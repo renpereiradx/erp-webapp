@@ -57,10 +57,13 @@ function Input({
       type={type}
       data-slot="input"
       className={cn(
-        "input",
+        "flex w-full rounded-md border border-slate-400 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 transition-all",
         variantClass,
         stateClass,
         sizeClass,
+        size === "sm" && "h-8 px-2 text-xs",
+        size === "default" && "h-10",
+        size === "lg" && "h-12 px-4 text-base",
         className
       )}
       {...props}

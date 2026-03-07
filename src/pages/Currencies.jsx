@@ -6,21 +6,6 @@
 // ===========================================================================
 
 import React, { useState, useEffect } from 'react'
-import {
-  Search,
-  Plus,
-  RefreshCw,
-  Download,
-  Edit2,
-  MoreVertical,
-  X,
-  Settings,
-  CreditCard,
-  Coins,
-  Info,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import useCurrencyStore from '@/store/useCurrencyStore'
 import { Button } from '@/components/ui/button'
@@ -34,6 +19,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
+import { PaymentMethodService } from '@/services/paymentMethodService'
 
 // --- Components ---
 
@@ -47,8 +33,6 @@ const getFlagUrl = (code) => {
   const countryCode = mapping[code.toUpperCase()];
   return countryCode ? `https://flagcdn.com/w40/${countryCode}.png` : null;
 }
-
-import { PaymentMethodService } from '@/services/paymentMethodService'
 
 // Payment Methods Tab Component
 const PaymentMethodsTab = ({ searchTerm }) => {
@@ -82,38 +66,38 @@ const PaymentMethodsTab = ({ searchTerm }) => {
   })
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border-subtle bg-white shadow-fluent-2">
+    <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-surface-dark shadow-sm">
       <Table>
-        <TableHeader className="bg-gray-50/50">
+        <TableHeader className="bg-slate-50/80 dark:bg-slate-800/50">
           <TableRow>
-            <TableHead className="text-[12px] font-black uppercase tracking-wider text-slate-500 py-4 px-6">{t('currencies.table.code')}</TableHead>
-            <TableHead className="text-[12px] font-black uppercase tracking-wider text-slate-500 py-4 px-6">{t('currencies.table.name')}</TableHead>
-            <TableHead className="text-[12px] font-black uppercase tracking-wider text-slate-500 py-4 px-6">{t('currencies.payment_methods.table.type')}</TableHead>
-            <TableHead className="text-[12px] font-black uppercase tracking-wider text-slate-500 py-4 px-6">{t('currencies.table.status')}</TableHead>
-            <TableHead className="text-[12px] font-black uppercase tracking-wider text-slate-500 py-4 px-6 text-right">{t('currencies.table.actions')}</TableHead>
+            <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.table.code')}</TableHead>
+            <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.table.name')}</TableHead>
+            <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.payment_methods.table.type')}</TableHead>
+            <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.table.status')}</TableHead>
+            <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3 text-right">{t('currencies.table.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
-            <TableRow><TableCell colSpan={5} className="py-12 text-center text-text-secondary font-bold uppercase tracking-widest text-xs">{t('common.loading')}</TableCell></TableRow>
+            <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-400 font-semibold uppercase tracking-widest text-xs">{t('common.loading')}</TableCell></TableRow>
           ) : filteredMethods.length === 0 ? (
-            <TableRow><TableCell colSpan={5} className="py-12 text-center text-text-secondary font-medium italic">{t('currencies.empty.search')}</TableCell></TableRow>
+            <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-500 font-medium italic">{t('currencies.empty.search')}</TableCell></TableRow>
           ) : (
             filteredMethods.map(method => (
-              <tr key={method.id} className="hover:bg-slate-50 transition-colors border-b border-slate-50">
-                <TableCell className="py-4 px-6"><span className="font-mono font-bold text-primary">{method.method_code}</span></TableCell>
-                <TableCell className="py-4 px-6 font-bold text-text-main">{method.description}</TableCell>
-                <TableCell className="py-4 px-6 text-xs font-medium text-text-secondary">
+              <tr key={method.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800">
+                <TableCell className="py-2 px-3"><span className="font-mono font-semibold text-primary tabular-nums">{method.method_code}</span></TableCell>
+                <TableCell className="py-2 px-3 font-semibold text-text-main">{method.description}</TableCell>
+                <TableCell className="py-2 px-3 text-xs font-medium text-slate-500">
                   {PaymentMethodService.requiresAdditionalInfo(method) ? t('currencies.payment_methods.type.complex') : t('currencies.payment_methods.type.simple')}
                 </TableCell>
-                <TableCell className="py-4 px-6">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${method.is_active ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-500'}`}>
-                    <span className={`size-1.5 rounded-full ${method.is_active ? 'bg-success' : 'bg-slate-400'}`}></span>
+                <TableCell className="py-2 px-3">
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-widest border ${method.is_active ? 'bg-green-50 border-green-200 text-green-700' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
+                    <span className={`size-1.5 rounded-full ${method.is_active ? 'bg-green-600' : 'bg-slate-400'}`}></span>
                     {method.is_active ? t('currencies.status.active') : t('currencies.status.inactive')}
                   </span>
                 </TableCell>
-                <TableCell className="py-4 px-6 text-right">
-                  <Button variant="ghost" size="icon" className="text-slate-300" disabled><Edit2 size={16} /></Button>
+                <TableCell className="py-2 px-3 text-right">
+                  <Button variant="ghost" size="icon" className="size-8 text-slate-300" disabled><span className="material-icons-round text-[18px]">edit</span></Button>
                 </TableCell>
               </tr>
             ))
@@ -163,17 +147,19 @@ const CurrencyDrawer = ({ isOpen, onClose, currency, onSave, baseCurrency }) => 
   const flagUrl = getFlagUrl(formData.currency_code);
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-fluent-16 z-[100] flex flex-col animate-in slide-in-from-right duration-300">
-      <div className="p-6 border-b border-border-subtle flex items-center justify-between">
-        <h3 className="text-xl font-black uppercase tracking-tighter text-text-main">
+    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-surface-dark shadow-xl z-[100] flex flex-col animate-in slide-in-from-right duration-300 border-l border-slate-200 dark:border-slate-800">
+      <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <h3 className="text-xl font-semibold tracking-tight text-text-main uppercase">
           {currency ? t('currencies.modal.edit_title') : t('currencies.modal.create_title')}
         </h3>
-        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400"><X size={20} /></button>
+        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
+          <span className="material-icons-round text-[20px]">close</span>
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
-        <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-          <div className="size-12 rounded-lg bg-white shadow-sm flex items-center justify-center overflow-hidden border border-border-subtle">
+        <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-800">
+          <div className="size-12 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
             {flagUrl ? (
                <img src={flagUrl} alt={formData.currency_code} className="w-full h-full object-cover" />
             ) : (
@@ -181,41 +167,41 @@ const CurrencyDrawer = ({ isOpen, onClose, currency, onSave, baseCurrency }) => 
             )}
           </div>
           <div>
-            <h4 className="text-lg font-black text-primary leading-none uppercase">{formData.currency_code || 'NEW'}</h4>
-            <p className="text-xs font-bold text-text-secondary uppercase tracking-widest mt-1">{formData.currency_name || t('currencies.placeholder.name')}</p>
+            <h4 className="text-lg font-semibold text-primary leading-none uppercase">{formData.currency_code || '---'}</h4>
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mt-1.5">{formData.currency_name || t('currencies.placeholder.name')}</p>
           </div>
         </div>
 
         <form id="currency-form" onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('currencies.field.name')}</label>
-            <Input value={formData.currency_name} onChange={e => setFormData({...formData, currency_name: e.target.value})} placeholder={t('currencies.placeholder.name')} required />
+            <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">{t('currencies.field.name')}</label>
+            <Input value={formData.currency_name} onChange={e => setFormData({...formData, currency_name: e.target.value})} placeholder={t('currencies.placeholder.name')} className="rounded-md border-slate-200" required />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('currencies.field.code')}</label>
-              <Input value={formData.currency_code} onChange={e => setFormData({...formData, currency_code: e.target.value.toUpperCase()})} maxLength={3} placeholder="EUR" disabled={currency?.is_base_currency || !!currency?.id} required />
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">{t('currencies.field.code')}</label>
+              <Input value={formData.currency_code} onChange={e => setFormData({...formData, currency_code: e.target.value.toUpperCase()})} maxLength={3} placeholder="EUR" disabled={currency?.is_base_currency || !!currency?.id} className="rounded-md border-slate-200 uppercase font-mono" required />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('currencies.field.symbol')}</label>
-              <Input value={formData.symbol} onChange={e => setFormData({...formData, symbol: e.target.value})} placeholder="$" maxLength={5} />
+              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">{t('currencies.field.symbol')}</label>
+              <Input value={formData.symbol} onChange={e => setFormData({...formData, symbol: e.target.value})} placeholder="$" maxLength={5} className="rounded-md border-slate-200 font-mono" />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('currencies.field.decimals')}</label>
-            <Input type="number" min={0} max={4} value={formData.decimal_places} onChange={e => setFormData({...formData, decimal_places: parseInt(e.target.value) || 0})} />
-            <p className="text-[10px] text-text-secondary font-medium italic px-1">Cantidad de decimales a usar al mostrar montos (0-4)</p>
+            <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">{t('currencies.field.decimals')}</label>
+            <Input type="number" min={0} max={4} value={formData.decimal_places} onChange={e => setFormData({...formData, decimal_places: parseInt(e.target.value) || 0})} className="rounded-md border-slate-200 font-mono" />
+            <p className="text-[10px] text-slate-500 font-medium italic px-1">Cantidad de decimales a usar al mostrar montos (0-4)</p>
           </div>
         </form>
       </div>
 
-      <div className="p-6 border-t border-border-subtle bg-slate-50/50 flex gap-3">
-        <Button form="currency-form" type="submit" className="flex-1 bg-primary hover:bg-primary-hover font-black uppercase tracking-widest h-11" disabled={saving}>
+      <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 flex gap-3">
+        <Button form="currency-form" type="submit" className="flex-1 bg-primary hover:bg-primary-hover text-white font-semibold uppercase tracking-widest text-[11px] h-11 rounded-md shadow-sm" disabled={saving}>
           {saving ? t('action.saving') : t('action.save')}
         </Button>
-        <Button variant="outline" onClick={onClose} className="flex-1 border-border-subtle font-bold uppercase tracking-widest h-11">
+        <Button variant="outline" onClick={onClose} className="flex-1 border-slate-200 font-semibold uppercase tracking-widest text-[11px] h-11 rounded-md">
           {t('action.cancel')}
         </Button>
       </div>
@@ -238,6 +224,21 @@ const CurrenciesPage = () => {
 
   useEffect(() => { fetchCurrencies() }, [fetchCurrencies])
 
+  const handleOpenCreate = () => {
+    setSelectedCurrency(null)
+    setDrawerOpen(true)
+  }
+
+  const handleOpenEdit = (currency) => {
+    setSelectedCurrency(currency)
+    setDrawerOpen(true)
+  }
+
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false)
+    setSelectedCurrency(null)
+  }
+
   const handleSave = async formData => {
     if (selectedCurrency) { await updateCurrency(selectedCurrency.id, formData); } else { await createCurrency(formData); }
   }
@@ -254,47 +255,49 @@ const CurrenciesPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background-light p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-sans">
       
       {/* Page Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <header className="flex flex-col gap-1 border-l-4 border-primary pl-4">
-          <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2">
+        <header className="flex flex-col gap-1">
+          <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
             {t('currencies.page.title')}
           </h1>
-          <p className="text-text-secondary text-sm font-medium mt-1">
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
             {t('currencies.page.subtitle')}
           </p>
         </header>
         
         {/* Base Currency Widget */}
-        <div className="bg-white p-4 rounded-xl border border-border-subtle shadow-fluent-2 flex items-center gap-6">
+        <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-6">
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">{t('currencies.widget.base_currency')}</p>
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest leading-none mb-2">{t('currencies.widget.base_currency')}</p>
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-black text-primary leading-none">{baseCurrency?.currency_code || 'PYG'}</span>
-              <span className="text-sm font-bold text-text-secondary">({baseCurrency?.symbol || 'Gs'})</span>
+              <span className="text-2xl font-semibold text-primary leading-none font-mono uppercase">{baseCurrency?.currency_code || 'PYG'}</span>
+              <span className="text-sm font-medium text-slate-400">({baseCurrency?.symbol || 'Gs'})</span>
             </div>
           </div>
-          <Button variant="outline" size="sm" className="h-9 px-4 border-primary/20 text-primary font-bold uppercase text-[10px] tracking-widest hover:bg-primary/5">{t('currencies.widget.change')}</Button>
+          <Button variant="outline" size="sm" className="h-9 px-4 border-slate-200 dark:border-slate-700 text-primary font-semibold uppercase text-[10px] tracking-widest hover:bg-primary/5 rounded-md shadow-sm">{t('currencies.widget.change')}</Button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 p-1 bg-white rounded-xl border border-border-subtle shadow-sm w-fit">
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit">
         {[
-          { id: 'currencies', label: t('currencies.tabs.currencies'), icon: Coins },
-          { id: 'payment-methods', label: t('currencies.tabs.payment_methods'), icon: CreditCard },
-          { id: 'settings', label: t('currencies.tabs.settings'), icon: Settings }
+          { id: 'currencies', label: t('currencies.tabs.currencies'), icon: 'payments' },
+          { id: 'payment-methods', label: t('currencies.tabs.payment_methods'), icon: 'credit_card' },
+          { id: 'settings', label: t('currencies.tabs.settings'), icon: 'settings' }
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
-              activeTab === tab.id ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-text-secondary hover:bg-slate-50'
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold uppercase tracking-widest transition-all ${
+              activeTab === tab.id 
+                ? 'bg-white dark:bg-surface-dark text-primary shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
             }`}
           >
-            <tab.icon size={16} />
+            <span className="material-icons-round text-[18px]">{tab.icon}</span>
             <span>{tab.label}</span>
           </button>
         ))}
@@ -302,21 +305,21 @@ const CurrenciesPage = () => {
 
       <div className="space-y-6">
         {/* Toolbar */}
-        <div className="bg-white p-4 rounded-xl border border-border-subtle shadow-fluent-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Button onClick={handleOpenCreate} className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest px-6 h-11">
-              <Plus className="size-4 mr-2" />
+            <Button onClick={handleOpenCreate} className="bg-primary hover:bg-primary-hover text-white font-semibold uppercase tracking-widest text-[11px] px-6 h-10 rounded-md shadow-sm flex items-center gap-2">
+              <span className="material-icons-round text-[18px]">add</span>
               {t('currencies.action.create')}
             </Button>
-            <div className="w-px h-6 bg-slate-100 mx-2"></div>
-            <Button variant="ghost" size="icon" onClick={fetchCurrencies} className="text-slate-400 hover:text-primary"><RefreshCw size={20} /></Button>
-            <Button variant="ghost" size="icon" onClick={handleExport} className="text-slate-400 hover:text-primary"><Download size={20} /></Button>
+            <div className="w-px h-6 bg-slate-100 dark:bg-slate-800 mx-2"></div>
+            <Button variant="ghost" size="icon" onClick={fetchCurrencies} className="size-10 text-slate-400 hover:text-primary rounded-md"><span className="material-icons-round text-[20px]">refresh</span></Button>
+            <Button variant="ghost" size="icon" onClick={handleExport} className="size-10 text-slate-400 hover:text-primary rounded-md"><span className="material-icons-round text-[20px]">download</span></Button>
           </div>
 
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
+            <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
             <Input
-              className="pl-10 h-11 border-border-subtle rounded-lg bg-slate-50/50 focus:bg-white transition-all"
+              className="pl-10 h-10 border-slate-200 dark:border-slate-700 rounded-md bg-slate-50/50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-surface-dark transition-all font-medium text-sm"
               placeholder={t('currencies.search.placeholder')}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
@@ -326,48 +329,48 @@ const CurrenciesPage = () => {
 
         {/* Content Area */}
         {activeTab === 'currencies' && (
-          <div className="overflow-hidden rounded-xl border border-border-subtle bg-white shadow-fluent-2">
+          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-surface-dark shadow-sm">
             <Table>
-              <TableHeader className="bg-gray-50/50">
+              <TableHeader className="bg-slate-50/80 dark:bg-slate-800/50">
                 <TableRow>
-                  <TableHead className="w-12 px-6"><input type="checkbox" className="rounded border-slate-300 text-primary" /></TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 py-4 px-6">{t('currencies.table.code')}</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 py-4 px-6">{t('currencies.table.name')}</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 py-4 px-6 text-center">{t('currencies.table.symbol')}</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 py-4 px-6 text-right">{t('currencies.table.exchange_rate')}</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 py-4 px-6">{t('currencies.table.status')}</TableHead>
-                  <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 py-4 px-6 text-right">{t('currencies.table.actions')}</TableHead>
+                  <TableHead className="w-12 px-4"><input type="checkbox" className="rounded border-slate-300 text-primary" /></TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.table.code')}</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.table.name')}</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3 text-center">{t('currencies.table.symbol')}</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3 text-right">{t('currencies.table.exchange_rate')}</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.table.status')}</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3 text-right">{t('currencies.table.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={7} className="py-20 text-center text-slate-400 font-bold uppercase tracking-[0.2em] text-xs">Cargando Monedas...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="py-20 text-center text-slate-400 font-semibold uppercase tracking-[0.2em] text-xs">Cargando Monedas...</TableCell></TableRow>
                 ) : (
                   filteredCurrencies.map(currency => {
                     const flagUrl = getFlagUrl(currency.currency_code);
                     return (
-                      <TableRow key={currency.id} className={`hover:bg-slate-50 transition-colors group ${currency.is_base_currency ? 'bg-primary/5' : ''}`}>
-                        <TableCell className="px-6"><input type="checkbox" className="rounded border-slate-300 text-primary" /></TableCell>
-                        <TableCell className="py-4 px-6">
+                      <TableRow key={currency.id} className={`hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group ${currency.is_base_currency ? 'bg-primary/5' : ''} border-b border-slate-100 dark:border-slate-800`}>
+                        <TableCell className="px-4"><input type="checkbox" className="rounded border-slate-300 text-primary" /></TableCell>
+                        <TableCell className="py-2 px-3">
                           <div className="flex items-center gap-3">
-                            <div className="size-8 rounded-full bg-white shadow-sm border border-border-subtle flex items-center justify-center overflow-hidden">
+                            <div className="size-8 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden">
                               {flagUrl ? <img src={flagUrl} className="w-full h-full object-cover" /> : <span className="text-sm">{currency.flag_emoji || '🏳️'}</span>}
                             </div>
-                            <span className="font-black text-primary uppercase">{currency.currency_code}</span>
-                            {currency.is_base_currency && <span className="text-[9px] font-black bg-primary text-white px-1.5 py-0.5 rounded uppercase leading-none">BASE</span>}
+                            <span className="font-semibold text-primary uppercase font-mono">{currency.currency_code}</span>
+                            {currency.is_base_currency && <span className="text-[9px] font-semibold bg-primary text-white px-1.5 py-0.5 rounded-sm uppercase leading-none ml-1">BASE</span>}
                           </div>
                         </TableCell>
-                        <TableCell className="py-4 px-6 font-bold text-text-main">{currency.currency_name || currency.name}</TableCell>
-                        <TableCell className="py-4 px-6 text-center font-mono font-bold text-text-secondary">{currency.symbol}</TableCell>
-                        <TableCell className="py-4 px-6 text-right font-mono font-bold text-text-main">{currency.is_base_currency ? '-' : formatCurrencyValue(currency.exchange_rate, currency)}</TableCell>
-                        <TableCell className="py-4 px-6">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${currency.is_enabled !== false ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-500'}`}>
-                            <span className={`size-1.5 rounded-full ${currency.is_enabled !== false ? 'bg-success' : 'bg-slate-400'}`}></span>
+                        <TableCell className="py-2 px-3 font-semibold text-text-main text-sm">{currency.currency_name || currency.name}</TableCell>
+                        <TableCell className="py-2 px-3 text-center font-mono font-semibold text-slate-500 tabular-nums">{currency.symbol}</TableCell>
+                        <TableCell className="py-2 px-3 text-right font-mono font-semibold text-text-main tabular-nums">{currency.is_base_currency ? '-' : formatCurrencyValue(currency.exchange_rate, currency)}</TableCell>
+                        <TableCell className="py-2 px-3">
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-widest border ${currency.is_enabled !== false ? 'bg-green-50 border-green-200 text-green-700' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
+                            <span className={`size-1.5 rounded-full ${currency.is_enabled !== false ? 'bg-green-600' : 'bg-slate-400'}`}></span>
                             {currency.is_enabled !== false ? t('currencies.status.active') : t('currencies.status.inactive')}
                           </span>
                         </TableCell>
-                        <TableCell className="py-4 px-6 text-right">
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(currency)} className="opacity-0 group-hover:opacity-100 transition-all text-slate-400 hover:text-primary"><Edit2 size={16} /></Button>
+                        <TableCell className="py-2 px-3 text-right">
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(currency)} className="opacity-0 group-hover:opacity-100 transition-all text-slate-400 hover:text-primary rounded-md size-8"><span className="material-icons-round text-[18px]">edit</span></Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -375,11 +378,11 @@ const CurrenciesPage = () => {
                 )}
               </TableBody>
             </Table>
-            <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{t('currencies.results', { count: filteredCurrencies.length, total: filteredCurrencies.length })}</p>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="size-8 rounded-lg border-border-subtle" disabled><ChevronLeft size={16} /></Button>
-                <Button variant="outline" size="icon" className="size-8 rounded-lg border-border-subtle" disabled><ChevronRight size={16} /></Button>
+            <div className="p-3 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{t('currencies.results', { count: filteredCurrencies.length, total: filteredCurrencies.length })}</p>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="icon" className="size-7 rounded-md border-slate-200 dark:border-slate-700" disabled><span className="material-icons-round text-[16px]">chevron_left</span></Button>
+                <Button variant="outline" size="icon" className="size-7 rounded-md border-slate-200 dark:border-slate-700" disabled><span className="material-icons-round text-[16px]">chevron_right</span></Button>
               </div>
             </div>
           </div>
@@ -388,23 +391,23 @@ const CurrenciesPage = () => {
         {activeTab === 'payment-methods' && <PaymentMethodsTab searchTerm={searchTerm} />}
 
         {activeTab === 'settings' && (
-           <div className="bg-white p-8 rounded-xl border border-border-subtle shadow-fluent-2 max-w-2xl space-y-8 animate-in fade-in slide-in-from-top-2">
+           <div className="bg-white dark:bg-surface-dark p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-2xl space-y-6 animate-in fade-in slide-in-from-top-2">
              <div className="border-l-4 border-primary pl-4">
-               <h3 className="text-xl font-black uppercase tracking-tighter text-text-main">{t('currencies.settings.general.title')}</h3>
-               <p className="text-text-secondary text-sm font-medium mt-1">{t('currencies.settings.general.description')}</p>
+               <h3 className="text-xl font-semibold tracking-tight text-text-main uppercase">{t('currencies.settings.general.title')}</h3>
+               <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">{t('currencies.settings.general.description')}</p>
              </div>
              
              <div className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">{t('currencies.settings.field.number_format')}</label>
-                  <select className="w-full h-11 rounded-lg border-border-subtle bg-slate-50 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none" disabled>
+                  <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 ml-1">{t('currencies.settings.field.number_format')}</label>
+                  <select className="w-full h-10 rounded-md border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-4 text-sm font-semibold focus:ring-1 focus:ring-primary outline-none appearance-none cursor-not-allowed" disabled>
                     <option>{t('currencies.settings.field.number_format.es_py')}</option>
                   </select>
                 </div>
 
-                <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-100 dark:border-slate-800">
                   <input type="checkbox" checked readOnly className="rounded border-slate-300 text-primary size-4" />
-                  <span className="text-sm font-bold text-text-main">{t('currencies.settings.field.show_symbols')}</span>
+                  <span className="text-sm font-semibold text-text-main">{t('currencies.settings.field.show_symbols')}</span>
                 </div>
              </div>
            </div>

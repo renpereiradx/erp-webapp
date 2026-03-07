@@ -195,14 +195,14 @@ const SalesPaymentHistory = () => {
     switch (s) {
       case 'completed':
       case 'paid':
-        return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none font-black uppercase text-[10px] tracking-widest px-4 py-1.5 shadow-sm">Totalmente Pagado</Badge>
+        return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 border-none font-medium text-xs px-2 py-0.5">Pagado</Badge>
       case 'partial':
       case 'partial_payment':
-        return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none font-black uppercase text-[10px] tracking-widest px-4 py-1.5 shadow-sm">Pago Parcial</Badge>
+        return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 border-none font-medium text-xs px-2 py-0.5">Parcial</Badge>
       case 'overdue':
-        return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-none font-black uppercase text-[10px] tracking-widest px-4 py-1.5 shadow-sm">Pago Vencido</Badge>
+        return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 border-none font-medium text-xs px-2 py-0.5">Vencido</Badge>
       default:
-        return <Badge className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-none font-black uppercase text-[10px] tracking-widest px-4 py-1.5 shadow-sm">Pendiente</Badge>
+        return <Badge className="bg-slate-100 text-slate-700 dark:bg-slate-800 border-none font-medium text-xs px-2 py-0.5">Pendiente</Badge>
     }
   }
 
@@ -228,8 +228,8 @@ const SalesPaymentHistory = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] gap-4 animate-in fade-in duration-700">
-        <RefreshCw className="w-12 h-12 animate-spin text-primary opacity-20" />
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Cargando historial...</p>
+        <RefreshCw className="w-10 h-10 animate-spin text-primary opacity-20" />
+        <p className="text-sm font-medium text-slate-500">Cargando historial...</p>
       </div>
     )
   }
@@ -248,42 +248,40 @@ const SalesPaymentHistory = () => {
   }
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in duration-500 max-w-[1200px] mx-auto py-2">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-1">
         <div className="flex items-center gap-5">
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={() => navigate('/cobros-ventas')}
-            className="size-12 rounded-full hover:bg-primary/10 text-primary transition-all"
+            className="size-10 md:size-12 rounded-lg border-slate-400 transition-all"
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={20} />
           </Button>
           <div className="space-y-1">
-            <div className="flex items-center gap-3">
-               <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none font-display">
-                 Historial de Cobros
-               </h1>
-            </div>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium font-display flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Historial de Cobros
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
               Venta #{sale.id} • {sale.client_name || 'Cliente Ocasional'}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             onClick={handlePrint}
-            className="h-12 border-slate-200 dark:border-slate-800 font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800"
+            className="h-10 border-slate-400 font-medium text-sm rounded-md px-4"
           >
             <Printer size={16} className="mr-2" /> Imprimir
           </Button>
           <Button
             variant="outline"
             onClick={handleDownload}
-            className="h-12 border-slate-200 dark:border-slate-800 font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800"
+            className="h-10 border-slate-400 font-medium text-sm rounded-md px-4"
           >
             <Download size={16} className="mr-2" /> Exportar
           </Button>
@@ -291,42 +289,42 @@ const SalesPaymentHistory = () => {
       </header>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+         <Card className="rounded-xl border border-slate-200 shadow-sm bg-white dark:bg-surface-dark overflow-hidden transition-all duration-300 hover:shadow-md">
             <CardContent className="p-6">
-               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Venta</p>
-               <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{formatCurrency(totalAmount)}</h2>
+               <p className="text-sm font-semibold text-slate-500 mb-1">Total Venta</p>
+               <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums">{formatCurrency(totalAmount)}</h2>
             </CardContent>
          </Card>
-         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+         <Card className="rounded-xl border border-slate-200 shadow-sm bg-white dark:bg-surface-dark overflow-hidden transition-all duration-300 hover:shadow-md">
             <CardContent className="p-6">
-               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Cobrado</p>
-               <h2 className="text-2xl font-bold text-green-600 tracking-tight">{formatCurrency(paidAmount)}</h2>
+               <p className="text-sm font-semibold text-slate-500 mb-1">Cobrado</p>
+               <h2 className="text-2xl font-bold text-green-600 tracking-tight tabular-nums">{formatCurrency(paidAmount)}</h2>
             </CardContent>
          </Card>
-         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+         <Card className="rounded-xl border border-slate-200 shadow-sm bg-white dark:bg-surface-dark overflow-hidden transition-all duration-300 hover:shadow-md">
             <CardContent className="p-6">
-               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Saldo Restante</p>
-               <h2 className="text-2xl font-black text-primary tracking-tight">{formatCurrency(balanceDue)}</h2>
+               <p className="text-sm font-semibold text-slate-500 mb-1">Saldo Restante</p>
+               <h2 className="text-2xl font-bold text-primary tracking-tight tabular-nums">{formatCurrency(balanceDue)}</h2>
             </CardContent>
          </Card>
-         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+         <Card className="rounded-xl border border-slate-200 shadow-sm bg-white dark:bg-surface-dark overflow-hidden transition-all duration-300 hover:shadow-md">
             <CardContent className="p-6">
-               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estado</p>
+               <p className="text-sm font-semibold text-slate-500 mb-1">Estado</p>
                <div className="mt-1">{getStatusBadge(sale.status)}</div>
             </CardContent>
          </Card>
       </div>
 
       {/* Progress Bar */}
-      <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
-        <CardContent className="p-6 flex items-center gap-6">
-           <div className="flex-1 space-y-2">
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                 <span className="text-slate-400">Progreso de Cobro</span>
-                 <span className="text-primary">{paymentProgress}% Completado</span>
+      <Card className="rounded-xl border border-slate-200 shadow-sm bg-white dark:bg-surface-dark overflow-hidden">
+        <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6">
+           <div className="flex-1 w-full space-y-2">
+              <div className="flex justify-between items-center text-xs font-medium">
+                 <span className="text-slate-500">Progreso de Cobro</span>
+                 <span className="text-primary font-semibold">{paymentProgress}% Completado</span>
               </div>
-              <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                  <div 
                   className="h-full bg-primary transition-all duration-1000 ease-out" 
                   style={{ width: `${paymentProgress}%` }}
@@ -336,7 +334,7 @@ const SalesPaymentHistory = () => {
            {balanceDue > 0 && (
              <Button
                 onClick={handleAddPayment}
-                className="h-12 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+                className="h-10 w-full md:w-auto bg-primary hover:bg-primary-hover text-white font-medium text-sm rounded-md shadow-sm transition-all active:scale-95"
               >
                 <Plus size={18} className="mr-2" />
                 Registrar Cobro
@@ -346,54 +344,54 @@ const SalesPaymentHistory = () => {
       </Card>
 
       {/* Timeline */}
-      <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
-        <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 py-5 px-8">
-           <CardTitle className="text-[13px] font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-3">
+      <Card className="rounded-xl border border-slate-200 shadow-sm bg-white dark:bg-surface-dark overflow-hidden">
+        <CardHeader className="bg-slate-50 py-4 px-6 border-b border-slate-200">
+           <CardTitle className="text-sm font-semibold text-slate-700 dark:text-white flex items-center gap-3">
               <History size={18} className="text-primary" /> Línea de Tiempo de Cobros
            </CardTitle>
         </CardHeader>
-        <CardContent className="p-8">
+        <CardContent className="p-6 md:p-8">
            {normalizedPayments.length === 0 ? (
              <div className="py-16 flex flex-col items-center justify-center text-center opacity-40">
                 <CreditCard size={48} className="mb-4 text-slate-300" />
-                <h3 className="text-lg font-black uppercase tracking-tighter text-slate-500 mb-1">Sin Registros</h3>
-                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Esta venta aún no tiene cobros asociados.</p>
+                <h3 className="text-base font-semibold text-slate-500 mb-1">Sin Registros</h3>
+                <p className="text-sm font-medium text-slate-400">Esta venta aún no tiene cobros asociados.</p>
              </div>
            ) : (
              <div className="space-y-8">
                 {normalizedPayments.map((payment, idx) => (
-                  <div key={payment.id || idx} className="relative pl-8 border-l-2 border-slate-100 dark:border-slate-800 space-y-3 group">
-                     <div className="absolute -left-[11px] top-0 size-5 bg-white dark:bg-surface-dark border-4 border-primary rounded-full group-hover:bg-primary transition-colors" />
+                  <div key={payment.id || idx} className="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800 space-y-3 group">
+                     <div className="absolute -left-[9px] top-0 size-4 bg-white dark:bg-surface-dark border-[2px] border-primary rounded-full group-hover:bg-primary transition-colors" />
                      
-                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/30 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 group-hover:shadow-sm transition-all">
+                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 bg-slate-50 p-5 rounded-md border border-slate-200 group-hover:shadow-sm transition-all">
                         <div className="space-y-2 flex-1">
                            <div className="flex items-center gap-3">
-                             <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black px-2 py-0.5">COBRO APLICADO</Badge>
-                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                             <Badge className="bg-green-100 text-green-700 border-none text-xs font-medium px-2 py-0.5">COBRO APLICADO</Badge>
+                             <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
                                <Clock size={12} /> {formatDate(payment.date)}
                              </span>
                            </div>
                            
-                           <h3 className="text-xl font-black text-slate-900 dark:text-white tabular-nums tracking-tighter">
+                           <h3 className="text-xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tight">
                              {formatCurrency(payment.amount)}
                            </h3>
                            
                            <div className="flex flex-wrap gap-4 pt-2">
-                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
-                                <User size={12} className="text-slate-400" /> Cajero: {payment.user}
+                              <p className="text-xs text-slate-600 font-medium flex items-center gap-2">
+                                <User size={14} className="text-slate-400" /> Cajero: {payment.user}
                               </p>
                               {payment.reference && payment.reference !== '—' && (
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
-                                  <FileText size={12} className="text-slate-400" /> Ref: {payment.reference}
+                                <p className="text-xs text-slate-600 font-medium flex items-center gap-2">
+                                  <FileText size={14} className="text-slate-400" /> Ref: {payment.reference}
                                 </p>
                               )}
                            </div>
                         </div>
 
                         {payment.notes && (
-                           <div className="md:w-1/3 bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Notas</p>
-                             <p className="text-xs text-slate-600 dark:text-slate-300 italic">"{payment.notes}"</p>
+                           <div className="md:w-1/3 bg-white dark:bg-slate-800 p-3 rounded-md border border-slate-200 dark:border-slate-700 italic leading-relaxed text-xs text-slate-600 dark:text-slate-300">
+                             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1 not-italic">Notas</p>
+                             "{payment.notes}"
                            </div>
                         )}
                      </div>

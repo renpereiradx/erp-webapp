@@ -201,7 +201,6 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     meta: cr.location || cr.branch_name || null
   })), [cashRegisters, formatLocalizedCurrency])
 
-  const resolvedCashRegisterValue = cashRegisterId || CASH_REGISTER_NONE_VALUE
   const isSubmitDisabled = !sale || isSubmitting || isCashRegistersLoading || validationErrors.hasErrors || !amountReceived || !amountToApply
 
   const handleSubmit = async event => {
@@ -232,35 +231,35 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className='register-sale-payment-modal w-[95vw] lg:!w-[1150px] lg:!max-w-[calc(95vw-288px)] p-0 overflow-hidden border-none shadow-2xl rounded-2xl sm:rounded-3xl'>
+      <DialogContent className='register-sale-payment-modal w-[95vw] lg:!w-[1150px] lg:!max-w-[calc(95vw-288px)] p-0 overflow-hidden border border-slate-200 shadow-xl rounded-xl'>
         <DialogTitle className='sr-only'>Registrar Cobro de Venta</DialogTitle>
         <DialogDescription className='sr-only'>Registre el cobro de la venta seleccionada.</DialogDescription>
         <form className='flex flex-col md:flex-row h-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto md:overflow-hidden' onSubmit={handleSubmit}>
           {/* PANEL IZQUIERDO: RESUMEN */}
-          <div className='w-full md:w-[35%] bg-slate-900 border-b md:border-b-0 md:border-r border-white/5 text-white p-6 md:p-10 flex flex-col relative overflow-hidden'>
+          <div className='w-full md:w-[35%] bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 text-white p-6 md:p-10 flex flex-col relative overflow-hidden'>
             <div className='relative z-10 flex flex-col h-full'>
               <header className='mb-6'>
-                <div className='size-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary mb-4 ring-1 ring-primary/40'>
+                <div className='size-10 bg-primary/20 rounded-lg flex items-center justify-center text-primary mb-4 ring-1 ring-primary/40'>
                   <Building size={20} />
                 </div>
-                <h2 className='text-xl md:text-2xl font-black tracking-tight uppercase leading-tight mb-1.5'>
+                <h2 className='text-xl md:text-2xl font-bold tracking-tight leading-tight mb-1.5'>
                   Registrar Cobro <br />
                   <span className='text-primary'>de Venta</span>
                 </h2>
-                <div className='flex items-center gap-2 text-white/40 font-black uppercase text-[10px] tracking-widest'>
+                <div className='flex items-center gap-2 text-white/70 font-medium text-xs'>
                   <Receipt size={14} className='text-primary' /> Venta #{sale?.id || sale?.sale_id || '---'}
                 </div>
               </header>
 
               <div className='space-y-4 md:space-y-6 flex-1'>
-                <div className='bg-white/5 backdrop-blur-md rounded-xl p-4 md:p-5 border border-white/10'>
+                <div className='bg-white/5 backdrop-blur-md rounded-lg p-4 md:p-5 border border-white/10'>
                   <div className='flex items-center gap-3 md:gap-4 mb-1'>
-                    <div className='size-9 md:size-10 bg-white/10 rounded-lg flex items-center justify-center text-white/40 ring-1 ring-white/10'>
+                    <div className='size-9 md:size-10 bg-white/10 rounded-md flex items-center justify-center text-white/60 ring-1 ring-white/10'>
                       <User size={18} />
                     </div>
                     <div>
-                      <p className='text-[9px] md:text-[10px] font-black text-white/30 uppercase tracking-widest mb-0.5'>Cliente</p>
-                      <p className='text-[14px] md:text-[15px] font-black text-white truncate max-w-[180px]'>{sale?.client_name || 'Consumidor Final'}</p>
+                      <p className='text-xs font-medium text-white/70 mb-0.5'>Cliente</p>
+                      <p className='text-sm font-semibold text-white truncate max-w-[180px]'>{sale?.client_name || 'Consumidor Final'}</p>
                     </div>
                   </div>
                 </div>
@@ -268,8 +267,8 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                 <div className='space-y-4 md:space-y-5'>
                   <div>
                     <div className='flex justify-between items-end mb-1'>
-                      <p className='text-[9px] md:text-[10px] font-black text-white/40 uppercase tracking-widest'>Saldo Pendiente</p>
-                      <p className='text-xl md:text-2xl font-black text-white tabular-nums'>{balanceDueLabel || formatLocalizedCurrency(0)}</p>
+                      <p className='text-xs font-medium text-white/70'>Saldo Pendiente</p>
+                      <p className='text-xl md:text-2xl font-bold text-white tabular-nums'>{balanceDueLabel || formatLocalizedCurrency(0)}</p>
                     </div>
                     <div className='h-1.5 bg-slate-800 rounded-full overflow-hidden'>
                       <div 
@@ -277,20 +276,20 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                         style={{ width: `${Math.round((Number.parseFloat(parseNumberWithDots(amountToApply)) || 0) / (getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 1) * 100)}%` }}
                       />
                     </div>
-                    <div className='mt-1.5 text-[9px] md:text-[10px] font-black text-primary uppercase tracking-widest text-right'>
+                    <div className='mt-1.5 text-xs font-medium text-primary text-right'>
                       {Math.round((Number.parseFloat(parseNumberWithDots(amountToApply)) || 0) / (getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 1) * 100)}% Aplicado
                     </div>
                   </div>
 
-                  <div className='p-4 md:p-5 bg-primary/5 rounded-xl border border-primary/10 backdrop-blur-sm'>
+                  <div className='p-4 md:p-5 bg-primary/5 rounded-lg border border-primary/10 backdrop-blur-sm'>
                     <div className='flex items-center gap-3 md:gap-4'>
-                      <div className='size-7 md:size-8 bg-primary rounded-lg flex items-center justify-center text-white'>
+                      <div className='size-7 md:size-8 bg-primary rounded-md flex items-center justify-center text-white'>
                         <ArrowUpRight size={16} />
                       </div>
                       <div>
-                        <p className='text-[9px] md:text-[10px] font-black text-white/30 uppercase tracking-widest leading-none mb-1'>Nuevo Saldo</p>
+                        <p className='text-xs font-medium text-white/70 leading-none mb-1'>Nuevo Saldo</p>
                         <p className={cn(
-                          "text-base md:text-lg font-black tabular-nums transition-colors leading-none",
+                          "text-base md:text-lg font-bold tabular-nums transition-colors leading-none",
                           projectedBalance === 0 ? "text-green-400" : "text-white"
                         )}>
                           {formatLocalizedCurrency(projectedBalance)}
@@ -302,7 +301,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
               </div>
 
               <footer className='mt-6 pt-4 border-t border-white/5 hidden md:block'>
-                <p className='text-[10px] text-white/20 font-black uppercase tracking-widest italic'>
+                <p className='text-xs text-white/50 italic'>
                   * Verifique los datos del cobro antes de confirmar la transacción.
                 </p>
               </footer>
@@ -314,16 +313,16 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
             <div className='flex-1 space-y-6 md:space-y-10 overflow-y-auto pr-1 md:pr-2 scrollbar-thin'>
               <section className='space-y-6 md:space-y-8'>
                 <div className='flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4'>
-                  <div className='size-8 bg-slate-50 dark:bg-slate-800 rounded-lg flex items-center justify-center text-slate-400'>
+                  <div className='size-8 bg-slate-50 dark:bg-slate-800 rounded-md flex items-center justify-center text-slate-500'>
                     <Coins size={18} />
                   </div>
-                  <h3 className='text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-slate-500'>Información del Cobro</h3>
+                  <h3 className='text-sm font-semibold text-slate-700'>Información del Cobro</h3>
                 </div>
 
                 {/* Monto Recibido con botón al lado */}
                 <div className='space-y-3'>
                   <div className='flex flex-wrap items-center gap-3 md:gap-6 px-1'>
-                    <label className='text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400'>Monto Recibido</label>
+                    <label className='text-sm font-medium text-slate-700'>Monto Recibido</label>
                     <button 
                       type='button' 
                       onClick={() => {
@@ -334,9 +333,9 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                           userEditedAmountToApply.current = false
                         }
                       }}
-                      className='text-[8px] md:text-[9px] font-black text-primary hover:text-primary-hover hover:bg-primary/10 px-2 md:px-3 py-1 bg-primary/5 rounded-md transition-all uppercase tracking-tighter'
+                      className='text-xs font-medium text-primary hover:text-primary-hover hover:bg-primary/10 px-2 md:px-3 py-1 bg-primary/5 rounded-md transition-all'
                     >
-                      COBRAR TODO EL SALDO
+                      Cobrar todo el saldo
                     </button>
                   </div>
                   <div className='relative group'>
@@ -354,15 +353,15 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                           setAmountToApply(formatNumberWithDots(String(Math.round(Math.min(numeric, balanceDue)))))
                         }
                       }}
-                      className='h-10 md:h-11 pl-9 rounded-xl bg-slate-50 border-slate-100 font-bold text-base focus:ring-2 focus:ring-primary/20'
+                      className='h-10 md:h-11 pl-9 rounded-md bg-white border-slate-400 font-medium text-base focus:ring-2 focus:ring-primary/20'
                     />
                   </div>
-                  {amountReceivedError && <p className='text-[9px] md:text-[10px] text-rose-500 font-bold uppercase ml-1'>{amountReceivedError}</p>}
+                  {amountReceivedError && <p className='text-xs font-medium text-rose-500 ml-1'>{amountReceivedError}</p>}
                 </div>
 
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 pt-2'>
                   <div className='space-y-2'>
-                    <label className='text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400 px-1'>Monto a Aplicar</label>
+                    <label className='text-sm font-medium text-slate-700 px-1'>Monto a Aplicar</label>
                     <Input
                       type='text'
                       inputMode='numeric'
@@ -371,14 +370,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                         setAmountToApply(formatNumberWithDots(parseNumberWithDots(e.target.value)))
                         userEditedAmountToApply.current = true
                       }}
-                      className='h-10 md:h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-base'
+                      className='h-10 md:h-11 rounded-md bg-white border-slate-400 font-medium text-base'
                     />
-                    {amountToApplyError && <p className='text-[9px] md:text-[10px] text-rose-500 font-bold uppercase ml-1'>{amountToApplyError}</p>}
+                    {amountToApplyError && <p className='text-xs font-medium text-rose-500 ml-1'>{amountToApplyError}</p>}
                   </div>
 
                   <div className='space-y-2'>
-                    <label className='text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400 px-1'>Vuelto / Saldo a favor</label>
-                    <div className='h-10 md:h-11 flex items-center px-4 bg-primary/5 text-primary font-black rounded-xl border border-primary/10 text-sm md:text-base tabular-nums'>
+                    <label className='text-sm font-medium text-slate-700 px-1'>Vuelto / Saldo a favor</label>
+                    <div className='h-10 md:h-11 flex items-center px-4 bg-primary/5 text-primary font-bold rounded-md border border-primary/10 text-sm md:text-base tabular-nums'>
                       {formatLocalizedCurrency(change)}
                     </div>
                   </div>
@@ -386,18 +385,18 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
 
                 {/* Caja Registradora */}
                 <div className='space-y-2'>
-                  <label className='text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400 px-1'>Caja de Cobro</label>
-                  <Select value={resolvedCashRegisterValue} onValueChange={v => setCashRegisterId(v === CASH_REGISTER_NONE_VALUE ? '' : v)}>
-                    <SelectTrigger className='h-10 md:h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 font-bold text-[10px] md:text-[11px] uppercase tracking-widest'>
+                  <label className='text-sm font-medium text-slate-700 px-1'>Caja de Cobro</label>
+                  <Select value={cashRegisterId || CASH_REGISTER_NONE_VALUE} onValueChange={v => setCashRegisterId(v === CASH_REGISTER_NONE_VALUE ? '' : v)}>
+                    <SelectTrigger className='h-10 rounded-md bg-white dark:bg-slate-800 border-slate-400 dark:border-slate-700 text-sm font-medium w-full'>
                       <SelectValue placeholder='Seleccionar caja...' />
                     </SelectTrigger>
-                    <SelectContent className='!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-[9999] min-w-[280px] max-w-[90vw]'>
-                      <SelectItem value={CASH_REGISTER_NONE_VALUE} className='font-black text-[10px] uppercase py-2 hover:!bg-slate-50 dark:hover:!bg-slate-800'>Sin Caja Asignada</SelectItem>
+                    <SelectContent className='!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-[9999] min-w-[280px] max-w-[90vw] rounded-md'>
+                      <SelectItem value={CASH_REGISTER_NONE_VALUE} className='font-medium text-sm py-2 hover:!bg-slate-50 dark:hover:!bg-slate-800'>Sin Caja Asignada</SelectItem>
                       {cashRegisterOptions.map(opt => (
                         <SelectItem key={opt.value} value={opt.value} className='py-3 border-b border-slate-50 dark:border-slate-800 last:border-none hover:!bg-slate-50 dark:hover:!bg-slate-800 cursor-pointer'>
                           <div className='flex flex-col gap-0.5'>
-                            <span className='font-black uppercase text-[10px] md:text-[11px] tracking-widest'>{opt.label}</span>
-                            <div className='flex items-center gap-2 text-[8px] md:text-[9px] font-bold text-primary uppercase'>{opt.balanceLabel}</div>
+                            <span className='font-medium text-sm'>{opt.label}</span>
+                            <div className='flex items-center gap-2 text-xs font-medium text-slate-500'>{opt.balanceLabel}</div>
                           </div>
                         </SelectItem>
                       ))}
@@ -406,43 +405,43 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                 </div>
 
                 <div className='space-y-2 pt-2'>
-                  <label className='text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400 px-1'>Observaciones Internas</label>
+                  <label className='text-sm font-medium text-slate-700 px-1'>Observaciones Internas</label>
                   <Textarea
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
                     placeholder='Detalles...'
                     rows={2}
-                    className='rounded-xl bg-slate-50 border-slate-100 font-medium text-sm p-3 md:p-4 resize-none'
+                    className='rounded-md bg-white border-slate-400 text-sm p-3 md:p-4 resize-none'
                   />
                 </div>
               </section>
 
               {formError && (
-                <div className='p-4 bg-rose-50 border border-rose-100 rounded-xl text-rose-600 text-[9px] md:text-[10px] font-black uppercase flex items-center gap-3'>
+                <div className='p-4 bg-rose-50 border border-rose-100 rounded-md text-rose-600 text-sm font-medium flex items-center gap-3'>
                   <AlertCircle size={16} />
                   <span>{formError}</span>
                 </div>
               )}
             </div>
 
-            <footer className='mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4 pt-6 md:pt-8 border-t border-slate-100 dark:border-slate-800'>
+            <footer className='mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4 pt-6 md:pt-8 border-t border-slate-200 dark:border-slate-800'>
               <Button
                 type='button'
                 variant='outline'
                 onClick={() => handleDialogChange(false)}
-                className='w-full sm:flex-1 h-10 md:h-11 rounded-xl font-black uppercase tracking-widest text-[9px] md:text-[10px] border-slate-200 hover:bg-slate-50 transition-all'
+                className='w-full sm:flex-1 h-10 rounded-md font-medium text-sm border-slate-400 hover:bg-slate-50 transition-all'
               >
                 Cancelar
               </Button>
               <Button
                 type='submit'
                 disabled={isSubmitDisabled}
-                className='w-full sm:flex-[2] h-10 md:h-11 rounded-xl bg-primary hover:bg-primary-hover text-white shadow-lg shadow-primary/20 font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-[10px] md:text-[11px] transition-all active:scale-[0.98]'
+                className='w-full sm:flex-[2] h-10 rounded-md bg-primary hover:bg-primary-hover text-white font-medium text-sm transition-all active:scale-[0.98]'
               >
                 {isSubmitting ? (
-                  <div className='flex items-center gap-2'><Loader2 size={14} className='animate-spin' /> PROCESANDO...</div>
+                  <div className='flex items-center gap-2'><Loader2 size={16} className='animate-spin' /> Procesando...</div>
                 ) : (
-                  <div className='flex items-center gap-2'><CheckCircle2 size={16} /> REGISTRAR COBRO AHORA</div>
+                  <div className='flex items-center gap-2'><CheckCircle2 size={16} /> Registrar Cobro</div>
                 )}
               </Button>
             </footer>

@@ -4,24 +4,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import {
-  Calendar as CalendarIcon,
-  MoreHorizontal,
-  Edit,
-  X,
-  Filter,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  RefreshCw,
-  ArrowLeft,
-  CalendarDays,
-  Settings2,
-} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -275,7 +257,7 @@ const SchedulesNew = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-sans">
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-primary pl-6 py-2">
         <div className="flex items-center gap-4">
@@ -285,25 +267,25 @@ const SchedulesNew = () => {
             onClick={() => navigate('/gestion-reservas')}
             className="rounded-full hover:bg-primary/10 text-primary"
           >
-            <ArrowLeft size={20} />
+            <span className="material-icons-round text-[20px]">arrow_back</span>
           </Button>
-          <h1 className="text-3xl font-black text-text-primary-light dark:text-text-primary-dark tracking-tighter uppercase font-display">
+          <h1 className="text-3xl font-semibold text-text-primary-light dark:text-text-primary-dark tracking-tight uppercase">
             {t('schedules.title', 'Gestión de Horarios')}
           </h1>
         </div>
       </header>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-6 w-fit h-auto flex gap-1">
+        <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-md mb-6 w-fit h-auto flex gap-1">
           <TabsTrigger 
             value="schedules" 
-            className="rounded-lg px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-surface-dark data-[state=active]:shadow-sm transition-all"
+            className="rounded-md px-4 py-2 font-semibold uppercase text-xs tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-surface-dark data-[state=active]:shadow-sm transition-all"
           >
             Tablero de Gestión
           </TabsTrigger>
           <TabsTrigger 
             value="details" 
-            className="rounded-lg px-6 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-surface-dark data-[state=active]:shadow-sm transition-all"
+            className="rounded-md px-4 py-2 font-semibold uppercase text-xs tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-surface-dark data-[state=active]:shadow-sm transition-all"
           >
             Explorador Visual
           </TabsTrigger>
@@ -311,49 +293,49 @@ const SchedulesNew = () => {
 
         <TabsContent value="schedules" className="m-0 space-y-6">
           {/* Toolbar Card */}
-          <Card className="rounded-xl border-slate-200 dark:border-slate-800 shadow-fluent-2 overflow-hidden bg-white dark:bg-surface-dark">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row justify-between gap-8">
+          <Card className="rounded-xl border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden bg-white dark:bg-surface-dark">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col lg:flex-row justify-between gap-6">
                 {/* Filters */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block ml-1">Producto / Cancha</label>
+                    <label className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 block ml-1">Producto / Cancha</label>
                     <div className="relative">
                       <select
                         value={filters.productId}
                         onChange={e => setFilters(prev => ({ ...prev, productId: e.target.value }))}
-                        className="w-full h-11 pl-4 pr-10 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary outline-none appearance-none cursor-pointer"
+                        className="w-full h-10 pl-4 pr-10 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer"
                       >
                         <option value="all">Todas las canchas</option>
                         {products.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+                      <span className="material-icons-round absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">expand_more</span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block ml-1">Fecha de Operación</label>
+                    <label className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 block ml-1">Fecha de Operación</label>
                     <div className="relative">
-                      <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                      <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">calendar_today</span>
                       <Input
                         type="date"
                         value={filters.date}
                         onChange={e => setFilters(prev => ({ ...prev, date: e.target.value }))}
-                        className="h-11 pl-10 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
+                        className="h-10 pl-10 rounded-md border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block ml-1">Filtrar por Estado</label>
-                    <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1 rounded-lg h-11">
+                    <label className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 block ml-1">Filtrar por Estado</label>
+                    <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1 rounded-md h-10">
                       {['all', 'available', 'reserved'].map((s) => (
                         <button
                           key={s}
                           onClick={() => setFilters(prev => ({ ...prev, status: s }))}
-                          className={`flex-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${
+                          className={`flex-1 rounded-sm text-xs font-semibold uppercase tracking-wider transition-all ${
                             filters.status === s 
                               ? 'bg-white dark:bg-slate-700 shadow-sm text-primary' 
                               : 'text-slate-500 hover:text-slate-700'
@@ -372,26 +354,26 @@ const SchedulesNew = () => {
                     <Button
                       onClick={handleGenerateToday}
                       disabled={actionLoading.today}
-                      className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-lg shadow-md shadow-primary/20"
+                      className="bg-primary hover:bg-primary-hover text-white font-semibold uppercase tracking-widest text-[10px] h-9 px-4 rounded-md shadow-sm flex items-center justify-center gap-2"
                     >
-                      {actionLoading.today ? <RefreshCw size={14} className="animate-spin mr-2" /> : <Clock size={14} className="mr-2" />}
+                      {actionLoading.today ? <span className="material-icons-round text-[16px] animate-spin">refresh</span> : <span className="material-icons-round text-[16px]">schedule</span>}
                       Generar Hoy
                     </Button>
                     <Button
                       onClick={handleGenerateTomorrow}
                       disabled={actionLoading.tomorrow}
                       variant="outline"
-                      className="border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
+                      className="border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-widest text-[10px] h-9 px-4 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-2"
                     >
-                      {actionLoading.tomorrow ? <RefreshCw size={14} className="animate-spin mr-2" /> : <CalendarDays size={14} className="mr-2" />}
+                      {actionLoading.tomorrow ? <span className="material-icons-round text-[16px] animate-spin">refresh</span> : <span className="material-icons-round text-[16px]">calendar_month</span>}
                       Generar Mañana
                     </Button>
                   </div>
                   <Button
                     onClick={() => setIsCustomModalOpen(true)}
-                    className="bg-slate-900 dark:bg-slate-700 hover:bg-black dark:hover:bg-slate-600 text-white font-black uppercase tracking-widest text-[10px] h-auto py-4 px-6 rounded-lg shadow-lg flex-1"
+                    className="bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-semibold uppercase tracking-widest text-[11px] h-auto py-2 px-4 rounded-md shadow-sm flex-1 flex items-center justify-center gap-2"
                   >
-                    <Settings2 size={16} className="mr-2" />
+                    <span className="material-icons-round text-[18px]">settings</span>
                     Rango Especial
                   </Button>
                 </div>
@@ -400,36 +382,36 @@ const SchedulesNew = () => {
           </Card>
 
           {/* Table Container */}
-          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-shadow overflow-hidden">
-             <div className="overflow-x-auto">
+          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+             <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
                 <table className="w-full text-left border-collapse min-w-[900px]">
                   <thead>
-                    <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                      <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Cancha / Producto</th>
-                      <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Horario</th>
-                      <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Estado</th>
-                      <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Asignado a</th>
-                      <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500 text-right w-24">Acciones</th>
+                    <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                      <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">Cancha / Producto</th>
+                      <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">Horario</th>
+                      <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">Estado</th>
+                      <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">Asignado a</th>
+                      <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 text-right w-24">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {isLoading ? (
                       <tr>
-                        <td colSpan="5" className="py-20">
+                        <td colSpan="5" className="py-12">
                           <div className="flex flex-col items-center justify-center gap-3">
-                            <RefreshCw className="w-8 h-8 animate-spin text-primary" />
-                            <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Sincronizando horarios...</span>
+                            <span className="material-icons-round text-[32px] animate-spin text-primary">refresh</span>
+                            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Sincronizando horarios...</span>
                           </div>
                         </td>
                       </tr>
                     ) : schedules.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="py-24">
+                        <td colSpan="5" className="py-16">
                           <div className="flex flex-col items-center justify-center text-center">
-                            <div className="size-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-4">
-                              <Search size={32} />
+                            <div className="size-12 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3 border border-slate-200 dark:border-slate-700">
+                              <span className="material-icons-round text-[24px]">search</span>
                             </div>
-                            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter">Sin resultados</h3>
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-tight">Sin resultados</h3>
                             <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">No hay horarios generados para esta fecha o criterios.</p>
                           </div>
                         </td>
@@ -437,37 +419,37 @@ const SchedulesNew = () => {
                     ) : (
                       schedules.map((schedule, index) => (
                         <tr key={schedule.id || index} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
-                          <td className="py-4 px-6">
-                            <span className="font-bold text-slate-900 dark:text-white text-sm">{schedule.product_name || 'Producto'}</span>
+                          <td className="py-2 px-3">
+                            <span className="font-semibold text-slate-900 dark:text-white text-sm">{schedule.product_name || 'Producto'}</span>
                           </td>
-                          <td className="py-4 px-6">
+                          <td className="py-2 px-3">
                             <div className="flex items-center gap-2">
-                               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{formatDisplayDate(schedule.start_time)}</span>
-                               <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2 py-0.5 rounded border-none tabular-nums">
+                               <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{formatDisplayDate(schedule.start_time)}</span>
+                               <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-medium px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 tabular-nums">
                                  {formatTimeRange(schedule.start_time, schedule.end_time)}
                                </Badge>
                             </div>
                           </td>
-                          <td className="py-4 px-6">
-                            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                          <td className="py-2 px-3">
+                            <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-widest border ${
                               schedule.is_available 
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400' 
+                                : 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400'
                             }`}>
                               <div className="size-1.5 rounded-full bg-current"></div>
                               {schedule.is_available ? 'Disponible' : 'Reservado'}
                             </div>
                           </td>
-                          <td className="py-4 px-6 text-sm font-medium text-slate-500 dark:text-slate-500">
+                          <td className="py-2 px-3 text-sm font-medium text-slate-600 dark:text-slate-400">
                              {schedule.is_available ? '-' : schedule.user_name || 'Cliente'}
                           </td>
-                          <td className="py-4 px-6 text-right">
+                          <td className="py-2 px-3 text-right">
                              <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button variant="ghost" size="icon" className="size-8 rounded-lg hover:bg-primary/10 hover:text-primary">
-                                  <Edit size={16} />
+                                <Button variant="ghost" size="icon" className="size-7 rounded-md hover:bg-primary/10 hover:text-primary">
+                                  <span className="material-icons-round text-[16px]">edit</span>
                                 </Button>
-                                <Button variant="ghost" size="icon" className="size-8 rounded-lg hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30">
-                                  <X size={16} />
+                                <Button variant="ghost" size="icon" className="size-7 rounded-md hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30">
+                                  <span className="material-icons-round text-[16px]">close</span>
                                 </Button>
                              </div>
                           </td>
@@ -481,81 +463,85 @@ const SchedulesNew = () => {
         </TabsContent>
 
         <TabsContent value="details" className="m-0 space-y-6">
-           <Card className="rounded-xl border-slate-200 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark p-6">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+           <Card className="rounded-xl border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-surface-dark p-6">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
                  <div className="space-y-1">
-                   <h2 className="text-xl font-black text-text-primary-light dark:text-text-primary-dark tracking-tight uppercase">Explorador de Disponibilidad</h2>
+                   <h2 className="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark tracking-tight uppercase">Explorador de Disponibilidad</h2>
                    <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-widest">Vista en tiempo real de cuadrícula</p>
                  </div>
-                 <div className="flex items-center gap-4 w-full md:w-auto">
-                    <div className="flex-1 md:w-48">
+                 <div className="flex items-center gap-3 w-full md:w-auto">
+                    <div className="flex-1 md:w-48 relative">
+                       <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">calendar_today</span>
                        <Input 
                         type="date" 
                         value={explorerFilters.date} 
                         onChange={e => setExplorerFilters(prev => ({ ...prev, date: e.target.value }))}
-                        className="h-10 rounded-lg"
+                        className="h-9 pl-10 rounded-md border-slate-200 dark:border-slate-700 font-medium"
                        />
                     </div>
-                    <select
-                      value={explorerFilters.productId}
-                      onChange={e => setExplorerFilters(prev => ({ ...prev, productId: e.target.value }))}
-                      className="h-10 px-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold focus:ring-2 focus:ring-primary outline-none"
-                    >
-                      <option value="all">Todas las canchas</option>
-                      {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={explorerFilters.productId}
+                        onChange={e => setExplorerFilters(prev => ({ ...prev, productId: e.target.value }))}
+                        className="h-9 pl-3 pr-8 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md text-xs font-semibold focus:ring-1 focus:ring-primary outline-none appearance-none"
+                      >
+                        <option value="all">Todas las canchas</option>
+                        {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                      <span className="material-icons-round absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] pointer-events-none">expand_more</span>
+                    </div>
                  </div>
               </div>
 
               {explorerLoading ? (
-                 <div className="py-32 flex flex-col items-center justify-center gap-4">
-                    <RefreshCw className="w-10 h-10 animate-spin text-primary opacity-30" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Escaneando celdas...</span>
+                 <div className="py-20 flex flex-col items-center justify-center gap-3 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="material-icons-round text-[32px] animate-spin text-primary opacity-50">refresh</span>
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Escaneando celdas...</span>
                  </div>
               ) : explorerSchedules.length === 0 ? (
-                 <div className="py-32 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-900/30 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-                    <CalendarDays className="size-16 text-slate-200 dark:text-slate-800 mb-4" />
-                    <p className="text-sm font-black uppercase tracking-widest text-slate-400">Sin datos para mostrar</p>
+                 <div className="py-20 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+                    <span className="material-icons-round text-[48px] text-slate-300 dark:text-slate-600 mb-3">calendar_month</span>
+                    <p className="text-sm font-semibold uppercase tracking-tight text-slate-500">Sin datos para mostrar</p>
                  </div>
               ) : (
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     {explorerSchedules.map((schedule, index) => (
                       <article 
                         key={schedule.id || `explorer-${index}`}
-                        className={`group relative p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-between h-44 ${
+                        className={`group relative p-4 rounded-lg border transition-all duration-300 flex flex-col justify-between h-32 ${
                           schedule.is_available 
-                            ? 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-fluent-8 hover:border-primary/30' 
+                            ? 'bg-white dark:bg-surface-dark border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-primary/40' 
                             : 'bg-slate-50 dark:bg-slate-900/50 border-transparent opacity-80'
                         }`}
                       >
-                         <div className="flex justify-between items-start mb-4">
-                            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter truncate max-w-[150px]">
+                         <div className="flex justify-between items-start mb-3">
+                            <h3 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-tight truncate max-w-[120px]">
                               {schedule.product_name || 'Cancha'}
                             </h3>
-                            <Badge className={`text-[9px] font-black px-2 py-0.5 rounded border-none shadow-none ${
+                            <Badge className={`text-[9px] font-semibold px-2 py-0.5 rounded-sm border ${
                               schedule.is_available 
-                                ? 'bg-green-500/10 text-green-600' 
-                                : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
+                                ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400' 
+                                : 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'
                             }`}>
                               {schedule.is_available ? 'LIBRE' : 'OCUPADO'}
                             </Badge>
                          </div>
                          
-                         <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
-                               <Clock size={14} />
-                               <span className="text-lg font-black tabular-nums tracking-tight text-slate-700 dark:text-slate-300">
+                         <div className="flex flex-col gap-1 mb-3">
+                            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                               <span className="material-icons-round text-[14px]">schedule</span>
+                               <span className="text-sm font-mono font-semibold tabular-nums tracking-tight text-slate-700 dark:text-slate-300">
                                  {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
                                </span>
                             </div>
                          </div>
 
-                         <div className="mt-4">
+                         <div className="mt-auto">
                             <Button 
-                              className={`w-full h-10 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-none border-none transition-all ${
+                              className={`w-full h-8 rounded-md font-semibold uppercase tracking-widest text-[10px] shadow-sm transition-all ${
                                 schedule.is_available 
                                   ? 'bg-primary text-white hover:bg-primary-hover active:scale-95' 
-                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                               }`}
                               disabled={!schedule.is_available}
                             >
@@ -572,63 +558,69 @@ const SchedulesNew = () => {
 
       {/* Modals */}
       <Dialog open={isCustomModalOpen} onOpenChange={setIsCustomModalOpen}>
-        <DialogContent className="rounded-3xl border-none shadow-fluent-16 max-w-lg p-8">
-          <DialogHeader className="gap-2 text-left mb-6">
-            <div className="size-14 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-900 dark:text-white mb-2">
-              <Settings2 size={30} />
+        <DialogContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-md max-w-lg p-6 font-sans">
+          <DialogHeader className="gap-2 text-left mb-4">
+            <div className="size-12 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-300 mb-1 border border-slate-200 dark:border-slate-700">
+              <span className="material-icons-round text-[24px]">settings</span>
             </div>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter">Generación Personalizada</DialogTitle>
-            <DialogDescription className="text-slate-500 font-medium">Configure parámetros específicos para generar horarios de servicios.</DialogDescription>
+            <DialogTitle className="text-xl font-semibold tracking-tight">Generación Personalizada</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">Configure parámetros específicos para generar horarios de servicios.</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-8 py-4">
+          <div className="space-y-6 py-2">
             <div className="space-y-2">
-               <label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Fecha de Destino</label>
+               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 ml-1">Fecha de Destino</label>
                <div className="relative">
-                 <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                 <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">calendar_today</span>
                  <Input
                   type="date"
                   value={customRange.targetDate}
                   onChange={e => setCustomRange(prev => ({ ...prev, targetDate: e.target.value }))}
-                  className="h-12 pl-12 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 font-semibold"
+                  className="h-10 pl-10 rounded-md bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 font-medium"
                 />
                </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
-                  <label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Apertura</label>
-                  <select
-                    value={customRange.startHour}
-                    onChange={e => setCustomRange(prev => ({ ...prev, startHour: parseInt(e.target.value) }))}
-                    className="w-full h-12 px-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black focus:ring-2 focus:ring-primary outline-none"
-                  >
-                    {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{i}:00</option>)}
-                  </select>
+                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 ml-1">Apertura</label>
+                  <div className="relative">
+                    <select
+                      value={customRange.startHour}
+                      onChange={e => setCustomRange(prev => ({ ...prev, startHour: parseInt(e.target.value) }))}
+                      className="w-full h-10 pl-3 pr-8 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium focus:ring-1 focus:ring-primary outline-none appearance-none"
+                    >
+                      {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{i}:00</option>)}
+                    </select>
+                    <span className="material-icons-round absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">expand_more</span>
+                  </div>
                </div>
                <div className="space-y-2">
-                  <label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Cierre</label>
-                  <select
-                    value={customRange.endHour}
-                    onChange={e => setCustomRange(prev => ({ ...prev, endHour: parseInt(e.target.value) }))}
-                    className="w-full h-12 px-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black focus:ring-2 focus:ring-primary outline-none"
-                  >
-                    {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{i}:00</option>)}
-                  </select>
+                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 ml-1">Cierre</label>
+                  <div className="relative">
+                    <select
+                      value={customRange.endHour}
+                      onChange={e => setCustomRange(prev => ({ ...prev, endHour: parseInt(e.target.value) }))}
+                      className="w-full h-10 pl-3 pr-8 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium focus:ring-1 focus:ring-primary outline-none appearance-none"
+                    >
+                      {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{i}:00</option>)}
+                    </select>
+                    <span className="material-icons-round absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">expand_more</span>
+                  </div>
                </div>
             </div>
           </div>
 
-          <DialogFooter className="mt-10 sm:justify-between items-center flex-row gap-4">
-            <Button variant="ghost" onClick={() => setIsCustomModalOpen(false)} className="font-bold uppercase tracking-widest text-xs h-12 flex-1">
+          <DialogFooter className="mt-6 sm:justify-between items-center flex-row gap-3">
+            <Button variant="ghost" onClick={() => setIsCustomModalOpen(false)} className="font-medium text-xs h-10 flex-1 border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
               Descartar
             </Button>
             <Button 
               onClick={handleCustomGenerate} 
               disabled={actionLoading.custom}
-              className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-[0.2em] text-xs h-12 rounded-xl px-10 shadow-lg shadow-primary/20 flex-1"
+              className="bg-primary hover:bg-primary-hover text-white font-semibold text-xs h-10 rounded-md px-6 shadow-sm flex-1 flex items-center justify-center gap-2"
             >
-              {actionLoading.custom ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+              {actionLoading.custom ? <span className="material-icons-round text-[16px] animate-spin">refresh</span> : <span className="material-icons-round text-[16px]">check_circle</span>}
               Generar Ahora
             </Button>
           </DialogFooter>

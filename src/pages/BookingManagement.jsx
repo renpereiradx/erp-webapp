@@ -4,20 +4,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  ArrowLeft,
-  Plus,
-  Search,
-  ChevronDown,
-  MoreVertical,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  Check,
-  Calendar,
-  Filter,
-  RefreshCw,
-} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -269,7 +255,7 @@ const BookingManagement = () => {
 
   if (loading && reservations.length === 0) {
     return (
-      <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-sans">
         <DataState variant="loading" skeletonVariant="list" />
       </div>
     )
@@ -277,7 +263,7 @@ const BookingManagement = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-sans">
         <DataState
           variant="error"
           title={t('booking.error.title')}
@@ -289,7 +275,7 @@ const BookingManagement = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-sans">
       {showScheduleExplorer ? (
         <div className="flex flex-col gap-6">
           <div className="flex items-center gap-4">
@@ -299,13 +285,13 @@ const BookingManagement = () => {
               onClick={() => setShowScheduleExplorer(false)}
               className="rounded-full shadow-sm"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <span className="material-icons-round text-[20px]">chevron_left</span>
             </Button>
-            <h1 className="text-2xl font-black text-text-primary-light dark:text-text-primary-dark tracking-tight uppercase font-display">
+            <h1 className="text-2xl font-semibold text-text-primary-light dark:text-text-primary-dark tracking-tight uppercase">
               Consultar Horarios Disponibles
             </h1>
           </div>
-          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-2 overflow-hidden">
+          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
              <div style={{ '--hide-available-slots-header': 'true' }}>
               <style>{`
                 .available-slots-header-container {
@@ -327,51 +313,51 @@ const BookingManagement = () => {
                 onClick={handleBack}
                 className="rounded-full hover:bg-primary/10 text-primary"
               >
-                <ArrowLeft size={20} />
+                <span className="material-icons-round text-[20px]">arrow_back</span>
               </Button>
-              <h1 className="text-3xl font-black text-text-primary-light dark:text-text-primary-dark tracking-tighter uppercase font-display">
+              <h1 className="text-3xl font-semibold text-text-primary-light dark:text-text-primary-dark tracking-tight uppercase">
                 {t('booking.title', 'Listado de Reservas')}
               </h1>
             </div>
 
             <Button
               onClick={handleCreateReservation}
-              className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest px-6 py-6 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+              className="bg-primary hover:bg-primary-hover text-white font-semibold uppercase tracking-widest px-6 py-5 rounded-md shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              <Plus size={20} className="mr-2" />
+              <span className="material-icons-round text-[20px]">add</span>
               {t('booking.action.create', 'Nueva Reserva')}
             </Button>
           </header>
 
           {/* Filters Bar */}
-          <Card className="rounded-xl border-slate-200 dark:border-slate-800 shadow-fluent-2 overflow-hidden bg-white dark:bg-surface-dark">
+          <Card className="rounded-xl border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden bg-white dark:bg-surface-dark">
             <CardContent className="p-6 flex flex-col gap-6">
               {/* API Filters (Dates) */}
               <div className="grid grid-cols-1 md:grid-cols-3 items-end gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase tracking-widest text-slate-400">Desde</label>
+                  <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">Desde</label>
                   <Input
                     type="date"
                     value={dateRange.startDate}
                     onChange={e => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                    className="h-11 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
+                    className="h-10 rounded-md border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase tracking-widest text-slate-400">Hasta</label>
+                  <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">Hasta</label>
                   <Input
                     type="date"
                     value={dateRange.endDate}
                     onChange={e => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                    className="h-11 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
+                    className="h-10 rounded-md border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
                   />
                 </div>
                 <Button
                   variant="secondary"
                   onClick={() => fetchReservations({ startDate: dateRange.startDate, endDate: dateRange.endDate })}
-                  className="h-11 font-bold uppercase tracking-widest text-xs border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="h-10 font-semibold uppercase tracking-widest text-xs border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2 rounded-md"
                 >
-                  <Search size={18} className="mr-2" />
+                  <span className="material-icons-round text-[18px]">search</span>
                   Actualizar Lista
                 </Button>
               </div>
@@ -380,40 +366,46 @@ const BookingManagement = () => {
               <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
                 <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                    <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
                     <input
                       type="text"
-                      className="w-full h-11 pl-10 pr-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                      className="w-full h-10 pl-10 pr-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md text-sm focus:ring-1 focus:ring-primary outline-none transition-all"
                       placeholder={t('booking.search.placeholder', 'Buscar por cliente...')}
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
                     />
                   </div>
 
-                  <select
-                    className="h-11 px-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary outline-none cursor-pointer min-w-[160px]"
-                    value={selectedProduct}
-                    onChange={e => setSelectedProduct(e.target.value)}
-                  >
-                    <option value="all">{t('booking.filter.all_products', 'Todos los servicios')}</option>
-                    {products.map(product => (
-                      <option key={product.id} value={product.id}>{product.name}</option>
-                    ))}
-                  </select>
+                  <div className="relative min-w-[160px]">
+                    <select
+                      className="w-full h-10 pl-4 pr-10 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer"
+                      value={selectedProduct}
+                      onChange={e => setSelectedProduct(e.target.value)}
+                    >
+                      <option value="all">{t('booking.filter.all_products', 'Todos los servicios')}</option>
+                      {products.map(product => (
+                        <option key={product.id} value={product.id}>{product.name}</option>
+                      ))}
+                    </select>
+                    <span className="material-icons-round absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px] pointer-events-none">expand_more</span>
+                  </div>
 
-                  <select
-                    className="h-11 px-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary outline-none cursor-pointer min-w-[160px]"
-                    value={selectedStatus}
-                    onChange={e => setSelectedStatus(e.target.value)}
-                  >
-                    <option value="all">{t('booking.filter.all_statuses', 'Todos los estados')}</option>
-                    <option value="confirmed">{t('booking.status.confirmed', 'Confirmada')}</option>
-                    <option value="pending">{t('booking.status.pending', 'Pendiente')}</option>
-                    <option value="cancelled">{t('booking.status.cancelled', 'Cancelada')}</option>
-                  </select>
+                  <div className="relative min-w-[160px]">
+                    <select
+                      className="w-full h-10 pl-4 pr-10 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer"
+                      value={selectedStatus}
+                      onChange={e => setSelectedStatus(e.target.value)}
+                    >
+                      <option value="all">{t('booking.filter.all_statuses', 'Todos los estados')}</option>
+                      <option value="confirmed">{t('booking.status.confirmed', 'Confirmada')}</option>
+                      <option value="pending">{t('booking.status.pending', 'Pendiente')}</option>
+                      <option value="cancelled">{t('booking.status.cancelled', 'Cancelada')}</option>
+                    </select>
+                    <span className="material-icons-round absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px] pointer-events-none">expand_more</span>
+                  </div>
                 </div>
 
-                <div className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full">
                   {filteredReservations.length} Resultados
                 </div>
               </div>
@@ -421,83 +413,83 @@ const BookingManagement = () => {
           </Card>
 
           {/* Table Container */}
-          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-shadow overflow-hidden">
+          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
              {filteredReservations.length === 0 ? (
-               <div className="flex flex-col items-center justify-center py-24 text-center">
-                  <div className="size-20 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-4 border-4 border-white dark:border-slate-800 shadow-inner">
-                    <Calendar size={40} />
+               <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="size-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <span className="material-icons-round text-[32px]">calendar_today</span>
                   </div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">Sin reservas</h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm max-w-xs mx-auto mt-1">No hay reservas registradas con los filtros actuales en el sistema.</p>
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-tight">Sin reservas</h3>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs max-w-xs mx-auto mt-1">No hay reservas registradas con los filtros actuales en el sistema.</p>
                </div>
              ) : (
                <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
                   <table className="w-full text-left border-collapse min-w-[1000px]">
                     <thead>
-                      <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Servicio</th>
-                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Cliente</th>
-                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Usuario</th>
-                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Fecha/Hora</th>
-                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Estado</th>
-                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Duración</th>
-                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500 text-right">Total</th>
-                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500 text-center w-20"></th>
+                      <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                        <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">Servicio</th>
+                        <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">Cliente</th>
+                        <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">Usuario</th>
+                        <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">Fecha/Hora</th>
+                        <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">Estado</th>
+                        <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">Duración</th>
+                        <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 text-right">Total</th>
+                        <th className="py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 text-center w-16"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {paginatedReservations.map(reservation => (
                         <tr key={reservation.id || reservation.reserve_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
-                          <td className="py-4 px-6">
+                          <td className="py-2 px-3">
                             <div className="flex items-center gap-3">
-                              <div className="size-9 bg-primary/10 rounded-lg flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                                <Calendar size={18} />
+                              <div className="size-8 bg-primary/10 rounded-md flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                <span className="material-icons-round text-[16px]">calendar_today</span>
                               </div>
-                              <span className="font-bold text-slate-900 dark:text-white text-sm">{reservation.product_name || '-'}</span>
+                              <span className="font-semibold text-slate-900 dark:text-white text-sm">{reservation.product_name || '-'}</span>
                             </div>
                           </td>
-                          <td className="py-4 px-6 text-sm font-medium text-slate-600 dark:text-slate-400">
+                          <td className="py-2 px-3 text-sm font-medium text-slate-600 dark:text-slate-400">
                             {reservation.client_name || '-'}
                           </td>
-                          <td className="py-4 px-6 text-xs text-slate-500 dark:text-slate-500">
+                          <td className="py-2 px-3 text-xs text-slate-500 dark:text-slate-500">
                             {reservation.user_email || reservation.created_by || '-'}
                           </td>
-                          <td className="py-4 px-6 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          <td className="py-2 px-3 text-sm font-medium text-slate-700 dark:text-slate-300">
                             {formatDateTime(reservation.reserve_date || reservation.created_at)}
                           </td>
-                          <td className="py-4 px-6">
-                             <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusBadgeClass(reservation.status)}`}>
+                          <td className="py-2 px-3">
+                             <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-widest border ${getStatusBadgeClass(reservation.status)}`}>
                                 <div className="size-1.5 rounded-full bg-current"></div>
                                 {reservation.status || '-'}
                              </div>
                           </td>
-                          <td className="py-4 px-6 text-sm text-slate-600 dark:text-slate-400">
+                          <td className="py-2 px-3 text-sm text-slate-600 dark:text-slate-400 font-mono tabular-nums">
                             {Math.round(parseFloat(reservation.duration || 0))} hrs
                           </td>
-                          <td className="py-4 px-6 text-right font-black text-slate-900 dark:text-white tabular-nums">
+                          <td className="py-2 px-3 text-right font-mono font-semibold text-slate-900 dark:text-white tabular-nums">
                             {formatCurrency(reservation.total_amount)}
                           </td>
-                          <td className="py-4 px-6 text-center">
+                          <td className="py-2 px-3 text-center">
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="size-9 rounded-full text-slate-400 hover:text-primary transition-colors">
-                                    <MoreVertical size={18} />
+                                  <Button variant="ghost" size="icon" className="size-8 rounded-md text-slate-400 hover:text-primary transition-colors">
+                                    <span className="material-icons-round text-[18px]">more_vert</span>
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl border-slate-200 dark:border-slate-800 shadow-fluent-16">
+                                <DropdownMenuContent align="end" className="w-52 p-1.5 rounded-xl border-slate-200 dark:border-slate-800 shadow-md">
                                   <DropdownMenuItem 
                                     onClick={() => handleConfirmClick(reservation)}
                                     disabled={['confirmed', 'confirmada', 'cancelled', 'cancelada'].includes(reservation.status?.toLowerCase())}
-                                    className="gap-3 py-3 font-bold rounded-lg focus:bg-green-50 focus:text-green-600 dark:focus:bg-green-900/30"
+                                    className="gap-2 py-2 font-medium rounded-md focus:bg-green-50 focus:text-green-600 dark:focus:bg-green-900/30 cursor-pointer"
                                   >
-                                    <Check size={18} /> Confirmar Reserva
+                                    <span className="material-icons-round text-[18px]">check</span> Confirmar Reserva
                                   </DropdownMenuItem>
                                   <DropdownMenuItem 
                                     onClick={() => handleCancelClick(reservation)}
                                     disabled={['cancelled', 'cancelada'].includes(reservation.status?.toLowerCase())}
-                                    className="gap-3 py-3 font-bold rounded-lg focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-900/30"
+                                    className="gap-2 py-2 font-medium rounded-md focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-900/30 cursor-pointer text-red-600"
                                   >
-                                    <X size={18} /> Cancelar Reserva
+                                    <span className="material-icons-round text-[18px]">close</span> Cancelar Reserva
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                              </DropdownMenu>
@@ -511,27 +503,27 @@ const BookingManagement = () => {
 
              {/* Pagination */}
              {totalPages > 1 && (
-                <div className="px-6 py-4 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                <div className="px-4 py-3 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-[11px] font-medium text-slate-500">
                     Mostrando {startIndex + 1} - {Math.min(endIndex, filteredReservations.length)} de {filteredReservations.length}
                   </div>
                   <div className="flex items-center gap-1">
                     <Button
                       variant="outline"
                       size="icon"
-                      className="size-9 rounded-lg border-slate-200 dark:border-slate-700"
+                      className="size-8 rounded-md border-slate-200 dark:border-slate-700"
                       onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
                     >
-                      <ChevronLeft size={18} />
+                      <span className="material-icons-round text-[18px]">chevron_left</span>
                     </Button>
                     
-                    <div className="flex items-center gap-1 px-2">
+                    <div className="flex items-center gap-1 px-1">
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                         <Button
                           key={page}
                           variant={page === currentPage ? "default" : "ghost"}
-                          className={`size-9 rounded-lg font-bold text-sm ${page === currentPage ? 'bg-primary shadow-md' : 'text-slate-500'}`}
+                          className={`size-8 rounded-md font-medium text-sm ${page === currentPage ? 'bg-primary shadow-sm text-white' : 'text-slate-500'}`}
                           onClick={() => setCurrentPage(page)}
                         >
                           {page}
@@ -542,11 +534,11 @@ const BookingManagement = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="size-9 rounded-lg border-slate-200 dark:border-slate-700"
+                      className="size-8 rounded-md border-slate-200 dark:border-slate-700"
                       onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                       disabled={currentPage === totalPages}
                     >
-                      <ChevronRight size={18} />
+                      <span className="material-icons-round text-[18px]">chevron_right</span>
                     </Button>
                   </div>
                 </div>
@@ -566,40 +558,40 @@ const BookingManagement = () => {
 
       {/* Confirmation Dialogs */}
       <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
-        <DialogContent className="rounded-2xl border-none shadow-fluent-16 max-w-md">
+        <DialogContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-md max-w-md font-sans">
           <DialogHeader className="gap-2">
-            <div className="size-14 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 mb-2">
-              <X size={30} />
+            <div className="size-12 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center text-red-600 mb-2 border border-red-100 dark:border-red-800">
+              <span className="material-icons-round text-[24px]">close</span>
             </div>
-            <DialogTitle className="text-xl font-black uppercase tracking-tighter">Confirmar Cancelación</DialogTitle>
-            <DialogDescription className="text-slate-500">¿Está seguro que desea cancelar esta reserva? Esta acción no se puede deshacer.</DialogDescription>
+            <DialogTitle className="text-lg font-semibold tracking-tight">Confirmar Cancelación</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">¿Está seguro que desea cancelar esta reserva? Esta acción no se puede deshacer.</DialogDescription>
           </DialogHeader>
           {cancellingReservation && (
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl space-y-2 border border-slate-100 dark:border-slate-800">
-              <p className="text-sm"><strong>Servicio:</strong> {cancellingReservation.product_name}</p>
-              <p className="text-sm"><strong>Cliente:</strong> {cancellingReservation.client_name}</p>
-              <p className="text-sm"><strong>Fecha:</strong> {formatDateTime(cancellingReservation.start_time || cancellingReservation.reserve_date)}</p>
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-md space-y-1 border border-slate-100 dark:border-slate-800">
+              <p className="text-sm"><strong className="font-semibold">Servicio:</strong> {cancellingReservation.product_name}</p>
+              <p className="text-sm"><strong className="font-semibold">Cliente:</strong> {cancellingReservation.client_name}</p>
+              <p className="text-sm"><strong className="font-semibold">Fecha:</strong> {formatDateTime(cancellingReservation.start_time || cancellingReservation.reserve_date)}</p>
             </div>
           )}
-          <DialogFooter className="gap-3 sm:gap-0 mt-4">
-            <Button variant="ghost" onClick={() => setShowCancelConfirm(false)} className="font-bold uppercase tracking-widest text-xs">No, volver</Button>
-            <Button onClick={handleConfirmCancel} className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-xs rounded-xl px-6">Sí, cancelar reserva</Button>
+          <DialogFooter className="gap-2 sm:gap-0 mt-4">
+            <Button variant="ghost" onClick={() => setShowCancelConfirm(false)} className="font-medium text-xs">No, volver</Button>
+            <Button onClick={handleConfirmCancel} className="bg-red-600 hover:bg-red-700 text-white font-medium text-xs rounded-md px-4 shadow-sm">Sí, cancelar reserva</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={showConfirmConfirm} onOpenChange={setShowConfirmConfirm}>
-        <DialogContent className="rounded-2xl border-none shadow-fluent-16 max-w-md">
+        <DialogContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-md max-w-md font-sans">
           <DialogHeader className="gap-2">
-            <div className="size-14 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 mb-2">
-              <Check size={30} />
+            <div className="size-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center text-green-600 mb-2 border border-green-100 dark:border-green-800">
+              <span className="material-icons-round text-[24px]">check</span>
             </div>
-            <DialogTitle className="text-xl font-black uppercase tracking-tighter">Confirmar Reserva</DialogTitle>
-            <DialogDescription className="text-slate-500">¿Está seguro que desea confirmar esta reserva ahora?</DialogDescription>
+            <DialogTitle className="text-lg font-semibold tracking-tight">Confirmar Reserva</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">¿Está seguro que desea confirmar esta reserva ahora?</DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-3 sm:gap-0 mt-4">
-            <Button variant="ghost" onClick={() => setShowConfirmConfirm(false)} className="font-bold uppercase tracking-widest text-xs">No, volver</Button>
-            <Button onClick={handleConfirmConfirm} className="bg-green-600 hover:bg-green-700 text-white font-black uppercase tracking-widest text-xs rounded-xl px-6">Sí, confirmar reserva</Button>
+          <DialogFooter className="gap-2 sm:gap-0 mt-4">
+            <Button variant="ghost" onClick={() => setShowConfirmConfirm(false)} className="font-medium text-xs">No, volver</Button>
+            <Button onClick={handleConfirmConfirm} className="bg-green-600 hover:bg-green-700 text-white font-medium text-xs rounded-md px-4 shadow-sm">Sí, confirmar reserva</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

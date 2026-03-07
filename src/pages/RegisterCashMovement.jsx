@@ -11,6 +11,7 @@ import { telemetry } from '@/utils/telemetry'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
 
 const RegisterCashMovement = () => {
   const { t } = useI18n()
@@ -73,22 +74,9 @@ const RegisterCashMovement = () => {
         'cashMovement.type.income.desc',
         'Entrada de dinero a la caja'
       ),
-      theme: 'theme-income', // Clase CSS para estilos específicos
-      icon: (
-        <svg
-          width='24'
-          height='24'
-          viewBox='0 0 24 24'
-          fill='none'
-          stroke='currentColor'
-          strokeWidth='2'
-          strokeLinecap='round'
-          strokeLinejoin='round'
-          className='text-green-600'
-        >
-          <path d='M12 5v14M5 12l7 7 7-7' />
-        </svg>
-      ),
+      theme: 'theme-income',
+      bgClass: 'bg-green-50 dark:bg-green-900/20',
+      icon: <span className="material-icons-round text-green-600 text-[24px]">arrow_downward</span>,
     },
     EXPENSE: {
       title: t('cashMovement.type.expense.title', 'Registrar Egreso'),
@@ -97,21 +85,8 @@ const RegisterCashMovement = () => {
         'Salida de dinero de la caja'
       ),
       theme: 'theme-expense',
-      icon: (
-        <svg
-          width='24'
-          height='24'
-          viewBox='0 0 24 24'
-          fill='none'
-          stroke='currentColor'
-          strokeWidth='2'
-          strokeLinecap='round'
-          strokeLinejoin='round'
-          className='text-red-600'
-        >
-          <path d='M12 19V5M5 12l7-7 7 7' />
-        </svg>
-      ),
+      bgClass: 'bg-red-50 dark:bg-red-900/20',
+      icon: <span className="material-icons-round text-red-600 text-[24px]">arrow_upward</span>,
     },
     ADJUSTMENT: {
       title: t('cashMovement.type.adjustment.title', 'Registrar Ajuste'),
@@ -120,22 +95,8 @@ const RegisterCashMovement = () => {
         'Corrección de balance'
       ),
       theme: 'theme-adjustment',
-      icon: (
-        <svg
-          width='24'
-          height='24'
-          viewBox='0 0 24 24'
-          fill='none'
-          stroke='currentColor'
-          strokeWidth='2'
-          strokeLinecap='round'
-          strokeLinejoin='round'
-          className='text-orange-600'
-        >
-          <circle cx='12' cy='12' r='3'></circle>
-          <path d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z'></path>
-        </svg>
-      ),
+      bgClass: 'bg-orange-50 dark:bg-orange-900/20',
+      icon: <span className="material-icons-round text-orange-600 text-[24px]">settings</span>,
     },
   }
 
@@ -295,9 +256,9 @@ const RegisterCashMovement = () => {
 
   if (loadingCashRegister) {
     return (
-      <div className='register-cash-movement-page'>
-        <div className='register-cash-movement-page__loading'>
-          {t('common.loading', 'Cargando...')}
+      <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-sans p-6'>
+        <div className='flex items-center justify-center min-h-[40vh]'>
+           <span className="material-icons-round text-primary text-[40px] animate-spin">refresh</span>
         </div>
       </div>
     )
@@ -306,58 +267,60 @@ const RegisterCashMovement = () => {
   const currentConfig = MOVEMENT_CONFIG[formData.movementType]
 
   return (
-    <div className={`register-cash-movement-page ${currentConfig.theme}`}>
+    <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-sans p-2'>
       {/* Header */}
-      <div className='register-cash-movement-page__header'>
-        <div className='flex items-center gap-3'>
-          <div className={`p-2 rounded-lg ${currentConfig.bgClass}`}>
+      <header className='flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-primary pl-6 py-2'>
+        <div className='flex items-center gap-4'>
+          <div className={`size-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800 ${currentConfig.bgClass}`}>
             {currentConfig.icon}
           </div>
           <div>
-            <h1 className='register-cash-movement-page__title'>
+            <h1 className='text-2xl md:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight'>
               {currentConfig.title}
             </h1>
-            <p className='text-sm text-gray-500 mt-1'>
+            <p className='text-sm text-slate-500 dark:text-slate-400'>
               {currentConfig.description}
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className='register-cash-movement-page__actions'>
-          <button
-            type='button'
-            className='btn btn--ghost'
+        <div className='flex items-center gap-3'>
+          <Button
+            variant='ghost'
             onClick={handleCancel}
             disabled={loading}
+            className="h-10 font-semibold uppercase tracking-widest text-[10px]"
           >
             {t('common.cancel', 'Cancelar')}
-          </button>
-          <button
-            type='button'
-            className='btn btn--subtle'
+          </Button>
+          <Button
+            variant='outline'
             onClick={() => handleSubmit(true)}
             disabled={loading || !activeCashRegister}
+            className="h-10 px-4 font-semibold uppercase tracking-widest text-[10px] rounded-md border-slate-200"
           >
             {t('cashMovement.action.saveAndNew', 'Guardar y Nuevo')}
-          </button>
-          <button
-            type='button'
-            className='btn btn--primary'
+          </Button>
+          <Button
             onClick={() => handleSubmit(false)}
             disabled={loading || !activeCashRegister}
+            className="h-10 px-6 font-semibold uppercase tracking-widest text-[10px] rounded-md shadow-sm bg-primary hover:bg-primary-hover text-white"
           >
             {loading
               ? t('common.saving', 'Guardando...')
               : t('common.save', 'Guardar')}
-          </button>
+          </Button>
         </div>
-      </div>
+      </header>
 
       {/* Form Content */}
-      <div className='register-cash-movement-page__content'>
+      <div className='bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 space-y-8'>
         {/* Movement Type Selector */}
-        <div className='register-cash-movement-page__field register-cash-movement-page__field--full mb-6'>
+        <div className='space-y-2'>
+          <label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 ml-1">
+             {t('cashMovement.field.movementType', 'Tipo de Movimiento')}
+          </label>
           <SegmentedControl
             options={[
               {
@@ -375,88 +338,89 @@ const RegisterCashMovement = () => {
             ]}
             value={formData.movementType}
             onChange={handleMovementTypeChange}
-            aria-label={t(
-              'cashMovement.field.movementType',
-              'Tipo de Movimiento'
-            )}
           />
         </div>
 
         {/* Balance Info Card */}
         {activeCashRegister && (
-          <div className='register-cash-movement-page__field register-cash-movement-page__field--full'>
-            <div className='bg-gray-50 p-4 rounded-lg border border-gray-200 flex justify-between items-center'>
-              <div>
-                <span className='text-sm text-gray-500 block'>Caja Actual</span>
-                <span className='font-medium'>{activeCashRegister.name}</span>
-              </div>
-              <div className='text-right'>
-                <span className='text-sm text-gray-500 block'>
-                  Balance Disponible
-                </span>
-                <span
-                  className={`text-xl font-bold font-mono ${
-                    formData.movementType === 'EXPENSE'
-                      ? 'text-red-600'
-                      : 'text-gray-900'
-                  }`}
-                >
-                  $
-                  {activeCashRegister.current_balance?.toLocaleString('es-AR', {
-                    minimumFractionDigits: 2,
-                  }) || '0.00'}
-                </span>
-              </div>
+          <div className='bg-slate-50 dark:bg-slate-900/30 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex justify-between items-center'>
+            <div>
+              <span className='text-[10px] font-semibold uppercase tracking-widest text-slate-500 block'>{t('cashRegister.field.active', 'Caja Activa')}</span>
+              <span className='font-semibold text-slate-900 dark:text-white'>{activeCashRegister.name}</span>
+            </div>
+            <div className='text-right'>
+              <span className='text-[10px] font-semibold uppercase tracking-widest text-slate-500 block'>
+                {t('cashRegister.field.currentBalance', 'Balance Disponible')}
+              </span>
+              <span
+                className={`text-2xl font-mono font-semibold tabular-nums ${
+                  formData.movementType === 'EXPENSE'
+                    ? 'text-red-600'
+                    : 'text-primary'
+                }`}
+              >
+                $
+                {activeCashRegister.current_balance?.toLocaleString('es-PY', {
+                  minimumFractionDigits: 0,
+                }) || '0'}
+              </span>
             </div>
           </div>
         )}
 
-        {/* Concept */}
-        <div className='register-cash-movement-page__field'>
-          <label className='register-cash-movement-page__label'>
-            {t('cashMovement.field.concept', 'Concepto')}
-          </label>
-          <select
-            value={formData.concept}
-            onChange={e => handleInputChange('concept', e.target.value)}
-            className='register-cash-movement-page__select'
-            data-slot='select-trigger'
-            required
-          >
-            <option value=''>
-              {t(
-                'cashMovement.field.concept.placeholder',
-                'Seleccionar Concepto'
-              )}
-            </option>
-            {concepts[formData.movementType].map(concept => (
-              <option key={concept} value={concept}>
-                {concept}
-              </option>
-            ))}
-          </select>
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Concept */}
+          <div className='space-y-2'>
+            <label className='text-xs font-semibold uppercase tracking-widest text-slate-500 ml-1'>
+              {t('cashMovement.field.concept', 'Concepto')}
+            </label>
+            <div className="relative">
+              <select
+                value={formData.concept}
+                onChange={e => handleInputChange('concept', e.target.value)}
+                className='w-full h-11 pl-4 pr-10 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer transition-all'
+                required
+              >
+                <option value=''>
+                  {t(
+                    'cashMovement.field.concept.placeholder',
+                    'Seleccionar Concepto'
+                  )}
+                </option>
+                {concepts[formData.movementType].map(concept => (
+                  <option key={concept} value={concept}>
+                    {concept}
+                  </option>
+                ))}
+              </select>
+              <span className="material-icons-round absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">expand_more</span>
+            </div>
+          </div>
 
-        {/* Amount */}
-        <div className='register-cash-movement-page__field'>
-          <label className='register-cash-movement-page__label'>
-            {t('cashMovement.field.amount', 'Monto')}
-          </label>
-          <Input
-            type='number'
-            value={formData.amount}
-            onChange={e => handleInputChange('amount', e.target.value)}
-            placeholder='$ 0.00'
-            step='0.01'
-            min='0.01'
-            className='register-cash-movement-page__input'
-            required
-          />
+          {/* Amount */}
+          <div className='space-y-2'>
+            <label className='text-xs font-semibold uppercase tracking-widest text-slate-500 ml-1'>
+              {t('cashMovement.field.amount', 'Monto')}
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">$</span>
+              <Input
+                type='number'
+                value={formData.amount}
+                onChange={e => handleInputChange('amount', e.target.value)}
+                placeholder='0.00'
+                step='0.01'
+                min='0.01'
+                className='h-11 pl-8 font-mono font-semibold tabular-nums rounded-lg border-slate-200 focus:ring-primary'
+                required
+              />
+            </div>
+          </div>
         </div>
 
         {/* Notes */}
-        <div className='register-cash-movement-page__field register-cash-movement-page__field--full'>
-          <label className='register-cash-movement-page__label'>
+        <div className='space-y-2'>
+          <label className='text-xs font-semibold uppercase tracking-widest text-slate-500 ml-1'>
             {t('cashMovement.field.notes', 'Notas (Opcional)')}
           </label>
           <Textarea
@@ -467,54 +431,22 @@ const RegisterCashMovement = () => {
               'Añada una descripción detallada si es necesario...'
             )}
             rows={4}
-            className='register-cash-movement-page__textarea'
+            className='resize-none rounded-lg border-slate-200 focus:ring-primary'
           />
         </div>
       </div>
 
-      {/* Success Message */}
-      {success && (
-        <div className='register-cash-movement-page__success'>
-          <svg
-            width='20'
-            height='20'
-            viewBox='0 0 20 20'
-            fill='none'
-            xmlns='http://www.w3.org/2000/svg'
-            className='register-cash-movement-page__success-icon'
-          >
-            <path
-              fillRule='evenodd'
-              clipRule='evenodd'
-              d='M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18ZM13.7071 8.70711C14.0976 8.31658 14.0976 7.68342 13.7071 7.29289C13.3166 6.90237 12.6834 6.90237 12.2929 7.29289L9 10.5858L7.70711 9.29289C7.31658 8.90237 6.68342 8.90237 6.29289 9.29289C5.90237 9.68342 5.90237 10.3166 6.29289 10.7071L8.29289 12.7071C8.68342 13.0976 9.31658 13.0976 9.70711 12.7071L13.7071 8.70711Z'
-              fill='currentColor'
-            />
-          </svg>
-          <span>
-            {t('cashMovement.success', 'Movimiento registrado con éxito.')}
+      {/* Messages */}
+      {(success || error) && (
+        <div className={`p-4 rounded-xl border flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 ${
+          success ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'
+        }`}>
+          <span className="material-icons-round text-[20px]">
+            {success ? 'check_circle' : 'error'}
           </span>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className='register-cash-movement-page__error'>
-          <svg
-            width='20'
-            height='20'
-            viewBox='0 0 20 20'
-            fill='none'
-            xmlns='http://www.w3.org/2000/svg'
-            className='register-cash-movement-page__error-icon'
-          >
-            <path
-              fillRule='evenodd'
-              clipRule='evenodd'
-              d='M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18ZM8.70711 7.29289C8.31658 6.90237 7.68342 6.90237 7.29289 7.29289C6.90237 7.68342 6.90237 8.31658 7.29289 8.70711L8.58579 10L7.29289 11.2929C6.90237 11.6834 6.90237 12.3166 7.29289 12.7071C7.68342 13.0976 8.31658 13.0976 8.70711 12.7071L10 11.4142L11.2929 12.7071C11.6834 13.0976 12.3166 13.0976 12.7071 12.7071C13.0976 12.3166 13.0976 11.6834 12.7071 11.2929L11.4142 10L12.7071 8.70711C13.0976 8.31658 13.0976 7.68342 12.7071 7.29289C12.3166 6.90237 11.6834 6.90237 11.2929 7.29289L10 8.58579L8.70711 7.29289Z'
-              fill='currentColor'
-            />
-          </svg>
-          <span>{error}</span>
+          <span className="text-sm font-medium">
+            {success ? t('cashMovement.success', 'Movimiento registrado con éxito.') : error}
+          </span>
         </div>
       )}
     </div>

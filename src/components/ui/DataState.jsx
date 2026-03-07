@@ -5,7 +5,6 @@
  */
 
 import React from 'react';
-import { CircleAlert, RefreshCw } from 'lucide-react';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import GenericSkeletonList from './GenericSkeletonList';
 
@@ -65,13 +64,13 @@ export default function DataState({
       <div className="py-20 text-center flex flex-col items-center justify-center" data-testid={testId || 'data-state-error'}>
         <div className="text-center p-8" data-testid="error-state-inner">
           <div className="mb-4">
-            <CircleAlert className="w-16 h-16 mx-auto text-destructive" aria-hidden="true" />
+            <span className="material-icons-round text-destructive text-[64px]" aria-hidden="true">error_outline</span>
           </div>
           <h3 className="text-2xl font-semibold mb-2">
             {title || 'Error'}
           </h3>
-          <p className="text-muted-foreground mb-4" role="status" aria-live="polite" aria-label={message}>
-            {message || 'Ha ocurrido un error'}
+          <p className="text-muted-foreground mb-4" role="status" aria-live="polite">
+            {typeof message === 'object' && message?.message ? message.message : String(message || 'Ha ocurrido un error')}
           </p>
           <div className="flex gap-3 justify-center">
             {onRetry && (
@@ -95,14 +94,14 @@ export default function DataState({
       <div className="text-center p-8">
         <div className="mb-4">
           <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
-            <div className="w-8 h-8 bg-muted-foreground/30 rounded-full"></div>
+            <span className="material-icons-round text-muted-foreground/40 text-[32px]">inventory_2</span>
           </div>
         </div>
         <h3 className="text-2xl font-semibold mb-2">
           {title || 'Sin datos'}
         </h3>
         <p className="text-muted-foreground mb-4">
-          {description || 'No hay información para mostrar'}
+          {typeof description === 'object' && description?.message ? description.message : String(description || 'No hay información para mostrar')}
         </p>
         {onAction && actionLabel && (
           <button

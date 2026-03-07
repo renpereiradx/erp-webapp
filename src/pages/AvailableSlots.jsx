@@ -3,16 +3,6 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react'
-import {
-  Search,
-  Calendar as CalendarIcon,
-  Clock,
-  RefreshCw,
-  ChevronDown,
-  ChevronRight,
-  Info,
-  Layers,
-} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -88,48 +78,48 @@ const AvailableSlots = ({ onReserveClick }) => {
   const currentProductName = products.find(p => p.id == filters.productId)?.name || 'Seleccione un servicio'
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-sans">
       {/* Search and Filters Header */}
       <section className="available-slots-header-container">
         <header className="flex flex-col gap-2 border-l-4 border-primary pl-6 py-2 mb-6">
-          <h1 className="text-2xl font-black text-text-primary-light dark:text-text-primary-dark tracking-tighter uppercase leading-none font-display">
+          <h1 className="text-2xl font-semibold text-text-primary-light dark:text-text-primary-dark tracking-tight uppercase leading-none">
             Disponibilidad de Servicios
           </h1>
-          <p className="text-text-secondary-light dark:text-text-secondary-dark text-xs font-medium uppercase tracking-widest font-display">
+          <p className="text-text-secondary-light dark:text-text-secondary-dark text-xs font-medium uppercase tracking-widest">
             Consulte y reserve horarios en tiempo real
           </p>
         </header>
 
-        <Card className="rounded-xl border-slate-200 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
-          <CardContent className="p-6">
+        <Card className="rounded-xl border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow bg-white dark:bg-surface-dark overflow-hidden">
+          <CardContent className="p-4 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block ml-1">Servicio / Recurso</label>
+                <label className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 block ml-1">Servicio / Recurso</label>
                 <div className="relative">
-                  <Layers className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+                  <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">layers</span>
                   <select
                     value={filters.productId}
                     onChange={e => setFilters(prev => ({ ...prev, productId: e.target.value }))}
-                    className="w-full h-11 pl-10 pr-10 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold focus:ring-2 focus:ring-primary outline-none appearance-none cursor-pointer"
+                    className="w-full h-10 pl-10 pr-10 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer"
                   >
                     <option value="all">Seleccionar servicio...</option>
                     {products.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+                  <span className="material-icons-round absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">expand_more</span>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block ml-1">Fecha de Consulta</label>
+                <label className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 block ml-1">Fecha de Consulta</label>
                 <div className="relative">
-                  <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+                  <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">calendar_today</span>
                   <Input
                     type="date"
                     value={filters.date}
                     onChange={e => setFilters(prev => ({ ...prev, date: e.target.value }))}
-                    className="h-11 pl-10 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 font-semibold"
+                    className="h-10 pl-10 rounded-md border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 font-medium"
                   />
                 </div>
               </div>
@@ -137,9 +127,9 @@ const AvailableSlots = ({ onReserveClick }) => {
               <Button
                 onClick={loadAvailableSlots}
                 disabled={loading || filters.productId === 'all'}
-                className="h-11 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95"
+                className="h-10 bg-primary hover:bg-primary-hover text-white font-semibold uppercase tracking-widest text-[11px] rounded-md shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2"
               >
-                {loading ? <RefreshCw size={16} className="animate-spin mr-2" /> : <Search size={16} className="mr-2" />}
+                {loading ? <span className="material-icons-round text-[18px] animate-spin">refresh</span> : <span className="material-icons-round text-[18px]">search</span>}
                 Ver Disponibilidad
               </Button>
             </div>
@@ -150,68 +140,68 @@ const AvailableSlots = ({ onReserveClick }) => {
       {/* Slots Grid */}
       <div className="flex flex-col gap-4 mt-2">
         <div className="flex items-center justify-between px-2">
-          <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-            <Clock size={16} className="text-primary" />
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+            <span className="material-icons-round text-primary text-[18px]">schedule</span>
             Horarios para {currentProductName}
           </h2>
           {availableSlots.length > 0 && (
-            <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none font-black px-3 py-1">
+            <Badge variant="secondary" className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800 font-semibold px-2 py-0.5 rounded-md">
               {availableSlots.length} Disponibles
             </Badge>
           )}
         </div>
 
         {loading || isInitialLoading ? (
-          <div className="py-32 flex flex-col items-center justify-center gap-4 bg-white/50 dark:bg-slate-900/20 rounded-2xl border border-slate-100 dark:border-slate-800">
-            <RefreshCw className="w-10 h-10 animate-spin text-primary opacity-40" />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Consultando agenda...</span>
+          <div className="py-24 flex flex-col items-center justify-center gap-4 bg-white/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800">
+            <span className="material-icons-round text-[40px] animate-spin text-primary opacity-40">refresh</span>
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Consultando agenda...</span>
           </div>
         ) : filters.productId === 'all' ? (
-          <div className="py-24 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-900/30 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 px-6">
-            <div className="size-16 bg-white dark:bg-surface-dark rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-700 mb-4 shadow-sm">
-              <Layers size={32} />
+          <div className="py-20 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 px-6">
+            <div className="size-14 bg-white dark:bg-surface-dark rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4 shadow-sm border border-slate-100 dark:border-slate-800">
+              <span className="material-icons-round text-[28px]">layers</span>
             </div>
-            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter">Seleccione un servicio</h3>
-            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 max-w-[240px]">Debe elegir un producto o cancha para ver los horarios que tiene disponibles.</p>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-tight">Seleccione un servicio</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 max-w-[240px]">Debe elegir un producto o cancha para ver los horarios disponibles.</p>
           </div>
         ) : availableSlots.length === 0 ? (
-          <div className="py-24 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-900/30 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 px-6">
-            <div className="size-16 bg-white dark:bg-surface-dark rounded-2xl flex items-center justify-center text-amber-300 dark:text-amber-700 mb-4 shadow-sm">
-              <Info size={32} />
+          <div className="py-20 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 px-6">
+            <div className="size-14 bg-white dark:bg-surface-dark rounded-xl flex items-center justify-center text-amber-500 dark:text-amber-600 mb-4 shadow-sm border border-slate-100 dark:border-slate-800">
+              <span className="material-icons-round text-[28px]">info</span>
             </div>
-            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter">Sin disponibilidad</h3>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-tight">Sin disponibilidad</h3>
             <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 max-w-[240px]">No se encontraron horarios libres para este servicio en la fecha seleccionada.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {availableSlots.map((slot, index) => (
               <Card 
                 key={slot.id || `slot-${index}`}
-                className="group relative overflow-hidden rounded-xl border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-fluent-8 hover:border-primary/40 transition-all duration-300 bg-white dark:bg-surface-dark"
+                className="group relative overflow-hidden rounded-lg border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 bg-white dark:bg-surface-dark"
               >
-                <CardContent className="p-5 flex flex-col justify-between h-full min-h-[140px]">
+                <CardContent className="p-4 flex flex-col justify-between h-full min-h-[120px]">
                   <div className="flex justify-between items-start">
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Horario Libre</p>
-                      <h3 className="text-xl font-black tabular-nums tracking-tighter text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Horario Libre</p>
+                      <h3 className="text-lg font-mono font-semibold tabular-nums tracking-tight text-slate-900 dark:text-white group-hover:text-primary transition-colors">
                         {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                       </h3>
                     </div>
-                    <div className="size-8 bg-green-500/10 rounded-lg flex items-center justify-center text-green-600">
-                      <Clock size={16} />
+                    <div className="size-7 bg-green-50 dark:bg-green-900/20 rounded-md flex items-center justify-center text-green-600 dark:text-green-500 border border-green-100 dark:border-green-800">
+                      <span className="material-icons-round text-[16px]">schedule</span>
                     </div>
                   </div>
 
-                  <div className="mt-6 flex items-center justify-between gap-3">
-                     <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                  <div className="mt-4 flex items-center justify-between gap-2">
+                     <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate pr-2">
                        {slot.product_name}
                      </div>
                      <Button
                       onClick={() => onReserveClick && onReserveClick(slot)}
-                      className="bg-slate-900 dark:bg-slate-800 hover:bg-primary text-white font-black uppercase tracking-widest text-[9px] h-9 px-4 rounded-lg shadow-sm group-hover:shadow-md group-hover:shadow-primary/20 transition-all active:scale-95 flex items-center gap-2"
+                      className="bg-slate-100 dark:bg-slate-800 hover:bg-primary text-slate-700 dark:text-slate-300 hover:text-white font-semibold uppercase tracking-widest text-[10px] h-8 px-3 rounded-md transition-all active:scale-95 flex items-center gap-1 shrink-0"
                      >
                        Reservar
-                       <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                       <span className="material-icons-round text-[14px] group-hover:translate-x-0.5 transition-transform">chevron_right</span>
                      </Button>
                   </div>
                 </CardContent>

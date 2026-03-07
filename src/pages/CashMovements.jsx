@@ -47,14 +47,6 @@ import DataState from '@/components/ui/DataState'
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
 import { cashRegisterService } from '@/services/cashRegisterService'
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  PlusIcon,
-  FilterIcon,
-  BanIcon,
-  WalletIcon,
-} from 'lucide-react'
 
 const CashMovements = () => {
   const { t } = useI18n()
@@ -190,13 +182,13 @@ const CashMovements = () => {
   const getMovementDisplay = type => {
     const displays = {
       INCOME: {
-        icon: <ArrowUpIcon className='w-4 h-4' />,
+        icon: <span className="material-icons-round text-[16px]">arrow_upward</span>,
         variant: 'success',
         label: t('cashMovement.type.income', 'Ingreso'),
         className: 'movement-badge--income',
       },
       EXPENSE: {
-        icon: <ArrowDownIcon className='w-4 h-4' />,
+        icon: <span className="material-icons-round text-[16px]">arrow_downward</span>,
         variant: 'destructive',
         label: t('cashMovement.type.expense', 'Egreso'),
         className: 'movement-badge--expense',
@@ -457,9 +449,9 @@ const CashMovements = () => {
   // Render loading state
   if (isLoadingCashRegister) {
     return (
-      <div className='cash-movements-page'>
+      <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-sans p-6'>
         <DataState
-          type='loading'
+          variant='loading'
           message={t('common.loading', 'Cargando...')}
         />
       </div>
@@ -469,19 +461,24 @@ const CashMovements = () => {
   // Render no cash register state
   if (!activeCashRegister) {
     return (
-      <div className='cash-movements-page'>
-        <div className='cash-movements-page__empty-state'>
-          <WalletIcon className='cash-movements-page__empty-icon' />
-          <h2>
+      <div className='flex flex-col items-center justify-center min-h-[60vh] gap-6 animate-in fade-in duration-500 font-sans'>
+        <div className='flex flex-col items-center text-center max-w-md'>
+          <div className="size-20 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+            <span className="material-icons-round text-[48px]">account_balance_wallet</span>
+          </div>
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-white uppercase tracking-tight">
             {t('cashMovement.noCashRegister.title', 'No hay caja activa')}
           </h2>
-          <p>
+          <p className="text-slate-500 dark:text-slate-400 mt-2">
             {t(
               'cashMovement.noCashRegister.description',
               'Debe abrir una caja registradora para ver los movimientos'
             )}
           </p>
-          <Button onClick={() => navigate('/caja-registradora')}>
+          <Button 
+            onClick={() => navigate('/caja-registradora')}
+            className="mt-6 h-11 font-semibold uppercase tracking-widest text-[11px] rounded-md shadow-sm px-8"
+          >
             {t('cashMovement.noCashRegister.action', 'Ir a Caja Registradora')}
           </Button>
         </div>
@@ -490,63 +487,63 @@ const CashMovements = () => {
   }
 
   return (
-    <div className='cash-movements-page'>
+    <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-sans'>
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
 
-      {/* Header - mismo ancho que la card */}
-      <div className='cash-movements-page__header'>
-        <div className='cash-movements-page__header-content'>
-          <h1 className='cash-movements-page__title'>
+      {/* Header */}
+      <header className='flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-primary pl-6 py-2'>
+        <div className='space-y-1'>
+          <h1 className='text-2xl md:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight'>
             {t('cashMovement.pageTitle', 'Movimientos de Caja')}
           </h1>
-          <p className='cash-movements-page__description'>
+          <p className='text-sm text-slate-500 dark:text-slate-400'>
             {t('cashMovement.pageSubtitle', 'Caja activa')}:{' '}
-            <strong>{activeCashRegister.name}</strong>
+            <span className="font-semibold text-slate-700 dark:text-slate-300">{activeCashRegister.name}</span>
             {' · '}
             {t('cashMovement.currentBalance', 'Saldo')}:{' '}
-            <strong>
+            <span className="font-mono font-semibold text-primary tabular-nums">
               {formatCurrency(
                 activeCashRegister.current_balance ||
                   activeCashRegister.initial_balance ||
                   0
               )}
-            </strong>
+            </span>
           </p>
         </div>
 
-        <div className='cash-movements-page__actions'>
+        <div className='flex items-center gap-3'>
           <Button
             variant='outline'
             onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-            className={`cash-movements-page__btn-filter ${
-              hasActiveFilters ? 'cash-movements-page__btn-filter--active' : ''
+            className={`h-10 px-4 font-semibold uppercase tracking-widest text-[10px] rounded-md border-slate-200 flex items-center gap-2 ${
+              hasActiveFilters ? 'bg-primary/5 border-primary/20 text-primary' : ''
             }`}
           >
-            <FilterIcon className='w-4 h-4' />
+            <span className="material-icons-round text-[18px]">filter_alt</span>
             {t('common.filters', 'Filtros')}
-            {hasActiveFilters && <span className='filter-badge'>!</span>}
+            {hasActiveFilters && <span className='size-2 rounded-full bg-primary animate-pulse ml-1' />}
           </Button>
           <Button
             onClick={() => setIsNewMovementOpen(true)}
-            className='cash-movements-page__btn-new'
+            className='h-10 px-4 font-semibold uppercase tracking-widest text-[10px] rounded-md shadow-sm flex items-center gap-2 bg-primary hover:bg-primary-hover text-white'
           >
-            <PlusIcon className='w-4 h-4' />
+            <span className="material-icons-round text-[18px]">add</span>
             {t('cashMovement.newMovement', 'Nuevo Movimiento')}
           </Button>
         </div>
-      </div>
+      </header>
 
       {/* Filters Panel */}
       {isFiltersOpen && (
-        <div className='cash-movements-page__filters'>
-          <div className='cash-movements-page__filters-row'>
-            <div className='form-group'>
-              <Label>{t('cashMovement.filter.type', 'Tipo')}</Label>
+        <div className='bg-slate-50 dark:bg-slate-900/30 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in slide-in-from-top-2 duration-200'>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+            <div className='space-y-1.5'>
+              <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 ml-1">{t('cashMovement.filter.type', 'Tipo')}</Label>
               <Select
                 value={filters.type}
                 onValueChange={value => handleFilterChange('type', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-10 bg-white dark:bg-surface-dark border-slate-200 rounded-md">
                   <SelectValue
                     placeholder={t('cashMovement.filter.allTypes', 'Todos')}
                   />
@@ -562,30 +559,39 @@ const CashMovements = () => {
               </Select>
             </div>
 
-            <div className='form-group'>
-              <Label>{t('cashMovement.filter.dateFrom', 'Desde')}</Label>
+            <div className='space-y-1.5'>
+              <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 ml-1">{t('cashMovement.filter.dateFrom', 'Desde')}</Label>
               <Input
                 type='date'
                 value={filters.date_from}
                 onChange={e => handleFilterChange('date_from', e.target.value)}
+                className="h-10 bg-white dark:bg-surface-dark border-slate-200 rounded-md"
               />
             </div>
 
-            <div className='form-group'>
-              <Label>{t('cashMovement.filter.dateTo', 'Hasta')}</Label>
+            <div className='space-y-1.5'>
+              <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 ml-1">{t('cashMovement.filter.dateTo', 'Hasta')}</Label>
               <Input
                 type='date'
                 value={filters.date_to}
                 onChange={e => handleFilterChange('date_to', e.target.value)}
+                className="h-10 bg-white dark:bg-surface-dark border-slate-200 rounded-md"
               />
             </div>
           </div>
 
-          <div className='cash-movements-page__filters-actions'>
-            <Button variant='ghost' onClick={handleClearFilters}>
+          <div className='flex justify-end gap-3 pt-2 border-t border-slate-200 dark:border-slate-800'>
+            <Button 
+              variant='ghost' 
+              onClick={handleClearFilters}
+              className="h-9 font-semibold uppercase tracking-widest text-[10px]"
+            >
               {t('common.clear', 'Limpiar')}
             </Button>
-            <Button onClick={handleApplyFilters}>
+            <Button 
+              onClick={handleApplyFilters}
+              className="h-9 px-6 font-semibold uppercase tracking-widest text-[10px] rounded-md shadow-sm"
+            >
               {t('common.apply', 'Aplicar')}
             </Button>
           </div>
@@ -593,144 +599,101 @@ const CashMovements = () => {
       )}
 
       {/* Movements Table */}
-      <div className='cash-movements-page__card'>
+      <div className='bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden'>
         {isLoadingMovements ? (
-          <DataState
-            type='loading'
-            message={t(
-              'cashMovement.loadingMovements',
-              'Cargando movimientos...'
-            )}
-          />
+          <div className="py-20">
+            <DataState
+              variant='loading'
+              message={t('common.loading', 'Cargando movimientos...')}
+            />
+          </div>
         ) : movements.length === 0 ? (
-          <div className='cash-movements-page__empty'>
-            <p>
-              {t('cashMovement.noMovements', 'No hay movimientos registrados')}
-            </p>
+          <div className="py-20 text-center">
+            <div className="size-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-4 mx-auto border border-slate-200 dark:border-slate-700 shadow-sm">
+              <span className="material-icons-round text-[32px]">history</span>
+            </div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-tight">Sin movimientos</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">No se encontraron movimientos para los criterios seleccionados.</p>
           </div>
         ) : (
-          <div className='cash-movements-page__table-wrapper'>
-            <Table>
+          <div className='overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800'>
+            <Table className="min-w-[800px]">
               <TableHeader>
-                <TableRow>
-                  <TableHead>{t('cashMovement.table.date', 'Fecha')}</TableHead>
-                  <TableHead>{t('cashMovement.table.type', 'Tipo')}</TableHead>
-                  <TableHead>
+                <TableRow className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                  <TableHead className='py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 w-[180px]'>
+                    {t('cashMovement.table.date', 'Fecha y Hora')}
+                  </TableHead>
+                  <TableHead className='py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500'>
                     {t('cashMovement.table.concept', 'Concepto')}
                   </TableHead>
-                  <TableHead className='text-right'>
+                  <TableHead className='py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 text-center'>
+                    {t('cashMovement.table.type', 'Tipo')}
+                  </TableHead>
+                  <TableHead className='py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 text-right'>
                     {t('cashMovement.table.amount', 'Monto')}
                   </TableHead>
-                  <TableHead className='text-right'>
-                    {t('cashMovement.table.balance', 'Balance')}
-                  </TableHead>
-                  <TableHead>
-                    {t('cashMovement.table.user', 'Usuario')}
-                  </TableHead>
-                  <TableHead>
-                    {t('cashMovement.table.details', 'Detalles')}
-                  </TableHead>
-                  <TableHead className='text-center'>
-                    {t('cashMovement.table.actions', 'Acciones')}
+                  <TableHead className='py-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500 text-center w-[100px]'>
+                    {t('common.actions', 'Acciones')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {movements.map(movement => {
                   const display = getMovementDisplay(movement.movement_type)
-                  const isReversal =
-                    movement.concept?.toLowerCase().includes('reversión') ||
-                    movement.concept?.toLowerCase().includes('anulación')
+                  const isVoided = !!movement.voided_at
 
                   return (
                     <TableRow
                       key={movement.movement_id}
-                      className={isReversal ? 'row--reversal' : ''}
+                      className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group ${
+                        isVoided ? 'opacity-50 grayscale' : ''
+                      }`}
                     >
-                      <TableCell className='text-sm'>
+                      <TableCell className='py-2 px-3 text-sm font-medium text-slate-600 dark:text-slate-400'>
                         {formatDate(movement.created_at)}
                       </TableCell>
-
-                      <TableCell>
+                      <TableCell className='py-2 px-3'>
+                        <div className='flex flex-col'>
+                          <span className='font-semibold text-slate-900 dark:text-white text-sm'>
+                            {movement.concept}
+                          </span>
+                          {isVoided && (
+                            <span className='text-[10px] text-red-500 font-semibold uppercase tracking-tighter'>
+                              {t('cashMovement.voided', 'ANULADO')}:{' '}
+                              {movement.void_reason}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className='py-2 px-3 text-center'>
                         <Badge
                           variant={display.variant}
-                          className={`movement-badge ${display.className}`}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-widest border ${
+                            display.variant === 'success' 
+                              ? 'bg-green-50 border-green-200 text-green-700' 
+                              : 'bg-red-50 border-red-200 text-red-700'
+                          }`}
                         >
                           {display.icon}
                           {display.label}
                         </Badge>
                       </TableCell>
-
-                      <TableCell
-                        className='max-w-xs truncate'
-                        title={movement.concept}
-                      >
-                        {movement.concept}
-                      </TableCell>
-
-                      <TableCell
-                        className={`text-right font-medium ${
-                          movement.movement_type === 'INCOME'
-                            ? 'text-success'
-                            : 'text-error'
-                        }`}
-                      >
-                        {movement.movement_type === 'INCOME' ? '+' : '-'}
+                      <TableCell className='py-2 px-3 text-right font-mono font-semibold text-slate-900 dark:text-white tabular-nums'>
+                        {display.variant === 'success' ? '+' : '-'}
                         {formatCurrency(movement.amount)}
                       </TableCell>
-
-                      <TableCell className='text-right font-semibold'>
-                        {formatCurrency(movement.running_balance)}
-                      </TableCell>
-
-                      <TableCell>
-                        {movement.user_full_name || movement.created_by || '-'}
-                      </TableCell>
-
-                      <TableCell>
-                        {movement.related_sale_id && (
-                          <div className='movement-details'>
-                            <span className='movement-details__sale'>
-                              {movement.related_sale_id}
-                            </span>
-                            {movement.sale_client_name && (
-                              <span className='movement-details__client'>
-                                {movement.sale_client_name}
-                              </span>
-                            )}
-                          </div>
+                      <TableCell className='py-2 px-3 text-center'>
+                        {!isVoided && (
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            onClick={() => handleOpenVoidDialog(movement)}
+                            className='size-8 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100'
+                            title={t('common.void', 'Anular')}
+                          >
+                            <span className="material-icons-round text-[18px]">block</span>
+                          </Button>
                         )}
-                        {movement.related_purchase_id && (
-                          <div className='movement-details'>
-                            <span className='movement-details__purchase'>
-                              Compra #{movement.related_purchase_id}
-                            </span>
-                            {movement.purchase_supplier && (
-                              <span className='movement-details__supplier'>
-                                {movement.purchase_supplier}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        {!movement.related_sale_id &&
-                          !movement.related_purchase_id &&
-                          '-'}
-                      </TableCell>
-
-                      <TableCell className='text-center'>
-                        {!isReversal &&
-                          !movement.related_sale_id &&
-                          !movement.related_purchase_id && (
-                            <Button
-                              variant='ghost'
-                              size='sm'
-                              onClick={() => handleOpenVoidDialog(movement)}
-                              className='btn-void'
-                              title={t('cashMovement.void.button', 'Anular')}
-                            >
-                              <BanIcon className='w-4 h-4' />
-                            </Button>
-                          )}
                       </TableCell>
                     </TableRow>
                   )
@@ -743,187 +706,183 @@ const CashMovements = () => {
 
       {/* New Movement Dialog */}
       <Dialog open={isNewMovementOpen} onOpenChange={setIsNewMovementOpen}>
-        <DialogContent className='cash-movements-dialog'>
-          <DialogHeader>
-            <DialogTitle>
-              {t(
-                'cashMovement.newMovement.title',
-                'Registrar Nuevo Movimiento'
-              )}
+        <DialogContent className='rounded-xl border-slate-200 dark:border-slate-800 shadow-md max-w-lg p-6 font-sans'>
+          <DialogHeader className="gap-2 text-left mb-4">
+            <div className="size-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-1 border border-primary/10">
+              <span className="material-icons-round text-[24px]">payments</span>
+            </div>
+            <DialogTitle className="text-xl font-semibold tracking-tight">
+              {t('cashMovement.newMovement', 'Nuevo Movimiento')}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm text-slate-500">
               {t(
-                'cashMovement.newMovement.description',
-                'Complete el formulario para registrar un movimiento manual'
+                'cashMovement.newDialogDescription',
+                'Registre un ingreso o egreso de efectivo manualmente.'
               )}
             </DialogDescription>
           </DialogHeader>
 
-          <div className='dialog-form'>
-            <div className='form-group'>
-              <Label>
-                {t('cashMovement.field.movementType', 'Tipo de Movimiento')}
+          <div className='space-y-5 py-2'>
+            <div className='space-y-2'>
+              <Label className="text-xs font-semibold uppercase tracking-widest text-slate-500 ml-1">
+                {t('cashMovement.field.type', 'Tipo de Movimiento')}
               </Label>
               <SegmentedControl
+                options={movementTypes}
                 value={newMovementForm.movement_type}
                 onChange={handleTypeChange}
-                options={movementTypes}
+                className='h-10'
               />
             </div>
 
-            <div className='form-group'>
-              <Label>{t('cashMovement.field.concept', 'Concepto')}</Label>
-              <Select
-                value={newMovementForm.concept}
-                onValueChange={value =>
-                  handleNewMovementChange('concept', value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={t(
-                      'cashMovement.placeholder.selectConcept',
-                      'Seleccionar concepto'
-                    )}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {concepts[newMovementForm.movement_type]?.map(concept => (
-                    <SelectItem key={concept.id} value={concept.id}>
-                      {concept.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className='form-group'>
-              <Label>{t('cashMovement.field.amount', 'Monto')}</Label>
-              <div className='form-group__input-wrapper'>
-                <span className='form-group__input-prefix'>Gs.</span>
-                <Input
-                  type='text'
-                  inputMode='numeric'
-                  value={formatNumber(newMovementForm.amount)}
-                  onChange={e =>
-                    handleNewMovementChange(
-                      'amount',
-                      parseFormattedNumber(e.target.value)
-                    )
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='space-y-2'>
+                <Label className="text-xs font-semibold uppercase tracking-widest text-slate-500 ml-1" htmlFor='concept'>
+                  {t('cashMovement.field.concept', 'Concepto')}
+                </Label>
+                <Select
+                  value={newMovementForm.concept}
+                  onValueChange={value =>
+                    handleNewMovementChange('concept', value)
                   }
-                  placeholder='0'
-                  className='form-group__input--with-prefix'
-                />
+                >
+                  <SelectTrigger id='concept' className="h-10 border-slate-200 rounded-md">
+                    <SelectValue
+                      placeholder={t('common.select', 'Seleccionar...')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {concepts[newMovementForm.movement_type].map(concept => (
+                      <SelectItem key={concept.id} value={concept.id}>
+                        {concept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='space-y-2'>
+                <Label className="text-xs font-semibold uppercase tracking-widest text-slate-500 ml-1" htmlFor='amount'>
+                  {t('cashMovement.field.amount', 'Monto')}
+                </Label>
+                <div className='relative'>
+                  <span className='absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-semibold'>
+                    ₲
+                  </span>
+                  <Input
+                    id='amount'
+                    type='text'
+                    inputMode='numeric'
+                    value={formatNumber(newMovementForm.amount)}
+                    onChange={e =>
+                      handleNewMovementChange('amount', e.target.value)
+                    }
+                    placeholder='0'
+                    className='h-10 pl-8 font-mono font-semibold tabular-nums border-slate-200 rounded-md'
+                  />
+                </div>
               </div>
             </div>
 
-            <div className='form-group'>
-              <Label>
-                {t('cashMovement.field.notes', 'Notas')}
-                <span className='form-group__label-optional'>
-                  {' '}
-                  ({t('common.optional', 'Opcional')})
-                </span>
+            <div className='space-y-2'>
+              <Label className="text-xs font-semibold uppercase tracking-widest text-slate-500 ml-1" htmlFor='notes'>
+                {t('cashMovement.field.notes', 'Observaciones (opcional)')}
               </Label>
               <Textarea
+                id='notes'
+                placeholder={t(
+                  'cashMovement.notesPlaceholder',
+                  'Añada información adicional...'
+                )}
                 value={newMovementForm.notes}
                 onChange={e => handleNewMovementChange('notes', e.target.value)}
-                placeholder={t(
-                  'cashMovement.placeholder.notes',
-                  'Añada una descripción si es necesario...'
-                )}
+                className='resize-none rounded-md border-slate-200'
                 rows={3}
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className='mt-6 sm:justify-between items-center flex-row gap-3'>
             <Button
-              variant='outline'
+              variant='ghost'
               onClick={() => setIsNewMovementOpen(false)}
-              disabled={isSubmitting}
+              className='font-medium text-xs h-10 flex-1 border border-transparent hover:border-slate-200'
             >
               {t('common.cancel', 'Cancelar')}
             </Button>
-            <Button onClick={handleSubmitNewMovement} disabled={isSubmitting}>
-              {isSubmitting
-                ? t('common.saving', 'Guardando...')
-                : t('common.save', 'Guardar')}
+            <Button
+              onClick={handleSubmitNewMovement}
+              disabled={isSubmitting}
+              className='bg-primary hover:bg-primary-hover text-white font-semibold text-xs h-10 rounded-md px-6 shadow-sm flex-1 flex items-center justify-center gap-2'
+            >
+              {isSubmitting ? (
+                <span className="material-icons-round text-[18px] animate-spin">refresh</span>
+              ) : (
+                <span className="material-icons-round text-[18px]">check_circle</span>
+              )}
+              {t('common.save', 'Guardar Movimiento')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Void Movement Dialog */}
+      {/* Void Dialog */}
       <Dialog
         open={voidDialog.isOpen}
-        onOpenChange={open =>
-          !open &&
-          setVoidDialog({
-            isOpen: false,
-            movement: null,
-            reason: '',
-            isSubmitting: false,
-          })
+        onOpenChange={isOpen =>
+          !isOpen && setVoidDialog(prev => ({ ...prev, isOpen }))
         }
       >
-        <DialogContent className='cash-movements-dialog cash-movements-dialog--void'>
-          <DialogHeader>
-            <DialogTitle className='text-error'>
+        <DialogContent className='rounded-xl border-slate-200 dark:border-slate-800 shadow-md max-w-md p-6 font-sans'>
+          <DialogHeader className="gap-2 text-left mb-4">
+            <div className="size-12 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-center justify-center text-red-600 mb-1 border border-red-100 dark:border-red-800">
+              <span className="material-icons-round text-[24px]">block</span>
+            </div>
+            <DialogTitle className="text-xl font-semibold tracking-tight text-red-600">
               {t('cashMovement.void.title', 'Anular Movimiento')}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm text-slate-500">
               {t(
                 'cashMovement.void.description',
-                'Esta acción creará un movimiento de reversión. No se puede deshacer.'
+                'Esta acción revertirá el efecto del movimiento en el saldo.'
               )}
             </DialogDescription>
           </DialogHeader>
 
           {voidDialog.movement && (
-            <div className='void-summary'>
-              <div className='void-summary__row'>
-                <span>{t('cashMovement.table.type', 'Tipo')}:</span>
-                <Badge
-                  variant={
-                    getMovementDisplay(voidDialog.movement.movement_type)
-                      .variant
-                  }
-                >
-                  {getMovementDisplay(voidDialog.movement.movement_type).label}
-                </Badge>
-              </div>
-              <div className='void-summary__row'>
-                <span>{t('cashMovement.table.amount', 'Monto')}:</span>
-                <strong>{formatCurrency(voidDialog.movement.amount)}</strong>
-              </div>
-              <div className='void-summary__row'>
-                <span>{t('cashMovement.table.concept', 'Concepto')}:</span>
-                <span>{voidDialog.movement.concept}</span>
-              </div>
+            <div className='bg-slate-50 dark:bg-slate-900/50 p-3 rounded-md space-y-1 border border-slate-100 dark:border-slate-800 mb-4'>
+              <p className='text-sm'>
+                <strong className="font-semibold">{t('cashMovement.field.concept', 'Concepto')}:</strong>{' '}
+                {voidDialog.movement.concept}
+              </p>
+              <p className='text-sm'>
+                <strong className="font-semibold">{t('cashMovement.field.amount', 'Monto')}:</strong>{' '}
+                <span className="font-mono font-semibold tabular-nums">{formatCurrency(voidDialog.movement.amount)}</span>
+              </p>
             </div>
           )}
 
-          <div className='form-group'>
-            <Label>
+          <div className='space-y-2'>
+            <Label className="text-xs font-semibold uppercase tracking-widest text-slate-500 ml-1" htmlFor='void-reason'>
               {t('cashMovement.void.reason', 'Razón de anulación')} *
             </Label>
-            <Textarea
+            <Input
+              id='void-reason'
               value={voidDialog.reason}
               onChange={e =>
                 setVoidDialog(prev => ({ ...prev, reason: e.target.value }))
               }
               placeholder={t(
                 'cashMovement.void.reasonPlaceholder',
-                'Ingrese la razón de la anulación (mínimo 5 caracteres)'
+                'Ej: Error en el monto ingresado'
               )}
-              rows={3}
+              className='h-10 border-slate-200 rounded-md'
             />
           </div>
 
-          <DialogFooter>
+          <DialogFooter className='mt-6 sm:justify-between items-center flex-row gap-3'>
             <Button
-              variant='outline'
+              variant='ghost'
               onClick={() =>
                 setVoidDialog({
                   isOpen: false,
@@ -932,18 +891,22 @@ const CashMovements = () => {
                   isSubmitting: false,
                 })
               }
-              disabled={voidDialog.isSubmitting}
+              className='font-medium text-xs h-10 flex-1 border border-transparent hover:border-slate-200'
             >
               {t('common.cancel', 'Cancelar')}
             </Button>
             <Button
               variant='destructive'
               onClick={handleVoidMovement}
-              disabled={voidDialog.isSubmitting || voidDialog.reason.length < 5}
+              disabled={voidDialog.isSubmitting}
+              className='bg-red-600 hover:bg-red-700 text-white font-semibold text-xs h-10 rounded-md px-6 shadow-sm flex-1 flex items-center justify-center gap-2'
             >
-              {voidDialog.isSubmitting
-                ? t('common.processing', 'Procesando...')
-                : t('cashMovement.void.confirm', 'Anular')}
+              {voidDialog.isSubmitting ? (
+                <span className="material-icons-round text-[18px] animate-spin">refresh</span>
+              ) : (
+                <span className="material-icons-round text-[18px]">check_circle</span>
+              )}
+              {t('common.confirm', 'Anular Ahora')}
             </Button>
           </DialogFooter>
         </DialogContent>
