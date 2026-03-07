@@ -74,6 +74,11 @@ import AgingReport from '@/pages/AgingReport'
 import ProfitAndLoss from '@/pages/ProfitAndLoss'
 import LegalBooks from '@/pages/LegalBooks'
 import ProfitabilityAnalysis from '@/pages/ProfitabilityAnalysis'
+import SalesAnalyticsDashboard from '@/pages/sales-analytics/Dashboard'
+import SalesAnalyticsProductsCategories from '@/pages/sales-analytics/ProductsCategories'
+import SalesAnalyticsInsights from '@/pages/sales-analytics/CustomerSellerInsights'
+import SalesAnalyticsTrendsVelocity from '@/pages/sales-analytics/TrendsVelocity'
+import SalesAnalyticsPeriodComparison from '@/pages/sales-analytics/PeriodComparison'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -166,6 +171,14 @@ function AppContent() {
                       <Route path='/proveedores' element={<Suppliers />} />
                       <Route path='/proveedores/:id/analisis' element={<SupplierAnalysis />} />
                       <Route path='/ventas' element={<SalesNew />} />
+                      
+                      {/* Sales Analytics Routes */}
+                      <Route path='/sales-analytics/dashboard' element={<SalesAnalyticsDashboard />} />
+                      <Route path='/sales-analytics/products-categories' element={<SalesAnalyticsProductsCategories />} />
+                      <Route path='/sales-analytics/insights' element={<SalesAnalyticsInsights />} />
+                      <Route path='/sales-analytics/trends-velocity' element={<SalesAnalyticsTrendsVelocity />} />
+                      <Route path='/sales-analytics/period-comparison' element={<SalesAnalyticsPeriodComparison />} />
+
                       <Route
                         path='/gestion-reservas'
                         element={<ReservationsAndSchedules />}

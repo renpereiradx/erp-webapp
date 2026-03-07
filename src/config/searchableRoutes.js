@@ -19,7 +19,10 @@ import {
   UserCheck,
   LayoutDashboard,
   BarChart3,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Activity,
+  Zap,
+  BarChart
 } from 'lucide-react'
 
 /**
@@ -27,6 +30,38 @@ import {
  * Estructura compatible con el sistema de navegación de MainLayout
  */
 export const distinctSearchableRoutes = [
+  // Sales Analytics (Business Intelligence)
+  {
+    name: 'Dashboard Ejecutivo de Ventas (Analítica)',
+    href: '/sales-analytics/dashboard',
+    icon: LayoutDashboard,
+    category: 'BI / Ventas'
+  },
+  {
+    name: 'Análisis de Productos y Categorías (Ventas)',
+    href: '/sales-analytics/products-categories',
+    icon: PieChart,
+    category: 'BI / Ventas'
+  },
+  {
+    name: 'Insights de Clientes y Vendedores',
+    href: '/sales-analytics/insights',
+    icon: Users,
+    category: 'BI / Ventas'
+  },
+  {
+    name: 'Tendencias Temporales y Velocidad de Ventas',
+    href: '/sales-analytics/trends-velocity',
+    icon: Zap,
+    category: 'BI / Ventas'
+  },
+  {
+    name: 'Comparativa de Períodos de Venta',
+    href: '/sales-analytics/period-comparison',
+    icon: Activity,
+    category: 'BI / Ventas'
+  },
+
   // Cuentas por Cobrar (Receivables) - Detalle y Reportes específicos
   {
     name: 'Dashboard de Resumen de Cuentas por Cobrar',

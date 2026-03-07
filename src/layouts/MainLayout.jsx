@@ -40,6 +40,9 @@ import {
   List,
   FileText,
   Clock as ClockIcon,
+  Zap,
+  Activity,
+  PieChart,
 } from 'lucide-react'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 import { distinctSearchableRoutes } from '@/config/searchableRoutes'
@@ -110,6 +113,38 @@ const MainLayout = ({ children }) => {
                 name: t('dashboard.topProducts', 'Top de Productos'),
                 href: '/dashboard/top-products',
                 icon: Award,
+              },
+            ],
+          },
+          {
+            name: 'Analítica de Ventas',
+            href: '#',
+            icon: BarChart3,
+            children: [
+              {
+                name: 'Dashboard Ejecutivo',
+                href: '/sales-analytics/dashboard',
+                icon: LayoutDashboard,
+              },
+              {
+                name: 'Productos y Categorías',
+                href: '/sales-analytics/products-categories',
+                icon: PieChart,
+              },
+              {
+                name: 'Insights Clientes/Vend.',
+                href: '/sales-analytics/insights',
+                icon: Users,
+              },
+              {
+                name: 'Tendencias y Velocidad',
+                href: '/sales-analytics/trends-velocity',
+                icon: Zap,
+              },
+              {
+                name: 'Comparativa Períodos',
+                href: '/sales-analytics/period-comparison',
+                icon: Activity,
               },
             ],
           },
