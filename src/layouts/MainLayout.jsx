@@ -43,6 +43,7 @@ import {
   Zap,
   Activity,
   PieChart,
+  UserCheck,
 } from 'lucide-react'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 import { distinctSearchableRoutes } from '@/config/searchableRoutes'
@@ -146,10 +147,47 @@ const MainLayout = ({ children }) => {
                 href: '/sales-analytics/period-comparison',
                 icon: Activity,
               },
-            ],
-          },
-          {
-            name: t('inventory.analytics.title', 'Analítica de Inventario'),
+              ],
+              },
+              {
+              name: 'Analítica de Rentabilidad',
+              href: '#',
+              icon: BarChart3,
+              children: [
+              {
+                name: 'Dashboard Ejecutivo',
+                href: '/profitability/dashboard',
+                icon: LayoutDashboard,
+              },
+              {
+                name: 'Rentabilidad por Producto',
+                href: '/profitability/products',
+                icon: BarChart3,
+              },
+              {
+                name: 'Rentabilidad por Cliente',
+                href: '/profitability/customers',
+                icon: Users,
+              },
+              {
+                name: 'Rentabilidad por Categoría',
+                href: '/profitability/categories',
+                icon: PieChart,
+              },
+              {
+                name: 'Tendencias de Margen',
+                href: '/profitability/trends',
+                icon: Zap,
+              },
+              {
+                name: 'Desempeño por Vendedor',
+                href: '/profitability/sellers',
+                icon: UserCheck,
+              },
+              ],
+              },
+              {
+              name: t('inventory.analytics', 'Analítica de Inventario'),
             href: '#',
             icon: Package,
             children: [
@@ -253,11 +291,6 @@ const MainLayout = ({ children }) => {
                 name: 'Libros Legales (Ventas y Compras)',
                 href: '/finance/legal-books',
                 icon: BookOpen,
-              },
-              {
-                name: 'Análisis de Rentabilidad y Márgenes',
-                href: '/finance/profitability',
-                icon: BarChart3,
               },
               {
                 name: 'Estado de Resultados (P&L)',

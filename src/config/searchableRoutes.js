@@ -199,9 +199,47 @@ export const distinctSearchableRoutes = [
   },
   {
     name: 'Análisis de Rentabilidad y Márgenes por BI',
-    href: '/finance/profitability',
+    href: '/profitability',
     icon: BarChart3,
     category: 'BI / Reportes Financieros'
+  },
+  
+  // Profitability Analytics (Detailed)
+  {
+    name: 'Dashboard de Rentabilidad (Resumen Ejecutivo)',
+    href: '/profitability/dashboard',
+    icon: LayoutDashboard,
+    category: 'BI / Rentabilidad'
+  },
+  {
+    name: 'Rentabilidad por Producto y SKU',
+    href: '/profitability/products',
+    icon: BarChart3,
+    category: 'BI / Rentabilidad'
+  },
+  {
+    name: 'Rentabilidad por Cliente y Segmentación',
+    href: '/profitability/customers',
+    icon: Users,
+    category: 'BI / Rentabilidad'
+  },
+  {
+    name: 'Rentabilidad por Categoría de Producto',
+    href: '/profitability/categories',
+    icon: PieChart,
+    category: 'BI / Rentabilidad'
+  },
+  {
+    name: 'Tendencias de Rentabilidad y Crecimiento',
+    href: '/profitability/trends',
+    icon: Zap,
+    category: 'BI / Rentabilidad'
+  },
+  {
+    name: 'Rentabilidad por Vendedor y Performance',
+    href: '/profitability/sellers',
+    icon: UserCheck,
+    category: 'BI / Rentabilidad'
   },
   
   // Gestión de Usuarios y Perfil

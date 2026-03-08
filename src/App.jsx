@@ -74,6 +74,16 @@ import AgingReport from '@/pages/AgingReport'
 import ProfitAndLoss from '@/pages/ProfitAndLoss'
 import LegalBooks from '@/pages/LegalBooks'
 import ProfitabilityAnalysis from '@/pages/ProfitabilityAnalysis'
+import {
+  ProfitabilityDashboard,
+  ProductProfitability,
+  CustomerProfitability,
+  CategoryProfitability,
+  ProfitabilityTrends,
+  SellerProfitability,
+  StockManagement as BIStockManagement,
+  InventoryRisk as BIInventoryRisk,
+} from '@/features/profitability'
 import SalesAnalyticsDashboard from '@/pages/sales-analytics/Dashboard'
 import SalesAnalyticsProductsCategories from '@/pages/sales-analytics/ProductsCategories'
 import SalesAnalyticsInsights from '@/pages/sales-analytics/CustomerSellerInsights'
@@ -164,6 +174,19 @@ function AppContent() {
                       <Route path='/finance/profit-and-loss' element={<ProfitAndLoss />} />
                       <Route path='/finance/legal-books' element={<LegalBooks />} />
                       <Route path='/finance/profitability' element={<ProfitabilityAnalysis />} />
+                      
+                      {/* Profitability Analytics Module (Detailed) */}
+                      <Route path='/profitability/dashboard' element={<ProfitabilityDashboard />} />
+                      <Route path='/profitability/products' element={<ProductProfitability />} />
+                      <Route path='/profitability/customers' element={<CustomerProfitability />} />
+                      <Route path='/profitability/categories' element={<CategoryProfitability />} />
+                      <Route path='/profitability/trends' element={<ProfitabilityTrends />} />
+                      <Route path='/profitability/sellers' element={<SellerProfitability />} />
+
+                      {/* BI Inventory Analytics (Detailed) */}
+                      <Route path='/bi/inventory/stock-levels' element={<BIStockManagement />} />
+                      <Route path='/bi/inventory/risk-analysis' element={<BIInventoryRisk />} />
+
                       <Route path='/receivables' element={<ReceivablesDashboard />} />
                       <Route path='/receivables/list' element={<ReceivablesMasterList />} />
                       <Route path='/receivables/detail/:id' element={<ReceivableDetail />} />
