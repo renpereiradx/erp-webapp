@@ -1,0 +1,43 @@
+/* =============================================================================
+   FLUENT 2 RESOURCES - LOCAL FONTS
+   ============================================================================= */
+
+/* Inter - UI & Reading */
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/* JetBrains Mono - Numbers & Codes */
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/jetbrains-mono.ttf') format('truetype');
+  font-weight: 100 800;
+  font-display: swap;
+}
+
+/* Material Icons Round - Iconography */
+@font-face {
+  font-family: 'Material Icons Round';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/MaterialIconsRound-Regular.otf') format('opentype');
+}
+
+.material-icons-round {
+  font-family: 'Material Icons Round';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}

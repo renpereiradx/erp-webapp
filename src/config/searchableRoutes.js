@@ -62,6 +62,32 @@ export const distinctSearchableRoutes = [
     category: 'BI / Ventas'
   },
 
+  // Inventory Analytics (Business Intelligence)
+  {
+    name: 'Dashboard Ejecutivo de Inventario',
+    href: '/inventory-analytics/dashboard',
+    icon: LayoutDashboard,
+    category: 'BI / Inventario'
+  },
+  {
+    name: 'Análisis de Rotación y Clasificación ABC',
+    href: '/inventory-analytics/turnover-abc',
+    icon: BarChart3,
+    category: 'BI / Inventario'
+  },
+  {
+    name: 'Niveles de Stock y Reabastecimiento',
+    href: '/inventory-analytics/stock-levels',
+    icon: List,
+    category: 'BI / Inventario'
+  },
+  {
+    name: 'Análisis de Riesgos y Stock Muerto',
+    href: '/inventory-analytics/risk',
+    icon: AlertTriangle,
+    category: 'BI / Inventario'
+  },
+
   // Cuentas por Cobrar (Receivables) - Detalle y Reportes específicos
   {
     name: 'Dashboard de Resumen de Cuentas por Cobrar',

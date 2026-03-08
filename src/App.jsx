@@ -79,6 +79,10 @@ import SalesAnalyticsProductsCategories from '@/pages/sales-analytics/ProductsCa
 import SalesAnalyticsInsights from '@/pages/sales-analytics/CustomerSellerInsights'
 import SalesAnalyticsTrendsVelocity from '@/pages/sales-analytics/TrendsVelocity'
 import SalesAnalyticsPeriodComparison from '@/pages/sales-analytics/PeriodComparison'
+import InventoryTurnoverABC from '@/pages/InventoryAnalytics/InventoryTurnoverABC'
+import InventoryDashboard from '@/pages/InventoryAnalytics/InventoryDashboard'
+import StockLevelsReorder from '@/pages/InventoryAnalytics/StockLevelsReorder'
+import InventoryRisk from '@/pages/InventoryAnalytics/InventoryRisk'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -178,6 +182,12 @@ function AppContent() {
                       <Route path='/sales-analytics/insights' element={<SalesAnalyticsInsights />} />
                       <Route path='/sales-analytics/trends-velocity' element={<SalesAnalyticsTrendsVelocity />} />
                       <Route path='/sales-analytics/period-comparison' element={<SalesAnalyticsPeriodComparison />} />
+
+                      {/* Inventory Analytics Routes */}
+                      <Route path='/inventory-analytics/dashboard' element={<InventoryDashboard />} />
+                      <Route path='/inventory-analytics/turnover-abc' element={<InventoryTurnoverABC />} />
+                      <Route path='/inventory-analytics/stock-levels' element={<StockLevelsReorder />} />
+                      <Route path='/inventory-analytics/risk' element={<InventoryRisk />} />
 
                       <Route
                         path='/gestion-reservas'

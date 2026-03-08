@@ -69,27 +69,27 @@ const PeriodComparison = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-display">
       {/* Header */}
       <header className="flex flex-col gap-1">
-        <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
           <span>Ventas</span>
-          <ChevronRight size={12} />
-          <span className="text-slate-900 dark:text-slate-100">Comparativa de Períodos</span>
+          <ChevronRight size={10} />
+          <span className="text-[#137fec]">Comparativa de Períodos</span>
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Comparativa de Períodos</h2>
-        <p className="text-sm text-slate-500">Análisis detallado de rendimiento entre dos rangos de fechas seleccionados.</p>
+        <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Comparativa de Períodos</h2>
+        <p className="text-sm text-slate-500 font-medium">Análisis detallado de rendimiento entre dos rangos de fechas seleccionados.</p>
       </header>
 
       {/* Selection Bar */}
-      <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+      <section className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
         <div className="flex flex-wrap items-end gap-6 max-w-6xl">
             <div className="flex-1 min-w-[280px]">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Período A (Actual)</label>
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Período A (Actual)</label>
               <select 
                 value={periodA}
                 onChange={(e) => setPeriodA(e.target.value)}
-                className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-[#137fec] focus:border-[#137fec]"
+                className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm font-bold focus:ring-[#137fec] focus:border-[#137fec] py-2.5"
               >
                 <option>Mes Actual (Mayo 2024)</option>
                 <option>Semana Actual</option>
@@ -97,18 +97,18 @@ const PeriodComparison = () => {
               </select>
             </div>
             <div className="flex-1 min-w-[280px]">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Período B (Comparativo)</label>
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Período B (Comparativo)</label>
               <select 
                 value={periodB}
                 onChange={(e) => setPeriodB(e.target.value)}
-                className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-[#137fec] focus:border-[#137fec]"
+                className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm font-bold focus:ring-[#137fec] focus:border-[#137fec] py-2.5"
               >
                 <option>Mes Anterior (Abril 2024)</option>
                 <option>Mismo mes año anterior</option>
                 <option>Personalizado</option>
               </select>
             </div>
-            <button className="bg-[#137fec] hover:bg-[#137fec]/90 text-white font-semibold py-2.5 px-8 rounded-lg transition-colors flex items-center gap-2 shadow-md shadow-[#137fec]/20">
+            <button className="bg-[#137fec] hover:bg-[#137fec]/90 text-white font-black py-2.5 px-8 rounded-lg transition-all flex items-center gap-2 shadow-md shadow-[#137fec]/20 uppercase text-xs tracking-widest">
               <Activity size={18} />
               Comparar
             </button>
@@ -116,7 +116,7 @@ const PeriodComparison = () => {
         </section>
 
         {/* Grid Metrics */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+        <div className="flex-1 overflow-y-auto p-4 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <CompareKPICard 
               title="Ventas Totales" 
@@ -163,24 +163,24 @@ const PeriodComparison = () => {
           </div>
 
           {/* Trend Chart Section */}
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex justify-between items-center mb-8">
               <div>
-                <h3 className="text-lg font-bold">Tendencia Diaria de Ventas</h3>
-                <p className="text-sm text-slate-500">Comparativa día a día entre Período A y Período B</p>
+                <h3 className="text-lg font-bold uppercase tracking-tight">Tendencia Diaria de Ventas</h3>
+                <p className="text-sm text-slate-500 font-medium font-display">Comparativa día a día entre Período A y Período B</p>
               </div>
               <div className="flex gap-4">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-[#137fec]"></span>
-                  <span className="text-xs font-medium">Período A</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Período A</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-slate-400"></span>
-                  <span className="text-xs font-medium">Período B</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Período B</span>
                 </div>
               </div>
             </div>
-            <div className="h-[300px] w-full">
+            <div className="h-[300px] w-full font-mono">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                   <defs>
@@ -190,11 +190,11 @@ const PeriodComparison = () => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10}} />
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} />
                   <Tooltip 
-                    contentStyle={{borderRadius: '8px', border: 'none'}} 
-                    formatter={(value) => formatCurrency(value)}
+                    contentStyle={{borderRadius: '8px', border: 'none', fontFamily: 'Inter, sans-serif'}} 
+                    formatter={(value) => [formatCurrency(value), 'Ventas']}
                   />
                   <Area type="monotone" dataKey="periodA" stroke="#137fec" strokeWidth={3} fillOpacity={1} fill="url(#colorA)" />
                   <Area type="monotone" dataKey="periodB" stroke="#94a3b8" strokeWidth={2} fillOpacity={0} />
@@ -208,10 +208,10 @@ const PeriodComparison = () => {
 };
 
 const CompareKPICard = ({ title, value, prevValue, diff, absDiff }) => (
-  <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-[#137fec] transition-colors group">
+  <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm hover:border-[#137fec] transition-all group">
     <div className="flex justify-between items-start mb-4">
-      <h3 className="text-sm font-semibold text-slate-500 group-hover:text-[#137fec] transition-colors">{title}</h3>
-      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+      <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-widest group-hover:text-[#137fec] transition-colors leading-none">{title}</h3>
+      <span className={`text-[10px] font-black px-2 py-0.5 rounded font-mono ${
         diff >= 0 
           ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' 
           : 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'
@@ -221,10 +221,10 @@ const CompareKPICard = ({ title, value, prevValue, diff, absDiff }) => (
     </div>
     <div className="flex items-end justify-between">
       <div className="space-y-1">
-        <p className="text-2xl font-black text-slate-900 dark:text-white">{value}</p>
-        <p className="text-xs text-slate-400">vs {prevValue} (Período B)</p>
+        <p className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none tracking-tight">{value}</p>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">vs <span className="font-mono">{prevValue}</span></p>
       </div>
-      <p className={`text-sm font-medium ${diff >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+      <p className={`text-xs font-black font-mono ${diff >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
         {diff >= 0 ? '+' : ''}{absDiff}
       </p>
     </div>

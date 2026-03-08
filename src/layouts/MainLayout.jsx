@@ -149,6 +149,33 @@ const MainLayout = ({ children }) => {
             ],
           },
           {
+            name: t('inventory.analytics.title', 'Analítica de Inventario'),
+            href: '#',
+            icon: Package,
+            children: [
+              {
+                name: t('inventory.analytics.dashboard', 'Dashboard de Inventario'),
+                href: '/inventory-analytics/dashboard',
+                icon: LayoutDashboard,
+              },
+              {
+                name: t('inventory.analytics.turnover_abc', 'Rotación y Análisis ABC'),
+                href: '/inventory-analytics/turnover-abc',
+                icon: BarChart3,
+              },
+              {
+                name: t('inventory.analytics.stock_levels', 'Niveles de Stock'),
+                href: '/inventory-analytics/stock-levels',
+                icon: List,
+              },
+              {
+                name: t('inventory.analytics.risk', 'Riesgos y Stock Muerto'),
+                href: '/inventory-analytics/risk',
+                icon: AlertTriangle,
+              },
+            ],
+          },
+          {
             name: t('receivables.title', 'Cuentas por Cobrar'),
             href: '#',
             icon: CreditCard,

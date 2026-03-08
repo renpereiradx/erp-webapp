@@ -72,20 +72,20 @@ const TrendsVelocity = () => {
     : 'Periodo actual';
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-display">
         
         {/* Header Section */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <h1 className="text-slate-900 dark:text-white text-3xl font-black leading-tight tracking-tight">Tendencias Temporales y Velocidad</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Análisis detallado de frecuencia de transacciones y picos de demanda operativa.</p>
+            <h1 className="text-slate-900 dark:text-white text-3xl font-black leading-tight tracking-tight uppercase">Tendencias Temporales y Velocidad</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Análisis detallado de frecuencia de transacciones y picos de demanda operativa.</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-sm font-medium shadow-sm">
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-sm font-bold shadow-sm font-mono uppercase tracking-tighter">
               <Calendar size={18} className="text-slate-400" />
               <span>{periodLabel}</span>
             </div>
-            <button className="flex items-center gap-2 bg-[#137fec] hover:bg-[#137fec]/90 text-white px-5 py-2 rounded-lg font-bold text-sm transition-all shadow-md shadow-[#137fec]/20">
+            <button className="flex items-center gap-2 bg-[#137fec] hover:bg-[#137fec]/90 text-white px-5 py-2 rounded-lg font-bold text-sm transition-all shadow-md shadow-[#137fec]/20 uppercase tracking-wider">
               <RefreshCcw size={18} />
               <span>Actualizar</span>
             </button>
@@ -127,17 +127,17 @@ const TrendsVelocity = () => {
         <div className="bg-white dark:bg-slate-900 p-8 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <h2 className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">Heatmap de Ventas</h2>
+              <h2 className="text-slate-900 dark:text-white text-xl font-bold tracking-tight uppercase">Heatmap de Ventas</h2>
               <Info size={18} className="text-slate-400 cursor-help" />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Baja</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Baja</span>
               <div className="flex gap-1">
                 {[0.1, 0.3, 0.6, 0.9].map(op => (
                   <div key={op} className="size-3 rounded-sm bg-[#137fec]" style={{ opacity: op }}></div>
                 ))}
               </div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alta</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Alta</span>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -145,16 +145,16 @@ const TrendsVelocity = () => {
               <div className="grid grid-cols-[80px_repeat(24,1fr)] gap-1 mb-2">
                 <div></div>
                 {Array.from({length: 24}).map((_, i) => (
-                  <div key={i} className="text-[10px] font-bold text-slate-400 text-center">{i % 2 === 0 ? i.toString().padStart(2, '0') : ''}</div>
+                  <div key={i} className="text-[10px] font-black text-slate-400 text-center font-mono">{i % 2 === 0 ? i.toString().padStart(2, '0') : ''}</div>
                 ))}
               </div>
               {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((day, dIdx) => (
                 <div key={day} className="grid grid-cols-[80px_repeat(24,1fr)] gap-1 mb-1">
-                  <div className="text-xs font-bold text-slate-500 flex items-center pr-2">{day}</div>
+                  <div className="text-[10px] font-black text-slate-500 flex items-center pr-2 uppercase tracking-tighter">{day}</div>
                   {Array.from({length: 24}).map((_, hIdx) => {
                     const opacity = getHeatmapIntensity(dIdx, hIdx);
                     return (
-                      <div key={hIdx} className="h-8 rounded-sm bg-[#137fec] hover:scale-110 transition-transform cursor-pointer" style={{ opacity }}></div>
+                      <div key={hIdx} className="h-8 rounded-sm bg-[#137fec] hover:scale-110 transition-transform cursor-pointer shadow-sm border border-black/5" style={{ opacity }}></div>
                     );
                   })}
                 </div>
@@ -167,15 +167,15 @@ const TrendsVelocity = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Ventas por Día de la Semana */}
           <div className="bg-white dark:bg-slate-900 p-8 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[400px]">
-            <h2 className="text-slate-900 dark:text-white text-xl font-bold tracking-tight mb-8">Ventas por Día</h2>
-            <div className="flex-1">
+            <h2 className="text-slate-900 dark:text-white text-xl font-bold tracking-tight mb-8 uppercase">Ventas por Día</h2>
+            <div className="flex-1 font-mono">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={trendsData.daily}>
-                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeights: 'bold'}} />
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 'bold', fill: '#64748b'}} />
                   <Tooltip 
                     cursor={{fill: '#f1f5f9'}} 
-                    contentStyle={{borderRadius: '8px', border: 'none'}} 
-                    formatter={(value) => formatCurrency(value)}
+                    contentStyle={{borderRadius: '8px', border: 'none', fontFamily: 'Inter, sans-serif'}} 
+                    formatter={(value) => [formatCurrency(value), 'Ventas']}
                   />
                   <Bar dataKey="sales" fill="#137fec" radius={[4, 4, 0, 0]} barSize={40} />
                 </BarChart>
@@ -187,12 +187,12 @@ const TrendsVelocity = () => {
           <div className="bg-white dark:bg-slate-900 p-8 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[400px]">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">Ventas por Hora</h2>
-                <p className="text-xs font-medium text-slate-400">Distribución horaria</p>
+                <h2 className="text-slate-900 dark:text-white text-xl font-bold tracking-tight uppercase">Ventas por Hora</h2>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Distribución horaria</p>
               </div>
-              <div className="bg-[#137fec]/10 text-[#137fec] text-[10px] font-bold px-2 py-1 rounded-lg uppercase">Pico: 14:00</div>
+              <div className="bg-[#137fec]/10 text-[#137fec] text-[10px] font-black px-2 py-1 rounded uppercase font-mono tracking-widest">Pico: 14:00</div>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 font-mono">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trendsData.hourly}>
                   <defs>
@@ -201,10 +201,10 @@ const TrendsVelocity = () => {
                       <stop offset="95%" stopColor="#137fec" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} />
                   <Tooltip 
-                    contentStyle={{borderRadius: '8px', border: 'none'}} 
-                    formatter={(value) => formatCurrency(value)}
+                    contentStyle={{borderRadius: '8px', border: 'none', fontFamily: 'Inter, sans-serif'}} 
+                    formatter={(value) => [formatCurrency(value), 'Ventas']}
                   />
                   <Area type="monotone" dataKey="sales" stroke="#137fec" strokeWidth={3} fillOpacity={1} fill="url(#colorHr)" />
                 </AreaChart>
@@ -217,22 +217,22 @@ const TrendsVelocity = () => {
 };
 
 const VelocityKPICard = ({ title, value, icon, status, trend, isBadge }) => (
-  <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2 hover:border-[#137fec] transition-colors">
+  <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2 hover:border-[#137fec] transition-all group">
     <div className="flex justify-between items-start">
-      <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider">{title}</p>
+      <p className="text-slate-500 dark:text-slate-400 text-[11px] font-black uppercase tracking-widest group-hover:text-[#137fec] transition-colors">{title}</p>
       <div className="text-[#137fec] bg-[#137fec]/10 p-2 rounded-lg">
         {icon}
       </div>
     </div>
-    <p className="text-slate-900 dark:text-white text-3xl font-black tracking-tight">{value}</p>
+    <p className="text-slate-900 dark:text-white text-3xl font-black tracking-tight font-mono leading-none">{value}</p>
     <div className="flex items-center gap-1.5 mt-2">
       {trend}
       {isBadge ? (
-        <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
+        <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter font-mono">
           {status}
         </span>
       ) : (
-        <p className="text-slate-500 dark:text-slate-400 text-xs font-medium">{status}</p>
+        <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-tight">{status}</p>
       )}
     </div>
   </div>
