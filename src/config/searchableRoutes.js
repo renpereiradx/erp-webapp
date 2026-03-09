@@ -16,6 +16,7 @@ import {
   Award,
   PieChart,
   List,
+  Package,
   UserCheck,
   LayoutDashboard,
   BarChart3,
@@ -240,6 +241,38 @@ export const distinctSearchableRoutes = [
     href: '/profitability/sellers',
     icon: UserCheck,
     category: 'BI / Rentabilidad'
+  },
+  
+  // BI Forecasting (Business Intelligence)
+  {
+    name: 'Dashboard de Pronósticos Inteligentes (IA)',
+    href: '/bi/pronosticos/dashboard',
+    icon: LayoutDashboard,
+    category: 'BI / Pronósticos'
+  },
+  {
+    name: 'Análisis de Salud de Inventario y Quiebre de Stock',
+    href: '/bi/pronosticos/inventario',
+    icon: Package,
+    category: 'BI / Pronósticos'
+  },
+  {
+    name: 'Pronóstico de Ventas y Análisis Estacional',
+    href: '/bi/pronosticos/ventas',
+    icon: TrendingUp,
+    category: 'BI / Pronósticos'
+  },
+  {
+    name: 'Pronóstico de Demanda de Unidades y Categorías',
+    href: '/bi/pronosticos/demanda',
+    icon: BarChart3,
+    category: 'BI / Pronósticos'
+  },
+  {
+    name: 'Escenarios Financieros y Pronóstico de Ingresos',
+    href: '/bi/pronosticos/ingresos',
+    icon: BarChart,
+    category: 'BI / Pronósticos'
   },
   
   // Gestión de Usuarios y Perfil

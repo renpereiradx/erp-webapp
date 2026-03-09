@@ -88,6 +88,13 @@ import {
   StockManagement as BIStockManagement,
   InventoryRisk as BIInventoryRisk,
 } from '@/features/profitability'
+import {
+  DashboardPronosticos,
+  SaludInventario,
+  PronosticoVentas,
+  PronosticoDemanda,
+  PronosticoIngresos
+} from '@/features/bi-forecasting'
 import SalesAnalyticsDashboard from '@/pages/sales-analytics/Dashboard'
 import SalesAnalyticsProductsCategories from '@/pages/sales-analytics/ProductsCategories'
 import SalesAnalyticsInsights from '@/pages/sales-analytics/CustomerSellerInsights'
@@ -178,6 +185,13 @@ function AppContent() {
                       <Route path='/finance/profit-and-loss' element={<ProfitAndLoss />} />
                       <Route path='/finance/legal-books' element={<LegalBooks />} />
                       <Route path='/finance/profitability' element={<ProfitabilityAnalysis />} />
+                      
+                      {/* BI Forecasting Routes */}
+                      <Route path='/bi/pronosticos/dashboard' element={<DashboardPronosticos />} />
+                      <Route path='/bi/pronosticos/inventario' element={<SaludInventario />} />
+                      <Route path='/bi/pronosticos/ventas' element={<PronosticoVentas />} />
+                      <Route path='/bi/pronosticos/demanda' element={<PronosticoDemanda />} />
+                      <Route path='/bi/pronosticos/ingresos' element={<PronosticoIngresos />} />
                       
                       {/* Profitability Analytics Module (Detailed) */}
                       <Route path='/profitability/dashboard' element={<ProfitabilityDashboard />} />

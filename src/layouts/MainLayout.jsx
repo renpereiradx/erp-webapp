@@ -18,6 +18,7 @@ import {
   ShoppingBag,
   Calendar,
   BarChart3,
+  BarChart,
   Settings,
   Menu,
   X,
@@ -151,10 +152,42 @@ const MainLayout = ({ children }) => {
               ],
               },
               {
-              name: 'Analítica de Rentabilidad',
-              href: '#',
-              icon: BarChart3,
-              children: [
+                name: 'Pronósticos BI (IA)',
+                href: '#',
+                icon: Zap,
+                children: [
+                  {
+                    name: 'Dashboard de Pronósticos',
+                    href: '/bi/pronosticos/dashboard',
+                    icon: LayoutDashboard,
+                  },
+                  {
+                    name: 'Salud de Inventario',
+                    href: '/bi/pronosticos/inventario',
+                    icon: Package,
+                  },
+                  {
+                    name: 'Pronóstico de Ventas',
+                    href: '/bi/pronosticos/ventas',
+                    icon: TrendingUp,
+                  },
+                  {
+                    name: 'Pronóstico de Demanda',
+                    href: '/bi/pronosticos/demanda',
+                    icon: BarChart3,
+                  },
+                  {
+                    name: 'Escenarios de Ingresos',
+                    href: '/bi/pronosticos/ingresos',
+                    icon: BarChart,
+                  },
+                ],
+              },
+              {
+                name: 'Analítica de Rentabilidad',
+                href: '#',
+                icon: BarChart3,
+                children: [
               {
                 name: 'Dashboard Ejecutivo',
                 href: '/profitability/dashboard',
