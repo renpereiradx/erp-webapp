@@ -54,6 +54,10 @@ import Settings from '@/pages/Settings'
 import UserManagementList from '@/pages/UserManagementList'
 import UserDetailedProfile from '@/pages/UserDetailedProfile'
 import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity'
+import AuditDashboard from '@/pages/AuditDashboard'
+import AuditLogs from '@/pages/AuditLogs'
+import AuditLogDetail from '@/pages/AuditLogDetail'
+import AuditUserActivity from '@/pages/AuditUserActivity'
 // import ProductDetailTest from '@/components/ProductDetailTest';
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
@@ -298,6 +302,12 @@ function AppContent() {
                       <Route path='/perfil' element={<MyProfileAndSecurity />} />
                       <Route path='/usuarios' element={<UserManagementList />} />
                       <Route path='/usuarios/:id' element={<UserDetailedProfile />} />
+                      
+                      {/* Auditoría */}
+                      <Route path='/auditoria' element={<AuditDashboard />} />
+                      <Route path='/auditoria/logs' element={<AuditLogs />} />
+                      <Route path='/auditoria/logs/:id' element={<AuditLogDetail />} />
+                      <Route path='/auditoria/usuarios/:id' element={<AuditUserActivity />} />
 
                       {/* Configuración Financiera */}
                       <Route

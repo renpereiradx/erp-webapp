@@ -23,6 +23,7 @@ import {
   X,
   LogOut,
   User,
+  Shield,
   CreditCard,
   Receipt,
   DollarSign,
@@ -296,6 +297,23 @@ const MainLayout = ({ children }) => {
                 name: 'Estado de Resultados (P&L)',
                 href: '/finance/profit-and-loss',
                 icon: BarChart3,
+              },
+            ],
+          },
+          {
+            name: 'Auditoría de Sistema',
+            href: '#',
+            icon: Shield,
+            children: [
+              {
+                name: 'Dashboard de Auditoría',
+                href: '/auditoria',
+                icon: LayoutDashboard,
+              },
+              {
+                name: 'Registro de Logs',
+                href: '/auditoria/logs',
+                icon: List,
               },
             ],
           },

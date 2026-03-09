@@ -320,5 +320,25 @@ export const distinctSearchableRoutes = [
     href: '/movimientos-caja/nuevo',
     icon: PlusCircle,
     category: 'Caja'
+  },
+
+  // Auditoría de Sistema (Business Intelligence)
+  {
+    name: 'Dashboard de Auditoría y Seguridad',
+    href: '/auditoria',
+    icon: Shield,
+    category: 'BI / Auditoría'
+  },
+  {
+    name: 'Registro de Logs de Auditoría (Eventos)',
+    href: '/auditoria/logs',
+    icon: ClipboardList,
+    category: 'BI / Auditoría'
+  },
+  {
+    name: 'Reporte de Actividad por Usuario (Auditoría)',
+    href: '/auditoria/usuarios/USER001',
+    icon: User,
+    category: 'BI / Auditoría'
   }
 ]
