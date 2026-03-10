@@ -20,20 +20,20 @@ Este módulo agrega capacidades de inteligencia de negocios al ERP, permitiendo:
 
 ## Módulos
 
-| Módulo | Estado | Documentación |
-|--------|--------|---------------|
-| Dashboard | Completado | [dashboard-api.md](dashboard-api.md) |
-| Cuentas por Cobrar | Completado | [receivables-api.md](receivables-api.md) |
-| Cuentas por Pagar | Completado | [payables-api.md](payables-api.md) |
-| Reportes Financieros | Completado | [financial-reports-api.md](financial-reports-api.md) |
-| Analytics de Ventas | Completado | [sales-analytics-api.md](sales-analytics-api.md) |
-| Analytics de Inventario | Completado | [inventory-analytics-api.md](inventory-analytics-api.md) |
-| Análisis de Rentabilidad | Completado | [profitability-api.md](profitability-api.md) |
-| Comisiones | Deshabilitado | [commissions-api.md](commissions-api.md) |
-| Fidelización | Deshabilitado | [loyalty-api.md](loyalty-api.md) |
-| Auditoría | Completado | [audit-api.md](audit-api.md) |
-| Forecasting | Completado | [forecast-api.md](forecast-api.md) |
-| Metas | Deshabilitado | [goals-api.md](goals-api.md) |
+| Módulo                   | Estado        | Documentación                                            |
+| ------------------------ | ------------- | -------------------------------------------------------- |
+| Dashboard                | Completado    | [dashboard-api.md](dashboard-api.md)                     |
+| Cuentas por Cobrar       | Completado    | [receivables-api.md](receivables-api.md)                 |
+| Cuentas por Pagar        | Completado    | [payables-api.md](payables-api.md)                       |
+| Reportes Financieros     | Completado    | [financial-reports-api.md](financial-reports-api.md)     |
+| Analytics de Ventas      | Completado    | [sales-analytics-api.md](sales-analytics-api.md)         |
+| Analytics de Inventario  | Completado    | [inventory-analytics-api.md](inventory-analytics-api.md) |
+| Análisis de Rentabilidad | Completado    | [profitability-api.md](profitability-api.md)             |
+| Comisiones               | Deshabilitado | [commissions-api.md](commissions-api.md)                 |
+| Fidelización             | Deshabilitado | [loyalty-api.md](loyalty-api.md)                         |
+| Auditoría                | Completado    | [audit-api.md](audit-api.md)                             |
+| Forecasting              | Completado    | [forecast-api.md](forecast-api.md)                       |
+| Metas                    | Deshabilitado | [goals-api.md](goals-api.md)                             |
 
 ## Arquitectura
 
@@ -68,18 +68,31 @@ Este módulo agrega capacidades de inteligencia de negocios al ERP, permitiendo:
 ### Endpoints
 
 - Base path: `/api/v1/` (para nuevos endpoints de BI)
+- Compatibilidad Forecast: también se exponen rutas legacy en `/forecast/*`
 - Autenticación: JWT Bearer Token requerido
 - Formato: JSON
 - Fechas: ISO 8601 (`2025-01-15T10:30:00Z`)
 
+### Compatibilidad de Rutas (Forecast)
+
+Para mantener compatibilidad con frontend BI existente, el módulo de pronósticos acepta ambos prefijos:
+
+- `/api/v1/forecast/*` (principal)
+- `/forecast/*` (legacy)
+
+Ejemplos equivalentes:
+
+- `/api/v1/forecast/sales` y `/forecast/sales`
+- `/api/v1/forecast/dashboard` y `/forecast/dashboard`
+
 ### Parámetros de Fecha Comunes
 
-| Parámetro | Descripción | Ejemplo |
-|-----------|-------------|---------|
-| `start_date` | Fecha inicio del período | `2025-01-01` |
-| `end_date` | Fecha fin del período | `2025-01-31` |
-| `period` | Período predefinido | `today`, `week`, `month`, `year` |
-| `compare` | Comparar con período anterior | `true/false` |
+| Parámetro    | Descripción                   | Ejemplo                          |
+| ------------ | ----------------------------- | -------------------------------- |
+| `start_date` | Fecha inicio del período      | `2025-01-01`                     |
+| `end_date`   | Fecha fin del período         | `2025-01-31`                     |
+| `period`     | Período predefinido           | `today`, `week`, `month`, `year` |
+| `compare`    | Comparar con período anterior | `true/false`                     |
 
 ### Respuestas Estándar
 
@@ -122,4 +135,4 @@ Este módulo agrega capacidades de inteligencia de negocios al ERP, permitiendo:
 
 ---
 
-**Última actualización:** 2026-02-23
+**Última actualización:** 2026-03-09
