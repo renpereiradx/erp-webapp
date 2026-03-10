@@ -9,6 +9,7 @@ import { devtools } from 'zustand/middleware'
 import saleService from '@/services/saleService'
 import { telemetryService } from '@/services/telemetryService'
 import { DEMO_CONFIG_SALES } from '@/config/demoData'
+import { normalizeSalePriceGs } from '@/domain/pricing/sales/salesPricingPolicy'
 
 const getSaleIdentifier = sale =>
   sale?.sale_id || sale?.id || sale?.saleId || null
@@ -869,6 +870,8 @@ const useSaleStore = create()(
           )
         } else {
           // Agregar nuevo ítem (MVP: estructura simple)
+          // Normalizar precio a múltiplo de 50 según política PYG
+          const unitPriceGs = normalizeSalePriceGs(product.price)
           newItems = [
             ...currentSaleData.items,
             {
@@ -876,8 +879,8 @@ const useSaleStore = create()(
               product_id: product.id,
               name: product.name,
               quantity: quantity,
-              unit_price: product.price,
-              total_price: product.price * quantity,
+              unit_price: unitPriceGs,
+              total_price: unitPriceGs * quantity,
             },
           ]
         }
