@@ -154,11 +154,37 @@ export const payablesService = {
   },
 
   /**
-   * Rest of methods (simplified for demo/mvp)
+   * Get list of all payables/invoices
    */
   async getPayables(filters = {}, pagination = {}, sorting = {}) {
-    const endpoint = `${API_PREFIX}`
-    return _fetchWithRetry(async () => apiService.get(endpoint))
+    const startTime = Date.now()
+    try {
+      if (USE_MOCK) {
+        // We'll return a richer set of data for the master list
+        return _mockRes([
+          { id: 'FAC-45920', vendor: 'Logística Global S.A.', vendorId: 'PRV-001', dueDate: '12 Oct 2024', totalAmount: 4500000, pendingAmount: 1200000, status: 'PARCIAL', priority: 'ALTA', initials: 'LG' },
+          { id: 'FAC-45921', vendor: 'Distribuidora Central', vendorId: 'PRV-002', dueDate: '05 Oct 2024', totalAmount: 2800000, pendingAmount: 2800000, status: 'VENCIDO', priority: 'ALTA', initials: 'DC' },
+          { id: 'FAC-45922', vendor: 'Suministros Industriales', vendorId: 'PRV-003', dueDate: '25 Oct 2024', totalAmount: 8500000, pendingAmount: 0, status: 'PAGADO', priority: 'BAJA', initials: 'SI' },
+          { id: 'FAC-45923', vendor: 'Tecnología Avanzada', vendorId: 'PRV-004', dueDate: '18 Oct 2024', totalAmount: 12400000, pendingAmount: 12400000, status: 'PENDIENTE', priority: 'MEDIA', initials: 'TA' },
+          { id: 'FAC-45924', vendor: 'Mantenimiento Express', vendorId: 'PRV-005', dueDate: '02 Oct 2024', totalAmount: 950000, pendingAmount: 950000, status: 'VENCIDO', priority: 'ALTA', initials: 'ME' },
+          { id: 'FAC-45925', vendor: 'Papelería del Este', vendorId: 'PRV-006', dueDate: '30 Oct 2024', totalAmount: 1200000, pendingAmount: 1200000, status: 'PENDIENTE', priority: 'BAJA', initials: 'PE' }
+        ])
+      }
+
+      const endpoint = `${API_PREFIX}`
+      const result = await _fetchWithRetry(async () => apiService.get(endpoint, { params: { ...filters, ...pagination, ...sorting } }))
+      telemetry.record('payables.service.list', {
+        duration: Date.now() - startTime,
+      })
+      return result
+    } catch (error) {
+      telemetry.record('payables.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getPayables',
+      })
+      throw error
+    }
   },
 
   async getPayableById(id) {

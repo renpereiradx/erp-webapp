@@ -176,7 +176,7 @@ function AppContent() {
                       <Route path='/dashboard/top-products' element={<TopProductsOverview />} />
                       <Route path='/dashboard/receivables' element={<ReceivablesDashboard />} />
                       <Route path='/dashboard/payables' element={<PayablesDashboard />} />
-                      <Route path='/payables/list' element={<InvoicesMasterList />} />
+                      <Route path='/payables/invoices' element={<InvoicesMasterList />} />
                       <Route path='/payables/detail/:id' element={<InvoiceDetail />} />
                       <Route path='/payables/cash-flow' element={<CashFlowProjection />} />
                       <Route path='/payables/aging-report' element={<PayablesAgingReport />} />
@@ -214,7 +214,7 @@ function AppContent() {
                       <Route path='/productos' element={<Products />} />
                       <Route path='/clientes' element={<Clients />} />
                       <Route path='/proveedores' element={<Suppliers />} />
-                      <Route path='/proveedores/:id/analisis' element={<SupplierAnalysis />} />
+                      <Route path='/payables/suppliers/:id/analysis' element={<SupplierAnalysis />} />
                       <Route path='/ventas' element={<SalesNew />} />
                       
                       {/* Sales Analytics Routes */}

@@ -2,14 +2,6 @@
    FLUENT 2 RESOURCES - LOCAL FONTS
    ============================================================================= */
 
-/* Inter - UI & Reading */
-@font-face {
-  font-family: 'Inter';
-  src: url('/fonts/inter.ttf') format('truetype');
-  font-weight: 100 900;
-  font-display: swap;
-}
-
 /* JetBrains Mono - Numbers & Codes */
 @font-face {
   font-family: 'JetBrains Mono';

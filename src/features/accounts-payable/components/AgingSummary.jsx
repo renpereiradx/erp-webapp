@@ -20,7 +20,7 @@ const AgingSummary = ({ aging = [], stats = {} }) => {
       <div className="space-y-7">
         {aging.map((item, index) => {
           let textClass = 'font-bold uppercase tracking-wide text-xs';
-          let valClass = 'font-bold text-sm';
+          let valClass = 'font-mono font-black text-sm';
           if (item.critical) {
             textClass += ' text-fluent-danger';
             valClass += ' text-fluent-danger';
@@ -43,7 +43,7 @@ const AgingSummary = ({ aging = [], stats = {} }) => {
                   className={`${item.color} h-full flex items-center justify-end px-3 rounded-lg transition-all duration-1000 shadow-sm`}
                   style={{ width: `${item.percentage}%` }}
                 >
-                  <span className="text-[10px] text-white font-bold">{item.percentage}%</span>
+                  <span className="text-[10px] text-white font-mono font-black">{item.percentage}%</span>
                 </div>
               </div>
             </div>
@@ -54,19 +54,19 @@ const AgingSummary = ({ aging = [], stats = {} }) => {
       <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-700 grid grid-cols-4 gap-4 text-center">
         <div className="space-y-1">
           <p className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.1em]">Total</p>
-          <p className="text-base font-bold text-slate-900 dark:text-white">{stats.total}</p>
+          <p className="text-base font-mono font-black text-slate-900 dark:text-white">{stats.total}</p>
         </div>
         <div className="space-y-1">
           <p className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.1em]">Al Corriente</p>
-          <p className="text-base font-bold text-fluent-success">{stats.onTime}</p>
+          <p className="text-base font-mono font-black text-fluent-success">{stats.onTime}</p>
         </div>
         <div className="space-y-1">
           <p className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.1em]">Venc. Crítico</p>
-          <p className="text-base font-bold text-fluent-danger">{stats.critical}</p>
+          <p className="text-base font-mono font-black text-fluent-danger">{stats.critical}</p>
         </div>
         <div className="space-y-1">
           <p className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.1em]">Promedio</p>
-          <p className="text-base font-bold text-slate-900 dark:text-white">{stats.avgDays}</p>
+          <p className="text-base font-mono font-black text-slate-900 dark:text-white">{stats.avgDays}</p>
         </div>
       </div>
     </div>

@@ -1,8 +1,16 @@
-import axios from 'axios';
-import { profitabilityMocks } from '@/data/profitabilityMocks';
+import { profitabilityMocks } from '@/data/profitabilityMocks'
+import { DEMO_CONFIG } from '@/config/demoAuth'
+import { apiClient } from '@/services/api'
 
-const isDemo = import.meta.env.VITE_APP_DEMO === 'true' || true; // Forzado a true para desarrollo inicial
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const isDemo = DEMO_CONFIG.enabled
+
+const get = async (endpoint, params = {}, mockData) => {
+  if (isDemo) return { success: true, data: mockData }
+  return apiClient.makeRequest(endpoint, {
+    method: 'GET',
+    params,
+  })
+}
 
 /**
  * Servicio para obtener datos de rentabilidad.
@@ -10,46 +18,44 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
  */
 const profitabilityService = {
   getDashboard: async (period = 'month') => {
-    if (isDemo) return { success: true, data: profitabilityMocks.dashboard };
-    const response = await axios.get(`${API_BASE_URL}/profitability/dashboard`, { params: { period } });
-    return response.data;
+    return get(
+      '/profitability/dashboard',
+      { period },
+      profitabilityMocks.dashboard,
+    )
   },
 
   getOverview: async (period = 'month') => {
-    if (isDemo) return { success: true, data: profitabilityMocks.overview };
-    const response = await axios.get(`${API_BASE_URL}/profitability/overview`, { params: { period } });
-    return response.data;
+    return get(
+      '/profitability/overview',
+      { period },
+      profitabilityMocks.overview,
+    )
   },
 
-  getProducts: async (params) => {
-    if (isDemo) return { success: true, data: profitabilityMocks.products };
-    const response = await axios.get(`${API_BASE_URL}/profitability/products`, { params });
-    return response.data;
+  getProducts: async params => {
+    return get('/profitability/products', params, profitabilityMocks.products)
   },
 
-  getCustomers: async (params) => {
-    if (isDemo) return { success: true, data: profitabilityMocks.customers };
-    const response = await axios.get(`${API_BASE_URL}/profitability/customers`, { params });
-    return response.data;
+  getCustomers: async params => {
+    return get('/profitability/customers', params, profitabilityMocks.customers)
   },
 
   getCategories: async (period = 'month') => {
-    if (isDemo) return { success: true, data: profitabilityMocks.categories };
-    const response = await axios.get(`${API_BASE_URL}/profitability/categories`, { params: { period } });
-    return response.data;
+    return get(
+      '/profitability/categories',
+      { period },
+      profitabilityMocks.categories,
+    )
   },
 
-  getTrends: async (params) => {
-    if (isDemo) return { success: true, data: profitabilityMocks.trends };
-    const response = await axios.get(`${API_BASE_URL}/profitability/trends`, { params });
-    return response.data;
+  getTrends: async params => {
+    return get('/profitability/trends', params, profitabilityMocks.trends)
   },
 
   getSellers: async (period = 'month') => {
-    if (isDemo) return { success: true, data: profitabilityMocks.sellers };
-    const response = await axios.get(`${API_BASE_URL}/profitability/sellers`, { params: { period } });
-    return response.data;
-  }
-};
+    return get('/profitability/sellers', { period }, profitabilityMocks.sellers)
+  },
+}
 
-export default profitabilityService;
+export default profitabilityService

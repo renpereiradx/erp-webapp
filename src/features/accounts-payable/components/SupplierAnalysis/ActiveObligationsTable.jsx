@@ -49,11 +49,11 @@ const ActiveObligationsTable = ({ invoices, summary }) => {
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs md:text-sm">
             {invoices.map((invoice, idx) => (
               <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <td className="px-4 md:px-8 py-4 font-medium text-[#137fec]">{invoice.id}</td>
-                <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{invoice.date}</td>
-                <td className="px-4 py-4 text-right font-medium text-slate-700 dark:text-slate-300">Gs. {invoice.originalAmount.toLocaleString()}</td>
-                <td className="px-4 py-4 text-right font-bold text-slate-900 dark:text-white">Gs. {invoice.pendingAmount.toLocaleString()}</td>
-                <td className={`px-4 py-4 font-medium ${invoice.isOverdue ? 'text-[#dc3545]' : 'text-slate-600 dark:text-slate-400'}`}>
+                <td className="px-4 md:px-8 py-4 font-mono font-bold text-[#137fec]">{invoice.id}</td>
+                <td className="px-4 py-4 font-mono text-slate-600 dark:text-slate-400">{invoice.date}</td>
+                <td className="px-4 py-4 text-right font-mono font-bold text-slate-700 dark:text-slate-300 tabular-nums">Gs. {invoice.originalAmount.toLocaleString()}</td>
+                <td className="px-4 py-4 text-right font-mono font-black text-slate-900 dark:text-white tabular-nums">Gs. {invoice.pendingAmount.toLocaleString()}</td>
+                <td className={`px-4 py-4 font-mono font-bold ${invoice.isOverdue ? 'text-[#dc3545]' : 'text-slate-600 dark:text-slate-400'}`}>
                   {invoice.dueDate}
                 </td>
                 <td className="px-4 py-4">

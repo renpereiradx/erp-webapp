@@ -29,18 +29,18 @@ const UpcomingPayments = ({ payments = [] }) => {
             <div key={payment.id} className="p-4 border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all flex items-center gap-5 group cursor-pointer">
               <div className={`${isUrgent ? 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-900/30' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700'} p-2.5 rounded-xl flex flex-col items-center justify-center min-w-[54px] border shadow-sm group-hover:scale-105 transition-transform`}>
                 <span className={`text-[10px] font-black ${isUrgent ? 'text-fluent-danger' : 'text-slate-400'} uppercase tracking-tight`}>{payment.date.month}</span>
-                <span className={`text-xl font-extrabold ${isUrgent ? 'text-fluent-danger' : 'text-slate-900 dark:text-white'} leading-none mt-0.5`}>{payment.date.day}</span>
+                <span className={`text-xl font-mono font-black ${isUrgent ? 'text-fluent-danger' : 'text-slate-900 dark:text-white'} leading-none mt-0.5`}>{payment.date.day}</span>
               </div>
               
               <div className="flex-grow min-w-0">
                 <p className="text-sm font-extrabold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{payment.vendor}</p>
                 <p className="text-[11px] font-semibold text-slate-500 flex items-center mt-0.5 uppercase tracking-wide">
-                  <span className="opacity-50 mr-1">Factura:</span> {payment.invoice}
+                  <span className="opacity-50 mr-1">Factura:</span> <span className="font-mono font-bold">{payment.invoice}</span>
                 </p>
               </div>
               
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-black text-slate-900 dark:text-white">
+                <p className="text-sm font-mono font-black text-slate-900 dark:text-white">
                   {formatPYG(payment.amount)}
                 </p>
                 <span className={`text-[9px] px-2 py-0.5 rounded-full ${statusClasses} font-black uppercase tracking-widest mt-1 inline-block`}>

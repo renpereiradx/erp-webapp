@@ -136,7 +136,7 @@ export const distinctSearchableRoutes = [
   },
   {
     name: 'Lista Maestra de Facturas',
-    href: '/payables/list',
+    href: '/payables/invoices',
     icon: FileText,
     category: 'Finanzas / Cuentas por Pagar'
   },

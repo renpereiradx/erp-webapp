@@ -11,6 +11,7 @@ export const usePayables = () => {
   const { toast } = useToast()
 
   const [overview, setOverview] = useState(null)
+  const [payables, setPayables] = useState([])
   const [topSuppliers, setTopSuppliers] = useState([])
   const [schedule, setSchedule] = useState([])
   const [agingSummary, setAgingSummary] = useState(null)
@@ -31,6 +32,31 @@ export const usePayables = () => {
       toast({
         title: 'Error',
         description: 'No se pudo cargar el resumen de cuentas por pagar.',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [toast])
+
+  const fetchPayables = useCallback(async (filters = {}, pagination = {}) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await payablesService.getPayables(filters, pagination)
+      if (response.success) {
+        // Validación de seguridad: asegurar que sea un array
+        const data = Array.isArray(response.data) 
+          ? response.data 
+          : (response.data?.payables || [])
+        setPayables(data)
+      }
+      return response
+    } catch (err) {
+      setError(err.message)
+      toast({
+        title: 'Error',
+        description: 'No se pudieron cargar las facturas.',
         variant: 'destructive',
       })
     } finally {
@@ -137,12 +163,14 @@ export const usePayables = () => {
     loading,
     error,
     overview,
+    payables,
     topSuppliers,
     schedule,
     agingSummary,
     agingReport,
     statistics,
     fetchOverview,
+    fetchPayables,
     fetchTopSuppliers,
     fetchSchedule,
     fetchAgingSummary,

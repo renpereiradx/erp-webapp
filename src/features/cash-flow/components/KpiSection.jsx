@@ -38,7 +38,7 @@ const KpiSection = ({ coverageRatio, netFlow, totalInflows, totalOutflows }) => 
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">{coverageRatio}</span>
+              <span className="text-3xl font-mono font-black text-slate-900 dark:text-white">{coverageRatio}</span>
               <span className="text-[10px] font-black text-green-600 flex items-center gap-1 mt-1 uppercase tracking-tighter">
                 <TrendingUp className="h-3 w-3" /> Saludable
               </span>
@@ -59,11 +59,11 @@ const KpiSection = ({ coverageRatio, netFlow, totalInflows, totalOutflows }) => 
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+              <span className="text-3xl lg:text-4xl font-mono font-black tracking-tight text-slate-900 dark:text-white tabular-nums">
                 Gs. {netFlow.toLocaleString('es-PY')}
               </span>
-              <div className="mt-1 text-xs font-bold text-green-600 flex items-center gap-1">
-                +12.4% <span className="text-slate-400 font-medium tracking-tight">vs. mes anterior</span>
+              <div className="mt-1 text-xs font-mono font-bold text-green-600 flex items-center gap-1">
+                +12.4% <span className="text-slate-400 font-medium font-sans tracking-tight">vs. mes anterior</span>
               </div>
             </div>
           </div>
@@ -91,14 +91,14 @@ const KpiSection = ({ coverageRatio, netFlow, totalInflows, totalOutflows }) => 
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+              <span className="text-3xl lg:text-4xl font-mono font-black tracking-tight text-slate-900 dark:text-white tabular-nums">
                 Gs. {totalInflows.toLocaleString('es-PY')}
               </span>
             </div>
           </div>
           <div className="mt-6 space-y-2">
-            <div className="flex justify-between text-[10px] font-bold uppercase">
-              <span className="text-slate-500">Facturación</span>
+            <div className="flex justify-between text-[10px] font-mono font-bold uppercase">
+              <span className="text-slate-500 font-sans">Facturación</span>
               <span className="text-slate-900 dark:text-white font-black">85%</span>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -119,14 +119,14 @@ const KpiSection = ({ coverageRatio, netFlow, totalInflows, totalOutflows }) => 
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-3xl lg:text-4xl font-black tracking-tight text-orange-500">
+              <span className="text-3xl lg:text-4xl font-mono font-black tracking-tight text-orange-500 tabular-nums">
                 Gs. {totalOutflows.toLocaleString('es-PY')}
               </span>
             </div>
           </div>
           <div className="mt-6 space-y-2">
-            <div className="flex justify-between text-[10px] font-bold uppercase">
-              <span className="text-slate-500">Compromisos Fijos</span>
+            <div className="flex justify-between text-[10px] font-mono font-bold uppercase">
+              <span className="text-slate-500 font-sans">Compromisos Fijos</span>
               <span className="text-slate-900 dark:text-white font-black">62%</span>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
