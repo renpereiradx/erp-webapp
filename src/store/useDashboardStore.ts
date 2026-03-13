@@ -1,29 +1,111 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { clientService } from '../services/clientService';
 import { 
   DEMO_CONFIG_DASHBOARD, 
-  getDemoDashboardData,
-  getDemoClientStats,
-  getDemoProductStats,
-  getDemoSalesStats
+  getDemoDashboardData
 } from '../config/demoData';
-// import { productService } from '../services/productService'; // A futuro
-// import { saleService } from '../services/saleService'; // A futuro
 import { dashboardService } from '../services/dashboardService';
 
-const useDashboardStore = create()(
+// Interfaces para el estado del Dashboard
+export interface DashboardSummary {
+  sales_today: number;
+  sales_this_week: number;
+  sales_this_month: number;
+  total_revenue: number;
+  revenue_trend: string | number;
+  active_customers: number;
+  low_stock_alerts: number;
+}
+
+export interface DashboardKPIs {
+  sales_kpis: {
+    average_ticket: number;
+    sales_per_day: number;
+    conversion_rate: number;
+    repeat_customer_rate: number;
+  };
+  financial_kpis: {
+    net_margin: number;
+    gross_margin: number;
+    operating_expense_ratio: number;
+  };
+  customer_kpis: {
+    new_customers: number;
+    active_customers: number;
+    total_customers: number;
+    average_purchase_frequency: number;
+  };
+  inventory_kpis: {
+    turnover_rate: number;
+  };
+}
+
+export interface DashboardAlert {
+  id: string | number;
+  severity: 'info' | 'warning' | 'error' | 'success';
+  message: string;
+  category: string;
+}
+
+export interface DashboardActivity {
+  id: string | number;
+  type: string;
+  description: string;
+  timestamp: string;
+  user?: string;
+}
+
+export interface TopProduct {
+  id: string | number;
+  name: string;
+  category: string;
+  quantity_sold: number;
+  revenue: number;
+  profit: number;
+  margin_percentage: number;
+  trend: string;
+  stock_status: string;
+}
+
+export interface DashboardState {
+  // Estado de las métricas
+  summary: DashboardSummary | null;
+  kpis: DashboardKPIs | null;
+  alerts: DashboardAlert[];
+  activities: DashboardActivity[];
+  
+  // Estados de carga y error
+  loading: boolean;
+  error: string | null;
+
+  // Estado para nuevas páginas
+  salesHeatmap: any | null; // Se puede refinar a futuro
+  topProducts: TopProduct[];
+  topProductsMetrics: {
+    total_revenue: number;
+    total_profit: number;
+  } | null;
+
+  // Acciones
+  fetchKPIData: (period?: string) => Promise<void>;
+  fetchSalesHeatmap: (weeks?: number) => Promise<void>;
+  fetchTopProducts: (period?: string, limit?: number, sortBy?: string) => Promise<void>;
+  fetchDashboardData: () => Promise<void>;
+}
+
+const useDashboardStore = create<DashboardState>()(
   devtools(
     (set) => ({
-      // Estado de las métricas
+      // Estado inicial
       summary: null,
       kpis: null,
       alerts: [],
       activities: [],
-      
-      // Estados de carga y error
       loading: false,
       error: null,
+      salesHeatmap: null,
+      topProducts: [],
+      topProductsMetrics: null,
 
       // Acción para cargar los KPIs detallados
       fetchKPIData: async (period = 'month') => {
@@ -31,7 +113,7 @@ const useDashboardStore = create()(
         try {
           const response = await dashboardService.getKPIs(period);
           set({ kpis: response.data, loading: false });
-        } catch (error) {
+        } catch (error: any) {
           if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
               console.log('🔄 Dashboard: Mapeando KPIs de modo demo...');
               try {
@@ -39,7 +121,7 @@ const useDashboardStore = create()(
                   const { clientStats } = demo.data;
                   
                   // Mapeo de demoData a API structure
-                  const mappedKPIs = {
+                  const mappedKPIs: DashboardKPIs = {
                       sales_kpis: {
                           average_ticket: 350000,
                           sales_per_day: 15,
@@ -74,19 +156,13 @@ const useDashboardStore = create()(
         }
       },
       
-      // Estado para nuevas páginas
-      salesHeatmap: null,
-      topProducts: [],
-      topProductsMetrics: null,
-
       fetchSalesHeatmap: async (weeks = 4) => {
         set({ loading: true, error: null });
         try {
             const response = await dashboardService.getSalesHeatmap(weeks);
             set({ salesHeatmap: response.data, loading: false });
-        } catch(error) {
+        } catch(error: any) {
             console.error('❌ Dashboard: Error loading heatmap:', error.message);
-            // Fallback mock (opcional, por ahora solo error)
             set({ error: error.message, loading: false });
         }
       },
@@ -103,15 +179,14 @@ const useDashboardStore = create()(
                 },
                 loading: false 
             });
-        } catch(error) {
+        } catch(error: any) {
              if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
                 console.log('🔄 Dashboard: Mapeando Top Products de modo demo...');
                 try {
                     const demo = await getDemoDashboardData();
                     const { topProducts } = demo.charts;
                     
-                    // Mapeo de demoData a API structure (enriqueciendo con datos para la UI)
-                    const mappedTopProducts = topProducts.map(p => ({
+                    const mappedTopProducts: TopProduct[] = topProducts.map((p: any) => ({
                         id: p.id,
                         name: p.name,
                         category: p.category || 'General',
@@ -143,12 +218,10 @@ const useDashboardStore = create()(
         }
       },
 
-      // Acción para cargar todos los datos del dashboard
       fetchDashboardData: async () => {
         set({ loading: true, error: null });
         
         try {
-          // Cargar datos de la API real en paralelo de forma resiliente
           const results = await Promise.allSettled([
              dashboardService.getSummary(),
              dashboardService.getAlerts(),
@@ -157,28 +230,26 @@ const useDashboardStore = create()(
 
           const [summaryRes, alertsRes, activityRes] = results;
 
-          // El resumen es crítico, si falla, lanzamos el error
           if (summaryRes.status === 'rejected') {
             throw summaryRes.reason;
           }
 
-          // Alertas y actividad son opcionales/secundarios, si fallan usamos defaults
           const summaryData = summaryRes.value.data;
           
           const alertsData = alertsRes.status === 'fulfilled' 
-            ? alertsRes.value.data.alerts 
+            ? (alertsRes.value.data as any).alerts 
             : [];
             
           if (alertsRes.status === 'rejected') {
-            console.warn('⚠️ Dashboard: Falló la carga de alertas:', alertsRes.reason.message);
+            console.warn('⚠️ Dashboard: Falló la carga de alertas:', (alertsRes.reason as any).message);
           }
 
           const activitiesData = activityRes.status === 'fulfilled' 
-            ? activityRes.value.data.activities 
+            ? (activityRes.value.data as any).activities 
             : [];
 
           if (activityRes.status === 'rejected') {
-            console.warn('⚠️ Dashboard: Falló la carga de actividad reciente:', activityRes.reason.message);
+            console.warn('⚠️ Dashboard: Falló la carga de actividad reciente:', (activityRes.reason as any).message);
           }
 
           set({
@@ -189,8 +260,7 @@ const useDashboardStore = create()(
             error: null
           });
           
-        } catch (error) {
-          // Fallback silencioso a datos demo si está habilitado
+        } catch (error: any) {
           if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
             console.log('🔄 Dashboard: Mapeando datos de modo demo...');
             try {
@@ -211,7 +281,7 @@ const useDashboardStore = create()(
                   { id: 1, severity: 'warning', message: `Stock bajo en ${data.productStats.lowStock} productos`, category: 'inventory' },
                   { id: 2, severity: 'info', message: `${data.clientStats.new_this_month} nuevos clientes este mes`, category: 'sales' }
                 ],
-                activities: charts.recentActivity,
+                activities: (charts as any).recentActivity,
                 loading: false,
                 error: null
               });

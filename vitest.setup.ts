@@ -9,7 +9,7 @@ import { tRaw } from '@/lib/i18n';
 
 const fakeT = (key, vars) => {
   if (!key) return '';
-  let template = tRaw(key);
+  let template = tRaw(key, '', {});
   // If tRaw returns the key, fall back to a readable fragment
   if (!template || template === key) template = (key.includes('.') ? key.split('.').slice(-1)[0].replace(/_/g, ' ') : key);
   if (!vars) return template;

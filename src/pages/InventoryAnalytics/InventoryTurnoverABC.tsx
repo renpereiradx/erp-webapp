@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { inventoryAnalyticsService } from '../../services/inventoryAnalyticsService';
-import { InventoryTurnoverData } from '../../data/mockInventoryABCData';
 import { SummaryCard } from '../../components/InventoryAnalytics/SummaryCard';
 import { CategoryTurnoverTable } from '../../components/InventoryAnalytics/CategoryTurnoverTable';
 import { ABCParetoChart } from '../../components/InventoryAnalytics/ABCParetoChart';
