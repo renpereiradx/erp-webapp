@@ -24,10 +24,12 @@ Obtiene el estado de resultados (P&L).
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `period` | string | No | Período: `today`, `week`, `month`, `year`. Default: `month` |
-| `compare` | bool | No | Comparar con período anterior |
+| Parámetro | Tipo   | Requerido | Descripción                                                 |
+| --------- | ------ | --------- | ----------------------------------------------------------- |
+| `period`  | string | No        | Período: `today`, `week`, `month`, `year`. Default: `month` |
+| `compare` | bool   | No        | Comparar con período anterior                               |
+
+> **Nota:** El objeto `comparison` solo se incluye en la respuesta cuando se pasa `compare=true`.
 
 **Response:**
 
@@ -64,6 +66,7 @@ Obtiene el estado de resultados (P&L).
     "cost_of_sales": {
       "purchases": 35000000,
       "purchase_returns": 200000,
+      "beginning_inventory": 20000000,
       "ending_inventory": 15000000,
       "cost_of_goods_sold": 32000000
     },
@@ -72,6 +75,17 @@ Obtiene el estado de resultados (P&L).
       "margin": 34.02,
       "percentage": 34.02
     },
+    "expenses": {
+      "operating": 0,
+      "salaries": 0,
+      "rent": 0,
+      "utilities": 0,
+      "marketing": 0,
+      "other": 0,
+      "total": 0
+    },
+    "other_income": 0,
+    "other_expenses": 0,
     "operating_income": 16500000,
     "net_income": 16500000,
     "comparison": {
@@ -91,10 +105,10 @@ Obtiene el estado de resultados por rango de fechas.
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `start_date` | string | Sí | Fecha inicio (YYYY-MM-DD) |
-| `end_date` | string | Sí | Fecha fin (YYYY-MM-DD) |
+| Parámetro    | Tipo   | Requerido | Descripción               |
+| ------------ | ------ | --------- | ------------------------- |
+| `start_date` | string | Sí        | Fecha inicio (YYYY-MM-DD) |
+| `end_date`   | string | Sí        | Fecha fin (YYYY-MM-DD)    |
 
 ---
 
@@ -106,9 +120,9 @@ Obtiene el estado de flujo de efectivo.
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `period` | string | No | Período: `today`, `week`, `month`, `year`. Default: `month` |
+| Parámetro | Tipo   | Requerido | Descripción                                                 |
+| --------- | ------ | --------- | ----------------------------------------------------------- |
+| `period`  | string | No        | Período: `today`, `week`, `month`, `year`. Default: `month` |
 
 **Response:**
 
@@ -163,9 +177,9 @@ Obtiene el reporte de IVA.
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `period` | string | No | Período: `today`, `week`, `month`, `year`. Default: `month` |
+| Parámetro | Tipo   | Requerido | Descripción                                                 |
+| --------- | ------ | --------- | ----------------------------------------------------------- |
+| `period`  | string | No        | Período: `today`, `week`, `month`, `year`. Default: `month` |
 
 **Response:**
 
@@ -224,10 +238,10 @@ Obtiene el reporte de IVA para un mes específico.
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `year` | int | No | Año. Default: año actual |
-| `month` | int | No | Mes (1-12). Default: mes actual |
+| Parámetro | Tipo | Requerido | Descripción                     |
+| --------- | ---- | --------- | ------------------------------- |
+| `year`    | int  | No        | Año. Default: año actual        |
+| `month`   | int  | No        | Mes (1-12). Default: mes actual |
 
 ---
 
@@ -239,11 +253,11 @@ Obtiene el libro de ventas.
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `period` | string | No | Período. Default: `month` |
-| `page` | int | No | Página. Default: 1 |
-| `page_size` | int | No | Registros por página. Default: 50, Max: 500 |
+| Parámetro   | Tipo   | Requerido | Descripción                                 |
+| ----------- | ------ | --------- | ------------------------------------------- |
+| `period`    | string | No        | Período. Default: `month`                   |
+| `page`      | int    | No        | Página. Default: 1                          |
+| `page_size` | int    | No        | Registros por página. Default: 50, Max: 500 |
 
 **Response:**
 
@@ -300,11 +314,11 @@ Obtiene el libro de compras.
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `period` | string | No | Período. Default: `month` |
-| `page` | int | No | Página. Default: 1 |
-| `page_size` | int | No | Registros por página. Default: 50, Max: 500 |
+| Parámetro   | Tipo   | Requerido | Descripción                                 |
+| ----------- | ------ | --------- | ------------------------------------------- |
+| `period`    | string | No        | Período. Default: `month`                   |
+| `page`      | int    | No        | Página. Default: 1                          |
+| `page_size` | int    | No        | Registros por página. Default: 50, Max: 500 |
 
 **Response:**
 
@@ -355,10 +369,10 @@ Obtiene el reporte de márgenes de rentabilidad.
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `period` | string | No | Período. Default: `month` |
-| `limit` | int | No | Límite de productos. Default: 20, Max: 100 |
+| Parámetro | Tipo   | Requerido | Descripción                                |
+| --------- | ------ | --------- | ------------------------------------------ |
+| `period`  | string | No        | Período. Default: `month`                  |
+| `limit`   | int    | No        | Límite de productos. Default: 20, Max: 100 |
 
 **Response:**
 
@@ -391,9 +405,9 @@ Obtiene el reporte de márgenes de rentabilidad.
     "by_product": [...],
     "top_profitable": [
       {
-        "product_id": "uuid",
+        "product_id": "7vOJEs6Hg",
         "product_name": "Producto Premium",
-        "sku": "SKU-001",
+        "sku": "7vOJEs6Hg",
         "category_name": "Electrónicos",
         "revenue": 5000000,
         "cost": 2500000,
@@ -417,6 +431,8 @@ Obtiene el reporte de márgenes de rentabilidad.
 }
 ```
 
+> **Nota:** En la implementación actual, `sku` en `top_profitable` y `least_profitable` se expone usando el `id` del producto como string (no el campo barcode).
+
 #### GET /financial-reports/profit-margins/date-range
 
 Obtiene el reporte de márgenes por rango de fechas.
@@ -431,9 +447,9 @@ Obtiene el resumen fiscal.
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `period` | string | No | Período. Default: `month` |
+| Parámetro | Tipo   | Requerido | Descripción               |
+| --------- | ------ | --------- | ------------------------- |
+| `period`  | string | No        | Período. Default: `month` |
 
 **Response:**
 
@@ -471,9 +487,9 @@ Obtiene el resumen fiscal anual.
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `year` | int | No | Año. Default: año actual |
+| Parámetro | Tipo | Requerido | Descripción              |
+| --------- | ---- | --------- | ------------------------ |
+| `year`    | int  | No        | Año. Default: año actual |
 
 ---
 
@@ -485,10 +501,12 @@ Obtiene el resumen financiero general.
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `period` | string | No | Período. Default: `month` |
-| `compare` | bool | No | Comparar con período anterior |
+| Parámetro | Tipo   | Requerido | Descripción                   |
+| --------- | ------ | --------- | ----------------------------- |
+| `period`  | string | No        | Período. Default: `month`     |
+| `compare` | bool   | No        | Comparar con período anterior |
+
+> **Nota:** El objeto `comparison` solo se incluye en la respuesta cuando se pasa `compare=true`.
 
 **Response:**
 
@@ -537,9 +555,9 @@ Obtiene el score de salud financiera del negocio.
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `period` | string | No | Período. Default: `month` |
+| Parámetro | Tipo   | Requerido | Descripción               |
+| --------- | ------ | --------- | ------------------------- |
+| `period`  | string | No        | Período. Default: `month` |
 
 **Response:**
 
@@ -566,13 +584,13 @@ Obtiene el score de salud financiera del negocio.
 
 **Estados de Salud:**
 
-| Status | Score | Descripción |
-|--------|-------|-------------|
-| `EXCELLENT` | 80-100 | Situación financiera óptima |
-| `GOOD` | 60-79 | Buena salud financiera |
-| `FAIR` | 40-59 | Situación estable pero mejorable |
-| `POOR` | 20-39 | Requiere atención |
-| `CRITICAL` | 0-19 | Situación crítica |
+| Status      | Score  | Descripción                      |
+| ----------- | ------ | -------------------------------- |
+| `EXCELLENT` | 80-100 | Situación financiera óptima      |
+| `GOOD`      | 60-79  | Buena salud financiera           |
+| `FAIR`      | 40-59  | Situación estable pero mejorable |
+| `POOR`      | 20-39  | Requiere atención                |
+| `CRITICAL`  | 0-19   | Situación crítica                |
 
 ---
 
@@ -584,12 +602,12 @@ Compara dos períodos financieros.
 
 **Query Parameters:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `period1_start` | string | Sí | Inicio período 1 (YYYY-MM-DD) |
-| `period1_end` | string | Sí | Fin período 1 (YYYY-MM-DD) |
-| `period2_start` | string | Sí | Inicio período 2 (YYYY-MM-DD) |
-| `period2_end` | string | Sí | Fin período 2 (YYYY-MM-DD) |
+| Parámetro       | Tipo   | Requerido | Descripción                   |
+| --------------- | ------ | --------- | ----------------------------- |
+| `period1_start` | string | Sí        | Inicio período 1 (YYYY-MM-DD) |
+| `period1_end`   | string | Sí        | Fin período 1 (YYYY-MM-DD)    |
+| `period2_start` | string | Sí        | Inicio período 2 (YYYY-MM-DD) |
+| `period2_end`   | string | Sí        | Fin período 2 (YYYY-MM-DD)    |
 
 **Response:**
 
@@ -633,45 +651,81 @@ Compara dos períodos financieros.
 - **IVA 5%**: Tasa reducida para productos específicos
 - **Exento**: Productos sin IVA
 
+### Parámetros por Defecto
+
+| Endpoint       | Parámetro   | Defecto | Máximo |
+| -------------- | ----------- | ------- | ------ |
+| Ledgers        | `page`      | 1       | -      |
+| Ledgers        | `page_size` | 50      | 500    |
+| Profit Margins | `limit`     | 20      | 100    |
+
 ### Ratios Financieros
 
-| Ratio | Fórmula | Interpretación |
-|-------|---------|----------------|
-| Current Ratio | Activos Corrientes / Pasivos Corrientes | >1 es saludable |
-| Quick Ratio | (Caja + Cuentas por Cobrar) / Pasivos Corrientes | >1 es ideal |
-| Gross Margin | (Ingresos - Costo) / Ingresos * 100 | % de utilidad bruta |
-| Net Margin | Utilidad Neta / Ingresos * 100 | % de utilidad neta |
+| Ratio         | Fórmula                                          | Interpretación      |
+| ------------- | ------------------------------------------------ | ------------------- |
+| Current Ratio | Activos Corrientes / Pasivos Corrientes          | >1 es saludable     |
+| Quick Ratio   | (Caja + Cuentas por Cobrar) / Pasivos Corrientes | >1 es ideal         |
+| Gross Margin  | (Ingresos - Costo) / Ingresos \* 100             | % de utilidad bruta |
+| Net Margin    | Utilidad Neta / Ingresos \* 100                  | % de utilidad neta  |
 
 ### Estados de Balance IVA
 
-| Estado | Descripción |
-|--------|-------------|
-| `TO_PAY` | IVA a pagar (débito > crédito) |
-| `CREDIT` | Crédito fiscal a favor |
-| `BALANCED` | Débito = Crédito |
+| Estado     | Descripción                    |
+| ---------- | ------------------------------ |
+| `TO_PAY`   | IVA a pagar (débito > crédito) |
+| `CREDIT`   | Crédito fiscal a favor         |
+| `BALANCED` | Débito = Crédito               |
+
+### Estados de Salud Financiera
+
+| Status      | Score  | Descripción                      |
+| ----------- | ------ | -------------------------------- |
+| `EXCELLENT` | 80-100 | Situación financiera óptima      |
+| `GOOD`      | 60-79  | Buena salud financiera           |
+| `FAIR`      | 40-59  | Situación estable pero mejorable |
+| `POOR`      | 20-39  | Requiere atención                |
+| `CRITICAL`  | 0-19   | Situación crítica                |
 
 ---
 
 ## Archivos de Implementación
 
-| Archivo | Descripción |
-|---------|-------------|
-| `models/financial_reports.go` | Modelos de datos |
-| `repository/financial_reports.go` | Queries SQL |
-| `services/financial_reports.go` | Lógica de negocio |
-| `handlers/financial_reports.go` | Handlers HTTP |
+| Archivo                           | Descripción           |
+| --------------------------------- | --------------------- |
+| `models/financial_reports.go`     | Modelos de datos      |
+| `repository/financial_reports.go` | Queries SQL           |
+| `services/financial_reports.go`   | Lógica de negocio     |
+| `handlers/financial_reports.go`   | Handlers HTTP         |
+| `routes/routes.go`                | Registración de rutas |
+
+---
+
+## Información de Sincronización
+
+- **Última sincronización Swagger**: 2026-03-12
+- **Documentación API**: [swagger.yaml](../../swagger/swagger.yaml)
+- **Versión Swagger**: 3.0.3
 
 ---
 
 ## Notas de Versión
 
+### v1.2 (2026-03-12)
+
+- **Update**: Documentación completa en Swagger para todos los 18 endpoints
+- **Fix**: Consistencia de parámetros entre documentación y Swagger
+- **Add**: Schemas completos para todas las respuestas
+
 ### v1.1 (2026-02-23)
+
 - **Fix**: Corrección de valores por defecto en paginación — `page` y `page_size` ahora usan defaults correctos (1 y 50) cuando no se pasan parámetros en `/sales-ledger`, `/purchase-ledger` y `/sales-ledger/date-range`, `/purchase-ledger/date-range`
 - **Fix**: Corrección de valor por defecto para `limit` — ahora usa default 20 cuando no se pasa en `/profit-margins` y `/profit-margins/date-range`
 
 ### v1.0 (2026-01-03)
+
 - Versión inicial
 
 ---
 
-**Última actualización:** 2026-02-23
+**Última actualización:** 2026-03-12
+**Estado:** ✅ Sincronizado con Swagger

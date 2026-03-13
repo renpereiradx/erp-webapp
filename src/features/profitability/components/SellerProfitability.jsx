@@ -108,7 +108,7 @@ const SellerProfitability = () => {
           <div className="flex items-end gap-4">
             <p className="text-4xl font-black text-slate-900 dark:text-white font-mono leading-none tracking-tighter">32.4%</p>
             <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full mb-1.5 overflow-hidden shadow-inner">
-              <div className="h-full bg-[#137fec] shadow-[0_0_8px_rgba(19,127,236,0.3)] transition-all duration-[2000ms] ease-out" style={{ width: '32.4%' }}></div>
+              <div className="h-full bg-[#137fec] shadow-[0_0_8px_rgba(19,127,236,0.3)] transition-all duration-2000 ease-out" style={{ width: '32.4%' }}></div>
             </div>
           </div>
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Objetivo anual: 30.0% MARGEN</p>
@@ -293,7 +293,7 @@ const SellerProfitability = () => {
                   <span className="font-mono text-slate-900 dark:text-white text-xs">{s.gross_margin_pct}% M.B.</span>
                 </div>
                 <div className="h-2 md:h-2.5 w-full bg-slate-50 dark:bg-slate-800/50 rounded-full border border-slate-100/50 dark:border-slate-800/50 overflow-hidden shadow-inner p-0.5">
-                  <div className="h-full bg-emerald-500 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.4)] transition-all duration-[1500ms] group-hover/item:scale-x-[1.02] origin-left" style={{ width: `${(s.gross_margin_pct / 40) * 100}%` }}></div>
+                  <div className="h-full bg-emerald-500 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.4)] transition-all duration-1500 group-hover/item:scale-x-[1.02] origin-left" style={{ width: `${(s.gross_margin_pct / 40) * 100}%` }}></div>
                 </div>
               </div>
             ))}

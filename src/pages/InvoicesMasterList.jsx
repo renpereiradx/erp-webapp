@@ -35,29 +35,75 @@ import { usePayables } from '@/hooks/usePayables';
  */
 const InvoicesMasterList = () => {
   const navigate = useNavigate();
-  const { loading, error, fetchPayables, payables } = usePayables();
+  const { loading, error, fetchPayables, payables, pagination } = usePayables();
   
   const [viewMode, setViewMode] = useState('table');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [selectedInvoices, setSelectedInvoices] = useState([]);
 
-  const loadData = useCallback(async () => {
+  // Estado de filtros alineado con la API
+  const [filters, setFilters] = useState({
+    search: '',
+    status: '',
+    priority: '',
+    startDate: '',
+    endDate: '',
+    page: 1,
+    pageSize: 20
+  });
+
+  const loadData = useCallback(async (currentFilters = filters) => {
     try {
-      await fetchPayables();
+      // Mapeo de filtros de UI a parámetros de API
+      const apiParams = {
+        status: currentFilters.status || undefined,
+        priority: currentFilters.priority || undefined,
+        search: currentFilters.search || undefined,
+        start_date: currentFilters.startDate || undefined,
+        end_date: currentFilters.endDate || undefined,
+      };
+
+      // Paginación
+      const paginationParams = {
+        page: currentFilters.page,
+        page_size: currentFilters.pageSize
+      };
+
+      await fetchPayables(apiParams, paginationParams);
     } catch (err) {
       console.error("API Error in Master List:", err);
     }
-  }, [fetchPayables]);
+  }, [fetchPayables, filters]);
+
+  // Efecto para búsqueda y filtros con debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadData();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [filters.search, filters.status, filters.priority, filters.startDate, filters.endDate, filters.page, filters.pageSize, loadData]);
 
   useEffect(() => {
     document.title = 'Lista Maestra de Facturas | Fluent ERP';
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
-    
-    loadData();
-
     return () => window.removeEventListener('resize', handleResize);
-  }, [loadData]);
+  }, []);
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value, page: key === 'page' ? value : 1 }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      search: '',
+      status: '',
+      priority: '',
+      startDate: '',
+      endDate: '',
+      page: 1,
+      pageSize: 20
+    });
+  };
 
   const handleRowClick = (id) => {
     navigate(`/payables/detail/${id}`);
@@ -69,22 +115,6 @@ const InvoicesMasterList = () => {
       navigate(`/payables/suppliers/${vendorId}/analysis`);
     } else {
       console.warn("No vendor ID provided for analysis");
-    }
-  };
-
-  const toggleSelection = (e, id) => {
-    e.stopPropagation();
-    setSelectedInvoices(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
-  };
-
-  const toggleAll = (e) => {
-    e.stopPropagation();
-    if (selectedInvoices.length === payables.length) {
-      setSelectedInvoices([]);
-    } else {
-      setSelectedInvoices(payables.map(inv => inv.id));
     }
   };
 
@@ -146,30 +176,76 @@ const InvoicesMasterList = () => {
       </header>
 
       {/* Advanced Command Panel */}
-      <div className="bg-white dark:bg-slate-900 p-1.5 md:p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2">
-        <div className="flex flex-col md:flex-row items-center gap-2">
-          <div className="relative w-full md:flex-grow group">
+      <div className="bg-white dark:bg-slate-900 p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
+          {/* Search Input */}
+          <div className="relative flex-grow group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={16} />
             <input 
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/40 border-transparent focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-slate-800 rounded-xl text-sm transition-all outline-none font-medium placeholder:text-slate-400" 
+              className="w-full pl-11 pr-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/40 border-slate-100 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-slate-800 rounded-xl text-sm transition-all outline-none font-medium placeholder:text-slate-400 border" 
               placeholder="Buscar por ID, proveedor o RUC..." 
               type="text"
+              value={filters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar py-1 md:py-0">
-            <select className="bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-xl text-xs px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none font-bold cursor-pointer transition-all min-w-[140px]">
+
+          {/* Filters Row */}
+          <div className="flex flex-wrap items-center gap-3">
+            <select 
+              className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-xs px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none font-bold cursor-pointer transition-all min-w-[140px]"
+              value={filters.status}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+            >
               <option value="">Estados: Todos</option>
-              <option value="pendiente">PENDIENTE</option>
-              <option value="parcial">PARCIAL</option>
-              <option value="vencido">VENCIDO</option>
+              <option value="PENDING">PENDIENTE</option>
+              <option value="PARTIAL">PARCIAL</option>
+              <option value="OVERDUE">VENCIDO</option>
+              <option value="PAID">PAGADO</option>
             </select>
-            <div className="flex items-center bg-slate-100/50 dark:bg-slate-800/50 rounded-xl px-4 py-2.5 gap-2 text-xs font-bold cursor-pointer hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-all border border-transparent whitespace-nowrap">
-              <Calendar size={14} className="text-slate-400" />
-              <span className="text-slate-600 dark:text-slate-300">Este Año</span>
+            <select 
+              className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-xs px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none font-bold cursor-pointer transition-all min-w-[140px]"
+              value={filters.priority}
+              onChange={(e) => handleFilterChange('priority', e.target.value)}
+            >
+              <option value="">Prioridad: Todas</option>
+              <option value="URGENT">URGENTE</option>
+              <option value="HIGH">ALTA</option>
+              <option value="MEDIUM">MEDIA</option>
+              <option value="LOW">BAJA</option>
+            </select>
+            
+            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl px-3 py-1.5">
+              <div className="flex flex-col">
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Desde</span>
+                <input 
+                  type="date" 
+                  className="bg-transparent border-none p-0 text-[11px] font-bold outline-none text-slate-700 dark:text-slate-300 cursor-pointer"
+                  value={filters.startDate}
+                  onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                />
+              </div>
+              <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+              <div className="flex flex-col">
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Hasta</span>
+                <input 
+                  type="date" 
+                  className="bg-transparent border-none p-0 text-[11px] font-bold outline-none text-slate-700 dark:text-slate-300 cursor-pointer"
+                  value={filters.endDate}
+                  onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                />
+              </div>
             </div>
-            <button className="p-2.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all border border-transparent shrink-0">
-              <Filter size={18} />
-            </button>
+
+            {(filters.search || filters.status || filters.priority || filters.startDate || filters.endDate) && (
+              <button 
+                onClick={clearFilters}
+                className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
+                title="Limpiar Filtros"
+              >
+                <RefreshCcw size={16} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -177,84 +253,64 @@ const InvoicesMasterList = () => {
       <main className="flex flex-col gap-0 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/40 dark:shadow-none overflow-hidden min-h-[400px]">
         
         {/* Command Bar */}
-        <div className="flex items-center justify-between px-4 py-3 bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between px-6 py-4 bg-slate-50/30 dark:bg-slate-800/10 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-4">
-            {selectedInvoices.length > 0 ? (
-              <div className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-200">
-                <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-md tracking-wider">
-                  {selectedInvoices.length} seleccionados
-                </span>
-                <div className="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
-                <div className="flex items-center gap-1">
-                  <button className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Eliminar">
-                    <Trash2 size={16} />
-                  </button>
-                  <button className="p-2 text-slate-500 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors" title="Enviar Email">
-                    <Mail size={16} />
-                  </button>
-                  <button className="p-2 text-slate-500 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors" title="Imprimir">
-                    <Printer size={16} />
-                  </button>
-                </div>
+            <div className="flex items-center gap-4">
+              <span className="font-bold text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                Mostrando <span className="text-primary font-black">{payables.length}</span> Facturas Registradas
+              </span>
+              <div className="h-3 w-px bg-slate-200 dark:bg-slate-800"></div>
+              <div className="flex bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
+                <button 
+                  onClick={() => setViewMode('table')}
+                  className={`p-1.5 rounded-md transition-all ${viewMode === 'table' ? 'bg-white dark:bg-slate-600 shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  <ListIcon size={14} />
+                </button>
+                <button 
+                  onClick={() => setViewMode('grid')}
+                  className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-600 shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  <LayoutGrid size={14} />
+                </button>
               </div>
-            ) : (
-              <div className="flex items-center gap-4">
-                <span className="font-bold text-[10px] uppercase tracking-[0.15em] text-slate-400">
-                  <span className="text-slate-900 dark:text-white font-black">{payables.length}</span> Facturas encontradas
-                </span>
-                <div className="h-3 w-px bg-slate-200 dark:bg-slate-800"></div>
-                <div className="flex bg-slate-200/50 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                  <button 
-                    onClick={() => setViewMode('table')}
-                    className={`p-1 rounded ${viewMode === 'table' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary' : 'text-slate-400'}`}
-                  >
-                    <ListIcon size={14} />
-                  </button>
-                  <button 
-                    onClick={() => setViewMode('grid')}
-                    className={`p-1 rounded ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary' : 'text-slate-400'}`}
-                  >
-                    <LayoutGrid size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button 
-              onClick={loadData}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-slate-500 hover:text-primary transition-colors font-black uppercase text-[9px] tracking-[0.2em]"
+              onClick={() => loadData()}
+              className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-500 hover:text-primary transition-all font-black uppercase text-[9px] tracking-[0.15em] shadow-sm active:scale-95"
             >
               <RefreshCcw size={14} className={loading ? 'animate-spin' : ''} />
-              <span className="hidden sm:inline">Refrescar</span>
-            </button>
-            <button className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-primary">
-              <Settings size={16} />
+              <span className="hidden sm:inline">Sincronizar</span>
             </button>
           </div>
         </div>
 
         {/* Dynamic Content */}
         {loading && payables.length === 0 ? (
-          <div className="flex-grow flex items-center justify-center py-20">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sincronizando con Servidor...</span>
+          <div className="flex-grow flex items-center justify-center py-24">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <div className="w-12 h-12 border-4 border-primary/20 rounded-full"></div>
+                <div className="absolute top-0 left-0 w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 animate-pulse">Accediendo al Libro Mayor...</span>
             </div>
           </div>
         ) : error ? (
-          <div className="flex-grow flex items-center justify-center py-20">
-            <div className="flex flex-col items-center gap-4 text-center px-6">
-              <div className="size-16 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600 shadow-sm">
-                <AlertTriangle size={32} />
+          <div className="flex-grow flex items-center justify-center py-24">
+            <div className="flex flex-col items-center gap-5 text-center px-6">
+              <div className="size-20 rounded-3xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600 shadow-inner border border-red-100 dark:border-red-800/30">
+                <AlertTriangle size={40} strokeWidth={1.5} />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Error de Conexión</h3>
-                <p className="text-sm text-slate-500 max-w-[300px]">No se pudo obtener la información de facturación del servidor central.</p>
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Fallo de Comunicación</h3>
+                <p className="text-sm text-slate-500 max-w-[320px] font-medium leading-relaxed">Hubo un problema al intentar conectar con los servicios financieros centrales.</p>
               </div>
               <button 
-                onClick={loadData}
-                className="px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform"
+                onClick={() => loadData()}
+                className="px-8 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl shadow-slate-200 dark:shadow-none"
               >
                 Reintentar Conexión
               </button>
@@ -264,99 +320,95 @@ const InvoicesMasterList = () => {
           <>
             {viewMode === 'table' && !isMobile ? (
               <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full text-left border-collapse table-fixed min-w-[1100px]">
+                <table className="w-full text-left border-collapse min-w-full">
                   <thead>
                     <tr className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
-                      <th className="px-4 py-3.5 w-[50px] text-center">
-                        <input 
-                          type="checkbox" 
-                          checked={selectedInvoices.length === payables.length && payables.length > 0}
-                          onChange={toggleAll}
-                          className="rounded border-slate-300 text-primary focus:ring-primary dark:bg-slate-800 dark:border-slate-700" 
-                        />
-                      </th>
-                      <th className="px-3 py-3.5 w-[140px] font-black text-[9px] uppercase tracking-[0.2em] text-slate-400">ID Factura</th>
-                      <th className="px-3 py-3.5 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400">Proveedor</th>
-                      <th className="px-3 py-3.5 w-[140px] font-black text-[9px] uppercase tracking-[0.2em] text-slate-400">Vencimiento</th>
-                      <th className="px-3 py-3.5 w-[160px] font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 text-right">Importe Total</th>
-                      <th className="px-3 py-3.5 w-[160px] font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 text-right">Imp. Pendiente</th>
-                      <th className="px-3 py-3.5 w-[140px] font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 text-center">Estado</th>
-                      <th className="px-3 py-3.5 w-[120px] font-black text-[9px] uppercase tracking-[0.2em] text-slate-400">Prioridad</th>
-                      <th className="px-3 py-3.5 w-[50px] text-right"></th>
+                      <th className="px-6 py-4 w-1/6 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400">ID Factura</th>
+                      <th className="px-3 py-4 w-1/3 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400">Proveedor / Emisor</th>
+                      <th className="px-3 py-4 w-1/6 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 hidden lg:table-cell">Vencimiento</th>
+                      <th className="px-3 py-4 w-1/4 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 text-right">Balance Financiero</th>
+                      <th className="px-3 py-4 w-[160px] font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 text-center hidden md:table-cell">Estado</th>
+                      <th className="px-6 py-4 w-[60px] text-right"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50 dark:divide-slate-800/40">
                     {Array.isArray(payables) && payables.map((invoice) => {
                       const statusStyle = getStatusStyles(invoice.status);
                       const isOverdue = invoice.status?.toUpperCase() === 'VENCIDO';
-                      const isSelected = selectedInvoices.includes(invoice.id);
+                      const progress = invoice.totalAmount > 0 
+                        ? ((invoice.totalAmount - invoice.pendingAmount) / invoice.totalAmount) * 100 
+                        : 0;
                       
-                      let priorityColor = 'border-slate-200 text-slate-500';
-                      if (invoice.priority === 'ALTA') priorityColor = 'border-red-200 text-red-600 dark:text-red-400';
-                      else if (invoice.priority === 'MEDIA') priorityColor = 'border-blue-200 text-blue-600 dark:text-blue-400';
-
                       return (
                         <tr 
                           key={invoice.id} 
-                          className={`hover:bg-primary/[0.03] dark:hover:bg-primary/[0.05] transition-all group cursor-pointer ${isSelected ? 'bg-primary/[0.05] dark:bg-primary/[0.08]' : ''}`}
+                          className="hover:bg-primary/[0.02] dark:hover:bg-primary/[0.04] transition-all group cursor-pointer border-l-2 border-transparent hover:border-primary"
                           onClick={() => handleRowClick(invoice.id)}
                         >
-                          <td className="px-4 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
-                            <input 
-                              type="checkbox" 
-                              checked={isSelected}
-                              onChange={(e) => toggleSelection(e, invoice.id)}
-                              className="rounded border-slate-300 text-primary focus:ring-primary dark:bg-slate-800 dark:border-slate-700" 
-                            />
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <div className="flex items-center gap-1.5 group/id">
-                              <span className="text-[11px] font-mono font-bold text-slate-400 group-hover/id:text-primary transition-colors">#{invoice.id}</span>
-                              <ExternalLink size={12} className="opacity-0 group-hover/id:opacity-100 text-primary transition-all" />
+                          <td className="px-6 py-5">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-[12px] font-mono font-black text-slate-900 dark:text-white">#{invoice.id}</span>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Ref. Interna</span>
                             </div>
                           </td>
-                          <td className="px-3 py-2.5">
+                          <td className="px-3 py-5">
                             <div 
-                              className="flex items-center gap-3 group/vendor"
-                              onClick={(e) => handleVendorClick(e, invoice.vendorId || 'PRV-001')}
+                              className="flex items-center gap-4 group/vendor"
+                              onClick={(e) => handleVendorClick(e, invoice.vendorId)}
                             >
-                              <div className="size-7 shrink-0 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden group-hover/vendor:border-primary transition-colors">
+                              <div className="size-9 shrink-0 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden group-hover/vendor:border-primary transition-all group-hover/vendor:scale-105">
                                 {invoice.logo ? (
                                   <img className="size-full object-cover" src={invoice.logo} alt="" />
                                 ) : (
-                                  <span className="text-[10px] font-black text-primary">{invoice.initials || invoice.vendor?.charAt(0)}</span>
+                                  <span className="text-[11px] font-black text-primary">{invoice.initials}</span>
                                 )}
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[13px] font-extrabold text-slate-900 dark:text-white truncate group-hover/vendor:text-primary transition-colors">{invoice.vendor}</span>
-                                <span className="text-[9px] font-black text-primary/60 uppercase tracking-widest flex items-center gap-1 opacity-0 group-hover/vendor:opacity-100 transition-opacity">
-                                  Ver Análisis <ExternalLink size={8} />
-                                </span>
+                                <span className="text-[14px] font-black text-slate-900 dark:text-white truncate group-hover/vendor:text-primary transition-colors tracking-tight">{invoice.vendor}</span>
+                                <div className="flex items-center gap-2 md:hidden">
+                                   <span className={`px-1.5 py-0.5 rounded text-[8px] font-black border uppercase tracking-widest ${statusStyle.container}`}>
+                                    {invoice.status}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </td>
-                          <td className={`px-3 py-2.5 text-[11px] font-black whitespace-nowrap ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400'}`}>
-                            {invoice.dueDate}
+                          <td className="px-3 py-5 hidden lg:table-cell">
+                            <div className="flex flex-col gap-1">
+                              <span className={`text-[12px] font-black ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                                {invoice.dueDate}
+                              </span>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Límite de Pago</span>
+                            </div>
                           </td>
-                          <td className="px-3 py-2.5 text-[13px] text-right font-mono font-bold text-slate-900 dark:text-white tabular-nums">
-                            {formatCurrency(invoice.totalAmount)}
+                          <td className="px-3 py-5 text-right">
+                            <div className="flex flex-col gap-2">
+                              <div className="flex flex-col">
+                                <span className="text-[14px] font-mono font-black text-slate-900 dark:text-white tabular-nums">
+                                  {formatCurrency(invoice.totalAmount)}
+                                </span>
+                                {invoice.pendingAmount > 0 && (
+                                  <span className={`text-[10px] font-mono font-bold tabular-nums ${isOverdue ? 'text-red-600' : 'text-slate-500'}`}>
+                                    Deuda: {formatCurrency(invoice.pendingAmount)}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="w-24 ml-auto h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
+                                <div 
+                                  className={`h-full transition-all duration-1000 ${isOverdue ? 'bg-red-500' : 'bg-primary'}`} 
+                                  style={{ width: `${progress}%` }}
+                                ></div>
+                              </div>
+                            </div>
                           </td>
-                          <td className={`px-3 py-2.5 text-[13px] text-right font-mono font-black tabular-nums ${invoice.pendingAmount > 0 && isOverdue ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
-                            {formatCurrency(invoice.pendingAmount)}
-                          </td>
-                          <td className="px-3 py-2.5 text-center">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider border shadow-sm ${statusStyle.container}`}>
+                          <td className="px-3 py-5 text-center hidden md:table-cell">
+                            <span className={`inline-flex items-center px-2.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border shadow-sm transition-all group-hover:scale-105 ${statusStyle.container}`}>
                               {invoice.status}
                             </span>
                           </td>
-                          <td className="px-3 py-2.5">
-                            <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border tracking-[0.1em] ${priorityColor}`}>
-                              {invoice.priority}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5 text-right">
-                            <button className="p-1 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-primary transition-all rounded-lg">
-                              <MoreVertical size={16} />
+                          <td className="px-6 py-5 text-right">
+                            <button className="p-2 text-slate-300 hover:text-primary hover:bg-primary/5 rounded-xl transition-all active:scale-90">
+                              <MoreVertical size={18} />
                             </button>
                           </td>
                         </tr>
@@ -371,33 +423,32 @@ const InvoicesMasterList = () => {
                 {Array.isArray(payables) && payables.map((invoice) => {
                   const statusStyle = getStatusStyles(invoice.status);
                   const isOverdue = invoice.status?.toUpperCase() === 'VENCIDO';
-                  const isSelected = selectedInvoices.includes(invoice.id);
+                  const progress = invoice.totalAmount > 0 
+                    ? ((invoice.totalAmount - invoice.pendingAmount) / invoice.totalAmount) * 100 
+                    : 0;
                   
                   return (
                     <div 
                       key={invoice.id}
                       onClick={() => handleRowClick(invoice.id)}
-                      className={`bg-white dark:bg-slate-900 p-5 transition-all flex flex-col gap-4 relative cursor-pointer ${isSelected ? 'bg-primary/[0.03] dark:bg-primary/[0.05]' : ''}`}
+                      className="bg-white dark:bg-slate-900 p-5 transition-all flex flex-col gap-4 relative cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50"
                     >
                       <div className="flex items-center justify-between">
                         <div 
                           className="flex items-center gap-3 group/vendor"
-                          onClick={(e) => handleVendorClick(e, invoice.vendorId || 'PRV-001')}
+                          onClick={(e) => handleVendorClick(e, invoice.vendorId)}
                         >
                           <div className="size-10 shrink-0 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm group-hover/vendor:border-primary transition-colors">
                             {invoice.logo ? (
                               <img className="size-full rounded-xl object-cover" src={invoice.logo} alt="" />
                             ) : (
-                              <span className="text-xs font-black text-primary">{invoice.initials || invoice.vendor?.charAt(0)}</span>
+                              <span className="text-xs font-black text-primary">{invoice.initials}</span>
                             )}
                           </div>
                           <div className="flex flex-col min-w-0">
                             <span className="text-[15px] font-black text-slate-900 dark:text-white truncate max-w-[160px] group-hover/vendor:text-primary transition-colors">{invoice.vendor}</span>
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className="text-[11px] font-mono font-bold text-primary hover:underline">#{invoice.id}</span>
-                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-black border uppercase tracking-widest ${invoice.priority === 'ALTA' ? 'border-red-200 text-red-600' : 'border-slate-200 text-slate-400'}`}>
-                                {invoice.priority}
-                              </span>
                             </div>
                           </div>
                         </div>
@@ -418,18 +469,17 @@ const InvoicesMasterList = () => {
                           </span>
                         </div>
                       </div>
+                      
+                      {/* Mobile progress bar */}
+                      <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div className={`h-full ${isOverdue ? 'bg-red-500' : 'bg-primary'}`} style={{ width: `${progress}%` }}></div>
+                      </div>
 
                       <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 px-1">
                         <div className="flex items-center gap-2">
                           <Calendar size={14} className="text-slate-300" />
                           Vence: <span className={isOverdue ? 'text-red-600 font-black' : ''}>{invoice.dueDate}</span>
                         </div>
-                        <input 
-                          type="checkbox" 
-                          checked={isSelected}
-                          onChange={(e) => toggleSelection(e, invoice.id)}
-                          className="size-5 rounded-lg border-slate-300 text-primary focus:ring-primary dark:bg-slate-800 dark:border-slate-700 shadow-sm" 
-                        />
                       </div>
                     </div>
                   );
@@ -440,27 +490,42 @@ const InvoicesMasterList = () => {
         )}
 
         {/* Footer */}
-        <footer className="bg-slate-50/50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4 mt-auto">
+        <footer className="bg-slate-50/50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 mt-auto">
           <div className="flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
             <span>Mostrar</span>
-            <select className="bg-transparent border-none rounded-lg p-0 text-[10px] font-black text-primary focus:ring-0 outline-none cursor-pointer">
-              <option>25</option>
-              <option selected>50</option>
-              <option>100</option>
+            <select 
+              className="bg-transparent border-none rounded-lg p-0 text-[10px] font-black text-primary focus:ring-0 outline-none cursor-pointer"
+              value={filters.pageSize}
+              onChange={(e) => handleFilterChange('pageSize', Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
             </select>
-            <span>por página</span>
+            <span>de <span className="text-slate-900 dark:text-white">{pagination.totalItems}</span> registros</span>
           </div>
           
-          <div className="flex items-center gap-1.5">
-            <button className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-primary transition-all disabled:opacity-30 shadow-sm active:scale-90" disabled>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => handleFilterChange('page', filters.page - 1)}
+              className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-primary transition-all disabled:opacity-30 shadow-sm active:scale-90" 
+              disabled={filters.page <= 1}
+            >
               <ChevronLeft size={16} />
             </button>
-            <div className="flex items-center gap-1 mx-1">
-              <button className="size-9 rounded-xl bg-primary text-white font-black text-xs shadow-md shadow-primary/20">1</button>
-              <button className="size-9 rounded-xl hover:bg-white dark:hover:bg-slate-800 text-slate-500 font-bold text-xs transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700">2</button>
-              <button className="size-9 rounded-xl hover:bg-white dark:hover:bg-slate-800 text-slate-500 font-bold text-xs transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700">3</button>
+            
+            <div className="flex items-center gap-1.5 mx-2">
+              <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                Página <span className="text-primary">{pagination.page}</span> de {pagination.totalPages}
+              </span>
             </div>
-            <button className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-primary transition-all shadow-sm active:scale-90">
+
+            <button 
+              onClick={() => handleFilterChange('page', filters.page + 1)}
+              className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-primary transition-all disabled:opacity-30 shadow-sm active:scale-90"
+              disabled={filters.page >= pagination.totalPages}
+            >
               <ChevronRight size={16} />
             </button>
           </div>

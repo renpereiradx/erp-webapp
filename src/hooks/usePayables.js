@@ -12,6 +12,13 @@ export const usePayables = () => {
 
   const [overview, setOverview] = useState(null)
   const [payables, setPayables] = useState([])
+  const [selectedPayable, setSelectedPayable] = useState(null)
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 20,
+    totalItems: 0,
+    totalPages: 1
+  })
   const [topSuppliers, setTopSuppliers] = useState([])
   const [schedule, setSchedule] = useState([])
   const [agingSummary, setAgingSummary] = useState(null)
@@ -45,11 +52,77 @@ export const usePayables = () => {
     try {
       const response = await payablesService.getPayables(filters, pagination)
       if (response.success) {
-        // Validación de seguridad: asegurar que sea un array
-        const data = Array.isArray(response.data) 
-          ? response.data 
-          : (response.data?.payables || [])
-        setPayables(data)
+        // Extraction logic to handle both array and object responses
+        let rawData = []
+        if (Array.isArray(response.data)) {
+          rawData = response.data
+        } else if (response.data?.items) {
+          rawData = response.data.items
+        } else if (response.data?.payables) {
+          rawData = response.data.payables
+        }
+
+        // Helper translations for status and priority
+        const translateStatus = (status) => {
+          if (!status) return 'PENDIENTE'
+          const s = status.toUpperCase()
+          if (s === 'OVERDUE') return 'VENCIDO'
+          if (s === 'PENDING') return 'PENDIENTE'
+          if (s === 'PARTIAL') return 'PARCIAL'
+          if (s === 'PAID') return 'PAGADO'
+          return s
+        }
+
+        const translatePriority = (priority) => {
+          if (!priority) return 'MEDIA'
+          const p = priority.toUpperCase()
+          if (p === 'URGENT' || p === 'HIGH') return 'ALTA'
+          if (p === 'MEDIUM') return 'MEDIA'
+          if (p === 'LOW') return 'BAJA'
+          return p
+        }
+
+        const formatDate = (dateStr) => {
+          if (!dateStr) return 'N/A'
+          try {
+            const date = new Date(dateStr)
+            if (isNaN(date.getTime())) return dateStr
+            return date.toLocaleDateString('es-PY', { 
+              day: '2-digit', 
+              month: 'short', 
+              year: 'numeric' 
+            }).replace('.', '')
+          } catch (e) {
+            return dateStr
+          }
+        }
+
+        // Mapping to satisfy InvoicesMasterList.jsx expectations
+        const mappedData = rawData.map(p => ({
+          id: p.id || p.purchase_order_id || p.payable_id || 'N/A',
+          purchaseOrderId: p.purchase_order_id || p.id,
+          vendor: p.supplier_name || p.vendor || 'Proveedor Desconocido',
+          vendorId: p.supplier_id || p.vendorId,
+          dueDate: formatDate(p.due_date || p.dueDate),
+          totalAmount: p.original_amount || p.totalAmount || 0,
+          pendingAmount: p.pending_amount || p.pendingAmount || 0,
+          status: translateStatus(p.status),
+          priority: translatePriority(p.priority),
+          initials: p.initials || (p.supplier_name || p.vendor || '??').substring(0, 2).toUpperCase(),
+          logo: p.logo || null
+        }))
+
+        setPayables(mappedData)
+
+        // Actualizar estado de paginación si la API lo provee
+        if (response.data?.pagination) {
+          setPagination({
+            page: response.data.pagination.page || 1,
+            pageSize: response.data.pagination.page_size || 20,
+            totalItems: response.data.pagination.total_items || mappedData.length,
+            totalPages: response.data.pagination.total_pages || 1
+          })
+        }
       }
       return response
     } catch (err) {
@@ -57,6 +130,95 @@ export const usePayables = () => {
       toast({
         title: 'Error',
         description: 'No se pudieron cargar las facturas.',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [toast])
+
+  const fetchPayableById = useCallback(async (id) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await payablesService.getPayableById(id)
+      if (response.success) {
+        const p = response.data
+        
+        // Helper translations
+        const translateStatus = (status) => {
+          if (!status) return 'PENDIENTE'
+          const s = status.toUpperCase()
+          if (s === 'OVERDUE') return 'VENCIDO'
+          if (s === 'PENDING') return 'PENDIENTE'
+          if (s === 'PARTIAL') return 'PARCIAL'
+          if (s === 'PAID') return 'PAGADO'
+          return s
+        }
+
+        const formatDate = (dateStr) => {
+          if (!dateStr) return 'N/A'
+          try {
+            const date = new Date(dateStr)
+            if (isNaN(date.getTime())) return dateStr
+            return date.toLocaleDateString('es-PY', { 
+              day: '2-digit', 
+              month: 'short', 
+              year: 'numeric' 
+            }).replace('.', '')
+          } catch (e) {
+            return dateStr
+          }
+        }
+
+        // Mapeo de datos reales para el detalle
+        const mapped = {
+          id: p.id || p.purchase_order_id || 'N/A',
+          purchaseOrderId: p.purchase_order_id || p.id,
+          status: translateStatus(p.status),
+          totalAmount: p.original_amount || 0,
+          paidAmount: p.paid_amount || 0,
+          pendingAmount: p.pending_amount || 0,
+          progress: p.original_amount > 0 ? (p.paid_amount / p.original_amount) * 100 : 0,
+          detalle: {
+            emision: formatDate(p.order_date || p.created_at),
+            vencimiento: formatDate(p.due_date),
+            terminos: p.credit_terms || 'Net 30 días',
+            prioridad: p.priority === 'URGENT' || p.priority === 'HIGH' ? 'Alta' : 'Media'
+          },
+          proveedor: {
+            nombre: p.supplier_name || 'Proveedor Desconocido',
+            ruc: p.supplier_ruc || 'N/A',
+            contacto: p.supplier_contact || 'No disponible',
+            email: p.supplier_email || 'No disponible',
+            direccion: p.supplier_address || 'No disponible'
+          },
+          pagos: p.payments?.map(py => ({
+            id: py.payment_id,
+            fecha: formatDate(py.payment_date),
+            metodo: py.payment_method,
+            ref: py.reference,
+            user: py.processed_by || 'Sistema',
+            userInit: (py.processed_by || 'S').substring(0, 2).toUpperCase(),
+            monto: py.amount
+          })) || [],
+          actividad: p.activity?.map(act => ({
+            titulo: act.title,
+            desc: act.description,
+            date: formatDate(act.created_at),
+            type: act.type,
+            color: act.color || 'primary'
+          })) || []
+        }
+        
+        setSelectedPayable(mapped)
+      }
+      return response
+    } catch (err) {
+      setError(err.message)
+      toast({
+        title: 'Error',
+        description: 'No se pudo cargar el detalle de la factura.',
         variant: 'destructive',
       })
     } finally {
@@ -164,6 +326,8 @@ export const usePayables = () => {
     error,
     overview,
     payables,
+    selectedPayable,
+    pagination,
     topSuppliers,
     schedule,
     agingSummary,
@@ -171,6 +335,7 @@ export const usePayables = () => {
     statistics,
     fetchOverview,
     fetchPayables,
+    fetchPayableById,
     fetchTopSuppliers,
     fetchSchedule,
     fetchAgingSummary,

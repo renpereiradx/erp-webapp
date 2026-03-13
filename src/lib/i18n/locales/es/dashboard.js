@@ -35,6 +35,24 @@ export const dashboard = {
       turnoverRate: 'Tasa de Rotación',
       daysOfInventory: 'Días de Inventario',
       totalSKUs: 'Total SKUs Activos',
+      topProductsPanel: {
+        subtitle: 'Resumen de los SKUs con mejor desempeño',
+        starProduct: 'Producto Estrella',
+        requiresRestock: 'Requiere reabastecimiento inmediato',
+        status: {
+          inStock: 'En Stock',
+          lowStock: 'Stock Bajo',
+          outOfStock: 'Sin Stock'
+        },
+        table: {
+          productName: 'Nombre del Producto',
+          avgPrice: 'Precio Prom.',
+          unitsSold: 'Und. Vendidas',
+          trend7d: 'Tendencia (7d)',
+          loading: 'Cargando productos con mejor desempeño...',
+          noResults: 'No se encontraron productos para el período seleccionado.'
+        }
+      },
 
     regional: {
       title: 'Rendimiento Regional',
@@ -55,7 +73,8 @@ export const dashboard = {
       cashRegister: 'Caja Registradora',
       healthy: 'Saludable',
       dailyTransactions: 'Transacciones Diarias',
-      vsPrevious30Days: 'vs. últimos 30 días'
+      vsPrevious30Days: 'vs. últimos 30 días',
+      vsPrevShort: 'vs prev'
     },
     charts: {
       revenueVsExpenses: {
@@ -88,6 +107,7 @@ export const dashboard = {
     },
     activity: {
       title: 'Alertas y Actividad Reciente',
+      titleShort: 'Alertas de Stock',
       live: 'En Vivo',
       lastUpdated: 'Última actualización',
       noActivity: 'Sin actividad reciente.',

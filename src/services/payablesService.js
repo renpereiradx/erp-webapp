@@ -207,5 +207,28 @@ export const payablesService = {
       })
     }
     return _fetchWithRetry(async () => apiService.get(`${API_PREFIX}/statistics?period=${period}`))
+  },
+
+  async getSupplierAnalysis(supplierId) {
+    const stats = await _fetchWithRetry(async () => apiService.get(`${API_PREFIX}/statistics?supplier_id=${supplierId}`))
+    const report = await _fetchWithRetry(async () => apiService.get(`${API_PREFIX}/aging/report?supplier_id=${supplierId}`))
+    const invoices = await _fetchWithRetry(async () => apiService.get(`${API_PREFIX}?supplier_id=${supplierId}&pageSize=100`))
+    
+    return {
+      success: true,
+      data: {
+        stats: stats.data,
+        report: report.data,
+        invoices: invoices.data?.items || []
+      }
+    }
+  },
+
+  async getAgingReport() {
+    return _fetchWithRetry(async () => apiService.get(`${API_PREFIX}/aging/report`))
+  },
+
+  async getCashFlowProjection(days = 30) {
+    return _fetchWithRetry(async () => apiService.get(`${API_PREFIX}/cash-flow?days=${days}`))
   }
 }

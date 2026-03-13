@@ -162,7 +162,7 @@ const InventoryRisk = () => {
                   </div>
                 </div>
                 <div className="mt-5 h-2 w-full bg-white dark:bg-slate-800 rounded-full overflow-hidden shadow-inner border border-slate-200/20">
-                  <div className={`h-full transition-all duration-[1500ms] ${item.level === 'Alto' ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]' : 'bg-amber-500'}`} style={{ width: `${item.progress}%` }}></div>
+                  <div className={`h-full transition-all duration-1500 ${item.level === 'Alto' ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]' : 'bg-amber-500'}`} style={{ width: `${item.progress}%` }}></div>
                 </div>
               </div>
             ))}

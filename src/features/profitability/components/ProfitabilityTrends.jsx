@@ -206,7 +206,7 @@ const ProfitabilityTrends = () => {
                   <span className="text-sm font-black text-slate-900 dark:text-white leading-none">32.4%</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden shadow-inner border border-slate-200/20">
-                  <div className="bg-[#137fec] h-full rounded-full transition-all duration-[2000ms]" style={{ width: '32.4%' }}></div>
+                  <div className="bg-[#137fec] h-full rounded-full transition-all duration-2000" style={{ width: '32.4%' }}></div>
                 </div>
               </div>
               <div>
@@ -215,7 +215,7 @@ const ProfitabilityTrends = () => {
                   <span className="text-sm font-black text-slate-900 dark:text-white leading-none">18.2%</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden shadow-inner border border-slate-200/20">
-                  <div className="bg-emerald-500 h-full rounded-full transition-all duration-[2000ms] shadow-[0_0_10px_rgba(16,185,129,0.4)]" style={{ width: '18.2%' }}></div>
+                  <div className="bg-emerald-500 h-full rounded-full transition-all duration-2000 shadow-[0_0_10px_rgba(16,185,129,0.4)]" style={{ width: '18.2%' }}></div>
                 </div>
               </div>
             </div>

@@ -388,6 +388,7 @@ Obtiene los productos más vendidos del período.
         "revenue": 4500000,
         "profit": 1350000,
         "margin_percentage": 30.0,
+        "stock_status": "in_stock",
         "trend": "up",
         "trend_percentage": 15.2
       },
@@ -399,6 +400,7 @@ Obtiene los productos más vendidos del período.
         "revenue": 3600000,
         "profit": 1800000,
         "margin_percentage": 50.0,
+        "stock_status": "low_stock",
         "trend": "stable",
         "trend_percentage": 2.1
       }
@@ -651,7 +653,7 @@ Esto permite obtener el balance real de las cajas abiertas sin necesidad de una 
 ---
 
 **Estado:** En producción
-**Última actualización:** 2026-01-31
+**Última actualización:** 2026-03-12
 
 ---
 

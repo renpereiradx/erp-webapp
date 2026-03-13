@@ -2,6 +2,13 @@ import { apiClient } from './api';
 import { DEMO_CONFIG } from '@/config/demoAuth';
 import * as mocks from './mocks/salesAnalyticsMock';
 
+// Helper to check for demo mode
+const _checkDemo = () => {
+  if (DEMO_CONFIG.enabled) {
+    throw new Error('DEMO_MODE: Using local fallback data');
+  }
+};
+
 /**
  * Service for Sales Analytics API
  */
@@ -10,145 +17,217 @@ const salesAnalyticsService = {
    * Get main dashboard metrics
    * @param {string} period - 'today', 'week', 'month', 'year'
    */
-  getDashboard: (period = 'month') => {
-    if (DEMO_CONFIG.enabled) return Promise.resolve(mocks.MOCK_DASHBOARD);
-    return apiClient.makeRequest(`/sales-analytics/dashboard?period=${period}`, {
-      method: 'GET'
-    });
+  getDashboard: async (period = 'month') => {
+    try {
+      _checkDemo();
+      return await apiClient.makeRequest(`/sales-analytics/dashboard?period=${period}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      if (error.message === 'DEMO_MODE: Using local fallback data') return mocks.MOCK_DASHBOARD;
+      console.error(`[SalesAnalytics] Error in getDashboard (${period}):`, error);
+      throw error;
+    }
   },
 
   /**
    * Get sales performance metrics
    * @param {Object} params - { period, compare }
    */
-  getPerformance: (params = { period: 'month', compare: true }) => {
-    if (DEMO_CONFIG.enabled) return Promise.resolve(mocks.MOCK_PERFORMANCE);
-    const query = new URLSearchParams(params).toString();
-    return apiClient.makeRequest(`/sales-analytics/performance?${query}`, {
-      method: 'GET'
-    });
+  getPerformance: async (params = { period: 'month', compare: true }) => {
+    try {
+      _checkDemo();
+      const query = new URLSearchParams(params).toString();
+      return await apiClient.makeRequest(`/sales-analytics/performance?${query}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      if (error.message === 'DEMO_MODE: Using local fallback data') return mocks.MOCK_PERFORMANCE;
+      console.error(`[SalesAnalytics] Error in getPerformance:`, error, params);
+      throw error;
+    }
   },
 
   /**
    * Get sales trends
    * @param {Object} params - { period, granularity }
    */
-  getTrends: (params = { period: 'month' }) => {
-    if (DEMO_CONFIG.enabled) {
-      return Promise.resolve(params.granularity === 'hourly' ? mocks.MOCK_TRENDS_HOURLY : mocks.MOCK_TRENDS_DAILY);
+  getTrends: async (params = { period: 'month' }) => {
+    try {
+      _checkDemo();
+      const query = new URLSearchParams(params).toString();
+      return await apiClient.makeRequest(`/sales-analytics/trends?${query}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      if (error.message === 'DEMO_MODE: Using local fallback data') {
+        return params.granularity === 'hourly' ? mocks.MOCK_TRENDS_HOURLY : mocks.MOCK_TRENDS_DAILY;
+      }
+      console.error(`[SalesAnalytics] Error in getTrends:`, error, params);
+      throw error;
     }
-    const query = new URLSearchParams(params).toString();
-    return apiClient.makeRequest(`/sales-analytics/trends?${query}`, {
-      method: 'GET'
-    });
   },
 
   /**
    * Get sales by category
    * @param {Object} params - { period, limit }
    */
-  getByCategory: (params = { period: 'month', limit: 20 }) => {
-    if (DEMO_CONFIG.enabled) return Promise.resolve(mocks.MOCK_BY_CATEGORY);
-    const query = new URLSearchParams(params).toString();
-    return apiClient.makeRequest(`/sales-analytics/by-category?${query}`, {
-      method: 'GET'
-    });
+  getByCategory: async (params = { period: 'month', limit: 20 }) => {
+    try {
+      _checkDemo();
+      const query = new URLSearchParams(params).toString();
+      return await apiClient.makeRequest(`/sales-analytics/by-category?${query}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      if (error.message === 'DEMO_MODE: Using local fallback data') return mocks.MOCK_BY_CATEGORY;
+      console.error(`[SalesAnalytics] Error in getByCategory:`, error, params);
+      throw error;
+    }
   },
 
   /**
    * Get sales by product with pagination
    * @param {Object} params - { period, page, page_size, sort_by, sort_order }
    */
-  getByProduct: (params = { period: 'month', page: 1, page_size: 20 }) => {
-    if (DEMO_CONFIG.enabled) return Promise.resolve(mocks.MOCK_BY_PRODUCT);
-    const query = new URLSearchParams(params).toString();
-    return apiClient.makeRequest(`/sales-analytics/by-product?${query}`, {
-      method: 'GET'
-    });
+  getByProduct: async (params = { period: 'month', page: 1, page_size: 20 }) => {
+    try {
+      _checkDemo();
+      const query = new URLSearchParams(params).toString();
+      return await apiClient.makeRequest(`/sales-analytics/by-product?${query}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      if (error.message === 'DEMO_MODE: Using local fallback data') return mocks.MOCK_BY_PRODUCT;
+      console.error(`[SalesAnalytics] Error in getByProduct:`, error, params);
+      throw error;
+    }
   },
 
   /**
    * Get top and bottom products
    * @param {Object} params - { period, limit }
    */
-  getTopBottomProducts: (params = { period: 'month', limit: 10 }) => {
-    if (DEMO_CONFIG.enabled) return Promise.resolve(mocks.MOCK_BY_PRODUCT);
-    const query = new URLSearchParams(params).toString();
-    return apiClient.makeRequest(`/sales-analytics/top-bottom-products?${query}`, {
-      method: 'GET'
-    });
+  getTopBottomProducts: async (params = { period: 'month', limit: 10 }) => {
+    try {
+      _checkDemo();
+      const query = new URLSearchParams(params).toString();
+      return await apiClient.makeRequest(`/sales-analytics/top-bottom-products?${query}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      if (error.message === 'DEMO_MODE: Using local fallback data') return mocks.MOCK_BY_PRODUCT;
+      console.error(`[SalesAnalytics] Error in getTopBottomProducts:`, error, params);
+      throw error;
+    }
   },
 
   /**
    * Get sales by customer
    * @param {Object} params - { period, page, page_size }
    */
-  getByCustomer: (params = { period: 'month', page: 1, page_size: 20 }) => {
-    if (DEMO_CONFIG.enabled) return Promise.resolve(mocks.MOCK_BY_CUSTOMER);
-    const query = new URLSearchParams(params).toString();
-    return apiClient.makeRequest(`/sales-analytics/by-customer?${query}`, {
-      method: 'GET'
-    });
+  getByCustomer: async (params = { period: 'month', page: 1, page_size: 20 }) => {
+    try {
+      _checkDemo();
+      const query = new URLSearchParams(params).toString();
+      return await apiClient.makeRequest(`/sales-analytics/by-customer?${query}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      if (error.message === 'DEMO_MODE: Using local fallback data') return mocks.MOCK_BY_CUSTOMER;
+      console.error(`[SalesAnalytics] Error in getByCustomer:`, error, params);
+      throw error;
+    }
   },
 
   /**
    * Get sales by seller
    * @param {Object} params - { period }
    */
-  getBySeller: (params = { period: 'month' }) => {
-    if (DEMO_CONFIG.enabled) return Promise.resolve(mocks.MOCK_BY_SELLER);
-    const query = new URLSearchParams(params).toString();
-    return apiClient.makeRequest(`/sales-analytics/by-seller?${query}`, {
-      method: 'GET'
-    });
+  getBySeller: async (params = { period: 'month' }) => {
+    try {
+      _checkDemo();
+      const query = new URLSearchParams(params).toString();
+      return await apiClient.makeRequest(`/sales-analytics/by-seller?${query}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      if (error.message === 'DEMO_MODE: Using local fallback data') return mocks.MOCK_BY_SELLER;
+      console.error(`[SalesAnalytics] Error in getBySeller:`, error, params);
+      throw error;
+    }
   },
 
   /**
    * Get sales by payment method
    * @param {Object} params - { period }
    */
-  getByPaymentMethod: (params = { period: 'month' }) => {
-    if (DEMO_CONFIG.enabled) return Promise.resolve(mocks.MOCK_PAYMENT_METHODS);
-    const query = new URLSearchParams(params).toString();
-    return apiClient.makeRequest(`/sales-analytics/by-payment-method?${query}`, {
-      method: 'GET'
-    });
+  getByPaymentMethod: async (params = { period: 'month' }) => {
+    try {
+      _checkDemo();
+      const query = new URLSearchParams(params).toString();
+      return await apiClient.makeRequest(`/sales-analytics/by-payment-method?${query}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      if (error.message === 'DEMO_MODE: Using local fallback data') return mocks.MOCK_PAYMENT_METHODS;
+      console.error(`[SalesAnalytics] Error in getByPaymentMethod:`, error, params);
+      throw error;
+    }
   },
 
   /**
    * Get sales heatmap (day/hour matrix)
    * @param {Object} params - { period }
    */
-  getHeatmap: (params = { period: 'month' }) => {
-    if (DEMO_CONFIG.enabled) return Promise.resolve(mocks.MOCK_HEATMAP);
-    const query = new URLSearchParams(params).toString();
-    return apiClient.makeRequest(`/sales-analytics/heatmap?${query}`, {
-      method: 'GET'
-    });
+  getHeatmap: async (params = { period: 'month' }) => {
+    try {
+      _checkDemo();
+      const query = new URLSearchParams(params).toString();
+      return await apiClient.makeRequest(`/sales-analytics/heatmap?${query}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      if (error.message === 'DEMO_MODE: Using local fallback data') return mocks.MOCK_HEATMAP;
+      console.error(`[SalesAnalytics] Error in getHeatmap:`, error, params);
+      throw error;
+    }
   },
 
   /**
    * Get sales velocity metrics
    * @param {Object} params - { period }
    */
-  getVelocity: (params = { period: 'month' }) => {
-    if (DEMO_CONFIG.enabled) return Promise.resolve(mocks.MOCK_VELOCITY);
-    const query = new URLSearchParams(params).toString();
-    return apiClient.makeRequest(`/sales-analytics/velocity?${query}`, {
-      method: 'GET'
-    });
+  getVelocity: async (params = { period: 'month' }) => {
+    try {
+      _checkDemo();
+      const query = new URLSearchParams(params).toString();
+      return await apiClient.makeRequest(`/sales-analytics/velocity?${query}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      if (error.message === 'DEMO_MODE: Using local fallback data') return mocks.MOCK_VELOCITY;
+      console.error(`[SalesAnalytics] Error in getVelocity:`, error, params);
+      throw error;
+    }
   },
 
   /**
    * Compare metrics between two periods
    * @param {Object} params - { period } OR { start1, end1, start2, end2 }
    */
-  comparePeriods: (params = { period: 'month' }) => {
-    if (DEMO_CONFIG.enabled) return Promise.resolve(mocks.MOCK_COMPARE);
-    const query = new URLSearchParams(params).toString();
-    return apiClient.makeRequest(`/sales-analytics/compare?${query}`, {
-      method: 'GET'
-    });
+  comparePeriods: async (params = { period: 'month' }) => {
+    try {
+      _checkDemo();
+      const query = new URLSearchParams(params).toString();
+      return await apiClient.makeRequest(`/sales-analytics/compare?${query}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      if (error.message === 'DEMO_MODE: Using local fallback data') return mocks.MOCK_COMPARE;
+      console.error(`[SalesAnalytics] Error in comparePeriods:`, error, params);
+      throw error;
+    }
   }
 };
 

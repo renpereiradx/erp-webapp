@@ -27,13 +27,23 @@ const CashFlowProjection = () => {
     setPeriod, 
     filteredData, 
     stats, 
-    pendingPayments 
+    pendingPayments,
+    loading 
   } = useCashFlow();
 
   useEffect(() => {
     document.title = 'Proyección de Pagos y Flujo | ERP System';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  if (loading && filteredData.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] animate-pulse">Calculando Proyección Financiera...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500">

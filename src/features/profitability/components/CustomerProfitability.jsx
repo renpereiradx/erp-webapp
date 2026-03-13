@@ -178,7 +178,7 @@ const CustomerProfitability = () => {
                       <div className="flex flex-col items-end gap-1.5">
                         <span className="font-black font-mono text-xs text-emerald-600 dark:text-emerald-400">{c.gross_margin_pct}%</span>
                         <div className="w-20 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                          <div className="bg-emerald-500 h-full transition-all duration-[1500ms] ease-out shadow-[0_0_8px_rgba(16,185,129,0.4)]" style={{ width: `${c.gross_margin_pct}%` }}></div>
+                          <div className="bg-emerald-500 h-full transition-all duration-1500 ease-out shadow-[0_0_8px_rgba(16,185,129,0.4)]" style={{ width: `${c.gross_margin_pct}%` }}></div>
                         </div>
                       </div>
                     </td>

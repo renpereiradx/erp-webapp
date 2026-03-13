@@ -11,6 +11,7 @@ Sistema de endpoints para análisis avanzado de inventario.
 Obtiene un resumen general del estado del inventario.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -18,9 +19,9 @@ Obtiene un resumen general del estado del inventario.
     "generated_at": "2026-01-05T10:30:00Z",
     "total_products": 150,
     "total_units": 5000,
-    "total_value": 250000.00,
-    "total_cost": 180000.00,
-    "potential_profit": 70000.00,
+    "total_value": 250000.0,
+    "total_cost": 180000.0,
+    "potential_profit": 70000.0,
     "stock_status": {
       "in_stock": 120,
       "low_stock": 20,
@@ -32,11 +33,11 @@ Obtiene un resumen general del estado del inventario.
       "overstock_pct": 3.3
     },
     "valuation": {
-      "total_cost_value": 180000.00,
-      "total_retail_value": 250000.00,
-      "potential_margin": 70000.00,
+      "total_cost_value": 180000.0,
+      "total_retail_value": 250000.0,
+      "potential_margin": 70000.0,
       "potential_margin_pct": 28.0,
-      "average_cost": 1200.00,
+      "average_cost": 1200.0,
       "average_retail": 1666.67
     },
     "turnover": {
@@ -44,7 +45,18 @@ Obtiene un resumen general del estado del inventario.
       "days_of_inventory": 87,
       "stockout_rate": 3.3,
       "fill_rate": 96.7
-    }
+    },
+    "alerts": [
+      {
+        "type": "LOW_STOCK",
+        "product_id": "123",
+        "product_name": "Producto A",
+        "message": "Stock por debajo del umbral mínimo",
+        "current_stock": 3,
+        "threshold": 5,
+        "severity": "HIGH"
+      }
+    ]
   }
 }
 ```
@@ -67,6 +79,7 @@ Obtiene niveles de stock detallados con filtros y paginación.
 | `sort_order` | string | Orden: `ASC` o `DESC` |
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -75,14 +88,15 @@ Obtiene niveles de stock detallados con filtros y paginación.
     "summary": {
       "total_products": 150,
       "total_units": 5000,
-      "total_value": 250000.00,
-      "average_stock": 33.3
+      "total_value": 250000.0,
+      "average_stock": 33.3,
+      "median_stock": 20
     },
     "products": [
       {
         "product_id": "123",
         "product_name": "Producto A",
-        "sku": "SKU-001",
+        "sku": "123",
         "category_name": "Categoría 1",
         "current_stock": 15,
         "min_stock": 10,
@@ -90,9 +104,9 @@ Obtiene niveles de stock detallados con filtros y paginación.
         "reorder_point": 15,
         "status": "LOW_STOCK",
         "days_of_stock": 7.5,
-        "unit_cost": 100.00,
-        "unit_price": 150.00,
-        "stock_value": 1500.00,
+        "unit_cost": 100.0,
+        "unit_price": 150.0,
+        "stock_value": 1500.0,
         "last_movement": "2026-01-03T14:00:00Z",
         "last_sale": "2026-01-04T09:30:00Z"
       }
@@ -106,6 +120,8 @@ Obtiene niveles de stock detallados con filtros y paginación.
   }
 }
 ```
+
+> **Nota:** En la implementación actual, `sku` se expone usando el `id` del producto como string.
 
 ---
 
@@ -133,6 +149,7 @@ Obtiene análisis de rotación por rango de fechas.
 | `limit` | int | Límite de resultados (default: 20) |
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -144,8 +161,8 @@ Obtiene análisis de rotación por rango de fechas.
     "overall": {
       "turnover_rate": 4.2,
       "days_of_inventory": 87,
-      "average_inventory": 180000.00,
-      "cost_of_goods_sold": 756000.00
+      "average_inventory": 180000.0,
+      "cost_of_goods_sold": 756000.0
     },
     "by_category": [
       {
@@ -154,7 +171,7 @@ Obtiene análisis de rotación por rango de fechas.
         "turnover_rate": 6.5,
         "days_of_inventory": 56,
         "total_units": 1500,
-        "total_value": 75000.00,
+        "total_value": 75000.0,
         "units_sold": 450,
         "performance": "EXCELLENT"
       }
@@ -163,7 +180,7 @@ Obtiene análisis de rotación por rango de fechas.
       {
         "product_id": "123",
         "product_name": "Producto A",
-        "sku": "SKU-001",
+        "sku": "123",
         "category_name": "Categoría 1",
         "turnover_rate": 8.2,
         "days_of_inventory": 44,
@@ -178,6 +195,7 @@ Obtiene análisis de rotación por rango de fechas.
 ```
 
 **Performance Classifications:**
+
 - `EXCELLENT`: Turnover >= 4
 - `GOOD`: Turnover >= 2
 - `AVERAGE`: Turnover >= 1
@@ -207,6 +225,7 @@ Obtiene análisis ABC por rango de fechas.
 | `end_date` | string | Fecha fin (YYYY-MM-DD) |
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -250,6 +269,7 @@ Obtiene análisis de productos sin movimiento (stock muerto).
 | `days_threshold` | int | Días sin movimiento para considerar muerto (default: 90) |
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -258,19 +278,19 @@ Obtiene análisis de productos sin movimiento (stock muerto).
     "summary": {
       "total_products": 25,
       "total_units": 800,
-      "total_value": 45000.00,
+      "total_value": 45000.0,
       "percentage_of_stock": 18.0,
       "average_days_idle": 135,
-      "potential_loss": 13500.00
+      "potential_loss": 13500.0
     },
     "products": [
       {
         "product_id": "456",
         "product_name": "Producto Muerto",
-        "sku": "SKU-456",
+        "sku": "456",
         "category_name": "Categoría 2",
         "current_stock": 50,
-        "stock_value": 2500.00,
+        "stock_value": 2500.0,
         "last_sale_date": "2025-08-15T00:00:00Z",
         "days_since_last_sale": 143,
         "last_movement_date": "2025-09-01T00:00:00Z",
@@ -295,6 +315,7 @@ Obtiene análisis de productos sin movimiento (stock muerto).
 Obtiene análisis de productos que necesitan reabastecimiento.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -304,13 +325,14 @@ Obtiene análisis de productos que necesitan reabastecimiento.
       "total_needing_reorder": 35,
       "urgent_count": 10,
       "soon_count": 25,
-      "estimated_cost": 50000.00
+      "estimated_cost": 50000.00,
+      "average_lead_time_days": 0
     },
     "urgent_reorders": [
       {
         "product_id": "789",
         "product_name": "Producto Urgente",
-        "sku": "SKU-789",
+        "sku": "789",
         "category_name": "Categoría 3",
         "current_stock": 2,
         "min_stock": 10,
@@ -327,6 +349,7 @@ Obtiene análisis de productos que necesitan reabastecimiento.
 ```
 
 **Priority Levels:**
+
 - `URGENT`: Stock = 0
 - `HIGH`: Stock <= 50% del mínimo
 - `MEDIUM`: Stock <= mínimo
@@ -341,6 +364,7 @@ Obtiene análisis de productos que necesitan reabastecimiento.
 Obtiene reporte de antigüedad del stock.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -403,6 +427,7 @@ Obtiene movimientos por rango de fechas.
 | `end_date` | string | Fecha fin (YYYY-MM-DD) |
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -417,23 +442,33 @@ Obtiene movimientos por rango de fechas.
       "total_outbound": 1800,
       "total_adjustments": 50,
       "net_change": 200,
-      "inbound_value": 100000.00,
-      "outbound_value": 90000.00
+      "inbound_value": 100000.0,
+      "outbound_value": 90000.0
     },
     "by_type": [
       {
         "type": "SALE",
         "count": 300,
         "units": 1500,
-        "value": 75000.00,
+        "value": 75000.0,
         "percentage": 60.0
       },
       {
         "type": "PURCHASE",
         "count": 150,
         "units": 1800,
-        "value": 90000.00,
+        "value": 90000.0,
         "percentage": 36.0
+      }
+    ],
+    "by_category": [
+      {
+        "category_id": "1",
+        "category_name": "Categoría 1",
+        "count": 220,
+        "units": 980,
+        "value": 56000.0,
+        "percentage": 44.0
       }
     ],
     "daily": [
@@ -463,6 +498,7 @@ Obtiene pronóstico de stock basado en demanda histórica.
 | `forecast_days` | int | Días a pronosticar (default: 30, max: 365) |
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -480,7 +516,7 @@ Obtiene pronóstico de stock basado en demanda histórica.
       {
         "product_id": "123",
         "product_name": "Producto Riesgo",
-        "sku": "SKU-123",
+        "sku": "123",
         "current_stock": 20,
         "daily_demand": 3.5,
         "days_until_stockout": 5.7,
@@ -496,6 +532,7 @@ Obtiene pronóstico de stock basado en demanda histórica.
 ```
 
 **Risk Levels:**
+
 - `HIGH`: Stockout en <= 7 días
 - `MEDIUM`: Stockout en <= 14 días
 - `LOW`: Stockout en <= 30 días
@@ -510,6 +547,7 @@ Obtiene pronóstico de stock basado en demanda histórica.
 Obtiene dashboard consolidado con KPIs y alertas de inventario.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -535,6 +573,7 @@ Obtiene dashboard consolidado con KPIs y alertas de inventario.
     },
     "top_movers": [...],
     "slow_movers": [...],
+    "trends": [...],
     "reorder_alerts": [...],
     "dead_stock_value": 37500.00,
     "abc_summary": {
@@ -565,12 +604,12 @@ Obtiene dashboard consolidado con KPIs y alertas de inventario.
 
 ## Códigos de Error
 
-| Código | Descripción |
-|--------|-------------|
-| 400 | Parámetros inválidos |
-| 401 | No autorizado |
-| 500 | Error interno del servidor |
+| Código | Descripción                |
+| ------ | -------------------------- |
+| 400    | Parámetros inválidos       |
+| 401    | No autorizado              |
+| 500    | Error interno del servidor |
 
 ---
 
-**Última actualización:** 2026-01-05
+**Última actualización:** 2026-03-12

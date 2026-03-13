@@ -215,7 +215,7 @@ const ProfitabilityDashboard = () => {
                 style={{ height: `${h}%` }}
               >
                 <div
-                  className='absolute bottom-0 w-full bg-emerald-500 rounded-t-xl transition-all duration-[1500ms] group-hover/bar:scale-y-105 origin-bottom shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                  className='absolute bottom-0 w-full bg-emerald-500 rounded-t-xl transition-all duration-1500 group-hover/bar:scale-y-105 origin-bottom shadow-[0_0_15px_rgba(16,185,129,0.3)]'
                   style={{ height: `${h * 0.4}%` }}
                 />
               </div>
@@ -249,7 +249,7 @@ const ProfitabilityDashboard = () => {
             <div className='space-y-6'>
               <div className='w-full bg-white/20 h-2.5 rounded-full overflow-hidden shadow-inner p-0.5'>
                 <div
-                  className='bg-white h-full rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all duration-[2000ms]'
+                  className='bg-white h-full rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all duration-2000'
                   style={{ width: '82%' }}
                 ></div>
               </div>

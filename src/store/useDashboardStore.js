@@ -104,6 +104,40 @@ const useDashboardStore = create()(
                 loading: false 
             });
         } catch(error) {
+             if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
+                console.log('🔄 Dashboard: Mapeando Top Products de modo demo...');
+                try {
+                    const demo = await getDemoDashboardData();
+                    const { topProducts } = demo.charts;
+                    
+                    // Mapeo de demoData a API structure (enriqueciendo con datos para la UI)
+                    const mappedTopProducts = topProducts.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        category: p.category || 'General',
+                        quantity_sold: p.sales || p.quantity_sold,
+                        revenue: p.revenue,
+                        profit: p.profit || (p.revenue * 0.3),
+                        margin_percentage: p.margin_percentage || 30.0,
+                        trend: p.trend || 'stable',
+                        stock_status: p.stock_status || 'in_stock'
+                    }));
+                    
+                    set({ 
+                        topProducts: mappedTopProducts, 
+                        topProductsMetrics: {
+                            total_revenue: mappedTopProducts.reduce((acc, p) => acc + p.revenue, 0),
+                            total_profit: mappedTopProducts.reduce((acc, p) => acc + p.profit, 0)
+                        },
+                        loading: false, 
+                        error: null 
+                    });
+                    return;
+                } catch (demoError) {
+                    console.error('❌ Dashboard: Error en fallback de Top Products:', demoError);
+                }
+             }
+
              console.error('❌ Dashboard: Error loading top products:', error.message);
              set({ error: error.message, loading: false });
         }

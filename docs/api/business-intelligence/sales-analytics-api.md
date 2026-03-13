@@ -26,10 +26,10 @@ Obtiene métricas de rendimiento de ventas.
 
 **Parámetros Query:**
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `period` | string | Período: `today`, `week`, `month`, `year` (default: `month`) |
-| `compare` | boolean | Incluir comparación con período anterior |
+| Parámetro | Tipo    | Descripción                                                  |
+| --------- | ------- | ------------------------------------------------------------ |
+| `period`  | string  | Período: `today`, `week`, `month`, `year` (default: `month`) |
+| `compare` | boolean | Incluir comparación con período anterior                     |
 
 **Respuesta:**
 
@@ -48,11 +48,6 @@ Obtiene métricas de rendimiento de ventas.
     "unique_customers": 180,
     "gross_margin": 4500000,
     "gross_margin_pct": 30.0,
-    "returns": {
-      "total_returns": 150000,
-      "return_count": 5,
-      "return_rate": 1.0
-    },
     "comparison": {
       "previous_period": {
         "start_date": "2025-12-01T00:00:00Z",
@@ -79,10 +74,10 @@ Obtiene métricas por rango de fechas personalizado.
 
 **Parámetros Query:**
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `start_date` | string | Sí | Fecha inicio (YYYY-MM-DD) |
-| `end_date` | string | Sí | Fecha fin (YYYY-MM-DD) |
+| Parámetro    | Tipo   | Requerido | Descripción               |
+| ------------ | ------ | --------- | ------------------------- |
+| `start_date` | string | Sí        | Fecha inicio (YYYY-MM-DD) |
+| `end_date`   | string | Sí        | Fecha fin (YYYY-MM-DD)    |
 
 ---
 
@@ -94,9 +89,9 @@ Obtiene tendencias de ventas con granularidad configurable.
 
 **Parámetros Query:**
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `period` | string | Período: `today`, `week`, `month`, `year` |
+| Parámetro     | Tipo   | Descripción                                             |
+| ------------- | ------ | ------------------------------------------------------- |
+| `period`      | string | Período: `today`, `week`, `month`, `year`               |
 | `granularity` | string | `hourly`, `daily`, `weekly`, `monthly` (auto-detectado) |
 
 **Respuesta:**
@@ -144,10 +139,10 @@ Obtiene ventas agrupadas por categoría de producto.
 
 **Parámetros Query:**
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `period` | string | Período predefinido |
-| `limit` | int | Máximo de categorías (default: 20) |
+| Parámetro | Tipo   | Descripción                        |
+| --------- | ------ | ---------------------------------- |
+| `period`  | string | Período predefinido                |
+| `limit`   | int    | Máximo de categorías (default: 20) |
 
 **Respuesta:**
 
@@ -190,13 +185,13 @@ Obtiene ventas detalladas por producto con paginación.
 
 **Parámetros Query:**
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `period` | string | Período predefinido |
-| `page` | int | Página (default: 1) |
-| `page_size` | int | Tamaño página (default: 20, max: 100) |
-| `sort_by` | string | `sales`, `units`, `margin`, `name`, `last_sale` |
-| `sort_order` | string | `ASC` o `DESC` |
+| Parámetro    | Tipo   | Descripción                                     |
+| ------------ | ------ | ----------------------------------------------- |
+| `period`     | string | Período predefinido                             |
+| `page`       | int    | Página (default: 1)                             |
+| `page_size`  | int    | Tamaño página (default: 20, max: 100)           |
+| `sort_by`    | string | `sales`, `units`, `margin`, `name`, `last_sale` |
+| `sort_order` | string | `ASC` o `DESC`                                  |
 
 **Respuesta:**
 
@@ -209,7 +204,7 @@ Obtiene ventas detalladas por producto con paginación.
       {
         "product_id": "1",
         "product_name": "Smartphone XYZ",
-        "sku": "PHONE-001",
+        "sku": "1",
         "category_name": "Electrónicos",
         "sales": 1200000,
         "units_sold": 24,
@@ -233,6 +228,8 @@ Obtiene ventas detalladas por producto con paginación.
 }
 ```
 
+> **Nota:** En la implementación actual, `sku` se expone usando el `id` del producto como string para mantener compatibilidad de respuesta.
+
 #### GET /by-product/date-range
 
 #### GET /top-bottom-products
@@ -241,10 +238,10 @@ Obtiene productos más y menos vendidos.
 
 **Parámetros Query:**
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `period` | string | Período predefinido |
-| `limit` | int | Cantidad por lista (default: 10) |
+| Parámetro | Tipo   | Descripción                      |
+| --------- | ------ | -------------------------------- |
+| `period`  | string | Período predefinido              |
+| `limit`   | int    | Cantidad por lista (default: 10) |
 
 **Respuesta:**
 
@@ -271,11 +268,11 @@ Obtiene ventas por cliente con segmentación.
 
 **Parámetros Query:**
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `period` | string | Período predefinido |
-| `page` | int | Página (default: 1) |
-| `page_size` | int | Tamaño página (default: 20) |
+| Parámetro   | Tipo   | Descripción                 |
+| ----------- | ------ | --------------------------- |
+| `period`    | string | Período predefinido         |
+| `page`      | int    | Página (default: 1)         |
+| `page_size` | int    | Tamaño página (default: 20) |
 
 **Respuesta:**
 
@@ -316,21 +313,21 @@ Obtiene ventas por cliente con segmentación.
 
 **Segmentos de Cliente:**
 
-| Segmento | Criterio |
-|----------|----------|
-| VIP | Compras >= 1,000,000 |
-| PREMIUM | Compras >= 500,000 |
-| STANDARD | Compras >= 100,000 |
-| NEW | Compras < 100,000 |
+| Segmento | Criterio             |
+| -------- | -------------------- |
+| VIP      | Compras >= 1,000,000 |
+| PREMIUM  | Compras >= 500,000   |
+| STANDARD | Compras >= 100,000   |
+| NEW      | Compras < 100,000    |
 
 **Frecuencia de Compra:**
 
-| Frecuencia | Criterio |
-|------------|----------|
-| FREQUENT | Promedio <= 7 días |
-| REGULAR | Promedio <= 30 días |
-| OCCASIONAL | Promedio > 30 días |
-| NEW | Solo una compra |
+| Frecuencia | Criterio            |
+| ---------- | ------------------- |
+| FREQUENT   | Promedio <= 7 días  |
+| REGULAR    | Promedio <= 30 días |
+| OCCASIONAL | Promedio > 30 días  |
+| NEW        | Solo una compra     |
 
 #### GET /by-customer/date-range
 
@@ -563,11 +560,11 @@ Obtiene métricas de velocidad de ventas.
 
 **Clasificación de Velocidad:**
 
-| Velocidad | Criterio |
-|-----------|----------|
-| FAST | >= 5 unidades/día |
-| MEDIUM | >= 1 unidad/día |
-| SLOW | < 1 unidad/día |
+| Velocidad | Criterio          |
+| --------- | ----------------- |
+| FAST      | >= 5 unidades/día |
+| MEDIUM    | >= 1 unidad/día   |
+| SLOW      | < 1 unidad/día    |
 
 #### GET /velocity/date-range
 
@@ -646,9 +643,9 @@ Obtiene dashboard consolidado con todas las métricas principales.
 
 **Parámetros Query:**
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `period` | string | Período: `today`, `week`, `month`, `year` |
+| Parámetro | Tipo   | Descripción                               |
+| --------- | ------ | ----------------------------------------- |
+| `period`  | string | Período: `today`, `week`, `month`, `year` |
 
 **Respuesta:**
 
@@ -700,28 +697,28 @@ Obtiene dashboard consolidado con todas las métricas principales.
 
 **Tipos de Alerta:**
 
-| Tipo | Descripción |
-|------|-------------|
+| Tipo     | Descripción        |
+| -------- | ------------------ |
 | POSITIVE | Indicador positivo |
 | NEGATIVE | Indicador negativo |
-| WARNING | Advertencia |
+| WARNING  | Advertencia        |
 
 **Categorías de Alerta:**
 
-| Categoría | Descripción |
-|-----------|-------------|
-| SALES | Relacionado a ventas |
-| MARGIN | Relacionado a margen |
-| PRODUCT | Relacionado a productos |
-| CUSTOMER | Relacionado a clientes |
+| Categoría | Descripción             |
+| --------- | ----------------------- |
+| SALES     | Relacionado a ventas    |
+| MARGIN    | Relacionado a margen    |
+| PRODUCT   | Relacionado a productos |
+| CUSTOMER  | Relacionado a clientes  |
 
 **Severidad:**
 
-| Severidad | Descripción |
-|-----------|-------------|
-| HIGH | Alta prioridad |
-| MEDIUM | Prioridad media |
-| LOW | Baja prioridad |
+| Severidad | Descripción     |
+| --------- | --------------- |
+| HIGH      | Alta prioridad  |
+| MEDIUM    | Prioridad media |
+| LOW       | Baja prioridad  |
 
 #### GET /dashboard/date-range
 
@@ -729,11 +726,11 @@ Obtiene dashboard consolidado con todas las métricas principales.
 
 ## Códigos de Error
 
-| Código | Descripción |
-|--------|-------------|
-| 400 | Parámetros inválidos |
-| 401 | No autorizado |
-| 500 | Error interno del servidor |
+| Código | Descripción                |
+| ------ | -------------------------- |
+| 400    | Parámetros inválidos       |
+| 401    | No autorizado              |
+| 500    | Error interno del servidor |
 
 ## Ejemplo de Uso con cURL
 
@@ -753,4 +750,21 @@ curl -X GET "http://localhost:8080/sales-analytics/dashboard?period=month" \
 
 ---
 
-**Última actualización:** 2026-01-04
+## Notas Importantes
+
+### Manejo de Devoluciones
+
+> **Nota:** El sistema actual no maneja el estado `RETURNED` (devuelto) para las órdenes de venta. Las devoluciones no están soportadas en el esquema actual de la base de datos. Todos los cálculos de análisis excluyen únicamente las órdenes con estado `CANCELLED`.
+
+### Estados de Venta Válidos
+
+| Estado            | Descripción                            |
+| ----------------- | -------------------------------------- |
+| `PAID`            | Venta pagada completamente             |
+| `PENDING`         | Venta pendiente de pago                |
+| `PARTIAL_PAYMENT` | Venta con pago parcial                 |
+| `CANCELLED`       | Venta cancelada (excluida de análisis) |
+
+---
+
+**Última actualización:** 2026-03-12

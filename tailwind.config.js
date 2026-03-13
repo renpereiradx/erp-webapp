@@ -10,6 +10,11 @@ export default {
       screens: {
         'xs': '480px',
       },
+      transitionDuration: {
+        '1500': '1500ms',
+        '2000': '2000ms',
+        '2500': '2500ms',
+      },
       colors: {
         primary: {
           DEFAULT: "#137fec", // Stitch Primary

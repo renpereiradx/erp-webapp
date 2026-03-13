@@ -3,8 +3,10 @@ import useDashboardStore from '@/store/useDashboardStore';
 import { formatPYG } from '@/utils/currencyUtils';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useI18n } from '@/lib/i18n';
 
 const TopProductsOverview = () => {
+    const { t } = useI18n();
     const { 
         topProducts, 
         topProductsMetrics, 
@@ -15,7 +17,7 @@ const TopProductsOverview = () => {
     } = useDashboardStore();
 
     useEffect(() => {
-        fetchTopProducts();
+        fetchTopProducts('month');
         if (!alerts || alerts.length === 0) fetchDashboardData();
     }, [fetchTopProducts, fetchDashboardData, alerts]);
 
@@ -38,15 +40,15 @@ const TopProductsOverview = () => {
         switch(status?.toLowerCase()) {
             case 'in_stock':
             case 'in stock':
-                return { color: 'text-[#111418] dark:text-white', dot: 'bg-green-500', text: 'En Stock' };
+                return { color: 'text-[#111418] dark:text-white', dot: 'bg-green-500', text: t('dashboard.dashboard.topProductsPanel.status.inStock', 'En Stock') };
             case 'low_stock':
             case 'low stock':
-                return { color: 'text-orange-600 dark:text-orange-400 font-medium', dot: 'bg-orange-500 animate-pulse', text: 'Stock Bajo' };
+                return { color: 'text-orange-600 dark:text-orange-400 font-medium', dot: 'bg-orange-500 animate-pulse', text: t('dashboard.dashboard.topProductsPanel.status.lowStock', 'Stock Bajo') };
             case 'out_of_stock':
             case 'out of stock':
-                return { color: 'text-red-600 dark:text-red-400 font-medium', dot: 'bg-red-500', text: 'Sin Stock' };
+                return { color: 'text-red-600 dark:text-red-400 font-medium', dot: 'bg-red-500', text: t('dashboard.dashboard.topProductsPanel.status.outOfStock', 'Sin Stock') };
             default:
-                return { color: 'text-[#111418] dark:text-white', dot: 'bg-gray-400', text: status || 'Desconocido' };
+                return { color: 'text-[#111418] dark:text-white', dot: 'bg-gray-400', text: status || t('common.unknown', 'Desconocido') };
         }
     };
 
@@ -57,8 +59,12 @@ const TopProductsOverview = () => {
       {/* Page Heading */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pt-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-[#111418] dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Rendimiento de Productos Top</h1>
-          <p className="text-[#617589] dark:text-gray-400 text-base font-normal leading-normal">Últimos 30 Días | Resumen de los SKUs con mejor desempeño</p>
+          <h1 className="text-[#111418] dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">
+            {t('dashboard.dashboard.nav.topProducts', 'Rendimiento de Productos Top')}
+          </h1>
+          <p className="text-[#617589] dark:text-gray-400 text-base font-normal leading-normal">
+            {t('dashboard.dashboard.actions.dateRange', 'Últimos 30 Días')} | {t('dashboard.dashboard.topProductsPanel.subtitle', 'Resumen de los SKUs con mejor desempeño')}
+          </p>
         </div>
       </div>
 
@@ -67,14 +73,16 @@ const TopProductsOverview = () => {
         {/* Total Revenue Card */}
         <div className="flex flex-col gap-2 !rounded-[12px] p-6 bg-white dark:bg-[#1e2832] border border-[#dbe0e6] dark:border-[#2a3642] shadow-sm hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
-            <p className="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Ingresos Totales</p>
+            <p className="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">
+              {t('dashboard.dashboard.kpi.revenue', 'Ingresos Totales')}
+            </p>
             <span className="material-symbols-outlined text-green-600 bg-green-100 dark:bg-green-900/30 !rounded-full p-1 text-[16px]">trending_up</span>
           </div>
           <div className="flex items-baseline gap-2">
             <p className="text-[#111418] dark:text-white tracking-tight text-3xl font-bold leading-tight">
                 {formatCurrency(topProductsMetrics?.total_revenue || 0)}
             </p>
-            <span className="text-[#078838] text-sm font-medium bg-green-50 dark:bg-green-900/20 px-2 py-0.5 !rounded-[6px]">+12% vs prev</span>
+            <span className="text-[#078838] text-sm font-medium bg-green-50 dark:bg-green-900/20 px-2 py-0.5 !rounded-[6px]">+12% {t('dashboard.dashboard.kpi.vsPrevShort', 'vs prev')}</span>
           </div>
           <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 !rounded-full mt-2 overflow-hidden">
             <div className="bg-[#137fec] h-1.5 rounded-full w-[75%]" ></div>
@@ -84,28 +92,36 @@ const TopProductsOverview = () => {
         {/* Top Performer Card */}
         <div className="flex flex-col gap-2 !rounded-[12px] p-6 bg-white dark:bg-[#1e2832] border border-[#dbe0e6] dark:border-[#2a3642] shadow-sm hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
-            <p className="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Producto Estrella</p>
+            <p className="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">
+              {t('dashboard.dashboard.topProductsPanel.starProduct', 'Producto Estrella')}
+            </p>
             <span className="material-symbols-outlined text-[#137fec] bg-blue-100 dark:bg-blue-900/30 !rounded-full p-1 text-[16px]">emoji_events</span>
           </div>
           <p className="text-[#111418] dark:text-white tracking-tight text-2xl font-bold leading-tight truncate" title={topPerformer?.name}>
-            {topPerformer ? topPerformer.name : 'Cargando...'}
+            {topPerformer ? topPerformer.name : t('common.loading', 'Cargando...')}
           </p>
           <p className="text-[#617589] dark:text-gray-400 text-sm">
-            {topPerformer ? `${topPerformer.category || 'General'} • ${formatNumber(topPerformer.quantity_sold)} Unidades` : '-'}
+            {topPerformer ? `${topPerformer.category || t('common.general', 'General')} • ${formatNumber(topPerformer.quantity_sold)} ${t('common.units', 'Unidades')}` : '-'}
           </p>
         </div>
 
         {/* Inventory Alerts Card */}
         <div className="flex flex-col gap-2 !rounded-[12px] p-6 bg-white dark:bg-[#1e2832] border border-[#dbe0e6] dark:border-[#2a3642] shadow-sm hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
-            <p className="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Alertas de Stock</p>
+            <p className="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">
+              {t('dashboard.dashboard.activity.titleShort', 'Alertas de Stock')}
+            </p>
             <span className="material-symbols-outlined text-orange-600 bg-orange-100 dark:bg-orange-900/30 rounded-full p-1 text-[16px]">warning</span>
           </div>
           <div className="flex items-baseline gap-2">
-            <p className="text-[#111418] dark:text-white tracking-tight text-3xl font-bold leading-tight">{inventoryAlertsCount} Productos</p>
-            <span className="text-orange-600 text-sm font-medium">Stock Bajo</span>
+            <p className="text-[#111418] dark:text-white tracking-tight text-3xl font-bold leading-tight">
+              {inventoryAlertsCount} {t('common.products', 'Productos')}
+            </p>
+            <span className="text-orange-600 text-sm font-medium">{t('dashboard.dashboard.kpi.lowStock', 'Stock Bajo')}</span>
           </div>
-          <p className="text-[#617589] dark:text-gray-400 text-sm">Requiere reabastecimiento inmediato</p>
+          <p className="text-[#617589] dark:text-gray-400 text-sm">
+            {t('dashboard.dashboard.topProductsPanel.requiresRestock', 'Requiere reabastecimiento inmediato')}
+          </p>
         </div>
       </div>
 
@@ -116,15 +132,15 @@ const TopProductsOverview = () => {
           <div className="flex gap-2">
             <button className="flex items-center gap-2 px-3 py-2 text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-white/5 !rounded-[8px] border border-transparent transition-colors">
               <span className="material-symbols-outlined text-[20px]">filter_list</span>
-              <span className="text-sm font-medium">Filtrar</span>
+              <span className="text-sm font-medium">{t('common.filter', 'Filtrar')}</span>
             </button>
             <button className="flex items-center gap-2 px-3 py-2 text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-white/5 !rounded-[8px] border border-transparent transition-colors">
               <span className="material-symbols-outlined text-[20px]">view_column</span>
-              <span className="text-sm font-medium">Columnas</span>
+              <span className="text-sm font-medium">{t('common.columns', 'Columnas')}</span>
             </button>
             <button className="flex items-center gap-2 px-3 py-2 text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-white/5 !rounded-[8px] border border-transparent transition-colors">
               <span className="material-symbols-outlined text-[20px]">sort</span>
-              <span className="text-sm font-medium">Ordenar</span>
+              <span className="text-sm font-medium">{t('common.sort', 'Ordenar')}</span>
             </button>
           </div>
           <div className="flex gap-3">
@@ -133,7 +149,7 @@ const TopProductsOverview = () => {
             </button>
             <button className="flex cursor-pointer items-center justify-center overflow-hidden !rounded-[8px] h-9 bg-[#137fec] hover:bg-blue-600 text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] px-4 shadow-sm transition-colors">
               <span className="material-symbols-outlined text-[18px]">download</span>
-              <span className="truncate">Exportar a Excel</span>
+              <span className="truncate">{t('common.exportToExcel', 'Exportar a Excel')}</span>
             </button>
           </div>
         </div>
@@ -146,18 +162,29 @@ const TopProductsOverview = () => {
                 <th className="p-4 w-12 text-center">
                   <Checkbox className="!rounded-[4px] border-gray-300 text-[#137fec] focus:ring-[#137fec] h-4 w-4 bg-white dark:bg-[#1e2832] dark:border-gray-600" />
                 </th>
-                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nombre del Producto</th>
-                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Categoría</th>
-                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Precio Prom.</th>
-                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Und. Vendidas</th>
-                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Ingresos</th>
-                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
-                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Tendencia (7d)</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('dashboard.dashboard.topProductsPanel.table.productName', 'Nombre del Producto')}</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('common.category', 'Categoría')}</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">{t('dashboard.dashboard.topProductsPanel.table.avgPrice', 'Precio Prom.')}</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">{t('dashboard.dashboard.topProductsPanel.table.unitsSold', 'Und. Vendidas')}</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">{t('dashboard.dashboard.revenue', 'Ingresos')}</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('common.status', 'Estado')}</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">{t('dashboard.dashboard.topProductsPanel.table.trend7d', 'Tendencia (7d)')}</th>
                 <th className="p-4 w-12"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f0f2f4] dark:divide-[#2a3642]">
-              {topProducts && topProducts.map((product) => {
+              {loading && topProducts.length === 0 ? (
+                  <tr>
+                      <td colSpan={9} className="p-12 text-center border-none">
+                          <div className="flex flex-col items-center justify-center gap-3">
+                            <span className="material-symbols-outlined animate-spin text-[#137fec] text-[40px]">refresh</span>
+                            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">
+                                {t('dashboard.dashboard.topProductsPanel.table.loading', 'Cargando productos con mejor desempeño...')}
+                            </p>
+                          </div>
+                      </td>
+                  </tr>
+              ) : topProducts && topProducts.map((product) => {
                 const statusInfo = getStatusStyle(product.stock_status);
                 const avgPrice = product.quantity_sold > 0 ? product.revenue / product.quantity_sold : 0;
                 
@@ -179,7 +206,7 @@ const TopProductsOverview = () => {
                     </td>
                     <td className="p-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 !rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                        {product.category || 'General'}
+                        {product.category || t('common.general', 'General')}
                       </span>
                     </td>
                     <td className="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">
@@ -229,7 +256,7 @@ const TopProductsOverview = () => {
                           <div className="flex flex-col items-center justify-center gap-2">
                             <span className="material-symbols-outlined text-slate-300 text-[48px]">inventory_2</span>
                             <p className="text-sm font-bold text-text-secondary uppercase tracking-widest">
-                                No se encontraron productos para el período seleccionado.
+                                {t('dashboard.dashboard.topProductsPanel.table.noResults', 'No se encontraron productos para el período seleccionado.')}
                             </p>
                           </div>
                       </td>
@@ -242,14 +269,14 @@ const TopProductsOverview = () => {
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-[#f0f2f4] dark:border-[#2a3642] bg-gray-50 dark:bg-black/10">
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-            <span>Mostrando 1 a {topProducts?.length || 0} de {topProducts?.length || 0} resultados</span>
+            <span>{t('common.pagination.showing', 'Mostrando')} 1 {t('common.pagination.to', 'a')} {topProducts?.length || 0} {t('common.pagination.of', 'de')} {topProducts?.length || 0} {t('common.pagination.results', 'resultados')}</span>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="px-3 py-1 !rounded-[8px] border border-[#dbe0e6] dark:border-[#2a3642] bg-white dark:bg-[#1e2832] text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-30" disabled>
-                Anterior
+                {t('common.previous', 'Anterior')}
             </Button>
             <Button variant="outline" size="sm" className="px-3 py-1 !rounded-[8px] border border-[#dbe0e6] dark:border-[#2a3642] bg-white dark:bg-[#1e2832] text-sm text-[#111418] dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-30" disabled>
-                Siguiente
+                {t('common.next', 'Siguiente')}
             </Button>
           </div>
         </div>

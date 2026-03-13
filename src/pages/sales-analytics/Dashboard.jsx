@@ -25,28 +25,47 @@ import { MOCK_DASHBOARD } from '@/services/mocks/salesAnalyticsMock'
 
 const Dashboard = () => {
   const [data, setData] = useState(MOCK_DASHBOARD.data)
-  const [period, setPeriod] = useState('mes')
+  const [period, setPeriod] = useState('month')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [isClient, setIsClient] = useState(false)
+
+  // Map for UI labels
+  const labelMap = {
+    'today': 'hoy',
+    'week': 'semana',
+    'month': 'mes',
+    'year': 'año'
+  }
 
   useEffect(() => {
+    setIsClient(true)
     const fetchData = async () => {
+      setLoading(true)
+      setError(null)
       try {
         const response = await salesAnalyticsService.getDashboard(period)
         if (response && response.success) {
           setData(response.data)
+        } else {
+          throw new Error('Respuesta de API inválida')
         }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error)
-        // Fallback to mock data already set
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err)
+        setError(err.message || 'Error al cargar datos')
+        // El fallback ya está en el estado inicial o se mantiene el anterior
+      } finally {
+        setLoading(false)
       }
     }
     fetchData()
   }, [period])
 
-  const kpis = useMemo(() => data.kpis, [data])
-  const trends = useMemo(() => data.trends, [data])
-  const alerts = useMemo(() => data.alerts, [data])
-  const topProducts = useMemo(() => data.top_products, [data])
-  const paymentMix = useMemo(() => data.payment_mix, [data])
+  const kpis = useMemo(() => data?.kpis || MOCK_DASHBOARD.data.kpis, [data])
+  const trends = useMemo(() => data?.trends || MOCK_DASHBOARD.data.trends, [data])
+  const alerts = useMemo(() => data?.alerts || MOCK_DASHBOARD.data.alerts, [data])
+  const topProducts = useMemo(() => data?.top_products || MOCK_DASHBOARD.data.top_products, [data])
+  const paymentMix = useMemo(() => data?.payment_mix || MOCK_DASHBOARD.data.payment_mix, [data])
 
   const formatCurrency = value => {
     return new Intl.NumberFormat('es-PY', {
@@ -70,17 +89,17 @@ const Dashboard = () => {
         </div>
         <div className='flex items-center gap-4'>
           <div className='flex h-10 items-center rounded-lg bg-slate-200/50 dark:bg-slate-800 p-1 font-mono shadow-sm'>
-            {['hoy', 'semana', 'mes', 'año'].map(p => (
+            {Object.entries(labelMap).map(([apiVal, label]) => (
               <button
-                key={p}
-                onClick={() => setPeriod(p)}
+                key={apiVal}
+                onClick={() => setPeriod(apiVal)}
                 className={`flex cursor-pointer h-full items-center justify-center rounded-lg px-4 text-xs font-bold uppercase tracking-wider transition-all ${
-                  period === p
+                  period === apiVal
                     ? 'bg-white dark:bg-slate-700 shadow-sm text-[#137fec]'
                     : 'text-slate-600 dark:text-slate-400 hover:text-[#137fec]'
                 }`}
               >
-                {p}
+                {label}
               </button>
             ))}
           </div>
@@ -126,55 +145,63 @@ const Dashboard = () => {
               <MoreHorizontal size={20} />
             </button>
           </div>
-          <div className='h-[280px] w-full font-mono'>
-            <ResponsiveContainer
-              width='100%'
-              height='100%'
-              minWidth={0}
-              minHeight={0}
-            >
-              <AreaChart data={trends}>
-                <defs>
-                  <linearGradient id='colorSales' x1='0' y1='0' x2='0' y2='1'>
-                    <stop offset='5%' stopColor='#137fec' stopOpacity={0.2} />
-                    <stop offset='95%' stopColor='#137fec' stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray='3 3'
-                  vertical={false}
-                  stroke='#e2e8f0'
-                />
-                <XAxis
-                  dataKey='label'
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: '8px',
-                    border: 'none',
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                    fontFamily: 'Inter, sans-serif',
-                  }}
-                  formatter={value => [formatCurrency(value), 'Ventas']}
-                />
-                <Area
-                  type='monotone'
-                  dataKey='sales'
-                  stroke='#137fec'
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill='url(#colorSales)'
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className='h-[280px] w-full font-mono relative'>
+            {loading && (
+              <div className='absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-slate-900/50 z-10 rounded-lg'>
+                <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#137fec]'></div>
+              </div>
+            )}
+            
+            {isClient && trends && trends.length > 0 && (
+              <ResponsiveContainer
+                width='100%'
+                height='100%'
+                minWidth={0}
+                minHeight={280}
+              >
+                <AreaChart data={trends}>
+                  <defs>
+                    <linearGradient id='colorSales' x1='0' y1='0' x2='0' y2='1'>
+                      <stop offset='5%' stopColor='#137fec' stopOpacity={0.2} />
+                      <stop offset='95%' stopColor='#137fec' stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray='3 3'
+                    vertical={false}
+                    stroke='#e2e8f0'
+                  />
+                  <XAxis
+                    dataKey='label'
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '8px',
+                      border: 'none',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                      fontFamily: 'Inter, sans-serif',
+                    }}
+                    formatter={value => [formatCurrency(value), 'Ventas']}
+                  />
+                  <Area
+                    type='monotone'
+                    dataKey='sales'
+                    stroke='#137fec'
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill='url(#colorSales)'
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
         <div className='lg:col-span-4 flex flex-col gap-4 rounded-lg p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm'>

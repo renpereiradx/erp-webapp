@@ -113,7 +113,7 @@ const StockManagement = () => {
             <p className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter font-mono mt-4 leading-none">{formatPYG(1840500000)}</p>
           </div>
           <div className="w-full bg-slate-50 dark:bg-slate-800/50 h-2.5 rounded-full mt-8 overflow-hidden shadow-inner border border-slate-100/50 dark:border-slate-700/50 p-0.5">
-            <div className="bg-[#137fec] h-full rounded-full shadow-[0_0_15px_rgba(19,127,236,0.4)] transition-all duration-[2500ms] ease-out" style={{ width: '65%' }}></div>
+            <div className="bg-[#137fec] h-full rounded-full shadow-[0_0_15px_rgba(19,127,236,0.4)] transition-all duration-2500 ease-out" style={{ width: '65%' }}></div>
           </div>
         </div>
       </div>

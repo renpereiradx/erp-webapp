@@ -11,48 +11,91 @@ import {
   ChevronRight,
   MoreVertical,
   Download,
-  Plus
+  Plus,
+  RefreshCcw
 } from 'lucide-react';
 import salesAnalyticsService from '@/services/salesAnalyticsService';
-import { MOCK_BY_CATEGORY } from '@/services/mocks/salesAnalyticsMock';
 
 const ProductsCategories = () => {
-  const [categoriesData, setCategoriesData] = useState(MOCK_BY_CATEGORY.data);
+  const [categoriesData, setCategoriesData] = useState(null);
   const [productsData, setProductsData] = useState({ products: [], pagination: { page: 1, total_items: 0, total_pages: 1 } });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [period, setPeriod] = useState('month');
+
+  // Map for UI labels
+  const labelMap = {
+    'today': 'hoy',
+    'week': 'semana',
+    'month': 'mes',
+    'year': 'año'
+  };
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [catRes, prodRes] = await Promise.all([
+        salesAnalyticsService.getByCategory({ period }),
+        salesAnalyticsService.getByProduct({ period, page: 1, page_size: 10 })
+      ]);
+      
+      if (catRes && catRes.success) setCategoriesData(catRes.data);
+      if (prodRes && prodRes.success) setProductsData(prodRes.data);
+    } catch (err) {
+      console.error("Error fetching sales analytics data:", err);
+      setError(err.message || "Error al cargar los datos de analítica");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [catRes, prodRes] = await Promise.all([
-          salesAnalyticsService.getByCategory({ period: 'month' }),
-          salesAnalyticsService.getByProduct({ period: 'month', page: 1, page_size: 10 })
-        ]);
-        
-        if (catRes && catRes.success) setCategoriesData(catRes.data);
-        if (prodRes && prodRes.success) setProductsData(prodRes.data);
-      } catch (error) {
-        console.error("Error fetching sales analytics data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
-  }, []);
+  }, [period]);
 
   const handlePageChange = async (newPage) => {
     try {
-      const res = await salesAnalyticsService.getByProduct({ period: 'month', page: newPage, page_size: 10 });
+      const res = await salesAnalyticsService.getByProduct({ period, page: newPage, page_size: 10 });
       if (res && res.success) setProductsData(res.data);
-    } catch (error) {
-      console.error("Error fetching page:", error);
+    } catch (err) {
+      console.error("Error fetching page:", err);
     }
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(value || 0);
   };
+
+  if (loading && !categoriesData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+          <RefreshCcw className="animate-spin text-[#137fec]" size={48} />
+          <p className="text-lg font-medium text-slate-500 font-mono uppercase tracking-widest">Cargando analítica...</p>
+      </div>
+    );
+  }
+
+  if (error && !categoriesData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+          <div className="p-4 bg-red-100 rounded-full text-red-500 mb-4">
+            <TrendingDown size={48} />
+          </div>
+          <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white uppercase tracking-tight">Error de Conexión</h2>
+          <p className="text-slate-500 mb-6 max-w-md font-medium">{error}</p>
+          <button 
+            className="px-6 py-3 bg-[#137fec] text-white rounded-lg font-bold hover:opacity-90 transition-all uppercase tracking-widest text-xs shadow-lg shadow-[#137fec]/20"
+            onClick={fetchData}
+          >
+            Reintentar Carga
+          </button>
+      </div>
+    );
+  }
+
+  // Si no hay datos (y no está cargando ni en error)
+  if (!categoriesData) return null;
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-display">
@@ -63,11 +106,28 @@ const ProductsCategories = () => {
             <h1 className="text-slate-900 dark:text-white text-3xl font-black leading-tight tracking-tight uppercase">Analítica de Productos y Categorías</h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Visualización detallada del rendimiento comercial por SKU y líneas de producto.</p>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm text-slate-700 dark:text-slate-200 text-sm font-bold hover:bg-slate-50 transition-colors font-mono">
-            <Calendar size={18} />
-            <span>Últimos 30 días</span>
-            <TrendingUp size={18} className="text-slate-400" />
-          </button>
+          
+          <div className="flex items-center gap-4">
+            <div className='flex h-10 items-center rounded-lg bg-slate-200/50 dark:bg-slate-800 p-1 font-mono shadow-sm'>
+              {Object.entries(labelMap).map(([apiVal, label]) => (
+                <button
+                  key={apiVal}
+                  onClick={() => setPeriod(apiVal)}
+                  className={`flex cursor-pointer h-full items-center justify-center rounded-lg px-4 text-xs font-bold uppercase tracking-wider transition-all ${
+                    period === apiVal
+                      ? 'bg-white dark:bg-slate-700 shadow-sm text-[#137fec]'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-[#137fec]'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <button className="flex items-center justify-center gap-2 rounded-lg h-10 px-4 bg-[#137fec] text-white text-sm font-bold shadow-lg shadow-[#137fec]/20 hover:bg-[#137fec]/90 transition-all uppercase tracking-wider">
+              <Download size={18} />
+              <span>Exportar</span>
+            </button>
+          </div>
         </div>
 
         {/* Top Row: Charts and Highlights */}
