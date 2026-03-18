@@ -14,7 +14,8 @@ const API_ENDPOINTS = {
   closeCashRegister: id => `/cash-registers/${id}/close`,
   cashRegisterMovements: id => `/cash-registers/${id}/movements`,
   cashRegisterMovementsFilter: id => `/cash-registers/${id}/movements/filter`,
-  cashRegisterSummary: id => `/cash-registers/${id}/summary`,
+  cashRegisterReport: id => `/cash-registers/${id}/report`,
+  cashRegisterAudits: id => `/cash-registers/${id}/audits`,
   cashMovements: '/cash-movements/',
   voidMovement: id => `/cash-movements/${id}/void`,
   paymentsSale: '/cash-registers/payments/sale',
@@ -413,21 +414,28 @@ export const cashRegisterService = {
   },
 
   /**
-   * Obtiene resumen de una caja registradora
+   * Obtiene reporte detallado de una caja registradora
    * @param {number} cashRegisterId
-   * @returns {Promise<CashRegisterSummary>}
+   * @returns {Promise<CashRegisterReport>}
    */
   async getCashRegisterSummary(cashRegisterId) {
+    if (IS_DEMO_MODE) {
+      return {
+        cash_register: { id: cashRegisterId, name: 'Caja Demo', status: 'OPEN', current_balance: 1250000 },
+        summary: { total_income: 950000, total_expenses: 200000, net_change: 750000, transaction_count: 15 },
+        by_category: { SALE: 900000, PURCHASE: 150000, ADJUSTMENT: 0 }
+      }
+    }
     const startTime = Date.now()
 
     try {
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(
-          API_ENDPOINTS.cashRegisterSummary(cashRegisterId)
+          API_ENDPOINTS.cashRegisterReport(cashRegisterId)
         )
       })
 
-      telemetry.record('cash_register.service.summary', {
+      telemetry.record('cash_register.service.report', {
         duration: Date.now() - startTime,
         cashRegisterId,
       })
@@ -438,6 +446,36 @@ export const cashRegisterService = {
         duration: Date.now() - startTime,
         error: error.message,
         operation: 'getCashRegisterSummary',
+      })
+      throw error
+    }
+  },
+
+  /**
+   * Obtiene historial de auditorías de una caja
+   * @param {number} cashRegisterId
+   * @returns {Promise<Array>}
+   */
+  async getAuditsByRegister(cashRegisterId) {
+    if (IS_DEMO_MODE) {
+      const { getDemoAudits } = await import('@/config/demoData')
+      return getDemoAudits(cashRegisterId)
+    }
+    const startTime = Date.now()
+
+    try {
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.get(
+          API_ENDPOINTS.cashRegisterAudits(cashRegisterId)
+        )
+      })
+
+      return result
+    } catch (error) {
+      telemetry.record('cash_register.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getAuditsByRegister',
       })
       throw error
     }

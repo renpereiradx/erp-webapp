@@ -272,12 +272,12 @@ class BusinessManagementAPI {
   // ============================================================================
 
   async getCategories() {
-    return this.makeRequest('/categories')
+    return this.makeRequest('/category/')
   }
 
   // Obtener todas las categorías
   async getAllCategories() {
-    return this.makeRequest('/categories')
+    return this.makeRequest('/category/')
   }
 
   // ============================================================================

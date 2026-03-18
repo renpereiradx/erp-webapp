@@ -99,7 +99,7 @@ const PurchasePaymentsPage = () => {
   const [modalOrder, setModalOrder] = useState(null)
 
   const {
-    orders, filters, meta, loading, error, fetchOrders, setFilter, resetFilters,
+    orders, filters, meta, loading, error, fetchOrders, setFilter, resetFilters, processPayment
   } = usePurchasePaymentsMvpStore()
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
@@ -115,10 +115,24 @@ const PurchasePaymentsPage = () => {
     setRegisterModalOpen(true)
   }
 
-  const handlePaymentSuccess = () => {
-    setRegisterModalOpen(false)
-    fetchOrders()
-    showSuccess('Pago registrado exitosamente')
+  const handlePaymentSubmit = async (paymentData) => {
+    try {
+      await processPayment(paymentData.orderId, {
+        amount_paid: paymentData.amount,
+        payment_method_id: paymentData.paymentMethodId,
+        currency_id: paymentData.currencyId,
+        exchange_rate: paymentData.exchange_rate,
+        original_amount: paymentData.original_amount,
+        payment_reference: paymentData.reference,
+        cash_register_id: paymentData.cashRegisterId,
+        notes: paymentData.notes
+      })
+      setRegisterModalOpen(false)
+      fetchOrders()
+      showSuccess('Pago registrado exitosamente')
+    } catch (err) {
+      throw err
+    }
   }
 
   const getStatusBadge = status => {
@@ -303,7 +317,7 @@ const PurchasePaymentsPage = () => {
         )}
       </div>
 
-      <RegisterPaymentModal open={isRegisterModalOpen} onOpenChange={setRegisterModalOpen} order={modalOrder} onSubmit={handlePaymentSuccess} />
+      <RegisterPaymentModal open={isRegisterModalOpen} onOpenChange={setRegisterModalOpen} order={modalOrder} onSubmit={handlePaymentSubmit} />
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   )

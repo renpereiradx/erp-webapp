@@ -236,6 +236,20 @@ export const purchasePaymentService = {
         apiData.payment_method_id = resolvedPaymentMethodId
       }
 
+      const resolvedCurrencyId =
+        paymentData.currency_id ?? paymentData.currencyId ?? null
+      if (resolvedCurrencyId) {
+        apiData.currency_id = resolvedCurrencyId
+      }
+
+      if (paymentData.exchange_rate !== undefined && paymentData.exchange_rate !== null) {
+        apiData.exchange_rate = Number(paymentData.exchange_rate)
+      }
+
+      if (paymentData.original_amount !== undefined && paymentData.original_amount !== null) {
+        apiData.original_amount = Number(paymentData.original_amount)
+      }
+
       const resolvedCurrencyCode =
         paymentData.currency_code ??
         paymentData.currencyCode ??

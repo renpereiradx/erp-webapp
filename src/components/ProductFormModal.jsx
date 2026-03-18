@@ -27,6 +27,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
     brand: '',
     origin: '',
     base_unit: 'unit',
+    taxRateId: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -34,23 +35,40 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [categories, setCategories] = useState([])
+  const [taxRates, setTaxRates] = useState([])
   const [loadingCategories, setLoadingCategories] = useState(false)
+  const [loadingTaxRates, setLoadingTaxRates] = useState(false)
 
   useEffect(() => {
-    if (isOpen) loadCategories()
+    if (isOpen) {
+      loadCategories()
+      loadTaxRates()
+    }
   }, [isOpen])
 
   const loadCategories = async () => {
     setLoadingCategories(true)
     try {
-      const response = await apiClient.getCategories()
-      if (response && response.categories) setCategories(response.categories)
-      else if (Array.isArray(response)) setCategories(response)
-      else setCategories([])
+      const { categoryService } = await import('../services/categoryService')
+      const response = await categoryService.getAll()
+      setCategories(Array.isArray(response) ? response : [])
     } catch (error) {
       setCategories([])
     } finally {
       setLoadingCategories(false)
+    }
+  }
+
+  const loadTaxRates = async () => {
+    setLoadingTaxRates(true)
+    try {
+      const { taxRateService } = await import('../services/taxRateService')
+      const response = await taxRateService.getPaginated(1, 50)
+      setTaxRates(Array.isArray(response) ? response : [])
+    } catch (error) {
+      setTaxRates([])
+    } finally {
+      setLoadingTaxRates(false)
     }
   }
 
@@ -66,11 +84,12 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
           brand: product.brand || '',
           origin: product.origin || '',
           base_unit: product.base_unit || 'unit',
+          taxRateId: product.tax_rate_id?.toString() || '',
         })
       } else {
         setFormData({
           name: '', category: '', productType: 'PHYSICAL', description: '',
-          barcode: '', brand: '', origin: '', base_unit: 'unit',
+          barcode: '', brand: '', origin: '', base_unit: 'unit', taxRateId: '',
         })
       }
       setErrors({})
@@ -106,6 +125,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
         brand: formData.brand?.trim() || undefined,
         origin: formData.origin || undefined,
         base_unit: formData.base_unit || 'unit',
+        override_tax_rate_id: formData.taxRateId ? parseInt(formData.taxRateId) : undefined,
       }
       const productId = product?.product_id || product?.id
       if (isEditMode) await updateProduct(productId, productData)
@@ -233,6 +253,31 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
                           <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                         </div>
                       </div>
+                    </div>
+
+                    {/* Tasa de IVA (Nuevo v1.1) */}
+                    <div className="space-y-1 relative">
+                      <label className={labelClass}>Tasa de IVA (Opcional - Sobrescribe Categoría)</label>
+                      <div className="relative">
+                        <select
+                          name="taxRateId"
+                          value={formData.taxRateId}
+                          onChange={handleChange}
+                          className={selectClass}
+                          disabled={loadingTaxRates}
+                        >
+                          <option value="">Heredar de Categoría</option>
+                          {taxRates.map(rate => (
+                            <option key={rate.id} value={rate.id}>
+                              {rate.tax_name || rate.name} ({rate.rate}%)
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      </div>
+                      <p className="text-[10px] text-slate-400 font-medium italic mt-1">
+                        Si no se selecciona, se usará la tasa por defecto de la categoría seleccionada.
+                      </p>
                     </div>
 
                     {/* Descripcion */}

@@ -1887,6 +1887,16 @@ const Purchases = () => {
                 </span>
                 .
               </p>
+              {cancelPreviewData.impact_analysis && (
+                <div className='mt-4 p-3 bg-red-50 text-red-700 text-xs rounded text-left'>
+                  <p className='font-semibold mb-1'>Impacto de la anulación:</p>
+                  <ul className='list-disc pl-4 space-y-1'>
+                    {cancelPreviewData.impact_analysis.requires_payment_reversal && <li>Se reversarán {cancelPreviewData.impact_analysis.payments_to_cancel || 0} pagos.</li>}
+                    {cancelPreviewData.impact_analysis.requires_stock_adjustment && <li>Se ajustará el stock de {cancelPreviewData.impact_analysis.stock_adjustments_required || 0} items.</li>}
+                    <li>Total a reversar: {cancelPreviewData.impact_analysis.total_to_reverse || 0}</li>
+                  </ul>
+                </div>
+              )}
             </div>
             <div className='flex gap-3 pt-2'>
               <button

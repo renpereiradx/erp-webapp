@@ -11,7 +11,7 @@ const DEMO_PAYMENT_METHODS = [
   { id: 3, method_code: 'TRANSFER', description: 'Transferencia Bancaria', is_active: true },
   { id: 4, method_code: 'CHECK', description: 'Cheque', is_active: true },
 ]
-const PAYMENT_METHOD_WRITE_ENABLED = false
+const PAYMENT_METHOD_WRITE_ENABLED = true
 
 const logPaymentFailure = (
   operation,
@@ -49,7 +49,8 @@ class PaymentMethodService {
    */
   static async getAll() {
     if (DEMO_CONFIG.enabled) {
-      return DEMO_PAYMENT_METHODS
+      const { getDemoPaymentMethods } = await import('../config/demoData.js')
+      return getDemoPaymentMethods()
     }
     try {
       const response = await apiClient.makeRequest('/payment-methods')
@@ -304,6 +305,10 @@ class PaymentMethodService {
       })
       throw new Error(message)
     }
+    if (DEMO_CONFIG.enabled) {
+      const { createDemoPaymentMethod } = await import('../config/demoData.js')
+      return createDemoPaymentMethod(data)
+    }
     try {
       const payload = this.preparePayload(data)
       const response = await apiClient.makeRequest('/payment-methods', {
@@ -329,6 +334,10 @@ class PaymentMethodService {
    * @returns {Promise<import('../types/payment.js').PaymentMethod>}
    */
   static async update(id, data) {
+    if (DEMO_CONFIG.enabled) {
+      const { updateDemoPaymentMethod } = await import('../config/demoData.js')
+      return updateDemoPaymentMethod(id, data)
+    }
     if (!PAYMENT_METHOD_WRITE_ENABLED) {
       const message =
         'La actualización de métodos de pago no está disponible. Los endpoints de escritura aún no fueron implementados en el backend.'
@@ -372,6 +381,11 @@ class PaymentMethodService {
    * @returns {Promise<void>}
    */
   static async delete(id) {
+    if (DEMO_CONFIG.enabled) {
+      const { updateDemoPaymentMethod } = await import('../config/demoData.js')
+      updateDemoPaymentMethod(id, { is_active: false })
+      return
+    }
     if (!PAYMENT_METHOD_WRITE_ENABLED) {
       const message =
         'La eliminación de métodos de pago no está disponible. Los endpoints de escritura aún no fueron implementados en el backend.'

@@ -64,6 +64,8 @@ class CurrencyService {
       // Campo de la API
       decimal_places:
         typeof payload.decimal_places === 'number' ? payload.decimal_places : 2,
+      iso_number: payload.iso_number || null,
+      is_active: payload.is_active !== undefined ? payload.is_active : true,
       // Campos UI-only que pueden o no venir de la respuesta
       is_enabled: payload.is_enabled !== undefined ? payload.is_enabled : true,
       flag_emoji: payload.flag_emoji || '',
@@ -124,7 +126,7 @@ class CurrencyService {
   }
 
   /**
-   * Obtiene una moneda por ID usando la API unificada con query params
+   * Obtiene una moneda por ID usando parámetros de ruta
    * @param {number} id - Currency ID
    * @returns {Promise<import('../types/payment.js').Currency>}
    */
@@ -134,27 +136,23 @@ class CurrencyService {
         throw new Error('ID de moneda inválido')
       }
 
-      // Nueva API unificada: GET /currencies?id=1
-      const response = await apiClient.makeRequest(`/currencies?id=${id}`)
+      const response = await apiClient.makeRequest(`/currencies/${id}`)
       const payload = response.data || response
 
-      // La API puede devolver un array o un objeto individual
-      const currency = Array.isArray(payload) ? payload[0] : payload
-
-      if (!currency) {
+      if (!payload) {
         throw new Error('Moneda no encontrada')
       }
 
-      return this.normalizeCurrency(currency)
+      return this.normalizeCurrency(payload)
     } catch (error) {
       console.error(`Error fetching currency ${id}:`, error)
-      logPaymentFailure('getById', `/currencies?id=${id}`, error)
+      logPaymentFailure('getById', `/currencies/${id}`, error)
       throw new Error('Error al obtener la moneda')
     }
   }
 
   /**
-   * Obtiene una moneda por código usando la API unificada con query params
+   * Obtiene una moneda por código usando parámetros de ruta
    * @param {string} code - Currency code (e.g., "USD", "PYG")
    * @returns {Promise<import('../types/payment.js').Currency>}
    */
@@ -165,28 +163,49 @@ class CurrencyService {
       }
 
       const normalizedCode = code.trim().toUpperCase()
-      // Nueva API unificada: GET /currencies?code=USD
       const response = await apiClient.makeRequest(
-        `/currencies?code=${normalizedCode}`
+        `/currencies/code/${normalizedCode}`
       )
       const payload = response.data || response
 
-      // La API puede devolver un array o un objeto individual
-      const currency = Array.isArray(payload) ? payload[0] : payload
-
-      if (!currency) {
+      if (!payload) {
         throw new Error('Moneda no encontrada')
       }
 
-      return this.normalizeCurrency(currency)
+      return this.normalizeCurrency(payload)
     } catch (error) {
       console.error(`Error fetching currency ${code}:`, error)
       logPaymentFailure(
         'getByCode',
-        `/currencies?code=${code.trim().toUpperCase()}`,
+        `/currencies/code/${code.trim().toUpperCase()}`,
         error
       )
       throw new Error('Error al obtener la moneda')
+    }
+  }
+
+  /**
+   * Convierte un monto de una moneda a otra usando el servidor
+   * @param {number} amount - Monto a convertir
+   * @param {string} fromCurrency - Código moneda origen
+   * @param {string} toCurrency - Código moneda destino
+   * @returns {Promise<Object>} Resultado de la conversión
+   */
+  static async convert(amount, fromCurrency, toCurrency) {
+    try {
+      const params = new URLSearchParams({
+        amount: String(amount),
+        from_currency: fromCurrency.toUpperCase(),
+        to_currency: toCurrency.toUpperCase(),
+      })
+
+      const response = await apiClient.makeRequest(
+        `/currencies/convert?${params.toString()}`
+      )
+      return response.data || response
+    } catch (error) {
+      console.error('Error converting currency:', error)
+      throw new Error('Error al convertir moneda')
     }
   }
 

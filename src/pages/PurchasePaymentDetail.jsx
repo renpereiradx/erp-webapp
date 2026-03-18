@@ -55,8 +55,28 @@ const PurchasePaymentDetailPage = () => {
   const navigate = useNavigate()
   const { success: showSuccess } = useToast()
 
-  const { currentOrder: order, loading, error, fetchOrder } = usePurchasePaymentsMvpStore()
+  const { currentOrder: order, loading, error, fetchOrder, processPayment } = usePurchasePaymentsMvpStore()
   const [isRegisterModalOpen, setRegisterModalOpen] = useState(false)
+
+  const handlePaymentSubmit = async (paymentData) => {
+    try {
+      await processPayment(paymentData.orderId, {
+        amount_paid: paymentData.amount,
+        payment_method_id: paymentData.paymentMethodId,
+        currency_id: paymentData.currencyId,
+        exchange_rate: paymentData.exchange_rate,
+        original_amount: paymentData.original_amount,
+        payment_reference: paymentData.reference,
+        cash_register_id: paymentData.cashRegisterId,
+        notes: paymentData.notes
+      })
+      setRegisterModalOpen(false)
+      fetchOrder(orderId)
+      showSuccess('Pago registrado exitosamente')
+    } catch (err) {
+      throw err
+    }
+  }
 
   useEffect(() => { if (orderId) fetchOrder(orderId) }, [orderId, fetchOrder])
 
@@ -154,24 +174,52 @@ const PurchasePaymentDetailPage = () => {
                     {/* Desktop Table */}
                     <div className="hidden md:block overflow-x-auto">
                       <Table>
-                        <TableHeader><TableRow className="bg-slate-50 border-b border-slate-200"><TableHead className="text-xs font-semibold text-slate-600 py-3 px-8">Descripción</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-center">Cant.</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-right">Precio</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-right px-8">Subtotal</TableHead></TableRow></TableHeader>
-                        <TableBody className="divide-y divide-slate-200">{order.items?.map((item, idx) => (<TableRow key={idx} className="hover:bg-slate-50 transition-colors"><TableCell className="py-4 px-8"><div className="flex flex-col"><span className="font-semibold text-slate-900 text-sm">{item.name}</span><span className="text-xs text-slate-500 font-medium">SKU-{Math.floor(Math.random() * 10000)}</span></div></TableCell><TableCell className="text-center font-medium text-slate-600 text-sm">x{item.quantity}</TableCell><TableCell className="text-right font-medium text-slate-600 text-sm tabular-nums">{currencyFormatter.format(item.unitPrice)}</TableCell><TableCell className="text-right font-semibold text-slate-900 text-sm tabular-nums px-8">{currencyFormatter.format(item.total)}</TableCell></TableRow>))}</TableBody>
+                        <TableHeader><TableRow className="bg-slate-50 border-b border-slate-200"><TableHead className="text-xs font-semibold text-slate-600 py-3 px-8">Descripción</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-center">Cant.</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-right">Precio s/IVA</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-right">IVA</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-right px-8">Subtotal</TableHead></TableRow></TableHeader>
+                        <TableBody className="divide-y divide-slate-200">{order.items?.map((item, idx) => {
+                          const unitPriceWoTax = item.unit_price_without_tax ?? item.unitPrice
+                          const taxAmount = item.tax_amount ?? 0
+                          const lineTotal = item.total_line_with_tax ?? item.total
+                          return (
+                            <TableRow key={idx} className="hover:bg-slate-50 transition-colors">
+                              <TableCell className="py-4 px-8"><div className="flex flex-col"><span className="font-semibold text-slate-900 text-sm">{item.name}</span><span className="text-xs text-slate-500 font-medium">SKU-{Math.floor(Math.random() * 10000)}</span></div></TableCell>
+                              <TableCell className="text-center font-medium text-slate-600 text-sm">x{item.quantity}</TableCell>
+                              <TableCell className="text-right font-medium text-slate-600 text-sm tabular-nums">{currencyFormatter.format(unitPriceWoTax)}</TableCell>
+                              <TableCell className="text-right font-medium text-slate-600 text-sm tabular-nums text-slate-400">{taxAmount > 0 ? currencyFormatter.format(taxAmount) : '-'}</TableCell>
+                              <TableCell className="text-right font-semibold text-slate-900 text-sm tabular-nums px-8">{currencyFormatter.format(lineTotal)}</TableCell>
+                            </TableRow>
+                          )
+                        })}</TableBody>
                       </Table>
                     </div>
                     {/* Mobile Card View */}
                     <div className="md:hidden divide-y divide-slate-200">
-                      {order.items?.map((item, idx) => (
-                        <div key={idx} className="p-5 space-y-3">
-                          <div className="flex justify-between items-start gap-4">
-                            <span className="font-semibold text-slate-900 text-base leading-tight">{item.name}</span>
-                            <span className="bg-slate-100 px-2 py-0.5 rounded-md text-xs font-medium text-slate-600 whitespace-nowrap">x{item.quantity}</span>
+                      {order.items?.map((item, idx) => {
+                        const unitPriceWoTax = item.unit_price_without_tax ?? item.unitPrice
+                        const taxAmount = item.tax_amount ?? 0
+                        const lineTotal = item.total_line_with_tax ?? item.total
+                        return (
+                          <div key={idx} className="p-5 space-y-3">
+                            <div className="flex justify-between items-start gap-4">
+                              <span className="font-semibold text-slate-900 text-base leading-tight">{item.name}</span>
+                              <span className="bg-slate-100 px-2 py-0.5 rounded-md text-xs font-medium text-slate-600 whitespace-nowrap">x{item.quantity}</span>
+                            </div>
+                            <div className="flex flex-col gap-2 bg-slate-50 p-3 rounded-md border border-slate-200">
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-medium text-slate-500">Precio s/IVA</span>
+                                <span className="font-semibold text-sm tabular-nums">{currencyFormatter.format(unitPriceWoTax)}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-medium text-slate-500">IVA</span>
+                                <span className="font-medium text-sm tabular-nums text-slate-400">{taxAmount > 0 ? currencyFormatter.format(taxAmount) : '-'}</span>
+                              </div>
+                              <div className="flex justify-between items-center border-t border-slate-200 pt-2 mt-1">
+                                <span className="text-xs font-bold text-slate-700">Subtotal</span>
+                                <span className="font-bold text-base text-primary tabular-nums">{currencyFormatter.format(lineTotal)}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex justify-between items-center bg-slate-50 p-3 rounded-md border border-slate-200">
-                            <div className="flex flex-col"><span className="text-xs font-medium text-slate-500">Precio Unit.</span><span className="font-semibold text-sm tabular-nums">{currencyFormatter.format(item.unitPrice)}</span></div>
-                            <div className="flex flex-col text-right"><span className="text-xs font-medium text-slate-500">Subtotal</span><span className="font-bold text-base text-primary tabular-nums">{currencyFormatter.format(item.total)}</span></div>
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </>
                 )}
@@ -206,7 +254,7 @@ const PurchasePaymentDetailPage = () => {
         </div>
       </div>
 
-      <RegisterPaymentModal open={isRegisterModalOpen} onOpenChange={setRegisterModalOpen} order={{ id: order.id, pendingAmount: order.pendingAmount, currency: order.currency, supplierName: order.supplier?.name, supplierId: order.supplier?.id, priority: order.priority }} onSubmit={() => { setRegisterModalOpen(false); fetchOrder(orderId); showSuccess('Pago registrado'); }} />
+      <RegisterPaymentModal open={isRegisterModalOpen} onOpenChange={setRegisterModalOpen} order={{ id: order.id, pendingAmount: order.pendingAmount, currency: order.currency, supplierName: order.supplier?.name, supplierId: order.supplier?.id, priority: order.priority }} onSubmit={handlePaymentSubmit} />
     </div>
   )
 }

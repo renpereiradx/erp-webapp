@@ -58,6 +58,8 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
   const { t, lang } = useI18n()
 
   const [amount, setAmount] = useState('')
+  const [exchangeRate, setExchangeRate] = useState('')
+  const [originalAmount, setOriginalAmount] = useState('')
   const [reference, setReference] = useState('')
   const [notes, setNotes] = useState('')
   const [paymentMethodId, setPaymentMethodId] = useState('')
@@ -84,7 +86,7 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
   }, [])
 
   const resetForm = useCallback(() => {
-    setAmount(''); setReference(''); setNotes(''); setPaymentMethodId('');
+    setAmount(''); setExchangeRate(''); setOriginalAmount(''); setReference(''); setNotes(''); setPaymentMethodId('');
     setCurrencyCode((order?.currency || DEFAULT_CURRENCY_CODE).toUpperCase());
     setCashRegister(''); setAmountError(null); setFormError(null); setSubmitting(false);
   }, [order?.currency])
@@ -149,9 +151,9 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
   useEffect(() => { if (open) loadData() }, [loadData, open])
 
   const currencySelectorData = useMemo(() => {
-    if (currencies.length) return currencies.map(c => ({ id: c.currency_code, code: c.currency_code, name: c.currency_name }))
+    if (currencies.length) return currencies.map(c => ({ id: c.currency_code, code: c.currency_code, name: c.currency_name, currency_id: c.id }))
     const fb = (order?.currency || DEFAULT_CURRENCY_CODE).toUpperCase()
-    return [{ id: fb, code: fb, name: fb }]
+    return [{ id: fb, code: fb, name: fb, currency_id: null }]
   }, [currencies, order?.currency])
 
   const paymentMethodOptions = useMemo(() => paymentMethods.map(m => {
@@ -175,10 +177,16 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
     
     setSubmitting(true)
     try {
+      const selectedCurrency = currencySelectorData.find(c => c.code === String(currencyCode).toUpperCase())
+      
       await onSubmit({
-        orderId: order.id, amount: Number(num.toFixed(2)),
+        orderId: order.id, 
+        amount: Number(num.toFixed(2)),
         paymentMethodId: Number(paymentMethodId),
         currencyCode: String(currencyCode).toUpperCase(),
+        currencyId: selectedCurrency ? selectedCurrency.currency_id : undefined,
+        exchange_rate: exchangeRate ? Number(exchangeRate) : undefined,
+        original_amount: originalAmount ? Number(originalAmount) : undefined,
         reference: reference.trim() || null,
         cashRegisterId: cashRegister ? Number(cashRegister) : undefined,
         notes: notes.trim() || null,
@@ -265,6 +273,19 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
                       </Select>
                     </div>
                   </div>
+
+                  {currencyCode !== (order?.currency || DEFAULT_CURRENCY_CODE).toUpperCase() && (
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 p-4 bg-slate-50 rounded-md border border-slate-200'>
+                      <div className='space-y-2'>
+                        <label className='text-sm font-medium text-slate-700 px-1'>Tipo de Cambio</label>
+                        <Input type='number' step='any' min='0' value={exchangeRate} onChange={e => setExchangeRate(e.target.value)} placeholder='Ej: 7350' className='h-10 rounded-md bg-white border-slate-400 text-sm' required />
+                      </div>
+                      <div className='space-y-2'>
+                        <label className='text-sm font-medium text-slate-700 px-1'>Monto Original ({currencyCode})</label>
+                        <Input type='number' step='any' min='0' value={originalAmount} onChange={e => setOriginalAmount(e.target.value)} placeholder='Monto en moneda extranjera' className='h-10 rounded-md bg-white border-slate-400 text-sm' required />
+                      </div>
+                    </div>
+                  )}
 
                   <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8'>
                     <div className='space-y-2'><label htmlFor='purchase-reference' className='text-sm font-medium text-slate-700 px-1'>N° Referencia / Comprobante</label><div className='relative'><Hash className='absolute left-3 top-1/2 -translate-y-1/2 text-slate-400' size={14} /><Input id='purchase-reference' value={reference} onChange={e => setReference(e.target.value)} placeholder='Opcional...' className='h-10 pl-9 rounded-md bg-white border-slate-400 text-sm' /></div></div>

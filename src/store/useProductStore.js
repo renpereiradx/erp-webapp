@@ -229,85 +229,35 @@ const useProductStore = create()(
 
       fetchCategories: async () => {
         const currentState = get()
-        // Evitar llamadas múltiples simultáneas
-        if (currentState.loading) return currentState.categories
+        if (currentState.loading && currentState.categories.length > 0) return currentState.categories
 
         set({ loading: true, error: null })
         try {
-          const response = await productService.getAllCategories()
+          const { categoryService } = await import('@/services/categoryService')
+          const categories = await categoryService.getAll()
+          
+          set({ 
+            categories: Array.isArray(categories) ? categories : [], 
+            loading: false 
+          })
 
-          let categories = []
-
-          // Manejar diferentes formatos de respuesta
-          if (Array.isArray(response)) {
-            categories = response
-          } else if (
-            response &&
-            typeof response === 'object' &&
-            Array.isArray(response.data)
-          ) {
-            categories = response.data
-          } else if (
-            response &&
-            typeof response === 'object' &&
-            Array.isArray(response.categories)
-          ) {
-            categories = response.categories
-          } else {
-            console.warn(
-              'Formato de respuesta de categorías no reconocido:',
-              response
-            )
-          }
-
-          set({ categories, loading: false })
-          // Registrar evento en telemetry en lugar de logs de depuración
           try {
             telemetry.record('categories.fetch.success', {
-              count: categories.length,
+              count: (categories || []).length,
             })
-          } catch (e) {
-            /* noop */
-          }
+          } catch (e) { /* noop */ }
+          
           return categories
         } catch (error) {
-          console.error('Error detallado en fetchCategories:', error)
-
-          // En caso de error del servidor, usar categorías por defecto
+          console.error('Error fetching categories:', error)
           const fallbackCategories = [
             { id: 1, name: 'Alimentos', description: 'Productos alimenticios' },
             { id: 2, name: 'Bebidas', description: 'Bebidas variadas' },
             { id: 3, name: 'Limpieza', description: 'Productos de limpieza' },
-            {
-              id: 4,
-              name: 'Cuidado Personal',
-              description: 'Productos de higiene',
-            },
+            { id: 4, name: 'Cuidado Personal', description: 'Productos de higiene' },
             { id: 5, name: 'Hogar', description: 'Artículos para el hogar' },
           ]
-
-          // Detectar errores de conexión y otros tipos de error
-          if (error.message.includes('500') || isConnectionError(error)) {
-            const errorMsg = isConnectionError(error)
-              ? getConnectionErrorMessage(error)
-              : 'Error del servidor. Usando categorías por defecto.'
-
-            console.warn(errorMsg)
-            set({
-              categories: fallbackCategories,
-              loading: false,
-              error: errorMsg,
-            })
-            return fallbackCategories
-          }
-
-          set({
-            categories: fallbackCategories,
-            loading: false,
-            error:
-              'Error al cargar categorías. Usando categorías por defecto: ' +
-              (error.message || 'Error desconocido'),
-          })
+          set({ categories: fallbackCategories, loading: false })
           return fallbackCategories
         }
       },

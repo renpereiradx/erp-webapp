@@ -316,15 +316,21 @@ Content-Type: application/json
 - **Body (ProcessPurchasePaymentRequest):**
   - `purchase_order_id` (requerido, int)
   - `amount_paid` (requerido, `> 0`)
+  - `payment_method_id` (requerido, int)
   - opcionales: `payment_reference`, `payment_notes`, `cash_register_id`.
-- **Ejemplo body:**
+  - **Multimoneda (opcionales):** `currency_id` (int), `exchange_rate` (number, > 0), `original_amount` (number, >= 0).
+- **Ejemplo body (Multimoneda):**
 
 ```json
 {
   "purchase_order_id": 1,
   "amount_paid": 50000,
+  "payment_method_id": 1,
+  "currency_id": 5,
+  "exchange_rate": 7350.50,
+  "original_amount": 6.80,
   "payment_reference": "CHK-0001",
-  "payment_notes": "Pago parcial con cheque"
+  "payment_notes": "Pago parcial en USD"
 }
 ```
 
@@ -370,6 +376,7 @@ Content-Type: application/json
 - **Body (ProcessPurchasePaymentCashRegisterRequest):**
   - `purchase_order_id` (requerido, int)
   - `amount_paid` (requerido)
+  - `payment_method_id` (requerido, int)
   - opcionales: `payment_reference`, `payment_notes`.
 - **Respuesta exitosa (200):** objeto dinámico con resultado de pago + movimiento de caja.
 - **Errores:**

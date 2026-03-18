@@ -371,15 +371,20 @@ Content-Type: application/json
 - **Body (ProcessPaymentRequest):**
   - `sales_order_id` (requerido)
   - `amount_received` (requerido, `>= 0`)
+  - `payment_method_id` (requerido, int)
   - opcionales: `payment_reference`, `payment_notes`, `cash_register_id`.
-- **Ejemplo body:**
+  - **Multimoneda (opcionales):** `currency_id` (int), `exchange_rate` (number, > 0), `original_amount` (number, >= 0).
+- **Ejemplo body (Multimoneda):**
 
 ```json
 {
   "sales_order_id": "SALE-001",
   "amount_received": 150000,
-  "payment_reference": "REC-0001",
-  "payment_notes": "Pago contado"
+  "payment_method_id": 1,
+  "currency_id": 2,
+  "exchange_rate": 7350.50,
+  "original_amount": 20.41,
+  "payment_reference": "REC-0001"
 }
 ```
 
@@ -396,7 +401,9 @@ Content-Type: application/json
 - **Body (ProcessPartialPaymentRequest):**
   - `sales_order_id` (requerido)
   - `amount_received` (requerido, `>= 0`)
+  - `payment_method_id` (requerido, int)
   - opcionales: `amount_to_apply`, `cash_register_id`, `payment_reference`, `payment_notes`.
+  - **Multimoneda (opcionales):** `currency_id` (int), `exchange_rate` (number, > 0), `original_amount` (number, >= 0).
 - **Respuesta exitosa (200):** `ProcessPartialPaymentResponse`
   - `payment_summary` (saldo previo, aplicado, restante), `cash_summary`, `payment_complete`.
 - **Errores:**
@@ -462,6 +469,7 @@ Content-Type: application/json
 - **Body (ProcessSalePaymentCashRegisterRequest):**
   - `sales_order_id` (requerido)
   - `amount_received` (requerido)
+  - `payment_method_id` (requerido, int)
   - `payment_reference` (opcional)
   - `payment_notes` (opcional)
 - **Respuesta exitosa (200):** objeto dinámico con resultado de pago + movimiento de caja.

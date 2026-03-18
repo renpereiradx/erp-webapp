@@ -2163,3 +2163,93 @@ export const resetDemoCurrencies = () => {
   demoCurrenciesStore = [...DEMO_CURRENCIES_DATA]
   demoCurrencyIdCounter = DEMO_CURRENCIES_DATA.length + 1
 }
+
+// =============================================================================
+// PAYMENT METHODS DEMO DATA
+// =============================================================================
+
+export const DEMO_PAYMENT_METHODS_DATA = [
+  { id: 1, method_code: 'CASH', description: 'Efectivo', is_active: true },
+  { id: 2, method_code: 'CARD', description: 'Tarjeta de Crédito/Débito', is_active: true },
+  { id: 3, method_code: 'TRANSFER', description: 'Transferencia Bancaria', is_active: true },
+  { id: 4, method_code: 'CHECK', description: 'Cheque', is_active: true },
+]
+
+let demoPaymentMethodsStore = [...DEMO_PAYMENT_METHODS_DATA]
+let demoPaymentMethodIdCounter = 5
+
+export const getDemoPaymentMethods = () => [...demoPaymentMethodsStore]
+
+export const createDemoPaymentMethod = data => {
+  const newMethod = {
+    id: demoPaymentMethodIdCounter++,
+    method_code: data.method_code.toUpperCase(),
+    description: data.description,
+    is_active: data.is_active ?? true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+  demoPaymentMethodsStore.push(newMethod)
+  return newMethod
+}
+
+export const updateDemoPaymentMethod = (id, data) => {
+  const idx = demoPaymentMethodsStore.findIndex(m => m.id === id)
+  if (idx === -1) throw new Error('Método no encontrado')
+  const updated = {
+    ...demoPaymentMethodsStore[idx],
+    ...data,
+    updated_at: new Date().toISOString()
+  }
+  demoPaymentMethodsStore[idx] = updated
+  return updated
+}
+
+// =============================================================================
+// CASH AUDITS DEMO DATA
+// =============================================================================
+
+// =============================================================================
+// CATEGORIES DEMO DATA
+// =============================================================================
+
+export const DEMO_CATEGORIES_DATA = [
+  { id: 1, name: 'Electrónicos', description: 'Productos electrónicos y tecnología', default_tax_rate_id: 1, parent_id: null, is_active: true },
+  { id: 2, name: 'Lácteos', description: 'Productos lácteos y derivados', default_tax_rate_id: 2, parent_id: null, is_active: true },
+  { id: 3, name: 'Bebidas', description: 'Gaseosas, jugos y aguas', default_tax_rate_id: 1, parent_id: null, is_active: true },
+  { id: 4, name: 'Limpieza', description: 'Productos de limpieza del hogar', default_tax_rate_id: 1, parent_id: null, is_active: true },
+]
+
+export const DEMO_DENOMINATIONS = {
+  PYG: {
+    bills: [100000, 50000, 20000, 10000, 5000, 2000],
+    coins: [1000, 500, 100, 50]
+  },
+  USD: {
+    bills: [100, 50, 20, 10, 5, 1],
+    coins: [0.25, 0.10, 0.05, 0.01]
+  }
+}
+
+let demoAuditsStore = []
+let demoAuditIdCounter = 1
+
+export const getDemoAudits = registerId => demoAuditsStore.filter(a => a.cash_register_id === registerId)
+
+export const createDemoAudit = data => {
+  const expectedBalance = 1250000 // Valor fijo para demo
+  const newAudit = {
+    id: demoAuditIdCounter++,
+    cash_register_id: data.cash_register_id,
+    expected_balance: expectedBalance,
+    counted_amount: data.counted_amount,
+    difference: data.counted_amount - expectedBalance,
+    status: data.counted_amount === expectedBalance ? 'SUCCESS' : 'DISCREPANCY',
+    notes: data.notes || '',
+    created_at: new Date().toISOString(),
+    denominations: data.denominations || []
+  }
+  demoAuditsStore.push(newAudit)
+  return newAudit
+}
+

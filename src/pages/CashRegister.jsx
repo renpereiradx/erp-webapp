@@ -31,7 +31,164 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
+  ClipboardCheck,
+  History,
 } from 'lucide-react'
+import { cashAuditService } from '@/services/cashAuditService'
+
+const CashAuditModal = ({ isOpen, onClose, cashRegisterId, systemBalance, onAuditCreated }) => {
+  const { t } = useI18n()
+  const { styles } = useThemeStyles()
+  const [denominations, setDenominations] = useState(null)
+  const [counts, setCounts] = useState({})
+  const [notes, setNotes] = useState('')
+  const [loading, setLoading] = useState(true)
+  const { createAudit, isCreatingAudit } = useCashRegisterStore()
+
+  useEffect(() => {
+    if (isOpen) {
+      loadDenominations()
+      setCounts({})
+      setNotes('')
+    }
+  }, [isOpen])
+
+  const loadDenominations = async () => {
+    setLoading(true)
+    try {
+      const data = await cashAuditService.getDenominations()
+      setDenominations(data.PYG || data)
+    } catch (error) {
+      console.error('Error loading denominations', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCountChange = (value, denom) => {
+    setCounts(prev => ({
+      ...prev,
+      [denom]: parseInt(value) || 0
+    }))
+  }
+
+  const totalCounted = useMemo(() => {
+    if (!denominations) return 0
+    let total = 0
+    denominations.bills?.forEach(val => total += (counts[val] || 0) * val)
+    denominations.coins?.forEach(val => total += (counts[val] || 0) * val)
+    return total
+  }, [denominations, counts])
+
+  const difference = totalCounted - systemBalance
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    const denomDetails = []
+    denominations.bills?.forEach(val => {
+      if (counts[val]) denomDetails.push({ denomination: val, count: counts[val], type: 'BILL' })
+    })
+    denominations.coins?.forEach(val => {
+      if (counts[val]) denomDetails.push({ denomination: val, count: counts[val], type: 'COIN' })
+    })
+
+    try {
+      await createAudit({
+        cash_register_id: cashRegisterId,
+        counted_amount: totalCounted,
+        denominations: denomDetails,
+        notes: notes
+      })
+      onAuditCreated()
+      onClose()
+    } catch (error) {
+      console.error('Error creating audit', error)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm'>
+      <div className={`${styles.card()} w-full max-w-2xl max-h-[90vh] flex flex-col`} onClick={e => e.stopPropagation()}>
+        <div className='flex items-center justify-between p-6 border-b'>
+          <div className='flex items-center gap-3'>
+            <ClipboardCheck className='w-6 h-6 text-primary' />
+            <div>
+              <h2 className='text-lg font-semibold uppercase tracking-tight'>Arqueo de Caja</h2>
+              <p className='text-xs text-muted-foreground'>Conteo físico de billetes y monedas</p>
+            </div>
+          </div>
+          <button onClick={onClose} className='text-muted-foreground hover:text-foreground'><XCircle className='w-5 h-5' /></button>
+        </div>
+
+        <div className='flex-1 overflow-y-auto p-6'>
+          {loading ? (
+            <div className='flex justify-center py-12'><Clock className='animate-spin' /></div>
+          ) : (
+            <form id='audit-form' onSubmit={handleSubmit} className='space-y-8'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+                <div className='space-y-4'>
+                  <h4 className='text-[11px] font-bold uppercase text-slate-500 tracking-widest flex items-center gap-2'>Billetes</h4>
+                  <div className='space-y-2'>
+                    {denominations.bills?.map(val => (
+                      <div key={val} className='flex items-center justify-between gap-4 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg'>
+                        <span className='text-sm font-mono font-bold w-20'>{val.toLocaleString()} ₲</span>
+                        <div className='flex items-center gap-2'>
+                          <span className='text-xs text-muted-foreground font-semibold'>x</span>
+                          <Input type='number' min='0' className='w-20 h-8 text-right' value={counts[val] || ''} onChange={e => handleCountChange(e.target.value, val)} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className='space-y-4'>
+                  <h4 className='text-[11px] font-bold uppercase text-slate-500 tracking-widest flex items-center gap-2'>Monedas</h4>
+                  <div className='space-y-2'>
+                    {denominations.coins?.map(val => (
+                      <div key={val} className='flex items-center justify-between gap-4 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg'>
+                        <span className='text-sm font-mono font-bold w-20'>{val.toLocaleString()} ₲</span>
+                        <div className='flex items-center gap-2'>
+                          <span className='text-xs text-muted-foreground font-semibold'>x</span>
+                          <Input type='number' min='0' className='w-20 h-8 text-right' value={counts[val] || ''} onChange={e => handleCountChange(e.target.value, val)} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className='p-4 bg-primary/5 rounded-xl border border-primary/10 flex flex-col md:flex-row justify-between items-center gap-4'>
+                <div>
+                  <p className='text-[10px] font-bold uppercase text-slate-500 tracking-widest'>Total Contado</p>
+                  <p className='text-2xl font-bold text-primary'>{totalCounted.toLocaleString()} ₲</p>
+                </div>
+                <div className='text-right'>
+                  <p className='text-[10px] font-bold uppercase text-slate-500 tracking-widest'>Diferencia</p>
+                  <p className={`text-xl font-bold ${difference === 0 ? 'text-green-600' : 'text-rose-600'}`}>
+                    {difference > 0 ? '+' : ''}{difference.toLocaleString()} ₲
+                  </p>
+                </div>
+              </div>
+
+              <div className='space-y-2'>
+                <Label>Observaciones</Label>
+                <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder='Notas sobre el arqueo...' rows={2} />
+              </div>
+            </form>
+          )}
+        </div>
+
+        <div className='p-6 border-t bg-slate-50/50 flex gap-3'>
+          <Button type='submit' form='audit-form' className='flex-1' disabled={isCreatingAudit}>
+            {isCreatingAudit ? 'Guardando...' : 'Confirmar Arqueo'}
+          </Button>
+          <Button variant='outline' onClick={onClose} className='flex-1'>Cancelar</Button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const CashRegister = () => {
   const { t } = useI18n()
@@ -61,6 +218,8 @@ const CashRegister = () => {
   const [closeCashRegisterDialog, setCloseCashRegisterDialog] = useState(false)
   const [movementDialog, setMovementDialog] = useState(false)
   const [summaryDialog, setSummaryDialog] = useState(false)
+  const [auditModalOpen, setAuditModalOpen] = useState(false)
+  const [showAudits, setShowAudits] = useState(false)
 
   const [openCashRegisterForm, setOpenCashRegisterForm] = useState({
     name: '',
@@ -670,9 +829,28 @@ const CashRegister = () => {
                   {isMovementsLoading ? 'Cargando...' : 'Ver Movimientos'}
                 </Button>
 
-                <Button variant='outline' onClick={handleLoadSummary}>
+                <Button
+                  variant='outline'
+                  onClick={handleLoadSummary}
+                >
                   <Calculator className='w-4 h-4 mr-2' />
-                  Ver Resumen
+                  Ver Reporte
+                </Button>
+
+                <Button
+                  variant='outline'
+                  onClick={() => setAuditModalOpen(true)}
+                >
+                  <ClipboardCheck className='w-4 h-4 mr-2' />
+                  Realizar Arqueo
+                </Button>
+
+                <Button
+                  variant='outline'
+                  onClick={() => setShowAudits(!showAudits)}
+                >
+                  <History className='w-4 h-4 mr-2' />
+                  {showAudits ? 'Ver Movimientos' : 'Ver Arqueos'}
                 </Button>
 
                 <Button
@@ -833,7 +1011,7 @@ const CashRegister = () => {
         )}
 
         {/* Movements List - Using Enriched Data v2.1 */}
-        {movements.length > 0 && (
+        {!showAudits && movements.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Movimientos Recientes</CardTitle>
@@ -934,7 +1112,7 @@ const CashRegister = () => {
                                         Total Venta:
                                       </span>
                                       <span className='font-semibold text-foreground'>
-                                        ${movement.sale_total.toLocaleString()}
+                                        ₲ {movement.sale_total.toLocaleString()}
                                       </span>
                                     </p>
                                   )}
@@ -967,8 +1145,7 @@ const CashRegister = () => {
                                         Total:
                                       </span>
                                       <span className='font-semibold text-foreground'>
-                                        $
-                                        {movement.purchase_total.toLocaleString()}
+                                        ₲ {movement.purchase_total.toLocaleString()}
                                       </span>
                                     </p>
                                   )}
@@ -986,8 +1163,7 @@ const CashRegister = () => {
                             movement.movement_type
                           )}`}
                         >
-                          {movement.movement_type === 'EXPENSE' ? '-' : '+'}$
-                          {movement.amount.toLocaleString()}
+                          {movement.movement_type === 'EXPENSE' ? '-' : '+'}₲ {movement.amount.toLocaleString()}
                         </p>
                         {/* Enriched data: Running balance */}
                         <div className='inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 rounded-md'>
@@ -995,13 +1171,53 @@ const CashRegister = () => {
                             Balance:
                           </span>
                           <span className='text-sm font-bold text-primary'>
-                            ${movement.running_balance?.toLocaleString() || '0'}
+                            ₲ {movement.running_balance?.toLocaleString() || '0'}
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Arqueos List */}
+        {showAudits && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Historial de Arqueos</CardTitle>
+              <CardDescription>Auditorías físicas de caja</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='space-y-3'>
+                {audits.length === 0 ? (
+                  <p className='text-center text-muted-foreground py-8'>No hay arqueos registrados para esta caja.</p>
+                ) : (
+                  audits.map(audit => (
+                    <div key={audit.id} className='p-4 border rounded-lg bg-card hover:shadow-sm transition-all'>
+                      <div className='flex justify-between items-start'>
+                        <div className='flex items-center gap-3'>
+                          <div className='size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500'>
+                            <ClipboardCheck size={20} />
+                          </div>
+                          <div>
+                            <p className='font-semibold'>Arqueo #{audit.id}</p>
+                            <p className='text-xs text-muted-foreground'>{new Date(audit.created_at).toLocaleString()}</p>
+                          </div>
+                        </div>
+                        <div className='text-right'>
+                          <p className='font-bold text-lg tabular-nums'>{audit.counted_amount.toLocaleString()} ₲</p>
+                          <Badge variant={audit.difference === 0 ? 'success' : 'destructive'} className='text-[10px] uppercase font-bold'>
+                            {audit.difference === 0 ? 'Sin Discrepancia' : `Diferencia: ${audit.difference.toLocaleString()} ₲`}
+                          </Badge>
+                        </div>
+                      </div>
+                      {audit.notes && <p className='mt-3 text-sm italic text-muted-foreground bg-slate-50 p-2 rounded'>"{audit.notes}"</p>}
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -1200,6 +1416,13 @@ const CashRegister = () => {
           </div>
         )}
       </div>
+      <CashAuditModal 
+        isOpen={auditModalOpen} 
+        onClose={() => setAuditModalOpen(false)} 
+        cashRegisterId={activeCashRegister?.id} 
+        systemBalance={activeCashRegister?.current_balance || 0}
+        onAuditCreated={handleLoadAudits}
+      />
     </div>
   )
 }

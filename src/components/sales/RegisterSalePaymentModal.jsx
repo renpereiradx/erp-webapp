@@ -19,7 +19,8 @@ import {
   User,
   Hash,
   ChevronRight,
-  Building
+  Building,
+  CreditCard
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -41,9 +42,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cashRegisterService } from '@/services/cashRegisterService'
+import { CurrencyService } from '@/services/currencyService'
+import { PaymentMethodService } from '@/services/paymentMethodService'
 import { calculateCashRegisterBalance } from '@/utils/cashRegisterUtils'
-import { normalizeCurrencyCode } from '@/utils/currencyUtils'
+import { normalizeCurrencyCode, formatPYG } from '@/utils/currencyUtils'
 
+const DEFAULT_CURRENCY_CODE = 'PYG'
 const CASH_REGISTER_NONE_VALUE = '__none__'
 
 const getNormalizedBalanceDue = (balanceDue, currency) => {
@@ -60,7 +64,11 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
 
   const [amountReceived, setAmountReceived] = useState('')
   const [amountToApply, setAmountToApply] = useState('')
+  const [exchangeRate, setExchangeRate] = useState('')
+  const [originalAmount, setOriginalAmount] = useState('')
   const [notes, setNotes] = useState('')
+  const [paymentMethodId, setPaymentMethodId] = useState('')
+  const [currencyCode, setCurrencyCode] = useState((sale?.currency || DEFAULT_CURRENCY_CODE).toUpperCase())
   const [cashRegisterId, setCashRegisterId] = useState('')
 
   const userEditedAmountToApply = useRef(false)
@@ -72,18 +80,24 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
 
   const [cashRegisters, setCashRegisters] = useState([])
   const [isCashRegistersLoading, setCashRegistersLoading] = useState(false)
+  const [paymentMethods, setPaymentMethods] = useState([])
+  const [currencies, setCurrencies] = useState([])
 
   const resetForm = useCallback(() => {
     setAmountReceived('')
     setAmountToApply('')
+    setExchangeRate('')
+    setOriginalAmount('')
     setNotes('')
+    setPaymentMethodId('')
+    setCurrencyCode((sale?.currency || DEFAULT_CURRENCY_CODE).toUpperCase())
     setCashRegisterId('')
     setAmountReceivedError(null)
     setAmountToApplyError(null)
     setFormError(null)
     setSubmitting(false)
     userEditedAmountToApply.current = false
-  }, [])
+  }, [sale?.currency])
 
   useEffect(() => { if (open) resetForm() }, [open, resetForm])
 
@@ -92,21 +106,18 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     if (onOpenChange) onOpenChange(nextOpen)
   }
 
-  const formatter = useMemo(() => {
-    const locale = lang === 'en' ? 'en-US' : 'es-PY'
-    const code = normalizeCurrencyCode(sale?.currency)
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: code,
-      minimumFractionDigits: code === 'PYG' ? 0 : 2,
-      maximumFractionDigits: code === 'PYG' ? 0 : 2,
+  const formatLocalizedCurrency = useCallback((value, currencyCode = 'PYG') => {
+    const code = normalizeCurrencyCode(currencyCode || sale?.currency)
+    if (code === 'PYG') {
+      return formatPYG(Number(value || 0));
+    }
+    const formatter = new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
+      style: 'currency', currency: code,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     })
+    return formatter.format(Number(value || 0))
   }, [lang, sale?.currency])
-
-  const formatLocalizedCurrency = useCallback(
-    value => formatter.format(Number(value || 0)),
-    [formatter]
-  )
 
   const formatNumberWithDots = useCallback(value => {
     if (!value) return ''
@@ -119,6 +130,51 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     if (!value) return ''
     return value.toString().replace(/\./g, '')
   }, [])
+
+  const loadData = useCallback(async () => {
+    setCashRegistersLoading(true)
+    try {
+      const [methods, currencyList, registersData] = await Promise.all([
+        PaymentMethodService.getAll().catch(() => []),
+        CurrencyService.getAll().catch(() => []),
+        Promise.all([
+          cashRegisterService.getCashRegisters().catch(() => []),
+          cashRegisterService.getActiveCashRegister().catch(() => null)
+        ])
+      ])
+
+      const validMethods = Array.isArray(methods) ? methods : (methods?.data || [])
+      setPaymentMethods(validMethods)
+      if (validMethods.length > 0) {
+        const def = validMethods.find(m => m.is_default) || validMethods[0]
+        setPaymentMethodId(curr => curr || String(def.id || def.payment_method_id))
+      }
+
+      setCurrencies(Array.isArray(currencyList) ? currencyList : [])
+      
+      const [allRegs, activeReg] = registersData
+      const openRegs = Array.isArray(allRegs) ? allRegs.filter(cr => {
+        const s = (cr?.status || cr?.state || '').toUpperCase()
+        return s === 'OPEN' || s === 'ACTIVE'
+      }) : []
+      setCashRegisters(openRegs)
+      if (activeReg?.id) setCashRegisterId(c => c || String(activeReg.id))
+    } catch (e) { console.error('Error loading modal data:', e) }
+    finally { setCashRegistersLoading(false) }
+  }, [])
+
+  useEffect(() => { if (open) loadData() }, [loadData, open])
+
+  const currencySelectorData = useMemo(() => {
+    if (currencies.length) return currencies.map(c => ({ id: c.currency_code, code: c.currency_code, name: c.currency_name, currency_id: c.id }))
+    const fb = (sale?.currency || DEFAULT_CURRENCY_CODE).toUpperCase()
+    return [{ id: fb, code: fb, name: fb, currency_id: null }]
+  }, [currencies, sale?.currency])
+
+  const paymentMethodOptions = useMemo(() => paymentMethods.map(m => {
+    const id = String(m.id || m.payment_method_id)
+    return { id, label: m.display_name || m.name || m.method_name || id }
+  }).filter(o => o.id !== 'undefined'), [paymentMethods])
 
   const validationErrors = useMemo(() => {
     const errors = { amountReceived: null, amountToApply: null, hasErrors: false }
@@ -164,44 +220,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     return Math.max(0, balanceDue - toApply)
   }, [sale, amountToApply, parseNumberWithDots])
 
-  const loadCashRegisters = useCallback(async () => {
-    setCashRegistersLoading(true)
-    try {
-      const [allCashRegisters, activeCashRegister] = await Promise.all([
-        cashRegisterService.getCashRegisters().catch(() => []),
-        cashRegisterService.getActiveCashRegister().catch(() => null),
-      ])
-      const openCashRegisters = Array.isArray(allCashRegisters) ? allCashRegisters.filter(cr => {
-        const s = (cr?.status || cr?.state || '').toUpperCase()
-        return s === 'OPEN' || s === 'ACTIVE'
-      }) : []
-      const cashRegistersWithBalance = await Promise.all(openCashRegisters.map(async cr => {
-        if (typeof cr.current_balance === 'number' && cr.current_balance > 0) return cr
-        try {
-          const movs = await cashRegisterService.getMovements(cr.id)
-          return calculateCashRegisterBalance(cr, movs)
-        } catch { return cr }
-      }))
-      setCashRegisters(cashRegistersWithBalance)
-      const preferredId = activeCashRegister?.id || cashRegistersWithBalance[0]?.id || null
-      if (preferredId) setCashRegisterId(c => c || String(preferredId))
-    } catch (error) {
-      console.error('Error loading cash registers', error)
-    } finally {
-      setCashRegistersLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { if (open) loadCashRegisters() }, [loadCashRegisters, open])
-
   const cashRegisterOptions = useMemo(() => cashRegisters.map(cr => ({
     value: String(cr.id),
     label: cr.name || cr.description || `Caja #${cr.id}`,
-    balanceLabel: typeof cr.current_balance === 'number' ? formatLocalizedCurrency(cr.current_balance) : null,
+    balanceLabel: typeof cr.current_balance === 'number' ? formatLocalizedCurrency(cr.current_balance, cr.currency) : null,
     meta: cr.location || cr.branch_name || null
   })), [cashRegisters, formatLocalizedCurrency])
 
-  const isSubmitDisabled = !sale || isSubmitting || isCashRegistersLoading || validationErrors.hasErrors || !amountReceived || !amountToApply
+  const isSubmitDisabled = !sale || isSubmitting || isCashRegistersLoading || validationErrors.hasErrors || !amountReceived || !amountToApply || !paymentMethodId
 
   const handleSubmit = async event => {
     event.preventDefault()
@@ -211,10 +237,16 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     
     setSubmitting(true)
     try {
+      const selectedCurrency = currencySelectorData.find(c => c.code === String(currencyCode).toUpperCase())
+      
       await onSubmit({
         sales_order_id: sale.id || sale.sale_id,
         amount_received: Number(numericAmountReceived.toFixed(2)),
         amount_to_apply: Number(numericAmountToApply.toFixed(2)),
+        payment_method_id: Number(paymentMethodId),
+        currency_id: selectedCurrency ? selectedCurrency.currency_id : undefined,
+        exchange_rate: exchangeRate ? Number(exchangeRate) : undefined,
+        original_amount: originalAmount ? Number(originalAmount) : undefined,
         cash_register_id: cashRegisterId ? Number(cashRegisterId) : undefined,
         payment_notes: notes.trim() || null,
       })
@@ -227,7 +259,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     }
   }
 
-  const balanceDueLabel = useMemo(() => sale ? formatLocalizedCurrency(sale.balance_due) : null, [formatLocalizedCurrency, sale])
+  const balanceDueLabel = useMemo(() => sale ? formatLocalizedCurrency(sale.balance_due, sale.currency) : null, [formatLocalizedCurrency, sale])
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
@@ -359,6 +391,71 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                   {amountReceivedError && <p className='text-xs font-medium text-rose-500 ml-1'>{amountReceivedError}</p>}
                 </div>
 
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8'>
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium text-slate-700 px-1'>Divisa de la Operación</label>
+                    <Select value={currencyCode} onValueChange={setCurrencyCode}>
+                      <SelectTrigger className='h-10 rounded-md bg-white dark:bg-slate-800 border-slate-400 dark:border-slate-700 text-sm font-medium w-full'>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className='!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-[9999] rounded-md'>
+                        {currencySelectorData.map(c => (
+                          <SelectItem key={c.id} value={c.code} className='text-sm font-medium py-2 hover:!bg-slate-50 dark:hover:!bg-slate-800'>
+                            {c.code} - {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium text-slate-700 px-1'>Método de Pago</label>
+                    <Select value={paymentMethodId} onValueChange={setPaymentMethodId}>
+                      <SelectTrigger className='h-10 rounded-md bg-white dark:bg-slate-800 border-slate-400 dark:border-slate-700 text-sm font-medium w-full'>
+                        <SelectValue placeholder='Seleccionar...' />
+                      </SelectTrigger>
+                      <SelectContent className='!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-[9999] rounded-md'>
+                        {paymentMethodOptions.map(m => (
+                          <SelectItem key={m.id} value={m.id} className='text-sm font-medium py-2 hover:!bg-slate-50 dark:hover:!bg-slate-800'>
+                            {m.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {currencyCode !== (sale?.currency || DEFAULT_CURRENCY_CODE).toUpperCase() && (
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 p-4 bg-slate-50 rounded-md border border-slate-200'>
+                    <div className='space-y-2'>
+                      <label className='text-sm font-medium text-slate-700 px-1'>Tipo de Cambio</label>
+                      <Input 
+                        type='number' 
+                        step='any' 
+                        min='0' 
+                        value={exchangeRate} 
+                        onChange={e => setExchangeRate(e.target.value)} 
+                        placeholder='Ej: 7350' 
+                        className='h-10 rounded-md bg-white border-slate-400 text-sm' 
+                        required 
+                      />
+                    </div>
+                    <div className='space-y-2'>
+                      <label className='text-sm font-medium text-slate-700 px-1'>Monto Original ({currencyCode})</label>
+                      <Input 
+                        type='number' 
+                        step='any' 
+                        min='0' 
+                        value={originalAmount} 
+                        onChange={e => setOriginalAmount(e.target.value)} 
+                        placeholder='Monto en moneda extranjera' 
+                        className='h-10 rounded-md bg-white border-slate-400 text-sm' 
+                        required 
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 pt-2'>
                   <div className='space-y-2'>
                     <label className='text-sm font-medium text-slate-700 px-1'>Monto a Aplicar</label>
@@ -378,7 +475,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                   <div className='space-y-2'>
                     <label className='text-sm font-medium text-slate-700 px-1'>Vuelto / Saldo a favor</label>
                     <div className='h-10 md:h-11 flex items-center px-4 bg-primary/5 text-primary font-bold rounded-md border border-primary/10 text-sm md:text-base tabular-nums'>
-                      {formatLocalizedCurrency(change)}
+                      {formatLocalizedCurrency(change, sale?.currency)}
                     </div>
                   </div>
                 </div>

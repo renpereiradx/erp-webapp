@@ -545,21 +545,14 @@ class PurchaseService {
 
   // Obtener tasas de impuestos disponibles
   async getTaxRates(start = 1, limit = 10) {
-    if (DEMO_CONFIG.enabled) {
-      console.log('🧪 [PurchaseService] Demo mode: returning mock tax rates')
-      return { success: true, data: DEMO_TAX_RATES_DATA }
-    }
     const startTime = performance.now()
     try {
-      return await withRetry(async () => {
-        const response = await apiClient.makeRequest(
-          `/tax_rate/${start}/${limit}`,
-        )
-        return {
-          success: true,
-          data: Array.isArray(response) ? response : response.data || [],
-        }
-      })
+      const { taxRateService } = await import('./taxRateService')
+      const taxRates = await taxRateService.getPaginated(start, limit)
+      return {
+        success: true,
+        data: taxRates,
+      }
     } catch (error) {
       console.error('Error fetching tax rates:', error)
       return {

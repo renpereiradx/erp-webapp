@@ -67,42 +67,50 @@ const SalesOrderDetail = () => {
     if (!saleId || saleId === 'undefined') return
     setLoading(true); setError(null)
     try {
-      const paymentStatusResponse = await salePaymentService.getSalePaymentStatus(saleId)
-      if (!paymentStatusResponse) { setError('Venta no encontrada'); return }
+      // Intentar obtener datos completos de la venta primero (incluye items enriquecidos con IVA)
+      const saleResponse = await saleService.getSaleById(saleId)
+      if (!saleResponse.success) { setError('Venta no encontrada'); return }
+      
+      const fullSaleData = saleResponse.data?.sale || saleResponse.data
+      const saleItems = saleResponse.data?.details || saleResponse.data?.items || []
 
-      let saleDetails = null
+      // Obtener estado de pago actualizado
+      let paymentStatus = null
       try {
-        const clientSalesResponse = await saleService.getSalesByClient(paymentStatusResponse.client_id || paymentStatusResponse.client?.id)
-        if (clientSalesResponse?.data) {
-          saleDetails = clientSalesResponse.data.find(item => String(item.sale_id || item.id) === String(saleId))
-        }
-      } catch (err) { console.warn('Details fetch error', err) }
+        paymentStatus = await salePaymentService.getSalePaymentStatus(saleId)
+      } catch (err) { console.warn('Payment status fetch error', err) }
 
       let clientDetails = null
       try {
-        const clientId = paymentStatusResponse.client_id || paymentStatusResponse.client?.id
+        const clientId = fullSaleData.client_id || paymentStatus?.client_id
         if (clientId) clientDetails = await clientService.getById(clientId)
       } catch (err) { console.warn('Client fetch error', err) }
 
-      const balanceDue = paymentStatusResponse.balance_due || 0
-      let correctedStatus = paymentStatusResponse.status || paymentStatusResponse.payment_status
+      const balanceDue = paymentStatus?.balance_due ?? (fullSaleData.total_amount - (paymentStatus?.total_paid || 0))
+      let correctedStatus = fullSaleData.status || paymentStatus?.status || paymentStatus?.payment_status
       if (balanceDue === 0 && (correctedStatus === 'PARTIAL_PAYMENT' || correctedStatus === 'partial')) correctedStatus = 'PAID'
 
       setSale({
-        ...paymentStatusResponse,
-        id: paymentStatusResponse.sale_id || paymentStatusResponse.id,
+        ...fullSaleData,
+        ...paymentStatus,
+        id: fullSaleData.sale_id || fullSaleData.id,
         status: correctedStatus,
         balance_due: balanceDue,
-        items: saleDetails?.details || saleDetails?.items || paymentStatusResponse.items || [],
-        user_name: saleDetails?.user_name || paymentStatusResponse.user_name || 'Vendedor',
-        client_name: paymentStatusResponse.client_name || paymentStatusResponse.client?.name || clientDetails?.name,
-        client_document: clientDetails?.document_id || paymentStatusResponse.client?.document_id,
-        client_contact: clientDetails?.contact || paymentStatusResponse.client?.contact,
-        date: paymentStatusResponse.issue_date || paymentStatusResponse.sale_date || paymentStatusResponse.date,
-        currency: paymentStatusResponse.currency || 'PYG'
+        items: saleItems,
+        user_name: fullSaleData.user_name || paymentStatus?.user_name || 'Vendedor',
+        client_name: fullSaleData.client_name || paymentStatus?.client_name || clientDetails?.name,
+        client_document: clientDetails?.document_id || paymentStatus?.client?.document_id,
+        client_contact: clientDetails?.contact || paymentStatus?.client?.contact,
+        date: fullSaleData.sale_date || fullSaleData.date || paymentStatus?.sale_date,
+        currency: fullSaleData.currency || paymentStatus?.currency || 'PYG'
       })
-      if (paymentStatusResponse.payments) setPayments(paymentStatusResponse.payments)
-    } catch (err) { setError(err.message || 'Error loading sale'); showError('Error de carga') } finally { setLoading(false) }
+      
+      if (paymentStatus?.payments) setPayments(paymentStatus.payments)
+    } catch (err) { 
+      console.error('Error in loadSale:', err)
+      setError(err.message || 'Error loading sale'); 
+      showError('Error de carga') 
+    } finally { setLoading(false) }
   }, [saleId, showError])
 
   useEffect(() => { loadSale() }, [loadSale])
@@ -208,23 +216,61 @@ const SalesOrderDetail = () => {
                   <>
                     <div className="hidden md:block overflow-x-auto">
                       <Table>
-                        <TableHeader><TableRow className="bg-slate-50 border-b border-slate-200"><TableHead className="text-xs font-semibold text-slate-600 py-3 px-8">Ítem</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-center">Cant.</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-right">P. Unitario</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-right px-8">Subtotal</TableHead></TableRow></TableHeader>
-                        <TableBody className="divide-y divide-slate-200">{items.map((item, idx) => (<TableRow key={item.id || idx} className="hover:bg-slate-50 transition-colors"><TableCell className="py-4 px-8 font-semibold text-slate-900 dark:text-white text-sm">{item.product_name || item.name}</TableCell><TableCell className="text-center font-medium text-slate-600 text-sm">x{item.quantity || 1}</TableCell><TableCell className="text-right font-medium text-slate-600 tabular-nums text-sm">{formatCurrency(item.unit_price || item.price || 0)}</TableCell><TableCell className="text-right font-semibold text-slate-900 tabular-nums px-8 text-sm">{formatCurrency(item.total_price || item.total || 0)}</TableCell></TableRow>))}</TableBody>
+                        <TableHeader><TableRow className="bg-slate-50 border-b border-slate-200"><TableHead className="text-xs font-semibold text-slate-600 py-3 px-8">Ítem</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-center">Cant.</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-right">Precio s/IVA</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-right">IVA</TableHead><TableHead className="text-xs font-semibold text-slate-600 text-right px-8">Total con IVA</TableHead></TableRow></TableHeader>
+                        <TableBody className="divide-y divide-slate-200">{items.map((item, idx) => {
+                          const unitPriceWoTax = item.unit_price_without_tax ?? item.unit_price ?? item.price
+                          const taxAmount = item.tax_amount ?? 0
+                          const totalWithTax = item.total_with_tax ?? item.total_price ?? item.total
+                          return (
+                            <TableRow key={item.id || idx} className="hover:bg-slate-50 transition-colors">
+                              <TableCell className="py-4 px-8 font-semibold text-slate-900 dark:text-white text-sm">
+                                {item.product_name || item.name}
+                                {item.applied_tax_rate !== undefined && (
+                                  <span className="ml-2 text-[10px] text-slate-400 font-normal">({item.applied_tax_rate}%)</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-center font-medium text-slate-600 text-sm">x{item.quantity || 1}</TableCell>
+                              <TableCell className="text-right font-medium text-slate-600 tabular-nums text-sm">{formatCurrency(unitPriceWoTax)}</TableCell>
+                              <TableCell className="text-right font-medium text-slate-400 tabular-nums text-sm">{taxAmount > 0 ? formatCurrency(taxAmount) : '-'}</TableCell>
+                              <TableCell className="text-right font-semibold text-slate-900 tabular-nums px-8 text-sm">{formatCurrency(totalWithTax)}</TableCell>
+                            </TableRow>
+                          )
+                        })}</TableBody>
                       </Table>
                     </div>
                     <div className="md:hidden divide-y divide-slate-200">
-                      {items.map((item, idx) => (
-                        <div key={idx} className="p-5 space-y-3">
-                          <div className="flex justify-between items-start gap-4">
-                            <span className="font-semibold text-slate-900 text-base leading-tight">{item.product_name || item.name}</span>
-                            <span className="bg-slate-100 px-2 py-0.5 rounded-md text-xs font-medium text-slate-600 whitespace-nowrap">x{item.quantity || 1}</span>
+                      {items.map((item, idx) => {
+                        const unitPriceWoTax = item.unit_price_without_tax ?? item.unit_price ?? item.price
+                        const taxAmount = item.tax_amount ?? 0
+                        const totalWithTax = item.total_with_tax ?? item.total_price ?? item.total
+                        return (
+                          <div key={idx} className="p-5 space-y-3">
+                            <div className="flex justify-between items-start gap-4">
+                              <span className="font-semibold text-slate-900 text-base leading-tight">
+                                {item.product_name || item.name}
+                                {item.applied_tax_rate !== undefined && (
+                                  <span className="block text-[10px] text-slate-400 font-normal mt-0.5">Tasa IVA: {item.applied_tax_rate}%</span>
+                                )}
+                              </span>
+                              <span className="bg-slate-100 px-2 py-0.5 rounded-md text-xs font-medium text-slate-600 whitespace-nowrap">x{item.quantity || 1}</span>
+                            </div>
+                            <div className="flex flex-col gap-2 bg-slate-50 p-3 rounded-md border border-slate-200">
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-medium text-slate-500">Precio s/IVA</span>
+                                <span className="font-semibold text-sm tabular-nums">{formatCurrency(unitPriceWoTax)}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-medium text-slate-500">IVA</span>
+                                <span className="font-medium text-sm tabular-nums text-slate-400">{taxAmount > 0 ? formatCurrency(taxAmount) : '-'}</span>
+                              </div>
+                              <div className="flex justify-between items-center border-t border-slate-200 pt-2 mt-1">
+                                <span className="text-xs font-bold text-slate-700">Subtotal con IVA</span>
+                                <span className="font-bold text-base text-primary tabular-nums">{formatCurrency(totalWithTax)}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex justify-between items-center bg-slate-50 p-3 rounded-md border border-slate-200">
-                            <div className="flex flex-col"><span className="text-xs font-medium text-slate-500">Precio Unit.</span><span className="font-semibold text-sm tabular-nums">{formatCurrency(item.unit_price || item.price || 0)}</span></div>
-                            <div className="flex flex-col text-right"><span className="text-xs font-medium text-slate-500">Subtotal</span><span className="font-bold text-base text-primary tabular-nums">{formatCurrency(item.total_price || item.total || 0)}</span></div>
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </>
                 )}

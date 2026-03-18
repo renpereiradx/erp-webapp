@@ -37,6 +37,13 @@ const initialState = {
   isRegisteringMovement: false,
   registerMovementError: null,
 
+  // Estados de auditoría
+  audits: [],
+  isAuditsLoading: false,
+  auditsError: null,
+  isCreatingAudit: false,
+  createAuditError: null,
+
   // Estados de pagos integrados
   isProcessingSalePayment: false,
   salePaymentError: null,
@@ -266,7 +273,7 @@ export const useCashRegisterStore = create()(
       },
 
       /**
-       * Obtiene resumen de caja
+       * Obtiene reporte detallado de una caja registradora
        */
       getCashRegisterSummary: async cashRegisterId => {
         set({ isSummaryLoading: true, summaryError: null })
@@ -285,6 +292,57 @@ export const useCashRegisterStore = create()(
           set({
             summaryError: error,
             isSummaryLoading: false,
+          })
+          throw error
+        }
+      },
+
+      /**
+       * Obtiene historial de auditorías de una caja
+       */
+      getAudits: async cashRegisterId => {
+        set({ isAuditsLoading: true, auditsError: null })
+        try {
+          const audits = await cashRegisterService.getAuditsByRegister(
+            cashRegisterId
+          )
+          set({
+            audits: Array.isArray(audits) ? audits : [],
+            isAuditsLoading: false,
+          })
+          return audits
+        } catch (error) {
+          console.warn('Error loading audits:', error)
+          set({
+            auditsError: error,
+            isAuditsLoading: false,
+          })
+          throw error
+        }
+      },
+
+      /**
+       * Crea una nueva auditoría de caja (arqueo)
+       */
+      createAudit: async auditData => {
+        set({ isCreatingAudit: true, createAuditError: null })
+        try {
+          const { cashAuditService } = await import('@/services/cashAuditService')
+          const result = await cashAuditService.createAudit(auditData)
+
+          // Actualizar historial de auditorías
+          const { audits } = get()
+          set({
+            audits: [result, ...(audits || [])],
+            isCreatingAudit: false,
+          })
+
+          return result
+        } catch (error) {
+          console.warn('Error creating audit:', error)
+          set({
+            createAuditError: error,
+            isCreatingAudit: false,
           })
           throw error
         }

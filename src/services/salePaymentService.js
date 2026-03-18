@@ -132,8 +132,30 @@ export const salePaymentService = {
     const startTime = Date.now();
 
     try {
+      // Normalizar campos para la API v2.0
+      const apiData = {
+        sales_order_id: paymentData.sales_order_id,
+        amount_received: paymentData.amount_received,
+        payment_method_id: paymentData.payment_method_id,
+        payment_reference: paymentData.payment_reference || null,
+        payment_notes: paymentData.payment_notes || null,
+        cash_register_id: paymentData.cash_register_id || null
+      };
+
+      if (paymentData.currency_id) {
+        apiData.currency_id = paymentData.currency_id;
+      }
+
+      if (paymentData.exchange_rate) {
+        apiData.exchange_rate = Number(paymentData.exchange_rate);
+      }
+
+      if (paymentData.original_amount) {
+        apiData.original_amount = Number(paymentData.original_amount);
+      }
+
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.post(API_ENDPOINTS.processPayment, paymentData);
+        return await apiClient.post(API_ENDPOINTS.processPayment, apiData);
       });
 
       telemetry.record('sale_payment.service.process_payment', {
@@ -177,18 +199,32 @@ export const salePaymentService = {
     const startTime = Date.now();
 
     try {
-      // Construir payload según API v3.0
+      // Construir payload según API v3.0 / v2.0
       const payload = {
         sales_order_id: paymentData.sales_order_id,
         amount_received: paymentData.amount_received,
         cash_register_id: paymentData.cash_register_id,
+        payment_method_id: paymentData.payment_method_id,
         payment_reference: paymentData.payment_reference,
-        payment_notes: paymentData.payment_notes
+        payment_notes: paymentData.payment_notes || paymentData.notes
       };
 
       // Si el usuario especificó amount_to_apply, incluirlo
       if (paymentData.amount_to_apply) {
         payload.amount_to_apply = paymentData.amount_to_apply;
+      }
+
+      // Soporte multi-moneda
+      if (paymentData.currency_id) {
+        payload.currency_id = paymentData.currency_id;
+      }
+
+      if (paymentData.exchange_rate) {
+        payload.exchange_rate = Number(paymentData.exchange_rate);
+      }
+
+      if (paymentData.original_amount) {
+        payload.original_amount = Number(paymentData.original_amount);
       }
 
       const result = await _fetchWithRetry(async () => {

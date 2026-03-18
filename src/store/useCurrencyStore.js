@@ -79,7 +79,7 @@ const useCurrencyStore = create()(
           let enrichedCurrencies = data
           try {
             const { apiClient } = await import('@/services/api.js')
-            const ratesResponse = await apiClient.makeRequest('/exchange-rates?latest=true')
+            const ratesResponse = await apiClient.makeRequest('/exchange-rates/latest')
             const rates = ratesResponse?.data || ratesResponse || []
 
             if (Array.isArray(rates) && rates.length > 0) {

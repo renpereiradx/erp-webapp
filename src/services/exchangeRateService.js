@@ -202,23 +202,21 @@ class ExchangeRateService {
 
   /**
    * Obtiene la lista de tipos de cambio más recientes para todas las monedas
-   * Nueva API: GET /exchange-rates?latest=true
+   * Nueva API: GET /exchange-rates/latest
    * @returns {Promise<import('../types/payment.js').ExchangeRateEnriched[]>}
    */
   static async getLatestAll() {
     try {
-      // Nueva API unificada: /exchange-rates?latest=true
-      const response = await apiClient.makeRequest(
-        '/exchange-rates?latest=true'
-      )
+      // Nueva API unificada: /exchange-rates/latest
+      const response = await apiClient.makeRequest('/exchange-rates/latest')
       const payload = response.data || response
       return this.normalizeExchangeRateList(payload)
     } catch (error) {
       console.error('Error fetching latest exchange rates:', error)
-      // Fallback al endpoint legacy si el nuevo no está disponible
+      // Fallback al parámetro legacy si el nuevo no está disponible
       try {
         const fallbackResponse = await apiClient.makeRequest(
-          '/exchange-rate/latest'
+          '/exchange-rates?latest=true'
         )
         const payload = fallbackResponse.data || fallbackResponse
         return this.normalizeExchangeRateList(payload)

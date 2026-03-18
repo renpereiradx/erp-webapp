@@ -1237,8 +1237,9 @@ const SalesNew = () => {
     try {
       await salePaymentService.processSalePaymentWithCashRegister({
         sales_order_id: createdSaleData.id,
-        amount_received: paymentData.amount,
-        payment_notes: paymentData.notes || null,
+        amount_received: paymentData.amount_received || paymentData.amount,
+        payment_method_id: paymentData.paymentMethodId || createdSaleData.paymentMethodId,
+        payment_notes: paymentData.payment_notes || paymentData.notes || null,
       })
       setShowInstantCollection(false)
       setCreatedSaleData(null)
