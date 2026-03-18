@@ -1,557 +1,725 @@
-# 🛍️ API de Productos
+# API de Productos
 
-**Versión:** 2.3.0
-**Fecha:** 28 de Diciembre de 2025
+**Version:** 3.1.0
+**Fecha:** 18 de Marzo de 2026
 **Endpoint Base:** `http://localhost:5050`
 
-## 📝 Historial de Cambios
+## Historial de Cambios
+
+### v3.1.0 - 18 de Marzo de 2026
+- **NUEVO**: Campo `category` expandido con `default_tax_rate_id` y `default_tax_rate`.
+- **NUEVO**: Campo `applicable_tax_rate` con la tasa de IVA que aplica al producto.
+- **NUEVO**: Campos de pricing: `override_tax_rate_id`, `target_margin_percent`, `pricing_strategy`.
+- **CAMBIO**: La lógica de `applicable_tax_rate` es: override del producto > default de categoría.
+
+### v3.0.0 - 24 de Febrero de 2026
+- **BREAKING**: Campo `id_category` renombrado a `category_id` en request bodies de crear/actualizar.
+- **BREAKING**: Campo `price_formatted` eliminado de las respuestas.
+- **BREAKING**: Rutas eliminadas: `/products/name/{name}`, `/products/financial/{id}`, `/products/{id}/details`, `/products/{id}/with-description`, `/products/search/details/{name}`, `/products/delete/{id}`, `/products/enriched/*`, `/product_description/*`.
+- Nuevo tipo de producto: `PRODUCTION` (ademas de `PHYSICAL` y `SERVICE`).
+- Endpoint unificado `GET /products/{id}` reemplaza 3 endpoints anteriores (details, with-description, enriched by ID).
+- Endpoint unificado `GET /products/search/{name}` reemplaza 2 endpoints de busqueda.
+- Nuevo endpoint financiero: `GET /products/{id}/financial` (antes era `/products/financial/{id}`).
+- N+1 queries eliminadas en todos los endpoints de lectura.
 
 ### v2.4.0 - 25 de Enero de 2026
-- ✅ **Soporte para Unidades de Medida**: Agregado campo `base_unit` para productos medibles (peso, longitud, volumen).
-- ✅ **Unidades Permitidas**: `kg`, `g`, `lb`, `oz`, `ton`, `l`, `ml`, `gal`, `meter`, `cm`, `sqm`, `unit`, `pair`, `dozen`, `box`, `pack`, `bag`, `case`, `bundle`, `roll`, `hour`, `day`, `month`, `tray`, `bottle`, `can`, `jar`, `carton`, `stick`, `slice`, `portion`.
-- ✅ **Stock con Unidad**: El stock ahora incluye campo `stock_unit` para indicar la unidad de la cantidad almacenada.
-- ✅ **Función de Conversión**: Nueva función `products.convert_units()` para conversión entre unidades compatibles.
+- Soporte para Unidades de Medida: campo `base_unit` para productos medibles.
+- Stock con Unidad: campo `stock_unit` en las respuestas.
 
 ### v2.3.0 - 28 de Diciembre de 2025
-- ✅ **Trazabilidad de Timestamps**: Agregados campos `created_at` y `updated_at` a todos los modelos de productos.
-- ✅ **Ordenamiento por Fecha**: El endpoint de listado paginado ahora ordena por fecha de creación descendente (más recientes primero).
-- ✅ **Nuevo Endpoint**: Agregado `GET /products/{page}/{pageSize}` para listar productos con paginación.
-- ✅ **Índices Optimizados**: Base de datos optimizada con índices en created_at y updated_at.
-- ✅ **Actualización Automática**: Trigger de base de datos que actualiza updated_at automáticamente.
-- ✅ **Respuestas Completas**: Los endpoints `POST /products` y `PUT /products/:id` ahora retornan el producto completo con timestamps en la respuesta.
-
-### v2.2.0 - 13 de Octubre de 2025
-- ✅ **Refactorización Estricta**: Documentación 100% alineada con la guía `FRONTEND_API_DOCUMENTATION_GUIDE.md`.
-
-- ✅ **Ejemplos Completos**: Se expandieron todos los ejemplos de JSON para ser completos y realistas.
-- ✅ **Endpoints Individuales**: Se eliminaron las tablas de resumen de endpoints; cada endpoint ahora está documentado individualmente con todos sus detalles.
-- ✅ **Documentación de Errores**: Se aseguró que cada endpoint tenga su tabla de `Errores Posibles`.
-
-
-### v2.1.0 - 13 de Octubre de 2025
-
-### v2.0.0 - 9 de Septiembre, 2025
-
-- ✅ **Agregado**: Endpoints de productos financieramente enriquecidos (`/products/financial/*`).
-
-
-
-Esta API gestiona todos los aspectos de los productos, desde su creación básica hasta la consulta de datos financieros complejos. Permite manejar productos físicos y servicios, gestionar stock, precios, costos y más.
-
+- Trazabilidad de Timestamps: campos `created_at` y `updated_at` en todos los modelos.
 
 ---
 
-### Base URL
+## 📋 Descripción General
 
-```
+Los productos ahora incluyen información completa de IVA (Impuesto al Valor Agregado) según la Ley 6380/2019 de Paraguay. Cada producto tiene una tasa de IVA aplicable que se determina automáticamente:
 
-```
+1. **Si el producto tiene `override_tax_rate_id`**: usa esa tasa específica
+2. **Si no tiene override**: usa el `default_tax_rate` de su categoría
 
+### Códigos de IVA Soportados
+
+| Código | Descripción | Tasa |
+|--------|-------------|------|
+| `IVA10` | IVA General | 10% |
+| `IVA5` | IVA Canasta Básica | 5% |
+| `EXENTO` | Exento de IVA | 0% |
+| `ISC` | Impuesto Selectivo al Consumo | Variable |
+| `IVA_DIGITAL` | IVA para servicios digitales | 10% |
+| `IMPORT` | Impuesto de importación | Variable |
+
+---
 
 ### Headers Requeridos
 
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
-
 ```
 
-
 ---
 
-## 📦 Estructuras de Datos (Modelos)
+## Estructuras de Datos
 
-### Producto Enriquecido (`ProductEnriched`)
-Contiene información completa del producto, ideal para la mayoría de las interfaces de usuario.
+### ProductEnriched
 
+Respuesta estandar para todos los endpoints de productos.
 
-
-| Campo | Tipo | Descripción |
-
+| Campo | Tipo | Descripcion |
 |-------|------|-------------|
-| `id` | string | ID único del producto |
+| `id` | string | ID unico del producto |
 | `name` | string | Nombre del producto |
-| `barcode` | string \| null | Código de barras |
+| `barcode` | string \| null | Codigo de barras |
 | `state` | boolean | Estado (activo/inactivo) |
-| `category` | object | Objeto de la categoría (`{id, name}`) |
-| `product_type` | string | `PHYSICAL` \| `SERVICE` |
+| `category` | object \| null | Ver estructura Category mas abajo |
+| `product_type` | string | `PHYSICAL` \| `SERVICE` \| `PRODUCTION` |
 | `origin` | string \| null | `NACIONAL` \| `IMPORTADO` |
 | `brand` | string \| null | Marca del producto |
-| `base_unit` | string \| null | Unidad base del producto: `kg`, `meter`, `l`, `unit`, etc. Si es `null`, el producto se mide en unidades discretas. |
-| `created_at` | string | Fecha y hora de creación (ISO 8601) |
-| `updated_at` | string | Fecha y hora de última actualización (ISO 8601) |
-| `purchase_price`| number | Precio de compra |
-| `stock_quantity`| number \| null | Cantidad en stock |
-| `stock_unit` | string \| null | Unidad de la cantidad en stock (ej: `kg`, `l`, `meter`). Si es `null`, se asume `unit`. |
-| `stock_status` | string | `in_stock`, `low_stock`, `out_of_stock`, etc. |
+| `base_unit` | string \| null | Unidad base: `kg`, `meter`, `l`, `unit`, etc. |
+| `override_tax_rate_id` | number \| null | ID de tasa de IVA especifica (anula la de categoria) |
+| `target_margin_percent` | number \| null | Porcentaje de margen objetivo (0-100) |
+| `pricing_strategy` | string \| null | `MANUAL` \| `AUTOMATIC` |
+| `applicable_tax_rate` | object \| null | Tasa de IVA que aplica al producto |
+| `created_at` | string | Fecha de creacion (ISO 8601) |
+| `updated_at` | string | Fecha de ultima actualizacion (ISO 8601) |
+| `purchase_price` | number \| null | Precio de compra mas reciente |
+| `stock_quantity` | number \| null | Cantidad en stock |
+| `stock_unit` | string \| null | Unidad del stock (ej: `kg`, `l`) |
+| `stock_status` | string | `in_stock`, `low_stock`, `medium_stock`, `out_of_stock` |
+| `has_valid_stock` | boolean | Si tiene stock registrado |
+| `has_valid_price` | boolean | Si tiene al menos un precio |
+| `has_unit_pricing` | boolean | Si tiene precios por unidad |
 | `unit_prices` | array | Lista de precios por unidad |
-| `description` | string \| null | Descripción del producto |
-| `price_formatted`| string | Precio formateado (ej: "PYG 15,000") |
+| `description` | string \| null | Descripcion del producto |
 
+### Category
 
-### Producto Financieramente Enriquecido (`ProductFinancialEnriched`)
+Estructura de categoria en productos.
 
-La estructura más completa, con análisis financiero.
-
-
-| Campo | Tipo | Descripción |
+| Campo | Tipo | Descripcion |
 |-------|------|-------------|
-| `product_id` | string | ID único del producto |
+| `id` | number | ID unico de la categoria |
+| `name` | string | Nombre de la categoria |
+| `description` | string \| null | Descripcion de la categoria |
+| `default_tax_rate_id` | number \| null | ID de la tasa de IVA por defecto |
+| `default_tax_rate` | object \| null | Ver estructura TaxRate mas abajo |
+| `parent_id` | number \| null | ID de categoria padre (jerarquia) |
+| `is_active` | boolean | Estado de la categoria |
+| `created_at` | string | Fecha de creacion (ISO 8601) |
+| `updated_at` | string | Fecha de actualizacion (ISO 8601) |
+
+### TaxRate
+
+Estructura de tasa de impuesto.
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `id` | number | ID unico de la tasa |
+| `tax_name` | string | Nombre del impuesto (ej: "IVA 10%") |
+| `code` | string | Codigo: `IVA10`, `IVA5`, `EXENTO`, `ISC`, `IVA_DIGITAL`, `IMPORT` |
+| `rate` | number | Porcentaje de la tasa (ej: 10.0, 5.0, 0) |
+| `country` | string | Pais (ej: "PY") |
+| `jurisdiction_type` | string | Tipo de jurisdiccion |
+| `operation_type` | string | Tipo de operacion: `NACIONAL`, `CANASTA`, `EXEMPT`, etc. |
+| `description` | string \| null | Descripcion detallada |
+| `is_default` | boolean | Si es la tasa por defecto del sistema |
+| `is_active` | boolean | Si la tasa esta activa |
+
+### ProductFinancialEnriched
+
+Estructura completa con analisis financiero.
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `product_id` | string | ID unico del producto |
 | `product_name` | string | Nombre del producto |
-| `barcode` | string \| null | Código de barras |
+| `barcode` | string \| null | Codigo de barras |
 | `state` | boolean | Estado (activo/inactivo) |
-| `category` | object | Objeto de la categoría (`{id, name}`) |
-| `product_type` | string | `PHYSICAL` \| `SERVICE` |
+| `category` | object \| null | `{id: number, name: string}` |
+| `product_type` | string | `PHYSICAL` \| `SERVICE` \| `PRODUCTION` |
 | `origin` | string \| null | `NACIONAL` \| `IMPORTADO` |
 | `brand` | string \| null | Marca del producto |
-| `base_unit` | string \| null | Unidad base del producto: `kg`, `meter`, `l`, `unit`, etc. |
-| `created_at` | string | Fecha y hora de creación (ISO 8601) |
-| `updated_at` | string | Fecha y hora de última actualización (ISO 8601) |
-| `unit_prices` | array | Lista de precios de venta por unidad |
-| `unit_costs_summary` | array | Resumen de costos por unidad (`{last_cost, weighted_avg_cost_6m}`) |
-| `stock_quantity`| number \| null | Cantidad en stock |
-| `financial_health` | object | Indicadores de salud financiera (`{has_prices, has_costs, has_stock}`) |
-| `best_margin_unit` | string \| null | Unidad con el mejor margen de ganancia |
-| `best_margin_percent` | number \| null | Porcentaje del mejor margen encontrado |
-
+| `base_unit` | string \| null | Unidad base |
+| `created_at` | string | Fecha de creacion (ISO 8601) |
+| `updated_at` | string | Fecha de ultima actualizacion (ISO 8601) |
+| `unit_prices` | array | Precios de venta por unidad |
+| `unit_costs_summary` | array | Resumen de costos por unidad |
+| `stock_quantity` | number \| null | Cantidad en stock |
+| `description` | string \| null | Descripcion del producto |
+| `financial_health` | object | `{has_prices, has_costs, has_stock, price_count, cost_units_count, last_updated}` |
+| `stock_status` | string | Estado del stock |
+| `has_valid_stock` | boolean | Si tiene stock |
+| `has_valid_prices` | boolean | Si tiene precios |
+| `has_valid_costs` | boolean | Si tiene costos |
+| `best_margin_unit` | string \| null | Unidad con mejor margen |
+| `best_margin_percent` | number \| null | Porcentaje del mejor margen |
 
 ---
 
-
-
-## 🛍️ Endpoints de Productos
-
-
+## Endpoints CRUD
 
 ### 1. Crear Producto
 
-**Endpoint:** `POST /products`
+**`POST /products`**
 
-Crea un nuevo producto en el sistema.
+Crea un nuevo producto con su descripcion de forma atomica.
 
 **Request Body:**
 ```json
 {
   "name": "Coca-Cola 2L",
-  "barcode": "7891234567890",
-  "id_category": 10,
-  "product_type": "PHYSICAL",
   "description": "Gaseosa Coca-Cola 2 litros",
-
-  "purchase_price": 8500,
-
+  "category_id": 10,
+  "product_type": "PHYSICAL",
+  "barcode": "7891234567890",
   "origin": "IMPORTADO",
-  "brand": "Coca-Cola"
+  "brand": "Coca-Cola",
+  "base_unit": "unit"
 }
 ```
 
-**Parámetros:**
+**Parametros:**
 
-| Campo | Tipo | Requerido | Descripción |
+| Campo | Tipo | Requerido | Descripcion |
 |-------|------|-----------|-------------|
-| `name` | string | ✅ Sí | Nombre del producto |
+| `name` | string | Si | Nombre del producto |
+| `description` | string | Si | Descripcion del producto |
+| `category_id` | number | Si | ID de la categoria (debe ser > 0) |
+| `product_type` | string | No | `PHYSICAL`, `SERVICE` o `PRODUCTION`. Default: `PHYSICAL` |
+| `barcode` | string | No | Codigo de barras |
+| `origin` | string | No | `NACIONAL` o `IMPORTADO` |
+| `brand` | string | No | Marca del producto |
+| `base_unit` | string | No | Unidad base: `kg`, `l`, `meter`, `unit`, etc. |
 
-| `id_category` | number | ✅ Sí | ID de la categoría |
-
-| `purchase_price`| number | ✅ Sí | Precio de compra del producto |
-| `description` | string | ✅ Sí | Descripción del producto |
-| `barcode` | string | ❌ No | Código de barras (máx 50 caracteres) |
-| `product_type` | string | ❌ No | `PHYSICAL` o `SERVICE`. Default: `PHYSICAL` |
-| `origin` | string | ❌ No | Origen: `NACIONAL` o `IMPORTADO` |
-| `brand` | string | ❌ No | Marca del producto (máx 100 caracteres) |
+> **Nota sobre IVA:** El IVA se determina automaticamente desde la categoria. Si necesitas sobrescribirlo, usa `PUT /products/{id}` con `override_tax_rate_id`.
 
 **Response (201 Created):**
 ```json
 {
-  "success": true,
-  "message": "Producto creado exitosamente",
-  "data": {
-    "id": "clw2s0q5j00003b6k8z4h9j2g",
-    "name": "Coca-Cola 2L",
-    "barcode": "7891234567890",
-    "state": true,
-    "product_type": "PHYSICAL",
-    "origin": "IMPORTADO",
-    "brand": "Coca-Cola",
-    "created_at": "2025-12-28T15:30:00Z",
-    "updated_at": "2025-12-28T15:30:00Z",
-    "category": {
-      "id": 10,
-      "name": "Bebidas",
-      "description": "Bebidas y refrescos"
-    },
-    "description": {
+  "id": "abc123def456",
+  "name": "Coca-Cola 2L",
+  "barcode": "7891234567890",
+  "state": true,
+  "product_type": "PHYSICAL",
+  "origin": "IMPORTADO",
+  "brand": "Coca-Cola",
+  "base_unit": "unit",
+  "override_tax_rate_id": null,
+  "target_margin_percent": null,
+  "pricing_strategy": null,
+  "created_at": "2026-02-24T15:30:00Z",
+  "updated_at": "2026-02-24T15:30:00Z",
+  "category": {
+    "id": 10,
+    "name": "Bebidas",
+    "default_tax_rate_id": 1,
+    "default_tax_rate": {
       "id": 1,
-      "description": "Gaseosa Coca-Cola 2 litros",
-      "effective_date": "2025-12-28T15:30:00Z",
-      "user_id": "user123"
-    }
-  }
+      "tax_name": "IVA 10%",
+      "code": "IVA10",
+      "rate": 10.0,
+      "is_default": true,
+      "is_active": true
+    },
+    "is_active": true
+  },
+  "applicable_tax_rate": {
+    "id": 1,
+    "tax_name": "IVA 10%",
+    "code": "IVA10",
+    "rate": 10.0,
+    "is_default": true,
+    "is_active": true
+  },
+  "description": "Gaseosa Coca-Cola 2 litros",
+  "purchase_price": null,
+  "stock_quantity": null,
+  "stock_status": "out_of_stock",
+  "has_valid_stock": false,
+  "has_valid_price": false,
+  "has_unit_pricing": false,
+  "unit_prices": null
 }
 ```
 
+**Errores:**
 
-**Errores Posibles:**
-
-
-
-| Error | HTTP Status | Descripción |
-
-|-------|-------------|-------------|
-| `Invalid request body` | 400 | El cuerpo de la solicitud es inválido. |
-| `El origen debe ser NACIONAL o IMPORTADO` | 400 | Valor incorrecto para el campo `origin`. |
-| `Internal server error` | 500 | Error interno al crear el producto. |
+| HTTP Status | Descripcion |
+|-------------|-------------|
+| 400 | Datos invalidos, nombre vacio, category_id invalido, product_type o origin no validos |
+| 401 | Token JWT invalido o ausente |
 
 ---
 
 ### 2. Actualizar Producto
-**Endpoint:** `PUT /products/:id`
 
+**`PUT /products/{id}`**
 
-Actualiza la información de un producto existente.
-
+Actualiza los datos de un producto y su descripcion.
 
 **Request Body:**
 ```json
 {
-  "name": "Coca-Cola 2L - Edición Especial",
+  "name": "Coca-Cola 2L - Edicion Especial",
+  "description": "Gaseosa Coca-Cola 2 litros edicion especial",
   "state": true,
-
-  "id_category": 10,
-
-  "description": "Gaseosa Coca-Cola 2 litros - Edición especial",
+  "category_id": 10,
+  "product_type": "PHYSICAL",
   "origin": "NACIONAL",
-  "brand": "Coca-Cola"
-}
-
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "message": "Product and description updated successfully",
-  "data": {
-    "id": "clw2s0q5j00003b6k8z4h9j2g",
-    "name": "Coca-Cola 2L - Edición Especial",
-    "barcode": "7891234567890",
-    "state": true,
-    "product_type": "PHYSICAL",
-    "origin": "NACIONAL",
-    "brand": "Coca-Cola",
-    "created_at": "2025-12-28T15:30:00Z",
-    "updated_at": "2025-12-28T16:45:00Z",
-    "category": {
-      "id": 10,
-      "name": "Bebidas",
-      "description": "Bebidas y refrescos"
-    },
-    "description": {
-      "id": 1,
-      "description": "Gaseosa Coca-Cola 2 litros - Edición especial",
-      "effective_date": "2025-12-28T16:45:00Z",
-      "user_id": "user123"
-    }
-  }
+  "brand": "Coca-Cola",
+  "base_unit": "unit"
 }
 ```
 
-**Nota:** El campo `updated_at` refleja la última modificación del producto.
+**Parametros adicionales al crear:**
 
-**Errores Posibles:**
+| Campo | Tipo | Requerido | Descripcion |
+|-------|------|-----------|-------------|
+| `state` | boolean | Si | Estado del producto (true=activo, false=inactivo) |
 
-| Error | HTTP Status | Descripción |
-|-------|-------------|-------------|
-| `Product not found` | 404 | El producto con el ID especificado no existe. |
-| `El origen debe ser NACIONAL o IMPORTADO` | 400 | Valor incorrecto para el campo `origin`. |
+> **Nota:** Para sobrescribir el IVA de la categoria, actualizar via base de datos o usar endpoints administrativos.
+
+**Response (200 OK):** Retorna `ProductEnriched` con los datos actualizados.
+
+**Errores:**
+
+| HTTP Status | Descripcion |
+|-------------|-------------|
+| 400 | Datos invalidos o validacion fallida |
+| 401 | No autorizado |
 
 ---
 
-### 3. Obtener Producto Enriquecido por ID
-**Endpoint:** `GET /products/:id`
+### 3. Eliminar Producto (borrado logico)
 
-Obtiene un producto **enriquecido** con información completa.
+**`DELETE /products/{id}`**
+
+Desactiva el producto (cambia `state` a `false`).
 
 **Response (200 OK):**
 ```json
 {
-  "id": "clw2s0q5j00003b6k8z4h9j2g",
+  "message": "Producto eliminado exitosamente"
+}
+```
+
+**Errores:**
+
+| HTTP Status | Descripcion |
+|-------------|-------------|
+| 401 | No autorizado |
+| 500 | Error al eliminar producto |
+
+---
+
+### 4. Obtener Producto por ID
+
+**`GET /products/{id}`**
+
+Retorna un producto enriquecido con stock, precios, descripcion, categoria e IVA.
+
+**Response (200 OK):** Retorna `ProductEnriched`.
+
+```json
+{
+  "id": "abc123def456",
   "name": "Coca-Cola 2L",
   "barcode": "7891234567890",
   "state": true,
   "category": {
-
     "id": 10,
+    "name": "Bebidas",
+    "description": "Bebidas gaseosas y jugos",
+    "default_tax_rate_id": 1,
+    "default_tax_rate": {
+      "id": 1,
+      "tax_name": "IVA 10%",
+      "code": "IVA10",
+      "rate": 10.0,
+      "country": "PY",
+      "jurisdiction_type": "NATIONAL",
+      "operation_type": "NACIONAL",
+      "description": "Impuesto al Valor Agregado - Tasa General",
+      "is_default": true,
+      "is_active": true
+    },
+    "is_active": true,
+    "created_at": "2026-01-15T10:00:00Z",
+    "updated_at": "2026-03-18T14:30:00Z"
+  },
+  "product_type": "PHYSICAL",
+  "origin": "IMPORTADO",
+  "brand": "Coca-Cola",
+  "base_unit": "unit",
+  "override_tax_rate_id": null,
+  "target_margin_percent": null,
+  "pricing_strategy": null,
+  "applicable_tax_rate": {
+    "id": 1,
+    "tax_name": "IVA 10%",
+    "code": "IVA10",
+    "rate": 10.0,
+    "country": "PY",
+    "jurisdiction_type": "NATIONAL",
+    "operation_type": "NACIONAL",
+    "description": "Impuesto al Valor Agregado - Tasa General",
+    "is_default": true,
+    "is_active": true
+  },
+  "created_at": "2026-02-24T15:30:00Z",
+  "updated_at": "2026-02-24T15:30:00Z",
+  "purchase_price": 8500,
+  "stock_quantity": 50,
+  "stock_unit": "unit",
+  "stock_status": "in_stock",
+  "has_valid_stock": true,
+  "has_valid_price": true,
+  "has_unit_pricing": true,
+  "unit_prices": [
+    {
+      "id": 1,
+      "product_id": "abc123def456",
+      "unit": "unit",
+      "price_per_unit": 12000,
+      "effective_date": "2026-02-24T15:30:00Z"
+    }
+  ],
+  "description": "Gaseosa Coca-Cola 2 litros"
+}
+```
 
+> **Nota:** El campo `applicable_tax_rate` es la tasa de IVA que aplica a este producto. Si el producto tiene `override_tax_rate_id`, esa tasa tiene prioridad. De lo contrario, se usa el `default_tax_rate` de la categoria.
+
+**Errores:**
+
+| HTTP Status | Descripcion |
+|-------------|-------------|
+| 401 | No autorizado |
+| 404 | Producto no encontrado |
+| 500 | Error interno |
+
+---
+
+### 5. Obtener Producto por Codigo de Barras
+
+**`GET /products/barcode/{barcode}`**
+
+Retorna un producto enriquecido buscado por su codigo de barras.
+
+**Response (200 OK):** Retorna `ProductEnriched`.
+
+**Errores:**
+
+| HTTP Status | Descripcion |
+|-------------|-------------|
+| 401 | No autorizado |
+| 404 | Producto no encontrado |
+| 500 | Error interno |
+
+---
+
+### 6. Buscar Productos por Nombre
+
+**`GET /products/search/{name}`**
+
+Busqueda parcial case-insensitive por nombre. Retorna todos los productos que coincidan.
+
+**Response (200 OK):** Retorna `ProductEnriched[]` (array vacio si no hay coincidencias).
+
+**Errores:**
+
+| HTTP Status | Descripcion |
+|-------------|-------------|
+| 401 | No autorizado |
+| 500 | Error interno |
+
+---
+
+### 7. Listar Productos con Paginacion
+
+**`GET /products/list/{page}/{pageSize}`**
+
+Lista paginada de productos activos enriquecidos, ordenados por nombre.
+
+**Parametros de URL:**
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `page` | number | Numero de pagina (desde 1) |
+| `pageSize` | number | Cantidad por pagina |
+
+**Ejemplos:**
+```
+GET /products/list/1/10   # Primeros 10 productos
+GET /products/list/2/20   # Segunda pagina, 20 por pagina
+```
+
+**Response (200 OK):** Retorna `ProductEnriched[]`.
+
+**Errores:**
+
+| HTTP Status | Descripcion |
+|-------------|-------------|
+| 400 | Numero de pagina o tamanio invalido |
+| 401 | No autorizado |
+| 500 | Error interno |
+
+---
+
+### 8. Listar Todos los Productos
+
+**`GET /products/all`**
+
+Retorna todos los productos activos sin paginacion. Util para selectores y catalogos.
+
+**Response (200 OK):** Retorna `ProductEnriched[]`.
+
+**Errores:**
+
+| HTTP Status | Descripcion |
+|-------------|-------------|
+| 401 | No autorizado |
+| 500 | Error interno |
+
+---
+
+### 9. Listar Canchas (Service Courts)
+
+**`GET /products/service-courts`**
+
+Retorna productos de tipo `SERVICE` cuya categoria corresponda a canchas deportivas.
+
+**Response (200 OK):** Retorna `ProductEnriched[]`.
+
+**Errores:**
+
+| HTTP Status | Descripcion |
+|-------------|-------------|
+| 401 | No autorizado |
+| 500 | Error interno |
+
+---
+
+## Endpoints Financieros
+
+### 10. Obtener Producto Financiero por ID
+
+**`GET /products/{id}/financial`**
+
+Retorna informacion financiera completa: costos, margenes, precios por unidad y salud financiera.
+
+**Response (200 OK):** Retorna `ProductFinancialEnriched`.
+
+```json
+{
+  "product_id": "abc123def456",
+  "product_name": "Coca-Cola 2L",
+  "barcode": "7891234567890",
+  "state": true,
+  "category": {
+    "id": 10,
     "name": "Bebidas"
   },
   "product_type": "PHYSICAL",
-
+  "origin": "IMPORTADO",
   "brand": "Coca-Cola",
-  "purchase_price": 8500.0,
-
-  "stock_quantity": 50,
-
-  "description": "Gaseosa Coca-Cola 2 litros",
-
-  "price_formatted": "PYG 12,000",
-
-  "stock_status": "in_stock",
+  "base_unit": "unit",
+  "created_at": "2026-02-24T15:30:00Z",
+  "updated_at": "2026-02-24T15:30:00Z",
   "unit_prices": [
     {
+      "id": 1,
+      "product_id": "abc123def456",
       "unit": "unit",
-      "price_per_unit": 12000
+      "price_per_unit": 12000,
+      "effective_date": "2026-02-24T15:30:00Z"
     }
-  ]
-}
-```
-
-**Errores Posibles:**
-
-| Error | HTTP Status | Descripción |
-|-------|-------------|-------------|
-| `Product not found` | 404 | El producto con el ID especificado no existe. |
-
----
-
-### 4. Obtener Producto Financiero por ID
-**Endpoint:** `GET /products/financial/:id`
-
-Obtiene un producto **financieramente enriquecido** con análisis de costos y márgenes.
-
-**Response (200 OK):**
-```json
-{
-  "product_id": "GA4w4YlYpVP1LNji17o9FKbp8Dg",
-  "product_name": "Onion - Dried",
-  "barcode": null,
-  "state": true,
-  "category": {
-    "id": 1,
-    "name": "Vegetables"
-  },
-  "product_type": "PHYSICAL",
-  "origin": "NACIONAL",
-  "brand": "Genérica",
-  "unit_prices": [
-    {
-
-      "id": 18,
-
-      "product_id": "GA4w4YlYpVP1LNji17o9FKbp8Dg",
-      "unit": "unit",
-      "price_per_unit": 24.05
-
   ],
   "unit_costs_summary": [
-
     {
-
       "unit": "unit",
-
-      "last_cost": 18.50,
-
-      "last_purchase_date": "2025-09-04T13:08:47.529294Z",
-
-      "weighted_avg_cost_6m": 18.50
+      "last_cost": 8500,
+      "last_purchase_date": "2026-02-20T10:00:00Z",
+      "weighted_avg_cost_6m": 8300,
+      "total_purchases": 5,
+      "cost_variance_percent": 2.4
     }
   ],
-  "stock_quantity": 50.0,
+  "stock_quantity": 50,
+  "description": "Gaseosa Coca-Cola 2 litros",
   "financial_health": {
     "has_prices": true,
     "has_costs": true,
-    "has_stock": true
+    "has_stock": true,
+    "price_count": 1,
+    "cost_units_count": 1,
+    "last_updated": "2026-02-24T15:30:00Z"
   },
+  "stock_status": "in_stock",
+  "has_valid_stock": true,
+  "has_valid_prices": true,
+  "has_valid_costs": true,
   "best_margin_unit": "unit",
-  "best_margin_percent": 23.06
+  "best_margin_percent": 29.17
 }
-
 ```
 
+**Errores:**
 
-**Errores Posibles:**
-
-
-|-------|-------------|-------------|
-| `Product not found` | 404 | El producto con el ID especificado no existe. |
-
-### 5. Buscar Producto Enriquecido por Nombre
-
-**Endpoint:** `GET /products/name/:name`
-
-Busca productos enriquecidos por nombre (búsqueda parcial).
-
-*Retorna un array de objetos `ProductEnriched`.*
-```json
-
-[
-
-  {
-
-    "id": "clw2s0q5j00003b6k8z4h9j2g",
-
-    "name": "Coca-Cola 2L",
-    "origin": "IMPORTADO",
-    "brand": "Coca-Cola",
-    "stock_quantity": 50,
-    "stock_status": "in_stock"
-  }
-
-]
-
-```
-
-**Errores Posibles:**
-
-| Error | HTTP Status | Descripción |
-|-------|-------------|-------------|
-
-| `No products found` | 404 | No se encontraron productos que coincidan. |
+| HTTP Status | Descripcion |
+|-------------|-------------|
+| 401 | No autorizado |
+| 404 | Producto no encontrado |
+| 500 | Error interno |
 
 ---
 
-### 6. Listar Productos con Paginación
+### 11. Obtener Producto Financiero por Codigo de Barras
 
-**Endpoint:** `GET /products/{page}/{pageSize}`
+**`GET /products/financial/barcode/{barcode}`**
 
-Obtiene una lista paginada de productos enriquecidos ordenados por fecha de creación (más recientes primero).
+Retorna informacion financiera completa usando el codigo de barras.
 
-**Parámetros de URL:**
+**Response (200 OK):** Retorna `ProductFinancialEnriched`.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `page` | number | Número de página (comienza en 1) |
-| `pageSize` | number | Cantidad de productos por página |
+**Errores:**
 
-**Ejemplos de Uso:**
-```bash
-# Obtener los primeros 10 productos más recientes
-GET /products/1/10
-
-# Obtener la segunda página con 20 productos
-GET /products/2/20
-
-# Obtener los últimos 5 productos registrados
-GET /products/1/5
-```
-
-**Response (200 OK):**
-```json
-[
-  {
-    "id": "clw2s0q5j00003b6k8z4h9j2g",
-    "name": "Producto Más Reciente",
-    "barcode": "7891234567890",
-    "state": true,
-    "category": {
-      "id": 10,
-      "name": "Bebidas"
-    },
-    "product_type": "PHYSICAL",
-    "origin": "IMPORTADO",
-    "brand": "Coca-Cola",
-    "created_at": "2025-12-28T15:30:00Z",
-    "updated_at": "2025-12-28T15:30:00Z",
-    "purchase_price": 8500,
-    "stock_quantity": 50,
-    "stock_status": "in_stock",
-    "unit_prices": [],
-    "description": "Producto registrado recientemente",
-    "price_formatted": "PYG 8,500"
-  },
-  {
-    "id": "clw2s0q5j00003b6k8z4h9j2f",
-    "name": "Producto Anterior",
-    "created_at": "2025-12-27T10:15:00Z",
-    "updated_at": "2025-12-27T10:15:00Z",
-    "stock_status": "low_stock"
-  }
-]
-```
-
-**Características:**
-- ✅ **Ordenamiento**: Los productos se ordenan por `created_at DESC` (más recientes primero)
-- ✅ **Paginación Eficiente**: Usa LIMIT/OFFSET optimizado con índices
-- ✅ **Datos Enriquecidos**: Incluye stock, precios y descripción
-- ✅ **Timestamps**: Cada producto incluye su fecha de creación y última actualización
-
-**Errores Posibles:**
-
-| Error | HTTP Status | Descripción |
-|-------|-------------|-------------|
-| `Invalid page number` | 400 | El número de página no es válido |
-| `Invalid page size` | 400 | El tamaño de página no es válido |
-| `Products not found` | 404 | No se encontraron productos |
-
-
-
-Obtiene **todos** los productos enriquecidos sin paginación. Útil para selectores.
-
-
-
-**Response (200 OK):**
-*Retorna un array de objetos `ProductEnriched`.*
-
-
-**Errores Posibles:**
-
-| Error | HTTP Status | Descripción |
-
-| `Internal server error` | 500 | Error al consultar la base de datos. |
-
+| HTTP Status | Descripcion |
+|-------------|-------------|
+| 401 | No autorizado |
+| 404 | Producto no encontrado |
+| 500 | Error interno |
 
 ---
 
-### 7. Eliminar Producto
-**Endpoint:** `DELETE /products/:id`
+### 12. Buscar Productos Financieros por Nombre
 
-Realiza una eliminación lógica del producto.
+**`GET /products/financial/search/{name}?limit=50`**
+
+Busca productos con informacion financiera por nombre.
+
+**Parametros:**
+
+| Campo | Tipo | Ubicacion | Descripcion |
+|-------|------|-----------|-------------|
+| `name` | string | path | Texto de busqueda |
+| `limit` | number | query | Limite de resultados (default: 50) |
+
+**Response (200 OK):** Retorna `ProductFinancialEnriched[]`.
+
+**Errores:**
+
+| HTTP Status | Descripcion |
+|-------------|-------------|
+| 401 | No autorizado |
+| 500 | Error interno |
+
+---
+
+## Endpoints de Pricing
+
+### 13. Obtener Productos por Categoria
+
+**`GET /products/by-category?categories=1,2,3`**
+
+Retorna productos con precios filtrados por categorias.
+
+**Parametros:**
+
+| Campo | Tipo | Ubicacion | Descripcion |
+|-------|------|-----------|-------------|
+| `categories` | string | query | IDs de categorias separados por coma |
 
 **Response (200 OK):**
 ```json
 {
-  "success": true,
-  "message": "Product and description deleted successfully"
+  "data": [...],
+  "count": 15
 }
 ```
 
-**Errores Posibles:**
+---
 
-| Error | HTTP Status | Descripción |
-|-------|-------------|-------------|
-| `Product not found` | 404 | El producto con el ID especificado no existe. |
+### 14. Obtener Unidades de un Producto
+
+**`GET /products/{id}/units`**
+
+Retorna las unidades de medida con precios asignados.
+
+**Response (200 OK):**
+```json
+{
+  "data": ["unit", "kg", "dozen"]
+}
+```
 
 ---
 
-## 🔍 Validaciones y Reglas de Negocio
+### 15. Crear Precio por Unidad
 
-### Campo `origin`
-- **Valores permitidos**: `"NACIONAL"` o `"IMPORTADO"` (mayúsculas).
-- Si se envía otro valor, la API retornará un error 400.
+**`POST /products/{id}/units`**
 
-### Campo `brand`
-- **Longitud máxima**: 100 caracteres.
+Asigna un precio de venta a una unidad de medida.
+
+**Request Body:**
+```json
+{
+  "unit": "kg",
+  "price_per_unit": 15000
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Unit price created successfully",
+  "data": {
+    "id": 0,
+    "product_id": "abc123",
+    "unit": "kg",
+    "price_per_unit": 15000,
+    "effective_date": "2026-02-24T15:30:00Z"
+  }
+}
+```
 
 ---
 
-## 🎯 Recomendaciones de Implementación
+## Validaciones
 
-### Cuándo Usar Cada Tipo de Producto
-
-1.  **Para Análisis Financiero y Administración:**
-    - Usa los endpoints **financieramente enriquecidos** (`/products/financial/*`).
-    - **Casos de uso**: Reportes de rentabilidad, dashboards de gestión, análisis de costos y márgenes.
-
-2.  **Para Interfaces de Usuario Generales:**
-    - Usa los endpoints **enriquecidos** (`/products/name/*`, `/products/:id`, etc.).
-    - **Casos de uso**: Catálogos de productos, puntos de venta (POS), selectores de productos.
+| Campo | Regla |
+|-------|-------|
+| `name` | Requerido, no puede estar vacio |
+| `category_id` | Requerido, debe ser > 0 |
+| `product_type` | `PHYSICAL`, `SERVICE` o `PRODUCTION` |
+| `origin` | `NACIONAL` o `IMPORTADO` (si se proporciona) |
 
 ---
 
-## ❌ Códigos de Error Comunes
+## Guia de Migracion desde v2.x
 
-| Error | HTTP Status | Descripción | Solución |
-|-------|-------------|-------------|----------|
-| `Product not found` | 404 | El recurso no existe. | Verificar el ID o código de barras. |
-| `Invalid request body` | 400 | Los datos enviados son incorrectos. | Validar la estructura y tipos de datos. |
-| `Unauthorized` | 401 | Token JWT inválido o ausente. | Verificar que el token se esté enviando. |
-| `Internal server error` | 500 | Error en el servidor. | Reportar el error al equipo de backend. |
+| Antes (v2.x) | Ahora (v3.0) |
+|---------------|--------------|
+| `"id_category": 10` | `"category_id": 10` |
+| `"price_formatted": "PYG 12,000"` | Campo eliminado |
+| `GET /products/financial/{id}` | `GET /products/{id}/financial` |
+| `GET /products/name/{name}` | `GET /products/search/{name}` |
+| `GET /products/financial/name/{name}` | `GET /products/financial/search/{name}` |
+| `GET /products/{id}/details` | `GET /products/{id}` |
+| `GET /products/{id}/with-description` | `GET /products/{id}` |
+| `PUT /products/delete/{id}` | `DELETE /products/{id}` |
+| `GET /products/enriched/all` | `GET /products/all` |
+| `GET /products/enriched/service-courts` | `GET /products/service-courts` |
+| `POST/GET/PUT /product_description/*` | Eliminado (descripcion integrada en producto) |
+
+---
+
+## Codigos de Error Comunes
+
+| HTTP Status | Descripcion | Solucion |
+|-------------|-------------|----------|
+| 400 | Datos invalidos o validacion fallida | Verificar el body y los campos requeridos |
+| 401 | Token JWT invalido o ausente | Verificar que se envia el header Authorization |
+| 404 | Producto no encontrado | Verificar el ID o codigo de barras |
+| 500 | Error interno del servidor | Reportar al equipo de backend |

@@ -708,37 +708,48 @@ const Purchases = () => {
   }
 
   return (
-    <div className='min-h-screen bg-[var(--fluent-background-canvas,#FAFAFA)] dark:bg-[var(--fluent-neutral-grey-160,#201F1E)] font-sans transition-colors duration-[duration:var(--fluent-duration-normal,200ms)] pb-16'>
-      {/* Tab Navigation - Fluent 2 Pivot Style */}
-      <div className='bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] px-4 md:px-6 mb-4 md:mb-6 sticky top-0 z-20'>
-        <div className='max-w-[1920px] mx-auto flex gap-1'>
-          <button
-            className={`px-5 py-3 text-sm font-semibold transition-all duration-[duration:var(--fluent-duration-fast,150ms)] border-b-2 ${
-              activeTab === 'nueva-compra'
-                ? 'border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)]'
-                : 'border-transparent text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)]'
-            }`}
-            onClick={() => setActiveTab('nueva-compra')}
-          >
-            Nueva Compra
-          </button>
-          <button
-            className={`px-5 py-3 text-sm font-semibold transition-all duration-[duration:var(--fluent-duration-fast,150ms)] border-b-2 ${
-              activeTab === 'historial'
-                ? 'border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)]'
-                : 'border-transparent text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)]'
-            }`}
-            onClick={() => setActiveTab('historial')}
-          >
-            Historial de Órdenes
-          </button>
+    <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-display'>
+      {/* Header Section */}
+      <header className='flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2'>
+        <div className='flex items-center gap-4'>
+          <div className='size-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-fluent-8'>
+            <ShoppingCart size={28} />
+          </div>
+          <div>
+            <h1 className='text-3xl font-black text-text-main tracking-tighter uppercase leading-none'>Gestión de Compras</h1>
+            <p className='text-text-secondary text-sm font-medium mt-1'>
+              Abastecimiento y órdenes de compra a proveedores
+            </p>
+          </div>
         </div>
-      </div>
 
-      <main className='max-w-[1920px] mx-auto px-4 md:px-6'>
+        <div className='flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit'>
+          {[
+            { id: 'nueva-compra', label: 'Nueva Orden', icon: <Plus size={16} /> },
+            { id: 'historial', label: 'Historial', icon: <History size={16} /> },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'flex items-center gap-2 px-6 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all',
+                activeTab === tab.id
+                  ? 'bg-white dark:bg-surface-dark text-primary shadow-fluent-2'
+                  : 'text-text-secondary hover:text-text-main'
+              )}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <main className='w-full'>
         {error && (
-          <div className='mb-4 rounded-[var(--fluent-corner-radius-medium,4px)] border border-[var(--fluent-semantic-danger,#D13438)]/30 bg-[rgba(209,52,56,0.08)] px-4 py-3 text-sm text-[var(--fluent-semantic-danger,#D13438)]'>
-            {error}
+          <div className='mb-6 p-4 bg-error/5 border border-error/20 rounded-xl flex items-center gap-3'>
+            <AlertCircle className="text-error" size={18} />
+            <p className='text-xs font-bold text-error uppercase tracking-wider'>{error}</p>
           </div>
         )}
 

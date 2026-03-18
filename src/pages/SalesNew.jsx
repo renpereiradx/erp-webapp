@@ -1269,47 +1269,45 @@ const SalesNew = () => {
   }
 
   return (
-    <div className='min-h-screen bg-[var(--fluent-surface-subtle,#F5F5F5)] p-4 lg:p-6'>
-      {/* Fluent 2 Pivot Tabs */}
-      <nav className='mb-6' aria-label='Gestión de ventas'>
-        <div
-          className='flex gap-1 border-b border-[var(--fluent-border-default,#E0E0E0)]'
-          role='tablist'
-        >
-          <button
-            type='button'
-            onClick={() => setActiveTab('new-sale')}
-            id='sales-new-tab'
-            role='tab'
-            aria-selected={activeTab === 'new-sale'}
-            aria-controls='sales-new-panel'
-            className={`px-4 py-2.5 text-sm font-medium transition-all duration-[duration:var(--fluent-duration-normal,200ms)] border-b-2 -mb-px ${
-              activeTab === 'new-sale'
-                ? 'border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)]'
-                : 'border-transparent text-[var(--fluent-text-secondary,#616161)] hover:text-[var(--fluent-text-primary,#242424)] hover:bg-[var(--fluent-surface-hover,#F0F0F0)]'
-            }`}
-          >
-            Nueva Venta
-          </button>
-          <button
-            type='button'
-            onClick={() => setActiveTab('history')}
-            id='sales-history-tab'
-            role='tab'
-            aria-selected={activeTab === 'history'}
-            aria-controls='sales-history-panel'
-            className={`px-4 py-2.5 text-sm font-medium transition-all duration-[duration:var(--fluent-duration-normal,200ms)] border-b-2 -mb-px ${
-              activeTab === 'history'
-                ? 'border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)]'
-                : 'border-transparent text-[var(--fluent-text-secondary,#616161)] hover:text-[var(--fluent-text-primary,#242424)] hover:bg-[var(--fluent-surface-hover,#F0F0F0)]'
-            }`}
-          >
-            Historial de Ventas
-          </button>
+    <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-display'>
+      {/* Header Section */}
+      <header className='flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2'>
+        <div className='flex items-center gap-4'>
+          <div className='size-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-fluent-8'>
+            <ShoppingCart size={28} />
+          </div>
+          <div>
+            <h1 className='text-3xl font-black text-text-main tracking-tighter uppercase leading-none'>Punto de Venta</h1>
+            <p className='text-text-secondary text-sm font-medium mt-1'>
+              Facturación y registro de operaciones comerciales
+            </p>
+          </div>
         </div>
-      </nav>
 
-      {activeTab === 'new-sale' && (
+        <div className='flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit'>
+          {[
+            { id: 'new-sale', label: 'Nueva Venta', icon: <Plus size={16} /> },
+            { id: 'history', label: 'Historial', icon: <History size={16} /> },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'flex items-center gap-2 px-6 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all',
+                activeTab === tab.id
+                  ? 'bg-white dark:bg-surface-dark text-primary shadow-fluent-2'
+                  : 'text-text-secondary hover:text-text-main'
+              )}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <main className='w-full'>
+        {activeTab === 'new-sale' && (
         <section
           id='sales-new-panel'
           role='tabpanel'

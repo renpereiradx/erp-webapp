@@ -64,43 +64,43 @@ const CategoriesTab = ({ searchTerm, onEdit, onAdd }) => {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center">
-        <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Categorías de Producto</h3>
-        <Button onClick={onAdd} size="sm" className="bg-primary hover:bg-primary-hover text-white font-semibold uppercase tracking-widest text-[10px] px-4 h-9 rounded-md shadow-sm flex items-center gap-2">
+      <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-border-subtle shadow-fluent-2 flex justify-between items-center">
+        <h3 className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em]">Categorías de Producto</h3>
+        <Button onClick={onAdd} size="sm" className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] px-4 h-9 rounded shadow-fluent-2 flex items-center gap-2">
           <span className="material-icons-round text-[16px]">add</span>
           Nueva Categoría
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-surface-dark shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-border-subtle bg-white dark:bg-surface-dark shadow-fluent-2">
         <Table>
           <TableHeader className="bg-slate-50/80 dark:bg-slate-800/50">
             <TableRow>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">Nombre</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">Descripción</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">IVA Defecto</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">Estado</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3 text-right">Acciones</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">Nombre</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">Descripción</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">IVA Defecto</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">Estado</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3 text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-400 font-semibold uppercase tracking-widest text-xs">{t('common.loading')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-400 font-black uppercase tracking-widest text-xs">{t('common.loading')}</TableCell></TableRow>
             ) : filteredCategories.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-500 font-medium italic">No se encontraron categorías</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="py-12 text-center text-text-secondary font-bold italic">No se encontraron categorías</TableCell></TableRow>
             ) : (
               filteredCategories.map(cat => (
-                <tr key={cat.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800">
-                  <TableCell className="py-2 px-3 font-semibold text-text-main">{cat.name}</TableCell>
-                  <TableCell className="py-2 px-3 text-xs text-slate-500">{cat.description || '-'}</TableCell>
-                  <TableCell className="py-2 px-3 font-mono text-xs">{cat.default_tax_rate_id ? `ID: ${cat.default_tax_rate_id}` : 'General (10%)'}</TableCell>
-                  <TableCell className="py-2 px-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-widest border ${cat.is_active !== false ? 'bg-green-50 border-green-200 text-green-700' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
+                <tr key={cat.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-border-subtle">
+                  <TableCell className="py-4 px-3 font-bold text-text-main">{cat.name}</TableCell>
+                  <TableCell className="py-4 px-3 text-xs font-medium text-text-secondary">{cat.description || '-'}</TableCell>
+                  <TableCell className="py-4 px-3 font-mono font-black text-xs text-primary">{cat.default_tax_rate_id ? `ID: ${cat.default_tax_rate_id}` : 'General (10%)'}</TableCell>
+                  <TableCell className="py-4 px-3">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${cat.is_active !== false ? 'bg-green-50 border-green-200 text-success' : 'bg-slate-100 border-slate-200 text-text-secondary'}`}>
                       {cat.is_active !== false ? 'Activo' : 'Inactivo'}
                     </span>
                   </TableCell>
-                  <TableCell className="py-2 px-3 text-right">
-                    <Button variant="ghost" size="icon" className="size-8 text-slate-400 hover:text-primary transition-colors" onClick={() => onEdit(cat)}><span className="material-icons-round text-[18px]">edit</span></Button>
+                  <TableCell className="py-4 px-3 text-right">
+                    <Button variant="ghost" size="icon" className="size-8 text-text-secondary hover:text-primary transition-colors rounded" onClick={() => onEdit(cat)}><span className="material-icons-round text-[18px]">edit</span></Button>
                   </TableCell>
                 </tr>
               ))
@@ -147,7 +147,7 @@ const CategoryDrawer = ({ isOpen, onClose, category, onSave }) => {
       const payload = {
         ...formData,
         default_tax_rate_id: formData.default_tax_rate_id ? parseInt(formData.default_tax_rate_id) : null,
-        parent_id: formData.parent_id ? parseInt(formData.parent_id) : null
+        parent_id: formData.parent_id ? (formData.parent_id === 'none' ? null : parseInt(formData.parent_id)) : null
       }
       await onSave(payload); 
       onClose(); 
@@ -159,12 +159,12 @@ const CategoryDrawer = ({ isOpen, onClose, category, onSave }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-surface-dark shadow-xl z-[100] flex flex-col animate-in slide-in-from-right duration-300 border-l border-slate-200 dark:border-slate-800">
-      <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-        <h3 className="text-xl font-semibold tracking-tight text-text-main uppercase">
+    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-surface-dark shadow-fluent-16 z-[100] flex flex-col animate-in slide-in-from-right duration-300 border-l border-border-subtle">
+      <div className="p-6 border-b border-border-subtle flex items-center justify-between">
+        <h3 className="text-xl font-black tracking-tighter text-text-main uppercase">
           {category ? 'Editar Categoría' : 'Nueva Categoría'}
         </h3>
-        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
+        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-text-secondary transition-colors">
           <span className="material-icons-round text-[20px]">close</span>
         </button>
       </div>
@@ -172,52 +172,55 @@ const CategoryDrawer = ({ isOpen, onClose, category, onSave }) => {
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
         <form id="category-form" onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">Nombre</label>
-            <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej: Electrónicos" className="rounded-md border-slate-200" required />
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Nombre</label>
+            <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej: Electrónicos" className="rounded border-border-subtle font-bold" required />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">Descripción</label>
-            <Input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Breve descripción..." className="rounded-md border-slate-200" />
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Descripción</label>
+            <Input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Breve descripción..." className="rounded border-border-subtle" />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">Tasa de IVA por Defecto</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Tasa de IVA por Defecto</label>
             <Select value={formData.default_tax_rate_id} onValueChange={v => setFormData({...formData, default_tax_rate_id: v})}>
-              <SelectTrigger className="rounded-md border-slate-200"><SelectValue placeholder="Seleccionar tasa..." /></SelectTrigger>
-              <SelectContent>
+              <SelectTrigger className="rounded border-border-subtle font-bold h-11"><SelectValue placeholder="Seleccionar tasa..." /></SelectTrigger>
+              <SelectContent className="rounded-xl shadow-fluent-16 border-border-subtle">
                 {taxRates.map(rate => (
-                  <SelectItem key={rate.id} value={rate.id.toString()}>{rate.tax_name || rate.name} ({rate.rate}%)</SelectItem>
+                  <SelectItem key={rate.id} value={rate.id.toString()} className="font-bold text-xs uppercase tracking-wider">{rate.tax_name || rate.name} ({rate.rate}%)</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">Categoría Padre</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Categoría Padre</label>
             <Select value={formData.parent_id} onValueChange={v => setFormData({...formData, parent_id: v})}>
-              <SelectTrigger className="rounded-md border-slate-200"><SelectValue placeholder="Ninguna (Raíz)" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Ninguna</SelectItem>
+              <SelectTrigger className="rounded border-border-subtle font-bold h-11"><SelectValue placeholder="Ninguna (Raíz)" /></SelectTrigger>
+              <SelectContent className="rounded-xl shadow-fluent-16 border-border-subtle">
+                <SelectItem value="none" className="font-bold text-xs uppercase tracking-wider">Ninguna</SelectItem>
                 {allCategories.filter(c => c.id !== category?.id).map(c => (
-                  <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                  <SelectItem key={c.id} value={c.id.toString()} className="font-bold text-xs uppercase tracking-wider">{c.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-100 dark:border-slate-800">
-            <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.checked})} className="rounded border-slate-300 text-primary size-4" />
-            <span className="text-sm font-semibold text-text-main">Categoría Activa</span>
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-border-subtle">
+            <span className="text-xs font-black uppercase tracking-widest text-text-main">Categoría Activa</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.checked})} className="sr-only peer" />
+                <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+            </label>
           </div>
         </form>
       </div>
 
-      <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 flex gap-3">
-        <Button form="category-form" type="submit" className="flex-1 bg-primary hover:bg-primary-hover text-white font-semibold uppercase tracking-widest text-[11px] h-11 rounded-md shadow-sm" disabled={saving}>
+      <div className="p-6 border-t border-border-subtle bg-slate-50/50 dark:bg-slate-900/20 flex gap-3">
+        <Button form="category-form" type="submit" className="flex-1 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] h-11 rounded shadow-fluent-2" disabled={saving}>
           {saving ? 'Guardando...' : 'Guardar Categoría'}
         </Button>
-        <Button variant="outline" onClick={onClose} className="flex-1 border-slate-200 font-semibold uppercase tracking-widest text-[11px] h-11 rounded-md">Cancelar</Button>
+        <Button variant="outline" onClick={onClose} className="flex-1 border-border-subtle font-black uppercase tracking-widest text-[10px] h-11 rounded">Cancelar</Button>
       </div>
     </div>
   )
@@ -243,41 +246,41 @@ const TaxRatesTab = ({ searchTerm, onEdit, onAdd }) => {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center">
-        <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Tasas de Impuestos (IVA)</h3>
-        <Button onClick={onAdd} size="sm" className="bg-primary hover:bg-primary-hover text-white font-semibold uppercase tracking-widest text-[10px] px-4 h-9 rounded-md shadow-sm flex items-center gap-2">
+      <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-border-subtle shadow-fluent-2 flex justify-between items-center">
+        <h3 className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em]">Tasas de Impuestos (IVA)</h3>
+        <Button onClick={onAdd} size="sm" className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] px-4 h-9 rounded shadow-fluent-2 flex items-center gap-2">
           <span className="material-icons-round text-[16px]">add</span>
           Nueva Tasa
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-surface-dark shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-border-subtle bg-white dark:bg-surface-dark shadow-fluent-2">
         <Table>
           <TableHeader className="bg-slate-50/80 dark:bg-slate-800/50">
             <TableRow>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">Código</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">Nombre</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">Tasa %</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">Por Defecto</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3 text-right">Acciones</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">Código</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">Nombre</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">Tasa %</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">Por Defecto</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3 text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-400 font-semibold uppercase tracking-widest text-xs">{t('common.loading')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-400 font-black uppercase tracking-widest text-xs">{t('common.loading')}</TableCell></TableRow>
             ) : filteredRates.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-500 font-medium italic">No se encontraron tasas</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="py-12 text-center text-text-secondary font-bold italic">No se encontraron tasas</TableCell></TableRow>
             ) : (
               filteredRates.map(rate => (
-                <tr key={rate.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800">
-                  <TableCell className="py-2 px-3"><span className="font-mono font-semibold text-primary">{rate.code}</span></TableCell>
-                  <TableCell className="py-2 px-3 font-semibold text-text-main">{rate.tax_name || rate.name}</TableCell>
-                  <TableCell className="py-2 px-3 font-mono font-bold">{rate.rate}%</TableCell>
-                  <TableCell className="py-2 px-3">
-                    {rate.is_default && <Badge className="bg-amber-100 text-amber-700 border-amber-200 uppercase text-[9px]">Sistema</Badge>}
+                <tr key={rate.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-border-subtle">
+                  <TableCell className="py-4 px-3"><span className="font-mono font-black text-primary uppercase">{rate.code}</span></TableCell>
+                  <TableCell className="py-4 px-3 font-bold text-text-main">{rate.tax_name || rate.name}</TableCell>
+                  <TableCell className="py-4 px-3 font-mono font-black text-primary tabular-nums">{rate.rate}%</TableCell>
+                  <TableCell className="py-4 px-3">
+                    {rate.is_default && <Badge className="bg-amber-100 text-warning border-amber-200 uppercase text-[9px] font-black px-2 py-0.5 rounded-full">Sistema</Badge>}
                   </TableCell>
-                  <TableCell className="py-2 px-3 text-right">
-                    <Button variant="ghost" size="icon" className="size-8 text-slate-400 hover:text-primary transition-colors" onClick={() => onEdit(rate)}><span className="material-icons-round text-[18px]">edit</span></Button>
+                  <TableCell className="py-4 px-3 text-right">
+                    <Button variant="ghost" size="icon" className="size-8 text-text-secondary hover:text-primary transition-colors rounded" onClick={() => onEdit(rate)}><span className="material-icons-round text-[18px]">edit</span></Button>
                   </TableCell>
                 </tr>
               ))
@@ -325,12 +328,12 @@ const TaxRateDrawer = ({ isOpen, onClose, taxRate, onSave }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-surface-dark shadow-xl z-[100] flex flex-col animate-in slide-in-from-right duration-300 border-l border-slate-200 dark:border-slate-800">
-      <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-        <h3 className="text-xl font-semibold tracking-tight text-text-main uppercase">
+    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-surface-dark shadow-fluent-16 z-[100] flex flex-col animate-in slide-in-from-right duration-300 border-l border-border-subtle">
+      <div className="p-6 border-b border-border-subtle flex items-center justify-between">
+        <h3 className="text-xl font-black tracking-tighter text-text-main uppercase">
           {taxRate ? 'Editar Tasa de IVA' : 'Nueva Tasa de IVA'}
         </h3>
-        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
+        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-text-secondary transition-colors">
           <span className="material-icons-round text-[20px]">close</span>
         </button>
       </div>
@@ -338,41 +341,41 @@ const TaxRateDrawer = ({ isOpen, onClose, taxRate, onSave }) => {
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
         <form id="tax-rate-form" onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">Código (Ej: IVA10)</label>
-            <Input value={formData.code} onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})} placeholder="IVA10, IVA5, EXENTO" className="rounded-md border-slate-200 uppercase font-mono" required />
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Código (Ej: IVA10)</label>
+            <Input value={formData.code} onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})} placeholder="IVA10, IVA5, EXENTO" className="rounded border-border-subtle uppercase font-mono font-bold" required />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">Nombre Descriptivo</label>
-            <Input value={formData.tax_name} onChange={e => setFormData({...formData, tax_name: e.target.value})} placeholder="Ej: IVA General 10%" className="rounded-md border-slate-200" required />
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Nombre Descriptivo</label>
+            <Input value={formData.tax_name} onChange={e => setFormData({...formData, tax_name: e.target.value})} placeholder="Ej: IVA General 10%" className="rounded border-border-subtle font-bold" required />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">Tasa Porcentual (%)</label>
-            <Input type="number" step="0.1" value={formData.rate} onChange={e => setFormData({...formData, rate: e.target.value})} placeholder="10.0" className="rounded-md border-slate-200 font-mono" required />
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Tasa Porcentual (%)</label>
+            <Input type="number" step="0.1" value={formData.rate} onChange={e => setFormData({...formData, rate: e.target.value})} placeholder="10.0" className="rounded border-border-subtle font-mono font-bold" required />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">Jurisdicción</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Jurisdicción</label>
               <Select value={formData.jurisdiction_type} onValueChange={v => setFormData({...formData, jurisdiction_type: v})}>
-                <SelectTrigger className="rounded-md border-slate-200"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NATIONAL">Nacional</SelectItem>
-                  <SelectItem value="STATE">Estatal/Dpto</SelectItem>
-                  <SelectItem value="LOCAL">Local/Mun.</SelectItem>
+                <SelectTrigger className="rounded border-border-subtle font-bold h-11"><SelectValue /></SelectTrigger>
+                <SelectContent className="rounded-xl shadow-fluent-16 border-border-subtle">
+                  <SelectItem value="NATIONAL" className="font-bold text-xs uppercase tracking-wider">Nacional</SelectItem>
+                  <SelectItem value="STATE" className="font-bold text-xs uppercase tracking-wider">Estatal/Dpto</SelectItem>
+                  <SelectItem value="LOCAL" className="font-bold text-xs uppercase tracking-wider">Local/Mun.</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">Operación</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Operación</label>
               <Select value={formData.operation_type} onValueChange={v => setFormData({...formData, operation_type: v})}>
-                <SelectTrigger className="rounded-md border-slate-200"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NACIONAL">Nacional</SelectItem>
-                  <SelectItem value="CANASTA">Canasta Básica</SelectItem>
-                  <SelectItem value="EXEMPT">Exento</SelectItem>
-                  <SelectItem value="IMPORT">Importación</SelectItem>
+                <SelectTrigger className="rounded border-border-subtle font-bold h-11"><SelectValue /></SelectTrigger>
+                <SelectContent className="rounded-xl shadow-fluent-16 border-border-subtle">
+                  <SelectItem value="NACIONAL" className="font-bold text-xs uppercase tracking-wider">Nacional</SelectItem>
+                  <SelectItem value="CANASTA" className="font-bold text-xs uppercase tracking-wider">Canasta Básica</SelectItem>
+                  <SelectItem value="EXEMPT" className="font-bold text-xs uppercase tracking-wider">Exento</SelectItem>
+                  <SelectItem value="IMPORT" className="font-bold text-xs uppercase tracking-wider">Importación</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -382,19 +385,19 @@ const TaxRateDrawer = ({ isOpen, onClose, taxRate, onSave }) => {
             <div className="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
               <input type="checkbox" checked={formData.is_default} onChange={e => setFormData({...formData, is_default: e.target.checked})} className="rounded border-slate-300 text-primary size-4" />
               <div className="flex flex-col">
-                <span className="text-sm font-semibold text-text-main">Tasa por Defecto</span>
-                <span className="text-[10px] text-amber-700 font-medium">Se aplicará automáticamente a nuevos productos</span>
+                <span className="text-sm font-black uppercase tracking-tighter text-text-main">Tasa por Defecto</span>
+                <span className="text-[10px] text-amber-700 font-bold uppercase tracking-widest mt-0.5">Se aplicará automáticamente a nuevos productos</span>
               </div>
             </div>
           </div>
         </form>
       </div>
 
-      <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 flex gap-3">
-        <Button form="tax-rate-form" type="submit" className="flex-1 bg-primary hover:bg-primary-hover text-white font-semibold uppercase tracking-widest text-[11px] h-11 rounded-md shadow-sm" disabled={saving}>
+      <div className="p-6 border-t border-border-subtle bg-slate-50/50 dark:bg-slate-900/20 flex gap-3">
+        <Button form="tax-rate-form" type="submit" className="flex-1 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] h-11 rounded shadow-fluent-2" disabled={saving}>
           {saving ? 'Guardando...' : 'Guardar Tasa'}
         </Button>
-        <Button variant="outline" onClick={onClose} className="flex-1 border-slate-200 font-semibold uppercase tracking-widest text-[11px] h-11 rounded-md">Cancelar</Button>
+        <Button variant="outline" onClick={onClose} className="flex-1 border-border-subtle font-black uppercase tracking-widest text-[10px] h-11 rounded">Cancelar</Button>
       </div>
     </div>
   )
@@ -436,46 +439,46 @@ const PaymentMethodsTab = ({ searchTerm, onEdit, onAdd }) => {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center">
-        <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">{t('currencies.tabs.payment_methods')}</h3>
-        <Button onClick={onAdd} size="sm" className="bg-primary hover:bg-primary-hover text-white font-semibold uppercase tracking-widest text-[10px] px-4 h-9 rounded-md shadow-sm flex items-center gap-2">
+      <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-border-subtle shadow-fluent-2 flex justify-between items-center">
+        <h3 className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em]">{t('currencies.tabs.payment_methods')}</h3>
+        <Button onClick={onAdd} size="sm" className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] px-4 h-9 rounded shadow-fluent-2 flex items-center gap-2">
           <span className="material-icons-round text-[16px]">add</span>
           Nuevo Método
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-surface-dark shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-border-subtle bg-white dark:bg-surface-dark shadow-fluent-2">
         <Table>
           <TableHeader className="bg-slate-50/80 dark:bg-slate-800/50">
             <TableRow>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.table.code')}</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.table.name')}</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.payment_methods.table.type')}</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.table.status')}</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3 text-right">{t('currencies.table.actions')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">{t('currencies.table.code')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">{t('currencies.table.name')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">{t('currencies.payment_methods.table.type')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">{t('currencies.table.status')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3 text-right">{t('currencies.table.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-400 font-semibold uppercase tracking-widest text-xs">{t('common.loading')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-400 font-black uppercase tracking-widest text-xs">{t('common.loading')}</TableCell></TableRow>
             ) : filteredMethods.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-500 font-medium italic">{t('currencies.empty.search')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="py-12 text-center text-text-secondary font-bold italic">{t('currencies.empty.search')}</TableCell></TableRow>
             ) : (
               filteredMethods.map(method => (
-                <tr key={method.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800">
-                  <TableCell className="py-2 px-3"><span className="font-mono font-semibold text-primary tabular-nums">{method.method_code}</span></TableCell>
-                  <TableCell className="py-2 px-3 font-semibold text-text-main">{method.description}</TableCell>
-                  <TableCell className="py-2 px-3 text-xs font-medium text-slate-500">
+                <tr key={method.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-border-subtle">
+                  <TableCell className="py-4 px-3"><span className="font-mono font-black text-primary tabular-nums uppercase">{method.method_code}</span></TableCell>
+                  <TableCell className="py-4 px-3 font-bold text-text-main">{method.description}</TableCell>
+                  <TableCell className="py-4 px-3 text-xs font-bold text-text-secondary uppercase tracking-tighter">
                     {PaymentMethodService.requiresAdditionalInfo(method) ? t('currencies.payment_methods.type.complex') : t('currencies.payment_methods.type.simple')}
                   </TableCell>
-                  <TableCell className="py-2 px-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-widest border ${method.is_active ? 'bg-green-50 border-green-200 text-green-700' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
-                      <span className={`size-1.5 rounded-full ${method.is_active ? 'bg-green-600' : 'bg-slate-400'}`}></span>
+                  <TableCell className="py-4 px-3">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${method.is_active ? 'bg-green-50 border-green-200 text-success' : 'bg-slate-100 border-slate-200 text-text-secondary'}`}>
+                      <span className={`size-1.5 rounded-full ${method.is_active ? 'bg-success' : 'bg-slate-400'}`}></span>
                       {method.is_active ? t('currencies.status.active') : t('currencies.status.inactive')}
                     </span>
                   </TableCell>
-                  <TableCell className="py-2 px-3 text-right">
-                    <Button variant="ghost" size="icon" className="size-8 text-slate-400 hover:text-primary transition-colors" onClick={() => onEdit(method)}><span className="material-icons-round text-[18px]">edit</span></Button>
+                  <TableCell className="py-4 px-3 text-right">
+                    <Button variant="ghost" size="icon" className="size-8 text-text-secondary hover:text-primary transition-colors rounded" onClick={() => onEdit(method)}><span className="material-icons-round text-[18px]">edit</span></Button>
                   </TableCell>
                 </tr>
               ))
@@ -518,12 +521,12 @@ const PaymentMethodDrawer = ({ isOpen, onClose, method, onSave }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-surface-dark shadow-xl z-[100] flex flex-col animate-in slide-in-from-right duration-300 border-l border-slate-200 dark:border-slate-800">
-      <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-        <h3 className="text-xl font-semibold tracking-tight text-text-main uppercase">
+    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-surface-dark shadow-fluent-16 z-[100] flex flex-col animate-in slide-in-from-right duration-300 border-l border-border-subtle">
+      <div className="p-6 border-b border-border-subtle flex items-center justify-between">
+        <h3 className="text-xl font-black tracking-tighter text-text-main uppercase">
           {method ? 'Editar Método de Pago' : 'Nuevo Método de Pago'}
         </h3>
-        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
+        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-text-secondary transition-colors">
           <span className="material-icons-round text-[20px]">close</span>
         </button>
       </div>
@@ -531,27 +534,30 @@ const PaymentMethodDrawer = ({ isOpen, onClose, method, onSave }) => {
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
         <form id="payment-method-form" onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">Código del Método</label>
-            <Input value={formData.method_code} onChange={e => setFormData({...formData, method_code: e.target.value.toUpperCase()})} placeholder="CASH, CARD, etc." disabled={!!method?.id} className="rounded-md border-slate-200 uppercase font-mono" required />
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Código del Método</label>
+            <Input value={formData.method_code} onChange={e => setFormData({...formData, method_code: e.target.value.toUpperCase()})} placeholder="CASH, CARD, etc." disabled={!!method?.id} className="rounded border-border-subtle uppercase font-mono font-bold" required />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 ml-1">Descripción</label>
-            <Input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Ej: Pago en Efectivo" className="rounded-md border-slate-200" required />
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Descripción</label>
+            <Input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Ej: Pago en Efectivo" className="rounded border-border-subtle font-bold" required />
           </div>
 
-          <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-100 dark:border-slate-800">
-            <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.checked})} className="rounded border-slate-300 text-primary size-4" />
-            <span className="text-sm font-semibold text-text-main">Método Activo</span>
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-border-subtle">
+            <span className="text-xs font-black uppercase tracking-widest text-text-main">Método Activo</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.checked})} className="sr-only peer" />
+                <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+            </label>
           </div>
         </form>
       </div>
 
-      <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 flex gap-3">
-        <Button form="payment-method-form" type="submit" className="flex-1 bg-primary hover:bg-primary-hover text-white font-semibold uppercase tracking-widest text-[11px] h-11 rounded-md shadow-sm" disabled={saving}>
+      <div className="p-6 border-t border-border-subtle bg-slate-50/50 dark:bg-slate-900/20 flex gap-3">
+        <Button form="payment-method-form" type="submit" className="flex-1 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] h-11 rounded shadow-fluent-2" disabled={saving}>
           {saving ? t('action.saving') : t('action.save')}
         </Button>
-        <Button variant="outline" onClick={onClose} className="flex-1 border-slate-200 font-semibold uppercase tracking-widest text-[11px] h-11 rounded-md">
+        <Button variant="outline" onClick={onClose} className="flex-1 border-border-subtle font-black uppercase tracking-widest text-[10px] h-11 rounded">
           {t('action.cancel')}
         </Button>
       </div>
@@ -761,29 +767,29 @@ const CurrenciesPage = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-sans">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-display">
       
       {/* Page Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2">
         <header className="flex flex-col gap-1">
-          <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+          <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">
             {t('currencies.page.title')}
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+          <p className="text-text-secondary text-sm font-medium">
             {t('currencies.page.subtitle')}
           </p>
         </header>
         
         {/* Base Currency Widget */}
-        <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-6">
+        <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-border-subtle shadow-fluent-2 flex items-center gap-6">
           <div>
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest leading-none mb-2">{t('currencies.widget.base_currency')}</p>
+            <p className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] leading-none mb-2">{t('currencies.widget.base_currency')}</p>
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-semibold text-primary leading-none font-mono uppercase">{baseCurrency?.currency_code || 'PYG'}</span>
-              <span className="text-sm font-medium text-slate-400">({baseCurrency?.symbol || '₲'})</span>
+              <span className="text-2xl font-black text-primary leading-none font-mono uppercase">{baseCurrency?.currency_code || 'PYG'}</span>
+              <span className="text-sm font-bold text-slate-400">({baseCurrency?.symbol || '₲'})</span>
             </div>
           </div>
-          <Button variant="outline" size="sm" className="h-9 px-4 border-slate-200 dark:border-slate-700 text-primary font-semibold uppercase text-[10px] tracking-widest hover:bg-primary/5 rounded-md shadow-sm">{t('currencies.widget.change')}</Button>
+          <Button variant="outline" size="sm" className="h-9 px-4 border-border-subtle text-primary font-black uppercase text-[10px] tracking-widest hover:bg-primary/5 rounded shadow-sm">{t('currencies.widget.change')}</Button>
         </div>
       </div>
 
@@ -799,10 +805,10 @@ const CurrenciesPage = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold uppercase tracking-widest transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${
               activeTab === tab.id 
-                ? 'bg-white dark:bg-surface-dark text-primary shadow-sm' 
-                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                ? 'bg-white dark:bg-surface-dark text-primary shadow-fluent-2' 
+                : 'text-text-secondary hover:text-text-main'
             }`}
           >
             <span className="material-icons-round text-[18px]">{tab.icon}</span>
@@ -814,21 +820,21 @@ const CurrenciesPage = () => {
       <div className="space-y-6">
         {/* Toolbar (Only for Currencies tab) */}
         {activeTab === 'currencies' && (
-          <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-border-subtle shadow-fluent-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Button onClick={handleOpenCreate} className="bg-primary hover:bg-primary-hover text-white font-semibold uppercase tracking-widest text-[11px] px-6 h-10 rounded-md shadow-sm flex items-center gap-2">
+              <Button onClick={handleOpenCreate} className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] px-6 h-10 rounded shadow-fluent-2 flex items-center gap-2">
                 <span className="material-icons-round text-[18px]">add</span>
                 {t('currencies.action.create')}
               </Button>
-              <div className="w-px h-6 bg-slate-100 dark:bg-slate-800 mx-2"></div>
-              <Button variant="ghost" size="icon" onClick={fetchCurrencies} className="size-10 text-slate-400 hover:text-primary rounded-md"><span className="material-icons-round text-[20px]">refresh</span></Button>
-              <Button variant="ghost" size="icon" onClick={handleExport} className="size-10 text-slate-400 hover:text-primary rounded-md"><span className="material-icons-round text-[20px]">download</span></Button>
+              <div className="w-px h-6 bg-border-subtle mx-2"></div>
+              <Button variant="ghost" size="icon" onClick={fetchCurrencies} className="size-10 text-text-secondary hover:text-primary rounded"><span className="material-icons-round text-[20px]">refresh</span></Button>
+              <Button variant="ghost" size="icon" onClick={handleExport} className="size-10 text-text-secondary hover:text-primary rounded"><span className="material-icons-round text-[20px]">download</span></Button>
             </div>
 
             <div className="relative flex-1 max-w-sm">
               <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
               <Input
-                className="pl-10 h-10 border-slate-200 dark:border-slate-700 rounded-md bg-slate-50/50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-surface-dark transition-all font-medium text-sm"
+                className="pl-10 h-10 border-border-subtle rounded-full bg-slate-50 focus:bg-white transition-all font-bold text-xs uppercase tracking-wider"
                 placeholder={t('currencies.search.placeholder')}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
@@ -839,48 +845,48 @@ const CurrenciesPage = () => {
 
         {/* Content Area */}
         {activeTab === 'currencies' && (
-          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-surface-dark shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-border-subtle bg-white dark:bg-surface-dark shadow-fluent-2">
             <Table>
               <TableHeader className="bg-slate-50/80 dark:bg-slate-800/50">
                 <TableRow>
                   <TableHead className="w-12 px-4"><input type="checkbox" className="rounded border-slate-300 text-primary" /></TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.table.code')}</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.table.name')}</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3 text-center">{t('currencies.table.symbol')}</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3 text-right">{t('currencies.table.exchange_rate')}</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3">{t('currencies.table.status')}</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 py-2 px-3 text-right">{t('currencies.table.actions')}</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">{t('currencies.table.code')}</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">{t('currencies.table.name')}</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3 text-center">{t('currencies.table.symbol')}</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3 text-right">{t('currencies.table.exchange_rate')}</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">{t('currencies.table.status')}</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3 text-right">{t('currencies.table.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {currenciesLoading ? (
-                  <TableRow><TableCell colSpan={7} className="py-20 text-center text-slate-400 font-semibold uppercase tracking-[0.2em] text-xs">Cargando Monedas...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="py-20 text-center text-slate-400 font-black uppercase tracking-[0.3em] text-xs">Cargando Monedas...</TableCell></TableRow>
                 ) : (
                   filteredCurrencies.map(currency => {
                     const flagUrl = getFlagUrl(currency.currency_code);
                     return (
-                      <TableRow key={currency.id} className={`hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group ${currency.is_base_currency ? 'bg-primary/5' : ''} border-b border-slate-100 dark:border-slate-800`}>
+                      <TableRow key={currency.id} className={`hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group ${currency.is_base_currency ? 'bg-primary/5' : ''} border-b border-border-subtle`}>
                         <TableCell className="px-4"><input type="checkbox" className="rounded border-slate-300 text-primary" /></TableCell>
-                        <TableCell className="py-2 px-3">
+                        <TableCell className="py-4 px-3">
                           <div className="flex items-center gap-3">
-                            <div className="size-8 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden">
+                            <div className="size-8 rounded-full bg-white dark:bg-slate-800 shadow-fluent-2 border border-border-subtle flex items-center justify-center overflow-hidden">
                               {flagUrl ? <img src={flagUrl} className="w-full h-full object-cover" /> : <span className="text-sm">{currency.flag_emoji || '🏳️'}</span>}
                             </div>
-                            <span className="font-semibold text-primary uppercase font-mono">{currency.currency_code}</span>
-                            {currency.is_base_currency && <span className="text-[9px] font-semibold bg-primary text-white px-1.5 py-0.5 rounded-sm uppercase leading-none ml-1">BASE</span>}
+                            <span className="font-black text-primary uppercase font-mono">{currency.currency_code}</span>
+                            {currency.is_base_currency && <span className="text-[9px] font-black bg-primary text-white px-1.5 py-0.5 rounded-sm uppercase leading-none ml-1">BASE</span>}
                           </div>
                         </TableCell>
-                        <TableCell className="py-2 px-3 font-semibold text-text-main text-sm">{currency.currency_name || currency.name}</TableCell>
-                        <TableCell className="py-2 px-3 text-center font-mono font-semibold text-slate-500 tabular-nums">{currency.symbol}</TableCell>
-                        <TableCell className="py-2 px-3 text-right font-mono font-semibold text-text-main tabular-nums">{currency.is_base_currency ? '-' : formatCurrencyValue(currency.exchange_rate, currency)}</TableCell>
-                        <TableCell className="py-2 px-3">
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-widest border ${currency.is_enabled !== false ? 'bg-green-50 border-green-200 text-green-700' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
-                            <span className={`size-1.5 rounded-full ${currency.is_enabled !== false ? 'bg-green-600' : 'bg-slate-400'}`}></span>
+                        <TableCell className="py-4 px-3 font-bold text-text-main text-sm">{currency.currency_name || currency.name}</TableCell>
+                        <TableCell className="py-4 px-3 text-center font-mono font-black text-text-secondary tabular-nums">{currency.symbol}</TableCell>
+                        <TableCell className="py-4 px-3 text-right font-mono font-black text-text-main tabular-nums">{currency.is_base_currency ? '-' : formatCurrencyValue(currency.exchange_rate, currency)}</TableCell>
+                        <TableCell className="py-4 px-3">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${currency.is_enabled !== false ? 'bg-green-50 border-green-200 text-success' : 'bg-slate-100 border-slate-200 text-text-secondary'}`}>
+                            <span className={`size-1.5 rounded-full ${currency.is_enabled !== false ? 'bg-success' : 'bg-slate-400'}`}></span>
                             {currency.is_enabled !== false ? t('currencies.status.active') : t('currencies.status.inactive')}
                           </span>
                         </TableCell>
-                        <TableCell className="py-2 px-3 text-right">
-                          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-all text-slate-400 hover:text-primary rounded-md size-8" onClick={() => handleOpenEdit(currency)}><span className="material-icons-round text-[18px]">edit</span></Button>
+                        <TableCell className="py-4 px-3 text-right">
+                          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-all text-text-secondary hover:text-primary rounded size-8" onClick={() => handleOpenEdit(currency)}><span className="material-icons-round text-[18px]">edit</span></Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -888,11 +894,11 @@ const CurrenciesPage = () => {
                 )}
               </TableBody>
             </Table>
-            <div className="p-3 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{t('currencies.results', { count: filteredCurrencies.length, total: filteredCurrencies.length })}</p>
+            <div className="p-4 bg-slate-50/50 dark:bg-slate-900/30 border-t border-border-subtle flex items-center justify-between">
+              <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest">{t('currencies.results', { count: filteredCurrencies.length, total: filteredCurrencies.length })}</p>
               <div className="flex items-center gap-1">
-                <Button variant="outline" size="icon" className="size-7 rounded-md border-slate-200 dark:border-slate-700" disabled><span className="material-icons-round text-[16px]">chevron_left</span></Button>
-                <Button variant="outline" size="icon" className="size-7 rounded-md border-slate-200 dark:border-slate-700" disabled><span className="material-icons-round text-[16px]">chevron_right</span></Button>
+                <Button variant="outline" size="icon" className="size-8 rounded border-border-subtle" disabled><span className="material-icons-round text-[16px]">chevron_left</span></Button>
+                <Button variant="outline" size="icon" className="size-8 rounded border-border-subtle" disabled><span className="material-icons-round text-[16px]">chevron_right</span></Button>
               </div>
             </div>
           </div>

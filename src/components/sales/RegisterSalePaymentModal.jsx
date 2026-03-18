@@ -270,58 +270,58 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
           {/* PANEL IZQUIERDO: RESUMEN */}
           <div className='w-full md:w-[35%] bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 text-white p-6 md:p-10 flex flex-col relative overflow-hidden'>
             <div className='relative z-10 flex flex-col h-full'>
-              <header className='mb-6'>
-                <div className='size-10 bg-primary/20 rounded-lg flex items-center justify-center text-primary mb-4 ring-1 ring-primary/40'>
-                  <Building size={20} />
+              <header className='mb-10'>
+                <div className='size-12 bg-primary/20 rounded-xl flex items-center justify-center text-primary mb-6 ring-1 ring-primary/40 shadow-fluent-8'>
+                  <Building size={24} />
                 </div>
-                <h2 className='text-xl md:text-2xl font-bold tracking-tight leading-tight mb-1.5'>
+                <h2 className='text-2xl font-black tracking-tighter uppercase leading-none mb-2'>
                   Registrar Cobro <br />
-                  <span className='text-primary'>de Venta</span>
+                  <span className='text-primary font-black'>de Venta</span>
                 </h2>
-                <div className='flex items-center gap-2 text-white/70 font-medium text-xs'>
+                <div className='flex items-center gap-2 text-white/50 font-black text-[10px] uppercase tracking-widest'>
                   <Receipt size={14} className='text-primary' /> Venta #{sale?.id || sale?.sale_id || '---'}
                 </div>
               </header>
 
-              <div className='space-y-4 md:space-y-6 flex-1'>
-                <div className='bg-white/5 backdrop-blur-md rounded-lg p-4 md:p-5 border border-white/10'>
-                  <div className='flex items-center gap-3 md:gap-4 mb-1'>
-                    <div className='size-9 md:size-10 bg-white/10 rounded-md flex items-center justify-center text-white/60 ring-1 ring-white/10'>
+              <div className='space-y-6 flex-1'>
+                <div className='bg-white/5 backdrop-blur-md rounded-xl p-5 border border-white/10'>
+                  <div className='flex items-center gap-4 mb-1'>
+                    <div className='size-10 bg-white/10 rounded-lg flex items-center justify-center text-white/60 ring-1 ring-white/10 shadow-fluent-2'>
                       <User size={18} />
                     </div>
                     <div>
-                      <p className='text-xs font-medium text-white/70 mb-0.5'>Cliente</p>
-                      <p className='text-sm font-semibold text-white truncate max-w-[180px]'>{sale?.client_name || 'Consumidor Final'}</p>
+                      <p className='text-[9px] font-black uppercase tracking-widest text-white/50 mb-1'>Cliente</p>
+                      <p className='text-sm font-bold text-white truncate max-w-[180px]'>{sale?.client_name || 'Consumidor Final'}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className='space-y-4 md:space-y-5'>
+                <div className='space-y-6'>
                   <div>
-                    <div className='flex justify-between items-end mb-1'>
-                      <p className='text-xs font-medium text-white/70'>Saldo Pendiente</p>
-                      <p className='text-xl md:text-2xl font-bold text-white tabular-nums'>{balanceDueLabel || formatLocalizedCurrency(0)}</p>
+                    <div className='flex justify-between items-end mb-2'>
+                      <p className='text-[9px] font-black uppercase tracking-widest text-white/50'>Saldo Pendiente</p>
+                      <p className='text-2xl font-black text-white tabular-nums font-mono'>{balanceDueLabel || formatLocalizedCurrency(0)}</p>
                     </div>
-                    <div className='h-1.5 bg-slate-800 rounded-full overflow-hidden'>
+                    <div className='h-2 bg-slate-800 rounded-full overflow-hidden shadow-inner'>
                       <div 
-                        className='h-full bg-primary transition-all duration-700' 
+                        className='h-full bg-primary transition-all duration-1000' 
                         style={{ width: `${Math.round((Number.parseFloat(parseNumberWithDots(amountToApply)) || 0) / (getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 1) * 100)}%` }}
                       />
                     </div>
-                    <div className='mt-1.5 text-xs font-medium text-primary text-right'>
+                    <div className='mt-2 text-[9px] font-black uppercase tracking-widest text-primary text-right'>
                       {Math.round((Number.parseFloat(parseNumberWithDots(amountToApply)) || 0) / (getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 1) * 100)}% Aplicado
                     </div>
                   </div>
 
-                  <div className='p-4 md:p-5 bg-primary/5 rounded-lg border border-primary/10 backdrop-blur-sm'>
-                    <div className='flex items-center gap-3 md:gap-4'>
-                      <div className='size-7 md:size-8 bg-primary rounded-md flex items-center justify-center text-white'>
+                  <div className='p-5 bg-primary/10 rounded-xl border border-primary/20 backdrop-blur-sm'>
+                    <div className='flex items-center gap-4'>
+                      <div className='size-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-fluent-2'>
                         <ArrowUpRight size={16} />
                       </div>
                       <div>
-                        <p className='text-xs font-medium text-white/70 leading-none mb-1'>Nuevo Saldo</p>
+                        <p className='text-[9px] font-black uppercase tracking-widest text-white/50 mb-1'>Nuevo Saldo</p>
                         <p className={cn(
-                          "text-base md:text-lg font-bold tabular-nums transition-colors leading-none",
+                          "text-xl font-black tabular-nums transition-colors font-mono",
                           projectedBalance === 0 ? "text-green-400" : "text-white"
                         )}>
                           {formatLocalizedCurrency(projectedBalance)}
@@ -332,8 +332,8 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                 </div>
               </div>
 
-              <footer className='mt-6 pt-4 border-t border-white/5 hidden md:block'>
-                <p className='text-xs text-white/50 italic'>
+              <footer className='mt-10 pt-6 border-t border-white/5 hidden md:block'>
+                <p className='text-[9px] text-white/30 uppercase font-black tracking-widest leading-relaxed'>
                   * Verifique los datos del cobro antes de confirmar la transacción.
                 </p>
               </footer>
@@ -342,19 +342,19 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
 
           {/* PANEL DERECHO: FORMULARIO */}
           <div className='w-full md:w-[65%] bg-white dark:bg-slate-900 p-6 md:p-12 flex flex-col'>
-            <div className='flex-1 space-y-6 md:space-y-10 overflow-y-auto pr-1 md:pr-2 scrollbar-thin'>
-              <section className='space-y-6 md:space-y-8'>
+            <div className='flex-1 space-y-8 md:space-y-12 overflow-y-auto pr-1 md:pr-2 scrollbar-thin'>
+              <section className='space-y-8'>
                 <div className='flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4'>
                   <div className='size-8 bg-slate-50 dark:bg-slate-800 rounded-md flex items-center justify-center text-slate-500'>
                     <Coins size={18} />
                   </div>
-                  <h3 className='text-sm font-semibold text-slate-700'>Información del Cobro</h3>
+                  <h3 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]'>Información del Cobro</h3>
                 </div>
 
                 {/* Monto Recibido con botón al lado */}
                 <div className='space-y-3'>
-                  <div className='flex flex-wrap items-center gap-3 md:gap-6 px-1'>
-                    <label className='text-sm font-medium text-slate-700'>Monto Recibido</label>
+                  <div className='flex flex-wrap items-center justify-between gap-3 px-1'>
+                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]'>Monto Recibido</label>
                     <button 
                       type='button' 
                       onClick={() => {
@@ -365,13 +365,13 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                           userEditedAmountToApply.current = false
                         }
                       }}
-                      className='text-xs font-medium text-primary hover:text-primary-hover hover:bg-primary/10 px-2 md:px-3 py-1 bg-primary/5 rounded-md transition-all'
+                      className='text-[9px] font-black uppercase tracking-widest text-primary hover:text-primary-hover hover:bg-primary/10 px-3 py-1.5 bg-primary/5 rounded-md transition-all'
                     >
                       Cobrar todo el saldo
                     </button>
                   </div>
                   <div className='relative group'>
-                    <div className='absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg'>₲</div>
+                    <div className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xl font-mono uppercase'>₲</div>
                     <Input
                       type='text'
                       inputMode='numeric'
@@ -385,22 +385,22 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                           setAmountToApply(formatNumberWithDots(String(Math.round(Math.min(numeric, balanceDue)))))
                         }
                       }}
-                      className='h-10 md:h-11 pl-9 rounded-md bg-white border-slate-400 font-medium text-base focus:ring-2 focus:ring-primary/20'
+                      className='h-12 pl-12 rounded-xl bg-white border-border-subtle font-black font-mono text-xl focus:ring-4 focus:ring-primary/10 transition-all'
                     />
                   </div>
-                  {amountReceivedError && <p className='text-xs font-medium text-rose-500 ml-1'>{amountReceivedError}</p>}
+                  {amountReceivedError && <p className='text-[10px] font-black uppercase tracking-widest text-error ml-1'>{amountReceivedError}</p>}
                 </div>
 
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium text-slate-700 px-1'>Divisa de la Operación</label>
+                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Divisa de la Operación</label>
                     <Select value={currencyCode} onValueChange={setCurrencyCode}>
-                      <SelectTrigger className='h-10 rounded-md bg-white dark:bg-slate-800 border-slate-400 dark:border-slate-700 text-sm font-medium w-full'>
+                      <SelectTrigger className='h-11 rounded-xl bg-white dark:bg-slate-800 border-border-subtle font-bold text-sm'>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className='!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-[9999] rounded-md'>
+                      <SelectContent className='rounded-xl border-border-subtle shadow-fluent-16'>
                         {currencySelectorData.map(c => (
-                          <SelectItem key={c.id} value={c.code} className='text-sm font-medium py-2 hover:!bg-slate-50 dark:hover:!bg-slate-800'>
+                          <SelectItem key={c.id} value={c.code} className='font-bold text-xs uppercase tracking-wider'>
                             {c.code} - {c.name}
                           </SelectItem>
                         ))}
@@ -409,14 +409,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                   </div>
 
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium text-slate-700 px-1'>Método de Pago</label>
+                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Método de Pago</label>
                     <Select value={paymentMethodId} onValueChange={setPaymentMethodId}>
-                      <SelectTrigger className='h-10 rounded-md bg-white dark:bg-slate-800 border-slate-400 dark:border-slate-700 text-sm font-medium w-full'>
+                      <SelectTrigger className='h-11 rounded-xl bg-white dark:bg-slate-800 border-border-subtle font-bold text-sm'>
                         <SelectValue placeholder='Seleccionar...' />
                       </SelectTrigger>
-                      <SelectContent className='!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-[9999] rounded-md'>
+                      <SelectContent className='rounded-xl border-border-subtle shadow-fluent-16'>
                         {paymentMethodOptions.map(m => (
-                          <SelectItem key={m.id} value={m.id} className='text-sm font-medium py-2 hover:!bg-slate-50 dark:hover:!bg-slate-800'>
+                          <SelectItem key={m.id} value={m.id} className='font-bold text-xs uppercase tracking-wider'>
                             {m.label}
                           </SelectItem>
                         ))}
@@ -426,9 +426,9 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                 </div>
 
                 {currencyCode !== (sale?.currency || DEFAULT_CURRENCY_CODE).toUpperCase() && (
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 p-4 bg-slate-50 rounded-md border border-slate-200'>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-xl border border-border-subtle shadow-inner'>
                     <div className='space-y-2'>
-                      <label className='text-sm font-medium text-slate-700 px-1'>Tipo de Cambio</label>
+                      <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Tipo de Cambio</label>
                       <Input 
                         type='number' 
                         step='any' 
@@ -436,12 +436,12 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                         value={exchangeRate} 
                         onChange={e => setExchangeRate(e.target.value)} 
                         placeholder='Ej: 7350' 
-                        className='h-10 rounded-md bg-white border-slate-400 text-sm' 
+                        className='h-11 rounded-xl bg-white border-border-subtle font-mono font-black' 
                         required 
                       />
                     </div>
                     <div className='space-y-2'>
-                      <label className='text-sm font-medium text-slate-700 px-1'>Monto Original ({currencyCode})</label>
+                      <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Monto Original ({currencyCode})</label>
                       <Input 
                         type='number' 
                         step='any' 
@@ -449,16 +449,16 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                         value={originalAmount} 
                         onChange={e => setOriginalAmount(e.target.value)} 
                         placeholder='Monto en moneda extranjera' 
-                        className='h-10 rounded-md bg-white border-slate-400 text-sm' 
+                        className='h-11 rounded-xl bg-white border-border-subtle font-mono font-black' 
                         required 
                       />
                     </div>
                   </div>
                 )}
 
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 pt-2'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6 pt-4'>
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium text-slate-700 px-1'>Monto a Aplicar</label>
+                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Monto a Aplicar</label>
                     <Input
                       type='text'
                       inputMode='numeric'
@@ -467,14 +467,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                         setAmountToApply(formatNumberWithDots(parseNumberWithDots(e.target.value)))
                         userEditedAmountToApply.current = true
                       }}
-                      className='h-10 md:h-11 rounded-md bg-white border-slate-400 font-medium text-base'
+                      className='h-11 rounded-xl bg-white border-border-subtle font-black font-mono text-lg'
                     />
-                    {amountToApplyError && <p className='text-xs font-medium text-rose-500 ml-1'>{amountToApplyError}</p>}
+                    {amountToApplyError && <p className='text-[10px] font-black uppercase tracking-widest text-error ml-1'>{amountToApplyError}</p>}
                   </div>
 
                   <div className='space-y-2'>
-                    <label className='text-sm font-medium text-slate-700 px-1'>Vuelto / Saldo a favor</label>
-                    <div className='h-10 md:h-11 flex items-center px-4 bg-primary/5 text-primary font-bold rounded-md border border-primary/10 text-sm md:text-base tabular-nums'>
+                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Vuelto / Saldo a favor</label>
+                    <div className='h-11 flex items-center px-5 bg-primary/5 text-primary font-black rounded-xl border border-primary/10 text-lg tabular-nums font-mono'>
                       {formatLocalizedCurrency(change, sale?.currency)}
                     </div>
                   </div>
@@ -482,18 +482,18 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
 
                 {/* Caja Registradora */}
                 <div className='space-y-2'>
-                  <label className='text-sm font-medium text-slate-700 px-1'>Caja de Cobro</label>
+                  <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Caja de Cobro</label>
                   <Select value={cashRegisterId || CASH_REGISTER_NONE_VALUE} onValueChange={v => setCashRegisterId(v === CASH_REGISTER_NONE_VALUE ? '' : v)}>
-                    <SelectTrigger className='h-10 rounded-md bg-white dark:bg-slate-800 border-slate-400 dark:border-slate-700 text-sm font-medium w-full'>
+                    <SelectTrigger className='h-11 rounded-xl bg-white dark:bg-slate-800 border-border-subtle font-bold text-sm'>
                       <SelectValue placeholder='Seleccionar caja...' />
                     </SelectTrigger>
-                    <SelectContent className='!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-[9999] min-w-[280px] max-w-[90vw] rounded-md'>
-                      <SelectItem value={CASH_REGISTER_NONE_VALUE} className='font-medium text-sm py-2 hover:!bg-slate-50 dark:hover:!bg-slate-800'>Sin Caja Asignada</SelectItem>
+                    <SelectContent className='rounded-xl border-border-subtle shadow-fluent-16 min-w-[300px]'>
+                      <SelectItem value={CASH_REGISTER_NONE_VALUE} className='font-black text-[10px] uppercase tracking-widest text-slate-400 py-3'>Sin Caja Asignada</SelectItem>
                       {cashRegisterOptions.map(opt => (
-                        <SelectItem key={opt.value} value={opt.value} className='py-3 border-b border-slate-50 dark:border-slate-800 last:border-none hover:!bg-slate-50 dark:hover:!bg-slate-800 cursor-pointer'>
-                          <div className='flex flex-col gap-0.5'>
-                            <span className='font-medium text-sm'>{opt.label}</span>
-                            <div className='flex items-center gap-2 text-xs font-medium text-slate-500'>{opt.balanceLabel}</div>
+                        <SelectItem key={opt.value} value={opt.value} className='py-4 border-b border-slate-50 last:border-none'>
+                          <div className='flex flex-col gap-1'>
+                            <span className='font-black text-[11px] uppercase tracking-tight'>{opt.label}</span>
+                            <div className='flex items-center gap-2 text-[10px] font-bold text-text-secondary font-mono'>{opt.balanceLabel}</div>
                           </div>
                         </SelectItem>
                       ))}
@@ -501,39 +501,39 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                   </Select>
                 </div>
 
-                <div className='space-y-2 pt-2'>
-                  <label className='text-sm font-medium text-slate-700 px-1'>Observaciones Internas</label>
+                <div className='space-y-2 pt-4'>
+                  <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Observaciones Internas</label>
                   <Textarea
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
-                    placeholder='Detalles...'
+                    placeholder='Detalles operativos...'
                     rows={2}
-                    className='rounded-md bg-white border-slate-400 text-sm p-3 md:p-4 resize-none'
+                    className='rounded-xl bg-white border-border-subtle text-sm p-4 resize-none font-medium'
                   />
                 </div>
               </section>
 
               {formError && (
-                <div className='p-4 bg-rose-50 border border-rose-100 rounded-md text-rose-600 text-sm font-medium flex items-center gap-3'>
-                  <AlertCircle size={16} />
-                  <span>{formError}</span>
+                <div className='p-5 bg-error/5 border border-error/20 rounded-xl flex items-center gap-4'>
+                  <AlertCircle className="text-error" size={20} />
+                  <span className='text-[10px] font-black uppercase tracking-widest text-error leading-relaxed'>{formError}</span>
                 </div>
               )}
             </div>
 
-            <footer className='mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4 pt-6 md:pt-8 border-t border-slate-200 dark:border-slate-800'>
+            <footer className='mt-10 flex flex-col sm:flex-row gap-4 pt-10 border-t border-border-subtle'>
               <Button
                 type='button'
                 variant='outline'
                 onClick={() => handleDialogChange(false)}
-                className='w-full sm:flex-1 h-10 rounded-md font-medium text-sm border-slate-400 hover:bg-slate-50 transition-all'
+                className='w-full sm:flex-1 h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-border-subtle hover:bg-slate-50 transition-all'
               >
                 Cancelar
               </Button>
               <Button
                 type='submit'
                 disabled={isSubmitDisabled}
-                className='w-full sm:flex-[2] h-10 rounded-md bg-primary hover:bg-primary-hover text-white font-medium text-sm transition-all active:scale-[0.98]'
+                className='w-full sm:flex-[2] h-12 rounded-xl bg-primary hover:bg-primary-hover text-white font-black uppercase text-[10px] tracking-widest shadow-fluent-8 transition-all active:scale-[0.98]'
               >
                 {isSubmitting ? (
                   <div className='flex items-center gap-2'><Loader2 size={16} className='animate-spin' /> Procesando...</div>

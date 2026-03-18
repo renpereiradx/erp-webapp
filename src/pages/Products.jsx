@@ -44,9 +44,10 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
-import { Card } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import ProductFormModal from '@/components/ProductFormModal'
 import ProductDetailsModal from '@/components/ProductDetailsModal'
+import { cn } from '@/lib/utils'
 
 /**
  * Custom hook para debounce
@@ -285,20 +286,20 @@ const Products = () => {
     if (product.financial_health) {
       const { has_prices, has_costs, has_stock } = product.financial_health
       if (!has_prices || !has_costs || !has_stock) {
-        return { level: 'poor', text: t('products.health.poor'), color: 'bg-red-500' }
+        return { level: 'poor', text: t('products.health.poor'), color: 'bg-error' }
       } else if (stock < 10) {
-        return { level: 'at-risk', text: t('products.health.at_risk'), color: 'bg-yellow-500' }
+        return { level: 'at-risk', text: t('products.health.at_risk'), color: 'bg-warning' }
       } else {
-        return { level: 'healthy', text: t('products.health.healthy'), color: 'bg-green-500' }
+        return { level: 'healthy', text: t('products.health.healthy'), color: 'bg-success' }
       }
     }
 
     if (!isActive || stock === 0) {
-      return { level: 'poor', text: t('products.health.poor'), color: 'bg-red-500' }
+      return { level: 'poor', text: t('products.health.poor'), color: 'bg-error' }
     } else if (stock < 10) {
-      return { level: 'at-risk', text: t('products.health.at_risk'), color: 'bg-yellow-500' }
+      return { level: 'at-risk', text: t('products.health.at_risk'), color: 'bg-warning' }
     } else {
-      return { level: 'healthy', text: t('products.health.healthy'), color: 'bg-green-500' }
+      return { level: 'healthy', text: t('products.health.healthy'), color: 'bg-success' }
     }
   }
 
@@ -306,348 +307,351 @@ const Products = () => {
   const endIndex = Math.min(currentPage * 10, totalProducts)
 
   return (
-    <div className='min-h-screen bg-[#f3f4f6] text-[#323130] p-8 overflow-y-auto'>
-      <div className='max-w-[1600px] mx-auto'>
-        
-        {/* Breadcrumbs */}
-        <nav className="flex text-sm text-gray-500 mb-6">
-          <span onClick={() => navigate('/dashboard')} className="hover:text-[#106ebe] cursor-pointer transition-colors">
-            {t('products.breadcrumb.home', 'Inicio')}
-          </span>
-          <span className="mx-2">/</span>
-          <span className="text-gray-400">
-            {t('products.breadcrumb.inventory', 'Inventario')}
-          </span>
-          <span className="mx-2">/</span>
-          <span className="font-semibold text-gray-800">{t('products.page.title')}</span>
-        </nav>
+    <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-display'>
+      
+      {/* Breadcrumbs */}
+      <nav className='flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400'>
+        <span onClick={() => navigate('/dashboard')} className='flex items-center gap-1 hover:text-primary cursor-pointer transition-colors'>
+          <span className="material-icons-round text-xs">home</span> {t('products.breadcrumb.home', 'Inicio')}
+        </span>
+        <span className='material-icons-round text-[10px]'>chevron_right</span>
+        <span className='hover:text-primary cursor-pointer transition-colors'>
+          {t('products.breadcrumb.inventory', 'Inventario')}
+        </span>
+        <span className='material-icons-round text-[10px]'>chevron_right</span>
+        <span className='text-text-main'>{t('products.page.title')}</span>
+      </nav>
 
-        {/* Page Header */}
-        <div className='flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4'>
-          <div>
-            <h1 className='text-3xl font-bold tracking-tight text-[#242424]'>{t('products.page.title')}</h1>
-            <p className='text-[#616161] mt-1'>{t('products.page.subtitle')}</p>
+      {/* Page Header */}
+      <div className='flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2'>
+        <div>
+          <h1 className='text-3xl font-black text-text-main tracking-tighter uppercase leading-none'>{t('products.page.title')}</h1>
+          <p className='text-text-secondary text-sm font-medium mt-1'>{t('products.page.subtitle')}</p>
+        </div>
+        <div className='flex items-center gap-2'>
+          <Button
+            variant='outline'
+            onClick={handleRefresh}
+            disabled={loading}
+            className="h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest hover:bg-slate-50"
+          >
+            <RefreshCw className={`size-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <span className='hidden sm:inline'>{t('products.action.refresh', 'Refrescar')}</span>
+          </Button>
+          <Button variant='outline' className="h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest hover:bg-slate-50">
+            <Share className='size-4 mr-2' />
+            <span className='hidden sm:inline'>{t('products.action.export')}</span>
+          </Button>
+          <Button 
+            className='bg-primary hover:bg-primary-hover text-white font-black uppercase text-[10px] tracking-widest px-6 h-10 rounded shadow-fluent-2'
+            onClick={handleOpenCreateModal}
+          >
+            <Plus className='size-4 mr-2' />
+            <span>{t('products.action.new_product')}</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Toolbar Card */}
+      <Card className='bg-white dark:bg-surface-dark border-border-subtle rounded-xl shadow-fluent-2 p-6'>
+        <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4'>
+          {/* Search */}
+          <div className='relative flex-1 max-w-xl'>
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+              {isSearching ? (
+                <RefreshCw className="size-5 animate-spin" />
+              ) : (
+                <Search className="size-5" />
+              )}
+            </span>
+            <Input
+              type='search'
+              className='block w-full pl-10 pr-3 py-2.5 border-border-subtle rounded-full bg-slate-50 focus:bg-white transition-all h-11 font-bold text-xs uppercase tracking-wider'
+              placeholder={t('products.search.by_name_sku')}
+              value={searchTerm}
+              onChange={handleSearch}
+              onKeyDown={handleSearchKeyDown}
+            />
+            {searchTerm && searchTerm.trim().length > 0 && searchTerm.trim().length < 3 && (
+              <p className='absolute -bottom-6 left-0 text-[10px] font-black uppercase tracking-widest text-warning'>
+                {t('products.search.min_chars', 'Escribe al menos 3 caracteres')} ({searchTerm.trim().length}/3)
+              </p>
+            )}
           </div>
+
+          {/* Filters Toggle */}
           <div className='flex items-center gap-2'>
             <Button
-              variant='outline'
-              onClick={handleRefresh}
-              disabled={loading}
-              className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
+              variant={showFilters ? 'default' : 'outline'}
+              size='sm'
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn(
+                "h-11 px-6 font-black uppercase text-[10px] tracking-widest transition-all",
+                showFilters ? "bg-primary text-white" : "bg-white border-border-subtle text-text-secondary hover:bg-slate-50"
+              )}
             >
-              <RefreshCw className={`size-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              <span className='hidden sm:inline'>{t('products.action.refresh', 'Refrescar')}</span>
-            </Button>
-            <Button variant='outline' className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700">
-              <Share className='size-4 mr-2' />
-              <span className='hidden sm:inline'>{t('products.action.export')}</span>
-            </Button>
-            <Button 
-              className='bg-[#106ebe] hover:bg-[#005a9e] text-white px-5 shadow-sm border-none'
-              onClick={handleOpenCreateModal}
-            >
-              <Plus className='size-4 mr-2' />
-              <span>{t('products.action.new_product')}</span>
+              <Filter className='size-4 mr-2' />
+              {t('products.action.filter')}
             </Button>
           </div>
         </div>
 
-        {/* Toolbar Card */}
-        <Card className='bg-white border-gray-200 rounded-xl shadow-sm p-6 mb-6'>
-          <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4'>
-            {/* Search */}
-            <div className='relative flex-1 max-w-xl'>
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                {isSearching ? (
-                  <RefreshCw className="size-5 animate-spin" />
-                ) : (
-                  <Search className="size-5" />
-                )}
-              </span>
-              <Input
-                type='search'
-                className='block w-full pl-10 pr-3 py-2.5 border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-[#106ebe] focus:border-transparent outline-none transition-all h-11'
-                placeholder={t('products.search.by_name_sku')}
-                value={searchTerm}
-                onChange={handleSearch}
-                onKeyDown={handleSearchKeyDown}
-              />
-              {searchTerm && searchTerm.trim().length > 0 && searchTerm.trim().length < 3 && (
-                <p className='absolute -bottom-6 left-0 text-xs text-orange-600'>
-                  {t('products.search.min_chars', 'Escribe al menos 3 caracteres')} ({searchTerm.trim().length}/3)
-                </p>
-              )}
+        {/* Advanced Filters Panel */}
+        {showFilters && (
+          <div className='mt-6 pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-2'>
+            {/* Category Filter */}
+            <div className='space-y-2'>
+              <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1'>
+                {t('products.filter.category', 'Categoría')}
+              </label>
+              <Select
+                value={localFilters.category}
+                onValueChange={value =>
+                  setLocalFilters(prev => ({ ...prev, category: value }))
+                }
+              >
+                <SelectTrigger className='w-full border-border-subtle bg-white h-11 font-bold text-sm rounded-xl shadow-sm'>
+                  <SelectValue placeholder={t('products.filter.all_categories')} />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border-subtle shadow-fluent-16">
+                  <SelectItem value='all' className="font-bold text-xs uppercase">{t('products.filter.all_categories')}</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id.toString()} className="font-bold text-xs uppercase">{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Filters Toggle */}
-            <div className='flex items-center gap-2'>
-              <Button
-                variant={showFilters ? 'default' : 'outline'}
-                size='sm'
-                onClick={() => setShowFilters(!showFilters)}
-                className={`h-11 px-4 ${showFilters ? 'bg-[#106ebe] text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+            {/* Status Filter */}
+            <div className='space-y-2'>
+              <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1'>
+                {t('products.filter.status', 'Estado')}
+              </label>
+              <Select
+                value={localFilters.status}
+                onValueChange={value =>
+                  setLocalFilters(prev => ({ ...prev, status: value }))
+                }
               >
-                <Filter className='size-4 mr-2' />
-                {t('products.action.filter')}
+                <SelectTrigger className='w-full border-border-subtle bg-white h-11 font-bold text-sm rounded-xl shadow-sm'>
+                  <SelectValue placeholder={t('products.filter.all_statuses')} />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border-subtle shadow-fluent-16">
+                  <SelectItem value='all' className="font-bold text-xs uppercase">{t('products.filter.all_statuses')}</SelectItem>
+                  <SelectItem value='active' className="font-bold text-xs uppercase">{t('products.state.active')}</SelectItem>
+                  <SelectItem value='inactive' className="font-bold text-xs uppercase">{t('products.state.inactive')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Action Buttons */}
+            <div className='flex items-end gap-3'>
+              <Button
+                className='flex-1 bg-primary hover:bg-primary-hover text-white h-11 font-black uppercase text-[10px] tracking-widest rounded-xl shadow-fluent-2'
+                onClick={handleApplyFilters}
+              >
+                {t('products.filter.apply', 'Aplicar')}
+              </Button>
+              <Button
+                variant='outline'
+                className='flex-1 border-border-subtle text-text-secondary h-11 hover:bg-slate-50 font-black uppercase text-[10px] tracking-widest rounded-xl'
+                onClick={handleClearFilters}
+              >
+                {t('products.filter.clear', 'Limpiar')}
               </Button>
             </div>
           </div>
+        )}
+      </Card>
 
-          {/* Advanced Filters Panel */}
-          {showFilters && (
-            <div className='mt-6 pt-6 border-t border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-2'>
-              {/* Category Filter */}
-              <div className='space-y-2'>
-                <label className='text-xs font-semibold text-gray-500 uppercase tracking-wider'>
-                  {t('products.filter.category', 'Categoría')}
-                </label>
-                <Select
-                  value={localFilters.category}
-                  onValueChange={value =>
-                    setLocalFilters(prev => ({ ...prev, category: value }))
-                  }
-                >
-                  <SelectTrigger className='w-full border-gray-200 bg-white h-10'>
-                    <SelectValue placeholder={t('products.filter.all_categories')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='all'>{t('products.filter.all_categories')}</SelectItem>
-                    {categories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Status Filter */}
-              <div className='space-y-2'>
-                <label className='text-xs font-semibold text-gray-500 uppercase tracking-wider'>
-                  {t('products.filter.status', 'Estado')}
-                </label>
-                <Select
-                  value={localFilters.status}
-                  onValueChange={value =>
-                    setLocalFilters(prev => ({ ...prev, status: value }))
-                  }
-                >
-                  <SelectTrigger className='w-full border-gray-200 bg-white h-10'>
-                    <SelectValue placeholder={t('products.filter.all_statuses')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='all'>{t('products.filter.all_statuses')}</SelectItem>
-                    <SelectItem value='active'>{t('products.state.active')}</SelectItem>
-                    <SelectItem value='inactive'>{t('products.state.inactive')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Action Buttons */}
-              <div className='flex items-end gap-2'>
-                <Button
-                  className='flex-1 bg-[#106ebe] hover:bg-[#005a9e] text-white h-10'
-                  onClick={handleApplyFilters}
-                >
-                  {t('products.filter.apply', 'Aplicar')}
-                </Button>
-                <Button
-                  variant='outline'
-                  className='flex-1 border-gray-200 text-gray-700 h-10 hover:bg-gray-50'
-                  onClick={handleClearFilters}
-                >
-                  {t('products.filter.clear', 'Limpiar')}
-                </Button>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Table Container */}
-        <div className='bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden'>
-          <Table>
-            <TableHeader className="bg-gray-50/50 border-b border-gray-100">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className='w-[60px] text-center px-6'>
-                  <Checkbox
-                    checked={selectedIds.length === products.length && products.length > 0}
-                    onCheckedChange={toggleSelectAll}
-                    className="border-gray-300 data-[state=checked]:bg-[#106ebe] data-[state=checked]:border-[#106ebe]"
-                  />
-                </TableHead>
-                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">{t('products.table.product_name')}</TableHead>
-                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">{t('products.table.category')}</TableHead>
-                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">{t('products.table.stock')}</TableHead>
-                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">{t('products.table.state')}</TableHead>
-                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">{t('products.table.financial_health')}</TableHead>
-                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">
-                  {t('products.table.created_at', 'Creado')}
-                </TableHead>
-                <TableHead className='text-right py-4 px-6'></TableHead>
+      {/* Table Container */}
+      <div className='bg-white border border-border-subtle rounded-xl shadow-fluent-2 overflow-hidden'>
+        <Table>
+          <TableHeader className="bg-slate-50/80 border-b border-border-subtle">
+            <TableRow className="hover:bg-transparent border-none">
+              <TableHead className='w-[60px] text-center px-6'>
+                <Checkbox
+                  checked={selectedIds.length === products.length && products.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                  className="border-slate-300"
+                />
+              </TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.product_name')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.category')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.stock')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.state')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.financial_health')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.created_at', 'Creado')}</TableHead>
+              <TableHead className='text-right py-4 px-6'></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading && products.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-32">
+                  <div className='flex flex-col items-center justify-center gap-4'><RefreshCw className='w-12 h-12 animate-spin text-primary opacity-20' /><p className='text-[10px] font-black uppercase tracking-[0.3em] text-slate-400'>Cargando Inventario...</p></div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {/* States: Loading, Error, Empty, Data */}
-              {loading && products.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="py-20">
-                    <DataState variant='loading' skeletonVariant='list' skeletonProps={{ count: 10 }} />
-                  </TableCell>
-                </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="py-20">
-                    <DataState
-                      variant='error'
-                      title={t('products.error.title')}
-                      message={error}
-                      onRetry={() => {
-                        clearError()
-                        handleRefresh()
-                      }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ) : products.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="py-20">
-                    <DataState
-                      variant='empty'
-                      title={viewMode === 'search' ? t('products.empty.no_results') : t('products.empty.title')}
-                      description={viewMode === 'search' ? `No se encontraron productos con "${searchTerm}"` : t('products.empty.description')}
-                      actionLabel={t('products.action.new_product')}
-                      onAction={handleOpenCreateModal}
-                    />
-                  </TableCell>
-                </TableRow>
-              ) : (
-                products.map(product => {
-                  const productId = product.product_id || product.id
-                  const productName = product.product_name || product.name || t('field.no_name')
-                  const categoryName = product.category_name || product.category?.name || '-'
-                  const isSelected = selectedIds.includes(productId)
-                  const stockInfo = getStockDisplay(product)
-                  const healthInfo = getHealthIndicator(product)
-                  const isActive = product.state !== false && product.is_active !== false
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-20">
+                  <DataState
+                    variant='error'
+                    title={t('products.error.title')}
+                    message={error}
+                    onRetry={() => {
+                      clearError()
+                      handleRefresh()
+                    }}
+                  />
+                </TableCell>
+              </TableRow>
+            ) : products.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-20">
+                  <DataState
+                    variant='empty'
+                    title={viewMode === 'search' ? t('products.empty.no_results') : t('products.empty.title')}
+                    description={viewMode === 'search' ? `No se encontraron productos con "${searchTerm}"` : t('products.empty.description')}
+                    actionLabel={t('products.action.new_product')}
+                    onAction={handleOpenCreateModal}
+                  />
+                </TableCell>
+              </TableRow>
+            ) : (
+              products.map(product => {
+                const productId = product.product_id || product.id
+                const productName = product.product_name || product.name || t('field.no_name')
+                const categoryName = product.category_name || product.category?.name || '-'
+                const isSelected = selectedIds.includes(productId)
+                const stockInfo = getStockDisplay(product)
+                const healthInfo = getHealthIndicator(product)
+                const isActive = product.state !== false && product.is_active !== false
 
-                  return (
-                    <TableRow 
-                      key={productId} 
-                      selected={isSelected}
-                      className="border-b border-gray-50 hover:bg-gray-50 transition-colors group"
-                    >
-                      <TableCell className="px-6 text-center">
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleSelectProduct(productId)}
-                          className="border-gray-300 data-[state=checked]:bg-[#106ebe] data-[state=checked]:border-[#106ebe]"
-                        />
-                      </TableCell>
-                      <TableCell className='py-4 px-4'>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200 overflow-hidden text-gray-400">
-                            {product.image_url ? (
-                              <img src={product.image_url} alt={productName} className="w-full h-full object-cover" />
-                            ) : (
-                              <Package size={20} />
-                            )}
-                          </div>
-                          <span 
-                            className='font-medium text-[#242424] cursor-pointer hover:text-[#106ebe] hover:underline'
-                            onClick={() => handleOpenDetailsModal(product)}
-                          >
-                            {productName}
-                          </span>
+                return (
+                  <TableRow 
+                    key={productId} 
+                    selected={isSelected}
+                    className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group"
+                  >
+                    <TableCell className="px-6 text-center">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelectProduct(productId)}
+                        className="border-slate-300"
+                      />
+                    </TableCell>
+                    <TableCell className='py-5 px-4'>
+                      <div className="flex items-center gap-4">
+                        <div className="size-10 bg-slate-100 rounded-lg flex items-center justify-center border border-border-subtle overflow-hidden text-slate-400 shadow-sm shrink-0">
+                          {product.image_url ? (
+                            <img src={product.image_url} alt={productName} className="w-full h-full object-cover" />
+                          ) : (
+                            <Package size={20} />
+                          )}
                         </div>
-                      </TableCell>
-                      <TableCell className="text-gray-600 px-4">{categoryName}</TableCell>
-                      <TableCell className="px-4">
-                        <span className={stockInfo.isLow ? 'text-red-600 font-medium' : 'text-[#242424]'}>
-                          {stockInfo.display}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          isActive 
-                            ? 'bg-[#dff6dd] text-[#107c10]' 
-                            : 'bg-[#fde7e9] text-[#a4262c]'
-                        }`}>
-                          {isActive ? t('products.state.active') : t('products.state.inactive')}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-4">
-                        <div className='flex items-center gap-2'>
-                          <div className={`size-2 rounded-full ${healthInfo.color}`} />
-                          <span className='text-sm text-[#242424]'>{healthInfo.text}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className='text-gray-500 tabular-nums px-4 text-[13px]'>
-                        {product.created_at ? new Date(product.created_at).toLocaleDateString('es-ES') : '-'}
-                      </TableCell>
-                      <TableCell className='text-right px-6'>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
-                          onClick={() => handleOpenEditModal(product)}
+                        <span 
+                          className='font-bold text-text-main cursor-pointer hover:text-primary transition-colors'
+                          onClick={() => handleOpenDetailsModal(product)}
                         >
-                          <MoreVertical className='size-5' />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-              )}
-            </TableBody>
-          </Table>
+                          {productName}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-text-secondary font-medium px-4 text-sm">{categoryName}</TableCell>
+                    <TableCell className="px-4">
+                      <span className={cn(
+                        "font-black font-mono",
+                        stockInfo.isLow ? 'text-error' : 'text-text-main'
+                      )}>
+                        {stockInfo.display}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-4">
+                      <span className={cn(
+                        "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-1.5 w-fit",
+                        isActive ? "bg-green-50 text-success border-green-200" : "bg-red-50 text-error border-red-200"
+                      )}>
+                        <span className={cn("size-1.5 rounded-full", isActive ? "bg-success" : "bg-error")}></span>
+                        {isActive ? t('products.state.active') : t('products.state.inactive')}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-4">
+                      <div className='flex items-center gap-2'>
+                        <div className={cn("size-2 rounded-full", healthInfo.color)} />
+                        <span className='text-[10px] font-black uppercase tracking-widest text-text-secondary'>{healthInfo.text}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className='text-text-secondary tabular-nums px-4 text-xs font-mono'>
+                      {product.created_at ? new Date(product.created_at).toLocaleDateString('es-ES') : '-'}
+                    </TableCell>
+                    <TableCell className='text-right px-6'>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className="text-text-secondary hover:text-primary transition-colors size-8 rounded opacity-0 group-hover:opacity-100"
+                        onClick={() => handleOpenEditModal(product)}
+                      >
+                        <MoreVertical size={18} />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            )}
+          </TableBody>
+        </Table>
 
-          {/* Pagination Footer */}
-          <div className='px-6 py-4 flex items-center justify-between bg-[#fafafa] border-t border-gray-100'>
-            <p className='text-[13px] text-gray-500 font-medium'>
-              {t('products.pagination.showing', {
-                start: startIndex,
-                end: endIndex,
-                total: totalProducts,
-              })}
-            </p>
-            <div className='flex items-center gap-4'>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={handlePreviousPage}
-                disabled={currentPage === 1 || loading}
-                className="p-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30 h-8 w-8"
-              >
-                <ChevronLeft className='size-5' />
-              </Button>
-              <span className='text-sm font-semibold text-gray-700'>
-                {currentPage} / {totalPages || 1}
-              </span>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages || totalPages === 0 || loading}
-                className="p-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30 h-8 w-8"
-              >
-                <ChevronRight className='size-5' />
-              </Button>
+        {/* Pagination Footer */}
+        <div className='px-10 py-6 flex items-center justify-between bg-slate-50/50 border-t border-border-subtle'>
+          <p className='text-[10px] font-black uppercase tracking-widest text-text-secondary'>
+            {t('products.pagination.showing', {
+              start: startIndex,
+              end: endIndex,
+              total: totalProducts,
+            })}
+          </p>
+          <div className='flex items-center gap-6'>
+            <div className='flex items-center gap-1'>
+                <Button
+                    variant='outline'
+                    size='icon'
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1 || loading}
+                    className="size-8 rounded border-border-subtle hover:bg-white disabled:opacity-30"
+                >
+                    <ChevronLeft size={18} />
+                </Button>
+                <Button
+                    variant='outline'
+                    size='icon'
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages || totalPages === 0 || loading}
+                    className="size-8 rounded border-border-subtle hover:bg-white disabled:opacity-30"
+                >
+                    <ChevronRight size={18} />
+                </Button>
             </div>
+            <span className='text-[10px] font-black uppercase tracking-[0.2em] text-text-main'>
+              Página {currentPage} de {totalPages || 1}
+            </span>
           </div>
         </div>
-
-        {/* Modals */}
-        <ProductFormModal
-          isOpen={isFormModalOpen}
-          onClose={handleCloseFormModal}
-          product={selectedProduct}
-        />
-
-        <ProductDetailsModal
-          isOpen={isDetailsModalOpen}
-          onClose={handleCloseDetailsModal}
-          product={selectedProduct}
-          onEdit={handleEditFromDetails}
-        />
       </div>
+
+      {/* Modals */}
+      <ProductFormModal
+        isOpen={isFormModalOpen}
+        onClose={handleCloseFormModal}
+        product={selectedProduct}
+      />
+
+      <ProductDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={handleCloseDetailsModal}
+        product={selectedProduct}
+        onEdit={handleEditFromDetails}
+      />
     </div>
   )
 }

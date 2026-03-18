@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Card,
   CardContent,
@@ -18,6 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { useI18n } from '@/lib/i18n'
 import { useThemeStyles } from '@/hooks/useThemeStyles'
 import { useCashRegisterStore } from '@/store/useCashRegisterStore'
@@ -37,7 +45,6 @@ import {
 import { cashAuditService } from '@/services/cashAuditService'
 
 const CashAuditModal = ({ isOpen, onClose, cashRegisterId, systemBalance, onAuditCreated }) => {
-  const { t } = useI18n()
   const { styles } = useThemeStyles()
   const [denominations, setDenominations] = useState(null)
   const [counts, setCounts] = useState({})
@@ -110,80 +117,81 @@ const CashAuditModal = ({ isOpen, onClose, cashRegisterId, systemBalance, onAudi
 
   return (
     <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm'>
-      <div className={`${styles.card()} w-full max-w-2xl max-h-[90vh] flex flex-col`} onClick={e => e.stopPropagation()}>
-        <div className='flex items-center justify-between p-6 border-b'>
+      <div className={`${styles.card()} w-full max-w-2xl max-h-[90vh] flex flex-col rounded-xl shadow-fluent-16 overflow-hidden`} onClick={e => e.stopPropagation()}>
+        <div className='flex items-center justify-between p-6 border-b border-border-subtle bg-slate-50/50'>
           <div className='flex items-center gap-3'>
             <ClipboardCheck className='w-6 h-6 text-primary' />
             <div>
-              <h2 className='text-lg font-semibold uppercase tracking-tight'>Arqueo de Caja</h2>
-              <p className='text-xs text-muted-foreground'>Conteo físico de billetes y monedas</p>
+              <h2 className='text-lg font-black tracking-tighter uppercase'>Arqueo de Caja</h2>
+              <p className='text-[10px] font-bold uppercase tracking-widest text-text-secondary'>Conteo físico de billetes y monedas</p>
             </div>
           </div>
-          <button onClick={onClose} className='text-muted-foreground hover:text-foreground'><XCircle className='w-5 h-5' /></button>
+          <button onClick={onClose} className='text-text-secondary hover:text-text-main transition-colors'><XCircle className='w-5 h-5' /></button>
         </div>
 
-        <div className='flex-1 overflow-y-auto p-6'>
+        <div className='flex-1 overflow-y-auto p-8'>
           {loading ? (
-            <div className='flex justify-center py-12'><Clock className='animate-spin' /></div>
+            <div className='flex justify-center py-12'><Clock className='animate-spin text-primary' /></div>
           ) : (
             <form id='audit-form' onSubmit={handleSubmit} className='space-y-8'>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-12'>
                 <div className='space-y-4'>
-                  <h4 className='text-[11px] font-bold uppercase text-slate-500 tracking-widest flex items-center gap-2'>Billetes</h4>
+                  <h4 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2'>
+                    <PlusIcon size={12} /> Billetes
+                  </h4>
                   <div className='space-y-2'>
                     {denominations.bills?.map(val => (
-                      <div key={val} className='flex items-center justify-between gap-4 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg'>
-                        <span className='text-sm font-mono font-bold w-20'>{val.toLocaleString()} ₲</span>
+                      <div key={val} className='flex items-center justify-between gap-4 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-transparent hover:border-border-subtle transition-colors'>
+                        <span className='text-sm font-mono font-black text-text-main w-20'>{val.toLocaleString()} ₲</span>
                         <div className='flex items-center gap-2'>
-                          <span className='text-xs text-muted-foreground font-semibold'>x</span>
-                          <Input type='number' min='0' className='w-20 h-8 text-right' value={counts[val] || ''} onChange={e => handleCountChange(e.target.value, val)} />
+                          <span className='text-[10px] text-slate-400 font-black uppercase'>x</span>
+                          <Input type='number' min='0' className='w-20 h-8 text-right font-bold' value={counts[val] || ''} onChange={e => handleCountChange(e.target.value, val)} />
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className='space-y-4'>
-                  <h4 className='text-[11px] font-bold uppercase text-slate-500 tracking-widest flex items-center gap-2'>Monedas</h4>
+                  <h4 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2'>
+                    <MinusIcon size={12} /> Monedas
+                  </h4>
                   <div className='space-y-2'>
                     {denominations.coins?.map(val => (
-                      <div key={val} className='flex items-center justify-between gap-4 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg'>
-                        <span className='text-sm font-mono font-bold w-20'>{val.toLocaleString()} ₲</span>
+                      <div key={val} className='flex items-center justify-between gap-4 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-transparent hover:border-border-subtle transition-colors'>
+                        <span className='text-sm font-mono font-black text-text-main w-20'>{val.toLocaleString()} ₲</span>
                         <div className='flex items-center gap-2'>
-                          <span className='text-xs text-muted-foreground font-semibold'>x</span>
-                          <Input type='number' min='0' className='w-20 h-8 text-right' value={counts[val] || ''} onChange={e => handleCountChange(e.target.value, val)} />
+                          <span className='text-[10px] text-slate-400 font-black uppercase'>x</span>
+                          <Input type='number' min='0' className='w-20 h-8 text-right font-bold' value={counts[val] || ''} onChange={e => handleCountChange(e.target.value, val)} />
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
-
-              <div className='p-4 bg-primary/5 rounded-xl border border-primary/10 flex flex-col md:flex-row justify-between items-center gap-4'>
-                <div>
-                  <p className='text-[10px] font-bold uppercase text-slate-500 tracking-widest'>Total Contado</p>
-                  <p className='text-2xl font-bold text-primary'>{totalCounted.toLocaleString()} ₲</p>
+              <div className='p-6 bg-primary/5 rounded-xl border border-primary/10 flex flex-col md:flex-row justify-between items-center gap-6'>
+                <div className='text-center md:text-left'>
+                  <p className='text-[10px] font-black uppercase text-text-secondary tracking-[0.2em] mb-1'>Total Contado</p>
+                  <p className='text-3xl font-black text-primary tabular-nums font-mono'>{totalCounted.toLocaleString()} ₲</p>
                 </div>
-                <div className='text-right'>
-                  <p className='text-[10px] font-bold uppercase text-slate-500 tracking-widest'>Diferencia</p>
-                  <p className={`text-xl font-bold ${difference === 0 ? 'text-green-600' : 'text-rose-600'}`}>
+                <div className='text-center md:text-right'>
+                  <p className='text-[10px] font-black uppercase text-text-secondary tracking-[0.2em] mb-1'>Diferencia</p>
+                  <p className={`text-2xl font-black tabular-nums font-mono ${difference === 0 ? 'text-success' : 'text-error'}`}>
                     {difference > 0 ? '+' : ''}{difference.toLocaleString()} ₲
                   </p>
                 </div>
               </div>
-
               <div className='space-y-2'>
-                <Label>Observaciones</Label>
-                <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder='Notas sobre el arqueo...' rows={2} />
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Observaciones</Label>
+                <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder='Notas sobre el arqueo...' rows={2} className="rounded-lg border-border-subtle resize-none" />
               </div>
             </form>
           )}
         </div>
-
-        <div className='p-6 border-t bg-slate-50/50 flex gap-3'>
-          <Button type='submit' form='audit-form' className='flex-1' disabled={isCreatingAudit}>
+        <div className='p-6 border-t border-border-subtle bg-slate-50/50 flex gap-3'>
+          <Button type='submit' form='audit-form' className='flex-1 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] h-11 rounded shadow-fluent-2' disabled={isCreatingAudit}>
             {isCreatingAudit ? 'Guardando...' : 'Confirmar Arqueo'}
           </Button>
-          <Button variant='outline' onClick={onClose} className='flex-1'>Cancelar</Button>
+          <Button variant='outline' onClick={onClose} className='flex-1 border-border-subtle font-black uppercase tracking-widest text-[10px] h-11 rounded hover:bg-slate-100 transition-colors'>Cancelar</Button>
         </div>
       </div>
     </div>
@@ -192,26 +200,11 @@ const CashAuditModal = ({ isOpen, onClose, cashRegisterId, systemBalance, onAudi
 
 const CashRegister = () => {
   const { t } = useI18n()
-  const { styles, isNeoBrutalism } = useThemeStyles()
-
+  const { styles } = useThemeStyles()
   const {
-    activeCashRegister,
-    cashRegisters,
-    movements,
-    cashRegisterSummary,
-    isActiveCashRegisterLoading,
-    isCashRegistersLoading,
-    isMovementsLoading,
-    isOpeningCashRegister,
-    isClosingCashRegister,
-    isRegisteringMovement,
-    getActiveCashRegister,
-    getCashRegisters,
-    openCashRegister,
-    closeCashRegister,
-    registerMovement,
-    getMovements,
-    getCashRegisterSummary,
+    activeCashRegister, cashRegisters, movements, audits, cashRegisterSummary, isActiveCashRegisterLoading, isCashRegistersLoading,
+    isOpeningCashRegister, isClosingCashRegister, isRegisteringMovement, getActiveCashRegister, getCashRegisters, openCashRegister,
+    closeCashRegister, registerMovement, getMovements, getAudits, getCashRegisterSummary,
   } = useCashRegisterStore()
 
   const [openCashRegisterDialog, setOpenCashRegisterDialog] = useState(false)
@@ -220,84 +213,36 @@ const CashRegister = () => {
   const [summaryDialog, setSummaryDialog] = useState(false)
   const [auditModalOpen, setAuditModalOpen] = useState(false)
   const [showAudits, setShowAudits] = useState(false)
-
-  const [openCashRegisterForm, setOpenCashRegisterForm] = useState({
-    name: '',
-    initial_balance: '',
-    location: '',
-    notes: '',
-  })
-
-  const [closeCashRegisterForm, setCloseCashRegisterForm] = useState({
-    final_balance: '',
-    notes: '',
-  })
-
-  const [movementForm, setMovementForm] = useState({
-    movement_type: '',
-    amount: '',
-    concept: '',
-    notes: '',
-  })
-
-  const [activeTab, setActiveTab] = useState('overview')
+  const [openCashRegisterForm, setOpenCashRegisterForm] = useState({ name: '', initial_balance: '', location: '', notes: '' })
+  const [closeCashRegisterForm, setCloseCashRegisterForm] = useState({ final_balance: '', notes: '' })
+  const [movementForm, setMovementForm] = useState({ movement_type: '', amount: '', concept: '', notes: '' })
   const [formError, setFormError] = useState('')
 
-  // 🔄 Cargar datos al montar el componente
   useEffect(() => {
     const loadInitialData = async () => {
-      await handleLoadActiveCashRegister()
-      await handleLoadCashRegisters()
-
-      // Si hay caja activa, cargar sus movimientos
-      if (activeCashRegister?.id) {
-        await handleLoadMovements()
-      }
+      await getActiveCashRegister()
+      await getCashRegisters()
     }
-
     loadInitialData()
-  }, []) // Solo ejecutar al montar
+  }, [])
 
-  // 🔄 Cargar movimientos cuando cambie la caja activa
   useEffect(() => {
     if (activeCashRegister?.id) {
-      handleLoadMovements()
+      getMovements(activeCashRegister.id)
+      getAudits(activeCashRegister.id)
     }
   }, [activeCashRegister?.id])
 
-  const handleLoadActiveCashRegister = async () => {
-    try {
-      await getActiveCashRegister()
-    } catch (error) {}
-  }
-
-  const handleLoadCashRegisters = async () => {
-    try {
-      await getCashRegisters()
-    } catch (error) {}
-  }
-
-  const handleLoadMovements = async () => {
-    try {
-      if (activeCashRegister?.id) {
-        await getMovements(activeCashRegister.id)
-      }
-    } catch (error) {}
-  }
-
   const handleLoadSummary = async () => {
-    try {
-      if (activeCashRegister?.id) {
-        await getCashRegisterSummary(activeCashRegister.id)
-        setSummaryDialog(true)
-      }
-    } catch (error) {}
+    if (activeCashRegister?.id) {
+      await getCashRegisterSummary(activeCashRegister.id)
+      setSummaryDialog(true)
+    }
   }
 
   const handleOpenCashRegister = async e => {
     e.preventDefault()
     setFormError('')
-
     try {
       await openCashRegister({
         name: openCashRegisterForm.name,
@@ -305,1123 +250,260 @@ const CashRegister = () => {
         location: openCashRegisterForm.location || null,
         notes: openCashRegisterForm.notes || null,
       })
-
       setOpenCashRegisterDialog(false)
-      setOpenCashRegisterForm({
-        name: '',
-        initial_balance: '',
-        location: '',
-        notes: '',
-      })
-
-      // Reload active cash register
-      await handleLoadActiveCashRegister()
-    } catch (error) {
-      setFormError(error.message || 'Error al abrir la caja registradora')
-    }
+      setOpenCashRegisterForm({ name: '', initial_balance: '', location: '', notes: '' })
+      await getActiveCashRegister()
+    } catch (error) { setFormError(error.message || 'Error al abrir la caja registradora') }
   }
 
   const handleCloseCashRegister = async e => {
     e.preventDefault()
-
     try {
       if (!activeCashRegister?.id) return
-
       await closeCashRegister(activeCashRegister.id, {
         final_balance: parseFloat(closeCashRegisterForm.final_balance),
         notes: closeCashRegisterForm.notes || null,
       })
-
       setCloseCashRegisterDialog(false)
-      setCloseCashRegisterForm({
-        final_balance: '',
-        notes: '',
-      })
-
-      // Reload data
-      await handleLoadActiveCashRegister()
-      await handleLoadCashRegisters()
-    } catch (error) {
-      setFormError(error.message || 'Error al cerrar la caja registradora')
-    }
+      setCloseCashRegisterForm({ final_balance: '', notes: '' })
+      await getActiveCashRegister()
+      await getCashRegisters()
+    } catch (error) { setFormError(error.message || 'Error al cerrar la caja registradora') }
   }
 
   const handleRegisterMovement = async e => {
     e.preventDefault()
-
     try {
       if (!activeCashRegister?.id) return
-
       await registerMovement(activeCashRegister.id, {
         movement_type: movementForm.movement_type,
         amount: parseFloat(movementForm.amount),
         concept: movementForm.concept,
         notes: movementForm.notes || null,
       })
-
       setMovementDialog(false)
-      setMovementForm({
-        movement_type: '',
-        amount: '',
-        concept: '',
-        notes: '',
-      })
-
-      // Reload data
-      await handleLoadActiveCashRegister()
-      await handleLoadMovements()
-    } catch (error) {
-      setFormError(error.message || 'Error al registrar el movimiento')
-    }
+      setMovementForm({ movement_type: '', amount: '', concept: '', notes: '' })
+      await getActiveCashRegister()
+    } catch (error) { setFormError(error.message || 'Error al registrar el movimiento') }
   }
 
   const getStatusBadge = status => {
     switch (status) {
-      case 'OPEN':
-        return (
-          <Badge className='bg-green-100 text-green-800 border-green-300'>
-            Abierta
-          </Badge>
-        )
-      case 'CLOSED':
-        return (
-          <Badge className='bg-gray-100 text-gray-800 border-gray-300'>
-            Cerrada
-          </Badge>
-        )
-      default:
-        return <Badge variant='secondary'>{status}</Badge>
+      case 'OPEN': return <Badge className='bg-green-100 text-success border-green-200 uppercase font-black text-[9px] px-2.5 py-1 rounded-full'><span className='size-1.5 rounded-full bg-success mr-1.5'></span>Abierta</Badge>
+      case 'CLOSED': return <Badge className='bg-slate-100 text-text-secondary border-slate-200 uppercase font-black text-[9px] px-2.5 py-1 rounded-full'>Cerrada</Badge>
+      default: return <Badge variant='secondary' className="uppercase font-black text-[9px]">{status}</Badge>
     }
   }
 
   const getMovementTypeColor = type => {
     switch (type) {
-      case 'INCOME':
-        return 'text-green-600 dark:text-green-400'
-      case 'EXPENSE':
-        return 'text-red-600 dark:text-red-400'
-      case 'ADJUSTMENT':
-        return 'text-blue-600 dark:text-blue-400'
-      default:
-        return 'text-muted-foreground'
+      case 'INCOME': return 'text-success'
+      case 'EXPENSE': return 'text-error'
+      case 'ADJUSTMENT': return 'text-info'
+      default: return 'text-text-secondary'
     }
   }
 
   const getMovementTypeIcon = type => {
     switch (type) {
-      case 'INCOME':
-        return (
-          <PlusIcon className='w-4 h-4 text-green-600 dark:text-green-400' />
-        )
-      case 'EXPENSE':
-        return <MinusIcon className='w-4 h-4 text-red-600 dark:text-red-400' />
-      case 'ADJUSTMENT':
-        return (
-          <Calculator className='w-4 h-4 text-blue-600 dark:text-blue-400' />
-        )
-      default:
-        return <DollarSign className='w-4 h-4 text-muted-foreground' />
+      case 'INCOME': return <PlusIcon className='w-4 h-4 text-success' />
+      case 'EXPENSE': return <MinusIcon className='w-4 h-4 text-error' />
+      case 'ADJUSTMENT': return <Calculator className='w-4 h-4 text-info' />
+      default: return <DollarSign className='w-4 h-4 text-text-secondary' />
     }
   }
 
   const getMovementBorderColor = type => {
     switch (type) {
-      case 'INCOME':
-        return isNeoBrutalism ? '#10b981' : 'hsl(var(--chart-2))'
-      case 'EXPENSE':
-        return isNeoBrutalism ? '#ef4444' : 'hsl(var(--chart-1))'
-      case 'ADJUSTMENT':
-        return isNeoBrutalism ? '#3b82f6' : 'hsl(var(--chart-3))'
-      default:
-        return 'hsl(var(--border))'
+      case 'INCOME': return '#107c10'
+      case 'EXPENSE': return '#a4262c'
+      case 'ADJUSTMENT': return '#0078d4'
+      default: return '#e5e7eb'
     }
   }
 
-  // Función para obtener estilos de overlay basados en el tema
-  const getOverlayClasses = () => {
-    const baseClasses =
-      'absolute inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm'
-    return isNeoBrutalism
-      ? `${baseClasses} bg-black/70`
-      : `${baseClasses} bg-black/60`
-  }
+  const getOverlayClasses = () => 'fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-black/60'
 
   return (
-    <div className='container mx-auto p-6 space-y-8 relative'>
-      {/* Cash register content container */}
+    <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-display'>
       <div className='relative w-full space-y-8'>
-        {/* Header */}
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-3'>
-            <CashIcon className='w-8 h-8 text-blue-600' />
-            <div>
-              <h1 className='text-3xl font-bold'>Cajas Registradoras</h1>
-              <p className='text-muted-foreground'>
-                Gestión de efectivo y movimientos
-              </p>
-            </div>
+        <div className='flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2'>
+          <div className='flex items-center gap-4'>
+            <div className='size-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-fluent-8'><CashIcon size={28} /></div>
+            <div><h1 className='text-3xl font-black text-text-main tracking-tighter uppercase leading-none'>Cajas Registradoras</h1><p className='text-text-secondary text-sm font-medium mt-1'>Gestión de efectivo y movimientos operativos</p></div>
           </div>
-
-          <div className='flex gap-2'>
-            <Button
-              onClick={handleLoadActiveCashRegister}
-              disabled={isActiveCashRegisterLoading}
-            >
-              {isActiveCashRegisterLoading
-                ? 'Cargando...'
-                : 'Cargar Caja Activa'}
-            </Button>
-
-            <Button
-              onClick={() => {
-                setOpenCashRegisterDialog(true)
-                setFormError('') // Limpiar error al abrir modal
-              }}
-            >
-              <PlusIcon className='w-4 h-4 mr-2' />
-              Abrir Caja
-            </Button>
-
-            {openCashRegisterDialog && (
-              <div
-                className={getOverlayClasses()}
-                onClick={() => setOpenCashRegisterDialog(false)}
-              >
-                <div
-                  className={`${styles.card()} w-full max-w-lg max-h-[90vh] overflow-y-auto`}
-                  onClick={e => e.stopPropagation()}
-                >
-                  {/* Header */}
-                  <div className='flex items-center justify-between p-6 pb-4 border-b'>
-                    <div>
-                      <h2 className='text-lg font-semibold'>
-                        Abrir Nueva Caja Registradora
-                      </h2>
-                      <p className='text-sm text-muted-foreground'>
-                        Configure los datos iniciales para la nueva caja
-                        registradora
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setOpenCashRegisterDialog(false)}
-                      className='text-muted-foreground hover:text-foreground p-1 rounded'
-                    >
-                      <XCircle className='w-5 h-5' />
-                    </button>
-                  </div>
-
-                  {/* Content */}
-                  <div className='p-6'>
-                    <form
-                      onSubmit={handleOpenCashRegister}
-                      className='space-y-4'
-                    >
-                      <div>
-                        <Label htmlFor='name'>Nombre de la Caja</Label>
-                        <Input
-                          id='name'
-                          value={openCashRegisterForm.name}
-                          onChange={e =>
-                            setOpenCashRegisterForm(prev => ({
-                              ...prev,
-                              name: e.target.value,
-                            }))
-                          }
-                          placeholder='Ej: Caja Principal'
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor='initial_balance'>Balance Inicial</Label>
-                        <Input
-                          id='initial_balance'
-                          type='number'
-                          step='0.01'
-                          min='0'
-                          value={openCashRegisterForm.initial_balance}
-                          onChange={e =>
-                            setOpenCashRegisterForm(prev => ({
-                              ...prev,
-                              initial_balance: e.target.value,
-                            }))
-                          }
-                          placeholder='0.00'
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor='location'>Ubicación</Label>
-                        <Input
-                          id='location'
-                          value={openCashRegisterForm.location}
-                          onChange={e =>
-                            setOpenCashRegisterForm(prev => ({
-                              ...prev,
-                              location: e.target.value,
-                            }))
-                          }
-                          placeholder='Ej: Mostrador Principal'
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor='notes'>Notas</Label>
-                        <Textarea
-                          id='notes'
-                          value={openCashRegisterForm.notes}
-                          onChange={e =>
-                            setOpenCashRegisterForm(prev => ({
-                              ...prev,
-                              notes: e.target.value,
-                            }))
-                          }
-                          placeholder='Notas adicionales...'
-                          rows={3}
-                        />
-                      </div>
-
-                      {/* Error Message */}
-                      {formError && (
-                        <div className='mt-4 p-3 bg-red-50 border border-red-200 rounded-md'>
-                          <p className='text-sm text-red-600'>{formError}</p>
-                        </div>
-                      )}
-                    </form>
-                  </div>
-
-                  {/* Footer */}
-                  <div className='flex gap-3 justify-end p-6 pt-4 border-t'>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      onClick={() => setOpenCashRegisterDialog(false)}
-                      disabled={isOpeningCashRegister}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      type='submit'
-                      onClick={handleOpenCashRegister}
-                      disabled={isOpeningCashRegister}
-                    >
-                      {isOpeningCashRegister ? 'Abriendo...' : 'Abrir Caja'}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className='flex flex-wrap gap-2'>
+            <Button variant='outline' onClick={getActiveCashRegister} disabled={isActiveCashRegisterLoading} className='h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest'>{isActiveCashRegisterLoading ? 'Cargando...' : 'Actualizar Estado'}</Button>
+            <Button onClick={() => { setOpenCashRegisterDialog(true); setFormError(''); }} className='h-10 px-6 bg-primary hover:bg-primary-hover text-white font-black uppercase text-[10px] tracking-widest rounded shadow-fluent-2'><PlusIcon className='w-4 h-4 mr-2' /> Abrir Caja</Button>
           </div>
         </div>
 
-        {/* Active Cash Register Status */}
-        {activeCashRegister && (
-          <Card>
-            <CardHeader>
-              <CardTitle className='flex items-center justify-between'>
-                <span>Caja Activa: {activeCashRegister.name}</span>
-                {getStatusBadge(activeCashRegister.status)}
-              </CardTitle>
-              <CardDescription>
-                Abierta el{' '}
-                {new Date(activeCashRegister.opened_at).toLocaleString()}
-                {activeCashRegister.location &&
-                  ` • ${activeCashRegister.location}`}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-6'>
-                <div className='text-center'>
-                  <p className='text-sm text-muted-foreground'>
-                    Balance Inicial
-                  </p>
-                  <p className='text-2xl font-bold'>
-                    $
-                    {(activeCashRegister.initial_balance || 0).toLocaleString()}
-                  </p>
-                </div>
-                <div className='text-center'>
-                  <p className='text-sm text-muted-foreground'>
-                    Balance Actual
-                  </p>
-                  <p className='text-2xl font-bold text-blue-600'>
-                    $
-                    {(activeCashRegister.current_balance || 0).toLocaleString()}
-                  </p>
-                </div>
-                <div className='text-center'>
-                  <p className='text-sm text-muted-foreground'>Diferencia</p>
-                  <p
-                    className={`text-2xl font-bold ${
-                      (activeCashRegister.current_balance || 0) -
-                        (activeCashRegister.initial_balance || 0) >=
-                      0
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                    }`}
-                  >
-                    $
-                    {(
-                      (activeCashRegister.current_balance || 0) -
-                      (activeCashRegister.initial_balance || 0)
-                    ).toLocaleString()}
-                  </p>
-                </div>
+        {openCashRegisterDialog && (
+          <div className={getOverlayClasses()} onClick={() => setOpenCashRegisterDialog(false)}>
+            <div className={`${styles.card()} w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl shadow-fluent-16`} onClick={e => e.stopPropagation()}>
+              <div className='flex items-center justify-between p-6 pb-4 border-b border-border-subtle bg-slate-50/50'><div><h2 className='text-lg font-black tracking-tighter uppercase'>Abrir Nueva Caja</h2><p className='text-[10px] font-bold uppercase tracking-widest text-text-secondary'>Configuración de datos iniciales</p></div><button onClick={() => setOpenCashRegisterDialog(false)} className='text-text-secondary hover:text-text-main transition-colors'><XCircle className='w-5 h-5' /></button></div>
+              <div className='p-8 space-y-6'>
+                <form onSubmit={handleOpenCashRegister} className='space-y-6'>
+                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Nombre de la Caja</Label><Input value={openCashRegisterForm.name} onChange={e => setOpenCashRegisterForm(prev => ({...prev, name: e.target.value}))} placeholder='Ej: Caja Principal' className="rounded border-border-subtle font-bold" required /></div>
+                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Balance Inicial</Label><Input type='number' step='0.01' min='0' value={openCashRegisterForm.initial_balance} onChange={e => setOpenCashRegisterForm(prev => ({...prev, initial_balance: e.target.value}))} placeholder='0.00' className="rounded border-border-subtle font-mono font-bold text-lg" required /></div>
+                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Ubicación</Label><Input value={openCashRegisterForm.location} onChange={e => setOpenCashRegisterForm(prev => ({...prev, location: e.target.value}))} placeholder='Ej: Mostrador Principal' className="rounded border-border-subtle" /></div>
+                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Notas</Label><Textarea value={openCashRegisterForm.notes} onChange={e => setOpenCashRegisterForm(prev => ({...prev, notes: e.target.value}))} placeholder='Notas adicionales...' rows={3} className="rounded border-border-subtle resize-none" /></div>
+                  {formError && <div className='p-4 bg-error/5 border border-error/20 rounded-lg flex items-center gap-3'><AlertCircle className="text-error" size={18} /><p className='text-xs font-bold text-error uppercase tracking-wider'>{formError}</p></div>}
+                </form>
               </div>
-
-              <div className='flex gap-3 flex-wrap justify-center mt-4'>
-                <Button
-                  variant='outline'
-                  onClick={() => setMovementDialog(true)}
-                >
-                  <DollarSign className='w-4 h-4 mr-2' />
-                  Registrar Movimiento
-                </Button>
-
-                {movementDialog && (
-                  <div
-                    className={getOverlayClasses()}
-                    onClick={() => setMovementDialog(false)}
-                  >
-                    <div
-                      className={`${styles.card()} w-full max-w-lg max-h-[90vh] overflow-y-auto`}
-                      onClick={e => e.stopPropagation()}
-                    >
-                      {/* Header */}
-                      <div className='flex items-center justify-between p-6 pb-4 border-b'>
-                        <div>
-                          <h2 className='text-lg font-semibold'>
-                            Registrar Movimiento
-                          </h2>
-                          <p className='text-sm text-muted-foreground'>
-                            Registre un movimiento manual de efectivo
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => setMovementDialog(false)}
-                          className='text-muted-foreground hover:text-foreground p-1 rounded'
-                        >
-                          <XCircle className='w-5 h-5' />
-                        </button>
-                      </div>
-
-                      {/* Content */}
-                      <div className='p-6'>
-                        {isRegisteringMovement ? (
-                          <div className='flex items-center justify-center py-12'>
-                            <div className='animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full' />
-                            <span className='ml-3 text-sm text-muted-foreground'>
-                              Procesando...
-                            </span>
-                          </div>
-                        ) : (
-                          <form
-                            onSubmit={handleRegisterMovement}
-                            className='space-y-4'
-                          >
-                            <div>
-                              <Label htmlFor='movement_type'>
-                                Tipo de Movimiento
-                              </Label>
-                              <Select
-                                value={movementForm.movement_type}
-                                onValueChange={value =>
-                                  setMovementForm(prev => ({
-                                    ...prev,
-                                    movement_type: value,
-                                  }))
-                                }
-                                required
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder='Seleccione el tipo' />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value='INCOME'>
-                                    Ingreso
-                                  </SelectItem>
-                                  <SelectItem value='EXPENSE'>Gasto</SelectItem>
-                                  <SelectItem value='ADJUSTMENT'>
-                                    Ajuste
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <Label htmlFor='amount'>Monto</Label>
-                              <Input
-                                id='amount'
-                                type='number'
-                                step='0.01'
-                                value={movementForm.amount}
-                                onChange={e =>
-                                  setMovementForm(prev => ({
-                                    ...prev,
-                                    amount: e.target.value,
-                                  }))
-                                }
-                                placeholder='0.00'
-                                required
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor='concept'>Concepto</Label>
-                              <Input
-                                id='concept'
-                                value={movementForm.concept}
-                                onChange={e =>
-                                  setMovementForm(prev => ({
-                                    ...prev,
-                                    concept: e.target.value,
-                                  }))
-                                }
-                                placeholder='Descripción del movimiento'
-                                required
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor='movement_notes'>Notas</Label>
-                              <Textarea
-                                id='movement_notes'
-                                value={movementForm.notes}
-                                onChange={e =>
-                                  setMovementForm(prev => ({
-                                    ...prev,
-                                    notes: e.target.value,
-                                  }))
-                                }
-                                placeholder='Notas adicionales...'
-                                rows={2}
-                              />
-                            </div>
-                          </form>
-                        )}
-                      </div>
-
-                      {/* Footer */}
-                      <div className='flex gap-3 justify-end p-6 pt-4 border-t'>
-                        <Button
-                          type='button'
-                          variant='outline'
-                          onClick={() => setMovementDialog(false)}
-                          disabled={isRegisteringMovement}
-                        >
-                          Cancelar
-                        </Button>
-                        <Button
-                          type='submit'
-                          onClick={handleRegisterMovement}
-                          disabled={isRegisteringMovement}
-                        >
-                          {isRegisteringMovement
-                            ? 'Registrando...'
-                            : 'Registrar'}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  variant='outline'
-                  onClick={handleLoadMovements}
-                  disabled={isMovementsLoading}
-                >
-                  <Clock className='w-4 h-4 mr-2' />
-                  {isMovementsLoading ? 'Cargando...' : 'Ver Movimientos'}
-                </Button>
-
-                <Button
-                  variant='outline'
-                  onClick={handleLoadSummary}
-                >
-                  <Calculator className='w-4 h-4 mr-2' />
-                  Ver Reporte
-                </Button>
-
-                <Button
-                  variant='outline'
-                  onClick={() => setAuditModalOpen(true)}
-                >
-                  <ClipboardCheck className='w-4 h-4 mr-2' />
-                  Realizar Arqueo
-                </Button>
-
-                <Button
-                  variant='outline'
-                  onClick={() => setShowAudits(!showAudits)}
-                >
-                  <History className='w-4 h-4 mr-2' />
-                  {showAudits ? 'Ver Movimientos' : 'Ver Arqueos'}
-                </Button>
-
-                <Button
-                  variant='outline'
-                  onClick={() => setCloseCashRegisterDialog(true)}
-                  className='border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300'
-                >
-                  <XCircle className='w-4 h-4 mr-2' />
-                  Cerrar Caja
-                </Button>
-
-                {closeCashRegisterDialog && (
-                  <div
-                    className={getOverlayClasses()}
-                    onClick={() => setCloseCashRegisterDialog(false)}
-                  >
-                    <div
-                      className={`${styles.card()} border-yellow-200 w-full max-w-lg max-h-[80vh] flex flex-col`}
-                      onClick={e => e.stopPropagation()}
-                    >
-                      {/* Header */}
-                      <div className='flex items-center justify-between p-6 pb-4 border-b'>
-                        <div className='flex items-center gap-3'>
-                          <div className='flex items-center justify-center w-10 h-10 rounded-full bg-yellow-100'>
-                            <AlertCircle className='w-5 h-5 text-yellow-600' />
-                          </div>
-                          <div>
-                            <h2 className='text-lg font-semibold'>
-                              Cerrar Caja Registradora
-                            </h2>
-                            <p className='text-sm text-muted-foreground'>
-                              Confirme el balance final y cierre la caja
-                              registradora
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => setCloseCashRegisterDialog(false)}
-                          className='text-muted-foreground hover:text-foreground p-1 rounded'
-                        >
-                          <XCircle className='w-5 h-5' />
-                        </button>
-                      </div>
-
-                      {/* Content */}
-                      <div className='flex-1 p-6 overflow-y-auto'>
-                        {isClosingCashRegister ? (
-                          <div className='flex items-center justify-center py-12'>
-                            <div className='animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full' />
-                            <span className='ml-3 text-sm text-muted-foreground'>
-                              Cerrando...
-                            </span>
-                          </div>
-                        ) : (
-                          <>
-                            <form
-                              id='close-cash-register-form'
-                              onSubmit={handleCloseCashRegister}
-                              className='space-y-4'
-                            >
-                              <div>
-                                <Label htmlFor='final_balance'>
-                                  Balance Final Físico
-                                </Label>
-                                <Input
-                                  id='final_balance'
-                                  type='number'
-                                  step='0.01'
-                                  value={closeCashRegisterForm.final_balance}
-                                  onChange={e =>
-                                    setCloseCashRegisterForm(prev => ({
-                                      ...prev,
-                                      final_balance: e.target.value,
-                                    }))
-                                  }
-                                  placeholder={
-                                    activeCashRegister?.current_balance?.toString() ||
-                                    '0.00'
-                                  }
-                                  required
-                                />
-                                <p className='text-sm text-muted-foreground mt-1'>
-                                  Balance del sistema: $
-                                  {activeCashRegister?.current_balance || 0}
-                                </p>
-                              </div>
-                              <div>
-                                <Label htmlFor='close_notes'>
-                                  Notas de Cierre
-                                </Label>
-                                <Textarea
-                                  id='close_notes'
-                                  value={closeCashRegisterForm.notes}
-                                  onChange={e =>
-                                    setCloseCashRegisterForm(prev => ({
-                                      ...prev,
-                                      notes: e.target.value,
-                                    }))
-                                  }
-                                  placeholder='Observaciones del cierre...'
-                                  rows={3}
-                                />
-                              </div>
-                            </form>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Footer */}
-                      {!isClosingCashRegister && (
-                        <div className='flex gap-3 justify-end p-6 pt-4 border-t bg-muted/30'>
-                          <Button
-                            type='button'
-                            variant='outline'
-                            onClick={() => setCloseCashRegisterDialog(false)}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button
-                            type='submit'
-                            form='close-cash-register-form'
-                            variant='destructive'
-                          >
-                            Cerrar Caja
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* No Active Cash Register */}
-        {!activeCashRegister && !isActiveCashRegisterLoading && (
-          <Card>
-            <CardContent className='text-center py-8'>
-              <CashIcon className='w-16 h-16 mx-auto text-muted-foreground mb-4' />
-              <h3 className='text-lg font-semibold mb-2'>
-                No hay caja registradora activa
-              </h3>
-              <p className='text-muted-foreground mb-4'>
-                Debe abrir una caja registradora para comenzar a operar
-              </p>
-              <Button
-                onClick={() => {
-                  setOpenCashRegisterDialog(true)
-                  setFormError('') // Limpiar error al abrir modal
-                }}
-              >
-                <PlusIcon className='w-4 h-4 mr-2' />
-                Abrir Nueva Caja
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Movements List - Using Enriched Data v2.1 */}
-        {!showAudits && movements.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Movimientos Recientes</CardTitle>
-              <CardDescription>
-                Historial de movimientos de efectivo
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className='space-y-3'>
-                {movements.map(movement => (
-                  <div
-                    key={movement.movement_id}
-                    className='group relative p-4 border-l-4 border rounded-lg hover:shadow-md transition-all duration-200 bg-card'
-                    style={{
-                      borderLeftColor: getMovementBorderColor(
-                        movement.movement_type
-                      ),
-                    }}
-                  >
-                    {/* Main Row */}
-                    <div className='flex items-start justify-between gap-4'>
-                      {/* Left Section: Icon + Content */}
-                      <div className='flex items-start gap-3 flex-1 min-w-0'>
-                        <div className='mt-1 flex-shrink-0'>
-                          {getMovementTypeIcon(movement.movement_type)}
-                        </div>
-
-                        <div className='flex-1 min-w-0 space-y-2'>
-                          {/* Concept */}
-                          <p className='font-semibold text-base leading-tight'>
-                            {movement.concept}
-                          </p>
-
-                          {/* Metadata Row */}
-                          <div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground'>
-                            <span className='flex items-center gap-1'>
-                              <Clock className='w-3 h-3' />
-                              {new Date(movement.created_at).toLocaleString(
-                                'es-ES',
-                                {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                }
-                              )}
-                            </span>
-                            {movement.user_full_name && (
-                              <span className='flex items-center gap-1'>
-                                <span className='font-medium'>Por:</span>
-                                {movement.user_full_name}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Enriched Data: Sale Details */}
-                          {movement.related_sale_id && (
-                            <div className='flex items-start gap-2 p-2.5 bg-accent/30 rounded-md border border-border'>
-                              <div className='flex-1 min-w-0'>
-                                <div className='flex items-center gap-2 mb-1'>
-                                  <p className='font-semibold text-sm text-primary'>
-                                    Venta: {movement.related_sale_id}
-                                  </p>
-                                  {movement.sale_status && (
-                                    <Badge
-                                      variant='secondary'
-                                      className='text-xs h-5'
-                                    >
-                                      {movement.sale_status}
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className='space-y-0.5 text-xs text-muted-foreground'>
-                                  {movement.sale_client_name && (
-                                    <p className='flex items-center gap-1.5'>
-                                      <span className='font-medium text-foreground'>
-                                        Cliente:
-                                      </span>
-                                      <span className='truncate'>
-                                        {movement.sale_client_name}
-                                      </span>
-                                    </p>
-                                  )}
-                                  {movement.sale_payment_method && (
-                                    <p className='flex items-center gap-1.5'>
-                                      <span className='font-medium text-foreground'>
-                                        Método:
-                                      </span>
-                                      <span>
-                                        {movement.sale_payment_method}
-                                      </span>
-                                    </p>
-                                  )}
-                                  {movement.sale_total !== null && (
-                                    <p className='flex items-center gap-1.5'>
-                                      <span className='font-medium text-foreground'>
-                                        Total Venta:
-                                      </span>
-                                      <span className='font-semibold text-foreground'>
-                                        ₲ {movement.sale_total.toLocaleString()}
-                                      </span>
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Enriched Data: Purchase Details */}
-                          {movement.related_purchase_id && (
-                            <div className='flex items-start gap-2 p-2.5 bg-accent/30 rounded-md border border-border'>
-                              <div className='flex-1 min-w-0'>
-                                <p className='font-semibold text-sm text-primary mb-1'>
-                                  Compra #{movement.related_purchase_id}
-                                </p>
-                                <div className='space-y-0.5 text-xs text-muted-foreground'>
-                                  {movement.purchase_supplier && (
-                                    <p className='flex items-center gap-1.5'>
-                                      <span className='font-medium text-foreground'>
-                                        Proveedor:
-                                      </span>
-                                      <span className='truncate'>
-                                        {movement.purchase_supplier}
-                                      </span>
-                                    </p>
-                                  )}
-                                  {movement.purchase_total !== null && (
-                                    <p className='flex items-center gap-1.5'>
-                                      <span className='font-medium text-foreground'>
-                                        Total:
-                                      </span>
-                                      <span className='font-semibold text-foreground'>
-                                        ₲ {movement.purchase_total.toLocaleString()}
-                                      </span>
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Right Section: Amount + Balance */}
-                      <div className='text-right flex-shrink-0 space-y-1'>
-                        <p
-                          className={`font-bold text-xl ${getMovementTypeColor(
-                            movement.movement_type
-                          )}`}
-                        >
-                          {movement.movement_type === 'EXPENSE' ? '-' : '+'}₲ {movement.amount.toLocaleString()}
-                        </p>
-                        {/* Enriched data: Running balance */}
-                        <div className='inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 rounded-md'>
-                          <span className='text-xs font-medium text-muted-foreground'>
-                            Balance:
-                          </span>
-                          <span className='text-sm font-bold text-primary'>
-                            ₲ {movement.running_balance?.toLocaleString() || '0'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Arqueos List */}
-        {showAudits && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Historial de Arqueos</CardTitle>
-              <CardDescription>Auditorías físicas de caja</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className='space-y-3'>
-                {audits.length === 0 ? (
-                  <p className='text-center text-muted-foreground py-8'>No hay arqueos registrados para esta caja.</p>
-                ) : (
-                  audits.map(audit => (
-                    <div key={audit.id} className='p-4 border rounded-lg bg-card hover:shadow-sm transition-all'>
-                      <div className='flex justify-between items-start'>
-                        <div className='flex items-center gap-3'>
-                          <div className='size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500'>
-                            <ClipboardCheck size={20} />
-                          </div>
-                          <div>
-                            <p className='font-semibold'>Arqueo #{audit.id}</p>
-                            <p className='text-xs text-muted-foreground'>{new Date(audit.created_at).toLocaleString()}</p>
-                          </div>
-                        </div>
-                        <div className='text-right'>
-                          <p className='font-bold text-lg tabular-nums'>{audit.counted_amount.toLocaleString()} ₲</p>
-                          <Badge variant={audit.difference === 0 ? 'success' : 'destructive'} className='text-[10px] uppercase font-bold'>
-                            {audit.difference === 0 ? 'Sin Discrepancia' : `Diferencia: ${audit.difference.toLocaleString()} ₲`}
-                          </Badge>
-                        </div>
-                      </div>
-                      {audit.notes && <p className='mt-3 text-sm italic text-muted-foreground bg-slate-50 p-2 rounded'>"{audit.notes}"</p>}
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Cash Registers History */}
-        <Card>
-          <CardHeader>
-            <CardTitle className='flex items-center justify-between'>
-              <span>Historial de Cajas</span>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleLoadCashRegisters}
-                disabled={isCashRegistersLoading}
-              >
-                {isCashRegistersLoading ? 'Cargando...' : 'Actualizar'}
-              </Button>
-            </CardTitle>
-            <CardDescription>
-              Listado de todas las cajas registradoras
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {cashRegisters && cashRegisters.length > 0 ? (
-              <div className='space-y-2'>
-                {cashRegisters.map(cashRegister => (
-                  <div
-                    key={cashRegister.id}
-                    className='flex items-center justify-between p-3 border rounded'
-                  >
-                    <div>
-                      <p className='font-medium'>{cashRegister.name}</p>
-                      <p className='text-sm text-muted-foreground'>
-                        {new Date(cashRegister.opened_at).toLocaleDateString()}
-                        {cashRegister.closed_at &&
-                          ` - ${new Date(
-                            cashRegister.closed_at
-                          ).toLocaleDateString()}`}
-                        {cashRegister.location && ` • ${cashRegister.location}`}
-                      </p>
-                    </div>
-                    <div className='flex items-center gap-3'>
-                      <div className='text-right'>
-                        <p className='font-medium'>
-                          $
-                          {(cashRegister.current_balance || 0).toLocaleString()}
-                        </p>
-                        {cashRegister.variance !== undefined &&
-                          cashRegister.variance !== null &&
-                          cashRegister.variance !== 0 && (
-                            <p
-                              className={`text-sm ${
-                                cashRegister.variance >= 0
-                                  ? 'text-green-600'
-                                  : 'text-red-600'
-                              }`}
-                            >
-                              Var: $
-                              {(cashRegister.variance || 0).toLocaleString()}
-                            </p>
-                          )}
-                      </div>
-                      {getStatusBadge(cashRegister.status)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className='text-center text-muted-foreground py-4'>
-                No hay cajas registradoras. Haga clic en "Actualizar" para
-                cargar.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Summary Modal */}
-        {summaryDialog && (
-          <div
-            className={getOverlayClasses()}
-            onClick={() => setSummaryDialog(false)}
-          >
-            <div
-              className={`${styles.card()} border-blue-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto`}
-              onClick={e => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className='flex items-center justify-between p-6 pb-4 border-b'>
-                <div className='flex items-center gap-3'>
-                  <div className='flex items-center justify-center w-10 h-10 rounded-full bg-blue-100'>
-                    <Calculator className='w-5 h-5 text-blue-600' />
-                  </div>
-                  <div>
-                    <h2 className='text-lg font-semibold'>Resumen de Caja</h2>
-                    <p className='text-sm text-muted-foreground'>
-                      Detalles completos de la caja registradora
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSummaryDialog(false)}
-                  className='text-muted-foreground hover:text-foreground p-1 rounded'
-                >
-                  <XCircle className='w-5 h-5' />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className='p-6'>
-                {cashRegisterSummary && (
-                  <div className='space-y-4'>
-                    <div className='grid grid-cols-2 gap-4'>
-                      <div>
-                        <p className='text-sm text-muted-foreground'>
-                          Total Ingresos
-                        </p>
-                        <p className='text-lg font-semibold text-green-600'>
-                          ${cashRegisterSummary.total_income}
-                        </p>
-                      </div>
-                      <div>
-                        <p className='text-sm text-muted-foreground'>
-                          Total Gastos
-                        </p>
-                        <p className='text-lg font-semibold text-red-600'>
-                          ${cashRegisterSummary.total_expenses}
-                        </p>
-                      </div>
-                      <div>
-                        <p className='text-sm text-muted-foreground'>
-                          Total Ventas
-                        </p>
-                        <p className='text-lg font-semibold text-blue-600'>
-                          ${cashRegisterSummary.total_sales}
-                        </p>
-                      </div>
-                      <div>
-                        <p className='text-sm text-muted-foreground'>
-                          Total Movimientos
-                        </p>
-                        <p className='text-lg font-semibold'>
-                          {cashRegisterSummary.total_movements}
-                        </p>
-                      </div>
-                    </div>
-
-                    {cashRegisterSummary.expected_balance && (
-                      <div className='border-t pt-4'>
-                        <div className='grid grid-cols-2 gap-4'>
-                          <div>
-                            <p className='text-sm text-muted-foreground'>
-                              Balance Esperado
-                            </p>
-                            <p className='text-xl font-bold'>
-                              ${cashRegisterSummary.expected_balance}
-                            </p>
-                          </div>
-                          <div>
-                            <p className='text-sm text-muted-foreground'>
-                              Balance Actual
-                            </p>
-                            <p className='text-xl font-bold'>
-                              ${cashRegisterSummary.actual_balance}
-                            </p>
-                          </div>
-                        </div>
-
-                        {cashRegisterSummary.variance !== 0 && (
-                          <div className='mt-4'>
-                            <p className='text-sm text-muted-foreground'>
-                              Diferencia
-                            </p>
-                            <p
-                              className={`text-xl font-bold ${
-                                cashRegisterSummary.variance >= 0
-                                  ? 'text-green-600'
-                                  : 'text-red-600'
-                              }`}
-                            >
-                              ${cashRegisterSummary.variance}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className='flex justify-end p-6 pt-4 border-t'>
-                <Button onClick={() => setSummaryDialog(false)}>Cerrar</Button>
+              <div className='flex gap-3 justify-end p-6 border-t border-border-subtle bg-slate-50/50'>
+                <Button variant='outline' onClick={() => setOpenCashRegisterDialog(false)} disabled={isOpeningCashRegister} className="font-black uppercase text-[10px] tracking-widest border-border-subtle">Cancelar</Button>
+                <Button onClick={handleOpenCashRegister} disabled={isOpeningCashRegister} className="bg-primary hover:bg-primary-hover text-white font-black uppercase text-[10px] tracking-widest shadow-fluent-2">{isOpeningCashRegister ? 'Abriendo...' : 'Abrir Caja'}</Button>
               </div>
             </div>
           </div>
         )}
+
+        {activeCashRegister && (
+          <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-border-subtle pb-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className='flex items-center gap-3'><div className='size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary'><CashIcon size={20} /></div><div><CardTitle className="text-xl font-black tracking-tighter uppercase">{activeCashRegister.name}</CardTitle><CardDescription className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Abierta el {new Date(activeCashRegister.opened_at).toLocaleString()}{activeCashRegister.location && ` • ${activeCashRegister.location}`}</CardDescription></div></div>
+                {getStatusBadge(activeCashRegister.status)}
+              </div>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-8 mb-8'>
+                <div className='p-6 bg-white rounded-xl border border-border-subtle shadow-fluent-2 flex justify-between items-start gap-4 group hover:shadow-fluent-8 transition-all'><div className='flex-1 min-w-0'><p className='text-[10px] font-black uppercase text-text-secondary tracking-[0.2em] mb-2'>Balance Inicial</p><h2 className='text-2xl font-black tabular-nums truncate font-mono'>{(activeCashRegister.initial_balance || 0).toLocaleString()} ₲</h2></div><div className='flex-shrink-0 size-10 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center transition-colors'><MinusIcon size={20} /></div></div>
+                <div className='p-6 bg-primary text-white rounded-xl border border-primary/10 shadow-fluent-8 flex justify-between items-start gap-4'><div className='flex-1 min-w-0'><p className='text-[10px] font-black uppercase text-white/70 tracking-[0.2em] mb-2'>Balance Actual</p><h2 className='text-3xl font-black tabular-nums truncate font-mono'>{(activeCashRegister.current_balance || 0).toLocaleString()} ₲</h2></div><div className='flex-shrink-0 size-12 rounded-lg bg-white/20 flex items-center justify-center'><DollarSign size={24} /></div></div>
+                <div className='p-6 bg-white rounded-xl border border-border-subtle shadow-fluent-2 flex justify-between items-start gap-4 group hover:shadow-fluent-8 transition-all'><div className='flex-1 min-w-0'><p className='text-[10px] font-black uppercase text-text-secondary tracking-[0.2em] mb-2'>Diferencia</p><h2 className={`text-2xl font-black tabular-nums truncate font-mono ${(activeCashRegister.current_balance || 0) - (activeCashRegister.initial_balance || 0) >= 0 ? 'text-success' : 'text-error'}`}>{((activeCashRegister.current_balance || 0) - (activeCashRegister.initial_balance || 0)).toLocaleString()} ₲</h2></div><div className='flex-shrink-0 size-10 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center transition-colors'><PlusIcon size={20} /></div></div>
+              </div>
+              <div className='flex flex-wrap gap-3 justify-center md:justify-start mt-4 border-t border-slate-100 pt-8'>
+                <Button variant='outline' onClick={() => setMovementDialog(true)} className='h-11 rounded-lg px-6 font-black uppercase text-[10px] tracking-widest border-border-subtle hover:bg-slate-50 transition-colors'><DollarSign className='w-4 h-4 mr-2' /> Registrar Movimiento</Button>
+                <Button onClick={() => setAuditModalOpen(true)} className='h-11 rounded-lg px-6 font-black uppercase text-[10px] tracking-widest bg-primary hover:bg-primary-hover text-white shadow-fluent-2'><ClipboardCheck className='w-4 h-4 mr-2' /> Realizar Arqueo</Button>
+                <Button variant='outline' onClick={handleLoadSummary} className='h-11 rounded-lg px-6 font-black uppercase text-[10px] tracking-widest border-border-subtle hover:bg-slate-50 transition-colors'><Calculator className='w-4 h-4 mr-2' /> Ver Reporte</Button>
+                <Button variant='outline' onClick={() => setShowAudits(!showAudits)} className='h-11 rounded-lg px-6 font-black uppercase text-[10px] tracking-widest border-border-subtle hover:bg-slate-50 transition-colors'><History className='w-4 h-4 mr-2' /> {showAudits ? 'Ver Movimientos' : 'Ver Arqueos'}</Button>
+                <div className='w-px h-11 bg-border-subtle mx-2 hidden md:block'></div>
+                <Button variant='outline' onClick={() => setCloseCashRegisterDialog(true)} className='h-11 rounded-lg px-6 font-black uppercase text-[10px] tracking-widest border-error/30 text-error hover:bg-error/5 transition-colors'><XCircle className='w-4 h-4 mr-2' /> Cerrar Caja</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {!activeCashRegister && !isActiveCashRegisterLoading && (
+          <Card className="rounded-xl border-border-subtle shadow-fluent-2"><CardContent className='text-center py-16'><CashIcon className='w-16 h-16 mx-auto text-slate-200 mb-6' /><h3 className='text-xl font-black tracking-tighter uppercase mb-2'>No hay caja activa</h3><p className='text-text-secondary text-sm font-medium mb-8'>Debe abrir una caja registradora para comenzar a operar</p><Button onClick={() => { setOpenCashRegisterDialog(true); setFormError(''); }} className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] px-8 h-11 rounded shadow-fluent-2"><PlusIcon className='w-4 h-4 mr-2' /> Abrir Nueva Caja</Button></CardContent></Card>
+        )}
+
+        {!showAudits && movements.length > 0 && (
+          <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-border-subtle"><CardTitle className="text-xl font-black tracking-tighter uppercase">Movimientos Recientes</CardTitle><CardDescription className="text-[10px] font-bold uppercase tracking-widest">Historial de efectivo en caja</CardDescription></CardHeader>
+            <CardContent className="p-0">
+              <div className='divide-y divide-border-subtle'>
+                {movements.map(m => (
+                  <div key={m.movement_id} className='p-6 flex items-center justify-between hover:bg-slate-50 transition-colors border-l-4' style={{ borderLeftColor: getMovementBorderColor(m.movement_type) }}>
+                    <div className='flex items-center gap-4'>
+                      <div className='size-10 rounded-lg bg-slate-50 flex items-center justify-center'>{getMovementTypeIcon(m.movement_type)}</div>
+                      <div><p className='font-bold text-sm text-text-main'>{m.concept}</p><p className='text-[10px] font-bold uppercase text-text-secondary tracking-widest mt-0.5'>{new Date(m.created_at).toLocaleString()} • {m.user_full_name}</p></div>
+                    </div>
+                    <div className='text-right'>
+                      <p className={`font-black text-lg tabular-nums font-mono ${getMovementTypeColor(m.movement_type)}`}>{m.movement_type === 'EXPENSE' ? '-' : '+'} ₲ {m.amount.toLocaleString()}</p>
+                      <p className='text-[10px] font-bold uppercase text-slate-400 tracking-widest'>Balance: ₲ {m.running_balance?.toLocaleString() || '0'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {showAudits && (
+          <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-border-subtle"><CardTitle className="text-xl font-black tracking-tighter uppercase">Historial de Arqueos</CardTitle><CardDescription className="text-[10px] font-bold uppercase tracking-widest">Auditorías físicas de caja</CardDescription></CardHeader>
+            <CardContent className="p-0">
+              <div className='divide-y divide-border-subtle'>
+                {audits.length === 0 ? <div className='py-12 text-center text-text-secondary font-bold italic uppercase text-xs tracking-widest'>No hay arqueos registrados</div> : audits.map(audit => (
+                  <div key={audit.id} className='p-6 flex items-center justify-between hover:bg-slate-50 transition-colors'>
+                    <div className='flex items-center gap-4'><div className='size-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500'><ClipboardCheck size={20} /></div><div><p className='font-bold text-sm'>Arqueo #{audit.id}</p><p className='text-[10px] font-bold uppercase text-text-secondary tracking-widest mt-0.5'>{new Date(audit.created_at).toLocaleString()}</p></div></div>
+                    <div className='text-right'><p className='font-black text-lg tabular-nums font-mono'>{audit.counted_amount.toLocaleString()} ₲</p><Badge className={`${audit.difference === 0 ? 'bg-green-50 text-success border-green-200' : 'bg-red-50 text-error border-red-200'} uppercase font-black text-[9px] px-2 py-0.5 rounded-full border`}>{audit.difference === 0 ? 'Sin Discrepancia' : `Diferencia: ${audit.difference.toLocaleString()} ₲`}</Badge></div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden">
+          <CardHeader className="bg-slate-50/50 border-b border-border-subtle flex flex-row items-center justify-between"><div><CardTitle className="text-xl font-black tracking-tighter uppercase">Historial de Cajas</CardTitle><CardDescription className="text-[10px] font-bold uppercase tracking-widest">Cierres y arqueos anteriores</CardDescription></div><Button variant='ghost' size='sm' onClick={getCashRegisters} disabled={isCashRegistersLoading} className="text-primary font-black uppercase text-[10px] tracking-widest"><History size={14} className="mr-2" /> Actualizar</Button></CardHeader>
+          <CardContent className="p-0">
+            {cashRegisters && cashRegisters.length > 0 ? (
+              <div className='divide-y divide-border-subtle'>
+                {cashRegisters.map(cr => (
+                  <div key={cr.id} className='p-4 flex items-center justify-between hover:bg-slate-50 transition-colors'>
+                    <div><p className='font-bold text-sm'>{cr.name}</p><p className='text-[10px] font-bold uppercase text-text-secondary tracking-widest mt-0.5'>{new Date(cr.opened_at).toLocaleDateString()} {cr.closed_at && `- ${new Date(cr.closed_at).toLocaleDateString()}`} {cr.location && `• ${cr.location}`}</p></div>
+                    <div className='flex items-center gap-4'><div className='text-right'><p className='font-black font-mono text-sm tabular-nums'>₲ {(cr.current_balance || 0).toLocaleString()}</p></div>{getStatusBadge(cr.status)}</div>
+                  </div>
+                ))}
+              </div>
+            ) : <div className='py-12 text-center text-text-secondary font-bold italic uppercase text-xs tracking-widest'>No hay historial de cajas</div>}
+          </CardContent>
+        </Card>
       </div>
+
+      {movementDialog && (
+        <div className={getOverlayClasses()} onClick={() => setMovementDialog(false)}>
+          <div className={`${styles.card()} w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl shadow-fluent-16`} onClick={e => e.stopPropagation()}>
+            <div className='flex items-center justify-between p-6 border-b border-border-subtle bg-slate-50/50'><div><h2 className='text-lg font-black tracking-tighter uppercase'>Registrar Movimiento</h2><p className='text-[10px] font-bold uppercase tracking-widest text-text-secondary'>Entrada o salida manual de efectivo</p></div><button onClick={() => setMovementDialog(false)} className='text-text-secondary hover:text-text-main transition-colors'><XCircle className='w-5 h-5' /></button></div>
+            <div className='p-8 space-y-6'>
+              {isRegisteringMovement ? <div className='py-12 text-center'><Clock className='animate-spin text-primary mx-auto mb-4' /><p className='text-xs font-black uppercase tracking-widest text-slate-400'>Procesando...</p></div> : (
+                <form onSubmit={handleRegisterMovement} className='space-y-6'>
+                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Tipo de Movimiento</Label><Select value={movementForm.movement_type} onValueChange={v => setMovementForm(prev => ({...prev, movement_type: v}))} required><SelectTrigger className="rounded border-border-subtle font-bold h-11"><SelectValue placeholder='Seleccione el tipo' /></SelectTrigger><SelectContent className="rounded-xl shadow-fluent-16 border-border-subtle"><SelectItem value='INCOME' className="font-bold text-xs uppercase tracking-wider">Ingreso (+)</SelectItem><SelectItem value='EXPENSE' className="font-bold text-xs uppercase tracking-wider">Gasto (-)</SelectItem><SelectItem value='ADJUSTMENT' className="font-bold text-xs uppercase tracking-wider">Ajuste (+/-)</SelectItem></SelectContent></Select></div>
+                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Monto (₲)</Label><Input type='number' step='0.01' value={movementForm.amount} onChange={e => setMovementForm(prev => ({...prev, amount: e.target.value}))} placeholder='0.00' className="rounded border-border-subtle font-mono font-bold text-lg" required /></div>
+                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Concepto</Label><Input value={movementForm.concept} onChange={e => setMovementForm(prev => ({...prev, concept: e.target.value}))} placeholder='Descripción breve' className="rounded border-border-subtle font-bold" required /></div>
+                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Notas</Label><Textarea value={movementForm.notes} onChange={e => setMovementForm(prev => ({...prev, notes: e.target.value}))} placeholder='Detalles adicionales...' rows={2} className="rounded border-border-subtle resize-none" /></div>
+                </form>
+              )}
+            </div>
+            <div className='flex gap-3 justify-end p-6 border-t border-border-subtle bg-slate-50/50'><Button variant='outline' onClick={() => setMovementDialog(false)} disabled={isRegisteringMovement} className="font-black uppercase text-[10px] tracking-widest border-border-subtle">Cancelar</Button><Button onClick={handleRegisterMovement} disabled={isRegisteringMovement} className="bg-primary hover:bg-primary-hover text-white font-black uppercase text-[10px] tracking-widest shadow-fluent-2">Registrar</Button></div>
+          </div>
+        </div>
+      )}
+
+      {closeCashRegisterDialog && (
+        <div className={getOverlayClasses()} onClick={() => setCloseCashRegisterDialog(false)}>
+          <div className={`${styles.card()} w-full max-w-lg rounded-xl shadow-fluent-16 overflow-hidden`} onClick={e => e.stopPropagation()}>
+            <div className='flex items-center justify-between p-6 border-b border-border-subtle bg-amber-50/50'><div className='flex items-center gap-3'><div className='size-10 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600'><AlertCircle size={20} /></div><div><h2 className='text-lg font-black tracking-tighter uppercase'>Cerrar Caja</h2><p className='text-[10px] font-bold uppercase tracking-widest text-amber-700'>Finalizar jornada operativa</p></div></div><button onClick={() => setCloseCashRegisterDialog(false)} className='text-amber-400 hover:text-amber-600 transition-colors'><XCircle className='w-5 h-5' /></button></div>
+            <div className='p-8 space-y-6'>
+              {isClosingCashRegister ? <div className='py-12 text-center'><Clock className='animate-spin text-amber-600 mx-auto mb-4' /><p className='text-xs font-black uppercase tracking-widest text-amber-400'>Cerrando...</p></div> : (
+                <form id='close-cash-form' onSubmit={handleCloseCashRegister} className='space-y-6'>
+                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Balance Final Físico</Label><Input type='number' step='0.01' value={closeCashRegisterForm.final_balance} onChange={e => setCloseCashRegisterForm(prev => ({...prev, final_balance: e.target.value}))} placeholder='0.00' className="rounded border-border-subtle font-mono font-bold text-lg" required /><p className='text-[10px] text-slate-400 font-bold uppercase mt-2'>Balance del sistema: ₲ {activeCashRegister?.current_balance?.toLocaleString() || 0}</p></div>
+                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Notas de Cierre</Label><Textarea value={closeCashRegisterForm.notes} onChange={e => setCloseCashRegisterForm(prev => ({...prev, notes: e.target.value}))} placeholder='Observaciones...' rows={3} className="rounded border-border-subtle resize-none" /></div>
+                </form>
+              )}
+            </div>
+            <div className='flex gap-3 justify-end p-6 border-t border-border-subtle bg-slate-50/50'><Button variant='outline' onClick={() => setCloseCashRegisterDialog(false)} disabled={isClosingCashRegister} className="font-black uppercase text-[10px] tracking-widest border-border-subtle">Cancelar</Button><Button type='submit' form='close-cash-form' disabled={isClosingCashRegister} className="bg-error hover:bg-error/90 text-white font-black uppercase text-[10px] tracking-widest shadow-fluent-2">Cerrar Caja Registradora</Button></div>
+          </div>
+        </div>
+      )}
+
+      {summaryDialog && (
+        <div className={getOverlayClasses()} onClick={() => setSummaryDialog(false)}>
+          <div className={`${styles.card()} w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-fluent-16`} onClick={e => e.stopPropagation()}>
+            <div className='flex items-center justify-between p-6 border-b border-border-subtle bg-slate-50/50'><div className='flex items-center gap-3'><div className='size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary'><Calculator size={20} /></div><div><h2 className='text-lg font-black tracking-tighter uppercase'>Reporte de Caja</h2><p className='text-[10px] font-bold uppercase tracking-widest text-text-secondary'>Desglose financiero detallado</p></div></div><button onClick={() => setSummaryDialog(false)} className='text-text-secondary hover:text-text-main transition-colors'><XCircle className='w-5 h-5' /></button></div>
+            <div className='p-8 space-y-8'>
+              {cashRegisterSummary && (
+                <div className='space-y-8'>
+                  <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+                    <div className='p-4 bg-slate-50 rounded-lg border border-border-subtle'><p className='text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1'>Ingresos</p><p className='text-lg font-black text-success font-mono'>₲ {cashRegisterSummary.summary?.total_income?.toLocaleString() || 0}</p></div>
+                    <div className='p-4 bg-slate-50 rounded-lg border border-border-subtle'><p className='text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1'>Gastos</p><p className='text-lg font-black text-error font-mono'>₲ {cashRegisterSummary.summary?.total_expenses?.toLocaleString() || 0}</p></div>
+                    <div className='p-4 bg-slate-50 rounded-lg border border-border-subtle'><p className='text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1'>Transacciones</p><p className='text-lg font-black text-info font-mono'>{cashRegisterSummary.summary?.transaction_count || 0}</p></div>
+                    <div className='p-4 bg-slate-50 rounded-lg border border-border-subtle'><p className='text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1'>Cambio Neto</p><p className='text-lg font-black text-primary font-mono'>₲ {cashRegisterSummary.summary?.net_change?.toLocaleString() || 0}</p></div>
+                  </div>
+                  <div className='space-y-4'><h4 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]'>Por Categoría</h4><div className='grid grid-cols-1 md:grid-cols-2 gap-3'>{Object.entries(cashRegisterSummary.by_category || {}).map(([cat, amount]) => (<div key={cat} className='flex items-center justify-between p-3 border border-border-subtle rounded-lg'><span className='text-xs font-bold uppercase tracking-wider'>{cat}</span><span className='font-black font-mono text-sm'>₲ {amount.toLocaleString()}</span></div>))}</div></div>
+                </div>
+              )}
+            </div>
+            <div className='flex justify-end p-6 border-t border-border-subtle bg-slate-50/50'><Button onClick={() => setSummaryDialog(false)} className="bg-primary hover:bg-primary-hover text-white font-black uppercase text-[10px] tracking-widest h-10 px-8 rounded shadow-fluent-2">Cerrar</Button></div>
+          </div>
+        </div>
+      )}
+
       <CashAuditModal 
-        isOpen={auditModalOpen} 
-        onClose={() => setAuditModalOpen(false)} 
-        cashRegisterId={activeCashRegister?.id} 
-        systemBalance={activeCashRegister?.current_balance || 0}
-        onAuditCreated={handleLoadAudits}
+        isOpen={auditModalOpen} onClose={() => setAuditModalOpen(false)} cashRegisterId={activeCashRegister?.id} systemBalance={activeCashRegister?.current_balance || 0} onAuditCreated={() => getAudits(activeCashRegister?.id)}
       />
     </div>
   )
