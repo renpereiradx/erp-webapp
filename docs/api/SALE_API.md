@@ -306,6 +306,13 @@ Permite agregar uno o más productos a una venta existente que se encuentra en e
 
 Esta sección describe el proceso para anular o cancelar una venta. La anulación es un proceso irreversible que revierte el movimiento de stock de los productos vendidos.
 
+### ⚠️ Preservación de Datos Fiscales
+
+Durante la anulación se preservan automáticamente:
+- `tax_discrepancy_warnings`: Advertencias de discrepancia de tasas de IVA
+- `tax_rate_id` y `applied_tax_rate`: Datos fiscales de cada línea
+- Todos los datos se registran en `stock.metadata` para auditoría fiscal
+
 ### 3. Previsualizar Anulación de Venta
 
 **Endpoint:** `GET /sale/{id}/preview-cancellation`
@@ -386,9 +393,18 @@ Anula una venta de forma definitiva. Esto cambiará el estado de la venta a `CAN
   "success": true,
   "sale_id": "24aBcDeF",
   "new_status": "CANCELLED",
-  "message": "La venta ha sido anulada exitosamente. El stock ha sido revertido."
+  "message": "La venta ha sido anulada exitosamente. El stock ha sido revertido.",
+  "cancellation_details": {
+    "stock_reverted": 2,
+    "payments_refunded": 1,
+    "reserves_reverted": 0,
+    "reserves_cancelled": 0,
+    "tax_warnings_preserved": 0
+  }
 }
 ```
+
+**Nota:** El campo `tax_warnings_preserved` indica cuántas advertencias de discrepancia fiscal se preservaron para auditoría.
 
 **Errores Posibles:**
 

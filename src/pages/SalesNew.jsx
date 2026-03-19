@@ -785,8 +785,14 @@ const SalesNew = () => {
 
     setCancelSubmitting(true)
     try {
-      await cancelSale(saleId, cancelReason || 'Cancelada por el usuario')
-      toast.success('Venta cancelada exitosamente')
+      const response = await cancelSale(saleId, cancelReason || 'Cancelada por el usuario')
+      
+      const preserved = response?.data?.cancellation_details?.tax_warnings_preserved || 0
+      if (preserved > 0) {
+        toast.info(`Venta anulada. Se preservaron ${preserved} registros de discrepancia fiscal para auditoría.`)
+      } else {
+        toast.success('Venta cancelada exitosamente')
+      }
 
       setSelectedHistorySale(prev =>
         prev ? { ...prev, status: 'cancelled' } : prev,
