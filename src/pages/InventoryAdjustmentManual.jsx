@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Search, Package, Send, RefreshCw, X } from 'lucide-react'
 import useInventoryStore from '@/store/useInventoryStore'
+import useAuthStore from '@/store/useAuthStore'
 import { productService } from '@/services/productService'
 import {
   REASON_OPTIONS,
@@ -21,6 +22,8 @@ const InventoryAdjustmentManualPage = () => {
     error: storeError,
     clearError,
   } = useInventoryStore()
+
+  const { user } = useAuthStore()
 
   // Estado local para productos
   const [localProducts, setLocalProducts] = useState([])
@@ -183,12 +186,19 @@ const InventoryAdjustmentManualPage = () => {
       setFormErrors({ quantityAdjustment: 'La cantidad resultante no puede ser negativa' })
       return
     }
+    const previousStock = selectedProduct.stock_quantity || 0
     const metadata = {
       source: 'manual_adjustment',
       timestamp: new Date().toISOString(),
-      reason_category: formData.reasonCategory,
+      operator: user?.name || user?.id || 'manual_operator',
+      adjustment_type: formData.reasonCategory, // Alineado con enum v4.1
+      reason_category: formData.reasonCategory, // Retrocompatibilidad
+      previous_stock: previousStock,
+      new_stock: newQuantity,
+      stock_difference: newQuantity - previousStock,
       approval_level: formData.approvalLevel,
       notes: formData.details,
+      system_version: '4.1.0-frontend',
     }
     const adjustmentData = {
       product_id: selectedProduct.product_id,
@@ -209,7 +219,7 @@ const InventoryAdjustmentManualPage = () => {
       })
       setSelectedProduct(prev => ({ ...prev, stock_quantity: newQuantity }))
     } else {
-      setFormErrors({ submit: result.error || 'Error al crear ajuste' })
+      setFormErrors({ submit: result.message || result.error || 'Error al crear ajuste' })
     }
   }
 

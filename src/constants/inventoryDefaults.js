@@ -37,115 +37,135 @@ export const DEFAULT_REASONS = {
 
 export const DEFAULT_METADATA_TEMPLATES = {
   // Conteo Físico
-  PHYSICAL_COUNT: {
+  INVENTORY_COUNT: {
     source: 'physical_count',
+    adjustment_type: 'INVENTORY_COUNT',
     operator: '', // A completar por el usuario
     verification: 'single_check', // o "double_check"
     location: '', // ubicación del conteo
-    counting_method: 'manual', // o "scanner"
+    counting_method: 'manual', // o "barcode_scanner"
     timestamp: () => new Date().toISOString(),
+    system_version: '4.1.0-frontend',
   },
 
   // Producto Dañado
-  DAMAGED_GOODS: {
-    source: 'quality_control',
-    damage_type: '', // "expired", "broken", "contaminated", etc.
+  DAMAGE: {
+    source: 'manual_adjustment',
+    adjustment_type: 'DAMAGE',
     damage_severity: 'total', // "partial", "total"
     disposal_method: '', // "discard", "return_supplier", "repair"
-    photos_taken: false,
-    insurance_claim: false,
+    operator: '',
+    location: '',
+    timestamp: () => new Date().toISOString(),
+    system_version: '4.1.0-frontend',
   },
 
-  // Error del Sistema
-  SYSTEM_ERROR: {
+  // Producto Vencido
+  EXPIRY: {
+    source: 'manual_adjustment',
+    adjustment_type: 'EXPIRY',
+    expiry_date: '', // ISO date string
+    operator: '',
+    location: '',
+    timestamp: () => new Date().toISOString(),
+    system_version: '4.1.0-frontend',
+  },
+
+  // Robo o Extravío
+  THEFT: {
+    source: 'manual_adjustment',
+    adjustment_type: 'THEFT',
+    operator: '',
+    location: '',
+    timestamp: () => new Date().toISOString(),
+    system_version: '4.1.0-frontend',
+  },
+
+  // Devolución
+  RETURN: {
+    source: 'manual_adjustment',
+    adjustment_type: 'RETURN',
+    reference_document: '',
+    operator: '',
+    location: '',
+    timestamp: () => new Date().toISOString(),
+    system_version: '4.1.0-frontend',
+  },
+
+  // Corrección
+  CORRECTION: {
     source: 'system_correction',
-    error_type: '', // "sync_error", "calculation_error", etc.
-    original_transaction: '', // ID de transacción original
-    detection_method: 'audit', // "audit", "user_report", "automatic"
-    corrected_by: '', // ID del usuario que corrige
-    approval_required: false,
+    adjustment_type: 'CORRECTION',
+    previous_stock: 0,
+    new_stock: 0,
+    stock_difference: 0,
+    operator: '',
+    location: '',
+    timestamp: () => new Date().toISOString(),
+    system_version: '4.1.0-frontend',
   },
 
   // Configuración Inicial
-  INITIAL_STOCK: {
+  INITIAL_COUNT: {
     source: 'initial_setup',
-    migration_date: () => new Date().toISOString(),
-    data_source: '', // "manual", "import", "system_migration"
-    verified_by: '', // Usuario que verificó
-    cost_basis: '', // Base del costo
-    notes: '',
-  },
-
-  // Transferencia
-  TRANSFER: {
-    source: 'transfer',
-    from_location: '',
-    to_location: '',
-    transfer_type: 'internal', // "internal", "external"
-    shipping_method: '',
-    tracking_number: '',
-    expected_delivery: '',
-    carrier: '',
+    adjustment_type: 'INITIAL_COUNT',
+    operator: '',
+    location: '',
+    timestamp: () => new Date().toISOString(),
+    system_version: '4.1.0-frontend',
   },
 
   // Genérico/Mínimo
   DEFAULT: {
-    source: 'manual_entry',
+    source: 'manual_adjustment',
+    adjustment_type: 'CORRECTION',
     timestamp: () => new Date().toISOString(),
+    operator: '',
+    location: '',
+    system_version: '4.1.0-frontend',
     notes: '',
   },
 }
 
-// Para dropdowns en el frontend
+// Para dropdowns en el frontend - Alineado con adjustment_type enum v4.1
 export const REASON_OPTIONS = [
-  { value: 'PHYSICAL_COUNT', label: 'Conteo físico', icon: '📊' },
-  { value: 'DAMAGED_GOODS', label: 'Producto dañado', icon: '❌' },
-  {
-    value: 'INVENTORY_CORRECTION',
-    label: 'Corrección de inventario',
-    icon: '🔧',
-  },
-  { value: 'SYSTEM_ERROR', label: 'Error del sistema', icon: '⚠️' },
-  { value: 'THEFT_LOSS', label: 'Pérdida/Robo', icon: '🚫' },
-  { value: 'SUPPLIER_ERROR', label: 'Error del proveedor', icon: '📦' },
-  { value: 'EXPIRATION', label: 'Producto vencido', icon: '⏰' },
-  { value: 'BREAKAGE', label: 'Producto roto', icon: '💥' },
-  { value: 'QUALITY_CONTROL', label: 'Control de calidad', icon: '🔍' },
-  { value: 'INITIAL_STOCK', label: 'Stock inicial', icon: '🏁' },
+  { value: 'INVENTORY_COUNT', label: 'Conteo físico', icon: '📊' },
+  { value: 'DAMAGE', label: 'Producto dañado', icon: '❌' },
+  { value: 'EXPIRY', label: 'Producto vencido', icon: '⏰' },
+  { value: 'THEFT', label: 'Pérdida/Robo', icon: '🚫' },
+  { value: 'RETURN', label: 'Devolución', icon: '📦' },
+  { value: 'CORRECTION', label: 'Corrección de inventario', icon: '🔧' },
+  { value: 'INITIAL_COUNT', label: 'Stock inicial', icon: '🏁' },
   { value: 'OTHER', label: 'Otro motivo', icon: '📝' },
 ]
 
 // Plantillas de texto predeterminadas para cada categoría de motivo
 export const REASON_DETAIL_TEMPLATES = {
-  PHYSICAL_COUNT:
+  INVENTORY_COUNT:
     'Ajuste realizado tras conteo físico del inventario. Se encontró diferencia entre el stock registrado y el stock real en almacén.',
-  DAMAGED_GOODS:
-    'Producto dañado durante almacenamiento/manipulación. Se procede a dar de baja del inventario por no cumplir condiciones de venta.',
-  INVENTORY_CORRECTION:
-    'Corrección de inventario por discrepancia detectada durante auditoría interna. Se ajusta cantidad para reflejar existencias reales.',
-  SYSTEM_ERROR:
-    'Corrección por error detectado en el sistema. La cantidad registrada no corresponde con el movimiento real de mercancía.',
-  THEFT_LOSS:
+  DAMAGE:
+    'Producto dañado durante almacenamiento/manipulación. Se procede a dar de baja del inventario.',
+  EXPIRY:
+    'Producto dado de baja por vencimiento de fecha de caducidad. No apto para venta.',
+  THEFT:
     'Merma por pérdida o extravío de producto. Se registra faltante detectado sin causa identificable.',
-  SUPPLIER_ERROR:
-    'Ajuste por diferencia en entrega del proveedor. La cantidad recibida no coincide con la facturada.',
-  EXPIRATION:
-    'Producto dado de baja por vencimiento de fecha de caducidad. No apto para venta según políticas de calidad.',
-  BREAKAGE:
-    'Producto roto/deteriorado. Se retira del inventario disponible para venta.',
-  QUALITY_CONTROL:
-    'Rechazo por no superar control de calidad. Producto no cumple estándares requeridos para comercialización.',
-  INITIAL_STOCK:
+  RETURN:
+    'Reingreso de stock por devolución de producto en condiciones aptas para la venta.',
+  CORRECTION:
+    'Corrección de inventario por discrepancia detectada durante auditoría interna.',
+  INITIAL_COUNT:
     'Configuración de stock inicial del producto. Primera carga de inventario en el sistema.',
   OTHER: '',
 }
 
 export const METADATA_TEMPLATES_OPTIONS = [
-  { value: 'PHYSICAL_COUNT', label: 'Conteo físico' },
-  { value: 'DAMAGED_GOODS', label: 'Producto dañado' },
-  { value: 'SYSTEM_ERROR', label: 'Error del sistema' },
-  { value: 'INITIAL_STOCK', label: 'Stock inicial' },
-  { value: 'TRANSFER', label: 'Transferencia' },
+  { value: 'INVENTORY_COUNT', label: 'Conteo físico' },
+  { value: 'DAMAGE', label: 'Producto dañado' },
+  { value: 'EXPIRY', label: 'Vencimiento' },
+  { value: 'THEFT', label: 'Robo/Pérdida' },
+  { value: 'RETURN', label: 'Devolución' },
+  { value: 'CORRECTION', label: 'Corrección' },
+  { value: 'INITIAL_COUNT', label: 'Stock inicial' },
   { value: 'DEFAULT', label: 'Básico' },
 ]
 

@@ -361,6 +361,14 @@ export const inventoryService = {
         throw new Error('Se requiere al menos un producto en el inventario');
       }
 
+      // Enriquecer metadata con campos obligatorios v4.1
+      const enrichedMetadata = {
+        source: 'physical_count',
+        timestamp: new Date().toISOString(),
+        system_version: '4.1.0-frontend',
+        ...(inventoryData.metadata || {}),
+      };
+
       // Mapear datos al formato esperado por la API con validación
       const apiPayload = {
         items: itemsArray.map((product, index) => {
@@ -377,7 +385,7 @@ export const inventoryService = {
             quantity_checked: parseFloat(product.quantity_checked) || 0
           };
         }),
-        metadata: inventoryData.metadata || {}
+        metadata: enrichedMetadata
       };
 
       const result = await _fetchWithRetry(async () => {
@@ -386,7 +394,7 @@ export const inventoryService = {
 
       telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
         operation: 'createInventory',
-        itemsCount: inventoryData.products?.length || 0,
+        itemsCount: apiPayload.items.length,
         usedMockData: result === mockData
       });
 
@@ -401,12 +409,17 @@ export const inventoryService = {
 
       return response;
     } catch (error) {
+      console.error('Error in createInventory:', error);
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'createInventory',
         error: error.message,
         duration: Date.now() - startTime
       });
-      return { success: false, error: error.message };
+      return { 
+        success: false, 
+        error: error.message,
+        message: error.response?.data?.message || error.message 
+      };
     }
   },
 
@@ -420,10 +433,7 @@ export const inventoryService = {
     
     try {
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.post(API_ENDPOINTS.inventoryInvalidate, {
-          action: 'invalidate',
-          id_inventory: inventoryId
-        });
+        return await apiClient.put(`${API_ENDPOINTS.inventory}${inventoryId}`);
       });
       
       telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
@@ -456,7 +466,7 @@ export const inventoryService = {
     
     try {
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.get(`${API_ENDPOINTS.stockTransactionsByProduct}/${productId}?limit=${limit}&offset=${offset}`);
+        return await apiClient.get(`/stock-transactions/product/${productId}?limit=${limit}&offset=${offset}`);
       });
       
       telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
@@ -492,8 +502,18 @@ export const inventoryService = {
     const startTime = Date.now();
     
     try {
+      const enrichedMetadata = {
+        source: 'manual_adjustment',
+        timestamp: new Date().toISOString(),
+        system_version: '4.1.0-frontend',
+        ...(transactionData.metadata || {}),
+      };
+
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.post(API_ENDPOINTS.stockTransactions, transactionData);
+        return await apiClient.post('/stock-transactions/', {
+          ...transactionData,
+          metadata: enrichedMetadata
+        });
       });
       
       telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
@@ -522,7 +542,7 @@ export const inventoryService = {
     
     try {
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.get(API_ENDPOINTS.stockTransactionTypes);
+        return await apiClient.get('/stock-transactions/types');
       });
       
       telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
@@ -553,7 +573,7 @@ export const inventoryService = {
     const startTime = Date.now();
     
     try {
-      let url = `${API_ENDPOINTS.stockTransactionsByDate}?start_date=${startDate}&end_date=${endDate}&limit=${limit}&offset=${offset}`;
+      let url = `/stock-transactions/by-date?start_date=${startDate}&end_date=${endDate}&limit=${limit}&offset=${offset}`;
       if (type) {
         url += `&type=${type}`;
       }
@@ -592,7 +612,7 @@ export const inventoryService = {
     
     try {
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.get(`${API_ENDPOINTS.stockTransactionById}/${transactionId}`);
+        return await apiClient.get(`/stock-transactions/${transactionId}`);
       });
       
       telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
@@ -621,8 +641,8 @@ export const inventoryService = {
     
     try {
       const url = productId 
-        ? `${API_ENDPOINTS.validateConsistency}?product_id=${productId}`
-        : API_ENDPOINTS.validateConsistency;
+        ? `/stock-transactions/validate-consistency?product_id=${productId}`
+        : '/stock-transactions/validate-consistency';
         
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(url);
@@ -658,7 +678,7 @@ export const inventoryService = {
 
     try {
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.get(`${API_ENDPOINTS.manualAdjustmentHistory}/${productId}/history?limit=${limit}&offset=${offset}`);
+        return await apiClient.get(`/manual_adjustment/product/${productId}/history?limit=${limit}&offset=${offset}`);
       });
 
       telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
@@ -692,10 +712,24 @@ export const inventoryService = {
     const startTime = Date.now();
 
     try {
-      const mockData = _createMockData.manualAdjustment(adjustmentData);
+      // Enriquecer metadata con campos obligatorios v4.1
+      const enrichedMetadata = {
+        source: 'manual_adjustment',
+        timestamp: new Date().toISOString(),
+        system_version: '4.1.0-frontend',
+        ...(adjustmentData.metadata || {}),
+      };
+
+      const mockData = _createMockData.manualAdjustment({
+        ...adjustmentData,
+        metadata: enrichedMetadata
+      });
 
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.post(API_ENDPOINTS.manualAdjustment, adjustmentData);
+        return await apiClient.post(API_ENDPOINTS.manualAdjustment, {
+          ...adjustmentData,
+          metadata: enrichedMetadata
+        });
       }, 2, mockData);
 
       telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
@@ -707,12 +741,17 @@ export const inventoryService = {
 
       return { success: true, data: result };
     } catch (error) {
+      console.error('Error in createManualAdjustment:', error);
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'createManualAdjustment',
         error: error.message,
         duration: Date.now() - startTime
       });
-      return { success: false, error: error.message };
+      return { 
+        success: false, 
+        error: error.message,
+        message: error.response?.data?.message || error.message
+      };
     }
   },
 

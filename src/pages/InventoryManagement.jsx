@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useI18n } from '@/lib/i18n'
 import useInventoryManagementStore from '@/store/useInventoryManagementStore'
 import useDashboardStore from '@/store/useDashboardStore'
+import useAuthStore from '@/store/useAuthStore'
 import { productService } from '@/services/productService'
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
@@ -29,6 +30,7 @@ const InventoryManagement = () => {
   const navigate = useNavigate()
   const toast = useToast()
   const { fetchDashboardData } = useDashboardStore()
+  const { user } = useAuthStore()
 
   // Store hooks
   const {
@@ -200,7 +202,7 @@ const InventoryManagement = () => {
     // Resetear formulario
     setInventoryForm({
       metadata: {
-        operator: '',
+        operator: user?.name || user?.id || '',
         location: '',
         counting_method: 'manual',
         verification: 'single_check',
@@ -294,6 +296,7 @@ const InventoryManagement = () => {
       metadata: {
         ...inventoryForm.metadata,
         timestamp: new Date().toISOString(),
+        system_version: '4.1.0-frontend',
       },
     }
 
@@ -327,8 +330,9 @@ const InventoryManagement = () => {
       setShowDropdown(false)
     } else {
       // Mostrar notificación de error
-      toast.error(result.error || 'Error al crear el inventario', 5000)
-      setFormErrors([result.error || 'Error al crear el inventario'])
+      const errorMessage = result.message || result.error || 'Error al crear el inventario'
+      toast.error(errorMessage, 5000)
+      setFormErrors([errorMessage])
     }
   }
 
