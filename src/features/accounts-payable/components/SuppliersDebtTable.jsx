@@ -7,6 +7,10 @@ import { formatPYG } from '@/utils/currencyUtils';
  * 100% fidelity to Stitch design with high-density layout and rounded-xl.
  */
 const SuppliersDebtTable = ({ vendors = [] }) => {
+  const formatCurrency = (val) => {
+    return formatPYG(val);
+  };
+
   return (
     <div className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-[0_1.6px_3.6px_0_rgba(0,0,0,0.132),_0_0.3px_0.9px_0_rgba(0,0,0,0.108)] rounded-xl overflow-hidden mb-8 transition-all hover:shadow-[0_8px_16px_rgba(0,0,0,0.08)]">
       <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 bg-white dark:bg-slate-800">
@@ -73,13 +77,13 @@ const SuppliersDebtTable = ({ vendors = [] }) => {
                     <span className="text-xs font-mono font-medium text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded border border-slate-100 dark:border-slate-700">{vendor.rfc}</span>
                   </td> */}
                   <td className="px-6 py-4 text-right">
-                    <span className="text-sm font-black text-slate-900 dark:text-white">
-                      {formatPYG(vendor.totalBalance)}
+                    <span className="text-sm font-mono font-bold text-slate-900 dark:text-white tabular-nums">
+                      {formatCurrency(vendor.totalBalance)}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <span className={`text-sm font-black ${vendor.overdueAmount > 0 ? 'text-fluent-danger' : 'text-slate-900 dark:text-white'}`}>
-                      {formatPYG(vendor.overdueAmount)}
+                    <span className={`text-sm font-mono font-black tabular-nums ${vendor.overdueAmount > 0 ? 'text-fluent-danger' : 'text-slate-900 dark:text-white'}`}>
+                      {formatCurrency(vendor.overdueAmount)}
                     </span>
                   </td>
                   {/* <td className="px-6 py-4">

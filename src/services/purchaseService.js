@@ -11,6 +11,9 @@ import {
   DEMO_PURCHASE_ORDERS_DATA,
   DEMO_TAX_RATES_DATA,
 } from '../config/demoData'
+import {
+  calculatePurchaseSalePriceGs,
+} from '../domain/pricing/purchases/purchasePricingPolicy'
 // TypeScript types are available in ../types/purchase.ts
 
 // Configuración de timeouts y reintentos
@@ -668,8 +671,8 @@ class PurchaseService {
       } else if (metadataSalePrice > 0) {
         finalSalePrice = metadataSalePrice
       } else if (profitPct > 0) {
-        // Fallback: calcular con redondeo para PYG
-        finalSalePrice = Math.round(unitPrice * (1 + profitPct / 100))
+        // Fallback: calcular con política de redondeo PYG (ceil a múltiplo de 50)
+        finalSalePrice = calculatePurchaseSalePriceGs(unitPrice, profitPct)
       }
 
       return {
@@ -687,11 +690,9 @@ class PurchaseService {
   }
 
   // Calcular precio de venta según la especificación (precio ya incluye IVA)
+  // Usa política de dominio: ceil al múltiplo de 50 más cercano en Gs
   calculateSalePrice(unitPrice, profitPct) {
-    if (!unitPrice || unitPrice <= 0) return 0
-
-    const margin = profitPct && profitPct > 0 ? profitPct : 30 // Default 30%
-    return Number((unitPrice * (1 + margin / 100)).toFixed(2))
+    return calculatePurchaseSalePriceGs(unitPrice, profitPct)
   }
 
   // Calcular totales de compra (compatible con ambos formatos)

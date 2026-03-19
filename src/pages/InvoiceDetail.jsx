@@ -88,11 +88,11 @@ const InvoiceDetail = () => {
       <div className="flex flex-col gap-4">
         {/* Breadcrumbs with better styling */}
         <nav className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
-          <Link to="/payables/list" className="hover:text-primary transition-colors flex items-center gap-1">
+          <Link to="/dashboard/payables" className="hover:text-primary transition-colors flex items-center gap-1">
             Finanzas
           </Link>
           <ChevronRight size={12} className="mx-2 opacity-30" />
-          <Link to="/payables/list" className="hover:text-primary transition-colors">
+          <Link to="/payables/invoices" className="hover:text-primary transition-colors">
             Cuentas por Pagar
           </Link>
           <ChevronRight size={12} className="mx-2 opacity-30" />
@@ -111,7 +111,7 @@ const InvoiceDetail = () => {
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white uppercase flex items-center">
-                  Factura <span className="text-primary font-mono ml-2">#{invoice.id}</span>
+                  Factura <span className="text-primary font-mono font-black ml-2">#{invoice.id}</span>
                 </h1>
                 <div className="flex items-center px-2.5 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold rounded-lg border border-amber-100 dark:border-amber-800/50 uppercase tracking-widest shadow-sm">
                   <span className="size-1.5 rounded-full bg-amber-500 mr-1.5 animate-pulse"></span>
@@ -152,7 +152,7 @@ const InvoiceDetail = () => {
         <div className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-[0_1.6px_3.6px_0_rgba(0,0,0,0.132),_0_0.3px_0.9px_0_rgba(0,0,0,0.108)] p-6 md:p-8 rounded-2xl flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all">
           <div className="flex-1 min-w-0">
             <div className="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-[0.2em] group-hover:text-primary transition-colors">Monto Original</div>
-            <div className="text-2xl xl:text-3xl font-black text-slate-900 dark:text-white break-words">{formatAmount(invoice.montoOriginal)}</div>
+            <div className="text-2xl xl:text-3xl font-mono font-black text-slate-900 dark:text-white break-words tabular-nums">{formatAmount(invoice.montoOriginal)}</div>
           </div>
           <div className="mt-5 h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
             <div className="bg-slate-400 h-full w-full rounded-full opacity-50"></div>
@@ -162,7 +162,7 @@ const InvoiceDetail = () => {
         <div className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-[0_1.6px_3.6px_0_rgba(0,0,0,0.132),_0_0.3px_0.9px_0_rgba(0,0,0,0.108)] p-6 md:p-8 rounded-2xl border-l-4 border-l-emerald-500 flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all">
           <div className="flex-1 min-w-0">
             <div className="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-[0.2em] group-hover:text-emerald-500 transition-colors">Monto Pagado</div>
-            <div className="text-2xl xl:text-3xl font-black text-emerald-600 dark:text-emerald-400 break-words">{formatAmount(invoice.montoPagado)}</div>
+            <div className="text-2xl xl:text-3xl font-mono font-black text-emerald-600 dark:text-emerald-400 break-words tabular-nums">{formatAmount(invoice.montoPagado)}</div>
           </div>
           <div className="mt-5 h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
             <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(16,185,129,0.4)]" style={{ width: `${invoice.progreso}%` }}></div>
@@ -172,7 +172,7 @@ const InvoiceDetail = () => {
         <div className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-[0_1.6px_3.6px_0_rgba(0,0,0,0.132),_0_0.3px_0.9px_0_rgba(0,0,0,0.108)] p-6 md:p-8 rounded-2xl border-l-4 border-l-primary flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all">
           <div className="flex-1 min-w-0">
             <div className="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-[0.2em] group-hover:text-primary transition-colors">Saldo Pendiente</div>
-            <div className="text-2xl xl:text-3xl font-black text-primary break-words">{formatAmount(invoice.saldoPendiente)}</div>
+            <div className="text-2xl xl:text-3xl font-mono font-black text-primary break-words tabular-nums">{formatAmount(invoice.saldoPendiente)}</div>
           </div>
           <div className="mt-5 h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
             <div className="bg-primary h-full rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(19,127,236,0.4)]" style={{ width: `${100 - invoice.progreso}%` }}></div>
@@ -198,11 +198,11 @@ const InvoiceDetail = () => {
             <div className="p-6 md:p-8 grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
               <div>
                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Fecha de Emisión</div>
-                <div className="text-sm md:text-base font-bold text-slate-900 dark:text-white">{invoice.detalle.emision}</div>
+                <div className="text-sm md:text-base font-mono font-bold text-slate-900 dark:text-white">{invoice.detalle.emision}</div>
               </div>
               <div>
                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Fecha de Vencimiento</div>
-                <div className="text-sm md:text-base font-black text-fluent-danger">{invoice.detalle.vencimiento}</div>
+                <div className="text-sm md:text-base font-mono font-black text-fluent-danger">{invoice.detalle.vencimiento}</div>
               </div>
               <div>
                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Términos de Crédito</div>
@@ -241,8 +241,8 @@ const InvoiceDetail = () => {
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                   {invoice.pagos.map((pago, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer">
-                      <td className="px-6 py-4 font-mono text-sm font-bold text-primary group-hover:underline">{pago.id}</td>
-                      <td className="px-4 py-4 text-sm font-medium text-slate-700 dark:text-slate-300">{pago.fecha}</td>
+                      <td className="px-6 py-4 font-mono text-sm font-black text-primary group-hover:underline">{pago.id}</td>
+                      <td className="px-4 py-4 text-sm font-mono font-bold text-slate-700 dark:text-slate-300">{pago.fecha}</td>
                       <td className="px-4 py-4 text-sm font-medium text-slate-700 dark:text-slate-300">{pago.metodo}</td>
                       <td className="px-4 py-4 text-sm font-mono font-medium text-slate-500">{pago.ref}</td>
                       <td className="px-4 py-4 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -253,7 +253,7 @@ const InvoiceDetail = () => {
                           {pago.user}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-right font-mono font-black text-slate-900 dark:text-white text-sm">
+                      <td className="px-6 py-4 text-right font-mono font-black text-slate-900 dark:text-white text-sm tabular-nums">
                         {formatAmount(pago.monto)}
                       </td>
                     </tr>
@@ -263,7 +263,7 @@ const InvoiceDetail = () => {
             </div>
             <div className="px-6 py-4 md:py-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 text-right flex items-center justify-end">
               <span className="text-xs font-black uppercase tracking-widest text-slate-500 mr-4">Total Pagado:</span>
-              <span className="text-lg md:text-xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">{formatAmount(invoice.montoPagado)}</span>
+              <span className="text-lg md:text-xl font-mono font-black text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums">{formatAmount(invoice.montoPagado)}</span>
             </div>
           </section>
         </div>
@@ -355,7 +355,7 @@ const InvoiceDetail = () => {
                       <div className="flex-1 min-w-0 pt-0.5">
                         <div className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{act.titulo}</div>
                         <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">{act.desc}</div>
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">{act.date}</div>
+                        <div className="text-[10px] font-mono font-black text-slate-400 uppercase tracking-widest mt-1.5">{act.date}</div>
                       </div>
                     </div>
                   );

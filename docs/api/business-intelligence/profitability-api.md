@@ -2,6 +2,35 @@
 
 Sistema de endpoints para análisis de rentabilidad empresarial.
 
+## Validación de Parámetros (HTTP 400)
+
+Los endpoints del módulo validan parámetros de forma estricta:
+
+- `period` permitido: `today`, `week`, `month`, `year`
+- `granularity` permitido (tendencias): `daily`, `weekly`, `monthly`
+
+Comportamiento:
+
+- Si `period` no se envía, se usa `month` por defecto.
+- Si `granularity` no se envía en tendencias, se auto-calcula según el rango.
+- Si se envía un valor inválido, el endpoint responde `400`.
+
+**Ejemplos de error 400:**
+
+```json
+{
+  "success": false,
+  "error": "invalid period. allowed values: today, week, month, year"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "invalid granularity. allowed values: daily, weekly, monthly"
+}
+```
+
 ## Endpoints
 
 ### Overview - Resumen General de Rentabilidad
@@ -16,6 +45,7 @@ Obtiene un resumen general de rentabilidad.
 | `period` | string | `today`, `week`, `month`, `year` (default: `month`) |
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -26,16 +56,16 @@ Obtiene un resumen general de rentabilidad.
       "end_date": "2026-01-31"
     },
     "summary": {
-      "total_revenue": 500000.00,
-      "total_cost": 350000.00,
-      "gross_profit": 150000.00,
-      "operating_expenses": 50000.00,
-      "operating_profit": 100000.00,
-      "net_profit": 100000.00,
+      "total_revenue": 500000.0,
+      "total_cost": 350000.0,
+      "gross_profit": 150000.0,
+      "operating_expenses": 50000.0,
+      "operating_profit": 100000.0,
+      "net_profit": 100000.0,
       "total_transactions": 1500,
       "total_units_sold": 5000,
       "average_ticket": 333.33,
-      "profit_per_unit": 30.00
+      "profit_per_unit": 30.0
     },
     "margins": {
       "gross_margin_pct": 30.0,
@@ -43,7 +73,7 @@ Obtiene un resumen general de rentabilidad.
       "net_margin_pct": 20.0,
       "average_markup": 42.86,
       "roi": 42.86,
-      "contribution_margin": 150000.00
+      "contribution_margin": 150000.0
     }
   }
 }
@@ -61,6 +91,7 @@ Obtiene resumen por rango de fechas con comparación opcional.
 | `compare` | bool | Incluir comparación con período anterior (default: false) |
 
 **Response con comparación (`compare=true`):**
+
 ```json
 {
   "success": true,
@@ -121,6 +152,7 @@ Obtiene rentabilidad por producto por rango de fechas.
 | `sort_order` | string | Orden: `ASC` o `DESC` |
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -172,6 +204,7 @@ Obtiene rentabilidad por producto por rango de fechas.
 ```
 
 **Performance Classifications:**
+
 - `EXCELLENT`: Margen >= 40%
 - `GOOD`: Margen >= 25%
 - `AVERAGE`: Margen >= 10%
@@ -198,6 +231,7 @@ Obtiene análisis de rentabilidad por cliente.
 Obtiene rentabilidad por cliente por rango de fechas.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -247,6 +281,7 @@ Obtiene rentabilidad por cliente por rango de fechas.
 ```
 
 **Customer Segments:**
+
 - `PLATINUM`: Top 10% por profit
 - `GOLD`: Top 5-10% por profit
 - `SILVER`: Top 2-5% por profit
@@ -270,6 +305,7 @@ Obtiene análisis de rentabilidad por categoría.
 Obtiene rentabilidad por categoría por rango de fechas.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -286,7 +322,7 @@ Obtiene rentabilidad por categoría por rango de fechas.
       "least_profitable_id": "15",
       "least_profitable_name": "Accesorios",
       "average_margin": 25.5,
-      "total_profit": 150000.00
+      "total_profit": 150000.0
     },
     "categories": [
       {
@@ -294,9 +330,9 @@ Obtiene rentabilidad por categoría por rango de fechas.
         "category_name": "Electrónica",
         "product_count": 50,
         "units_sold": 1200,
-        "revenue": 180000.00,
-        "cost": 108000.00,
-        "gross_profit": 72000.00,
+        "revenue": 180000.0,
+        "cost": 108000.0,
+        "gross_profit": 72000.0,
         "gross_margin_pct": 40.0,
         "contribution_pct": 48.0,
         "average_markup": 66.67,
@@ -329,6 +365,7 @@ Obtiene tendencias de rentabilidad en el tiempo.
 Obtiene tendencias por rango de fechas.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -343,11 +380,11 @@ Obtiene tendencias por rango de fechas.
       {
         "date": "2026-01-01T00:00:00Z",
         "label": "01 Ene",
-        "revenue": 15000.00,
-        "cost": 9000.00,
-        "gross_profit": 6000.00,
+        "revenue": 15000.0,
+        "cost": 9000.0,
+        "gross_profit": 6000.0,
         "gross_margin_pct": 40.0,
-        "net_profit": 6000.00,
+        "net_profit": 6000.0,
         "net_margin_pct": 40.0,
         "transactions": 50,
         "units_sold": 150
@@ -368,6 +405,7 @@ Obtiene tendencias por rango de fechas.
 ```
 
 **Trend Direction:**
+
 - `UP`: Crecimiento > 5%
 - `DOWN`: Decrecimiento > 5%
 - `STABLE`: Variación <= 5%
@@ -390,6 +428,7 @@ Obtiene análisis de rentabilidad por vendedor.
 Obtiene rentabilidad por vendedor por rango de fechas.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -401,8 +440,8 @@ Obtiene rentabilidad por vendedor por rango de fechas.
     },
     "summary": {
       "total_sellers": 10,
-      "total_profit": 150000.00,
-      "average_profit_per_seller": 15000.00,
+      "total_profit": 150000.0,
+      "average_profit_per_seller": 15000.0,
       "top_seller_id": "789",
       "top_seller_name": "Juan Pérez"
     },
@@ -411,11 +450,11 @@ Obtiene rentabilidad por vendedor por rango de fechas.
         "seller_id": "789",
         "seller_name": "Juan Pérez",
         "total_sales": 150,
-        "total_revenue": 75000.00,
-        "total_cost": 45000.00,
-        "gross_profit": 30000.00,
+        "total_revenue": 75000.0,
+        "total_cost": 45000.0,
+        "gross_profit": 30000.0,
         "gross_margin_pct": 40.0,
-        "average_ticket": 500.00,
+        "average_ticket": 500.0,
         "contribution_pct": 20.0,
         "rank": 1
       }
@@ -442,6 +481,7 @@ Obtiene dashboard consolidado con KPIs y alertas de rentabilidad.
 Obtiene dashboard por rango de fechas.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -491,23 +531,23 @@ Obtiene dashboard por rango de fechas.
 
 ## Códigos de Error
 
-| Código | Descripción |
-|--------|-------------|
-| 400 | Parámetros inválidos |
-| 401 | No autorizado |
-| 500 | Error interno del servidor |
+| Código | Descripción                                                      |
+| ------ | ---------------------------------------------------------------- |
+| 400    | Parámetros inválidos (`period`/`granularity` u otros de request) |
+| 401    | No autorizado                                                    |
+| 500    | Error interno del servidor                                       |
 
 ---
 
 ## Alert Types
 
-| Tipo | Descripción | Severidad |
-|------|-------------|-----------|
-| `LOW_MARGIN` | Margen bruto por debajo del umbral | HIGH |
-| `DECLINING_PROFIT` | Beneficio en declive | HIGH |
-| `UNPROFITABLE_PRODUCTS` | Productos generando pérdidas | MEDIUM |
-| `PROFIT_GROWTH` | Crecimiento positivo de beneficios | LOW |
+| Tipo                    | Descripción                        | Severidad |
+| ----------------------- | ---------------------------------- | --------- |
+| `LOW_MARGIN`            | Margen bruto por debajo del umbral | HIGH      |
+| `DECLINING_PROFIT`      | Beneficio en declive               | HIGH      |
+| `UNPROFITABLE_PRODUCTS` | Productos generando pérdidas       | MEDIUM    |
+| `PROFIT_GROWTH`         | Crecimiento positivo de beneficios | LOW       |
 
 ---
 
-**Última actualización:** 2026-01-05
+**Última actualización:** 2026-03-09

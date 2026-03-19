@@ -9,6 +9,7 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import purchaseService from '@/services/purchaseService'
 import { telemetryService } from '@/services/telemetryService'
+import { calculatePurchaseSalePriceGs } from '@/domain/pricing/purchases/purchasePricingPolicy'
 
 const usePurchaseStore = create()(
   devtools(
@@ -343,7 +344,7 @@ const usePurchaseStore = create()(
                 30,
               tax_rate: options.tax_rate || 10, // IVA Paraguay
               line_total: unitPriceValue * quantity,
-              sale_price: purchaseService.calculateSalePrice(
+              sale_price: calculatePurchaseSalePriceGs(
                 unitPriceValue,
                 options.profit_pct || 30
               ),

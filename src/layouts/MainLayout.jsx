@@ -286,7 +286,7 @@ const MainLayout = ({ children }) => {
               },
               {
                 name: t('payables.invoices', 'Lista Maestra de Facturas'),
-                href: '/finance/invoices',
+                href: '/payables/invoices',
                 icon: FileText,
               },
               {

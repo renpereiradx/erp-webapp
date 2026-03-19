@@ -35,14 +35,14 @@ const PaymentCalendar = ({ pendingPayments }) => {
                 </div>
                 <div className="text-right">
                   <span className="text-[9px] font-black text-slate-400 uppercase block tracking-widest leading-none mb-1">Subtotal Salidas</span>
-                  <span className="text-sm font-black text-orange-600 tracking-tight">Gs. {group.subtotal.toLocaleString('es-PY')}</span>
+                  <span className="text-sm font-mono font-black text-orange-600 tracking-tight tabular-nums">Gs. {group.subtotal.toLocaleString('es-PY')}</span>
                 </div>
               </div>
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 {group.items.map((item) => (
                   <div key={item.id} className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors gap-4 group">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-black text-slate-400 text-xs border border-transparent group-hover:border-blue-200 transition-all">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-mono font-black text-slate-400 text-xs border border-transparent group-hover:border-blue-200 transition-all">
                         {item.code}
                       </div>
                       <div>
@@ -56,7 +56,7 @@ const PaymentCalendar = ({ pendingPayments }) => {
                         <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase">{item.category}</div>
                       </div>
                       <div className="text-right min-w-[100px]">
-                        <div className="font-black text-slate-900 dark:text-white tracking-tight">Gs. {item.amount.toLocaleString('es-PY')}</div>
+                        <div className="font-mono font-black text-slate-900 dark:text-white tracking-tight tabular-nums">Gs. {item.amount.toLocaleString('es-PY')}</div>
                         <Badge 
                           variant="outline" 
                           className={`mt-1 text-[8px] font-black border-none px-0 tracking-tighter ${

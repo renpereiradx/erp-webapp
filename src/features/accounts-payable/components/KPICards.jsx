@@ -36,7 +36,7 @@ const KPICard = ({ title, value, currency, trend, trendType, icon: Icon, subtitl
       <div className="flex justify-between items-start gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate tracking-tight uppercase">{title}</p>
-          <h2 className={`text-xl xl:text-2xl font-bold mt-1.5 break-words tracking-tight leading-none ${critical ? 'text-fluent-danger' : 'text-slate-900 dark:text-white'}`}>
+          <h2 className={`text-xl xl:text-2xl font-mono font-black mt-1.5 break-words tracking-tight leading-none ${critical ? 'text-fluent-danger' : 'text-slate-900 dark:text-white'}`}>
             {formatValue(value)}
           </h2>
         </div>
@@ -52,7 +52,7 @@ const KPICard = ({ title, value, currency, trend, trendType, icon: Icon, subtitl
       ) : (
         <div className="mt-5 flex items-center text-[10px] xl:text-[11px] font-bold uppercase tracking-wider leading-tight">
           {trend && (
-            <span className={`flex items-center flex-shrink-0 mr-2 px-1.5 py-0.5 rounded-md ${isSuccess ? 'bg-fluent-success/10 text-fluent-success' : 'bg-fluent-danger/10 text-fluent-danger'}`}>
+            <span className={`flex items-center flex-shrink-0 mr-2 px-1.5 py-0.5 rounded-md font-mono ${isSuccess ? 'bg-fluent-success/10 text-fluent-success' : 'bg-fluent-danger/10 text-fluent-danger'}`}>
               {isSuccess ? <TrendingUp className="w-3 h-3 mr-0.5" /> : <AlertCircle className="w-3 h-3 mr-0.5" />}
               {trend}
             </span>

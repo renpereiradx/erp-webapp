@@ -13,12 +13,55 @@ El módulo de Forecasting proporciona capacidades de pronóstico predictivo para
 
 ## Métodos de Pronóstico
 
-| Método | Descripción |
-|--------|-------------|
-| `LINEAR` | Regresión lineal simple |
-| `MOVING_AVG` | Promedio móvil |
-| `EXPONENTIAL` | Suavizado exponencial |
-| `SEASONAL` | Descomposición estacional |
+| Método        | Descripción               |
+| ------------- | ------------------------- |
+| `LINEAR`      | Regresión lineal simple   |
+| `MOVING_AVG`  | Promedio móvil            |
+| `EXPONENTIAL` | Suavizado exponencial     |
+| `SEASONAL`    | Descomposición estacional |
+
+## Compatibilidad de Rutas
+
+Todos los endpoints de Forecast están disponibles en ambos prefijos:
+
+- `/api/v1/forecast/*` (ruta principal)
+- `/forecast/*` (ruta legacy para compatibilidad con frontend BI)
+
+Ejemplo equivalente:
+
+- `GET /api/v1/forecast/sales`
+- `GET /forecast/sales`
+
+## Validación Estricta de Parámetros (HTTP 400)
+
+El módulo aplica validación estricta de query params. Si un valor es inválido, se responde `400` (ya no se ignora silenciosamente).
+
+| Parámetro           | Regla                                             |
+| ------------------- | ------------------------------------------------- |
+| `history_months`    | Entero positivo (`> 0`)                           |
+| `forecast_months`   | Entero positivo (`> 0`)                           |
+| `forecast_days`     | Entero positivo (`> 0`)                           |
+| `top_n`             | Entero positivo (`> 0`)                           |
+| `method`            | `LINEAR`, `MOVING_AVG`, `EXPONENTIAL`, `SEASONAL` |
+| `granularity`       | `DAILY`, `WEEKLY`, `MONTHLY`                      |
+| `include_inactive`  | `true` o `false`                                  |
+| `include_scenarios` | `true` o `false`                                  |
+
+**Ejemplos de error 400:**
+
+```json
+{
+  "success": false,
+  "error": "invalid granularity. allowed values: DAILY, WEEKLY, MONTHLY"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "forecast_months must be a positive integer"
+}
+```
 
 ## Endpoints
 
@@ -32,12 +75,12 @@ Genera pronóstico de ventas basado en datos históricos.
 
 **Parámetros de Query:**
 
-| Parámetro | Tipo | Default | Descripción |
-|-----------|------|---------|-------------|
-| `history_months` | int | 6 | Meses de historial a usar |
-| `forecast_months` | int | 3 | Meses a pronosticar |
-| `method` | string | LINEAR | Método de pronóstico |
-| `granularity` | string | MONTHLY | Granularidad (DAILY, WEEKLY, MONTHLY) |
+| Parámetro         | Tipo   | Default | Descripción                           |
+| ----------------- | ------ | ------- | ------------------------------------- |
+| `history_months`  | int    | 6       | Meses de historial a usar             |
+| `forecast_months` | int    | 3       | Meses a pronosticar                   |
+| `method`          | string | LINEAR  | Método de pronóstico                  |
+| `granularity`     | string | MONTHLY | Granularidad (DAILY, WEEKLY, MONTHLY) |
 
 **Respuesta:**
 
@@ -57,9 +100,9 @@ Genera pronóstico de ventas basado en datos históricos.
     "method": "LINEAR",
     "granularity": "MONTHLY",
     "summary": {
-      "total_historical": 150000.00,
-      "total_forecast": 175000.00,
-      "average_historical": 25000.00,
+      "total_historical": 150000.0,
+      "total_forecast": 175000.0,
+      "average_historical": 25000.0,
       "average_forecast": 29166.67,
       "growth_rate": 16.67,
       "trend": "INCREASING",
@@ -69,7 +112,7 @@ Genera pronóstico de ventas basado en datos históricos.
       {
         "date": "2025-08-01T00:00:00Z",
         "label": "Ago 2025",
-        "value": 24500.00,
+        "value": 24500.0,
         "is_actual": true,
         "is_forecast": false
       }
@@ -78,14 +121,14 @@ Genera pronóstico de ventas basado en datos históricos.
       {
         "date": "2026-02-01T00:00:00Z",
         "label": "Feb 2026",
-        "value": 28500.00,
+        "value": 28500.0,
         "is_actual": false,
         "is_forecast": true
       }
     ],
     "confidence": {
       "level": 85.5,
-      "mae": 1250.50,
+      "mae": 1250.5,
       "mape": 4.5,
       "rmse": 1580.25,
       "r2": 0.92,
@@ -98,7 +141,7 @@ Genera pronóstico de ventas basado en datos históricos.
       "peak_periods": ["Diciembre", "Marzo"],
       "low_periods": ["Febrero", "Agosto"],
       "seasonal_factors": [
-        {"period": "Enero", "factor": 0.95, "label": "Enero"}
+        { "period": "Enero", "factor": 0.95, "label": "Enero" }
       ]
     }
   }
@@ -117,11 +160,11 @@ Genera pronóstico de inventario con análisis de riesgo de agotamiento.
 
 **Parámetros de Query:**
 
-| Parámetro | Tipo | Default | Descripción |
-|-----------|------|---------|-------------|
-| `forecast_days` | int | 30 | Días a pronosticar |
-| `category_id` | string | - | Filtrar por categoría |
-| `include_inactive` | bool | false | Incluir productos inactivos |
+| Parámetro          | Tipo   | Default | Descripción                 |
+| ------------------ | ------ | ------- | --------------------------- |
+| `forecast_days`    | int    | 30      | Días a pronosticar          |
+| `category_id`      | string | -       | Filtrar por categoría       |
+| `include_inactive` | bool   | false   | Incluir productos inactivos |
 
 **Respuesta:**
 
@@ -185,12 +228,12 @@ Genera pronóstico de demanda por categoría y productos principales.
 
 **Parámetros de Query:**
 
-| Parámetro | Tipo | Default | Descripción |
-|-----------|------|---------|-------------|
-| `history_months` | int | 6 | Meses de historial |
-| `forecast_months` | int | 3 | Meses a pronosticar |
-| `category_id` | string | - | Filtrar por categoría |
-| `top_n` | int | 20 | Top N productos a incluir |
+| Parámetro         | Tipo   | Default | Descripción               |
+| ----------------- | ------ | ------- | ------------------------- |
+| `history_months`  | int    | 6       | Meses de historial        |
+| `forecast_months` | int    | 3       | Meses a pronosticar       |
+| `category_id`     | string | -       | Filtrar por categoría     |
+| `top_n`           | int    | 20      | Top N productos a incluir |
 
 **Respuesta:**
 
@@ -243,11 +286,11 @@ Genera pronóstico de ingresos con análisis de escenarios.
 
 **Parámetros de Query:**
 
-| Parámetro | Tipo | Default | Descripción |
-|-----------|------|---------|-------------|
-| `history_months` | int | 12 | Meses de historial |
-| `forecast_months` | int | 6 | Meses a pronosticar |
-| `include_scenarios` | bool | false | Incluir análisis de escenarios |
+| Parámetro           | Tipo | Default | Descripción                    |
+| ------------------- | ---- | ------- | ------------------------------ |
+| `history_months`    | int  | 12      | Meses de historial             |
+| `forecast_months`   | int  | 6       | Meses a pronosticar            |
+| `include_scenarios` | bool | false   | Incluir análisis de escenarios |
 
 **Respuesta:**
 
@@ -265,9 +308,9 @@ Genera pronóstico de ingresos con análisis de escenarios.
       "end_date": "2026-01-07T00:00:00Z"
     },
     "summary": {
-      "historical_revenue": 1200000.00,
-      "forecast_revenue": 650000.00,
-      "annual_projection": 1300000.00,
+      "historical_revenue": 1200000.0,
+      "forecast_revenue": 650000.0,
+      "annual_projection": 1300000.0,
       "growth_rate": 8.33,
       "confidence_level": 82.5,
       "trend": "INCREASING"
@@ -277,9 +320,9 @@ Genera pronóstico de ingresos con análisis de escenarios.
         "month": "2026-02-01T00:00:00Z",
         "label": "Feb 2026",
         "actual": 0,
-        "forecast": 108000.00,
-        "lower_bound": 97200.00,
-        "upper_bound": 118800.00,
+        "forecast": 108000.0,
+        "lower_bound": 97200.0,
+        "upper_bound": 118800.0,
         "is_forecast": true
       }
     ],
@@ -287,8 +330,8 @@ Genera pronóstico de ingresos con análisis de escenarios.
       {
         "category_id": "cat1",
         "category_name": "Electrónica",
-        "historical": 500000.00,
-        "forecast": 541650.00,
+        "historical": 500000.0,
+        "forecast": 541650.0,
         "growth_rate": 8.33,
         "percentage": 41.67
       }
@@ -297,21 +340,21 @@ Genera pronóstico de ingresos con análisis de escenarios.
       {
         "name": "PESSIMISTIC",
         "probability": 20,
-        "forecast_amount": 552500.00,
+        "forecast_amount": 552500.0,
         "growth_rate": -6.67,
         "description": "Escenario conservador considerando posibles factores adversos"
       },
       {
         "name": "BASELINE",
         "probability": 60,
-        "forecast_amount": 650000.00,
+        "forecast_amount": 650000.0,
         "growth_rate": 8.33,
         "description": "Proyeccion basada en tendencias actuales"
       },
       {
         "name": "OPTIMISTIC",
         "probability": 20,
-        "forecast_amount": 747500.00,
+        "forecast_amount": 747500.0,
         "growth_rate": 23.33,
         "description": "Escenario optimista con condiciones favorables"
       }
@@ -332,9 +375,9 @@ Dashboard consolidado con todos los pronósticos, insights y recomendaciones.
 
 **Parámetros de Query:**
 
-| Parámetro | Tipo | Default | Descripción |
-|-----------|------|---------|-------------|
-| `forecast_months` | int | 3 | Meses a pronosticar |
+| Parámetro         | Tipo | Default | Descripción         |
+| ----------------- | ---- | ------- | ------------------- |
+| `forecast_months` | int  | 3       | Meses a pronosticar |
 
 **Respuesta:**
 
@@ -396,31 +439,39 @@ Dashboard consolidado con todos los pronósticos, insights y recomendaciones.
 
 ## Métricas de Confianza
 
-| Métrica | Descripción |
-|---------|-------------|
-| `level` | Nivel de confianza general (0-100%) |
-| `mae` | Error Absoluto Medio |
-| `mape` | Error Porcentual Absoluto Medio |
-| `rmse` | Raíz del Error Cuadrático Medio |
-| `r2` | Coeficiente de determinación (R-cuadrado) |
+| Métrica | Descripción                               |
+| ------- | ----------------------------------------- |
+| `level` | Nivel de confianza general (0-100%)       |
+| `mae`   | Error Absoluto Medio                      |
+| `mape`  | Error Porcentual Absoluto Medio           |
+| `rmse`  | Raíz del Error Cuadrático Medio           |
+| `r2`    | Coeficiente de determinación (R-cuadrado) |
 
 ## Niveles de Riesgo de Inventario
 
-| Nivel | Descripción |
-|-------|-------------|
-| `HIGH` | Stock crítico, se agotará pronto |
-| `MEDIUM` | Stock bajo, requiere atención |
-| `LOW` | Stock adecuado |
-| `NONE` | Sin riesgo de agotamiento |
+| Nivel    | Descripción                      |
+| -------- | -------------------------------- |
+| `HIGH`   | Stock crítico, se agotará pronto |
+| `MEDIUM` | Stock bajo, requiere atención    |
+| `LOW`    | Stock adecuado                   |
+| `NONE`   | Sin riesgo de agotamiento        |
 
 ## Tendencias
 
-| Tendencia | Criterio |
-|-----------|----------|
-| `INCREASING` | Crecimiento > 5% |
+| Tendencia    | Criterio            |
+| ------------ | ------------------- |
+| `INCREASING` | Crecimiento > 5%    |
 | `DECREASING` | Decrecimiento < -5% |
-| `STABLE` | Entre -5% y 5% |
+| `STABLE`     | Entre -5% y 5%      |
+
+## Códigos de Error
+
+| Código | Descripción                                |
+| ------ | ------------------------------------------ |
+| 400    | Parámetros inválidos (validación estricta) |
+| 401    | No autorizado                              |
+| 500    | Error interno del servidor                 |
 
 ---
 
-**Última actualización:** 2026-01-07
+**Última actualización:** 2026-03-09
