@@ -178,6 +178,7 @@ const usePurchaseStore = create()(
               order_id: response.purchase_order_id,
               supplier_id: orderData.supplier_id,
               auto_pricing: orderData.auto_update_prices,
+              warnings_count: response.warnings?.length || 0,
             })
           }
 

@@ -28,6 +28,7 @@ import DataState from '@/components/ui/DataState'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import { useI18n } from '@/lib/i18n'
 import useDashboardStore from '@/store/useDashboardStore'
+import useAuthStore from '@/store/useAuthStore'
 import supplierService from '@/services/supplierService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
 import { CurrencyService } from '@/services/currencyService'
@@ -51,6 +52,7 @@ const Purchases = () => {
   const { t } = useI18n()
   const toast = useToast()
   const { fetchDashboardData } = useDashboardStore()
+  const { user } = useAuthStore()
 
   // Business Logic States
   const [purchaseOrders, setPurchaseOrders] = useState([])
@@ -89,6 +91,7 @@ const Purchases = () => {
   const [modalSalePrice, setModalSalePrice] = useState(0)
   const [pricingMode, setPricingMode] = useState('margin')
   const [modalTaxRateId, setModalTaxRateId] = useState(null)
+  const [modalPriceIncludesTax, setModalPriceIncludesTax] = useState(true)
   const [taxRates, setTaxRates] = useState([])
   const [purchaseItems, setPurchaseItems] = useState([])
   const modalProductSearchRef = useRef(null)
@@ -475,6 +478,7 @@ const Purchases = () => {
       pricing_mode: pricingMode,
       unit: modalSelectedProduct.unit || 'unit',
       tax_rate_id: modalTaxRateId,
+      price_includes_tax: modalPriceIncludesTax, // API v2.6
     }
     if (editingItemId)
       setPurchaseItems(prev =>
@@ -491,6 +495,7 @@ const Purchases = () => {
     setModalUnitPrice('')
     setModalSelectedProduct(null)
     setModalProductSearch('')
+    setModalPriceIncludesTax(true)
   }
 
   const handleSavePurchase = async () => {
@@ -511,6 +516,16 @@ const Purchases = () => {
       const result =
         await purchaseService.createEnhancedPurchaseOrder(orderData)
       if (result.success) {
+        // Manejar advertencias si existen (API v2.6)
+        if (result.warnings && result.warnings.length > 0) {
+          result.warnings.forEach(warning => {
+            console.warn('Purchase Warning:', warning)
+            toast.warning(
+              `Advertencia: ${warning.product_name} tiene una tasa de IVA diferente a la esperada.`,
+            )
+          })
+        }
+
         const selectedPaymentMethod = paymentMethods.find(
           method => String(method.id) === String(paymentMethod),
         )
@@ -542,9 +557,20 @@ const Purchases = () => {
     try {
       const result = await purchaseService.cancelPurchaseOrderWithDetails({
         purchase_order_id: orderToCancel.id,
-        reason: 'CANCELLED_BY_USER',
+        user_id: user?.id || user?.user_id || user?.role_id || 'system',
+        cancellation_reason: 'ANULADO_DESDE_INTERFAZ_USUARIO',
+        force_cancel: false,
       })
       if (result.success) {
+        const preserved =
+          result.data?.cancellation_details?.tax_warnings_preserved || 0
+        if (preserved > 0) {
+          toast.info(
+            `Orden anulada. Se preservaron ${preserved} registros de discrepancia fiscal para auditoría.`,
+          )
+        } else {
+          toast.success('Orden de compra anulada exitosamente.')
+        }
         setPurchaseOrders(prev =>
           prev.map(o => {
             const ord = o.purchase || o
@@ -675,6 +701,7 @@ const Purchases = () => {
     setModalSalePrice(item.sale_price)
     setPricingMode(item.pricing_mode)
     setModalTaxRateId(item.tax_rate_id)
+    setModalPriceIncludesTax(item.price_includes_tax !== false)
     setIsModalOpen(true)
   }
 
@@ -1562,6 +1589,26 @@ const Purchases = () => {
                         </option>
                       ))}
                     </select>
+                  </div>
+
+                  {/* Price Includes Tax Toggle */}
+                  <div className='flex items-center gap-3 p-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)]'>
+                    <input
+                      type='checkbox'
+                      id='priceIncludesTax'
+                      className='w-4 h-4 text-[var(--fluent-brand-primary,#0078D4)] border-[var(--fluent-border-neutral,#E1DFDD)] rounded focus:ring-[var(--fluent-brand-primary,#0078D4)] cursor-pointer'
+                      checked={modalPriceIncludesTax}
+                      onChange={e => setModalPriceIncludesTax(e.target.checked)}
+                    />
+                    <label
+                      htmlFor='priceIncludesTax'
+                      className='text-sm font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white cursor-pointer select-none'
+                    >
+                      {t(
+                        'purchases.modal.price_includes_tax',
+                        'Precio incluye IVA',
+                      )}
+                    </label>
                   </div>
                 </div>
 

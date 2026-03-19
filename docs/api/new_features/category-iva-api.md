@@ -1,6 +1,6 @@
 # 📂 API de Categorías e IVA (Impuesto al Valor Agregado)
 
-**Versión:** 1.1
+**Versión:** 1.2
 **Fecha:** Marzo 2026
 **Endpoint Base:** `http://localhost:5050`
 
@@ -8,15 +8,17 @@
 
 ## 📋 Descripción General
 
-Este módulo gestiona la **organización de productos mediante categorías** y la **configuración de tasas impositivas (IVA)** según la legislación de Paraguay (Ley 6380/2019).
+Este módulo gestiona la **organización de productos mediante categorías** y la **configuración de tasas impositivas (IVA)** según la legislación de Paraguay (Ley 6380/2019), con preparación para integración con SIFEN.
 
 ### Características Principales
 
 - **Categorías Jerárquicas**: Soporte para categorías padre e hijo con herencia fiscal.
+- **Clasificación Fiscal SIFEN**: Códigos CANASTA, GENERAL, EXENTO, etc. para facturación electrónica.
+- **Jerarquía de Tasas de 6 Niveles**: Resolución automática de tasas de IVA.
 - **Tasas de IVA Predefinidas**: IVA 10%, IVA 5%, Exento, ISC.
-- **Herencia Fiscal**: Los productos heredan automáticamente el IVA de su categoría.
-- **Operaciones por Tipo**: NACIONAL, CANASTA (básicos), EXEMPT, IMPORT, DIGITAL, SELECTIVE.
-- **CRUD Completo**: Crear, leer, actualizar y eliminar categorías y tasas de IVA.
+- **Herencia Fiscal**: Los productos heredan automáticamente el IVA según jerarquía.
+- **Detección de Discrepancias**: Advertencias cuando se usa una tasa diferente a la esperada.
+- **CRUD Completo**: Crear, leer, actualizar y eliminar categorías, tasas y clasificaciones.
 
 ---
 
@@ -237,11 +239,142 @@ El sistema automatiza el desglose de IVA incluido y el cálculo de precios.
 | **IVA_DIGITAL** | 10% | DIGITAL | Servicios digitales |
 | **IMPORT** | Variable | IMPORT | Importaciones |
 
-### Jerarquía de Aplicación
+### Jerarquía de Aplicación (6 Niveles)
 
-1. **Producto Individual**: Verifica si tiene `override_tax_rate_id`.
-2. **Categoría**: Si no hay override, usa `default_tax_rate_id` de su categoría.
-3. **Fallback Global**: Si no hay ninguno, aplica **IVA 10%** por defecto.
+El sistema determina la tasa de IVA aplicable siguiendo esta jerarquía:
+
+| Prioridad | Fuente | Campo | Descripción |
+|-----------|--------|-------|-------------|
+| 1 | **Transacción** | `order_details.tax_rate_id` | Override explícito en línea de transacción |
+| 2 | **Precio** | `unit_prices.effective_tax_rate_id` | Override de tasa para precio específico |
+| 3 | **Producto** | `products.override_tax_rate_id` | Override a nivel de producto individual |
+| 4 | **Clasificación Fiscal** | `product_tax_classifications` | Clasificación SIFEN asignada |
+| 5 | **Categoría** | `categories.default_tax_rate_id` | Tasa por defecto de la categoría |
+| 6 | **Sistema** | `tax_rates.is_default = true` | Fallback global (IVA 10%) |
+
+---
+
+## 🏷️ Clasificación Fiscal (Tax Classification)
+
+### Descripción
+
+El sistema de clasificación fiscal implementa una jerarquía para resolver tasas de IVA cumpliendo con la Ley 6380/2019 y preparando para SIFEN (facturación electrónica).
+
+### Códigos de Clasificación (SIFEN)
+
+| Código | Nombre | Tasa | Descripción |
+|--------|--------|------|-------------|
+| `CANASTA` | Canasta Básica | 5% | Productos de canasta básica |
+| `GENERAL` | General | 10% | Productos y servicios generales |
+| `EXENTO` | Exento | 0% | Exportaciones, transporte público, educación |
+| `IMPORT` | Importaciones | 10% | Productos importados |
+| `DIGITAL` | Servicios Digitales | 10% | Servicios digitales internacionales |
+| `TURISMO` | Turismo | variable | Servicios turísticos |
+| `SELECTIVE` | ISC | variable | Impuesto Selectivo al Consumo |
+
+---
+
+### Endpoints de Clasificación Fiscal
+
+#### 1. Obtener Información de Clasificaciones
+
+**Endpoint:** `GET /tax-classification/info`
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200 OK):**
+```json
+[
+  {
+    "code": "CANASTA",
+    "name": "Canasta Básica",
+    "description": "IVA 5% - Productos de la canasta básica",
+    "rate": "5%"
+  }
+]
+```
+
+#### 2. Obtener Tasas por Defecto
+
+**Endpoint:** `GET /tax-classification/defaults`
+
+**Response (200 OK):**
+```json
+[
+  {
+    "classification_code": "CANASTA",
+    "description": "Canasta Básica - IVA 5%",
+    "default_tax_rate_id": 2
+  }
+]
+```
+
+#### 3. Obtener Clasificación por ID
+
+**Endpoint:** `GET /tax-classification/{id}`
+
+**Response (200 OK):**
+```json
+{
+  "id": 1,
+  "product_id": "PROD_001",
+  "classification_code": "CANASTA",
+  "default_tax_rate_id": 2,
+  "effective_from": "2026-03-01T00:00:00Z",
+  "effective_to": null,
+  "notes": "Producto de canasta básica"
+}
+```
+
+#### 4. Obtener Clasificación de Producto
+
+**Endpoint:** `GET /tax-classification/product/{product_id}`
+
+#### 5. Obtener Clasificaciones por Código
+
+**Endpoint:** `GET /tax-classification/code/{code}`
+
+#### 6. Asignar Clasificación a Producto
+
+**Endpoint:** `POST /tax-classification/assign`
+
+**Request Body:**
+```json
+{
+  "product_id": "PROD_001",
+  "code": "CANASTA",
+  "tax_rate_id": 2,
+  "notes": "Producto de canasta básica"
+}
+```
+
+#### 7. Asignación Masiva
+
+**Endpoint:** `POST /tax-classification/bulk-assign`
+
+**Request Body:**
+```json
+{
+  "product_ids": ["PROD_001", "PROD_002"],
+  "code": "CANASTA",
+  "notes": "Productos de canasta básica"
+}
+```
+
+#### 8. Auto-Clasificar por Categoría
+
+**Endpoint:** `POST /tax-classification/auto-classify`
+
+#### 9. Actualizar Clasificación
+
+**Endpoint:** `PUT /tax-classification/{id}`
+
+#### 10. Eliminar Clasificación
+
+**Endpoint:** `DELETE /tax-classification/{id}`
 
 ---
 
@@ -588,9 +721,30 @@ Content-Type: application/json
 | PUT | `/tax_rate/{id}` | Actualizar tasa |
 | DELETE | `/tax_rate/{id}` | Eliminar tasa (soft delete) |
 
+### Clasificación Fiscal
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/tax-classification/info` | Obtener información de códigos de clasificación |
+| GET | `/tax-classification/defaults` | Obtener tasas por defecto por clasificación |
+| GET | `/tax-classification/{id}` | Obtener clasificación por ID |
+| GET | `/tax-classification/product/{product_id}` | Obtener clasificación activa de producto |
+| GET | `/tax-classification/code/{code}` | Obtener clasificaciones por código |
+| POST | `/tax-classification/assign` | Asignar clasificación a producto |
+| POST | `/tax-classification/bulk-assign` | Asignación masiva de clasificaciones |
+| POST | `/tax-classification/auto-classify` | Auto-clasificar productos por categoría |
+| PUT | `/tax-classification/{id}` | Actualizar clasificación |
+| DELETE | `/tax-classification/{id}` | Eliminar clasificación |
+
 ---
 
 ## 📝 Historial de Cambios
+
+### v1.2 - Marzo 2026
+- **Sistema de Clasificación Fiscal**: Agregados 10 nuevos endpoints para gestión de clasificaciones SIFEN.
+- **Jerarquía de 6 niveles**: Nueva resolución de tasas con soporte para overrides múltiples.
+- **Detección de discrepancias**: Advertencias automáticas cuando se usa una tasa diferente a la esperada.
+- **Auto-clasificación**: Endpoint para clasificar productos automáticamente por categoría.
 
 ### v1.1 - Marzo 2026
 - **CRUD completo para Categorías**: Agregados endpoints GET by ID, PUT, DELETE.

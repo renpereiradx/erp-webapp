@@ -61,6 +61,58 @@ En caso de error, el backend puede devolver un formato de error estándar:
 
 ---
 
+## 💰 Sistema de IVA y Clasificación Fiscal
+
+### Resolución de Tasas de IVA (Jerarquía de 6 Niveles)
+
+El campo `tax_rate_id` es opcional. Cuando no se especifica, el sistema resuelve automáticamente la tasa:
+
+| Prioridad | Fuente | Campo | Descripción |
+|-----------|--------|-------|-------------|
+| 1 | **Transacción** | `sales_order_details.tax_rate_id` | Override explícito en la línea |
+| 2 | **Precio** | `unit_prices.effective_tax_rate_id` | Tasa para precio específico |
+| 3 | **Producto** | `products.override_tax_rate_id` | Override del producto |
+| 4 | **Clasificación Fiscal** | `product_tax_classifications` | Clasificación SIFEN (CANASTA, GENERAL, EXENTO) |
+| 5 | **Categoría** | `categories.default_tax_rate_id` | Tasa de la categoría |
+| 6 | **Sistema** | `tax_rates.is_default = true` | Fallback (IVA 10%) |
+
+Ver `CATEGORY_IVA_API_GUIDE.md` para gestión de clasificaciones fiscales (SIFEN).
+
+### Campo `price_includes_tax`
+
+| Valor | Comportamiento | Ejemplo (IVA 10%) |
+|-------|----------------|-------------------|
+| `true` (default) | Precio incluye IVA → se extrae | 1210 → Neto=1100, IVA=110 |
+| `false` | Precio sin IVA → se agrega | 1000 → Neto=1000, IVA=100, Total=1100 |
+
+**Prioridad:**
+1. `price_includes_tax` en el request
+2. `price_includes_tax` del producto en `unit_prices`
+3. Default: `true` (Paraguay)
+
+### Advertencias de Discrepancia de Tasas
+
+Si se especifica `tax_rate_id` diferente al esperado, la respuesta incluye warnings:
+
+```json
+{
+  "success": true,
+  "sale_id": "SALE-123",
+  "warnings": [
+    {
+      "type": "TAX_DISCREPANCY",
+      "product_id": "PROD_001",
+      "product_name": "Producto Ejemplo",
+      "expected": {"id": 1, "code": "IVA10"},
+      "actual": {"id": 2, "code": "IVA5"},
+      "source": "TAX_CLASSIFICATION"
+    }
+  ]
+}
+```
+
+---
+
 ## 💳 Creación de Ventas
 
 Esta sección cubre cómo crear una nueva orden de venta.
@@ -117,7 +169,7 @@ Este endpoint crea una nueva venta. Es el punto de entrada para registrar todos 
 | `product_id` | string | ✅ Sí | ID del producto a vender. |
 | `quantity` | number | ✅ Sí | Cantidad del producto. Debe ser > 0. |
 | `unit` | string | ❌ No | Unidad de medida para productos medibles: `kg`, `meter`, `l`, etc. Si se omite, usa la unidad base del producto o `unit`. |
-| `tax_rate_id` | number | ❌ No | ID de la tasa de impuesto a aplicar. Si se omite, usa la del producto. |
+| `tax_rate_id` | number | ❌ No | ID de la tasa de impuesto a aplicar. Si se omite, se resuelve automáticamente. Ver sección "Sistema de IVA". |
 | `sale_price` | number | ⚠️ Condicional | **Modificación de Precio:** Precio de venta unitario modificado. Requiere `allow_price_modifications: true`. |
 | `price_change_reason` | string | ⚠️ Condicional | Justificación obligatoria si se usa `sale_price`. |
 | `discount_amount` | number | ⚠️ Condicional | **Descuento Fijo:** Monto de descuento a restar del precio unitario. |

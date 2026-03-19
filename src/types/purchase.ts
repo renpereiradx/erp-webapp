@@ -24,6 +24,7 @@ export interface PurchaseOrderDetail {
   profit_pct?: number;              // Para cálculo de precio sugerido
   explicit_sale_price?: number;     // API v1.0: Precio de venta explícito (entero, PYG)
   tax_rate_id?: number;             // Opcional
+  price_includes_tax?: boolean;     // API v2.6: Si el precio incluye IVA. Default: true
 }
 
 export interface PurchaseOrderResponse {
@@ -34,6 +35,7 @@ export interface PurchaseOrderResponse {
   cost_entries_created?: number;
   prices_updated?: number;
   validation_issues?: ValidationIssue[];
+  warnings?: any[];                 // API v2.6: Advertencias de discrepancia de tasas
   message?: string;
 }
 
@@ -71,6 +73,7 @@ export interface PurchaseOrderItemEnhanced {
   // NUEVOS CAMPOS ENRIQUECIDOS según PURCHASE_API.md
   unit: string;             // Unidad del producto ("kg", "unit", "box", etc.)
   tax_rate: number;         // Tasa de impuesto aplicada
+  tax_rate_id: number;      // ID de la tasa de impuesto
   profit_pct: number;       // Porcentaje de ganancia del producto
   line_total: number;       // Total calculado por línea
   sale_price: number;       // Precio de venta calculado dinámicamente
@@ -82,6 +85,7 @@ export interface PurchaseItemMetadata {
   tax_rate: number;
   line_total: number;
   profit_pct: number;
+  sale_price: number;
   [key: string]: any; // Permitir campos adicionales
 }
 
@@ -266,6 +270,7 @@ export interface CancelPurchaseOrderResponse {
     cancelled_at: string;
     cancelled_by: string;
     force_cancel_used: boolean;
+    tax_warnings_preserved: number; // API v2.6: Advertencias fiscales preservadas
   };
   error?: string;
   details?: {

@@ -1,7 +1,7 @@
 # 📦 API de Órdenes de Compra
 
-**Versión:** 2.5
-**Fecha:** 25 de Enero de 2026
+**Versión:** 2.6
+**Fecha:** 19 de Marzo de 2026
 **Endpoint Base:** `http://localhost:5050`
 
 ---
@@ -16,7 +16,20 @@ Esta API gestiona el ciclo de vida completo de las órdenes de compra (Purchase 
 - ✅ **Consulta de Órdenes**: Ofrece múltiples endpoints para consultar órdenes por proveedor, ID o rango de fechas.
 - ✅ **Cancelación de Órdenes**: Incluye un sistema seguro para previsualizar y ejecutar la cancelación de órdenes, revirtiendo stock y actualizando estados.
 - ✅ **Trazabilidad Financiera**: Separa costos y precios, y registra el impacto de cada compra.
+- ✅ **Sistema de Clasificación Fiscal**: Resolución automática de tasas de IVA con jerarquía de 6 niveles.
 - ✅ **Validación de Datos**: Asegura la integridad de los datos mediante validaciones en el backend.
+
+---
+
+## 📝 Historial de Cambios
+
+### v2.6 - 19 de Marzo de 2026
+- ✅ **Sistema de Clasificación Fiscal**: Nueva jerarquía de 6 niveles para resolución de tasas de IVA.
+- ✅ **Campo `price_includes_tax`**: Soporte para especificar si el precio incluye o excluye IVA.
+- ✅ **Advertencias de Discrepancia**: Respuesta incluye `warnings` cuando se usa una tasa diferente a la esperada.
+- ✅ **Endpoints de Tax Classification**: Ver `CATEGORY_IVA_API_GUIDE.md` para gestión de clasificaciones SIFEN.
+
+### v2.5 - 25 de Enero de 2026
 
 ---
 
@@ -160,12 +173,67 @@ Crea una nueva orden de compra y la procesa. Esta operación crea registros de c
 | `order_details[].unit_price` | number | ✅ Sí | Costo por unidad. Debe ser > 0. |
 | `order_details[].unit` | string | ❌ No | Unidad de medida (e.g., `kg`, `unit`). Default: `unit`. |
 | `order_details[].profit_pct` | number | ❌ No | Margen de ganancia para este producto. Si no se provee, se usa `default_profit_margin`. |
-| `order_details[].tax_rate_id`| number | ❌ No | ID de la tasa de impuesto aplicable. |
+| `order_details[].tax_rate_id`| number | ❌ No | ID de la tasa de impuesto aplicable. Si se omite, se resuelve automáticamente. |
+| `order_details[].price_includes_tax` | boolean | ❌ No | Si el precio incluye IVA. Default: `true`. Ver sección "Sistema de IVA". |
 | `payment_method_id` | number | ❌ No | ID del método de pago. |
 | `currency_id` | number | ❌ No | ID de la moneda. |
 | `auto_update_prices` | boolean | ❌ No | Si es `true`, actualiza el precio de venta del producto. Default: `true`. |
 | `default_profit_margin` | number | ❌ No | Margen de ganancia a aplicar si un item no tiene `profit_pct`. Default: `30.0`. |
 | `metadata` | object | ❌ No | Objeto para datos adicionales. |
+
+---
+
+## 💰 Sistema de IVA y Clasificación Fiscal
+
+### Resolución de Tasas de IVA (Jerarquía de 6 Niveles)
+
+Cuando `tax_rate_id` no se especifica, el sistema resuelve automáticamente la tasa:
+
+| Prioridad | Fuente | Campo | Descripción |
+|-----------|--------|-------|-------------|
+| 1 | **Transacción** | `order_details.tax_rate_id` | Override explícito en la línea |
+| 2 | **Precio** | `unit_prices.effective_tax_rate_id` | Tasa para precio específico |
+| 3 | **Producto** | `products.override_tax_rate_id` | Override del producto |
+| 4 | **Clasificación Fiscal** | `product_tax_classifications` | Clasificación SIFEN (CANASTA, GENERAL, EXENTO) |
+| 5 | **Categoría** | `categories.default_tax_rate_id` | Tasa de la categoría |
+| 6 | **Sistema** | `tax_rates.is_default = true` | Fallback (IVA 10%) |
+
+Ver `CATEGORY_IVA_API_GUIDE.md` para gestión de clasificaciones fiscales.
+
+### Campo `price_includes_tax`
+
+| Valor | Comportamiento | Ejemplo (IVA 10%) |
+|-------|----------------|-------------------|
+| `true` (default) | Precio incluye IVA → se extrae | Costo 1100 con IVA → Neto 1000, IVA 100 |
+| `false` | Precio sin IVA → se agrega | Costo 1000 sin IVA → Neto 1000, IVA 100, Total 1100 |
+
+**Prioridad:**
+1. `price_includes_tax` en `order_details`
+2. `price_includes_tax` del producto en `unit_prices`
+3. Default: `true` (Paraguay)
+
+### Advertencias de Discrepancia de Tasas
+
+Si se especifica `tax_rate_id` diferente al esperado, la respuesta incluye warnings:
+
+```json
+{
+  "success": true,
+  "purchase_order_id": 123,
+  "warnings": [
+    {
+      "type": "TAX_DISCREPANCY",
+      "product_id": "PROD_001",
+      "product_name": "Producto Ejemplo",
+      "expected": {"id": 1, "code": "IVA10"},
+      "actual": {"id": 2, "code": "IVA5"},
+      "source": "TAX_CLASSIFICATION"
+    }
+  ]
+}
+```
+
+---
 
 **Response (201 Created):**
 *Ver modelo `PurchaseOrderCreationResponse` en la sección "Modelos de Datos (JSON)".*
@@ -439,10 +507,18 @@ Cancela una orden de compra de forma definitiva. **Esta acción es irreversible*
     "payments_cancelled": 0,
     "cancelled_at": "2025-09-22T15:29:21.577672Z",
     "cancelled_by": "2prrJIgRvgaFVbuu49ua9QJVu8n",
-    "force_cancel_used": false
+    "force_cancel_used": false,
+    "tax_warnings_preserved": 0
   }
 }
 ```
+
+**Nota sobre datos fiscales:**
+La cancelación preserva automáticamente los datos fiscales para auditoría:
+- `tax_discrepancy_warnings`: Advertencias de discrepancia de tasas de IVA
+- `tax_rate_id`: ID de la tasa de IVA aplicada
+- `applied_tax_rate`: Tasa de IVA aplicada en cada línea
+- Todos los datos fiscales se registran en `stock_transactions.metadata`
 
 **Errores Posibles:**
 
@@ -653,10 +729,14 @@ Estructura del metadata almacenado en cada detalle de orden de compra. Esta estr
     "payments_cancelled": "number",
     "cancelled_at": "string (ISO 8601)",
     "cancelled_by": "string",
-    "force_cancel_used": "boolean"
+    "force_cancel_used": "boolean",
+    "tax_warnings_preserved": "number"
   }
 }
 ```
+
+**Campos de cancelación actualizados (v2.6):**
+El campo `tax_warnings_preserved` indica cuántas advertencias de discrepancia fiscal se preservaron para auditoría. Los datos fiscales completos (`tax_rate_id`, `applied_tax_rate`) se registran en las transacciones de stock para cumplimiento fiscal.
 
 ---
 

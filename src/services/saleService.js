@@ -389,19 +389,24 @@ export const saleService = {
 
   async createSale(saleData) {
     try {
-      // Según SALE_API.md v1.8, el endpoint es POST /sale/
-      const response = await apiClient.makeRequest('/sale/', {
+      // Según SALE_API.md v1.8, el endpoint es POST /sales/orders
+      const response = await apiClient.makeRequest('/sales/orders', {
         method: 'POST',
         body: JSON.stringify(saleData),
       })
+
+      // Manejar respuesta con posibles advertencias (API v1.8)
+      const saleId =
+        response?.sale_id ||
+        response?.id ||
+        response?.data?.sale_id ||
+        response?.data?.id
+
       return {
         success: true,
         data: response,
-        sale_id:
-          response?.sale_id ||
-          response?.id ||
-          response?.data?.sale_id ||
-          response?.data?.id,
+        sale_id: saleId,
+        warnings: response?.warnings || response?.data?.warnings || [],
       }
     } catch (error) {
       console.error('Error creating sale:', error)

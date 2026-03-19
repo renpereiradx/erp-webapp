@@ -594,10 +594,14 @@ const useSaleStore = create()(
                     const detail = {
                       product_id: item.product_id || item.id,
                       quantity: item.quantity || 1,
+                      unit: item.unit || 'unit',
                     }
 
                     if (item.sale_price || item.unit_price) {
                       detail.sale_price = item.sale_price || item.unit_price
+                    }
+                    if (item.price_change_reason) {
+                      detail.price_change_reason = item.price_change_reason
                     }
                     if (item.discount_amount) {
                       detail.discount_amount = item.discount_amount
@@ -607,6 +611,9 @@ const useSaleStore = create()(
                     }
                     if (item.discount_reason) {
                       detail.discount_reason = item.discount_reason
+                    }
+                    if (item.tax_rate_id) {
+                      detail.tax_rate_id = item.tax_rate_id
                     }
 
                     return detail
@@ -619,30 +626,48 @@ const useSaleStore = create()(
                   currency_id: rawData.currency_id || 1,
                   allow_price_modifications:
                     rawData.allow_price_modifications || false,
+                  price_includes_tax:
+                    rawData.price_includes_tax !== undefined
+                      ? rawData.price_includes_tax
+                      : true,
                   sale_id: rawData.sale_id,
                   reserve_id: rawData.reserve_id,
                 }
 
           const response = await saleService.createSale(dataToSend)
 
-          // Normalizar respuesta para evitar undefined en stats/historial
-          const sales = get().sales.filter(Boolean)
-          const newSale = response?.data ||
-            response?.sale || {
-              id: response?.sale_id || response?.id,
-              sale_id: response?.sale_id || response?.id,
-              sale_date: new Date().toISOString(),
-              status: response?.sale_status || response?.status || 'completed',
-              total_amount:
-                response?.total_amount ||
-                rawData.total_amount ||
-                rawData.totalAmount ||
-                0,
-              currency_id: dataToSend.currency_id,
-              client_id: dataToSend.client_id,
+          if (response.success) {
+            // Manejar advertencias si existen (API v1.8)
+            if (response.warnings && response.warnings.length > 0) {
+              response.warnings.forEach(warning => {
+                console.warn('Sale Tax Warning:', warning)
+                // Se registra en telemetría para análisis
+                telemetryService.recordEvent('sale_tax_discrepancy', {
+                  sale_id: response.sale_id,
+                  product_id: warning.product_id,
+                  expected: warning.expected?.code,
+                  actual: warning.actual?.code,
+                })
+              })
             }
 
-          if (response.success) {
+            // Normalizar respuesta para evitar undefined en stats/historial
+            const sales = get().sales.filter(Boolean)
+            const newSale = response?.data ||
+              response?.sale || {
+                id: response?.sale_id || response?.id,
+                sale_id: response?.sale_id || response?.id,
+                sale_date: new Date().toISOString(),
+                status: response?.sale_status || response?.status || 'completed',
+                total_amount:
+                  response?.total_amount ||
+                  rawData.total_amount ||
+                  rawData.totalAmount ||
+                  0,
+                currency_id: dataToSend.currency_id,
+                client_id: dataToSend.client_id,
+              }
+
             // Actualizar la lista de ventas (MVP: array simple)
             set({
               sales: [newSale, ...sales],
@@ -663,6 +688,7 @@ const useSaleStore = create()(
                 rawData.payment_method_id ||
                 rawData.paymentMethodId ||
                 dataToSend.payment_method_id,
+              warnings_count: response.warnings?.length || 0,
             })
           }
 
@@ -878,6 +904,7 @@ const useSaleStore = create()(
               quantity: quantity,
               unit_price: product.price,
               total_price: product.price * quantity,
+              unit: product.unit || product.unit_name || 'unit',
             },
           ]
         }

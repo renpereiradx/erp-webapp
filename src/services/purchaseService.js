@@ -190,6 +190,10 @@ class PurchaseService {
               item.tax_rate_id !== ''
                 ? parseInt(item.tax_rate_id)
                 : null,
+            price_includes_tax:
+              item.price_includes_tax !== undefined
+                ? Boolean(item.price_includes_tax)
+                : true, // Default API v2.6
             supplier_id: item.supplier_id
               ? parseInt(item.supplier_id)
               : parseInt(orderData.supplier_id),
@@ -224,29 +228,33 @@ class PurchaseService {
       })
 
       // Manejar diferentes formatos de respuesta del servidor
-      let responseData, purchaseOrderId, message
+      let responseData, purchaseOrderId, message, warnings
 
       if (response?.data) {
         // Formato: { data: { ... } }
         responseData = response.data
         purchaseOrderId = response.data.purchase_order_id || response.data.id
         message = response.data.message
+        warnings = response.data.warnings || []
       } else if (response?.purchase_order_id || response?.id) {
         // Formato directo: { purchase_order_id: ..., message: ... }
         responseData = response
         purchaseOrderId = response.purchase_order_id || response.id
         message = response.message
+        warnings = response.warnings || []
       } else {
         // Respuesta mínima o formato inesperado
         responseData = response
         purchaseOrderId = null
         message = 'Orden de compra creada exitosamente'
+        warnings = []
       }
 
       telemetryService.recordEvent('enhanced_purchase_order_created', {
         supplier_id: orderData.supplier_id,
         items_count: orderData.order_details?.length || 0,
         auto_pricing: requestData.auto_update_prices,
+        warnings_count: warnings.length,
       })
 
       return {
@@ -254,6 +262,7 @@ class PurchaseService {
         data: responseData,
         purchase_order_id: purchaseOrderId,
         message: message,
+        warnings: warnings, // API v2.6
       }
     } catch (error) {
       console.error('Error en /purchase/complete:', error)
@@ -667,6 +676,7 @@ class PurchaseService {
         ...processedDetail,
         unit: detail.unit || metadata.unit || 'unit',
         tax_rate: parseFloat(detail.tax_rate || metadata.tax_rate || 0),
+        tax_rate_id: detail.tax_rate_id || metadata.tax_rate_id || null,
         profit_pct: profitPct,
         line_total: parseFloat(
           detail.line_total || metadata.line_total || quantity * unitPrice,
@@ -728,27 +738,35 @@ class PurchaseService {
 
   // Cancelar orden de compra definitivamente
   async cancelPurchaseOrderWithDetails(cancellationRequest) {
+    const startTime = performance.now()
     try {
-      const { purchase_order_id, reason, notes } = cancellationRequest
+      const {
+        purchase_order_id,
+        reason,
+        cancellation_reason,
+        force_cancel,
+        user_id,
+      } = cancellationRequest
 
-      let response
-      try {
-        response = await apiClient.makeRequest(
-          `/purchase/${purchase_order_id}/cancel`,
-          {
-            method: 'PUT',
-            body: JSON.stringify({ reason, notes }),
-          },
-        )
-      } catch {
-        response = await apiClient.makeRequest(
-          `/purchase/cancel/${purchase_order_id}`,
-          {
-            method: 'PUT',
-            body: JSON.stringify({ reason, notes }),
-          },
-        )
+      // API v2.6: Payload estructurado para cancelación
+      const requestData = {
+        purchase_order_id: parseInt(purchase_order_id),
+        user_id: user_id || 'system', // El backend debería preferir el ID del token JWT
+        cancellation_reason:
+          cancellation_reason || reason || 'Cancelado desde la interfaz de usuario',
+        force_cancel: Boolean(force_cancel),
       }
+
+      const response = await apiClient.makeRequest('/purchase/cancel', {
+        method: 'POST',
+        body: JSON.stringify(requestData),
+      })
+
+      telemetryService.recordEvent('purchase_order_cancelled', {
+        order_id: purchase_order_id,
+        reason: requestData.cancellation_reason,
+        force_cancel: requestData.force_cancel,
+      })
 
       return {
         success: true,
@@ -756,6 +774,11 @@ class PurchaseService {
       }
     } catch (error) {
       console.error('Error cancelling purchase order:', error)
+      telemetryService.recordEvent('purchase_order_cancel_error', {
+        order_id: cancellationRequest?.purchase_order_id,
+        error: error.message,
+      })
+
       return {
         success: false,
         error:
@@ -763,6 +786,11 @@ class PurchaseService {
           error.message ||
           'Error al cancelar orden de compra',
       }
+    } finally {
+      telemetryService.recordMetric(
+        'cancel_purchase_order_duration',
+        performance.now() - startTime,
+      )
     }
   }
 

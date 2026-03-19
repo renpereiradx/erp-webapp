@@ -1046,6 +1046,7 @@ const SalesNew = () => {
       discountInput: parsedModalDiscount, // Unitary value entered
       discountReason: modalDiscountReason,
       taxRate: modalDisplay.taxRate || 0,
+      unit: modalDisplay.base_unit || 'unit',
     }
 
     setItems(prev => {
@@ -1138,6 +1139,7 @@ const SalesNew = () => {
             const detail = {
               product_id: item.productId,
               quantity: item.quantity,
+              unit: item.unit || 'unit',
             }
 
             // Agregar descuentos si existen
@@ -1186,6 +1188,7 @@ const SalesNew = () => {
             const detail = {
               product_id: item.productId,
               quantity: item.quantity,
+              unit: item.unit || 'unit',
             }
 
             // Agregar descuentos si existen
@@ -1203,11 +1206,21 @@ const SalesNew = () => {
           }),
           payment_method_id: paymentMethodId,
           currency_id: currencyId,
+          price_includes_tax: true, // Default para Paraguay (API v1.8)
         }
 
         const response = await createSale(saleData)
 
         if (response && response.sale_id) {
+          // Manejar advertencias si existen (API v1.8)
+          if (response.warnings && response.warnings.length > 0) {
+            response.warnings.forEach(warning => {
+              toast.warning(
+                `Aviso: ${warning.product_name} tiene una tasa de IVA diferente a la esperada.`,
+              )
+            })
+          }
+
           // Mostrar diálogo de cobro instantáneo
           setCreatedSaleData({
             id: response.sale_id,

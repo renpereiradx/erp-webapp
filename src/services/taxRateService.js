@@ -55,6 +55,34 @@ export const taxRateService = {
   },
 
   /**
+   * Obtiene una tasa por código
+   * @param {string} code
+   * @returns {Promise<Object>}
+   */
+  async getByCode(code) {
+    try {
+      return await apiClient.get(API_ENDPOINTS.byCode(code))
+    } catch (error) {
+      console.error(`Error fetching tax rate by code ${code}:`, error)
+      throw error
+    }
+  },
+
+  /**
+   * Obtiene una tasa por nombre
+   * @param {string} name
+   * @returns {Promise<Array>}
+   */
+  async getByName(name) {
+    try {
+      return await apiClient.get(API_ENDPOINTS.byName(name))
+    } catch (error) {
+      console.error(`Error fetching tax rate by name ${name}:`, error)
+      throw error
+    }
+  },
+
+  /**
    * Obtiene la tasa de IVA por defecto del sistema
    * @returns {Promise<Object>}
    */
