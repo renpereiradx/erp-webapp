@@ -80,6 +80,7 @@ const useSaleStore = create()(
       // ============ Estado MVP (Arrays simples) ============
       sales: [],
       currentSale: null,
+      currentSaleMetadata: null, // API v1.9: Metadata de cambios de precio/descuentos
       saleItems: [],
       loading: false,
       error: null,
@@ -465,19 +466,22 @@ const useSaleStore = create()(
           throw error
         }
       },
+clearSales: () => {
+  set({
+    sales: [],
+    pagination: {
+      ...get().pagination,
+      total: 0,
+      totalPages: 0,
+      currentPage: 1,
+      hasNext: false,
+      hasPrevious: false,
+    },
+    currentSaleMetadata: null,
+  })
+},
 
-      clearSales: () => {
-        set({
-          sales: [],
-          pagination: {
-            ...get().pagination,
-            total: 0,
-            totalPages: 0,
-            hasNext: false,
-            hasPrevious: false,
-          },
-        })
-      },
+clearCurrentSaleMetadata: () => set({ currentSaleMetadata: null }),
 
       fetchPendingSalesByClient: async clientId => {
         if (!clientId) {
@@ -539,6 +543,25 @@ const useSaleStore = create()(
           if (response.success) {
             set({
               currentSale: response.data,
+              loading: false,
+            })
+          }
+
+          return response
+        } catch (error) {
+          set({ error: error.message, loading: false })
+          throw error
+        }
+      },
+
+      fetchSaleMetadata: async id => {
+        set({ loading: true, error: null })
+        try {
+          const response = await saleService.getSaleMetadata(id)
+
+          if (response.success) {
+            set({
+              currentSaleMetadata: response.data?.metadata || response.data,
               loading: false,
             })
           }

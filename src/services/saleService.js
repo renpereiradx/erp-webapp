@@ -370,6 +370,16 @@ export const saleService = {
     }
   },
 
+  async getSaleMetadata(id) {
+    try {
+      const response = await apiClient.makeRequest(`/sales/${id}/metadata`)
+      return { success: true, data: response }
+    } catch (error) {
+      console.error(`Error fetching metadata for sale ${id}:`, error)
+      return { success: false, error: error.message }
+    }
+  },
+
   // ============ OPERACIONES CRUD ============
 
   async previewSaleCancellation(id) {

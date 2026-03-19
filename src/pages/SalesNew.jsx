@@ -160,6 +160,9 @@ const SalesNew = () => {
     fetchSalesByClientName,
     clearSales,
     cancelSale,
+    fetchSaleMetadata,
+    currentSaleMetadata,
+    clearCurrentSaleMetadata,
     loading: saleLoading,
   } = useSaleStore()
 
@@ -750,9 +753,15 @@ const SalesNew = () => {
   }
 
   const handleViewSale = sale => {
+    const saleId = sale.sale_id || sale.id
     setSelectedHistorySale(sale)
     setShowSaleDetailModal(true)
     setHistoryActionMenuId(null)
+    if (saleId) {
+      fetchSaleMetadata(saleId).catch(err =>
+        console.error('Error fetching sale metadata:', err),
+      )
+    }
   }
 
   const handleCancelSale = async sale => {
@@ -2124,6 +2133,7 @@ const SalesNew = () => {
             onClick={() => {
               setShowSaleDetailModal(false)
               setSelectedHistorySale(null)
+              clearCurrentSaleMetadata()
             }}
             aria-hidden='true'
           />
@@ -2145,6 +2155,7 @@ const SalesNew = () => {
                 onClick={() => {
                   setShowSaleDetailModal(false)
                   setSelectedHistorySale(null)
+                  clearCurrentSaleMetadata()
                 }}
                 className='p-1.5 rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F0F0F0)] transition-colors'
               >
@@ -2215,6 +2226,65 @@ const SalesNew = () => {
                   </span>
                 </div>
               </div>
+
+              {currentSaleMetadata && (
+                <div className='p-3 bg-[var(--fluent-surface-subtle,#F5F5F5)] rounded-[var(--fluent-corner-radius-medium,4px)] mb-4 border-l-4 border-[var(--fluent-brand-primary,#0078D4)]'>
+                  <h4 className='text-xs font-bold text-[var(--fluent-text-secondary,#616161)] uppercase tracking-wider mb-2'>
+                    Información Fiscal y de Precios (Metadata)
+                  </h4>
+                  <div className='grid grid-cols-2 md:grid-cols-3 gap-y-2 text-xs'>
+                    <div className='flex flex-col'>
+                      <span className='text-[var(--fluent-text-tertiary,#8A8886)]'>
+                        Modificaciones de Precio
+                      </span>
+                      <span className='font-medium text-[var(--fluent-text-primary,#242424)]'>
+                        {currentSaleMetadata.has_price_modifications
+                          ? 'Sí'
+                          : 'No'}
+                      </span>
+                    </div>
+                    <div className='flex flex-col'>
+                      <span className='text-[var(--fluent-text-tertiary,#8A8886)]'>
+                        Total Ajustes
+                      </span>
+                      <span className='font-medium text-[var(--fluent-text-primary,#242424)]'>
+                        {currentSaleMetadata.total_price_adjustments || 0}
+                      </span>
+                    </div>
+                    <div className='flex flex-col'>
+                      <span className='text-[var(--fluent-text-tertiary,#8A8886)]'>
+                        Versión Sistema
+                      </span>
+                      <span className='font-medium text-[var(--fluent-text-primary,#242424)]'>
+                        {currentSaleMetadata.system_version || '—'}
+                      </span>
+                    </div>
+                  </div>
+                  {currentSaleMetadata.price_changes?.length > 0 && (
+                    <div className='mt-2 pt-2 border-t border-[var(--fluent-border-subtle,#F0F0F0)]'>
+                      <p className='text-[10px] font-semibold text-[var(--fluent-text-tertiary,#8A8886)] uppercase mb-1'>
+                        Detalle de Cambios
+                      </p>
+                      <ul className='space-y-1'>
+                        {currentSaleMetadata.price_changes.map((pc, idx) => (
+                          <li
+                            key={idx}
+                            className='flex justify-between items-center text-[11px]'
+                          >
+                            <span className='text-[var(--fluent-text-primary,#242424)]'>
+                              {pc.product_name}: {formatCurrency(pc.original_price, 'PYG')} →{' '}
+                              {formatCurrency(pc.modified_price, 'PYG')}
+                            </span>
+                            <span className='italic text-[var(--fluent-text-secondary,#616161)]'>
+                              "{pc.reason}"
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <h4 className='text-sm font-semibold text-[var(--fluent-text-primary,#242424)] mb-2'>
                 Productos
@@ -2305,6 +2375,7 @@ const SalesNew = () => {
                 onClick={() => {
                   setShowSaleDetailModal(false)
                   setSelectedHistorySale(null)
+                  clearCurrentSaleMetadata()
                 }}
                 className='px-4 py-2 text-sm font-medium text-[var(--fluent-text-primary,#242424)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors'
               >
