@@ -361,11 +361,13 @@ export const inventoryService = {
         throw new Error('Se requiere al menos un producto en el inventario');
       }
 
-      // Enriquecer metadata con campos obligatorios v4.1
+      // Enriquecer metadata con campos obligatorios v4.2
       const enrichedMetadata = {
         source: 'physical_count',
         timestamp: new Date().toISOString(),
-        system_version: '4.1.0-frontend',
+        system_version: '4.2.0-frontend',
+        items_count: itemsArray.length,
+        status: inventoryData.metadata?.status || 'COMPLETED',
         ...(inventoryData.metadata || {}),
       };
 
@@ -505,7 +507,7 @@ export const inventoryService = {
       const enrichedMetadata = {
         source: 'manual_adjustment',
         timestamp: new Date().toISOString(),
-        system_version: '4.1.0-frontend',
+        system_version: '4.2.0-frontend',
         ...(transactionData.metadata || {}),
       };
 
@@ -712,12 +714,12 @@ export const inventoryService = {
     const startTime = Date.now();
 
     try {
-      // Enriquecer metadata con campos obligatorios v4.1
+      // Enriquecer metadata con campos obligatorios v4.2
       const enrichedMetadata = {
         source: 'manual_adjustment',
         timestamp: new Date().toISOString(),
-        system_version: '4.1.0-frontend',
-        ...(adjustmentData.metadata || {}),
+        system_version: '4.2.0-frontend',
+        ...(transactionData.metadata || {}),
       };
 
       const mockData = _createMockData.manualAdjustment({

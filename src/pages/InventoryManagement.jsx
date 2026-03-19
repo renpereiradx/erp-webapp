@@ -7,6 +7,10 @@ import useAuthStore from '@/store/useAuthStore'
 import { productService } from '@/services/productService'
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
+import {
+  INVENTORY_TYPES,
+  INVENTORY_STATUS_OPTIONS,
+} from '@/constants/inventoryDefaults'
 
 // Iconos de Lucide React
 import {
@@ -70,6 +74,8 @@ const InventoryManagement = () => {
       counting_method: 'manual',
       verification: 'single_check',
       source: 'physical_count',
+      inventory_type: 'MONTHLY',
+      status: 'COMPLETED',
       notes: '',
     },
     items: [],
@@ -207,6 +213,8 @@ const InventoryManagement = () => {
         counting_method: 'manual',
         verification: 'single_check',
         source: 'physical_count',
+        inventory_type: 'MONTHLY',
+        status: 'COMPLETED',
         notes: '',
       },
       items: [],
@@ -296,7 +304,7 @@ const InventoryManagement = () => {
       metadata: {
         ...inventoryForm.metadata,
         timestamp: new Date().toISOString(),
-        system_version: '4.1.0-frontend',
+        system_version: '4.2.0-frontend',
       },
     }
 
@@ -906,6 +914,38 @@ const InventoryManagement = () => {
                           <option value='manual'>{t('inventoryManagement.createModal.methodManual')}</option>
                           <option value='barcode_scanner'>{t('inventoryManagement.createModal.methodScanner')}</option>
                           <option value='rfid'>{t('inventoryManagement.createModal.methodRFID')}</option>
+                        </select>
+                      </div>
+                      <div className='flex flex-col gap-1.5'>
+                        <label className='text-xs font-bold text-text-secondary uppercase tracking-wider'>
+                          Tipo de Inventario
+                        </label>
+                        <select
+                          className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
+                          value={inventoryForm.metadata.inventory_type}
+                          onChange={e => handleMetadataChange('inventory_type', e.target.value)}
+                        >
+                          {INVENTORY_TYPES.map(type => (
+                            <option key={type.value} value={type.value}>
+                              {type.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className='flex flex-col gap-1.5'>
+                        <label className='text-xs font-bold text-text-secondary uppercase tracking-wider'>
+                          Estado Inicial
+                        </label>
+                        <select
+                          className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
+                          value={inventoryForm.metadata.status}
+                          onChange={e => handleMetadataChange('status', e.target.value)}
+                        >
+                          {INVENTORY_STATUS_OPTIONS.map(status => (
+                            <option key={status.value} value={status.value}>
+                              {status.label}
+                            </option>
+                          ))}
                         </select>
                       </div>
                       <div className='flex flex-col gap-1.5'>

@@ -198,7 +198,7 @@ const InventoryAdjustmentManualPage = () => {
       stock_difference: newQuantity - previousStock,
       approval_level: formData.approvalLevel,
       notes: formData.details,
-      system_version: '4.1.0-frontend',
+      system_version: '4.2.0-frontend',
     }
     const adjustmentData = {
       product_id: selectedProduct.product_id,

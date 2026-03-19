@@ -40,12 +40,14 @@ export const DEFAULT_METADATA_TEMPLATES = {
   INVENTORY_COUNT: {
     source: 'physical_count',
     adjustment_type: 'INVENTORY_COUNT',
+    inventory_type: 'MONTHLY', // Default v4.2
+    status: 'COMPLETED', // Default v4.2
     operator: '', // A completar por el usuario
     verification: 'single_check', // o "double_check"
     location: '', // ubicación del conteo
     counting_method: 'manual', // o "barcode_scanner"
     timestamp: () => new Date().toISOString(),
-    system_version: '4.1.0-frontend',
+    system_version: '4.2.0-frontend',
   },
 
   // Producto Dañado
@@ -57,7 +59,7 @@ export const DEFAULT_METADATA_TEMPLATES = {
     operator: '',
     location: '',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.1.0-frontend',
+    system_version: '4.2.0-frontend',
   },
 
   // Producto Vencido
@@ -68,7 +70,7 @@ export const DEFAULT_METADATA_TEMPLATES = {
     operator: '',
     location: '',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.1.0-frontend',
+    system_version: '4.2.0-frontend',
   },
 
   // Robo o Extravío
@@ -78,7 +80,7 @@ export const DEFAULT_METADATA_TEMPLATES = {
     operator: '',
     location: '',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.1.0-frontend',
+    system_version: '4.2.0-frontend',
   },
 
   // Devolución
@@ -89,7 +91,7 @@ export const DEFAULT_METADATA_TEMPLATES = {
     operator: '',
     location: '',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.1.0-frontend',
+    system_version: '4.2.0-frontend',
   },
 
   // Corrección
@@ -102,7 +104,7 @@ export const DEFAULT_METADATA_TEMPLATES = {
     operator: '',
     location: '',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.1.0-frontend',
+    system_version: '4.2.0-frontend',
   },
 
   // Configuración Inicial
@@ -112,7 +114,7 @@ export const DEFAULT_METADATA_TEMPLATES = {
     operator: '',
     location: '',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.1.0-frontend',
+    system_version: '4.2.0-frontend',
   },
 
   // Genérico/Mínimo
@@ -122,7 +124,7 @@ export const DEFAULT_METADATA_TEMPLATES = {
     timestamp: () => new Date().toISOString(),
     operator: '',
     location: '',
-    system_version: '4.1.0-frontend',
+    system_version: '4.2.0-frontend',
     notes: '',
   },
 }
@@ -167,6 +169,24 @@ export const METADATA_TEMPLATES_OPTIONS = [
   { value: 'CORRECTION', label: 'Corrección' },
   { value: 'INITIAL_COUNT', label: 'Stock inicial' },
   { value: 'DEFAULT', label: 'Básico' },
+]
+
+export const INVENTORY_TYPES = [
+  { value: 'ANNUAL', label: 'Anual' },
+  { value: 'MONTHLY', label: 'Mensual' },
+  { value: 'WEEKLY', label: 'Semanal' },
+  { value: 'DAILY', label: 'Diario' },
+  { value: 'SPOT_CHECK', label: 'Control puntual' },
+  { value: 'RANDOM', label: 'Aleatorio' },
+  { value: 'CYCLIC', label: 'Cíclico' },
+]
+
+export const INVENTORY_STATUS_OPTIONS = [
+  { value: 'PENDING', label: 'Pendiente' },
+  { value: 'IN_PROGRESS', label: 'En progreso' },
+  { value: 'COMPLETED', label: 'Completado' },
+  { value: 'APPROVED', label: 'Aprobado' },
+  { value: 'REJECTED', label: 'Rechazado' },
 ]
 
 /**
