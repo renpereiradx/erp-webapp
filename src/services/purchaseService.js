@@ -229,6 +229,7 @@ class PurchaseService {
           default_profit_margin: parseFloat(
             orderData.default_profit_margin || 30.0,
           ),
+          total_items: orderData.order_details?.length || 0,
           system_version: '2.7.0-frontend', // Identificador de versión para auditoría
           created_at: new Date().toISOString(),
         },

@@ -2259,6 +2259,26 @@ const SalesNew = () => {
                         {currentSaleMetadata.system_version || '—'}
                       </span>
                     </div>
+                    {currentSaleMetadata.created_at && (
+                      <div className='flex flex-col'>
+                        <span className='text-[var(--fluent-text-tertiary,#8A8886)]'>
+                          Fecha Generación
+                        </span>
+                        <span className='font-medium text-[var(--fluent-text-primary,#242424)]'>
+                          {new Date(currentSaleMetadata.created_at).toLocaleString('es-ES')}
+                        </span>
+                      </div>
+                    )}
+                    {currentSaleMetadata.last_price_change && (
+                      <div className='flex flex-col col-span-2'>
+                        <span className='text-[var(--fluent-text-tertiary,#8A8886)]'>
+                          Último Cambio
+                        </span>
+                        <span className='font-medium text-[var(--fluent-text-primary,#242424)]'>
+                          {currentSaleMetadata.last_price_change}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   {currentSaleMetadata.price_changes?.length > 0 && (
                     <div className='mt-2 pt-2 border-t border-[var(--fluent-border-subtle,#F0F0F0)]'>
@@ -2277,6 +2297,31 @@ const SalesNew = () => {
                             </span>
                             <span className='italic text-[var(--fluent-text-secondary,#616161)]'>
                               "{pc.reason}"
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {currentSaleMetadata.discounts?.length > 0 && (
+                    <div className='mt-2 pt-2 border-t border-[var(--fluent-border-subtle,#F0F0F0)]'>
+                      <p className='text-[10px] font-semibold text-[var(--fluent-text-tertiary,#8A8886)] uppercase mb-1'>
+                        Detalle de Descuentos
+                      </p>
+                      <ul className='space-y-1'>
+                        {currentSaleMetadata.discounts.map((d, idx) => (
+                          <li
+                            key={idx}
+                            className='flex justify-between items-center text-[11px]'
+                          >
+                            <span className='text-[var(--fluent-text-primary,#242424)]'>
+                              {d.product_name}: -
+                              {d.discount_percent > 0
+                                ? `${d.discount_percent}%`
+                                : formatCurrency(d.discount_amount, 'PYG')}
+                            </span>
+                            <span className='italic text-[var(--fluent-text-secondary,#616161)]'>
+                              "{d.reason}"
                             </span>
                           </li>
                         ))}
