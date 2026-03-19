@@ -223,6 +223,15 @@ class PurchaseService {
         currency_id: orderData.currency_id
           ? parseInt(orderData.currency_id)
           : null,
+        metadata: {
+          ...(orderData.metadata || {}),
+          auto_update_prices: Boolean(orderData.auto_update_prices !== false),
+          default_profit_margin: parseFloat(
+            orderData.default_profit_margin || 30.0,
+          ),
+          system_version: '2.7.0-frontend', // Identificador de versión para auditoría
+          created_at: new Date().toISOString(),
+        },
       }
 
       const response = await apiClient.makeRequest('/purchase/complete', {
@@ -280,6 +289,7 @@ class PurchaseService {
           error.response?.data?.error ||
           error.message ||
           'Error al crear orden de compra',
+        message: error.response?.data?.message, // API v2.7: Mensaje descriptivo de validación
       }
     } finally {
       telemetryService.recordMetric(

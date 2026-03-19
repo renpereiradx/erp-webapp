@@ -1,7 +1,7 @@
 # 🛒 Ventas y Pagos - Guía Completa de API
 
-**Versión:** 1.8
-**Fecha:** 25 de Enero de 2026
+**Versión:** 1.9
+**Fecha:** 19 de Marzo de 2026
 **Endpoint Base:** `http://localhost:5050`
 **Estado:** ✅ Production Ready
 
@@ -110,6 +110,109 @@ Si se especifica `tax_rate_id` diferente al esperado, la respuesta incluye warni
   ]
 }
 ```
+
+---
+
+## 📋 Sistema de Metadata
+
+El módulo de ventas maneja metadata en dos niveles:
+
+### Metadata de Venta (Generada por Backend)
+
+Después de procesar una venta, el backend genera metadata que incluye información sobre cambios de precio y descuentos aplicados. Esta metadata se almacena en `transactions.sales_orders.metadata`.
+
+**Estructura del Metadata de Venta:**
+
+```json
+{
+  "price_changes": [
+    {
+      "product_id": "string",
+      "product_name": "string",
+      "original_price": "number",
+      "modified_price": "number",
+      "price_difference": "number",
+      "percentage_change": "number",
+      "user_id": "string",
+      "reason": "string",
+      "timestamp": "ISO datetime",
+      "change_id": "string"
+    }
+  ],
+  "discounts": [
+    {
+      "product_id": "string",
+      "product_name": "string",
+      "original_amount": "number",
+      "discount_amount": "number",
+      "discount_percent": "number",
+      "final_amount": "number",
+      "reason": "string",
+      "user_id": "string",
+      "timestamp": "ISO datetime"
+    }
+  ],
+  "has_price_modifications": "boolean",
+  "total_price_adjustments": "integer",
+  "last_price_change": "string",
+  "system_version": "string",
+  "created_at": "ISO datetime"
+}
+```
+
+### Metadata de Presupuesto
+
+Los presupuestos (`Budget`) también tienen un campo `metadata` que puede contener información adicional definida por el frontend o generada por el sistema.
+
+**Estructura del Metadata de Presupuesto:**
+
+```json
+{
+  "system_version": "string",
+  "created_at": "ISO datetime",
+  "converted_to_sale": "boolean",
+  "converted_at": "ISO datetime",
+  "converted_by": "string",
+  "sale_id": "string",
+  "original_budget_id": "string",
+  "client_info": {
+    "id": "string",
+    "name": "string"
+  },
+  "totals": {
+    "subtotal": "number",
+    "tax_amount": "number",
+    "discount_amount": "number",
+    "total": "number"
+  }
+}
+```
+
+### Obtener Venta con Metadata
+
+**Endpoint:** `GET /sales/{id}/metadata`
+
+Obtiene una venta incluyendo el metadata completo de cambios de precio y descuentos.
+
+**Response:**
+```json
+{
+  "sale": {
+    "id": "SALE-123",
+    "client_id": "CLIENT_001",
+    "total_amount": 185500.50,
+    "status": "COMPLETED"
+  },
+  "metadata": {
+    "price_changes": [...],
+    "discounts": [...],
+    "has_price_modifications": true,
+    "total_price_adjustments": 2
+  }
+}
+```
+
+> **Nota:** El sistema de validación de schemas de metadata está preparado para uso futuro. Actualmente la metadata se genera automáticamente por el backend.
 
 ---
 
@@ -900,6 +1003,10 @@ Para una especificación técnica completa y machine-readable de esta API, consu
 ---
 
 ## 📝 Historial de Cambios
+
+### v1.9 - 19 de Marzo de 2026
+- ✅ **Schemas de Metadata Documentados**: Agregada sección "Sistema de Metadata" documentando las estructuras de metadata para ventas y presupuestos.
+- ✅ **Endpoint GET /sales/{id}/metadata**: Documentado endpoint para obtener metadata de cambios de precio y descuentos.
 
 ### v1.8 - 25 de Enero de 2026
 - ✅ **Soporte para Unidades de Medida**: Agregado campo `unit` en `product_details` para especificar unidades de productos medibles (kg, meter, l, etc.).

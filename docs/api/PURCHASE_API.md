@@ -1,6 +1,6 @@
 # 📦 API de Órdenes de Compra
 
-**Versión:** 2.6
+**Versión:** 2.7
 **Fecha:** 19 de Marzo de 2026
 **Endpoint Base:** `http://localhost:5050`
 
@@ -22,6 +22,10 @@ Esta API gestiona el ciclo de vida completo de las órdenes de compra (Purchase 
 ---
 
 ## 📝 Historial de Cambios
+
+### v2.7 - 19 de Marzo de 2026
+- ✅ **Validación de Metadata en Backend**: El campo `metadata` ahora es validado contra un JSON Schema en el backend.
+- ✅ **Errores Descriptivos**: Si la metadata no cumple con el schema, el API devuelve errores específicos indicando el campo y problema.
 
 ### v2.6 - 19 de Marzo de 2026
 - ✅ **Sistema de Clasificación Fiscal**: Nueva jerarquía de 6 niveles para resolución de tasas de IVA.
@@ -179,7 +183,64 @@ Crea una nueva orden de compra y la procesa. Esta operación crea registros de c
 | `currency_id` | number | ❌ No | ID de la moneda. |
 | `auto_update_prices` | boolean | ❌ No | Si es `true`, actualiza el precio de venta del producto. Default: `true`. |
 | `default_profit_margin` | number | ❌ No | Margen de ganancia a aplicar si un item no tiene `profit_pct`. Default: `30.0`. |
-| `metadata` | object | ❌ No | Objeto para datos adicionales. |
+| `metadata` | object | ❌ No | Objeto para datos adicionales. Ver sección "Validación de Metadata". |
+
+---
+
+## 📋 Validación de Metadata
+
+El campo `metadata` en `POST /purchase/complete` es validado contra un JSON Schema en el backend. Si la estructura no es válida, el API devuelve un error 400 con detalles.
+
+### Estructura Válida para Metadata de Orden de Compra
+
+```json
+{
+  "auto_update_prices": "boolean (opcional)",
+  "default_profit_margin": "number 0-100 (opcional)",
+  "system_version": "string (opcional)",
+  "created_at": "string ISO datetime (opcional)",
+  "completed_at": "string ISO datetime (opcional)",
+  "total_items": "integer (opcional)",
+  "cost_entries_created": "integer (opcional)",
+  "prices_updated": "integer (opcional)",
+  "stock_updated": "integer (opcional)",
+  "cancelled_at": "string ISO datetime (opcional)",
+  "cancelled_by": "string (opcional)",
+  "cancellation_reason": "string (opcional)",
+  "original_status": "string (opcional)",
+  "original_total": "number (opcional)",
+  "items_reverted": "integer (opcional)",
+  "stock_items_reverted": "integer (opcional)",
+  "payments_cancelled": "integer (opcional)",
+  "force_cancel_used": "boolean (opcional)",
+  "insufficient_stock_products": "array of strings (opcional)",
+  "preserved_tax_discrepancy_warnings": "array (opcional)",
+  "cancelled_by_system_version": "string (opcional)"
+}
+```
+
+### Ejemplo de Metadata Válida
+
+```json
+{
+  "auto_update_prices": true,
+  "default_profit_margin": 30.0,
+  "purchase_notes": "Compra urgente",
+  "supplier_contact": "juan@proveedor.com"
+}
+```
+
+**Nota:** El frontend puede agregar campos adicionales (como `purchase_notes` o `supplier_contact`) ya que el schema permite `additionalProperties: true`.
+
+### Ejemplo de Error de Metadata
+
+```json
+{
+  "success": false,
+  "error": "VALIDATION_ERROR",
+  "message": "Validation failed: invalid metadata: default_profit_margin: Invalid type"
+}
+```
 
 ---
 

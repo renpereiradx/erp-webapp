@@ -94,6 +94,7 @@ const Purchases = () => {
   const [modalPriceIncludesTax, setModalPriceIncludesTax] = useState(true)
   const [taxRates, setTaxRates] = useState([])
   const [purchaseItems, setPurchaseItems] = useState([])
+  const [purchaseNotes, setPurchaseNotes] = useState('')
   const modalProductSearchRef = useRef(null)
   const productDropdownRef = useRef(null)
   const [activeProductIndex, setActiveProductIndex] = useState(-1)
@@ -512,10 +513,15 @@ const Purchases = () => {
         payment_method_id: paymentMethod ? parseInt(paymentMethod) : null,
         currency_id:
           currencies.find(c => c.currency_code === paymentCurrency)?.id || null,
+        metadata: {
+          purchase_notes: purchaseNotes,
+        },
       }
       const result =
         await purchaseService.createEnhancedPurchaseOrder(orderData)
       if (result.success) {
+        setPurchaseItems([])
+        setPurchaseNotes('')
         // Manejar advertencias si existen (API v2.6)
         if (result.warnings && result.warnings.length > 0) {
           result.warnings.forEach(warning => {
@@ -544,7 +550,15 @@ const Purchases = () => {
         })
         setShowInstantPayment(true)
         fetchDashboardData()
+      } else {
+        // Manejar errores de validación (API v2.7)
+        toast.error(
+          result.message || result.error || 'Error al guardar la compra',
+        )
       }
+    } catch (err) {
+      console.error('Error in handleSavePurchase:', err)
+      toast.error('Error inesperado al procesar la compra')
     } finally {
       setLoading(false)
     }
@@ -1120,6 +1134,19 @@ const Purchases = () => {
                         </option>
                       ))}
                     </select>
+                  </div>
+
+                  <div className='space-y-1.5 pt-2 border-t border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]'>
+                    <label className='text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)] block'>
+                      Notas de la Compra (Opcional)
+                    </label>
+                    <textarea
+                      className='w-full px-3 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all resize-none'
+                      rows={3}
+                      placeholder='Ej: Pedido urgente de insumos...'
+                      value={purchaseNotes}
+                      onChange={e => setPurchaseNotes(e.target.value)}
+                    />
                   </div>
                 </div>
               </section>
