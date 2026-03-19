@@ -1,6 +1,6 @@
 # 📦 API de Ajustes de Inventario
 
-**Versión:** 4.1  
+**Versión:** 4.2  
 **Fecha:** 19 de Marzo de 2026  
 **Endpoint Base:** `http://localhost:5050`
 
@@ -76,6 +76,60 @@ El campo `metadata` en ajustes de stock es validado contra un JSON Schema en el 
   "message": "Invalid metadata: adjustment_type: adjustment_type must be one of the following: INVENTORY_COUNT, DAMAGE, EXPIRY, THEFT, RETURN, CORRECTION, INITIAL_COUNT"
 }
 ```
+
+---
+
+## 📋 Validación de Metadata de Inventario
+
+El campo `metadata` en inventarios es validado contra un JSON Schema en el backend.
+
+### Estructura Válida para Metadata de Inventario
+
+```json
+{
+  "system_version": "string (opcional)",
+  "inventory_type": "string enum: ANNUAL, MONTHLY, WEEKLY, DAILY, SPOT_CHECK, RANDOM, CYCLIC (opcional)",
+  "check_date": "string ISO datetime (opcional)",
+  "location": "string (opcional)",
+  "warehouse": "string (opcional)",
+  "shelf": "string (opcional)",
+  "verified_by": "string (opcional)",
+  "approved_by": "string (opcional)",
+  "supervisor_notes": "string (opcional)",
+  "items_count": "integer (opcional)",
+  "total_products": "integer (opcional)",
+  "discrepancies_found": "integer (opcional)",
+  "discrepancy_rate": "number 0-100 (opcional)",
+  "status": "string enum: PENDING, IN_PROGRESS, COMPLETED, APPROVED, REJECTED (opcional)",
+  "reference_document": "string (opcional)",
+  "notes": "string (opcional)",
+  "operator": "string (opcional)",
+  "reason_category": "string (opcional)"
+}
+```
+
+### Ejemplo de Metadata de Inventario Válida
+
+```json
+{
+  "inventory_type": "MONTHLY",
+  "location": "Almacén Central",
+  "warehouse": "A",
+  "shelf": "A-1",
+  "verified_by": "supervisor_01",
+  "items_count": 150,
+  "discrepancies_found": 3,
+  "status": "COMPLETED"
+}
+```
+
+### Generación Automática
+
+Si no se envía `metadata`, el backend genera una plantilla por defecto con:
+- `operator`: ID del usuario que crea el inventario
+- `reason_category`: "INVENTORY_CHECK"
+- `items_count`: Cantidad de items en el inventario
+- `status`: "COMPLETED"
 
 ---
 

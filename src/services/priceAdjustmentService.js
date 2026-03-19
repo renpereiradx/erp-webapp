@@ -159,8 +159,8 @@ export const priceAdjustmentService = {
       if (!adjustmentData.product_id) {
         throw new Error('Product ID is required');
       }
-      if (!adjustmentData.new_price || adjustmentData.new_price <= 0) {
-        throw new Error('New price must be a positive number');
+      if (adjustmentData.new_price === undefined || adjustmentData.new_price < 0) {
+        throw new Error('New price must be 0 or a positive number');
       }
       if (!adjustmentData.reason) {
         throw new Error('Reason is required');
@@ -173,8 +173,13 @@ export const priceAdjustmentService = {
           unit: adjustmentData.unit || 'UNIT',
           reason: adjustmentData.reason,
           metadata: {
-            source: 'manual_api',
+            source: 'manual_api_v2.1',
+            system_version: '2.1.0-frontend',
             change_type: adjustmentData.new_price > (adjustmentData.old_price || 0) ? 'increase' : 'decrease',
+            old_price: adjustmentData.old_price,
+            new_price: adjustmentData.new_price,
+            price_difference: adjustmentData.new_price - (adjustmentData.old_price || 0),
+            unit: adjustmentData.unit || 'UNIT',
             ...adjustmentData.metadata
           }
         });
@@ -185,14 +190,20 @@ export const priceAdjustmentService = {
         productId: adjustmentData.product_id
       });
 
-      return result;
+      return { success: true, data: result };
     } catch (error) {
+      console.error('Error in createPriceAdjustment:', error);
       telemetry.record('priceAdjustment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
         operation: 'create'
       });
-      throw error;
+      
+      return { 
+        success: false, 
+        error: error.message,
+        message: error.response?.data?.message || error.message
+      };
     }
   },
 

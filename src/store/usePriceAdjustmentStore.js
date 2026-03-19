@@ -24,59 +24,65 @@ const usePriceAdjustmentStore = create(
       clearAdjustments: () => set({ adjustments: [], error: null }),
 
       // Crear ajuste de precio
-      createPriceAdjustment: async (adjustmentData) => {
-        set({ creating: true, error: null });
-        const startTime = Date.now();
-        
+      createPriceAdjustment: async adjustmentData => {
+        set({ creating: true, error: null })
+        const startTime = Date.now()
+
         try {
-          const result = await priceAdjustmentService.createPriceAdjustment(adjustmentData);
-          
-          // Si se creó exitosamente, agregarlo a la lista local
-          if (result && result.id) {
-            const currentAdjustments = get().adjustments;
-            set({ 
-              adjustments: [result, ...currentAdjustments],
-              creating: false 
-            });
+          const result = await priceAdjustmentService.createPriceAdjustment(
+            adjustmentData,
+          )
+
+          if (result.success) {
+            const currentAdjustments = get().adjustments
+            set({
+              adjustments: [result.data, ...currentAdjustments],
+              creating: false,
+            })
 
             // Invalidar cache de productos para que se reflejen los cambios de precio
             try {
               // Importar dinámicamente el store para evitar dependencias circulares
-              const { default: useProductStore } = await import('./useProductStore');
-              const productStore = useProductStore.getState();
-              
+              const { default: useProductStore } = await import(
+                './useProductStore'
+              )
+              const productStore = useProductStore.getState()
+
               // Invalidar cache del producto con precio actualizado
               if (productStore.invalidateProductCache) {
-                productStore.invalidateProductCache(adjustmentData.product_id);
+                productStore.invalidateProductCache(adjustmentData.product_id)
               }
-              
-              telemetry.record('products.cache.invalidated_after_price_change', { 
-                productId: adjustmentData.product_id 
-              });
+
+              telemetry.record('products.cache.invalidated_after_price_change', {
+                productId: adjustmentData.product_id,
+              })
             } catch (err) {
-              console.warn('No se pudo invalidar cache de productos:', err);
+              console.warn('No se pudo invalidar cache de productos:', err)
             }
+            
+            telemetry.record('feature.priceAdjustment.create', {
+              duration: Date.now() - startTime,
+              productId: adjustmentData.product_id,
+              newPrice: adjustmentData.new_price,
+            })
+            
+            return result
           } else {
-            set({ creating: false });
+            const errorMessage = result.message || result.error || 'Error al crear ajuste de precio'
+            set({ error: errorMessage, creating: false })
+            return result
           }
-          
-          telemetry.record('feature.priceAdjustment.create', { 
-            duration: Date.now() - startTime,
-            productId: adjustmentData.product_id,
-            newPrice: adjustmentData.new_price
-          });
-          
-          return { success: true, data: result };
         } catch (error) {
-          const errorMessage = error.message || 'Error al crear ajuste de precio';
-          set({ error: errorMessage, creating: false });
-          
-          telemetry.record('feature.priceAdjustment.error', { 
+          const errorMessage =
+            error.message || 'Error al crear ajuste de precio'
+          set({ error: errorMessage, creating: false })
+
+          telemetry.record('feature.priceAdjustment.error', {
             error: errorMessage,
-            operation: 'create'
-          });
-          
-          return { success: false, error: errorMessage };
+            operation: 'create',
+          })
+
+          return { success: false, error: errorMessage }
         }
       },
 

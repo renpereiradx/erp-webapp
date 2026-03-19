@@ -38,46 +38,80 @@ const PriceAdjustmentDetail = () => {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState(null);
 
-  // Plantillas predefinidas para razones de ajuste
+  // Plantillas predefinidas para razones de ajuste - Alineado con adjustment_type v2.1
   const reasonTemplates = [
-    { value: '', label: t('priceAdjustmentDetail.reasonTemplate.select', 'Seleccionar plantilla...') },
-    { value: 'MARKET_ADJUSTMENT', label: '📊 ' + t('priceAdjustmentDetail.reasonTemplate.market', 'Ajuste por condiciones del mercado') },
-    { value: 'COST_INCREASE', label: '💰 ' + t('priceAdjustmentDetail.reasonTemplate.costIncrease', 'Aumento de costos de proveedor') },
-    { value: 'COST_DECREASE', label: '💸 ' + t('priceAdjustmentDetail.reasonTemplate.costDecrease', 'Reducción de costos de proveedor') },
-    { value: 'PROMOTIONAL_PRICING', label: '🎉 ' + t('priceAdjustmentDetail.reasonTemplate.promotional', 'Precio promocional temporal') },
-    { value: 'COMPETITIVE_ADJUSTMENT', label: '⚔️ ' + t('priceAdjustmentDetail.reasonTemplate.competitive', 'Ajuste por competencia') },
-    { value: 'INVENTORY_CLEARANCE', label: '📦 ' + t('priceAdjustmentDetail.reasonTemplate.clearance', 'Liquidación de inventario') },
-    { value: 'QUALITY_ADJUSTMENT', label: '🔧 ' + t('priceAdjustmentDetail.reasonTemplate.quality', 'Ajuste por calidad del producto') },
-    { value: 'SEASONAL_ADJUSTMENT', label: '🌟 ' + t('priceAdjustmentDetail.reasonTemplate.seasonal', 'Ajuste estacional') },
-    { value: 'BULK_DISCOUNT', label: '📈 ' + t('priceAdjustmentDetail.reasonTemplate.bulk', 'Descuento por volumen') },
-    { value: 'ERROR_CORRECTION', label: '🔄 ' + t('priceAdjustmentDetail.reasonTemplate.error', 'Corrección de error previo') },
-    { value: 'MANAGEMENT_DECISION', label: '👔 ' + t('priceAdjustmentDetail.reasonTemplate.management', 'Decisión gerencial') },
-    { value: 'SUPPLIER_NEGOTIATION', label: '🤝 ' + t('priceAdjustmentDetail.reasonTemplate.supplier', 'Renegociación con proveedor') },
-    { value: 'CURRENCY_FLUCTUATION', label: '💱 ' + t('priceAdjustmentDetail.reasonTemplate.currency', 'Fluctuación cambiaria') },
-    { value: 'INITIAL_INVENTORY_SETUP', label: '🏗️ ' + t('priceAdjustmentDetail.reasonTemplate.initial', 'Carga inicial de inventario') },
-    { value: 'CUSTOM', label: '✏️ ' + t('priceAdjustmentDetail.reasonTemplate.custom', 'Razón personalizada...') }
-  ];
+    {
+      value: '',
+      label: t('priceAdjustmentDetail.reasonTemplate.select', 'Seleccionar plantilla...'),
+    },
+    {
+      value: 'MARKET_UPDATE',
+      label: '📊 ' + t('priceAdjustmentDetail.reasonTemplate.market', 'Actualización de Mercado'),
+    },
+    {
+      value: 'COMPETITOR_ADJUSTMENT',
+      label: '⚔️ ' + t('priceAdjustmentDetail.reasonTemplate.competitive', 'Ajuste por Competencia'),
+    },
+    {
+      value: 'PROMOTION',
+      label: '🎉 ' + t('priceAdjustmentDetail.reasonTemplate.promotional', 'Promoción / Oferta'),
+    },
+    {
+      value: 'COST_CHANGE',
+      label: '💰 ' + t('priceAdjustmentDetail.reasonTemplate.costChange', 'Cambio en Costo de Proveedor'),
+    },
+    {
+      value: 'CURRENCY_ADJUSTMENT',
+      label: '💱 ' + t('priceAdjustmentDetail.reasonTemplate.currency', 'Ajuste por Divisa'),
+    },
+    {
+      value: 'SEASONAL',
+      label: '🌟 ' + t('priceAdjustmentDetail.reasonTemplate.seasonal', 'Ajuste Estacional'),
+    },
+    {
+      value: 'CORRECTION',
+      label: '🔄 ' + t('priceAdjustmentDetail.reasonTemplate.correction', 'Corrección de Error'),
+    },
+    {
+      value: 'CUSTOM',
+      label: '✏️ ' + t('priceAdjustmentDetail.reasonTemplate.custom', 'Razón personalizada...'),
+    },
+  ]
 
   // Función para obtener el texto de una plantilla
-  const getReasonText = (templateValue) => {
+  const getReasonText = templateValue => {
     const reasonTexts = {
-      'MARKET_ADJUSTMENT': t('priceAdjustmentDetail.reasonText.market', 'Ajuste de precio por condiciones actuales del mercado'),
-      'COST_INCREASE': t('priceAdjustmentDetail.reasonText.costIncrease', 'Aumento de precio debido al incremento en costos de proveedor'),
-      'COST_DECREASE': t('priceAdjustmentDetail.reasonText.costDecrease', 'Reducción de precio por disminución en costos de proveedor'),
-      'PROMOTIONAL_PRICING': t('priceAdjustmentDetail.reasonText.promotional', 'Precio promocional temporal para impulsar ventas'),
-      'COMPETITIVE_ADJUSTMENT': t('priceAdjustmentDetail.reasonText.competitive', 'Ajuste de precio para mantener competitividad en el mercado'),
-      'INVENTORY_CLEARANCE': t('priceAdjustmentDetail.reasonText.clearance', 'Precio reducido para liquidación de inventario'),
-      'QUALITY_ADJUSTMENT': t('priceAdjustmentDetail.reasonText.quality', 'Ajuste de precio por cambios en la calidad del producto'),
-      'SEASONAL_ADJUSTMENT': t('priceAdjustmentDetail.reasonText.seasonal', 'Ajuste estacional por demanda del período'),
-      'BULK_DISCOUNT': t('priceAdjustmentDetail.reasonText.bulk', 'Descuento aplicado por compra en volumen'),
-      'ERROR_CORRECTION': t('priceAdjustmentDetail.reasonText.error', 'Corrección de error en precio anterior'),
-      'MANAGEMENT_DECISION': t('priceAdjustmentDetail.reasonText.management', 'Ajuste autorizado por decisión gerencial'),
-      'SUPPLIER_NEGOTIATION': t('priceAdjustmentDetail.reasonText.supplier', 'Nuevo precio por renegociación con proveedor'),
-      'CURRENCY_FLUCTUATION': t('priceAdjustmentDetail.reasonText.currency', 'Ajuste por fluctuaciones en tipo de cambio'),
-      'INITIAL_INVENTORY_SETUP': t('priceAdjustmentDetail.reasonText.initial', 'Declaración de precio inicial para carga de inventario')
-    };
-    return reasonTexts[templateValue] || '';
-  };
+      MARKET_UPDATE: t(
+        'priceAdjustmentDetail.reasonText.market',
+        'Ajuste de precio por condiciones actuales del mercado',
+      ),
+      COMPETITOR_ADJUSTMENT: t(
+        'priceAdjustmentDetail.reasonText.competitive',
+        'Ajuste de precio para mantener competitividad en el mercado',
+      ),
+      PROMOTION: t(
+        'priceAdjustmentDetail.reasonText.promotional',
+        'Precio promocional temporal para impulsar ventas',
+      ),
+      COST_CHANGE: t(
+        'priceAdjustmentDetail.reasonText.costChange',
+        'Ajuste de precio debido a variaciones en el costo de adquisición',
+      ),
+      CURRENCY_ADJUSTMENT: t(
+        'priceAdjustmentDetail.reasonText.currency',
+        'Ajuste por fluctuaciones en el tipo de cambio de la moneda',
+      ),
+      SEASONAL: t(
+        'priceAdjustmentDetail.reasonText.seasonal',
+        'Ajuste estacional basado en la demanda del período actual',
+      ),
+      CORRECTION: t(
+        'priceAdjustmentDetail.reasonText.correction',
+        'Corrección de error detectado en el precio registrado anteriormente',
+      ),
+    }
+    return reasonTexts[templateValue] || ''
+  }
 
   // Manejar cambio de plantilla de razón
   const handleReasonTemplateChange = (templateValue) => {
@@ -178,35 +212,54 @@ const PriceAdjustmentDetail = () => {
   };
 
   // Manejar envío del formulario
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async e => {
+    e.preventDefault()
 
     if (!validateForm()) {
-      return;
+      return
     }
+
+    const currentOldPrice =
+      product.unit_prices?.[0]?.price_per_unit ||
+      product.current_price ||
+      product.price ||
+      0
+    const newPrice = parseFloat(formData.new_price)
 
     // Preparar datos para enviar
     const adjustmentData = {
       product_id: product.product_id || product.id,
-      new_price: parseFloat(formData.new_price),
-      old_price: product.unit_prices?.[0]?.price_per_unit || product.current_price || product.price || 0,
+      new_price: newPrice,
+      old_price: currentOldPrice,
       unit: formData.unit,
       reason: formData.reason.trim(),
-      metadata: formData.metadata.trim() ? JSON.parse(formData.metadata) : {}
-    };
+      metadata: {
+        ...(formData.metadata.trim() ? JSON.parse(formData.metadata) : {}),
+        adjustment_type: formData.reasonTemplate || 'MARKET_UPDATE',
+        old_price: currentOldPrice,
+        new_price: newPrice,
+        price_difference: newPrice - currentOldPrice,
+        price_change_percent:
+          currentOldPrice > 0
+            ? ((newPrice - currentOldPrice) / currentOldPrice) * 100
+            : 0,
+        system_version: '2.1.0-frontend',
+        notes: formData.reason.trim(),
+      },
+    }
 
-    const result = await createPriceAdjustment(adjustmentData);
+    const result = await createPriceAdjustment(adjustmentData)
 
     if (result.success) {
       // Recargar historial después de crear el ajuste
-      await loadHistory();
+      await loadHistory()
 
       // Redirigir de vuelta a la página de búsqueda después de un breve delay
       setTimeout(() => {
-        navigate('/ajustes-precios');
-      }, 1500);
+        navigate('/ajustes-precios')
+      }, 1500)
     }
-  };
+  }
 
   if (!product) {
     return null;
@@ -263,9 +316,14 @@ const PriceAdjustmentDetail = () => {
             </h2>
 
             {error && (
-              <div className="mb-6 p-4 bg-error/10 border-l-4 border-error rounded-r-lg flex items-center justify-between">
-                <p className="text-xs text-error font-bold">{error}</p>
-                <button onClick={clearError} className="text-error hover:text-red-700 transition-colors">
+              <div className='mb-6 p-4 bg-error/10 border-l-4 border-error rounded-r-lg flex items-center justify-between'>
+                <p className='text-xs text-error font-bold'>
+                  {error.message || error}
+                </p>
+                <button
+                  onClick={clearError}
+                  className='text-error hover:text-red-700 transition-colors'
+                >
                   <X size={16} />
                 </button>
               </div>

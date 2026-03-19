@@ -138,31 +138,40 @@ const usePriceAdjustmentNewStore = create(
       },
 
       // Crear ajuste de precio
-      createPriceAdjustment: async (adjustmentData) => {
-        set({ creating: true, error: null });
-        const startTime = Date.now();
+      createPriceAdjustment: async adjustmentData => {
+        set({ creating: true, error: null })
+        const startTime = Date.now()
 
         try {
-          const result = await priceAdjustmentService.createPriceAdjustment(adjustmentData);
+          const result = await priceAdjustmentService.createPriceAdjustment(
+            adjustmentData,
+          )
 
-          set({ creating: false });
+          set({ creating: false })
 
-          telemetry.record('feature.priceAdjustmentNew.create', {
-            duration: Date.now() - startTime,
-            productId: adjustmentData.product_id
-          });
-
-          return { success: true, data: result };
+          if (result.success) {
+            telemetry.record('feature.priceAdjustmentNew.create', {
+              duration: Date.now() - startTime,
+              productId: adjustmentData.product_id,
+            })
+            return result
+          } else {
+            const errorMessage =
+              result.message || result.error || 'Error al crear ajuste de precio'
+            set({ error: errorMessage, creating: false })
+            return result
+          }
         } catch (error) {
-          const errorMessage = error.message || 'Error al crear ajuste de precio';
-          set({ error: errorMessage, creating: false });
+          const errorMessage =
+            error.message || 'Error al crear ajuste de precio'
+          set({ error: errorMessage, creating: false })
 
           telemetry.record('feature.priceAdjustmentNew.error', {
             error: errorMessage,
-            operation: 'createAdjustment'
-          });
+            operation: 'createAdjustment',
+          })
 
-          return { success: false, error: errorMessage };
+          return { success: false, error: errorMessage }
         }
       },
 
