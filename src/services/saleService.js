@@ -265,7 +265,7 @@ export const saleService = {
       }
 
       // El endpoint espera GET con query params
-      const response = await apiClient.makeRequest('/sale/date_range/', {
+      const response = await apiClient.makeRequest('/sale/date_range', {
         method: 'GET',
         params: queryParams,
       })
@@ -372,7 +372,7 @@ export const saleService = {
 
   async getSaleMetadata(id) {
     try {
-      const response = await apiClient.makeRequest(`/sales/${id}/metadata`)
+      const response = await apiClient.makeRequest(`/sale/${id}/with-metadata`)
       return { success: true, data: response }
     } catch (error) {
       console.error(`Error fetching metadata for sale ${id}:`, error)
@@ -399,8 +399,8 @@ export const saleService = {
 
   async createSale(saleData) {
     try {
-      // Según SALE_API.md v1.8, el endpoint es POST /sales/orders
-      const response = await apiClient.makeRequest('/sales/orders', {
+      // Según SALE_API.md v1.10, el endpoint es POST /sale/
+      const response = await apiClient.makeRequest('/sale/', {
         method: 'POST',
         body: JSON.stringify(saleData),
       })

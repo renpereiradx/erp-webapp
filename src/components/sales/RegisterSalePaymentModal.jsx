@@ -173,7 +173,9 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
 
   const paymentMethodOptions = useMemo(() => paymentMethods.map(m => {
     const id = String(m.id || m.payment_method_id)
-    return { id, label: m.display_name || m.name || m.method_name || id }
+    // Alineado con API v1.1: usar description y method_code
+    const label = m.description || m.method_code || m.display_name || m.name || id
+    return { id, label }
   }).filter(o => o.id !== 'undefined'), [paymentMethods])
 
   const validationErrors = useMemo(() => {
@@ -425,7 +427,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                   </div>
                 </div>
 
-                {currencyCode !== (sale?.currency || DEFAULT_CURRENCY_CODE).toUpperCase() && (
+                {normalizeCurrencyCode(currencyCode) !== normalizeCurrencyCode(sale?.currency || DEFAULT_CURRENCY_CODE) && (
                   <div className='grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-xl border border-border-subtle shadow-inner'>
                     <div className='space-y-2'>
                       <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Tipo de Cambio</label>

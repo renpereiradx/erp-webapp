@@ -94,7 +94,14 @@ const normalizeOrderForModal = order => {
 const PurchasePaymentsPage = () => {
   const { t, lang } = useI18n()
   const navigate = useNavigate()
-  const { toasts, removeToast, info: showInfo, success: showSuccess } = useToast()
+  const { 
+    toasts, 
+    removeToast, 
+    info: showInfo, 
+    success: showSuccess, 
+    error: showError,
+    errorFrom 
+  } = useToast()
 
   const [isRegisterModalOpen, setRegisterModalOpen] = useState(false)
   const [modalOrder, setModalOrder] = useState(null)
@@ -103,13 +110,31 @@ const PurchasePaymentsPage = () => {
     orders, filters, meta, loading, error, fetchOrders, setFilter, resetFilters, processPayment
   } = usePurchasePaymentsMvpStore()
 
-  useEffect(() => { fetchOrders() }, [fetchOrders])
+  // Manejar carga inicial con feedback
+  useEffect(() => { 
+    fetchOrders().catch(err => {
+      errorFrom(err, { fallback: 'No se pudieron cargar las órdenes de pago' })
+    }) 
+  }, [fetchOrders, errorFrom])
 
   const dateFormatter = useMemo(() => dateFormatterFactory(lang), [lang])
   const formatCurrency = (val, cur) => currencyFormatter(lang, cur).format(val || 0)
 
-  const handleRefresh = () => { fetchOrders(); showInfo('Actualizando...') }
-  const handleReset = () => { resetFilters(); fetchOrders() }
+  const handleRefresh = async () => { 
+    try {
+      showInfo('Actualizando listado...')
+      await fetchOrders()
+      showSuccess('Listado actualizado')
+    } catch (err) {
+      errorFrom(err, { fallback: 'Error al actualizar el listado' })
+    }
+  }
+
+  const handleReset = () => { 
+    resetFilters()
+    fetchOrders() 
+    showInfo('Filtros reiniciados')
+  }
 
   const handleRegisterPayment = order => {
     setModalOrder(normalizeOrderForModal(order))
@@ -118,21 +143,25 @@ const PurchasePaymentsPage = () => {
 
   const handlePaymentSubmit = async (paymentData) => {
     try {
-      await processPayment(paymentData.orderId, {
-        amount_paid: paymentData.amount,
+      await processPayment({
+        orderId: paymentData.orderId,
+        amount: paymentData.amount,
         payment_method_id: paymentData.paymentMethodId,
+        currency_code: paymentData.currencyCode,
         currency_id: paymentData.currencyId,
         exchange_rate: paymentData.exchange_rate,
         original_amount: paymentData.original_amount,
-        payment_reference: paymentData.reference,
+        reference: paymentData.reference,
         cash_register_id: paymentData.cashRegisterId,
         notes: paymentData.notes
       })
       setRegisterModalOpen(false)
-      fetchOrders()
       showSuccess('Pago registrado exitosamente')
+      await fetchOrders()
     } catch (err) {
-      throw err
+      console.error('Payment processing error:', err)
+      errorFrom(err, { fallback: 'No se pudo procesar el pago' })
+      throw err // Mantener el error para que el modal no se cierre prematuramente si es necesario
     }
   }
 

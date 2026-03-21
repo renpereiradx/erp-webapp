@@ -144,7 +144,7 @@ const usePurchasePaymentsMvpStore = create(
         return get().fetchOrders({ page: meta.page })
       },
 
-      registerPayment: async payload => {
+      processPayment: async payload => {
         const orderId = payload?.orderId
         if (!orderId) {
           throw new Error('Missing purchase order identifier')

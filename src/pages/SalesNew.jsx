@@ -11,7 +11,9 @@ import {
   ShoppingCart,
   User,
   X,
+  History,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import useProductStore from '@/store/useProductStore'
 import useClientStore from '@/store/useClientStore'
 import useSaleStore from '@/store/useSaleStore'
@@ -925,12 +927,12 @@ const SalesNew = () => {
       })
 
       if (deduped.length === 0) {
-        alert('Todas las reservas ya están en el carrito')
+        toast.info('Todas las reservas ya están en el carrito')
         return prev
       }
 
       if (skippedReservations.length > 0) {
-        alert(
+        toast.info(
           `Se agregaron ${deduped.length} reserva(s). ${skippedReservations.length} reserva(s) duplicada(s) omitida(s).`,
         )
       }
@@ -943,7 +945,7 @@ const SalesNew = () => {
 
   const handleSearchReservations = async () => {
     if (!selectedClient || !selectedClient.id) {
-      alert('Por favor selecciona un cliente primero')
+      toast.error('Por favor selecciona un cliente primero')
       return
     }
 
@@ -957,11 +959,11 @@ const SalesNew = () => {
         setPendingReservations(reservations)
         setShowReservationModal(true)
       } else {
-        alert('No se encontraron reservas confirmadas para este cliente')
+        toast.info('No se encontraron reservas confirmadas para este cliente')
       }
     } catch (error) {
       console.error('Error buscando reservas:', error)
-      alert('Error al buscar reservas del cliente')
+      toast.error('Error al buscar reservas del cliente')
     }
   }
 
@@ -1002,13 +1004,13 @@ const SalesNew = () => {
       )
 
       if (newItems.length === 0) {
-        alert('Todos los productos de esta venta ya están en el carrito')
+        toast.info('Todos los productos de esta venta ya están en el carrito')
         return prev
       }
 
       if (newItems.length < loadedItems.length) {
         const skipped = loadedItems.length - newItems.length
-        alert(
+        toast.info(
           `Se cargaron ${newItems.length} producto(s). ${skipped} producto(s) ya estaban en el carrito.`,
         )
       }
@@ -1042,7 +1044,7 @@ const SalesNew = () => {
 
     // Validar razón de descuento si hay descuento
     if (modalDiscountValue > 0 && !modalDiscountReason.trim()) {
-      alert('Debes ingresar una razón para el descuento')
+      toast.error('Debes ingresar una razón para el descuento')
       return
     }
 
@@ -1127,12 +1129,12 @@ const SalesNew = () => {
   const handleSaveSale = async () => {
     // Validaciones según SALE_API.md
     if (!selectedClient) {
-      alert('Por favor selecciona un cliente')
+      toast.error('Por favor selecciona un cliente')
       return
     }
 
     if (items.length === 0) {
-      alert('Por favor agrega al menos un producto al carrito')
+      toast.error('Por favor agrega al menos un producto al carrito')
       return
     }
 
@@ -1143,14 +1145,14 @@ const SalesNew = () => {
         const newItems = items.filter(item => !item.isFromPendingSale)
 
         if (newItems.length === 0) {
-          alert('No hay productos nuevos para agregar a la venta')
+          toast.error('No hay productos nuevos para agregar a la venta')
           return
         }
 
         // Construir payload para agregar productos según ADD_PRODUCT_TO_SALE.md
         const addProductsPayload = {
           allow_price_modifications: newItems.some(item => item.discount > 0),
-          product_details: newItems.map(item => {
+          product_details: items.map(item => {
             const detail = {
               product_id: item.productId,
               quantity: item.quantity,
@@ -1192,7 +1194,7 @@ const SalesNew = () => {
           setGeneralDiscount(0)
           setCurrentSaleId(null)
         } else {
-          alert('Error: No se pudo actualizar la venta')
+          toast.error(`Error: ${response?.error || 'No se pudo actualizar la venta'}`)
         }
       } else {
         // Crear nueva venta
@@ -1221,7 +1223,6 @@ const SalesNew = () => {
           }),
           payment_method_id: paymentMethodId,
           currency_id: currencyId,
-          price_includes_tax: true, // Default para Paraguay (API v1.8)
         }
 
         const response = await createSale(saleData)
@@ -1250,14 +1251,12 @@ const SalesNew = () => {
           fetchDashboardData()
           setShowInstantCollection(true)
         } else {
-          alert('Error: No se recibió ID de venta')
+          toast.error('Error: No se recibió ID de venta de la API')
         }
       }
     } catch (error) {
       console.error('Error al guardar venta:', error)
-      alert(
-        `Error al guardar la venta: ${error.message || 'Error desconocido'}`,
-      )
+      toast.error(`Error al guardar la venta: ${error.message || 'Error desconocido'}`)
     }
   }
 

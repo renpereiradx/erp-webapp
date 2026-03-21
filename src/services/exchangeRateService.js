@@ -207,17 +207,15 @@ class ExchangeRateService {
    */
   static async getLatestAll() {
     try {
-      // Nueva API unificada: /exchange-rates/latest
-      const response = await apiClient.makeRequest('/exchange-rates/latest')
+      // 🔧 FIX: Se ha detectado que /exchange-rates/latest devuelve 405 (Method Not Allowed) en el backend actual
+      // Por tanto, priorizamos el parámetro legacy que está documentado como funcional
+      const response = await apiClient.makeRequest('/exchange-rates?latest=true')
       const payload = response.data || response
       return this.normalizeExchangeRateList(payload)
     } catch (error) {
-      console.error('Error fetching latest exchange rates:', error)
-      // Fallback al parámetro legacy si el nuevo no está disponible
+      console.warn('Fallback: Error al obtener con ?latest=true, intentando /exchange-rates/latest', error)
       try {
-        const fallbackResponse = await apiClient.makeRequest(
-          '/exchange-rates?latest=true'
-        )
+        const fallbackResponse = await apiClient.makeRequest('/exchange-rates/latest')
         const payload = fallbackResponse.data || fallbackResponse
         return this.normalizeExchangeRateList(payload)
       } catch {

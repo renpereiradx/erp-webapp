@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 
 import { useI18n } from '@/lib/i18n'
+import { useToast } from '@/hooks/useToast'
 import {
   Dialog,
   DialogContent,
@@ -56,6 +57,7 @@ const getNormalizedPendingAmount = (pendingAmount, currencyCode) => {
 
 const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
   const { t, lang } = useI18n()
+  const { error: showError } = useToast()
 
   const [amount, setAmount] = useState('')
   const [exchangeRate, setExchangeRate] = useState('')
@@ -158,7 +160,9 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
 
   const paymentMethodOptions = useMemo(() => paymentMethods.map(m => {
     const id = String(m.id || m.payment_method_id)
-    return { id, label: m.display_name || m.name || m.method_name || id }
+    // Alineado con API v1.1: usar description y method_code
+    const label = m.description || m.method_code || m.display_name || m.name || id
+    return { id, label }
   }).filter(o => o.id !== 'undefined'), [paymentMethods])
 
   const cashRegisterOptions = useMemo(() => cashRegisters.map(cr => ({
@@ -173,7 +177,11 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
     event.preventDefault()
     if (!order) return
     const num = Number.parseFloat(parseNumberWithDots(amount))
-    if (!Number.isFinite(num) || num <= 0) { setAmountError('Monto requerido'); return }
+    if (!Number.isFinite(num) || num <= 0) { 
+      setAmountError('Monto requerido')
+      showError('Por favor ingresa un monto válido mayor a cero')
+      return 
+    }
     
     setSubmitting(true)
     try {
@@ -188,7 +196,7 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
         exchange_rate: exchangeRate ? Number(exchangeRate) : undefined,
         original_amount: originalAmount ? Number(originalAmount) : undefined,
         reference: reference.trim() || null,
-        cashRegisterId: cashRegister ? Number(cashRegister) : undefined,
+        cashRegisterId: (cashRegister && cashRegister !== CASH_REGISTER_NONE_VALUE) ? Number(cashRegister) : undefined,
         notes: notes.trim() || null,
       })
       resetForm(); handleDialogChange(false)
@@ -274,7 +282,7 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
                     </div>
                   </div>
 
-                  {currencyCode !== (order?.currency || DEFAULT_CURRENCY_CODE).toUpperCase() && (
+                  {normalizeCurrencyCode(currencyCode) !== normalizeCurrencyCode(order?.currency || DEFAULT_CURRENCY_CODE) && (
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-xl border border-border-subtle shadow-inner'>
                       <div className='space-y-2'>
                         <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Tipo de Cambio</label>

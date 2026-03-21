@@ -67,13 +67,15 @@ const PurchasePaymentDetailPage = () => {
 
   const handlePaymentSubmit = async (paymentData) => {
     try {
-      await processPayment(paymentData.orderId, {
-        amount_paid: paymentData.amount,
+      await processPayment({
+        orderId: paymentData.orderId,
+        amount: paymentData.amount,
         payment_method_id: paymentData.paymentMethodId,
+        currency_code: paymentData.currencyCode,
         currency_id: paymentData.currencyId,
         exchange_rate: paymentData.exchange_rate,
         original_amount: paymentData.original_amount,
-        payment_reference: paymentData.reference,
+        reference: paymentData.reference,
         cash_register_id: paymentData.cashRegisterId,
         notes: paymentData.notes
       })

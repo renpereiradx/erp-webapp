@@ -594,11 +594,12 @@ clearCurrentSaleMetadata: () => set({ currentSaleMetadata: null }),
             allow_price_modifications: payload?.allow_price_modifications,
           })
 
-          set({ loading: false })
           return response
         } catch (error) {
-          set({ error: error.message, loading: false })
+          set({ error: error.message })
           throw error
+        } finally {
+          set({ loading: false })
         }
       },
 
@@ -619,10 +620,6 @@ clearCurrentSaleMetadata: () => set({ currentSaleMetadata: null }),
                       product_id: item.product_id || item.id,
                       quantity: item.quantity || 1,
                       unit: item.unit || 'unit',
-                    }
-
-                    if (item.sale_price || item.unit_price) {
-                      detail.sale_price = item.sale_price || item.unit_price
                     }
                     if (item.price_change_reason) {
                       detail.price_change_reason = item.price_change_reason
@@ -695,7 +692,6 @@ clearCurrentSaleMetadata: () => set({ currentSaleMetadata: null }),
             // Actualizar la lista de ventas (MVP: array simple)
             set({
               sales: [newSale, ...sales],
-              loading: false,
             })
 
             // Limpiar venta actual
@@ -718,8 +714,10 @@ clearCurrentSaleMetadata: () => set({ currentSaleMetadata: null }),
 
           return response
         } catch (error) {
-          set({ error: error.message, loading: false })
+          set({ error: error.message })
           throw error
+        } finally {
+          set({ loading: false })
         }
       },
 

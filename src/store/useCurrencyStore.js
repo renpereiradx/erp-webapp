@@ -78,9 +78,8 @@ const useCurrencyStore = create()(
           // Fetch exchange rates and merge them
           let enrichedCurrencies = data
           try {
-            const { apiClient } = await import('@/services/api.js')
-            const ratesResponse = await apiClient.makeRequest('/exchange-rates/latest')
-            const rates = ratesResponse?.data || ratesResponse || []
+            const { ExchangeRateService } = await import('@/services/exchangeRateService.js')
+            const rates = await ExchangeRateService.getLatestAll()
 
             if (Array.isArray(rates) && rates.length > 0) {
               enrichedCurrencies = data.map(currency => {

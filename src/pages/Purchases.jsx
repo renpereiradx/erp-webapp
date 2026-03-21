@@ -23,7 +23,9 @@ import {
   ArrowRight,
   Check,
   Minus,
+  History,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import DataState from '@/components/ui/DataState'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import { useI18n } from '@/lib/i18n'

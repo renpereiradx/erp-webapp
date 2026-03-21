@@ -211,10 +211,10 @@ const ProductModal = ({
     <div
       className={`${
         container ? 'absolute' : 'fixed'
-      } inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm product-detail-modal`}
+      } inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm product-detail-modal font-display`}
     >
       <div
-        className={`w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden rounded-2xl ${styles.card()} product-modal shadow-2xl`}
+        className={`w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden rounded-2xl ${styles.card()} product-modal shadow-2xl font-display`}
       >
         <div className='flex items-start justify-between gap-3 border-b px-5 py-4'>
           <div className='flex flex-1 flex-col gap-2'>

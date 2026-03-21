@@ -176,27 +176,30 @@ class BusinessManagementAPI {
         )
       }
 
-      // Para errores 500, dar información más específica
-      if (response.status === 500) {
-        if (endpoint.includes('/search')) {
-          throw new ApiError(
-            'INTERNAL',
-            'Error interno del servidor al buscar. Intenta con términos diferentes o contacta al administrador.',
-          )
+      // Capturar detalles del error para debugging
+      // Log detallado para depuración de errores críticos (400, 500, etc)
+      // Omitir log ruidoso para fallos conocidos de base de datos en payment-status para no saturar consola
+      const isKnownBackendIssue = endpoint.includes('/payment-status') && rawErrorBody?.includes('pm.name does not exist')
+      
+      if (response.status >= 400 && !isKnownBackendIssue) {
+        console.group(`❌ API ERROR [${response.status}]: ${endpoint}`)
+        console.info('URL:', url)
+        console.info('Method:', options.method || 'GET')
+        if (options.body) {
+          try {
+            console.info('Payload Sent:', JSON.parse(options.body))
+          } catch (e) {
+            console.info('Raw Payload:', options.body)
+          }
         }
-        if (endpoint.includes('/category/')) {
-          throw new ApiError(
-            'INTERNAL',
-            'Error interno del servidor al cargar categorías. Intenta recargar la página.',
-          )
-        }
-        throw new ApiError(
-          'INTERNAL',
-          `Error interno del servidor (${response.status}). Contacta al administrador.`,
-        )
+        console.info('Headers Sent:', options.headers || 'Default or no explicit headers')
+        console.info('Server Raw Response Body:', rawErrorBody || 'Empty response body')
+        console.groupEnd()
+      } else if (isKnownBackendIssue) {
+        // Log minimal para problemas conocidos del backend
+        console.warn(`⚠️ Backend Issue (Known): ${endpoint} - ${response.status} (SQL Column Error)`)
       }
 
-      // Capturar detalles del error para debugging
       let errorDetails = `HTTP error! status: ${response.status}`
       if (rawErrorBody) {
         try {
@@ -206,7 +209,7 @@ class BusinessManagementAPI {
           if (typeof payload === 'string') {
             errorDetails = payload
           } else if (payload && typeof payload === 'object') {
-            errorDetails = payload.message || payload.error || errorDetails
+            errorDetails = payload.message || payload.error || payload.details || errorDetails
           }
         } catch (jsonParseError) {
           errorDetails = rawErrorBody.trim()
@@ -215,6 +218,26 @@ class BusinessManagementAPI {
         }
       } else {
         errorDetails = `HTTP ${response.status}: Unable to read response body`
+      }
+
+      // Para errores 500, dar información más específica
+      if (response.status === 500) {
+        if (endpoint.includes('/search')) {
+          throw new ApiError(
+            'INTERNAL',
+            errorDetails || 'Error interno del servidor al buscar. Intenta con términos diferentes o contacta al administrador.',
+          )
+        }
+        if (endpoint.includes('/category/')) {
+          throw new ApiError(
+            'INTERNAL',
+            errorDetails || 'Error interno del servidor al cargar categorías. Intenta recargar la página.',
+          )
+        }
+        throw new ApiError(
+          'INTERNAL',
+          errorDetails || `Error interno del servidor (${response.status}). Contacta al administrador.`,
+        )
       }
 
       throw new ApiError('HTTP_ERROR', errorDetails)
@@ -444,7 +467,9 @@ class BusinessManagementAPI {
   }
 
   async getLatestExchangeRates() {
-    return this.makeRequest('/exchange-rates/latest')
+    // 🔧 UPDATE: Use query parameter for better compatibility as some backend versions
+    // might not support /exchange-rates/latest as a GET endpoint (405 Method Not Allowed)
+    return this.makeRequest('/exchange-rates?latest=true')
   }
 
   // --- Cash Registers ---

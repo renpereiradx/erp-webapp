@@ -25,7 +25,8 @@ import {
   Coins,
   Wallet,
   Calculator,
-  CheckCircle
+  CheckCircle,
+  DollarSign
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -80,31 +81,42 @@ const SalesOrderDetail = () => {
       let paymentStatus = null
       try {
         paymentStatus = await salePaymentService.getSalePaymentStatus(saleId)
-      } catch (err) { console.warn('Payment status fetch error', err) }
+      } catch (err) { 
+        // Fallback silencioso: el backend tiene un error conocido en este endpoint
+        console.info('ℹ️ Usando fallback para estado de pago (Backend inestable)')
+      }
 
       let clientDetails = null
       try {
-        const clientId = fullSaleData.client_id || paymentStatus?.client_id
+        const clientId = fullSaleData.client_id || (paymentStatus && paymentStatus.client_id)
         if (clientId) clientDetails = await clientService.getById(clientId)
       } catch (err) { console.warn('Client fetch error', err) }
 
-      const balanceDue = paymentStatus?.balance_due ?? (fullSaleData.total_amount - (paymentStatus?.total_paid || 0))
-      let correctedStatus = fullSaleData.status || paymentStatus?.status || paymentStatus?.payment_status
-      if (balanceDue === 0 && (correctedStatus === 'PARTIAL_PAYMENT' || correctedStatus === 'partial')) correctedStatus = 'PAID'
+      // Calcular balance basado en la información disponible
+      const totalAmount = fullSaleData.total_amount || 0
+      const totalPaid = (paymentStatus && paymentStatus.total_paid) || 0
+      const balanceDue = (paymentStatus && paymentStatus.balance_due !== undefined) 
+        ? paymentStatus.balance_due 
+        : Math.max(0, totalAmount - totalPaid)
+      
+      let correctedStatus = fullSaleData.status || (paymentStatus && (paymentStatus.status || paymentStatus.payment_status)) || 'PENDING'
+      if (balanceDue === 0 && (correctedStatus === 'PARTIAL_PAYMENT' || correctedStatus === 'partial' || correctedStatus === 'PENDING')) {
+        correctedStatus = 'PAID'
+      }
 
       setSale({
         ...fullSaleData,
-        ...paymentStatus,
+        ...(paymentStatus || {}),
         id: fullSaleData.sale_id || fullSaleData.id,
         status: correctedStatus,
         balance_due: balanceDue,
         items: saleItems,
-        user_name: fullSaleData.user_name || paymentStatus?.user_name || 'Vendedor',
-        client_name: fullSaleData.client_name || paymentStatus?.client_name || clientDetails?.name,
-        client_document: clientDetails?.document_id || paymentStatus?.client?.document_id,
-        client_contact: clientDetails?.contact || paymentStatus?.client?.contact,
-        date: fullSaleData.sale_date || fullSaleData.date || paymentStatus?.sale_date,
-        currency: fullSaleData.currency || paymentStatus?.currency || 'PYG'
+        user_name: fullSaleData.user_name || (paymentStatus && paymentStatus.user_name) || 'Vendedor',
+        client_name: fullSaleData.client_name || (paymentStatus && paymentStatus.client_name) || (clientDetails && clientDetails.name) || 'Cliente',
+        client_document: (clientDetails && clientDetails.document_id) || (paymentStatus && paymentStatus.client && paymentStatus.client.document_id),
+        client_contact: (clientDetails && clientDetails.contact) || (paymentStatus && paymentStatus.client && paymentStatus.client.contact),
+        date: fullSaleData.sale_date || fullSaleData.date || (paymentStatus && paymentStatus.sale_date),
+        currency: fullSaleData.currency || (paymentStatus && paymentStatus.currency) || 'PYG'
       })
       
       if (paymentStatus?.payments) setPayments(paymentStatus.payments)
@@ -164,7 +176,9 @@ const SalesOrderDetail = () => {
           </div>
           <div>
             <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">Detalle de Venta</h1>
-            <p className="text-text-secondary text-sm font-medium mt-1">Orden #{sale.id} • {new Date(sale.date).toLocaleDateString()}</p>
+            <p className="text-text-secondary text-sm font-medium mt-1">
+              Orden #{sale?.id || '—'} • {sale?.date ? new Date(sale.date).toLocaleDateString() : 'Fecha no disponible'}
+            </p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">

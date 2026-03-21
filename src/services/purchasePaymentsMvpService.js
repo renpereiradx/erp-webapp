@@ -100,6 +100,9 @@ const STATUS_MAP = {
   processing: 'pending',
   in_progress: 'pending',
   created: 'pending',
+  received: 'pending',
+  confirmed: 'pending',
+  authorized: 'pending',
   cancelled: 'cancelled',
   canceled: 'cancelled',
   voided: 'cancelled',
@@ -439,10 +442,9 @@ const normalizeOrder = raw => {
   if (!raw) return null
 
   const base = raw.purchase ?? raw
-  const orderId = Number(
-    base.purchase_order_id ?? base.order_id ?? base.id ?? raw.id
-  )
-  if (!Number.isFinite(orderId)) {
+  const orderId = base.purchase_order_id ?? base.order_id ?? base.id ?? raw.id
+  
+  if (orderId === null || orderId === undefined) {
     return null
   }
 
@@ -462,24 +464,30 @@ const normalizeOrder = raw => {
 
   if (paymentSummary) {
     totalPaid = roundCurrency(
-      paymentSummary.total_paid ?? paymentSummary.totalPaid ?? 0
+      paymentSummary.total_paid ?? paymentSummary.totalPaid ?? paymentSummary.amount_paid ?? 0
     )
     outstanding = roundCurrency(
       paymentSummary.outstanding_amount ??
         paymentSummary.outstandingAmount ??
         paymentSummary.remaining_amount ??
-        0
+        paymentSummary.remaining_balance ??
+        paymentSummary.balance ??
+        paymentSummary.pending_amount ??
+        Math.max(0, totalAmount - totalPaid)
     )
-    if (paymentSummary.payment_status) {
-      rawStatus = paymentSummary.payment_status
+    if (paymentSummary.payment_status || paymentSummary.status) {
+      rawStatus = paymentSummary.payment_status || paymentSummary.status
     }
   } else {
-    totalPaid = roundCurrency(base.amount_paid ?? base.totalPaid ?? 0)
+    totalPaid = roundCurrency(base.amount_paid ?? base.totalPaid ?? base.total_paid ?? 0)
     outstanding = roundCurrency(
       base.remaining_amount ??
+        base.remaining_balance ??
         base.pending_amount ??
         base.pendingAmount ??
-        totalAmount - totalPaid
+        base.balance ??
+        base.debt ??
+        Math.max(0, totalAmount - totalPaid)
     )
   }
 
@@ -610,10 +618,12 @@ const filterOrders = (orders, filters) =>
 
 const sortOrders = orders =>
   [...orders].sort((a, b) => {
-    const aTime = ensureDate(a.issue_date)?.getTime() ?? 0
-    const bTime = ensureDate(b.issue_date)?.getTime() ?? 0
-    if (aTime === bTime) {
-      return (b.id ?? 0) - (a.id ?? 0)
+    const aTime = ensureDate(a.issue_date || a.createdAt)?.getTime() ?? 0
+    const bTime = ensureDate(b.issue_date || b.createdAt)?.getTime() ?? 0
+    if (Math.abs(aTime - bTime) < 1000) { // Si la diferencia es menor a 1 segundo, desempatar por ID
+      const aId = String(a.id || '').replace(/\D/g, '')
+      const bId = String(b.id || '').replace(/\D/g, '')
+      return Number(bId) - Number(aId)
     }
     return bTime - aTime
   })
@@ -794,20 +804,54 @@ const fetchOrdersFromApi = async filters => {
       return response.data || []
     }
 
-    const response = await purchaseService.getRecentPurchases(
-      60,
-      1,
-      DEFAULT_FETCH_LIMIT,
-      commonOptions
-    )
-
-    if (!response?.success) {
-      throw new Error(
-        response?.error || 'Unable to load recent purchase orders'
-      )
+    // Alinear con Purchases.jsx: usar rango de fechas por defecto (últimos 30 días)
+    // Usar formato local YYYY-MM-DD para evitar desfases de zona horaria con toISOString()
+    const getLocalDateStr = (date) => {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
     }
 
-    return response.data || []
+    const now = new Date()
+    const endDate = new Date(now)
+    endDate.setDate(now.getDate() + 1)
+    const endDateStr = getLocalDateStr(endDate)
+    
+    const thirtyDaysAgo = new Date(now)
+    thirtyDaysAgo.setDate(now.getDate() - 30)
+    const startDateStr = getLocalDateStr(thirtyDaysAgo)
+
+    let aggregatedOrders = []
+    let currentPage = 1
+    const maxPages = 20
+    const pageSize = 200
+
+    while (currentPage <= maxPages) {
+      const response = await purchaseService.getPurchasesByDateRange(
+        startDateStr,
+        endDateStr,
+        currentPage,
+        pageSize,
+        commonOptions
+      )
+
+      if (!response?.success) break
+      
+      const pageData = Array.isArray(response.data) ? response.data : []
+      if (pageData.length === 0) break
+      
+      // Combinar resultados (Purchases.jsx usa mergePurchaseOrdersById, aquí agregamos simplemente ya que normalizamos después)
+      aggregatedOrders = [...aggregatedOrders, ...pageData]
+      
+      const pagination = response.pagination
+      const hasNext = pagination?.hasNext || pagination?.has_next || pagination?.hasMore
+      if (!hasNext) break
+      
+      currentPage++
+    }
+
+    return aggregatedOrders
   } catch (error) {
     throw new Error(error?.message || 'Unable to load purchase orders')
   }
@@ -841,13 +885,11 @@ export const purchasePaymentsMvpService = {
     // Verificar si la API ya filtró por fecha
     const apiAlreadyFilteredByDate = Boolean(filters.dateFrom || filters.dateTo)
 
-    // Crear filtros para el cliente, excluyendo filtros ya aplicados por la API
+    // Alinear con Purchases.jsx: mostrar todas las órdenes devueltas por la API en el rango
+    // El filtrado por saldo o estado se deja al componente UI para máxima paridad
     const clientFilters = {
       ...filters,
-      // Remover el filtro de búsqueda si el API ya filtró por proveedor
       search: apiAlreadyFilteredBySupplier ? '' : filters.search,
-      // Remover el filtro de fechas si el API ya filtró por fecha
-      // (la API ya aplicó el ajuste de +1 día para inclusividad)
       dateFrom: apiAlreadyFilteredByDate ? '' : filters.dateFrom,
       dateTo: apiAlreadyFilteredByDate ? '' : filters.dateTo,
     }
@@ -908,14 +950,21 @@ export const purchasePaymentsMvpService = {
     const rawCashRegisterId =
       payload.cashRegisterId ?? payload.cash_register_id ?? null
     let cashRegisterId = null
-    if (rawCashRegisterId !== null && rawCashRegisterId !== undefined) {
+    
+    // Solo validar si el valor no es nulo, no es indefinido y no es NaN
+    if (rawCashRegisterId !== null && rawCashRegisterId !== undefined && !Number.isNaN(rawCashRegisterId)) {
       const parsedCashRegisterId = Number(rawCashRegisterId)
-      if (!Number.isFinite(parsedCashRegisterId) || parsedCashRegisterId <= 0) {
+      
+      // Solo lanzar error si se intentó enviar un ID explícito pero es inválido (ej: negativo o cero)
+      // Si el valor es vacío o NaN después de la conversión, se asume que no hay caja
+      if (parsedCashRegisterId > 0) {
+        cashRegisterId = parsedCashRegisterId
+      } else if (String(rawCashRegisterId).trim() !== '') {
+        // Solo lanzamos error si el string no está vacío (es decir, el usuario escribió algo inválido)
         throw new Error(
           'Seleccioná una caja válida o dejá el campo vacío para continuar'
         )
       }
-      cashRegisterId = parsedCashRegisterId
     }
 
     const apiPayload = {

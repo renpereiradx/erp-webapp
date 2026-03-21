@@ -1,7 +1,7 @@
 # 🛒 Ventas y Pagos - Guía Completa de API
 
-**Versión:** 1.9
-**Fecha:** 19 de Marzo de 2026
+**Versión:** 1.10
+**Fecha:** 21 de Marzo de 2026
 **Endpoint Base:** `http://localhost:5050`
 **Estado:** ✅ Production Ready
 
@@ -15,7 +15,7 @@ Para la gestión de pagos y cobranzas, consulte la guía:
 - **[💸 Pagos y Cobranzas - Guía de API](./SALE_PAYMENT.md)**
 
 El proceso de venta se divide en las siguientes acciones principales:
-1.  **Crear una Venta:** A través de `POST /sales/orders`, se registra una nueva orden de venta.
+1.  **Crear una Venta:** A través de `POST /sale/`, se registra una nueva orden de venta.
 2.  **Modificar una Venta:** Se pueden agregar productos a una venta existente.
 3.  **Anular una Venta:** Se puede cancelar una venta que cumpla ciertas condiciones.
 4.  **Consultar Ventas:** Se pueden obtener ventas por diversos criterios, como rango de fechas o cliente.
@@ -190,7 +190,7 @@ Los presupuestos (`Budget`) también tienen un campo `metadata` que puede conten
 
 ### Obtener Venta con Metadata
 
-**Endpoint:** `GET /sales/{id}/metadata`
+**Endpoint:** `GET /sale/{id}/with-metadata`
 
 Obtiene una venta incluyendo el metadata completo de cambios de precio y descuentos.
 
@@ -222,7 +222,9 @@ Esta sección cubre cómo crear una nueva orden de venta.
 
 ### 1. Crear Orden de Venta
 
-**Endpoint:** `POST /sales/orders`
+**Endpoint:** `POST /sale/`
+
+> Compatibilidad legacy: `POST /sales/orders` sigue disponible para clientes antiguos, pero `POST /sale/` es la ruta canónica actual.
 
 Este endpoint crea una nueva venta. Es el punto de entrada para registrar todos los productos que un cliente desea adquirir, aplicando las condiciones comerciales correspondientes (descuentos, precios especiales, etc.).
 
@@ -271,13 +273,14 @@ Este endpoint crea una nueva venta. Es el punto de entrada para registrar todos 
 |-------|------|-----------|-------------|
 | `product_id` | string | ✅ Sí | ID del producto a vender. |
 | `quantity` | number | ✅ Sí | Cantidad del producto. Debe ser > 0. |
-| `unit` | string | ❌ No | Unidad de medida para productos medibles: `kg`, `meter`, `l`, etc. Si se omite, usa la unidad base del producto o `unit`. |
 | `tax_rate_id` | number | ❌ No | ID de la tasa de impuesto a aplicar. Si se omite, se resuelve automáticamente. Ver sección "Sistema de IVA". |
 | `sale_price` | number | ⚠️ Condicional | **Modificación de Precio:** Precio de venta unitario modificado. Requiere `allow_price_modifications: true`. |
 | `price_change_reason` | string | ⚠️ Condicional | Justificación obligatoria si se usa `sale_price`. |
 | `discount_amount` | number | ⚠️ Condicional | **Descuento Fijo:** Monto de descuento a restar del precio unitario. |
 | `discount_percent` | number | ⚠️ Condicional | **Descuento Porcentual:** Porcentaje de descuento (0-100) a aplicar al precio unitario. |
 | `discount_reason` | string | ⚠️ Condicional | Justificación obligatoria si se aplica cualquier tipo de descuento. |
+
+> Nota sobre `unit`: actualmente el request de creación de venta no procesa `unit` en `product_details` en este endpoint. El campo `unit` sí puede aparecer en respuestas de detalle de venta.
 
 > **💡 Importante:** No se pueden usar `discount_amount` y `discount_percent` en el mismo producto simultáneamente.
 
@@ -318,9 +321,10 @@ Este endpoint crea una nueva venta. Es el punto de entrada para registrar todos 
 |---|-------------|-------------|----------|
 | `DISCOUNT_REASON_REQUIRED` | 400 | Se aplicó un descuento sin justificación. | Añadir un valor a `discount_reason` cuando se usa `discount_amount` o `discount_percent`. |
 | `PRICE_CHANGE_REASON_REQUIRED` | 400 | Se usó `sale_price` sin justificación. | Añadir un valor a `price_change_reason`. |
-| `EXCESSIVE_DISCOUNT_AMOUNT` | 400 | El descuento es mayor que el precio del producto. | Ajustar el monto del descuento para que no supere el precio unitario. |
+| `INVALID_DISCOUNT` | 400 | Valores de descuento inválidos (por ejemplo, negativos). | Validar que descuentos y porcentajes sean valores válidos antes de enviar. |
 | `INSUFFICIENT_STOCK` | 409 (Conflict) | No hay suficiente stock para uno de los productos. | Validar el stock disponible antes de crear la venta. El mensaje de error indicará el producto. |
 | `INVALID_RESERVATION`| 400 | La reserva especificada no es válida o ya ha sido utilizada. | Asegurarse de que el `reserve_id` es correcto y que la reserva está en estado `CONFIRMED`. |
+| `PRODUCT_VALIDATION_ERROR` | 400 | Falló validación/procesamiento de uno o más productos. | Revisar `details` del error para identificar producto no encontrado, reglas de precio/descuento o validaciones de stock. |
 
 
 ---
@@ -368,7 +372,7 @@ Permite agregar uno o más productos a una venta existente que se encuentra en e
 | `allow_price_modifications` | boolean | ✅ Sí       | Debe ser `true` para poder usar `sale_price` u otros campos de descuento en los productos añadidos. |
 | `product_details`           | array   | ✅ Sí       | Lista de nuevos productos a agregar a la venta. La estructura es idéntica a la de creación de ventas. |
 
-> **💡 Nota:** La estructura del array `product_details` es la misma que la utilizada en el endpoint `POST /sales/orders`. Se pueden aplicar descuentos y modificaciones de precio a los nuevos productos siguiendo las mismas reglas.
+> **💡 Nota:** La estructura del array `product_details` es la misma que la utilizada en el endpoint `POST /sale/`. Se pueden aplicar descuentos y modificaciones de precio a los nuevos productos siguiendo las mismas reglas.
 
 **Response (200 OK):**
 
@@ -911,7 +915,7 @@ GET /sale/date_range?start_date=2025-05-01&end_date=2025-06-19&page=1&page_size=
 
 **Escenario:** Vender un producto con un 15% de descuento por ser cliente VIP.
 
-**Request a `POST /sales/orders`:**
+**Request a `POST /sale/`:**
 ```json
 {
   "client_id": "CLIENT_VIP_007",
@@ -932,7 +936,7 @@ GET /sale/date_range?start_date=2025-05-01&end_date=2025-06-19&page=1&page_size=
 
 **Escenario:** Vender un producto con un precio especial acordado con el cliente.
 
-**Request a `POST /sales/orders`:**
+**Request a `POST /sale/`:**
 ```json
 {
   "client_id": "CLIENT_002",
@@ -976,7 +980,7 @@ GET /sale/date_range?start_date=2025-05-01&end_date=2025-05-31&page=1&page_size=
 
 ### Validaciones en Frontend (Recomendadas)
 
-**Para `POST /sales/orders`:**
+**Para `POST /sale/`:**
 1.  ✅ Si se usa `discount_amount` o `discount_percent`, asegurar que `discount_reason` no esté vacío.
 2.  ✅ Si se usa `sale_price`, asegurar que `price_change_reason` no esté vacío.
 3.  ✅ No permitir `discount_amount` y `discount_percent` en el mismo item.
@@ -988,7 +992,7 @@ GET /sale/date_range?start_date=2025-05-01&end_date=2025-05-31&page=1&page_size=
 
 ### Flujo de Creación de Venta
 
-1.  **Crear la Venta:** El usuario arma el carrito. Al confirmar, enviar la solicitud a `POST /sales/orders`.
+1.  **Crear la Venta:** El usuario arma el carrito. Al confirmar, enviar la solicitud a `POST /sale/`.
 2.  **Guardar el ID:** Al recibir una respuesta exitosa, guardar el `sale_id` retornado.
 3.  **Continuar al Pago:** Usar el `sale_id` para navegar a la sección de pagos de la aplicación, donde se utilizará la **[Guía de API de Pagos y Cobranzas](./SALE_PAYMENT.md)**.
 
@@ -1004,9 +1008,16 @@ Para una especificación técnica completa y machine-readable de esta API, consu
 
 ## 📝 Historial de Cambios
 
+### v1.10 - 21 de Marzo de 2026
+- ✅ **Rutas canónicas alineadas**: creación de venta documentada con `POST /sale/`.
+- ✅ **Compatibilidad legacy aclarada**: `POST /sales/orders` se mantiene solo para clientes antiguos.
+- ✅ **Metadata alineada con backend**: endpoint actualizado a `GET /sale/{id}/with-metadata`.
+- ✅ **Precisión de contrato de request**: aclarado que `unit` no se procesa en `product_details` para creación en este endpoint.
+- ✅ **Errores de validación actualizados**: agregado `PRODUCT_VALIDATION_ERROR` y ajuste de `INVALID_DISCOUNT`.
+
 ### v1.9 - 19 de Marzo de 2026
 - ✅ **Schemas de Metadata Documentados**: Agregada sección "Sistema de Metadata" documentando las estructuras de metadata para ventas y presupuestos.
-- ✅ **Endpoint GET /sales/{id}/metadata**: Documentado endpoint para obtener metadata de cambios de precio y descuentos.
+- ✅ **Endpoint GET /sale/{id}/with-metadata**: Documentado endpoint para obtener metadata de cambios de precio y descuentos.
 
 ### v1.8 - 25 de Enero de 2026
 - ✅ **Soporte para Unidades de Medida**: Agregado campo `unit` en `product_details` para especificar unidades de productos medibles (kg, meter, l, etc.).
