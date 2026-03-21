@@ -2120,6 +2120,7 @@ const SalesNew = () => {
           </article>
         </section>
       )}
+      </main>
 
       {showSaleDetailModal && selectedHistorySale && (
         <div
