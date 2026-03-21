@@ -149,45 +149,45 @@ const MainLayout = ({ children }) => {
                 href: '/sales-analytics/period-comparison',
                 icon: Activity,
               },
-              ],
+            ],
+          },
+          {
+            name: 'Pronósticos BI (IA)',
+            href: '#',
+            icon: Zap,
+            children: [
+              {
+                name: 'Dashboard de Pronósticos',
+                href: '/bi/pronosticos/dashboard',
+                icon: LayoutDashboard,
               },
               {
-                name: 'Pronósticos BI (IA)',
-                href: '#',
-                icon: Zap,
-                children: [
-                  {
-                    name: 'Dashboard de Pronósticos',
-                    href: '/bi/pronosticos/dashboard',
-                    icon: LayoutDashboard,
-                  },
-                  {
-                    name: 'Salud de Inventario',
-                    href: '/bi/pronosticos/inventario',
-                    icon: Package,
-                  },
-                  {
-                    name: 'Pronóstico de Ventas',
-                    href: '/bi/pronosticos/ventas',
-                    icon: TrendingUp,
-                  },
-                  {
-                    name: 'Pronóstico de Demanda',
-                    href: '/bi/pronosticos/demanda',
-                    icon: BarChart3,
-                  },
-                  {
-                    name: 'Escenarios de Ingresos',
-                    href: '/bi/pronosticos/ingresos',
-                    icon: BarChart,
-                  },
-                ],
+                name: 'Salud de Inventario',
+                href: '/bi/pronosticos/inventario',
+                icon: Package,
               },
               {
-                name: 'Analítica de Rentabilidad',
-                href: '#',
+                name: 'Pronóstico de Ventas',
+                href: '/bi/pronosticos/ventas',
+                icon: TrendingUp,
+              },
+              {
+                name: 'Pronóstico de Demanda',
+                href: '/bi/pronosticos/demanda',
                 icon: BarChart3,
-                children: [
+              },
+              {
+                name: 'Escenarios de Ingresos',
+                href: '/bi/pronosticos/ingresos',
+                icon: BarChart,
+              },
+            ],
+          },
+          {
+            name: 'Analítica de Rentabilidad',
+            href: '#',
+            icon: BarChart3,
+            children: [
               {
                 name: 'Dashboard Ejecutivo',
                 href: '/profitability/dashboard',
@@ -218,10 +218,10 @@ const MainLayout = ({ children }) => {
                 href: '/profitability/sellers',
                 icon: UserCheck,
               },
-              ],
-              },
-              {
-              name: t('inventory.analytics', 'Analítica de Inventario'),
+            ],
+          },
+          {
+            name: t('inventory.analytics', 'Analítica de Inventario'),
             href: '#',
             icon: Package,
             children: [
@@ -352,66 +352,167 @@ const MainLayout = ({ children }) => {
           },
         ],
       },
-      { name: t('products.title', 'Productos'), href: '/productos', icon: Package },
-      { name: t('clients.title', 'Clientes'), href: '/clientes', icon: Users },
-      { name: t('suppliers.title', 'Proveedores'), href: '/proveedores', icon: Truck },
       {
-        name: t('productAdjustments.title', 'Ajustes de Producto'),
-        href: '/ajustes-producto',
-        icon: SlidersHorizontal,
-      },
-      { name: t('purchases.title', 'Compras'), href: '/compras', icon: ShoppingBag },
-      { name: t('sales.title', 'Ventas'), href: '/ventas', icon: ShoppingCart },
-      { name: t('reservations.title', 'Gestión Reservas'), href: '/gestion-reservas', icon: Calendar },
-      {
-        name: t('common.payments', 'Pagos'),
+        name: t('common.commercial', 'Gestión Comercial'),
         href: '#',
-        icon: DollarSign,
+        icon: ShoppingCart,
         children: [
+          { name: t('sales.title', 'Ventas'), href: '/ventas', icon: ShoppingCart },
+          { name: t('purchases.title', 'Compras'), href: '/compras', icon: ShoppingBag },
           {
-            name: t('purchasePaymentsMvp.title', 'Pagos Compras'),
-            href: '/pagos-compras',
-            icon: CircleDollarSign,
+            name: t('common.payments', 'Pagos y Cobros'),
+            href: '#',
+            icon: DollarSign,
+            children: [
+              {
+                name: t('sales.payments', 'Cobros Ventas'),
+                href: '/cobros-ventas',
+                icon: CreditCard,
+              },
+              {
+                name: t('purchasePaymentsMvp.title', 'Pagos Compras'),
+                href: '/pagos-compras',
+                icon: CircleDollarSign,
+              },
+            ],
           },
           {
-            name: t('sales.payments', 'Cobros Ventas'),
-            href: '/cobros-ventas',
-            icon: CreditCard,
+            name: t('cashRegister.title', 'Caja'),
+            href: '#',
+            icon: DollarSign,
+            children: [
+              {
+                name: t('cashRegister.openClose', 'Apertura y Cierre'),
+                href: '/caja-registradora',
+                icon: DollarSign,
+              },
+              {
+                name: t('cashMovement.title', 'Movimientos Manuales'),
+                href: '/movimientos-caja',
+                icon: Activity,
+              },
+            ],
           },
         ],
       },
       {
-        name: t('cashRegister.title', 'Registro de Caja'),
+        name: t('common.inventory_logistics', 'Logística e Inventario'),
         href: '#',
-        icon: DollarSign,
+        icon: Package,
         children: [
+          { name: t('products.title', 'Productos'), href: '/productos', icon: Package },
           {
-            name: t('cashRegister.openClose', 'Apertura y Cierre'),
-            href: '/caja-registradora',
-            icon: DollarSign,
-          },
-          {
-            name: t('cashMovement.title', 'Registro Manual'),
-            href: '/movimientos-caja',
-            icon: DollarSign,
-          },
-        ],
-      },
-      {
-        name: t('common.financeConfig', 'Config. Financiera'),
-        href: '#',
-        icon: Coins,
-        children: [
-          {
-            name: t('currencies.title', 'Monedas'),
-            href: '/configuracion/monedas',
-            icon: Coins,
-          },
-          {
-            name: t('exchangeRates.title', 'Tipos de Cambio'),
-            href: '/configuracion/tipos-cambio',
+            name: t('productAdjustments.title', 'Ajustes de Stock'),
+            href: '#',
             icon: SlidersHorizontal,
+            children: [
+              {
+                name: 'Resumen de Ajustes',
+                href: '/ajustes-producto',
+                icon: SlidersHorizontal,
+              },
+              {
+                name: 'Ajustes de Inventario',
+                href: '/ajustes-inventario',
+                icon: Package,
+              },
+              {
+                name: 'Ajuste Unitario',
+                href: '/ajuste-inventario-unitario',
+                icon: SlidersHorizontal,
+              },
+              {
+                name: 'Ajuste Masivo',
+                href: '/ajuste-inventario-masivo',
+                icon: List,
+              },
+            ],
           },
+        ],
+      },
+      {
+        name: t('common.directory', 'Directorio y Contactos'),
+        href: '#',
+        icon: Users,
+        children: [
+          { name: t('clients.title', 'Clientes'), href: '/clientes', icon: Users },
+          { name: t('suppliers.title', 'Proveedores'), href: '/proveedores', icon: Truck },
+        ],
+      },
+      {
+        name: t('common.services_planning', 'Planificación y Servicios'),
+        href: '#',
+        icon: Calendar,
+        children: [
+          {
+            name: t('reservations.title', 'Gestión de Reservas'),
+            href: '#',
+            icon: Calendar,
+            children: [
+              {
+                name: 'Dashboard General',
+                href: '/gestion-reservas',
+                icon: LayoutDashboard,
+              },
+              {
+                name: 'Lista de Reservas',
+                href: '/reservas',
+                icon: List,
+              },
+              {
+                name: 'Horarios',
+                href: '/horarios',
+                icon: ClockIcon,
+              },
+              {
+                name: 'Disponibilidad',
+                href: '/horarios-disponibles',
+                icon: ClockIcon,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: t('common.system_config', 'Configuración y Sistema'),
+        href: '#',
+        icon: Settings,
+        children: [
+          {
+            name: t('common.financeConfig', 'Config. Financiera'),
+            href: '#',
+            icon: Coins,
+            children: [
+              {
+                name: t('currencies.title', 'Monedas'),
+                href: '/configuracion/monedas',
+                icon: Coins,
+              },
+              {
+                name: t('exchangeRates.title', 'Tipos de Cambio'),
+                href: '/configuracion/tipos-cambio',
+                icon: SlidersHorizontal,
+              },
+            ],
+          },
+          {
+            name: 'Usuarios y Seguridad',
+            href: '#',
+            icon: Shield,
+            children: [
+              {
+                name: 'Gestión de Usuarios',
+                href: '/usuarios',
+                icon: Users,
+              },
+              {
+                name: 'Mi Perfil',
+                href: '/perfil',
+                icon: User,
+              },
+            ],
+          },
+          { name: t('settings.title', 'Ajustes Generales'), href: '/configuracion', icon: Settings },
         ],
       },
     ],

@@ -136,6 +136,7 @@ class CurrencyService {
         throw new Error('ID de moneda inválido')
       }
 
+      // v1.1 API: GET /currencies/{id}
       const response = await apiClient.makeRequest(`/currencies/${id}`)
       const payload = response.data || response
 
@@ -163,6 +164,7 @@ class CurrencyService {
       }
 
       const normalizedCode = code.trim().toUpperCase()
+      // v1.1 API: GET /currencies/code/{code}
       const response = await apiClient.makeRequest(
         `/currencies/code/${normalizedCode}`
       )

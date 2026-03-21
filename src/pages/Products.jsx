@@ -13,12 +13,8 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal,
   RefreshCw,
   MoreVertical,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
   Package,
 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
@@ -28,7 +24,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import StatusBadge from '@/components/ui/StatusBadge'
 import {
   Select,
   SelectContent,
@@ -44,7 +39,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import ProductFormModal from '@/components/ProductFormModal'
 import ProductDetailsModal from '@/components/ProductDetailsModal'
 import { cn } from '@/lib/utils'
@@ -105,7 +100,6 @@ const Products = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedIds, setSelectedIds] = useState([])
   const [isSearching, setIsSearching] = useState(false)
-  const [hasSearched, setHasSearched] = useState(false)
   const [viewMode, setViewMode] = useState('paginated')
   const [showFilters, setShowFilters] = useState(false)
   const [localFilters, setLocalFilters] = useState({
@@ -131,7 +125,6 @@ const Products = () => {
 
       if (!trimmedTerm) {
         setIsSearching(false)
-        setHasSearched(false)
         setViewMode('paginated')
         fetchProductsPaginated(1, 10)
         return
@@ -143,7 +136,6 @@ const Products = () => {
       }
 
       setIsSearching(true)
-      setHasSearched(true)
       setViewMode('search')
       fetchProducts(1, 10, trimmedTerm).finally(() => {
         setIsSearching(false)
@@ -353,7 +345,7 @@ const Products = () => {
       </div>
 
       {/* Toolbar Card */}
-      <Card className='bg-white dark:bg-surface-dark border-border-subtle rounded-xl shadow-fluent-2 p-6'>
+      <Card className='bg-white border-border-subtle rounded-xl shadow-fluent-2 p-6'>
         <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4'>
           {/* Search */}
           <div className='relative flex-1 max-w-xl'>
@@ -478,6 +470,7 @@ const Products = () => {
               </TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.product_name')}</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.category')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">IVA</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.stock')}</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.state')}</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.financial_health')}</TableHead>
@@ -488,13 +481,13 @@ const Products = () => {
           <TableBody>
             {loading && products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-32">
+                <TableCell colSpan={9} className="py-32">
                   <div className='flex flex-col items-center justify-center gap-4'><RefreshCw className='w-12 h-12 animate-spin text-primary opacity-20' /><p className='text-[10px] font-black uppercase tracking-[0.3em] text-slate-400'>Cargando Inventario...</p></div>
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-20">
+                <TableCell colSpan={9} className="py-20">
                   <DataState
                     variant='error'
                     title={t('products.error.title')}
@@ -508,7 +501,7 @@ const Products = () => {
               </TableRow>
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-20">
+                <TableCell colSpan={9} className="py-20">
                   <DataState
                     variant='empty'
                     title={viewMode === 'search' ? t('products.empty.no_results') : t('products.empty.title')}
@@ -559,6 +552,11 @@ const Products = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-text-secondary font-medium px-4 text-sm">{categoryName}</TableCell>
+                    <TableCell className="px-4">
+                      <span className="text-[11px] font-black px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-tighter">
+                        {product.applied_tax_name || product.tax_rate_name || product.tax_rate_code || '10% (STD)'}
+                      </span>
+                    </TableCell>
                     <TableCell className="px-4">
                       <span className={cn(
                         "font-black font-mono",

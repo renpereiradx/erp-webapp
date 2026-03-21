@@ -127,8 +127,32 @@ class BusinessManagementAPI {
         ) {
           throw new ApiError('NOT_FOUND', 'Producto no encontrado')
         }
-        if (endpoint.includes('/categories')) {
+        if (endpoint.includes('/category/')) {
           throw new ApiError('NOT_FOUND', 'No hay categorías disponibles')
+        }
+        if (endpoint.includes('/tax_rate/')) {
+          throw new ApiError('NOT_FOUND', 'No hay tasas de IVA disponibles')
+        }
+        if (endpoint.includes('/tax-classification/')) {
+          throw new ApiError('NOT_FOUND', 'No hay clasificaciones fiscales disponibles')
+        }
+        if (endpoint.includes('/payment-methods')) {
+          throw new ApiError('NOT_FOUND', 'Módulo de métodos de pago no disponible')
+        }
+        if (endpoint.includes('/currencies')) {
+          throw new ApiError('NOT_FOUND', 'Módulo de monedas no disponible')
+        }
+        if (endpoint.includes('/cash-registers')) {
+          throw new ApiError('NOT_FOUND', 'Módulo de cajas registradoras no disponible')
+        }
+        if (endpoint.includes('/cash-movements')) {
+          throw new ApiError('NOT_FOUND', 'Módulo de movimientos de caja no disponible')
+        }
+        if (endpoint.includes('/cash-audits')) {
+          throw new ApiError('NOT_FOUND', 'Módulo de auditoría de caja no disponible')
+        }
+        if (endpoint.includes('/exchange-rates')) {
+          throw new ApiError('NOT_FOUND', 'Módulo de tipos de cambio no disponible')
         }
         if (endpoint.includes('/reserve/')) {
           throw new ApiError(
@@ -160,7 +184,7 @@ class BusinessManagementAPI {
             'Error interno del servidor al buscar. Intenta con términos diferentes o contacta al administrador.',
           )
         }
-        if (endpoint.includes('/categories')) {
+        if (endpoint.includes('/category/')) {
           throw new ApiError(
             'INTERNAL',
             'Error interno del servidor al cargar categorías. Intenta recargar la página.',
@@ -268,16 +292,237 @@ class BusinessManagementAPI {
   }
 
   // ============================================================================
-  // CATEGORIES
+  // CATEGORIES & TAXATION (v1.2 - March 2026)
   // ============================================================================
 
+  // --- Categories ---
+
   async getCategories() {
-    return this.makeRequest('/category/')
+    const response = await this.makeRequest('/category/')
+    return response.categories || response
   }
 
-  // Obtener todas las categorías
   async getAllCategories() {
-    return this.makeRequest('/category/')
+    const response = await this.makeRequest('/category/')
+    return response.categories || response
+  }
+
+  async getCategoryById(id) {
+    return this.makeRequest(`/category/${id}`)
+  }
+
+  async createCategory(categoryData) {
+    return this.makeRequest('/category/', {
+      method: 'POST',
+      body: JSON.stringify(categoryData),
+    })
+  }
+
+  async updateCategory(id, categoryData) {
+    return this.makeRequest(`/category/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(categoryData),
+    })
+  }
+
+  async deleteCategory(id) {
+    return this.makeRequest(`/category/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // --- Tax Rates (IVA) ---
+
+  async getTaxRates(page = 1, pageSize = 10) {
+    return this.makeRequest(`/tax_rate/${page}/${pageSize}`)
+  }
+
+  async getTaxRateById(id) {
+    return this.makeRequest(`/tax_rate/${id}`)
+  }
+
+  async getTaxRateByCode(code) {
+    return this.makeRequest(`/tax_rate/code/${code}`)
+  }
+
+  async getDefaultTaxRate() {
+    return this.makeRequest('/tax_rate/default')
+  }
+
+  async createTaxRate(taxRateData) {
+    return this.makeRequest('/tax_rate/', {
+      method: 'POST',
+      body: JSON.stringify(taxRateData),
+    })
+  }
+
+  // --- Tax Classification (SIFEN) ---
+
+  async getTaxClassificationInfo() {
+    return this.makeRequest('/tax-classification/info')
+  }
+
+  async getTaxClassificationDefaults() {
+    return this.makeRequest('/tax-classification/defaults')
+  }
+
+  async getProductTaxClassification(productId) {
+    return this.makeRequest(`/tax-classification/product/${productId}`)
+  }
+
+  async assignTaxClassification(assignmentData) {
+    return this.makeRequest('/tax-classification/assign', {
+      method: 'POST',
+      body: JSON.stringify(assignmentData),
+    })
+  }
+
+  async autoClassifyByCategory() {
+    return this.makeRequest('/tax-classification/auto-classify', {
+      method: 'POST',
+    })
+  }
+
+  // ============================================================================
+  // PAYMENTS, CURRENCIES & CASH REGISTERS (v1.1 - March 2026)
+  // ============================================================================
+
+  // --- Payment Methods ---
+
+  async getPaymentMethods() {
+    return this.makeRequest('/payment-methods')
+  }
+
+  async getPaymentMethodById(id) {
+    return this.makeRequest(`/payment-methods/${id}`)
+  }
+
+  async getPaymentMethodByCode(code) {
+    return this.makeRequest(`/payment-methods/code/${code}`)
+  }
+
+  async createPaymentMethod(data) {
+    return this.makeRequest('/payment-methods', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updatePaymentMethod(id, data) {
+    return this.makeRequest(`/payment-methods/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deletePaymentMethod(id) {
+    return this.makeRequest(`/payment-methods/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // --- Currencies & Exchange Rates ---
+
+  async getCurrencies(params = {}) {
+    const query = new URLSearchParams(params).toString()
+    return this.makeRequest(`/currencies${query ? `?${query}` : ''}`)
+  }
+
+  async getCurrencyByCode(code) {
+    return this.makeRequest(`/currencies/code/${code}`)
+  }
+
+  async convertCurrency(amount, from, to) {
+    return this.makeRequest(
+      `/currencies/convert?amount=${amount}&from_currency=${from}&to_currency=${to}`,
+    )
+  }
+
+  async getExchangeRates(params = {}) {
+    const query = new URLSearchParams(params).toString()
+    return this.makeRequest(`/exchange-rates${query ? `?${query}` : ''}`)
+  }
+
+  async getLatestExchangeRates() {
+    return this.makeRequest('/exchange-rates/latest')
+  }
+
+  // --- Cash Registers ---
+
+  async openCashRegister(data) {
+    return this.makeRequest('/cash-registers/open', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getActiveCashRegister() {
+    return this.makeRequest('/cash-registers/active')
+  }
+
+  async getCashRegisters(params = {}) {
+    const query = new URLSearchParams(params).toString()
+    return this.makeRequest(`/cash-registers${query ? `?${query}` : ''}`)
+  }
+
+  async closeCashRegister(id, data = {}) {
+    return this.makeRequest(`/cash-registers/${id}/close`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getCashRegisterMovements(id, params = {}) {
+    const query = new URLSearchParams(params).toString()
+    return this.makeRequest(
+      `/cash-registers/${id}/movements${query ? `?${query}` : ''}`,
+    )
+  }
+
+  async getCashRegisterReport(id) {
+    return this.makeRequest(`/cash-registers/${id}/report`)
+  }
+
+  // --- Cash Movements ---
+
+  async createCashMovement(data) {
+    return this.makeRequest('/cash-movements', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async voidCashMovement(id, reason) {
+    return this.makeRequest(`/cash-movements/${id}/void`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    })
+  }
+
+  // --- Cash Audits ---
+
+  async createCashAudit(data) {
+    return this.makeRequest('/cash-audits', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getCashAuditDenominations() {
+    return this.makeRequest('/cash-audits/denominations')
+  }
+
+  async resolveCashAuditDiscrepancy(id, data) {
+    return this.makeRequest(`/cash-audits/${id}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  // --- Bootstrap ---
+
+  async getPaymentsBootstrap() {
+    return this.makeRequest('/payments/bootstrap')
   }
 
   // ============================================================================

@@ -96,6 +96,11 @@ export const common = {
   'common.normal': 'Normal',
   'common.payments': 'Pagos',
   'common.financeConfig': 'Configuración Financiera',
+  'common.commercial': 'Gestión Comercial',
+  'common.inventory_logistics': 'Logística e Inventario',
+  'common.directory': 'Directorio y Contactos',
+  'common.services_planning': 'Planificación y Servicios',
+  'common.system_config': 'Configuración y Sistema',
 
   // Filtros
   'common.filters': 'Filtros',

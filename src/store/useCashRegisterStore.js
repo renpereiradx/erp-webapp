@@ -273,22 +273,22 @@ export const useCashRegisterStore = create()(
       },
 
       /**
-       * Obtiene reporte detallado de una caja registradora
+       * Obtiene reporte detallado de caja (v1.1)
        */
-      getCashRegisterSummary: async cashRegisterId => {
+      getCashRegisterReport: async cashRegisterId => {
         set({ isSummaryLoading: true, summaryError: null })
 
         try {
-          const summary = await cashRegisterService.getCashRegisterSummary(
+          const report = await cashRegisterService.getCashRegisterReport(
             cashRegisterId
           )
           set({
-            cashRegisterSummary: summary,
+            cashRegisterSummary: report,
             isSummaryLoading: false,
           })
-          return summary
+          return report
         } catch (error) {
-          console.warn('Error loading cash register summary:', error)
+          console.warn('Error loading cash register report:', error)
           set({
             summaryError: error,
             isSummaryLoading: false,

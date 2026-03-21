@@ -91,6 +91,8 @@ const CashAuditModal = ({ isOpen, onClose, cashRegisterId, systemBalance, onAudi
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!denominations) return
+
     const denomDetails = []
     denominations.bills?.forEach(val => {
       if (counts[val]) denomDetails.push({ denomination: val, count: counts[val], type: 'BILL' })
@@ -202,9 +204,25 @@ const CashRegister = () => {
   const { t } = useI18n()
   const { styles } = useThemeStyles()
   const {
-    activeCashRegister, cashRegisters, movements, audits, cashRegisterSummary, isActiveCashRegisterLoading, isCashRegistersLoading,
-    isOpeningCashRegister, isClosingCashRegister, isRegisteringMovement, getActiveCashRegister, getCashRegisters, openCashRegister,
-    closeCashRegister, registerMovement, getMovements, getAudits, getCashRegisterSummary,
+    activeCashRegister,
+    cashRegisters,
+    movements,
+    audits,
+    cashRegisterSummary,
+    isActiveCashRegisterLoading,
+    isCashRegistersLoading,
+    isMovementsLoading,
+    isOpeningCashRegister,
+    isClosingCashRegister,
+    isRegisteringMovement,
+    getActiveCashRegister,
+    getCashRegisters,
+    openCashRegister,
+    closeCashRegister,
+    registerMovement,
+    getMovements,
+    getAudits,
+    getCashRegisterReport,
   } = useCashRegisterStore()
 
   const [openCashRegisterDialog, setOpenCashRegisterDialog] = useState(false)
@@ -229,15 +247,17 @@ const CashRegister = () => {
   useEffect(() => {
     if (activeCashRegister?.id) {
       getMovements(activeCashRegister.id)
-      getAudits(activeCashRegister.id)
+      if (getAudits) getAudits(activeCashRegister.id)
     }
   }, [activeCashRegister?.id])
 
   const handleLoadSummary = async () => {
-    if (activeCashRegister?.id) {
-      await getCashRegisterSummary(activeCashRegister.id)
-      setSummaryDialog(true)
-    }
+    try {
+      if (activeCashRegister?.id) {
+        await getCashRegisterReport(activeCashRegister.id)
+        setSummaryDialog(true)
+      }
+    } catch (error) {}
   }
 
   const handleOpenCashRegister = async e => {
@@ -395,10 +415,10 @@ const CashRegister = () => {
             <CardContent className="p-0">
               <div className='divide-y divide-border-subtle'>
                 {movements.map(m => (
-                  <div key={m.movement_id} className='p-6 flex items-center justify-between hover:bg-slate-50 transition-colors border-l-4' style={{ borderLeftColor: getMovementBorderColor(m.movement_type) }}>
+                  <div key={m.id || m.movement_id} className='p-6 flex items-center justify-between hover:bg-slate-50 transition-colors border-l-4' style={{ borderLeftColor: getMovementBorderColor(m.movement_type) }}>
                     <div className='flex items-center gap-4'>
                       <div className='size-10 rounded-lg bg-slate-50 flex items-center justify-center'>{getMovementTypeIcon(m.movement_type)}</div>
-                      <div><p className='font-bold text-sm text-text-main'>{m.concept}</p><p className='text-[10px] font-bold uppercase text-text-secondary tracking-widest mt-0.5'>{new Date(m.created_at).toLocaleString()} • {m.user_full_name}</p></div>
+                      <div><p className='font-bold text-sm text-text-main'>{m.concept || m.description}</p><p className='text-[10px] font-bold uppercase text-text-secondary tracking-widest mt-0.5'>{new Date(m.created_at).toLocaleString()} • {m.user_full_name || m.created_by_name}</p></div>
                     </div>
                     <div className='text-right'>
                       <p className={`font-black text-lg tabular-nums font-mono ${getMovementTypeColor(m.movement_type)}`}>{m.movement_type === 'EXPENSE' ? '-' : '+'} ₲ {m.amount.toLocaleString()}</p>
@@ -416,7 +436,7 @@ const CashRegister = () => {
             <CardHeader className="bg-slate-50/50 border-b border-border-subtle"><CardTitle className="text-xl font-black tracking-tighter uppercase">Historial de Arqueos</CardTitle><CardDescription className="text-[10px] font-bold uppercase tracking-widest">Auditorías físicas de caja</CardDescription></CardHeader>
             <CardContent className="p-0">
               <div className='divide-y divide-border-subtle'>
-                {audits.length === 0 ? <div className='py-12 text-center text-text-secondary font-bold italic uppercase text-xs tracking-widest'>No hay arqueos registrados</div> : audits.map(audit => (
+                {(!audits || audits.length === 0) ? <div className='py-12 text-center text-text-secondary font-bold italic uppercase text-xs tracking-widest'>No hay arqueos registrados</div> : audits.map(audit => (
                   <div key={audit.id} className='p-6 flex items-center justify-between hover:bg-slate-50 transition-colors'>
                     <div className='flex items-center gap-4'><div className='size-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500'><ClipboardCheck size={20} /></div><div><p className='font-bold text-sm'>Arqueo #{audit.id}</p><p className='text-[10px] font-bold uppercase text-text-secondary tracking-widest mt-0.5'>{new Date(audit.created_at).toLocaleString()}</p></div></div>
                     <div className='text-right'><p className='font-black text-lg tabular-nums font-mono'>{audit.counted_amount.toLocaleString()} ₲</p><Badge className={`${audit.difference === 0 ? 'bg-green-50 text-success border-green-200' : 'bg-red-50 text-error border-red-200'} uppercase font-black text-[9px] px-2 py-0.5 rounded-full border`}>{audit.difference === 0 ? 'Sin Discrepancia' : `Diferencia: ${audit.difference.toLocaleString()} ₲`}</Badge></div>

@@ -54,10 +54,10 @@ class CurrencyConversionService {
         throw new Error('El monto debe ser un número válido mayor o igual a 0')
       }
 
-      // Construir query params
+      // v1.1 spec: Usar from_currency y to_currency
       const params = new URLSearchParams({
-        from: fromCode.trim().toUpperCase(),
-        to: toCode.trim().toUpperCase(),
+        from_currency: fromCode.trim().toUpperCase(),
+        to_currency: toCode.trim().toUpperCase(),
         amount: String(amount),
       })
 

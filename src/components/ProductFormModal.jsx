@@ -27,7 +27,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
     brand: '',
     origin: '',
     base_unit: 'unit',
-    taxRateId: '',
+    tax_rate_id: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -62,10 +62,12 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
   const loadTaxRates = async () => {
     setLoadingTaxRates(true)
     try {
-      const { taxRateService } = await import('../services/taxRateService')
-      const response = await taxRateService.getPaginated(1, 50)
-      setTaxRates(Array.isArray(response) ? response : [])
+      const response = await apiClient.getTaxRates(1, 100)
+      if (Array.isArray(response)) setTaxRates(response)
+      else if (response && response.tax_rates) setTaxRates(response.tax_rates)
+      else setTaxRates([])
     } catch (error) {
+      console.error('Error loading tax rates:', error)
       setTaxRates([])
     } finally {
       setLoadingTaxRates(false)
@@ -84,12 +86,12 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
           brand: product.brand || '',
           origin: product.origin || '',
           base_unit: product.base_unit || 'unit',
-          taxRateId: product.tax_rate_id?.toString() || '',
+          tax_rate_id: (product.override_tax_rate_id || product.tax_rate_id)?.toString() || '',
         })
       } else {
         setFormData({
           name: '', category: '', productType: 'PHYSICAL', description: '',
-          barcode: '', brand: '', origin: '', base_unit: 'unit', taxRateId: '',
+          barcode: '', brand: '', origin: '', base_unit: 'unit', tax_rate_id: '',
         })
       }
       setErrors({})
@@ -125,7 +127,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
         brand: formData.brand?.trim() || undefined,
         origin: formData.origin || undefined,
         base_unit: formData.base_unit || 'unit',
-        override_tax_rate_id: formData.taxRateId ? parseInt(formData.taxRateId) : undefined,
+        override_tax_rate_id: formData.tax_rate_id ? parseInt(formData.tax_rate_id) : undefined,
       }
       const productId = product?.product_id || product?.id
       if (isEditMode) await updateProduct(productId, productData)
@@ -253,31 +255,34 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
                           <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                         </div>
                       </div>
-                    </div>
 
-                    {/* Tasa de IVA (Nuevo v1.1) */}
-                    <div className="space-y-1.5 relative">
-                      <label className={labelClass}>Tasa de IVA (Opcional - Sobrescribe Categoría)</label>
-                      <div className="relative">
-                        <select
-                          name="taxRateId"
-                          value={formData.taxRateId}
-                          onChange={handleChange}
-                          className={selectClass}
-                          disabled={loadingTaxRates}
-                        >
-                          <option value="">Heredar de Categoría</option>
-                          {taxRates.map(rate => (
-                            <option key={rate.id} value={rate.id}>
-                              {rate.tax_name || rate.name} ({rate.rate}%)
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      {/* Tasa de IVA (v1.2) */}
+                      <div className="space-y-1 relative">
+                        <label className={labelClass}>
+                          Tasa de IVA (SIFEN)
+                          <span className="ml-1 text-[10px] text-blue-500 font-bold lowercase bg-blue-50 px-1 rounded">v1.2</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            name="tax_rate_id"
+                            value={formData.tax_rate_id}
+                            onChange={handleChange}
+                            className={selectClass}
+                            disabled={loadingTaxRates}
+                          >
+                            <option value="">{loadingTaxRates ? 'Cargando...' : 'Usar por defecto (Categoría)'}</option>
+                            {taxRates.map(rate => (
+                              <option key={rate.id} value={rate.id}>
+                                {rate.tax_name || rate.name} ({rate.rate}%) - {rate.code}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        </div>
+                        <p className="text-[10px] text-gray-500 italic mt-1">
+                          Si no se selecciona, heredará el IVA de la categoría.
+                        </p>
                       </div>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">
-                        Si no se selecciona, se usará la tasa por defecto de la categoría.
-                      </p>
                     </div>
 
                     {/* Descripcion */}

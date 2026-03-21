@@ -272,7 +272,7 @@ export interface InventoryItemInput {
 export type CreateInventoryRequest = InventoryItemInput[];
 
 // ============================================================================
-// CASH REGISTER TYPES
+// CASH REGISTER TYPES (v1.1 - March 2026)
 // ============================================================================
 
 export interface CashRegister {
@@ -282,12 +282,13 @@ export interface CashRegister {
   initial_balance: number;
   current_balance: number;
   opened_at: string;
-  opened_by: number;
+  opened_by: string | number;
   closed_at?: string;
-  closed_by?: number;
+  closed_by?: string | number;
   final_balance?: number;
-  calculated_balance?: number;
-  variance?: number;
+  difference?: number; // v1.1 field
+  total_income?: number; // v1.1 field
+  total_expenses?: number; // v1.1 field
   location?: string;
   description?: string;
 }
@@ -296,52 +297,155 @@ export interface OpenCashRegisterRequest {
   name: string;
   initial_balance: number;
   location?: string;
-  description?: string;
 }
 
 export interface CloseCashRegisterRequest {
-  final_balance?: number;
-  notes?: string;
+  final_notes?: string;
+  counted_cash?: number;
 }
 
 export interface CashRegisterMovement {
   id: number;
   cash_register_id: number;
-  movement_type: "INCOME" | "EXPENSE" | "ADJUSTMENT";
+  movement_type: "INCOME" | "EXPENSE";
   amount: number;
-  concept: string;
-  notes?: string;
+  category?: string;
+  description?: string;
+  running_balance?: number;
+  is_voided?: boolean;
+  reference_type?: string;
+  reference_id?: string;
   created_at: string;
-  created_by: number;
+  created_by_name?: string;
 }
 
 export interface RegisterMovementRequest {
-  movement_type: "INCOME" | "EXPENSE" | "ADJUSTMENT";
+  cash_register_id: number;
+  movement_type: "INCOME" | "EXPENSE";
   amount: number;
-  concept: string;
-  notes?: string;
+  category?: string;
+  description?: string;
+  reference_type?: string;
+  reference_id?: string;
 }
 
-export interface CashRegisterSummary {
-  cash_register: CashRegister;
-  financial_summary: {
-    initial_balance: number;
+export interface CashRegisterReport {
+  cash_register: Partial<CashRegister>;
+  summary: {
     total_income: number;
     total_expenses: number;
-    current_balance: number;
-    calculated_balance: number;
+    net_change: number;
+    transaction_count: number;
   };
-  movement_counts: {
-    total_movements: number;
-    income_movements: number;
-    expense_movements: number;
-    adjustment_movements: number;
-  };
-  period_summary: {
-    start_time: string;
-    end_time?: string;
-    duration_hours?: number;
-  };
+  by_category: Record<string, number>;
+}
+
+// ============================================================================
+// CASH AUDIT TYPES (v1.1)
+// ============================================================================
+
+export interface CashDenomination {
+  denomination: number;
+  count: number;
+  type: "BILL" | "COIN";
+}
+
+export interface CashAudit {
+  id: number;
+  cash_register_id: number;
+  expected_balance: number;
+  counted_amount: number;
+  difference: number;
+  status: "MATCH" | "DISCREPANCY" | "RESOLVED";
+  notes?: string;
+  created_at: string;
+}
+
+export interface CreateCashAuditRequest {
+  cash_register_id: number;
+  counted_amount: number;
+  notes?: string;
+  denominations?: CashDenomination[];
+}
+
+// ============================================================================
+// PAYMENT METHOD TYPES (v1.1)
+// ============================================================================
+
+export interface PaymentMethod {
+  id: number;
+  method_code: string;
+  description?: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreatePaymentMethodRequest {
+  method_code: string;
+  description?: string;
+}
+
+// ============================================================================
+// CURRENCY TYPES (v1.1)
+// ============================================================================
+
+export interface Currency {
+  id: number;
+  code: string;
+  iso_number?: number;
+  name: string;
+  symbol?: string;
+  decimal_places: number;
+  is_base: boolean;
+  is_active: boolean;
+  country_code?: string;
+  format_pattern?: string;
+  thousands_separator?: string;
+  decimal_separator?: string;
+  current_rate?: number;
+  rate_date?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CurrencyConversionResponse {
+  original_amount: number;
+  original_currency: string;
+  converted_amount: number;
+  target_currency: string;
+  exchange_rate: number;
+  rate_date: string;
+  formatted_original: string;
+  formatted_converted: string;
+}
+
+// ============================================================================
+// EXCHANGE RATE TYPES (v1.1)
+// ============================================================================
+
+export interface ExchangeRate {
+  id: number;
+  from_currency_id: number;
+  to_currency_id: number;
+  from_currency_code: string;
+  to_currency_code: string;
+  rate: number;
+  rate_date: string;
+  source?: string;
+  is_current: boolean;
+  notes?: string;
+  created_at: string;
+}
+
+// ============================================================================
+// PAYMENTS BOOTSTRAP TYPES (v1.1)
+// ============================================================================
+
+export interface PaymentsBootstrap {
+  currencies: Partial<Currency>[];
+  payment_methods: Partial<PaymentMethod>[];
+  exchange_rates: any[];
 }
 
 // ============================================================================
@@ -795,7 +899,7 @@ export interface RequestOptions {
 export const API_ENDPOINTS = {
   SIGNUP: '/signup',
   LOGIN: '/login',
-  CATEGORIES: '/categories',
+  CATEGORIES: '/category/',
   PRODUCTS: '/products',
   PRODUCTS_BY_ID: (id: string) => `/products/${id}`,
   PRODUCTS_BY_NAME: (name: string) => `/products/search/${name}`,
@@ -820,9 +924,48 @@ export const API_ENDPOINTS = {
   CLIENT_BY_NAME: (name: string) => `/client/name/${name}`,
   CLIENT_PAGINATED: (page: number, pageSize: number) => `/client/${page}/${pageSize}`,
   CLIENT_DELETE: (id: string) => `/client/delete/${id}`,
+  // Sale and Purchase Payments (Legacy/Specialized)
   SALE_CREATE: '/sale/',
   SALE_BY_ID: (id: string) => `/sale/${id}`,
   SALE_BY_CLIENT_ID: (clientId: string) => `/sale/client_id/${clientId}`,
+  
+  // Payment Methods (v1.1)
+  PAYMENT_METHODS: '/payment-methods',
+  PAYMENT_METHOD_BY_ID: (id: number) => `/payment-methods/${id}`,
+  PAYMENT_METHOD_BY_CODE: (code: string) => `/payment-methods/code/${code}`,
+  
+  // Currencies (v1.1)
+  CURRENCIES: '/currencies',
+  CURRENCY_BY_ID: (id: number) => `/currencies/${id}`,
+  CURRENCY_BY_CODE: (code: string) => `/currencies/code/${code}`,
+  CURRENCY_CONVERT: '/currencies/convert',
+  
+  // Exchange Rates (v1.1)
+  EXCHANGE_RATES: '/exchange-rates',
+  EXCHANGE_RATES_LATEST: '/exchange-rates/latest',
+  
+  // Cash Registers (v1.1)
+  CASH_REGISTERS: '/cash-registers',
+  CASH_REGISTERS_OPEN: '/cash-registers/open',
+  CASH_REGISTERS_ACTIVE: '/cash-registers/active',
+  CASH_REGISTERS_BY_ID: (id: number) => `/cash-registers/${id}`,
+  CASH_REGISTERS_CLOSE: (id: number) => `/cash-registers/${id}/close`,
+  CASH_REGISTERS_MOVEMENTS: (id: number) => `/cash-registers/${id}/movements`,
+  CASH_REGISTERS_MOVEMENTS_FILTER: (id: number) => `/cash-registers/${id}/movements/filter`,
+  CASH_REGISTERS_REPORT: (id: number) => `/cash-registers/${id}/report`,
+  CASH_REGISTERS_AUDITS: (id: number) => `/cash-registers/${id}/audits`,
+  
+  // Cash Movements (v1.1)
+  CASH_MOVEMENTS: '/cash-movements',
+  CASH_MOVEMENT_VOID: (id: number) => `/cash-movements/${id}/void`,
+  
+  // Cash Audits (v1.1)
+  CASH_AUDITS: '/cash-audits',
+  CASH_AUDITS_DENOMINATIONS: '/cash-audits/denominations',
+  CASH_AUDITS_RESOLVE: (id: number) => `/cash-audits/${id}/resolve`,
+  
+  // Payments Bootstrap (v1.1)
+  PAYMENTS_BOOTSTRAP: '/payments/bootstrap',
   // Inventory Management
   INVENTORY_CREATE: '/inventory/',
   INVENTORY_BY_ID: (id: string) => `/inventory/${id}`,
