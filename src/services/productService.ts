@@ -9,11 +9,14 @@ import BusinessManagementAPI from './BusinessManagementAPI'
 import { ApiError, toApiError } from '@/utils/ApiError'
 // Removed MockDataService import - using real API only
 import { telemetryService } from './telemetryService'
+import { DEMO_CONFIG } from '@/config/demoAuth'
+import { DEMO_PRODUCT_DATA } from '@/config/demoData'
 
 /**
  * Helper para retry con backoff exponencial en errores de red
  */
 const retryWithBackoff = async (fn, maxRetries = 2, baseDelay = 1000) => {
+  if (DEMO_CONFIG.enabled) return await fn()
   let lastError
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -65,6 +68,9 @@ export const productService = {
    * @returns {Promise<Product[]>} Array de productos enriquecidos con timestamps
    */
   getProductsPaginated: async (page = 1, pageSize = 10, options = {}) => {
+    if (DEMO_CONFIG.enabled) {
+      return (DEMO_PRODUCT_DATA || []).slice((page - 1) * pageSize, page * pageSize)
+    }
     try {
       return await retryWithBackoff(async () => {
         return await apiClient.getProductsPaginated(page, pageSize, options)
@@ -88,12 +94,16 @@ export const productService = {
    * @returns {Promise<Product|any>}
    */
   getProductById: async productId => {
+    if (DEMO_CONFIG.enabled) {
+      const product = (DEMO_PRODUCT_DATA || []).find(p => String(p.id) === String(productId))
+      return product || DEMO_PRODUCT_DATA[0]
+    }
     const startTime = performance.now()
 
     try {
       // Using financial endpoint which includes price data
       const result = await retryWithBackoff(async () => {
-        return await apiClient.getProductFinancialById(productId)
+        return await apiClient.getProductInfoById(productId)
       })
 
       telemetryService?.recordMetric('product_fetched_by_id_api', 1)
@@ -118,12 +128,16 @@ export const productService = {
   // Obtener un producto enriquecido por ID (con precios, stock, descripción)
   /**
    * @param {string} productId
-   * @returns {Promise<Product|any>}
+   * @returns {Promise<ProductOperationInfoResponse|any>}
    */
-  getProductByIdEnriched: async productId => {
+  getProductByIdEnriched: async (productId: string) => {
+    if (DEMO_CONFIG.enabled) {
+      const product = (DEMO_PRODUCT_DATA || []).find(p => String(p.id) === String(productId))
+      return product || DEMO_PRODUCT_DATA[0]
+    }
     try {
       // Use financial endpoint which includes enriched data
-      const product = await apiClient.getProductFinancialById(productId)
+      const product = await apiClient.getProductInfoById(productId)
       return product
     } catch (error) {
       const norm = toApiError(error, 'Error al obtener producto enriquecido')
@@ -134,9 +148,14 @@ export const productService = {
   // Buscar productos por nombre
   /**
    * @param {string} name
-   * @returns {Promise<Product[]|any>}
+   * @returns {Promise<any[]>}
    */
-  searchProductsByName: async name => {
+  searchProductsByName: async (name: string) => {
+    if (DEMO_CONFIG.enabled) {
+      return (DEMO_PRODUCT_DATA || []).filter(p => 
+        p.name?.toLowerCase().includes(name.toLowerCase())
+      )
+    }
     try {
       return await apiClient.searchProductsByName(name)
     } catch (error) {
@@ -147,9 +166,13 @@ export const productService = {
   // Buscar producto por código de barras
   /**
    * @param {string} barcode
-   * @returns {Promise<Product|any>}
+   * @returns {Promise<ProductOperationInfoResponse|any>}
    */
-  getProductByBarcode: async barcode => {
+  getProductByBarcode: async (barcode: string) => {
+    if (DEMO_CONFIG.enabled) {
+      const product = (DEMO_PRODUCT_DATA || []).find(p => String(p.barcode) === String(barcode))
+      return product || DEMO_PRODUCT_DATA[0]
+    }
     try {
       return await retryWithBackoff(async () => {
         return await apiClient.getProductByBarcode(barcode)
@@ -193,35 +216,39 @@ export const productService = {
     }
   },
 
-  // =================== FINANCIAL ENRICHED PRODUCTS ===================
+  // =================== INFO ENRICHED PRODUCTS ===================
 
-  // Obtener producto financieramente enriquecido por ID
+  // Obtener producto enriquecido con información operativa por ID
   /**
    * @param {string} productId
-   * @returns {Promise<ProductFinancialEnriched|any>}
+   * @returns {Promise<ProductOperationInfoResponse|any>}
    */
-  getProductByIdFinancial: async productId => {
+  getProductByIdInfo: async productId => {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getProductFinancialById(productId)
+        return await apiClient.getProductInfoById(productId)
       })
     } catch (error) {
       throw toApiError(
         error,
-        'Error al obtener producto financieramente enriquecido',
+        'Error al obtener producto enriquecido con información operativa',
       )
     }
   },
 
-  // Obtener producto financieramente enriquecido por código de barras
+  // Obtener producto enriquecido con información operativa por código de barras
   /**
    * @param {string} barcode
-   * @returns {Promise<ProductFinancialEnriched|any>}
+   * @returns {Promise<ProductOperationInfoResponse|any>}
    */
-  getProductByBarcodeFinancial: async barcode => {
+  getProductByBarcodeInfo: async (barcode: string) => {
+    if (DEMO_CONFIG.enabled) {
+      const product = (DEMO_PRODUCT_DATA || []).find(p => String(p.barcode) === String(barcode))
+      return product || DEMO_PRODUCT_DATA[0]
+    }
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getProductFinancialByBarcode(barcode)
+        return await apiClient.getProductInfoByBarcode(barcode)
       })
     } catch (error) {
       throw toApiError(
@@ -231,17 +258,60 @@ export const productService = {
     }
   },
 
-  // Buscar productos financieramente enriquecidos por nombre
+  /**
+   * Obtiene un producto optimizado para el flujo de COMPRA
+   * @param {string} productId
+   * @returns {Promise<ProductOperationInfoResponse|any>}
+   */
+  getProductForPurchase: async (productId: string) => {
+    if (DEMO_CONFIG.enabled) {
+      const product = (DEMO_PRODUCT_DATA || []).find(p => String(p.id) === String(productId))
+      return product || DEMO_PRODUCT_DATA[0]
+    }
+    try {
+      return await retryWithBackoff(async () => {
+        return await apiClient.getProductForPurchase(productId)
+      })
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener datos de producto para compra')
+    }
+  },
+
+  /**
+   * Obtiene un producto optimizado para el flujo de VENTA
+   * @param {string} productId
+   * @returns {Promise<ProductOperationInfoResponse|any>}
+   */
+  getProductForSale: async (productId: string) => {
+    if (DEMO_CONFIG.enabled) {
+      const product = (DEMO_PRODUCT_DATA || []).find(p => String(p.id) === String(productId))
+      return product || DEMO_PRODUCT_DATA[0]
+    }
+    try {
+      return await retryWithBackoff(async () => {
+        return await apiClient.getProductForSale(productId)
+      })
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener datos de producto para venta')
+    }
+  },
+
+  // Buscar productos enriquecido con información operativas por nombre
   /**
    * @param {string} name - Término de búsqueda
    * @param {{ limit?: number, signal?: AbortSignal }} [options] - Opciones de búsqueda
-   * @returns {Promise<ProductFinancialEnriched[]|any>}
+   * @returns {Promise<ProductOperationInfoResponse[]|any>}
    */
-  searchProductsFinancial: async (name, options = {}) => {
+  searchProductsInfo: async (name: string, options = {}) => {
+    if (DEMO_CONFIG.enabled) {
+      return (DEMO_PRODUCT_DATA || []).filter(p => 
+        p.name?.toLowerCase().includes(name.toLowerCase())
+      )
+    }
     const { limit = 50, signal } = options
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.searchProductsFinancialByName(name, {
+        return await apiClient.searchProductsInfoByName(name, {
           limit,
           signal,
         })

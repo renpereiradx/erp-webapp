@@ -6,9 +6,21 @@
 
 import { apiClient } from './api'
 import { DEMO_SALES_RESPONSE, IS_DEMO_MODE } from '@/config/demoSalePayments'
+import { 
+  SaleRequest, 
+  SaleEnhancedResponse, 
+  PaginatedSalesResponse,
+  SaleWithMetadataResponse,
+  SalePaymentStatusResponse,
+  ProcessPaymentRequest,
+  ProcessPaymentResponse,
+  AddProductsToSaleRequest
+} from '@/types'
+import { validateSaleOrder } from '@/domain/sale/validators/saleValidator'
+import { calculateSaleTotals } from '@/domain/sale/calculations/saleCalculator'
 
 export const saleService = {
-  extractSalesAndPagination(response, fallback = {}) {
+  extractSalesAndPagination(response: any, fallback: any = {}) {
     const arrayCandidates = [
       response,
       response?.data,
@@ -147,20 +159,20 @@ export const saleService = {
 
   // ============ GESTIÓN DE SESIONES ============
 
-  async startSaleSession(data) {
+  async startSaleSession(data: any) {
     try {
       const response = await apiClient.makeRequest('/sale/session/start', {
         method: 'POST',
         body: JSON.stringify(data),
       })
       return { success: true, data: response }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting sale session:', error)
       return { success: false, error: error.message }
     }
   },
 
-  async endSaleSession(sessionId, summary) {
+  async endSaleSession(sessionId: string, summary: any) {
     try {
       const response = await apiClient.makeRequest(
         `/sale/session/${sessionId}/end`,
@@ -170,7 +182,7 @@ export const saleService = {
         },
       )
       return { success: true, data: response }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error ending sale session:', error)
       return { success: false, error: error.message }
     }
@@ -178,23 +190,21 @@ export const saleService = {
 
   // ============ PROCESAMIENTO DE PAGOS ============
 
-  async processPayment(saleId, paymentData) {
+  async processPayment(saleId: string, paymentData: any) {
     try {
-      const response = await apiClient.makeRequest(`/sales-payment/process`, {
-        method: 'POST',
-        body: JSON.stringify({
-          sale_id: saleId,
-          ...paymentData,
-        }),
+      // Usar nuevo método de BusinessManagementAPI
+      const response = await apiClient.processSalePayment({
+        sales_order_id: saleId,
+        ...paymentData,
       })
       return { success: true, data: response }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing payment:', error)
       return { success: false, error: error.message }
     }
   },
 
-  async calculateChange(totalAmount, amountPaid) {
+  async calculateChange(totalAmount: number, amountPaid: number) {
     // Cálculo local para rapidez, o llamar a API si existe
     const change = amountPaid - totalAmount
     return {
@@ -210,7 +220,7 @@ export const saleService = {
 
   // ============ CONSULTA DE VENTAS ============
 
-  async getSales(params = {}) {
+  async getSales(params: any = {}) {
     try {
       // Si hay rango de fechas, usar el endpoint específico
       if (
@@ -226,12 +236,13 @@ export const saleService = {
       if (params.clientId || params.client_id) {
         return this.getSalesByClientId(
           params.clientId || params.client_id,
-          params,
+          params.page,
+          params.page_size || params.limit
         )
       }
 
       if (params.clientName) {
-        return this.getSalesByClientName(params.clientName, params)
+        return this.getSalesByClientName(params.clientName, params.page, params.page_size)
       }
 
       // Fallback a lista general si existiera, o usar rango de hoy por defecto
@@ -241,38 +252,31 @@ export const saleService = {
         end_date: today,
         ...params,
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching sales:', error)
       return { success: false, error: error.message }
     }
   },
 
-  async getSalesByDateRange(params = {}) {
+  async getSalesByDateRange(params: any = {}) {
     if (IS_DEMO_MODE) {
       return DEMO_SALES_RESPONSE
     }
     try {
-      // Normalizar parámetros según SALE_GET_BY_RANGE_API.md
-      const queryParams = {
-        start_date: params.start_date || params.dateFrom,
-        end_date: params.end_date || params.dateTo,
-        page: params.page || 1,
-        page_size: params.page_size || params.limit || 50,
-      }
+      const startDate = params.start_date || params.dateFrom
+      const endDate = params.end_date || params.dateTo
+      const page = params.page || 1
+      const pageSize = params.page_size || params.limit || 50
 
-      if (!queryParams.start_date || !queryParams.end_date) {
+      if (!startDate || !endDate) {
         throw new Error('start_date and end_date are required')
       }
 
-      // El endpoint espera GET con query params
-      const response = await apiClient.makeRequest('/sale/date_range', {
-        method: 'GET',
-        params: queryParams,
-      })
+      const response = await apiClient.getSalesByDateRange(startDate, endDate, page, pageSize)
 
       const { data, pagination } = this.extractSalesAndPagination(
         response,
-        queryParams,
+        { start_date: startDate, end_date: endDate, page, page_size: pageSize }
       )
 
       return {
@@ -280,35 +284,26 @@ export const saleService = {
         data,
         pagination,
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching sales by date range:', error)
       return { success: false, error: error.message }
     }
   },
 
-  async getSalesByClient(clientId) {
+  async getSalesByClient(clientId: string) {
     return this.getSalesByClientId(clientId)
   },
 
-  async getSalesByClientId(clientId, params = {}) {
+  async getSalesByClientId(clientId: string, page = 1, pageSize = 50) {
     if (IS_DEMO_MODE) {
       return DEMO_SALES_RESPONSE
     }
     try {
-      const response = await apiClient.makeRequest(
-        `/sale/client_id/${clientId}`,
-        {
-          method: 'GET',
-          params: {
-            page: params.page || 1,
-            page_size: params.page_size || params.limit || 50,
-          },
-        },
-      )
+      const response = await apiClient.getSalesByClientId(clientId, page, pageSize)
 
       const { data, pagination } = this.extractSalesAndPagination(response, {
-        page: params.page || 1,
-        page_size: params.page_size || params.limit || 50,
+        page,
+        page_size: pageSize,
       })
 
       return {
@@ -316,31 +311,22 @@ export const saleService = {
         data,
         pagination,
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching sales by client ID:', error)
       return { success: false, error: error.message }
     }
   },
 
-  async getSalesByClientName(name, params = {}) {
+  async getSalesByClientName(name: string, page = 1, pageSize = 50) {
     if (IS_DEMO_MODE) {
       return DEMO_SALES_RESPONSE
     }
     try {
-      const response = await apiClient.makeRequest(
-        `/sale/client_name/${encodeURIComponent(name)}`,
-        {
-          method: 'GET',
-          params: {
-            page: params.page || 1,
-            page_size: params.page_size || params.limit || 50,
-          },
-        },
-      )
+      const response = await apiClient.getSalesByClientName(name, page, pageSize)
 
       const { data, pagination } = this.extractSalesAndPagination(response, {
-        page: params.page || 1,
-        page_size: params.page_size || params.limit || 50,
+        page,
+        page_size: pageSize,
       })
 
       return {
@@ -348,64 +334,93 @@ export const saleService = {
         data,
         pagination,
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching sales by client name:', error)
       return { success: false, error: error.message }
     }
   },
 
-  async getPendingSalesByClient(clientId) {
-    // Alias conveniente que filtra por estado PENDING si la API lo soporta
-    // o simplemente obtiene todas y el store filtra
-    return this.getSalesByClientId(clientId, { status: 'PENDING' })
+  async getPendingSalesByClient(clientId: string) {
+    // Intentar endpoint específico de pendientes si existe
+    try {
+      const response = await apiClient.getSalesByClientId(clientId, 1, 100)
+      // Filtrar pendientes en el cliente por ahora si el endpoint no lo hace
+      const { data } = this.extractSalesAndPagination(response)
+      return { 
+        success: true, 
+        data: data.filter((s: any) => s.sale?.status === 'PENDING' || s.status === 'PENDING') 
+      }
+    } catch (error: any) {
+      return { success: false, error: error.message }
+    }
   },
 
-  async getSaleById(id) {
+  async getSaleById(id: string) {
+    if (IS_DEMO_MODE) {
+      const sale = (DEMO_SALES_PAYMENTS || []).find(s => String(s.id) === String(id));
+      return { success: true, data: sale || DEMO_SALES_PAYMENTS[0] };
+    }
     try {
-      const response = await apiClient.makeRequest(`/sale/${id}`)
+      const response = await apiClient.getSaleById(id)
       return { success: true, data: response }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching sale ${id}:`, error)
       return { success: false, error: error.message }
     }
   },
 
-  async getSaleMetadata(id) {
+  async getSaleMetadata(id: string) {
     try {
-      const response = await apiClient.makeRequest(`/sale/${id}/with-metadata`)
+      const response = await apiClient.getSaleWithMetadata(id)
       return { success: true, data: response }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching metadata for sale ${id}:`, error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  async getSalePaymentStatus(id: string) {
+    try {
+      const response = await apiClient.getSalePaymentStatus(id)
+      return { success: true, data: response }
+    } catch (error: any) {
+      console.error(`Error fetching payment status for sale ${id}:`, error)
       return { success: false, error: error.message }
     }
   },
 
   // ============ OPERACIONES CRUD ============
 
-  async previewSaleCancellation(id) {
+  async previewSaleCancellation(id: string) {
     try {
-      const response = await apiClient.makeRequest(
-        `/sale/${id}/preview-cancellation`,
-        {
-          method: 'GET',
-        },
-      )
+      const response = await apiClient.previewSaleCancellation(id)
       return response
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error previewing cancellation for sale ${id}:`, error)
       throw error
     }
   },
 
-  async createSale(saleData) {
+  async createSale(saleData: SaleRequest) {
+    if (IS_DEMO_MODE) {
+      return {
+        success: true,
+        sale_id: `DEMO-SALE-${Date.now()}`,
+        total_amount: 150000,
+        items_processed: saleData.product_details?.length || 0,
+        message: 'Venta demo creada exitosamente',
+        data: { id: `DEMO-SALE-${Date.now()}`, status: 'PENDING' }
+      }
+    }
     try {
-      // Según SALE_API.md v1.10, el endpoint es POST /sale/
-      const response = await apiClient.makeRequest('/sale/', {
-        method: 'POST',
-        body: JSON.stringify(saleData),
-      })
+      // Validar con dominio antes de enviar
+      const validation = validateSaleOrder(saleData);
+      if (!validation.isValid) {
+        return { success: false, error: 'Validación de dominio fallida', details: validation.errors };
+      }
 
-      // Manejar respuesta con posibles advertencias (API v1.8)
+      const response = await apiClient.createSale(saleData)
+
       const saleId =
         response?.sale_id ||
         response?.id ||
@@ -418,77 +433,46 @@ export const saleService = {
         sale_id: saleId,
         warnings: response?.warnings || response?.data?.warnings || [],
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating sale:', error)
       return { success: false, error: error.message }
     }
   },
 
-  async updateSale(id, saleData) {
+  async addProductsToSale(saleId: string, payload: AddProductsToSaleRequest) {
     try {
-      const response = await apiClient.makeRequest(`/sale/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(saleData),
-      })
+      const response = await apiClient.addProductsToSale(saleId, payload)
       return { success: true, data: response }
-    } catch (error) {
-      console.error(`Error updating sale ${id}:`, error)
-      return { success: false, error: error.message }
-    }
-  },
-
-  async addProductsToSale(saleId, payload) {
-    try {
-      const response = await apiClient.makeRequest(`/sale/${saleId}/products`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
-      return { success: true, data: response }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error adding products to sale ${saleId}:`, error)
       return { success: false, error: error.message }
     }
   },
 
-  async revertSale(id, reason) {
+  async revertSale(id: string, reason: string) {
     try {
-      // Según SALE_API.md el endpoint es PUT /sale/{id} para anulación
-      const response = await apiClient.makeRequest(`/sale/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ cancellation_reason: reason }),
-      })
+      const response = await apiClient.cancelSale(id, reason)
       return { success: true, data: response }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error reverting sale ${id}:`, error)
       return { success: false, error: error.message }
     }
   },
 
-  async completeSale(id, paymentData) {
-    // Marcar como pagada y procesar pago si no se hizo
-    try {
-      const response = await apiClient.makeRequest(`/sale/${id}/complete`, {
-        method: 'POST',
-        body: JSON.stringify(paymentData),
-      })
-      return { success: true, data: response }
-    } catch (error) {
-      console.error(`Error completing sale ${id}:`, error)
-      return { success: false, error: error.message }
-    }
-  },
+  // ============ DOMAIN HELPER ============
 
-  async refundSale(id, refundData) {
-    try {
-      const response = await apiClient.makeRequest(`/sale/${id}/refund`, {
-        method: 'POST',
-        body: JSON.stringify(refundData),
-      })
-      return { success: true, data: response }
-    } catch (error) {
-      console.error(`Error refunding sale ${id}:`, error)
-      return { success: false, error: error.message }
-    }
+  calculateLocalTotals(items: any[]) {
+    // Normalizar items para el dominio
+    const domainItems = items.map(item => ({
+      quantity: Number(item.quantity || 0),
+      unit_price: Number(item.unit_price || item.sale_price || 0),
+      discount_amount: item.discount_amount ? Number(item.discount_amount) : undefined,
+      discount_percent: item.discount_percent ? Number(item.discount_percent) : undefined,
+      tax_rate: item.tax_rate ? Number(item.tax_rate) : undefined,
+      price_includes_tax: item.price_includes_tax !== undefined ? Boolean(item.price_includes_tax) : true
+    }));
+
+    return calculateSaleTotals(domainItems);
   },
 
   // ============ ESTADÍSTICAS ============
@@ -498,41 +482,28 @@ export const saleService = {
     return this.getSalesByDateRange({ start_date: today, end_date: today })
   },
 
-  async getSalesStats(params = {}) {
+  async getSalesStats(params: any = {}) {
     try {
       const response = await apiClient.makeRequest('/sale/stats', {
         method: 'GET',
         params,
       })
       return { success: true, data: response }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching sales stats:', error)
       return { success: false, error: error.message }
     }
   },
 
-  async getTopSellingProducts(params = {}) {
+  async getTopSellingProducts(params: any = {}) {
     try {
       const response = await apiClient.makeRequest('/sale/top-products', {
         method: 'GET',
         params,
       })
       return { success: true, data: response }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching top products:', error)
-      return { success: false, error: error.message }
-    }
-  },
-
-  async calculateTotal(items, clientId = null) {
-    try {
-      const response = await apiClient.makeRequest('/sale/calculate-total', {
-        method: 'POST',
-        body: JSON.stringify({ items, client_id: clientId }),
-      })
-      return { success: true, data: response }
-    } catch (error) {
-      console.error('Error calculating total:', error)
       return { success: false, error: error.message }
     }
   },

@@ -2,12 +2,20 @@ import { useEffect } from 'react';
 import { useI18n } from '../lib/i18n';
 import { X, Edit, Package, Info, Layout, Activity, TrendingUp, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { Button } from './ui/button';
+import { ProductOperationInfoResponse } from '../types';
+
+interface ProductDetailsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  product: ProductOperationInfoResponse | any;
+  onEdit?: () => void;
+}
 
 /**
  * ProductDetailsModal Component
  * Rediseñado con Tailwind CSS siguiendo Fluent Design System 2
  */
-export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }) {
+export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }: ProductDetailsModalProps) {
   const { t } = useI18n();
 
   useEffect(() => {
@@ -105,6 +113,13 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                     <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('products.modal.field.origin')}</label>
                     <p className="text-sm font-semibold text-gray-800">
                       {origin === 'IMPORTADO' ? t('products.origin.imported') : origin === 'NACIONAL' ? t('products.origin.national') : '-'}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Impuesto (IVA)</label>
+                    <p className="text-sm font-semibold text-[#106ebe]">
+                      {product.tax?.rate?.tax_name || product.applicable_tax_rate?.tax_name || 'No especificado'}
+                      {product.tax?.rate?.rate != null ? ` (${product.tax.rate.rate}%)` : ''}
                     </p>
                   </div>
                 </div>

@@ -6,11 +6,11 @@
  *
  * Usage:
  *   import { calculateSalePriceGs, normalizeSalePriceGs }
- *     from '@/domain/pricing/sales/salesPricingPolicy'
+ *     from '@/domain/sale/pricing/salesPricingPolicy'
  *   const price = calculateSalePriceGs(10000, 30) // => 13000
  */
 
-import { roundToStep } from '../core/rounding'
+import { roundToStep } from '@/domain/core/rounding'
 
 /** Default rounding step for Gs prices */
 const GS_STEP = 50
@@ -25,13 +25,8 @@ const GS_STEP = 50
  * @param {number} costGs - Base cost in Guaraníes. Must be >= 0.
  * @param {number} [marginPct=30] - Margin percentage (e.g. 30 for 30%). Must be >= 0.
  * @returns {number} Final sale price, always a multiple of 50.
- *
- * @example
- * calculateSalePriceGs(10000, 30)   // => 13000
- * calculateSalePriceGs(10000, 29.99) // raw=12999 => 13000
- * calculateSalePriceGs(10000, 0)    // => 10000
  */
-export function calculateSalePriceGs(costGs, marginPct = 30) {
+export function calculateSalePriceGs(costGs: number, marginPct: number = 30): number {
   if (!Number.isFinite(costGs) || costGs < 0) return 0
 
   if (!Number.isFinite(marginPct) || marginPct < 0) {
@@ -50,13 +45,8 @@ export function calculateSalePriceGs(costGs, marginPct = 30) {
  *
  * @param {number} priceGs - The sale price to normalize.
  * @returns {number} Price rounded up to the nearest multiple of 50.
- *
- * @example
- * normalizeSalePriceGs(12999) // => 13000
- * normalizeSalePriceGs(12950) // => 12950
- * normalizeSalePriceGs(0)     // => 0
  */
-export function normalizeSalePriceGs(priceGs) {
+export function normalizeSalePriceGs(priceGs: number): number {
   if (!Number.isFinite(priceGs) || priceGs < 0) return 0
   return roundToStep(priceGs, GS_STEP, 'ceil')
 }

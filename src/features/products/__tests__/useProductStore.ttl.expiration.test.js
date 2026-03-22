@@ -57,7 +57,7 @@ describe('TTL expiration behaviour', () => {
     const firstSearch = [ { id: 'S1', name: 'abc-one' } ];
     const secondSearch = [ { id: 'S1', name: 'abc-one' }, { id: 'S2', name: 'abc-two' } ];
 
-    const spy = vi.spyOn(productService, 'searchProductsFinancial')
+    const spy = vi.spyOn(productService, 'searchProductsInfo')
       .mockResolvedValueOnce(firstSearch)
       .mockResolvedValueOnce(secondSearch);
 

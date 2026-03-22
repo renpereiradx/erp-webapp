@@ -12,6 +12,12 @@
 - **NUEVO**: Campos de pricing: `override_tax_rate_id`, `target_margin_percent`, `pricing_strategy`.
 - **CAMBIO**: La lógica de `applicable_tax_rate` es: override del producto > default de categoría.
 
+### v3.2.0 - 22 de Marzo de 2026
+- **NUEVO**: `GET /products/{id}/info` como endpoint legible y completo.
+- **NUEVO**: `GET /products/info/barcode/{barcode}` y `GET /products/info/search/{name}`.
+- **NUEVO**: `GET /products/{id}/sale` y `GET /products/{id}/purchase` para flujos operativos.
+- **CAMBIO**: `financial` queda como alias legacy temporal.
+
 ### v3.0.0 - 24 de Febrero de 2026
 - **BREAKING**: Campo `id_category` renombrado a `category_id` en request bodies de crear/actualizar.
 - **BREAKING**: Campo `price_formatted` eliminado de las respuestas.
@@ -19,7 +25,7 @@
 - Nuevo tipo de producto: `PRODUCTION` (ademas de `PHYSICAL` y `SERVICE`).
 - Endpoint unificado `GET /products/{id}` reemplaza 3 endpoints anteriores (details, with-description, enriched by ID).
 - Endpoint unificado `GET /products/search/{name}` reemplaza 2 endpoints de busqueda.
-- Nuevo endpoint financiero: `GET /products/{id}/financial` (antes era `/products/financial/{id}`).
+- Nuevo endpoint simple: `GET /products/{id}/info` (legacy temporal: `/products/{id}/financial`).
 - N+1 queries eliminadas en todos los endpoints de lectura.
 
 ### v2.4.0 - 25 de Enero de 2026
@@ -126,9 +132,9 @@ Estructura de tasa de impuesto.
 | `is_default` | boolean | Si es la tasa por defecto del sistema |
 | `is_active` | boolean | Si la tasa esta activa |
 
-### ProductFinancialEnriched
+### ProductOperationInfoResponse
 
-Estructura completa con analisis financiero.
+Estructura completa para UI transaccional y detalle de producto.
 
 | Campo | Tipo | Descripcion |
 |-------|------|-------------|
@@ -147,6 +153,9 @@ Estructura completa con analisis financiero.
 | `unit_costs_summary` | array | Resumen de costos por unidad |
 | `stock_quantity` | number \| null | Cantidad en stock |
 | `description` | string \| null | Descripcion del producto |
+| `tax` | object | `{classification_code, resolution_source, rate}` |
+| `context` | object | `{operation: sale|purchase}` |
+| `operation_hints` | object | Pistas para frontend por contexto |
 | `financial_health` | object | `{has_prices, has_costs, has_stock, price_count, cost_units_count, last_updated}` |
 | `stock_status` | string | Estado del stock |
 | `has_valid_stock` | boolean | Si tiene stock |
@@ -501,15 +510,15 @@ Retorna productos de tipo `SERVICE` cuya categoria corresponda a canchas deporti
 
 ---
 
-## Endpoints Financieros
+## Endpoints de Informacion de Producto
 
-### 10. Obtener Producto Financiero por ID
+### 10. Obtener Informacion Completa por ID
 
-**`GET /products/{id}/financial`**
+**`GET /products/{id}/info`**
 
-Retorna informacion financiera completa: costos, margenes, precios por unidad y salud financiera.
+Retorna informacion completa: categoria, IVA, costos, precios, stock, auditoria y metadatos de operacion.
 
-**Response (200 OK):** Retorna `ProductFinancialEnriched`.
+**Response (200 OK):** Retorna `ProductOperationInfoResponse`.
 
 ```json
 {
@@ -548,6 +557,16 @@ Retorna informacion financiera completa: costos, margenes, precios por unidad y 
   ],
   "stock_quantity": 50,
   "description": "Gaseosa Coca-Cola 2 litros",
+  "tax": {
+    "classification_code": "GENERAL",
+    "resolution_source": "TAX_CLASSIFICATION",
+    "rate": {
+      "id": 1,
+      "tax_name": "IVA 10%",
+      "code": "IVA10",
+      "rate": 10
+    }
+  },
   "financial_health": {
     "has_prices": true,
     "has_costs": true,
@@ -575,13 +594,13 @@ Retorna informacion financiera completa: costos, margenes, precios por unidad y 
 
 ---
 
-### 11. Obtener Producto Financiero por Codigo de Barras
+### 11. Obtener Informacion Completa por Codigo de Barras
 
-**`GET /products/financial/barcode/{barcode}`**
+**`GET /products/info/barcode/{barcode}`**
 
-Retorna informacion financiera completa usando el codigo de barras.
+Retorna informacion completa usando el codigo de barras.
 
-**Response (200 OK):** Retorna `ProductFinancialEnriched`.
+**Response (200 OK):** Retorna `ProductOperationInfoResponse`.
 
 **Errores:**
 
@@ -593,11 +612,11 @@ Retorna informacion financiera completa usando el codigo de barras.
 
 ---
 
-### 12. Buscar Productos Financieros por Nombre
+### 12. Buscar Productos por Nombre
 
-**`GET /products/financial/search/{name}?limit=50`**
+**`GET /products/info/search/{name}?limit=50`**
 
-Busca productos con informacion financiera por nombre.
+Busca productos con informacion completa por nombre.
 
 **Parametros:**
 
@@ -606,7 +625,7 @@ Busca productos con informacion financiera por nombre.
 | `name` | string | path | Texto de busqueda |
 | `limit` | number | query | Limite de resultados (default: 50) |
 
-**Response (200 OK):** Retorna `ProductFinancialEnriched[]`.
+**Response (200 OK):** Retorna `ProductOperationInfoResponse[]`.
 
 **Errores:**
 
@@ -635,9 +654,21 @@ Retorna productos con precios filtrados por categorias.
 ```json
 {
   "data": [...],
-  "count": 15
-}
-```
+    "count": 15
+  }
+  ```
+
+### 14. Obtener Producto para Venta
+
+**`GET /products/{id}/sale`**
+
+Retorna el producto completo optimizado para la carga del flujo de venta.
+
+### 15. Obtener Producto para Compra
+
+**`GET /products/{id}/purchase`**
+
+Retorna el producto completo optimizado para la carga del flujo de compra.
 
 ---
 
@@ -699,19 +730,20 @@ Asigna un precio de venta a una unidad de medida.
 
 ## Guia de Migracion desde v2.x
 
-| Antes (v2.x) | Ahora (v3.0) |
+| Antes (v2.x) | Ahora (v3.2) |
 |---------------|--------------|
 | `"id_category": 10` | `"category_id": 10` |
 | `"price_formatted": "PYG 12,000"` | Campo eliminado |
-| `GET /products/financial/{id}` | `GET /products/{id}/financial` |
 | `GET /products/name/{name}` | `GET /products/search/{name}` |
-| `GET /products/financial/name/{name}` | `GET /products/financial/search/{name}` |
+| `GET /products/financial/{id}` | `GET /products/{id}/info` |
 | `GET /products/{id}/details` | `GET /products/{id}` |
 | `GET /products/{id}/with-description` | `GET /products/{id}` |
 | `PUT /products/delete/{id}` | `DELETE /products/{id}` |
 | `GET /products/enriched/all` | `GET /products/all` |
 | `GET /products/enriched/service-courts` | `GET /products/service-courts` |
 | `POST/GET/PUT /product_description/*` | Eliminado (descripcion integrada en producto) |
+
+> **Nota de compatibilidad:** `GET /products/{id}/financial` sigue disponible como alias legacy mientras el frontend migra a `/info`.
 
 ---
 

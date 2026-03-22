@@ -34,7 +34,7 @@ const AvailableSlots = ({ onReserveClick }) => {
 
   // Stores
   const { loading, fetchAvailableSchedules } = useReservationStore()
-  const { products, fetchServiceCourts } = useProductStore()
+  const { serviceCourts, fetchServiceCourts } = useProductStore()
 
   // Local State
   const [filters, setFilters] = useState({
@@ -75,7 +75,7 @@ const AvailableSlots = ({ onReserveClick }) => {
   }, [loadAvailableSlots])
 
   // Get current product name
-  const currentProductName = products.find(p => p.id == filters.productId)?.name || 'Seleccione un servicio'
+  const currentProductName = serviceCourts.find(p => p.id == filters.productId)?.name || 'Seleccione un servicio'
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-sans">
@@ -103,7 +103,7 @@ const AvailableSlots = ({ onReserveClick }) => {
                     className="w-full h-10 pl-10 pr-10 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer"
                   >
                     <option value="all">Seleccionar servicio...</option>
-                    {products.map(p => (
+                    {serviceCourts.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>

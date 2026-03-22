@@ -59,29 +59,36 @@ const getNormalizedBalanceDue = (balanceDue, currency) => {
   return Math.round(raw * 100) / 100
 }
 
-const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
+interface RegisterSalePaymentModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  sale: any;
+  onSubmit: (data: any) => Promise<void>;
+}
+
+const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: RegisterSalePaymentModalProps) => {
   const { t, lang } = useI18n()
 
-  const [amountReceived, setAmountReceived] = useState('')
-  const [amountToApply, setAmountToApply] = useState('')
-  const [exchangeRate, setExchangeRate] = useState('')
-  const [originalAmount, setOriginalAmount] = useState('')
-  const [notes, setNotes] = useState('')
-  const [paymentMethodId, setPaymentMethodId] = useState('')
-  const [currencyCode, setCurrencyCode] = useState((sale?.currency || DEFAULT_CURRENCY_CODE).toUpperCase())
-  const [cashRegisterId, setCashRegisterId] = useState('')
+  const [amountReceived, setAmountReceived] = useState<string | number>('')
+  const [amountToApply, setAmountToApply] = useState<string | number>('')
+  const [exchangeRate, setExchangeRate] = useState<string | number>('')
+  const [originalAmount, setOriginalAmount] = useState<string | number>('')
+  const [notes, setNotes] = useState<string>('')
+  const [paymentMethodId, setPaymentMethodId] = useState<string>('')
+  const [currencyCode, setCurrencyCode] = useState<string>((sale?.currency || DEFAULT_CURRENCY_CODE).toUpperCase())
+  const [cashRegisterId, setCashRegisterId] = useState<string>('')
 
-  const userEditedAmountToApply = useRef(false)
+  const userEditedAmountToApply = useRef<boolean>(false)
 
-  const [amountReceivedError, setAmountReceivedError] = useState(null)
-  const [amountToApplyError, setAmountToApplyError] = useState(null)
-  const [formError, setFormError] = useState(null)
-  const [isSubmitting, setSubmitting] = useState(false)
+  const [amountReceivedError, setAmountReceivedError] = useState<string | null>(null)
+  const [amountToApplyError, setAmountToApplyError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [isSubmitting, setSubmitting] = useState<boolean>(false)
 
-  const [cashRegisters, setCashRegisters] = useState([])
-  const [isCashRegistersLoading, setCashRegistersLoading] = useState(false)
-  const [paymentMethods, setPaymentMethods] = useState([])
-  const [currencies, setCurrencies] = useState([])
+  const [cashRegisters, setCashRegisters] = useState<any[]>([])
+  const [isCashRegistersLoading, setCashRegistersLoading] = useState<boolean>(false)
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([])
+  const [currencies, setCurrencies] = useState<any[]>([])
 
   const resetForm = useCallback(() => {
     setAmountReceived('')

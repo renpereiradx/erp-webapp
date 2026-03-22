@@ -17,6 +17,7 @@ Este documento unifica la operación funcional del módulo de **ventas** y **cob
 - Estadísticas/totales de cobros
 - Integración de cobro con caja registradora
 - Endpoints de soporte para front de cobros (bootstrap y métodos de pago)
+- Consulta de producto para UI de venta: `GET /products/{id}/sale`, `GET /products/info/barcode/{barcode}`, `GET /products/info/search/{name}`
 
 ---
 
@@ -141,6 +142,7 @@ Content-Type: application/json
   - `client_id` (requerido)
   - `product_details[]` (requerido salvo cuando se usa `reserve_id`)
   - opcionales: `sale_id`, `reserve_id`, `payment_method_id`, `currency_id`, `allow_price_modifications`.
+- **Carga de producto recomendada para frontend:** usar `GET /products/{id}/sale`.
 - **Ejemplo body:**
 
 ```json

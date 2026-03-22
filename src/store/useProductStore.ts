@@ -31,6 +31,7 @@ const useProductStore = create()(
     (set, get) => ({
       // =================== ESTADO ===================
       products: [],
+      serviceCourts: [],
       productsById: {}, // Normalización por id
       pageCache: {}, // { pageNumber: { ts, products } }
       pageCacheTTL: 120000,
@@ -792,7 +793,7 @@ const useProductStore = create()(
               ;(async () => {
                 try {
                   const fresh = await get()._withRetry(
-                    () => productService.searchProductsFinancial(term),
+                    () => productService.searchProductsInfo(term),
                     { attempts: 2, telemetryKey: 'products.search.revalidate' }
                   )
                   const freshArr = Array.isArray(fresh) ? fresh : [fresh]
@@ -833,7 +834,7 @@ const useProductStore = create()(
             set(s => ({ cacheMisses: s.cacheMisses + 1 }))
             telemetry.record('products.search.cache.miss', { term })
             // Usar financial search para obtener datos completos con precios y costos
-            const response = await productService.searchProductsFinancial(
+            const response = await productService.searchProductsInfo(
               term,
               { signal: options.signal }
             )
@@ -884,7 +885,7 @@ const useProductStore = create()(
           telemetry.record('products.search.cache.miss', { term })
           // Usar financial search para obtener datos completos con precios y costos
           const response = await get()._withRetry(
-            () => productService.searchProductsFinancial(term),
+            () => productService.searchProductsInfo(term),
             { telemetryKey: 'products.search' }
           )
           const products = Array.isArray(response) ? response : [response]
@@ -1047,12 +1048,12 @@ const useProductStore = create()(
       // =================== FINANCIAL ENRICHED PRODUCTS ===================
 
       // Obtener producto financieramente enriquecido por ID
-      fetchProductByIdFinancial: async productId => {
+      fetchProductByIdInfo: async productId => {
         set({ loading: true, error: null })
 
         try {
           const response = await get()._withRetry(
-            () => productService.getProductByIdFinancial(productId),
+            () => productService.getProductByIdInfo(productId),
             { telemetryKey: 'products.fetch_financial_by_id' }
           )
 
@@ -1089,12 +1090,12 @@ const useProductStore = create()(
       },
 
       // Buscar productos financieramente enriquecidos por código de barras
-      searchProductByBarcodeFinancial: async barcode => {
+      searchProductByBarcodeInfo: async barcode => {
         set({ loading: true, error: null })
 
         try {
           const response = await get()._withRetry(
-            () => productService.getProductByBarcodeFinancial(barcode),
+            () => productService.getProductByBarcodeInfo(barcode),
             { telemetryKey: 'products.search_financial_by_barcode' }
           )
 
@@ -1132,7 +1133,7 @@ const useProductStore = create()(
       },
 
       // Buscar productos financieramente enriquecidos por nombre
-      searchProductsFinancial: async (searchTerm, options = {}) => {
+      searchProductsInfo: async (searchTerm, options = {}) => {
         const { limit = 10, signal } = options
         const correlationId = `search_financial_${Date.now()}_${Math.random()
           .toString(36)
@@ -1162,7 +1163,7 @@ const useProductStore = create()(
         try {
           const response = await get()._withRetry(
             () =>
-              productService.searchProductsFinancial(searchTerm.trim(), {
+              productService.searchProductsInfo(searchTerm.trim(), {
                 limit,
                 signal,
               }),
@@ -1264,17 +1265,32 @@ const useProductStore = create()(
             const { DEMO_PRODUCT_DATA } = await import('@/config/demoData')
             services = DEMO_PRODUCT_DATA.filter(p => p.product_type === 'SERVICE')
           } else {
-            const result = await get()._withRetry(
-              async () => {
-                return await apiClient.get('/products/enriched/service-courts')
-              },
-              { telemetryKey: 'products.fetch_service_courts' }
-            )
+            try {
+              const result = await get()._withRetry(
+                async () => {
+                  return await apiClient.get('/products/enriched')
+                },
+                { telemetryKey: 'products.fetch_service_courts' }
+              )
 
-            if (Array.isArray(result)) {
-              services = result
-            } else if (result?.data && Array.isArray(result.data)) {
-              services = result.data
+              if (Array.isArray(result)) {
+                services = result.filter(p => p.product_type === 'SERVICE')
+              } else if (result?.data && Array.isArray(result.data)) {
+                services = result.data.filter(p => p.product_type === 'SERVICE')
+              }
+            } catch (enrichedError) {
+              console.warn('⚠️ Endpoint /products/enriched no disponible, usando fallback al listado normal:', enrichedError.message)
+              
+              // FALLBACK: Usar listado de productos normal si el enriquecido falla
+              const normalResult = await get()._withRetry(
+                async () => {
+                  return await apiClient.get('/products/')
+                },
+                { telemetryKey: 'products.fetch_service_courts_fallback' }
+              )
+              
+              const rawData = Array.isArray(normalResult) ? normalResult : (normalResult?.data || [])
+              services = rawData.filter(p => p.product_type === 'SERVICE' || p.category_name?.toLowerCase().includes('cancha'))
             }
           }
 
@@ -1315,6 +1331,7 @@ const useProductStore = create()(
           )
           set({
             products: enrichedServices,
+            serviceCourts: enrichedServices,
             productsById: servicesById,
             totalProducts: enrichedServices.length,
             totalPages: 1,
@@ -1430,7 +1447,7 @@ const useProductStore = create()(
       refreshProductData: async productId => {
         try {
           // Obtener datos actualizados del producto
-          const updatedProduct = await productService.getProductByIdFinancial(
+          const updatedProduct = await productService.getProductByIdInfo(
             productId
           )
           const product = updatedProduct.data || updatedProduct

@@ -19,6 +19,17 @@ Esta API gestiona el ciclo de vida completo de las órdenes de compra (Purchase 
 - ✅ **Sistema de Clasificación Fiscal**: Resolución automática de tasas de IVA con jerarquía de 6 niveles.
 - ✅ **Validación de Datos**: Asegura la integridad de los datos mediante validaciones en el backend.
 
+### Nota de UI
+
+Para cargar productos en el flujo de compras, usar:
+
+- `GET /products/{id}/purchase`
+- `GET /products/{id}/info`
+- `GET /products/info/barcode/{barcode}`
+- `GET /products/info/search/{name}`
+
+Usar `info`, `sale` y `purchase` como rutas principales de consulta.
+
 ---
 
 ## 📝 Historial de Cambios
@@ -32,6 +43,10 @@ Esta API gestiona el ciclo de vida completo de las órdenes de compra (Purchase 
 - ✅ **Campo `price_includes_tax`**: Soporte para especificar si el precio incluye o excluye IVA.
 - ✅ **Advertencias de Discrepancia**: Respuesta incluye `warnings` cuando se usa una tasa diferente a la esperada.
 - ✅ **Endpoints de Tax Classification**: Ver `CATEGORY_IVA_API_GUIDE.md` para gestión de clasificaciones SIFEN.
+
+### v2.8 - 22 de Marzo de 2026
+- ✅ **Nombres simples para producto**: `info`, `sale` y `purchase` como endpoints de lectura recomendados.
+- ✅ **Rutas principales simples**: `info`, `sale` y `purchase`.
 
 ### v2.5 - 25 de Enero de 2026
 
@@ -130,6 +145,8 @@ Authorization: Bearer <jwt_token>
 **Endpoint:** `POST /purchase/complete`
 
 Crea una nueva orden de compra y la procesa. Esta operación crea registros de costos, actualiza el stock de productos y, opcionalmente, actualiza los precios de venta.
+
+> Para mostrar el producto en pantalla antes de confirmar la compra, usar `GET /products/{id}/purchase`.
 
 **Request Body:**
 *Ver modelo `PurchaseOrderRequest` en la sección "Modelos de Datos (JSON)".*
@@ -328,6 +345,8 @@ Si se especifica `tax_rate_id` diferente al esperado, la respuesta incluye warni
 **Endpoint:** `GET /purchase/{id}`
 
 Obtiene una orden de compra específica por su ID, con información enriquecida que incluye detalles financieros y un resumen de pagos.
+
+> El detalle de producto para la interfaz debe venir de `GET /products/{id}/purchase` o `GET /products/{id}/info`.
 
 **Parámetros de URL:**
 
@@ -811,6 +830,13 @@ El campo `tax_warnings_preserved` indica cuántas advertencias de discrepancia f
 - **Cálculo de Precio de Venta**: El sistema calcula el precio de venta aplicando el margen de ganancia (`profit_pct`) directamente sobre el costo unitario (`unit_price`), que ya tiene el IVA.
 - **Fórmula Correcta**: `precio_venta = costo_unitario * (1 + margen / 100)`
 - **Función del IVA en el Sistema**: El campo `tax_rate` se almacena con fines de registro fiscal y auditoría, pero **no se usa para calcular el precio de venta final** y así evitar una doble imposición de impuestos.
+
+### Carga de producto en UI
+
+Para la pantalla de compra, la UI debe consultar el producto con:
+
+- `GET /products/{id}/purchase` para detalle operativo.
+- `GET /products/{id}/info` para detalle general.
 
 ### Auto-Pricing
 - Si `auto_update_prices` es `true`, el sistema crea o actualiza un registro en `products.unit_prices` después de una compra.

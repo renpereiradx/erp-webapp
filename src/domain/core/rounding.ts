@@ -17,7 +17,7 @@
  *
  * @param {number} value - The value to round.
  * @param {number} [step=50] - The step to round to. Must be > 0.
- * @param {RoundingMode} [mode='ceil'] - How to round: 'ceil', 'floor', or 'nearest'.
+ * @param {string} [mode='ceil'] - How to round: 'ceil', 'floor', or 'nearest'.
  * @returns {number} The rounded value.
  * @throws {Error} If value is not finite or step is not > 0.
  *
@@ -27,7 +27,7 @@
  * roundToStep(12951, 50, 'ceil')  // => 13000
  * roundToStep(0, 50, 'ceil')      // => 0
  */
-export function roundToStep(value, step = 50, mode = 'ceil') {
+export function roundToStep(value: number, step: number = 50, mode: string = 'ceil'): number {
   if (!Number.isFinite(value)) {
     throw new Error(`roundToStep: value must be a finite number, got ${value}`)
   }
@@ -56,7 +56,7 @@ export function roundToStep(value, step = 50, mode = 'ceil') {
  * @param {number} [step=50]
  * @returns {boolean}
  */
-export function isMultipleOfStep(value, step = 50) {
+export function isMultipleOfStep(value: number, step: number = 50): boolean {
   if (!Number.isFinite(value) || !Number.isFinite(step) || step <= 0) return false
   return value % step === 0
 }

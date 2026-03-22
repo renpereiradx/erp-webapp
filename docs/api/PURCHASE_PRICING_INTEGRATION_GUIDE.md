@@ -1,284 +1,186 @@
-# Guía de Integración Frontend - Precios en Compras
+# Guía de Integración Frontend - Pricing en Compras (actual)
 
-**Versión:** 1.0
-**Fecha:** 26 de Diciembre de 2025
+**Versión:** 1.1
+**Fecha:** 22 de Marzo de 2026
+**Estado:** Vigente con la API actual
 
 ---
 
 ## Resumen
 
-Esta guía explica cómo el frontend debe manejar los precios de venta al registrar compras, incluyendo el nuevo soporte para **precio explícito**.
+Esta guía define el flujo actual para calcular precio de venta desde compras y cómo cargar datos de producto en frontend.
+
+Principio clave:
+
+- El frontend muestra preview.
+- El backend calcula y persiste (fuente de verdad).
 
 ---
 
-## 1. Modos de Precio
+## 1. Endpoints que debe usar frontend
 
-El sistema soporta dos modos de definición de precio de venta:
+Para cargar producto en pantallas de compra/venta:
 
-| Modo | Descripción | Cuándo usar |
-|------|-------------|-------------|
-| **Margen automático** | Backend calcula: `costo × (1 + margen%)` | Usuario define solo el margen |
-| **Precio explícito** | Backend usa el precio enviado directamente | Usuario define el precio final |
+- `GET /products/{id}/purchase` (flujo de compra)
+- `GET /products/{id}/sale` (flujo de venta)
+- `GET /products/{id}/info` (detalle general)
+- `GET /products/info/barcode/{barcode}`
+- `GET /products/info/search/{name}`
+
+Para registrar compra completa:
+
+- `POST /purchase/complete`
 
 ---
 
-## 2. Estructura del Request
-
-### 2.1 Campo Nuevo: `explicit_sale_price`
+## 2. Payload soportado hoy en `POST /purchase/complete`
 
 ```typescript
-interface PurchaseOrderDetail {
+interface ProcessCompletePurchaseOrderDetail {
   product_id: string;
-  quantity: number;
-  unit_price: number;        // Costo de compra
-  unit: string;
-  profit_pct?: number;       // Margen porcentual (opcional si hay explicit)
-  explicit_sale_price?: number;  // NUEVO: Precio de venta explícito
-  tax_rate_id?: number;
+  quantity: number;          // > 0
+  unit_price: number;        // costo de compra > 0
+  unit?: string;             // default backend: "unit"
+  profit_pct?: number;       // modo margen automatico
+  explicit_sale_price?: number; // modo precio explicito (prioridad)
+  tax_rate_id?: number;      // override opcional de IVA
 }
 ```
 
-### 2.2 Reglas de Prioridad
+Campos a nivel request:
 
-```
-SI explicit_sale_price está presente:
-    → Backend usa ese precio (redondeado)
-    → profit_pct es ignorado para cálculo (solo informativo)
-SINO:
-    → Backend calcula: ROUND(costo × (1 + profit_pct/100))
-```
+- `supplier_id`, `status`, `order_details`
+- opcionales: `payment_method_id`, `currency_id`, `auto_update_prices`, `default_profit_margin`, `metadata`
 
 ---
 
-## 3. Ejemplos de Uso
+## 3. Reglas de cálculo de precio (implementación actual)
 
-### 3.1 Modo "Margen Automático"
+### 3.1 Modo precio explícito
 
-Usuario selecciona margen de 25%:
+Si viene `explicit_sale_price`:
+
+- backend usa ese valor como precio de venta final
+- `profit_pct` queda solo como dato de referencia UI
+
+### 3.2 Modo margen automático
+
+Si no viene `explicit_sale_price`:
+
+- backend calcula `sale_price = ROUND(unit_price * (1 + profit_pct/100))`
+- si no viene `profit_pct`, usa `default_profit_margin` o default del sistema
+
+### 3.3 Quién calcula el margen
+
+- frontend puede calcular margen para mostrar
+- backend recalcula y persiste margen/precio final
+
+---
+
+## 4. IVA en compras (actual)
+
+### 4.1 Resolución de tasa
+
+Si no se envía `tax_rate_id`, backend resuelve por jerarquía fiscal (producto/clasificación/categoría/default).
+
+### 4.2 Cálculo fiscal
+
+La API actual discrimina y guarda desglose fiscal por línea en detalles de compra:
+
+- `unit_price_with_tax`
+- `unit_price_without_tax`
+- `tax_amount`
+- `total_line_with_tax`
+- `applied_tax_rate`
+- `tax_resolution_source`
+
+### 4.3 Dónde ver el desglose
+
+Consultar `GET /purchase/{id}` o endpoints enriquecidos de compra para ver el detalle por ítem.
+
+---
+
+## 5. Ejemplos de request
+
+### 5.1 Margen automático
 
 ```json
 {
-  "product_id": "ABC123",
-  "quantity": 5,
-  "unit_price": 56850,
-  "unit": "unit",
-  "profit_pct": 25.0
+  "supplier_id": 13,
+  "status": "COMPLETED",
+  "order_details": [
+    {
+      "product_id": "PROD_BANANA_001",
+      "quantity": 50,
+      "unit_price": 2500,
+      "unit": "kg",
+      "profit_pct": 35
+    }
+  ],
+  "auto_update_prices": true,
+  "default_profit_margin": 30
 }
 ```
 
-**Resultado:** Backend calcula `ROUND(56850 × 1.25) = 71063`
-
-### 3.2 Modo "Precio Explícito"
-
-Usuario quiere precio de venta = 90,000:
+### 5.2 Precio explícito
 
 ```json
 {
-  "product_id": "Cc2y5JnvR",
-  "quantity": 5,
-  "unit_price": 56850,
-  "unit": "unit",
-  "profit_pct": 58.31,
-  "explicit_sale_price": 90000
-}
-```
-
-**Resultado:** Backend usa `90000` directamente (no recalcula)
-
----
-
-## 4. Validaciones Frontend
-
-### 4.1 Precios Deben Ser Enteros (PYG)
-
-```typescript
-function validateAndRoundPrice(price: number): number {
-  const rounded = Math.round(price);
-
-  if (price !== rounded) {
-    console.warn(`Precio ${price} redondeado a ${rounded}`);
-    // Opcional: mostrar notificación al usuario
-  }
-
-  return rounded;
-}
-```
-
-### 4.2 Lógica de Construcción
-
-```typescript
-function buildOrderDetail(item: CartItem): PurchaseOrderDetail {
-  const detail: PurchaseOrderDetail = {
-    product_id: item.productId,
-    quantity: item.quantity,
-    unit_price: item.costPrice,
-    unit: item.unit,
-  };
-
-  if (item.pricingMode === 'explicit') {
-    // Usuario definió precio de venta explícito
-    detail.explicit_sale_price = validateAndRoundPrice(item.salePrice);
-    // profit_pct es opcional pero útil para mostrar en UI
-    detail.profit_pct = calculateMargin(item.costPrice, detail.explicit_sale_price);
-  } else {
-    // Modo margen: solo enviar el porcentaje
-    detail.profit_pct = item.profitMargin;
-    // NO enviar explicit_sale_price
-  }
-
-  return detail;
-}
-
-function calculateMargin(cost: number, salePrice: number): number {
-  if (cost === 0) return 0;
-  return Math.round(((salePrice - cost) / cost) * 100 * 100) / 100; // 2 decimales
+  "supplier_id": 13,
+  "status": "COMPLETED",
+  "order_details": [
+    {
+      "product_id": "FL8K0xxRzjX0VAND78u842kzKcM",
+      "quantity": 20,
+      "unit_price": 5000,
+      "unit": "unit",
+      "explicit_sale_price": 9000,
+      "tax_rate_id": 5
+    }
+  ]
 }
 ```
 
 ---
 
-## 5. UI/UX Recomendado
+## 6. Respuesta y warnings
 
-### 5.1 Selector de Modo
+`POST /purchase/complete` devuelve, entre otros:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  Definir precio de venta                                │
-│                                                         │
-│  ○ Calcular desde margen                                │
-│     Margen: [____25____] %                              │
-│     Precio calculado: 71,063 Gs.                        │
-│                                                         │
-│  ● Precio explícito                                     │
-│     Precio de venta: [__90,000__] Gs.                   │
-│     Margen resultante: 58.31%                           │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
-
-### 5.2 Indicador de Redondeo
-
-Cuando el usuario ingresa un precio con decimales:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  ⚠️ El precio 89,999.50 se redondeará a 90,000 Gs.     │
-│     (Los precios en guaraníes deben ser enteros)        │
-└─────────────────────────────────────────────────────────┘
-```
+- `success`
+- `purchase_order_id`
+- `total_amount`
+- `items_processed`
+- `cost_entries_created`
+- `prices_updated`
+- `message`
+- `warnings` (cuando aplica, por ejemplo discrepancias fiscales)
 
 ---
 
-## 6. Manejo de Respuestas
+## 7. Recomendaciones frontend
 
-### 6.1 Respuesta Exitosa
-
-```json
-{
-  "success": true,
-  "purchase_order_id": 15,
-  "prices_updated": 3,
-  "details": {
-    "items": [
-      {
-        "product_id": "Cc2y5JnvR",
-        "cost": 56850,
-        "final_price": 90000,
-        "margin_percent": 58.31,
-        "price_source": "explicit"
-      }
-    ]
-  }
-}
-```
-
-### 6.2 Campos de Interés
-
-| Campo | Descripción |
-|-------|-------------|
-| `final_price` | Precio final almacenado (siempre entero) |
-| `margin_percent` | Margen real calculado |
-| `price_source` | `"explicit"` o `"calculated"` |
+1. Redondear montos para PYG en UI antes de enviar.
+2. Usar `explicit_sale_price` solo cuando usuario fija precio final manual.
+3. No confiar en cálculo local para persistencia; usar siempre respuesta backend.
+4. Mostrar en UI la tasa y fuente fiscal (`applied_tax_rate`, `tax_resolution_source`) al confirmar compra.
+5. Para nuevos desarrollos, usar exclusivamente rutas `info`, `sale`, `purchase`.
 
 ---
 
-## 7. Errores Comunes
+## 8. Checklist de implementación
 
-### Error 1: Precio con decimales no enteros
-
-```json
-// ❌ Incorrecto
-{ "explicit_sale_price": 89999.24 }
-
-// ✓ Correcto (frontend debe redondear antes de enviar)
-{ "explicit_sale_price": 90000 }
-```
-
-### Error 2: Enviar ambos sin explicit_sale_price
-
-```json
-// ⚠️ profit_pct será usado para calcular
-{
-  "profit_pct": 25.0
-  // Sin explicit_sale_price → calcula desde margen
-}
-```
-
-### Error 3: Margen inconsistente con precio explícito
-
-```json
-// ⚠️ Esto está bien - el backend ignora profit_pct cuando hay explicit
-{
-  "profit_pct": 10.0,
-  "explicit_sale_price": 90000
-  // Backend usa 90000, ignora el 10%
-}
-```
+- [ ] Soportar selector de modo: margen vs explícito
+- [ ] Enviar `explicit_sale_price` solo en modo explícito
+- [ ] Enviar `profit_pct` en modo margen
+- [ ] Consumir `GET /products/{id}/purchase` para precarga de formulario
+- [ ] Mostrar desglose fiscal de backend al confirmar
+- [ ] Manejar `warnings` en respuesta de compra
 
 ---
 
-## 8. Resumen de Cambios
+## 9. Referencias
 
-### Antes (problema)
-
-```javascript
-// Frontend calculaba margen desde precio
-const margin = ((salePrice - cost) / cost) * 100;  // 58.3069...
-const roundedMargin = Math.round(margin * 100) / 100;  // 58.31
-
-// Backend recalculaba precio
-const recalculatedPrice = cost * (1 + roundedMargin / 100);  // 89999.24 ❌
-```
-
-### Después (solución)
-
-```javascript
-// Frontend envía precio explícito directamente
-const detail = {
-  unit_price: cost,
-  explicit_sale_price: Math.round(salePrice),  // 90000 ✓
-  profit_pct: margin  // Solo para referencia
-};
-```
-
----
-
-## 9. Checklist de Implementación
-
-- [ ] Agregar campo `explicit_sale_price` al modelo de detalle
-- [ ] Implementar selector de modo (margen vs explícito)
-- [ ] Validar y redondear precios a enteros
-- [ ] Enviar `explicit_sale_price` cuando usuario define precio
-- [ ] Mostrar advertencia si precio tiene decimales
-- [ ] Actualizar formulario de compra con nuevo campo
-
----
-
-## 10. Contacto
-
-Para dudas sobre la integración, contactar al equipo backend.
-
----
-
-**Última actualización:** 26 de Diciembre de 2025
-**Versión:** 1.0
+- `docs/guides/frontend/PURCHASE_ORDERS_API_GUIDE.md`
+- `docs/guides/frontend/PRODUCT_API_GUIDE.md`
+- `docs/guides/frontend/SALES_API_GUIDE.md`

@@ -12,7 +12,7 @@ vi.mock('@/services/productService', async (orig) => {
       getProducts: vi.fn(),
       getProductsPaginated: vi.fn(),
       searchProducts: vi.fn(),
-      searchProductsFinancial: vi.fn(),
+      searchProductsInfo: vi.fn(),
       updateProduct: vi.fn(async (id, data) => ({ id, ...data })),
       validateProductData: () => {},
     }
@@ -75,17 +75,17 @@ describe('Circuit breaker & prefetch', () => {
   });
 
   test('search uses circuit breaker similarly', async () => {
-    productService.searchProductsFinancial.mockImplementation(fail);
+    productService.searchProductsInfo.mockImplementation(fail);
     const threshold = useProductStore.getState().circuit.threshold;
     for (let i = 0; i < threshold; i++) {
       await useProductStore.getState().searchProducts('abc');
     }
-    const prev = productService.searchProductsFinancial.mock.calls.length;
+    const prev = productService.searchProductsInfo.mock.calls.length;
     let res;
     await act(async () => {
       res = await useProductStore.getState().searchProducts('abc');
     });
-    expect(productService.searchProductsFinancial.mock.calls.length).toBe(prev);
+    expect(productService.searchProductsInfo.mock.calls.length).toBe(prev);
     expect(res.circuitOpen).toBe(true);
   });
 

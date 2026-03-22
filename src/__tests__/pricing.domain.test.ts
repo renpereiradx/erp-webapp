@@ -6,12 +6,12 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { roundToStep, isMultipleOfStep } from '../domain/pricing/core/rounding'
-import { calculateSalePriceGs, normalizeSalePriceGs } from '../domain/pricing/sales/salesPricingPolicy'
+import { roundToStep, isMultipleOfStep } from '../domain/core/rounding'
+import { calculateSalePriceGs, normalizeSalePriceGs } from '../domain/sale/pricing/salesPricingPolicy'
 import {
   calculatePurchaseSalePriceGs,
   normalizePurchaseAmountGs,
-} from '../domain/pricing/purchases/purchasePricingPolicy'
+} from '../domain/purchase/pricing/purchasePricingPolicy'
 
 // ─────────────────────────────────────────────────────────────
 // Core: roundToStep

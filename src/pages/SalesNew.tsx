@@ -109,7 +109,8 @@ const getProductDisplay = product => {
     product.metadata?.tax_rate,
   ]
 
-  const rawTaxRate = rawTaxRateCandidates.find(
+  const taxInfo = product.applicable_tax_rate || product.tax?.rate;
+  const rawTaxRate = (typeof taxInfo === 'object' ? taxInfo?.rate : taxInfo) ?? rawTaxRateCandidates.find(
     candidate => candidate !== undefined && candidate !== null,
   )
 
@@ -117,7 +118,7 @@ const getProductDisplay = product => {
   if (rawTaxRate !== undefined) {
     const parsedRate = Number(rawTaxRate)
     if (Number.isFinite(parsedRate) && parsedRate > 0) {
-      normalizedTaxRate = parsedRate > 1 ? parsedRate / 100 : parsedRate
+      normalizedTaxRate = parsedRate >= 1 ? parsedRate / 100 : parsedRate
     }
   }
 
@@ -127,9 +128,10 @@ const getProductDisplay = product => {
     price:
       product.sale_price ||
       product.price ||
+      product.unit_price ||
       product.unit_prices?.[0]?.price_per_unit ||
       0,
-    sku: product.sku || product.barcode || product.code || '',
+    sku: product.sku || product.barcode || product.code || '-',
     stock: product.stock_quantity || product.stock || product.quantity || 0,
     base_unit: product.base_unit || product.unit || 'unit',
     taxRate: normalizedTaxRate,
@@ -444,9 +446,17 @@ const SalesNew = () => {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [activeTab, isModalOpen, matchesShortcut, items.length])
 
-  const subtotal = useMemo(
-    () => items.reduce((acc, item) => acc + item.price * item.quantity, 0),
-    [items],
+  const saleTotals = useMemo(
+    () => saleService.calculateLocalTotals(items),
+    [items]
+  )
+
+  const subtotal = saleTotals.subtotal;
+  const lineDiscounts = saleTotals.discount_total;
+  const taxes = saleTotals.tax_amount;
+  const total = useMemo(
+    () => Math.max(0, saleTotals.total - generalDiscount),
+    [saleTotals.total, generalDiscount],
   )
 
   const filteredItems = useMemo(
@@ -456,45 +466,6 @@ const SalesNew = () => {
       ),
     [items, searchTerm],
   )
-
-  const lineDiscounts = useMemo(
-    () => items.reduce((acc, item) => acc + (item.discount || 0), 0),
-    [items],
-  )
-
-  const taxes = useMemo(() => {
-    const itemsTax = items.reduce((acc, item) => {
-      const explicitTaxAmount = Number(
-        item.tax_amount ?? item.taxAmount ?? item.tax,
-      )
-
-      if (Number.isFinite(explicitTaxAmount) && explicitTaxAmount >= 0) {
-        return acc + explicitTaxAmount
-      }
-
-      const rawTaxRate = Number(item.taxRate ?? item.tax_rate ?? 0)
-      const normalizedTaxRate =
-        Number.isFinite(rawTaxRate) && rawTaxRate > 0
-          ? rawTaxRate > 1
-            ? rawTaxRate / 100
-            : rawTaxRate
-          : 0
-
-      if (normalizedTaxRate <= 0) {
-        return acc
-      }
-
-      const lineBase = Math.max(
-        0,
-        Number(item.price || 0) * Number(item.quantity || 0) -
-          Number(item.discount || 0),
-      )
-
-      return acc + lineBase * normalizedTaxRate
-    }, 0)
-
-    return Math.max(0, itemsTax)
-  }, [items])
 
   const taxSummaryLabel = useMemo(() => {
     const rates = Array.from(
@@ -517,11 +488,6 @@ const SalesNew = () => {
 
     return 'Impuestos (según tasa de producto)'
   }, [items])
-
-  const total = useMemo(
-    () => Math.max(0, subtotal - lineDiscounts - generalDiscount + taxes),
-    [subtotal, lineDiscounts, generalDiscount, taxes],
-  )
 
   const filteredHistory = useMemo(
     () =>
@@ -657,7 +623,8 @@ const SalesNew = () => {
       try {
         let clientSales = []
         try {
-          clientSales = await apiService.getSalesByClientId(client.id)
+          const res = await saleService.getSalesByClientId(client.id)
+          clientSales = res.data || []
         } catch (idError) {
           console.warn('Error fetching sales by ID, trying by name...', idError)
           // Fallback: Try by name if ID fails (e.g. 500 error)
@@ -665,7 +632,8 @@ const SalesNew = () => {
             const fullName = client.last_name
               ? `${client.name} ${client.last_name}`.trim()
               : client.name
-            clientSales = await apiService.getSalesByClientName(fullName)
+            const res = await saleService.getSalesByClientName(fullName)
+            clientSales = res.data || []
           }
         }
 
@@ -976,7 +944,8 @@ const SalesNew = () => {
     // Si no tiene detalles, intentar obtenerlos por ID
     if (saleDetails.length === 0 && saleId) {
       try {
-        const fullSale = await apiService.getSaleById(saleId)
+        const response = await saleService.getSaleById(saleId)
+        const fullSale = response.data
         if (fullSale && fullSale.details) {
           saleDetails = fullSale.details
         }
@@ -1288,11 +1257,22 @@ const SalesNew = () => {
     toast.success('Venta creada exitosamente')
   }
 
-  const handleSelectProduct = product => {
-    const display = getProductDisplay(product)
-    setSelectedModalProduct(product)
-    setProductSearchTerm(display.name)
-    setShowProductDropdown(false)
+  const handleSelectProduct = async product => {
+    const productId = product.id || product.product_id
+    if (!productId) return
+
+    try {
+      setIsSearchingProducts(true)
+      const fullProduct = await productService.getProductForSale(productId)
+      const display = getProductDisplay(fullProduct)
+      setSelectedModalProduct(fullProduct)
+      setProductSearchTerm(display.name)
+      setShowProductDropdown(false)
+    } catch (err) {
+      toast.error('No se pudo cargar el detalle del producto para venta')
+    } finally {
+      setIsSearchingProducts(false)
+    }
   }
 
   return (
@@ -1526,6 +1506,30 @@ const SalesNew = () => {
                           )}
                         </span>
                       </div>
+
+                      {/* Liquidación IVA Breakdown */}
+                      <div className='pt-2 space-y-1 border-t border-[var(--fluent-border-subtle,#F0F0F0)]'>
+                        <p className='text-[10px] font-bold text-gray-400 uppercase tracking-tight mb-1'>Liquidación IVA</p>
+                        {saleTotals.iva10 > 0 && (
+                          <div className='flex justify-between items-center'>
+                            <span className='text-xs text-gray-500'>IVA 10%</span>
+                            <span className='text-xs font-medium text-gray-700'>{formatCurrency(saleTotals.iva10, 'PYG')}</span>
+                          </div>
+                        )}
+                        {saleTotals.iva5 > 0 && (
+                          <div className='flex justify-between items-center'>
+                            <span className='text-xs text-gray-500'>IVA 5%</span>
+                            <span className='text-xs font-medium text-gray-700'>{formatCurrency(saleTotals.iva5, 'PYG')}</span>
+                          </div>
+                        )}
+                        {saleTotals.exento > 0 && (
+                          <div className='flex justify-between items-center'>
+                            <span className='text-xs text-gray-500'>Exento</span>
+                            <span className='text-xs font-medium text-gray-700'>{formatCurrency(saleTotals.exento, 'PYG')}</span>
+                          </div>
+                        )}
+                      </div>
+
                       <div className='border-t border-[var(--fluent-border-default,#E0E0E0)] pt-2 mt-2'>
                         <div className='flex justify-between items-center'>
                           <span className='text-base font-semibold text-[var(--fluent-text-primary,#242424)]'>

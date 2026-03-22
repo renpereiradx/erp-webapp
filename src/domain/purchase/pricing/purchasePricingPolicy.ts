@@ -6,10 +6,10 @@
  *
  * Usage:
  *   import { calculatePurchaseSalePriceGs, normalizePurchaseAmountGs }
- *     from '@/domain/pricing/purchases/purchasePricingPolicy'
+ *     from '@/domain/purchase/pricing/purchasePricingPolicy'
  */
 
-import { roundToStep } from '../core/rounding'
+import { roundToStep } from '@/domain/core/rounding'
 
 /** Default rounding step for Gs prices */
 const GS_STEP = 50
@@ -24,12 +24,8 @@ const DEFAULT_MARGIN_PCT = 30
  * @param {number} unitPriceGs - Unit cost from purchase order. Must be > 0.
  * @param {number} [profitPct] - Profit margin percentage. Defaults to DEFAULT_MARGIN_PCT.
  * @returns {number} Suggested sale price rounded to multiple of 50.
- *
- * @example
- * calculatePurchaseSalePriceGs(10000, 30)    // => 13000
- * calculatePurchaseSalePriceGs(10000, 29.99) // raw=12999 => 13000
  */
-export function calculatePurchaseSalePriceGs(unitPriceGs, profitPct) {
+export function calculatePurchaseSalePriceGs(unitPriceGs: number, profitPct?: number): number {
   if (!unitPriceGs || !Number.isFinite(unitPriceGs) || unitPriceGs <= 0) return 0
 
   const margin =
@@ -42,18 +38,25 @@ export function calculatePurchaseSalePriceGs(unitPriceGs, profitPct) {
 }
 
 /**
+ * Calculates the profit margin percentage based on cost and sale price.
+ * 
+ * @param {number} cost - The unit cost.
+ * @param {number} salePrice - The final sale price.
+ * @returns {number} Profit margin percentage (0-100).
+ */
+export function calculateProfitMargin(cost: number, salePrice: number): number {
+  if (!cost || cost <= 0) return 0;
+  return Math.max(0, ((salePrice - cost) / cost) * 100);
+}
+
+/**
  * Normalizes any monetary amount in Gs to a multiple of 50 using ceil.
  * Use this for amounts that already exist but need to be brought into policy.
  *
  * @param {number} amountGs - Any monetary amount in Gs.
  * @returns {number} Amount rounded up to the nearest multiple of 50.
- *
- * @example
- * normalizePurchaseAmountGs(12999) // => 13000
- * normalizePurchaseAmountGs(12950) // => 12950
- * normalizePurchaseAmountGs(12951) // => 13000
  */
-export function normalizePurchaseAmountGs(amountGs) {
+export function normalizePurchaseAmountGs(amountGs: number): number {
   if (!Number.isFinite(amountGs) || amountGs < 0) return 0
   return roundToStep(amountGs, GS_STEP, 'ceil')
 }

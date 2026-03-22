@@ -90,6 +90,18 @@ Ver `CATEGORY_IVA_API_GUIDE.md` para gestión de clasificaciones fiscales (SIFEN
 2. `price_includes_tax` del producto en `unit_prices`
 3. Default: `true` (Paraguay)
 
+### Carga de productos para venta
+
+Para construir el carrito o cargar el detalle de un producto en POS, usar:
+
+- `GET /products/{id}/sale`
+- `GET /products/info/barcode/{barcode}`
+- `GET /products/info/search/{name}`
+
+Estos endpoints usan `info` y `sale` como rutas principales de consulta.
+
+> Recomendacion: para la UI de venta usar `GET /products/{id}/sale`; para catálogos/lookup rapido usar `GET /products/info/barcode/{barcode}` o `GET /products/info/search/{name}`.
+
 ### Advertencias de Discrepancia de Tasas
 
 Si se especifica `tax_rate_id` diferente al esperado, la respuesta incluye warnings:

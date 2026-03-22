@@ -17,6 +17,7 @@ Este documento unifica la operación funcional del módulo de **compras** y **pa
 - Estadísticas/totales de pagos
 - Integración de pago con caja registradora
 - Endpoints de soporte para front de compras (suppliers, métodos de pago)
+- Consulta de producto para UI de compra: `GET /products/{id}/purchase`, `GET /products/{id}/info`, `GET /products/info/barcode/{barcode}`
 
 ---
 
@@ -177,6 +178,7 @@ Content-Type: application/json
     - `quantity` (requerido, > 0)
     - `unit_price` (requerido, > 0)
     - `exp_date` (opcional)
+- **Carga de producto recomendada para frontend:** usar `GET /products/{id}/purchase`.
 - **Ejemplo body:**
 
 ```json
@@ -351,7 +353,9 @@ Content-Type: application/json
   - `end_date` (`YYYY-MM-DD`)
   - `supplier_id` (int)
 - **Respuesta exitosa (200):** `PurchasePaymentStatisticsResponse`
-  - `period`, `order_statistics`, `financial_summary`, `generated_at`.
+ - `period`, `order_statistics`, `financial_summary`, `generated_at`.
+
+> Nota: la UI de compras debe cargar el detalle de producto con `GET /products/{id}/purchase` o `GET /products/{id}/info`.
 - **Errores:**
   - `400`: formato de parámetros inválido.
   - `401`: no autorizado.

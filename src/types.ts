@@ -79,22 +79,45 @@ export interface FinancialHealth {
   last_updated: string; // ISO 8601 date string
 }
 
-export interface ProductFinancialEnriched {
+export interface TaxRateInfo {
+  id: number;
+  tax_name: string;
+  code: string;
+  rate: number;
+}
+
+export interface TaxInfo {
+  classification_code: string;
+  resolution_source: string;
+  rate: TaxRateInfo;
+}
+
+export interface ProductOperationInfoResponse {
   product_id: string;
   product_name: string;
   barcode: string | null;
   state: boolean;
-  category_id: number;
-  product_type: 'PHYSICAL' | 'SERVICE';
+  category_id?: number;
+  product_type: 'PHYSICAL' | 'SERVICE' | 'PRODUCTION';
+  origin?: 'NACIONAL' | 'IMPORTADO' | null;
+  brand?: string | null;
+  base_unit?: string | null;
+  created_at?: string;
+  updated_at?: string;
   unit_prices: UnitPrice[];
   unit_costs_summary: UnitCostSummary[];
   stock_quantity: number | null;
-  stock_updated_at: string | null;
-  stock_updated_by: string | null;
+  stock_updated_at?: string | null;
+  stock_updated_by?: string | null;
   description: string | null;
-  description_updated_at: string | null;
-  category_name: string;
-  category: Category;
+  description_updated_at?: string | null;
+  category_name?: string;
+  category?: Category;
+  tax?: TaxInfo;
+  context?: {
+    operation: 'sale' | 'purchase' | string;
+  };
+  operation_hints?: Record<string, any>;
   financial_health: FinancialHealth;
   stock_status: 'out_of_stock' | 'low_stock' | 'medium_stock' | 'in_stock' | 'no_stock_tracking' | 'unavailable' | 'limited_availability' | 'available';
   has_valid_stock: boolean;
@@ -449,40 +472,157 @@ export interface PaymentsBootstrap {
 }
 
 // ============================================================================
-// PURCHASE PAYMENT TYPES
+// PURCHASE PAYMENT TYPES (v2.7+)
 // ============================================================================
 
-export interface PurchaseEnhancedProductDetail {
+/**
+ * Metadata stored in each purchase order detail
+ */
+export interface PurchaseOrderDetailMetadata {
+  unit: string;
+  profit_pct: number;
+  sale_price: number;
+  line_total: number;
+  tax_rate: number;
+}
+
+/**
+ * Single item in a purchase order request
+ */
+export interface PurchaseOrderDetailRequest {
   product_id: string;
   quantity: number;
   unit_price: number;
-  tax_rate_id?: number;
+  unit?: string;
   profit_pct?: number;
+  explicit_sale_price?: number;
+  tax_rate_id?: number | null;
+  price_includes_tax?: boolean;
 }
 
-export interface CreatePurchaseOrderRequest {
+/**
+ * Main request for creating a purchase order
+ */
+export interface PurchaseOrderRequest {
   supplier_id: number;
-  status?: string;
-  product_details: PurchaseEnhancedProductDetail[];
+  status: 'PENDING' | 'COMPLETED' | 'CANCELLED' | string;
+  order_details: PurchaseOrderDetailRequest[];
   payment_method_id?: number;
   currency_id?: number;
-  metadata?: Record<string, any>;
+  auto_update_prices?: boolean;
+  default_profit_margin?: number;
+  metadata?: {
+    purchase_notes?: string;
+    supplier_contact?: string;
+    [key: string]: any;
+  };
 }
 
-export interface PurchaseOrderResponse {
+/**
+ * Response when a purchase order is created
+ */
+export interface PurchaseOrderCreationResponse {
   success: boolean;
   purchase_order_id: number;
   total_amount: number;
   items_processed: number;
+  cost_entries_created: number;
+  prices_updated: number;
   message: string;
-  error?: string;
+  warnings?: any[];
+}
+
+/**
+ * Basic purchase information
+ */
+export interface PurchaseRiched {
+  id: number;
+  order_date: string;
+  total_amount: number;
+  status: string;
+  supplier_id: number;
+  supplier_name: string;
+  supplier_status: boolean;
+  user_id: string;
+  user_name: string;
+  payment_method_id: number | null;
+  payment_method?: string;
+  currency_id: number | null;
+  currency?: string;
+  metadata: Record<string, any>;
+}
+
+/**
+ * Detailed information for a single item in a purchase order
+ */
+export interface PurchaseItemFullRiched {
+  id: number;
+  purchase_id: number;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+  sale_price: number;
+  profit_pct: number;
+  unit: string;
+  tax_rate_id: number;
+  tax_rate: number;
+  exp_date?: string;
+  user_id: string;
+  user_name: string;
+  line_total: number;
+  metadata: PurchaseOrderDetailMetadata;
+}
+
+/**
+ * Summary of payments for a purchase order
+ */
+export interface PurchasePaymentSummary {
+  total_paid: number;
+  outstanding_amount: number;
+  payment_count: number;
+  last_payment_date: string;
+  payment_status: string;
+  is_fully_paid: boolean;
+}
+
+/**
+ * Financial cost information for a purchase order
+ */
+export interface PurchaseCostInfo {
+  total_cost: number;
+  total_sale_value: number;
+  average_profit_pct: number;
+  total_tax_amount: number;
+  currency_id?: number;
+  currency_code?: string;
+  payment_method_id?: number;
+  payment_method_name?: string;
+}
+
+/**
+ * Full enriched purchase data returned by most GET endpoints
+ */
+export interface PurchaseWithFullDetails {
+  purchase: PurchaseRiched;
+  details: PurchaseItemFullRiched[];
+  payments: PurchasePaymentSummary;
+  cost_info: PurchaseCostInfo;
+  metadata: Record<string, any>;
 }
 
 export interface ProcessPurchasePaymentRequest {
   purchase_order_id: number;
   amount_paid: number;
+  payment_method_id: number;
   payment_reference?: string;
   payment_notes?: string;
+  cash_register_id?: number;
+  // Multi-currency options
+  currency_id?: number;
+  exchange_rate?: number;
+  original_amount?: number;
 }
 
 export interface PurchasePaymentResponse {
@@ -502,33 +642,55 @@ export interface PurchasePaymentResponse {
   processed_by: string;
 }
 
-export interface PurchaseCancellationPreview {
+export interface PurchaseOrderCancellationPreviewResponse {
   success: boolean;
+  generated_at: string;
   purchase_info: {
     purchase_order_id: number;
+    supplier_name: string;
     current_status: string;
     total_amount: number;
-    order_date: string;
-    created_by: string;
-    can_be_cancelled: boolean;
   };
+  stock_impact: Array<{
+    product_id: string;
+    product_name: string;
+    quantity_to_revert: number;
+    current_stock: number;
+    stock_after_cancellation: number;
+    sufficient_stock: boolean;
+  }>;
+  payment_impact: any[];
   impact_analysis: {
-    total_items: number;
-    payments_to_cancel: number;
-    total_to_reverse: number;
-    stock_adjustments_required: number;
-    price_updates_required: number;
+    products_with_insufficient_stock: number;
     requires_payment_reversal: boolean;
-    requires_stock_adjustment: boolean;
-    requires_price_reversion: boolean;
+    requires_force_cancel: boolean;
   };
-  recommendations: {
-    action: "proceed_with_caution" | "no_action_needed" | "cancel_recommended";
-    backup_recommended: boolean;
-    notify_supplier: boolean;
-    estimated_complexity: "low" | "medium" | "high";
+  can_be_cancelled: boolean;
+  cancellation_issues: any[];
+  warnings: any[];
+  recommendations: string[];
+}
+
+export interface PurchaseOrderCancellationRequest {
+  purchase_order_id: number;
+  user_id: string;
+  cancellation_reason?: string;
+  force_cancel?: boolean;
+}
+
+export interface PurchaseOrderCancellationResponse {
+  success: boolean;
+  message: string;
+  cancelled_order_id: number;
+  cancellation_details: {
+    items_reverted: number;
+    stock_items_updated: number;
+    payments_cancelled: number;
+    cancelled_at: string;
+    cancelled_by: string;
+    force_cancel_used: boolean;
+    tax_warnings_preserved: number;
   };
-  generated_at: string;
 }
 
 export interface PurchasePaymentStatistics {
@@ -554,51 +716,215 @@ export interface PurchasePaymentStatistics {
 }
 
 // ============================================================================
-// SALE PAYMENT TYPES
+// SALE OPERATIONS TYPES (v1.10+)
 // ============================================================================
 
-export interface ProcessSaleRequest {
-  sale_id?: string;
-  client_id: string;
-  product_details: SaleProductDetail[];
-  payment_method_id?: number;
-  currency_id?: number;
-  allow_price_modifications: boolean;
-  reserve_id?: number;
-}
-
-export interface SaleProductDetail {
+/**
+ * Item in a sale order request
+ */
+export interface SaleOrderDetailRequest {
   product_id: string;
   quantity: number;
-  tax_rate_id?: number;
+  tax_rate_id?: number | null;
   sale_price?: number;
   price_change_reason?: string;
+  discount_amount?: number;
+  discount_percent?: number;
+  discount_reason?: string;
 }
 
-export interface ProcessSaleResponse {
+/**
+ * Request to create a new sale
+ */
+export interface SaleRequest {
+  sale_id?: string;
+  client_id: string;
+  reserve_id?: number;
+  allow_price_modifications: boolean;
+  product_details: SaleOrderDetailRequest[];
+  payment_method_id?: number;
+  currency_id?: number;
+}
+
+/**
+ * Response when a sale is processed
+ */
+export interface ProcessSaleEnhancedResponse {
   success: boolean;
   sale_id: string;
   total_amount: number;
   items_processed: number;
-  price_modifications_enabled: boolean;
   has_price_changes: boolean;
+  has_discounts: boolean;
+  reserve_processed: boolean;
+  reserve_id?: number;
   message: string;
-  error?: string;
+  validation_summary?: any;
+  warnings?: any[];
 }
+
+/**
+ * Enriched sale data for single sale view
+ */
+export interface SaleEnhancedResponse {
+  sale: {
+    sale_id: string;
+    client_id: string;
+    client_name: string;
+    sale_date: string;
+    total_amount: number;
+    status: 'PENDING' | 'PAID' | 'CANCELLED' | string;
+    user_id: string;
+    user_name: string;
+    payment_method_id: number | null;
+    payment_method: string | null;
+    currency_id: number | null;
+    currency: string | null;
+    metadata: Record<string, any>;
+  };
+  details: Array<{
+    id: number;
+    order_id: string;
+    product_id: string;
+    product_name: string;
+    product_type: 'PHYSICAL' | 'SERVICE';
+    quantity: number;
+    unit?: string | null;
+    base_price: number;
+    unit_price: number;
+    discount_amount: number;
+    subtotal: number;
+    tax_amount: number;
+    total_with_tax: number;
+    price_modified: boolean;
+    reserve_id: number;
+    tax_rate_id: number;
+  }>;
+}
+
+/**
+ * Paginated sales list response
+ */
+export interface PaginatedSalesResponse {
+  data: SaleEnhancedResponse[];
+  pagination: PaginationState;
+}
+
+/**
+ * Metadata about price changes and discounts
+ */
+export interface SaleMetadata {
+  price_changes: Array<{
+    product_id: string;
+    product_name: string;
+    original_price: number;
+    modified_price: number;
+    price_difference: number;
+    percentage_change: number;
+    user_id: string;
+    reason: string;
+    timestamp: string;
+  }>;
+  discounts: Array<{
+    product_id: string;
+    product_name: string;
+    original_amount: number;
+    discount_amount: number;
+    discount_percent: number;
+    final_amount: number;
+    reason: string;
+    user_id: string;
+    timestamp: string;
+  }>;
+  has_price_modifications: boolean;
+  total_price_adjustments: number;
+  system_version: string;
+  created_at: string;
+}
+
+/**
+ * Sale with its full metadata
+ */
+export interface SaleWithMetadataResponse {
+  sale: SaleEnhancedResponse['sale'];
+  metadata: SaleMetadata;
+}
+
+/**
+ * Status of payments for a sale
+ */
+export interface SalePaymentStatusResponse {
+  sale_id: string;
+  total_amount: number;
+  total_paid: number;
+  balance_due: number;
+  payment_progress: number;
+  is_fully_paid: boolean;
+  payment_status: 'PENDING' | 'PARTIAL' | 'PAID' | 'CANCELLED';
+  payments: any[];
+}
+
+/**
+ * Request to cancel a sale
+ */
+export interface CancelSaleRequest {
+  cancellation_reason: string;
+}
+
+/**
+ * Request to add products to an existing sale
+ */
+export interface AddProductsToSaleRequest {
+  allow_price_modifications: boolean;
+  product_details: SaleOrderDetailRequest[];
+}
+
+/**
+ * Response when adding products to a sale
+ */
+export interface AddProductsToSaleResponse {
+  success: boolean;
+  sale_id: string;
+  message: string;
+  products_added: number;
+  previous_total: number;
+  added_amount: number;
+  new_total: number;
+  sale_status: string;
+}
+
+// ============================================================================
+// SALE PAYMENT & COLLECTION TYPES (v2.0+)
+// ============================================================================
 
 export interface ProcessPaymentRequest {
   sales_order_id: string;
   amount_received: number;
+  payment_method_id: number;
   payment_reference?: string;
   payment_notes?: string;
+  cash_register_id?: number;
+  // Multi-currency options
+  currency_id?: number;
+  exchange_rate?: number;
+  original_amount?: number;
+}
+
+export interface ProcessPartialPaymentRequest extends ProcessPaymentRequest {
+  amount_to_apply?: number;
 }
 
 export interface ProcessPaymentResponse {
   success: boolean;
   payment_id?: number;
   sale_id: string;
-  client_name: string;
-  payment_details: PaymentDetails;
+  payment_details: {
+    amount_paid: number;
+    change_due: number;
+    total_paid_so_far: number;
+    remaining_balance: number;
+    payment_status: "partial" | "complete";
+  };
   message: string;
   requires_change: boolean;
   processed_at: string;
@@ -910,9 +1236,9 @@ export const API_ENDPOINTS = {
   PRODUCTS_BY_BARCODE: (barcode: string) => `/products/barcode/${barcode}`,
   PRODUCTS_SERVICE_COURTS: '/products/service-courts',
   PRODUCTS_BY_CATEGORY: '/products/by-category',
-  PRODUCTS_FINANCIAL: (id: string) => `/products/${id}/financial`,
-  PRODUCTS_FINANCIAL_BARCODE: (barcode: string) => `/products/financial/barcode/${barcode}`,
-  PRODUCTS_FINANCIAL_SEARCH: (name: string) => `/products/financial/search/${name}`,
+  PRODUCTS_INFO: (id: string) => `/products/${id}/info`,
+  PRODUCTS_INFO_BARCODE: (barcode: string) => `/products/info/barcode/${barcode}`,
+  PRODUCTS_INFO_SEARCH: (name: string) => `/products/info/search/${name}`,
   PRODUCTS_PRICING_INFO: (id: string) => `/products/${id}/pricing-info`,
   PRODUCTS_UNITS: (id: string) => `/products/${id}/units`,
   PRODUCT_PRICE_CREATE: (productId: string) => `/product_price/product_id/${productId}`,
@@ -924,10 +1250,50 @@ export const API_ENDPOINTS = {
   CLIENT_BY_NAME: (name: string) => `/client/name/${name}`,
   CLIENT_PAGINATED: (page: number, pageSize: number) => `/client/${page}/${pageSize}`,
   CLIENT_DELETE: (id: string) => `/client/delete/${id}`,
-  // Sale and Purchase Payments (Legacy/Specialized)
+  // Products operative (v3.2)
+  PRODUCTS_SALE: (id: string) => `/products/${id}/sale`,
+  PRODUCTS_PURCHASE: (id: string) => `/products/${id}/purchase`,
+
+  // Sale and Purchase Operations (v2.7+)
   SALE_CREATE: '/sale/',
   SALE_BY_ID: (id: string) => `/sale/${id}`,
   SALE_BY_CLIENT_ID: (clientId: string) => `/sale/client_id/${clientId}`,
+  SALE_BY_CLIENT_NAME: (name: string) => `/sale/client_name/${name}`,
+  SALE_CLIENT_PENDING: (clientId: string) => `/sale/client_id/${clientId}/pending`,
+  SALE_DATE_RANGE: '/sale/date_range',
+  SALE_WITH_METADATA: (id: string) => `/sale/${id}/with-metadata`,
+  SALE_PAYMENT_STATUS: (id: string) => `/sale/${id}/payment-status`,
+  SALE_CONFIRM_PAYMENT: (id: string) => `/sale/${id}/confirm-payment`,
+  SALE_PREVIEW_CANCELLATION: (id: string) => `/sale/${id}/preview-cancellation`,
+  SALE_ADD_PRODUCTS: (id: string) => `/sale/${id}/products`,
+
+  // Sale Payments & Collections (v2.0)
+  SALE_PAYMENT_PROCESS: '/payment/process',
+  SALE_PAYMENT_PROCESS_PARTIAL: '/payment/process-partial',
+  SALE_PAYMENT_DETAILS: (saleId: string) => `/payment/details/${saleId}`,
+  SALE_PAYMENT_TOTALS: '/payment/totals/sales',
+  SALE_CASH_REGISTER_PAYMENT: '/cash-registers/payments/sale',
+  PAYMENTS_BOOTSTRAP: '/payments/bootstrap',
+
+  PURCHASE_CREATE_COMPLETE: '/purchase/complete',
+  PURCHASE_BY_ID: (id: number) => `/purchase/${id}`,
+  PURCHASE_BY_SUPPLIER_ID: (supplierId: number) => `/purchase/supplier_id/${supplierId}`,
+  PURCHASE_BY_SUPPLIER_NAME: (name: string) => `/purchase/supplier_name/${name}`,
+  PURCHASE_BY_ID_AND_SUPPLIER: (id: number, supplierName: string) => `/purchase/${id}/supplier/${supplierName}`,
+  PURCHASE_DATE_RANGE: '/purchase/date_range/',
+  PURCHASE_PREVIEW_CANCELLATION: (id: number) => `/purchase/${id}/preview-cancellation`,
+  PURCHASE_CANCEL: '/purchase/cancel',
+  
+  // Purchase Payments (v2.0)
+  PURCHASE_PAYMENT_PROCESS: '/purchase/payment/process',
+  PURCHASE_PAYMENT_STATISTICS: '/purchase/payment/statistics',
+  PURCHASE_PAYMENT_TOTALS: '/payment/totals/purchases',
+  PURCHASE_CASH_REGISTER_PAYMENT: '/cash-registers/payments/purchase',
+
+  // Suppliers Support
+  SUPPLIERS: '/suppliers',
+  SUPPLIER_BY_ID: (id: number) => `/supplier/${id}`,
+  SUPPLIER_BY_NAME: (name: string) => `/supplier/name/${name}`,
   
   // Payment Methods (v1.1)
   PAYMENT_METHODS: '/payment-methods',

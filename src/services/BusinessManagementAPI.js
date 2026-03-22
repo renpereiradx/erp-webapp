@@ -122,10 +122,14 @@ class BusinessManagementAPI {
         }
 
         if (
-          endpoint.startsWith('/products') &&
-          !endpoint.includes('/products/products/')
+          endpoint.startsWith('/products/') &&
+          (endpoint.split('/').length === 3 || endpoint.includes('/products/products/'))
         ) {
           throw new ApiError('NOT_FOUND', 'Producto no encontrado')
+        }
+        
+        if (endpoint.includes('/enriched/')) {
+          throw new ApiError('ENDPOINT_NOT_FOUND', 'El sistema de productos enriquecidos no está disponible o la ruta es incorrecta')
         }
         if (endpoint.includes('/category/')) {
           throw new ApiError('NOT_FOUND', 'No hay categorías disponibles')
@@ -591,26 +595,26 @@ class BusinessManagementAPI {
   }
 
   // ============================================================================
-  // PRODUCTS - FINANCIAL ENDPOINTS
+  // PRODUCTS - INFO ENDPOINTS
   // ============================================================================
 
   /**
-   * Obtiene información financiera completa de un producto por ID
+   * Obtiene información operativa completa de un producto por ID
    * @param {string} id - ID del producto
-   * @returns {Promise} Producto con datos financieros enriquecidos
+   * @returns {Promise} Producto con datos enriquecidos (impuestos, stock, precios)
    */
-  async getProductFinancialById(id) {
-    return this.makeRequest(`/products/${id}/financial`)
+  async getProductInfoById(id) {
+    return this.makeRequest(`/products/${id}/info`)
   }
 
   /**
-   * Busca un producto por código de barras con información financiera completa
+   * Busca un producto por código de barras con información operativa completa
    * @param {string} barcode - Código de barras del producto
-   * @returns {Promise} Producto con datos financieros enriquecidos
+   * @returns {Promise} Producto con datos enriquecidos
    */
-  async getProductFinancialByBarcode(barcode) {
+  async getProductInfoByBarcode(barcode) {
     return this.makeRequest(
-      `/products/financial/barcode/${encodeURIComponent(barcode)}`,
+      `/products/info/barcode/${encodeURIComponent(barcode)}`,
     )
   }
 
@@ -623,16 +627,34 @@ class BusinessManagementAPI {
   }
 
   /**
-   * Busca productos por nombre con información financiera completa
+   * Obtiene información optimizada para el flujo de VENTA de un producto
+   * @param {string} id - ID del producto
+   * @returns {Promise} Producto con datos para venta
+   */
+  async getProductForSale(id) {
+    return this.makeRequest(`/products/${id}/sale`)
+  }
+
+  /**
+   * Obtiene información optimizada para el flujo de COMPRA de un producto
+   * @param {string} id - ID del producto
+   * @returns {Promise} Producto con datos para compra
+   */
+  async getProductForPurchase(id) {
+    return this.makeRequest(`/products/${id}/purchase`)
+  }
+
+  /**
+   * Busca productos por nombre con información operativa completa
    * @param {string} name - Término de búsqueda (búsqueda parcial)
    * @param {Object} options - Opciones de búsqueda
    * @param {number} options.limit - Número máximo de resultados (default: 50)
    * @param {AbortSignal} options.signal - Signal para cancelar la petición
-   * @returns {Promise} Array de productos con datos financieros y score de coincidencia
+   * @returns {Promise} Array de productos con datos y score de coincidencia
    */
-  async searchProductsFinancialByName(name, options = {}) {
+  async searchProductsInfoByName(name, options = {}) {
     const { limit = 50, signal } = options
-    const url = `/products/financial/search/${encodeURIComponent(
+    const url = `/products/info/search/${encodeURIComponent(
       name,
     )}?limit=${limit}`
     return this.makeRequest(url, { signal })
@@ -670,7 +692,7 @@ class BusinessManagementAPI {
       // Intentar búsqueda por ID primero si parece un ID
       if (isLikelyId) {
         try {
-          const product = await this.getProductFinancialById(term)
+          const product = await this.getProductInfoById(term)
           // Si encontramos por ID, devolver como array para consistencia
           return product ? [product] : []
         } catch (error) {
@@ -681,7 +703,7 @@ class BusinessManagementAPI {
       // Intentar búsqueda por código de barras si parece un barcode
       if (isLikelyBarcode) {
         try {
-          const product = await this.getProductFinancialByBarcode(term)
+          const product = await this.getProductInfoByBarcode(term)
           // Si encontramos por barcode, devolver como array para consistencia
           return product ? [product] : []
         } catch (error) {
@@ -690,7 +712,7 @@ class BusinessManagementAPI {
       }
 
       // Búsqueda por nombre (fallback o búsqueda primaria)
-      return await this.searchProductsFinancialByName(term, options)
+      return await this.searchProductsInfoByName(term, options)
     } catch (error) {
       console.error('Smart search error:', error)
       return []
@@ -822,37 +844,250 @@ class BusinessManagementAPI {
   }
 
   // ============================================================================
-  // SALES
+  // SALES (v1.10+)
   // ============================================================================
 
+  /**
+   * Crea y procesa una nueva orden de venta
+   * @param {Object} saleData - Datos de la venta (SaleRequest)
+   */
   async createSale(saleData) {
-    return this.makeRequest('/sale', {
+    return this.makeRequest('/sale/', {
       method: 'POST',
-      body: JSON.stringify({
-        client_id: saleData.clientId || saleData.client_id,
-        total_amount: saleData.totalAmount || saleData.total_amount,
-        status: saleData.status || 'completed',
-      }),
+      body: JSON.stringify(saleData),
     })
   }
 
+  /**
+   * Obtiene una venta por su ID
+   */
   async getSaleById(saleId) {
     return this.makeRequest(`/sale/${saleId}`)
   }
 
-  async getSalesByClientId(clientId) {
-    return this.makeRequest(`/sale/client_id/${clientId}`)
+  /**
+   * Obtiene una venta con su metadata de cambios de precio y descuentos
+   */
+  async getSaleWithMetadata(saleId) {
+    return this.makeRequest(`/sale/${saleId}/with-metadata`)
   }
 
-  async getSalesByClientName(clientName) {
+  /**
+   * Obtiene el estado de pagos de una venta
+   */
+  async getSalePaymentStatus(saleId) {
+    return this.makeRequest(`/sale/${saleId}/payment-status`)
+  }
+
+  /**
+   * Lista ventas por rango de fechas (paginado)
+   */
+  async getSalesByDateRange(startDate, endDate, page = 1, pageSize = 50) {
+    return this.makeRequest('/sale/date_range', {
+      params: {
+        start_date: startDate,
+        end_date: endDate,
+        page,
+        page_size: pageSize,
+      },
+    })
+  }
+
+  /**
+   * Lista ventas de un cliente por ID
+   */
+  async getSalesByClientId(clientId, page = 1, pageSize = 50) {
+    return this.makeRequest(`/sale/client_id/${clientId}`, {
+      params: { page, page_size: pageSize },
+    })
+  }
+
+  /**
+   * Lista ventas de un cliente por nombre
+   */
+  async getSalesByClientName(name, page = 1, pageSize = 50) {
+    return this.makeRequest(`/sale/client_name/${encodeURIComponent(name)}`, {
+      params: { page, page_size: pageSize },
+    })
+  }
+
+  /**
+   * Agrega productos a una venta existente
+   */
+  async addProductsToSale(saleId, payload) {
+    return this.makeRequest(`/sale/${saleId}/products`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  }
+
+  /**
+   * Previsualiza el impacto de anular una venta
+   */
+  async previewSaleCancellation(saleId) {
+    return this.makeRequest(`/sale/${saleId}/preview-cancellation`)
+  }
+
+  /**
+   * Anula una venta de forma definitiva
+   */
+  async cancelSale(saleId, reason) {
+    return this.makeRequest(`/sale/${saleId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ cancellation_reason: reason }),
+    })
+  }
+
+  /**
+   * Confirma operativamente el pago de una venta
+   */
+  async confirmSalePayment(saleId, data = {}) {
+    return this.makeRequest(`/sale/${saleId}/confirm-payment`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  // ============================================================================
+  // SALE PAYMENTS & COLLECTIONS (v2.0+)
+  // ============================================================================
+
+  /**
+   * Procesa el cobro completo de una venta
+   */
+  async processSalePayment(paymentData) {
+    return this.makeRequest('/payment/process', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    })
+  }
+
+  /**
+   * Procesa un cobro parcial de una venta
+   */
+  async processPartialSalePayment(paymentData) {
+    return this.makeRequest('/payment/process-partial', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    })
+  }
+
+  /**
+   * Obtiene detalles de pagos de una venta
+   */
+  async getSalePaymentDetails(saleId, params = {}) {
+    return this.makeRequest(`/payment/details/${saleId}`, { params })
+  }
+
+  /**
+   * Obtiene estadísticas de vuelto
+   */
+  async getChangeStatistics(params = {}) {
+    return this.makeRequest('/payment/statistics/change', { params })
+  }
+
+  /**
+   * Obtiene totales de cobros de ventas
+   */
+  async getSalePaymentTotals(params = {}) {
+    return this.makeRequest('/payment/totals/sales', { params })
+  }
+
+  /**
+   * Procesa cobro de venta con integración de caja registradora
+   */
+  async processSalePaymentCashRegister(paymentData) {
+    return this.makeRequest('/cash-registers/payments/sale', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    })
+  }
+
+  // ============================================================================
+  // PURCHASE (v2.7+)
+  // ============================================================================
+
+  /**
+   * Crea y procesa una orden de compra completa
+   * @param {Object} purchaseData - Datos de la orden (PurchaseOrderRequest)
+   */
+  async createCompletePurchase(purchaseData) {
+    return this.makeRequest('/purchase/complete', {
+      method: 'POST',
+      body: JSON.stringify(purchaseData),
+    })
+  }
+
+  /**
+   * Obtiene una orden de compra por ID con detalles enriquecidos
+   * @param {number} id - ID de la orden
+   */
+  async getPurchaseById(id) {
+    return this.makeRequest(`/purchase/${id}`)
+  }
+  /**
+   * Obtiene una orden de compra validando que pertenezca al proveedor
+   */
+  async getPurchaseByIdAndSupplier(id, supplierName) {
     return this.makeRequest(
-      `/sale/client_name/${encodeURIComponent(clientName)}`,
+      `/purchase/${id}/supplier/${encodeURIComponent(supplierName)}`,
     )
   }
 
-  async cancelSale(saleId) {
-    return this.makeRequest(`/sale/${saleId}`, {
-      method: 'DELETE',
+  /**
+   * Lista todas las compras de un proveedor por ID
+   * @param {number} supplierId - ID del proveedor
+   */
+  async getPurchasesBySupplierId(supplierId) {
+    return this.makeRequest(`/purchase/supplier_id/${supplierId}`)
+  }
+
+  /**
+   * Lista compras por nombre de proveedor
+   * @param {string} name - Nombre del proveedor
+   */
+  async getPurchasesBySupplierName(name) {
+    return this.makeRequest(`/purchase/supplier_name/${encodeURIComponent(name)}`)
+  }
+
+  /**
+   * Lista compras por rango de fechas (paginado)
+   */
+  async getPurchasesByDateRange(startDate, endDate, page = 1, pageSize = 50) {
+    return this.makeRequest('/purchase/date_range/', {
+      params: {
+        start_date: startDate,
+        end_date: endDate,
+        page,
+        page_size: pageSize
+      }
+    })
+  }
+
+  /**
+   * Previsualiza el impacto de cancelar una orden
+   */
+  async previewPurchaseCancellation(id) {
+    return this.makeRequest(`/purchase/${id}/preview-cancellation`)
+  }
+
+  /**
+   * Ejecuta la cancelación de una orden de compra
+   */
+  async cancelPurchaseOrder(cancellationData) {
+    return this.makeRequest('/purchase/cancel', {
+      method: 'POST',
+      body: JSON.stringify(cancellationData)
+    })
+  }
+
+  /**
+   * Procesa un pago para una orden de compra
+   */
+  async processPurchasePayment(paymentData) {
+    return this.makeRequest('/purchase/payment/process', {
+      method: 'POST',
+      body: JSON.stringify(paymentData)
     })
   }
 

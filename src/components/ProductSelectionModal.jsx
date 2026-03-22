@@ -12,7 +12,7 @@ import useProductStore from '@/store/useProductStore';
 import { isProductActive } from '@/utils/productUtils';
 
 const ProductSelectionModal = ({ isOpen, onClose, onSelectProduct, selectedProductIds = [], activeOnly = true }) => {
-  const { products, searchProducts, searchProductByBarcodeFinancial, loading } = useProductStore();
+  const { products, searchProducts, searchProductByBarcodeInfo, loading } = useProductStore();
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleSearch = async () => {
@@ -25,7 +25,7 @@ const ProductSelectionModal = ({ isOpen, onClose, onSelectProduct, selectedProdu
 
       if (isBarcode) {
         // Search by barcode
-        await searchProductByBarcodeFinancial(searchTerm.trim());
+        await searchProductByBarcodeInfo(searchTerm.trim());
       } else {
         // Search by name or ID
         await searchProducts(searchTerm.trim());

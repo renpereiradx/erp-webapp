@@ -44,6 +44,8 @@ import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog'
 import { normalizeCurrencyCode } from '@/utils/currencyUtils'
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
+import { calculatePurchaseSalePriceGs, calculateProfitMargin } from '@/domain/purchase/pricing/purchasePricingPolicy'
+import { PurchaseWithFullDetails } from '@/types'
 
 /**
  * Purchases Page - Fluent Design System 2
@@ -57,59 +59,60 @@ const Purchases = () => {
   const { user } = useAuthStore()
 
   // Business Logic States
-  const [purchaseOrders, setPurchaseOrders] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [activeTab, setActiveTab] = useState('nueva-compra')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [searchType, setSearchType] = useState('date')
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseWithFullDetails[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState<string>('')
+  const [activeTab, setActiveTab] = useState<string>('nueva-compra')
+  const [startDate, setStartDate] = useState<string>('')
+  const [endDate, setEndDate] = useState<string>('')
+  const [searchType, setSearchType] = useState<string>('date')
 
   // Supplier States
-  const [supplierSearch, setSupplierSearch] = useState('')
-  const [supplierResults, setSupplierResults] = useState([])
-  const [selectedSupplier, setSelectedSupplier] = useState(null)
-  const [searchingSuppliers, setSearchingSuppliers] = useState(false)
-  const supplierSearchRef = useRef(null)
+  const [supplierSearch, setSupplierSearch] = useState<string>('')
+  const [supplierResults, setSupplierResults] = useState<any[]>([])
+  const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
+  const [searchingSuppliers, setSearchingSuppliers] = useState<boolean>(false)
+  const supplierSearchRef = useRef<HTMLDivElement>(null)
 
   // Payment Details States
-  const [paymentMethod, setPaymentMethod] = useState('')
-  const [paymentCurrency, setPaymentCurrency] = useState('PYG')
-  const [paymentMethods, setPaymentMethods] = useState([])
-  const [currencies, setCurrencies] = useState([])
+  const [paymentMethod, setPaymentMethod] = useState<string>('')
+  const [paymentCurrency, setPaymentCurrency] = useState<string>('PYG')
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([])
+  const [currencies, setCurrencies] = useState<any[]>([])
 
   // Product Modal States
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingItemId, setEditingItemId] = useState(null)
-  const [modalProductSearch, setModalProductSearch] = useState('')
-  const [modalProductResults, setModalProductResults] = useState([])
-  const [modalSelectedProduct, setModalSelectedProduct] = useState(null)
-  const [searchingProducts, setSearchingProducts] = useState(false)
-  const [showProductDropdown, setShowProductDropdown] = useState(false)
-  const [modalQuantity, setModalQuantity] = useState('')
-  const [modalUnitPrice, setModalUnitPrice] = useState('')
-  const [modalProfitPct, setModalProfitPct] = useState(30)
-  const [modalSalePrice, setModalSalePrice] = useState(0)
-  const [pricingMode, setPricingMode] = useState('margin')
-  const [modalTaxRateId, setModalTaxRateId] = useState(null)
-  const [modalPriceIncludesTax, setModalPriceIncludesTax] = useState(true)
-  const [taxRates, setTaxRates] = useState([])
-  const [purchaseItems, setPurchaseItems] = useState([])
-  const [purchaseNotes, setPurchaseNotes] = useState('')
-  const modalProductSearchRef = useRef(null)
-  const productDropdownRef = useRef(null)
-  const [activeProductIndex, setActiveProductIndex] = useState(-1)
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
+  const [editingItemId, setEditingItemId] = useState<string | null>(null)
+  const [modalProductSearch, setModalProductSearch] = useState<string>('')
+  const [modalProductResults, setModalProductResults] = useState<any[]>([])
+  const [modalSelectedProduct, setModalSelectedProduct] = useState<any>(null)
+  const [searchingProducts, setSearchingProducts] = useState<boolean>(false)
+  const [showProductDropdown, setShowProductDropdown] = useState<boolean>(false)
+  const [modalQuantity, setModalQuantity] = useState<string | number>('')
+  const [modalUnitPrice, setModalUnitPrice] = useState<string | number>('')
+  const [modalProfitPct, setModalProfitPct] = useState<number>(30)
+  const [modalSalePrice, setModalSalePrice] = useState<number>(0)
+  const [pricingMode, setPricingMode] = useState<string>('margin')
+  const [modalTaxRateId, setModalTaxRateId] = useState<number | null>(null)
+  const [modalTaxRatePercent, setModalTaxRatePercent] = useState<number>(0)
+  const [modalPriceIncludesTax, setModalPriceIncludesTax] = useState<boolean>(true)
+  const [taxRates, setTaxRates] = useState<any[]>([])
+  const [purchaseItems, setPurchaseItems] = useState<any[]>([])
+  const [purchaseNotes, setPurchaseNotes] = useState<string>('')
+  const modalProductSearchRef = useRef<HTMLInputElement>(null)
+  const productDropdownRef = useRef<HTMLDivElement>(null)
+  const [activeProductIndex, setActiveProductIndex] = useState<number>(-1)
 
   // UI Support States
-  const [openActionMenu, setOpenActionMenu] = useState(null)
-  const [showCancelPreview, setShowCancelPreview] = useState(false)
-  const [cancelPreviewData, setCancelPreviewData] = useState(null)
-  const [orderToCancel, setOrderToCancel] = useState(null)
-  const [showViewModal, setShowViewModal] = useState(false)
-  const [viewOrderData, setViewOrderData] = useState(null)
-  const [showInstantPayment, setShowInstantPayment] = useState(false)
-  const [createdOrderData, setCreatedOrderData] = useState(null)
+  const [openActionMenu, setOpenActionMenu] = useState<number | null>(null)
+  const [showCancelPreview, setShowCancelPreview] = useState<boolean>(false)
+  const [cancelPreviewData, setCancelPreviewData] = useState<any>(null)
+  const [orderToCancel, setOrderToCancel] = useState<any>(null)
+  const [showViewModal, setShowViewModal] = useState<boolean>(false)
+  const [viewOrderData, setViewOrderData] = useState<any>(null)
+  const [showInstantPayment, setShowInstantPayment] = useState<boolean>(false)
+  const [createdOrderData, setCreatedOrderData] = useState<any>(null)
 
   const fixMojibakeText = value => {
     if (value === null || value === undefined) return ''
@@ -367,7 +370,7 @@ const Purchases = () => {
       setSearchingProducts(true)
       setShowProductDropdown(true)
       try {
-        const res = await productService.searchProductsFinancial(
+        const res = await productService.searchProductsInfo(
           modalProductSearch.trim(),
           { limit: 10 },
         )
@@ -385,17 +388,29 @@ const Purchases = () => {
   const effectiveSalePrice = useMemo(() => {
     const cost = Number(modalUnitPrice) || 0
     return pricingMode === 'margin'
-      ? cost * (1 + modalProfitPct / 100)
-      : modalSalePrice
+      ? calculatePurchaseSalePriceGs(cost, Number(modalProfitPct))
+      : Number(modalSalePrice)
   }, [pricingMode, modalUnitPrice, modalProfitPct, modalSalePrice])
 
   const effectiveProfitPct = useMemo(() => {
     const cost = Number(modalUnitPrice) || 0
     if (pricingMode === 'sale_price' && cost > 0) {
-      return Math.max(0, ((modalSalePrice - cost) / cost) * 100)
+      return calculateProfitMargin(cost, Number(modalSalePrice))
     }
-    return modalProfitPct
+    return Number(modalProfitPct)
   }, [pricingMode, modalUnitPrice, modalSalePrice, modalProfitPct])
+
+  const purchaseTotals = useMemo(() => {
+    return purchaseService.calculatePurchaseTotals(
+      purchaseItems.map(item => ({
+        quantity: Number(item.quantity),
+        unit_price: Number(item.unit_price),
+        tax_rate: item.tax_rate / 100,
+        price_includes_tax: item.price_includes_tax !== false
+      })),
+      0
+    )
+  }, [purchaseItems])
 
   // Handlers
   const handleSupplierSelect = s => {
@@ -404,29 +419,49 @@ const Purchases = () => {
     setSupplierResults([])
   }
 
-  const handleProductSelect = p => {
-    const normalizedProduct = {
-      ...p,
-      id: p.id ?? p.product_id,
-      name: getProductName(p),
-      sku: p.sku || p.product_sku || p.code || '-',
-      unit: p.unit || p.unit_name || p.measure_unit || 'unit',
-      cost_price: Number(p.cost_price ?? p.unit_cost ?? p.unit_price ?? 0),
-      stock: Number(p.stock ?? p.quantity_available ?? 0),
+  const handleProductSelect = async (p: any) => {
+    const productId = p.id || p.product_id;
+    if (!productId) return;
+
+    try {
+      setSearchingProducts(true);
+      const fullProduct = await productService.getProductForPurchase(productId);
+      
+      const normalizedProduct = {
+        ...fullProduct,
+        id: fullProduct.product_id || fullProduct.id,
+        name: getProductName(fullProduct),
+        sku: fullProduct.barcode || fullProduct.sku || '-',
+        unit: fullProduct.base_unit || fullProduct.unit || 'unit',
+        cost_price: Number(fullProduct.purchase_price || fullProduct.unit_cost || 0),
+        stock: Number(fullProduct.stock_quantity || fullProduct.stock || 0),
+      };
+
+      setModalSelectedProduct(normalizedProduct);
+      setModalProductSearch(normalizedProduct.name || '');
+      setShowProductDropdown(false);
+
+      const cost = normalizedProduct.cost_price || 0;
+      setModalUnitPrice(cost);
+      
+      // Default pricing: cost * (1 + 0.3)
+      setModalSalePrice(Math.ceil((cost * 1.3) / 50) * 50);
+
+      const taxInfo = fullProduct.tax?.rate || fullProduct.applicable_tax_rate;
+      if (taxInfo) {
+        setModalTaxRateId(taxInfo.id);
+        setModalTaxRatePercent(taxInfo.rate || 0);
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: 'No se pudo cargar el detalle del producto para compra',
+        variant: 'destructive',
+      });
+    } finally {
+      setSearchingProducts(false);
     }
-
-    setModalSelectedProduct(normalizedProduct)
-    setModalProductSearch(normalizedProduct.name || '')
-    setShowProductDropdown(false)
-
-    const cost = normalizedProduct.cost_price || 0
-    setModalUnitPrice(cost)
-    setModalSalePrice(cost * 1.3)
-
-    if (p.tax_rate_id) {
-      setModalTaxRateId(p.tax_rate_id)
-    }
-  }
+  };
 
   const handleModalProductSearchKeyDown = event => {
     if (!filteredModalProducts.length) {
@@ -476,11 +511,13 @@ const Purchases = () => {
       sku: modalSelectedProduct.sku || '-',
       quantity: Number(modalQuantity),
       unit_price: Number(modalUnitPrice),
-      profit_pct: effectiveProfitPct,
+      unit: modalSelectedProduct.unit || 'unit',
+      profit_pct: pricingMode === 'margin' ? Number(modalProfitPct) : effectiveProfitPct,
+      explicit_sale_price: pricingMode === 'sale_price' ? Number(modalSalePrice) : undefined,
       sale_price: effectiveSalePrice,
       pricing_mode: pricingMode,
-      unit: modalSelectedProduct.unit || 'unit',
       tax_rate_id: modalTaxRateId,
+      tax_rate: modalTaxRatePercent,
       price_includes_tax: modalPriceIncludesTax, // API v2.6
     }
     if (editingItemId)
@@ -932,14 +969,33 @@ const Purchases = () => {
                         Total Compra
                       </span>
                       <span className='text-[var(--fluent-text-primary,#212121)] dark:text-white'>
-                        {formatCurrency(
-                          purchaseItems.reduce(
-                            (s, i) => s + i.quantity * i.unit_price,
-                            0,
-                          ),
-                        )}
+                        {formatCurrency(purchaseTotals.subtotal)}
                       </span>
                     </div>
+
+                    {/* Liquidación IVA Breakdown */}
+                    <div className='pt-1.5 space-y-1 border-t border-[var(--fluent-border-subtle,#F0F0F0)] dark:border-[var(--fluent-neutral-grey-140,#484644)]'>
+                      <p className='text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tight mb-1'>Liquidación IVA (Incluido)</p>
+                      {purchaseTotals.iva10 > 0 && (
+                        <div className='flex justify-between items-center'>
+                          <span className='text-[11px] text-gray-500 dark:text-gray-400'>IVA 10%</span>
+                          <span className='text-[11px] font-medium text-gray-700 dark:text-gray-300'>{formatCurrency(purchaseTotals.iva10)}</span>
+                        </div>
+                      )}
+                      {purchaseTotals.iva5 > 0 && (
+                        <div className='flex justify-between items-center'>
+                          <span className='text-[11px] text-gray-500 dark:text-gray-400'>IVA 5%</span>
+                          <span className='text-[11px] font-medium text-gray-700 dark:text-gray-300'>{formatCurrency(purchaseTotals.iva5)}</span>
+                        </div>
+                      )}
+                      {purchaseTotals.exento > 0 && (
+                        <div className='flex justify-between items-center'>
+                          <span className='text-[11px] text-gray-500 dark:text-gray-400'>Exento</span>
+                          <span className='text-[11px] font-medium text-gray-700 dark:text-gray-300'>{formatCurrency(purchaseTotals.exento)}</span>
+                        </div>
+                      )}
+                    </div>
+
                     <div className='flex justify-between items-center text-sm'>
                       <span className='text-[var(--fluent-text-secondary,#605E5C)]'>
                         Venta Esperada

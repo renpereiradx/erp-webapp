@@ -5,19 +5,19 @@ import useProductStore from '@/store/useProductStore';
  * Hook for working with financial enriched products
  * Provides easy access to financial product search and analysis functions
  */
-export const useFinancialProducts = () => {
+export const useInfoProducts = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState(null);
 
   // Store methods
-  const fetchProductByIdFinancial = useProductStore(state => state.fetchProductByIdFinancial);
-  const searchProductByBarcodeFinancial = useProductStore(state => state.searchProductByBarcodeFinancial);
-  const searchProductsFinancial = useProductStore(state => state.searchProductsFinancial);
+  const fetchProductByIdInfo = useProductStore(state => state.fetchProductByIdInfo);
+  const searchProductByBarcodeInfo = useProductStore(state => state.searchProductByBarcodeInfo);
+  const searchProductsInfo = useProductStore(state => state.searchProductsInfo);
 
   /**
    * Search for products with financial information
    */
-  const searchFinancial = useCallback(async (searchTerm, options = {}) => {
+  const searchInfo = useCallback(async (searchTerm, options = {}) => {
     if (!searchTerm?.trim()) {
       return { data: [], total: 0 };
     }
@@ -26,7 +26,7 @@ export const useFinancialProducts = () => {
       setIsAnalyzing(true);
       setAnalysisError(null);
       
-      const result = await searchProductsFinancial(searchTerm.trim(), {
+      const result = await searchProductsInfo(searchTerm.trim(), {
         limit: options.limit || 20,
         signal: options.signal
       });
@@ -38,12 +38,12 @@ export const useFinancialProducts = () => {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [searchProductsFinancial]);
+  }, [searchProductsInfo]);
 
   /**
    * Get financial product by barcode
    */
-  const getByBarcodeFinancial = useCallback(async (barcode) => {
+  const getByBarcodeInfo = useCallback(async (barcode) => {
     if (!barcode?.trim()) {
       throw new Error('Código de barras requerido');
     }
@@ -52,7 +52,7 @@ export const useFinancialProducts = () => {
       setIsAnalyzing(true);
       setAnalysisError(null);
       
-      const product = await searchProductByBarcodeFinancial(barcode.trim());
+      const product = await searchProductByBarcodeInfo(barcode.trim());
       return product;
     } catch (error) {
       setAnalysisError(error.message || 'Error al buscar producto por código de barras');
@@ -60,12 +60,12 @@ export const useFinancialProducts = () => {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [searchProductByBarcodeFinancial]);
+  }, [searchProductByBarcodeInfo]);
 
   /**
    * Get financial product by ID
    */
-  const getByIdFinancial = useCallback(async (productId) => {
+  const getByIdInfo = useCallback(async (productId) => {
     if (!productId?.trim()) {
       throw new Error('ID de producto requerido');
     }
@@ -74,7 +74,7 @@ export const useFinancialProducts = () => {
       setIsAnalyzing(true);
       setAnalysisError(null);
       
-      const product = await fetchProductByIdFinancial(productId.trim());
+      const product = await fetchProductByIdInfo(productId.trim());
       return product;
     } catch (error) {
       setAnalysisError(error.message || 'Error al cargar producto financiero');
@@ -82,7 +82,7 @@ export const useFinancialProducts = () => {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [fetchProductByIdFinancial]);
+  }, [fetchProductByIdInfo]);
 
   /**
    * Analyze product profitability
@@ -259,9 +259,9 @@ export const useFinancialProducts = () => {
     analysisError,
 
     // Search methods
-    searchFinancial,
-    getByBarcodeFinancial,
-    getByIdFinancial,
+    searchInfo,
+    getByBarcodeInfo,
+    getByIdInfo,
 
     // Analysis methods
     analyzeProfitability,
