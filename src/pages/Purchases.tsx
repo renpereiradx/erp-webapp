@@ -544,6 +544,7 @@ const Purchases = () => {
     try {
       const orderData = {
         supplier_id: selectedSupplier.id,
+        status: 'COMPLETED',
         order_details: purchaseItems.map(i => ({
           ...i,
           supplier_id: selectedSupplier.id,
@@ -611,7 +612,7 @@ const Purchases = () => {
       const result = await purchaseService.cancelPurchaseOrderWithDetails({
         purchase_order_id: orderToCancel.id,
         user_id: user?.id || user?.user_id || user?.role_id || 'system',
-        cancellation_reason: 'ANULADO_DESDE_INTERFAZ_USUARIO',
+        cancellation_reason: 'ANULADO_POR_USUARIO',
         force_cancel: false,
       })
       if (result.success) {

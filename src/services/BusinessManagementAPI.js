@@ -1075,9 +1075,10 @@ class BusinessManagementAPI {
    * Ejecuta la cancelación de una orden de compra
    */
   async cancelPurchaseOrder(cancellationData) {
-    return this.makeRequest('/purchase/cancel', {
-      method: 'POST',
-      body: JSON.stringify(cancellationData)
+    const { purchase_order_id, ...data } = cancellationData
+    return this.makeRequest(`/purchase/cancel/${purchase_order_id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
     })
   }
 

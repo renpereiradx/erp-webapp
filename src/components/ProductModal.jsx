@@ -155,7 +155,8 @@ const ProductModal = ({
         category_id: isNaN(Number(formData.id_category))
           ? formData.id_category
           : Number(formData.id_category),
-        state: !!formData.state,
+        state: formData.state !== undefined ? !!formData.state : true,
+        is_active: formData.state !== undefined ? !!formData.state : true,
         product_type: formData.product_type || 'PHYSICAL',
         description: formData.description.trim(),
         barcode: formData.barcode.trim(),

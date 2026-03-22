@@ -128,6 +128,8 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
         origin: formData.origin || undefined,
         base_unit: formData.base_unit || 'unit',
         override_tax_rate_id: formData.tax_rate_id ? parseInt(formData.tax_rate_id) : undefined,
+        state: true,
+        is_active: true,
       }
       const productId = product?.product_id || product?.id
       if (isEditMode) await updateProduct(productId, productData)

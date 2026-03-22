@@ -243,18 +243,18 @@ export const salePaymentService = {
    */
   async cancelSale(saleId: string, cancellationData: CancelSaleRequest) {
     const startTime = Date.now();
-    
+
     try {
       const result = await _fetchWithRetry(async () => {
         return await apiClient.cancelSale(saleId, cancellationData.cancellation_reason);
       });
-      
+
       telemetry.record('sale_payment.service.cancel_sale', {
         duration: Date.now() - startTime,
         saleId,
         reason: cancellationData.cancellation_reason
       });
-      
+
       return result;
     } catch (error: any) {
       telemetry.record('sale_payment.service.error', {
@@ -266,7 +266,62 @@ export const salePaymentService = {
     }
   },
 
-  // =================== CONSULTAS DE ESTADO DE PAGO (v3.0) ===================
+  // ============ CONSULTAS DE ESTADO DE PAGO (v3.0) ============
+
+  /**
+   * Obtiene lista de ventas por rango de fechas incluyendo estado de pago
+   */
+  async getSalesByDateRangeWithPaymentStatus(filters: any = {}) {
+    const startTime = Date.now();
+    try {
+      // Reutilizar lógica de saleService que ya maneja extracción y paginación
+      const { saleService } = await import('./saleService');
+      const result = await saleService.getSalesByDateRange(filters);
+
+      telemetry.record('sale_payment.service.list_with_status', {
+        duration: Date.now() - startTime,
+        count: result?.data?.length || 0
+      });
+
+      return result;
+    } catch (error: any) {
+      telemetry.record('sale_payment.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getSalesByDateRangeWithPaymentStatus'
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene lista de ventas por nombre de cliente incluyendo estado de pago
+   */
+  async getSalesByClientNameWithPaymentStatus(clientName: string, filters: any = {}) {
+    const startTime = Date.now();
+    try {
+      const { saleService } = await import('./saleService');
+      const result = await saleService.getSalesByClientName(
+        clientName, 
+        filters.page, 
+        filters.page_size
+      );
+
+      telemetry.record('sale_payment.service.client_list_with_status', {
+        duration: Date.now() - startTime,
+        clientName
+      });
+
+      return result;
+    } catch (error: any) {
+      telemetry.record('sale_payment.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getSalesByClientNameWithPaymentStatus'
+      });
+      throw error;
+    }
+  },
 
   /**
    * Obtiene el estado de pago de una venta individual con historial completo

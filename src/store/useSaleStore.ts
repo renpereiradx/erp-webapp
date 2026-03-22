@@ -545,9 +545,14 @@ const useSaleStore = create<SaleState>()(
           const response = await saleService.createSale(dataToSend)
 
           if (response.success) {
-            set({ sales: [response.data, ...get().sales] })
+            set({
+              sales: [response.data, ...get().sales],
+              loading: false,
+            })
             get().clearCurrentSale()
             get().updateStats()
+          } else {
+            set({ loading: false })
           }
 
           return response

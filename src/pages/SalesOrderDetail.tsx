@@ -71,40 +71,58 @@ const SalesOrderDetail = () => {
 
   const loadSale = useCallback(async () => {
     if (!saleId || saleId === 'undefined') return
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
     try {
       const saleResponse = await saleService.getSaleById(saleId)
-      if (!saleResponse.success) { setError('Venta no encontrada'); return }
-      
-      const fullSaleData = saleResponse.data as SaleEnhancedResponse;
-      const saleHeader = fullSaleData.sale;
-      const saleItems = fullSaleData.details || [];
+      if (!saleResponse.success) {
+        setError('Venta no encontrada')
+        return
+      }
+
+      // Handle both flat structure and nested { sale: {...}, details: [...] }
+      const fullData = saleResponse.data || {}
+      const saleHeader = fullData.sale || fullData
+      const saleItems = fullData.details || fullData.items || []
 
       let paymentStatus = null
       try {
         const paymentResponse = await saleService.getSalePaymentStatus(saleId)
         if (paymentResponse.success) {
-          paymentStatus = paymentResponse.data;
+          paymentStatus = paymentResponse.data
         }
-      } catch (err) { 
+      } catch (err) {
         console.info('ℹ️ Usando fallback para estado de pago (Backend inestable)')
       }
 
       let clientDetails = null
       try {
-        const clientId = saleHeader.client_id || (paymentStatus && paymentStatus.client_id)
+        const clientId =
+          saleHeader.client_id || (paymentStatus && paymentStatus.client_id)
         if (clientId) clientDetails = await clientService.getById(clientId)
-      } catch (err) { console.warn('Client fetch error', err) }
+      } catch (err) {
+        console.warn('Client fetch error', err)
+      }
 
       // Calcular balance basado en la información disponible
       const totalAmount = saleHeader.total_amount || 0
       const totalPaid = (paymentStatus && paymentStatus.total_paid) || 0
-      const balanceDue = (paymentStatus && paymentStatus.balance_due !== undefined) 
-        ? paymentStatus.balance_due 
-        : Math.max(0, totalAmount - totalPaid)
-      
-      let correctedStatus = saleHeader.status || (paymentStatus && (paymentStatus.status || paymentStatus.payment_status)) || 'PENDING'
-      if (balanceDue === 0 && (correctedStatus === 'PARTIAL_PAYMENT' || correctedStatus === 'PARTIAL' || correctedStatus === 'PENDING')) {
+      const balanceDue =
+        paymentStatus && paymentStatus.balance_due !== undefined
+          ? paymentStatus.balance_due
+          : Math.max(0, totalAmount - totalPaid)
+
+      let correctedStatus =
+        saleHeader.status ||
+        (paymentStatus &&
+          (paymentStatus.status || paymentStatus.payment_status)) ||
+        'PENDING'
+      if (
+        balanceDue === 0 &&
+        (correctedStatus === 'PARTIAL_PAYMENT' ||
+          correctedStatus === 'PARTIAL' ||
+          correctedStatus === 'PENDING')
+      ) {
         correctedStatus = 'PAID'
       }
 
@@ -115,20 +133,43 @@ const SalesOrderDetail = () => {
         status: correctedStatus,
         balance_due: balanceDue,
         items: saleItems,
-        user_name: saleHeader.user_name || (paymentStatus && paymentStatus.user_name) || 'Vendedor',
-        client_name: saleHeader.client_name || (paymentStatus && paymentStatus.client_name) || (clientDetails && clientDetails.name) || 'Cliente',
-        client_document: (clientDetails && clientDetails.document_id) || (paymentStatus && paymentStatus.client && paymentStatus.client.document_id),
-        client_contact: (clientDetails && clientDetails.contact) || (paymentStatus && paymentStatus.client && paymentStatus.client.contact),
-        date: saleHeader.sale_date || saleHeader.date || (paymentStatus && paymentStatus.sale_date),
-        currency: saleHeader.currency || (paymentStatus && paymentStatus.currency) || 'PYG'
+        user_name:
+          saleHeader.user_name ||
+          (paymentStatus && paymentStatus.user_name) ||
+          'Vendedor',
+        client_name:
+          saleHeader.client_name ||
+          (paymentStatus && paymentStatus.client_name) ||
+          (clientDetails && clientDetails.name) ||
+          'Cliente',
+        client_document:
+          (clientDetails && clientDetails.document_id) ||
+          (paymentStatus &&
+            paymentStatus.client &&
+            paymentStatus.client.document_id),
+        client_contact:
+          (clientDetails && clientDetails.contact) ||
+          (paymentStatus &&
+            paymentStatus.client &&
+            paymentStatus.client.contact),
+        date:
+          saleHeader.sale_date ||
+          saleHeader.date ||
+          (paymentStatus && paymentStatus.sale_date),
+        currency:
+          saleHeader.currency ||
+          (paymentStatus && paymentStatus.currency) ||
+          'PYG',
       })
-      
+
       if (paymentStatus?.payments) setPayments(paymentStatus.payments)
-    } catch (err: any) { 
+    } catch (err: any) {
       console.error('Error in loadSale:', err)
-      setError(err.message || 'Error loading sale'); 
-      showError('Error de carga') 
-    } finally { setLoading(false) }
+      setError(err.message || 'Error loading sale')
+      showError('Error de carga')
+    } finally {
+      setLoading(false)
+    }
   }, [saleId, showError])
 
   useEffect(() => { loadSale() }, [loadSale])

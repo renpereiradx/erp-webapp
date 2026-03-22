@@ -144,10 +144,10 @@ const SalePayment = () => {
   // Date Filters
   const getDefaultDateRange = () => {
     const today = new Date()
-    const lastMonth = new Date(today)
-    lastMonth.setMonth(today.getMonth() - 1)
+    const last3Months = new Date(today)
+    last3Months.setMonth(today.getMonth() - 3)
     return {
-      start_date: lastMonth.toISOString().split('T')[0],
+      start_date: last3Months.toISOString().split('T')[0],
       end_date: today.toISOString().split('T')[0],
     }
   }
@@ -199,13 +199,27 @@ const SalePayment = () => {
           await salePaymentService.getSalesByDateRangeWithPaymentStatus(filters)
       }
 
-      const normalizedData = (result?.data || []).map(sale => ({
-        ...sale,
-        id: sale.sale_id || sale.id,
-        status: normalizeSaleStatus(sale),
-        date: sale.sale_date || sale.issue_date || sale.date,
-        client_name: sale.client_name || sale.client?.name || 'Ocasional',
-      }))
+      const normalizedData = (result?.data || [])
+        .map(item => {
+          // Handle both flat structure and nested { sale: {...}, details: [...] }
+          const sale = item.sale || item
+          return {
+            ...sale,
+            id: sale.sale_id || sale.id,
+            status: normalizeSaleStatus(sale),
+            date: sale.sale_date || sale.issue_date || sale.date,
+            client_name:
+              sale.client_name ||
+              sale.client?.name ||
+              (item.client && item.client.name) ||
+              'Ocasional',
+            balance_due:
+              sale.balance_due !== undefined
+                ? sale.balance_due
+                : Math.max(0, (sale.total_amount || 0) - (sale.total_paid || 0)),
+          }
+        })
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
       setRawSales(normalizedData)
       if (result?.pagination) {
@@ -552,9 +566,9 @@ const SalePayment = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody className='divide-y divide-slate-200'>
-                    {displaySales.map(sale => (
+                    {displaySales.map((sale, index) => (
                       <TableRow
-                        key={sale.id}
+                        key={`table-row-${sale.id || index}-${index}`}
                         className='hover:bg-slate-50 transition-colors cursor-pointer group'
                         onClick={() => navigate(`/cobros-ventas/${sale.id}`)}
                       >
@@ -667,9 +681,9 @@ const SalePayment = () => {
 
               {/* Mobile Card View */}
               <div className='lg:hidden divide-y divide-slate-200'>
-                {displaySales.map(sale => (
+                {displaySales.map((sale, index) => (
                   <div
-                    key={sale.id}
+                    key={`mobile-card-${sale.id || index}-${index}`}
                     className='p-4 space-y-4 active:bg-slate-50 transition-colors'
                     onClick={() => navigate(`/cobros-ventas/${sale.id}`)}
                   >

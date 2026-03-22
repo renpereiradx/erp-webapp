@@ -1107,6 +1107,8 @@ const SalesNew = () => {
       return
     }
 
+    // Set loading state in store if possible or use a local one if needed
+    // The store's createSale already sets loading to true, but addProductsToSale doesn't
     try {
       // Si hay una venta pendiente seleccionada, actualizar en lugar de crear
       if (currentSaleId) {
@@ -1163,7 +1165,9 @@ const SalesNew = () => {
           setGeneralDiscount(0)
           setCurrentSaleId(null)
         } else {
-          toast.error(`Error: ${response?.error || 'No se pudo actualizar la venta'}`)
+          toast.error(
+            `Error: ${response?.error || 'No se pudo actualizar la venta'}`,
+          )
         }
       } else {
         // Crear nueva venta
@@ -1223,9 +1227,11 @@ const SalesNew = () => {
           toast.error('Error: No se recibió ID de venta de la API')
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al guardar venta:', error)
-      toast.error(`Error al guardar la venta: ${error.message || 'Error desconocido'}`)
+      toast.error(
+        `Error al guardar la venta: ${error.message || 'Error desconocido'}`,
+      )
     }
   }
 
