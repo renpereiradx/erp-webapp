@@ -28,7 +28,8 @@ import {
   Calculator,
   Coins,
   Wallet,
-  CheckCircle
+  CheckCircle,
+  Ban
 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import RegisterPaymentModal from '@/components/purchase-payments/RegisterPaymentModal'
@@ -52,6 +53,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import usePurchasePaymentsMvpStore from '@/store/usePurchasePaymentsMvpStore'
+import purchaseService from '@/services/purchaseService'
 import { useToast } from '@/hooks/useToast'
 import { normalizeCurrencyCode } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
@@ -60,10 +62,57 @@ const PurchasePaymentDetailPage = () => {
   const { orderId } = useParams()
   const { t, lang } = useI18n()
   const navigate = useNavigate()
-  const { success: showSuccess } = useToast()
+  const { success: showSuccess, error: showError } = useToast()
 
   const { currentOrder: order, loading, error, fetchOrder, processPayment } = usePurchasePaymentsMvpStore()
   const [isRegisterModalOpen, setRegisterModalOpen] = useState(false)
+  const [showCancelPreview, setShowCancelPreview] = useState(false)
+  const [cancelPreviewData, setCancelPreviewData] = useState(null)
+  const [isCancelling, setIsCancelling] = useState(false)
+
+  const handleCancelOrder = async () => {
+    if (!order) return
+    setIsCancelling(true)
+
+    try {
+      const previewResult =
+        await purchaseService.previewPurchaseOrderCancellation(order.id)
+      if (previewResult?.success) {
+        setCancelPreviewData(
+          previewResult.data || { purchase_info: { id: order.id } },
+        )
+      } else {
+        setCancelPreviewData({ purchase_info: { id: order.id } })
+      }
+    } catch {
+      setCancelPreviewData({ purchase_info: { id: order.id } })
+    } finally {
+      setIsCancelling(false)
+      setShowCancelPreview(true)
+    }
+  }
+
+  const handleConfirmCancellation = async () => {
+    if (!order) return
+    setIsCancelling(true)
+    setShowCancelPreview(false)
+    try {
+      const result = await purchaseService.cancelPurchaseOrderWithDetails({
+        purchase_order_id: order.id,
+        user_id: 'system',
+        cancellation_reason: 'ANULADO_DESDE_DETALLE_PAGOS',
+        force_cancel: false,
+      })
+      if (result.success) {
+        showSuccess('Orden de compra anulada exitosamente.')
+        fetchOrder(orderId)
+      }
+    } catch (err) {
+      showError('No se pudo anular la orden')
+    } finally {
+      setIsCancelling(false)
+    }
+  }
 
   const handlePaymentSubmit = async (paymentData) => {
     try {
@@ -128,7 +177,7 @@ const PurchasePaymentDetailPage = () => {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => navigate('/pagos-compras')} className="h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest hover:bg-slate-50">
+          <Button variant="outline" onClick={() => navigate(-1)} className="h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest hover:bg-slate-50">
             <ArrowLeft size={14} className="mr-2" /> Volver
           </Button>
           <Button variant="outline" onClick={() => fetchOrder(orderId)} className="h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest hover:bg-slate-50">
@@ -137,6 +186,16 @@ const PurchasePaymentDetailPage = () => {
           {!['completed', 'paid'].includes(order.status?.toLowerCase()) && (
             <Button onClick={() => setRegisterModalOpen(true)} className="h-10 px-6 bg-primary hover:bg-primary-hover text-white font-black uppercase text-[10px] tracking-widest rounded shadow-fluent-2">
               <DollarSign size={14} className="mr-2" /> Registrar Pago
+            </Button>
+          )}
+          {order.status?.toLowerCase() !== 'cancelled' && (
+            <Button 
+              variant="outline" 
+              onClick={handleCancelOrder} 
+              disabled={isCancelling}
+              className="h-10 px-4 border-error text-error hover:bg-red-50 font-black uppercase text-[10px] tracking-widest"
+            >
+              <Ban size={14} className="mr-2" /> Anular Orden
             </Button>
           )}
         </div>
@@ -332,6 +391,61 @@ const PurchasePaymentDetailPage = () => {
       </div>
 
       <RegisterPaymentModal open={isRegisterModalOpen} onOpenChange={setRegisterModalOpen} order={{ id: order.id, pendingAmount: order.pendingAmount, currency: order.currency, supplierName: order.supplier?.name, supplierId: order.supplier?.id, priority: order.priority }} onSubmit={handlePaymentSubmit} />
+
+      {/* CANCEL ORDER MODAL - Fluent 2 Dialog */}
+      {showCancelPreview && cancelPreviewData && (
+        <div className='fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4'>
+          <div
+            className='absolute inset-0 bg-black/50 backdrop-blur-sm'
+            onClick={() => setShowCancelPreview(false)}
+          ></div>
+          <div className='relative bg-white dark:bg-surface-dark w-full max-w-sm rounded-xl shadow-fluent-64 p-6 border border-border-subtle text-center space-y-5 animate-in zoom-in-95 duration-200'>
+            <div className='w-14 h-14 bg-red-100 text-error rounded-full flex items-center justify-center mx-auto'>
+              <Ban size={28} />
+            </div>
+            <div>
+              <h3 className='text-lg font-semibold text-text-main'>
+                ¿Anular esta orden?
+              </h3>
+              <p className='text-sm text-text-secondary mt-2'>
+                Esta acción afectará los saldos con{' '}
+                <span className='font-semibold text-error'>
+                  {order.supplier?.name || 'el proveedor'}
+                </span>.
+              </p>
+              {cancelPreviewData.impact_analysis && (
+                <div className='mt-4 p-3 bg-red-50 text-red-700 text-xs rounded text-left'>
+                  <p className='font-semibold mb-1'>Impacto de la anulación:</p>
+                  <ul className='list-disc pl-4 space-y-1'>
+                    {cancelPreviewData.impact_analysis.requires_payment_reversal && (
+                      <li>Se reversarán {cancelPreviewData.impact_analysis.payments_to_cancel || 0} pagos.</li>
+                    )}
+                    {cancelPreviewData.impact_analysis.requires_stock_adjustment && (
+                      <li>Se ajustará el stock de {cancelPreviewData.impact_analysis.stock_adjustments_required || 0} items.</li>
+                    )}
+                    <li>Total a reversar: {currencyFormatter.format(cancelPreviewData.impact_analysis.total_to_reverse || 0)}</li>
+                  </ul>
+                </div>
+              )}
+            </div>
+            <div className='flex gap-3 pt-2'>
+              <Button
+                variant='outline'
+                className='flex-1 font-bold uppercase text-[10px] tracking-widest'
+                onClick={() => setShowCancelPreview(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className='flex-1 bg-error hover:bg-error/90 text-white font-bold uppercase text-[10px] tracking-widest shadow-fluent-4'
+                onClick={handleConfirmCancellation}
+              >
+                Sí, Anular
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

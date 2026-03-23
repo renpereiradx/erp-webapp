@@ -527,6 +527,25 @@ const normalizeOrder = raw => {
 
   const history = normalizeHistory(raw, base, payments)
 
+  // Determinar estado de pago real basado en los montos si es necesario
+  // para mayor paridad con lo que ve el usuario en historial vs pagos
+  let finalStatus = formatStatus(rawStatus)
+  
+  const isCancelled = finalStatus === 'cancelled' || base.status?.toUpperCase() === 'CANCELLED'
+  
+  if (isCancelled) {
+    finalStatus = 'cancelled'
+  } else if (totalAmount > 0) {
+    if (totalPaid >= totalAmount) {
+      finalStatus = 'completed' // En la UI de pagos significa 'Pagado'
+    } else if (totalPaid > 0) {
+      finalStatus = 'partial'
+    } else {
+      // Si ya está completada operativamente pero no tiene pagos, es 'pending' (Pendiente de Pago)
+      finalStatus = 'pending'
+    }
+  }
+
   return {
     id: orderId,
     supplier,
@@ -542,7 +561,7 @@ const normalizeOrder = raw => {
     totalPaid,
     pendingAmount: Math.max(0, outstanding),
     currency,
-    status: formatStatus(rawStatus),
+    status: finalStatus,
     priority: supplier.priority || PRIORITY_FALLBACK,
     notes: base.notes ?? '',
     payments,

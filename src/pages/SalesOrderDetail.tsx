@@ -26,7 +26,8 @@ import {
   Wallet,
   Calculator,
   CheckCircle,
-  DollarSign
+  DollarSign,
+  Ban
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -68,6 +69,9 @@ const SalesOrderDetail = () => {
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false)
+  const [showCancelPreview, setShowCancelPreview] = useState(false)
+  const [cancelPreviewData, setCancelPreviewData] = useState<any>(null)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   const loadSale = useCallback(async () => {
     if (!saleId || saleId === 'undefined') return
@@ -174,6 +178,48 @@ const SalesOrderDetail = () => {
 
   useEffect(() => { loadSale() }, [loadSale])
 
+  const handleCancelSale = async () => {
+    if (!sale) return
+    setIsCancelling(true)
+
+    try {
+      const previewResult =
+        await saleService.previewSaleCancellation(sale.id)
+      if (previewResult?.success) {
+        setCancelPreviewData(
+          previewResult.data || { sale_info: { id: sale.id } },
+        )
+      } else {
+        setCancelPreviewData({ sale_info: { id: sale.id } })
+      }
+    } catch {
+      setCancelPreviewData({ sale_info: { id: sale.id } })
+    } finally {
+      setIsCancelling(false)
+      setShowCancelPreview(true)
+    }
+  }
+
+  const handleConfirmCancellation = async () => {
+    if (!sale) return
+    setIsCancelling(true)
+    setShowCancelPreview(false)
+    try {
+      const result = await saleService.revertSale(
+        sale.id,
+        'ANULADO_DESDE_DETALLE_COBROS_VENTAS'
+      )
+      if (result.success) {
+        showSuccess('Venta anulada exitosamente.')
+        loadSale()
+      }
+    } catch (err) {
+      showError('No se pudo anular la venta')
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
   const handlePaymentSubmit = async paymentData => {
     try {
       await salePaymentService.processSalePaymentWithCashRegister(paymentData)
@@ -227,7 +273,7 @@ const SalesOrderDetail = () => {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => navigate('/cobros-ventas')} className="h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest hover:bg-slate-50">
+          <Button variant="outline" onClick={() => navigate(-1)} className="h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest hover:bg-slate-50">
             <ArrowLeft size={14} className="mr-2" /> Volver
           </Button>
           <Button variant="outline" onClick={loadSale} className="h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest hover:bg-slate-50">
@@ -236,6 +282,16 @@ const SalesOrderDetail = () => {
           {sale.status !== 'CANCELLED' && sale.status !== 'PAID' && (
             <Button onClick={() => setIsPaymentModalOpen(true)} className="h-10 px-6 bg-primary hover:bg-primary-hover text-white font-black uppercase text-[10px] tracking-widest rounded shadow-fluent-2">
               <DollarSign size={14} className="mr-2" /> Registrar Cobro
+            </Button>
+          )}
+          {sale.status !== 'CANCELLED' && (
+            <Button 
+              variant="outline" 
+              onClick={handleCancelSale} 
+              disabled={isCancelling}
+              className="h-10 px-4 border-error text-error hover:bg-red-50 font-black uppercase text-[10px] tracking-widest"
+            >
+              <Ban size={14} className="mr-2" /> Anular Venta
             </Button>
           )}
         </div>
@@ -469,6 +525,62 @@ const SalesOrderDetail = () => {
       </div>
 
       <RegisterSalePaymentModal open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen} sale={{ ...sale, balance_due: balanceDue, currency: sale?.currency || 'PYG' }} onSubmit={handlePaymentSubmit} />
+
+      {/* CANCEL SALE MODAL - Fluent 2 Dialog */}
+      {showCancelPreview && cancelPreviewData && (
+        <div className='fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4'>
+          <div
+            className='absolute inset-0 bg-black/50 backdrop-blur-sm'
+            onClick={() => setShowCancelPreview(false)}
+          ></div>
+          <div className='relative bg-white dark:bg-surface-dark w-full max-w-sm rounded-xl shadow-fluent-64 p-6 border border-border-subtle text-center space-y-5 animate-in zoom-in-95 duration-200'>
+            <div className='w-14 h-14 bg-red-100 text-error rounded-full flex items-center justify-center mx-auto'>
+              <Ban size={28} />
+            </div>
+            <div>
+              <h3 className='text-lg font-semibold text-text-main'>
+                ¿Anular esta venta?
+              </h3>
+              <p className='text-sm text-text-secondary mt-2'>
+                Esta acción revertirá los cobros y devolverá el stock. Cliente:{' '}
+                <span className='font-semibold text-error'>
+                  {sale.client_name}
+                </span>.
+              </p>
+              {cancelPreviewData.impact_analysis && (
+                <div className='mt-4 p-3 bg-red-50 text-red-700 text-xs rounded text-left'>
+                  <p className='font-semibold mb-1'>Impacto de la anulación:</p>
+                  <ul className='list-disc pl-4 space-y-1'>
+                    {cancelPreviewData.impact_analysis.requires_payment_reversal && (
+                      <li>Se reversarán {cancelPreviewData.impact_analysis.payments_to_cancel || 0} cobros.</li>
+                    )}
+                    {cancelPreviewData.impact_analysis.requires_stock_adjustment && (
+                      <li>Se devolverá al stock {cancelPreviewData.impact_analysis.stock_adjustments_required || 0} items.</li>
+                    )}
+                    <li>Total a devolver: {formatCurrency(cancelPreviewData.impact_analysis.total_to_reverse || 0)}</li>
+                  </ul>
+                </div>
+              )}
+            </div>
+            <div className='flex gap-3 pt-2'>
+              <Button
+                variant='outline'
+                className='flex-1 font-bold uppercase text-[10px] tracking-widest'
+                onClick={() => setShowCancelPreview(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className='flex-1 bg-error hover:bg-error/90 text-white font-bold uppercase text-[10px] tracking-widest shadow-fluent-4'
+                onClick={handleConfirmCancellation}
+                disabled={isCancelling}
+              >
+                {isCancelling ? 'Anulando...' : 'Sí, Anular'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

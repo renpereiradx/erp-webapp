@@ -51,13 +51,14 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   server: {
+    host: true,
+    strictPort: true,
     fs: {
       strict: false
     },
     // Enable HMR but with overlay for errors
     hmr: {
       overlay: true,
-      // 🔧 Quitamos el puerto fijo para que funcione en Codespaces/Proxies
       clientErrorOverlay: true
     },
     // Aggressive headers to prevent cache specifically for this app

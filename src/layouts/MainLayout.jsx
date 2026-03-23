@@ -809,8 +809,90 @@ const MainLayout = ({ children }) => {
               <div className="size-9 bg-primary rounded flex items-center justify-center text-white"><span className="material-symbols-outlined text-xl font-bold">architecture</span></div>
               <h1 className="font-black text-base tracking-tighter uppercase leading-none">ERP System</h1>
             </div>
-            <nav className="flex-1 px-4 space-y-1 overflow-y-auto pb-6">
-              {/* Similar mobile navigation logic would go here, simplified for now */}
+            <nav className="flex-1 px-4 space-y-1 overflow-y-auto pb-6 custom-scrollbar">
+              {navigation.map((item) => {
+                const hasChildren = item.children && item.children.length > 0;
+                const isExpanded = expandedMenus[item.name];
+                const active = hasChildren ? isParentActive(item) : isActive(item.href);
+                
+                if (hasChildren) {
+                  return (
+                    <div key={item.name} className="space-y-1 pt-4 first:pt-0">
+                      <div className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] truncate">
+                        {item.name}
+                      </div>
+                      {item.children.map((child) => {
+                        const childActive = child.children ? isParentActive(child) : isActive(child.href);
+                        const isChildExpanded = expandedMenus[child.name];
+
+                        return (
+                          <div key={child.name} className="space-y-1">
+                            {child.children ? (
+                              <>
+                                <button
+                                  onClick={() => toggleMenu(child.name)}
+                                  className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium ${
+                                    childActive ? 'bg-primary/10 text-primary font-bold shadow-sm' : 'text-text-secondary hover:bg-slate-50'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {child.icon && <child.icon className="size-4 min-w-[16px]" />}
+                                    <span className="truncate">{child.name}</span>
+                                  </div>
+                                  <span className={`material-symbols-outlined text-xs transition-transform duration-300 ${isChildExpanded ? 'rotate-180' : ''}`}>
+                                    expand_more
+                                  </span>
+                                </button>
+                                {isChildExpanded && (
+                                  <div className="ml-9 space-y-1 border-l border-slate-100 pl-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                                    {child.children.map((grandchild) => (
+                                      <Link
+                                        key={grandchild.name}
+                                        to={grandchild.href}
+                                        onClick={() => setSidebarOpen(false)}
+                                        className={`block px-3 py-1.5 rounded-md text-xs transition-colors ${
+                                          isActive(grandchild.href) ? 'text-primary font-bold bg-primary/5' : 'text-text-secondary hover:text-text-main hover:bg-slate-50'
+                                        }`}
+                                      >
+                                        {grandchild.name}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <Link
+                                to={child.href}
+                                onClick={() => setSidebarOpen(false)}
+                                className={`flex items-center justify-start gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium ${
+                                  childActive ? 'bg-primary/10 text-primary font-bold shadow-sm' : 'text-text-secondary hover:bg-slate-50'
+                                }`}
+                              >
+                                {child.icon && <child.icon className="size-4 min-w-[16px]" />}
+                                <span className="truncate">{child.name}</span>
+                              </Link>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center justify-start gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium mt-1 ${
+                      active ? 'bg-primary/10 text-primary font-bold shadow-sm' : 'text-text-secondary hover:bg-slate-50'
+                    }`}
+                  >
+                    {item.icon && <item.icon className="size-4 min-w-[16px]" />}
+                    <span className="truncate">{item.name}</span>
+                  </Link>
+                );
+              })}
             </nav>
           </aside>
         </div>

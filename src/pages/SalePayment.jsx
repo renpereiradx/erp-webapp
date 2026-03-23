@@ -22,6 +22,7 @@ import {
   MoreVertical,
   Eye,
   List,
+  Ban,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -54,6 +55,7 @@ import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModa
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
 import { salePaymentService } from '@/services/salePaymentService'
+import { saleService } from '@/services/saleService'
 import { normalizeCurrencyCode } from '@/utils/currencyUtils'
 
 const formatDocumentId = value => {
@@ -165,6 +167,10 @@ const SalePayment = () => {
   // Modal State
   const [selectedSale, setSelectedSale] = useState(null)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+  const [saleToCancel, setSaleToCancel] = useState(null)
+  const [showCancelPreview, setShowCancelPreview] = useState(false)
+  const [cancelPreviewData, setCancelPreviewData] = useState(null)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   // Formatters
   const formatCurrency = value =>
@@ -203,20 +209,46 @@ const SalePayment = () => {
         .map(item => {
           // Handle both flat structure and nested { sale: {...}, details: [...] }
           const sale = item.sale || item
+          
+          // Normalizar campos de montos
+          const totalPaid = Number(sale.total_paid) || Number(sale.amount_paid) || 0
+          const rawTotal = Number(sale.total_amount) || Number(sale.total) || 0
+          const rawBalance = sale.balance_due !== undefined ? Number(sale.balance_due) : null
+          
+          // Determinar estado
+          const status = normalizeSaleStatus({ ...sale, total_paid: totalPaid, balance_due: rawBalance ?? (rawTotal - totalPaid) })
+          const isPaid = status === 'PAID'
+          
+          // Lógica de reconstrucción: 
+          // Si el "total" reportado es igual al "pendiente" pero hay pagos registrados, 
+          // entonces el backend está enviando el saldo actual en el campo de total.
+          let finalTotal = rawTotal
+          let finalBalance = rawBalance ?? Math.max(0, rawTotal - totalPaid)
+          
+          if (totalPaid > 0 && Math.abs(rawTotal - finalBalance) < 1 && rawTotal > 0) {
+            // Caso donde Total == Pendiente. Reconstruimos el original.
+            finalTotal = totalPaid + finalBalance
+          } else if (totalPaid > 0 && rawTotal > 0 && rawTotal > totalPaid && rawBalance === null) {
+            // Caso estándar: Total > Pagado, calculamos pendiente
+            finalBalance = rawTotal - totalPaid
+          }
+
+          // Si el estado es pagado, el saldo DEBE ser 0 para consistencia visual
+          if (isPaid) finalBalance = 0
+          
           return {
             ...sale,
             id: sale.sale_id || sale.id,
-            status: normalizeSaleStatus(sale),
+            status: status,
             date: sale.sale_date || sale.issue_date || sale.date,
             client_name:
               sale.client_name ||
               sale.client?.name ||
               (item.client && item.client.name) ||
               'Ocasional',
-            balance_due:
-              sale.balance_due !== undefined
-                ? sale.balance_due
-                : Math.max(0, (sale.total_amount || 0) - (sale.total_paid || 0)),
+            total_amount: finalTotal,
+            total_paid: totalPaid,
+            balance_due: finalBalance,
           }
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -273,6 +305,49 @@ const SalePayment = () => {
     await salePaymentService.processSalePaymentWithCashRegister(paymentData)
     showSuccess('Cobro registrado exitosamente')
     handleLoadSales(pagination.page)
+  }
+
+  const handleCancelSale = async sale => {
+    setSaleToCancel(sale)
+    setIsCancelling(true)
+
+    try {
+      const previewResult =
+        await saleService.previewSaleCancellation(sale.id)
+      if (previewResult?.success) {
+        setCancelPreviewData(
+          previewResult.data || { sale_info: { id: sale.id } },
+        )
+      } else {
+        setCancelPreviewData({ sale_info: { id: sale.id } })
+      }
+    } catch {
+      setCancelPreviewData({ sale_info: { id: sale.id } })
+    } finally {
+      setIsCancelling(false)
+      setShowCancelPreview(true)
+    }
+  }
+
+  const handleConfirmCancellation = async () => {
+    if (!saleToCancel) return
+    setIsCancelling(true)
+    setShowCancelPreview(false)
+    try {
+      const result = await saleService.revertSale(
+        saleToCancel.id,
+        'ANULADO_DESDE_COBROS_VENTAS'
+      )
+      if (result.success) {
+        showSuccess('Venta anulada exitosamente.')
+        handleLoadSales(pagination.page)
+      }
+    } catch (err) {
+      showError('No se pudo anular la venta')
+    } finally {
+      setIsCancelling(false)
+      setSaleToCancel(null)
+    }
   }
 
   const getStatusBadge = status => {
@@ -670,6 +745,14 @@ const SalePayment = () => {
                               >
                                 <List size={16} /> Ver Historial
                               </DropdownMenuItem>
+                              {sale.status !== 'CANCELLED' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleCancelSale(sale)}
+                                  className='gap-2 py-2 text-sm font-medium rounded text-red-600 cursor-pointer'
+                                >
+                                  <Ban size={16} /> Anular Venta
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -733,7 +816,7 @@ const SalePayment = () => {
                           setSelectedSale(sale)
                           setIsPaymentModalOpen(true)
                         }}
-                        disabled={normalizeSaleStatus(sale) === 'PAID'}
+                        disabled={normalizeSaleStatus(sale) === 'PAID' || sale.status === 'CANCELLED'}
                         className='flex-1 h-10 bg-primary/10 text-primary hover:bg-primary hover:text-white border-none font-medium text-sm rounded-md transition-all'
                       >
                         <CircleDollarSign size={16} className='mr-2' />{' '}
@@ -768,6 +851,14 @@ const SalePayment = () => {
                           >
                             <List size={16} /> Ver Historial
                           </DropdownMenuItem>
+                          {sale.status !== 'CANCELLED' && (
+                            <DropdownMenuItem
+                              onClick={() => handleCancelSale(sale)}
+                              className='gap-2 py-2 font-medium text-sm rounded text-red-600'
+                            >
+                              <Ban size={16} /> Anular Venta
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -777,34 +868,7 @@ const SalePayment = () => {
             </>
           )}
 
-          {/* Pagination Footer */}
-          {pagination.total_pages > 1 && (
-            <div className='px-4 py-4 border-t border-slate-200 bg-white flex items-center justify-between'>
-              <p className='text-sm font-medium text-slate-500'>
-                Pág. {pagination.page} de {pagination.total_pages}
-              </p>
-              <div className='flex gap-2'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  disabled={pagination.page <= 1}
-                  onClick={() => handleLoadSales(pagination.page - 1)}
-                  className='h-9 rounded-md border-slate-400 px-3 transition-all active:scale-95'
-                >
-                  <ChevronLeft size={16} />
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  disabled={pagination.page >= pagination.total_pages}
-                  onClick={() => handleLoadSales(pagination.page + 1)}
-                  className='h-9 rounded-md border-slate-400 px-3 transition-all active:scale-95'
-                >
-                  <ChevronRight size={16} />
-                </Button>
-              </div>
-            </div>
-          )}
+          {/* Pagination Footer ... */}
         </div>
       </div>
 
@@ -817,6 +881,63 @@ const SalePayment = () => {
         sale={selectedSale}
         onSubmit={handlePaymentSubmit}
       />
+
+      {/* CANCEL SALE MODAL - Fluent 2 Dialog */}
+      {showCancelPreview && cancelPreviewData && saleToCancel && (
+        <div className='fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4'>
+          <div
+            className='absolute inset-0 bg-black/50 backdrop-blur-sm'
+            onClick={() => setShowCancelPreview(false)}
+          ></div>
+          <div className='relative bg-white dark:bg-surface-dark w-full max-w-sm rounded-xl shadow-fluent-64 p-6 border border-border-subtle text-center space-y-5 animate-in zoom-in-95 duration-200'>
+            <div className='w-14 h-14 bg-red-100 text-error rounded-full flex items-center justify-center mx-auto'>
+              <Ban size={28} />
+            </div>
+            <div>
+              <h3 className='text-lg font-semibold text-text-main'>
+                ¿Anular esta venta?
+              </h3>
+              <p className='text-sm text-text-secondary mt-2'>
+                Esta acción revertirá los cobros y devolverá el stock. Cliente:{' '}
+                <span className='font-semibold text-error'>
+                  {saleToCancel.client_name}
+                </span>.
+              </p>
+              {cancelPreviewData.impact_analysis && (
+                <div className='mt-4 p-3 bg-red-50 text-red-700 text-xs rounded text-left'>
+                  <p className='font-semibold mb-1'>Impacto de la anulación:</p>
+                  <ul className='list-disc pl-4 space-y-1'>
+                    {cancelPreviewData.impact_analysis.requires_payment_reversal && (
+                      <li>Se reversarán {cancelPreviewData.impact_analysis.payments_to_cancel || 0} cobros.</li>
+                    )}
+                    {cancelPreviewData.impact_analysis.requires_stock_adjustment && (
+                      <li>Se devolverá al stock {cancelPreviewData.impact_analysis.stock_adjustments_required || 0} items.</li>
+                    )}
+                    <li>Total a devolver: {formatCurrency(cancelPreviewData.impact_analysis.total_to_reverse || 0)}</li>
+                  </ul>
+                </div>
+              )}
+            </div>
+            <div className='flex gap-3 pt-2'>
+              <Button
+                variant='outline'
+                className='flex-1 font-bold uppercase text-[10px] tracking-widest'
+                onClick={() => setShowCancelPreview(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className='flex-1 bg-error hover:bg-error/90 text-white font-bold uppercase text-[10px] tracking-widest shadow-fluent-4'
+                onClick={handleConfirmCancellation}
+                disabled={isCancelling}
+              >
+                {isCancelling ? 'Anulando...' : 'Sí, Anular'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   )

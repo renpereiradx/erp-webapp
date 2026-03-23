@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Search,
   Download,
@@ -53,6 +54,7 @@ import { PurchaseWithFullDetails } from '@/types'
  * Modal optimized for low-height desktop screens (720p+).
  */
 const Purchases = () => {
+  const navigate = useNavigate()
   const { t } = useI18n()
   const toast = useToast()
   const { fetchDashboardData } = useDashboardStore()
@@ -109,8 +111,6 @@ const Purchases = () => {
   const [showCancelPreview, setShowCancelPreview] = useState<boolean>(false)
   const [cancelPreviewData, setCancelPreviewData] = useState<any>(null)
   const [orderToCancel, setOrderToCancel] = useState<any>(null)
-  const [showViewModal, setShowViewModal] = useState<boolean>(false)
-  const [viewOrderData, setViewOrderData] = useState<any>(null)
   const [showInstantPayment, setShowInstantPayment] = useState<boolean>(false)
   const [createdOrderData, setCreatedOrderData] = useState<any>(null)
 
@@ -544,15 +544,14 @@ const Purchases = () => {
     try {
       const orderData = {
         supplier_id: selectedSupplier.id,
-        status: 'COMPLETED',
+        status: 'PENDING',
         order_details: purchaseItems.map(i => ({
           ...i,
           supplier_id: selectedSupplier.id,
         })),
         auto_update_prices: true,
-        payment_method_id: paymentMethod ? parseInt(paymentMethod) : null,
-        currency_id:
-          currencies.find(c => c.currency_code === paymentCurrency)?.id || null,
+        // Eliminamos el envío de payment_method_id y currency_id en este paso inicial.
+        // ...
         metadata: {
           purchase_notes: purchaseNotes,
         },
@@ -714,8 +713,10 @@ const Purchases = () => {
   }
 
   const handleViewPurchase = order => {
-    setViewOrderData({ purchase: order }) // Mock data for now
-    setShowViewModal(true)
+    const orderId = order.id || order.purchase_id
+    if (orderId) {
+      navigate(`/pagos-compras/${orderId}`)
+    }
   }
 
   const handleCancelPurchase = async order => {
@@ -761,8 +762,10 @@ const Purchases = () => {
 
   const handleInstantPaymentConfirm = async paymentPayload => {
     try {
+      const orderId = paymentPayload?.orderId || createdOrderData?.id
+      
       await purchasePaymentsMvpService.registerPayment(
-        paymentPayload?.orderId || createdOrderData?.id,
+        orderId,
         {
           amount: paymentPayload?.amount,
           paymentMethodId: paymentPayload?.paymentMethodId,
@@ -770,6 +773,15 @@ const Purchases = () => {
           notes: paymentPayload?.notes || null,
         },
       )
+
+      // [INTEGRACION] Una vez registrado el pago inicial, marcamos la orden como COMPLETED
+      // para que el stock se procese y la orden cambie de estado visualmente.
+      try {
+        await purchaseService.updatePurchaseOrderStatus(orderId, 'COMPLETED', 'Pago inicial registrado tras creación')
+      } catch (statusError) {
+        console.warn('Could not update order status to COMPLETED:', statusError)
+        // No fallamos el proceso si solo falla el cambio de estado, ya que el pago se registró
+      }
 
       toast.success('Pago registrado correctamente')
       setShowInstantPayment(false)
@@ -1331,6 +1343,16 @@ const Purchases = () => {
                         const isCancelled =
                           order.status?.toUpperCase() === 'CANCELLED'
 
+                        // Calcular estado de pago si la información está disponible
+                        const payments = orderData.payments || {}
+                        const totalAmount = order.total_amount || 0
+                        const totalPaid = payments.total_paid || 0
+                        const isFullyPaid =
+                          payments.is_fully_paid ||
+                          (totalPaid >= totalAmount && totalAmount > 0)
+                        const hasBalance =
+                          !isFullyPaid && totalAmount > 0 && !isCancelled
+
                         return (
                           <tr
                             key={order.id}
@@ -1352,17 +1374,29 @@ const Purchases = () => {
                               )}
                             </td>
                             <td className='px-5 py-3.5 text-center'>
-                              <span
-                                className={`inline-flex px-2.5 py-1 rounded-[var(--fluent-corner-radius-medium,4px)] text-xs font-semibold ${
-                                  isCompleted
-                                    ? 'bg-[rgba(16,124,16,0.1)] text-[var(--fluent-semantic-success,#107C10)]'
-                                    : isCancelled
-                                      ? 'bg-[rgba(209,52,56,0.1)] text-[var(--fluent-semantic-danger,#D13438)]'
-                                      : 'bg-[rgba(255,185,0,0.15)] text-[#B87900]'
-                                }`}
-                              >
-                                {getStatusText(order.status)}
-                              </span>
+                              <div className='flex flex-col items-center gap-1'>
+                                <span
+                                  className={`inline-flex px-2.5 py-1 rounded-[var(--fluent-corner-radius-medium,4px)] text-xs font-semibold ${
+                                    isCompleted
+                                      ? 'bg-[rgba(16,124,16,0.1)] text-[var(--fluent-semantic-success,#107C10)]'
+                                      : isCancelled
+                                        ? 'bg-[rgba(209,52,56,0.1)] text-[var(--fluent-semantic-danger,#D13438)]'
+                                        : 'bg-[rgba(255,185,0,0.15)] text-[#B87900]'
+                                  }`}
+                                >
+                                  {getStatusText(order.status)}
+                                </span>
+                                {hasBalance && (
+                                  <span className='inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-orange-100 text-orange-700 border border-orange-200'>
+                                    Saldo Pendiente
+                                  </span>
+                                )}
+                                {isFullyPaid && isCompleted && (
+                                  <span className='inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-600 border border-blue-100'>
+                                    Pagado
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className='px-5 py-3.5 text-right'>
                               <div className='relative inline-block'>
@@ -1905,104 +1939,6 @@ const Purchases = () => {
                 }
               >
                 {editingItemId ? 'Guardar Cambios' : 'Agregar a la Orden'}
-              </button>
-            </footer>
-          </div>
-        </div>
-      )}
-
-      {/* VIEW ORDER MODAL - Fluent 2 Dialog */}
-      {showViewModal && viewOrderData && (
-        <div className='fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4'>
-          <div
-            className='absolute inset-0 bg-black/50 backdrop-blur-sm'
-            onClick={() => setShowViewModal(false)}
-          ></div>
-          <div className='relative bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] w-full max-w-3xl max-h-[90vh] rounded-[var(--fluent-corner-radius-xlarge,8px)] shadow-[var(--fluent-shadow-64)] overflow-hidden flex flex-col border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)]'>
-            <header className='px-5 py-4 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] flex justify-between items-center bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)]'>
-              <h3 className='text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
-                Detalle de Orden #
-                {viewOrderData.purchase?.id || viewOrderData.id}
-              </h3>
-              <button
-                onClick={() => setShowViewModal(false)}
-                className='w-8 h-8 flex items-center justify-center text-[var(--fluent-text-tertiary,#8A8886)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-tertiary,#F3F2F1)] rounded-[var(--fluent-corner-radius-medium,4px)] transition-colors'
-              >
-                <X size={18} />
-              </button>
-            </header>
-            <div className='flex-1 overflow-y-auto p-5 space-y-5'>
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                <div className='p-4 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-large,6px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]'>
-                  <div className='text-xs text-[var(--fluent-text-tertiary,#8A8886)] mb-1'>
-                    Proveedor
-                  </div>
-                  <div className='font-semibold text-sm text-[var(--fluent-brand-primary,#0078D4)]'>
-                    {viewOrderData.purchase?.supplier_name || '-'}
-                  </div>
-                </div>
-                <div className='p-4 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-large,6px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]'>
-                  <div className='text-xs text-[var(--fluent-text-tertiary,#8A8886)] mb-1'>
-                    Estado
-                  </div>
-                  <span className='inline-flex px-2 py-0.5 rounded-[var(--fluent-corner-radius-small,2px)] text-xs font-medium bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-130,#605E5C)]'>
-                    {getStatusText(
-                      viewOrderData.purchase?.status || viewOrderData.status,
-                    )}
-                  </span>
-                </div>
-                <div className='p-4 bg-[rgba(0,120,212,0.08)] rounded-[var(--fluent-corner-radius-large,6px)] border border-[rgba(0,120,212,0.2)]'>
-                  <div className='text-xs text-[var(--fluent-text-tertiary,#8A8886)] mb-1'>
-                    Monto Total
-                  </div>
-                  <div className='font-bold text-lg text-[var(--fluent-brand-primary,#0078D4)]'>
-                    {formatCurrency(
-                      viewOrderData.purchase?.total_amount ||
-                        viewOrderData.total_amount,
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className='space-y-2'>
-                <h4 className='text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)]'>
-                  Artículos
-                </h4>
-                <div className='rounded-[var(--fluent-corner-radius-large,6px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] overflow-hidden'>
-                  <table className='w-full text-left'>
-                    <thead className='bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] text-xs text-[var(--fluent-text-secondary,#605E5C)]'>
-                      <tr>
-                        <th className='px-4 py-2.5'>Producto</th>
-                        <th className='px-4 py-2.5 text-center'>Cant.</th>
-                        <th className='px-4 py-2.5 text-right'>Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody className='divide-y divide-[var(--fluent-border-neutral,#E1DFDD)] dark:divide-[var(--fluent-neutral-grey-140,#484644)]'>
-                      {viewOrderData.details?.map((d, i) => (
-                        <tr key={i}>
-                          <td className='px-4 py-2.5 text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white'>
-                            {d.product_name}
-                          </td>
-                          <td className='px-4 py-2.5 text-center text-sm'>
-                            {d.quantity} {d.unit}
-                          </td>
-                          <td className='px-4 py-2.5 text-right font-semibold text-[var(--fluent-brand-primary,#0078D4)]'>
-                            {formatCurrency(
-                              d.line_total || d.quantity * d.unit_price,
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-            <footer className='px-5 py-3 border-t border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] flex justify-end'>
-              <button
-                className='px-4 py-2 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-130,#605E5C)] hover:bg-[var(--fluent-surface-quaternary,#EDEBE9)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-120,#797775)] rounded-[var(--fluent-corner-radius-medium,4px)] font-medium text-sm transition-colors'
-                onClick={() => setShowViewModal(false)}
-              >
-                Cerrar
               </button>
             </footer>
           </div>
