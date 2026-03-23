@@ -41,6 +41,7 @@ import {
   List,
   FileText,
   Clock as ClockIcon,
+  History as HistoryIcon,
   Zap,
   Activity,
   PieChart,
@@ -68,12 +69,23 @@ const MainLayout = ({ children }) => {
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const globalSearchInputRef = useRef(null)
   const searchContainerRef = useRef(null)
+  const searchResultsRef = useRef([])
 
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { t } = useI18n()
   const { matchesShortcut } = useKeyboardShortcutsStore()
+
+  // Scroll selected search item into view
+  useEffect(() => {
+    if (selectedIndex >= 0 && searchResultsRef.current[selectedIndex]) {
+      searchResultsRef.current[selectedIndex].scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth'
+      })
+    }
+  }, [selectedIndex])
 
   // Configuración de navegación
   const navigation = useMemo(
@@ -436,36 +448,29 @@ const MainLayout = ({ children }) => {
         ],
       },
       {
-        name: t('common.services_planning', 'Planificación y Servicios'),
+        name: t('common.services_planning', 'Planificación y Reservas'),
         href: '#',
         icon: Calendar,
         children: [
           {
-            name: t('reservations.title', 'Gestión de Reservas'),
-            href: '#',
+            name: 'Panel de Control',
+            href: '/reservas',
+            icon: LayoutDashboard,
+          },
+          {
+            name: 'Horarios y Reservas',
+            href: '/horarios',
+            icon: ClockIcon,
+          },
+          {
+            name: 'Historial y Auditoría',
+            href: '/historial-reservas',
+            icon: HistoryIcon,
+          },
+          {
+            name: 'Disponibilidad de Slots',
+            href: '/horarios-disponibles',
             icon: Calendar,
-            children: [
-              {
-                name: 'Dashboard General',
-                href: '/gestion-reservas',
-                icon: LayoutDashboard,
-              },
-              {
-                name: 'Lista de Reservas',
-                href: '/reservas',
-                icon: List,
-              },
-              {
-                name: 'Horarios',
-                href: '/horarios',
-                icon: ClockIcon,
-              },
-              {
-                name: 'Disponibilidad',
-                href: '/horarios-disponibles',
-                icon: ClockIcon,
-              },
-            ],
           },
         ],
       },
@@ -923,15 +928,25 @@ const MainLayout = ({ children }) => {
               {showGlobalSearch && globalSearchTerm && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-fluent-16 border border-border-subtle overflow-hidden z-[100] max-h-96 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="py-2">
-                    {globalSearchResults.map((item, index) => (
-                      <button key={index} onClick={() => { navigate(item.href); setShowGlobalSearch(false); setGlobalSearchTerm(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${index === selectedIndex ? 'bg-primary/5 border-l-4 border-primary' : 'hover:bg-slate-50 border-l-4 border-transparent'}`}>
-                        <div className={`p-1.5 rounded-md ${index === selectedIndex ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400'}`}><Search className="size-4" /></div>
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-bold text-text-main truncate">{item.name}</span>
-                          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{item.category}</span>
-                        </div>
-                      </button>
-                    ))}
+                    {globalSearchResults.map((item, index) => {
+                      const Icon = item.icon || Search;
+                      return (
+                        <button 
+                          key={index} 
+                          ref={el => searchResultsRef.current[index] = el}
+                          onClick={() => { navigate(item.href); setShowGlobalSearch(false); setGlobalSearchTerm(''); }} 
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${index === selectedIndex ? 'bg-primary/5 border-l-4 border-primary' : 'hover:bg-slate-50 border-l-4 border-transparent'}`}
+                        >
+                          <div className={`p-1.5 rounded-md ${index === selectedIndex ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400'}`}>
+                            <Icon className="size-4" />
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs font-bold text-text-main truncate">{item.name}</span>
+                            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{item.category}</span>
+                          </div>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               )}

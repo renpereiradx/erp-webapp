@@ -23,9 +23,9 @@ import Clients from '@/pages/Clients'
 import Suppliers from '@/pages/Suppliers'
 import SalesNew from '@/pages/SalesNew'
 import BookingManagement from '@/pages/BookingManagement'
+import ReservationScheduleDashboard from '@/pages/ReservationScheduleDashboard'
+import ReservationHistoryDashboard from '@/pages/ReservationHistoryDashboard'
 // import Schedules from '@/pages/Schedules'
-import SchedulesNew from '@/pages/SchedulesNew'
-import ReservationsAndSchedules from '@/pages/ReservationsAndSchedules'
 import AvailableSlots from '@/pages/AvailableSlots'
 import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
 import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
@@ -230,12 +230,9 @@ function AppContent() {
                       <Route path='/inventory-analytics/stock-levels' element={<StockLevelsReorder />} />
                       <Route path='/inventory-analytics/risk' element={<InventoryRisk />} />
 
-                      <Route
-                        path='/gestion-reservas'
-                        element={<ReservationsAndSchedules />}
-                      />
                       <Route path='/reservas' element={<BookingManagement />} />
-                      <Route path='/horarios' element={<SchedulesNew />} />
+                      <Route path='/horarios' element={<ReservationScheduleDashboard />} />
+                      <Route path='/historial-reservas' element={<ReservationHistoryDashboard />} />
                       <Route
                         path='/horarios-disponibles'
                         element={<AvailableSlots />}
