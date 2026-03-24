@@ -39,6 +39,7 @@ import {
   AlertTriangle,
   Award,
   List,
+  PlusCircle,
   FileText,
   Clock as ClockIcon,
   Zap,
@@ -353,8 +354,24 @@ const MainLayout = ({ children }) => {
         href: '#',
         icon: ShoppingCart,
         children: [
-          { name: t('sales.title', 'Ventas'), href: '/ventas', icon: ShoppingCart },
-          { name: t('purchases.title', 'Compras'), href: '/compras', icon: ShoppingBag },
+          {
+            name: t('sales.title', 'Ventas'),
+            href: '#',
+            icon: ShoppingCart,
+            children: [
+              { name: 'Nueva Venta', href: '/ventas', icon: PlusCircle },
+              {
+                name: 'Agenda y Reservas',
+                href: '/gestion-agenda',
+                icon: Calendar,
+              },
+            ],
+          },
+          {
+            name: t('purchases.title', 'Compras'),
+            href: '/compras',
+            icon: ShoppingBag,
+          },
           {
             name: t('common.payments', 'Pagos y Cobros'),
             href: '#',
