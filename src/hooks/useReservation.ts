@@ -7,27 +7,59 @@ export const useReservation = (initialProductId: string) => {
   const [targetDate, setTargetDate] = useState(new Date().toISOString().split('T')[0]);
   const [slots, setSlots] = useState<ScheduleSlot[]>([]);
   const [config, setConfig] = useState<ProductScheduleConfig | null>(null);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchInitialData = useCallback(async () => {
+    try {
+      const productList = await reservationService.getProducts();
+      setProducts(productList || []);
+    } catch (err) {
+      console.error('Error loading products', err);
+    }
+  }, []);
+
   const fetchSchedules = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await reservationService.getSchedulesForProductAndDate(productId, targetDate);
-      setSlots(data);
-      const configData = await reservationService.getProductConfig(productId);
-      setConfig(configData);
-    } catch (err) {
-      setError('Error al cargar horarios');
-      console.error(err);
+      setSlots(data || []);
+      
+      try {
+        const configData = await reservationService.getProductConfig(productId);
+        setConfig(configData);
+      } catch (configErr) {
+        console.warn('No se pudo cargar la configuración del producto', configErr);
+      }
+    } catch (err: any) {
+      setSlots([]); // Limpiar slots si hay error
+      // Si es un 500, asumimos que no están generados
+      const msg = err.message?.includes('500') 
+        ? 'No hay horarios generados para este recurso en la fecha seleccionada.' 
+        : 'Error al cargar horarios';
+      setError(msg);
     } finally {
       setLoading(false);
     }
   }, [productId, targetDate]);
 
   useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
+  useEffect(() => {
     fetchSchedules();
   }, [fetchSchedules]);
+
+  const searchClients = async (name: string) => {
+    return await reservationService.searchClients(name);
+  };
+
+  const getInitialClients = async () => {
+    return await reservationService.getInitialClients();
+  };
 
   const handleGenerateToday = async () => {
     try {
@@ -35,6 +67,21 @@ export const useReservation = (initialProductId: string) => {
       await fetchSchedules();
     } catch (err) {
       setError('Error al generar horarios');
+      throw err; // Relanzar para el toast
+    }
+  };
+
+  const updateConfig = async (newConfig: any) => {
+    try {
+      await reservationService.upsertProductConfig(productId, {
+        ...newConfig,
+        effective_from: targetDate,
+        slot_minutes: 60,
+      });
+      await fetchSchedules();
+    } catch (err) {
+      setError('Error al actualizar configuración');
+      throw err;
     }
   };
 
@@ -53,6 +100,39 @@ export const useReservation = (initialProductId: string) => {
     }
   };
 
+  const confirmReservation = async (reserveId: number) => {
+    try {
+      await reservationService.manageReserve({
+        action: 'CONFIRM',
+        reserve_id: reserveId,
+        product_id: productId,
+        client_id: '', // Requerido por el tipo pero no por el backend para CONFIRM
+        start_time: '',
+        duration: 0,
+      });
+      await fetchSchedules();
+    } catch (err) {
+      setError('Error al confirmar reserva');
+    }
+  };
+
+  const cancelReservation = async (reserveId: number) => {
+    if (!window.confirm('¿Está seguro de que desea cancelar esta reserva?')) return;
+    try {
+      await reservationService.manageReserve({
+        action: 'CANCEL',
+        reserve_id: reserveId,
+        product_id: productId,
+        client_id: '',
+        start_time: '',
+        duration: 0,
+      });
+      await fetchSchedules();
+    } catch (err) {
+      setError('Error al cancelar reserva');
+    }
+  };
+
   return {
     productId,
     setProductId,
@@ -64,6 +144,12 @@ export const useReservation = (initialProductId: string) => {
     error,
     handleGenerateToday,
     createReservation,
+    confirmReservation,
+    cancelReservation,
+    searchClients,
+    getInitialClients,
+    products,
+    updateConfig,
     refresh: fetchSchedules,
   };
 };
