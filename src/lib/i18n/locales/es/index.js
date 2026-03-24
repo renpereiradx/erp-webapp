@@ -15,11 +15,7 @@ import { clients } from './clients.js'
 import { suppliers } from './suppliers.js'
 import { sales } from './sales.js'
 import { inventory } from './inventory.js'
-import { reservations } from './reservations.js'
-import { booking } from './booking.js'
-import { bookingManagement } from './booking-management.js'
 import { other } from './other.js'
-import { availableSlots } from './availableSlots.js'
 import { cashRegister } from './cashRegister.js'
 import { cashMovement } from './cashMovement.js'
 import { currencies } from './currencies.js'
@@ -47,10 +43,6 @@ export const es = {
   ...suppliers,
   ...sales,
   ...inventory,
-  ...reservations,
-  ...booking,
-  ...bookingManagement,
-  ...availableSlots,
   ...cashRegister,
   ...cashMovement,
   ...currencies,

@@ -22,16 +22,12 @@ import Products from '@/pages/Products'
 import Clients from '@/pages/Clients'
 import Suppliers from '@/pages/Suppliers'
 import SalesNew from '@/pages/SalesNew'
-import BookingManagement from '@/pages/BookingManagement'
-// import Schedules from '@/pages/Schedules'
-import SchedulesNew from '@/pages/SchedulesNew'
-import ReservationsAndSchedules from '@/pages/ReservationsAndSchedules'
-import AvailableSlots from '@/pages/AvailableSlots'
 import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
 import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
 import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
 import PriceAdjustmentHistoryDetail from '@/pages/PriceAdjustmentHistoryDetail'
 import ProductAdjustments from '@/pages/ProductAdjustments'
+import BookingUnifiedDashboard from '@/pages/BookingUnifiedDashboard'
 import InventoryAdjustments from '@/pages/InventoryAdjustments'
 import InventoryAdjustmentManual from '@/pages/InventoryAdjustmentManual'
 import InventoryManagement from '@/pages/InventoryManagement'
@@ -230,16 +226,6 @@ function AppContent() {
                       <Route path='/inventory-analytics/stock-levels' element={<StockLevelsReorder />} />
                       <Route path='/inventory-analytics/risk' element={<InventoryRisk />} />
 
-                      <Route
-                        path='/gestion-reservas'
-                        element={<ReservationsAndSchedules />}
-                      />
-                      <Route path='/reservas' element={<BookingManagement />} />
-                      <Route path='/horarios' element={<SchedulesNew />} />
-                      <Route
-                        path='/horarios-disponibles'
-                        element={<AvailableSlots />}
-                      />
                       {/* Rutas con layout de tabs */}
                       <Route
                         path='/ajustes-precios'
@@ -259,6 +245,10 @@ function AppContent() {
                       <Route
                         path='/ajustes-precios/historial/:adjustmentId'
                         element={<PriceAdjustmentHistoryDetail />}
+                      />
+                      <Route
+                        path='/gestion-agenda'
+                        element={<BookingUnifiedDashboard />}
                       />
                       <Route
                         path='/ajustes-producto'
