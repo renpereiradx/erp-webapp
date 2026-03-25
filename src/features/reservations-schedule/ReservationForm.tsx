@@ -4,15 +4,29 @@ interface ReservationFormProps {
   selectedSlot: string | null;
   onSubmit: (clientId: string, startTime: string, duration: number) => Promise<void>;
   onSearchClients: (name: string) => Promise<any[]>;
+  onDurationChange?: (duration: number) => void;
 }
 
-export const ReservationForm: React.FC<ReservationFormProps> = ({ selectedSlot, onSubmit, onSearchClients }) => {
+export const ReservationForm: React.FC<ReservationFormProps> = ({ 
+  selectedSlot, 
+  onSubmit, 
+  onSearchClients,
+  onDurationChange 
+}) => {
   const [clientId, setClientId] = useState('');
   const [clientSearch, setClientSearch] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [duration, setDuration] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [startTime, setStartTime] = useState(selectedSlot || '');
+
+  // 🔧 FIX: Sincronizar el estado interno cuando cambia la prop desde afuera (las cards)
+  React.useEffect(() => {
+    if (selectedSlot) {
+      setStartTime(selectedSlot);
+    }
+  }, [selectedSlot]);
 
   // Precios simulados basados en el diseño de Stitch
   const baseRate = 12000;
@@ -42,17 +56,38 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({ selectedSlot, 
     setSearchResults([]);
   };
 
+  const handleDurationChange = (val: number) => {
+    setDuration(val);
+    if (onDurationChange) onDurationChange(val);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedSlot || !clientId) return;
+    if (!startTime || !clientId) return;
 
     setIsSubmitting(true);
     try {
-      await onSubmit(clientId, selectedSlot, duration);
+      await onSubmit(clientId, startTime, duration);
       setClientId('');
       setClientSearch('');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const formatDateTimeForInput = (dateStr: string) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return '';
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch {
+      return '';
     }
   };
 
@@ -99,9 +134,15 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({ selectedSlot, 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Hora Inicio</label>
-            <div className="bg-slate-50 rounded-xl py-4 px-4 font-mono text-blue-600 text-center text-sm font-bold border border-blue-50">
-              {selectedSlot ? new Date(selectedSlot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-            </div>
+            <input 
+              type="datetime-local"
+              value={formatDateTimeForInput(startTime)}
+              onChange={(e) => {
+                const newTime = new Date(e.target.value).toISOString();
+                setStartTime(newTime);
+              }}
+              className="w-full bg-slate-50 border-none rounded-xl py-3 px-4 font-mono text-blue-600 text-center text-sm font-bold focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+            />
           </div>
           <div>
             <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Tipo de Turno</label>
@@ -124,7 +165,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({ selectedSlot, 
             max="4" 
             step="0.5" 
             value={duration}
-            onChange={(e) => setDuration(parseFloat(e.target.value))}
+            onChange={(e) => handleDurationChange(parseFloat(e.target.value))}
             className="w-full h-1.5 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600" 
           />
           <div className="flex justify-between mt-2 text-[9px] font-mono text-blue-300 font-bold uppercase tracking-tighter">
@@ -152,7 +193,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({ selectedSlot, 
 
       <div className="pt-4 space-y-4">
         <button 
-          disabled={!selectedSlot || !clientId || isSubmitting}
+          disabled={!startTime || !clientId || isSubmitting}
           className="w-full bg-blue-600 py-4 rounded-2xl text-white font-black shadow-xl shadow-blue-600/20 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all transform hover:-translate-y-1 active:scale-[0.98]"
         >
           {isSubmitting ? 'Procesando...' : 'Confirmar Reserva'}

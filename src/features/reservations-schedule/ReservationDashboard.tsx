@@ -24,13 +24,15 @@ const ReservationDashboard: React.FC = () => {
     products,
     updateConfig,
     refresh: fetchSchedules,
-  } = useReservation('CANCHA_01');
+  } = useReservation();
 
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [selectedDuration, setSelectedDuration] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleNewReservation = () => {
     setSelectedSlot(null);
+    setSelectedDuration(1);
     setIsFormOpen(true);
   };
 
@@ -55,7 +57,7 @@ const ReservationDashboard: React.FC = () => {
   const handleGenerate = async () => {
     try {
       await handleGenerateToday();
-      addToast({ title: 'Horarios Generados', description: 'Slots creados exitosamente para hoy.', type: 'success' });
+      addToast({ title: 'Horarios Generados', description: `Slots creados exitosamente para el día ${targetDate}.`, type: 'success' });
     } catch (err) {
       addToast({ title: 'Error', description: 'No se pudieron generar los horarios.', type: 'error' });
     }
@@ -139,7 +141,7 @@ const ReservationDashboard: React.FC = () => {
                 onClick={handleGenerate}
                 className="w-full bg-white text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-50 transition-all shadow-lg"
               >
-                Generar Horarios para Hoy
+                Generar Horarios del Día
               </button>
             </div>
             <span className="material-symbols-outlined absolute -right-4 -bottom-4 text-white/10 text-[120px] group-hover:scale-110 transition-transform duration-500">auto_mode</span>
@@ -169,6 +171,8 @@ const ReservationDashboard: React.FC = () => {
             <ScheduleTimeline 
               slots={slots} 
               loading={loading} 
+              selectedSlot={selectedSlot}
+              selectedDuration={selectedDuration}
               onSelectSlot={(time) => {
                 setSelectedSlot(time);
                 setIsFormOpen(true);
@@ -213,6 +217,7 @@ const ReservationDashboard: React.FC = () => {
                 <ReservationForm 
                   selectedSlot={selectedSlot}
                   onSearchClients={searchClients}
+                  onDurationChange={setSelectedDuration}
                   onSubmit={async (clientId, startTime, duration) => {
                     try {
                       await createReservation(clientId, startTime, duration);

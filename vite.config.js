@@ -78,16 +78,6 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-      '/reserve': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/schedules': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-        secure: false,
       }
     }
   },

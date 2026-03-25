@@ -5,102 +5,88 @@ import {
   ScheduleSlot, 
   ProductScheduleConfig 
 } from '../domain/reservation';
+import { apiClient } from './api';
 
-const BASE_URL = ''; // Se usa el proxy de Vite en desarrollo o la ruta relativa en prod
-
-const getHeaders = () => {
-  const token = localStorage.getItem('authToken'); // Cambiado de 'jwt_token' a 'authToken'
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-  };
-};
-
-const handleResponse = async (res: Response) => {
-  if (res.status === 404) return []; // Para búsquedas sin resultados
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(errorText || `Error del servidor: ${res.status}`);
-  }
-  try {
-    return await res.json();
-  } catch (e) {
-    return null;
-  }
-};
-
+/**
+ * Servicio de Reservas y Horarios
+ * Utiliza el apiClient central para garantizar consistencia en auth y manejo de errores.
+ */
 export const reservationService = {
-  // Reservas
+  // ==========================================
+  // RESERVAS
+  // ==========================================
+  
   manageReserve: async (data: ManageReserveRequest) => {
-    const res = await fetch(`${BASE_URL}/reserve/manage`, {
+    return apiClient.makeRequest('/reserve/manage', {
       method: 'POST',
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    return handleResponse(res);
   },
 
   getAvailableSchedules: async (productId: string, date: string, duration: number) => {
-    const res = await fetch(`${BASE_URL}/reserve/available-schedules?product_id=${productId}&date=${date}&duration=${duration}`, {
-      headers: getHeaders(),
+    return apiClient.makeRequest('/reserve/available-schedules', {
+      params: { product_id: productId, date, duration }
     });
-    return handleResponse(res);
   },
 
-  // Horarios
+  // ==========================================
+  // HORARIOS (SCHEDULES)
+  // ==========================================
+  
   getSchedulesForProductAndDate: async (productId: string, date: string): Promise<ScheduleSlot[]> => {
-    const res = await fetch(`${BASE_URL}/schedules/product/${productId}/date/${date}/all`);
-    const data = await handleResponse(res);
-    return data || [];
+    try {
+      const response = await apiClient.makeRequest(`/schedules/product/${productId}/date/${date}/all`);
+      // 🔧 FIX: Extraer el arreglo si viene envuelto en un objeto (común en APIs estructuradas)
+      if (Array.isArray(response)) return response;
+      if (response && Array.isArray(response.data)) return response.data;
+      if (response && Array.isArray(response.slots)) return response.slots;
+      return [];
+    } catch (error: any) {
+      // Si el backend devuelve 500 porque no hay slots generados, devolvemos array vacío
+      if (error.status === 500 || error.message?.includes('500')) {
+        return [];
+      }
+      throw error;
+    }
   },
 
   getProductConfig: async (productId: string): Promise<ProductScheduleConfig> => {
-    const res = await fetch(`${BASE_URL}/schedules/product/${productId}/config`);
-    return handleResponse(res);
+    return apiClient.makeRequest(`/schedules/product/${productId}/config`);
   },
 
   generateSchedules: async (data: GenerateSchedulesForDateRequest) => {
-    const res = await fetch(`${BASE_URL}/schedules/generate/date`, {
+    return apiClient.makeRequest('/schedules/generate/date', {
       method: 'POST',
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    return handleResponse(res);
   },
 
   upsertProductConfig: async (productId: string, data: UpsertScheduleConfigByProductRequest) => {
-    const res = await fetch(`${BASE_URL}/schedules/product/${productId}/config`, {
+    return apiClient.makeRequest(`/schedules/product/${productId}/config`, {
       method: 'POST',
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    return handleResponse(res);
   },
 
-  // Clientes y Productos (Integración)
+  // ==========================================
+  // INTEGRACIÓN (CLIENTES Y PRODUCTOS)
+  // ==========================================
+  
   searchClients: async (name: string) => {
-    const res = await fetch(`/api/client/name/${encodeURIComponent(name)}`, {
-      headers: getHeaders(),
-    });
-    return handleResponse(res);
+    return apiClient.makeRequest(`/client/name/${encodeURIComponent(name)}`);
   },
 
   getInitialClients: async () => {
-    const res = await fetch(`/api/client/1/20`, {
-      headers: getHeaders(),
-    });
-    return handleResponse(res);
+    return apiClient.makeRequest(`/client/1/20`);
   },
 
   getProducts: async () => {
-    const res = await fetch(`/api/products/service-courts`, {
-      headers: getHeaders(),
-    });
-    // Si falla el específico, intentar con all
-    if (!res.ok) {
-      const allRes = await fetch(`/api/products/all`, { headers: getHeaders() });
-      return handleResponse(allRes);
+    try {
+      // Intentar primero el endpoint específico de servicios
+      return await apiClient.makeRequest('/products/service-courts');
+    } catch (error) {
+      // Fallback a todos los productos si falla el específico
+      return apiClient.makeRequest('/products/all');
     }
-    return handleResponse(res);
   },
 };
