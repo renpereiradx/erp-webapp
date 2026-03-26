@@ -46,7 +46,7 @@ export const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({ config, onSa
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 flex-1 max-w-4xl">
           <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-2">Hora Apertura</label>
+            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-2">Hora Apertura</label>
             <input 
               type="number" 
               min="0" max="23"
@@ -56,7 +56,7 @@ export const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({ config, onSa
             />
           </div>
           <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-2">Hora Cierre</label>
+            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-2">Hora Cierre</label>
             <input 
               type="number" 
               min="1" max="24"
@@ -66,7 +66,7 @@ export const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({ config, onSa
             />
           </div>
           <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-2">Zona Horaria</label>
+            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-2">Zona Horaria</label>
             <select 
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}

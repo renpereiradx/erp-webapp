@@ -91,25 +91,25 @@ export const ReservationDetail: React.FC<ReservationDetailProps> = ({
 
       <div className="bg-slate-50 rounded-2xl p-5 space-y-4">
         <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-slate-400">calendar_today</span>
+          <span className="material-icons-round text-slate-400">calendar_today</span>
           <div>
-            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Fecha y Hora</p>
+            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Fecha y Hora</p>
             <p className="text-sm font-bold text-slate-900">{formatDateTime(slot.start_time)}</p>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-slate-400">schedule</span>
+          <span className="material-icons-round text-slate-400">schedule</span>
           <div>
-            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Duración</p>
+            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Duración</p>
             <p className="text-sm font-bold text-slate-900">1 hora</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-slate-400">person</span>
+          <span className="material-icons-round text-slate-400">person</span>
           <div>
-            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">ID Cliente</p>
+            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">ID Cliente</p>
             <p className="text-sm font-bold text-slate-900 font-mono">{slot.reserve?.client_id || 'N/A'}</p>
           </div>
         </div>
@@ -118,10 +118,10 @@ export const ReservationDetail: React.FC<ReservationDetailProps> = ({
       {!isCancelled && !isCompleted && (
         <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100">
           <div className="flex items-center gap-3 mb-3">
-            <span className="material-symbols-outlined text-blue-500">info</span>
+            <span className="material-icons-round text-blue-500">info</span>
             <p className="text-xs font-bold text-blue-700">Información de la Reserva</p>
           </div>
-          <p className="text-xs text-blue-600/80">
+          <p className="text-xs text-blue-700/80">
             El turno ha sido reservado y está {isReserved ? 'pendiente de confirmación' : 'confirmado'} para la fecha indicada.
           </p>
         </div>
@@ -134,7 +134,7 @@ export const ReservationDetail: React.FC<ReservationDetailProps> = ({
             disabled={isProcessing}
             className="w-full bg-blue-600 py-4 rounded-2xl text-white font-black shadow-xl shadow-blue-600/20 hover:bg-blue-700 disabled:bg-slate-300 disabled:shadow-none transition-all flex items-center justify-center gap-2"
           >
-            <span className="material-symbols-outlined">check_circle</span>
+            <span className="material-icons-round">check_circle</span>
             {isProcessing ? 'Procesando...' : 'Confirmar Reserva'}
           </button>
         )}
@@ -145,7 +145,7 @@ export const ReservationDetail: React.FC<ReservationDetailProps> = ({
             disabled={isProcessing}
             className="w-full bg-white py-4 rounded-2xl text-red-600 font-bold border-2 border-red-200 hover:bg-red-50 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 transition-all flex items-center justify-center gap-2"
           >
-            <span className="material-symbols-outlined">cancel</span>
+            <span className="material-icons-round">cancel</span>
             {isProcessing ? 'Procesando...' : 'Cancelar Reserva'}
           </button>
         )}

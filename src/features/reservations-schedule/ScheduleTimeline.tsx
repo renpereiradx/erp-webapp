@@ -210,12 +210,12 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
         <div className="p-4 min-h-[80px] flex flex-col justify-center">
           {hasConflict ? (
             <div className="text-center space-y-1">
-              <span className="material-symbols-outlined text-red-500 text-3xl">error</span>
+              <span className="material-icons-round text-red-500 text-3xl">error</span>
               <p className="text-[9px] font-black text-red-600 uppercase">Conflicto</p>
             </div>
           ) : (
             <div className="text-center space-y-1">
-              <span className={`material-symbols-outlined text-3xl transition-colors ${
+              <span className={`material-icons-round text-3xl transition-colors ${
                 isHighlighted ? 'text-blue-500' : 'text-emerald-300 group-hover:text-emerald-500'
               }`}>
                 {isSelectedStart ? 'stars' : isHighlighted ? 'check_circle' : 'add_circle'}
@@ -252,7 +252,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
               {formatTimeRange(group.start_time, group.end_time)}
             </span>
             <span className="flex items-center gap-1 text-[9px] font-bold text-amber-600 bg-white/60 px-2 py-0.5 rounded-full">
-              <span className="material-symbols-outlined text-[10px]">schedule</span>
+              <span className="material-icons-round text-[10px]">schedule</span>
               {getDurationText(group.slot_count)}
             </span>
           </div>
@@ -284,7 +284,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                   onClick={() => onConfirm(group.reserve_id as number)}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-200/50"
                 >
-                  <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                  <span className="material-icons-round text-[16px]">check_circle</span>
                   <span className="text-[10px] font-black uppercase">Confirmar</span>
                 </button>
               )}
@@ -293,7 +293,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                   onClick={() => onCancel(group.reserve_id as number)}
                   className="py-2.5 px-4 rounded-xl transition-all flex items-center justify-center border-2 border-amber-200 text-amber-600 hover:bg-amber-100"
                 >
-                  <span className="material-symbols-outlined text-[16px]">close</span>
+                  <span className="material-icons-round text-[16px]">close</span>
                 </button>
               )}
               {(isCancelled || isCompleted) && (
@@ -301,7 +301,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                   onClick={() => firstSlot && onShowDetail(firstSlot)}
                   className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-[16px]">visibility</span>
+                  <span className="material-icons-round text-[16px]">visibility</span>
                   <span className="text-[10px] font-bold uppercase">Ver Detalle</span>
                 </button>
               )}
@@ -326,16 +326,16 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
       <div className="flex items-center justify-between px-2">
         <div>
           <h3 className="text-sm font-black text-slate-900 uppercase tracking-tighter">Cronograma de Disponibilidad</h3>
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Haz clic en un horario libre para reservar</p>
+          <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest mt-0.5">Haz clic en un horario libre para reservar</p>
         </div>
         <div className="flex gap-4">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>
-            <span className="text-[10px] font-black text-slate-500 uppercase">Libre</span>
+            <span className="text-[10px] font-black text-slate-600 uppercase">Libre</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"></span>
-            <span className="text-[10px] font-black text-slate-500 uppercase">Ocupado</span>
+            <span className="text-[10px] font-black text-slate-600 uppercase">Ocupado</span>
           </div>
         </div>
       </div>
@@ -354,10 +354,10 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
       {(!Array.isArray(slots) || slots.length === 0) && (
         <div className="bg-white rounded-3xl p-20 text-center border border-slate-100 shadow-sm flex flex-col items-center">
           <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-4">
-            <span className="material-symbols-outlined text-4xl">event_busy</span>
+            <span className="material-icons-round text-4xl">event_busy</span>
           </div>
           <h4 className="text-slate-900 font-black text-lg">No hay horarios disponibles</h4>
-          <p className="text-slate-400 text-sm max-w-xs mx-auto mt-1">Intenta cambiar la fecha o utiliza el botón de generación rápida para crear slots.</p>
+          <p className="text-slate-500 text-sm max-w-xs mx-auto mt-1">Intenta cambiar la fecha o utiliza el botón de generación rápida para crear slots.</p>
         </div>
       )}
     </div>

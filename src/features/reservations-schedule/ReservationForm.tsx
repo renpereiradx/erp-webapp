@@ -131,7 +131,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
       <div className="space-y-6">
         {/* Cliente con Autocomplete */}
         <div className="relative">
-          <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Cliente / Socio</label>
+          <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-3">Cliente / Socio</label>
           <div className="relative">
             <input 
               value={clientSearch}
@@ -140,8 +140,8 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
               placeholder="Buscar por nombre o ID..."
               type="text" 
             />
-            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">person_search</span>
-            {isSearching && <div className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-blue-400"><span className="material-symbols-outlined">sync</span></div>}
+            <span className="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">person_search</span>
+            {isSearching && <div className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-blue-400"><span className="material-icons-round">sync</span></div>}
           </div>
           
           {/* Resultados de búsqueda */}
@@ -168,7 +168,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Hora Inicio</label>
+            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-3">Hora Inicio</label>
             <input 
               type="datetime-local"
               value={formatDateTimeForInput(startTime)}
@@ -180,7 +180,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
             />
           </div>
           <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Tipo de Turno</label>
+            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-3">Tipo de Turno</label>
             <select 
               value={selectedReservationType}
               onChange={(e) => setSelectedReservationType(e.target.value)}
@@ -199,7 +199,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
 
         <div className="bg-blue-50/30 p-6 rounded-2xl border border-blue-100/50">
           <div className="flex justify-between items-center mb-5">
-            <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">Duración Estimada</label>
+            <label className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest">Duración Estimada</label>
             <span className={`font-mono font-black bg-white px-3 py-1 rounded-lg shadow-sm border ${
               showDurationWarning ? 'border-red-300 text-red-600' : 'border-blue-100 text-blue-700'
             }`}>
@@ -235,12 +235,12 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
         {/* Desglose de Precios */}
         <div className="bg-slate-50/80 p-6 rounded-2xl space-y-3 border border-slate-100">
           <div className="flex justify-between text-xs">
-            <span className="text-slate-500 font-medium tracking-tight">Tarifa Base ({duration}h × {formatCurrency(baseRate)}/h)</span>
+            <span className="text-slate-600 font-medium tracking-tight">Tarifa Base ({duration}h × {formatCurrency(baseRate)}/h)</span>
             <span className="font-mono font-bold text-slate-700">{formatCurrency(baseRate * duration)}</span>
           </div>
           {calculatedLightingFee > 0 && (
             <div className="flex justify-between text-xs">
-              <span className="text-slate-500 font-medium tracking-tight">Recargo Iluminación</span>
+              <span className="text-slate-600 font-medium tracking-tight">Recargo Iluminación</span>
               <span className="font-mono font-bold text-slate-700">{formatCurrency(calculatedLightingFee)}</span>
             </div>
           )}
@@ -259,7 +259,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
           {isSubmitting ? 'Procesando...' : 'Confirmar Reserva'}
         </button>
         <div className="flex items-center gap-2 justify-center text-slate-400">
-          <span className="material-symbols-outlined text-sm">shield</span>
+          <span className="material-icons-round text-sm">shield</span>
           <p className="text-[10px] font-bold uppercase tracking-tight">Garantía de disponibilidad activa</p>
         </div>
       </div>

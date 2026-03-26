@@ -153,11 +153,11 @@ const ReservationDashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in duration-500 relative min-h-screen bg-slate-50/40 -m-8 p-8">
+    <div className="flex flex-col gap-8 animate-in fade-in duration-500 relative min-h-screen bg-slate-50/40 -m-8 p-8 font-sans">
       {/* Mensaje de Error si existe */}
       {error && (
         <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl flex items-center gap-3 animate-in slide-in-from-top-2">
-          <span className="material-symbols-outlined">error</span>
+          <span className="material-icons-round">error</span>
           <p className="text-sm font-bold">{error}</p>
         </div>
       )}
@@ -166,17 +166,17 @@ const ReservationDashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-4">
         <div className="max-w-2xl">
           <h2 className="text-5xl font-black tracking-tighter leading-none mb-2">Planificación y Reservas</h2>
-          <p className="text-slate-500 font-medium opacity-70">Gestione la disponibilidad de recursos y coordine citas en tiempo real.</p>
+          <p className="text-slate-600 font-medium opacity-70">Gestione la disponibilidad de recursos y coordine citas en tiempo real.</p>
         </div>
         <div className="flex gap-4">
           <button className="bg-white border border-slate-200/60 px-6 py-3 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
-            <span className="material-symbols-outlined text-[20px]">file_download</span> Exportar
+            <span className="material-icons-round text-[20px]">file_download</span> Exportar
           </button>
           <button 
             onClick={handleNewReservation}
             className="bg-blue-600 px-6 py-3 rounded-xl font-semibold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 hover:scale-[1.02] transition-all flex items-center gap-2"
           >
-            <span className="material-symbols-outlined text-[20px]">add</span> Nueva Reserva
+            <span className="material-icons-round text-[20px]">add</span> Nueva Reserva
           </button>
         </div>
       </div>
@@ -185,7 +185,7 @@ const ReservationDashboard: React.FC = () => {
         {/* Left Sidebar Control */}
         <div className="col-span-12 lg:col-span-3 space-y-8">
           <section className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
-            <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-4">Selección de Recurso</label>
+            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-4">Selección de Recurso</label>
             <select 
               value={productId}
               onChange={(e) => setProductId(e.target.value)}
@@ -204,7 +204,7 @@ const ReservationDashboard: React.FC = () => {
           </section>
 
           <section className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
-            <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-4">Fecha de Operación</label>
+            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-4">Fecha de Operación</label>
             <input 
               type="date"
               value={targetDate}
@@ -216,7 +216,7 @@ const ReservationDashboard: React.FC = () => {
           <section className="bg-blue-600 p-6 rounded-2xl text-white relative overflow-hidden group shadow-xl shadow-blue-600/10 transition-all hover:shadow-blue-600/20">
             <div className="relative z-10">
               <h3 className="font-black text-xl mb-2">Acciones Rápidas</h3>
-              <p className="text-blue-100 text-sm mb-6">Genera bloques de disponibilidad basados en la configuración actual.</p>
+              <p className="text-blue-200 text-sm mb-6">Genera bloques de disponibilidad basados en la configuración actual.</p>
               <button 
                 onClick={handleGenerate}
                 className="w-full bg-white text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-50 transition-all shadow-lg"
@@ -224,7 +224,7 @@ const ReservationDashboard: React.FC = () => {
                 Generar Horarios del Día
               </button>
             </div>
-            <span className="material-symbols-outlined absolute -right-4 -bottom-4 text-white/10 text-[120px] group-hover:scale-110 transition-transform duration-500">auto_mode</span>
+            <span className="material-icons-round absolute -right-4 -bottom-4 text-white/10 text-[120px] group-hover:scale-110 transition-transform duration-500">auto_mode</span>
           </section>
         </div>
 
@@ -233,7 +233,7 @@ const ReservationDashboard: React.FC = () => {
           {error?.includes('No hay horarios') ? (
             <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-slate-200 shadow-sm flex flex-col items-center gap-4 animate-in zoom-in-95">
               <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
-                <span className="material-symbols-outlined text-3xl">calendar_today</span>
+                <span className="material-icons-round text-3xl">calendar_today</span>
               </div>
               <div>
                 <h3 className="text-xl font-black text-slate-900">Sin Horarios Disponibles</h3>
@@ -243,7 +243,7 @@ const ReservationDashboard: React.FC = () => {
                 onClick={handleGenerate}
                 className="mt-2 bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2"
               >
-                <span className="material-symbols-outlined text-[20px]">auto_mode</span>
+                <span className="material-icons-round text-[20px]">auto_mode</span>
                 Generar Horarios del Día
               </button>
             </div>
@@ -295,7 +295,7 @@ const ReservationDashboard: React.FC = () => {
                   onClick={() => setPanelMode('closed')}
                   className="p-2 hover:bg-slate-200/50 rounded-full transition-all text-slate-400 hover:text-slate-900"
                 >
-                  <span className="material-symbols-outlined">close</span>
+                  <span className="material-icons-round">close</span>
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-8">
