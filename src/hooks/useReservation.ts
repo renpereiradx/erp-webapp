@@ -133,7 +133,6 @@ export const useReservation = (initialProductId?: string) => {
   };
 
   const cancelReservation = async (reserveId: number) => {
-    if (!window.confirm('¿Está seguro de que desea cancelar esta reserva?')) return;
     try {
       await reservationService.manageReserve({
         action: 'CANCEL',
@@ -146,6 +145,7 @@ export const useReservation = (initialProductId?: string) => {
       await fetchSchedules();
     } catch (err) {
       setError('Error al cancelar reserva');
+      throw err;
     }
   };
 

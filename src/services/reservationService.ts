@@ -29,6 +29,10 @@ export const reservationService = {
     });
   },
 
+  getReservationById: async (reserveId: number) => {
+    return apiClient.makeRequest(`/reserve/${reserveId}`);
+  },
+
   // ==========================================
   // HORARIOS (SCHEDULES)
   // ==========================================
@@ -36,13 +40,32 @@ export const reservationService = {
   getSchedulesForProductAndDate: async (productId: string, date: string): Promise<ScheduleSlot[]> => {
     try {
       const response = await apiClient.makeRequest(`/schedules/product/${productId}/date/${date}/all`);
-      // 🔧 FIX: Extraer el arreglo si viene envuelto en un objeto (común en APIs estructuradas)
-      if (Array.isArray(response)) return response;
-      if (response && Array.isArray(response.data)) return response.data;
-      if (response && Array.isArray(response.slots)) return response.slots;
-      return [];
+      let slots: any[] = [];
+      if (Array.isArray(response)) slots = response;
+      else if (response && Array.isArray(response.data)) slots = response.data;
+      else if (response && Array.isArray(response.slots)) slots = response.slots;
+      else if (response && typeof response === 'object') slots = Object.values(response);
+      
+      return slots.map((slot: any) => {
+        // Nuevo formato API: usa is_available + reserve_id/reserved_by/reserve_status
+        // Formato legacy: usa status + reserve anidado
+        const hasReservation = slot.is_available === false || slot.reserve || slot.reserve_id;
+        const reserveData = slot.reserve || {};
+        
+        return {
+          id: slot.id,
+          product_id: slot.product_id,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          status: slot.reserve_status || slot.status || (slot.is_available ? 'AVAILABLE' : 'RESERVED'),
+          reserve: hasReservation ? {
+            id: slot.reserve_id || reserveData.id,
+            client_name: slot.reserved_by || reserveData.client_name || reserveData.user_name,
+            client_id: slot.client_id || reserveData.client_id || reserveData.user_id,
+          } : undefined,
+        };
+      });
     } catch (error: any) {
-      // Si el backend devuelve 500 porque no hay slots generados, devolvemos array vacío
       if (error.status === 500 || error.message?.includes('500')) {
         return [];
       }

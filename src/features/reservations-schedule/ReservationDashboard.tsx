@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { useReservation } from '../../hooks/useReservation';
 import { ScheduleTimeline } from './ScheduleTimeline';
 import { ReservationForm } from './ReservationForm';
+import { ReservationDetail } from './ReservationDetail';
 import { ScheduleSettings } from './ScheduleSettings';
-import { useToast } from '../../hooks/useToast';
+import { ScheduleSlot } from '../../domain/reservation';
+
+type PanelMode = 'closed' | 'new' | 'detail';
 
 const ReservationDashboard: React.FC = () => {
-  const { addToast } = useToast();
   const {
     productId,
     setProductId,
@@ -23,52 +26,129 @@ const ReservationDashboard: React.FC = () => {
     searchClients,
     products,
     updateConfig,
-    refresh: fetchSchedules,
   } = useReservation();
 
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = useState(1);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [panelMode, setPanelMode] = useState<PanelMode>('closed');
+  const [detailSlot, setDetailSlot] = useState<ScheduleSlot | null>(null);
+
+  const currentProduct = products.find(p => (p.id || p.product_id) === productId);
+
+  // Extraer precio del producto (puede estar en unit_prices o como campo directo)
+  const extractPrice = (product: any): number => {
+    if (product?.unit_prices && Array.isArray(product.unit_prices) && product.unit_prices.length > 0) {
+      const firstPrice = product.unit_prices[0];
+      return firstPrice.price_per_unit || firstPrice.unit_price || firstPrice.price || firstPrice.base_price || firstPrice.sale_price || 0;
+    }
+    return product?.base_price || product?.price || product?.unit_price || product?.price_per_unit || product?.sale_price || 0;
+  };
+
+  const productPricing = {
+    base_rate: extractPrice(currentProduct) || 12000,
+    lighting_fee: currentProduct?.lighting_fee || currentProduct?.lightingFee || 0,
+    min_duration: currentProduct?.min_duration || 1,
+    max_duration: currentProduct?.max_duration || 4,
+  };
+  const reservationTypes = currentProduct?.reservation_types || [];
+
+  // Calcular duración máxima permitida basada en slots disponibles
+  const getMaxAvailableDuration = (startTime: string | null): number => {
+    if (!startTime || slots.length === 0) return productPricing.max_duration;
+
+    const sortedSlots = [...slots].sort(
+      (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    );
+
+    const selectedIndex = sortedSlots.findIndex(s => s.start_time === startTime);
+    if (selectedIndex === -1) return productPricing.max_duration;
+
+    let consecutiveAvailable = 1; // El slot seleccionado cuenta como 1
+
+    for (let i = selectedIndex + 1; i < sortedSlots.length; i++) {
+      const slot = sortedSlots[i];
+      const isAvailable = !slot.reserve && (slot.status === 'AVAILABLE' || slot.status === 'FREE' || slot.status === '');
+      if (isAvailable) {
+        consecutiveAvailable++;
+      } else {
+        break; // Stop at first occupied slot
+      }
+    }
+
+    console.log('[DEBUG] Duración calculada:', {
+      startTime,
+      selectedIndex,
+      consecutiveAvailable,
+      productMax: productPricing.max_duration
+    });
+
+    return Math.min(consecutiveAvailable, productPricing.max_duration);
+  };
+
+  const maxAvailableDuration = getMaxAvailableDuration(selectedSlot);
 
   const handleNewReservation = () => {
-    setSelectedSlot(null);
+    if (!selectedSlot) {
+      toast.warning('Seleccione un horario', {
+        description: 'Haga clic en un horario disponible para crear una nueva reserva.',
+      });
+      return;
+    }
+
+    const maxDur = getMaxAvailableDuration(selectedSlot);
+    if (maxDur === 0) {
+      toast.error('Horario no disponible', {
+        description: 'Este slot ya no está disponible. Seleccione otro horario.',
+      });
+      return;
+    }
+
     setSelectedDuration(1);
-    setIsFormOpen(true);
+    setDetailSlot(null);
+    setPanelMode('new');
+  };
+
+  const handleShowDetail = (slot: ScheduleSlot) => {
+    setDetailSlot(slot);
+    setPanelMode('detail');
   };
 
   const handleConfirm = async (id: number) => {
     try {
       await confirmReservation(id);
-      addToast({ title: 'Reserva Confirmada', description: 'El turno ha sido marcado como confirmado.', type: 'success' });
+      toast.success('Reserva Confirmada', { description: 'El turno ha sido marcado como confirmado.' });
+      setPanelMode('closed');
     } catch (err) {
-      addToast({ title: 'Error', description: 'No se pudo confirmar la reserva.', type: 'error' });
+      toast.error('Error', { description: 'No se pudo confirmar la reserva.' });
     }
   };
 
   const handleCancel = async (id: number) => {
+    if (!window.confirm('¿Está seguro de que desea cancelar esta reserva?')) return;
     try {
       await cancelReservation(id);
-      addToast({ title: 'Reserva Cancelada', description: 'El turno ha sido anulado.', type: 'success' });
+      toast.success('Reserva Cancelada', { description: 'El turno ha sido anulado.' });
+      setPanelMode('closed');
     } catch (err) {
-      addToast({ title: 'Error', description: 'No se pudo cancelar la reserva.', type: 'error' });
+      toast.error('Error', { description: 'No se pudo cancelar la reserva.' });
     }
   };
 
   const handleGenerate = async () => {
     try {
       await handleGenerateToday();
-      addToast({ title: 'Horarios Generados', description: `Slots creados exitosamente para el día ${targetDate}.`, type: 'success' });
+      toast.success('Horarios Generados', { description: `Slots creados exitosamente para el día ${targetDate}.` });
     } catch (err) {
-      addToast({ title: 'Error', description: 'No se pudieron generar los horarios.', type: 'error' });
+      toast.error('Error', { description: 'No se pudieron generar los horarios.' });
     }
   };
 
   const handleUpdateConfig = async (newConfig: any) => {
     try {
       await updateConfig(newConfig);
-      addToast({ title: 'Configuración Guardada', description: 'Los parámetros operativos han sido actualizados.', type: 'success' });
+      toast.success('Configuración Guardada', { description: 'Los parámetros operativos han sido actualizados.' });
     } catch (err) {
-      addToast({ title: 'Error', description: 'No se pudo guardar la configuración.', type: 'error' });
+      toast.error('Error', { description: 'No se pudo guardar la configuración.' });
     }
   };
 
@@ -175,8 +255,9 @@ const ReservationDashboard: React.FC = () => {
               selectedDuration={selectedDuration}
               onSelectSlot={(time) => {
                 setSelectedSlot(time);
-                setIsFormOpen(true);
+                setPanelMode('new');
               }}
+              onShowDetail={handleShowDetail}
               onConfirm={handleConfirm}
               onCancel={handleCancel}
             />
@@ -192,42 +273,58 @@ const ReservationDashboard: React.FC = () => {
         />
       </div>
 
-      {/* Overlay Drawer para Nueva Reserva */}
-      {isFormOpen && (
+      {/* Unified Drawer Panel - Dynamic Content */}
+      {panelMode !== 'closed' && (
         <>
           <div 
             className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[60] animate-in fade-in duration-300"
-            onClick={() => setIsFormOpen(false)}
+            onClick={() => setPanelMode('closed')}
           />
           <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-[70] shadow-[-20px_0_50px_-10px_rgba(0,0,0,0.1)] animate-in slide-in-from-right duration-500 border-l border-slate-100">
             <div className="h-full flex flex-col">
               <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <div>
-                  <h3 className="text-xl font-black tracking-tight">Nueva Reserva</h3>
-                  <p className="text-xs text-slate-500 font-medium">Complete los datos para confirmar el turno.</p>
+                  <h3 className="text-xl font-black tracking-tight">
+                    {panelMode === 'new' ? 'Nueva Reserva' : 'Detalle de Reserva'}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {panelMode === 'new' ? 'Complete los datos para confirmar el turno.' : 'Información del turno reservado.'}
+                  </p>
                 </div>
                 <button 
-                  onClick={() => setIsFormOpen(false)}
+                  onClick={() => setPanelMode('closed')}
                   className="p-2 hover:bg-slate-200/50 rounded-full transition-all text-slate-400 hover:text-slate-900"
                 >
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-8">
-                <ReservationForm 
-                  selectedSlot={selectedSlot}
-                  onSearchClients={searchClients}
-                  onDurationChange={setSelectedDuration}
-                  onSubmit={async (clientId, startTime, duration) => {
-                    try {
-                      await createReservation(clientId, startTime, duration);
-                      addToast({ title: 'Reserva Exitosa', description: 'El turno ha sido registrado correctamente.', type: 'success' });
-                      setIsFormOpen(false);
-                    } catch (err) {
-                      addToast({ title: 'Error', description: 'No se pudo crear la reserva.', type: 'error' });
-                    }
-                  }}
-                />
+                {panelMode === 'new' ? (
+                  <ReservationForm 
+                    selectedSlot={selectedSlot}
+                    productPricing={productPricing}
+                    maxAvailableDuration={maxAvailableDuration}
+                    reservationTypes={reservationTypes}
+                    onSearchClients={searchClients}
+                    onDurationChange={setSelectedDuration}
+                    onSubmit={async (clientId, startTime, duration) => {
+                      try {
+                        await createReservation(clientId, startTime, duration);
+                        toast.success('Reserva Exitosa', { description: 'El turno ha sido registrado correctamente.' });
+                        setPanelMode('closed');
+                      } catch (err) {
+                        toast.error('Error', { description: 'No se pudo crear la reserva.' });
+                      }
+                    }}
+                  />
+                ) : (
+                  <ReservationDetail 
+                    slot={detailSlot!}
+                    onConfirm={handleConfirm}
+                    onCancel={handleCancel}
+                    onClose={() => setPanelMode('closed')}
+                  />
+                )}
               </div>
             </div>
           </div>

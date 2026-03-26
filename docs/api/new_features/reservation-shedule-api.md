@@ -177,9 +177,52 @@ curl -X POST "http://localhost:8080/schedules/product/CANCHA_01/config" \
 - `401`: token ausente/invalido
 - `500`: error interno
 
+## Modelo de respuesta: ScheduleWithReservationInfo
+
+`GET /schedules/product/{productId}/date/{date}/all` devuelve slots con info de reserva:
+
+```json
+[
+  {
+    "id": 123,
+    "product_id": "CANCHA_01",
+    "product_name": "Cancha de Fútbol",
+    "start_time": "2026-03-25T15:00:00Z",
+    "end_time": "2026-03-25T16:00:00Z",
+    "is_available": false,
+    "reserved_by": "Juan Pérez",
+    "reserve_id": 14,
+    "reserve_status": "RESERVED"
+  },
+  {
+    "id": 124,
+    "product_id": "CANCHA_01",
+    "product_name": "Cancha de Fútbol",
+    "start_time": "2026-03-25T16:00:00Z",
+    "end_time": "2026-03-25T17:00:00Z",
+    "is_available": false,
+    "reserved_by": "Juan Pérez",
+    "reserve_id": 14,
+    "reserve_status": "RESERVED"
+  }
+]
+```
+
+### Importante: Detección de overlap para reservas multi-hora
+
+Cuando un cliente reserva 2+ horas (ej: 15:00-17:00), el sistema detecta automáticamente todos los slots cubiertos:
+
+- Reserva de 15:00 a 17:00 (2 horas) -> Los slots 15:00-16:00 y 16:00-17:00 aparecen como ocupados
+- Ambos slots tendrán el mismo `reserve_id` y `reserved_by`
+- El campo `is_available` será `false` para ambos slots
+
+El frontend debe agrupar visualmente slots con el mismo `reserve_id` para mostrar la reserva completa.
+
 ## Notas de implementacion
 
 - El estado de reserva debe guiar la UI (`RESERVED`, `CONFIRMED`, `CANCELLED`, `COMPLETED`).
 - Para fecha en path/query usar `YYYY-MM-DD`.
 - Para fecha/hora en payload usar ISO-8601.
 - Mantener zona horaria de negocio en UI (`America/Asuncion`) para evitar desfasajes.
+- **Reservas multi-hora**: Cuando muestres slots ocupados, agrupa por `reserve_id` para indicar visualmente que es la misma reserva.
+- **Campo `reserved_by`**: Contiene "Nombre Apellido" del cliente que reservó. Úsalo para mostrar quién ocupa el slot.

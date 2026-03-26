@@ -10,6 +10,7 @@ import {
   Route,
   Navigate,
 } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import MainLayout from '@/layouts/MainLayout'
 import PriceAdjustmentLayout from '@/layouts/PriceAdjustmentLayout'
 import Dashboard from '@/pages/Dashboard'
@@ -139,6 +140,7 @@ function AppContent() {
     <ErrorBoundary>
       <Router>
         <div className='min-h-screen bg-background text-foreground'>
+          <Toaster position="top-right" richColors closeButton />
           <Routes>
             {/* Ruta de login - siempre accesible */}
             <Route

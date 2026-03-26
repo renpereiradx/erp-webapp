@@ -1,14 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+interface ReservationType {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+interface ProductPricing {
+  base_rate: number;
+  lighting_fee?: number;
+  min_duration?: number;
+  max_duration?: number;
+}
 
 interface ReservationFormProps {
   selectedSlot: string | null;
-  onSubmit: (clientId: string, startTime: string, duration: number) => Promise<void>;
+  productPricing: ProductPricing;
+  maxAvailableDuration?: number;
+  reservationTypes?: ReservationType[];
+  onSubmit: (clientId: string, startTime: string, duration: number, reservationType?: string) => Promise<void>;
   onSearchClients: (name: string) => Promise<any[]>;
   onDurationChange?: (duration: number) => void;
 }
 
 export const ReservationForm: React.FC<ReservationFormProps> = ({ 
   selectedSlot, 
+  productPricing,
+  maxAvailableDuration,
+  reservationTypes = [],
   onSubmit, 
   onSearchClients,
   onDurationChange 
@@ -20,18 +39,29 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [startTime, setStartTime] = useState(selectedSlot || '');
+  const [selectedReservationType, setSelectedReservationType] = useState<string>('');
 
-  // 🔧 FIX: Sincronizar el estado interno cuando cambia la prop desde afuera (las cards)
-  React.useEffect(() => {
+  const baseRate = productPricing?.base_rate || 0;
+  const lightingFee = productPricing?.lighting_fee || 0;
+  const minDuration = productPricing?.min_duration || 1;
+  const productMaxDuration = productPricing?.max_duration || 4;
+  const effectiveMaxDuration = Math.min(maxAvailableDuration || productMaxDuration, productMaxDuration);
+  const showDurationWarning = duration > (maxAvailableDuration || 4);
+
+  useEffect(() => {
     if (selectedSlot) {
       setStartTime(selectedSlot);
     }
   }, [selectedSlot]);
 
-  // Precios simulados basados en el diseño de Stitch
-  const baseRate = 12000;
-  const lightingFee = duration > 1.5 ? 2500 : 0;
-  const total = (baseRate * duration) + lightingFee;
+  useEffect(() => {
+    if (reservationTypes.length > 0 && !selectedReservationType) {
+      setSelectedReservationType(reservationTypes[0].id);
+    }
+  }, [reservationTypes, selectedReservationType]);
+
+  const calculatedLightingFee = duration > 1.5 ? lightingFee : 0;
+  const total = (baseRate * duration) + calculatedLightingFee;
 
   const handleSearch = async (val: string) => {
     setClientSearch(val);
@@ -67,7 +97,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
 
     setIsSubmitting(true);
     try {
-      await onSubmit(clientId, startTime, duration);
+      await onSubmit(clientId, startTime, duration, selectedReservationType);
       setClientId('');
       setClientSearch('');
     } finally {
@@ -89,6 +119,11 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
     } catch {
       return '';
     }
+  };
+
+  const formatCurrency = (value: number) => {
+    if (value === 0) return 'Gs. 0';
+    return `Gs. ${value.toLocaleString()}`;
   };
 
   return (
@@ -119,7 +154,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
                   className="p-4 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-none flex items-center gap-3 transition-colors"
                 >
                   <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
-                    {client.name[0]}{client.last_name[0]}
+                    {client.name?.[0]}{client.last_name?.[0]}
                   </div>
                   <div>
                     <p className="text-sm font-bold text-slate-900">{client.name} {client.last_name}</p>
@@ -146,10 +181,18 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
           </div>
           <div>
             <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Tipo de Turno</label>
-            <select className="w-full bg-slate-50 border-none rounded-xl py-4 px-4 font-semibold text-xs focus:ring-2 focus:ring-blue-100 transition-all">
-              <option>Normal</option>
-              <option>Torneo</option>
-              <option>Mantenimiento</option>
+            <select 
+              value={selectedReservationType}
+              onChange={(e) => setSelectedReservationType(e.target.value)}
+              className="w-full bg-slate-50 border-none rounded-xl py-4 px-4 font-semibold text-xs focus:ring-2 focus:ring-blue-100 transition-all"
+            >
+              {reservationTypes.length > 0 ? (
+                reservationTypes.map((type) => (
+                  <option key={type.id} value={type.id}>{type.name}</option>
+                ))
+              ) : (
+                <option value="">Normal</option>
+              )}
             </select>
           </div>
         </div>
@@ -157,36 +200,53 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
         <div className="bg-blue-50/30 p-6 rounded-2xl border border-blue-100/50">
           <div className="flex justify-between items-center mb-5">
             <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">Duración Estimada</label>
-            <span className="font-mono text-blue-700 font-black bg-white px-3 py-1 rounded-lg shadow-sm border border-blue-100">{duration} hr{duration > 1 ? 's' : ''}</span>
+            <span className={`font-mono font-black bg-white px-3 py-1 rounded-lg shadow-sm border ${
+              showDurationWarning ? 'border-red-300 text-red-600' : 'border-blue-100 text-blue-700'
+            }`}>
+              {duration} hr{duration > 1 ? 's' : ''}
+              {showDurationWarning && ` (máx ${maxAvailableDuration})`}
+            </span>
           </div>
           <input 
             type="range" 
-            min="1" 
-            max="4" 
+            min={minDuration} 
+            max={effectiveMaxDuration} 
             step="0.5" 
             value={duration}
             onChange={(e) => handleDurationChange(parseFloat(e.target.value))}
             className="w-full h-1.5 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600" 
           />
           <div className="flex justify-between mt-2 text-[9px] font-mono text-blue-300 font-bold uppercase tracking-tighter">
-            <span>1 hora</span>
-            <span>4 horas</span>
+            <span>{minDuration} hora</span>
+            <span>{effectiveMaxDuration} horas máx.</span>
           </div>
+          {showDurationWarning && (
+            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-[10px] font-bold text-red-600">
+                ⚠️ No hay suficientes horarios disponibles para {duration} horas consecutivas.
+              </p>
+              <p className="text-[9px] text-red-500 mt-1">
+                Seleccione otro horario de inicio o reduzca la duración.
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Desglose de Precios fiel a Stitch */}
+        {/* Desglose de Precios */}
         <div className="bg-slate-50/80 p-6 rounded-2xl space-y-3 border border-slate-100">
           <div className="flex justify-between text-xs">
-            <span className="text-slate-500 font-medium tracking-tight">Tarifa Base ({duration}h)</span>
-            <span className="font-mono font-bold text-slate-700">Gs. {(baseRate * duration).toLocaleString()}</span>
+            <span className="text-slate-500 font-medium tracking-tight">Tarifa Base ({duration}h × {formatCurrency(baseRate)}/h)</span>
+            <span className="font-mono font-bold text-slate-700">{formatCurrency(baseRate * duration)}</span>
           </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-slate-500 font-medium tracking-tight">Recargo Iluminación</span>
-            <span className="font-mono font-bold text-slate-700">Gs. {lightingFee.toLocaleString()}</span>
-          </div>
+          {calculatedLightingFee > 0 && (
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-500 font-medium tracking-tight">Recargo Iluminación</span>
+              <span className="font-mono font-bold text-slate-700">{formatCurrency(calculatedLightingFee)}</span>
+            </div>
+          )}
           <div className="pt-3 border-t border-slate-200 flex justify-between items-baseline">
             <span className="text-sm font-black text-slate-900">Total a Pagar</span>
-            <span className="font-mono font-black text-blue-600 text-xl tracking-tighter">Gs. {total.toLocaleString()}</span>
+            <span className="font-mono font-black text-blue-600 text-xl tracking-tighter">{formatCurrency(total)}</span>
           </div>
         </div>
       </div>
