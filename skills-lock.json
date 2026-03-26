@@ -10,6 +10,11 @@
       "source": "minimax-ai/skills",
       "sourceType": "github",
       "computedHash": "c884478532a625b8636c94e70c40535e9a4d0a0173bc354e6cea61f3c5092165"
+    },
+    "fullstack-dev": {
+      "source": "minimax-ai/skills",
+      "sourceType": "github",
+      "computedHash": "7cd5ae755a667e445a5a05dcdb6ac2a0a5feae84d183e115a71a8883b2196051"
     }
   }
 }
