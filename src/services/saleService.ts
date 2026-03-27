@@ -348,7 +348,10 @@ export const saleService = {
       const { data } = this.extractSalesAndPagination(response)
       return { 
         success: true, 
-        data: data.filter((s: any) => s.sale?.status === 'PENDING' || s.status === 'PENDING') 
+        data: data.filter((s: any) => {
+          const status = (s.sale?.status || s.status || '').toUpperCase();
+          return status === 'PENDING';
+        }) 
       }
     } catch (error: any) {
       return { success: false, error: error.message }
@@ -465,10 +468,10 @@ export const saleService = {
     // Normalizar items para el dominio
     const domainItems = items.map(item => ({
       quantity: Number(item.quantity || 0),
-      unit_price: Number(item.unit_price || item.sale_price || 0),
-      discount_amount: item.discount_amount ? Number(item.discount_amount) : undefined,
-      discount_percent: item.discount_percent ? Number(item.discount_percent) : undefined,
-      tax_rate: item.tax_rate ? Number(item.tax_rate) : undefined,
+      unit_price: Number(item.price || item.unit_price || item.sale_price || 0),
+      discount_amount: item.discount_amount ? Number(item.discount_amount) : (item.discountType === 'amount' ? Number(item.discountInput) : undefined),
+      discount_percent: item.discount_percent ? Number(item.discount_percent) : (item.discountType === 'percent' ? Number(item.discountInput) : undefined),
+      tax_rate: item.taxRate !== undefined ? Number(item.taxRate) : (item.tax_rate ? Number(item.tax_rate) : undefined),
       price_includes_tax: item.price_includes_tax !== undefined ? Boolean(item.price_includes_tax) : true
     }));
 

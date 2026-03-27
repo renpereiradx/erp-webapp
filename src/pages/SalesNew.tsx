@@ -43,6 +43,7 @@ import useSaleStore from '@/store/useSaleStore';
 import useDashboardStore from '@/store/useDashboardStore';
 import { useToast } from '@/hooks/useToast';
 import saleService from '@/services/saleService';
+import apiService from '@/services/api';
 import { PaymentMethodService } from '@/services/paymentMethodService';
 import { CurrencyService } from '@/services/currencyService';
 import { productService } from '@/services/productService';
@@ -56,6 +57,8 @@ interface CartItem {
   name: string;
   quantity: number;
   price: number;
+  originalPrice: number;
+  stock?: number;
   discount: number;
   discountType: 'amount' | 'percent';
   discountInput: number;
@@ -85,9 +88,12 @@ interface ProductDisplay {
 }
 
 interface SaleMetadata {
-  sale_id: string;
-  total_amount: number;
+  id: string;
+  total: number;
   status: string;
+  paymentMethodId?: number;
+  paymentMethodLabel?: string;
+  currencyCode?: string;
 }
 
 const STATUS_STYLES: Record<string, { label: string; badge: string }> = {
@@ -96,6 +102,18 @@ const STATUS_STYLES: Record<string, { label: string; badge: string }> = {
   pending: { label: 'Pendiente', badge: 'badge--subtle-warning' },
   paid: { label: 'Pagada', badge: 'badge--subtle-success' },
 };
+
+export const PRICE_CHANGE_REASONS = [
+  { id: 'bulk_discount', label: '🔻 Descuento por volumen', type: 'discount' },
+  { id: 'loyalty_discount', label: '🔻 Descuento por fidelidad', type: 'discount' },
+  { id: 'promotional_offer', label: '🔻 Oferta promocional', type: 'discount' },
+  { id: 'damaged_product', label: '🔻 Producto con daño menor', type: 'discount' },
+  { id: 'clearance_sale', label: '🔻 Liquidación de inventario', type: 'discount' },
+  { id: 'price_match', label: '🔻 Igualación de precio', type: 'discount' },
+  { id: 'tournament_price', label: '🔺 Precio de torneo/evento', type: 'increase' },
+  { id: 'peak_hours', label: '🔺 Tarifa por hora pico', type: 'increase' },
+  { id: 'holiday_surcharge', label: '🔺 Recargo por feriado', type: 'increase' },
+];
 
 const formatCurrency = (value: number, currencyCode = 'PYG'): string => {
   const isPYG = currencyCode === 'PYG';
@@ -126,7 +144,13 @@ const toDateInputValue = (date: Date): string => {
 };
 
 const getProductDisplay = (product: Record<string, unknown>): ProductDisplay => {
+  // Jerarquía según API v3.1.0: applicable_tax_rate > category.default_tax_rate > fallback
+  const applicableTaxRate = (product.applicable_tax_rate as any)?.rate;
+  const categoryTaxRate = (product.category as any)?.default_tax_rate?.rate;
+  
   const rawTaxRateCandidates = [
+    applicableTaxRate,
+    categoryTaxRate,
     product.tax_rate,
     product.tax_rate_value,
     product.tax_percentage,
@@ -134,19 +158,24 @@ const getProductDisplay = (product: Record<string, unknown>): ProductDisplay => 
     product.iva,
   ];
 
-  let normalizedTaxRate = 0;
+  let normalizedTaxRate = 0.10; // Fallback sistema (IVA 10% según doc)
   const rawTaxRate = rawTaxRateCandidates.find(candidate => candidate !== undefined && candidate !== null);
+  
   if (rawTaxRate !== undefined) {
     const parsedRate = Number(rawTaxRate);
-    if (Number.isFinite(parsedRate) && parsedRate > 0) {
+    if (Number.isFinite(parsedRate)) {
+      // Si viene como 10.0 -> 0.10, si viene como 0.10 -> 0.10
       normalizedTaxRate = parsedRate >= 1 ? parsedRate / 100 : parsedRate;
     }
   }
 
+  // Búsqueda exhaustiva de precio en el objeto de la API
+  const unitPrices = product.unit_prices as any[];
   const price = 
     product.sale_price ||
     product.price ||
     product.unit_price ||
+    (Array.isArray(unitPrices) && (unitPrices[0]?.price_per_unit || unitPrices[0]?.price || unitPrices[0]?.selling_price)) ||
     0;
 
   return {
@@ -166,6 +195,7 @@ const SalesNew: React.FC = () => {
   const toast = useToast();
   const productSearchInputRef = useRef<HTMLInputElement>(null);
   const clientSearchInputRef = useRef<HTMLInputElement>(null);
+  const dropdownQuantityInputRef = useRef<HTMLInputElement>(null);
 
   const { searchClients } = useClientStore();
   const {
@@ -211,6 +241,7 @@ const SalesNew: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedModalProduct, setSelectedModalProduct] = useState<Record<string, unknown> | null>(null);
   const [modalQuantity, setModalQuantity] = useState(1);
+  const [modalPrice, setModalPrice] = useState(0);
   const [modalDiscount, setModalDiscount] = useState(0);
   const [modalDiscountType, setModalDiscountType] = useState<'amount' | 'percent'>('amount');
   const [modalDiscountReason, setModalDiscountReason] = useState('');
@@ -221,6 +252,12 @@ const SalesNew: React.FC = () => {
   const [isProcessingSale, setIsProcessingSale] = useState(false);
 
   const [currentSaleId, setCurrentSaleId] = useState<string | null>(null);
+  const [activeSales, setActiveSales] = useState<any[]>([]);
+  const [activeSale, setActiveSale] = useState<any | null>(null);
+  const [showActiveSaleModal, setShowActiveSaleModal] = useState(false);
+
+  const [pendingReservations, setPendingReservations] = useState<any[]>([]);
+  const [showReservationModal, setShowReservationModal] = useState(false);
 
   const [productSearchResults, setProductSearchResults] = useState<ProductDisplay[]>([]);
   const [isSearchingProducts, setIsSearchingProducts] = useState(false);
@@ -233,6 +270,9 @@ const SalesNew: React.FC = () => {
   const subtotal = saleTotals.subtotal;
   const lineDiscounts = saleTotals.discount_total;
   const taxes = saleTotals.tax_amount;
+  const iva10 = saleTotals.iva10;
+  const iva5 = saleTotals.iva5;
+  const exento = saleTotals.exento;
   const total = useMemo(() => Math.max(0, saleTotals.total - generalDiscount), [saleTotals.total, generalDiscount]);
 
   const filteredItems = useMemo(() => 
@@ -295,8 +335,8 @@ const SalesNew: React.FC = () => {
   useEffect(() => {
     const loadPaymentData = async () => {
       try {
-        const methods = await PaymentMethodService.getAll();
-        const methodsArray = Array.isArray(methods) ? methods : [];
+        const response = await PaymentMethodService.getAll();
+        const methodsArray = Array.isArray(response) ? response : (response as any)?.data || [];
         setPaymentMethods(methodsArray);
         if (methodsArray.length > 0) setPaymentMethodId(methodsArray[0].id);
       } catch (error) {
@@ -304,7 +344,8 @@ const SalesNew: React.FC = () => {
       }
 
       try {
-        const currencyList = await CurrencyService.getAll();
+        const response = await CurrencyService.getAll();
+        const currencyList = Array.isArray(response) ? response : (response as any)?.data || [];
         setCurrencies(currencyList);
         if (currencyList.length > 0) setCurrencyId(currencyList[0].id);
       } catch (error) {
@@ -380,12 +421,17 @@ const SalesNew: React.FC = () => {
           event.preventDefault();
           const selectedProduct = productSearchResults[productHighlightedIndex];
           if (selectedProduct) {
-            addProductToCart(selectedProduct, selectedProductQuantity);
-            setProductSearchTerm('');
-            setProductHighlightedIndex(-1);
-            setSelectedProductQuantity(1);
-            setShowProductDropdown(false);
-            productSearchInputRef.current?.focus();
+            if (document.activeElement !== dropdownQuantityInputRef.current) {
+              dropdownQuantityInputRef.current?.focus();
+              dropdownQuantityInputRef.current?.select();
+            } else {
+              addProductToCart(selectedProduct, selectedProductQuantity);
+              setProductSearchTerm('');
+              setProductHighlightedIndex(-1);
+              setSelectedProductQuantity(1);
+              setShowProductDropdown(false);
+              productSearchInputRef.current?.focus();
+            }
           }
         } else if (event.key === 'Escape') {
           setShowProductDropdown(false);
@@ -456,6 +502,8 @@ const SalesNew: React.FC = () => {
       name: product.name,
       quantity,
       price: product.price,
+      originalPrice: product.price,
+      stock: product.stock,
       discount: 0,
       discountType: 'amount',
       discountInput: 0,
@@ -476,12 +524,125 @@ const SalesNew: React.FC = () => {
     });
   }, []);
 
-  const handleSelectClient = (client: Client) => {
+  const handleSelectClient = async (client: Client) => {
     setSelectedClient(client);
+    
+    // Buscar ventas pendientes del cliente
+    try {
+      const response = await saleService.getPendingSalesByClient(client.id);
+      if (response?.success && Array.isArray(response.data) && response.data.length > 0) {
+        setActiveSales(response.data);
+        setActiveSale(response.data[0]);
+        setShowActiveSaleModal(true);
+      }
+    } catch (error) {
+      console.error('Error buscando ventas pendientes:', error);
+    }
+
+    // Buscar reservas confirmadas del cliente
+    try {
+      const reservations = await apiService.getReservationReport({
+        client_id: client.id,
+        status: 'CONFIRMED',
+      });
+      if (reservations && reservations.length > 0) {
+        setPendingReservations(reservations);
+        setShowReservationModal(true);
+      }
+    } catch (error) {
+      console.error('Error buscando reservas del cliente:', error);
+    }
+  };
+
+  const handleContinueSale = async () => {
+    if (!activeSale) return;
+    
+    let saleDetails = activeSale.details || [];
+    const saleId = activeSale.sale_id || activeSale.id;
+
+    if (saleDetails.length === 0 && saleId) {
+      try {
+        const fullSale = await saleService.getSaleById(saleId);
+        if (fullSale?.success && fullSale.data?.details) {
+          saleDetails = fullSale.data.details;
+        }
+      } catch (error) {
+        console.error('Error fetching sale details:', error);
+      }
+    }
+
+    const loadedItems: CartItem[] = saleDetails.map((detail: any, index: number) => ({
+      id: `SALE-${saleId}-${detail.product_id}-${Date.now()}-${index}`,
+      productId: detail.product_id,
+      name: detail.product_name || 'Producto existente',
+      quantity: detail.quantity,
+      price: detail.unit_price || detail.price || 0,
+      originalPrice: detail.unit_price || detail.price || 0,
+      discount: detail.discount_amount || 0,
+      discountType: detail.discount_percent ? 'percent' : 'amount',
+      discountInput: detail.discount_percent || detail.discount_amount || 0,
+      discountReason: detail.discount_reason || 'Venta persistida',
+      taxRate: detail.tax_rate || 0,
+      unit: detail.unit || 'unit',
+      isFromPendingSale: true,
+      detailId: detail.id,
+    }));
+
+    setItems(prev => {
+      const existingProductIds = new Set(prev.map(item => item.productId));
+      const newItems = loadedItems.filter(item => !existingProductIds.has(item.productId));
+      
+      if (newItems.length === 0) {
+        toast.info('Todos los productos de esta venta ya están en el carrito');
+        return prev;
+      }
+      return [...prev, ...newItems];
+    });
+
+    setCurrentSaleId(saleId);
+    setShowActiveSaleModal(false);
+    toast.success(`Cargada venta #${saleId} para continuar`);
+  };
+
+  const handleAddReservations = () => {
+    if (pendingReservations.length === 0) return;
+
+    const loadedItems: CartItem[] = pendingReservations.map((res: any, index: number) => ({
+      id: `RES-${res.reserve_id || res.id}-${Date.now()}-${index}`,
+      productId: res.product_id || '',
+      name: res.product_name || 'Servicio de reserva',
+      quantity: 1,
+      price: res.total_amount || 0, // Precio unitario de la reserva
+      originalPrice: res.total_amount || 0,
+      discount: 0,
+      discountType: 'amount',
+      discountInput: 0,
+      discountReason: '',
+      taxRate: res.tax_rate || 0,
+      unit: 'service',
+      isFromPendingSale: false,
+    }));
+
+    setItems(prev => {
+      const existingResIds = new Set(prev.map(item => item.id.split('-')[1]));
+      const newItems = loadedItems.filter(item => !existingResIds.has(item.id.split('-')[1]));
+      
+      if (newItems.length === 0) {
+        toast.info('Las reservas seleccionadas ya están en el carrito');
+        return prev;
+      }
+      return [...prev, ...newItems];
+    });
+
+    setShowReservationModal(false);
+    setPendingReservations([]);
+    toast.success('Reservas añadidas al carrito');
   };
 
   const handleClearClient = () => {
     setSelectedClient(null);
+    setCurrentSaleId(null);
+    setPendingReservations([]);
   };
 
   const handleOpenEditModal = (item: CartItem) => {
@@ -497,6 +658,7 @@ const SalesNew: React.FC = () => {
       taxRate: item.taxRate,
     });
     setModalQuantity(item.quantity);
+    setModalPrice(item.price);
     setModalDiscount(item.discountInput);
     setModalDiscountType(item.discountType);
     setModalDiscountReason(item.discountReason);
@@ -508,20 +670,37 @@ const SalesNew: React.FC = () => {
       setIsModalOpen(false);
       return;
     }
-    if (modalDiscount > 0 && !modalDiscountReason.trim()) {
-      toast.error('Debes ingresar una razón para el descuento');
+
+    const productDisplay = getProductDisplay(selectedModalProduct);
+    const originalPrice = productDisplay.price;
+    const parsedModalQuantity = Math.max(1, Number(modalQuantity) || 1);
+    const parsedModalDiscount = Math.max(0, Number(modalDiscount) || 0);
+    
+    // Si el descuento es > 0, calculamos el precio final desde el descuento
+    // Si el descuento es 0, usamos el modalPrice (que pudo ser editado directamente)
+    let finalUnitPrice = Number(modalPrice);
+    let currentDiscountInput = parsedModalDiscount;
+    let currentDiscountType = modalDiscountType;
+
+    if (parsedModalDiscount > 0) {
+      if (modalDiscountType === 'percent') {
+        finalUnitPrice = originalPrice * (1 - parsedModalDiscount / 100);
+      } else {
+        finalUnitPrice = originalPrice - parsedModalDiscount;
+      }
+    }
+
+    const priceChanged = Math.abs(finalUnitPrice - originalPrice) > 0.01;
+
+    // VALIDACIÓN ESTRICTA: Si el precio cambió, la razón es obligatoria
+    if (priceChanged && !modalDiscountReason.trim()) {
+      toast.error('Debes ingresar una razón para el cambio de precio');
       return;
     }
 
-    const productDisplay = getProductDisplay(selectedModalProduct);
-    const parsedModalQuantity = Math.max(1, Number(modalQuantity) || 1);
-    const parsedModalDiscount = Math.max(0, Number(modalDiscount) || 0);
-
-    let discountValue = 0;
-    if (modalDiscountType === 'percent') {
-      discountValue = productDisplay.price * (parsedModalDiscount / 100) * parsedModalQuantity;
-    } else {
-      discountValue = parsedModalDiscount * parsedModalQuantity;
+    let totalDiscountAmount = 0;
+    if (finalUnitPrice < originalPrice) {
+      totalDiscountAmount = (originalPrice - finalUnitPrice) * parsedModalQuantity;
     }
 
     const newItem: CartItem = {
@@ -529,11 +708,12 @@ const SalesNew: React.FC = () => {
       productId: productDisplay.id,
       name: productDisplay.name,
       quantity: parsedModalQuantity,
-      price: productDisplay.price,
-      discount: discountValue,
-      discountType: modalDiscountType,
-      discountInput: parsedModalDiscount,
-      discountReason: modalDiscountReason,
+      price: finalUnitPrice, // El precio que efectivamente se cobra
+      stock: (selectedModalProduct as any).stock_quantity || (selectedModalProduct as any).stock,
+      discount: totalDiscountAmount,
+      discountType: currentDiscountType,
+      discountInput: currentDiscountInput,
+      discountReason: priceChanged ? modalDiscountReason : '',
       taxRate: productDisplay.taxRate,
       unit: productDisplay.base_unit,
     };
@@ -547,6 +727,7 @@ const SalesNew: React.FC = () => {
 
     setModalQuantity(1);
     setModalDiscount(0);
+    setModalPrice(0);
     setEditingItemId(null);
     setIsModalOpen(false);
   };
@@ -613,54 +794,89 @@ const SalesNew: React.FC = () => {
     setIsProcessingSale(true);
     try {
       if (currentSaleId) {
+        // Filtrar solo los productos NUEVOS
         const newItems = items.filter(item => !item.isFromPendingSale);
-        if (newItems.length === 0) { 
-          toast.error('No hay productos nuevos para agregar'); 
+        
+        if (newItems.length === 0) {
+          toast.info('No hay productos nuevos para agregar a esta venta');
           setIsProcessingSale(false);
           return;
         }
+
+        // VALIDACIÓN DE STOCK antes de enviar (según el Error 500 reportado)
+        for (const item of newItems) {
+          // Intentar obtener stock actualizado si es posible o usar el del carrito
+          if (item.quantity > (item as any).stock && (item as any).stock !== undefined) {
+            toast.error(`Stock insuficiente para ${item.name}. Disponible: ${(item as any).stock}`);
+            setIsProcessingSale(false);
+            return;
+          }
+        }
+
         const payload = {
-          allow_price_modifications: newItems.some(item => item.discount > 0),
-          product_details: newItems.map(item => ({
-            product_id: item.productId,
-            quantity: item.quantity,
-            unit: item.unit || 'unit',
-            ...(item.discount > 0 && {
-              [item.discountType === 'percent' ? 'discount_percent' : 'discount_amount']: Number(item.discountInput),
-              discount_reason: item.discountReason || 'Descuento aplicado en venta',
-            }),
-          })),
+          allow_price_modifications: newItems.some(item => Math.abs(item.price - item.originalPrice) > 0.01),
+          product_details: newItems.map(item => {
+            const hasModification = Math.abs(item.price - item.originalPrice) > 0.01;
+            return {
+              product_id: item.productId,
+              quantity: item.quantity,
+              unit: item.unit || 'unit',
+              ...(hasModification && {
+                [item.discountType === 'percent' ? 'discount_percent' : 'discount_amount']: Number(item.discountInput),
+                discount_reason: item.discountReason || 'Ajuste de precio aplicado',
+              }),
+            };
+          }),
         };
+
         const response = await saleService.addProductsToSale(currentSaleId, payload);
+        
         if (response?.success) {
-          toast.success(`Venta actualizada exitosamente.`); 
-          setItems([]); 
-          setCurrentSaleId(null); 
+          toast.success(`Venta #${currentSaleId} actualizada exitosamente.`);
+          setItems([]);
+          setCurrentSaleId(null);
           setSelectedClient(null);
           fetchDashboardData();
           handleHistoryFilter();
         }
       } else {
+        const payloadPriceMod = items.some(item => Math.abs(item.price - item.originalPrice) > 0.01);
         const saleData = {
           client_id: selectedClient.id,
-          allow_price_modifications: items.some(item => item.discount > 0),
-          product_details: items.map(item => ({
-            product_id: item.productId,
-            quantity: item.quantity,
-            unit: item.unit || 'unit',
-            ...(item.discount > 0 && {
-              [item.discountType === 'percent' ? 'discount_percent' : 'discount_amount']: Number(item.discountInput),
-              discount_reason: item.discountReason || 'Descuento aplicado en venta',
-            }),
-          })),
+          allow_price_modifications: payloadPriceMod,
+          product_details: items.map(item => {
+            const hasModification = Math.abs(item.price - item.originalPrice) > 0.01;
+            return {
+              product_id: item.productId,
+              quantity: item.quantity,
+              unit: item.unit || 'unit',
+              ...(hasModification && {
+                [item.discountType === 'percent' ? 'discount_percent' : 'discount_amount']: Number(item.discountInput),
+                discount_reason: item.discountReason || 'Descuento aplicado en venta',
+              }),
+            };
+          }),
+          payment_method_id: paymentMethodId,
+          currency_id: currencyId,
         };
         const response = await createSale(saleData);
         if (response?.sale_id) {
-          setCreatedSaleData({ id: response.sale_id, total: response.total_amount, status: 'pending' }); 
+          const selectedMethod = paymentMethods.find(m => m.id === paymentMethodId);
+          const selectedCurrency = currencies.find(c => c.id === currencyId);
+          
+          setCreatedSaleData({ 
+            id: response.sale_id, 
+            total: response.total_amount, 
+            status: 'pending',
+            paymentMethodId: paymentMethodId,
+            paymentMethodLabel: (selectedMethod as any)?.name || (selectedMethod as any)?.description || 'Efectivo',
+            currencyCode: (selectedCurrency as any)?.code || 'PYG'
+          });
           setShowInstantCollection(true);
+          fetchDashboardData();
         }
       }
-    } catch (error) { 
+    } catch (error) {
       toast.error('Error al procesar la venta');
     } finally {
       setIsProcessingSale(false);
@@ -767,61 +983,69 @@ const SalesNew: React.FC = () => {
                                   )}
                                 >
                                   <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-sm truncate">{product.name}</p>
-                                    <p className="text-xs text-slate-500">SKU: {product.sku}</p>
-                                  </div>
-                                  <div className="text-right">
-                                    <p className="font-black text-primary">
-                                      {formatCurrency(product.price)}
-                                    </p>
-                                    <p className={cn(
-                                      'text-[10px] font-bold uppercase',
-                                      product.stock > 0 ? 'text-success' : 'text-error'
-                                    )}>
-                                      Stock: {product.stock}
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-black text-sm text-slate-800 truncate">{product.name}</p>
+                                      <Badge variant="outline" className="text-[9px] font-black uppercase text-slate-400 border-slate-200">
+                                        #{product.sku}
+                                      </Badge>
+                                    </div>
+                                    <div className="flex items-center gap-3 mt-0.5">
+                                      <p className="text-sm font-black text-primary tracking-tight">
+                                        {formatCurrency(product.price)}
+                                      </p>
+                                      <div className={cn(
+                                        'px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter',
+                                        product.stock > 0 ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
+                                      )}>
+                                        STOCK: {product.stock}
+                                      </div>
+                                    </div>
                                   </div>
                                 </button>
 
                                 {isHighlighted && (
-                                  <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 border-t border-slate-100">
-                                    <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
-                                      Cant:
-                                    </span>
-                                    <input
-                                      type="number"
-                                      min="1"
-                                      value={selectedProductQuantity}
-                                      onChange={(e) => setSelectedProductQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          e.preventDefault();
-                                          addProductToCart(product, selectedProductQuantity);
-                                          setProductSearchTerm('');
-                                          setShowProductDropdown(false);
-                                          setProductHighlightedIndex(-1);
-                                          setSelectedProductQuantity(1);
-                                          productSearchInputRef.current?.focus();
-                                        } else if (e.key === 'Escape') {
-                                          setShowProductDropdown(false);
-                                          setProductHighlightedIndex(-1);
-                                        } else if (e.key === 'ArrowUp') {
-                                          e.preventDefault();
-                                          setProductHighlightedIndex(prev => Math.max(0, prev - 1));
-                                        } else if (e.key === 'ArrowDown') {
-                                          e.preventDefault();
-                                          setProductHighlightedIndex(prev =>
-                                            Math.min(productSearchResults.length - 1, prev + 1)
-                                          );
-                                        }
-                                        e.stopPropagation();
-                                      }}
-                                      className="w-16 h-8 px-2 text-sm font-bold text-center border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                    <span className="text-xs text-slate-400">
-                                      ↑↓ navegar • Enter agregar
-                                    </span>
+                                  <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-100 border-t border-slate-200 shadow-inner">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black uppercase text-slate-500 whitespace-nowrap">
+                                        Cantidad:
+                                      </span>
+                                      <input
+                                        ref={dropdownQuantityInputRef}
+                                        type="number"
+                                        min="1"
+                                        value={selectedProductQuantity}
+                                        onChange={(e) => setSelectedProductQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            addProductToCart(product, selectedProductQuantity);
+                                            setProductSearchTerm('');
+                                            setShowProductDropdown(false);
+                                            setProductHighlightedIndex(-1);
+                                            setSelectedProductQuantity(1);
+                                            productSearchInputRef.current?.focus();
+                                          } else if (e.key === 'Escape') {
+                                            setShowProductDropdown(false);
+                                            setProductHighlightedIndex(-1);
+                                          } else if (e.key === 'ArrowUp') {
+                                            e.preventDefault();
+                                            setProductHighlightedIndex(prev => Math.max(0, prev - 1));
+                                          } else if (e.key === 'ArrowDown') {
+                                            e.preventDefault();
+                                            setProductHighlightedIndex(prev =>
+                                              Math.min(productSearchResults.length - 1, prev + 1)
+                                            );
+                                          }
+                                          e.stopPropagation();
+                                        }}
+                                        className="w-20 h-9 px-3 text-sm font-black text-center border-2 border-primary/30 rounded-lg bg-white focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary shadow-sm"
+                                        onClick={(e) => e.stopPropagation()}
+                                      />
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-[9px] font-black uppercase text-primary leading-none">ENTER CONFIRMAR</span>
+                                      <span className="text-[9px] font-bold text-slate-400 uppercase leading-none mt-0.5">ESC CANCELAR</span>
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -896,12 +1120,44 @@ const SalesNew: React.FC = () => {
                 </header>
                 <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm"><span>Subtotal</span><span className="font-medium">{formatCurrency(subtotal)}</span></div>
-                    <div className="flex justify-between text-sm"><span>{taxSummaryLabel}</span><span className="font-medium">{formatCurrency(taxes)}</span></div>
-                    <div className="flex justify-between text-sm text-red-500"><span>Descuentos</span><span className="font-medium">-{formatCurrency(lineDiscounts + generalDiscount)}</span></div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Subtotal</span>
+                      <span className="font-medium text-slate-700">{formatCurrency(subtotal)}</span>
+                    </div>
+                    
+                    {/* Desglose de IVA */}
+                    <div className="space-y-1 py-2 border-y border-slate-100 border-dashed">
+                      {iva10 > 0 && (
+                        <div className="flex justify-between text-[11px] font-bold text-slate-500 uppercase">
+                          <span>Liquidación IVA 10%</span>
+                          <span>{formatCurrency(iva10)}</span>
+                        </div>
+                      )}
+                      {iva5 > 0 && (
+                        <div className="flex justify-between text-[11px] font-bold text-slate-500 uppercase">
+                          <span>Liquidación IVA 5%</span>
+                          <span>{formatCurrency(iva5)}</span>
+                        </div>
+                      )}
+                      {exento > 0 && (
+                        <div className="flex justify-between text-[11px] font-bold text-slate-500 uppercase">
+                          <span>Monto Exento</span>
+                          <span>{formatCurrency(exento)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex justify-between text-sm text-red-500 font-bold">
+                      <span>Descuentos</span>
+                      <span>-{formatCurrency(lineDiscounts + generalDiscount)}</span>
+                    </div>
+                    
                     <div className="pt-2 border-t flex justify-between items-end">
-                      <span className="text-base font-bold">Total</span>
-                      <span className="text-2xl font-black text-primary">{formatCurrency(total)}</span>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Total a Pagar</span>
+                        <span className="text-base font-bold">TOTAL</span>
+                      </div>
+                      <span className="text-3xl font-black text-primary tracking-tighter">{formatCurrency(total)}</span>
                     </div>
                   </div>
                   <div className="flex flex-col justify-end gap-2">
@@ -919,12 +1175,13 @@ const SalesNew: React.FC = () => {
             </div>
 
             <aside className="lg:col-span-4 space-y-4">
-              <article className="bg-white rounded-lg shadow-sm border overflow-hidden p-4 space-y-4">
+              <article className="bg-white rounded-lg shadow-sm border p-4 space-y-4">
                 <div className="flex items-center gap-2 border-b pb-2 mb-2">
                   <User size={18} className="text-primary" />
                   <h3 className="font-semibold">Cliente</h3>
                 </div>
                 <SearchableDropdown<Client>
+                  inputRef={clientSearchInputRef}
                   onSelect={handleSelectClient}
                   onSearch={async (term: string): Promise<Client[]> => {
                     if (term.trim().length < 3) return [];
@@ -963,7 +1220,7 @@ const SalesNew: React.FC = () => {
                 )}
               </article>
 
-              <article className="bg-white rounded-lg shadow-sm border overflow-hidden p-4 space-y-3">
+              <article className="bg-white rounded-lg shadow-sm border p-4 space-y-3">
                 <div className="flex items-center gap-2 border-b pb-2">
                   <CreditCard size={18} className="text-primary" />
                   <h3 className="font-semibold">Método de Pago</h3>
@@ -972,17 +1229,17 @@ const SalesNew: React.FC = () => {
                   <SelectTrigger className="w-full h-11">
                     <SelectValue placeholder="Seleccionar método" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[150]">
                     {paymentMethods.map(method => (
                       <SelectItem key={method.id} value={String(method.id)}>
-                        {method.name}
+                        {(method as any).name || (method as any).description || `Método #${method.id}`}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </article>
 
-              <article className="bg-white rounded-lg shadow-sm border overflow-hidden p-4 space-y-3">
+              <article className="bg-white rounded-lg shadow-sm border p-4 space-y-3">
                 <div className="flex items-center gap-2 border-b pb-2">
                   <DollarSign size={18} className="text-primary" />
                   <h3 className="font-semibold">Moneda</h3>
@@ -991,10 +1248,10 @@ const SalesNew: React.FC = () => {
                   <SelectTrigger className="w-full h-11">
                     <SelectValue placeholder="Seleccionar moneda" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[150]">
                     {currencies.map(currency => (
                       <SelectItem key={currency.id} value={String(currency.id)}>
-                        {currency.code}
+                        {(currency as any).code || (currency as any).name || `Moneda #${currency.id}`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1123,16 +1380,25 @@ const SalesNew: React.FC = () => {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Precio Unit.</label>
-                      <div className="h-12 flex items-center justify-center border-2 border-slate-200 rounded-md bg-slate-50">
-                        <span className="text-lg font-bold text-primary">{formatCurrency(modalUnitPrice)}</span>
-                      </div>
+                      <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Precio Final Unit.</label>
+                      <Input
+                        type="number"
+                        value={modalPrice}
+                        onChange={(e) => {
+                          const newPrice = Number(e.target.value);
+                          setModalPrice(newPrice);
+                          // Si cambia el precio directamente, resetear el input de descuento visual
+                          // para evitar confusiones, el cálculo se hará al confirmar.
+                          setModalDiscount(0);
+                        }}
+                        className="h-12 text-lg font-bold text-center border-2 border-slate-200 focus:border-primary text-primary"
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Descuento</label>
+                      <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Aplicar Descuento</label>
                       <Select value={modalDiscountType} onValueChange={(v) => setModalDiscountType(v as 'amount' | 'percent')}>
                         <SelectTrigger className="w-28 h-9 text-xs font-bold">
                           <SelectValue />
@@ -1146,20 +1412,39 @@ const SalesNew: React.FC = () => {
                     <Input
                       type="number"
                       value={modalDiscount}
-                      onChange={(e) => setModalDiscount(e.target.value)}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setModalDiscount(val);
+                        // Al escribir en descuento, el modalPrice se actualizará visualmente en el resumen inferior
+                      }}
                       placeholder={modalDiscountType === 'percent' ? '0' : '0'}
                       className="h-11 text-center font-bold border-2 border-slate-200 focus:border-primary"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Razón del descuento</label>
-                    <Input
-                      value={modalDiscountReason}
-                      onChange={(e) => setModalDiscountReason(e.target.value)}
-                      placeholder="Ej: Promo, descuento por cantidad..."
-                      className="h-10 border-slate-200"
-                    />
+                    <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Razón del cambio de precio</label>
+                    <Select value={modalDiscountReason} onValueChange={setModalDiscountReason}>
+                      <SelectTrigger className="w-full h-11 border-slate-200">
+                        <SelectValue placeholder="Selecciona una razón..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PRICE_CHANGE_REASONS.map(reason => (
+                          <SelectItem key={reason.id} value={reason.label}>
+                            {reason.label}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="Other">Otra razón...</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {modalDiscountReason === 'Other' && (
+                      <Input
+                        value={modalDiscountReason === 'Other' ? '' : modalDiscountReason}
+                        onChange={(e) => setModalDiscountReason(e.target.value)}
+                        placeholder="Especificar razón..."
+                        className="mt-2 h-10 border-slate-200"
+                      />
+                    )}
                   </div>
 
                   <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-3">
@@ -1229,27 +1514,147 @@ const SalesNew: React.FC = () => {
         </div>
       )}
 
+      {showActiveSaleModal && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 bg-white">
+            <CardHeader className="border-b bg-amber-50 px-6 py-4">
+              <CardTitle className="text-amber-700 flex items-center gap-2">
+                <History size={20} /> Ventas Pendientes Detectadas
+              </CardTitle>
+              <p className="text-xs text-amber-600 font-medium">El cliente "{selectedClient?.name}" tiene ventas sin completar.</p>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                {activeSales.map((sale) => (
+                  <label
+                    key={sale.id || sale.sale_id}
+                    className={cn(
+                      "flex flex-col p-3 border rounded-lg cursor-pointer transition-all",
+                      activeSale?.id === sale.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-slate-50 border-slate-200"
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="activeSale"
+                          checked={activeSale?.id === sale.id}
+                          onChange={() => setActiveSale(sale)}
+                          className="size-4 text-primary"
+                        />
+                        <span className="font-bold text-sm text-slate-700">Venta #{sale.id || sale.sale_id}</span>
+                      </div>
+                      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none text-[9px] uppercase font-black">
+                        Pendiente
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-end ml-6">
+                      <span className="text-xs text-slate-500">{formatDateTime(sale.sale_date || sale.created_at)}</span>
+                      <span className="text-sm font-black text-primary">{formatCurrency(sale.total_amount)}</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              
+              <div className="flex gap-3 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowActiveSaleModal(false);
+                    setCurrentSaleId(null);
+                  }} 
+                  className="flex-1 h-11 text-xs font-black uppercase tracking-widest"
+                >
+                  Nueva Venta
+                </Button>
+                <Button 
+                  onClick={handleContinueSale} 
+                  className="flex-1 h-11 text-xs font-black uppercase tracking-widest"
+                >
+                  Continuar Seleccionada
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {showReservationModal && (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 bg-white">
+            <CardHeader className="border-b bg-emerald-50 px-6 py-4">
+              <CardTitle className="text-emerald-700 flex items-center gap-2">
+                <ShoppingCart size={20} /> Reservas Confirmadas
+              </CardTitle>
+              <p className="text-xs text-emerald-600 font-medium">El cliente "{selectedClient?.name}" tiene reservas pendientes de pago.</p>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                {pendingReservations.map((res, index) => (
+                  <div key={`${res.id || res.reserve_id}-${index}`} className="flex flex-col p-3 border border-slate-200 rounded-lg bg-slate-50">
+                    <div className="flex justify-between mb-1">
+                      <span className="font-bold text-sm text-slate-700">{res.product_name || 'Servicio de reserva'}</span>
+                      <Badge className="bg-emerald-100 text-emerald-700 border-none text-[9px] uppercase font-black">Confirmada</Badge>
+                    </div>
+                    <div className="flex justify-between items-end">
+                      <div className="text-xs text-slate-500">
+                        {formatDateTime(res.start_time)}
+                        {res.duration_hours && <span className="ml-2">• {res.duration_hours}h</span>}
+                      </div>
+                      <span className="text-sm font-black text-emerald-600">{formatCurrency(res.total_amount)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex gap-3 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowReservationModal(false);
+                    setPendingReservations([]);
+                  }} 
+                  className="flex-1 h-11 text-xs font-black uppercase tracking-widest"
+                >
+                  Ahora No
+                </Button>
+                <Button 
+                  onClick={handleAddReservations} 
+                  className="flex-1 h-11 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  Añadir Todas al Carrito
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {showInstantCollection && createdSaleData && (
         <InstantPaymentDialog
           open={showInstantCollection}
           onOpenChange={setShowInstantCollection}
           isSale={true}
           totalAmount={createdSaleData.total}
-          currency="PYG"
+          currency={createdSaleData.currencyCode || 'PYG'}
+          paymentMethodId={createdSaleData.paymentMethodId}
+          paymentMethodLabel={createdSaleData.paymentMethodLabel}
           paymentMethods={paymentMethods}
           onSubmit={async (data) => {
             try {
               await salePaymentService.processSalePaymentWithCashRegister({
                 sales_order_id: createdSaleData.id,
                 amount_received: data.amount_received || data.amount,
-                payment_method_id: data.paymentMethodId,
+                payment_method_id: data.paymentMethodId || createdSaleData.paymentMethodId,
                 payment_notes: data.notes || null,
               });
               setShowInstantCollection(false);
               setCreatedSaleData(null);
               setItems([]);
               setSelectedClient(null);
+              setCurrentSaleId(null);
               toast.success('Cobro registrado exitosamente');
+              fetchDashboardData();
             } catch (e) {
               toast.error('Error al registrar cobro');
             }
@@ -1259,6 +1664,7 @@ const SalesNew: React.FC = () => {
             setCreatedSaleData(null);
             setItems([]);
             setSelectedClient(null);
+            setCurrentSaleId(null);
             toast.success('Venta guardada como pendiente');
           }}
         />

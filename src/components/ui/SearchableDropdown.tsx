@@ -17,6 +17,7 @@ export interface SearchableDropdownProps<T extends SearchableDropdownItem> {
   onSearch: (term: string) => Promise<T[]>;
   placeholder?: string;
   autoFocus?: boolean;
+  inputRef?: React.RefObject<HTMLInputElement>;
   renderItem?: (item: T, index: number, isHighlighted: boolean) => React.ReactNode;
   disabled?: boolean;
   className?: string;
@@ -45,6 +46,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
   onSearch,
   placeholder = 'Buscar...',
   autoFocus = false,
+  inputRef: externalInputRef,
   renderItem,
   disabled = false,
   className = '',
@@ -61,7 +63,8 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
   const [isSearching, setIsSearching] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const internalInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = externalInputRef || internalInputRef;
 
   const debouncedSearchTerm = useDebounce(searchTerm, debounceMs);
   const onSearchRef = useRef(onSearch);
