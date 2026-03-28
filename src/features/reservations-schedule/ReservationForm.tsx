@@ -127,16 +127,16 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="space-y-5 lg:space-y-6">
         {/* Cliente con Autocomplete */}
         <div className="relative">
-          <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-3">Cliente / Socio</label>
+          <label className="block text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Cliente / Socio</label>
           <div className="relative">
             <input 
               value={clientSearch}
               onChange={(e) => handleSearch(e.target.value)}
-              className="w-full bg-slate-50 border-none rounded-xl py-4 pl-12 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-medium" 
+              className="w-full bg-slate-50 border-none rounded-xl py-4 pl-12 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold text-slate-700" 
               placeholder="Buscar por nombre o ID..."
               type="text" 
             />
@@ -166,9 +166,9 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-3">Hora Inicio</label>
+            <label className="block text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Hora Inicio</label>
             <input 
               type="datetime-local"
               value={formatDateTimeForInput(startTime)}
@@ -176,15 +176,15 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
                 const newTime = new Date(e.target.value).toISOString();
                 setStartTime(newTime);
               }}
-              className="w-full bg-slate-50 border-none rounded-xl py-3 px-4 font-mono text-blue-600 text-center text-sm font-bold focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+              className="w-full bg-slate-50 border-none rounded-xl py-4 px-4 font-mono text-blue-600 text-center text-sm font-bold focus:ring-2 focus:ring-blue-100 transition-all outline-none"
             />
           </div>
           <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-3">Tipo de Turno</label>
+            <label className="block text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Tipo de Turno</label>
             <select 
               value={selectedReservationType}
               onChange={(e) => setSelectedReservationType(e.target.value)}
-              className="w-full bg-slate-50 border-none rounded-xl py-4 px-4 font-semibold text-xs focus:ring-2 focus:ring-blue-100 transition-all"
+              className="w-full bg-slate-50 border-none rounded-xl py-4 px-4 font-bold text-xs text-slate-700 focus:ring-2 focus:ring-blue-100 transition-all appearance-none cursor-pointer"
             >
               {reservationTypes.length > 0 ? (
                 reservationTypes.map((type) => (
@@ -197,9 +197,9 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
           </div>
         </div>
 
-        <div className="bg-blue-50/30 p-6 rounded-2xl border border-blue-100/50">
+        <div className="bg-blue-50/30 p-5 lg:p-6 rounded-2xl border border-blue-100/50">
           <div className="flex justify-between items-center mb-5">
-            <label className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest">Duración Estimada</label>
+            <label className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest">Duración Estimada</label>
             <span className={`font-mono font-black bg-white px-3 py-1 rounded-lg shadow-sm border ${
               showDurationWarning ? 'border-red-300 text-red-600' : 'border-blue-100 text-blue-700'
             }`}>
@@ -211,9 +211,9 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
             type="range" 
             min={minDuration} 
             max={effectiveMaxDuration} 
-            step="0.5" 
+            step="1" 
             value={duration}
-            onChange={(e) => handleDurationChange(parseFloat(e.target.value))}
+            onChange={(e) => handleDurationChange(parseInt(e.target.value))}
             className="w-full h-1.5 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600" 
           />
           <div className="flex justify-between mt-2 text-[9px] font-mono text-blue-300 font-bold uppercase tracking-tighter">
@@ -233,25 +233,25 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
         </div>
 
         {/* Desglose de Precios */}
-        <div className="bg-slate-50/80 p-6 rounded-2xl space-y-3 border border-slate-100">
+        <div className="bg-slate-50/80 p-5 lg:p-6 rounded-2xl space-y-3 border border-slate-100">
           <div className="flex justify-between text-xs">
-            <span className="text-slate-600 font-medium tracking-tight">Tarifa Base ({duration}h × {formatCurrency(baseRate)}/h)</span>
+            <span className="text-slate-500 font-bold tracking-tight">Tarifa Base ({duration}h × {formatCurrency(baseRate)}/h)</span>
             <span className="font-mono font-bold text-slate-700">{formatCurrency(baseRate * duration)}</span>
           </div>
           {calculatedLightingFee > 0 && (
             <div className="flex justify-between text-xs">
-              <span className="text-slate-600 font-medium tracking-tight">Recargo Iluminación</span>
+              <span className="text-slate-500 font-bold tracking-tight">Recargo Iluminación</span>
               <span className="font-mono font-bold text-slate-700">{formatCurrency(calculatedLightingFee)}</span>
             </div>
           )}
           <div className="pt-3 border-t border-slate-200 flex justify-between items-baseline">
-            <span className="text-sm font-black text-slate-900">Total a Pagar</span>
-            <span className="font-mono font-black text-blue-600 text-xl tracking-tighter">{formatCurrency(total)}</span>
+            <span className="text-xs font-black text-slate-900 uppercase tracking-wider">Total a Pagar</span>
+            <span className="font-mono font-black text-blue-600 text-xl lg:text-2xl tracking-tighter">{formatCurrency(total)}</span>
           </div>
         </div>
       </div>
 
-      <div className="pt-4 space-y-4">
+      <div className="pt-2 lg:pt-4 space-y-4">
         <button 
           disabled={!startTime || !clientId || isSubmitting}
           className="w-full bg-blue-600 py-4 rounded-2xl text-white font-black shadow-xl shadow-blue-600/20 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all transform hover:-translate-y-1 active:scale-[0.98]"

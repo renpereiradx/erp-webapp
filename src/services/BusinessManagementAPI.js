@@ -158,20 +158,9 @@ class BusinessManagementAPI {
         if (endpoint.includes('/exchange-rates')) {
           throw new ApiError('NOT_FOUND', 'Módulo de tipos de cambio no disponible')
         }
-        if (endpoint.includes('/reserve/')) {
-          throw new ApiError(
-            'ENDPOINT_NOT_IMPLEMENTED',
-            'El sistema de reservas aún no está implementado en el servidor. ' +
-              'Contacte al administrador para configurar la API de reservas.',
-          )
-        }
-        if (endpoint.includes('/schedules/')) {
-          throw new ApiError(
-            'ENDPOINT_NOT_IMPLEMENTED',
-            'El sistema de horarios aún no está implementado en el servidor. ' +
-              'Contacte al administrador para configurar la API de horarios.',
-          )
-        }
+        // NOTA: Se eliminó el bloqueo manual de /reserve/ y /schedules/ 
+        // para permitir que las peticiones lleguen al backend real.
+        
         // Endpoint genérico no encontrado
         throw new ApiError(
           'ENDPOINT_NOT_FOUND',

@@ -82,7 +82,7 @@ export const useReservation = (initialProductId?: string) => {
       await fetchSchedules();
     } catch (err) {
       setError('Error al generar horarios');
-      throw err; // Relanzar para el toast
+      throw err;
     }
   };
 
@@ -103,37 +103,48 @@ export const useReservation = (initialProductId?: string) => {
 
   const createReservation = async (clientId: string, startTime: string, duration: number) => {
     try {
+      if (!productId || !clientId || !startTime) {
+        throw new Error('Faltan datos requeridos para la reserva');
+      }
+
       await reservationService.manageReserve({
         action: 'CREATE',
         product_id: productId,
         client_id: clientId,
         start_time: startTime,
-        duration: duration,
+        duration: Number(duration) || 1,
       });
+      
       await fetchSchedules();
     } catch (err) {
       setError('Error al crear reserva');
+      throw err;
     }
   };
 
   const confirmReservation = async (reserveId: number) => {
     try {
+      if (!reserveId) throw new Error('ID de reserva no válido');
+
       await reservationService.manageReserve({
         action: 'CONFIRM',
         reserve_id: reserveId,
         product_id: productId,
-        client_id: '', // Requerido por el tipo pero no por el backend para CONFIRM
+        client_id: '', 
         start_time: '',
         duration: 0,
       });
       await fetchSchedules();
     } catch (err) {
       setError('Error al confirmar reserva');
+      throw err;
     }
   };
 
   const cancelReservation = async (reserveId: number) => {
     try {
+      if (!reserveId) throw new Error('ID de reserva no válido');
+
       await reservationService.manageReserve({
         action: 'CANCEL',
         reserve_id: reserveId,

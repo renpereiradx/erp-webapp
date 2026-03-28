@@ -340,21 +340,71 @@ export const saleService = {
     }
   },
 
-  async getPendingSalesByClient(clientId: string) {
-    // Intentar endpoint específico de pendientes si existe
+  async getPendingSalesByClient(clientId: string, clientName?: string) {
+    const onlyPending = (rawSales: any[]) =>
+      rawSales.filter((s: any) => {
+        const status = (s.sale?.status || s.status || '').toUpperCase()
+        return status === 'PENDING'
+      })
+
+    // 1) Intentar por client_id (algunos backends no tienen este endpoint)
     try {
       const response = await apiClient.getSalesByClientId(clientId, 1, 100)
-      // Filtrar pendientes en el cliente por ahora si el endpoint no lo hace
       const { data } = this.extractSalesAndPagination(response)
-      return { 
-        success: true, 
-        data: data.filter((s: any) => {
-          const status = (s.sale?.status || s.status || '').toUpperCase();
-          return status === 'PENDING';
-        }) 
+      return { success: true, data: onlyPending(data) }
+    } catch (errorById: any) {
+      const notFoundById =
+        String(errorById?.message || '')
+          .toLowerCase()
+          .includes('not found') ||
+        String(errorById?.message || '')
+          .toLowerCase()
+          .includes('endpoint')
+
+      // 2) Fallback por client_name si tenemos nombre
+      if (notFoundById && clientName) {
+        try {
+          const byName = await apiClient.getSalesByClientName(clientName, 1, 100)
+          const { data } = this.extractSalesAndPagination(byName)
+          return { success: true, data: onlyPending(data) }
+        } catch (errorByName) {
+          console.warn('Fallback by client_name failed:', errorByName)
+        }
       }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+
+      // 3) Fallback final por rango de fechas y filtro local
+      try {
+        const endDate = new Date()
+        const startDate = new Date()
+        startDate.setDate(endDate.getDate() - 90)
+
+        const fallback = await apiClient.getSalesByDateRange(
+          startDate.toISOString().split('T')[0],
+          endDate.toISOString().split('T')[0],
+          1,
+          200,
+        )
+
+        const { data } = this.extractSalesAndPagination(fallback)
+        const filteredByClient = data.filter((s: any) => {
+          const saleClientId = String(
+            s.sale?.client_id || s.client_id || s.clientId || '',
+          )
+          const saleClientName = String(s.sale?.client_name || s.client_name || '')
+
+          if (saleClientId && String(clientId)) {
+            return saleClientId === String(clientId)
+          }
+          if (clientName) {
+            return saleClientName.toLowerCase() === String(clientName).toLowerCase()
+          }
+          return false
+        })
+
+        return { success: true, data: onlyPending(filteredByClient) }
+      } catch (fallbackError: any) {
+        return { success: false, error: fallbackError.message || errorById?.message }
+      }
     }
   },
 
@@ -468,9 +518,28 @@ export const saleService = {
     // Normalizar items para el dominio
     const domainItems = items.map(item => ({
       quantity: Number(item.quantity || 0),
-      unit_price: Number(item.price || item.unit_price || item.sale_price || 0),
-      discount_amount: item.discount_amount ? Number(item.discount_amount) : (item.discountType === 'amount' ? Number(item.discountInput) : undefined),
-      discount_percent: item.discount_percent ? Number(item.discount_percent) : (item.discountType === 'percent' ? Number(item.discountInput) : undefined),
+      unit_price: (() => {
+        const original = Number(item.originalPrice)
+        const current = Number(item.price || item.unit_price || item.sale_price || 0)
+        const hasInputDiscount = Number(item.discountInput || 0) > 0
+        const hasDerivedDiscount = Number.isFinite(original) && original > 0 && current < original
+        if ((hasInputDiscount || hasDerivedDiscount) && Number.isFinite(original) && original > 0) {
+          return original
+        }
+        return current
+      })(),
+      discount_amount:
+        item.discount_amount
+          ? Number(item.discount_amount)
+          : item.discountType === 'amount'
+            ? Number(item.discountInput)
+            : undefined,
+      discount_percent:
+        item.discount_percent
+          ? Number(item.discount_percent)
+          : item.discountType === 'percent'
+            ? Number(item.discountInput)
+            : undefined,
       tax_rate: item.taxRate !== undefined ? Number(item.taxRate) : (item.tax_rate ? Number(item.tax_rate) : undefined),
       price_includes_tax: item.price_includes_tax !== undefined ? Boolean(item.price_includes_tax) : true
     }));

@@ -322,25 +322,25 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between px-2">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
         <div>
-          <h3 className="text-sm font-black text-slate-900 uppercase tracking-tighter">Cronograma de Disponibilidad</h3>
-          <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest mt-0.5">Haz clic en un horario libre para reservar</p>
+          <h3 className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-tighter">Cronograma de Disponibilidad</h3>
+          <p className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Haz clic en un horario libre para reservar</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-3 md:gap-4 self-end sm:self-auto">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>
-            <span className="text-[10px] font-black text-slate-600 uppercase">Libre</span>
+            <span className="text-[9px] md:text-[10px] font-black text-slate-600 uppercase">Libre</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"></span>
-            <span className="text-[10px] font-black text-slate-600 uppercase">Ocupado</span>
+            <span className="text-[9px] md:text-[10px] font-black text-slate-600 uppercase">Ocupado</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 px-1 md:px-0">
         {groupedItems.map((item) => {
           if (item.type === 'available' && item.slot) {
             return renderAvailableSlot(item.slot);
@@ -352,9 +352,9 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
       </div>
 
       {(!Array.isArray(slots) || slots.length === 0) && (
-        <div className="bg-white rounded-3xl p-20 text-center border border-slate-100 shadow-sm flex flex-col items-center">
-          <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-4">
-            <span className="material-icons-round text-4xl">event_busy</span>
+        <div className="bg-white rounded-3xl p-10 md:p-20 text-center border border-slate-100 shadow-sm flex flex-col items-center">
+          <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-4">
+            <span className="material-icons-round text-3xl md:text-4xl">event_busy</span>
           </div>
           <h4 className="text-slate-900 font-black text-lg">No hay horarios disponibles</h4>
           <p className="text-slate-500 text-sm max-w-xs mx-auto mt-1">Intenta cambiar la fecha o utiliza el botón de generación rápida para crear slots.</p>

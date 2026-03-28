@@ -13,6 +13,7 @@ import {
   X,
   History,
   Ban,
+  Percent,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +39,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { SearchableDropdown, SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
+import SegmentedControl from '@/components/ui/SegmentedControl';
 import useClientStore from '@/store/useClientStore';
 import useSaleStore from '@/store/useSaleStore';
 import useDashboardStore from '@/store/useDashboardStore';
@@ -190,6 +192,46 @@ const getProductDisplay = (product: Record<string, unknown>): ProductDisplay => 
   };
 };
 
+const getItemBaseUnitPrice = (item: CartItem): number => {
+  const original = Number(item.originalPrice || 0)
+  const current = Number(item.price || 0)
+  const hasExplicitDiscount = Number(item.discountInput || 0) > 0
+  const hasDerivedDiscount = original > 0 && current < original
+
+  if ((hasExplicitDiscount || hasDerivedDiscount) && original > 0) {
+    return original
+  }
+
+  return current
+}
+
+const getItemDiscountPerUnit = (item: CartItem): number => {
+  const basePrice = getItemBaseUnitPrice(item)
+  const explicitInput = Math.max(0, Number(item.discountInput || 0))
+
+  if (explicitInput > 0) {
+    if (item.discountType === 'percent') {
+      return Number((basePrice * (explicitInput / 100)).toFixed(2))
+    }
+    return explicitInput
+  }
+
+  const derived = Number((basePrice - Number(item.price || 0)).toFixed(2))
+  return Math.max(0, derived)
+}
+
+const getItemLineDiscount = (item: CartItem): number => {
+  const quantity = Math.max(1, Number(item.quantity || 1))
+  return Number((getItemDiscountPerUnit(item) * quantity).toFixed(2))
+}
+
+const getItemLineTotal = (item: CartItem): number => {
+  const quantity = Math.max(1, Number(item.quantity || 1))
+  const baseTotal = getItemBaseUnitPrice(item) * quantity
+  const discountTotal = getItemLineDiscount(item)
+  return Math.max(0, Number((baseTotal - discountTotal).toFixed(2)))
+}
+
 const SalesNew: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
@@ -254,6 +296,7 @@ const SalesNew: React.FC = () => {
   const [currentSaleId, setCurrentSaleId] = useState<string | null>(null);
   const [activeSales, setActiveSales] = useState<any[]>([]);
   const [activeSale, setActiveSale] = useState<any | null>(null);
+  const [activeSaleIndex, setActiveSaleIndex] = useState(0);
   const [showActiveSaleModal, setShowActiveSaleModal] = useState(false);
 
   const [pendingReservations, setPendingReservations] = useState<any[]>([]);
@@ -336,18 +379,22 @@ const SalesNew: React.FC = () => {
     const loadPaymentData = async () => {
       try {
         const response = await PaymentMethodService.getAll();
-        const methodsArray = Array.isArray(response) ? response : (response as any)?.data || [];
-        setPaymentMethods(methodsArray);
-        if (methodsArray.length > 0) setPaymentMethodId(methodsArray[0].id);
+        const rawArray = Array.isArray(response) ? response : (response as any)?.data || [];
+        // Filter duplicates by ID to avoid React key errors
+        const uniqueMethods = Array.from(new Map(rawArray.map((m: any) => [m.id, m])).values());
+        setPaymentMethods(uniqueMethods);
+        if (uniqueMethods.length > 0) setPaymentMethodId(uniqueMethods[0].id);
       } catch (error) {
         console.error('Error loading payment methods:', error);
       }
 
       try {
         const response = await CurrencyService.getAll();
-        const currencyList = Array.isArray(response) ? response : (response as any)?.data || [];
-        setCurrencies(currencyList);
-        if (currencyList.length > 0) setCurrencyId(currencyList[0].id);
+        const rawList = Array.isArray(response) ? response : (response as any)?.data || [];
+        // Filter duplicates by ID to avoid React key errors
+        const uniqueCurrencies = Array.from(new Map(rawList.map((c: any) => [c.id, c])).values());
+        setCurrencies(uniqueCurrencies);
+        if (uniqueCurrencies.length > 0) setCurrencyId(uniqueCurrencies[0].id);
       } catch (error) {
         console.error('Error loading currencies:', error);
       }
@@ -526,19 +573,23 @@ const SalesNew: React.FC = () => {
 
   const handleSelectClient = async (client: Client) => {
     setSelectedClient(client);
-    
+
+    let hasPendingSales = false;
+
     // Buscar ventas pendientes del cliente
     try {
-      const response = await saleService.getPendingSalesByClient(client.id);
+      const response = await saleService.getPendingSalesByClient(client.id, client.name);
       if (response?.success && Array.isArray(response.data) && response.data.length > 0) {
         setActiveSales(response.data);
         setActiveSale(response.data[0]);
+        setActiveSaleIndex(0);
         setShowActiveSaleModal(true);
+        hasPendingSales = true;
       }
     } catch (error) {
       console.error('Error buscando ventas pendientes:', error);
     }
-
+    
     // Buscar reservas confirmadas del cliente
     try {
       const reservations = await apiService.getReservationReport({
@@ -547,14 +598,16 @@ const SalesNew: React.FC = () => {
       });
       if (reservations && reservations.length > 0) {
         setPendingReservations(reservations);
-        setShowReservationModal(true);
+        if (!hasPendingSales) {
+          setShowReservationModal(true);
+        }
       }
     } catch (error) {
       console.error('Error buscando reservas del cliente:', error);
     }
   };
 
-  const handleContinueSale = async () => {
+  const handleContinueSale = useCallback(async () => {
     if (!activeSale) return;
     
     let saleDetails = activeSale.details || [];
@@ -571,22 +624,57 @@ const SalesNew: React.FC = () => {
       }
     }
 
-    const loadedItems: CartItem[] = saleDetails.map((detail: any, index: number) => ({
-      id: `SALE-${saleId}-${detail.product_id}-${Date.now()}-${index}`,
-      productId: detail.product_id,
-      name: detail.product_name || 'Producto existente',
-      quantity: detail.quantity,
-      price: detail.unit_price || detail.price || 0,
-      originalPrice: detail.unit_price || detail.price || 0,
-      discount: detail.discount_amount || 0,
-      discountType: detail.discount_percent ? 'percent' : 'amount',
-      discountInput: detail.discount_percent || detail.discount_amount || 0,
-      discountReason: detail.discount_reason || 'Venta persistida',
-      taxRate: detail.tax_rate || 0,
-      unit: detail.unit || 'unit',
-      isFromPendingSale: true,
-      detailId: detail.id,
-    }));
+    const loadedItems: CartItem[] = saleDetails.map((detail: any, index: number) => {
+      const quantity = Math.max(1, Number(detail.quantity) || 1)
+      const rawFinalUnit = Number(detail.unit_price || detail.price || 0)
+      const rawBaseUnit = Number(
+        detail.base_price ||
+          detail.original_unit_price ||
+          detail.list_price ||
+          detail.unit_price ||
+          detail.price ||
+          0,
+      )
+
+      const discountPercent = Number(detail.discount_percent || 0)
+      const lineDiscountAmount = Number(detail.discount_amount || 0)
+      const inferredDiscountPerUnit =
+        rawBaseUnit > rawFinalUnit ? rawBaseUnit - rawFinalUnit : 0
+      const explicitDiscountPerUnit =
+        lineDiscountAmount > 0 ? lineDiscountAmount / quantity : 0
+      const finalDiscountPerUnit =
+        explicitDiscountPerUnit > 0 ? explicitDiscountPerUnit : inferredDiscountPerUnit
+
+      const originalPrice =
+        rawBaseUnit > 0
+          ? rawBaseUnit
+          : Number((rawFinalUnit + finalDiscountPerUnit).toFixed(2))
+
+      const finalUnitPrice = Math.max(
+        0,
+        Number((originalPrice - finalDiscountPerUnit).toFixed(2)),
+      )
+
+      return {
+        id: `SALE-${saleId}-${detail.product_id}-${Date.now()}-${index}`,
+        productId: detail.product_id,
+        name: detail.product_name || 'Producto existente',
+        quantity,
+        price: finalUnitPrice,
+        originalPrice,
+        discount: Number((finalDiscountPerUnit * quantity).toFixed(2)),
+        discountType: discountPercent > 0 ? 'percent' : 'amount',
+        discountInput:
+          discountPercent > 0
+            ? discountPercent
+            : Number(finalDiscountPerUnit.toFixed(2)),
+        discountReason: detail.discount_reason || 'Venta persistida',
+        taxRate: detail.tax_rate || 0,
+        unit: detail.unit || 'unit',
+        isFromPendingSale: true,
+        detailId: detail.id,
+      }
+    });
 
     setItems(prev => {
       const existingProductIds = new Set(prev.map(item => item.productId));
@@ -594,7 +682,6 @@ const SalesNew: React.FC = () => {
       
       if (newItems.length === 0) {
         toast.info('Todos los productos de esta venta ya están en el carrito');
-        return prev;
       }
       return [...prev, ...newItems];
     });
@@ -602,7 +689,46 @@ const SalesNew: React.FC = () => {
     setCurrentSaleId(saleId);
     setShowActiveSaleModal(false);
     toast.success(`Cargada venta #${saleId} para continuar`);
-  };
+    
+    // Cola secuencial: Mostrar reservas solo tras manejar ventas pendientes
+    if (pendingReservations.length > 0) {
+      setTimeout(() => setShowReservationModal(true), 300);
+    }
+  }, [activeSale, saleService, setItems, toast, pendingReservations]);
+
+  useEffect(() => {
+    if (!showActiveSaleModal) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveSaleIndex(prev => {
+          const next = prev < activeSales.length - 1 ? prev + 1 : prev;
+          setActiveSale(activeSales[next]);
+          return next;
+        });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveSaleIndex(prev => {
+          const next = prev > 0 ? prev - 1 : prev;
+          setActiveSale(activeSales[next]);
+          return next;
+        });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        handleContinueSale();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowActiveSaleModal(false);
+        if (pendingReservations.length > 0) {
+          setTimeout(() => setShowReservationModal(true), 300);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showActiveSaleModal, activeSales, handleContinueSale, pendingReservations]);
 
   const handleAddReservations = () => {
     if (pendingReservations.length === 0) return;
@@ -650,7 +776,7 @@ const SalesNew: React.FC = () => {
     setSelectedModalProduct({
       id: item.productId,
       name: item.name,
-      price: item.price,
+      price: item.originalPrice || item.price,
       quantity: item.quantity,
       discount: item.discountInput,
       discountType: item.discountType,
@@ -688,6 +814,9 @@ const SalesNew: React.FC = () => {
       } else {
         finalUnitPrice = originalPrice - parsedModalDiscount;
       }
+    } else if (finalUnitPrice < originalPrice) {
+      currentDiscountType = 'amount';
+      currentDiscountInput = Number((originalPrice - finalUnitPrice).toFixed(2));
     }
 
     const priceChanged = Math.abs(finalUnitPrice - originalPrice) > 0.01;
@@ -703,12 +832,15 @@ const SalesNew: React.FC = () => {
       totalDiscountAmount = (originalPrice - finalUnitPrice) * parsedModalQuantity;
     }
 
+    const existingItem = editingItemId ? items.find(i => i.id === editingItemId) : null;
+
     const newItem: CartItem = {
       id: editingItemId || `${productDisplay.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       productId: productDisplay.id,
       name: productDisplay.name,
       quantity: parsedModalQuantity,
       price: finalUnitPrice, // El precio que efectivamente se cobra
+      originalPrice: originalPrice,
       stock: (selectedModalProduct as any).stock_quantity || (selectedModalProduct as any).stock,
       discount: totalDiscountAmount,
       discountType: currentDiscountType,
@@ -716,6 +848,8 @@ const SalesNew: React.FC = () => {
       discountReason: priceChanged ? modalDiscountReason : '',
       taxRate: productDisplay.taxRate,
       unit: productDisplay.base_unit,
+      isFromPendingSale: existingItem?.isFromPendingSale || false,
+      detailId: existingItem?.detailId,
     };
 
     setItems(prev => {
@@ -814,16 +948,22 @@ const SalesNew: React.FC = () => {
         }
 
         const payload = {
-          allow_price_modifications: newItems.some(item => Math.abs(item.price - item.originalPrice) > 0.01),
+          allow_price_modifications: newItems.some(item => Math.abs((Number(item.price) || 0) - (Number(item.originalPrice) || 0)) > 0.01),
           product_details: newItems.map(item => {
-            const hasModification = Math.abs(item.price - item.originalPrice) > 0.01;
+            const currentPrice = Number(item.price) || 0;
+            const originalPrice = Number(item.originalPrice) || 0;
+            const hasModification = Math.abs(currentPrice - originalPrice) > 0.01;
+            const discountInputVal = Number(item.discountInput) || 0;
+            
             return {
               product_id: item.productId,
-              quantity: item.quantity,
+              quantity: Number(item.quantity) || 1,
               unit: item.unit || 'unit',
               ...(hasModification && {
-                [item.discountType === 'percent' ? 'discount_percent' : 'discount_amount']: Number(item.discountInput),
-                discount_reason: item.discountReason || 'Ajuste de precio aplicado',
+                sale_price: currentPrice,
+                price_change_reason: (item.discountReason || 'Ajuste de precio aplicado').trim() || 'Ajuste de precio',
+                [item.discountType === 'percent' ? 'discount_percent' : 'discount_amount']: discountInputVal,
+                discount_reason: (item.discountReason || 'Ajuste de precio aplicado').trim() || 'Ajuste de precio',
               }),
             };
           }),
@@ -840,33 +980,46 @@ const SalesNew: React.FC = () => {
           handleHistoryFilter();
         }
       } else {
-        const payloadPriceMod = items.some(item => Math.abs(item.price - item.originalPrice) > 0.01);
+        const payloadPriceMod = items.some(item => Math.abs((Number(item.price) || 0) - (Number(item.originalPrice) || 0)) > 0.01);
         const saleData = {
           client_id: selectedClient.id,
           allow_price_modifications: payloadPriceMod,
           product_details: items.map(item => {
-            const hasModification = Math.abs(item.price - item.originalPrice) > 0.01;
+            const currentPrice = Number(item.price) || 0;
+            const originalPrice = Number(item.originalPrice) || 0;
+            const hasModification = Math.abs(currentPrice - originalPrice) > 0.01;
+            const discountInputVal = Number(item.discountInput) || 0;
+            
             return {
               product_id: item.productId,
-              quantity: item.quantity,
+              quantity: Number(item.quantity) || 1,
               unit: item.unit || 'unit',
               ...(hasModification && {
-                [item.discountType === 'percent' ? 'discount_percent' : 'discount_amount']: Number(item.discountInput),
-                discount_reason: item.discountReason || 'Descuento aplicado en venta',
+                sale_price: currentPrice,
+                price_change_reason: (item.discountReason || 'Descuento aplicado en venta').trim() || 'Descuento aplicado',
+                [item.discountType === 'percent' ? 'discount_percent' : 'discount_amount']: discountInputVal,
+                discount_reason: (item.discountReason || 'Descuento aplicado en venta').trim() || 'Descuento aplicado',
               }),
             };
           }),
-          payment_method_id: paymentMethodId,
-          currency_id: currencyId,
+          // NOTA: Se omite payment_method_id en la creacion inicial para que la venta nazca "pendiente"
+          // y el modal de cobro InstantPaymentDialog pueda procesar el pago sin arrojar error de "ya estaba pagada".
+          currency_id: Number(currencyId) || 1,
         };
         const response = await createSale(saleData);
         if (response?.sale_id) {
           const selectedMethod = paymentMethods.find(m => m.id === paymentMethodId);
           const selectedCurrency = currencies.find(c => c.id === currencyId);
           
+          const responseTotal =
+            Number((response as any)?.data?.total_amount) ||
+            Number((response as any)?.total_amount) ||
+            Number(total) ||
+            0;
+
           setCreatedSaleData({ 
             id: response.sale_id, 
-            total: response.total_amount, 
+            total: responseTotal,
             status: 'pending',
             paymentMethodId: paymentMethodId,
             paymentMethodLabel: (selectedMethod as any)?.name || (selectedMethod as any)?.description || 'Efectivo',
@@ -942,7 +1095,7 @@ const SalesNew: React.FC = () => {
                 </header>
 
                 <div className="p-4">
-                  <div className="mb-4">
+                  <div className="mb-4 relative">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
                       <Input
@@ -959,95 +1112,133 @@ const SalesNew: React.FC = () => {
                     </div>
 
                     {showProductDropdown && productSearchResults.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-border-subtle rounded-xl shadow-fluent-16 overflow-hidden max-h-80 overflow-y-auto">
-                        <div className="py-2">
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-border-subtle rounded-xl shadow-fluent-16 overflow-hidden max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="p-1">
                           {productSearchResults.map((product, index) => {
                             const isHighlighted = index === productHighlightedIndex;
+                            const itemKey = product.id ? `search-product-${product.id}` : `search-product-index-${index}`;
+                            
+                            // 1. Calcular cantidad actual en el carrito para este producto
+                            const quantityInCart = items
+                              .filter(item => item.productId === product.id)
+                              .reduce((sum, item) => sum + item.quantity, 0);
+                            
+                            // 2. Calcular stock virtual (disponible)
+                            const availableStock = Math.max(0, product.stock - quantityInCart);
+
                             return (
-                              <div key={product.id} className="relative">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    addProductToCart(product, selectedProductQuantity);
-                                    setProductSearchTerm('');
-                                    setShowProductDropdown(false);
-                                    setProductHighlightedIndex(-1);
-                                    productSearchInputRef.current?.focus();
-                                  }}
-                                  onMouseEnter={() => setProductHighlightedIndex(index)}
-                                  className={cn(
-                                    'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
-                                    isHighlighted
-                                      ? 'bg-primary/5 border-l-4 border-primary'
-                                      : 'hover:bg-slate-50 border-l-4 border-transparent'
-                                  )}
-                                >
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <p className="font-black text-sm text-slate-800 truncate">{product.name}</p>
-                                      <Badge variant="outline" className="text-[9px] font-black uppercase text-slate-400 border-slate-200">
-                                        #{product.sku}
-                                      </Badge>
-                                    </div>
-                                    <div className="flex items-center gap-3 mt-0.5">
-                                      <p className="text-sm font-black text-primary tracking-tight">
-                                        {formatCurrency(product.price)}
-                                      </p>
-                                      <div className={cn(
-                                        'px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter',
-                                        product.stock > 0 ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
-                                      )}>
-                                        STOCK: {product.stock}
+                              <div key={itemKey} className="w-full mb-0.5 last:mb-0">
+                                <div className={cn(
+                                  "flex items-center w-full transition-all rounded-lg overflow-hidden",
+                                  isHighlighted 
+                                    ? "bg-primary/5 ring-1 ring-primary/10 shadow-sm" 
+                                    : "hover:bg-slate-50"
+                                )}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (availableStock <= 0) {
+                                        toast.error(`Sin stock disponible para ${product.name}`);
+                                        return;
+                                      }
+                                      addProductToCart(product, selectedProductQuantity);
+                                      setProductSearchTerm('');
+                                      setShowProductDropdown(false);
+                                      setProductHighlightedIndex(-1);
+                                      productSearchInputRef.current?.focus();
+                                    }}
+                                    onMouseEnter={() => setProductHighlightedIndex(index)}
+                                    className={cn(
+                                      "flex-1 flex items-center gap-2 px-3 py-2 text-left transition-colors min-w-0",
+                                      availableStock <= 0 && "opacity-60 grayscale-[0.5]"
+                                    )}
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-1.5">
+                                        <p className="font-black text-[13px] text-slate-800 truncate leading-tight uppercase">{product.name}</p>
+                                        <Badge variant="outline" className="text-[8px] h-4 px-1 font-black uppercase text-slate-400 border-slate-200 shrink-0 bg-white">
+                                          #{product.sku}
+                                        </Badge>
+                                      </div>
+                                      <div className="flex items-center gap-2.5 mt-0.5">
+                                        <p className="text-xs font-black text-primary tracking-tight">
+                                          {formatCurrency(product.price)}
+                                        </p>
+                                        <div className={cn(
+                                          'px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter shrink-0',
+                                          availableStock > 0 ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
+                                        )}>
+                                          DISP: {availableStock}
+                                          {quantityInCart > 0 && <span className="ml-1 text-slate-400">({quantityInCart} en carrito)</span>}
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                </button>
+                                  </button>
 
-                                {isHighlighted && (
-                                  <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-100 border-t border-slate-200 shadow-inner">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-black uppercase text-slate-500 whitespace-nowrap">
-                                        Cantidad:
-                                      </span>
-                                      <input
-                                        ref={dropdownQuantityInputRef}
-                                        type="number"
-                                        min="1"
-                                        value={selectedProductQuantity}
-                                        onChange={(e) => setSelectedProductQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            addProductToCart(product, selectedProductQuantity);
-                                            setProductSearchTerm('');
-                                            setShowProductDropdown(false);
-                                            setProductHighlightedIndex(-1);
-                                            setSelectedProductQuantity(1);
-                                            productSearchInputRef.current?.focus();
-                                          } else if (e.key === 'Escape') {
-                                            setShowProductDropdown(false);
-                                            setProductHighlightedIndex(-1);
-                                          } else if (e.key === 'ArrowUp') {
-                                            e.preventDefault();
-                                            setProductHighlightedIndex(prev => Math.max(0, prev - 1));
-                                          } else if (e.key === 'ArrowDown') {
-                                            e.preventDefault();
-                                            setProductHighlightedIndex(prev =>
-                                              Math.min(productSearchResults.length - 1, prev + 1)
-                                            );
-                                          }
-                                          e.stopPropagation();
-                                        }}
-                                        className="w-20 h-9 px-3 text-sm font-black text-center border-2 border-primary/30 rounded-lg bg-white focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary shadow-sm"
-                                        onClick={(e) => e.stopPropagation()}
-                                      />
+                                  {isHighlighted && availableStock > 0 && (
+                                    <div className="flex items-center gap-1.5 px-2 py-1.5 mr-1 bg-white rounded-md border border-slate-200 shadow-sm shrink-0 ml-1 animate-in slide-in-from-right-2 duration-200">
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-[8px] font-black uppercase text-slate-400 whitespace-nowrap">
+                                          Cant:
+                                        </span>
+                                        <input
+                                          ref={dropdownQuantityInputRef}
+                                          type="number"
+                                          min="1"
+                                          max={availableStock}
+                                          value={selectedProductQuantity}
+                                          onChange={(e) => {
+                                            const val = Math.max(1, parseInt(e.target.value) || 1);
+                                            setSelectedProductQuantity(Math.min(val, availableStock));
+                                          }}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                              e.preventDefault();
+                                              if (selectedProductQuantity > availableStock) {
+                                                toast.error('Cantidad excede el stock disponible');
+                                                return;
+                                              }
+                                              addProductToCart(product, selectedProductQuantity);
+                                              setProductSearchTerm('');
+                                              setShowProductDropdown(false);
+                                              setProductHighlightedIndex(-1);
+                                              setSelectedProductQuantity(1);
+                                              productSearchInputRef.current?.focus();
+                                            } else if (e.key === 'Escape') {
+                                              setShowProductDropdown(false);
+                                              setProductHighlightedIndex(-1);
+                                            } else if (e.key === 'ArrowUp') {
+                                              e.preventDefault();
+                                              setProductHighlightedIndex(prev => Math.max(0, prev - 1));
+                                            } else if (e.key === 'ArrowDown') {
+                                              e.preventDefault();
+                                              setProductHighlightedIndex(prev =>
+                                                Math.min(productSearchResults.length - 1, prev + 1)
+                                              );
+                                            }
+                                            e.stopPropagation();
+                                          }}
+                                          className="w-10 h-7 text-xs font-black text-center border-2 border-primary/20 rounded-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                          onClick={(e) => e.stopPropagation()}
+                                        />
+                                      </div>
+                                      <div className="flex flex-col border-l border-slate-100 pl-1.5">
+                                        <div className="flex items-center gap-0.5 text-[7px] font-black text-primary leading-none">
+                                          <span className="opacity-60">⏎</span> OK
+                                        </div>
+                                        <div className="flex items-center gap-0.5 text-[7px] font-bold text-slate-400 uppercase leading-none mt-0.5">
+                                          <span className="opacity-60">ESC</span>
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="flex flex-col">
-                                      <span className="text-[9px] font-black uppercase text-primary leading-none">ENTER CONFIRMAR</span>
-                                      <span className="text-[9px] font-bold text-slate-400 uppercase leading-none mt-0.5">ESC CANCELAR</span>
+                                  )}
+                                  
+                                  {isHighlighted && availableStock <= 0 && (
+                                    <div className="px-3 py-1 mr-2 bg-red-50 rounded border border-red-100 text-[8px] font-black text-red-500 uppercase animate-in fade-in duration-200">
+                                      Agotado
                                     </div>
-                                  </div>
-                                )}
+                                  )}
+                                </div>
                               </div>
                             );
                           })}
@@ -1081,9 +1272,9 @@ const SalesNew: React.FC = () => {
                                 {item.name}
                               </td>
                               <td className="py-2 px-3 text-right">{item.quantity}</td>
-                              <td className="py-2 px-3 text-right">{formatCurrency(item.price)}</td>
-                              <td className="py-2 px-3 text-right text-red-500">-{formatCurrency(item.discount)}</td>
-                              <td className="py-2 px-3 text-right font-bold">{formatCurrency(item.price * item.quantity - item.discount)}</td>
+                              <td className="py-2 px-3 text-right">{formatCurrency(getItemBaseUnitPrice(item))}</td>
+                              <td className="py-2 px-3 text-right text-red-500">-{formatCurrency(getItemLineDiscount(item))}</td>
+                              <td className="py-2 px-3 text-right font-bold">{formatCurrency(getItemLineTotal(item))}</td>
                               <td className="py-2 px-3 text-right">
                                 <div className="flex items-center gap-1">
                                   <Button
@@ -1151,10 +1342,49 @@ const SalesNew: React.FC = () => {
                       <span>Descuentos</span>
                       <span>-{formatCurrency(lineDiscounts + generalDiscount)}</span>
                     </div>
+
+                    <div className="p-3 bg-slate-50 rounded-xl border-2 border-slate-100 space-y-2 my-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                        <DollarSign size={10} /> Precio Final de Venta
+                      </label>
+                      <div className="relative group">
+                        <Input
+                          type="number"
+                          value={total}
+                          onChange={(e) => {
+                            const targetTotal = Math.max(0, Number(e.target.value));
+                            if (targetTotal === total || items.length === 0) return;
+                            
+                            // Proportional adjustment logic
+                            const currentTotal = total;
+                            if (currentTotal === 0) return;
+                            const ratio = targetTotal / currentTotal;
+                            
+                            setItems(prev => prev.map(item => {
+                              const newPrice = Number((item.price * ratio).toFixed(2));
+                              const newDiscount = Number(((item.originalPrice - newPrice) * item.quantity).toFixed(2));
+                              return {
+                                ...item,
+                                price: newPrice,
+                                discount: newDiscount,
+                                discountType: 'amount',
+                                discountInput: Number((item.originalPrice - newPrice).toFixed(2)),
+                                discountReason: 'Ajuste global de venta'
+                              };
+                            }));
+                          }}
+                          className="h-11 pl-4 text-xl font-black tracking-tighter text-primary border-transparent bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all rounded-lg"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase tracking-widest pointer-events-none">
+                          EDITABLE
+                        </div>
+                      </div>
+                      <p className="text-[9px] text-slate-400 font-medium px-1 leading-tight">Este monto ajustará proporcionalmente todos los precios en el carrito.</p>
+                    </div>
                     
                     <div className="pt-2 border-t flex justify-between items-end">
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Total a Pagar</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Total Neto</span>
                         <span className="text-base font-bold">TOTAL</span>
                       </div>
                       <span className="text-3xl font-black text-primary tracking-tighter">{formatCurrency(total)}</span>
@@ -1164,9 +1394,17 @@ const SalesNew: React.FC = () => {
                     <Button
                       onClick={handleSaveSale}
                       disabled={isProcessingSale || items.length === 0}
-                      className="w-full h-12 text-base font-bold uppercase tracking-widest"
+                      className={cn(
+                        "w-full h-12 text-base font-black uppercase tracking-widest transition-all",
+                        currentSaleId ? "bg-amber-600 hover:bg-amber-700 shadow-amber-200" : "shadow-primary/20"
+                      )}
                     >
-                      {isProcessingSale ? 'Guardando...' : 'Confirmar Venta'}
+                      {isProcessingSale 
+                        ? 'Procesando...' 
+                        : currentSaleId 
+                          ? `Actualizar Venta #${currentSaleId}` 
+                          : 'Confirmar Venta'
+                      }
                     </Button>
                     <Button variant="outline" onClick={() => setItems([])} className="w-full">Limpiar Carrito</Button>
                   </div>
@@ -1344,141 +1582,204 @@ const SalesNew: React.FC = () => {
 
       {isModalOpen && selectedModalProduct && (
         <div 
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60" 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300" 
           onClick={() => setIsModalOpen(false)}
         >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <Card className="relative w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 bg-white" onClick={(e) => e.stopPropagation()}>
-            <CardHeader className="flex flex-row items-center justify-between border-b bg-primary/5 px-6 py-4">
+          <Card 
+            className="relative w-full max-w-lg shadow-fluent-8 rounded-xl animate-in zoom-in-95 duration-300 bg-white border-none overflow-hidden" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="flex flex-row items-center justify-between border-b bg-slate-50/50 px-6 py-4">
               <div className="flex items-center gap-3">
-                <div className="size-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <ShoppingCart size={20} className="text-primary" />
+                <div className="size-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary shadow-sm">
+                  <ShoppingCart size={20} />
                 </div>
                 <div>
-                  <CardTitle className="text-base font-bold">{editingItemId ? 'Editar Producto' : 'Producto'}</CardTitle>
+                  <CardTitle className="text-base font-black tracking-tighter uppercase">{editingItemId ? 'Editar Producto' : 'Producto'}</CardTitle>
                   {modalDisplay && (
-                    <p className="text-sm text-slate-500 font-medium">{modalDisplay.name}</p>
+                    <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{modalDisplay.name}</p>
                   )}
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 rounded-full">
                 <X size={18} />
               </Button>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               {modalDisplay && (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Cantidad</label>
-                      <Input
-                        type="number"
-                        value={modalQuantity}
-                        onChange={(e) => setModalQuantity(e.target.value)}
-                        min="1"
-                        className="h-12 text-lg font-bold text-center border-2 border-slate-200 focus:border-primary"
-                      />
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] ml-1">Precio Base</label>
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          value={formatCurrency(modalDisplay.price).replace('₲', '').trim()}
+                          disabled
+                          className="h-12 text-sm font-bold text-center border-slate-100 bg-slate-50 text-slate-400 rounded-lg cursor-not-allowed"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Precio Final Unit.</label>
-                      <Input
-                        type="number"
-                        value={modalPrice}
-                        onChange={(e) => {
-                          const newPrice = Number(e.target.value);
-                          setModalPrice(newPrice);
-                          // Si cambia el precio directamente, resetear el input de descuento visual
-                          // para evitar confusiones, el cálculo se hará al confirmar.
-                          setModalDiscount(0);
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] ml-1">Precio Final Unit.</label>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          value={modalPrice}
+                          onChange={(e) => {
+                            const newPrice = Math.max(0, Number(e.target.value));
+                            setModalPrice(newPrice);
+                            // Auto-calculate discount based on new final price
+                            if (newPrice < modalDisplay.price) {
+                              const diff = modalDisplay.price - newPrice;
+                              if (modalDiscountType === 'percent') {
+                                setModalDiscount(Number(((diff / modalDisplay.price) * 100).toFixed(2)));
+                              } else {
+                                setModalDiscount(diff);
+                              }
+                            } else {
+                              setModalDiscount(0);
+                            }
+                          }}
+                          className="h-12 text-sm font-black text-center border-2 border-slate-100 focus:border-primary focus:ring-4 focus:ring-primary/10 text-primary transition-all rounded-lg"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] ml-1">Cantidad</label>
+                      <div className="relative group">
+                        <Input
+                          type="number"
+                          value={modalQuantity}
+                          onChange={(e) => setModalQuantity(e.target.value)}
+                          min="1"
+                          className="h-12 text-sm font-black text-center border-2 border-slate-100 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all rounded-lg"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-2 border-t border-slate-50">
+                    <div className="flex items-center justify-between px-1">
+                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em]">Aplicar Descuento</label>
+                      <SegmentedControl
+                        size="small"
+                        value={modalDiscountType}
+                        onChange={(v) => {
+                          const type = v as 'amount' | 'percent';
+                          setModalDiscountType(type);
+                          // Recalculate input value when switching types to match current final price
+                          if (modalPrice < modalDisplay.price) {
+                             const diff = modalDisplay.price - modalPrice;
+                             if (type === 'percent') {
+                               setModalDiscount(Number(((diff / modalDisplay.price) * 100).toFixed(2)));
+                             } else {
+                               setModalDiscount(diff);
+                             }
+                          }
                         }}
-                        className="h-12 text-lg font-bold text-center border-2 border-slate-200 focus:border-primary text-primary"
+                        options={[
+                          { 
+                            value: 'amount', 
+                            label: <span className="font-black tracking-widest ml-1">MONTO</span>, 
+                            icon: <DollarSign size={12} strokeWidth={3} className="text-primary" /> 
+                          },
+                          { 
+                            value: 'percent', 
+                            label: <span className="font-black tracking-widest ml-1">PORC.</span>, 
+                            icon: <Percent size={12} strokeWidth={3} className="text-primary" /> 
+                          }
+                        ]}
+                      />
+                    </div>
+                    
+                    <div className="relative group">
+                      <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center size-8 bg-slate-100 rounded-md border border-slate-200 text-slate-500 group-focus-within:bg-primary/10 group-focus-within:border-primary/30 group-focus-within:text-primary transition-colors">
+                        {modalDiscountType === 'percent' ? <Percent size={14} strokeWidth={2.5} /> : <DollarSign size={14} strokeWidth={2.5} />}
+                      </div>
+                      <Input
+                        type="number"
+                        value={modalDiscount}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setModalDiscount(val);
+                          // Auto-calculate final price based on new discount
+                          if (val > 0) {
+                            if (modalDiscountType === 'percent') {
+                              setModalPrice(modalDisplay.price * (1 - val / 100));
+                            } else {
+                              setModalPrice(Math.max(0, modalDisplay.price - val));
+                            }
+                          } else {
+                            setModalPrice(modalDisplay.price);
+                          }
+                        }}
+                        placeholder="0"
+                        className="h-12 pl-12 pr-4 text-lg font-black border-2 border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all rounded-lg"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Aplicar Descuento</label>
-                      <Select value={modalDiscountType} onValueChange={(v) => setModalDiscountType(v as 'amount' | 'percent')}>
-                        <SelectTrigger className="w-28 h-9 text-xs font-bold">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="amount">Guaraníes</SelectItem>
-                          <SelectItem value="percent">Porcentaje</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Input
-                      type="number"
-                      value={modalDiscount}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setModalDiscount(val);
-                        // Al escribir en descuento, el modalPrice se actualizará visualmente en el resumen inferior
-                      }}
-                      placeholder={modalDiscountType === 'percent' ? '0' : '0'}
-                      className="h-11 text-center font-bold border-2 border-slate-200 focus:border-primary"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Razón del cambio de precio</label>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] ml-1">Razón del ajuste</label>
                     <Select value={modalDiscountReason} onValueChange={setModalDiscountReason}>
-                      <SelectTrigger className="w-full h-11 border-slate-200">
+                      <SelectTrigger className="w-full h-11 border-2 border-slate-100 rounded-lg font-medium text-sm">
                         <SelectValue placeholder="Selecciona una razón..." />
                       </SelectTrigger>
                       <SelectContent>
                         {PRICE_CHANGE_REASONS.map(reason => (
-                          <SelectItem key={reason.id} value={reason.label}>
+                          <SelectItem key={reason.id} value={reason.label} className="text-sm font-medium">
                             {reason.label}
                           </SelectItem>
                         ))}
-                        <SelectItem value="Other">Otra razón...</SelectItem>
+                        <SelectItem value="Other" className="text-sm font-medium">Otras razones...</SelectItem>
                       </SelectContent>
                     </Select>
                     {modalDiscountReason === 'Other' && (
                       <Input
                         value={modalDiscountReason === 'Other' ? '' : modalDiscountReason}
                         onChange={(e) => setModalDiscountReason(e.target.value)}
-                        placeholder="Especificar razón..."
-                        className="mt-2 h-10 border-slate-200"
+                        placeholder="Especificar motivo detallado..."
+                        className="mt-2 h-10 border-2 border-slate-100 rounded-lg text-sm"
                       />
                     )}
                   </div>
 
-                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-500">Subtotal</span>
-                      <span className="font-medium">{formatCurrency(modalUnitPrice * modalQuantity)}</span>
+                  <div className="rounded-xl bg-slate-50/80 border border-slate-100 p-5 space-y-4 shadow-inner">
+                    <div className="flex justify-between items-center text-xs font-bold uppercase tracking-tight text-slate-500">
+                      <span>Subtotal Bruto</span>
+                      <span className="font-black text-slate-700">{formatCurrency(modalUnitPrice * modalQuantity)}</span>
                     </div>
                     {modalDiscountValue > 0 && (
-                      <div className="flex justify-between text-sm text-red-500">
-                        <span>Descuento</span>
-                        <span className="font-medium">-{formatCurrency(modalDiscountValue)}</span>
+                      <div className="flex justify-between items-center text-xs font-bold uppercase tracking-tight text-red-500">
+                        <div className="flex items-center gap-1.5">
+                          <span className="size-1.5 rounded-full bg-red-500"></span>
+                          <span>Descuento Aplicado</span>
+                        </div>
+                        <span className="font-black">-{formatCurrency(modalDiscountValue)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between pt-2 border-t border-slate-200">
-                      <span className="font-bold">Total</span>
-                      <span className="text-xl font-black text-primary">{formatCurrency(modalLineTotal)}</span>
+                    <div className="flex justify-between items-center pt-4 border-t border-slate-200">
+                      <span className="text-xs font-black uppercase tracking-[0.1em] text-slate-400">Total de Línea</span>
+                      <span className="text-2xl font-black text-primary tracking-tighter">{formatCurrency(modalLineTotal)}</span>
                     </div>
                   </div>
                 </>
               )}
               
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-4 pt-2">
                 <Button 
                   variant="outline" 
                   onClick={() => setIsModalOpen(false)} 
-                  className="flex-1 h-11 font-semibold"
+                  className="flex-1 h-12 text-xs font-black uppercase tracking-widest border-2 hover:bg-slate-50 transition-all"
                 >
                   Cancelar
                 </Button>
                 <Button 
                   onClick={handleConfirmAdd} 
-                  className="flex-1 h-11 font-bold"
+                  className="flex-1 h-12 text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  Confirmar
+                  Confirmar Cambios
                 </Button>
               </div>
             </CardContent>
@@ -1525,35 +1826,49 @@ const SalesNew: React.FC = () => {
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                {activeSales.map((sale) => (
-                  <label
-                    key={sale.id || sale.sale_id}
-                    className={cn(
-                      "flex flex-col p-3 border rounded-lg cursor-pointer transition-all",
-                      activeSale?.id === sale.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-slate-50 border-slate-200"
-                    )}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="activeSale"
-                          checked={activeSale?.id === sale.id}
-                          onChange={() => setActiveSale(sale)}
-                          className="size-4 text-primary"
-                        />
-                        <span className="font-bold text-sm text-slate-700">Venta #{sale.id || sale.sale_id}</span>
+                {activeSales.map((sale, index) => {
+                  const saleId = sale.id || sale.sale_id;
+                  const itemKey = saleId ? `pending-sale-${saleId}` : `pending-sale-index-${index}`;
+                  
+                  return (
+                    <label
+                      key={itemKey}
+                      className={cn(
+                        "flex flex-col p-3 border rounded-lg cursor-pointer transition-all",
+                        activeSale?.id === sale.id || activeSaleIndex === index 
+                          ? "border-primary bg-primary/5 ring-1 ring-primary shadow-sm" 
+                          : "hover:bg-slate-50 border-slate-200"
+                      )}
+                      onMouseEnter={() => {
+                        setActiveSale(sale);
+                        setActiveSaleIndex(index);
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="activeSale"
+                            checked={activeSale?.id === sale.id || activeSaleIndex === index}
+                            onChange={() => {
+                              setActiveSale(sale);
+                              setActiveSaleIndex(index);
+                            }}
+                            className="size-4 text-primary"
+                          />
+                          <span className="font-bold text-sm text-slate-700">Venta #{saleId}</span>
+                        </div>
+                        <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none text-[9px] uppercase font-black">
+                          Pendiente
+                        </Badge>
                       </div>
-                      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none text-[9px] uppercase font-black">
-                        Pendiente
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between items-end ml-6">
-                      <span className="text-xs text-slate-500">{formatDateTime(sale.sale_date || sale.created_at)}</span>
-                      <span className="text-sm font-black text-primary">{formatCurrency(sale.total_amount)}</span>
-                    </div>
-                  </label>
-                ))}
+                      <div className="flex justify-between items-end ml-6">
+                        <span className="text-xs text-slate-500">{formatDateTime(sale.sale_date || sale.created_at)}</span>
+                        <span className="text-sm font-black text-primary">{formatCurrency(sale.total_amount)}</span>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
               
               <div className="flex gap-3 pt-4 border-t">
@@ -1633,20 +1948,26 @@ const SalesNew: React.FC = () => {
       {showInstantCollection && createdSaleData && (
         <InstantPaymentDialog
           open={showInstantCollection}
-          onOpenChange={setShowInstantCollection}
-          isSale={true}
-          totalAmount={createdSaleData.total}
-          currency={createdSaleData.currencyCode || 'PYG'}
-          paymentMethodId={createdSaleData.paymentMethodId}
-          paymentMethodLabel={createdSaleData.paymentMethodLabel}
-          paymentMethods={paymentMethods}
-          onSubmit={async (data) => {
+          onConfirmPayment={async (data) => {
             try {
+              const paymentStatus = await saleService.getSalePaymentStatus(createdSaleData.id);
+              const alreadyPaid = Boolean((paymentStatus as any)?.data?.is_fully_paid);
+              if (alreadyPaid) {
+                setShowInstantCollection(false);
+                setCreatedSaleData(null);
+                setItems([]);
+                setSelectedClient(null);
+                setCurrentSaleId(null);
+                toast.info('La venta ya estaba pagada. Se guardo correctamente.');
+                fetchDashboardData();
+                return;
+              }
+
               await salePaymentService.processSalePaymentWithCashRegister({
                 sales_order_id: createdSaleData.id,
                 amount_received: data.amount_received || data.amount,
                 payment_method_id: data.paymentMethodId || createdSaleData.paymentMethodId,
-                payment_notes: data.notes || null,
+                payment_notes: data.payment_notes || null,
               });
               setShowInstantCollection(false);
               setCreatedSaleData(null);
@@ -1655,7 +1976,18 @@ const SalesNew: React.FC = () => {
               setCurrentSaleId(null);
               toast.success('Cobro registrado exitosamente');
               fetchDashboardData();
-            } catch (e) {
+            } catch (e: any) {
+              const errorText = String(e?.message || '').toLowerCase();
+              if (errorText.includes('already fully paid') || errorText.includes('ya esta pagada')) {
+                setShowInstantCollection(false);
+                setCreatedSaleData(null);
+                setItems([]);
+                setSelectedClient(null);
+                setCurrentSaleId(null);
+                toast.info('La venta ya estaba pagada. No se registro un cobro duplicado.');
+                fetchDashboardData();
+                return;
+              }
               toast.error('Error al registrar cobro');
             }
           }}
@@ -1667,6 +1999,13 @@ const SalesNew: React.FC = () => {
             setCurrentSaleId(null);
             toast.success('Venta guardada como pendiente');
           }}
+          variant="sale"
+          orderId={createdSaleData.id}
+          totalAmount={createdSaleData.total}
+          currencyCode={createdSaleData.currencyCode || 'PYG'}
+          paymentMethodId={createdSaleData.paymentMethodId}
+          paymentMethodLabel={createdSaleData.paymentMethodLabel}
+          paymentMethods={paymentMethods}
         />
       )}
 
