@@ -181,11 +181,10 @@ class BusinessManagementAPI {
         if (options.body) {
           try {
             console.info('Payload Sent:', JSON.parse(options.body))
-          } catch (e) {
+          } catch {
             console.info('Raw Payload:', options.body)
           }
         }
-        console.info('Headers Sent:', options.headers || 'Default or no explicit headers')
         console.info('Server Raw Response Body:', rawErrorBody || 'Empty response body')
         console.groupEnd()
       } else if (isKnownBackendIssue) {
@@ -236,22 +235,22 @@ class BusinessManagementAPI {
       throw new ApiError('HTTP_ERROR', errorDetails)
     }
 
+    let parsedResponse
     const contentType = response.headers.get('content-type')
     if (contentType && contentType.includes('application/json')) {
-      const data = await response.json()
-      return data
+      parsedResponse = await response.json()
+    } else {
+      const textResponse = await response.text()
+      if (
+        textResponse === 'Product not found' ||
+        textResponse.includes('not found')
+      ) {
+        throw new ApiError('NOT_FOUND', 'Producto no encontrado')
+      }
+      parsedResponse = textResponse
     }
 
-    // Si es texto plano, verificar si es un mensaje de error conocido
-    const textResponse = await response.text()
-    if (
-      textResponse === 'Product not found' ||
-      textResponse.includes('not found')
-    ) {
-      throw new ApiError('NOT_FOUND', 'Producto no encontrado')
-    }
-
-    return textResponse
+    return parsedResponse
   }
 
   handleUnauthorized() {

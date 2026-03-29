@@ -1,7 +1,7 @@
 # API Unificada: Ventas y Cobros de Ventas
 
-**Versión:** 2.2  
-**Fecha:** 2026-03-28  
+**Versión:** 2.3  
+**Fecha:** 2026-03-29  
 **Base URL (Swagger):** `http://localhost:5050`
 
 ---
@@ -56,6 +56,19 @@ Se corrigió la lectura de detalles en consultas de ventas para evitar duplicado
 - Regla aplicada en backend para `base_price`:
   - `up.unit = COALESCE(sd.unit, 'unit')`
   - `up.effective_to IS NULL`
+
+### Nota de compatibilidad (actualización 2026-03-29)
+
+Se aplicaron correcciones para ventas con descuentos/modificación de precio y para reservas convertidas a venta.
+
+- `POST /sale/`:
+  - restaura helpers de metadata de cambios de precio (`create_price_change_metadata`, `register_price_change_in_metadata`).
+  - corrige resolución de precio activo en detalles para evitar arrastre entre productos.
+- Contrato recomendado para frontend:
+  - enviar `reserve_id` en raíz cuando la venta proviene de reserva.
+  - enviar `reserve_id` en el ítem del servicio reservado.
+  - no enviar `unit: "service"` (valor inválido por constraint). Usar unidades válidas como `unit`, `hour`, etc.
+  - si se usa `sale_price` para fijar precio final, no combinar con `discount_amount`/`discount_percent` en el mismo ítem para evitar doble ajuste.
 
 ---
 
@@ -156,6 +169,11 @@ Se corrigió la lectura de detalles en consultas de ventas para evitar duplicado
   - `client_id` (requerido)
   - `product_details[]` (requerido salvo cuando se usa `reserve_id`)
   - opcionales: `sale_id`, `reserve_id`, `payment_method_id`, `currency_id`, `allow_price_modifications`.
+- **Reglas importantes de `product_details[]`:**
+  - `unit` debe pertenecer al catálogo permitido por DB (ej: `unit`, `hour`, `kg`, `l`, `can`, etc.).
+  - `unit: "service"` no es válido y produce `chk_sales_order_details_valid_unit`.
+  - para ítems de reserva, enviar `reserve_id` también a nivel de detalle.
+  - `sale_price` y `discount_*` son acumulativos en backend; usar una sola estrategia por ítem cuando el objetivo es un ajuste único.
 - **Carga de producto recomendada para frontend:** usar `GET /products/{id}/sale`.
 - **UI recomendada:** cargar producto con `GET /products/{id}/sale` antes de construir el carrito.
 - **Ejemplo body:**

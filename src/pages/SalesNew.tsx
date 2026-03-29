@@ -69,6 +69,7 @@ interface CartItem {
   unit: string;
   isFromPendingSale?: boolean;
   detailId?: string;
+  reserve_id?: number;  // ID numerico de la reserva si aplica
 }
 
 interface Client extends SearchableDropdownItem {
@@ -590,7 +591,7 @@ const SalesNew: React.FC = () => {
       console.error('Error buscando ventas pendientes:', error);
     }
     
-    // Buscar reservas confirmadas del cliente
+    // Buscar reservas confirmadas del cliente - SIEMPRE cargar, se mostrarán después
     try {
       const reservations = await apiService.getReservationReport({
         client_id: client.id,
@@ -598,6 +599,8 @@ const SalesNew: React.FC = () => {
       });
       if (reservations && reservations.length > 0) {
         setPendingReservations(reservations);
+        // Si no hay ventas pendientes, mostrar reservas directamente
+        // Si hay ventas pendientes, el modal de reservas se mostrará después de cerrar el de ventas
         if (!hasPendingSales) {
           setShowReservationModal(true);
         }
@@ -738,15 +741,16 @@ const SalesNew: React.FC = () => {
       productId: res.product_id || '',
       name: res.product_name || 'Servicio de reserva',
       quantity: 1,
-      price: res.total_amount || 0, // Precio unitario de la reserva
+      price: res.total_amount || 0,
       originalPrice: res.total_amount || 0,
       discount: 0,
       discountType: 'amount',
       discountInput: 0,
       discountReason: '',
       taxRate: res.tax_rate || 0,
-      unit: 'service',
+      unit: res.unit || res.base_unit || 'hour',
       isFromPendingSale: false,
+      reserve_id: Number(res.reserve_id || res.id) || undefined,
     }));
 
     setItems(prev => {
@@ -980,33 +984,65 @@ const SalesNew: React.FC = () => {
           handleHistoryFilter();
         }
       } else {
-        const payloadPriceMod = items.some(item => Math.abs((Number(item.price) || 0) - (Number(item.originalPrice) || 0)) > 0.01);
+        // Validar que exista maximo 1 reserve_id distinto en el carrito
+        const distinctReserveIds = new Set(
+          items
+            .map(item => item.reserve_id)
+            .filter((id): id is number => id !== undefined && id !== null)
+        );
+        
+        if (distinctReserveIds.size > 1) {
+          toast.error('Solo se permite una reserva por venta. Remove items de otras reservas.');
+          setIsProcessingSale(false);
+          return;
+        }
+
+        // Tomar el reserve_id unico si existe
+        const saleReserveId = distinctReserveIds.size === 1
+          ? Array.from(distinctReserveIds)[0]
+          : undefined;
+
+        const payloadPriceMod = items.some(
+          item => Math.abs((Number(item.price) || 0) - (Number(item.originalPrice) || 0)) > 0.01
+        );
+
         const saleData = {
           client_id: selectedClient.id,
+          ...(saleReserveId && { reserve_id: saleReserveId }),
           allow_price_modifications: payloadPriceMod,
+          currency_id: Number(currencyId) || 1,
           product_details: items.map(item => {
             const currentPrice = Number(item.price) || 0;
             const originalPrice = Number(item.originalPrice) || 0;
             const hasModification = Math.abs(currentPrice - originalPrice) > 0.01;
-            const discountInputVal = Number(item.discountInput) || 0;
-            
-            return {
+
+            const detail: any = {
               product_id: item.productId,
               quantity: Number(item.quantity) || 1,
-              unit: item.unit || 'unit',
-              ...(hasModification && {
-                sale_price: currentPrice,
-                price_change_reason: (item.discountReason || 'Descuento aplicado en venta').trim() || 'Descuento aplicado',
-                [item.discountType === 'percent' ? 'discount_percent' : 'discount_amount']: discountInputVal,
-                discount_reason: (item.discountReason || 'Descuento aplicado en venta').trim() || 'Descuento aplicado',
-              }),
             };
+
+            // Validar unit: no enviar "service" (no existe en DB), usar "hour" para reservas o el valor real
+            const validUnit = item.unit && item.unit !== 'service' ? item.unit : 'hour';
+            detail.unit = validUnit;
+
+            // Incluir reserve_id cuando existe (sin condicionar por unit)
+            if (item.reserve_id) {
+              detail.reserve_id = item.reserve_id;
+            }
+
+            // Si hay modificacion: sale_price = precio FINAL (sin discount_amount/discount_percent)
+            if (hasModification) {
+              detail.sale_price = currentPrice;
+              detail.price_change_reason = (item.discountReason || 'Ajuste de precio').trim();
+              // NOTA: No enviamos discount_amount/discount_percent para evitar doble descuento
+            }
+
+            return detail;
           }),
-          // NOTA: Se omite payment_method_id en la creacion inicial para que la venta nazca "pendiente"
-          // y el modal de cobro InstantPaymentDialog pueda procesar el pago sin arrojar error de "ya estaba pagada".
-          currency_id: Number(currencyId) || 1,
         };
+
         const response = await createSale(saleData);
+
         if (response?.sale_id) {
           const selectedMethod = paymentMethods.find(m => m.id === paymentMethodId);
           const selectedCurrency = currencies.find(c => c.id === currencyId);
@@ -1030,6 +1066,7 @@ const SalesNew: React.FC = () => {
         }
       }
     } catch (error) {
+      console.error('Error al procesar la venta:', error);
       toast.error('Error al procesar la venta');
     } finally {
       setIsProcessingSale(false);
@@ -1877,6 +1914,10 @@ const SalesNew: React.FC = () => {
                   onClick={() => {
                     setShowActiveSaleModal(false);
                     setCurrentSaleId(null);
+                    // Si hay reservas pendientes, mostrar el modal de reservas
+                    if (pendingReservations.length > 0) {
+                      setTimeout(() => setShowReservationModal(true), 300);
+                    }
                   }} 
                   className="flex-1 h-11 text-xs font-black uppercase tracking-widest"
                 >
