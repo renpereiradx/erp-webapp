@@ -774,14 +774,16 @@ const Purchases = () => {
         },
       )
 
-      // [INTEGRACION] Una vez registrado el pago inicial, marcamos la orden como COMPLETED
-      // para que el stock se procese y la orden cambie de estado visualmente.
+      // [INTEGRACION] El endpoint /purchase/{id}/status no existe actualmente en el backend (404).
+      // Se comenta la llamada para evitar que el flujo de pago falle. 
+      // El estado debería ser gestionado por el backend tras el registro del pago.
+      /*
       try {
         await purchaseService.updatePurchaseOrderStatus(orderId, 'COMPLETED', 'Pago inicial registrado tras creación')
       } catch (statusError) {
         console.warn('Could not update order status to COMPLETED:', statusError)
-        // No fallamos el proceso si solo falla el cambio de estado, ya que el pago se registró
       }
+      */
 
       toast.success('Pago registrado correctamente')
       setShowInstantPayment(false)

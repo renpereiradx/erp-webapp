@@ -40,21 +40,71 @@ export const useToast = () => {
     setToasts(prev => prev.filter(toast => toast.id !== id))
   }, [])
 
-  const success = useCallback(
-    (message, duration, actions) => {
-      return addToast(message, 'success', duration, actions)
+  const toast = useCallback(
+    (options = {}) => {
+      if (typeof options === 'string') {
+        return addToast(options, 'info')
+      }
+
+      const {
+        title,
+        description,
+        variant,
+        duration = 3000,
+        actions = [],
+        type,
+        message,
+      } = options || {}
+
+      const normalizedType =
+        type || (variant === 'destructive' ? 'error' : variant) || 'info'
+      const finalMessage = description || message || title || 'Notificación'
+
+      return addToast(finalMessage, normalizedType, duration, actions)
     },
     [addToast],
+  )
+
+  const success = useCallback(
+    (message, optionsOrDuration, actions) => {
+      if (typeof optionsOrDuration === 'object') {
+        return toast({ ...optionsOrDuration, message, type: 'success' })
+      }
+      return addToast(message, 'success', optionsOrDuration, actions)
+    },
+    [addToast, toast],
   )
 
   const error = useCallback(
-    (message, duration, actions) => {
-      return addToast(message, 'error', duration, actions)
+    (message, optionsOrDuration, actions) => {
+      if (typeof optionsOrDuration === 'object') {
+        return toast({ ...optionsOrDuration, message, type: 'error' })
+      }
+      return addToast(message, 'error', optionsOrDuration, actions)
     },
-    [addToast],
+    [addToast, toast],
   )
 
-  // Muestra un toast de error a partir de un objeto Error/ApiError, con fallback y mapping por código
+  const warning = useCallback(
+    (message, optionsOrDuration, actions) => {
+      if (typeof optionsOrDuration === 'object') {
+        return toast({ ...optionsOrDuration, message, type: 'warning' })
+      }
+      return addToast(message, 'warning', optionsOrDuration, actions)
+    },
+    [addToast, toast],
+  )
+
+  const info = useCallback(
+    (message, optionsOrDuration, actions) => {
+      if (typeof optionsOrDuration === 'object') {
+        return toast({ ...optionsOrDuration, message, type: 'info' })
+      }
+      return addToast(message, 'info', optionsOrDuration, actions)
+    },
+    [addToast, toast],
+  )
+
   const errorFrom = useCallback(
     (err, { fallback = 'Ocurrió un error', duration = 4000 } = {}) => {
       try {
@@ -118,38 +168,6 @@ export const useToast = () => {
     [addToast, t],
   )
 
-  const info = useCallback(
-    (message, duration) => {
-      return addToast(message, 'info', duration)
-    },
-    [addToast],
-  )
-
-  const toast = useCallback(
-    (options = {}) => {
-      if (typeof options === 'string') {
-        return addToast(options, 'info')
-      }
-
-      const {
-        title,
-        description,
-        variant,
-        duration = 3000,
-        actions = [],
-        type,
-        message,
-      } = options || {}
-
-      const normalizedType =
-        type || (variant === 'destructive' ? 'error' : variant) || 'info'
-      const finalMessage = description || message || title || 'Notificación'
-
-      return addToast(finalMessage, normalizedType, duration, actions)
-    },
-    [addToast],
-  )
-
   const clear = useCallback(() => {
     setToasts([])
   }, [])
@@ -161,6 +179,7 @@ export const useToast = () => {
     removeToast,
     success,
     error,
+    warning,
     errorFrom,
     info,
     clear,

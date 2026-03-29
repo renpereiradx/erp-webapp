@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { CheckCircle, AlertCircle, X, Info } from 'lucide-react'
+import { CheckCircle, AlertCircle, X, Info, AlertTriangle } from 'lucide-react'
 
 const Toast = ({
   message,
@@ -45,6 +45,8 @@ const Toast = ({
         return <CheckCircle {...iconProps} />
       case 'error':
         return <AlertCircle {...iconProps} />
+      case 'warning':
+        return <AlertTriangle {...iconProps} />
       case 'info':
       default:
         return <Info {...iconProps} />
@@ -82,6 +84,13 @@ const Toast = ({
           backgroundColor: '#fde7e9',
           border: '1px solid #d13438',
           color: '#a4262c',
+        }
+      case 'warning':
+        return {
+          ...base,
+          backgroundColor: '#fff4ce',
+          border: '1px solid #ffb900',
+          color: '#8a6600',
         }
       case 'info':
       default:
