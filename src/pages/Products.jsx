@@ -43,6 +43,8 @@ import { Card } from '@/components/ui/card'
 import ProductFormModal from '@/components/ProductFormModal'
 import ProductDetailsModal from '@/components/ProductDetailsModal'
 import { cn } from '@/lib/utils'
+import { telemetry } from '@/utils/telemetry'
+import { useToast } from '@/hooks/useToast'
 
 /**
  * Custom hook para debounce
@@ -77,6 +79,8 @@ const useDebounce = (callback, delay) => {
 const Products = () => {
   const { t } = useI18n()
   const navigate = useNavigate()
+  const toast = useToast()
+  const searchInputRef = useRef(null)
 
   // Zustand store
   const {
@@ -117,6 +121,35 @@ const Products = () => {
     fetchProductsPaginated(1, 10)
     fetchCategories()
   }, [fetchProductsPaginated, fetchCategories])
+
+  // Record store errors in telemetry
+  useEffect(() => {
+    if (error) {
+      telemetry.record('products.error.store', { message: error });
+      toast.errorFrom(error);
+    }
+  }, [error, toast]);
+
+  // Auto-focus y atajo F2
+  useEffect(() => {
+    // Focus inicial
+    const focusTimeout = setTimeout(() => {
+      searchInputRef.current?.focus()
+    }, 100)
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'F2') {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      clearTimeout(focusTimeout)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   // Función de búsqueda
   const performSearch = useCallback(
@@ -270,29 +303,12 @@ const Products = () => {
     setIsFormModalOpen(true)
   }
 
-  const getHealthIndicator = product => {
-    const stock =
-      product.stock_quantity ?? product.stock ?? product.quantity ?? 0
-    const isActive = product.state !== false && product.is_active !== false
-
-    if (product.financial_health) {
-      const { has_prices, has_costs, has_stock } = product.financial_health
-      if (!has_prices || !has_costs || !has_stock) {
-        return { level: 'poor', text: t('products.health.poor'), color: 'bg-error' }
-      } else if (stock < 10) {
-        return { level: 'at-risk', text: t('products.health.at_risk'), color: 'bg-warning' }
-      } else {
-        return { level: 'healthy', text: t('products.health.healthy'), color: 'bg-success' }
-      }
-    }
-
-    if (!isActive || stock === 0) {
-      return { level: 'poor', text: t('products.health.poor'), color: 'bg-error' }
-    } else if (stock < 10) {
-      return { level: 'at-risk', text: t('products.health.at_risk'), color: 'bg-warning' }
-    } else {
-      return { level: 'healthy', text: t('products.health.healthy'), color: 'bg-success' }
-    }
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('es-PY', {
+      style: 'currency',
+      currency: 'PYG',
+      minimumFractionDigits: 0,
+    }).format(value || 0)
   }
 
   const startIndex = (currentPage - 1) * 10 + 1
@@ -357,9 +373,10 @@ const Products = () => {
               )}
             </span>
             <Input
+              ref={searchInputRef}
               type='search'
               className='block w-full pl-10 pr-3 py-2.5 border-border-subtle rounded-full bg-slate-50 focus:bg-white transition-all h-11 font-bold text-xs uppercase tracking-wider'
-              placeholder={t('products.search.by_name_sku')}
+              placeholder={t('products.search.by_name_sku') + " (F2)"}
               value={searchTerm}
               onChange={handleSearch}
               onKeyDown={handleSearchKeyDown}
@@ -472,8 +489,8 @@ const Products = () => {
               <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.category')}</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">IVA</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.stock')}</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.state')}</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.financial_health')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.modal.field.purchase_price', 'Costo de Compra')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.details.table.price', 'Precio de Venta')}</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">{t('products.table.created_at', 'Creado')}</TableHead>
               <TableHead className='text-right py-4 px-6'></TableHead>
             </TableRow>
@@ -482,7 +499,10 @@ const Products = () => {
             {loading && products.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="py-32">
-                  <div className='flex flex-col items-center justify-center gap-4'><RefreshCw className='w-12 h-12 animate-spin text-primary opacity-20' /><p className='text-[10px] font-black uppercase tracking-[0.3em] text-slate-400'>Cargando Inventario...</p></div>
+                  <div className='flex flex-col items-center justify-center gap-4' data-testid="products-loading">
+                    <RefreshCw className='w-12 h-12 animate-spin text-primary opacity-20' />
+                    <p className='text-[10px] font-black uppercase tracking-[0.3em] text-slate-400'>Cargando Inventario...</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : error ? (
@@ -490,6 +510,7 @@ const Products = () => {
                 <TableCell colSpan={9} className="py-20">
                   <DataState
                     variant='error'
+                    testId='error-main'
                     title={t('products.error.title')}
                     message={error}
                     onRetry={() => {
@@ -504,6 +525,7 @@ const Products = () => {
                 <TableCell colSpan={9} className="py-20">
                   <DataState
                     variant='empty'
+                    testId={viewMode === 'search' ? 'products-empty-search' : 'products-empty-initial'}
                     title={viewMode === 'search' ? t('products.empty.no_results') : t('products.empty.title')}
                     description={viewMode === 'search' ? `No se encontraron productos con "${searchTerm}"` : t('products.empty.description')}
                     actionLabel={t('products.action.new_product')}
@@ -518,8 +540,10 @@ const Products = () => {
                 const categoryName = product.category_name || product.category?.name || '-'
                 const isSelected = selectedIds.includes(productId)
                 const stockInfo = getStockDisplay(product)
-                const healthInfo = getHealthIndicator(product)
-                const isActive = product.state !== false && product.is_active !== false
+                
+                // Extraer costo y precio con fallbacks
+                const purchaseCost = product.purchase_price ?? product.unit_costs_summary?.[0]?.last_cost ?? 0
+                const salesPrice = product.price ?? product.unit_prices?.[0]?.price_per_unit ?? 0
 
                 return (
                   <TableRow 
@@ -566,19 +590,14 @@ const Products = () => {
                       </span>
                     </TableCell>
                     <TableCell className="px-4">
-                      <span className={cn(
-                        "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-1.5 w-fit",
-                        isActive ? "bg-green-50 text-success border-green-200" : "bg-red-50 text-error border-red-200"
-                      )}>
-                        <span className={cn("size-1.5 rounded-full", isActive ? "bg-success" : "bg-error")}></span>
-                        {isActive ? t('products.state.active') : t('products.state.inactive')}
+                      <span className="text-xs font-bold text-text-secondary tabular-nums">
+                        {formatCurrency(purchaseCost)}
                       </span>
                     </TableCell>
                     <TableCell className="px-4">
-                      <div className='flex items-center gap-2'>
-                        <div className={cn("size-2 rounded-full", healthInfo.color)} />
-                        <span className='text-[10px] font-black uppercase tracking-widest text-text-secondary'>{healthInfo.text}</span>
-                      </div>
+                      <span className="text-sm font-black text-primary tabular-nums">
+                        {formatCurrency(salesPrice)}
+                      </span>
                     </TableCell>
                     <TableCell className='text-text-secondary tabular-nums px-4 text-xs font-mono'>
                       {product.created_at ? new Date(product.created_at).toLocaleDateString('es-ES') : '-'}
@@ -587,6 +606,7 @@ const Products = () => {
                       <Button
                         variant='ghost'
                         size='icon'
+                        data-testid={`edit-product-${productId}`}
                         className="text-text-secondary hover:text-primary transition-colors size-8 rounded opacity-0 group-hover:opacity-100"
                         onClick={() => handleOpenEditModal(product)}
                       >

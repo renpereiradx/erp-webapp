@@ -301,6 +301,7 @@ const SalesNew: React.FC = () => {
   const [showActiveSaleModal, setShowActiveSaleModal] = useState(false);
 
   const [pendingReservations, setPendingReservations] = useState<any[]>([]);
+  const [selectedResIds, setSelectedResIds] = useState<Set<number>>(new Set());
   const [showReservationModal, setShowReservationModal] = useState(false);
 
   const [productSearchResults, setProductSearchResults] = useState<ProductDisplay[]>([]);
@@ -561,8 +562,14 @@ const SalesNew: React.FC = () => {
     };
 
     setItems(prev => {
-      const existingItem = prev.find(item => item.productId === product.id && !item.isFromPendingSale);
+      const existingItem = prev.find(item => item.productId === product.id);
+      
       if (existingItem) {
+        if (existingItem.reserve_id) {
+          toast.error(`Este producto ya está en el carrito como parte de una reserva.`);
+          return prev;
+        }
+        
         if (window.confirm(`El producto "${product.name}" ya está en el carrito.\n¿Deseas sumar las cantidades?`)) {
           return prev.map(item => item.id === existingItem.id ? { ...item, quantity: item.quantity + quantity } : item);
         }
@@ -599,6 +606,10 @@ const SalesNew: React.FC = () => {
       });
       if (reservations && reservations.length > 0) {
         setPendingReservations(reservations);
+        // Pre-seleccionar todas las reservas por defecto (Set de IDs numéricos)
+        const allIds = new Set(reservations.map((r: any) => Number(r.reserve_id || r.id)).filter(Boolean));
+        setSelectedResIds(allIds);
+        
         // Si no hay ventas pendientes, mostrar reservas directamente
         // Si hay ventas pendientes, el modal de reservas se mostrará después de cerrar el de ventas
         if (!hasPendingSales) {
@@ -734,9 +745,14 @@ const SalesNew: React.FC = () => {
   }, [showActiveSaleModal, activeSales, handleContinueSale, pendingReservations]);
 
   const handleAddReservations = () => {
-    if (pendingReservations.length === 0) return;
+    if (pendingReservations.length === 0 || selectedResIds.size === 0) return;
 
-    const loadedItems: CartItem[] = pendingReservations.map((res: any, index: number) => ({
+    // Filtrar la lista completa basándose en el Set de IDs seleccionados
+    const selectedReservations = pendingReservations.filter(res => 
+      selectedResIds.has(Number(res.reserve_id || res.id))
+    );
+
+    const loadedItems: CartItem[] = selectedReservations.map((res: any, index: number) => ({
       id: `RES-${res.reserve_id || res.id}-${Date.now()}-${index}`,
       productId: res.product_id || '',
       name: res.product_name || 'Servicio de reserva',
@@ -754,18 +770,37 @@ const SalesNew: React.FC = () => {
     }));
 
     setItems(prev => {
-      const existingResIds = new Set(prev.map(item => item.id.split('-')[1]));
-      const newItems = loadedItems.filter(item => !existingResIds.has(item.id.split('-')[1]));
+      const existingProductIds = new Set(prev.map(item => item.productId));
+      const existingReserveIds = new Set(
+        prev
+          .map(item => item.reserve_id)
+          .filter((id): id is number => id !== undefined && id !== null)
+      );
+      
+      const seenProductIdsInNew = new Set<string>();
+      const newItems = loadedItems.filter(item => {
+        // 1. Evitar duplicar reserva exacta
+        if (item.reserve_id && existingReserveIds.has(item.reserve_id)) return false;
+        
+        // 2. Evitar múltiples reservas para el mismo producto
+        if (existingProductIds.has(item.productId)) return false;
+        if (seenProductIdsInNew.has(item.productId)) return false;
+        
+        seenProductIdsInNew.add(item.productId);
+        return true;
+      });
       
       if (newItems.length === 0) {
-        toast.info('Las reservas seleccionadas ya están en el carrito');
+        toast.info('Los productos de estas reservas ya están en el carrito');
         return prev;
       }
+
       return [...prev, ...newItems];
     });
 
     setShowReservationModal(false);
     setPendingReservations([]);
+    setSelectedResIds(new Set());
     toast.success('Reservas añadidas al carrito');
   };
 
@@ -984,25 +1019,49 @@ const SalesNew: React.FC = () => {
           handleHistoryFilter();
         }
       } else {
-        // Validar que exista maximo 1 reserve_id distinto en el carrito
-        const distinctReserveIds = new Set(
-          items
-            .map(item => item.reserve_id)
-            .filter((id): id is number => id !== undefined && id !== null)
-        );
+        // 1. Validar unicidad de reserve_id y productId para reservas (Instrucción: permitir solo uno por producto)
+        const seenReserves = new Set<number>();
+        const seenProductIdsForReserves = new Set<string>();
+        const uniqueItems: CartItem[] = [];
+        const duplicatesRemoved: string[] = [];
+
+        for (const item of items) {
+          if (item.reserve_id) {
+            // Regla: No duplicar reserve_id exacto
+            if (seenReserves.has(item.reserve_id)) {
+              duplicatesRemoved.push(`${item.name} (Reserva Duplicada)`);
+              continue;
+            }
+            
+            // Regla: No permitir dos reservas distintas para el MISMO producto (Tu instrucción)
+            if (seenProductIdsForReserves.has(item.productId)) {
+              duplicatesRemoved.push(`${item.name} (Mismo Producto)`);
+              continue;
+            }
+
+            seenReserves.add(item.reserve_id);
+            seenProductIdsForReserves.add(item.productId);
+          }
+          uniqueItems.push(item);
+        }
+
+        if (duplicatesRemoved.length > 0) {
+          toast.warning(`Se filtraron ítems para cumplir con la regla de una reserva por producto: ${duplicatesRemoved.join(', ')}`);
+        }
+
+        // 2. Validar que exista maximo 1 reserve_id distinto en el carrito (Regla de negocio actual)
+        const distinctReserveIds = Array.from(seenReserves);
         
-        if (distinctReserveIds.size > 1) {
-          toast.error('Solo se permite una reserva por venta. Remove items de otras reservas.');
+        if (distinctReserveIds.length > 1) {
+          toast.error('Solo se permite una reserva por venta. Remueve ítems de otras reservas.');
           setIsProcessingSale(false);
           return;
         }
 
-        // Tomar el reserve_id unico si existe
-        const saleReserveId = distinctReserveIds.size === 1
-          ? Array.from(distinctReserveIds)[0]
-          : undefined;
+        // Tomar el reserve_id único si existe
+        const saleReserveId = distinctReserveIds.length === 1 ? distinctReserveIds[0] : undefined;
 
-        const payloadPriceMod = items.some(
+        const payloadPriceMod = uniqueItems.some(
           item => Math.abs((Number(item.price) || 0) - (Number(item.originalPrice) || 0)) > 0.01
         );
 
@@ -1011,7 +1070,7 @@ const SalesNew: React.FC = () => {
           ...(saleReserveId && { reserve_id: saleReserveId }),
           allow_price_modifications: payloadPriceMod,
           currency_id: Number(currencyId) || 1,
-          product_details: items.map(item => {
+          product_details: uniqueItems.map(item => {
             const currentPrice = Number(item.price) || 0;
             const originalPrice = Number(item.originalPrice) || 0;
             const hasModification = Math.abs(currentPrice - originalPrice) > 0.01;
@@ -1034,7 +1093,6 @@ const SalesNew: React.FC = () => {
             if (hasModification) {
               detail.sale_price = currentPrice;
               detail.price_change_reason = (item.discountReason || 'Ajuste de precio').trim();
-              // NOTA: No enviamos discount_amount/discount_percent para evitar doble descuento
             }
 
             return detail;
@@ -1937,48 +1995,136 @@ const SalesNew: React.FC = () => {
 
       {showReservationModal && (
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 bg-white">
-            <CardHeader className="border-b bg-emerald-50 px-6 py-4">
-              <CardTitle className="text-emerald-700 flex items-center gap-2">
-                <ShoppingCart size={20} /> Reservas Confirmadas
-              </CardTitle>
-              <p className="text-xs text-emerald-600 font-medium">El cliente "{selectedClient?.name}" tiene reservas pendientes de pago.</p>
+          <Card className="w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-200 bg-white border-none overflow-hidden">
+            <CardHeader className="border-b bg-emerald-50 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="size-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-700 shadow-sm">
+                  <ShoppingCart size={22} />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-black tracking-tighter uppercase text-emerald-800">
+                    Reservas Pendientes de Cobro
+                  </CardTitle>
+                  <p className="text-xs text-emerald-600 font-medium uppercase tracking-wider">
+                    {selectedClient?.name} • {pendingReservations.length} encontradas
+                  </p>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                {pendingReservations.map((res, index) => (
-                  <div key={`${res.id || res.reserve_id}-${index}`} className="flex flex-col p-3 border border-slate-200 rounded-lg bg-slate-50">
-                    <div className="flex justify-between mb-1">
-                      <span className="font-bold text-sm text-slate-700">{res.product_name || 'Servicio de reserva'}</span>
-                      <Badge className="bg-emerald-100 text-emerald-700 border-none text-[9px] uppercase font-black">Confirmada</Badge>
-                    </div>
-                    <div className="flex justify-between items-end">
-                      <div className="text-xs text-slate-500">
-                        {formatDateTime(res.start_time)}
-                        {res.duration_hours && <span className="ml-2">• {res.duration_hours}h</span>}
+            <CardContent className="p-0">
+              <div className="max-h-[400px] overflow-y-auto">
+                <div className="p-4 space-y-3">
+                  {pendingReservations.map((res, index) => {
+                    const resId = Number(res.reserve_id || res.id);
+                    const isSelected = selectedResIds.has(resId);
+                    
+                    // Verificar si ya hay otra reserva seleccionada para este MISMO producto
+                    const isProductAlreadySelected = Array.from(selectedResIds).some(sid => {
+                      if (sid === resId) return false;
+                      const otherRes = pendingReservations.find(r => Number(r.reserve_id || r.id) === sid);
+                      return otherRes?.product_id === res.product_id;
+                    });
+
+                    return (
+                      <div 
+                        key={`${resId}-${index}`} 
+                        onClick={() => {
+                          if (isProductAlreadySelected && !isSelected) {
+                            toast.warning(`Solo se permite una reserva por cada producto (${res.product_name})`);
+                            return;
+                          }
+                          const newSelection = new Set(selectedResIds);
+                          if (isSelected) newSelection.delete(resId);
+                          else newSelection.add(resId);
+                          setSelectedResIds(newSelection);
+                        }}
+                        className={cn(
+                          "group relative flex flex-col p-4 border-2 rounded-xl transition-all cursor-pointer",
+                          isSelected 
+                            ? "border-emerald-500 bg-emerald-50/50 ring-4 ring-emerald-500/10" 
+                            : isProductAlreadySelected
+                              ? "border-slate-100 bg-slate-50 opacity-50 grayscale cursor-not-allowed"
+                              : "border-slate-100 hover:border-emerald-200 hover:bg-slate-50"
+                        )}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className={cn(
+                              "size-5 rounded-md border-2 flex items-center justify-center transition-all",
+                              isSelected ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 bg-white"
+                            )}>
+                              {isSelected && <Plus size={14} strokeWidth={4} />}
+                            </div>
+                            <span className="font-black text-[13px] text-slate-800 uppercase leading-tight">
+                              {res.product_name || 'Servicio de reserva'}
+                            </span>
+                          </div>
+                          <Badge className={cn(
+                            "border-none text-[9px] uppercase font-black px-2 py-0.5",
+                            isSelected ? "bg-emerald-500 text-white" : "bg-emerald-100 text-emerald-700"
+                          )}>
+                            ID #{resId}
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mt-1 pl-7">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 text-slate-500">
+                              <History size={12} />
+                              <span className="text-[10px] font-bold uppercase tracking-tight">Inicio:</span>
+                              <span className="text-[11px] font-medium text-slate-700">{formatDateTime(res.start_time)}</span>
+                            </div>
+                            {res.duration_hours && (
+                              <div className="flex items-center gap-1.5 text-slate-500">
+                                <div className="size-3 flex items-center justify-center text-[10px] font-black">H</div>
+                                <span className="text-[10px] font-bold uppercase tracking-tight">Duración:</span>
+                                <span className="text-[11px] font-medium text-slate-700">{res.duration_hours} hora(s)</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end justify-center">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Reserva</span>
+                            <span className={cn(
+                              "text-lg font-black tabular-nums tracking-tighter",
+                              isSelected ? "text-emerald-600" : "text-slate-600"
+                            )}>
+                              {formatCurrency(res.total_amount)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {isProductAlreadySelected && !isSelected && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px] rounded-xl">
+                            <span className="bg-slate-800 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
+                              Producto ya seleccionado
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      <span className="text-sm font-black text-emerald-600">{formatCurrency(res.total_amount)}</span>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })}
+                </div>
               </div>
               
-              <div className="flex gap-3 pt-4 border-t">
+              <div className="p-6 bg-slate-50/80 border-t border-slate-100 flex items-center gap-4">
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   onClick={() => {
                     setShowReservationModal(false);
                     setPendingReservations([]);
+                    setSelectedResIds(new Set());
                   }} 
-                  className="flex-1 h-11 text-xs font-black uppercase tracking-widest"
+                  className="flex-1 h-12 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-200"
                 >
-                  Ahora No
+                  Omitir Reservas
                 </Button>
                 <Button 
                   onClick={handleAddReservations} 
-                  className="flex-1 h-11 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white"
+                  disabled={selectedResIds.size === 0}
+                  className="flex-[2] h-12 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200 transition-all active:scale-95"
                 >
-                  Añadir Todas al Carrito
+                  <Plus className="mr-2 size-4" /> 
+                  Añadir {selectedResIds.size} {selectedResIds.size === 1 ? 'Reserva' : 'Reservas'} al Carrito
                 </Button>
               </div>
             </CardContent>

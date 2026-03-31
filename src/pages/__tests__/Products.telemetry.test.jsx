@@ -21,9 +21,15 @@ vi.mock('@/utils/telemetry', () => ({
 }));
 
 // Mock modales lazy
-vi.mock('@/components/ProductModal', () => ({ default: () => null }));
-vi.mock('@/components/ProductDetailModal', () => ({ default: () => null }));
+vi.mock('@/components/ProductFormModal', () => ({ default: () => null }));
+vi.mock('@/components/ProductDetailsModal', () => ({ default: () => null }));
 vi.mock('@/components/DeleteProductModal', () => ({ default: () => null }));
+
+// Mock react-router-dom
+const navigate = vi.fn();
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => navigate,
+}));
 
 // Caso 1: error en store
 const MOCK_STORE_STATE = {
@@ -35,13 +41,18 @@ const MOCK_STORE_STATE = {
   totalPages: 0,
   pageSize: 10,
   categories: [],
+  filters: { category: 'all', status: 'all' },
   lastSearchTerm: '',
   fetchCategories: vi.fn(),
+  fetchProductsPaginated: vi.fn(),
+  fetchProducts: vi.fn(),
   searchProducts: vi.fn(),
   loadPage: vi.fn(),
   changePageSize: vi.fn(),
   clearProducts: vi.fn(),
   deleteProduct: vi.fn(),
+  setCurrentPage: vi.fn(),
+  setFilters: vi.fn(),
   clearError: vi.fn(),
 };
 
