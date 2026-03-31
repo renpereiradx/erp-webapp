@@ -1,7 +1,7 @@
 # 📦 API de Ajustes de Inventario
 
-**Versión:** 4.2  
-**Fecha:** 19 de Marzo de 2026  
+**Versión:** 4.3  
+**Fecha:** 31 de Marzo de 2026  
 **Endpoint Base:** `http://localhost:5050`
 
 ---
@@ -16,7 +16,7 @@ Esta API gestiona el sistema de inventarios y ajustes manuales. Permite realizar
 - ✅ Creación y gestión de inventarios físicos completos.
 - ✅ Historial detallado de todos los movimientos y ajustes por producto.
 - ✅ Endpoints para validar la consistencia del stock y la integridad del sistema.
-- ✅ Requerimiento obligatorio de metadatos para auditoría y trazabilidad.
+- ✅ Sistema de metadatos con validación opcional y generación automática de plantilla.
 
 ---
 
@@ -125,8 +125,15 @@ El campo `metadata` en inventarios es validado contra un JSON Schema en el backe
 
 ### Generación Automática
 
-Si no se envía `metadata`, el backend genera una plantilla por defecto con:
-- `operator`: ID del usuario que crea el inventario
+Si no se envía `metadata` o se envía un objeto vacío `{}`, el backend genera una plantilla por defecto automáticamente.
+
+**Para Ajustes Manuales (`POST /manual_adjustment/`):**
+- `operator`: ID del usuario extraído del JWT
+- `reason_category`: "MANUAL_ADJUSTMENT"
+- `notes`: Copia del campo `reason` si está presente
+
+**Para Inventarios (`POST /inventory/`):**
+- `operator`: ID del usuario extraído del JWT
 - `reason_category`: "INVENTORY_CHECK"
 - `items_count`: Cantidad de items en el inventario
 - `status`: "COMPLETED"
@@ -158,7 +165,7 @@ interface Inventory {
   user_id: string;
   check_date: string; // ISO 8601
   state: boolean; // `true` para activo, `false` para invalidado
-  metadata: object; // Metadatos obligatorios de la operación
+  metadata: object; // Metadatos opcionales de la operación
 }
 
 interface InventoryItem {
@@ -242,27 +249,17 @@ Crea un nuevo ajuste manual de stock. El sistema genera una transacción de stoc
 
 **Parámetros:**
 
-| Campo          | Tipo   | Requerido | Descripción                               |
-|----------------|--------|-----------|-------------------------------------------|
-| `product_id`   | string | ✅ Sí       | ID del producto a ajustar. Debe existir. |
-| `new_quantity` | number | ✅ Sí       | La nueva cantidad final del producto (≥ 0). |
-| `reason`       | string | ✅ Sí       | Motivo claro y descriptivo del ajuste.    |
-| `metadata`     | object | ✅ Sí       | Objeto con datos de trazabilidad. Ver sección de Metadatos. |
+| Campo          | Tipo   | Requerido | Descripción                                               |
+|----------------|--------|-----------|-----------------------------------------------------------|
+| `product_id`   | string | ✅ Sí       | ID del producto a ajustar. Debe existir.                 |
+| `new_quantity` | int    | ✅ Sí       | La nueva cantidad final del producto (≥ 0).              |
+| `reason`       | string | ✅ Sí       | Motivo claro y descriptivo del ajuste.                   |
+| `metadata`     | object | ❌ No       | Objeto con datos de trazabilidad. Si no se proporciona, se genera automáticamente. Ver sección de Metadatos. |
 
-**Response (200 OK):** `ManualAdjustment`
+**Response (200 OK):** `MessageResponse`
 ```json
 {
-  "id": 45,
-  "product_id": "PROD_ABC_001",
-  "old_quantity": 100.00,
-  "new_quantity": 150.50,
-  "adjustment_date": "2025-11-20T15:00:00Z",
-  "reason": "Ajuste por conteo físico",
-  "metadata": {
-    "source": "manual_adjustment",
-    "operator": "marcelo_p"
-  },
-  "user_id": "USR_789"
+  "message": "Manual adjustment successful"
 }
 ```
 
@@ -339,6 +336,54 @@ Obtiene todos los ajustes de precio y stock para un producto específico.
 }
 ```
 
+#### 2.5. Crear Ajuste de Precio Manual
+
+**Endpoint:** `POST /manual_adjustment/price`
+
+Crea un nuevo ajuste de precio para un producto. El sistema registra el cambio de precio con metadatos de trazabilidad.
+
+**Request Body:**
+```json
+{
+  "product_id": "PROD_ABC_001",
+  "new_price": 12500.00,
+  "unit": "unit",
+  "reason": "Actualización de precio de proveedor",
+  "metadata": {
+    "source": "manual_price_adjustment",
+    "operator": "marcelo_p",
+    "reason_category": "COST_CHANGE"
+  }
+}
+```
+
+**Parámetros:**
+
+| Campo       | Tipo    | Requerido | Descripción                                      |
+|-------------|---------|-----------|--------------------------------------------------|
+| `product_id` | string | ✅ Sí       | ID del producto a ajustar. Debe existir.         |
+| `new_price` | number  | ✅ Sí       | Nuevo precio (debe ser ≥ 0).                    |
+| `unit`      | string  | ❌ No       | Unidad de medida (ej. "unit", "kg").             |
+| `reason`    | string  | ✅ Sí       | Motivo del ajuste de precio.                     |
+| `metadata`  | object  | ❌ No       | Objeto con datos de trazabilidad. Opcional.      |
+
+**Response (200 OK):** `MessageResponse`
+```json
+{
+  "message": "Price adjustment successful"
+}
+```
+
+**Errores Posibles:**
+
+| Error                          | HTTP Status | Descripción                                            |
+|--------------------------------|-------------|--------------------------------------------------------|
+| `"Invalid request body"`         | 400         | El JSON es inválido o faltan campos requeridos.        |
+| `"Unauthorized"`                 | 401         | El token JWT es inválido, ha expirado o no fue provisto. |
+| `"Product not found"`            | 404         | El `product_id` enviado no existe.                     |
+| `"new_price must be non-negative"` | 400      | El precio no puede ser negativo.                       |
+| `"Error creating price adjustment: ..."` | 500 | Error interno del servidor.                          |
+
 ### Gestión de Inventarios
 
 #### 3. Crear un Inventario Físico
@@ -379,7 +424,7 @@ Crea un nuevo inventario físico. El sistema compara las cantidades contadas (`q
 | `items` | `InventoryItemInput[]` | ✅ Sí | Array de productos contados. |
 | `items[].product_id` | string | ✅ Sí | ID del producto. |
 | `items[].quantity_checked` | number | ✅ Sí | Cantidad física contada (≥ 0). |
-| `metadata` | object | ✅ Sí | Objeto con datos de trazabilidad del inventario. |
+| `metadata` | object | ❌ No | Objeto con datos de trazabilidad. Si no se proporciona, se genera automáticamente. |
 
 **Response (200 OK):**
 ```json
@@ -409,7 +454,9 @@ Invalida un inventario existente y revierte automáticamente todas las transacci
 
 #### 5. Obtener Lista de Inventarios
 
-**Endpoint:** `GET /inventory/{page}/{pageSize}`
+**Endpoint:** `GET /{page}/{pageSize}`
+
+> **Nota:** La ruta real es `/{page}/{pageSize}` sin prefijo `inventory/`.
 
 Obtiene una lista paginada de todos los inventarios realizados.
 
@@ -531,25 +578,26 @@ Obtiene el historial completo de movimientos de stock para un producto, enriquec
 
 ### Pre-Procesamiento (Validar en Frontend)
 
-1.  ✅ Para **Ajustes Manuales**, `new_quantity` debe ser un número mayor o igual a cero.
+1.  ✅ Para **Ajustes Manuales**, `new_quantity` debe ser un número entero mayor o igual a cero.
 2.  ✅ Para **Inventarios**, cada `quantity_checked` debe ser un número mayor o igual a cero.
 3.  ✅ El campo `reason` para ajustes debe tener entre 5 y 200 caracteres.
-4.  ✅ El objeto `metadata` **es siempre obligatorio** y debe contener una estructura válida.
+4.  ⚠️ El objeto `metadata` es **opcional**. Si no se proporciona, el backend genera una plantilla automáticamente con el ID del operador y categoría "MANUAL_ADJUSTMENT".
+5.  ✅ Para **Transacciones de Stock**, `quantity_change` **no puede ser cero**.
 
-### Metadatos Obligatorios
+### Metadatos (Opcionales)
 
-Todas las operaciones que modifican el stock (`/manual_adjustment`, `/inventory`) requieren un objeto `metadata` con una estructura mínima para garantizar la trazabilidad.
+Todas las operaciones que modifican el stock (`/manual_adjustment`, `/inventory`) soportan un objeto `metadata` con estructura opcional. Si no se proporciona, el backend genera una plantilla automáticamente.
 
-**Estructura Mínima Requerida para TODO `metadata`:**
+**Estructura Mínima Recomendada para `metadata`:**
 ```typescript
 interface MetadataMinima {
   source: string;      // Origen de la operación. E.g., "physical_count", "manual_adjustment"
-  timestamp: string;   // Fecha y hora en formato ISO 8601. E.g., new Date().toISOString()
+  timestamp?: string;   // Fecha y hora en formato ISO 8601. E.g., new Date().toISOString()
   operator: string;    // ID o nombre del usuario/operador que realiza la acción
 }
 ```
 
-**Campos Adicionales Obligatorios por Operación:**
+**Campos Adicionales Opcionales por Operación:**
 
 -   **Para Inventarios (`POST /inventory`):**
     -   `location`: string (Ubicación física donde se hizo el conteo).
@@ -560,6 +608,20 @@ interface MetadataMinima {
     -   `reason_category`: string (Categoría del motivo. Ver `REASON_OPTIONS`).
     -   `approval_level`: string (Nivel de aprobación: `operator`, `supervisor`, `manager`).
 
+**Generación Automática:**
+Si no se envía `metadata` o se envía un objeto vacío `{}`, el backend genera una plantilla por defecto automáticamente.
+
+**Para Ajustes Manuales (`POST /manual_adjustment/`):**
+- `operator`: ID del usuario extraído del JWT
+- `reason_category`: "MANUAL_ADJUSTMENT"
+- `notes`: Copia del campo `reason` si está presente
+
+**Para Inventarios (`POST /inventory/`):**
+- `operator`: ID del usuario extraído del JWT
+- `reason_category`: "INVENTORY_CHECK"
+- `items_count`: Cantidad de items en el inventario
+- `status`: "COMPLETED"
+
 ---
 
 ## 🎯 Recomendaciones de Implementación
@@ -568,17 +630,30 @@ interface MetadataMinima {
 
 Para facilitar la carga de datos, se recomienda usar menús desplegables (selects) en el frontend.
 
-**Opciones para `reason_category` en Ajustes:**
+**Opciones para `reason_category` en Ajustes de Stock:**
 ```javascript
 const REASON_OPTIONS = [
-  { value: "PHYSICAL_COUNT", label: "Conteo físico", icon: "📊" },
-  { value: "DAMAGED_GOODS", label: "Producto dañado", icon: "❌" },
-  { value: "INVENTORY_CORRECTION", label: "Corrección de inventario", icon: "🔧" },
-  { value: "SYSTEM_ERROR", label: "Error del sistema", icon: "⚠️" },
-  { value: "THEFT_LOSS", label: "Pérdida/Robo", icon: "🚫" },
-  { value: "EXPIRATION", label: "Producto vencido", icon: "⏰" },
-  { value: "INITIAL_STOCK", label: "Stock inicial", icon: "🏁" },
-  { value: "OTHER", label: "Otro motivo", icon: "📝" }
+  { value: "INVENTORY_COUNT", label: "Conteo de inventario", icon: "📊" },
+  { value: "DAMAGE", label: "Producto dañado", icon: "❌" },
+  { value: "EXPIRY", label: "Producto vencido", icon: "⏰" },
+  { value: "THEFT", label: "Pérdida/Robo", icon: "🚫" },
+  { value: "RETURN", label: "Devolución", icon: "↩️" },
+  { value: "CORRECTION", label: "Corrección", icon: "🔧" },
+  { value: "INITIAL_COUNT", label: "Conteo inicial", icon: "🏁" },
+  { value: "MANUAL_ADJUSTMENT", label: "Ajuste manual (default)", icon: "📝" }
+];
+```
+
+**Opciones para `adjustment_type` en Metadatos de Stock:**
+```javascript
+const ADJUSTMENT_TYPE_OPTIONS = [
+  { value: "INVENTORY_COUNT", label: "Conteo de inventario" },
+  { value: "DAMAGE", label: "Daño" },
+  { value: "EXPIRY", label: "Vencimiento" },
+  { value: "THEFT", label: "Robo/Pérdida" },
+  { value: "RETURN", label: "Devolución" },
+  { value: "CORRECTION", label: "Corrección" },
+  { value: "INITIAL_COUNT", label: "Conteo inicial" }
 ];
 ```
 

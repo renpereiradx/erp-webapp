@@ -317,17 +317,35 @@ export const saleService = {
     }
   },
 
-  async getSalesByClientName(name: string, page = 1, pageSize = 50) {
+  async getSalesByClientName(name: string, page = 1, pageSize = 50, filters: any = {}) {
     if (IS_DEMO_MODE) {
       return DEMO_SALES_RESPONSE
     }
     try {
       const response = await apiClient.getSalesByClientName(name, page, pageSize)
 
-      const { data, pagination } = this.extractSalesAndPagination(response, {
+      let { data, pagination } = this.extractSalesAndPagination(response, {
         page,
         page_size: pageSize,
       })
+
+      // Filtrado local por fechas si se proporcionan y el API no las soporta nativamente
+      if (filters.start_date || filters.end_date) {
+        const startStr = filters.start_date ? filters.start_date : null;
+        const endStr = filters.end_date ? filters.end_date : null;
+
+        data = data.filter((sale: any) => {
+          const saleDateStr = sale.sale_date || sale.issue_date || sale.date;
+          if (!saleDateStr) return true;
+          
+          // Normalizar fecha de la venta a YYYY-MM-DD
+          const saleDatePart = saleDateStr.split('T')[0];
+          
+          if (startStr && saleDatePart < startStr) return false;
+          if (endStr && saleDatePart > endStr) return false;
+          return true;
+        });
+      }
 
       return {
         success: true,

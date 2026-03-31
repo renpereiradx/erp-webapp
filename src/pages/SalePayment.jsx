@@ -122,6 +122,238 @@ const normalizeSaleStatus = sale => {
   return 'PENDING'
 }
 
+/**
+ * Componente de fila memoizado para optimizar el renderizado de listas largas
+ */
+const SaleRow = React.memo(({ 
+  sale, 
+  formatDate, 
+  formatCurrency, 
+  onPayment, 
+  onCancel, 
+  onDetails, 
+  onHistory,
+  getStatusBadge 
+}) => {
+  return (
+    <TableRow
+      key={sale.id}
+      className='hover:bg-slate-50 transition-colors cursor-pointer group'
+      onClick={() => onDetails(sale.id)}
+    >
+      <TableCell className='py-4 px-6 font-semibold text-sm'>
+        #{sale.id}
+      </TableCell>
+      <TableCell className='px-4'>
+        <div className='flex flex-col'>
+          <span className='font-semibold text-sm'>
+            {sale.client_name}
+          </span>
+          {(sale.client?.document_id || sale.client_document_id) && (
+            <span className='text-xs text-slate-500 font-medium'>
+              CI: {formatDocumentId(sale.client?.document_id || sale.client_document_id)}
+            </span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className='px-4 text-sm text-slate-600'>
+        {formatDate(sale.date)}
+      </TableCell>
+      <TableCell className='px-4 text-center'>
+        {getStatusBadge(sale.status)}
+      </TableCell>
+      <TableCell className='px-4 text-right'>
+        <div className='flex items-center justify-end gap-2'>
+          <div className='h-1.5 w-16 bg-slate-100 rounded-full overflow-hidden'>
+            <div
+              className={cn(
+                'h-full transition-all duration-500',
+                Number(sale.payment_progress) >= 100
+                  ? 'bg-green-500'
+                  : Number(sale.payment_progress) > 0
+                    ? 'bg-blue-500'
+                    : 'bg-transparent',
+              )}
+              style={{
+                width: `${Math.min(100, Math.max(0, sale.payment_progress || 0))}%`,
+              }}
+            />
+          </div>
+          <span className='text-[10px] font-bold text-slate-500 tabular-nums'>
+            {Math.round(sale.payment_progress || 0)}%
+          </span>
+        </div>
+      </TableCell>
+      <TableCell className='px-4 text-right font-bold text-sm'>
+        {formatCurrency(sale.total_amount)}
+      </TableCell>
+      <TableCell className='px-4 text-right font-bold text-sm text-error'>
+        {formatCurrency(sale.balance_due)}
+      </TableCell>
+      <TableCell className='py-4 px-6 text-right'>
+        <div className='flex items-center justify-end gap-1'>
+          {sale.status !== 'PAID' && sale.status !== 'CANCELLED' && (
+            <Button
+              size='sm'
+              variant='ghost'
+              onClick={e => {
+                e.stopPropagation()
+                onPayment(sale)
+              }}
+              className='h-8 w-8 p-0 text-primary hover:bg-primary/10 hover:text-primary rounded-full'
+              title='Registrar Cobro'
+            >
+              <CreditCard size={16} />
+            </Button>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full'
+                onClick={e => e.stopPropagation()}
+              >
+                <MoreVertical size={16} className='text-slate-400' />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align='end'
+              className='w-48 p-1 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-surface-dark shadow-xl z-50'
+            >
+              <DropdownMenuItem
+                onClick={() => onDetails(sale.id)}
+                className='gap-2 py-2 font-medium text-sm rounded'
+              >
+                <Eye size={16} /> Ver Detalles
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onHistory(sale.id)}
+                className='gap-2 py-2 font-medium text-sm rounded'
+              >
+                <List size={16} /> Historial de Cobros
+              </DropdownMenuItem>
+              {sale.status !== 'CANCELLED' && (
+                <DropdownMenuItem
+                  onClick={() => onCancel(sale)}
+                  className='gap-2 py-2 font-medium text-sm rounded text-red-600'
+                >
+                  <Ban size={16} /> Anular Venta
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+});
+
+/**
+ * Componente de tarjeta memoizado para vista móvil
+ */
+const SaleCard = React.memo(({ 
+  sale, 
+  formatDate, 
+  formatCurrency, 
+  onPayment,
+  onCancel,
+  onDetails,
+  onHistory,
+  getStatusBadge 
+}) => {
+  return (
+    <div
+      key={sale.id}
+      className='p-4 space-y-4 active:bg-slate-50 dark:active:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800'
+    >
+      <div className='flex items-center justify-between' onClick={() => onDetails(sale.id)}>
+        <div className='flex items-center gap-2'>
+          <div className='size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500'>
+            <User size={14} />
+          </div>
+          <span className='font-bold text-slate-900 dark:text-white text-sm'>
+            {sale.client_name}
+          </span>
+        </div>
+        <span className='font-mono text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded'>
+          #{sale.id}
+        </span>
+      </div>
+
+      <div className='grid grid-cols-2 gap-4' onClick={() => onDetails(sale.id)}>
+        <div>
+          <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1'>
+            Fecha
+          </p>
+          <p className='text-xs font-medium text-slate-600 dark:text-slate-400'>
+            {formatDate(sale.date)}
+          </p>
+        </div>
+        <div className='text-right'>
+          <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1'>
+            Total
+          </p>
+          <p className='text-xs font-bold text-slate-900 dark:text-white tabular-nums'>
+            {formatCurrency(sale.total_amount)}
+          </p>
+        </div>
+        <div>
+          <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1'>
+            Estado
+          </p>
+          {getStatusBadge(sale.status)}
+        </div>
+        <div className='text-right'>
+          <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1'>
+            Pendiente
+          </p>
+          <p className='text-xs font-bold text-error tabular-nums'>
+            {formatCurrency(sale.balance_due)}
+          </p>
+        </div>
+      </div>
+
+      {/* Botones de Acción en Card */}
+      <div className='flex gap-2 pt-2 border-t border-slate-50 dark:border-slate-800'>
+        {sale.status !== 'PAID' && sale.status !== 'CANCELLED' && (
+          <Button
+            size='sm'
+            onClick={() => onPayment(sale)}
+            className='flex-1 h-9 bg-primary/10 text-primary hover:bg-primary hover:text-white border-none font-bold text-[10px] uppercase tracking-tighter'
+          >
+            <CreditCard size={14} className='mr-1.5' /> Registrar Cobro
+          </Button>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant='outline'
+              size='sm'
+              className='h-9 w-10 p-0 border-slate-200'
+            >
+              <MoreVertical size={16} className='text-slate-400' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end' className='w-48 p-1'>
+            <DropdownMenuItem onClick={() => onDetails(sale.id)} className='gap-2 text-xs font-medium'>
+              <Eye size={14} /> Ver Detalles
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onHistory(sale.id)} className='gap-2 text-xs font-medium'>
+              <List size={14} /> Historial de Cobros
+            </DropdownMenuItem>
+            {sale.status !== 'CANCELLED' && (
+              <DropdownMenuItem onClick={() => onCancel(sale)} className='gap-2 text-xs font-medium text-red-600'>
+                <Ban size={14} /> Anular Venta
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+});
+
 const SalePayment = () => {
   const { lang } = useI18n()
   const navigate = useNavigate()
@@ -156,13 +388,20 @@ const SalePayment = () => {
 
   const [dateRange, setDateRange] = useState(getDefaultDateRange())
 
-  // Pagination
+  // Pagination & Cache State
   const [pagination, setPagination] = useState({
     page: 1,
-    page_size: 10,
+    page_size: 100, // Fetch 100 records from server
     total_records: 0,
     total_pages: 0,
   })
+  
+  const [localPage, setLocalPage] = useState(1)
+  const localPageSize = 20 // Show 20 items per local page
+  
+  // Caché persistente para evitar recargas innecesarias y gestionar memoria
+  const pagesCache = React.useRef(new Map())
+  const abortControllerRef = React.useRef(null)
 
   // Modal State
   const [selectedSale, setSelectedSale] = useState(null)
@@ -172,15 +411,35 @@ const SalePayment = () => {
   const [cancelPreviewData, setCancelPreviewData] = useState(null)
   const [isCancelling, setIsCancelling] = useState(false)
 
-  // Formatters
-  const formatCurrency = value =>
-    currencyFormatter(lang, 'PYG').format(value || 0)
-  const formatDate = dateStr =>
-    dateStr ? dateFormatterFactory(lang).format(new Date(dateStr)) : '-'
+  // Formatters memoizados para rendimiento
+  const formatCurrency = React.useCallback(value =>
+    currencyFormatter(lang, 'PYG').format(value || 0), [lang])
+  
+  const formatDate = React.useCallback(dateStr =>
+    dateStr ? dateFormatterFactory(lang).format(new Date(dateStr)) : '-', [lang])
 
-  const handleLoadSales = async (page = 1) => {
+  const handleLoadSales = async (page = 1, forceRefresh = false) => {
+    // Reset local page if it's a new fetch or different page
+    setLocalPage(1)
+
+    // Cancelar petición previa si existe (evita race conditions)
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    
+    // Generar llave de caché única basada en filtros para gestión inteligente de memoria
+    const cacheKey = `${page}-${selectedClientName}-${selectedStatus}-${dateRange.start_date}-${dateRange.end_date}`
+    
+    if (!forceRefresh && pagesCache.current.has(cacheKey)) {
+      const cachedData = pagesCache.current.get(cacheKey)
+      setRawSales(cachedData.data)
+      setPagination(cachedData.pagination)
+      return
+    }
+
     setIsLoading(true)
     setError(null)
+    abortControllerRef.current = new AbortController()
 
     try {
       let result
@@ -195,9 +454,10 @@ const SalePayment = () => {
         filters.payment_status = normalizeStatusFilterForApi(selectedStatus)
       }
 
-      if (selectedClientName) {
+      // Llamada al servicio: Unificando inteligencia
+      if (selectedClientName?.trim()) {
         result = await salePaymentService.getSalesByClientNameWithPaymentStatus(
-          selectedClientName,
+          selectedClientName.trim(),
           filters,
         )
       } else {
@@ -207,33 +467,23 @@ const SalePayment = () => {
 
       const normalizedData = (result?.data || [])
         .map(item => {
-          // Handle both flat structure and nested { sale: {...}, details: [...] }
           const sale = item.sale || item
-          
-          // Normalizar campos de montos
           const totalPaid = Number(sale.total_paid) || Number(sale.amount_paid) || 0
           const rawTotal = Number(sale.total_amount) || Number(sale.total) || 0
           const rawBalance = sale.balance_due !== undefined ? Number(sale.balance_due) : null
           
-          // Determinar estado
           const status = normalizeSaleStatus({ ...sale, total_paid: totalPaid, balance_due: rawBalance ?? (rawTotal - totalPaid) })
           const isPaid = status === 'PAID'
           
-          // Lógica de reconstrucción: 
-          // Si el "total" reportado es igual al "pendiente" pero hay pagos registrados, 
-          // entonces el backend está enviando el saldo actual en el campo de total.
           let finalTotal = rawTotal
           let finalBalance = rawBalance ?? Math.max(0, rawTotal - totalPaid)
           
           if (totalPaid > 0 && Math.abs(rawTotal - finalBalance) < 1 && rawTotal > 0) {
-            // Caso donde Total == Pendiente. Reconstruimos el original.
             finalTotal = totalPaid + finalBalance
           } else if (totalPaid > 0 && rawTotal > 0 && rawTotal > totalPaid && rawBalance === null) {
-            // Caso estándar: Total > Pagado, calculamos pendiente
             finalBalance = rawTotal - totalPaid
           }
 
-          // Si el estado es pagado, el saldo DEBE ser 0 para consistencia visual
           if (isPaid) finalBalance = 0
           
           return {
@@ -253,53 +503,110 @@ const SalePayment = () => {
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
+      const paginationData = result?.pagination ? {
+        page: result.pagination.page,
+        page_size: result.pagination.page_size,
+        total_records: result.pagination.total_records,
+        total_pages: result.pagination.total_pages,
+      } : pagination
+
+      // Guardar en caché para acceso instantáneo posterior
+      pagesCache.current.set(cacheKey, { data: normalizedData, pagination: paginationData })
+      
       setRawSales(normalizedData)
-      if (result?.pagination) {
-        setPagination({
-          page: result.pagination.page,
-          page_size: result.pagination.page_size,
-          total_records: result.pagination.total_records,
-          total_pages: result.pagination.total_pages,
-        })
-      }
+      setPagination(paginationData)
     } catch (err) {
+      if (err.name === 'AbortError') return
       console.error('Error loading sales:', err)
       setError('Error al cargar los cobros de ventas.')
       showError('Error de conexión')
     } finally {
       setIsLoading(false)
+      abortControllerRef.current = null
     }
   }
 
+  // Limpiar caché cuando cambian filtros base
+  // Efecto para búsqueda inteligente (Auto-fetch al cambiar filtros)
   useEffect(() => {
-    handleLoadSales()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const timer = setTimeout(() => {
+      // Solo disparar si ha pasado 1s desde el último cambio en el nombre
+      // o inmediatamente si es estado/fecha
+      handleLoadSales(1);
+    }, selectedClientName ? 800 : 0);
+
+    return () => clearTimeout(timer);
+  }, [selectedStatus, dateRange.start_date, dateRange.end_date]);
+
+  // Manejar cambio de nombre por separado con debounce más largo
+  useEffect(() => {
+    if (!selectedClientName) return;
+    const timer = setTimeout(() => {
+      handleLoadSales(1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [selectedClientName]);
+
+  const handleHistory = React.useCallback((saleId) => {
+    navigate(`/cobros-ventas/${saleId}/pagos`)
+  }, [navigate])
+
+  const handleDetails = React.useCallback((saleId) => {
+    navigate(`/cobros-ventas/${saleId}`)
+  }, [navigate])
+
+  const handleOpenPayment = React.useCallback((sale) => {
+    setSelectedSale(sale)
+    setIsPaymentModalOpen(true)
   }, [])
 
-  const applyFilters = () => handleLoadSales(1)
+  const handleRefresh = React.useCallback(() => {
+    pagesCache.current.clear()
+    handleLoadSales(pagination.page, true)
+    showInfo('Actualizando...')
+  }, [pagination.page])
 
-  const handleClearFilters = () => {
+  const applyFilters = React.useCallback(() => {
+    pagesCache.current.clear()
+    handleLoadSales(1, true)
+  }, [])
+
+  const handleClearFilters = React.useCallback(() => {
+    pagesCache.current.clear()
     setSearchTerm('')
     setSelectedClientName('')
     setSelectedStatus('all')
     setDateRange(getDefaultDateRange())
-    setTimeout(() => handleLoadSales(1), 0)
-  }
+    setTimeout(() => handleLoadSales(1, true), 0)
+  }, [])
 
-  const handleRefresh = () => {
-    handleLoadSales(pagination.page)
-    showInfo('Actualizando...')
-  }
+  const { filteredSales, displaySales } = React.useMemo(() => {
+    // 1. Filtrado local por término de búsqueda e Inteligencia de Estado
+    let filtered = rawSales;
+    
+    // Filtro por Estado (Local sobre datos ya obtenidos)
+    if (selectedStatus && selectedStatus !== 'all') {
+      const targetStatus = selectedStatus.toUpperCase();
+      filtered = filtered.filter(sale => sale.status === targetStatus);
+    }
 
-  const displaySales = useMemo(() => {
-    if (!searchTerm) return rawSales
-    const lowerTerm = searchTerm.toLowerCase()
-    return rawSales.filter(
-      sale =>
-        String(sale.id).includes(lowerTerm) ||
-        (sale.client_name || '').toLowerCase().includes(lowerTerm),
-    )
-  }, [rawSales, searchTerm])
+    // Filtro por Término de búsqueda (ID o Cliente)
+    if (searchTerm) {
+      const lowerTerm = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        sale =>
+          String(sale.id).includes(lowerTerm) ||
+          (sale.client_name || '').toLowerCase().includes(lowerTerm),
+      )
+    }
+
+    // 2. Paginación local: Mostrar solo 20 de los cargados
+    const start = (localPage - 1) * localPageSize;
+    return {
+      filteredSales: filtered,
+      displaySales: filtered.slice(start, start + localPageSize)
+    };
+  }, [rawSales, searchTerm, selectedStatus, localPage, localPageSize])
 
   const handlePaymentSubmit = async paymentData => {
     await salePaymentService.processSalePaymentWithCashRegister(paymentData)
@@ -424,56 +731,58 @@ const SalePayment = () => {
         </Button>
       </header>
 
-      {/* KPI Cards (Procesados sobre resultados actuales en pantalla) */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6'>
+      {/* KPI Cards (Procesados sobre resultados filtrados totales en memoria) */}
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6'>
         {[
           {
             label: 'Saldos Pendientes',
             icon: Clock,
             color: 'amber',
-            value: formatCurrency(
-              displaySales.reduce(
-                (acc, s) => acc + (Number(s.balance_due) || 0),
-                0,
-              ),
-            ),
+            count: filteredSales.filter(s => s.status === 'PENDING' || s.status === 'PARTIAL').length,
+            amount: filteredSales.reduce((acc, s) => acc + (Number(s.balance_due) || 0), 0)
           },
           {
             label: 'Cobros Parciales',
             icon: CircleDollarSign,
             color: 'blue',
-            value: `${displaySales.filter(s => (s.payment_count > 0 && s.balance_due > 0) || ['partial', 'parcial'].includes(s.status?.toLowerCase())).length} Ventas`,
+            count: filteredSales.filter(s => s.status === 'PARTIAL').length,
+            amount: filteredSales.reduce((acc, s) => acc + (s.status === 'PARTIAL' ? (Number(s.total_paid) || 0) : 0), 0)
           },
           {
             label: 'Cobros Exitosos',
             icon: CheckCircle2,
             color: 'green',
-            value: formatCurrency(
-              displaySales.reduce(
-                (acc, s) =>
-                  acc + (Number(s.total_paid) || Number(s.amount_paid) || 0),
-                0,
-              ),
-            ),
+            count: filteredSales.filter(s => s.status === 'PAID').length,
+            amount: filteredSales.reduce((acc, s) => acc + (s.status === 'PAID' ? (Number(s.total_amount) || 0) : 0), 0)
+          },
+          {
+            label: 'Ventas Anuladas',
+            icon: Ban,
+            color: 'slate',
+            count: filteredSales.filter(s => s.status === 'CANCELLED').length,
+            amount: filteredSales.reduce((acc, s) => acc + (s.status === 'CANCELLED' ? (Number(s.total_amount) || 0) : 0), 0)
           },
         ].map((kpi, i) => (
           <Card
             key={i}
             className='rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-surface-dark overflow-hidden transition-all duration-300 hover:shadow-md group'
           >
-            <CardContent className='p-4 md:p-6 flex items-start gap-4'>
-              <div className='flex-1 min-w-0'>
-                <p className='text-sm font-semibold text-slate-500 truncate'>
+            <CardContent className='p-4 flex flex-col gap-3'>
+              <div className='flex items-center justify-between'>
+                <div className={`p-2 bg-${kpi.color}-500/10 rounded-lg text-${kpi.color}-600 group-hover:scale-110 transition-transform`}>
+                  <kpi.icon size={20} />
+                </div>
+                <Badge variant='secondary' className='bg-slate-100 text-slate-600 font-bold text-[10px]'>
+                  {kpi.count} OP
+                </Badge>
+              </div>
+              <div>
+                <p className='text-[10px] font-bold text-slate-500 uppercase tracking-widest'>
                   {kpi.label}
                 </p>
-                <h2 className='text-2xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums break-words mt-1'>
-                  {kpi.value}
+                <h2 className='text-lg font-bold text-slate-900 dark:text-white tracking-tight tabular-nums mt-0.5'>
+                  {formatCurrency(kpi.amount)}
                 </h2>
-              </div>
-              <div
-                className={`flex-shrink-0 size-12 bg-${kpi.color}-500/10 rounded-lg flex items-center justify-center text-${kpi.color}-600 group-hover:scale-110 transition-transform`}
-              >
-                <kpi.icon size={24} />
               </div>
             </CardContent>
           </Card>
@@ -523,6 +832,9 @@ const SalePayment = () => {
                     </SelectItem>
                     <SelectItem value='paid' className='text-sm'>
                       Pagado
+                    </SelectItem>
+                    <SelectItem value='cancelled' className='text-sm text-red-500'>
+                      Anulado
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -641,122 +953,18 @@ const SalePayment = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody className='divide-y divide-slate-200'>
-                    {displaySales.map((sale, index) => (
-                      <TableRow
-                        key={`table-row-${sale.id || index}-${index}`}
-                        className='hover:bg-slate-50 transition-colors cursor-pointer group'
-                        onClick={() => navigate(`/cobros-ventas/${sale.id}`)}
-                      >
-                        <TableCell className='py-4 px-6 font-semibold text-sm'>
-                          #{sale.id}
-                        </TableCell>
-                        <TableCell className='px-4'>
-                          <div className='flex flex-col'>
-                            <span className='font-semibold text-sm'>
-                              {sale.client_name}
-                            </span>
-                            {(sale.client?.document_id ||
-                              sale.client_document_id) && (
-                              <span className='text-xs text-slate-500 font-medium'>
-                                CI:{' '}
-                                {formatDocumentId(
-                                  sale.client?.document_id ||
-                                    sale.client_document_id,
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className='px-4 text-sm text-slate-600'>
-                          {formatDate(sale.date)}
-                        </TableCell>
-                        <TableCell className='px-4 text-center'>
-                          {getStatusBadge(sale.status)}
-                        </TableCell>
-                        <TableCell className='px-4 text-right'>
-                          <div className='flex items-center justify-end gap-2'>
-                            <div className='h-1.5 w-16 bg-slate-100 rounded-full overflow-hidden'>
-                              <div
-                                className={cn(
-                                  'h-full transition-all duration-500',
-                                  Number(sale.payment_progress) >= 100
-                                    ? 'bg-green-500'
-                                    : Number(sale.payment_progress) > 0
-                                      ? 'bg-blue-500'
-                                      : 'bg-transparent',
-                                )}
-                                style={{
-                                  width: `${Math.min(100, Math.max(0, sale.payment_progress || 0))}%`,
-                                }}
-                              />
-                            </div>
-                            <span className='text-[10px] font-bold tabular-nums text-slate-400'>
-                              {Math.round(sale.payment_progress || 0)}%
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className='px-4 text-right font-medium text-slate-500 tabular-nums'>
-                          {formatCurrency(sale.total_amount)}
-                        </TableCell>
-                        <TableCell className='px-4 text-right font-semibold text-slate-900 tabular-nums'>
-                          {formatCurrency(sale.balance_due)}
-                        </TableCell>
-                        <TableCell
-                          className='px-6 text-right'
-                          onClick={e => e.stopPropagation()}
-                        >
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                className='size-8 rounded-md text-slate-400 hover:text-primary hover:bg-slate-100 transition-all'
-                              >
-                                <MoreVertical size={16} />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align='end'
-                              className='w-56 p-1 rounded-md shadow-md border-slate-200'
-                            >
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  navigate(`/cobros-ventas/${sale.id}`)
-                                }
-                                className='gap-2 py-2 text-sm font-medium rounded cursor-pointer'
-                              >
-                                <Eye size={16} /> Ver Maestro
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedSale(sale)
-                                  setIsPaymentModalOpen(true)
-                                }}
-                                disabled={normalizeSaleStatus(sale) === 'PAID'}
-                                className='gap-2 py-2 text-sm font-medium rounded text-emerald-600 cursor-pointer'
-                              >
-                                <CircleDollarSign size={16} /> Registrar Cobro
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  navigate(`/cobros-ventas/${sale.id}/pagos`)
-                                }
-                                className='gap-2 py-2 text-sm font-medium rounded cursor-pointer'
-                              >
-                                <List size={16} /> Ver Historial
-                              </DropdownMenuItem>
-                              {sale.status !== 'CANCELLED' && (
-                                <DropdownMenuItem
-                                  onClick={() => handleCancelSale(sale)}
-                                  className='gap-2 py-2 text-sm font-medium rounded text-red-600 cursor-pointer'
-                                >
-                                  <Ban size={16} /> Anular Venta
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
+                    {displaySales.map(sale => (
+                      <SaleRow
+                        key={sale.id}
+                        sale={sale}
+                        formatDate={formatDate}
+                        formatCurrency={formatCurrency}
+                        onPayment={handleOpenPayment}
+                        onCancel={handleCancelSale}
+                        onDetails={handleDetails}
+                        onHistory={handleHistory}
+                        getStatusBadge={getStatusBadge}
+                      />
                     ))}
                   </TableBody>
                 </Table>
@@ -764,111 +972,70 @@ const SalePayment = () => {
 
               {/* Mobile Card View */}
               <div className='lg:hidden divide-y divide-slate-200'>
-                {displaySales.map((sale, index) => (
-                  <div
-                    key={`mobile-card-${sale.id || index}-${index}`}
-                    className='p-4 space-y-4 active:bg-slate-50 transition-colors'
-                    onClick={() => navigate(`/cobros-ventas/${sale.id}`)}
-                  >
-                    <div className='flex justify-between items-start'>
-                      <div className='flex flex-col gap-1'>
-                        <span className='font-semibold text-sm text-primary'>
-                          VENTA #{sale.id}
-                        </span>
-                        <span className='font-semibold text-slate-900 text-base leading-tight'>
-                          {sale.client_name}
-                        </span>
-                        <div className='flex items-center gap-2 text-slate-500 mt-1'>
-                          <Calendar size={12} />
-                          <span className='text-xs font-medium'>
-                            {formatDate(sale.date)}
-                          </span>
-                        </div>
-                      </div>
-                      {getStatusBadge(sale.status)}
-                    </div>
-
-                    <div className='flex justify-between items-end bg-slate-50 p-3 rounded-md border border-slate-200'>
-                      <div className='flex flex-col'>
-                        <span className='text-xs font-medium text-slate-500'>
-                          Total Venta
-                        </span>
-                        <span className='font-semibold text-sm tabular-nums'>
-                          {formatCurrency(sale.total_amount)}
-                        </span>
-                      </div>
-                      <div className='flex flex-col text-right'>
-                        <span className='text-xs font-medium text-slate-500'>
-                          Saldo Pendiente
-                        </span>
-                        <span className='font-bold text-base text-slate-900 tabular-nums'>
-                          {formatCurrency(sale.balance_due)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div
-                      className='flex gap-2 pt-1'
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <Button
-                        onClick={() => {
-                          setSelectedSale(sale)
-                          setIsPaymentModalOpen(true)
-                        }}
-                        disabled={normalizeSaleStatus(sale) === 'PAID' || sale.status === 'CANCELLED'}
-                        className='flex-1 h-10 bg-primary/10 text-primary hover:bg-primary hover:text-white border-none font-medium text-sm rounded-md transition-all'
-                      >
-                        <CircleDollarSign size={16} className='mr-2' />{' '}
-                        Registrar Cobro
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant='outline'
-                            className='h-10 w-12 rounded-md border-slate-400 transition-all active:scale-95'
-                          >
-                            <MoreVertical size={18} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align='end'
-                          className='w-56 p-1 rounded-md shadow-md border-slate-200'
-                        >
-                          <DropdownMenuItem
-                            onClick={() =>
-                              navigate(`/cobros-ventas/${sale.id}`)
-                            }
-                            className='gap-2 py-2 font-medium text-sm rounded'
-                          >
-                            <Eye size={16} /> Ver Maestro
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              navigate(`/cobros-ventas/${sale.id}/pagos`)
-                            }
-                            className='gap-2 py-2 font-medium text-sm rounded'
-                          >
-                            <List size={16} /> Ver Historial
-                          </DropdownMenuItem>
-                          {sale.status !== 'CANCELLED' && (
-                            <DropdownMenuItem
-                              onClick={() => handleCancelSale(sale)}
-                              className='gap-2 py-2 font-medium text-sm rounded text-red-600'
-                            >
-                              <Ban size={16} /> Anular Venta
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
+                {displaySales.map(sale => (
+                  <SaleCard
+                    key={sale.id}
+                    sale={sale}
+                    formatDate={formatDate}
+                    formatCurrency={formatCurrency}
+                    onDetails={handleDetails}
+                    getStatusBadge={getStatusBadge}
+                  />
                 ))}
               </div>
             </>
           )}
 
-          {/* Pagination Footer ... */}
+          {/* Pagination Footer - Inteligente & Híbrido */}
+          {(pagination.total_records > localPageSize) && (
+            <div className='p-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4'>
+              <div className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
+                Viendo <span className='text-primary'>{(localPage - 1) * localPageSize + 1}-{Math.min(localPage * localPageSize, pagination.total_records)}</span> de {pagination.total_records} Registros
+                {pagination.total_pages > 1 && <span className='ml-2 text-slate-400'>(Pág. Servidor: {pagination.page}/{pagination.total_pages})</span>}
+              </div>
+              <div className='flex items-center gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={(localPage === 1 && pagination.page === 1) || isLoading}
+                  onClick={() => {
+                    if (localPage > 1) {
+                      setLocalPage(prev => prev - 1);
+                    } else if (pagination.page > 1) {
+                      handleLoadSales(pagination.page - 1);
+                      // handleLoadSales resets localPage to 1, but we want the last local page of previous set
+                      setTimeout(() => setLocalPage(Math.ceil(pagination.page_size / localPageSize)), 100);
+                    }
+                  }}
+                  className='h-8 px-3 border-slate-300 font-bold uppercase text-[10px] tracking-widest'
+                >
+                  <ChevronLeft size={14} className='mr-1' /> Anterior
+                </Button>
+                
+                <div className='flex gap-1'>
+                  <span className='px-3 py-1 bg-white border border-slate-200 rounded text-[10px] font-black text-primary'>
+                    BLOQUE {localPage}
+                  </span>
+                </div>
+
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={(localPage * localPageSize >= rawSales.length && pagination.page >= pagination.total_pages) || isLoading}
+                  onClick={() => {
+                    if (localPage * localPageSize < rawSales.length) {
+                      setLocalPage(prev => prev + 1);
+                    } else if (pagination.page < pagination.total_pages) {
+                      handleLoadSales(pagination.page + 1);
+                    }
+                  }}
+                  className='h-8 px-3 border-slate-300 font-bold uppercase text-[10px] tracking-widest'
+                >
+                  Siguiente <ChevronRight size={14} className='ml-1' />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

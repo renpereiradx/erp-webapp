@@ -20,6 +20,7 @@ import {
   Phone,
   CircleDollarSign,
   ArrowUpRight,
+  ChevronRight,
   MoreVertical,
   Download,
   Coins,
@@ -489,10 +490,21 @@ const SalesOrderDetail = () => {
           </Card>
 
           {/* Payments History */}
-          <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b border-border-subtle p-6">
-              <CardTitle className="text-lg font-black tracking-tighter uppercase">Historial de Cobros</CardTitle>
-              <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Pagos parciales recibidos</CardDescription>
+          <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden group">
+            <CardHeader 
+              className="bg-slate-50/50 border-b border-border-subtle p-6 cursor-pointer hover:bg-slate-100 transition-colors flex flex-row items-center justify-between space-y-0"
+              onClick={() => navigate(`/cobros-ventas/${saleId}/pagos`)}
+            >
+              <div>
+                <CardTitle className="text-lg font-black tracking-tighter uppercase flex items-center gap-2">
+                  Historial de Cobros
+                  <ChevronRight size={18} className="text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
+                </CardTitle>
+                <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Pagos parciales recibidos</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" className="h-8 px-2 text-[9px] font-black uppercase tracking-widest text-primary border border-primary/20 bg-primary/5 hover:bg-primary hover:text-white transition-all">
+                Ver Detalles
+              </Button>
             </CardHeader>
             <CardContent className="p-0">
               {payments.length === 0 ? (
