@@ -39,7 +39,7 @@ const _createMockData = {
       old_quantity: oldQuantity,
       new_quantity: adjustmentData.new_quantity,
       adjustment_date: new Date().toISOString(),
-      reason: adjustmentData.reason || DEFAULT_REASONS.MANUAL_ADJUSTMENT.PHYSICAL_COUNT,
+      reason: adjustmentData.reason || DEFAULT_REASONS.MANUAL_ADJUSTMENT.INVENTORY_COUNT,
       metadata: {
         ...DEFAULT_METADATA_TEMPLATES.DEFAULT,
         timestamp: new Date().toISOString(),
@@ -128,12 +128,12 @@ export const inventoryService = {
    * Crea un request de ajuste manual con valores por defecto
    * @param {string} productId - ID del producto
    * @param {number} newQuantity - Nueva cantidad
-   * @param {string} reasonType - Tipo de razón (PHYSICAL_COUNT, DAMAGED_GOODS, etc.)
+   * @param {string} reasonType - Tipo de razón (INVENTORY_COUNT, DAMAGED_GOODS, etc.)
    * @param {string} [customReason] - Razón personalizada
    * @param {object} [customMetadata] - Metadata adicional
    * @returns {object} Request estructurado
    */
-  createStructuredAdjustmentRequest(productId, newQuantity, reasonType = 'PHYSICAL_COUNT', customReason = null, customMetadata = {}) {
+  createStructuredAdjustmentRequest(productId, newQuantity, reasonType = 'INVENTORY_COUNT', customReason = null, customMetadata = {}) {
     return createAdjustmentRequest(productId, newQuantity, reasonType, customReason, reasonType, customMetadata);
   },
 
@@ -211,7 +211,7 @@ export const inventoryService = {
             source: "physical_count",
             location: "main_warehouse",
             operator: "Usuario Demo",
-            template: "PHYSICAL_COUNT",
+            template: "INVENTORY_COUNT",
             equipment: "barcode_scanner",
             timestamp: new Date().toISOString(),
             verification: "single_check",
@@ -361,13 +361,14 @@ export const inventoryService = {
         throw new Error('Se requiere al menos un producto en el inventario');
       }
 
-      // Enriquecer metadata con campos obligatorios v4.2
+      // Enriquecer metadata con campos obligatorios v4.3
       const enrichedMetadata = {
         source: 'physical_count',
         timestamp: new Date().toISOString(),
-        system_version: '4.2.0-frontend',
+        system_version: '4.3.0-frontend',
         items_count: itemsArray.length,
         status: inventoryData.metadata?.status || 'COMPLETED',
+        operator: inventoryData.metadata?.operator || 'manual_operator',
         ...(inventoryData.metadata || {}),
       };
 
@@ -719,7 +720,7 @@ export const inventoryService = {
         source: 'manual_adjustment',
         timestamp: new Date().toISOString(),
         system_version: '4.2.0-frontend',
-        ...(transactionData.metadata || {}),
+        ...(adjustmentData.metadata || {}),
       };
 
       const mockData = _createMockData.manualAdjustment({
