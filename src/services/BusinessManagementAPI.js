@@ -16,6 +16,10 @@ class BusinessManagementAPI {
 
     // Log de inicialización solo en desarrollo
     if (API_CONFIG.isDevelopment()) {
+      console.debug('[BusinessManagementAPI] initialized', {
+        baseUrl: this.baseUrl,
+        timeout: this.timeout,
+      })
     }
   }
 
