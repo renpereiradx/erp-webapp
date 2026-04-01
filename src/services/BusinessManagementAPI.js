@@ -146,6 +146,7 @@ class BusinessManagementAPI {
         if (endpoint.includes('/currencies')) {
           throw new ApiError('NOT_FOUND', 'Módulo de monedas no disponible')
         }
+        /*
         if (endpoint.includes('/cash-registers')) {
           throw new ApiError('NOT_FOUND', 'Módulo de cajas registradoras no disponible')
         }
@@ -158,6 +159,7 @@ class BusinessManagementAPI {
         if (endpoint.includes('/exchange-rates')) {
           throw new ApiError('NOT_FOUND', 'Módulo de tipos de cambio no disponible')
         }
+        */
         // NOTA: Se eliminó el bloqueo manual de /reserve/ y /schedules/ 
         // para permitir que las peticiones lleguen al backend real.
         
@@ -503,10 +505,7 @@ class BusinessManagementAPI {
   // --- Cash Movements ---
 
   async createCashMovement(data) {
-    return this.makeRequest('/cash-movements', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
+    return this.post('/cash-movements/', data)
   }
 
   async voidCashMovement(id, reason) {

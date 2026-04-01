@@ -17,6 +17,7 @@ import {
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog'
 import { useI18n } from '@/lib/i18n'
+import { cashRegisterService } from '@/services/cashRegisterService'
 
 type Variant = 'purchase' | 'sale'
 
@@ -35,6 +36,7 @@ interface InstantPaymentPayload {
   paymentMethodId?: string | number
   currencyCode?: string
   notes?: string | null
+  cash_register_id?: string | number | null
 }
 
 interface InstantPaymentDialogProps {
@@ -87,6 +89,9 @@ const InstantPaymentDialog = ({
   const [selectedMethodId, setSelectedMethodId] = useState<string | number>(
     paymentMethodId || '',
   )
+  const [cashRegisters, setCashRegisters] = useState<any[]>([])
+  const [cashRegisterId, setCashRegisterId] = useState<string | number | null>(null)
+  const [isCashRegistersLoading, setCashRegistersLoading] = useState(false)
 
   const confirmRef = useRef<HTMLButtonElement | null>(null)
   const amountRef = useRef<HTMLInputElement | null>(null)
@@ -119,7 +124,34 @@ const InstantPaymentDialog = ({
     } else {
       setSelectedMethodId('')
     }
-  }, [open, totalAmount, paymentMethodId, paymentMethods])
+
+    if (isSale) {
+      const loadCashRegisters = async () => {
+        setCashRegistersLoading(true)
+        try {
+          const [allRegisters, activeRegister] = await Promise.all([
+            cashRegisterService.getCashRegisters().catch(() => []),
+            cashRegisterService.getActiveCashRegister().catch(() => null)
+          ])
+          
+          const rawRegisters = Array.isArray(allRegisters) ? allRegisters : (allRegisters as any)?.data || []
+          setCashRegisters(rawRegisters)
+          
+          if (activeRegister) {
+            setCashRegisterId(activeRegister.id || activeRegister.cash_register_id)
+          } else if (rawRegisters.length > 0) {
+            // No default if no active register, user must choose or leave null
+            setCashRegisterId(null)
+          }
+        } catch (err) {
+          console.error('Error loading cash registers:', err)
+        } finally {
+          setCashRegistersLoading(false)
+        }
+      }
+      loadCashRegisters()
+    }
+  }, [open, totalAmount, paymentMethodId, paymentMethods, isSale])
 
   useEffect(() => {
     if (!open) return
@@ -161,6 +193,7 @@ const InstantPaymentDialog = ({
           amount_received: normalizedAmount,
           payment_notes: notes || null,
           paymentMethodId: selectedMethodId,
+          cash_register_id: cashRegisterId,
         })
       } else {
         await onConfirmPayment({
@@ -274,39 +307,64 @@ const InstantPaymentDialog = ({
             </div>
           </div>
 
-          {paymentMethodId ? (
-            <div className='space-y-1'>
-              <label className='text-sm font-medium text-muted-foreground'>
-                {t(`${prefix}.methodLabel`, 'Metodo de pago')}
-              </label>
-              <div className='rounded-md border bg-background px-3 py-2'>
-                <p className='text-sm font-medium text-foreground flex items-center gap-2'>
-                  <span className='inline-block w-2 h-2 rounded-full bg-primary/80'></span>
-                  {resolvedPaymentMethodLabel}
-                </p>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            {paymentMethodId ? (
+              <div className='space-y-1'>
+                <label className='text-sm font-medium text-muted-foreground'>
+                  {t(`${prefix}.methodLabel`, 'Metodo de pago')}
+                </label>
+                <div className='rounded-md border bg-background px-3 py-2'>
+                  <p className='text-sm font-medium text-foreground flex items-center gap-2'>
+                    <span className='inline-block w-2 h-2 rounded-full bg-primary/80'></span>
+                    {resolvedPaymentMethodLabel}
+                  </p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className='space-y-2'>
-              <label className='text-sm font-medium leading-none' htmlFor='instant-payment-method'>
-                {t(`${prefix}.methodLabel`, 'Metodo de pago')}
-              </label>
-              <select
-                id='instant-payment-method'
-                value={selectedMethodId}
-                onChange={e => setSelectedMethodId(e.target.value)}
-                disabled={processing}
-                className='flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm'
-              >
-                {paymentMethods.length === 0 && <option value=''>Cargando metodos...</option>}
-                {paymentMethods.map(method => (
-                  <option key={method.id} value={method.id}>
-                    {method.description || method.method_code}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+            ) : (
+              <div className='space-y-2'>
+                <label className='text-sm font-medium leading-none' htmlFor='instant-payment-method'>
+                  {t(`${prefix}.methodLabel`, 'Metodo de pago')}
+                </label>
+                <select
+                  id='instant-payment-method'
+                  value={selectedMethodId}
+                  onChange={e => setSelectedMethodId(e.target.value)}
+                  disabled={processing}
+                  className='flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm'
+                >
+                  {paymentMethods.length === 0 && <option value=''>Cargando metodos...</option>}
+                  {paymentMethods.map(method => (
+                    <option key={method.id} value={method.id}>
+                      {method.description || method.method_code}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {isSale && (
+              <div className='space-y-2'>
+                <label className='text-sm font-medium leading-none' htmlFor='instant-payment-cash-register'>
+                  {t('sales.registerPaymentModal.cashRegister.label', 'Caja de Cobro')}
+                </label>
+                <select
+                  id='instant-payment-cash-register'
+                  value={cashRegisterId || ''}
+                  onChange={e => setCashRegisterId(e.target.value || null)}
+                  disabled={processing || isCashRegistersLoading}
+                  className='flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm'
+                >
+                  <option value=''>{t('sales.registerPaymentModal.cashRegister.none', 'Sin caja asignada')}</option>
+                  {isCashRegistersLoading && <option disabled>Cargando cajas...</option>}
+                  {cashRegisters.map(reg => (
+                    <option key={reg.id || reg.cash_register_id} value={reg.id || reg.cash_register_id}>
+                      {reg.name || reg.description || `Caja #${reg.id}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
 
           <div>
             <button

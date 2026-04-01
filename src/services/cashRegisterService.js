@@ -16,7 +16,7 @@ const API_ENDPOINTS = {
   cashRegisterMovementsFilter: id => `/cash-registers/${id}/movements/filter`,
   cashRegisterReport: id => `/cash-registers/${id}/report`,
   cashRegisterAudits: id => `/cash-registers/${id}/audits`,
-  cashMovements: '/cash-movements',
+  cashMovements: '/cash-movements/',
   voidMovement: id => `/cash-movements/${id}/void`,
   cashAudits: '/cash-audits',
   cashAuditsDenominations: '/cash-audits/denominations',
@@ -331,7 +331,7 @@ export const cashRegisterService = {
   },
 
   /**
-   * Registra un movimiento manual de efectivo (POST /cash-movements)
+   * Registra un movimiento manual de efectivo (POST /cash-movements/)
    * @param {Object} movementData
    * @returns {Promise<Object>}
    */
@@ -340,7 +340,17 @@ export const cashRegisterService = {
 
     try {
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.post(API_ENDPOINTS.cashMovements, movementData)
+        const payload = {
+          cash_register_id: Number(movementData.cash_register_id),
+          movement_type: movementData.movement_type,
+          amount: Number(movementData.amount),
+          concept: movementData.concept?.trim(),
+          category: movementData.category || undefined,
+          reference_type: movementData.reference_type || undefined,
+          reference_id: movementData.reference_id || undefined,
+        }
+
+        return await apiClient.post(API_ENDPOINTS.cashMovements, payload)
       })
 
       telemetry.record('cash_register.service.create_movement', {

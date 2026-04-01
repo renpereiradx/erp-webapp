@@ -350,6 +350,7 @@ const CashMovements = () => {
         cash_register_id: activeCashRegister.id,
         movement_type: newMovementForm.movement_type,
         amount: amount,
+        category: newMovementForm.concept, // El ID del concepto seleccionado actúa como categoría
         concept:
           conceptLabel +
           (newMovementForm.notes ? ` - ${newMovementForm.notes}` : ''),

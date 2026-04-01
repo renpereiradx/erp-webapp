@@ -2155,6 +2155,7 @@ const SalesNew: React.FC = () => {
                 amount_received: data.amount_received || data.amount,
                 payment_method_id: data.paymentMethodId || createdSaleData.paymentMethodId,
                 payment_notes: data.payment_notes || null,
+                cash_register_id: data.cash_register_id,
               });
               setShowInstantCollection(false);
               setCreatedSaleData(null);
