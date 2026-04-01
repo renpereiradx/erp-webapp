@@ -49,7 +49,7 @@ const ProfitabilityTrends = () => {
   if (loading) return <div className="p-16 text-center animate-pulse text-slate-500 font-black uppercase tracking-widest text-[10px]">Modelando proyecciones de rentabilidad temporal...</div>;
   if (error) return <div className="p-10 text-center text-rose-500 bg-rose-50 border border-rose-100 rounded-2xl m-6 font-black uppercase tracking-tight text-xs">Fallo en la sincronización de tendencias: {error}</div>;
 
-  const { data_points, summary } = data;
+  const { data_points = [], summary = {} } = data || {};
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
@@ -100,15 +100,15 @@ const ProfitabilityTrends = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <TrendSummaryCard 
           title="Vector de Tendencia" 
-          value={summary.trend_direction === 'UP' ? 'Expansión Sostenida' : 'Contracción'} 
-          status={summary.trend_direction} 
+          value={summary?.trend_direction === 'UP' ? 'Expansión Sostenida' : 'Contracción'} 
+          status={summary?.trend_direction || 'DOWN'} 
           description="Basado en rendimiento diario" 
         />
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm group hover:border-[#137fec] transition-all">
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">Tasa de Crecimiento</p>
-              <h3 className="text-3xl font-black mt-2 text-[#137fec] font-mono leading-none tracking-tighter">+{summary.growth_rate}%</h3>
+              <h3 className="text-3xl font-black mt-2 text-[#137fec] font-mono leading-none tracking-tighter">+{summary?.growth_rate || 0}%</h3>
             </div>
             <div className="text-emerald-500 group-hover:scale-110 transition-transform">
               <Zap size={24} fill="currentColor" />
@@ -160,7 +160,7 @@ const ProfitabilityTrends = () => {
           </div>
           
           <div className="flex-1 p-10 bg-slate-50/30 dark:bg-slate-950/30 relative min-h-[400px] flex items-end justify-between gap-4">
-            {data_points.map((pt, i) => (
+            {data_points?.map((pt, i) => (
               <div key={i} className="flex-1 flex flex-col items-center group relative">
                 <div className="w-full max-w-[40px] bg-slate-200 dark:bg-slate-800 rounded-t-xl relative border border-white/5 dark:border-slate-700/50 overflow-hidden" style={{ height: `${(pt.revenue / 20000000) * 300}px` }}>
                   <div className="absolute bottom-0 w-full bg-[#137fec]/30 h-full"></div>

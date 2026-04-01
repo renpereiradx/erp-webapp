@@ -110,28 +110,28 @@ const TrendsVelocity = () => {
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
         <VelocityKPICard
           title='Ventas por Día'
-          value={formatCurrency(velocityData.overall.sales_per_day)}
+          value={formatCurrency(velocityData?.overall?.sales_per_day || 0)}
           icon={<Banknote size={20} />}
           status='Promedio diario estable'
           trend={<TrendingUp size={14} className='text-emerald-500' />}
         />
         <VelocityKPICard
           title='Ventas por Hora'
-          value={formatCurrency(velocityData.overall.sales_per_hour)}
+          value={formatCurrency(velocityData?.overall?.sales_per_hour || 0)}
           icon={<Zap size={20} />}
           status='Hora pico: 14:00 - 15:00'
           trend={<TrendingUp size={14} className='text-orange-500' />}
         />
         <VelocityKPICard
           title='Unidades por Día'
-          value={velocityData.overall.units_per_day}
+          value={velocityData?.overall?.units_per_day || 0}
           icon={<Package size={20} />}
           status='+5% unidades vs mes anterior'
           isBadge={true}
         />
         <VelocityKPICard
           title='Ciclo de Venta'
-          value={`${velocityData.overall.avg_minutes_between_sales} min`}
+          value={`${velocityData?.overall?.avg_minutes_between_sales || 0} min`}
           icon={<Clock size={20} />}
           status='Tiempo prom. entre ventas'
         />
@@ -223,7 +223,7 @@ const TrendsVelocity = () => {
               minWidth={0}
               minHeight={0}
             >
-              <BarChart data={trendsData.daily}>
+              <BarChart data={trendsData.daily || []}>
                 <XAxis
                   dataKey='label'
                   axisLine={false}
@@ -272,7 +272,7 @@ const TrendsVelocity = () => {
               minWidth={0}
               minHeight={0}
             >
-              <AreaChart data={trendsData.hourly}>
+              <AreaChart data={trendsData.hourly || []}>
                 <defs>
                   <linearGradient id='colorHr' x1='0' y1='0' x2='0' y2='1'>
                     <stop offset='5%' stopColor='#137fec' stopOpacity={0.3} />

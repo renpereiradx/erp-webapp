@@ -62,10 +62,10 @@ const PeriodComparison = () => {
         ? { start_date: params.start2, end_date: params.end2 }
         : { period: params.period, compare: true } // Some backends might support this
 
-      const pointsA = trendsA?.success ? trendsA.data.data_points : []
+      const pointsA = trendsA?.success ? (trendsA.data?.data_points || []) : []
       
       // If we don't have a direct trends comparison, we map what we have
-      const merged = pointsA.map((p, i) => ({
+      const merged = (pointsA || []).map((p, i) => ({
         label: p.label,
         periodA: p.sales,
         periodB: (i % 2 === 0) ? p.sales * 0.85 : p.sales * 1.15, // Fallback visual difference if second trend isn't available

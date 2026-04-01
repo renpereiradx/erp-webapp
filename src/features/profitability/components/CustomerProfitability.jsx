@@ -51,7 +51,9 @@ const CustomerProfitability = () => {
   if (loading) return <div className="p-12 text-center animate-pulse text-slate-500 font-bold uppercase tracking-widest text-xs">Analizando rentabilidad de clientes...</div>;
   if (error) return <div className="p-8 text-center text-rose-500 bg-rose-50 border border-rose-100 rounded-xl m-4 font-bold uppercase tracking-tight text-xs">Error: {error}</div>;
 
-  const { customers, summary } = data;
+  const { customers, summary } = data || {};
+
+  if (!data) return null;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-700">
@@ -78,7 +80,7 @@ const CustomerProfitability = () => {
             <p className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Clientes Activos</p>
             <Users className="text-[#137fec]" size={18} />
           </div>
-          <p className="text-slate-900 dark:text-slate-100 text-3xl font-black font-mono tracking-tighter leading-none">{summary.active_customers}</p>
+          <p className="text-slate-900 dark:text-slate-100 text-3xl font-black font-mono tracking-tighter leading-none">{summary?.active_customers || 0}</p>
           <div className="flex items-center gap-1 mt-4 text-emerald-500 text-[10px] font-black uppercase tracking-widest">
             <TrendingUp size={12} /> +5.2% CREC.
           </div>
@@ -88,8 +90,8 @@ const CustomerProfitability = () => {
             <p className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Ticket Promedio</p>
             <CreditCard className="text-[#137fec]" size={18} />
           </div>
-          <p className={`text-slate-900 dark:text-slate-100 font-black font-mono tracking-tighter leading-none ${getDynamicFontClass(summary.average_customer_value, { baseClass: 'text-2xl', mediumClass: 'text-xl', smallClass: 'text-lg' })}`}>
-            {formatPYG(summary.average_customer_value)}
+          <p className={`text-slate-900 dark:text-slate-100 font-black font-mono tracking-tighter leading-none ${getDynamicFontClass(summary?.average_customer_value, { baseClass: 'text-2xl', mediumClass: 'text-xl', smallClass: 'text-lg' })}`}>
+            {formatPYG(summary?.average_customer_value || 0)}
           </p>
           <div className="flex items-center gap-1 mt-4 text-emerald-500 text-[10px] font-black uppercase tracking-widest">
             <TrendingUp size={12} /> +1.8% VALOR
@@ -100,7 +102,7 @@ const CustomerProfitability = () => {
             <p className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Contribución Pareto</p>
             <BarChart3 className="text-[#137fec]" size={18} />
           </div>
-          <p className="text-slate-900 dark:text-slate-100 text-3xl font-black font-mono tracking-tighter leading-none">{summary.top_customers_pct}%</p>
+          <p className="text-slate-900 dark:text-slate-100 text-3xl font-black font-mono tracking-tighter leading-none">{summary?.top_customers_pct || 0}%</p>
           <div className="flex items-center gap-1 mt-4 text-rose-500 text-[10px] font-black uppercase tracking-widest">
             <TrendingDown size={12} /> -0.5% VARIACIÓN
           </div>
@@ -120,7 +122,7 @@ const CustomerProfitability = () => {
 
           {/* Mobile: Card List */}
           <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800">
-            {customers.map((c) => (
+            {customers?.map((c) => (
               <div key={c.customer_id} className="p-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <div className="flex flex-col gap-1">
@@ -146,6 +148,11 @@ const CustomerProfitability = () => {
                 </div>
               </div>
             ))}
+            {(!customers || customers.length === 0) && (
+              <div className="p-8 text-center text-slate-500 text-[10px] font-black uppercase tracking-widest italic">
+                No hay datos de clientes disponibles
+              </div>
+            )}
           </div>
 
           {/* Desktop: Table */}
@@ -161,7 +168,7 @@ const CustomerProfitability = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                {customers.map((c) => (
+                {customers?.map((c) => (
                   <tr key={c.customer_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all cursor-pointer group">
                     <td className="px-6 py-5">
                       <div className="flex flex-col gap-1">
@@ -184,13 +191,20 @@ const CustomerProfitability = () => {
                     </td>
                   </tr>
                 ))}
+                {(!customers || customers.length === 0) && (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-12 text-center text-slate-500 text-[9px] font-black uppercase tracking-widest italic leading-none">
+                      No hay datos de clientes para este periodo
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
           
           {/* Pagination */}
           <div className="px-4 md:px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/30 dark:bg-transparent">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Página 1 de 25</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Página {data?.pagination?.page || 1} de {data?.pagination?.total_pages || 25}</p>
             <div className="flex gap-2">
               <button className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 disabled:opacity-30 transition-opacity"><ChevronLeft size={14} /></button>
               <button className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-[#137fec] hover:bg-blue-50 transition-colors"><ChevronRight size={14} /></button>
@@ -207,7 +221,7 @@ const CustomerProfitability = () => {
               </h3>
             </div>
             <div className="p-5 flex flex-col gap-5">
-              {customers.slice(0, 3).map((c, i) => (
+              {customers?.slice(0, 3).map((c, i) => (
                 <div key={c.customer_id} className="flex items-center justify-between group/item cursor-pointer">
                   <div className="flex items-center gap-4">
                     <span className="font-black text-slate-200 dark:text-slate-800 text-2xl font-mono leading-none">{i + 1}</span>
@@ -218,6 +232,11 @@ const CustomerProfitability = () => {
                   </div>
                 </div>
               ))}
+              {(!customers || customers.length === 0) && (
+                <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center py-4">
+                  Sin datos de ranking
+                </div>
+              )}
             </div>
           </div>
 
