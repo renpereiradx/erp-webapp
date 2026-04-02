@@ -8,11 +8,17 @@ import React from 'react';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import GenericSkeletonList from './GenericSkeletonList';
 
+interface SimpleSkeletonProps {
+  count?: number;
+  list?: boolean;
+  testId?: string;
+}
+
 // Skeleton simple
-const SimpleSkeleton = ({ count = 3, list = false, testId }) => {
+const SimpleSkeleton: React.FC<SimpleSkeletonProps> = ({ count = 3, list = false, testId }) => {
   const { styles } = useThemeStyles();
   const items = Array.from({ length: count });
-  const Wrapper = ({ children }) => list ? (
+  const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => list ? (
     <div role="list" aria-label="loading" className="space-y-4" data-testid={testId ? `${testId}-list` : undefined}>{children}</div>
   ) : (
     <div className="space-y-4" data-testid={testId ? `${testId}-stack` : undefined}>{children}</div>
@@ -32,6 +38,22 @@ const SimpleSkeleton = ({ count = 3, list = false, testId }) => {
   );
 };
 
+export interface DataStateProps {
+  variant?: 'loading' | 'error' | 'empty';
+  title?: string;
+  description?: any;
+  message?: any;
+  actionLabel?: string;
+  onAction?: () => void;
+  onRetry?: () => void;
+  testId?: string;
+  skeletonProps?: {
+    count?: number;
+    variant?: 'list' | 'stack';
+  };
+  skeletonVariant?: 'list' | 'stack';
+}
+
 export default function DataState({
   variant = 'empty',
   title,
@@ -43,7 +65,7 @@ export default function DataState({
   testId,
   skeletonProps = {},
   skeletonVariant,
-}) {
+}: DataStateProps) {
   const { styles } = useThemeStyles();
   if (variant === 'loading') {
     const count = skeletonProps.count || 3;

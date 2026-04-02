@@ -8,65 +8,159 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { cashRegisterService } from '@/services/cashRegisterService'
 
-const initialState = {
+export interface CashRegister {
+  id: number;
+  name: string;
+  status: 'OPEN' | 'CLOSED';
+  opened_at: string;
+  closed_at?: string;
+  initial_balance: number;
+  current_balance: number;
+  location?: string;
+  notes?: string;
+}
+
+export interface Movement {
+  id: number;
+  movement_id?: number;
+  movement_type: 'INCOME' | 'EXPENSE' | 'ADJUSTMENT';
+  amount: number;
+  concept: string;
+  description?: string;
+  created_at: string;
+  user_full_name?: string;
+  created_by_name?: string;
+  running_balance?: number;
+  category?: string;
+  notes?: string;
+  voided_at?: string;
+  void_reason?: string;
+}
+
+export interface Audit {
+  id: number;
+  cash_register_id: number;
+  counted_amount: number;
+  system_balance: number;
+  difference: number;
+  notes?: string;
+  created_at: string;
+  denominations?: any[];
+}
+
+export interface CashRegisterSummary {
+  summary: {
+    total_income: number;
+    total_expenses: number;
+    transaction_count: number;
+    net_change: number;
+  };
+  by_category: Record<string, number>;
+}
+
+interface CashRegisterState {
   // Estado de caja registradora activa
+  activeCashRegister: CashRegister | null;
+  isActiveCashRegisterLoading: boolean;
+  activeCashRegisterError: any | null;
+
+  // Lista de cajas registradoras
+  cashRegisters: CashRegister[];
+  isCashRegistersLoading: boolean;
+  cashRegistersError: any | null;
+
+  // Movimientos de caja
+  movements: Movement[];
+  isMovementsLoading: boolean;
+  movementsError: any | null;
+
+  // Resumen de caja
+  cashRegisterSummary: CashRegisterSummary | null;
+  isSummaryLoading: boolean;
+  summaryError: any | null;
+
+  // Estados de operaciones
+  isOpeningCashRegister: boolean;
+  openCashRegisterError: any | null;
+  isClosingCashRegister: boolean;
+  closeCashRegisterError: any | null;
+  isRegisteringMovement: boolean;
+  registerMovementError: any | null;
+
+  // Estados de auditoría
+  audits: Audit[];
+  isAuditsLoading: boolean;
+  auditsError: any | null;
+  isCreatingAudit: boolean;
+  createAuditError: any | null;
+
+  // Estados de pagos integrados
+  isProcessingSalePayment: boolean;
+  salePaymentError: any | null;
+  isProcessingPurchasePayment: boolean;
+  purchasePaymentError: any | null;
+
+  // Estado de verificación
+  integrationStatus: any | null;
+  isVerifyingIntegration: boolean;
+  verificationError: any | null;
+
+  // Acciones
+  getActiveCashRegister: () => Promise<CashRegister | null>;
+  openCashRegister: (cashRegisterData: any) => Promise<CashRegister>;
+  closeCashRegister: (cashRegisterId: number, closeData?: any) => Promise<CashRegister>;
+  getCashRegisters: (filters?: any) => Promise<CashRegister[]>;
+  registerMovement: (cashRegisterId: number, movementData: any) => Promise<Movement>;
+  getMovements: (cashRegisterId: number, filters?: any) => Promise<Movement[]>;
+  getCashRegisterReport: (cashRegisterId: number) => Promise<CashRegisterSummary>;
+  getAudits: (cashRegisterId: number) => Promise<Audit[]>;
+  createAudit: (auditData: any) => Promise<any>;
+  processSalePaymentWithCashRegister: (paymentData: any) => Promise<any>;
+  processPurchasePaymentWithCashRegister: (paymentData: any) => Promise<any>;
+  verifyIntegration: () => Promise<any>;
+  clearError: (errorType: string) => void;
+  clearAllErrors: () => void;
+  reset: () => void;
+}
+
+const initialState = {
   activeCashRegister: null,
   isActiveCashRegisterLoading: false,
   activeCashRegisterError: null,
-
-  // Lista de cajas registradoras
   cashRegisters: [],
   isCashRegistersLoading: false,
   cashRegistersError: null,
-
-  // Movimientos de caja
   movements: [],
   isMovementsLoading: false,
   movementsError: null,
-
-  // Resumen de caja
   cashRegisterSummary: null,
   isSummaryLoading: false,
   summaryError: null,
-
-  // Estados de operaciones
   isOpeningCashRegister: false,
   openCashRegisterError: null,
   isClosingCashRegister: false,
   closeCashRegisterError: null,
   isRegisteringMovement: false,
   registerMovementError: null,
-
-  // Estados de auditoría
   audits: [],
   isAuditsLoading: false,
   auditsError: null,
   isCreatingAudit: false,
   createAuditError: null,
-
-  // Estados de pagos integrados
   isProcessingSalePayment: false,
   salePaymentError: null,
   isProcessingPurchasePayment: false,
   purchasePaymentError: null,
-
-  // Estado de verificación
   integrationStatus: null,
   isVerifyingIntegration: false,
   verificationError: null,
 }
 
-export const useCashRegisterStore = create()(
+export const useCashRegisterStore = create<CashRegisterState>()(
   devtools(
     (set, get) => ({
       ...initialState,
 
-      // =================== GESTIÓN DE CAJA ACTIVA ===================
-
-      /**
-       * Obtiene la caja registradora activa
-       * El backend ahora envía current_balance calculado correctamente
-       */
       getActiveCashRegister: async () => {
         set({
           isActiveCashRegisterLoading: true,
@@ -92,11 +186,7 @@ export const useCashRegisterStore = create()(
         }
       },
 
-      /**
-       * Abre una nueva caja registradora
-       */
-      openCashRegister: async cashRegisterData => {
-        // Validar datos antes de enviar
+      openCashRegister: async (cashRegisterData) => {
         const validationErrors =
           cashRegisterService.validateOpenCashRegisterData(cashRegisterData)
         if (validationErrors.length > 0) {
@@ -114,7 +204,6 @@ export const useCashRegisterStore = create()(
             cashRegisterData
           )
 
-          // Actualizar estado: nueva caja activa y agregar a lista
           const { cashRegisters } = get()
           set({
             activeCashRegister: newCashRegister,
@@ -133,9 +222,6 @@ export const useCashRegisterStore = create()(
         }
       },
 
-      /**
-       * Cierra la caja registradora activa
-       */
       closeCashRegister: async (cashRegisterId, closeData = {}) => {
         set({ isClosingCashRegister: true, closeCashRegisterError: null })
 
@@ -146,14 +232,13 @@ export const useCashRegisterStore = create()(
               closeData
             )
 
-          // Actualizar estado: quitar caja activa y actualizar en lista
           const { cashRegisters } = get()
           const updatedCashRegisters = (cashRegisters || []).map(cr =>
             cr.id === cashRegisterId ? closedCashRegister : cr
           )
 
           set({
-            activeCashRegister: null, // Ya no hay caja activa
+            activeCashRegister: null,
             cashRegisters: updatedCashRegisters,
             isClosingCashRegister: false,
           })
@@ -169,11 +254,6 @@ export const useCashRegisterStore = create()(
         }
       },
 
-      // =================== LISTA DE CAJAS ===================
-
-      /**
-       * Obtiene lista de cajas registradoras con filtros
-       */
       getCashRegisters: async (filters = {}) => {
         set({ isCashRegistersLoading: true, cashRegistersError: null })
 
@@ -190,20 +270,14 @@ export const useCashRegisterStore = create()(
           console.warn('Error loading cash registers:', error)
           set({
             cashRegistersError: error,
-            cashRegisters: [], // Mantener array vacío en caso de error
+            cashRegisters: [],
             isCashRegistersLoading: false,
           })
           throw error
         }
       },
 
-      // =================== MOVIMIENTOS DE EFECTIVO ===================
-
-      /**
-       * Registra un movimiento manual
-       */
       registerMovement: async (cashRegisterId, movementData) => {
-        // Validar datos de movimiento
         const validationErrors =
           cashRegisterService.validateMovementData(movementData)
         if (validationErrors.length > 0) {
@@ -222,14 +296,12 @@ export const useCashRegisterStore = create()(
             movementData
           )
 
-          // Actualizar lista de movimientos
           const { movements } = get()
           set({
             movements: [movement, ...(movements || [])],
             isRegisteringMovement: false,
           })
 
-          // Refrescar caja activa para actualizar balance
           if (get().activeCashRegister?.id === cashRegisterId) {
             get().getActiveCashRegister()
           }
@@ -245,9 +317,6 @@ export const useCashRegisterStore = create()(
         }
       },
 
-      /**
-       * Obtiene movimientos de una caja
-       */
       getMovements: async (cashRegisterId, filters = {}) => {
         set({ isMovementsLoading: true, movementsError: null })
 
@@ -265,17 +334,14 @@ export const useCashRegisterStore = create()(
           console.warn('Error loading movements:', error)
           set({
             movementsError: error,
-            movements: [], // Mantener array vacío en caso de error
+            movements: [],
             isMovementsLoading: false,
           })
           throw error
         }
       },
 
-      /**
-       * Obtiene reporte detallado de caja (v1.1)
-       */
-      getCashRegisterReport: async cashRegisterId => {
+      getCashRegisterReport: async (cashRegisterId) => {
         set({ isSummaryLoading: true, summaryError: null })
 
         try {
@@ -297,10 +363,7 @@ export const useCashRegisterStore = create()(
         }
       },
 
-      /**
-       * Obtiene historial de auditorías de una caja
-       */
-      getAudits: async cashRegisterId => {
+      getAudits: async (cashRegisterId) => {
         set({ isAuditsLoading: true, auditsError: null })
         try {
           const audits = await cashRegisterService.getAuditsByRegister(
@@ -321,16 +384,12 @@ export const useCashRegisterStore = create()(
         }
       },
 
-      /**
-       * Crea una nueva auditoría de caja (arqueo)
-       */
-      createAudit: async auditData => {
+      createAudit: async (auditData) => {
         set({ isCreatingAudit: true, createAuditError: null })
         try {
           const { cashAuditService } = await import('@/services/cashAuditService')
           const result = await cashAuditService.createAudit(auditData)
 
-          // Actualizar historial de auditorías
           const { audits } = get()
           set({
             audits: [result, ...(audits || [])],
@@ -348,12 +407,7 @@ export const useCashRegisterStore = create()(
         }
       },
 
-      // =================== INTEGRACIÓN CON PAGOS ===================
-
-      /**
-       * Procesa pago de venta con integración automática de caja
-       */
-      processSalePaymentWithCashRegister: async paymentData => {
+      processSalePaymentWithCashRegister: async (paymentData) => {
         set({ isProcessingSalePayment: true, salePaymentError: null })
 
         try {
@@ -362,7 +416,6 @@ export const useCashRegisterStore = create()(
               paymentData
             )
 
-          // Refrescar caja activa para actualizar balance
           if (get().activeCashRegister) {
             get().getActiveCashRegister()
           }
@@ -382,10 +435,7 @@ export const useCashRegisterStore = create()(
         }
       },
 
-      /**
-       * Procesa pago de compra con integración automática de caja
-       */
-      processPurchasePaymentWithCashRegister: async paymentData => {
+      processPurchasePaymentWithCashRegister: async (paymentData) => {
         set({ isProcessingPurchasePayment: true, purchasePaymentError: null })
 
         try {
@@ -394,7 +444,6 @@ export const useCashRegisterStore = create()(
               paymentData
             )
 
-          // Refrescar caja activa para actualizar balance
           if (get().activeCashRegister) {
             get().getActiveCashRegister()
           }
@@ -414,11 +463,6 @@ export const useCashRegisterStore = create()(
         }
       },
 
-      // =================== VERIFICACIÓN DE INTEGRIDAD ===================
-
-      /**
-       * Verifica la integridad de la integración
-       */
       verifyIntegration: async () => {
         set({ isVerifyingIntegration: true, verificationError: null })
 
@@ -440,18 +484,10 @@ export const useCashRegisterStore = create()(
         }
       },
 
-      // =================== UTILIDADES DE ESTADO ===================
-
-      /**
-       * Limpia errores específicos
-       */
-      clearError: errorType => {
-        set({ [`${errorType}Error`]: null })
+      clearError: (errorType) => {
+        set({ [`${errorType}Error`]: null } as any)
       },
 
-      /**
-       * Limpia todos los errores
-       */
       clearAllErrors: () => {
         set({
           activeCashRegisterError: null,
@@ -467,9 +503,6 @@ export const useCashRegisterStore = create()(
         })
       },
 
-      /**
-       * Reset completo del store
-       */
       reset: () => {
         set(initialState)
       },

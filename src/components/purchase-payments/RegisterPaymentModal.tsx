@@ -1,20 +1,21 @@
+/**
+ * RegisterPaymentModal - v3.0
+ * Modal para registrar pagos a proveedores vinculado a caja
+ * 
+ * Migrated to TypeScript & Fluent Design System 2.0
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
-  AlertTriangle,
   CheckCircle2,
-  DollarSign,
   Loader2,
-  Wallet,
   Receipt,
-  ArrowRight,
   Coins,
-  Banknote,
   ArrowUpRight,
   User,
   Hash,
   ChevronRight,
-  CreditCard,
   Building
 } from 'lucide-react'
 
@@ -39,23 +40,27 @@ import {
 import { cashRegisterService } from '@/services/cashRegisterService'
 import { CurrencyService } from '@/services/currencyService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
-import { calculateCashRegisterBalance } from '@/utils/cashRegisterUtils'
 import { normalizeCurrencyCode, formatPYG } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
 
 const DEFAULT_CURRENCY_CODE = 'PYG'
 const CASH_REGISTER_NONE_VALUE = '__none__'
 
-const getNormalizedPendingAmount = (pendingAmount, currencyCode) => {
-  if (pendingAmount === null || pendingAmount === undefined) return null
-  const raw = Number(pendingAmount)
-  if (!Number.isFinite(raw)) return null
-  const code = normalizeCurrencyCode(currencyCode)
-  if (code === 'PYG') return Math.round(raw)
-  return Math.round(raw * 100) / 100
+interface Order {
+  id: number | string;
+  pendingAmount: number | null;
+  currency: string;
+  supplierName?: string;
 }
 
-const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
+interface RegisterPaymentModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  order: Order | null;
+  onSubmit: (data: any) => Promise<void>;
+}
+
+const RegisterPaymentModal: React.FC<RegisterPaymentModalProps> = ({ open, onOpenChange, order, onSubmit }) => {
   const { t, lang } = useI18n()
   const { error: showError } = useToast()
 
@@ -67,22 +72,21 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
   const [paymentMethodId, setPaymentMethodId] = useState('')
   const [currencyCode, setCurrencyCode] = useState((order?.currency || DEFAULT_CURRENCY_CODE).toUpperCase())
   const [cashRegister, setCashRegister] = useState('')
-  const [amountError, setAmountError] = useState(null)
-  const [formError, setFormError] = useState(null)
+  const [amountError, setAmountError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setSubmitting] = useState(false)
-  const [cashRegisters, setCashRegisters] = useState([])
-  const [isCashRegistersLoading, setCashRegistersLoading] = useState(false)
-  const [paymentMethods, setPaymentMethods] = useState([])
-  const [currencies, setCurrencies] = useState([])
+  const [cashRegisters, setCashRegisters] = useState<any[]>([])
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([])
+  const [currencies, setCurrencies] = useState<any[]>([])
 
-  const formatNumberWithDots = useCallback(value => {
+  const formatNumberWithDots = useCallback((value: string) => {
     if (!value) return ''
     const numericValue = value.toString().replace(/\D/g, '')
     if (!numericValue) return ''
     return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
   }, [])
 
-  const parseNumberWithDots = useCallback(value => {
+  const parseNumberWithDots = useCallback((value: string) => {
     if (!value) return ''
     return value.toString().replace(/\./g, '')
   }, [])
@@ -95,29 +99,28 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
 
   useEffect(() => { if (open) resetForm() }, [open, resetForm])
 
-  const handleDialogChange = nextOpen => {
+  const handleDialogChange = (nextOpen: boolean) => {
     if (!nextOpen) resetForm()
     if (onOpenChange) onOpenChange(nextOpen)
   }
 
-  const formatLocalizedCurrency = useCallback((value, currencyCode = 'PYG') => {
-    const code = normalizeCurrencyCode(currencyCode)
-    if (code === 'PYG') {
-      return formatPYG(Number(value || 0));
-    }
-    const formatter = new Intl.NumberFormat('es-PY', {
+  const formatLocalizedCurrency = useCallback((value: number, currCode = 'PYG') => {
+    const code = normalizeCurrencyCode(currCode)
+    if (code === 'PYG') return formatPYG(Number(value || 0))
+    const formatter = new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
       style: 'currency', currency: code,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })
     return formatter.format(Number(value || 0))
-  }, [])
+  }, [lang])
 
   const pendingLabel = useMemo(() => !order || order.pendingAmount === null ? null : formatLocalizedCurrency(order.pendingAmount, order.currency), [formatLocalizedCurrency, order])
   const numericAmount = useMemo(() => { 
     const val = Number.parseFloat(parseNumberWithDots(amount)); 
     return Number.isFinite(val) ? val : 0 
   }, [amount, parseNumberWithDots])
+  
   const projectedBalance = useMemo(() => {
     if (!order || order.pendingAmount === null) return 0
     return Math.max(0, Number(order.pendingAmount) - numericAmount)
@@ -137,14 +140,14 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
       const validMethods = Array.isArray(methods) ? methods : (methods?.data || [])
       setPaymentMethods(validMethods)
       if (validMethods.length > 0) {
-        const def = validMethods.find(m => m.is_default) || validMethods[0]
+        const def = validMethods.find((m: any) => m.is_default) || validMethods[0]
         setPaymentMethodId(curr => curr || String(def.id || def.payment_method_id))
       }
 
       setCurrencies(Array.isArray(currencyList) ? currencyList : [])
       
       const [allRegs, activeReg] = registersData
-      const openRegs = Array.isArray(allRegs) ? allRegs.filter(cr => (cr?.status || cr?.state || '').toUpperCase() === 'OPEN') : []
+      const openRegs = Array.isArray(allRegs) ? allRegs.filter((cr: any) => (cr?.status || cr?.state || '').toUpperCase() === 'OPEN') : []
       setCashRegisters(openRegs)
       if (activeReg?.id) setCashRegister(c => c || String(activeReg.id))
     } catch (e) { console.error('Error loading modal data:', e) }
@@ -160,7 +163,6 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
 
   const paymentMethodOptions = useMemo(() => paymentMethods.map(m => {
     const id = String(m.id || m.payment_method_id)
-    // Alineado con API v1.1: usar description y method_code
     const label = m.description || m.method_code || m.display_name || m.name || id
     return { id, label }
   }).filter(o => o.id !== 'undefined'), [paymentMethods])
@@ -173,7 +175,7 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
 
   const isSubmitDisabled = !order || isSubmitting || !paymentMethodId || !currencyCode || !!amountError || !amount
 
-  const handleSubmit = async event => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     if (!order) return
     const num = Number.parseFloat(parseNumberWithDots(amount))
@@ -192,7 +194,7 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
         amount: Number(num.toFixed(2)),
         paymentMethodId: Number(paymentMethodId),
         currencyCode: String(currencyCode).toUpperCase(),
-        currencyId: selectedCurrency ? selectedCurrency.currency_id : undefined,
+        currencyId: selectedCurrency ? (selectedCurrency as any).currency_id : undefined,
         exchange_rate: exchangeRate ? Number(exchangeRate) : undefined,
         original_amount: originalAmount ? Number(originalAmount) : undefined,
         reference: reference.trim() || null,
@@ -200,14 +202,14 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
         notes: notes.trim() || null,
       })
       resetForm(); handleDialogChange(false)
-    } catch (e) { setFormError(e?.message || 'Error al registrar') } finally { setSubmitting(false) }
+    } catch (e: any) { setFormError(e?.message || 'Error al registrar') } finally { setSubmitting(false) }
   }
 
   const paymentPercentage = useMemo(() => !order || !order.pendingAmount ? 0 : Math.min(100, Math.round((numericAmount / Number(order.pendingAmount)) * 100)), [order, numericAmount])
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className='register-payment-modal w-[95vw] lg:!w-[1150px] lg:!max-w-[calc(95vw-288px)] p-0 overflow-hidden border border-slate-200 shadow-xl rounded-xl'>
+      <DialogContent className='register-payment-modal w-[95vw] lg:!w-[1150px] lg:!max-w-[calc(95vw-288px)] p-0 overflow-hidden border border-slate-200 shadow-xl rounded-2xl'>
         <DialogTitle className='sr-only'>Registrar Pago Proveedor</DialogTitle>
         <DialogDescription className='sr-only'>Registre el pago a un proveedor para la factura correspondiente.</DialogDescription>
         <form onSubmit={handleSubmit} className='flex flex-col md:flex-row h-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto md:overflow-hidden'>
@@ -255,7 +257,7 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
 
                 <div className='space-y-8'>
                   <div className='space-y-3'>
-                    <div className='flex flex-wrap items-center justify-between gap-3 px-1'><label htmlFor='purchase-amount' className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]'>Monto a Pagar</label><button type='button' onClick={() => setAmount(formatNumberWithDots(String(getNormalizedPendingAmount(order?.pendingAmount, order?.currency))))} className='text-[9px] font-black uppercase tracking-widest text-primary hover:text-primary-hover hover:bg-primary/10 px-3 py-1.5 bg-primary/5 rounded-md transition-all'>Liquidar Saldo</button></div>
+                    <div className='flex flex-wrap items-center justify-between gap-3 px-1'><label htmlFor='purchase-amount' className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]'>Monto a Pagar</label><button type='button' onClick={() => order?.pendingAmount && setAmount(formatNumberWithDots(String(order.pendingAmount)))} className='text-[9px] font-black uppercase tracking-widest text-primary hover:text-primary-hover hover:bg-primary/10 px-3 py-1.5 bg-primary/5 rounded-md transition-all'>Liquidar Saldo</button></div>
                     <div className='relative'><div className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xl font-mono uppercase'>₲</div><Input id='purchase-amount' type='text' inputMode='numeric' value={amount} onChange={e => { setAmount(formatNumberWithDots(parseNumberWithDots(e.target.value))); if (amountError) setAmountError(null); }} className='h-12 pl-12 rounded-xl bg-white border-border-subtle font-black font-mono text-xl focus:ring-4 focus:ring-primary/10 transition-all' /></div>
                     {amountError && <p className='text-[10px] font-black uppercase tracking-widest text-error ml-1'>{amountError}</p>}
                   </div>

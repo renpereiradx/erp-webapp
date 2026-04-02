@@ -217,7 +217,6 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
           onFocus={() => items.length > 0 && setIsOpen(true)}
           disabled={disabled}
           className={cn('pl-10 pr-4 h-11', searchInputClassName)}
-          state=""
         />
         {isSearching && (
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-slate-400 animate-spin" />
