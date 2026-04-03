@@ -3,26 +3,15 @@
  * Optimized for Mobile/Tablet with Items Card View
  */
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
-  Printer,
-  Calendar,
-  User,
-  Clock,
   CreditCard,
-  FileText,
   Package,
-  History,
   Receipt,
   RefreshCw,
-  Phone,
-  CircleDollarSign,
-  ArrowUpRight,
   ChevronRight,
-  MoreVertical,
-  Download,
   Coins,
   Wallet,
   Calculator,
@@ -47,7 +36,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Separator } from '@/components/ui/separator'
 import DataState from '@/components/ui/DataState'
 import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModal'
 import { useI18n } from '@/lib/i18n'
@@ -57,12 +45,11 @@ import { clientService } from '@/services/clientService'
 import { useToast } from '@/hooks/useToast'
 import { normalizeCurrencyCode } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
-import { SaleEnhancedResponse } from '@/types'
 
 const SalesOrderDetail = () => {
   const { saleId } = useParams<{ saleId: string }>()
   const navigate = useNavigate()
-  const { t, lang } = useI18n()
+  const { lang } = useI18n()
   const { error: showError, success: showSuccess } = useToast()
 
   const [sale, setSale] = useState<any>(null)
@@ -90,7 +77,7 @@ const SalesOrderDetail = () => {
       const saleHeader = fullData.sale || fullData
       const saleItems = fullData.details || fullData.items || []
 
-      let paymentStatus = null
+      let paymentStatus: any = null
       try {
         const paymentResponse = await saleService.getSalePaymentStatus(saleId)
         if (paymentResponse.success) {

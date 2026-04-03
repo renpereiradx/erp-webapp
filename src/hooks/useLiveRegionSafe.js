@@ -71,11 +71,13 @@ export const useLiveRegionSafe = (options = {}) => {
         });
       } catch (error) {
         // Silently handle telemetry errors in StrictMode
+        // ignore
       }
     }
 
     // Debug logging
     if (debugMode) {
+      // dev_log: announcement
     }
 
     // Agregar a la cola de mensajes
@@ -183,6 +185,7 @@ export const useLiveRegionSafe = (options = {}) => {
           debugMode
         });
       } catch (error) {
+        // ignore telemetry error
       }
     }
 
@@ -193,6 +196,7 @@ export const useLiveRegionSafe = (options = {}) => {
             announcements_made: messageQueue.length
           });
         } catch (error) {
+          // ignore telemetry error
         }
       }
     };

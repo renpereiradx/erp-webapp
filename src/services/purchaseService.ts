@@ -1,5 +1,4 @@
 import { apiClient } from './api'
-import { telemetryService } from './telemetryService'
 import { DEMO_CONFIG } from '../config/demoAuth'
 import {
   DEMO_PURCHASE_ORDERS_DATA,
@@ -11,31 +10,13 @@ import { validatePurchaseOrder } from '@/domain/purchase/validators/purchaseOrde
 import { calculatePurchaseTotals as domainCalculatePurchaseTotals } from '@/domain/purchase/calculations/purchaseCalculator'
 import { 
   PurchaseOrderRequest, 
-  PurchaseWithFullDetails, 
-  PurchaseOrderCreationResponse,
-  PaginationState
+  PurchaseOrderOperationResponse
 } from '@/types'
+import { telemetryService } from './telemetryService'
 
-// Configuración de timeouts y reintentos
-const RETRY_ATTEMPTS = 3
-const RETRY_DELAY = 1000
-
-// Utilidad para reintentos con backoff exponencial
-const withRetry = async (fn: () => Promise<any>, attempts = RETRY_ATTEMPTS) => {
-  for (let i = 0; i < attempts; i++) {
-    try {
-      return await fn()
-    } catch (error) {
-      if (i === attempts - 1) throw error
-      await new Promise(resolve =>
-        setTimeout(resolve, RETRY_DELAY * Math.pow(2, i)),
-      )
-    }
-  }
-}
-
-class PurchaseService {
-  extractPurchasesAndPagination(response: any, fallback: any = {}) {
+// Servicio de compras
+export const purchaseService = {
+  extractPurchasesAndPagination: (response: any, fallback: any = {}) => {
     const arrayCandidates = [
       response,
       response?.data,
@@ -50,7 +31,7 @@ class PurchaseService {
       response?.data?.rows,
     ]
 
-    let data = []
+    let data: any[] = []
     for (const candidate of arrayCandidates) {
       if (Array.isArray(candidate)) {
         data = candidate
@@ -166,12 +147,12 @@ class PurchaseService {
         hasPrevious,
       },
     }
-  }
+  },
 
   // ============ ENHANCED PURCHASE ORDER OPERATIONS ============
 
   // Create enhanced purchase order with auto-pricing
-  async createEnhancedPurchaseOrder(orderData: PurchaseOrderRequest): Promise<any> {
+  createEnhancedPurchaseOrder: async (orderData: PurchaseOrderRequest): Promise<any> => {
     if (DEMO_CONFIG.enabled) {
       return {
         success: true,
@@ -240,24 +221,24 @@ class PurchaseService {
         performance.now() - startTime,
       )
     }
-  }
+  },
 
   // ============ CRUD OPERATIONS (MVP Style) ============
 
   // Obtener compras por proveedor ID (con datos enriquecidos y metadata parsing)
-  async getPurchasesBySupplier(supplierId: number, options: any = {}) {
+  getPurchasesBySupplier: async (supplierId: number, options: any = {}) => {
     if (DEMO_CONFIG.enabled) {
       return {
         success: true,
-        data: this.processEnhancedPurchaseData(DEMO_PURCHASE_ORDERS_DATA, options),
+        data: purchaseService.processEnhancedPurchaseData(DEMO_PURCHASE_ORDERS_DATA, options),
       };
     }
     try {
       const response = await apiClient.getPurchasesBySupplierId(supplierId)
-      const { data } = this.extractPurchasesAndPagination(response)
+      const { data } = purchaseService.extractPurchasesAndPagination(response)
 
       // Process enhanced metadata for each purchase order with filter options
-      const enrichedData = this.processEnhancedPurchaseData(data, options)
+      const enrichedData = purchaseService.processEnhancedPurchaseData(data, options)
 
       return {
         success: true,
@@ -273,10 +254,10 @@ class PurchaseService {
           'Error al obtener compras del proveedor',
       }
     }
-  }
+  },
 
   // Obtener una orden de compra por ID
-  async getPurchaseById(id: number | string) {
+  getPurchaseById: async (id: number | string) => {
     if (DEMO_CONFIG.enabled) {
       const demoOrder = (DEMO_PURCHASE_ORDERS_DATA || []).find(
         o => String(o.id) === String(id) || String(o.purchase?.id) === String(id)
@@ -299,10 +280,10 @@ class PurchaseService {
         error: error.message || 'Error al obtener orden de compra',
       };
     }
-  }
+  },
 
   // Obtener orden de compra específica con validación de proveedor
-  async getPurchaseOrderWithSupplierValidation(purchaseOrderId: number | string, supplierName: string) {
+  getPurchaseOrderWithSupplierValidation: async (purchaseOrderId: number | string, supplierName: string) => {
     if (DEMO_CONFIG.enabled) {
       const demoOrder = (DEMO_PURCHASE_ORDERS_DATA || []).find(
         o => String(o.id) === String(purchaseOrderId) || String(o.purchase?.id) === String(purchaseOrderId)
@@ -334,39 +315,39 @@ class PurchaseService {
           'Error al obtener orden de compra',
       }
     }
-  }
+  },
 
   // Método helper para obtener compras de los últimos N días
-  async getRecentPurchases(days = 30, page = 1, pageSize = 50, options = {}) {
+  getRecentPurchases: async (days = 30, page = 1, pageSize = 50, options = {}) => {
     const endDate = new Date().toISOString().split('T')[0]
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
     const startDateStr = startDate.toISOString().split('T')[0]
 
-    return this.getPurchasesByDateRange(
+    return purchaseService.getPurchasesByDateRange(
       startDateStr,
       endDate,
       page,
       pageSize,
       options,
     )
-  }
+  },
 
   // Obtener compras por nombre de proveedor (con datos enriquecidos y metadata parsing)
-  async getPurchasesBySupplierName(supplierName: string, options: any = {}) {
+  getPurchasesBySupplierName: async (supplierName: string, options: any = {}) => {
     if (DEMO_CONFIG.enabled) {
       return {
         success: true,
-        data: this.processEnhancedPurchaseData(DEMO_PURCHASE_ORDERS_DATA, options),
+        data: purchaseService.processEnhancedPurchaseData(DEMO_PURCHASE_ORDERS_DATA, options),
         pagination: { page: 1, pageSize: 50, hasNext: false, hasPrevious: false },
       };
     }
     try {
       const response = await apiClient.getPurchasesBySupplierName(supplierName)
-      const { data, pagination } = this.extractPurchasesAndPagination(response)
+      const { data, pagination } = purchaseService.extractPurchasesAndPagination(response)
 
       // Process enhanced metadata for each purchase order with filter options
-      const enrichedData = this.processEnhancedPurchaseData(data, options)
+      const enrichedData = purchaseService.processEnhancedPurchaseData(data, options)
 
       return {
         success: true,
@@ -383,16 +364,16 @@ class PurchaseService {
           'Error al buscar compras del proveedor',
       }
     }
-  }
+  },
 
   // Obtener compras por rango de fechas (con datos enriquecidos, metadata parsing y paginación)
-  async getPurchasesByDateRange(
+  getPurchasesByDateRange: async (
     startDate: string,
     endDate: string,
     page = 1,
     pageSize = 50,
-    options = {},
-  ) {
+    options: any = {},
+  ) => {
     if (DEMO_CONFIG.enabled) {
       return {
         success: true,
@@ -403,13 +384,13 @@ class PurchaseService {
     try {
       const response = await apiClient.getPurchasesByDateRange(startDate, endDate, page, pageSize)
 
-      const { data, pagination } = this.extractPurchasesAndPagination(
+      const { data, pagination } = purchaseService.extractPurchasesAndPagination(
         response,
         { page, pageSize },
       )
 
       // Process enhanced metadata for each purchase order with filter options
-      const enrichedData = this.processEnhancedPurchaseData(data, options)
+      const enrichedData = purchaseService.processEnhancedPurchaseData(data, options)
 
       return {
         success: true,
@@ -426,10 +407,10 @@ class PurchaseService {
           'Error al obtener compras por fecha',
       }
     }
-  }
+  },
 
   // Validar datos de compra antes del envío (compatible con ambos formatos)
-  validatePurchaseData(purchaseData: any) {
+  validatePurchaseData: (purchaseData: any) => {
     // Delegar a la lógica de dominio
     const normalizedData = {
       ...purchaseData,
@@ -438,10 +419,10 @@ class PurchaseService {
     };
     
     return validatePurchaseOrder(normalizedData);
-  }
+  },
 
   // Obtener tasas de impuestos disponibles
-  async getTaxRates(start = 1, limit = 10) {
+  getTaxRates: async (start = 1, limit = 10) => {
     const startTime = performance.now()
     try {
       const { taxRateService } = await import('./taxRateService')
@@ -466,10 +447,10 @@ class PurchaseService {
         endTime - startTime,
       )
     }
-  }
+  },
 
   // Procesar datos enriquecidos con parsing de metadata (según PURCHASE_API.md)
-  processEnhancedPurchaseData(purchaseOrders: any[], filterOptions: any = {}) {
+  processEnhancedPurchaseData: (purchaseOrders: any[], filterOptions: any = {}) => {
     if (!Array.isArray(purchaseOrders)) {
       return purchaseOrders
     }
@@ -478,7 +459,7 @@ class PurchaseService {
       // Si ya tiene la estructura procesada, devolverla tal como está
       if (orderData.purchase && orderData.details) {
         // Procesar metadata en los detalles si están disponibles
-        const enhancedDetails = this.processDetailsMetadata(orderData.details)
+        const enhancedDetails = purchaseService.processDetailsMetadata(orderData.details)
 
         const enhancedPurchase = {
           ...orderData.purchase,
@@ -508,10 +489,10 @@ class PurchaseService {
     }
 
     return processedData
-  }
+  },
 
   // Get detailed analysis of purchase order
-  async getPurchaseOrderAnalysis(purchaseOrderId: number | string) {
+  getPurchaseOrderAnalysis: async (purchaseOrderId: number | string) => {
     if (DEMO_CONFIG.enabled) {
       return { success: true, data: { status: 'Analyzed (DEMO)' } };
     }
@@ -528,10 +509,10 @@ class PurchaseService {
         error: error.message || 'Error al obtener análisis de la orden',
       };
     }
-  }
+  },
 
   // Validate purchase order integrity
-  async validatePurchaseOrderIntegrity(purchaseOrderId: number | string) {
+  validatePurchaseOrderIntegrity: async (purchaseOrderId: number | string) => {
     if (DEMO_CONFIG.enabled) {
       return { success: true, data: { status: 'Valid (DEMO)' } };
     }
@@ -548,10 +529,10 @@ class PurchaseService {
         error: error.message || 'Error al validar integridad',
       };
     }
-  }
+  },
 
   // Actualizar estado de orden
-  async updatePurchaseOrderStatus(id: number | string, newStatus: string, notes: string = '') {
+  updatePurchaseOrderStatus: async (id: number | string, newStatus: string, notes: string = '') => {
     if (DEMO_CONFIG.enabled) {
       return { success: true, data: { id, status: newStatus } };
     }
@@ -565,10 +546,10 @@ class PurchaseService {
       console.error(`Error updating purchase order ${id} status:`, error);
       return { success: false, error: error.message };
     }
-  }
+  },
 
   // Procesar metadata de detalles de compra según la nueva especificación
-  processDetailsMetadata(details: any[]) {
+  processDetailsMetadata: (details: any[]) => {
     if (!Array.isArray(details)) {
       return details
     }
@@ -620,15 +601,15 @@ class PurchaseService {
         sale_price: finalSalePrice,
       }
     })
-  }
+  },
 
   // Calcular precio de venta según la especificación (precio ya incluye IVA)
-  calculateSalePrice(unitPrice: number, profitPct: number) {
+  calculateSalePrice: (unitPrice: number, profitPct: number) => {
     return calculatePurchaseSalePriceGs(unitPrice, profitPct)
-  }
+  },
 
   // Calcular totales de compra (compatible con ambos formatos)
-  calculatePurchaseTotals(items: any[], taxRate = 0) {
+  calculatePurchaseTotals: (items: any[], taxRate = 0) => {
     const normalizedItems = (items || []).map(item => ({
       quantity: Number(item.quantity || 0),
       unit_price: Number(item.unit_price || item.unitPrice || 0),
@@ -637,11 +618,11 @@ class PurchaseService {
     }));
 
     return domainCalculatePurchaseTotals(normalizedItems, taxRate);
-  }
+  },
 
   // ============ NUEVOS ENDPOINTS DE CANCELACIÓN ============
 
-  async previewPurchaseOrderCancellation(purchaseOrderId: number | string) {
+  previewPurchaseOrderCancellation: async (purchaseOrderId: number | string) => {
     if (DEMO_CONFIG.enabled) {
       return {
         success: true,
@@ -649,7 +630,7 @@ class PurchaseService {
       };
     }
     try {
-      const response = await apiClient.previewPurchaseCancellation(purchaseOrderId as number)
+      const response = await (apiClient as any).previewPurchaseCancellation(purchaseOrderId as number)
       return {
         success: true,
         data: response,
@@ -664,9 +645,9 @@ class PurchaseService {
           'Error al obtener vista previa de cancelación',
       }
     }
-  }
+  },
 
-  async cancelPurchaseOrderWithDetails(cancellationRequest: any) {
+  cancelPurchaseOrderWithDetails: async (cancellationRequest: any) => {
     if (DEMO_CONFIG.enabled) {
       return { success: true, data: { message: 'Cancelado (DEMO)' } };
     }
@@ -697,11 +678,7 @@ class PurchaseService {
         performance.now() - startTime,
       )
     }
-  }
+  },
 }
 
-// Crear instancia única del servicio
-const purchaseService = new PurchaseService()
-
-export { purchaseService }
 export default purchaseService

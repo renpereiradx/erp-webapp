@@ -16,6 +16,7 @@ class BusinessManagementAPI {
 
     // Log de inicialización solo en desarrollo
     if (API_CONFIG.isDevelopment()) {
+      // dev_log: BusinessManagementAPI initialized
     }
   }
 

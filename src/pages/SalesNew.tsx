@@ -262,8 +262,8 @@ const SalesNew: React.FC = () => {
 
   const [paymentMethodId, setPaymentMethodId] = useState(1);
   const [currencyId, setCurrencyId] = useState(1);
-  const [paymentMethods, setPaymentMethods] = useState<Array<{ id: number; name: string }>>([]);
-  const [currencies, setCurrencies] = useState<Array<{ id: number; code: string }>>([]);
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [currencies, setCurrencies] = useState<any[]>([]);
 
   const [historySearch, setHistorySearch] = useState('');
   const [historyFilterMode, setHistoryFilterMode] = useState<'date' | 'name'>('date');
@@ -305,7 +305,6 @@ const SalesNew: React.FC = () => {
   const [showReservationModal, setShowReservationModal] = useState(false);
 
   const [productSearchResults, setProductSearchResults] = useState<ProductDisplay[]>([]);
-  const [isSearchingProducts, setIsSearchingProducts] = useState(false);
   const [showProductDropdown, setShowProductDropdown] = useState(false);
   const [productHighlightedIndex, setProductHighlightedIndex] = useState(-1);
   const [productSearchTerm, setProductSearchTerm] = useState('');
@@ -314,7 +313,6 @@ const SalesNew: React.FC = () => {
   const saleTotals = useMemo(() => saleService.calculateLocalTotals(items), [items]);
   const subtotal = saleTotals.subtotal;
   const lineDiscounts = saleTotals.discount_total;
-  const taxes = saleTotals.tax_amount;
   const iva10 = saleTotals.iva10;
   const iva5 = saleTotals.iva5;
   const exento = saleTotals.exento;
@@ -324,21 +322,6 @@ const SalesNew: React.FC = () => {
     items.filter(item => (item.name || '').toLowerCase().includes(searchTerm.toLowerCase())),
     [items, searchTerm]
   );
-
-  const taxSummaryLabel = useMemo(() => {
-    const rates = Array.from(
-      new Set(
-        items
-          .map(item => Number(item.taxRate ?? 0))
-          .filter(rate => Number.isFinite(rate) && rate > 0)
-          .map(rate => (rate > 1 ? rate / 100 : rate))
-          .map(rate => Number((rate * 100).toFixed(2))),
-      ),
-    );
-    if (rates.length === 1) return `Impuestos (IVA ${rates[0]}%)`;
-    if (rates.length > 1) return 'Impuestos (tasas mixtas)';
-    return 'Impuestos (según tasa de producto)';
-  }, [items]);
 
   const filteredHistory = useMemo(() => {
     return (sales || [])

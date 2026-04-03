@@ -49,6 +49,7 @@ const API_CONFIG = {
 
 // Log de configuración (solo en desarrollo)
 if (API_CONFIG.isDevelopment()) {
+  // dev_log: API_CONFIG initialized
 }
 
 export default API_CONFIG;

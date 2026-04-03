@@ -6,11 +6,14 @@ const isDev = typeof process !== 'undefined' && process.env.NODE_ENV !== 'produc
 
 function log(event, data, level = 'debug') {
   if (!isDev) return;
+  // dev_log: event
 }
 
 export const telemetry = {
   record(event, data = {}) {
-    try { log(event, data); } catch (_) {}
+    try { log(event, data); } catch (_) {
+      // ignore
+    }
   },
   track(event, data = {}) { this.record(event, data); },
   startTimer(event, data = {}) {

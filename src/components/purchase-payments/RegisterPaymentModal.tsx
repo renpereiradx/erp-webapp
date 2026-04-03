@@ -15,7 +15,6 @@ import {
   ArrowUpRight,
   User,
   Hash,
-  ChevronRight,
   Building
 } from 'lucide-react'
 
@@ -61,7 +60,7 @@ interface RegisterPaymentModalProps {
 }
 
 const RegisterPaymentModal: React.FC<RegisterPaymentModalProps> = ({ open, onOpenChange, order, onSubmit }) => {
-  const { t, lang } = useI18n()
+  const { lang } = useI18n()
   const { error: showError } = useToast()
 
   const [amount, setAmount] = useState('')
@@ -311,7 +310,7 @@ const RegisterPaymentModal: React.FC<RegisterPaymentModalProps> = ({ open, onOpe
                     </div>
                   </div>
 
-                  <div className='space-y-2 pt-4'><label htmlFor='purchase-notes' className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Observaciones Internas</label><Textarea id='purchase-notes' value={notes} onChange={e => setNotes(e.target.value)} placeholder='Detalles operativos...' rows={2} className='rounded-xl bg-white border-border-subtle text-sm p-4 resize-none font-medium' /></div>
+                  <div className='space-y-2 pt-4'><label htmlFor='purchase-notes' className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Observaciones Internas</label><Textarea id='purchase-notes' value={notes} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)} placeholder='Detalles operativos...' rows={2} className='rounded-xl bg-white border-border-subtle text-sm p-4 resize-none font-medium' /></div>
                 </div>
               </section>
               {formError && (<div className='p-5 bg-error/5 border border-error/20 rounded-xl flex items-center gap-4'><AlertCircle className="text-error" size={20} /><span className='text-[10px] font-black uppercase tracking-widest text-error leading-relaxed'>{formError}</span></div>)}

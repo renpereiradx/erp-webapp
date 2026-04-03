@@ -271,6 +271,7 @@ const ManufacturingPanel = ({ productId, productName }) => {
         try {
           await refreshProductData(productId)
         } catch (refreshError) {
+          // silent refresh error
         }
       }
     } catch (err) {

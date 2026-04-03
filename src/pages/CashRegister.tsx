@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Card,
   CardContent,
@@ -18,8 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useI18n } from '@/lib/i18n'
-import { useThemeStyles } from '@/hooks/useThemeStyles'
 import { useCashRegisterStore, CashRegister as CashRegisterType, Movement } from '@/store/useCashRegisterStore'
 import {
   DollarSign as CashIcon,
@@ -44,7 +42,6 @@ interface CashAuditModalProps {
 }
 
 const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose, cashRegisterId, systemBalance, onAuditCreated }) => {
-  const { styles } = useThemeStyles()
   const [denominations, setDenominations] = useState<any>(null)
   const [counts, setCounts] = useState<Record<number, number>>({})
   const [notes, setNotes] = useState('')
@@ -248,8 +245,6 @@ const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose, cashRe
 }
 
 const CashRegister = () => {
-  const { t } = useI18n()
-  const { styles } = useThemeStyles()
   const {
     activeCashRegister,
     cashRegisters,
@@ -258,7 +253,6 @@ const CashRegister = () => {
     cashRegisterSummary,
     isActiveCashRegisterLoading,
     isCashRegistersLoading,
-    isMovementsLoading,
     isOpeningCashRegister,
     isClosingCashRegister,
     isRegisteringMovement,

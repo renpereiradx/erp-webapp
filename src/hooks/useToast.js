@@ -121,7 +121,9 @@ export const useToast = () => {
             onClick: () => {
               try {
                 navigator.clipboard.writeText(norm.code || '')
-              } catch {}
+              } catch {
+                // Ignore copy errors
+              }
             },
           },
           {
@@ -137,7 +139,9 @@ export const useToast = () => {
                     },
                   }),
                 )
-              } catch {}
+              } catch {
+                // Ignore dispatch errors
+              }
             },
           },
           {
@@ -152,7 +156,9 @@ export const useToast = () => {
                     },
                   }),
                 )
-              } catch {}
+              } catch {
+                // Ignore dispatch errors
+              }
             },
           },
         ]

@@ -439,8 +439,7 @@ export const useSalesLogic = () => {
         return productDetail;
       }),
       payment_method_id: 1, // Default: Efectivo
-      currency_id: 1, // Default: Guaraníes
-      allow_price_modifications: true // Necesario para cambios de precio y descuentos
+      currency_id: 1 // Default: Guaraníes
     };
 
     // Solo agregar reserve_id si existe

@@ -6,8 +6,6 @@ import { ReservationForm } from './ReservationForm';
 import { ReservationDetail } from './ReservationDetail';
 import { ScheduleSettings } from './ScheduleSettings';
 import { ScheduleSlot } from '../../domain/reservation';
-import { ShoppingCart, Calendar, Plus, History, Search } from 'lucide-react';
-import { cn } from '../../lib/utils';
 
 type PanelMode = 'closed' | 'new' | 'detail';
 
@@ -110,7 +108,7 @@ const ReservationDashboard: React.FC = () => {
 
     for (let i = selectedIndex + 1; i < sortedSlots.length; i++) {
       const slot = sortedSlots[i];
-      const isAvailable = !slot.reserve && (slot.status === 'AVAILABLE' || slot.status === 'FREE' || slot.status === '');
+      const isAvailable = !slot.reserve && slot.status === 'AVAILABLE';
       if (isAvailable) {
         consecutiveAvailable++;
       } else {

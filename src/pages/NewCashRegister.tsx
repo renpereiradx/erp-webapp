@@ -7,32 +7,30 @@
 
 import React, { useState, useEffect } from 'react'
 import { useI18n } from '@/lib/i18n'
-import { useCashRegisterStore, CashRegister } from '@/store/useCashRegisterStore'
+import { useCashRegisterStore } from '@/store/useCashRegisterStore'
 import useDashboardStore from '@/store/useDashboardStore'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import DataState from '@/components/ui/DataState'
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import { 
-  Calculate, 
-  CheckCircle, 
-  Warning, 
+  Calculator, 
+  CheckCircle2, 
+  AlertTriangle, 
   Info, 
-  Storefront, 
-  CalendarToday, 
-  Payments, 
-  Description, 
-  Schedule, 
-  Place, 
+  Wallet, 
+  MapPin, 
   TrendingUp, 
   TrendingDown,
   History,
-  Clock
-} from '@mui/icons-material'
+  Clock,
+  RefreshCw
+} from 'lucide-react'
 
 interface OpenForm {
   name: string;
@@ -58,7 +56,6 @@ const NewCashRegister: React.FC = () => {
   const {
     activeCashRegister,
     isActiveCashRegisterLoading,
-    activeCashRegisterError,
     isOpeningCashRegister,
     isClosingCashRegister,
     openCashRegister,
@@ -110,6 +107,11 @@ const NewCashRegister: React.FC = () => {
 
   const handleOpenFormChange = (field: keyof OpenForm, value: string) => {
     setOpenForm(prev => ({ ...prev, [field]: value }))
+    setFormError('')
+  }
+
+  const handleCloseFormChange = (field: keyof CloseForm, value: string) => {
+    setCloseForm(prev => ({ ...prev, [field]: value }))
     setFormError('')
   }
 
@@ -204,7 +206,7 @@ const NewCashRegister: React.FC = () => {
       <div className='flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2'>
         <div className='flex items-center gap-5'>
           <div className='size-14 bg-primary rounded-2xl flex items-center justify-center text-white shadow-fluent-8'>
-            <Calculate sx={{ fontSize: 32 }} />
+            <Calculator size={32} />
           </div>
           <div>
             <h1 className='text-3xl font-black text-text-main tracking-tighter uppercase leading-none'>
@@ -232,7 +234,7 @@ const NewCashRegister: React.FC = () => {
                     </span>
                   </div>
                   <div className='flex items-center gap-2 text-[10px] font-black text-text-secondary bg-white/50 dark:bg-black/20 px-3 py-1.5 rounded-full border border-border-subtle'>
-                    <Schedule sx={{ fontSize: 14 }} />
+                    <Clock size={14} />
                     {formatTimeOpen()}
                   </div>
                 </div>
@@ -255,14 +257,14 @@ const NewCashRegister: React.FC = () => {
                 <div className='grid grid-cols-1 gap-4'>
                   <div className='flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-border-subtle/50 group hover:bg-white dark:hover:bg-slate-800 transition-all'>
                     <div className='flex items-center gap-3'>
-                      <Place className='text-slate-400 group-hover:text-primary transition-colors' sx={{ fontSize: 18 }} />
+                      <MapPin className='text-slate-400 group-hover:text-primary transition-colors' size={18} />
                       <span className='text-[10px] font-black uppercase text-text-secondary'>Ubicación</span>
                     </div>
                     <span className='text-xs font-black text-text-main'>{activeCashRegister.location || 'No definida'}</span>
                   </div>
                   <div className='flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-border-subtle/50 group hover:bg-white dark:hover:bg-slate-800 transition-all'>
                     <div className='flex items-center gap-3'>
-                      <History className='text-slate-400 group-hover:text-success transition-colors' sx={{ fontSize: 18 }} />
+                      <History className='text-slate-400 group-hover:text-success transition-colors' size={18} />
                       <span className='text-[10px] font-black uppercase text-text-secondary'>Fondo Inicial</span>
                     </div>
                     <span className='text-xs font-black font-mono text-text-main'>₲{(activeCashRegister.initial_balance || 0).toLocaleString()}</span>
@@ -273,7 +275,7 @@ const NewCashRegister: React.FC = () => {
                   onClick={() => setActiveTab('close')}
                   className='w-full h-14 bg-error hover:bg-error/90 text-white font-black uppercase tracking-widest text-[11px] rounded-xl shadow-fluent-8 transition-all active:scale-95 flex items-center justify-center gap-2'
                 >
-                  <CheckCircle sx={{ fontSize: 18 }} />
+                  <CheckCircle2 size={18} />
                   Cerrar Jornada Operativa
                 </Button>
               </div>
@@ -281,7 +283,7 @@ const NewCashRegister: React.FC = () => {
           ) : (
             <Card className='border-none rounded-3xl shadow-fluent-2 bg-slate-50 dark:bg-slate-900/50 p-8 border-dashed border-2 border-border-subtle'>
               <div className='text-center space-y-4'>
-                <Info className='text-slate-300' sx={{ fontSize: 40 }} />
+                <Info className='text-slate-300' size={40} />
                 <p className='text-xs font-bold uppercase tracking-widest text-slate-400'>Esperando apertura de terminal</p>
               </div>
             </Card>
@@ -300,7 +302,7 @@ const NewCashRegister: React.FC = () => {
                     : 'text-text-secondary hover:text-text-main hover:bg-white/50'
                 }`}
               >
-                <Calculate sx={{ fontSize: 20 }} />
+                <Calculator size={20} />
                 Apertura de Caja
               </button>
               <button
@@ -311,7 +313,7 @@ const NewCashRegister: React.FC = () => {
                     : 'text-text-secondary hover:text-text-main hover:bg-white/50'
                 }`}
               >
-                <CheckCircle sx={{ fontSize: 20 }} />
+                <CheckCircle2 size={20} />
                 Cierre de Caja
               </button>
             </div>
@@ -321,7 +323,7 @@ const NewCashRegister: React.FC = () => {
                 <div className='space-y-10 animate-in slide-in-from-left-4 duration-300'>
                   {activeCashRegister && (
                     <div className='bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 rounded-2xl p-6 flex gap-5'>
-                      <Warning className="text-amber-600 shrink-0" sx={{ fontSize: 28 }} />
+                      <AlertTriangle className="text-amber-600 shrink-0" size={28} />
                       <div>
                         <p className='font-black uppercase tracking-tight text-amber-800 text-sm'>Restricción de Operación</p>
                         <p className='text-amber-700 text-xs mt-1 font-medium leading-relaxed'>
@@ -397,7 +399,7 @@ const NewCashRegister: React.FC = () => {
 
                     {formError && activeTab === 'open' && (
                       <div className='md:col-span-2 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3 animate-in shake-in duration-300'>
-                        <Info className="text-red-500" sx={{ fontSize: 20 }} />
+                        <Info className="text-red-500" size={20} />
                         <p className='text-xs text-red-600 font-black uppercase tracking-widest'>{formError}</p>
                       </div>
                     )}
@@ -408,7 +410,7 @@ const NewCashRegister: React.FC = () => {
                         disabled={isOpeningCashRegister || !!activeCashRegister}
                         className='flex-1 h-14 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[11px] rounded-xl shadow-fluent-8 transition-all active:scale-95'
                       >
-                        {isOpeningCashRegister ? <Refresh className='animate-spin mr-2' sx={{ fontSize: 18 }} /> : null}
+                        {isOpeningCashRegister ? <RefreshCw className='animate-spin mr-2' size={18} /> : null}
                         {isOpeningCashRegister ? 'Procesando...' : 'Iniciar Apertura de Caja'}
                       </Button>
                       <Button
@@ -431,7 +433,7 @@ const NewCashRegister: React.FC = () => {
                     <form onSubmit={handleCloseSubmit} className='space-y-10'>
                       <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 rounded-2xl p-8 flex flex-col md:flex-row justify-between items-center gap-6'>
                         <div className='flex gap-5'>
-                          <Info className="text-blue-600 shrink-0" sx={{ fontSize: 28 }} />
+                          <Info className="text-blue-600 shrink-0" size={28} />
                           <div>
                             <p className='font-black uppercase tracking-tight text-blue-800 text-sm'>Estado de Arqueo Requerido</p>
                             <p className='text-blue-700 text-xs mt-1 font-medium leading-relaxed'>
@@ -483,7 +485,7 @@ const NewCashRegister: React.FC = () => {
                                 <div className={`size-16 rounded-2xl flex items-center justify-center shadow-sm ${
                                   calculateDifference() === 0 ? 'bg-success text-white' : 'bg-error text-white'
                                 }`}>
-                                  {calculateDifference() === 0 ? <CheckCircle sx={{ fontSize: 32 }} /> : (calculateDifference() > 0 ? <TrendingUp sx={{ fontSize: 32 }} /> : <TrendingDown sx={{ fontSize: 32 }} />)}
+                                  {calculateDifference() === 0 ? <CheckCircle2 size={32} /> : (calculateDifference() > 0 ? <TrendingUp size={32} /> : <TrendingDown size={32} />)}
                                 </div>
                                 <div>
                                   <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${
@@ -523,7 +525,7 @@ const NewCashRegister: React.FC = () => {
 
                       {formError && activeTab === 'close' && (
                         <div className='bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3 animate-in shake-in duration-300'>
-                          <Info className="text-red-500" sx={{ fontSize: 20 }} />
+                          <Info className="text-red-500" size={20} />
                           <p className='text-xs text-red-600 font-black uppercase tracking-widest'>{formError}</p>
                         </div>
                       )}
@@ -534,7 +536,7 @@ const NewCashRegister: React.FC = () => {
                           disabled={isClosingCashRegister}
                           className='flex-1 h-16 bg-error hover:bg-error/90 text-white font-black uppercase tracking-widest text-[11px] rounded-xl shadow-fluent-16 transition-all active:scale-95'
                         >
-                          {isClosingCashRegister ? <Refresh className='animate-spin mr-2' sx={{ fontSize: 18 }} /> : null}
+                          {isClosingCashRegister ? <RefreshCw className='animate-spin mr-2' size={18} /> : null}
                           {isClosingCashRegister ? 'Cerrando Terminal...' : 'Finalizar y Cerrar Caja Registradora'}
                         </Button>
                         <Button
@@ -554,7 +556,7 @@ const NewCashRegister: React.FC = () => {
                   ) : (
                     <div className='py-20 flex flex-col items-center justify-center space-y-8 animate-in zoom-in-95 duration-500'>
                       <div className='size-32 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-200 dark:text-slate-700 border border-border-subtle shadow-inner'>
-                        <Payments sx={{ fontSize: 60 }} />
+                        <Wallet size={60} />
                       </div>
                       <div className='text-center max-w-sm space-y-3'>
                         <h3 className='text-xl font-black tracking-tighter uppercase text-text-main'>Terminal sin Actividad</h3>

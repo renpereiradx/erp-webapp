@@ -119,6 +119,7 @@ export function useProductFilters({ products = [], onApiSearch, onClear, persist
       } catch (error) {
         // Ignorar errores de cancelación u otros
         if (error?.name !== 'AbortError') {
+          // ignore non-abort errors
         }
       }
     };

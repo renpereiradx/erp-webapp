@@ -28,7 +28,7 @@ interface UseProductSearchReturn {
   searchByBarcode: (barcode: string) => Promise<ProductSearchResult | null>;
 }
 
-const getProductDisplay = (product: Record<string, unknown>): ProductSearchResult => {
+const getProductDisplay = (product: any): ProductSearchResult => {
   const rawTaxRateCandidates = [
     product.tax_rate,
     product.tax_rate_value,

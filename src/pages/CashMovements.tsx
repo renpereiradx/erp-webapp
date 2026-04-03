@@ -106,7 +106,7 @@ const CashMovements: React.FC = () => {
   })
 
   // Data helpers
-  const movementTypes = [
+  const movementTypes: any[] = [
     { value: 'INCOME', label: t('cashMovement.type.income', 'Ingreso') },
     { value: 'EXPENSE', label: t('cashMovement.type.expense', 'Egreso') },
   ]

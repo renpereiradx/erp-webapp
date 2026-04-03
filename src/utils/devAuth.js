@@ -23,44 +23,40 @@ const DEV_USER = {
  * Si el usuario no existe, lo crea primero
  */
 export const autoLogin = async () => {
-  try {
-    // Verificar si ya tenemos token válido
-    const existingToken = localStorage.getItem('authToken');
-    if (existingToken) {
-      // Verificar si el token es válido haciendo una llamada rápida
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/category/`, {
-          headers: {
-            'Authorization': existingToken, // Sin "Bearer " según el formato que funciona
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          return existingToken;
-        } else {
-          localStorage.removeItem('authToken');
+  // Verificar si ya tenemos token válido
+  const existingToken = localStorage.getItem('authToken');
+  if (existingToken) {
+    // Verificar si el token es válido haciendo una llamada rápida
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/category/`, {
+        headers: {
+          'Authorization': existingToken, // Sin "Bearer " según el formato que funciona
+          'Content-Type': 'application/json'
         }
-      } catch (error) {
+      });
+      
+      if (response.ok) {
+        return existingToken;
+      } else {
         localStorage.removeItem('authToken');
       }
+    } catch (error) {
+      localStorage.removeItem('authToken');
     }
+  }
 
-    // Intentar login primero
-    try {
-      const loginResponse = await apiClient.login(DEV_USER.email, DEV_USER.password);
-      return loginResponse.token;
-    } catch (loginError) {
-      if (loginError.message.includes('not found') || loginError.message.includes('404')) {
-        // Usuario no existe, crear cuenta
-        const signupResponse = await apiClient.signup(DEV_USER.email, DEV_USER.password);
-        return signupResponse.token;
-      } else {
-        throw loginError;
-      }
+  // Intentar login primero
+  try {
+    const loginResponse = await apiClient.login(DEV_USER.email, DEV_USER.password);
+    return loginResponse.token;
+  } catch (loginError) {
+    if (loginError.message.includes('not found') || loginError.message.includes('404')) {
+      // Usuario no existe, crear cuenta
+      const signupResponse = await apiClient.signup(DEV_USER.email, DEV_USER.password);
+      return signupResponse.token;
+    } else {
+      throw loginError;
     }
-  } catch (error) {
-    throw error;
   }
 };
 

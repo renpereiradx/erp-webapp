@@ -8,12 +8,6 @@ import { apiClient } from './api'
 import { DEMO_SALES_RESPONSE, IS_DEMO_MODE } from '@/config/demoSalePayments'
 import { 
   SaleRequest, 
-  SaleEnhancedResponse, 
-  PaginatedSalesResponse,
-  SaleWithMetadataResponse,
-  SalePaymentStatusResponse,
-  ProcessPaymentRequest,
-  ProcessPaymentResponse,
   AddProductsToSaleRequest
 } from '@/types'
 import { validateSaleOrder } from '@/domain/sale/validators/saleValidator'
@@ -35,7 +29,7 @@ export const saleService = {
       response?.data?.rows,
     ]
 
-    let data = []
+    let data: any[] = []
     for (const candidate of arrayCandidates) {
       if (Array.isArray(candidate)) {
         data = candidate

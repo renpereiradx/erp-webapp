@@ -35,6 +35,7 @@ class TelemetryService {
 
     // Console log for development
     if (process.env.NODE_ENV === 'development') {
+      // dev_log: metric
     }
   }
 
@@ -56,6 +57,7 @@ class TelemetryService {
 
     // Console log for development
     if (process.env.NODE_ENV === 'development') {
+      // dev_log: event
     }
 
     // Keep only last 100 events to prevent memory issues

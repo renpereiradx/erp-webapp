@@ -33,6 +33,7 @@ export const telemetry = {
     _state.last[name] = data || {};
     // Evitar ruido en producción; aún así útil en dev
     if (isDev && typeof console !== 'undefined' && typeof console.debug === 'function') {
+      // dev_log: telemetry record
     }
   },
   get(name) {

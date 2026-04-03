@@ -15,6 +15,7 @@ const businessAPI = new BusinessManagementAPI({
 
 // Business Management API client initialized
 if (API_CONFIG.isDevelopment()) {
+  // dev_log: API client initialized
 }
 
 export const apiClient = businessAPI

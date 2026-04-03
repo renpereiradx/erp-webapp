@@ -87,10 +87,10 @@ export const useInfoProducts = () => {
   /**
    * Analyze product profitability
    */
-  const analyzeProfitability = useCallback((product) => {
+  const analyzeProfitability = useCallback((product: any) => {
     if (!product) return null;
 
-    const analysis = {
+    const analysis: any = {
       productId: product.product_id,
       productName: product.product_name,
       hasCompleteData: product.financial_health?.has_prices && product.financial_health?.has_costs,

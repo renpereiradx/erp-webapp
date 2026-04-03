@@ -66,7 +66,6 @@ export default function DataState({
   skeletonProps = {},
   skeletonVariant,
 }: DataStateProps) {
-  const { styles } = useThemeStyles();
   if (variant === 'loading') {
     const count = skeletonProps.count || 3;
     const sv = skeletonVariant || skeletonProps.variant;
@@ -75,7 +74,7 @@ export default function DataState({
         {sv === 'list' ? (
           <GenericSkeletonList count={count} data-testid="data-state-loading-list" />
         ) : (
-          <SimpleSkeleton count={count} list={sv === 'list'} testId={testId || 'data-state-loading'} />
+          <SimpleSkeleton count={count} list={false} testId={testId || 'data-state-loading'} />
         )}
       </div>
     );

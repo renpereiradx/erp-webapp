@@ -7,20 +7,13 @@ import React, {
 } from 'react'
 import { 
   AlertCircle, 
-  AlertTriangle, 
   CheckCircle2, 
   Loader2, 
-  Wallet, 
   Receipt, 
-  ArrowRight, 
   Coins, 
-  Banknote,
   ArrowUpRight,
   User,
-  Hash,
-  ChevronRight,
   Building,
-  CreditCard
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -44,13 +37,12 @@ import {
 import { cashRegisterService } from '@/services/cashRegisterService'
 import { CurrencyService } from '@/services/currencyService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
-import { calculateCashRegisterBalance } from '@/utils/cashRegisterUtils'
 import { normalizeCurrencyCode, formatPYG } from '@/utils/currencyUtils'
 
 const DEFAULT_CURRENCY_CODE = 'PYG'
 const CASH_REGISTER_NONE_VALUE = '__none__'
 
-const getNormalizedBalanceDue = (balanceDue, currency) => {
+const getNormalizedBalanceDue = (balanceDue: any, currency: any) => {
   if (balanceDue === null || balanceDue === undefined) return null
   const raw = Number(balanceDue)
   if (!Number.isFinite(raw)) return null
@@ -67,7 +59,7 @@ interface RegisterSalePaymentModalProps {
 }
 
 const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: RegisterSalePaymentModalProps) => {
-  const { t, lang } = useI18n()
+  const { lang } = useI18n()
 
   const [amountReceived, setAmountReceived] = useState<string | number>('')
   const [amountToApply, setAmountToApply] = useState<string | number>('')
@@ -186,7 +178,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
   }).filter(o => o.id !== 'undefined'), [paymentMethods])
 
   const validationErrors = useMemo(() => {
-    const errors = { amountReceived: null, amountToApply: null, hasErrors: false }
+    const errors: { amountReceived: string | null, amountToApply: string | null, hasErrors: boolean } = { amountReceived: null, amountToApply: null, hasErrors: false }
     if (!sale) return errors
 
     if (amountReceived) {

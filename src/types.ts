@@ -1331,7 +1331,6 @@ export const API_ENDPOINTS = {
   CASH_AUDITS_RESOLVE: (id: number) => `/cash-audits/${id}/resolve`,
   
   // Payments Bootstrap (v1.1)
-  PAYMENTS_BOOTSTRAP: '/payments/bootstrap',
   // Inventory Management
   INVENTORY_CREATE: '/inventory/',
   INVENTORY_BY_ID: (id: string) => `/inventory/${id}`,

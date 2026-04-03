@@ -40,7 +40,9 @@ describe('Circuit breaker & prefetch', () => {
       try { // each call should throw
         // need act to update state properly
         await act(async () => { await useProductStore.getState().fetchProductsPaginated(1, 10); });
-      } catch {}
+      } catch {
+        // expected error in circuit breaker test
+      }
     }
     // Next call should short-circuit and NOT invoke service again
     const prevCalls = productService.getProductsPaginated.mock.calls.length;
@@ -62,7 +64,9 @@ describe('Circuit breaker & prefetch', () => {
     productService.getProductsPaginated.mockImplementation(fail);
     const { circuit: { threshold, cooldownMs } } = useProductStore.getState();
     for (let i = 0; i < threshold; i++) {
-      try { await act(async () => { await useProductStore.getState().fetchProductsPaginated(1, 10); }); } catch {}
+      try { await act(async () => { await useProductStore.getState().fetchProductsPaginated(1, 10); }); } catch {
+        // expected error in cooldown test
+      }
     }
     // Now advance time beyond cooldown
     vi.advanceTimersByTime(cooldownMs + 10);
