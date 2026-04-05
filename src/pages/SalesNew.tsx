@@ -75,6 +75,8 @@ interface CartItem {
 interface Client extends SearchableDropdownItem {
   id: string;
   name: string;
+  lastName?: string;
+  displayName?: string;
   document_id?: string;
   email?: string;
 }
@@ -1529,7 +1531,7 @@ const SalesNew: React.FC = () => {
                         <User size={14} className="text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm truncate">{item.name}</p>
+                        <p className="font-bold text-sm truncate">{item.displayName || item.name}</p>
                         {item.document_id && (
                           <p className="text-xs text-slate-500">CI: {item.document_id}</p>
                         )}
@@ -1543,7 +1545,7 @@ const SalesNew: React.FC = () => {
                   <div className="p-3 bg-primary/5 rounded border border-primary/10 flex items-center justify-between">
                     <div>
                       <p className="font-black text-primary uppercase text-xs">Cliente Seleccionado</p>
-                      <p className="font-bold text-sm">{selectedClient.name}</p>
+                      <p className="font-bold text-sm">{selectedClient.displayName || selectedClient.name}</p>
                       <p className="text-xs text-slate-500">{selectedClient.document_id}</p>
                     </div>
                     <Button variant="ghost" size="icon" onClick={handleClearClient} className="size-8 text-slate-400 hover:text-red-500">
