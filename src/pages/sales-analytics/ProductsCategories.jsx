@@ -148,8 +148,8 @@ const ProductsCategories = () => {
               </div>
             </div>
             <div className="space-y-4">
-              {categoriesData.categories.map((cat, idx) => (
-                <div key={cat.category_id} className="space-y-1.5">
+              {categoriesData.categories?.map((cat, idx) => (
+                <div key={cat.category_id || idx} className="space-y-1.5">
                   <div className="flex justify-between text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">
                     <span>{cat.category_name}</span>
                     <span className="font-mono">{formatCurrency(cat.sales)} ({cat.percentage}%)</span>
@@ -162,6 +162,11 @@ const ProductsCategories = () => {
                   </div>
                 </div>
               ))}
+              {(!categoriesData.categories || categoriesData.categories.length === 0) && (
+                <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                  <p className="text-sm font-medium uppercase tracking-widest">No hay datos por categoría</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -172,18 +177,20 @@ const ProductsCategories = () => {
                 <Star className="text-amber-300" size={20} fill="currentColor" />
                 <p className="text-white/20 text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded">Top Performer</p>
               </div>
-              <h2 className="text-2xl font-black mb-1 uppercase tracking-tight">{categoriesData.categories[0]?.top_product}</h2>
+              <h2 className="text-2xl font-black mb-1 uppercase tracking-tight">
+                {categoriesData.categories?.[0]?.top_product || "N/A"}
+              </h2>
               <p className="text-white/80 text-sm font-medium">Producto líder de este periodo</p>
             </div>
             <div className="py-6 font-mono">
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/10 p-3 rounded-lg border border-white/10">
                   <p className="text-white/60 text-[10px] uppercase font-black">Unidades</p>
-                  <p className="text-xl font-black">{categoriesData.categories[0]?.units_sold}</p>
+                  <p className="text-xl font-black">{categoriesData.categories?.[0]?.units_sold || 0}</p>
                 </div>
                 <div className="bg-white/10 p-3 rounded-lg border border-white/10">
                   <p className="text-white/60 text-[10px] uppercase font-black">Margen</p>
-                  <p className="text-xl font-black">{categoriesData.categories[0]?.gross_margin_pct}%</p>
+                  <p className="text-xl font-black">{categoriesData.categories?.[0]?.gross_margin_pct || 0}%</p>
                 </div>
               </div>
             </div>
@@ -199,13 +206,13 @@ const ProductsCategories = () => {
           <PerformanceTable 
             title="Productos Más Vendidos" 
             icon={<TrendingUp size={18} className="text-emerald-500" />} 
-            data={categoriesData.categories} 
+            data={categoriesData.categories || []} 
             type="top"
           />
           <PerformanceTable 
             title="Bajo Rendimiento" 
             icon={<TrendingDown size={18} className="text-rose-500" />} 
-            data={categoriesData.categories} 
+            data={categoriesData.categories || []} 
             type="bottom"
           />
         </div>
@@ -240,7 +247,7 @@ const ProductsCategories = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                {productsData.products.map((product) => (
+                {productsData.products?.map((product) => (
                   <tr key={product.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{product.product_name}</td>
                     <td className="px-6 py-4 font-mono text-xs text-slate-500 font-bold">{product.sku}</td>
@@ -258,7 +265,7 @@ const ProductsCategories = () => {
                     </td>
                   </tr>
                 ))}
-                {productsData.products.length === 0 && !loading && (
+                {(!productsData.products || productsData.products.length === 0) && !loading && (
                   <tr>
                     <td colSpan="8" className="px-6 py-8 text-center text-slate-500 font-medium italic">
                       No se encontraron productos en este periodo.
@@ -318,7 +325,7 @@ const PerformanceTable = ({ title, icon, data, type }) => (
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-mono">
-          {data.map((item, idx) => (
+          {data?.map((item, idx) => (
             <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
               <td className="px-6 py-4 font-black text-slate-400 text-center">#{idx + 1}</td>
               <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200 font-display text-sm">{item.top_product}</td>
@@ -328,6 +335,13 @@ const PerformanceTable = ({ title, icon, data, type }) => (
               </td>
             </tr>
           ))}
+          {(!data || data.length === 0) && (
+            <tr>
+              <td colSpan="4" className="px-6 py-8 text-center text-slate-400 font-medium italic text-xs uppercase tracking-widest">
+                Sin datos disponibles
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
