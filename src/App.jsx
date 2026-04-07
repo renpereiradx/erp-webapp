@@ -75,6 +75,7 @@ import AgingReport from '@/pages/AgingReport'
 import ProfitAndLoss from '@/pages/ProfitAndLoss'
 import LegalBooks from '@/pages/LegalBooks'
 import ProfitabilityAnalysis from '@/pages/ProfitabilityAnalysis'
+import AdminSessionsDashboard from '@/pages/AdminSessionsDashboard'
 import {
   ProfitabilityDashboard,
   ProductProfitability,

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import userService from '@/services/userService';
+import sessionService from '@/services/sessionService';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -11,11 +12,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 export default function MyProfileAndSecurity() {
   const { t } = useI18n();
   const [loading, setLoading] = useState(true);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
   const [userData, setUserData] = useState({ id: '', first_name: '', last_name: '', email: '', username: '', phone: '', avatar_url: '', created_at: '', roles: [], sessions_count: 0 });
   const [profileForm, setProfileForm] = useState({ first_name: '', last_name: '', phone: '' });
   const [passwordForm, setPasswordForm] = useState({ current_password: '', new_password: '', confirm_password: '' });
+  const [activeSessions, setActiveSessions] = useState([]);
 
-  useEffect(() => { fetchProfileData(); }, []);
+  useEffect(() => { 
+    fetchProfileData(); 
+    fetchActiveSessions();
+  }, []);
 
   const fetchProfileData = async () => {
     try {
@@ -25,24 +31,86 @@ export default function MyProfileAndSecurity() {
         setUserData(response.data);
         setProfileForm({ first_name: response.data.first_name || '', last_name: response.data.last_name || '', phone: response.data.phone || '' });
       }
-    } catch (error) { toast.error(t('profile.errors.fetch_failed')); } finally { setLoading(false); }
+    } catch (error) { 
+      toast.error(t('profile.errors.fetch_failed')); 
+    } finally { 
+      setLoading(false); 
+    }
+  };
+
+  const fetchActiveSessions = async () => {
+    try {
+      setSessionsLoading(true);
+      const response = await sessionService.getActiveSessions();
+      
+      // Manejar respuesta tanto de BusinessManagementAPI (envuelto en data) como de apiService legacy
+      const data = response.data || response;
+      if (Array.isArray(data)) {
+        setActiveSessions(data);
+      } else if (response.success && Array.isArray(response.data)) {
+        setActiveSessions(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching sessions', error);
+    } finally {
+      setSessionsLoading(false);
+    }
+  };
+
+  const handleRevokeSession = async (sessionId) => {
+    try {
+      await sessionService.revokeSession(sessionId);
+      toast.success('Sesión revocada exitosamente');
+      fetchActiveSessions();
+    } catch (error) {
+      toast.error('Error al revocar la sesión');
+    }
+  };
+
+  const handleRevokeAllSessions = async () => {
+    if (window.confirm('¿Está seguro de que desea cerrar todas sus otras sesiones activas?')) {
+      try {
+        await sessionService.revokeAllOtherSessions();
+        toast.success('Todas las demás sesiones fueron revocadas');
+        fetchActiveSessions();
+      } catch (error) {
+        toast.error('Error al revocar las sesiones');
+      }
+    }
   };
 
   const handleProfileUpdate = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     try {
       const response = await userService.updateMe(profileForm);
-      if (response.success) { toast.success(t('profile.success.update')); fetchProfileData(); }
-    } catch (error) { toast.error(t('profile.errors.update_failed')); }
+      if (response.success) { 
+        toast.success(t('profile.success.update')); 
+        fetchProfileData(); 
+      }
+    } catch (error) { 
+      toast.error(t('profile.errors.update_failed')); 
+    }
   };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    if (passwordForm.new_password !== passwordForm.confirm_password) { toast.error(t('profile.errors.password_mismatch')); return; }
+    if (passwordForm.new_password !== passwordForm.confirm_password) { 
+      toast.error(t('profile.errors.password_mismatch')); 
+      return; 
+    }
     try {
-      const response = await userService.changeMyPassword({ current_password: passwordForm.current_password, new_password: passwordForm.new_password, logout_other_sessions: false });
-      if (response.success) { toast.success(t('profile.success.password_changed')); setPasswordForm({ current_password: '', new_password: '', confirm_password: '' }); }
-    } catch (error) { toast.error(error.response?.data?.error?.message || t('profile.errors.password_change_failed')); }
+      const response = await userService.changeMyPassword({ 
+        current_password: passwordForm.current_password, 
+        new_password: passwordForm.new_password, 
+        logout_other_sessions: false 
+      });
+      if (response.success) { 
+        toast.success(t('profile.success.password_changed')); 
+        setPasswordForm({ current_password: '', new_password: '', confirm_password: '' }); 
+      }
+    } catch (error) { 
+      toast.error(error.response?.data?.error?.message || t('profile.errors.password_change_failed')); 
+    }
   };
 
   if (loading) {
@@ -99,7 +167,7 @@ export default function MyProfileAndSecurity() {
               </div>
             </div>
             <div className="flex justify-center pb-1">
-              <Button onClick={handleProfileUpdate} className="bg-[#106ebe] text-white hover:bg-[#005a9e] font-bold text-xs h-9 px-6 rounded-lg shadow-sm transition-all">
+              <Button onClick={() => handleProfileUpdate()} className="bg-[#106ebe] text-white hover:bg-[#005a9e] font-bold text-xs h-9 px-6 rounded-lg shadow-sm transition-all">
                 {t('profile.update_profile_btn')}
               </Button>
             </div>
@@ -184,17 +252,17 @@ export default function MyProfileAndSecurity() {
         <CardHeader className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between py-4 px-6">
           <CardTitle className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 m-0">
             <span className="material-symbols-outlined text-lg text-[#106ebe]">history</span>
-            {t('profile.active_sessions')}
+            {t('profile.active_sessions', 'Sesiones Activas')}
           </CardTitle>
           <Button variant="ghost" onClick={handleRevokeAllSessions} className="text-[10px] font-bold uppercase text-rose-600 hover:bg-rose-50 h-8 px-3 rounded-lg tracking-wider">
-            {t('profile.sign_out_all')}
+            {t('profile.sign_out_all', 'Cerrar todas las sesiones')}
           </Button>
         </CardHeader>
         <CardContent className="p-0 divide-y divide-slate-50 dark:divide-slate-800">
           {sessionsLoading ? (
             <div className="p-6 text-center text-sm text-slate-500">Cargando sesiones...</div>
           ) : activeSessions.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">No se encontraron sesiones activas (o función en desarrollo)</div>
+            <div className="p-6 text-center text-sm text-slate-500">No se encontraron sesiones activas</div>
           ) : (
             activeSessions.map((s, i) => (
               <div key={s.id || i} className="flex items-center justify-between p-4 px-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
@@ -204,7 +272,7 @@ export default function MyProfileAndSecurity() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-slate-900 dark:text-white">{s.user_agent ? s.user_agent.substring(0, 30) : 'Dispositivo Desconocido'}</span>
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">{s.user_agent ? (s.user_agent.length > 40 ? s.user_agent.substring(0, 40) + '...' : s.user_agent) : 'Dispositivo Desconocido'}</span>
                       {s.is_current && <span className="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-tighter">Actual</span>}
                     </div>
                     <p className="text-[11px] text-slate-500 font-medium">{s.location_info || s.ip_address} • {s.last_activity ? new Date(s.last_activity).toLocaleString() : 'Activo'}</p>
