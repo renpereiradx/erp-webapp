@@ -249,6 +249,68 @@ export default function AdminSessionsDashboard() {
           </div>
         </div>
       </Card>
+
+      {/* Dashboard Insights (Asymmetric Bento) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <Card className="md:col-span-2 p-6 rounded-lg shadow-sm border-slate-200">
+          <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-blue-500">analytics</span>
+            Session Activity Trends
+          </h3>
+          <div className="h-48 flex items-end justify-between gap-2 px-2">
+            <div className="w-full bg-slate-100 rounded-t h-[40%]"></div>
+            <div className="w-full bg-slate-100 rounded-t h-[55%]"></div>
+            <div className="w-full bg-slate-100 rounded-t h-[35%]"></div>
+            <div className="w-full bg-blue-500 rounded-t h-[80%]"></div>
+            <div className="w-full bg-slate-100 rounded-t h-[60%]"></div>
+            <div className="w-full bg-slate-100 rounded-t h-[45%]"></div>
+            <div className="w-full bg-slate-100 rounded-t h-[70%]"></div>
+            <div className="w-full bg-blue-600 rounded-t h-[95%]"></div>
+            <div className="w-full bg-slate-100 rounded-t h-[50%]"></div>
+            <div className="w-full bg-slate-100 rounded-t h-[65%]"></div>
+            <div className="w-full bg-slate-100 rounded-t h-[40%]"></div>
+            <div className="w-full bg-blue-500 rounded-t h-[85%]"></div>
+          </div>
+          <div className="flex justify-between mt-2 text-[10px] text-slate-400 font-bold uppercase">
+            <span>00:00</span>
+            <span>06:00</span>
+            <span>12:00</span>
+            <span>18:00</span>
+            <span>23:59</span>
+          </div>
+        </Card>
+        <Card className="p-6 flex flex-col justify-between rounded-lg shadow-sm border-slate-200">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-orange-500">public</span>
+              Geographic Distribution
+            </h3>
+            <ul className="space-y-3">
+              <li className="flex items-center justify-between text-xs">
+                <span className="text-slate-600">North America</span>
+                <span className="font-bold">42%</span>
+              </li>
+              <li className="flex items-center justify-between text-xs">
+                <span className="text-slate-600">Europe</span>
+                <span className="font-bold">31%</span>
+              </li>
+              <li className="flex items-center justify-between text-xs">
+                <span className="text-slate-600">Asia Pacific</span>
+                <span className="font-bold">22%</span>
+              </li>
+              <li className="flex items-center justify-between text-xs">
+                <span className="text-slate-600">Others</span>
+                <span className="font-bold">5%</span>
+              </li>
+            </ul>
+          </div>
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <Button className="w-full py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-colors uppercase tracking-wider h-auto">
+              View Detailed Map
+            </Button>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
