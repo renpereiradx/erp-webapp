@@ -308,6 +308,7 @@ function AppContent() {
                       <Route path='/perfil' element={<MyProfileAndSecurity />} />
                       <Route path='/usuarios' element={<UserManagementList />} />
                       <Route path='/usuarios/:id' element={<UserDetailedProfile />} />
+                      <Route path='/admin/sesiones' element={<AdminSessionsDashboard />} />
                       
                       {/* Auditoría */}
                       <Route path='/auditoria' element={<AuditDashboard />} />

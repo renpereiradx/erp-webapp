@@ -186,36 +186,38 @@ export default function MyProfileAndSecurity() {
             <span className="material-symbols-outlined text-lg text-[#106ebe]">history</span>
             {t('profile.active_sessions')}
           </CardTitle>
-          <Button variant="ghost" className="text-[10px] font-bold uppercase text-rose-600 hover:bg-rose-50 h-8 px-3 rounded-lg tracking-wider">
+          <Button variant="ghost" onClick={handleRevokeAllSessions} className="text-[10px] font-bold uppercase text-rose-600 hover:bg-rose-50 h-8 px-3 rounded-lg tracking-wider">
             {t('profile.sign_out_all')}
           </Button>
         </CardHeader>
         <CardContent className="p-0 divide-y divide-slate-50 dark:divide-slate-800">
-          {[
-            { icon: 'desktop_windows', device: "Chrome on macOS Monterey", loc: "San Francisco, USA • 192.168.1.1", current: true },
-            { icon: 'smartphone', device: "Safari on iPhone 15 Pro", loc: "San Francisco, USA • Hace 2 horas", current: false },
-            { icon: 'laptop', device: "Firefox on Windows 11", loc: "Seattle, USA • Hace 3 días", current: false }
-          ].map((s, i) => (
-            <div key={i} className="flex items-center justify-between p-4 px-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className={`size-10 rounded-lg flex items-center justify-center ${s.current ? 'bg-[#106ebe]/10 text-[#106ebe]' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                  <span className="material-symbols-outlined text-xl">{s.icon}</span>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">{s.device}</span>
-                    {s.current && <span className="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-tighter">Actual</span>}
+          {sessionsLoading ? (
+            <div className="p-6 text-center text-sm text-slate-500">Cargando sesiones...</div>
+          ) : activeSessions.length === 0 ? (
+            <div className="p-6 text-center text-sm text-slate-500">No se encontraron sesiones activas (o función en desarrollo)</div>
+          ) : (
+            activeSessions.map((s, i) => (
+              <div key={s.id || i} className="flex items-center justify-between p-4 px-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className={`size-10 rounded-lg flex items-center justify-center ${s.is_current ? 'bg-[#106ebe]/10 text-[#106ebe]' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                    <span className="material-symbols-outlined text-xl">{s.device_type === 'mobile' ? 'smartphone' : 'laptop_mac'}</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 font-medium">{s.loc}</p>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">{s.user_agent ? s.user_agent.substring(0, 30) : 'Dispositivo Desconocido'}</span>
+                      {s.is_current && <span className="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-tighter">Actual</span>}
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-medium">{s.location_info || s.ip_address} • {s.last_activity ? new Date(s.last_activity).toLocaleString() : 'Activo'}</p>
+                  </div>
                 </div>
+                {!s.is_current && (
+                  <button onClick={() => handleRevokeSession(s.id)} className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all">
+                    <span className="material-symbols-outlined text-xl">close</span>
+                  </button>
+                )}
               </div>
-              {!s.current && (
-                <button className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all">
-                  <span className="material-symbols-outlined text-xl">close</span>
-                </button>
-              )}
-            </div>
-          ))}
+            ))
+          )}
         </CardContent>
       </Card>
 

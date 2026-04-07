@@ -65,12 +65,19 @@ const authService = {
 
       // Normalizar la respuesta del backend
       const token = result.token || result.data?.token;
+      const refreshToken = result.refresh_token || result.data?.refresh_token;
       const user = result.user || result.data?.user || result.data;
       const role_id = result.role_id || result.data?.role_id;
+      
+      // Asegurarnos de que el refreshToken se guarde si viene en la respuesta del login
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
 
       return {
         success: true,
         token,
+        refreshToken,
         user,
         role_id,
         ...result
@@ -85,6 +92,29 @@ const authService = {
   },
 
   // Mantener otros métodos si existen y son necesarios
+  refreshToken: async (refreshToken) => {
+    try {
+      return await apiService.post('/auth/refresh', { refresh_token: refreshToken });
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      throw error;
+    }
+  },
+
+  logoutAll: async () => {
+    try {
+      const response = await apiService.post('/auth/logout-all');
+      apiService.clearToken();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('api:logout'));
+      }
+      return response;
+    } catch (error) {
+      console.error('Error en logout global:', error);
+      throw error;
+    }
+  },
+
   logout: async () => {
     // 🔧 FIX: El token se limpia en AuthContext, no aquí
     // Solo intentar notificar al servidor del logout

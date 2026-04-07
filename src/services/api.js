@@ -127,7 +127,10 @@ export const apiService = {
   isAuthenticated: () => !!localStorage.getItem('authToken'),
   getToken: () => localStorage.getItem('authToken'),
   setToken: token => localStorage.setItem('authToken', token),
-  clearToken: () => localStorage.removeItem('authToken'),
+  clearToken: () => {
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('refreshToken')
+  },
 }
 
 export default apiService

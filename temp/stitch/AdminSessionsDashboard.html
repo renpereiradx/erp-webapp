@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Global Sessions Dashboard | ERP Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: '#f0f7fe',
+                100: '#e0effd',
+                500: '#137fec',
+                600: '#0063d1',
+              },
+              slate: {
+                50: '#F7F9FC',
+              }
+            },
+            borderRadius: {
+              "DEFAULT": "0.25rem",
+              "lg": "0.5rem",
+              "xl": "0.75rem",
+              "full": "9999px"
+            },
+            fontFamily: {
+              headline: ["Inter", "sans-serif"],
+              body: ["Inter", "sans-serif"],
+              label: ["Inter", "sans-serif"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      body { font-family: 'Inter', sans-serif; background-color: #F7F9FC; }
+      .material-symbols-outlined { font-size: 20px; }
+      .fluent-card { background: white; border-radius: 0.5rem; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body class="antialiased text-slate-900">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-4 h-12 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center gap-4">
+<span class="text-lg font-semibold text-slate-900 dark:text-slate-50 tracking-tight">ERP Admin</span>
+<div class="hidden md:flex items-center space-x-6 h-full ml-8">
+<a class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 h-12 flex items-center font-medium text-sm" href="#">Dashboard</a>
+<a class="text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors h-12 flex items-center px-2 font-medium text-sm duration-150 ease-in-out" href="#">Inventory</a>
+<a class="text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors h-12 flex items-center px-2 font-medium text-sm duration-150 ease-in-out" href="#">Reports</a>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="relative flex items-center bg-slate-100 dark:bg-slate-800 rounded-full px-3 py-1 mr-4">
+<span class="material-symbols-outlined text-slate-500 text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-xs w-48 py-1" placeholder="Search..." type="text"/>
+</div>
+<button class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<img alt="Administrator profile" class="w-8 h-8 rounded-full border border-slate-200 ml-2" data-alt="professional portrait of a senior system administrator in a modern office environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_Umb65LA8AYSZiE_t69PqjX3kNCHBER_J38IXUgqwwNrewcRy8CuKgKW0PuI_vmu4XihxlPAyDXm6hllRD5e3Fng9eJs9L4FJfICUDa1VEpi8j0ir9DEVzm13hIqbRpxGpuq-23sIMuHSMuVa56iIein5gLt11a6h83NXYVAacLTSX8hTmUkRj9jdymZNWs7PVOdl3_Q0inoNHdfkVDtZLn3SG7_4EYNYhimq6Q6MXj1j9AHPOgqnkHO5cigpX2Ah4t6nNZWnIg"/>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-12 h-[calc(100vh-3rem)] w-64 flex flex-col py-4 bg-slate-50 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 z-40 hidden md:flex">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="hub">hub</span>
+</div>
+<div>
+<h2 class="text-blue-600 font-bold text-sm leading-tight">Global Sessions</h2>
+<p class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Admin Panel</p>
+</div>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm border-l-4 border-blue-600 font-semibold text-xs transition-all duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:translate-x-1 transition-transform font-semibold text-xs" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+                User Management
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:translate-x-1 transition-transform font-semibold text-xs" href="#">
+<span class="material-symbols-outlined" data-icon="devices">devices</span>
+                Active Sessions
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:translate-x-1 transition-transform font-semibold text-xs" href="#">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+                Security Logs
+            </a>
+</nav>
+<div class="px-3 py-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 font-semibold text-xs" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                Support
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-red-600 hover:bg-red-50 font-semibold text-xs transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Logout
+            </a>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="md:ml-64 pt-16 p-4 md:p-8 min-h-screen">
+<div class="max-w-7xl mx-auto">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+<div>
+<h1 class="text-2xl font-bold text-slate-900 tracking-tight">Global Sessions Dashboard</h1>
+<p class="text-slate-500 text-sm mt-1">Real-time monitoring and management of active user sessions across the ERP ecosystem.</p>
+</div>
+<div class="flex gap-4">
+<!-- Metric Card 1 -->
+<div class="fluent-card px-6 py-4 min-w-[160px] flex flex-col items-center border-l-4 border-l-blue-500">
+<span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Total Active</span>
+<span class="text-2xl font-bold text-slate-900">842</span>
+</div>
+<!-- Metric Card 2 -->
+<div class="fluent-card px-6 py-4 min-w-[160px] flex flex-col items-center border-l-4 border-l-orange-500">
+<span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Revoked Today</span>
+<span class="text-2xl font-bold text-slate-900">12</span>
+</div>
+<!-- Metric Card 3 -->
+<div class="fluent-card px-6 py-4 min-w-[160px] flex flex-col items-center border-l-4 border-l-red-500">
+<span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Anomalies</span>
+<span class="text-2xl font-bold text-red-600">3</span>
+</div>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="fluent-card p-3 mb-6 flex flex-wrap items-center gap-4">
+<div class="flex-1 relative min-w-[280px]">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-50 border-slate-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="Search by user, IP, or Device" type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-semibold text-slate-500">Status:</span>
+<select class="text-sm py-2 px-4 border-slate-200 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500">
+<option>All</option>
+<option>Active</option>
+<option>Idle</option>
+<option>Revoked</option>
+</select>
+</div>
+<div class="h-8 w-px bg-slate-200 mx-2"></div>
+<button class="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors">
+<span class="material-symbols-outlined" data-icon="block">block</span>
+                    Revoke All
+                </button>
+</div>
+<!-- High Density Data Grid -->
+<div class="fluent-card overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 border-b border-slate-200">
+<th class="px-6 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">User</th>
+<th class="px-6 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">IP Address</th>
+<th class="px-6 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Device/Browser</th>
+<th class="px-6 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Location</th>
+<th class="px-6 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Last Activity</th>
+<th class="px-6 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+<th class="px-6 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50/50 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<img alt="Elena Rodriguez" class="w-8 h-8 rounded-full object-cover" data-alt="close-up portrait of a woman with glasses in a professional business setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQfQHuPsLxI3bbcNl0oSpJIpNdW_1VdFqcEdSMxtbiVa2_tVbT-lgMr6UhWnn4nDuXIfIW7Vrc5jE9Eker47dX2_AFN8fQ8vbSYJI2GbpgqP6Fc2t6SZGe1E32tTkDaiBk47p1DiYjRVTJ5K2k_r3TrBhLO8IrxvMet4jZnljpEtxGk-7lq6IMb8bPz2JUBgVMHbG0YF-BY9iJREdNOefzltLi-2pgbBlFtN8bl6qbpM_7uDWdRKYkH6B7cMzaVdeuIUxbK-R5QQ"/>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900">Elena Rodriguez</span>
+<span class="text-[10px] text-slate-500">elena.r@enterprise.com</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-mono text-slate-600">192.168.1.105</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-sm">laptop_mac</span>
+<span class="text-sm text-slate-600">Chrome / Windows</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-sm">location_on</span>
+<span class="text-sm text-slate-600">Madrid, ES</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm text-slate-500">2 mins ago</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700 uppercase">Active</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<button class="px-3 py-1.5 text-xs font-semibold text-slate-600 border border-slate-200 rounded-md hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all">Revoke</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50/50 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<img alt="Marcus Smith" class="w-8 h-8 rounded-full object-cover" data-alt="professional portrait of a man with a friendly smile wearing a navy blazer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCK_5Rqa6N7NtVHnppNPpMahcGMEy47QYPaDWx_ZTWI1kT7a2S6PI80aqbsWNshmuMUbWfSScLBFdHQd-onqpd25yy2rJ0zCG5rTNb-4uLsHVD9ZvbDPTqju8YQ47gg4ERP9WfUBfqe2RaJ1RgOOX-HN8BL22pTlYq4avqDDGcgS28ESHoM49Y_GQgU4mj9mRarXVVmANxsjrdufkjYR54PcecTncYf4gkUBGFtBG2-EnD-lkGZhHtI1mQeV4o0VtwF1y2zGbsGDA"/>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900">Marcus Smith</span>
+<span class="text-[10px] text-slate-500">m.smith@enterprise.com</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-mono text-slate-600">45.12.33.21</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-sm">smartphone</span>
+<span class="text-sm text-slate-600">Safari / iPhone 15</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-sm">location_on</span>
+<span class="text-sm text-slate-600">New York, US</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm text-slate-500">1 hour ago</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 uppercase">Idle</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<button class="px-3 py-1.5 text-xs font-semibold text-slate-600 border border-slate-200 rounded-md hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all">Revoke</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50/50 transition-colors group bg-red-50/30">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<img alt="Unknown" class="w-8 h-8 rounded-full object-cover" data-alt="generic user placeholder icon with a subtle red background indicating warning" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjKkAgYvQ2S2UPU4nO2AesTpyTbf8OiwU8odQZiOSPEw746ZoXggi3VdC8esSrAcnaBLirk1Y-bshlemV1wIF_N4hu4Di1y24rQHEHJJIFPmR_9M_odV5zPuzcVe9dmJhv_ywXniTVaYldW33nxG_CdDJT-9enQRcn-zGa1SDWKEe0fLUbOakAwci28fqBPzzxeHU6GKLo9aH-Q5e2QG0OVhsklXC4BR-ej-8EKHp0R3dD4A7vOMK-t-CdrUZUVSvoJuEmaB6rNw"/>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-red-600">Anonymous Access</span>
+<span class="text-[10px] text-slate-500">id: 99420-tmp</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-mono text-red-600 font-bold">103.24.11.201</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-sm">terminal</span>
+<span class="text-sm text-slate-600">cURL / Unknown OS</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-sm">location_on</span>
+<span class="text-sm text-slate-600">Moscow, RU</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm text-red-500 font-semibold">Just now</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700 uppercase">Anomaly</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<button class="px-3 py-1.5 text-xs font-semibold bg-red-600 text-white rounded-md hover:bg-red-700 shadow-sm transition-all">Revoke Immediately</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50/50 transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<img alt="David Chen" class="w-8 h-8 rounded-full object-cover" data-alt="professional headshot of an asian man in a business casual outfit with soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAv6xs8MDNf7OIORHw9RI3Lyk_va0_R3s7qO5v3gUuSmrEwI1GX4UJpDTvw9P9Gr24RzFV2L8OUMr3wpljfBrSvtpR1gLnZKgaa4r-qLrsnFHNK7cRY__eIPbZFBhF6BJ2X6A9vaE1hJjnl2mzMKOTp8F6PaEp879YYGaTjSEk2pWqWrAfAHlzImKaZxJNjXjXrH_cZL5OS6h6eArYdTz3aeB1rMjEGxNv8lTGCwnTOfwIaUm-9iXO-QCOe3YpTMeXUXnOUNxqVA"/>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900">David Chen</span>
+<span class="text-[10px] text-slate-500">d.chen@enterprise.com</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-mono text-slate-600">114.12.5.88</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-sm">tablet</span>
+<span class="text-sm text-slate-600">Edge / Android 14</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-sm">location_on</span>
+<span class="text-sm text-slate-600">Singapore, SG</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm text-slate-500">45 mins ago</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700 uppercase">Active</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<button class="px-3 py-1.5 text-xs font-semibold text-slate-600 border border-slate-200 rounded-md hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all">Revoke</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination / Footer -->
+<div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+<span class="text-xs text-slate-500 font-medium">Showing 1 to 4 of 842 active sessions</span>
+<div class="flex gap-2">
+<button class="p-2 border border-slate-200 rounded-md hover:bg-white text-slate-400 disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-2 border border-slate-200 rounded-md hover:bg-white text-slate-600">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Dashboard Insights (Asymmetric Bento) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+<div class="md:col-span-2 fluent-card p-6">
+<h3 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-blue-500">analytics</span>
+                        Session Activity Trends
+                    </h3>
+<div class="h-48 flex items-end justify-between gap-2 px-2">
+<div class="w-full bg-slate-100 rounded-t h-[40%]"></div>
+<div class="w-full bg-slate-100 rounded-t h-[55%]"></div>
+<div class="w-full bg-slate-100 rounded-t h-[35%]"></div>
+<div class="w-full bg-blue-500 rounded-t h-[80%]"></div>
+<div class="w-full bg-slate-100 rounded-t h-[60%]"></div>
+<div class="w-full bg-slate-100 rounded-t h-[45%]"></div>
+<div class="w-full bg-slate-100 rounded-t h-[70%]"></div>
+<div class="w-full bg-blue-600 rounded-t h-[95%]"></div>
+<div class="w-full bg-slate-100 rounded-t h-[50%]"></div>
+<div class="w-full bg-slate-100 rounded-t h-[65%]"></div>
+<div class="w-full bg-slate-100 rounded-t h-[40%]"></div>
+<div class="w-full bg-blue-500 rounded-t h-[85%]"></div>
+</div>
+<div class="flex justify-between mt-2 text-[10px] text-slate-400 font-bold uppercase">
+<span>00:00</span>
+<span>06:00</span>
+<span>12:00</span>
+<span>18:00</span>
+<span>23:59</span>
+</div>
+</div>
+<div class="fluent-card p-6 flex flex-col justify-between">
+<div>
+<h3 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-orange-500">public</span>
+                            Geographic Distribution
+                        </h3>
+<ul class="space-y-3">
+<li class="flex items-center justify-between text-xs">
+<span class="text-slate-600">North America</span>
+<span class="font-bold">42%</span>
+</li>
+<li class="flex items-center justify-between text-xs">
+<span class="text-slate-600">Europe</span>
+<span class="font-bold">31%</span>
+</li>
+<li class="flex items-center justify-between text-xs">
+<span class="text-slate-600">Asia Pacific</span>
+<span class="font-bold">22%</span>
+</li>
+<li class="flex items-center justify-between text-xs">
+<span class="text-slate-600">Others</span>
+<span class="font-bold">5%</span>
+</li>
+</ul>
+</div>
+<div class="mt-4 pt-4 border-t border-slate-100">
+<button class="w-full py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-colors uppercase tracking-wider">
+                            View Detailed Map
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile only) -->
+<nav class="md:hidden fixed bottom-0 w-full h-16 bg-white border-t border-slate-200 flex justify-around items-center z-50">
+<button class="flex flex-col items-center gap-1 text-blue-600">
+<span class="material-symbols-outlined" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="text-[10px] font-bold">Dashboard</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined" data-icon="devices">devices</span>
+<span class="text-[10px] font-bold">Sessions</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+<span class="text-[10px] font-bold">Logs</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-[10px] font-bold">Settings</span>
+</button>
+</nav>
+</body></html>

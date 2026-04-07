@@ -107,7 +107,41 @@ class BusinessManagementAPI {
       }
 
       if (response.status === 401) {
-        // Token inválido o expirado - limpiar y redirigir al login
+        // Token inválido o expirado - Intentar refresh primero si hay token de refresh
+        // Evitar bucle infinito si la solicitud original ya era a /auth/refresh
+        if (!options._retry && !endpoint.includes('/auth/refresh')) {
+          options._retry = true;
+          const refreshToken = localStorage.getItem('refreshToken');
+          
+          if (refreshToken && refreshToken !== 'null' && refreshToken !== 'undefined') {
+            try {
+              // Llamada directa usando fetch para evitar dependencias circulares con authService
+              const refreshResponse = await fetch(`${this.baseUrl}/auth/refresh`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh_token: refreshToken })
+              });
+              
+              if (refreshResponse.ok) {
+                const data = await refreshResponse.json();
+                if (data.success && data.access_token) {
+                  // Guardar los nuevos tokens
+                  localStorage.setItem('authToken', data.access_token);
+                  if (data.refresh_token) {
+                    localStorage.setItem('refreshToken', data.refresh_token);
+                  }
+                  
+                  // Reintentar la petición original con el nuevo token
+                  return await this.makeRequest(endpoint, options);
+                }
+              }
+            } catch (refreshError) {
+              console.error('Error auto-refreshing token:', refreshError);
+            }
+          }
+        }
+        
+        // Si falló el refresh o no había token de refresh
         this.handleUnauthorized()
         throw new ApiError(
           'UNAUTHORIZED',
@@ -306,6 +340,7 @@ class BusinessManagementAPI {
 
   logout() {
     localStorage.removeItem('authToken')
+    localStorage.removeItem('refreshToken')
     // Emit logout event
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('api:logout'))
@@ -1142,3 +1177,4 @@ class BusinessManagementAPI {
 // ============================================================================
 
 export default BusinessManagementAPI
+PI
