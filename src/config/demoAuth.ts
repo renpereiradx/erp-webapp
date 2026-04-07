@@ -3,8 +3,18 @@
  * Provides mock authentication for development and testing without API
  */
 
+export interface DemoUser {
+  id: number;
+  email: string;
+  password?: string;
+  name: string;
+  role: string;
+  role_id: number;
+  permissions: string[];
+}
+
 // Demo users with different roles
-export const DEMO_USERS = {
+export const DEMO_USERS: Record<string, DemoUser> = {
   admin: {
     id: 1,
     email: 'admin@demo.com',
@@ -69,9 +79,11 @@ if (import.meta.env.DEV) {
  * Validar credenciales demo
  * @param {string} email - Email o username
  * @param {string} password - Password
- * @returns {Object|null} - Usuario demo o null si no es válido
+ * @returns {DemoUser|null} - Usuario demo o null si no es válido
  */
-export const validateDemoCredentials = (email, password) => {
+export const validateDemoCredentials = (email?: string, password?: string): DemoUser | null => {
+  if (!email || !password) return null;
+  
   // Buscar usuario por email exacto
   const userByEmail = Object.values(DEMO_USERS).find(user => user.email === email);
   if (userByEmail && userByEmail.password === password) {
@@ -88,10 +100,10 @@ export const validateDemoCredentials = (email, password) => {
 
 /**
  * Generar respuesta de login demo
- * @param {Object} user - Usuario demo
+ * @param {DemoUser} user - Usuario demo
  * @returns {Object} - Respuesta de login simulada
  */
-export const generateDemoLoginResponse = (user) => ({
+export const generateDemoLoginResponse = (user: DemoUser) => ({
   success: true,
   token: DEMO_TOKEN,
   user: {
@@ -111,7 +123,7 @@ export const generateDemoLoginResponse = (user) => ({
  * @param {string} password 
  * @returns {boolean}
  */
-export const isDemoCredentials = (email, password) => {
+export const isDemoCredentials = (email?: string, password?: string): boolean => {
   return validateDemoCredentials(email, password) !== null;
 };
 
@@ -128,19 +140,19 @@ export const getDemoCredentialsList = () => [
 
 /**
  * Verificar si el token es demo
- * @param {string} token 
+ * @param {string|null} token 
  * @returns {boolean}
  */
-export const isDemoToken = (token) => {
+export const isDemoToken = (token?: string | null): boolean => {
   return token === DEMO_TOKEN;
 };
 
 /**
  * Obtener usuario demo por token
- * @param {string} token 
- * @returns {Object|null}
+ * @param {string|null} token 
+ * @returns {DemoUser|null}
  */
-export const getDemoUserByToken = (token) => {
+export const getDemoUserByToken = (token?: string | null): DemoUser | null => {
   if (!isDemoToken(token)) return null;
   
   // En un caso real, decodificaríamos el JWT

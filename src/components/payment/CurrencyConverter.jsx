@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRightLeft, Calculator, RefreshCw, AlertCircle, TrendingUp } from 'lucide-react';
-import CurrencySelector from './CurrencySelector.jsx';
-import ExchangeRateDisplay from './ExchangeRateDisplay.jsx';
-import { ExchangeRateService } from '../../services/exchangeRateService.js';
+import CurrencySelector from './CurrencySelector';
+import ExchangeRateDisplay from './ExchangeRateDisplay';
+import { ExchangeRateService } from '../../services/exchangeRateService';
 
 /**
  * Currency Converter Component

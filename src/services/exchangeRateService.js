@@ -1,5 +1,5 @@
-import { apiClient } from './api.js'
-import { paymentApiDebug } from './paymentApiDebug.js'
+import { apiClient } from './api'
+import { paymentApiDebug } from './paymentApiDebug'
 
 // Track currencies whose exchange rate endpoints are unavailable to avoid redundant requests
 const unavailableCurrencyEndpoints = new Set()
@@ -77,7 +77,7 @@ class ExchangeRateService {
   /**
    * Normaliza la estructura de un tipo de cambio recibido desde la API
    * @param {any} payload
-   * @returns {import('../types/payment.js').ExchangeRateEnriched|null}
+   * @returns {import('../types/payment').ExchangeRateEnriched|null}
    */
   static normalizeExchangeRate(payload) {
     if (!payload || typeof payload !== 'object') {
@@ -145,7 +145,7 @@ class ExchangeRateService {
   /**
    * Normaliza una lista de tipos de cambio
    * @param {any} payload
-   * @returns {import('../types/payment.js').ExchangeRateEnriched[]}
+   * @returns {import('../types/payment').ExchangeRateEnriched[]}
    */
   static normalizeExchangeRateList(payload) {
     if (!payload) {
@@ -171,7 +171,7 @@ class ExchangeRateService {
    * Normaliza una respuesta paginada de tipos de cambio
    * @param {any} payload
    * @param {{ page?: number, page_size?: number }} fallback
-   * @returns {import('../types/payment.js').ExchangeRateEnrichedPaginatedResponse}
+   * @returns {import('../types/payment').ExchangeRateEnrichedPaginatedResponse}
    */
   static normalizePaginatedResponse(payload, fallback = {}) {
     const normalizedData = this.normalizeExchangeRateList(payload)
@@ -203,7 +203,7 @@ class ExchangeRateService {
   /**
    * Obtiene la lista de tipos de cambio más recientes para todas las monedas
    * Nueva API: GET /exchange-rates/latest
-   * @returns {Promise<import('../types/payment.js').ExchangeRateEnriched[]>}
+   * @returns {Promise<import('../types/payment').ExchangeRateEnriched[]>}
    */
   static async getLatestAll() {
     try {
@@ -228,7 +228,7 @@ class ExchangeRateService {
    * Obtiene todos los tipos de cambio, opcionalmente filtrando por moneda o fecha
    * Nueva API: GET /exchange-rates con query params
    * @param {{ currency_id?: number, code?: string, date?: string, from?: string, to?: string, page?: number, page_size?: number }} [query]
-   * @returns {Promise<import('../types/payment.js').ExchangeRateEnriched[]>}
+   * @returns {Promise<import('../types/payment').ExchangeRateEnriched[]>}
    */
   static async getAll(query = {}) {
     try {
@@ -296,7 +296,7 @@ class ExchangeRateService {
   /**
    * Obtiene tipos de cambio enriquecidos con paginación
    * @param {{ date?: string, page?: number, page_size?: number }} [query]
-   * @returns {Promise<import('../types/payment.js').ExchangeRateEnrichedPaginatedResponse>}
+   * @returns {Promise<import('../types/payment').ExchangeRateEnrichedPaginatedResponse>}
    */
   static async getEnriched(query = {}) {
     try {
@@ -346,7 +346,7 @@ class ExchangeRateService {
    * Obtiene un tipo de cambio por ID
    * Nueva API: GET /exchange-rates?id=1
    * @param {number} id - Exchange rate ID
-   * @returns {Promise<import('../types/payment.js').ExchangeRateEnriched>}
+   * @returns {Promise<import('../types/payment').ExchangeRateEnriched>}
    */
   static async getById(id) {
     try {
@@ -376,8 +376,8 @@ class ExchangeRateService {
   /**
    * Obtiene el tipo de cambio de una moneda en una fecha específica
    * Nueva API: GET /exchange-rates?currency_id=X&date=YYYY-MM-DD
-   * @param {import('../types/payment.js').ExchangeRateQuery} query - Query parameters
-   * @returns {Promise<import('../types/payment.js').ExchangeRate>}
+   * @param {import('../types/payment').ExchangeRateQuery} query - Query parameters
+   * @returns {Promise<import('../types/payment').ExchangeRate>}
    */
   static async getByDate(query) {
     let requestEndpoint = ''
@@ -468,8 +468,8 @@ class ExchangeRateService {
 
   /**
    * Obtiene tipos de cambio de una moneda en un rango de fechas
-   * @param {import('../types/payment.js').ExchangeRateRangeQuery} query - Range query parameters
-   * @returns {Promise<import('../types/payment.js').ExchangeRate[]>}
+   * @param {import('../types/payment').ExchangeRateRangeQuery} query - Range query parameters
+   * @returns {Promise<import('../types/payment').ExchangeRate[]>}
    */
   static async getByRange(query) {
     try {
@@ -533,7 +533,7 @@ class ExchangeRateService {
    * Crea un nuevo tipo de cambio
    * Nueva API: POST /exchange-rates
    * @param {{ currency_id: number, rate_to_base: number, date: string, source?: string }} data
-   * @returns {Promise<import('../types/payment.js').ExchangeRateEnriched>}
+   * @returns {Promise<import('../types/payment').ExchangeRateEnriched>}
    */
   static async create(data) {
     let payload
@@ -581,7 +581,7 @@ class ExchangeRateService {
    * Nueva API: PUT /exchange-rates/{id}
    * @param {number} id - Exchange rate ID
    * @param {{ currency_id: number, rate_to_base: number, date: string, source?: string }} data
-   * @returns {Promise<import('../types/payment.js').ExchangeRateEnriched>}
+   * @returns {Promise<import('../types/payment').ExchangeRateEnriched>}
    */
   static async update(id, data) {
     let payload
@@ -720,7 +720,7 @@ class ExchangeRateService {
   /**
    * Obtiene el tipo de cambio más reciente de una moneda
    * @param {number} currencyId - Currency ID
-   * @returns {Promise<import('../types/payment.js').ExchangeRate>}
+   * @returns {Promise<import('../types/payment').ExchangeRate>}
    */
   static async getLatest(currencyId) {
     return this.getByDate({ currency_id: currencyId })
@@ -791,7 +791,7 @@ class ExchangeRateService {
    * @param {number} fromCurrencyId - Source currency ID
    * @param {number} toCurrencyId - Target currency ID
    * @param {string} [date] - Optional date for historical conversion
-   * @returns {Promise<import('../types/payment.js').CurrencyConversionResult>}
+   * @returns {Promise<import('../types/payment').CurrencyConversionResult>}
    */
   static async convertCurrencyDetailed(
     amount,
@@ -830,7 +830,7 @@ class ExchangeRateService {
    * Valida si existe un tipo de cambio para una moneda en una fecha
    * @param {number} currencyId - Currency ID
    * @param {string} [date] - Optional date to check
-   * @returns {Promise<import('../types/payment.js').ExchangeRateValidation>}
+   * @returns {Promise<import('../types/payment').ExchangeRateValidation>}
    */
   static async validateExchangeRate(currencyId, date) {
     try {
@@ -876,7 +876,7 @@ class ExchangeRateService {
    * @param {number[]} currencyIds - Array of currency IDs
    * @param {string} startDate - Start date YYYY-MM-DD
    * @param {string} endDate - End date YYYY-MM-DD
-   * @returns {Promise<{[currencyId: number]: import('../types/payment.js').ExchangeRate[]}>}
+   * @returns {Promise<{[currencyId: number]: import('../types/payment').ExchangeRate[]}>}
    */
   static async getMultipleCurrencyRates(currencyIds, startDate, endDate) {
     try {

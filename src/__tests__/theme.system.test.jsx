@@ -27,7 +27,7 @@ import {
   validateStylesObject,
   testAllThemes,
   AVAILABLE_THEME_IDS
-} from '../utils/themeTestUtils.jsx';
+} from '../utils/themeTestUtils';
 
 // Mock localStorage globally
 const mockStorage = mockLocalStorage();

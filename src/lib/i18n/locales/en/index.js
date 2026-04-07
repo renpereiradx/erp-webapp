@@ -3,15 +3,15 @@
  * Imports and combines all translation modules
  */
 
-import { common } from './common.js'
-import { products } from './products.js'
-import { purchases } from './purchases.js'
-import { currencies } from './currencies.js'
-import { exchangeRates } from './exchangeRates.js'
-import { dashboard } from './dashboard.js'
-import { receivables } from './receivables.js'
-import { purchasePaymentsMvp } from './purchasePaymentsMvp.js'
-import { es } from '../es/index.js'
+import { common } from './common'
+import { products } from './products'
+import { purchases } from './purchases'
+import { currencies } from './currencies'
+import { exchangeRates } from './exchangeRates'
+import { dashboard } from './dashboard'
+import { receivables } from './receivables'
+import { purchasePaymentsMvp } from './purchasePaymentsMvp'
+import { es } from '../es/index'
 
 /**
  * Complete English translation dictionary

@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fireEvent, waitFor, screen } from '@testing-library/react';
-import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
+import { renderWithTheme } from '@/utils/themeTestUtils';
 
 // Mock toast
 const success = vi.fn();
@@ -103,7 +103,7 @@ vi.mock('@/store/useProductStore', () => ({
   default: (sel) => (typeof sel === 'function' ? sel(MOCK_STORE) : MOCK_STORE)
 }));
 
-import Products from '@/pages/Products.jsx';
+import Products from '@/pages/Products';
 
 describe('Products delete flow', () => {
   beforeEach(() => {

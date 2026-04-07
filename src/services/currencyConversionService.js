@@ -1,5 +1,5 @@
-import { apiClient } from './api.js'
-import { paymentApiDebug } from './paymentApiDebug.js'
+import { apiClient } from './api'
+import { paymentApiDebug } from './paymentApiDebug'
 
 const SERVICE_NAME = 'CurrencyConversionService'
 

@@ -1,7 +1,7 @@
-import { apiClient } from './api.js'
-import { paymentApiDebug } from './paymentApiDebug.js'
-import { DEMO_CONFIG } from '../config/demoAuth.js'
-import { DEMO_CURRENCIES_DATA } from '../config/demoData.js'
+import { apiClient } from './api'
+import { paymentApiDebug } from './paymentApiDebug'
+import { DEMO_CONFIG } from '../config/demoAuth'
+import { DEMO_CURRENCIES_DATA } from '../config/demoData'
 
 const SERVICE_NAME = 'CurrencyService'
 
@@ -38,7 +38,7 @@ class CurrencyService {
   /**
    * Normaliza la estructura de moneda proveniente de la API
    * @param {any} payload
-   * @returns {import('../types/payment.js').Currency|null}
+   * @returns {import('../types/payment').Currency|null}
    */
   static normalizeCurrency(payload) {
     if (!payload || typeof payload !== 'object') {
@@ -78,7 +78,7 @@ class CurrencyService {
   /**
    * Normaliza una colección de monedas
    * @param {any} payload
-   * @returns {import('../types/payment.js').Currency[]}
+   * @returns {import('../types/payment').Currency[]}
    */
   static normalizeCurrencyList(payload) {
     if (!payload) {
@@ -98,7 +98,7 @@ class CurrencyService {
 
   /**
    * Obtiene todas las monedas disponibles
-   * @returns {Promise<import('../types/payment.js').Currency[]>}
+   * @returns {Promise<import('../types/payment').Currency[]>}
    */
   static async getAll() {
     if (DEMO_CONFIG.enabled) {
@@ -128,7 +128,7 @@ class CurrencyService {
   /**
    * Obtiene una moneda por ID usando parámetros de ruta
    * @param {number} id - Currency ID
-   * @returns {Promise<import('../types/payment.js').Currency>}
+   * @returns {Promise<import('../types/payment').Currency>}
    */
   static async getById(id) {
     try {
@@ -155,7 +155,7 @@ class CurrencyService {
   /**
    * Obtiene una moneda por código usando parámetros de ruta
    * @param {string} code - Currency code (e.g., "USD", "PYG")
-   * @returns {Promise<import('../types/payment.js').Currency>}
+   * @returns {Promise<import('../types/payment').Currency>}
    */
   static async getByCode(code) {
     try {
@@ -228,7 +228,7 @@ class CurrencyService {
   /**
    * Obtiene todas las monedas con datos adicionales (enriched)
    * Incluye symbol, decimal_places, is_base
-   * @returns {Promise<import('../types/payment.js').Currency[]>}
+   * @returns {Promise<import('../types/payment').Currency[]>}
    */
   static async getAllEnriched() {
     try {
@@ -247,7 +247,7 @@ class CurrencyService {
 
   /**
    * Obtiene todas las monedas excepto la moneda base (PYG)
-   * @returns {Promise<import('../types/payment.js').Currency[]>}
+   * @returns {Promise<import('../types/payment').Currency[]>}
    */
   static async getAllExceptBase() {
     try {
@@ -268,7 +268,7 @@ class CurrencyService {
   /**
    * Busca monedas por nombre (búsqueda local)
    * @param {string} searchTerm - Término de búsqueda
-   * @returns {Promise<import('../types/payment.js').Currency[]>}
+   * @returns {Promise<import('../types/payment').Currency[]>}
    */
   static async searchByName(searchTerm) {
     try {
@@ -292,7 +292,7 @@ class CurrencyService {
 
   /**
    * Obtiene la moneda base del sistema (PYG)
-   * @returns {Promise<import('../types/payment.js').Currency>}
+   * @returns {Promise<import('../types/payment').Currency>}
    */
   static async getBaseCurrency() {
     try {
@@ -324,7 +324,7 @@ class CurrencyService {
 
   /**
    * Formatea el código de moneda para mostrar
-   * @param {import('../types/payment.js').Currency} currency - Currency object
+   * @param {import('../types/payment').Currency} currency - Currency object
    * @returns {string}
    */
   static formatCurrencyCode(currency) {
@@ -336,7 +336,7 @@ class CurrencyService {
 
   /**
    * Formatea el nombre completo de la moneda
-   * @param {import('../types/payment.js').Currency} currency - Currency object
+   * @param {import('../types/payment').Currency} currency - Currency object
    * @returns {string}
    */
   static formatCurrencyName(currency) {
@@ -348,7 +348,7 @@ class CurrencyService {
 
   /**
    * Verifica si una moneda es la moneda base
-   * @param {import('../types/payment.js').Currency} currency - Currency object
+   * @param {import('../types/payment').Currency} currency - Currency object
    * @returns {boolean}
    */
   static isBaseCurrency(currency) {
@@ -358,7 +358,7 @@ class CurrencyService {
   /**
    * Crea una nueva moneda
    * @param {{ currency_code: string, currency_name?: string, symbol?: string, is_base_currency?: boolean }} data
-   * @returns {Promise<import('../types/payment.js').Currency>}
+   * @returns {Promise<import('../types/payment').Currency>}
    */
   static async create(data) {
     let payload
@@ -384,7 +384,7 @@ class CurrencyService {
    * Actualiza una moneda existente
    * @param {number} id
    * @param {{ currency_code: string, currency_name?: string, symbol?: string, is_base_currency?: boolean }} data
-   * @returns {Promise<import('../types/payment.js').Currency>}
+   * @returns {Promise<import('../types/payment').Currency>}
    */
   static async update(id, data) {
     let payload

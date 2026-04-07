@@ -1,6 +1,6 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
-import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
+import { renderWithTheme } from '@/utils/themeTestUtils';
 import { vi } from 'vitest';
 
 // Mock toast
@@ -36,7 +36,7 @@ vi.mock('@/store/useProductStore', () => ({
   default: (sel) => (typeof sel === 'function' ? sel(STORE_STATE) : STORE_STATE)
 }));
 
-import Products from '@/pages/Products.jsx';
+import Products from '@/pages/Products';
 
 const createBaseStoreState = (overrides = {}) => ({
   products: [],

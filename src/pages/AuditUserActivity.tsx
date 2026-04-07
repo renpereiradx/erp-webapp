@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom';
 import auditService from '@/services/auditService';
 
 export default function AuditUserActivity() {
-  const { id } = useParams();
-  const [activity, setActivity] = useState(null);
+  const { id } = useParams<{ id: string }>();
+  const [activity, setActivity] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,7 +14,7 @@ export default function AuditUserActivity() {
   const fetchUserActivity = async () => {
     try {
       setLoading(true);
-      const data = await auditService.getUserActivity(id);
+      const data = await auditService.getUserActivity(id || '');
       setActivity(data);
     } catch (error) {
       console.error('Error fetching user activity:', error);
@@ -104,7 +104,7 @@ export default function AuditUserActivity() {
             <span className="material-symbols-outlined text-slate-400">info</span>
           </div>
           <div className="space-y-6">
-            {activity.actions_by_category.map((item) => (
+            {activity.actions_by_category.map((item: any) => (
               <div key={item.category} className="space-y-2">
                 <div className="flex justify-between text-sm font-bold">
                   <span className="text-slate-700">{item.category}</span>
@@ -134,7 +134,7 @@ export default function AuditUserActivity() {
             <button className="text-sm font-bold text-[#137fec] hover:underline uppercase tracking-widest text-[10px]">Ver todo</button>
           </div>
           <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-slate-200 before:via-slate-200 before:to-transparent">
-            {activity.recent_actions.map((action) => (
+            {activity.recent_actions.map((action: any) => (
               <div key={action.id} className="relative flex items-center gap-6">
                 <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ring-4 ring-white z-10 shadow-sm ${
                   action.success ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'

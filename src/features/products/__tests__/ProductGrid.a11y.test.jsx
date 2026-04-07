@@ -1,6 +1,6 @@
 import { describe, test, expect, vi, beforeAll } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
+import { renderWithTheme } from '@/utils/themeTestUtils';
 import React from 'react';
 import ProductGrid from '@/features/products/components/ProductGrid';
 

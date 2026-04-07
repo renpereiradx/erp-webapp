@@ -1,5 +1,6 @@
 import api from '@/services/api';
 import { DEMO_CONFIG, DEMO_USERS } from '../config/demoAuth';
+import { User, SuccessResponse, PaginatedResponse } from '@/types';
 
 const BASE_URL = '/api/v1/users';
 
@@ -10,10 +11,8 @@ const BASE_URL = '/api/v1/users';
 export const userService = {
   /**
    * Listar usuarios con filtros
-   * @param {Object} params - Query parameters (search, status, role_id, page, page_size, sort_by, sort_order)
-   * @returns {Promise<Object>}
    */
-  getUsers: async (params = {}) => {
+  getUsers: async (params: Record<string, any> = {}): Promise<PaginatedResponse<User>> => {
     try {
       const response = await api.get(BASE_URL, { params });
       return response;
@@ -25,10 +24,8 @@ export const userService = {
 
   /**
    * Obtener usuario por ID
-   * @param {string} id 
-   * @returns {Promise<Object>}
    */
-  getUserById: async (id) => {
+  getUserById: async (id: string): Promise<SuccessResponse & { data: User }> => {
     try {
       const response = await api.get(`${BASE_URL}/${id}`);
       return response;
@@ -40,10 +37,8 @@ export const userService = {
 
   /**
    * Crear un nuevo usuario
-   * @param {Object} userData 
-   * @returns {Promise<Object>}
    */
-  createUser: async (userData) => {
+  createUser: async (userData: Partial<User>): Promise<SuccessResponse & { data: User }> => {
     try {
       const response = await api.post(BASE_URL, userData);
       return response;
@@ -55,11 +50,8 @@ export const userService = {
 
   /**
    * Actualizar usuario
-   * @param {string} id 
-   * @param {Object} userData 
-   * @returns {Promise<Object>}
    */
-  updateUser: async (id, userData) => {
+  updateUser: async (id: string, userData: Partial<User>): Promise<SuccessResponse & { data: User }> => {
     try {
       const response = await api.put(`${BASE_URL}/${id}`, userData);
       return response;
@@ -71,10 +63,8 @@ export const userService = {
 
   /**
    * Eliminar usuario (Soft Delete)
-   * @param {string} id 
-   * @returns {Promise<Object>}
    */
-  deleteUser: async (id) => {
+  deleteUser: async (id: string): Promise<SuccessResponse> => {
     try {
       const response = await api.delete(`${BASE_URL}/${id}`);
       return response;
@@ -87,7 +77,7 @@ export const userService = {
   /**
    * Cambiar contraseña (Admin)
    */
-  changePasswordAdmin: async (id, data) => {
+  changePasswordAdmin: async (id: string, data: any): Promise<SuccessResponse> => {
     try {
       const response = await api.post(`${BASE_URL}/${id}/change-password`, data);
       return response;
@@ -100,13 +90,13 @@ export const userService = {
   /**
    * Obtener mi perfil
    */
-  getMe: async () => {
+  getMe: async (): Promise<SuccessResponse & { data: User }> => {
     // 🔧 Bypass en modo demo para evitar errores de red
     if (DEMO_CONFIG.enabled) {
       // Simular delay y retornar admin por defecto en demo
       return {
         success: true,
-        data: DEMO_USERS.demo // Usar el perfil demo configurado (admin)
+        data: DEMO_USERS.demo as User // Usar el perfil demo configurado (admin)
       };
     }
 
@@ -116,9 +106,8 @@ export const userService = {
 
   /**
    * Actualizar mi perfil
-   * @param {Object} data - { first_name, last_name, phone, avatar_url }
    */
-  updateMe: async (data) => {
+  updateMe: async (data: any): Promise<SuccessResponse & { data: User }> => {
     try {
       const response = await api.put(`${BASE_URL}/me`, data);
       return response;
@@ -131,7 +120,7 @@ export const userService = {
   /**
    * Cambiar mi contraseña
    */
-  changeMyPassword: async (data) => {
+  changeMyPassword: async (data: any): Promise<SuccessResponse> => {
     try {
       const response = await api.post(`${BASE_URL}/me/change-password`, data);
       return response;
@@ -144,7 +133,7 @@ export const userService = {
   /**
    * Activar usuario
    */
-  activateUser: async (id) => {
+  activateUser: async (id: string): Promise<SuccessResponse> => {
     try {
       const response = await api.post(`${BASE_URL}/${id}/activate`);
       return response;
@@ -157,7 +146,7 @@ export const userService = {
   /**
    * Desactivar usuario
    */
-  deactivateUser: async (id) => {
+  deactivateUser: async (id: string): Promise<SuccessResponse> => {
     try {
       const response = await api.post(`${BASE_URL}/${id}/deactivate`);
       return response;
@@ -170,7 +159,7 @@ export const userService = {
   /**
    * Asignar rol a usuario
    */
-  assignRole: async (userId, roleId) => {
+  assignRole: async (userId: string, roleId: string): Promise<SuccessResponse> => {
     try {
         const response = await api.post(`${BASE_URL}/${userId}/roles`, { role_id: roleId });
         return response;
@@ -183,7 +172,7 @@ export const userService = {
   /**
    * Eliminar rol de usuario
    */
-  removeRole: async (userId, roleId) => {
+  removeRole: async (userId: string, roleId: string): Promise<SuccessResponse> => {
       try {
           const response = await api.delete(`${BASE_URL}/${userId}/roles/${roleId}`);
           return response;

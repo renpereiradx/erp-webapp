@@ -7,16 +7,17 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Info, Ban, Trash2, ShieldCheck, CheckCircle, Mail, Phone, KeyRound, Edit2, MoreVertical, Calendar, User as UserIcon, Unlock, ChevronRight
+  Info, Ban, Trash2, ShieldCheck, CheckCircle, Mail, KeyRound, Edit2, History, Monitor, Calendar, User as UserIcon, Unlock
 } from 'lucide-react';
 import { EditUserModal } from '@/components/users/EditUserModal';
 import { ManageRolesPanel } from '@/components/users/ManageRolesPanel';
+import { User } from '@/types';
 
 const UserDetailedProfile = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useI18n();
-  const { selectedUser: user, loading, fetchUserById, activateUser, deactivateUser, deleteUser } = useUserStore();
+  const { selectedUser: user, loading, fetchUserById, activateUser, deactivateUser, deleteUser } = useUserStore() as any;
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isRolesModalOpen, setIsRolesModalOpen] = useState(false);
 
@@ -28,8 +29,21 @@ const UserDetailedProfile = () => {
   const initials = user ? `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}` : '';
   const fullName = user ? `${user.first_name} ${user.last_name}` : '';
 
-  const handleToggleStatus = async () => { if (user.status === 'active') { await deactivateUser(user.id); } else { await activateUser(user.id); } fetchUserById(user.id); };
-  const handleDelete = async () => { if (window.confirm(t('users.confirmDelete', { name: fullName }))) { const result = await deleteUser(user.id); if (result.success) navigate('/usuarios'); } };
+  const handleToggleStatus = async () => { 
+    if (user.status === 'active') { 
+      await deactivateUser(user.id); 
+    } else { 
+      await activateUser(user.id); 
+    } 
+    fetchUserById(user.id); 
+  };
+  
+  const handleDelete = async () => { 
+    if (window.confirm(t('users.confirmDelete', { name: fullName }))) { 
+      const result = await deleteUser(user.id); 
+      if (result.success) navigate('/usuarios'); 
+    } 
+  };
 
   return (
     <div className="min-h-screen bg-background-light p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
@@ -118,7 +132,7 @@ const UserDetailedProfile = () => {
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {user.roles?.map(role => (
+                {user.roles?.map((role: any) => (
                   <div key={role.id} className="p-4 rounded-xl border border-border-subtle bg-slate-50/50 hover:border-primary/20 transition-colors space-y-3">
                     <div className="flex items-center justify-between">
                       <Badge className={`border-none text-[9px] font-black uppercase tracking-wider h-5 ${role.id === "admin" ? "bg-indigo-50 text-indigo-600" : "bg-primary/10 text-primary"}`}>{role.name}</Badge>
@@ -150,7 +164,7 @@ const UserDetailedProfile = () => {
                 <div className="flex items-center gap-4 p-5 rounded-2xl bg-amber-50/50 border border-amber-100">
                   <div className="size-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-amber-500"><Calendar size={24} /></div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('users.profile.failedAttempts')}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('users.profile.failedAttempts', 'Intentos Fallidos')}</p>
                     <p className="text-2xl font-black text-amber-600 leading-none">{user.failed_login_attempts || 0}</p>
                   </div>
                 </div>

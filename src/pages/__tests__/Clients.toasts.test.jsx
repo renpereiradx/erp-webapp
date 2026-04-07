@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { waitFor, cleanup } from '@testing-library/react';
-import { renderWithTheme } from '../../utils/themeTestUtils.jsx';
+import { renderWithTheme } from '../../utils/themeTestUtils';
 
 vi.mock('../../hooks/useToast', () => {
   const errorFrom = vi.fn();
@@ -32,7 +32,7 @@ vi.mock('../../store/useClientStore', () => ({
   default: () => mockStoreImpl(),
 }));
 
-import ClientsPage from '../Clients.jsx';
+import ClientsPage from '../Clients';
 
 describe('ClientsPage toasts y telemetría', () => {
   it('emite toast de error y telemetría cuando el store expone error', async () => {

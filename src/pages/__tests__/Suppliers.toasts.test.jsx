@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { waitFor, cleanup } from '@testing-library/react';
-import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
+import { renderWithTheme } from '@/utils/themeTestUtils';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('@/hooks/useToast', () => {
@@ -45,7 +45,7 @@ vi.mock('@/store/useSupplierDirectoryStore', () => ({
   },
 }));
 
-import SuppliersPage from '@/pages/Suppliers.jsx';
+import SuppliersPage from '@/pages/Suppliers';
 
 describe('SuppliersPage toasts y telemetría', () => {
   it('emite toast de error y telemetría cuando el store expone error', async () => {

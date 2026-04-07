@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { waitFor } from '@testing-library/react';
-import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
+import { renderWithTheme } from '@/utils/themeTestUtils';
 
 // Mock toast
 const errorFrom = vi.fn();
@@ -61,7 +61,7 @@ vi.mock('@/store/useProductStore', () => ({
   default: (sel) => (typeof sel === 'function' ? sel(MOCK_STORE_STATE) : MOCK_STORE_STATE)
 }));
 
-import Products from '@/pages/Products.jsx';
+import Products from '@/pages/Products';
 
 describe('Products telemetry', () => {
   it('registra products.error.store y muestra toast ante error de store', async () => {

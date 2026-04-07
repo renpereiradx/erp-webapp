@@ -7,7 +7,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './styles/material-icons.css'
-import App from './App.jsx'
+import App from './App'
 
 // Simple error boundary para hooks
 window.addEventListener('error', (event) => {

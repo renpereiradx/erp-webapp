@@ -3,7 +3,7 @@
  * Run this to ensure all systems work correctly with mock data
  */
 
-import { MockDataService, MOCK_CONFIG } from './index.js';
+import { MockDataService, MOCK_CONFIG } from './index';
 
 // Test function to verify all services
 export const testMockDataSystem = async () => {

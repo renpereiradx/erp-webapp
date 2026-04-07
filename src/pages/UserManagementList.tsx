@@ -32,14 +32,14 @@ import {
   Eye, 
   Edit, 
   Trash2,
-  Calendar,
   CheckCircle,
-  MoreHorizontal,
+  X,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight
 } from 'lucide-react';
+import { User } from '@/types';
 
 export default function UserManagementList() {
   const { t } = useI18n();
@@ -47,37 +47,37 @@ export default function UserManagementList() {
   const { 
     users, roles, pagination, loading, fetchUsers, fetchRoles,
     setPage, setPageSize, filters, setFilters, deleteUser
-  } = useUserStore();
+  } = useUserStore() as any;
   
-  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [userToEdit, setUserToEdit] = useState(null);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
 
   React.useEffect(() => {
     fetchUsers();
     fetchRoles();
-  }, []);
+  }, [fetchUsers, fetchRoles]);
 
-  const toggleSelect = (id) => {
+  const toggleSelect = (id: string) => {
     setSelectedUsers(prev => prev.includes(id) ? prev.filter(userId => userId !== id) : [...prev, id]);
   };
 
   const selectedCount = selectedUsers.length;
 
-  const handleEditClick = (user) => {
+  const handleEditClick = (user: User) => {
     setUserToEdit(user);
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteClick = async (user) => {
+  const handleDeleteClick = async (user: User) => {
     if (window.confirm(t('users.confirmDelete', { name: `${user.first_name} ${user.last_name}` }) || `¿Estás seguro de eliminar a ${user.first_name}?`)) {
       await deleteUser(user.id);
     }
   };
 
-  const handleSelectAll = (checked) => {
-    setSelectedUsers(checked ? users.map(u => u.id) : []);
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedUsers(checked ? users.map((u: User) => u.id) : []);
   };
 
   return (
@@ -122,14 +122,14 @@ export default function UserManagementList() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="h-11 border-border-subtle bg-white text-xs font-bold uppercase tracking-wider text-text-secondary hover:text-primary">
                   <Filter className="size-4 mr-2" />
-                  {filters.role_id ? (roles.find(r => r.id === filters.role_id)?.name) : t('users.filterRole')}
+                  {filters.role_id ? (roles.find((r: any) => r.id === filters.role_id)?.name) : t('users.filterRole')}
                   <ChevronDown className="size-3 ml-2 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 rounded-xl shadow-fluent-16">
                 <DropdownMenuItem className="text-xs font-bold uppercase tracking-wider" onClick={() => setFilters({ role_id: '' })}>{t('users.filterRole')} (Todos)</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                {roles.map(role => (
+                {roles.map((role: any) => (
                   <DropdownMenuItem key={role.id} className="text-xs font-medium" onClick={() => setFilters({ role_id: role.id })}>{role.name}</DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -188,7 +188,7 @@ export default function UserManagementList() {
           <TableBody>
             {loading ? (
               <TableRow><TableCell colSpan={6} className="py-20 text-center text-slate-400 font-bold uppercase tracking-[0.2em] text-xs">Cargando Usuarios...</TableCell></TableRow>
-            ) : users.map((user) => (
+            ) : users.map((user: User) => (
               <TableRow key={user.id} className={`hover:bg-slate-50 transition-colors group ${selectedUsers.includes(user.id) ? 'bg-primary/5' : ''}`}>
                 <TableCell className="px-6 text-center"><input type="checkbox" className="rounded border-slate-300 text-primary" checked={selectedUsers.includes(user.id)} onChange={() => toggleSelect(user.id)} /></TableCell>
                 <TableCell className="py-4 px-6">

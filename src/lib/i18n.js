@@ -15,7 +15,7 @@
  */
 
 // Re-exportar todo desde el nuevo sistema modular
-export * from './i18n/index.js'
+export * from './i18n/index'
 
 // Mantener alias para compatibilidad total
-export { useI18n as default } from './i18n/index.js'
+export { useI18n as default } from './i18n/index'

@@ -3,19 +3,33 @@
  * Reemplaza Zustand para evitar problemas de compatibilidad
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import authService from '../services/authService';
 import apiService from '../services/api';
 import userService from '../services/userService';
+import { User } from '@/types';
 
-const AuthContext = createContext();
+interface AuthContextType {
+  isAuthenticated: boolean;
+  user: User | null;
+  token: string | null;
+  loading: boolean;
+  error: string | null;
+  authLoading: boolean;
+  login: (credentials: any) => Promise<{ success: boolean; message?: string }>;
+  logout: () => Promise<void>;
+  clearError: () => void;
+  initializeAuth: () => Promise<void>;
+}
 
-export const AuthProvider = ({ children }) => {
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
   const initializeAuth = useCallback(async () => {
@@ -42,7 +56,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (credentials) => {
+  const login = async (credentials: any) => {
     setLoading(true);
     setError(null);
     
@@ -85,7 +99,7 @@ export const AuthProvider = ({ children }) => {
         setError(errorMsg);
         return { success: false, message: errorMsg };
       }
-    } catch (error) {
+    } catch (error: any) {
       // Manejar errores de red o del servidor
       let errorMessage = 'Error de conexión. Verifica tu conexión a internet.';
       
@@ -156,7 +170,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       window.removeEventListener('api:unauthorized', handleUnauthorized);
     };
-  }, []);
+  }, [initializeAuth]);
 
   return (
     <AuthContext.Provider value={{

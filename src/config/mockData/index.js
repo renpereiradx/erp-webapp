@@ -9,23 +9,23 @@ import {
   DEMO_PRODUCT_DATA,
   PRODUCTS_CONFIG,
   createProductData,
-} from './products.js'
+} from './products'
 import {
   DEMO_SALES_DATA,
   DEMO_SALE_ITEMS_DATA,
   SALES_CONFIG,
   createSalesData,
-} from './sales.js'
+} from './sales'
 import {
   DEMO_RESERVATIONS_DATA,
   RESERVATIONS_CONFIG,
   createReservationsData,
-} from './reservations.js'
+} from './reservations'
 import {
   DEMO_SCHEDULES_DATA,
   SCHEDULES_CONFIG,
   createSchedulesData,
-} from './schedules.js'
+} from './schedules'
 
 // Global mock configuration
 export const MOCK_CONFIG = {
