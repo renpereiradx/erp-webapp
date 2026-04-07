@@ -7,16 +7,23 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserSession } from '@/types';
+
+interface Metrics {
+  active: number;
+  revokedToday: number;
+  anomalies: number;
+}
 
 export default function AdminSessionsDashboard() {
   const { t } = useI18n();
-  const [sessions, setSessions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [sessions, setSessions] = useState<UserSession[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('All');
   
   // Resumen
-  const [metrics, setMetrics] = useState({
+  const [metrics, setMetrics] = useState<Metrics>({
     active: 0,
     revokedToday: 0,
     anomalies: 0
@@ -31,16 +38,13 @@ export default function AdminSessionsDashboard() {
       setLoading(true);
       const response = await sessionService.getAllActiveSessions();
       
-      // Manejar diferentes formatos de respuesta del backend
-      const data = response.data || response || [];
-      const sessionList = Array.isArray(data) ? data : [];
-      
+      const sessionList = response.data || [];
       setSessions(sessionList);
       
       // Calcular métricas
       setMetrics({
         active: sessionList.filter(s => s.is_active !== false).length,
-        revokedToday: sessionList.filter(s => s.is_active === false).length, // Asumiendo data mock/real
+        revokedToday: sessionList.filter(s => s.is_active === false).length,
         anomalies: sessionList.filter(s => s.is_anomaly).length || 0
       });
       
@@ -52,7 +56,7 @@ export default function AdminSessionsDashboard() {
     }
   };
 
-  const handleRevoke = async (id) => {
+  const handleRevoke = async (id: string | number) => {
     try {
       await sessionService.adminRevokeSession(id);
       toast.success('Sesión revocada exitosamente');
@@ -163,11 +167,11 @@ export default function AdminSessionsDashboard() {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-slate-500">Cargando sesiones...</td>
+                  <td colSpan={7} className="px-6 py-8 text-center text-slate-500">Cargando sesiones...</td>
                 </tr>
               ) : filteredSessions.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-slate-500">No se encontraron sesiones activas</td>
+                  <td colSpan={7} className="px-6 py-8 text-center text-slate-500">No se encontraron sesiones activas</td>
                 </tr>
               ) : (
                 filteredSessions.map((session) => (
@@ -196,7 +200,7 @@ export default function AdminSessionsDashboard() {
                         <span className="material-symbols-outlined text-slate-400 text-sm">
                           {session.device_type === 'mobile' ? 'smartphone' : 'laptop_mac'}
                         </span>
-                        <span className="text-sm text-slate-600">{session.user_agent ? session.user_agent.substring(0, 20) + '...' : 'Browser / OS'}</span>
+                        <span className="text-sm text-slate-600">{session.user_agent ? (session.user_agent.length > 20 ? session.user_agent.substring(0, 20) + '...' : session.user_agent) : 'Browser / OS'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

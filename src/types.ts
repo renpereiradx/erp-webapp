@@ -20,7 +20,62 @@ export interface User {
   first_name: string;
   last_name: string;
   email: string;
+  username?: string;
   status: string;
+  avatar_url?: string;
+  roles?: Array<{ id: string; name: string }>;
+  phone?: string;
+  created_at?: string;
+  updated_at?: string;
+  last_login_at?: string;
+  sessions_count?: number;
+}
+
+export interface UserSession {
+  id: string | number;
+  user_id: string;
+  token_hash?: string;
+  ip_address: string;
+  user_agent: string;
+  device_type: 'desktop' | 'mobile' | 'tablet' | string;
+  location_info?: string;
+  is_active: boolean;
+  is_current?: boolean;
+  is_idle?: boolean;
+  is_anomaly?: boolean;
+  last_activity: string; // ISO Date
+  expires_at: string; // ISO Date
+  created_at: string; // ISO Date
+  revoked_at?: string;
+  revoked_by?: string;
+  revoke_reason?: string;
+  user?: Partial<User>;
+}
+
+export interface SessionConfig {
+  id: number;
+  role_id: string;
+  max_concurrent_sessions: number;
+  session_timeout_minutes: number;
+  inactivity_timeout_minutes: number;
+  require_device_verification: boolean;
+  allow_multiple_locations: boolean;
+  force_logout_on_password_change: boolean;
+}
+
+export interface UserActivity {
+  id: number | string;
+  user_id: string;
+  session_id?: string | number;
+  activity_type: string;
+  endpoint?: string;
+  http_method?: string;
+  ip_address: string;
+  user_agent: string;
+  request_data?: string;
+  response_status?: number;
+  duration_ms?: number;
+  created_at: string;
 }
 
 // ============================================================================

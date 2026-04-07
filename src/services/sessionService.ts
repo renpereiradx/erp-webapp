@@ -1,4 +1,5 @@
 import api from './api';
+import { UserSession, SessionConfig, UserActivity, PaginatedResponse, SuccessResponse } from '@/types';
 
 const BASE_URL = '/sessions';
 const ADMIN_BASE_URL = '/admin/sessions';
@@ -6,9 +7,8 @@ const ADMIN_BASE_URL = '/admin/sessions';
 export const sessionService = {
   /**
    * Obtiene las sesiones activas del usuario actual.
-   * @returns {Promise<Object>}
    */
-  getActiveSessions: async () => {
+  getActiveSessions: async (): Promise<SuccessResponse & { data: UserSession[] }> => {
     try {
       return await api.get(`${BASE_URL}/active`);
     } catch (error) {
@@ -19,10 +19,8 @@ export const sessionService = {
 
   /**
    * Obtiene el historial de sesiones del usuario.
-   * @param {Object} params - Query parameters (page, page_size)
-   * @returns {Promise<Object>}
    */
-  getSessionHistory: async (params = { page: 1, page_size: 20 }) => {
+  getSessionHistory: async (params: { page?: number; page_size?: number } = { page: 1, page_size: 20 }): Promise<PaginatedResponse<UserSession>> => {
     try {
       return await api.get(`${BASE_URL}/history`, { params });
     } catch (error) {
@@ -33,10 +31,8 @@ export const sessionService = {
 
   /**
    * Revoca una sesion especifica.
-   * @param {string|number} id
-   * @returns {Promise<Object>}
    */
-  revokeSession: async (id) => {
+  revokeSession: async (id: string | number): Promise<SuccessResponse> => {
     try {
       return await api.post(`${BASE_URL}/${id}/revoke`);
     } catch (error) {
@@ -47,9 +43,8 @@ export const sessionService = {
 
   /**
    * Revoca todas las sesiones del usuario excepto la actual.
-   * @returns {Promise<Object>}
    */
-  revokeAllOtherSessions: async () => {
+  revokeAllOtherSessions: async (): Promise<SuccessResponse & { revoked_count?: number }> => {
     try {
       return await api.post(`${BASE_URL}/revoke-all`);
     } catch (error) {
@@ -60,10 +55,8 @@ export const sessionService = {
 
   /**
    * Obtiene el log de actividad del usuario.
-   * @param {Object} params - Query parameters (page, page_size)
-   * @returns {Promise<Object>}
    */
-  getActivityLog: async (params = { page: 1, page_size: 20 }) => {
+  getActivityLog: async (params: { page?: number; page_size?: number } = { page: 1, page_size: 20 }): Promise<PaginatedResponse<UserActivity>> => {
     try {
       return await api.get(`${BASE_URL}/activity`, { params });
     } catch (error) {
@@ -74,9 +67,8 @@ export const sessionService = {
 
   /**
    * Obtiene la configuracion de sesion para el rol del usuario.
-   * @returns {Promise<Object>}
    */
-  getSessionConfig: async () => {
+  getSessionConfig: async (): Promise<SuccessResponse & { data: SessionConfig }> => {
     try {
       return await api.get(`${BASE_URL}/config`);
     } catch (error) {
@@ -91,10 +83,8 @@ export const sessionService = {
 
   /**
    * Obtiene todas las sesiones activas (solo admin).
-   * @param {Object} params - Posibles filtros (page, page_size, search, status)
-   * @returns {Promise<Object>}
    */
-  getAllActiveSessions: async (params = {}) => {
+  getAllActiveSessions: async (params: Record<string, any> = {}): Promise<SuccessResponse & { data: UserSession[] }> => {
     try {
       return await api.get(`${ADMIN_BASE_URL}/all`, { params });
     } catch (error) {
@@ -105,10 +95,8 @@ export const sessionService = {
 
   /**
    * Revoca una sesion especifica de cualquier usuario (solo admin).
-   * @param {string|number} id
-   * @returns {Promise<Object>}
    */
-  adminRevokeSession: async (id) => {
+  adminRevokeSession: async (id: string | number): Promise<SuccessResponse> => {
     try {
       return await api.post(`${ADMIN_BASE_URL}/${id}/revoke`);
     } catch (error) {

@@ -6,10 +6,11 @@ import {
   generateDemoLoginResponse,
   isDemoCredentials 
 } from '../config/demoAuth';
+import { SuccessResponse } from '@/types';
 
 // Helper con retry simple (máx 2 reintentos)
-const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
-  let lastError;
+const _fetchWithRetry = async <T>(requestFn: () => Promise<T>, maxRetries = 2): Promise<T> => {
+  let lastError: any;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await requestFn();
@@ -26,10 +27,10 @@ const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
 };
 
 const authService = {
-  login: async (credentials) => {
+  login: async (credentials: { username?: string; email?: string; password?: string }): Promise<any> => {
     const startTime = Date.now();
-    const username = credentials.username || credentials.email;
-    const password = credentials.password;
+    const username = credentials.username || credentials.email || '';
+    const password = credentials.password || '';
     
     // Verificar si son credenciales demo
     if (DEMO_CONFIG.enabled && isDemoCredentials(username, password)) {
@@ -82,7 +83,7 @@ const authService = {
         role_id,
         ...result
       };
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('auth.login.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -92,7 +93,7 @@ const authService = {
   },
 
   // Mantener otros métodos si existen y son necesarios
-  refreshToken: async (refreshToken) => {
+  refreshToken: async (refreshToken: string): Promise<any> => {
     try {
       return await apiService.post('/auth/refresh', { refresh_token: refreshToken });
     } catch (error) {
@@ -101,7 +102,7 @@ const authService = {
     }
   },
 
-  logoutAll: async () => {
+  logoutAll: async (): Promise<SuccessResponse> => {
     try {
       const response = await apiService.post('/auth/logout-all');
       apiService.clearToken();
@@ -115,12 +116,12 @@ const authService = {
     }
   },
 
-  logout: async () => {
+  logout: async (): Promise<SuccessResponse> => {
     // 🔧 FIX: El token se limpia en AuthContext, no aquí
     // Solo intentar notificar al servidor del logout
     const currentToken = apiService.getToken();
     if (currentToken === 'demo-jwt-token-12345') {
-      return { success: true, message: 'Demo logout successful' };
+      return { success: true, message: 'Demo logout successful' } as SuccessResponse;
     }
 
     // Para API real, intentar logout en el servidor
@@ -129,7 +130,7 @@ const authService = {
     } catch (error) {
       // Si falla el logout de API, está OK - el token se limpia en AuthContext
       console.warn('Server logout failed:', error);
-      return { success: true, message: 'Logged out locally' };
+      return { success: true, message: 'Logged out locally' } as SuccessResponse;
     }
   },
 };

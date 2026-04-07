@@ -8,15 +8,23 @@ import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { User, UserSession } from '@/types';
 
 export default function MyProfileAndSecurity() {
   const { t } = useI18n();
-  const [loading, setLoading] = useState(true);
-  const [sessionsLoading, setSessionsLoading] = useState(false);
-  const [userData, setUserData] = useState({ id: '', first_name: '', last_name: '', email: '', username: '', phone: '', avatar_url: '', created_at: '', roles: [], sessions_count: 0 });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [sessionsLoading, setSessionsLoading] = useState<boolean>(false);
+  const [userData, setUserData] = useState<User>({ 
+    id: '', 
+    first_name: '', 
+    last_name: '', 
+    email: '', 
+    username: '', 
+    status: 'active' 
+  });
   const [profileForm, setProfileForm] = useState({ first_name: '', last_name: '', phone: '' });
   const [passwordForm, setPasswordForm] = useState({ current_password: '', new_password: '', confirm_password: '' });
-  const [activeSessions, setActiveSessions] = useState([]);
+  const [activeSessions, setActiveSessions] = useState<UserSession[]>([]);
 
   useEffect(() => { 
     fetchProfileData(); 
@@ -29,7 +37,11 @@ export default function MyProfileAndSecurity() {
       const response = await userService.getMe();
       if (response.success && response.data) {
         setUserData(response.data);
-        setProfileForm({ first_name: response.data.first_name || '', last_name: response.data.last_name || '', phone: response.data.phone || '' });
+        setProfileForm({ 
+          first_name: response.data.first_name || '', 
+          last_name: response.data.last_name || '', 
+          phone: response.data.phone || '' 
+        });
       }
     } catch (error) { 
       toast.error(t('profile.errors.fetch_failed')); 
@@ -43,12 +55,9 @@ export default function MyProfileAndSecurity() {
       setSessionsLoading(true);
       const response = await sessionService.getActiveSessions();
       
-      // Manejar respuesta tanto de BusinessManagementAPI (envuelto en data) como de apiService legacy
       const data = response.data || response;
       if (Array.isArray(data)) {
         setActiveSessions(data);
-      } else if (response.success && Array.isArray(response.data)) {
-        setActiveSessions(response.data);
       }
     } catch (error) {
       console.error('Error fetching sessions', error);
@@ -57,7 +66,7 @@ export default function MyProfileAndSecurity() {
     }
   };
 
-  const handleRevokeSession = async (sessionId) => {
+  const handleRevokeSession = async (sessionId: string | number) => {
     try {
       await sessionService.revokeSession(sessionId);
       toast.success('Sesión revocada exitosamente');
@@ -79,7 +88,7 @@ export default function MyProfileAndSecurity() {
     }
   };
 
-  const handleProfileUpdate = async (e) => {
+  const handleProfileUpdate = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     try {
       const response = await userService.updateMe(profileForm);
@@ -92,7 +101,7 @@ export default function MyProfileAndSecurity() {
     }
   };
 
-  const handlePasswordChange = async (e) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordForm.new_password !== passwordForm.confirm_password) { 
       toast.error(t('profile.errors.password_mismatch')); 
@@ -108,7 +117,7 @@ export default function MyProfileAndSecurity() {
         toast.success(t('profile.success.password_changed')); 
         setPasswordForm({ current_password: '', new_password: '', confirm_password: '' }); 
       }
-    } catch (error) { 
+    } catch (error: any) { 
       toast.error(error.response?.data?.error?.message || t('profile.errors.password_change_failed')); 
     }
   };
