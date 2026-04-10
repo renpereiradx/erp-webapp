@@ -37,7 +37,7 @@ export const ABCSummary: React.FC<ABCSummaryProps> = ({ items }) => {
               <div className="flex-1">
                 <div className="flex justify-between items-end mb-1">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{item.label}</p>
-                  <p className="text-sm font-black font-mono">{item.percentage}% Valor</p>
+                  <p className="text-sm font-black font-mono">{Number(item.percentage).toFixed(2)}% Valor</p>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                   <div className={`${colors.bar} h-full rounded-full`} style={{ width: `${item.percentage}%` }}></div>

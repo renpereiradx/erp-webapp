@@ -49,8 +49,8 @@ export const InventoryRisk: React.FC = () => {
             <ImpactCard 
               title="Pérdida Potencial por Stock Muerto"
               value={`Gs. ${deadStockData.summary.potential_loss.toLocaleString('es-PY')}`}
-              trend="vs. mes anterior (alto riesgo identificado)"
-              trendValue="-12.4%"
+              trend="capital inmovilizado identificado"
+              trendValue={`${deadStockData.summary.percentage_of_stock.toFixed(1)}%`}
               trendType="negative"
               icon="trending_down"
               iconColorClass="text-red-600"
@@ -61,8 +61,8 @@ export const InventoryRisk: React.FC = () => {
             <ImpactCard 
               title="Valor de Reorden Recomendado"
               value={`Gs. ${forecastData.summary.reorder_value.toLocaleString('es-PY')}`}
-              trend="necesario para mitigar riesgo de stockout (30d)"
-              trendValue="+5.2%"
+              trend={`para mitigar riesgo en ${forecastData.forecast_days} días`}
+              trendValue={`${forecastData.summary.products_at_risk}`}
               trendType="positive"
               icon="shopping_cart_checkout"
               iconColorClass="text-primary"
@@ -71,43 +71,55 @@ export const InventoryRisk: React.FC = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Dead Stock Table Section */}
-          <div className="lg:col-span-2">
+        <div className="flex flex-col gap-10">
+          {/* Section 1: Dead Stock Analysis (Full Width) */}
+          <section>
             {deadStockData && (
               <DeadStockTable products={deadStockData.products} />
             )}
-          </div>
+          </section>
 
-          {/* Stockout Forecast List Section */}
-          <div className="lg:col-span-1">
+          {/* Section 2: Stockout Forecast (Grid distribution) */}
+          <section>
             {forecastData && (
               <ForecastRiskList products={forecastData.risk_products} />
             )}
-          </div>
+          </section>
         </div>
       </main>
 
       {/* Footer / Insight Area */}
-      <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6">
+      <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 py-8">
         <div className="max-w-[1440px] mx-auto px-6">
-          <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 flex flex-col md:flex-row items-center gap-4 border border-primary/10 shadow-sm">
-            <div className="bg-primary text-white p-2 rounded-lg">
-              <span className="material-symbols-outlined text-xl">lightbulb</span>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 border border-slate-200 dark:border-slate-800 shadow-xl relative overflow-hidden">
+            {/* Accent decoration */}
+            <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+            
+            <div className="bg-primary/10 text-primary p-4 rounded-2xl shrink-0">
+              <span className="material-symbols-outlined text-4xl">analytics</span>
             </div>
+            
             <div className="flex-1 font-display">
-              <h4 className="text-sm font-bold text-primary mb-1 uppercase tracking-tight">Impacto del Capital Inmovilizado</h4>
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                Actualmente, el <span className="font-bold font-mono">18% de su inventario</span> total califica como stock muerto. La ejecución de las liquidaciones recomendadas podría liberar un flujo de caja estimado de <span className="font-bold font-mono text-primary">Gs. 32.850.000</span> para reinvertir en productos de alta rotación identificados en el pronóstico.
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Análisis de Capital Inmovilizado</h4>
+                <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-black rounded-full uppercase tracking-widest animate-pulse">Acción Recomendada</span>
+              </div>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium text-base">
+                Su inventario presenta un <span className="font-black font-mono text-rose-600 text-lg">{deadStockData?.summary.percentage_of_stock.toFixed(1)}% de stock sin movimiento</span>. 
+                La ejecución inmediata de las liquidaciones sugeridas liberaría un flujo de caja de <span className="font-black font-mono text-primary text-xl underline decoration-primary/30 underline-offset-4">Gs. {deadStockData?.summary.potential_loss.toLocaleString('es-PY')}</span>, 
+                capital crítico para cubrir el reabastecimiento de los <span className="font-bold text-slate-900 dark:text-white">{forecastData?.summary.products_at_risk} productos en riesgo</span> de agotamiento detectados.
               </p>
             </div>
-            <button className="text-primary text-sm font-bold border border-primary px-4 py-2 rounded-lg hover:bg-primary hover:text-white transition-all whitespace-nowrap uppercase tracking-wider">
-              Ver Plan de Mitigación
-            </button>
-          </div>
-          <div className="mt-6 flex justify-between items-center text-xs text-slate-400 font-mono">
-            <p>© 2024 ERP Inventario - Módulo de Inteligencia de Riesgos</p>
-            <p>Última actualización: Hoy, 08:45 AM</p>
+            
+            <div className="shrink-0 w-full md:w-auto">
+              <button 
+                onClick={() => alert("Generando plan de liquidación y reabastecimiento estratégico...")}
+                className="w-full bg-primary hover:bg-primary/90 text-white font-black px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-primary/20 uppercase tracking-widest text-sm flex items-center justify-center gap-2 group"
+              >
+                Ejecutar Plan de Mitigación
+                <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              </button>
+            </div>
           </div>
         </div>
       </footer>

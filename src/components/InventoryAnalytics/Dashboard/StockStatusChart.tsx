@@ -62,7 +62,10 @@ export const StockStatusChart: React.FC<StockStatusChartProps> = ({
                 <div className={`size-3 rounded-full ${item.colorClass}`}></div>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{item.label}</p>
               </div>
-              <p className="text-lg font-bold font-mono">{item.percentage}% <span className="text-xs font-normal text-slate-400 font-display">({item.count} items)</span></p>
+              <p className="text-lg font-bold font-mono">
+                {Number(item.percentage).toFixed(2)}% 
+                <span className="text-xs font-normal text-slate-400 font-display"> ({item.count} items)</span>
+              </p>
             </div>
           ))}
         </div>

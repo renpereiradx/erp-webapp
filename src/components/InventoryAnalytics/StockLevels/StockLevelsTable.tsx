@@ -3,9 +3,10 @@ import { StockLevelProduct } from '../../../types/inventoryAnalytics';
 
 export interface StockLevelsTableProps {
   products: StockLevelProduct[];
+  totalItems?: number;
 }
 
-export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products }) => {
+export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, totalItems = 0 }) => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'IN_STOCK':
@@ -54,54 +55,71 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products }) 
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {products.map((product) => (
-              <tr key={product.product_id} className="text-sm hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                <td className="py-4 px-4">
-                  <div className="flex items-center gap-3">
-                    <div className="size-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
-                      <span className="material-symbols-outlined">image</span>
+            {products.map((product) => {
+              // Soporte para variaciones de nombres de campo entre endpoints
+              const resolveStatus = () => {
+                const raw = product.status || (product as any).priority || '';
+                if (raw === 'URGENT' || raw === 'OUT_OF_STOCK') return 'OUT_OF_STOCK';
+                if (raw === 'HIGH' || raw === 'LOW_STOCK' || raw === 'MEDIUM') return 'LOW_STOCK';
+                if (raw === 'OVERSTOCK') return 'OVERSTOCK';
+                return 'IN_STOCK';
+              };
+
+              const status = resolveStatus();
+              const daysStock = product.days_of_stock ?? (product as any).days_until_stockout ?? 0;
+              const unitCost = product.unit_cost ?? 
+                              (product.current_stock > 0 ? product.stock_value / product.current_stock : (product as any).estimated_cost / ((product as any).reorder_quantity || 1));
+              const totalValue = product.stock_value ?? (product as any).estimated_cost ?? 0;
+
+              return (
+                <tr key={product.product_id} className="text-sm hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                        <span className="material-symbols-outlined text-xl">package_2</span>
+                      </div>
+                      <span className="font-bold text-slate-900 dark:text-slate-100">{product.product_name}</span>
                     </div>
-                    <span className="font-bold text-slate-900 dark:text-slate-100">{product.product_name}</span>
-                  </div>
-                </td>
-                <td className="py-4 px-4">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-mono text-slate-500">{product.sku}</span>
-                    <span className="text-xs text-slate-400">{product.category_name}</span>
-                  </div>
-                </td>
-                <td className="py-4 px-4 text-center font-mono">
-                  <div className="flex flex-col">
-                    <span className="font-black">{product.current_stock}</span>
-                    <span className="text-[10px] text-slate-400">Mín: {product.min_stock}</span>
-                  </div>
-                </td>
-                <td className="py-4 px-4 text-center font-mono">
-                  <span className={`font-bold ${product.days_of_stock <= 5 ? 'text-rose-500' : 'text-slate-700 dark:text-slate-300'}`}>
-                    {product.days_of_stock} d
-                  </span>
-                </td>
-                <td className="py-4 px-4 text-center">
-                  {getStatusBadge(product.status)}
-                </td>
-                <td className="py-4 px-4 text-right font-medium font-mono">
-                  Gs. {product.unit_cost.toLocaleString('es-PY')}
-                </td>
-                <td className="py-4 px-4 text-right font-black text-primary font-mono">
-                  Gs. {product.stock_value.toLocaleString('es-PY')}
-                </td>
-                <td className="py-4 px-4 text-center">
-                  <button className="p-2 text-slate-400 hover:text-primary transition-colors">
-                    <span className="material-symbols-outlined text-lg">more_vert</span>
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-mono text-slate-500">{product.sku}</span>
+                      <span className="text-xs text-slate-400">{product.category_name}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-center font-mono">
+                    <div className="flex flex-col">
+                      <span className="font-black">{product.current_stock}</span>
+                      <span className="text-[10px] text-slate-400">Mín: {product.min_stock}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-center font-mono">
+                    <span className={`font-bold ${daysStock <= 5 ? 'text-rose-500' : 'text-slate-700 dark:text-slate-300'}`}>
+                      {Number(daysStock).toFixed(1)} d
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    {getStatusBadge(status)}
+                  </td>
+                  <td className="py-4 px-4 text-right font-medium font-mono">
+                    Gs. {(unitCost || 0).toLocaleString('es-PY')}
+                  </td>
+                  <td className="py-4 px-4 text-right font-black text-primary font-mono">
+                    Gs. {(totalValue || 0).toLocaleString('es-PY')}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <button className="p-2 text-slate-400 hover:text-primary transition-colors">
+                      <span className="material-symbols-outlined text-lg">more_vert</span>
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
       <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 flex items-center justify-between border-t border-slate-200 dark:border-slate-700 font-mono">
-        <p className="text-xs text-slate-500">Mostrando {products.length} de 150 productos</p>
+        <p className="text-xs text-slate-500">Mostrando {products.length} de {totalItems || products.length} productos</p>
         <div className="flex gap-2">
           <button className="px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold disabled:opacity-50" disabled>Anterior</button>
           <button className="px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold">Siguiente</button>

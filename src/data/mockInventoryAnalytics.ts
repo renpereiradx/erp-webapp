@@ -210,6 +210,7 @@ export const mockInventoryDashboard: InventoryDashboardData = {
   generated_at: new Date().toISOString(),
   kpis: {
     total_value: 250000000,
+    potential_profit: 70000000,
     turnover_rate: 4.2,
     days_of_inventory: 87,
     stockout_rate: 3.3,
