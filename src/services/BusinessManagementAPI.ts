@@ -23,14 +23,6 @@ class BusinessManagementAPI {
       ...API_CONFIG.defaultHeaders,
       ...config.defaultHeaders,
     }
-
-    // Log de inicialización solo en desarrollo
-    if (API_CONFIG.isDevelopment()) {
-      console.debug('[BusinessManagementAPI] initialized', {
-        baseUrl: this.baseUrl,
-        timeout: this.timeout,
-      })
-    }
   }
 
   // ============================================================================
@@ -311,8 +303,47 @@ class BusinessManagementAPI {
     return this.post('/sale/payment', data, options)
   }
 
+  async processSalePaymentCashRegister(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/payment/process-partial', data, options)
+  }
+
   async getSalePaymentStatus(id: string | number, options: RequestOptions = {}): Promise<any> {
     return this.get(`/sale/${id}/payment-status`, options)
+  }
+
+  async getSalePaymentDetails(saleId: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/payment/details/${saleId}`, options)
+  }
+
+  async getChangeStatistics(options: RequestOptions = {}): Promise<any> {
+    return this.get('/payment/statistics/change', options)
+  }
+
+  // ============================================================================
+  // PURCHASE METHODS
+  // ============================================================================
+
+  async getPurchasesByDateRange(startDate: string, endDate: string, page = 1, pageSize = 50, options: RequestOptions = {}): Promise<any> {
+    return this.get('/purchase/date_range/', {
+      ...options,
+      params: { ...options.params, start_date: startDate, end_date: endDate, page, page_size: pageSize }
+    })
+  }
+
+  async getPurchaseById(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/purchase/${id}`, options)
+  }
+
+  async processPurchasePayment(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/purchase/payment/process', data, options)
+  }
+
+  async processPurchasePaymentCashRegister(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/cash-registers/payments/purchase', data, options)
+  }
+
+  async getPurchasePaymentStatistics(options: RequestOptions = {}): Promise<any> {
+    return this.get('/purchase/payment/statistics', options)
   }
 
   // ============================================================================

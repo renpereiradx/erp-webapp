@@ -1,14 +1,40 @@
 import api from './api';
 import { UserSession, SessionConfig, UserActivity, PaginatedResponse, SuccessResponse } from '@/types';
+import { DEMO_CONFIG } from '../config/demoAuth';
 
 const BASE_URL = '/sessions';
 const ADMIN_BASE_URL = '/admin/sessions';
+
+// 🧪 Datos de sesiones para modo demo
+const DEMO_SESSIONS: UserSession[] = [
+  {
+    id: 'sess_1',
+    user_id: '1',
+    ip_address: '192.168.1.1',
+    user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+    last_activity: new Date().toISOString(),
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+    is_current: true
+  },
+  {
+    id: 'sess_2',
+    user_id: '1',
+    ip_address: '10.0.0.5',
+    user_agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148',
+    last_activity: new Date(Date.now() - 86400000).toISOString(),
+    created_at: new Date(Date.now() - 90000000).toISOString(),
+    is_current: false
+  }
+];
 
 export const sessionService = {
   /**
    * Obtiene las sesiones activas del usuario actual.
    */
   getActiveSessions: async (): Promise<SuccessResponse & { data: UserSession[] }> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, data: DEMO_SESSIONS };
+    }
     try {
       return await api.get(`${BASE_URL}/active`);
     } catch (error) {
@@ -21,6 +47,20 @@ export const sessionService = {
    * Obtiene el historial de sesiones del usuario.
    */
   getSessionHistory: async (params: { page?: number; page_size?: number } = { page: 1, page_size: 20 }): Promise<PaginatedResponse<UserSession>> => {
+    if (DEMO_CONFIG.enabled) {
+      return {
+        success: true,
+        data: DEMO_SESSIONS,
+        pagination: {
+          page: 1,
+          page_size: 20,
+          total_items: DEMO_SESSIONS.length,
+          total_pages: 1,
+          has_next: false,
+          has_prev: false
+        }
+      };
+    }
     try {
       return await api.get(`${BASE_URL}/history`, { params });
     } catch (error) {
@@ -33,6 +73,9 @@ export const sessionService = {
    * Revoca una sesion especifica.
    */
   revokeSession: async (id: string | number): Promise<SuccessResponse> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, message: 'Sesión revocada (Demo)' };
+    }
     try {
       return await api.post(`${BASE_URL}/${id}/revoke`);
     } catch (error) {
@@ -45,6 +88,9 @@ export const sessionService = {
    * Revoca todas las sesiones del usuario excepto la actual.
    */
   revokeAllOtherSessions: async (): Promise<SuccessResponse & { revoked_count?: number }> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, revoked_count: 1, message: 'Sesiones revocadas (Demo)' };
+    }
     try {
       return await api.post(`${BASE_URL}/revoke-all`);
     } catch (error) {
@@ -57,6 +103,20 @@ export const sessionService = {
    * Obtiene el log de actividad del usuario.
    */
   getActivityLog: async (params: { page?: number; page_size?: number } = { page: 1, page_size: 20 }): Promise<PaginatedResponse<UserActivity>> => {
+    if (DEMO_CONFIG.enabled) {
+      return {
+        success: true,
+        data: [],
+        pagination: {
+          page: 1,
+          page_size: 20,
+          total_items: 0,
+          total_pages: 1,
+          has_next: false,
+          has_prev: false
+        }
+      };
+    }
     try {
       return await api.get(`${BASE_URL}/activity`, { params });
     } catch (error) {
@@ -69,6 +129,16 @@ export const sessionService = {
    * Obtiene la configuracion de sesion para el rol del usuario.
    */
   getSessionConfig: async (): Promise<SuccessResponse & { data: SessionConfig }> => {
+    if (DEMO_CONFIG.enabled) {
+      return {
+        success: true,
+        data: {
+          max_active_sessions: 5,
+          session_timeout_minutes: 60,
+          remember_me_days: 30
+        }
+      };
+    }
     try {
       return await api.get(`${BASE_URL}/config`);
     } catch (error) {
@@ -85,6 +155,9 @@ export const sessionService = {
    * Obtiene todas las sesiones activas (solo admin).
    */
   getAllActiveSessions: async (params: Record<string, any> = {}): Promise<SuccessResponse & { data: UserSession[] }> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, data: DEMO_SESSIONS };
+    }
     try {
       return await api.get(`${ADMIN_BASE_URL}/all`, { params });
     } catch (error) {
@@ -97,6 +170,9 @@ export const sessionService = {
    * Revoca una sesion especifica de cualquier usuario (solo admin).
    */
   adminRevokeSession: async (id: string | number): Promise<SuccessResponse> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, message: 'Sesión revocada por admin (Demo)' };
+    }
     try {
       return await api.post(`${ADMIN_BASE_URL}/${id}/revoke`);
     } catch (error) {

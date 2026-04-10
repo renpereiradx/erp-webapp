@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
-import userService from '@/services/userService';
-import sessionService from '@/services/sessionService';
+import userService from '@/services/userService.ts';
+import sessionService from '@/services/sessionService.ts';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"

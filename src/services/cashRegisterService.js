@@ -471,6 +471,66 @@ export const cashRegisterService = {
     }
   },
 
+  // =================== PAGOS INTEGRADOS CON CAJA ===================
+
+  /**
+   * Procesa cobro de venta con integración de caja (v3.0)
+   * @param {Object} paymentData 
+   * @returns {Promise<Object>}
+   */
+  async processSalePaymentWithCashRegister(paymentData) {
+    const startTime = Date.now()
+
+    try {
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.processSalePaymentCashRegister(paymentData)
+      })
+
+      telemetry.record('cash_register.service.sale_payment', {
+        duration: Date.now() - startTime,
+        saleId: paymentData.sales_order_id,
+      })
+
+      return result
+    } catch (error) {
+      telemetry.record('cash_register.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'processSalePaymentWithCashRegister',
+      })
+      throw error
+    }
+  },
+
+  /**
+   * Procesa pago de compra con integración de caja (v2.0)
+   * @param {Object} paymentData 
+   * @returns {Promise<Object>}
+   */
+  async processPurchasePaymentWithCashRegister(paymentData) {
+    const startTime = Date.now()
+
+    try {
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.processPurchasePaymentCashRegister(paymentData)
+      })
+
+      telemetry.record('cash_register.service.purchase_payment', {
+        duration: Date.now() - startTime,
+        purchaseOrderId: paymentData.purchase_order_id,
+      })
+
+      return result
+    } catch (error) {
+      telemetry.record('cash_register.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'processPurchasePaymentWithCashRegister',
+      })
+      throw error
+    }
+  },
+
   // =================== UTILIDADES ===================
 
   /**

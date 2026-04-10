@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../lib/i18n';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.tsx';
 import { Eye, EyeOff, ShieldCheck, Lock, User } from 'lucide-react';
 import { DEMO_CONFIG } from '../config/demoAuth';
 

@@ -4,6 +4,7 @@
  */
 
 import React from 'react'
+console.log('🚀 App.tsx loaded - TS Version');
 import {
   BrowserRouter as Router,
   Routes,
@@ -46,15 +47,15 @@ import SalesOrderDetail from '@/pages/SalesOrderDetail'
 import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
 import Currencies from '@/pages/Currencies'
 import ExchangeRates from '@/pages/ExchangeRates'
-import Login from '@/pages/Login'
+import Login from '@/pages/Login.tsx'
 import Settings from '@/pages/Settings'
-import UserManagementList from '@/pages/UserManagementList'
-import UserDetailedProfile from '@/pages/UserDetailedProfile'
-import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity'
+import UserManagementList from '@/pages/UserManagementList.tsx'
+import UserDetailedProfile from '@/pages/UserDetailedProfile.tsx'
+import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity.tsx'
 import AuditDashboard from '@/pages/AuditDashboard'
 import AuditLogs from '@/pages/AuditLogs'
 import AuditLogDetail from '@/pages/AuditLogDetail'
-import AuditUserActivity from '@/pages/AuditUserActivity'
+import AuditUserActivity from '@/pages/AuditUserActivity.tsx'
 // import ProductDetailTest from '@/components/ProductDetailTest';
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
@@ -75,7 +76,7 @@ import AgingReport from '@/pages/AgingReport'
 import ProfitAndLoss from '@/pages/ProfitAndLoss'
 import LegalBooks from '@/pages/LegalBooks'
 import ProfitabilityAnalysis from '@/pages/ProfitabilityAnalysis'
-import AdminSessionsDashboard from '@/pages/AdminSessionsDashboard'
+import AdminSessionsDashboard from '@/pages/AdminSessionsDashboard.tsx'
 import {
   ProfitabilityDashboard,
   ProductProfitability,
@@ -102,9 +103,10 @@ import InventoryTurnoverABC from '@/pages/InventoryAnalytics/InventoryTurnoverAB
 import InventoryDashboard from '@/pages/InventoryAnalytics/InventoryDashboard'
 import StockLevelsReorder from '@/pages/InventoryAnalytics/StockLevelsReorder'
 import InventoryRisk from '@/pages/InventoryAnalytics/InventoryRisk'
-import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext.tsx'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import RoleGuard from '@/components/auth/RoleGuard'
 
 // Componente de protección de rutas
 const ProtectedRoute = ({ children }) => {
@@ -306,16 +308,45 @@ function AppContent() {
 
                       {/* Configuración */}
                       <Route path='/configuracion' element={<Settings />} />
-                      <Route path='/perfil' element={<MyProfileAndSecurity />} />
-                      <Route path='/usuarios' element={<UserManagementList />} />
-                      <Route path='/usuarios/:id' element={<UserDetailedProfile />} />
-                      <Route path='/admin/sesiones' element={<AdminSessionsDashboard />} />
+                      <Route path='/configuracion/perfil' element={<MyProfileAndSecurity />} />
+                      
+                      <Route path='/configuracion/usuarios' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <UserManagementList />
+                        </RoleGuard>
+                      } />
+                      <Route path='/configuracion/usuarios/:id' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <UserDetailedProfile />
+                        </RoleGuard>
+                      } />
+                      <Route path='/configuracion/sesiones' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <AdminSessionsDashboard />
+                        </RoleGuard>
+                      } />
                       
                       {/* Auditoría */}
-                      <Route path='/auditoria' element={<AuditDashboard />} />
-                      <Route path='/auditoria/logs' element={<AuditLogs />} />
-                      <Route path='/auditoria/logs/:id' element={<AuditLogDetail />} />
-                      <Route path='/auditoria/usuarios/:id' element={<AuditUserActivity />} />
+                      <Route path='/auditoria' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <AuditDashboard />
+                        </RoleGuard>
+                      } />
+                      <Route path='/auditoria/logs' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <AuditLogs />
+                        </RoleGuard>
+                      } />
+                      <Route path='/auditoria/logs/:id' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <AuditLogDetail />
+                        </RoleGuard>
+                      } />
+                      <Route path='/auditoria/usuarios/:id' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <AuditUserActivity />
+                        </RoleGuard>
+                      } />
 
                       {/* Configuración Financiera */}
                       <Route

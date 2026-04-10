@@ -4,6 +4,20 @@ import { User, SuccessResponse, PaginatedResponse } from '@/types';
 
 const BASE_URL = '/api/v1/users';
 
+// 🧪 Datos de usuarios para modo demo
+const DEMO_USERS_LIST: User[] = Object.values(DEMO_USERS).map(u => ({
+  id: u.id.toString(),
+  username: u.email.split('@')[0],
+  email: u.email,
+  first_name: u.name.split(' ')[0],
+  last_name: u.name.split(' ')[1] || '',
+  status: 'active',
+  roles: [{ id: u.role, name: u.role.toUpperCase() }],
+  permissions: u.permissions,
+  created_at: new Date().toISOString(),
+  last_login_at: new Date().toISOString()
+} as User));
+
 /**
  * Servicio para la gestión de usuarios
  * Basado en la documentación de API_USER_MANAGER.md
@@ -13,6 +27,21 @@ export const userService = {
    * Listar usuarios con filtros
    */
   getUsers: async (params: Record<string, any> = {}): Promise<PaginatedResponse<User>> => {
+    if (DEMO_CONFIG.enabled) {
+      return {
+        success: true,
+        data: DEMO_USERS_LIST,
+        pagination: {
+          page: 1,
+          page_size: 20,
+          total_items: DEMO_USERS_LIST.length,
+          total_pages: 1,
+          has_next: false,
+          has_prev: false
+        }
+      };
+    }
+
     try {
       const response = await api.get(BASE_URL, { params });
       return response;
@@ -26,6 +55,14 @@ export const userService = {
    * Obtener usuario por ID
    */
   getUserById: async (id: string): Promise<SuccessResponse & { data: User }> => {
+    if (DEMO_CONFIG.enabled) {
+      const user = DEMO_USERS_LIST.find(u => u.id === id) || DEMO_USERS_LIST[0];
+      return {
+        success: true,
+        data: user
+      };
+    }
+
     try {
       const response = await api.get(`${BASE_URL}/${id}`);
       return response;
@@ -39,6 +76,20 @@ export const userService = {
    * Crear un nuevo usuario
    */
   createUser: async (userData: Partial<User>): Promise<SuccessResponse & { data: User }> => {
+    if (DEMO_CONFIG.enabled) {
+      const newUser = {
+        ...userData,
+        id: Math.random().toString(36).substr(2, 9),
+        status: 'active',
+        created_at: new Date().toISOString()
+      } as User;
+      return {
+        success: true,
+        data: newUser,
+        message: 'Usuario creado (Modo Demo)'
+      };
+    }
+
     try {
       const response = await api.post(BASE_URL, userData);
       return response;
@@ -52,6 +103,14 @@ export const userService = {
    * Actualizar usuario
    */
   updateUser: async (id: string, userData: Partial<User>): Promise<SuccessResponse & { data: User }> => {
+    if (DEMO_CONFIG.enabled) {
+      return {
+        success: true,
+        data: { ...DEMO_USERS_LIST[0], ...userData, id } as User,
+        message: 'Usuario actualizado (Modo Demo)'
+      };
+    }
+
     try {
       const response = await api.put(`${BASE_URL}/${id}`, userData);
       return response;
@@ -65,6 +124,13 @@ export const userService = {
    * Eliminar usuario (Soft Delete)
    */
   deleteUser: async (id: string): Promise<SuccessResponse> => {
+    if (DEMO_CONFIG.enabled) {
+      return {
+        success: true,
+        message: 'Usuario eliminado (Modo Demo)'
+      };
+    }
+
     try {
       const response = await api.delete(`${BASE_URL}/${id}`);
       return response;
@@ -78,6 +144,10 @@ export const userService = {
    * Cambiar contraseña (Admin)
    */
   changePasswordAdmin: async (id: string, data: any): Promise<SuccessResponse> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, message: 'Contraseña cambiada (Modo Demo)' };
+    }
+
     try {
       const response = await api.post(`${BASE_URL}/${id}/change-password`, data);
       return response;
@@ -96,7 +166,7 @@ export const userService = {
       // Simular delay y retornar admin por defecto en demo
       return {
         success: true,
-        data: DEMO_USERS.demo as User // Usar el perfil demo configurado (admin)
+        data: DEMO_USERS_LIST[0] // Usar el perfil demo configurado
       };
     }
 
@@ -108,6 +178,14 @@ export const userService = {
    * Actualizar mi perfil
    */
   updateMe: async (data: any): Promise<SuccessResponse & { data: User }> => {
+    if (DEMO_CONFIG.enabled) {
+      return {
+        success: true,
+        data: { ...DEMO_USERS_LIST[0], ...data } as User,
+        message: 'Perfil actualizado (Modo Demo)'
+      };
+    }
+
     try {
       const response = await api.put(`${BASE_URL}/me`, data);
       return response;
@@ -121,6 +199,10 @@ export const userService = {
    * Cambiar mi contraseña
    */
   changeMyPassword: async (data: any): Promise<SuccessResponse> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, message: 'Contraseña cambiada (Modo Demo)' };
+    }
+
     try {
       const response = await api.post(`${BASE_URL}/me/change-password`, data);
       return response;
@@ -134,6 +216,10 @@ export const userService = {
    * Activar usuario
    */
   activateUser: async (id: string): Promise<SuccessResponse> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, message: 'Usuario activado (Modo Demo)' };
+    }
+
     try {
       const response = await api.post(`${BASE_URL}/${id}/activate`);
       return response;
@@ -147,6 +233,10 @@ export const userService = {
    * Desactivar usuario
    */
   deactivateUser: async (id: string): Promise<SuccessResponse> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, message: 'Usuario desactivado (Modo Demo)' };
+    }
+
     try {
       const response = await api.post(`${BASE_URL}/${id}/deactivate`);
       return response;
@@ -160,6 +250,10 @@ export const userService = {
    * Asignar rol a usuario
    */
   assignRole: async (userId: string, roleId: string): Promise<SuccessResponse> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, message: 'Rol asignado (Modo Demo)' };
+    }
+
     try {
         const response = await api.post(`${BASE_URL}/${userId}/roles`, { role_id: roleId });
         return response;
@@ -173,6 +267,10 @@ export const userService = {
    * Eliminar rol de usuario
    */
   removeRole: async (userId: string, roleId: string): Promise<SuccessResponse> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, message: 'Rol eliminado (Modo Demo)' };
+    }
+
       try {
           const response = await api.delete(`${BASE_URL}/${userId}/roles/${roleId}`);
           return response;

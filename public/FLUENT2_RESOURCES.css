@@ -1,14 +1,9 @@
 /* =============================================================================
-   FLUENT 2 RESOURCES - LOCAL FONTS
+   FLUENT 2 RESOURCES - GOOGLE FONTS (ONLINE FALLBACK)
    ============================================================================= */
 
-/* JetBrains Mono - Numbers & Codes */
-@font-face {
-  font-family: 'JetBrains Mono';
-  src: url('/fonts/jetbrains-mono.ttf') format('truetype');
-  font-weight: 100 800;
-  font-display: swap;
-}
+/* Importación desde Google Fonts para garantizar integridad de archivos */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@400;700&family=Public+Sans:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=JetBrains+Mono:wght@400;800&display=swap');
 
 /* Material Icons Round - Iconography */
 @font-face {

@@ -14,10 +14,10 @@ const AgingSummaryChart = ({ agingData = {} }) => {
     { label: '> 90 Días', key: 'over_90_days', color: 'bg-[#dc2626]', border: 'border-[#dc2626]', text: 'text-[#dc2626]' }
   ];
 
-  // Extraer datos o usar valores de ejemplo realistas
-  const getAmount = (key) => agingData[key]?.amount ?? agingData[key] ?? (key === 'current' ? 8500000 : 1500000);
+  // Extraer datos o usar valores por defecto (0) para evitar hardcoding
+  const getAmount = (key) => agingData[key]?.amount ?? agingData[key] ?? 0;
   const getPercentage = (key) => {
-    const raw = agingData[key]?.percentage ?? (key === 'current' ? 55 : 10);
+    const raw = agingData[key]?.percentage ?? 0;
     return typeof raw === 'number' ? Number(raw.toFixed(2)) : raw;
   };
 

@@ -38,6 +38,12 @@
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
     --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    
+    /* ERP Surface & Text Aliases */
+    --surface: 0 0% 100%;
+    --text-main: 217 19% 8%;
+    --text-secondary: 210 17% 46%;
+    --border-subtle: 214 32% 91%;
   }
 
   .dark {
@@ -60,6 +66,12 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+
+    /* ERP Surface & Text Aliases - Dark Mode */
+    --surface: 217 33% 15%;
+    --text-main: 210 10% 95%;
+    --text-secondary: 215 14% 66%;
+    --border-subtle: 217 33% 20%;
   }
 
   html {

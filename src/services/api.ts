@@ -13,11 +13,6 @@ const businessAPI = new BusinessManagementAPI({
   defaultHeaders: API_CONFIG.defaultHeaders,
 })
 
-// Business Management API client initialized
-if (API_CONFIG.isDevelopment()) {
-  // dev_log: API client initialized
-}
-
 export const apiClient = businessAPI
 
 // Servicio API legacy manteniendo compatibilidad
@@ -67,6 +62,17 @@ export const apiService: any = {
   getSalesByClientId: (id: string | number) => (apiClient as any).getSalesByClientId(id),
   getSalesByClientName: (name: string) => (apiClient as any).getSalesByClientName(name),
   getSaleById: (id: string | number) => (apiClient as any).getSaleById(id),
+  processSalePaymentCashRegister: (data: any) => (apiClient as any).processSalePaymentCashRegister(data),
+  getSalePaymentDetails: (saleId: string | number) => (apiClient as any).getSalePaymentDetails(saleId),
+  getChangeStatistics: (filters: any) => (apiClient as any).getChangeStatistics({ params: filters }),
+
+  // Métodos de compras
+  getPurchasesByDateRange: (startDate: string, endDate: string, page = 1, pageSize = 50) => 
+    (apiClient as any).getPurchasesByDateRange(startDate, endDate, page, pageSize),
+  getPurchaseById: (id: string | number) => (apiClient as any).getPurchaseById(id),
+  processPurchasePayment: (data: any) => (apiClient as any).processPurchasePayment(data),
+  processPurchasePaymentCashRegister: (data: any) => (apiClient as any).processPurchasePaymentCashRegister(data),
+  getPurchasePaymentStatistics: (filters: any) => (apiClient as any).getPurchasePaymentStatistics({ params: filters }),
 
   // Métodos de reservas con fallback robusto
   getReservationReport: async (params: any = {}) => {

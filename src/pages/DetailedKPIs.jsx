@@ -146,14 +146,14 @@ const DetailedKPIs = () => {
       {/* KPI Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Revenue Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-between h-40 relative overflow-hidden group">
+        <div className="bg-surface rounded-xl p-5 shadow-sm border border-border-subtle flex flex-col justify-between h-40 relative overflow-hidden group">
           <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <span className="material-symbols-outlined text-6xl text-primary">attach_money</span>
           </div>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-slate-500">{t('dashboard.dashboard.kpi.revenue', 'Ingresos Totales')}</p>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{formatCurrency(revenueTotal)}</h3>
+              <p className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.kpi.revenue', 'Ingresos Totales')}</p>
+              <h3 className="text-2xl font-bold text-text-main mt-1">{formatCurrency(revenueTotal)}</h3>
             </div>
           </div>
           <div className="mt-auto">
@@ -167,19 +167,19 @@ const DetailedKPIs = () => {
                 <div className="w-1/6 bg-primary h-[85%]"></div>
               </div>
             </div>
-            <p className="text-xs text-slate-400 mt-2 relative z-10">{vsLast30Days}</p>
+            <p className="text-xs text-text-secondary mt-2 relative z-10">{vsLast30Days}</p>
           </div>
         </div>
 
         {/* Profit Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-between h-40 relative overflow-hidden group">
+        <div className="bg-surface rounded-xl p-5 shadow-sm border border-border-subtle flex flex-col justify-between h-40 relative overflow-hidden group">
           <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <span className="material-symbols-outlined text-6xl text-purple-500">monitoring</span>
           </div>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-slate-500">{t('dashboard.dashboard.kpi.netProfit', 'Margen Neto')}</p>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{netMargin}%</h3>
+              <p className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.kpi.netProfit', 'Margen Neto')}</p>
+              <h3 className="text-2xl font-bold text-text-main mt-1">{netMargin}%</h3>
             </div>
           </div>
           <div className="mt-auto relative z-10">
@@ -193,19 +193,19 @@ const DetailedKPIs = () => {
               </defs>
               <path d="M0 30 Q 20 10 40 25 T 100 5 V 40 H 0 Z" fill="url(#purpleGradient)" stroke="none"></path>
             </svg>
-            <p className="text-xs text-slate-400 mt-2">{vsLast30Days}</p>
+            <p className="text-xs text-text-secondary mt-2">{vsLast30Days}</p>
           </div>
         </div>
 
         {/* Customers Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-between h-40 relative overflow-hidden group">
+        <div className="bg-surface rounded-xl p-5 shadow-sm border border-border-subtle flex flex-col justify-between h-40 relative overflow-hidden group">
           <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <span className="material-symbols-outlined text-6xl text-blue-400">groups</span>
           </div>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-slate-500">{t('dashboard.dashboard.kpi.newCustomers', 'Clientes Nuevos')}</p>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{newCustomers.toLocaleString()}</h3>
+              <p className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.kpi.newCustomers', 'Clientes Nuevos')}</p>
+              <h3 className="text-2xl font-bold text-text-main mt-1">{newCustomers.toLocaleString()}</h3>
             </div>
           </div>
           <div className="mt-auto relative z-10">
@@ -221,21 +221,21 @@ const DetailedKPIs = () => {
                 <div className="w-1.5 bg-blue-400 rounded-full h-[65%]"></div>
               </div>
             </div>
-            <p className="text-xs text-slate-400 mt-2">{vsLast30Days}</p>
+            <p className="text-xs text-text-secondary mt-2">{vsLast30Days}</p>
           </div>
         </div>
 
         {/* Inventory Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-between h-40 relative overflow-hidden group">
+        <div className="bg-surface rounded-xl p-5 shadow-sm border border-border-subtle flex flex-col justify-between h-40 relative overflow-hidden group">
           <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <span className="material-symbols-outlined text-6xl text-orange-400">inventory_2</span>
           </div>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-slate-500">{t('dashboard.dashboard.kpi.inventoryValue', 'Valor Inventario')}</p>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{formatCurrency(inventoryValue)}</h3>
+              <p className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.kpi.inventoryValue', 'Valor Inventario')}</p>
+              <h3 className="text-2xl font-bold text-text-main mt-1">{formatCurrency(inventoryValue)}</h3>
             </div>
-            <span className="flex items-center text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/50">
+            <span className="flex items-center text-xs font-bold text-success bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full border border-green-100 dark:border-green-800/50">
               <span className="material-symbols-outlined text-[14px] mr-0.5">check_circle</span>
               Saludable
             </span>
@@ -244,9 +244,9 @@ const DetailedKPIs = () => {
             <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 mt-4 overflow-hidden">
               <div className="bg-orange-400 h-2 rounded-full" style={{ width: '75%' }}></div>
             </div>
-            <div className="flex justify-between mt-2 text-xs text-slate-400">
+            <div className="flex justify-between mt-2 text-xs text-text-secondary">
               <span>Nivel de Stock</span>
-              <span className="font-medium text-slate-700 dark:text-slate-300">75%</span>
+              <span className="font-medium text-text-main">75%</span>
             </div>
           </div>
         </div>
@@ -256,125 +256,125 @@ const DetailedKPIs = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         {/* Sales & Efficiency */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('dashboard.dashboard.salesEfficiency', 'Eficiencia de Ventas')}</h3>
+        <div className="bg-surface rounded-xl shadow-sm border border-border-subtle flex flex-col overflow-hidden">
+          <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50 dark:bg-slate-800/50">
+            <h3 className="text-lg font-bold text-text-main">{t('dashboard.dashboard.salesEfficiency', 'Eficiencia de Ventas')}</h3>
           </div>
           <div className="p-6 space-y-6 flex-1">
             <div className="flex justify-between items-center group">
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('dashboard.dashboard.avgTicket', 'Ticket Promedio')}</span>
-              <span className="text-lg font-bold text-slate-900 dark:text-white">{formatCurrency(avgTicket)}</span>
+              <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.avgTicket', 'Ticket Promedio')}</span>
+              <span className="text-lg font-bold text-text-main">{formatCurrency(avgTicket)}</span>
             </div>
             <div className="flex justify-between items-center group">
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('dashboard.dashboard.salesPerDay', 'Ventas por Día')}</span>
-              <span className="text-lg font-bold text-slate-900 dark:text-white">{salesPerDay}</span>
+              <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.salesPerDay', 'Ventas por Día')}</span>
+              <span className="text-lg font-bold text-text-main">{salesPerDay}</span>
             </div>
             <div className="space-y-3">
                 <div className="flex justify-between items-center group">
-                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('dashboard.dashboard.convRate', 'Tasa de Conversión')}</span>
+                    <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.convRate', 'Tasa de Conversión')}</span>
                     <span className="text-lg font-bold text-primary">{convRate}%</span>
                 </div>
                 <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${convRate}%` }}></div>
                 </div>
             </div>
-            <div className="flex justify-between items-center group border-t border-slate-100 dark:border-slate-700 pt-4">
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('dashboard.dashboard.customerFrequency', 'Frecuencia de Compra')}</span>
-              <span className="text-lg font-bold text-slate-900 dark:text-white">{purchaseFreq}x</span>
+            <div className="flex justify-between items-center group border-t border-border-subtle pt-4">
+              <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.customerFrequency', 'Frecuencia de Compra')}</span>
+              <span className="text-lg font-bold text-text-main">{purchaseFreq}x</span>
             </div>
           </div>
         </div>
 
         {/* Financial Health */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('dashboard.dashboard.financialHealth', 'Salud Financiera')}</h3>
+        <div className="bg-surface rounded-xl shadow-sm border border-border-subtle flex flex-col overflow-hidden">
+          <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50 dark:bg-slate-800/50">
+            <h3 className="text-lg font-bold text-text-main">{t('dashboard.dashboard.financialHealth', 'Salud Financiera')}</h3>
           </div>
           <div className="p-6 space-y-6 flex-1">
             <div className="space-y-3">
                 <div className="flex justify-between items-center group">
-                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('dashboard.dashboard.grossMargin', 'Margen Bruto')}</span>
-                  <span className="text-lg font-bold text-slate-900 dark:text-white">{grossMargin}%</span>
+                  <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.grossMargin', 'Margen Bruto')}</span>
+                  <span className="text-lg font-bold text-text-main">{grossMargin}%</span>
                 </div>
                 <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${grossMargin}%` }}></div>
+                    <div className="h-full bg-success rounded-full transition-all duration-1000" style={{ width: `${grossMargin}%` }}></div>
                 </div>
             </div>
             <div className="flex justify-between items-center group">
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('dashboard.dashboard.netMargin', 'Margen Neto')}</span>
-              <span className="text-lg font-bold text-emerald-600">{netMargin}%</span>
+              <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.netMargin', 'Margen Neto')}</span>
+              <span className="text-lg font-bold text-success">{netMargin}%</span>
             </div>
-            <div className="flex justify-between items-center group border-t border-slate-100 dark:border-slate-700 pt-4">
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('dashboard.dashboard.operatingRatio', 'Ratio Gasto Operativo')}</span>
-              <span className="text-lg font-bold text-orange-500">{opExpenseRatio}%</span>
+            <div className="flex justify-between items-center group border-t border-border-subtle pt-4">
+              <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.operatingRatio', 'Ratio Gasto Operativo')}</span>
+              <span className="text-lg font-bold text-warning">{opExpenseRatio}%</span>
             </div>
           </div>
         </div>
 
         {/* Inventory Performance */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('dashboard.dashboard.inventoryPerformance', 'Rendimiento de Inventario')}</h3>
+        <div className="bg-surface rounded-xl shadow-sm border border-border-subtle flex flex-col overflow-hidden">
+          <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50 dark:bg-slate-800/50">
+            <h3 className="text-lg font-bold text-text-main">{t('dashboard.dashboard.inventoryPerformance', 'Rendimiento de Inventario')}</h3>
           </div>
           <div className="p-6 space-y-6 flex-1">
             <div className="flex justify-between items-center group">
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('dashboard.dashboard.turnoverRate', 'Tasa de Rotación')}</span>
-              <span className="text-lg font-bold text-slate-900 dark:text-white">{turnoverRate}x</span>
+              <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.turnoverRate', 'Tasa de Rotación')}</span>
+              <span className="text-lg font-bold text-text-main">{turnoverRate}x</span>
             </div>
             <div className="flex justify-between items-center group">
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('dashboard.dashboard.daysOfInventory', 'Días de Inventario')}</span>
-              <span className="text-lg font-bold text-slate-900 dark:text-white">{daysOfInventory} {t('common.days', 'días')}</span>
+              <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.daysOfInventory', 'Días de Inventario')}</span>
+              <span className="text-lg font-bold text-text-main">{daysOfInventory} {t('common.days', 'días')}</span>
             </div>
-            <div className="flex justify-between items-center group border-t border-slate-100 dark:border-slate-700 pt-4">
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('dashboard.dashboard.totalSKUs', 'Total SKUs Activos')}</span>
-              <span className="text-lg font-bold text-slate-900 dark:text-white">{totalProducts}</span>
+            <div className="flex justify-between items-center group border-t border-border-subtle pt-4">
+              <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.totalSKUs', 'Total SKUs Activos')}</span>
+              <span className="text-lg font-bold text-text-main">{totalProducts}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Alerts View - using Stitch format */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+      <div className="bg-surface rounded-xl p-6 shadow-sm border border-border-subtle">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('dashboard.dashboard.activity.title', 'Alertas Recientes')}</h3>
+          <h3 className="text-lg font-bold text-text-main">{t('dashboard.dashboard.activity.title', 'Alertas Recientes')}</h3>
           <button className="text-sm text-primary font-medium hover:underline cursor-pointer" onClick={() => navigate('/dashboard/alerts')}>Ver Todo</button>
         </div>
         <div className="space-y-4">
           {alerts.slice(0, 5).map((alert) => {
-            let borderClass = 'border-blue-500 bg-blue-50/50 dark:bg-transparent';
-            let iconClass = 'text-blue-500';
+            let borderClass = 'border-primary bg-blue-50/50 dark:bg-slate-800/50';
+            let iconClass = 'text-primary';
             let iconText = 'info';
 
             if (alert.severity === 'critical') {
-              borderClass = 'border-red-500 bg-red-50/50 dark:bg-transparent';
-              iconClass = 'text-red-500';
+              borderClass = 'border-error bg-red-50/50 dark:bg-slate-800/50';
+              iconClass = 'text-error';
               iconText = 'warning';
             } else if (alert.severity === 'warning') {
-              borderClass = 'border-amber-400 bg-amber-50/50 dark:bg-transparent';
-              iconClass = 'text-amber-500';
+              borderClass = 'border-warning bg-amber-50/50 dark:bg-slate-800/50';
+              iconClass = 'text-warning';
               iconText = 'trending_down'; // Match Stitch
             } else if (alert.severity === 'success') {
-              borderClass = 'border-emerald-500 bg-emerald-50/50 dark:bg-transparent';
-              iconClass = 'text-emerald-500';
+              borderClass = 'border-success bg-green-50/50 dark:bg-slate-800/50';
+              iconClass = 'text-success';
               iconText = 'check_circle';
             }
 
             return (
-              <div key={alert.id} className={`flex gap-4 items-start p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border-l-4 ${borderClass}`} onClick={() => navigate('/dashboard/alerts')}>
+              <div key={alert.id} className={`flex gap-4 items-start p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border-l-4 ${borderClass}`} onClick={() => navigate('/dashboard/alerts')}>
                 <div className="mt-0.5">
                   <span className={`material-symbols-outlined ${iconClass}`}>{iconText}</span>
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white">{alert.title}</h4>
-                  <p className="text-xs text-slate-500 mt-1">{alert.message}</p>
+                  <h4 className="text-sm font-semibold text-text-main">{alert.title}</h4>
+                  <p className="text-xs text-text-secondary mt-1">{alert.message}</p>
                 </div>
-                <span className="text-xs text-slate-400 whitespace-nowrap">{getTimeAgo(alert.created_at)}</span>
+                <span className="text-xs text-text-secondary whitespace-nowrap">{getTimeAgo(alert.created_at)}</span>
               </div>
             );
           })}
           {alerts.length === 0 && (
             <div className="text-center py-6">
-               <p className="text-sm text-slate-500">
+               <p className="text-sm text-text-secondary">
                  {t('dashboard.dashboard.activity.noActivity', 'Sin alertas.')}
                </p>
             </div>
