@@ -262,6 +262,10 @@ const SaleCard = React.memo(({
   onHistory,
   getStatusBadge 
 }) => {
+  const progress = sale.total_amount > 0 
+    ? ((sale.total_amount - sale.balance_due) / sale.total_amount) * 100 
+    : 0;
+
   return (
     <div
       key={sale.id}
@@ -272,16 +276,19 @@ const SaleCard = React.memo(({
           <div className='size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500'>
             <User size={14} />
           </div>
-          <span className='font-bold text-slate-900 dark:text-white text-sm'>
-            {sale.client_name}
-          </span>
+          <div className='flex flex-col'>
+            <span className='font-bold text-slate-900 dark:text-white text-sm'>
+              {sale.client_name}
+            </span>
+            <span className='font-mono text-[10px] font-bold text-slate-400'>
+              #{sale.id}
+            </span>
+          </div>
         </div>
-        <span className='font-mono text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded'>
-          #{sale.id}
-        </span>
+        {getStatusBadge(sale.status)}
       </div>
 
-      <div className='grid grid-cols-2 gap-4' onClick={() => onDetails(sale.id)}>
+      <div className='grid grid-cols-2 gap-x-4 gap-y-3' onClick={() => onDetails(sale.id)}>
         <div>
           <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1'>
             Fecha
@@ -294,23 +301,26 @@ const SaleCard = React.memo(({
           <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1'>
             Total
           </p>
-          <p className='text-xs font-bold text-slate-900 dark:text-white tabular-nums'>
+          <p className='text-sm font-bold text-slate-900 dark:text-white tabular-nums'>
             {formatCurrency(sale.total_amount)}
           </p>
         </div>
-        <div>
-          <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1'>
-            Estado
-          </p>
-          {getStatusBadge(sale.status)}
-        </div>
-        <div className='text-right'>
-          <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1'>
-            Pendiente
-          </p>
-          <p className='text-xs font-bold text-error tabular-nums'>
-            {formatCurrency(sale.balance_due)}
-          </p>
+        
+        <div className='col-span-2 space-y-1.5'>
+          <div className='flex justify-between items-end'>
+            <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider'>
+              Progreso de Cobro
+            </p>
+            <p className='text-xs font-bold text-error tabular-nums'>
+              Pendiente: {formatCurrency(sale.balance_due)}
+            </p>
+          </div>
+          <div className='h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden'>
+            <div 
+              className='h-full bg-primary transition-all duration-500' 
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       </div>
 
@@ -320,7 +330,7 @@ const SaleCard = React.memo(({
           <Button
             size='sm'
             onClick={() => onPayment(sale)}
-            className='flex-1 h-9 bg-primary/10 text-primary hover:bg-primary hover:text-white border-none font-bold text-[10px] uppercase tracking-tighter'
+            className='flex-1 h-9 bg-primary text-white hover:bg-primary-hover border-none font-bold text-[10px] uppercase tracking-tighter shadow-sm'
           >
             <CreditCard size={14} className='mr-1.5' /> Registrar Cobro
           </Button>
@@ -330,9 +340,9 @@ const SaleCard = React.memo(({
             <Button
               variant='outline'
               size='sm'
-              className='h-9 w-10 p-0 border-slate-200'
+              className='h-9 px-3 border-slate-200 text-[10px] font-bold uppercase text-slate-600'
             >
-              <MoreVertical size={16} className='text-slate-400' />
+              Más <MoreVertical size={14} className='ml-1 text-slate-400' />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end' className='w-48 p-1'>
@@ -978,7 +988,10 @@ const SalePayment = () => {
                     sale={sale}
                     formatDate={formatDate}
                     formatCurrency={formatCurrency}
+                    onPayment={handleOpenPayment}
+                    onCancel={handleCancelSale}
                     onDetails={handleDetails}
+                    onHistory={handleHistory}
                     getStatusBadge={getStatusBadge}
                   />
                 ))}

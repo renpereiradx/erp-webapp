@@ -45,7 +45,7 @@ import useSaleStore from '@/store/useSaleStore';
 import useDashboardStore from '@/store/useDashboardStore';
 import { useToast } from '@/hooks/useToast';
 import saleService from '@/services/saleService';
-import apiService from '@/services/api';
+import apiService from '@/services/api.ts';
 import { PaymentMethodService } from '@/services/paymentMethodService';
 import { CurrencyService } from '@/services/currencyService';
 import { productService } from '@/services/productService';
@@ -307,6 +307,7 @@ const SalesNew: React.FC = () => {
   const [showReservationModal, setShowReservationModal] = useState(false);
 
   const [productSearchResults, setProductSearchResults] = useState<ProductDisplay[]>([]);
+  const [isSearchingProducts, setIsSearchingProducts] = useState(false);
   const [showProductDropdown, setShowProductDropdown] = useState(false);
   const [productHighlightedIndex, setProductHighlightedIndex] = useState(-1);
   const [productSearchTerm, setProductSearchTerm] = useState('');
@@ -1328,7 +1329,8 @@ const SalesNew: React.FC = () => {
                   </div>
 
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
+                    {/* Desktop Table View */}
+                    <table className="w-full text-sm hidden md:table">
                       <thead>
                         <tr className="border-b text-xs uppercase text-slate-500">
                           <th className="text-left py-2 px-3">ID</th>
@@ -1380,6 +1382,67 @@ const SalesNew: React.FC = () => {
                         )}
                       </tbody>
                     </table>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden divide-y">
+                      {filteredItems.length === 0 ? (
+                        <div className="text-center py-8 text-slate-400 text-sm">Carrito vacío</div>
+                      ) : (
+                        filteredItems.map(item => (
+                          <div key={item.id} className="py-4 space-y-3">
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="min-w-0">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">#{item.productId || '-'}</p>
+                                <h4 className="font-bold text-slate-900 leading-tight">
+                                  {item.isFromPendingSale && <Badge className="mr-1.5 bg-amber-100 text-amber-700 border-none text-[8px] uppercase align-middle">P</Badge>}
+                                  {item.name}
+                                </h4>
+                              </div>
+                              <div className="flex gap-1 shrink-0">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => handleOpenEditModal(item)}
+                                  className="size-8 rounded-full border-slate-200"
+                                >
+                                  <MoreVertical size={14} />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => setItems(prev => prev.filter(i => i.id !== item.id))}
+                                  className="size-8 rounded-full border-slate-200 text-red-500 hover:bg-red-50 hover:border-red-100"
+                                >
+                                  <X size={14} />
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                              <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase mb-0.5">Cant.</p>
+                                <p className="text-xs font-black text-slate-700">{item.quantity} {item.unit}</p>
+                              </div>
+                              <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase mb-0.5">Unitario</p>
+                                <p className="text-xs font-bold text-slate-700">{formatCurrency(getItemBaseUnitPrice(item))}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[9px] font-black text-slate-400 uppercase mb-0.5">Total Línea</p>
+                                <p className="text-xs font-black text-primary">{formatCurrency(getItemLineTotal(item))}</p>
+                              </div>
+                            </div>
+
+                            {getItemLineDiscount(item) > 0 && (
+                              <div className="flex items-center justify-between px-2 text-[10px] font-bold">
+                                <span className="text-slate-400 uppercase">Descuento Aplicado</span>
+                                <span className="text-red-500">-{formatCurrency(getItemLineDiscount(item))}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 </div>
               </article>
@@ -1610,7 +1673,8 @@ const SalesNew: React.FC = () => {
               </div>
 
               <div className="overflow-x-auto border rounded-lg">
-                <table className="w-full text-sm">
+                {/* Desktop History Table */}
+                <table className="w-full text-sm hidden md:table">
                   <thead className="bg-slate-50 border-b">
                     <tr className="text-xs uppercase text-slate-500">
                       <th className="text-left py-3 px-4">ID</th>
@@ -1639,21 +1703,69 @@ const SalesNew: React.FC = () => {
                             </Badge>
                           </td>
                           <td className="py-3 px-4 text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="size-8"><MoreVertical size={16} /></Button></DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem onClick={() => handleViewSale(sale)} className="gap-2"><Eye size={14} /> Ver Detalle</DropdownMenuItem>
-                                {sale.status !== 'CANCELLED' && (
-                                  <DropdownMenuItem onClick={() => handleCancelSale(sale)} className="gap-2 text-red-600 focus:text-red-600"><Ban size={14} /> Anular Venta</DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            <div className="flex justify-end items-center gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => handleViewSale(sale)} className="size-8 text-slate-400 hover:text-primary"><Eye size={16} /></Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="size-8"><MoreVertical size={16} /></Button></DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                  <DropdownMenuItem onClick={() => handleViewSale(sale)} className="gap-2"><Eye size={14} /> Ver Detalle</DropdownMenuItem>
+                                  {sale.status !== 'CANCELLED' && (
+                                    <DropdownMenuItem onClick={() => handleCancelSale(sale)} className="gap-2 text-red-600 focus:text-red-600"><Ban size={14} /> Anular Venta</DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </td>
                         </tr>
                       ))
                     )}
                   </tbody>
                 </table>
+
+                {/* Mobile History Cards */}
+                <div className="md:hidden divide-y divide-slate-100">
+                  {saleLoading ? (
+                    <div className="py-12 text-center text-slate-400 text-sm">Cargando historial...</div>
+                  ) : filteredHistory.length === 0 ? (
+                    <div className="py-12 text-center text-slate-400 text-sm">No se encontraron resultados</div>
+                  ) : (
+                    filteredHistory.map((sale) => (
+                      <div key={sale.internalKey} className="p-4 space-y-3 active:bg-slate-50 transition-colors" onClick={() => handleViewSale(sale)}>
+                        <div className="flex justify-between items-center">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-mono font-bold text-primary">#{sale.displayId}</span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{formatDateTime(sale.date)}</span>
+                          </div>
+                          <Badge className={cn('uppercase text-[8px] font-black', STATUS_STYLES[sale.status.toLowerCase()]?.badge || 'bg-slate-100')}>
+                            {STATUS_STYLES[sale.status.toLowerCase()]?.label || sale.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex justify-between items-end">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase mb-0.5 tracking-tight">Cliente</span>
+                            <span className="text-sm font-bold text-slate-900 leading-none truncate max-w-[180px]">{sale.client_name}</span>
+                          </div>
+                          <div className="flex flex-col text-right">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase mb-0.5 tracking-tight">Importe Total</span>
+                            <span className="text-base font-black text-slate-900 leading-none">{formatCurrency(sale.total_amount)}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-2 border-t border-slate-50">
+                          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleViewSale(sale); }} className="flex-1 h-9 text-[10px] font-black uppercase tracking-widest border-slate-200">
+                            <Eye size={14} className="mr-1.5 text-primary" /> Detalles
+                          </Button>
+                          {sale.status !== 'CANCELLED' && (
+                            <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleCancelSale(sale); }} className="h-9 w-10 border-slate-200 text-red-500">
+                              <Ban size={14} />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </article>
           </div>

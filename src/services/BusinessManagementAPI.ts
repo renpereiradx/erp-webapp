@@ -191,6 +191,131 @@ class BusinessManagementAPI {
   }
 
   // ============================================================================
+  // PRODUCT METHODS
+  // ============================================================================
+
+  async getProductsPaginated(page: number, pageSize: number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/list/${page}/${pageSize}`, options)
+  }
+
+  async getProductById(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/${id}`, options)
+  }
+
+  async getProductInfoById(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/${id}/info`, options)
+  }
+
+  async getProductByBarcode(barcode: string, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/barcode/${barcode}`, options)
+  }
+
+  async getProductInfoByBarcode(barcode: string, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/info/barcode/${barcode}`, options)
+  }
+
+  async searchProducts(name: string, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/search/${encodeURIComponent(name)}`, options)
+  }
+
+  async searchProductsInfoByName(name: string, options: RequestOptions = {}): Promise<any> {
+    const { limit = 50, ...rest } = options;
+    return this.get(`/products/info/search/${encodeURIComponent(name)}`, {
+      ...rest,
+      params: { ...rest.params, limit }
+    })
+  }
+
+  async getServiceProducts(options: RequestOptions = {}): Promise<any> {
+    return this.get('/products/service-courts', options)
+  }
+
+  async getProductForSale(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/${id}/sale`, options)
+  }
+
+  async getProductForPurchase(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/${id}/purchase`, options)
+  }
+
+  async createProduct(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/products', data, options)
+  }
+
+  async updateProduct(id: string | number, data: any, options: RequestOptions = {}): Promise<any> {
+    return this.put(`/products/${id}`, data, options)
+  }
+
+  async deleteProduct(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.delete(`/products/${id}`, options)
+  }
+
+  async getAllCategories(options: RequestOptions = {}): Promise<any> {
+    return this.get('/products/all-categories', options)
+  }
+
+  async getCategories(options: RequestOptions = {}): Promise<any> {
+    return this.get('/products/categories', options)
+  }
+
+  // ============================================================================
+  // SALES METHODS
+  // ============================================================================
+
+  async getSalesByDateRange(startDate: string, endDate: string, page = 1, pageSize = 50, options: RequestOptions = {}): Promise<any> {
+    return this.get('/sale/date_range', {
+      ...options,
+      params: { ...options.params, start_date: startDate, end_date: endDate, page, page_size: pageSize }
+    })
+  }
+
+  async getSalesByClientId(clientId: string, page = 1, pageSize = 50, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/sale/client_id/${clientId}`, {
+      ...options,
+      params: { ...options.params, page, page_size: pageSize }
+    })
+  }
+
+  async getSalesByClientName(name: string, page = 1, pageSize = 50, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/sale/client_name/${encodeURIComponent(name)}`, {
+      ...options,
+      params: { ...options.params, page, page_size: pageSize }
+    })
+  }
+
+  async getSaleById(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/sale/${id}`, options)
+  }
+
+  async getSaleWithMetadata(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/sale/${id}/with-metadata`, options)
+  }
+
+  async createSale(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/sale/', data, options)
+  }
+
+  async addProductsToSale(saleId: string | number, data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post(`/sale/${saleId}/products`, data, options)
+  }
+
+  async previewSaleCancellation(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/sale/${id}/preview-cancellation`, options)
+  }
+
+  async cancelSale(id: string | number, reason: string, options: RequestOptions = {}): Promise<any> {
+    return this.put(`/sale/${id}`, { cancellation_reason: reason }, options)
+  }
+
+  async processSalePayment(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/sale/payment', data, options)
+  }
+
+  async getSalePaymentStatus(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/sale/${id}/payment-status`, options)
+  }
+
+  // ============================================================================
   // HTTP VERBS SHORTHANDS
   // ============================================================================
 
@@ -229,6 +354,40 @@ class BusinessManagementAPI {
   // ============================================================================
   // AUTH HELPERS
   // ============================================================================
+
+  /**
+   * Realiza el login de usuario
+   * @param usernameOrEmail - Nombre de usuario o email
+   * @param password - Contraseña
+   */
+  async login(usernameOrEmail: string, password: string): Promise<any> {
+    // Enviamos ambos campos para máxima compatibilidad con el backend
+    // Si el backend es estricto, usará el que corresponda
+    const payload = {
+      username: usernameOrEmail,
+      email: usernameOrEmail,
+      password
+    };
+
+    return this.makeRequest('/login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      skipAuth: true // No se requiere token para login
+    });
+  }
+
+  /**
+   * Realiza el registro de usuario (si está habilitado)
+   * @param email - Correo electrónico
+   * @param password - Contraseña
+   */
+  async signup(email: string, password: string): Promise<any> {
+    return this.makeRequest('/signup', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+      skipAuth: true
+    });
+  }
 
   logout(): void {
     localStorage.removeItem('authToken')
