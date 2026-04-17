@@ -1305,12 +1305,12 @@ const useProductStore = create<ProductState>()(
         set({ loading: true, error: null })
 
         try {
-          const { default: API_CONFIG } = await import('@/config/api.config')
+          const { DEMO_CONFIG } = await import('@/config/demoAuth')
           
           let services = []
           
-          if (API_CONFIG.useDemo) {
-            const { DEMO_PRODUCT_DATA } = await import('@/config/demoData')
+          if (DEMO_CONFIG.enabled) {
+            const { DEMO_PRODUCT_DATA } = await import('../config/demoData')
             services = DEMO_PRODUCT_DATA.filter(p => p.product_type === 'SERVICE')
           } else {
             try {

@@ -28,8 +28,10 @@ const TrendsVelocity = () => {
   const [heatmapData, setHeatmapData] = useState(null)
   const [trendsData, setTrendsData] = useState({ daily: [], hourly: [] })
   const [loading, setLoading] = useState(true)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
     const fetchData = async () => {
       setLoading(true)
       try {
@@ -217,36 +219,38 @@ const TrendsVelocity = () => {
             Ventas por Día
           </h2>
           <div className='flex-1 font-mono'>
-            <ResponsiveContainer
-              width='100%'
-              height='100%'
-              minWidth={0}
-              minHeight={0}
-            >
-              <BarChart data={trendsData.daily || []}>
-                <XAxis
-                  dataKey='label'
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fontWeight: 'bold', fill: '#64748b' }}
-                />
-                <Tooltip
-                  cursor={{ fill: '#f1f5f9' }}
-                  contentStyle={{
-                    borderRadius: '8px',
-                    border: 'none',
-                    fontFamily: 'Inter, sans-serif',
-                  }}
-                  formatter={value => [formatCurrency(value), 'Ventas']}
-                />
-                <Bar
-                  dataKey='sales'
-                  fill='#137fec'
-                  radius={[4, 4, 0, 0]}
-                  barSize={40}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {!loading && isMounted && (
+              <ResponsiveContainer
+                width='100%'
+                height='100%'
+                minWidth={0}
+                minHeight={0}
+              >
+                <BarChart data={trendsData.daily || []}>
+                  <XAxis
+                    dataKey='label'
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fontWeight: 'bold', fill: '#64748b' }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: '#f1f5f9' }}
+                    contentStyle={{
+                      borderRadius: '8px',
+                      border: 'none',
+                      fontFamily: 'Inter, sans-serif',
+                    }}
+                    formatter={value => [formatCurrency(value), 'Ventas']}
+                  />
+                  <Bar
+                    dataKey='sales'
+                    fill='#137fec'
+                    radius={[4, 4, 0, 0]}
+                    barSize={40}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -266,43 +270,45 @@ const TrendsVelocity = () => {
             </div>
           </div>
           <div className='flex-1 font-mono'>
-            <ResponsiveContainer
-              width='100%'
-              height='100%'
-              minWidth={0}
-              minHeight={0}
-            >
-              <AreaChart data={trendsData.hourly || []}>
-                <defs>
-                  <linearGradient id='colorHr' x1='0' y1='0' x2='0' y2='1'>
-                    <stop offset='5%' stopColor='#137fec' stopOpacity={0.3} />
-                    <stop offset='95%' stopColor='#137fec' stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey='label'
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: '#64748b' }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: '8px',
-                    border: 'none',
-                    fontFamily: 'Inter, sans-serif',
-                  }}
-                  formatter={value => [formatCurrency(value), 'Ventas']}
-                />
-                <Area
-                  type='monotone'
-                  dataKey='sales'
-                  stroke='#137fec'
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill='url(#colorHr)'
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {!loading && isMounted && (
+              <ResponsiveContainer
+                width='100%'
+                height='100%'
+                minWidth={0}
+                minHeight={0}
+              >
+                <AreaChart data={trendsData.hourly || []}>
+                  <defs>
+                    <linearGradient id='colorHr' x1='0' y1='0' x2='0' y2='1'>
+                      <stop offset='5%' stopColor='#137fec' stopOpacity={0.3} />
+                      <stop offset='95%' stopColor='#137fec' stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey='label'
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: '#64748b' }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '8px',
+                      border: 'none',
+                      fontFamily: 'Inter, sans-serif',
+                    }}
+                    formatter={value => [formatCurrency(value), 'Ventas']}
+                  />
+                  <Area
+                    type='monotone'
+                    dataKey='sales'
+                    stroke='#137fec'
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill='url(#colorHr)'
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>

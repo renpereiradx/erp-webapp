@@ -33,6 +33,18 @@ export const reservationService = {
     return apiClient.makeRequest(`/reserve/${reserveId}`);
   },
 
+  getReservationsByDateRange: async (startDate: string, endDate: string) => {
+    return apiClient.makeRequest('/reserve/date-range', {
+      params: { start_date: startDate, end_date: endDate }
+    });
+  },
+
+  getReservationReport: async (params: any = {}) => {
+    return apiClient.makeRequest('/reserve/all', {
+      params: params
+    });
+  },
+
   // ==========================================
   // HORARIOS (SCHEDULES)
   // ==========================================

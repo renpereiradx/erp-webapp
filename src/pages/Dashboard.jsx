@@ -41,8 +41,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { summary, alerts, activities, loading, error, fetchDashboardData } = useDashboardStore();
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     fetchDashboardData().then(() => setLastUpdated(new Date()));
   }, [fetchDashboardData]);
 
@@ -235,9 +237,9 @@ const Dashboard = () => {
                        </div>
                    </div>
                </div>
-               <div className="h-[300px] w-full">
-                    {revenueExpensesData && revenueExpensesData.length > 0 && (
-                        <ResponsiveContainer width="100%" height="100%">
+                <div className="h-[300px] w-full">
+                    {isMounted && revenueExpensesData && revenueExpensesData.length > 0 && (
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                             <AreaChart data={revenueExpensesData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
