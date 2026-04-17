@@ -297,27 +297,9 @@ export const distinctSearchableRoutes = [
 
   // Reservas y Horarios
   {
-    name: 'Gestión Unificada de Horarios y Reservas',
-    href: '/horarios',
-    icon: Clock,
-    category: 'Reservas'
-  },
-  {
-    name: 'Historial y Auditoría de Reservas',
-    href: '/historial-reservas',
-    icon: History,
-    category: 'Reservas'
-  },
-  {
-    name: 'Dashboard de Reservas',
-    href: '/reservas',
+    name: 'Gestión de Agenda y Reservas',
+    href: '/gestion-agenda',
     icon: CalendarCheck,
-    category: 'Reservas'
-  },
-  {
-    name: 'Disponibilidad de Horarios',
-    href: '/horarios-disponibles',
-    icon: Clock,
     category: 'Reservas'
   },
 

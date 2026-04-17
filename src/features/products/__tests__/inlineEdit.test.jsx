@@ -2,7 +2,7 @@ import { screen, fireEvent } from '@testing-library/react';
 import ProductCard from '@/features/products/components/ProductCard';
 import useProductStore from '@/store/useProductStore';
 import { productService } from '@/services/productService';
-import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
+import { renderWithTheme } from '@/utils/themeTestUtils';
 
 import { describe, test, expect, vi } from 'vitest';
 

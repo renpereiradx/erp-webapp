@@ -70,25 +70,30 @@ export const InventoryTurnoverABC: React.FC = () => {
         <SummaryCard 
           title="Tasa Promedio de Rotación"
           icon="sync_alt"
-          value={`${data.overall.turnover_rate}x`}
-          changeValue={data.overall.turnover_rate_change}
+          value={`${Number(data.overall?.turnover_rate || 0).toFixed(2)}x`}
+          changeValue={data.overall?.turnover_rate_change || 0}
           changeDescription="Vs. mes anterior"
           isPositiveGood={true}
         />
         <SummaryCard 
           title="Días Promedio de Inventario"
           icon="calendar_today"
-          value={`${data.overall.days_of_inventory} días`}
-          changeValue={data.overall.days_of_inventory_change}
-          changeDescription="Mejora en eficiencia logística"
+          value={`${Math.round(data.overall?.days_of_inventory || 0)} días`}
+          changeValue={data.overall?.days_of_inventory_change || 0}
+          changeDescription="Eficiencia logística"
           isPositiveGood={false}
         />
       </div>
 
       {/* Split Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <CategoryTurnoverTable categories={data.by_category} />
-        <ABCParetoChart classAProducts={data.abc_class_a} />
+        <CategoryTurnoverTable categories={data.by_category || []} />
+        <ABCParetoChart 
+          classAProducts={data.abc_class_a || data.class_a || []} 
+          classAPct={data.abc_summary?.class_a_value_pct || data.overall?.class_a_pct || 80}
+          classBPct={data.abc_summary?.class_b_value_pct || data.overall?.class_b_pct || 15}
+          classCPct={data.abc_summary?.class_c_value_pct || data.overall?.class_c_pct || 5}
+        />
       </div>
     </div>
   );

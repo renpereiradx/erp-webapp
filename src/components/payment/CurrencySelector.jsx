@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { ChevronDown, AlertCircle, Loader2, Search } from 'lucide-react'
-import { CurrencyService } from '../../services/currencyService.js'
+import { CurrencyService } from '../../services/currencyService'
 
 /**
  * Currency Selector Component

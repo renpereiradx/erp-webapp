@@ -65,7 +65,7 @@ const CategoryProfitability = () => {
   if (loading) return <div className="p-16 text-center animate-pulse text-slate-500 font-black uppercase tracking-widest text-[10px]">Analizando rendimiento por familias de producto...</div>;
   if (error) return <div className="p-10 text-center text-rose-500 bg-rose-50 border border-rose-100 rounded-2xl m-6 font-black uppercase tracking-tight text-xs">Error operativo: {error}</div>;
 
-  const { categories, summary } = data;
+  const { categories = [], summary = {} } = data || {};
 
   return (
     <div className="space-y-8 md:space-y-10 animate-in fade-in duration-700">
@@ -101,15 +101,15 @@ const CategoryProfitability = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <KPICard 
           title="Líder en Beneficio" 
-          subtitle={summary.most_profitable_name} 
-          value={summary.total_profit * 0.42} 
+          subtitle={summary?.most_profitable_name || 'Sin datos'} 
+          value={(summary?.total_profit || 0) * 0.42} 
           highlight="+12.5% UP" 
           icon={TrendingUp} 
           color="blue" 
         />
         <KPICard 
           title="Márgenes Críticos" 
-          subtitle={summary.least_profitable_name} 
+          subtitle={summary?.least_profitable_name || 'Sin datos'} 
           value="8.4% BRUTO" 
           highlight="ALTA PRIORIDAD" 
           icon={AlertTriangle} 
@@ -118,7 +118,7 @@ const CategoryProfitability = () => {
         <KPICard 
           title="Consolidado Total" 
           subtitle="Rendimiento Global" 
-          value={summary.total_profit} 
+          value={summary?.total_profit || 0} 
           icon={Wallet} 
           color="indigo" 
         />
@@ -136,7 +136,7 @@ const CategoryProfitability = () => {
 
         {/* Mobile: Category Card List */}
         <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800">
-          {categories.map((cat) => (
+          {categories?.map((cat) => (
             <div key={cat.category_id} className="p-5 space-y-4">
               <div className="flex justify-between items-start">
                 <div className="flex flex-col gap-1">
@@ -179,7 +179,7 @@ const CategoryProfitability = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-              {categories.map((cat) => (
+              {categories?.map((cat) => (
                 <tr key={cat.category_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all cursor-pointer group">
                   <td className="px-8 py-6">
                     <div className="flex flex-col gap-1">
@@ -219,7 +219,7 @@ const CategoryProfitability = () => {
         </div>
         
         <div className="px-6 md:px-8 py-5 bg-slate-50/30 dark:bg-slate-950/30 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Total: {categories.length} Familias Auditadas</p>
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Total: {categories?.length || 0} Familias Auditadas</p>
           <div className="flex gap-2">
             <button className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 disabled:opacity-30 transition-all"><ChevronLeft size={14} /></button>
             <button className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-[#137fec] hover:bg-blue-50 transition-all shadow-sm"><ChevronRight size={14} /></button>
@@ -252,7 +252,7 @@ const CategoryProfitability = () => {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8 md:gap-y-10">
-          {categories.slice(0, 4).map((cat) => (
+          {categories?.slice(0, 4).map((cat) => (
             <div key={cat.category_id} className="space-y-4">
               <div className="flex justify-between items-end">
                 <span className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-900 dark:text-slate-100">{cat.category_name}</span>

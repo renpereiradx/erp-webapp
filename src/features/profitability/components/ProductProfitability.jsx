@@ -48,7 +48,9 @@ const ProductProfitability = () => {
   if (loading) return <div className="p-8 text-center animate-pulse text-slate-500">Cargando análisis de productos...</div>;
   if (error) return <div className="p-8 text-center text-rose-500 bg-rose-50 border border-rose-100 rounded-lg m-4">Error: {error}</div>;
 
-  const { products, summary, pagination } = data;
+  const { products, summary, pagination } = data || {};
+
+  if (!data) return null;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
@@ -75,17 +77,17 @@ const ProductProfitability = () => {
             <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">Productos</p>
             <Package className="text-[#137fec]" size={18} />
           </div>
-          <p className="text-slate-900 dark:text-white text-2xl font-bold font-mono">{summary.total_products}</p>
-          <p className="text-emerald-600 text-[10px] font-bold mt-2">RENTABLES: {summary.profitable_products}</p>
+          <p className="text-slate-900 dark:text-white text-2xl font-bold font-mono">{summary?.total_products || 0}</p>
+          <p className="text-emerald-600 text-[10px] font-bold mt-2">RENTABLES: {summary?.profitable_products || 0}</p>
         </div>
         <div className="bg-white dark:bg-slate-900 p-5 md:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">Margen Promedio</p>
             <Percent className="text-amber-500" size={18} />
           </div>
-          <p className="text-slate-900 dark:text-white text-2xl font-bold font-mono">{summary.average_margin}%</p>
+          <p className="text-slate-900 dark:text-white text-2xl font-bold font-mono">{summary?.average_margin || 0}%</p>
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-1 rounded-full mt-3 overflow-hidden">
-            <div className="bg-amber-500 h-full" style={{ width: `${summary.average_margin}%` }}></div>
+            <div className="bg-amber-500 h-full" style={{ width: `${summary?.average_margin || 0}%` }}></div>
           </div>
         </div>
         <div className="bg-white dark:bg-slate-900 p-5 md:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -93,10 +95,10 @@ const ProductProfitability = () => {
             <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">Beneficio Total</p>
             <TrendingUp className="text-emerald-500" size={18} />
           </div>
-          <p className={`text-slate-900 dark:text-white font-bold font-mono ${getDynamicFontClass(summary.total_profit, { baseClass: 'text-2xl', mediumClass: 'text-xl', smallClass: 'text-lg', extraSmallClass: 'text-base' })}`}>
-            {formatPYG(summary.total_profit)}
+          <p className={`text-slate-900 dark:text-white font-bold font-mono ${getDynamicFontClass(summary?.total_profit, { baseClass: 'text-2xl', mediumClass: 'text-xl', smallClass: 'text-lg', extraSmallClass: 'text-base' })}`}>
+            {formatPYG(summary?.total_profit || 0)}
           </p>
-          <p className="text-slate-400 text-[9px] font-bold mt-2 uppercase">TOTAL VENTAS: {formatPYG(summary.total_revenue)}</p>
+          <p className="text-slate-400 text-[9px] font-bold mt-2 uppercase">TOTAL VENTAS: {formatPYG(summary?.total_revenue || 0)}</p>
         </div>
       </div>
 
@@ -118,7 +120,7 @@ const ProductProfitability = () => {
 
         {/* Mobile: Card List (Visible solo en mobile) */}
         <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800">
-          {products.map((item) => (
+          {products?.map((item) => (
             <div key={item.product_id} className="p-4 space-y-3 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex flex-col min-w-0">
@@ -142,6 +144,11 @@ const ProductProfitability = () => {
               </div>
             </div>
           ))}
+          {(!products || products.length === 0) && (
+            <div className="p-8 text-center text-slate-500 text-xs italic">
+              No se encontraron datos de productos.
+            </div>
+          )}
         </div>
 
         {/* Desktop: Table (Oculta en mobile) */}
@@ -159,7 +166,7 @@ const ProductProfitability = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-              {products.map((item) => (
+              {products?.map((item) => (
                 <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-default">
                   <td className="px-6 py-4">
                     <div className="flex flex-col gap-0.5">
@@ -179,13 +186,22 @@ const ProductProfitability = () => {
                   </td>
                 </tr>
               ))}
+              {(!products || products.length === 0) && (
+                <tr>
+                  <td colSpan="7" className="px-6 py-12 text-center text-slate-500 text-xs italic">
+                    No hay datos disponibles para mostrar en la tabla.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
         
         {/* Pagination - Adaptativa */}
         <div className="px-4 md:px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/30 dark:bg-transparent">
-          <span className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest">Pág. {pagination.page} / {pagination.total_pages}</span>
+          <span className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest">
+            Pág. {pagination?.page || 1} / {pagination?.total_pages || 1}
+          </span>
           <div className="flex items-center gap-2">
             <button className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30 hover:bg-white transition-colors">
               <ChevronLeft size={14} />

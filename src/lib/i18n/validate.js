@@ -5,8 +5,8 @@
  * Uso: node src/lib/i18n/validate.js
  */
 
-import { es } from './locales/es/index.js'
-import { en } from './locales/en/index.js'
+import { es } from './locales/es/index'
+import { en } from './locales/en/index'
 
 /**
  * Colores para la consola

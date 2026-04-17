@@ -77,6 +77,7 @@ const InventoryManagement = () => {
       inventory_type: 'MONTHLY',
       status: 'COMPLETED',
       notes: '',
+      system_version: '4.3.0-frontend',
     },
     items: [],
   })
@@ -304,7 +305,8 @@ const InventoryManagement = () => {
       metadata: {
         ...inventoryForm.metadata,
         timestamp: new Date().toISOString(),
-        system_version: '4.2.0-frontend',
+        system_version: '4.3.0-frontend',
+        operator: user?.name || user?.id || 'manual_operator',
       },
     }
 
@@ -488,12 +490,17 @@ const InventoryManagement = () => {
   // Obtener origen desde metadata
   const getOrigin = metadata => {
     const sourceMap = {
-      physical_count: 'Conteo Manual',
-      barcode_scanner: 'Sistema POS',
-      rfid: 'Transferencia',
+      physical_count: 'Inventario Masivo',
+      INVENTORY_COUNT: 'Conteo Físico',
+      DAMAGE: 'Producto Dañado',
+      EXPIRY: 'Vencimiento',
+      THEFT: 'Robo/Pérdida',
+      RETURN: 'Devolución',
+      CORRECTION: 'Corrección',
+      INITIAL_COUNT: 'Stock Inicial',
       manual_adjustment: 'Ajuste Manual',
     }
-    return sourceMap[metadata?.source] || metadata?.source || 'N/A'
+    return sourceMap[metadata?.adjustment_type] || sourceMap[metadata?.source] || metadata?.source || 'N/A'
   }
 
   // Filtrar inventarios localmente
@@ -1103,91 +1110,185 @@ const InventoryManagement = () => {
       {/* Details Modal */}
       {showDetailsModal && selectedInventory && (
         <div className='fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200'>
-          <div className='bg-white w-full max-w-4xl rounded-xl shadow-fluent-16 overflow-hidden flex flex-col max-h-[85vh] scale-100 animate-in zoom-in-95 duration-200'>
+          <div className='bg-white w-full max-w-5xl rounded-xl shadow-fluent-16 overflow-hidden flex flex-col max-h-[90vh] scale-100 animate-in zoom-in-95 duration-200'>
             <header className='p-6 border-b border-border-subtle flex items-center justify-between bg-white'>
-              <h2 className='text-xl font-black text-text-main tracking-tighter uppercase'>
-                {t('inventoryManagement.viewModal.title')}
-              </h2>
-              <button onClick={() => { setShowDetailsModal(false); clearSelectedInventory(); }} className='p-2 hover:bg-slate-100 rounded-full transition-colors'>
-                <X size={24} className='text-text-secondary' />
-              </button>
+              <div className="flex items-center gap-4">
+                <div className="size-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                  <span className="material-symbols-outlined">inventory_2</span>
+                </div>
+                <div>
+                  <h2 className='text-xl font-black text-text-main tracking-tighter uppercase leading-none'>
+                    {t('inventoryManagement.viewModal.title')}
+                  </h2>
+                  <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest mt-1">
+                    ID: {selectedInventory.inventory.id} • {formatDate(selectedInventory.inventory.check_date)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  className="p-2 hover:bg-slate-100 rounded-lg text-text-secondary transition-colors"
+                  title="Imprimir reporte"
+                  onClick={() => window.print()}
+                >
+                  <span className="material-symbols-outlined">print</span>
+                </button>
+                <button onClick={() => { setShowDetailsModal(false); clearSelectedInventory(); }} className='p-2 hover:bg-slate-100 rounded-full transition-colors'>
+                  <X size={24} className='text-text-secondary' />
+                </button>
+              </div>
             </header>
 
-            <div className='flex-1 overflow-auto p-8 custom-scrollbar'>
-              <div className='mb-8'>
-                <h3 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4'>
-                  {t('inventoryManagement.viewModal.generalInfo')}
-                </h3>
-                <div className='grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-slate-50 rounded-xl border border-border-subtle'>
-                  <div className='space-y-1'>
-                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.id')}</p>
-                    <p className='font-mono text-xs text-primary font-bold'>{selectedInventory.inventory.id}</p>
-                  </div>
-                  <div className='space-y-1'>
-                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.status')}</p>
-                    <div>
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${getStatusColorClass(getInventoryStatus(selectedInventory.inventory.state, selectedInventory.inventory.metadata).type)}`}>
-                        {getInventoryStatus(selectedInventory.inventory.state, selectedInventory.inventory.metadata).label}
-                      </span>
+            <div className='flex-1 overflow-auto p-8 custom-scrollbar bg-slate-50/30'>
+              <div className='grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8'>
+                {/* General Information Card */}
+                <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-border-subtle shadow-sm space-y-6">
+                  <h3 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2'>
+                    <span className="material-symbols-outlined text-sm">info</span>
+                    {t('inventoryManagement.viewModal.generalInfo')}
+                  </h3>
+                  <div className='grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4'>
+                    <div className='space-y-1'>
+                      <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.status')}</p>
+                      <div>
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${getStatusColorClass(getInventoryStatus(selectedInventory.inventory.state, selectedInventory.inventory.metadata).type)}`}>
+                          {getInventoryStatus(selectedInventory.inventory.state, selectedInventory.inventory.metadata).label}
+                        </span>
+                      </div>
+                    </div>
+                    <div className='space-y-1'>
+                      <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.location')}</p>
+                      <p className='text-sm font-bold text-text-main flex items-center gap-1.5'>
+                        <span className="material-symbols-outlined text-sm text-slate-400">place</span>
+                        {selectedInventory.inventory.metadata?.location || 'N/A'}
+                      </p>
+                    </div>
+                    <div className='space-y-1'>
+                      <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.operator')}</p>
+                      <p className='text-sm font-bold text-text-main flex items-center gap-1.5'>
+                        <span className="material-symbols-outlined text-sm text-slate-400">person</span>
+                        {selectedInventory.inventory.metadata?.operator || 'N/A'}
+                      </p>
+                    </div>
+                    <div className='space-y-1'>
+                      <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.method')}</p>
+                      <p className='text-sm font-bold text-text-main capitalize flex items-center gap-1.5'>
+                        <span className="material-symbols-outlined text-sm text-slate-400">settings_input_antenna</span>
+                        {selectedInventory.inventory.metadata?.counting_method?.replace('_', ' ') || 'N/A'}
+                      </p>
+                    </div>
+                    <div className='space-y-1'>
+                      <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.verification')}</p>
+                      <p className='text-sm font-bold text-text-main capitalize flex items-center gap-1.5'>
+                        <span className="material-symbols-outlined text-sm text-slate-400">verified_user</span>
+                        {selectedInventory.inventory.metadata?.verification?.replace('_', ' ') || 'N/A'}
+                      </p>
+                    </div>
+                    <div className='space-y-1'>
+                      <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.origin')}</p>
+                      <p className='text-sm font-bold text-text-main flex items-center gap-1.5'>
+                        <span className="material-symbols-outlined text-sm text-slate-400">source</span>
+                        {getOrigin(selectedInventory.inventory.metadata)}
+                      </p>
                     </div>
                   </div>
-                  <div className='space-y-1'>
-                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.date')}</p>
-                    <p className='text-sm font-bold text-text-main'>{formatDate(selectedInventory.inventory.check_date)}</p>
-                  </div>
-                  <div className='space-y-1'>
-                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.location')}</p>
-                    <p className='text-sm font-bold text-text-main'>{selectedInventory.inventory.metadata?.location || 'N/A'}</p>
-                  </div>
-                  <div className='space-y-1 pt-2'>
-                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.operator')}</p>
-                    <p className='text-sm font-bold text-text-main'>{selectedInventory.inventory.metadata?.operator || 'N/A'}</p>
-                  </div>
-                  <div className='space-y-1 pt-2'>
-                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.origin')}</p>
-                    <p className='text-sm font-bold text-text-main'>{getOrigin(selectedInventory.inventory.metadata)}</p>
-                  </div>
-                  <div className='space-y-1 pt-2'>
-                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.method')}</p>
-                    <p className='text-sm font-bold text-text-main capitalize'>{selectedInventory.inventory.metadata?.counting_method?.replace('_', ' ') || 'N/A'}</p>
-                  </div>
-                  <div className='space-y-1 pt-2'>
-                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.verification')}</p>
-                    <p className='text-sm font-bold text-text-main capitalize'>{selectedInventory.inventory.metadata?.verification?.replace('_', ' ') || 'N/A'}</p>
+                  {selectedInventory.inventory.metadata?.notes && (
+                    <div className="pt-4 border-t border-slate-50">
+                      <p className='text-[10px] font-black uppercase text-slate-400 mb-1'>Notas</p>
+                      <p className="text-xs text-text-secondary leading-relaxed italic italic">"{selectedInventory.inventory.metadata.notes}"</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Statistics Card */}
+                <div className="bg-white p-6 rounded-xl border border-border-subtle shadow-sm space-y-6">
+                  <h3 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2'>
+                    <span className="material-symbols-outlined text-sm">analytics</span>
+                    Resumen de Conteo
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                      <span className="text-[10px] font-bold uppercase text-slate-500">Total Items</span>
+                      <span className="font-black text-sm">{selectedInventory.items?.length || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-green-50/50 rounded-lg">
+                      <span className="text-[10px] font-bold uppercase text-success">Aumentos</span>
+                      <span className="font-black text-sm text-success">
+                        {selectedInventory.items?.filter(i => (i.quantity_checked - i.previous_quantity) > 0).length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-red-50/50 rounded-lg">
+                      <span className="text-[10px] font-bold uppercase text-error">Mermas</span>
+                      <span className="font-black text-sm text-error">
+                        {selectedInventory.items?.filter(i => (i.quantity_checked - i.previous_quantity) < 0).length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-primary/5 rounded-lg border border-primary/10">
+                      <span className="text-[10px] font-bold uppercase text-primary">Sin Discrepancia</span>
+                      <span className="font-black text-sm text-primary">
+                        {selectedInventory.items?.filter(i => (i.quantity_checked - i.previous_quantity) === 0).length}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {selectedInventory.items && selectedInventory.items.length > 0 && (
-                <div>
-                  <h3 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4'>
-                    {t('inventoryManagement.viewModal.items')} ({selectedInventory.items.length})
-                  </h3>
-                  <div className="bg-white rounded-xl border border-border-subtle overflow-hidden">
-                    <table className='w-full text-left'>
-                      <thead className='bg-gray-50/50 border-b border-border-subtle text-[11px] font-black uppercase text-slate-500 tracking-wider'>
-                        <tr>
-                          <th className='py-3 px-6'>{t('inventoryManagement.viewModal.product')}</th>
-                          <th className="py-3 px-4 text-center">{t('inventoryManagement.viewModal.previousQuantity')}</th>
-                          <th className="py-3 px-4 text-center">{t('inventoryManagement.viewModal.quantityChecked')}</th>
-                          <th className="py-3 px-6 text-right">{t('inventoryManagement.viewModal.difference')}</th>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2'>
+                      <span className="material-symbols-outlined text-sm">list_alt</span>
+                      {t('inventoryManagement.viewModal.items')}
+                    </h3>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase">
+                      Mostrando {selectedInventory.items.length} productos
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl border border-border-subtle shadow-sm overflow-hidden">
+                    <table className='w-full text-left border-collapse'>
+                      <thead>
+                        <tr className='bg-slate-50 border-b border-border-subtle'>
+                          <th className='py-4 px-6 text-[10px] font-black uppercase text-slate-500 tracking-wider'>{t('inventoryManagement.viewModal.product')}</th>
+                          <th className="py-4 px-4 text-center text-[10px] font-black uppercase text-slate-500 tracking-wider">{t('inventoryManagement.viewModal.previousQuantity')}</th>
+                          <th className="py-4 px-4 text-center text-[10px] font-black uppercase text-slate-500 tracking-wider">{t('inventoryManagement.viewModal.quantityChecked')}</th>
+                          <th className="py-4 px-6 text-right text-[10px] font-black uppercase text-slate-500 tracking-wider">{t('inventoryManagement.viewModal.difference')}</th>
                         </tr>
                       </thead>
-                      <tbody className='divide-y divide-gray-50 text-sm'>
+                      <tbody className='divide-y divide-slate-50 text-xs'>
                         {selectedInventory.items.map((item, idx) => {
                           const diff = item.quantity_checked - item.previous_quantity;
                           return (
-                            <tr key={idx} className='hover:bg-slate-50 transition-colors'>
+                            <tr key={idx} className='hover:bg-slate-50/80 transition-colors group'>
                               <td className='py-4 px-6'>
-                                <div className="flex flex-col">
-                                  <span className="font-bold text-text-main">ID de Producto</span>
-                                  <span className="text-[10px] text-primary font-mono font-bold uppercase">{item.product_id}</span>
+                                <div className="flex items-center gap-3">
+                                  <div className="size-8 rounded bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                    <span className="material-symbols-outlined text-lg">package_2</span>
+                                  </div>
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="font-black text-text-main truncate uppercase tracking-tight">
+                                      {item.product_name || item.name || 'Producto sin nombre'}
+                                    </span>
+                                    <span className="text-[10px] text-primary font-mono font-bold uppercase flex items-center gap-1">
+                                      <span className="size-1 rounded-full bg-primary/30"></span>
+                                      {item.product_id}
+                                    </span>
+                                  </div>
                                 </div>
                               </td>
-                              <td className="py-4 px-4 text-center tabular-nums text-slate-500">{item.previous_quantity}</td>
+                              <td className="py-4 px-4 text-center tabular-nums text-slate-500 font-medium">{item.previous_quantity}</td>
                               <td className="py-4 px-4 text-center tabular-nums font-black text-text-main">{item.quantity_checked}</td>
-                              <td className={`py-4 px-6 text-right tabular-nums font-black ${diff > 0 ? 'text-success' : diff < 0 ? 'text-error' : 'text-slate-400'}`}>
-                                {diff > 0 ? `+${diff}` : diff}
+                              <td className={`py-4 px-6 text-right tabular-nums`}>
+                                <div className={`inline-flex items-center gap-1 px-2 py-1 rounded font-black text-[11px] ${
+                                  diff > 0 ? 'bg-green-50 text-success' : 
+                                  diff < 0 ? 'bg-red-50 text-error' : 
+                                  'bg-slate-50 text-slate-400'
+                                }`}>
+                                  {diff > 0 && <span className="material-symbols-outlined text-xs">trending_up</span>}
+                                  {diff < 0 && <span className="material-symbols-outlined text-xs">trending_down</span>}
+                                  {diff === 0 && <span className="material-symbols-outlined text-xs">remove</span>}
+                                  {diff > 0 ? `+${diff}` : diff}
+                                </div>
                               </td>
                             </tr>
                           );
@@ -1198,9 +1299,20 @@ const InventoryManagement = () => {
                 </div>
               )}
             </div>
-            <div className='p-6 bg-slate-50 border-t border-border-subtle flex justify-end'>
+            <div className='p-6 bg-white border-t border-border-subtle flex justify-between items-center'>
+              <div className="flex gap-2">
+                {selectedInventory.inventory.state && (
+                  <button
+                    className='px-4 py-2 text-error hover:bg-red-50 text-[10px] font-black uppercase rounded-lg transition-all flex items-center gap-2 border border-transparent hover:border-red-100'
+                    onClick={() => { setShowDetailsModal(false); handleDelete(selectedInventory.inventory.id); }}
+                  >
+                    <span className="material-symbols-outlined text-lg">delete_sweep</span>
+                    Invalidar Inventario
+                  </button>
+                )}
+              </div>
               <button
-                className='px-5 py-2.5 bg-white border border-border-subtle text-text-main text-xs font-bold uppercase rounded hover:bg-slate-100 transition-all shadow-sm'
+                className='px-6 py-2.5 bg-primary text-white text-xs font-black uppercase rounded-lg hover:bg-primary-hover transition-all shadow-md shadow-primary/20 flex items-center gap-2'
                 onClick={() => { setShowDetailsModal(false); clearSelectedInventory(); }}
               >
                 {t('inventoryManagement.viewModal.close')}

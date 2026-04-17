@@ -8,14 +8,22 @@ import { ABCSummary, ABCItem } from '../../components/InventoryAnalytics/Dashboa
 
 export const InventoryDashboard: React.FC = () => {
   const [data, setData] = useState<InventoryDashboardData | null>(null);
+  const [overview, setOverview] = useState<any>(null); // Añadido para el overview
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await inventoryAnalyticsService.getDashboard();
-        if (response.success) {
-          setData(response.data);
+        const [dashboardRes, overviewRes] = await Promise.all([
+          inventoryAnalyticsService.getDashboard(),
+          inventoryAnalyticsService.getOverview()
+        ]);
+
+        if (dashboardRes.success) {
+          setData(dashboardRes.data);
+        }
+        if (overviewRes.success) {
+          setOverview(overviewRes.data);
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -35,6 +43,11 @@ export const InventoryDashboard: React.FC = () => {
     return <div className="p-8 text-center text-rose-500">Error al cargar los datos del dashboard.</div>;
   }
 
+  // Calculamos la ganancia desde el overview si está disponible
+  const potentialProfit = overview?.potential_profit || 
+                         (overview?.total_value - overview?.total_cost) || 
+                         (data.kpis.total_value * 0.28); // Fallback dinámico si fallara el overview
+
   const stockStatusItems: StockStatusItem[] = [
     { label: 'En Stock', percentage: data.stock_status.in_stock_pct, count: data.stock_status.in_stock, colorClass: 'bg-emerald-500', strokeClass: 'stroke-emerald-500' },
     { label: 'Bajo Stock', percentage: data.stock_status.low_stock_pct, count: data.stock_status.low_stock, colorClass: 'bg-amber-400', strokeClass: 'stroke-amber-400' },
@@ -42,18 +55,51 @@ export const InventoryDashboard: React.FC = () => {
     { label: 'Sobre-stock', percentage: data.stock_status.overstock_pct, count: data.stock_status.overstock, colorClass: 'bg-purple-500', strokeClass: 'stroke-purple-500' },
   ];
 
+  const getActionLabel = (type: string, severity: string) => {
+    if (severity === 'CRITICAL') return 'Ver reporte detallado';
+    if (type === 'OUT_OF_STOCK') return 'Generar orden de compra';
+    if (type === 'LOW_STOCK') return 'Revisar stock mínimo';
+    if (type === 'OVERSTOCK') return 'Crear promoción';
+    if (type === 'DEAD_STOCK') return 'Liquidar producto';
+    return 'Ver detalles';
+  };
+
   const alerts: AlertItem[] = data.alerts.map((a, i) => ({
-    id: `alert-${i}`,
-    type: a.type,
+    id: `alert-${i}-${a.type}`,
+    type: a.type.replace(/_/g, ' '), // Formatear tipo (ej: LOW_STOCK -> LOW STOCK)
     message: a.message,
     severity: a.severity,
-    actionLabel: a.severity === 'CRITICAL' ? 'Ver reporte' : 'Generar orden'
+    actionLabel: getActionLabel(a.type, a.severity),
+    onAction: () => console.log(`Acción para alerta ${a.type}: ${a.message}`)
   }));
 
+  const totalValueForABC = overview?.total_value || data.kpis.total_value;
+
   const abcItems: ABCItem[] = [
-    { class: 'A', label: 'Productos Vitales', percentage: data.abc_summary.class_a_value_pct, count: data.abc_summary.class_a_count, value: `Gs. ${(data.kpis.total_value * data.abc_summary.class_a_value_pct / 100).toLocaleString('es-PY')}`, description: '' },
-    { class: 'B', label: 'Productos Medios', percentage: data.abc_summary.class_b_value_pct, count: data.abc_summary.class_b_count, value: `Gs. ${(data.kpis.total_value * data.abc_summary.class_b_value_pct / 100).toLocaleString('es-PY')}`, description: '' },
-    { class: 'C', label: 'Productos Menores', percentage: data.abc_summary.class_c_value_pct, count: data.abc_summary.class_c_count, value: `Gs. ${(data.kpis.total_value * data.abc_summary.class_c_value_pct / 100).toLocaleString('es-PY')}`, description: '' },
+    { 
+      class: 'A', 
+      label: 'Clase A (Alta Rotación/Valor)', 
+      percentage: data.abc_summary.class_a_value_pct, 
+      count: data.abc_summary.class_a_count, 
+      value: `Gs. ${(totalValueForABC * data.abc_summary.class_a_value_pct / 100).toLocaleString('es-PY')}`, 
+      description: 'Productos que representan el 80% del valor total.' 
+    },
+    { 
+      class: 'B', 
+      label: 'Clase B (Importancia Media)', 
+      percentage: data.abc_summary.class_b_value_pct, 
+      count: data.abc_summary.class_b_count, 
+      value: `Gs. ${(totalValueForABC * data.abc_summary.class_b_value_pct / 100).toLocaleString('es-PY')}`, 
+      description: 'Productos que representan el 15% del valor total.' 
+    },
+    { 
+      class: 'C', 
+      label: 'Clase C (Bajo Valor Unitario)', 
+      percentage: data.abc_summary.class_c_value_pct, 
+      count: data.abc_summary.class_c_count, 
+      value: `Gs. ${(totalValueForABC * data.abc_summary.class_c_value_pct / 100).toLocaleString('es-PY')}`, 
+      description: 'Productos que representan el 5% del valor total.' 
+    },
   ];
 
   return (
@@ -88,7 +134,7 @@ export const InventoryDashboard: React.FC = () => {
         />
         <KPIWidget 
           title="Ganancia Potencial"
-          value={`Gs. ${(data.kpis.total_value * 0.28).toLocaleString('es-PY')}`} // Simulated calculation
+          value={`Gs. ${potentialProfit.toLocaleString('es-PY')}`}
           icon="payments"
           iconColorClass="text-emerald-500"
           bgColorClass="bg-emerald-50 dark:bg-emerald-500/10"
@@ -97,7 +143,7 @@ export const InventoryDashboard: React.FC = () => {
         />
         <KPIWidget 
           title="Tasa de Rotación"
-          value={`${data.kpis.turnover_rate}x`}
+          value={`${Number(data.kpis.turnover_rate).toFixed(2)}x`}
           icon="sync_alt"
           iconColorClass="text-blue-500"
           bgColorClass="bg-blue-50 dark:bg-blue-500/10"
@@ -105,7 +151,7 @@ export const InventoryDashboard: React.FC = () => {
         />
         <KPIWidget 
           title="Stock Muerto"
-          value={`${data.kpis.dead_stock_pct}%`}
+          value={`${Number(data.kpis.dead_stock_pct).toFixed(2)}%`}
           icon="package_2"
           iconColorClass="text-amber-500"
           bgColorClass="bg-amber-50 dark:bg-amber-500/10"
@@ -116,7 +162,11 @@ export const InventoryDashboard: React.FC = () => {
       {/* Main Section */}
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
         <div className="lg:col-span-6">
-          <StockStatusChart items={stockStatusItems} />
+          <StockStatusChart 
+            items={stockStatusItems} 
+            totalLabel="Productos" 
+            totalValue={overview?.total_products?.toString() || (data.stock_status.in_stock + data.stock_status.low_stock + data.stock_status.out_of_stock + data.stock_status.overstock).toString()}
+          />
         </div>
         <div className="lg:col-span-4">
           <AlertsPanel alerts={alerts} />

@@ -102,6 +102,10 @@ export const common = {
   'common.services_planning': 'Planificación y Servicios',
   'common.system_config': 'Configuración y Sistema',
 
+  // Agenda y Reservas
+  'reservations.title': 'Gestión de Agenda',
+  'reservations.subtitle': 'Gestión unificada de horarios y reservas',
+
   // Filtros
   'common.filters': 'Filtros',
   'common.apply': 'Aplicar',

@@ -113,7 +113,7 @@ const PurchasePaymentsPage = () => {
   const [isCancelling, setIsCancelling] = useState(false)
 
   const {
-    orders, filters, meta, loading, error, fetchOrders, setFilter, resetFilters, processPayment
+    orders, filters, meta, loading, error, fetchOrders, updateFilters: setFilter, resetFilters, processPayment
   } = usePurchasePaymentsMvpStore()
 
   // Manejar carga inicial con feedback
@@ -266,18 +266,18 @@ const PurchasePaymentsPage = () => {
             <Input
               className='pl-10 h-10 border-border-subtle rounded-full bg-slate-50 focus:bg-white transition-all font-bold text-xs uppercase tracking-wider'
               placeholder='Buscar por proveedor o N° orden...'
-              value={filters.searchTerm || ''}
-              onChange={e => setFilter('searchTerm', e.target.value)}
+              value={filters.search || ''}
+              onChange={e => setFilter({ search: e.target.value })}
             />
           </div>
           
           <div className='flex items-center gap-2'>
-            <Select value={filters.status || 'ALL'} onValueChange={val => setFilter('status', val)}>
+            <Select value={filters.status || 'all'} onValueChange={val => setFilter({ status: val })}>
               <SelectTrigger className='h-10 w-[160px] rounded-lg border-border-subtle font-bold text-xs uppercase'>
                 <SelectValue placeholder='Estado' />
               </SelectTrigger>
               <SelectContent className='rounded-xl border-border-subtle shadow-fluent-16'>
-                <SelectItem value='ALL' className='font-bold text-xs uppercase'>Todos los estados</SelectItem>
+                <SelectItem value='all' className='font-bold text-xs uppercase'>Todos los estados</SelectItem>
                 <SelectItem value='PENDING' className='font-bold text-xs uppercase text-warning'>Pendientes</SelectItem>
                 <SelectItem value='PARTIAL' className='font-bold text-xs uppercase text-info'>Parciales</SelectItem>
                 <SelectItem value='PAID' className='font-bold text-xs uppercase text-success'>Pagados</SelectItem>

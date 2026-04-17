@@ -1,0 +1,421 @@
+/**
+ * Componente principal de la aplicación ERP
+ * Sistema de autenticación completo con sistema de temas robusto
+ */
+
+import React from 'react'
+console.log('🚀 App.tsx loaded - TS Version');
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom'
+import { Toaster } from 'sonner'
+import MainLayout from '@/layouts/MainLayout'
+import PriceAdjustmentLayout from '@/layouts/PriceAdjustmentLayout'
+import Dashboard from '@/pages/Dashboard'
+import FinancialSummaryDashboard from '@/pages/FinancialSummaryDashboard'
+import DetailedKPIs from '@/pages/DetailedKPIs'
+import SalesHeatmap from '@/pages/SalesHeatmap'
+import ConsolidatedAlerts from '@/pages/ConsolidatedAlerts'
+import TopProductsOverview from '@/pages/TopProductsOverview'
+import Products from '@/pages/Products'
+import Clients from '@/pages/Clients'
+import Suppliers from '@/pages/Suppliers'
+import SalesNew from '@/pages/SalesNew'
+import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
+import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
+import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
+import PriceAdjustmentHistoryDetail from '@/pages/PriceAdjustmentHistoryDetail'
+import ProductAdjustments from '@/pages/ProductAdjustments'
+import BookingUnifiedDashboard from '@/pages/BookingUnifiedDashboard'
+import InventoryAdjustments from '@/pages/InventoryAdjustments'
+import InventoryAdjustmentManual from '@/pages/InventoryAdjustmentManual'
+import InventoryManagement from '@/pages/InventoryManagement'
+// ISOLATED IMPORTS - Pages temporarily disabled for refactoring
+// import BookingSales from '@/pages/BookingSales';
+import Purchases from '@/pages/Purchases'
+import PurchasePayments from '@/pages/PurchasePayments'
+import PurchasePaymentDetail from '@/pages/PurchasePaymentDetail'
+// import CashRegister from '@/pages/CashRegister' // Obsoleto - usar NewCashRegister
+import NewCashRegister from '@/pages/NewCashRegister'
+import RegisterCashMovement from '@/pages/RegisterCashMovement'
+import CashMovements from '@/pages/CashMovements'
+import SalePayment from '@/pages/SalePayment'
+import SalesOrderDetail from '@/pages/SalesOrderDetail'
+import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
+import Currencies from '@/pages/Currencies'
+import ExchangeRates from '@/pages/ExchangeRates'
+import Login from '@/pages/Login.tsx'
+import Settings from '@/pages/Settings'
+import UserManagementList from '@/pages/UserManagementList.tsx'
+import UserDetailedProfile from '@/pages/UserDetailedProfile.tsx'
+import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity.tsx'
+import AuditDashboard from '@/pages/AuditDashboard'
+import AuditLogs from '@/pages/AuditLogs'
+import AuditLogDetail from '@/pages/AuditLogDetail'
+import AuditUserActivity from '@/pages/AuditUserActivity.tsx'
+// import ProductDetailTest from '@/components/ProductDetailTest';
+// import ProductComparisonDebug from '@/components/ProductComparisonDebug';
+import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
+import ReceivablesDashboard from '@/pages/ReceivablesDashboard'
+import PayablesDashboard from '@/pages/PayablesDashboard'
+import PayablesAgingReport from '@/pages/PayablesAgingReport'
+import ReceivablesMasterList from '@/pages/ReceivablesMasterList'
+import InvoicesMasterList from '@/pages/InvoicesMasterList'
+import InvoiceDetail from '@/pages/InvoiceDetail'
+import CashFlowProjection from '@/pages/CashFlowProjection'
+import CashFlowAnalysisDashboard from '@/pages/CashFlowAnalysisDashboard'
+import TaxManagementDashboard from '@/pages/TaxManagementDashboard'
+import SupplierAnalysis from '@/pages/SupplierAnalysis'
+import ReceivableDetail from '@/pages/ReceivableDetail'
+import OverdueAccounts from '@/pages/OverdueAccounts'
+import ClientCreditProfile from '@/pages/ClientCreditProfile'
+import AgingReport from '@/pages/AgingReport'
+import ProfitAndLoss from '@/pages/ProfitAndLoss'
+import LegalBooks from '@/pages/LegalBooks'
+import ProfitabilityAnalysis from '@/pages/ProfitabilityAnalysis'
+import AdminSessionsDashboard from '@/pages/AdminSessionsDashboard.tsx'
+import {
+  ProfitabilityDashboard,
+  ProductProfitability,
+  CustomerProfitability,
+  CategoryProfitability,
+  ProfitabilityTrends,
+  SellerProfitability,
+  StockManagement as BIStockManagement,
+  InventoryRisk as BIInventoryRisk,
+} from '@/features/profitability'
+import {
+  DashboardPronosticos,
+  SaludInventario,
+  PronosticoVentas,
+  PronosticoDemanda,
+  PronosticoIngresos
+} from '@/features/bi-forecasting'
+import SalesAnalyticsDashboard from '@/pages/sales-analytics/Dashboard'
+import SalesAnalyticsProductsCategories from '@/pages/sales-analytics/ProductsCategories'
+import SalesAnalyticsInsights from '@/pages/sales-analytics/CustomerSellerInsights'
+import SalesAnalyticsTrendsVelocity from '@/pages/sales-analytics/TrendsVelocity'
+import SalesAnalyticsPeriodComparison from '@/pages/sales-analytics/PeriodComparison'
+import InventoryTurnoverABC from '@/pages/InventoryAnalytics/InventoryTurnoverABC'
+import InventoryDashboard from '@/pages/InventoryAnalytics/InventoryDashboard'
+import StockLevelsReorder from '@/pages/InventoryAnalytics/StockLevelsReorder'
+import InventoryRisk from '@/pages/InventoryAnalytics/InventoryRisk'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext.tsx'
+import { ThemeProvider } from '@/contexts/ThemeContext'
+import ErrorBoundary from '@/components/ErrorBoundary'
+import RoleGuard from '@/components/auth/RoleGuard'
+
+// Componente de protección de rutas
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading, authLoading } = useAuth()
+
+  if (loading || authLoading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-lg'>Cargando...</div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to='/login' replace />
+  }
+
+  return children
+}
+
+// Componente interno que usa los hooks
+function AppContent() {
+  const { isAuthenticated, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-background text-foreground'>
+        <div className='text-lg'>Inicializando aplicación...</div>
+      </div>
+    )
+  }
+
+  return (
+    <ErrorBoundary>
+      <Router>
+        <div className='min-h-screen bg-background text-foreground'>
+          <Toaster position="top-right" richColors closeButton />
+          <Routes>
+            {/* Ruta de login - siempre accesible */}
+            <Route
+              path='/login'
+              element={
+                isAuthenticated ? (
+                  <Navigate to='/dashboard' replace />
+                ) : (
+                  <Login />
+                )
+              }
+            />
+
+            {/* Rutas protegidas */}
+            <Route
+              path='/*'
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Routes>
+                      {/* Ruta por defecto - Dashboard */}
+                      <Route
+                        path='/'
+                        element={<Navigate to='/dashboard' replace />}
+                      />
+                      <Route path='/dashboard' element={<Dashboard />} />
+                      <Route path='/dashboard/financial-summary' element={<FinancialSummaryDashboard />} />
+                      <Route path='/dashboard/kpis' element={<DetailedKPIs />} />
+                      <Route path='/dashboard/sales-heatmap' element={<SalesHeatmap />} />
+                      <Route path='/dashboard/alerts' element={<ConsolidatedAlerts />} />
+                      <Route path='/dashboard/top-products' element={<TopProductsOverview />} />
+                      <Route path='/dashboard/receivables' element={<ReceivablesDashboard />} />
+                      <Route path='/dashboard/payables' element={<PayablesDashboard />} />
+                      <Route path='/payables/invoices' element={<InvoicesMasterList />} />
+                      <Route path='/payables/detail/:id' element={<InvoiceDetail />} />
+                      <Route path='/payables/cash-flow' element={<CashFlowProjection />} />
+                      <Route path='/payables/aging-report' element={<PayablesAgingReport />} />
+                      <Route path='/finance/analytical-cash-flow' element={<CashFlowAnalysisDashboard />} />
+                      <Route path='/finance/tax-management' element={<TaxManagementDashboard />} />
+                      <Route path='/finance/profit-and-loss' element={<ProfitAndLoss />} />
+                      <Route path='/finance/legal-books' element={<LegalBooks />} />
+                      <Route path='/finance/profitability' element={<ProfitabilityAnalysis />} />
+                      
+                      {/* BI Forecasting Routes */}
+                      <Route path='/bi/pronosticos/dashboard' element={<DashboardPronosticos />} />
+                      <Route path='/bi/pronosticos/inventario' element={<SaludInventario />} />
+                      <Route path='/bi/pronosticos/ventas' element={<PronosticoVentas />} />
+                      <Route path='/bi/pronosticos/demanda' element={<PronosticoDemanda />} />
+                      <Route path='/bi/pronosticos/ingresos' element={<PronosticoIngresos />} />
+                      
+                      {/* Profitability Analytics Module (Detailed) */}
+                      <Route path='/profitability/dashboard' element={<ProfitabilityDashboard />} />
+                      <Route path='/profitability/products' element={<ProductProfitability />} />
+                      <Route path='/profitability/customers' element={<CustomerProfitability />} />
+                      <Route path='/profitability/categories' element={<CategoryProfitability />} />
+                      <Route path='/profitability/trends' element={<ProfitabilityTrends />} />
+                      <Route path='/profitability/sellers' element={<SellerProfitability />} />
+
+                      {/* BI Inventory Analytics (Detailed) */}
+                      <Route path='/bi/inventory/stock-levels' element={<BIStockManagement />} />
+                      <Route path='/bi/inventory/risk-analysis' element={<BIInventoryRisk />} />
+
+                      <Route path='/receivables' element={<ReceivablesDashboard />} />
+                      <Route path='/receivables/list' element={<ReceivablesMasterList />} />
+                      <Route path='/receivables/detail/:id' element={<ReceivableDetail />} />
+                      <Route path='/receivables/overdue' element={<OverdueAccounts />} />
+                      <Route path='/receivables/client-profile/:clientId' element={<ClientCreditProfile />} />
+                      <Route path='/receivables/aging-report' element={<AgingReport />} />
+                      <Route path='/productos' element={<Products />} />
+                      <Route path='/clientes' element={<Clients />} />
+                      <Route path='/proveedores' element={<Suppliers />} />
+                      <Route path='/payables/suppliers/:id/analysis' element={<SupplierAnalysis />} />
+                      <Route path='/ventas' element={<SalesNew />} />
+                      
+                      {/* Sales Analytics Routes */}
+                      <Route path='/sales-analytics/dashboard' element={<SalesAnalyticsDashboard />} />
+                      <Route path='/sales-analytics/products-categories' element={<SalesAnalyticsProductsCategories />} />
+                      <Route path='/sales-analytics/insights' element={<SalesAnalyticsInsights />} />
+                      <Route path='/sales-analytics/trends-velocity' element={<SalesAnalyticsTrendsVelocity />} />
+                      <Route path='/sales-analytics/period-comparison' element={<SalesAnalyticsPeriodComparison />} />
+
+                      {/* Inventory Analytics Routes */}
+                      <Route path='/inventory-analytics/dashboard' element={<InventoryDashboard />} />
+                      <Route path='/inventory-analytics/turnover-abc' element={<InventoryTurnoverABC />} />
+                      <Route path='/inventory-analytics/stock-levels' element={<StockLevelsReorder />} />
+                      <Route path='/inventory-analytics/risk' element={<InventoryRisk />} />
+
+                      {/* Rutas con layout de tabs */}
+                      <Route
+                        path='/ajustes-precios'
+                        element={<PriceAdjustmentLayout />}
+                      >
+                        <Route index element={<PriceAdjustmentNew />} />
+                        <Route
+                          path='historial'
+                          element={<PriceAdjustmentHistory />}
+                        />
+                      </Route>
+                      {/* Rutas independientes sin tabs */}
+                      <Route
+                        path='/ajustes-precios/detalle'
+                        element={<PriceAdjustmentDetail />}
+                      />
+                      <Route
+                        path='/ajustes-precios/historial/:adjustmentId'
+                        element={<PriceAdjustmentHistoryDetail />}
+                      />
+                      <Route
+                        path='/gestion-agenda'
+                        element={<BookingUnifiedDashboard />}
+                      />
+                      <Route
+                        path='/ajustes-producto'
+                        element={<ProductAdjustments />}
+                      />
+                      <Route
+                        path='/ajustes-inventario'
+                        element={<InventoryAdjustments />}
+                      />
+                      <Route
+                        path='/ajuste-inventario-unitario'
+                        element={<InventoryAdjustmentManual />}
+                      />
+                      <Route
+                        path='/ajuste-inventario-masivo'
+                        element={<InventoryManagement />}
+                      />
+
+                      {/* --- RUTAS AISLADAS TEMPORALMENTE PARA REFACTORING --- */}
+                      <Route path='/compras' element={<Purchases />} />
+
+                      {/* Nuevas rutas de sistemas de pagos */}
+                      <Route
+                        path='/caja-registradora'
+                        element={<NewCashRegister />}
+                      />
+                      <Route
+                        path='/movimientos-caja'
+                        element={<CashMovements />}
+                      />
+                      <Route
+                        path='/movimientos-caja/nuevo'
+                        element={<RegisterCashMovement />}
+                      />
+                      <Route
+                        path='/pagos-compras'
+                        element={<PurchasePayments />}
+                      />
+                      <Route
+                        path='/pagos-compras/:orderId'
+                        element={<PurchasePaymentDetail />}
+                      />
+                      <Route path='/cobros-ventas' element={<SalePayment />} />
+                      <Route
+                        path='/cobros-ventas/:saleId'
+                        element={<SalesOrderDetail />}
+                      />
+                      <Route
+                        path='/cobros-ventas/:saleId/pagos'
+                        element={<SalesPaymentHistory />}
+                      />
+
+                      {/* Configuración */}
+                      <Route path='/configuracion' element={<Settings />} />
+                      <Route path='/configuracion/perfil' element={<MyProfileAndSecurity />} />
+                      
+                      <Route path='/configuracion/usuarios' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <UserManagementList />
+                        </RoleGuard>
+                      } />
+                      <Route path='/configuracion/usuarios/:id' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <UserDetailedProfile />
+                        </RoleGuard>
+                      } />
+                      <Route path='/configuracion/sesiones' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <AdminSessionsDashboard />
+                        </RoleGuard>
+                      } />
+                      
+                      {/* Auditoría */}
+                      <Route path='/auditoria' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <AuditDashboard />
+                        </RoleGuard>
+                      } />
+                      <Route path='/auditoria/logs' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <AuditLogs />
+                        </RoleGuard>
+                      } />
+                      <Route path='/auditoria/logs/:id' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <AuditLogDetail />
+                        </RoleGuard>
+                      } />
+                      <Route path='/auditoria/usuarios/:id' element={
+                        <RoleGuard allowedRoles={['ADMIN']}>
+                          <AuditUserActivity />
+                        </RoleGuard>
+                      } />
+
+                      {/* Configuración Financiera */}
+                      <Route
+                        path='/configuracion/monedas'
+                        element={<Currencies />}
+                      />
+                      <Route
+                        path='/configuracion/tipos-cambio'
+                        element={<ExchangeRates />}
+                      />
+                      {/* <Route path="/test-products" element={<ProductDetailTest />} /> */}
+                      {/* <Route path="/debug-products" element={<ProductComparisonDebug />} /> */}
+                      <Route
+                        path='/test-purchase-endpoints'
+                        element={<PurchaseEndpointsTest />}
+                      />
+
+                      {/* Ruta 404 */}
+                      <Route
+                        path='*'
+                        element={
+                          <div className='space-y-6'>
+                            <div>
+                              <h1 className='text-3xl font-black uppercase tracking-wide'>
+                                Página no encontrada
+                              </h1>
+                              <p className='text-lg font-bold text-muted-foreground uppercase tracking-wide'>
+                                La página que buscas no existe.
+                              </p>
+                            </div>
+                            <div className='bg-card text-card-foreground border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 text-center'>
+                              <h2 className='text-xl font-black uppercase mb-2'>
+                                Error 404
+                              </h2>
+                              <p className='text-muted-foreground font-bold mb-4'>
+                                Verifica la URL o regresa al dashboard.
+                              </p>
+                              <a
+                                href='/dashboard'
+                                className='inline-flex items-center px-6 py-3 bg-lime-400 text-black font-black uppercase tracking-wide border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all'
+                              >
+                                Ir al Dashboard
+                              </a>
+                            </div>
+                          </div>
+                        }
+                      />
+                    </Routes>
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </div>
+      </Router>
+    </ErrorBoundary>
+  )
+}
+
+// Componente principal que provee los contextos
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        {/* AnnouncementProvider temporarily disabled due to React 19 hooks compatibility */}
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
+  )
+}
+
+export default App

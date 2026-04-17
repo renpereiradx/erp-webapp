@@ -4,9 +4,10 @@ export interface ReorderAlertCardProps {
   count: number;
   cost: string;
   type: 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW';
+  onClick?: () => void;
 }
 
-export const ReorderAlertCard: React.FC<ReorderAlertCardProps> = ({ count, cost, type }) => {
+export const ReorderAlertCard: React.FC<ReorderAlertCardProps> = ({ count, cost, type, onClick }) => {
   const getStyles = () => {
     switch (type) {
       case 'URGENT':
@@ -50,7 +51,10 @@ export const ReorderAlertCard: React.FC<ReorderAlertCardProps> = ({ count, cost,
         <p className="text-3xl font-black font-mono">{count} Productos</p>
         <p className={`text-sm font-semibold font-mono ${styles.accent}`}>Costo estimado: {cost}</p>
       </div>
-      <button className={`mt-2 text-sm font-bold underline text-left ${styles.accent}`}>
+      <button 
+        onClick={onClick}
+        className={`mt-2 text-sm font-bold underline text-left ${styles.accent}`}
+      >
         Ver lista detallada
       </button>
     </div>

@@ -3,32 +3,28 @@
  * Importa y combina todos los módulos de traducción
  */
 
-import { common } from './common.js'
-import { products } from './products.js'
-import { purchases } from './purchases.js'
-import { priceAdjustments } from './priceAdjustments.js'
-import { productAdjustments } from './productAdjustments.js'
-import { inventoryAdjustments } from './inventoryAdjustments.js'
-import { inventoryManagement } from './inventoryManagement.js'
-import { purchasePaymentsMvp } from './purchasePaymentsMvp.js'
-import { clients } from './clients.js'
-import { suppliers } from './suppliers.js'
-import { sales } from './sales.js'
-import { inventory } from './inventory.js'
-import { reservations } from './reservations.js'
-import { booking } from './booking.js'
-import { bookingManagement } from './booking-management.js'
-import { other } from './other.js'
-import { availableSlots } from './availableSlots.js'
-import { cashRegister } from './cashRegister.js'
-import { cashMovement } from './cashMovement.js'
-import { currencies } from './currencies.js'
-import { exchangeRates } from './exchangeRates.js'
-import { dashboard } from './dashboard.js'
-import { users } from './users.js'
-import { myProfile } from './my-profile.js'
-import { receivables } from './receivables.js'
-import payables from './payables.js'
+import { common } from './common'
+import { products } from './products'
+import { purchases } from './purchases'
+import { priceAdjustments } from './priceAdjustments'
+import { productAdjustments } from './productAdjustments'
+import { inventoryAdjustments } from './inventoryAdjustments'
+import { inventoryManagement } from './inventoryManagement'
+import { purchasePaymentsMvp } from './purchasePaymentsMvp'
+import { clients } from './clients'
+import { suppliers } from './suppliers'
+import { sales } from './sales'
+import { inventory } from './inventory'
+import { other } from './other'
+import { cashRegister } from './cashRegister'
+import { cashMovement } from './cashMovement'
+import { currencies } from './currencies'
+import { exchangeRates } from './exchangeRates'
+import { dashboard } from './dashboard'
+import { users } from './users'
+import { myProfile } from './my-profile'
+import { receivables } from './receivables'
+import payables from './payables'
 
 /**
  * Diccionario completo de traducciones en español
@@ -47,10 +43,6 @@ export const es = {
   ...suppliers,
   ...sales,
   ...inventory,
-  ...reservations,
-  ...booking,
-  ...bookingManagement,
-  ...availableSlots,
   ...cashRegister,
   ...cashMovement,
   ...currencies,

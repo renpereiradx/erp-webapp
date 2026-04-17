@@ -160,6 +160,7 @@ export interface InventoryDashboardData {
   generated_at: string;
   kpis: {
     total_value: number;
+    potential_profit: number; // Nuevo campo
     turnover_rate: number;
     days_of_inventory: number;
     stockout_rate: number;

@@ -3,25 +3,15 @@
  * Optimized for Mobile/Tablet with Items Card View
  */
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
-  Printer,
-  Calendar,
-  User,
-  Clock,
   CreditCard,
-  FileText,
   Package,
-  History,
   Receipt,
   RefreshCw,
-  Phone,
-  CircleDollarSign,
-  ArrowUpRight,
-  MoreVertical,
-  Download,
+  ChevronRight,
   Coins,
   Wallet,
   Calculator,
@@ -46,7 +36,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Separator } from '@/components/ui/separator'
 import DataState from '@/components/ui/DataState'
 import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModal'
 import { useI18n } from '@/lib/i18n'
@@ -56,12 +45,11 @@ import { clientService } from '@/services/clientService'
 import { useToast } from '@/hooks/useToast'
 import { normalizeCurrencyCode } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
-import { SaleEnhancedResponse } from '@/types'
 
 const SalesOrderDetail = () => {
   const { saleId } = useParams<{ saleId: string }>()
   const navigate = useNavigate()
-  const { t, lang } = useI18n()
+  const { lang } = useI18n()
   const { error: showError, success: showSuccess } = useToast()
 
   const [sale, setSale] = useState<any>(null)
@@ -89,7 +77,7 @@ const SalesOrderDetail = () => {
       const saleHeader = fullData.sale || fullData
       const saleItems = fullData.details || fullData.items || []
 
-      let paymentStatus = null
+      let paymentStatus: any = null
       try {
         const paymentResponse = await saleService.getSalePaymentStatus(saleId)
         if (paymentResponse.success) {
@@ -489,10 +477,21 @@ const SalesOrderDetail = () => {
           </Card>
 
           {/* Payments History */}
-          <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b border-border-subtle p-6">
-              <CardTitle className="text-lg font-black tracking-tighter uppercase">Historial de Cobros</CardTitle>
-              <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Pagos parciales recibidos</CardDescription>
+          <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden group">
+            <CardHeader 
+              className="bg-slate-50/50 border-b border-border-subtle p-6 cursor-pointer hover:bg-slate-100 transition-colors flex flex-row items-center justify-between space-y-0"
+              onClick={() => navigate(`/cobros-ventas/${saleId}/pagos`)}
+            >
+              <div>
+                <CardTitle className="text-lg font-black tracking-tighter uppercase flex items-center gap-2">
+                  Historial de Cobros
+                  <ChevronRight size={18} className="text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
+                </CardTitle>
+                <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Pagos parciales recibidos</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" className="h-8 px-2 text-[9px] font-black uppercase tracking-widest text-primary border border-primary/20 bg-primary/5 hover:bg-primary hover:text-white transition-all">
+                Ver Detalles
+              </Button>
             </CardHeader>
             <CardContent className="p-0">
               {payments.length === 0 ? (

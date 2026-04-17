@@ -39,6 +39,7 @@ import {
   AlertTriangle,
   Award,
   List,
+  PlusCircle,
   FileText,
   Clock as ClockIcon,
   History as HistoryIcon,
@@ -365,8 +366,24 @@ const MainLayout = ({ children }) => {
         href: '#',
         icon: ShoppingCart,
         children: [
-          { name: t('sales.title', 'Ventas'), href: '/ventas', icon: ShoppingCart },
-          { name: t('purchases.title', 'Compras'), href: '/compras', icon: ShoppingBag },
+          {
+            name: t('sales.title', 'Ventas'),
+            href: '#',
+            icon: ShoppingCart,
+            children: [
+              { name: 'Nueva Venta', href: '/ventas', icon: PlusCircle },
+              {
+                name: 'Agenda y Reservas',
+                href: '/gestion-agenda',
+                icon: Calendar,
+              },
+            ],
+          },
+          {
+            name: t('purchases.title', 'Compras'),
+            href: '/compras',
+            icon: ShoppingBag,
+          },
           {
             name: t('common.payments', 'Pagos y Cobros'),
             href: '#',
@@ -453,23 +470,8 @@ const MainLayout = ({ children }) => {
         icon: Calendar,
         children: [
           {
-            name: 'Panel de Control',
-            href: '/reservas',
-            icon: LayoutDashboard,
-          },
-          {
-            name: 'Horarios y Reservas',
-            href: '/horarios',
-            icon: ClockIcon,
-          },
-          {
-            name: 'Historial y Auditoría',
-            href: '/historial-reservas',
-            icon: HistoryIcon,
-          },
-          {
-            name: 'Disponibilidad de Slots',
-            href: '/horarios-disponibles',
+            name: t('reservations.title', 'Gestión de Agenda'),
+            href: '/gestion-agenda',
             icon: Calendar,
           },
         ],
@@ -503,12 +505,17 @@ const MainLayout = ({ children }) => {
             children: [
               {
                 name: 'Gestión de Usuarios',
-                href: '/usuarios',
+                href: '/configuracion/usuarios',
                 icon: Users,
               },
               {
+                name: 'Control de Sesiones',
+                href: '/configuracion/sesiones',
+                icon: ClockIcon,
+              },
+              {
                 name: 'Mi Perfil',
-                href: '/perfil',
+                href: '/configuracion/perfil',
                 icon: User,
               },
             ],
@@ -591,8 +598,23 @@ const MainLayout = ({ children }) => {
       })
     }
     traverse(navigation)
+
+    // Agregar rutas buscables adicionales que no están en el sidebar
+    if (distinctSearchableRoutes && Array.isArray(distinctSearchableRoutes)) {
+      distinctSearchableRoutes.forEach(route => {
+        // Evitar duplicados si ya están en el menú de navegación
+        if (!items.some(item => item.href === route.href)) {
+          items.push({
+            ...route,
+            parent: route.category,
+            category: route.category
+          })
+        }
+      })
+    }
+
     return items
-  }, [navigation])
+  }, [navigation, distinctSearchableRoutes])
 
   const normalizeText = (text) => {
     if (!text || typeof text !== 'string') return ''
@@ -787,7 +809,7 @@ const MainLayout = ({ children }) => {
           </nav>
 
           <div className="p-4 border-t border-slate-100">
-            <div className={`bg-slate-50 p-3 rounded-xl flex items-center ${isSidebarExpanded ? 'gap-3' : 'justify-center'} cursor-pointer hover:bg-slate-100 transition-all duration-200 group/profile overflow-hidden`} onClick={() => navigate('/perfil')} title={!isSidebarExpanded ? user?.first_name || 'Perfil' : ''}>
+            <div className={`bg-slate-50 p-3 rounded-xl flex items-center ${isSidebarExpanded ? 'gap-3' : 'justify-center'} cursor-pointer hover:bg-slate-100 transition-all duration-200 group/profile overflow-hidden`} onClick={() => navigate('/configuracion/perfil')} title={!isSidebarExpanded ? user?.first_name || 'Perfil' : ''}>
               <div className="size-8 min-w-[32px] rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs overflow-hidden group-hover/profile:ring-2 group-hover/profile:ring-primary/20 transition-all">
                 {user?.avatar_url ? <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" /> : (user?.first_name?.charAt(0) || 'U')}
               </div>
@@ -945,7 +967,7 @@ const MainLayout = ({ children }) => {
                             <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{item.category}</span>
                           </div>
                         </button>
-                      )
+                      );
                     })}
                   </div>
                 </div>
@@ -972,7 +994,7 @@ const MainLayout = ({ children }) => {
                       <p className="text-[10px] text-text-secondary truncate font-medium">{user?.email || 'No email'}</p>
                     </div>
                     <div className="p-2">
-                      <button onClick={() => { navigate('/perfil'); setShowUserMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-text-secondary hover:text-primary hover:bg-primary/5 rounded-md transition-colors"><span className="material-symbols-outlined text-lg">account_circle</span>Mi Perfil</button>
+                      <button onClick={() => { navigate('/configuracion/perfil'); setShowUserMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-text-secondary hover:text-primary hover:bg-primary/5 rounded-md transition-colors"><span className="material-symbols-outlined text-lg">account_circle</span>Mi Perfil</button>
                       <div className="my-1 border-t border-slate-50"></div>
                       <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-error hover:bg-error/5 rounded-md transition-colors"><span className="material-symbols-outlined text-lg">logout</span>Cerrar Sesión</button>
                     </div>

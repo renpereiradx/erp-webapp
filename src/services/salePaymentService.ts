@@ -304,12 +304,18 @@ export const salePaymentService = {
       const result = await saleService.getSalesByClientName(
         clientName, 
         filters.page, 
-        filters.page_size
+        filters.page_size,
+        {
+          start_date: filters.start_date,
+          end_date: filters.end_date
+        }
       );
 
       telemetry.record('sale_payment.service.client_list_with_status', {
         duration: Date.now() - startTime,
-        clientName
+        clientName,
+        startDate: filters.start_date,
+        endDate: filters.end_date
       });
 
       return result;

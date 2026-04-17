@@ -167,7 +167,7 @@ export const clients = {
 
 ```javascript
 // src/lib/i18n/locales/es/index.js
-import { clients } from './clients.js'
+import { clients } from './clients'
 
 export const es = {
   ...common,
@@ -179,7 +179,7 @@ export const es = {
 
 ```javascript
 // src/lib/i18n/locales/en/index.js
-import { clients } from './clients.js'
+import { clients } from './clients'
 
 export const en = {
   ...common,
@@ -293,7 +293,7 @@ El archivo `src/lib/i18n.js` ahora es un wrapper de compatibilidad que re-export
 import { useI18n } from '@/lib/i18n'
 
 // ✅ También funciona
-import { useI18n } from '@/lib/i18n/index.js'
+import { useI18n } from '@/lib/i18n/index'
 ```
 
 El sistema antiguo está guardado en `src/lib/i18n.legacy.js` como referencia.

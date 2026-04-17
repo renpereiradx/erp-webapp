@@ -18,8 +18,8 @@
  */
 
 import { useState, useCallback, useEffect } from 'react'
-import { es } from './locales/es/index.js'
-import { en } from './locales/en/index.js'
+import { es } from './locales/es/index'
+import { en } from './locales/en/index'
 
 /**
  * Diccionario completo de traducciones

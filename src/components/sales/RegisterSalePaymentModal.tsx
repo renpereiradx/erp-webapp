@@ -7,20 +7,13 @@ import React, {
 } from 'react'
 import { 
   AlertCircle, 
-  AlertTriangle, 
   CheckCircle2, 
   Loader2, 
-  Wallet, 
   Receipt, 
-  ArrowRight, 
   Coins, 
-  Banknote,
   ArrowUpRight,
   User,
-  Hash,
-  ChevronRight,
   Building,
-  CreditCard
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -44,13 +37,12 @@ import {
 import { cashRegisterService } from '@/services/cashRegisterService'
 import { CurrencyService } from '@/services/currencyService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
-import { calculateCashRegisterBalance } from '@/utils/cashRegisterUtils'
 import { normalizeCurrencyCode, formatPYG } from '@/utils/currencyUtils'
 
 const DEFAULT_CURRENCY_CODE = 'PYG'
 const CASH_REGISTER_NONE_VALUE = '__none__'
 
-const getNormalizedBalanceDue = (balanceDue, currency) => {
+const getNormalizedBalanceDue = (balanceDue: any, currency: any) => {
   if (balanceDue === null || balanceDue === undefined) return null
   const raw = Number(balanceDue)
   if (!Number.isFinite(raw)) return null
@@ -67,7 +59,7 @@ interface RegisterSalePaymentModalProps {
 }
 
 const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: RegisterSalePaymentModalProps) => {
-  const { t, lang } = useI18n()
+  const { lang } = useI18n()
 
   const [amountReceived, setAmountReceived] = useState<string | number>('')
   const [amountToApply, setAmountToApply] = useState<string | number>('')
@@ -186,7 +178,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
   }).filter(o => o.id !== 'undefined'), [paymentMethods])
 
   const validationErrors = useMemo(() => {
-    const errors = { amountReceived: null, amountToApply: null, hasErrors: false }
+    const errors: { amountReceived: string | null, amountToApply: string | null, hasErrors: boolean } = { amountReceived: null, amountToApply: null, hasErrors: false }
     if (!sale) return errors
 
     if (amountReceived) {
@@ -272,202 +264,239 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className='register-sale-payment-modal w-[95vw] lg:!w-[1150px] lg:!max-w-[calc(95vw-288px)] p-0 overflow-hidden border border-slate-200 shadow-xl rounded-xl'>
+      <DialogContent className='register-sale-payment-modal w-[95vw] lg:!w-[1100px] lg:!max-w-[calc(95vw-288px)] p-0 overflow-hidden border border-border-subtle shadow-fluent-16 rounded-xl bg-surface'>
         <DialogTitle className='sr-only'>Registrar Cobro de Venta</DialogTitle>
         <DialogDescription className='sr-only'>Registre el cobro de la venta seleccionada.</DialogDescription>
-        <form className='flex flex-col md:flex-row h-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto md:overflow-hidden' onSubmit={handleSubmit}>
-          {/* PANEL IZQUIERDO: RESUMEN */}
-          <div className='w-full md:w-[35%] bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 text-white p-6 md:p-10 flex flex-col relative overflow-hidden'>
+        <form className='flex flex-col md:flex-row h-full max-h-[95vh] md:max-h-[90vh] overflow-hidden' onSubmit={handleSubmit}>
+          {/* PANEL IZQUIERDO: RESUMEN OPERATIVO */}
+          <div className='w-full md:w-[32%] bg-[#001a33] text-white p-8 md:p-10 flex flex-col relative overflow-hidden border-r border-white/5'>
+            {/* Elementos decorativos Fluent */}
+            <div className='absolute -top-24 -right-24 size-64 bg-primary/10 rounded-full blur-3xl opacity-50' />
+            <div className='absolute -bottom-24 -left-24 size-64 bg-primary/5 rounded-full blur-3xl opacity-30' />
+            
             <div className='relative z-10 flex flex-col h-full'>
-              <header className='mb-10'>
-                <div className='size-12 bg-primary/20 rounded-xl flex items-center justify-center text-primary mb-6 ring-1 ring-primary/40 shadow-fluent-8'>
+              <header className='mb-12'>
+                <div className='size-12 bg-primary rounded-xl flex items-center justify-center text-white mb-6 shadow-lg shadow-primary/30'>
                   <Building size={24} />
                 </div>
-                <h2 className='text-2xl font-black tracking-tighter uppercase leading-none mb-2'>
-                  Registrar Cobro <br />
-                  <span className='text-primary font-black'>de Venta</span>
+                <h2 className='text-3xl font-black tracking-tighter uppercase leading-[0.85] mb-3'>
+                  Estado de <br />
+                  <span className='text-primary'>Cobro</span>
                 </h2>
-                <div className='flex items-center gap-2 text-white/50 font-black text-[10px] uppercase tracking-widest'>
-                  <Receipt size={14} className='text-primary' /> Venta #{sale?.id || sale?.sale_id || '---'}
+                <div className='inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-white/50 font-black text-[9px] uppercase tracking-widest'>
+                  <Receipt size={12} className='text-primary' /> Venta #{sale?.id || sale?.sale_id || '---'}
                 </div>
               </header>
 
-              <div className='space-y-6 flex-1'>
-                <div className='bg-white/5 backdrop-blur-md rounded-xl p-5 border border-white/10'>
-                  <div className='flex items-center gap-4 mb-1'>
-                    <div className='size-10 bg-white/10 rounded-lg flex items-center justify-center text-white/60 ring-1 ring-white/10 shadow-fluent-2'>
-                      <User size={18} />
+              {/* FLUJO DE SALDOS: Entrada -> Operación -> Salida */}
+              <div className='flex-1 flex flex-col gap-8'>
+                {/* 1. Estado Actual */}
+                <div className='relative pl-6 border-l-2 border-white/10'>
+                  <div className='absolute -left-[9px] top-0 size-4 rounded-full bg-[#001a33] border-2 border-white/20' />
+                  <p className='text-[10px] font-black uppercase tracking-widest text-white/40 mb-1'>Saldo Inicial</p>
+                  <p className='text-2xl font-black text-white tabular-nums font-mono'>{balanceDueLabel || formatLocalizedCurrency(0)}</p>
+                </div>
+
+                {/* 2. Operación (Barra de progreso integrada) */}
+                <div className='bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-fluent-2'>
+                  <div className='flex justify-between items-center mb-4'>
+                    <p className='text-[10px] font-black uppercase tracking-widest text-primary'>Aplicando Pago</p>
+                    <span className='text-xs font-black text-white bg-primary/20 px-2 py-0.5 rounded'>
+                      {Math.round((Number.parseFloat(parseNumberWithDots(amountToApply)) || 0) / (getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 1) * 100)}%
+                    </span>
+                  </div>
+                  <div className='h-2 bg-white/5 rounded-full overflow-hidden mb-4'>
+                    <div 
+                      className='h-full bg-primary shadow-[0_0_12px_rgba(19,127,236,0.5)] transition-all duration-1000' 
+                      style={{ width: `${Math.min(100, Math.round((Number.parseFloat(parseNumberWithDots(amountToApply)) || 0) / (getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 1) * 100))}%` }}
+                    />
+                  </div>
+                  <div className='flex items-center gap-3'>
+                    <div className='size-8 rounded-full bg-white/10 flex items-center justify-center text-white/60'>
+                      <User size={14} />
                     </div>
-                    <div>
-                      <p className='text-[9px] font-black uppercase tracking-widest text-white/50 mb-1'>Cliente</p>
-                      <p className='text-sm font-bold text-white truncate max-w-[180px]'>{sale?.client_name || 'Consumidor Final'}</p>
+                    <div className='min-w-0'>
+                      <p className='text-[9px] font-black uppercase text-white/30 truncate'>Cliente</p>
+                      <p className='text-xs font-bold text-white truncate'>{sale?.client_name || 'Consumidor Final'}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className='space-y-6'>
-                  <div>
-                    <div className='flex justify-between items-end mb-2'>
-                      <p className='text-[9px] font-black uppercase tracking-widest text-white/50'>Saldo Pendiente</p>
-                      <p className='text-2xl font-black text-white tabular-nums font-mono'>{balanceDueLabel || formatLocalizedCurrency(0)}</p>
-                    </div>
-                    <div className='h-2 bg-slate-800 rounded-full overflow-hidden shadow-inner'>
-                      <div 
-                        className='h-full bg-primary transition-all duration-1000' 
-                        style={{ width: `${Math.round((Number.parseFloat(parseNumberWithDots(amountToApply)) || 0) / (getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 1) * 100)}%` }}
-                      />
-                    </div>
-                    <div className='mt-2 text-[9px] font-black uppercase tracking-widest text-primary text-right'>
-                      {Math.round((Number.parseFloat(parseNumberWithDots(amountToApply)) || 0) / (getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 1) * 100)}% Aplicado
-                    </div>
-                  </div>
-
-                  <div className='p-5 bg-primary/10 rounded-xl border border-primary/20 backdrop-blur-sm'>
-                    <div className='flex items-center gap-4'>
-                      <div className='size-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-fluent-2'>
-                        <ArrowUpRight size={16} />
-                      </div>
-                      <div>
-                        <p className='text-[9px] font-black uppercase tracking-widest text-white/50 mb-1'>Nuevo Saldo</p>
-                        <p className={cn(
-                          "text-xl font-black tabular-nums transition-colors font-mono",
-                          projectedBalance === 0 ? "text-green-400" : "text-white"
-                        )}>
-                          {formatLocalizedCurrency(projectedBalance)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                {/* 3. Resultado Final */}
+                <div className='relative pl-6 border-l-2 border-primary/30'>
+                  <div className='absolute -left-[9px] top-0 size-4 rounded-full bg-primary shadow-[0_0_8px_rgba(19,127,236,0.5)]' />
+                  <p className='text-[10px] font-black uppercase tracking-widest text-primary mb-1'>Nuevo Saldo</p>
+                  <p className={cn(
+                    "text-3xl font-black tabular-nums transition-colors font-mono tracking-tighter",
+                    projectedBalance <= 0 ? "text-success" : "text-white"
+                  )}>
+                    {formatLocalizedCurrency(projectedBalance)}
+                  </p>
                 </div>
               </div>
 
-              <footer className='mt-10 pt-6 border-t border-white/5 hidden md:block'>
-                <p className='text-[9px] text-white/30 uppercase font-black tracking-widest leading-relaxed'>
-                  * Verifique los datos del cobro antes de confirmar la transacción.
+              <footer className='mt-12 pt-8 border-t border-white/5 hidden md:block opacity-30'>
+                <p className='text-[9px] uppercase font-black tracking-[0.2em] leading-relaxed'>
+                  SISTEMA DE GESTIÓN OPERATIVA <br /> FLUENT ERP v2.0
                 </p>
               </footer>
             </div>
           </div>
 
-          {/* PANEL DERECHO: FORMULARIO */}
-          <div className='w-full md:w-[65%] bg-white dark:bg-slate-900 p-6 md:p-12 flex flex-col'>
-            <div className='flex-1 space-y-8 md:space-y-12 overflow-y-auto pr-1 md:pr-2 scrollbar-thin'>
-              <section className='space-y-8'>
-                <div className='flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4'>
-                  <div className='size-8 bg-slate-50 dark:bg-slate-800 rounded-md flex items-center justify-center text-slate-500'>
-                    <Coins size={18} />
+          {/* PANEL DERECHO: FORMULARIO ESTRUCTURADO */}
+          <div className='w-full md:w-[68%] bg-[#f8fafc] p-6 md:p-10 flex flex-col'>
+            <div className='flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6'>
+              
+              {/* SECCIÓN 1: ORIGEN Y MONEDA (CARD) */}
+              <div className='bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden'>
+                <div className='px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3'>
+                  <div className='size-7 bg-primary/10 rounded flex items-center justify-center text-primary'>
+                    <Coins size={16} />
                   </div>
-                  <h3 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]'>Información del Cobro</h3>
+                  <h3 className='text-[11px] font-black uppercase text-slate-500 tracking-widest'>Origen de Fondos</h3>
                 </div>
+                <div className='p-6 space-y-6'>
+                  <div className='grid grid-cols-1 md:grid-cols-12 gap-6'>
+                    {/* Monto Recibido - Principal */}
+                    <div className='md:col-span-7 space-y-2'>
+                      <div className='flex justify-between items-center'>
+                        <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Importe Entregado</label>
+                        <button 
+                          type='button' 
+                          onClick={() => {
+                            const balanceDue = getNormalizedBalanceDue(sale.balance_due, sale.currency)
+                            if (balanceDue !== null) {
+                              setAmountReceived(formatNumberWithDots(String(balanceDue)))
+                              setAmountToApply(formatNumberWithDots(String(balanceDue)))
+                              userEditedAmountToApply.current = false
+                            }
+                          }}
+                          className='text-[9px] font-black uppercase text-primary hover:underline'
+                        >
+                          Cubrir Saldo Total
+                        </button>
+                      </div>
+                      <div className='relative group'>
+                        <div className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xl font-mono'>₲</div>
+                        <Input
+                          type='text'
+                          inputMode='numeric'
+                          value={amountReceived}
+                          onChange={e => {
+                            const val = formatNumberWithDots(parseNumberWithDots(e.target.value))
+                            setAmountReceived(val)
+                            if (!userEditedAmountToApply.current) {
+                              const balanceDue = getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 0
+                              const numeric = Number.parseFloat(parseNumberWithDots(val)) || 0
+                              setAmountToApply(formatNumberWithDots(String(Math.round(Math.min(numeric, balanceDue)))))
+                            }
+                          }}
+                          className='h-14 pl-12 rounded-lg bg-slate-50/50 border-slate-200 font-black font-mono text-2xl focus:ring-primary focus:bg-white transition-all shadow-inner'
+                        />
+                      </div>
+                    </div>
 
-                {/* Monto Recibido con botón al lado */}
-                <div className='space-y-3'>
-                  <div className='flex flex-wrap items-center justify-between gap-3 px-1'>
-                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]'>Monto Recibido</label>
-                    <button 
-                      type='button' 
-                      onClick={() => {
-                        const balanceDue = getNormalizedBalanceDue(sale.balance_due, sale.currency)
-                        if (balanceDue !== null) {
-                          setAmountReceived(formatNumberWithDots(String(balanceDue)))
-                          setAmountToApply(formatNumberWithDots(String(balanceDue)))
-                          userEditedAmountToApply.current = false
-                        }
-                      }}
-                      className='text-[9px] font-black uppercase tracking-widest text-primary hover:text-primary-hover hover:bg-primary/10 px-3 py-1.5 bg-primary/5 rounded-md transition-all'
-                    >
-                      Cobrar todo el saldo
-                    </button>
+                    {/* Divisa */}
+                    <div className='md:col-span-5 space-y-2'>
+                      <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Divisa</label>
+                      <Select value={currencyCode} onValueChange={setCurrencyCode}>
+                        <SelectTrigger className='h-14 rounded-lg bg-slate-50/50 border-slate-200 font-bold text-sm'>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className='rounded-xl border-slate-200 shadow-fluent-16'>
+                          {currencySelectorData.map(c => (
+                            <SelectItem key={c.id} value={c.code} className='font-bold text-xs uppercase py-3'>{c.code} - {c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div className='relative group'>
-                    <div className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xl font-mono uppercase'>₲</div>
-                    <Input
-                      type='text'
-                      inputMode='numeric'
-                      value={amountReceived}
-                      onChange={e => {
-                        const val = formatNumberWithDots(parseNumberWithDots(e.target.value))
-                        setAmountReceived(val)
-                        if (!userEditedAmountToApply.current) {
-                          const balanceDue = getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 0
-                          const numeric = Number.parseFloat(parseNumberWithDots(val)) || 0
-                          setAmountToApply(formatNumberWithDots(String(Math.round(Math.min(numeric, balanceDue)))))
-                        }
-                      }}
-                      className='h-12 pl-12 rounded-xl bg-white border-border-subtle font-black font-mono text-xl focus:ring-4 focus:ring-primary/10 transition-all'
-                    />
-                  </div>
-                  {amountReceivedError && <p className='text-[10px] font-black uppercase tracking-widest text-error ml-1'>{amountReceivedError}</p>}
+
+                  {/* Configuración de Cambio (Solo si divisa != base) */}
+                  {normalizeCurrencyCode(currencyCode) !== normalizeCurrencyCode(sale?.currency || DEFAULT_CURRENCY_CODE) && (
+                    <div className='grid grid-cols-2 gap-6 p-5 bg-primary/5 rounded-lg border border-primary/10 animate-in fade-in zoom-in-95 duration-300'>
+                      <div className='space-y-1.5'>
+                        <label className='text-[9px] font-black uppercase text-primary/60 tracking-widest'>Tasa de Cambio</label>
+                        <Input 
+                          type='number' 
+                          step='any' 
+                          value={exchangeRate} 
+                          onChange={e => setExchangeRate(e.target.value)} 
+                          className='h-10 rounded-md bg-white border-primary/20 font-mono font-black text-primary' 
+                        />
+                      </div>
+                      <div className='space-y-1.5'>
+                        <label className='text-[9px] font-black uppercase text-primary/60 tracking-widest'>Equivalente ({currencyCode})</label>
+                        <Input 
+                          type='number' 
+                          step='any' 
+                          value={originalAmount} 
+                          onChange={e => setOriginalAmount(e.target.value)} 
+                          className='h-10 rounded-md bg-white border-primary/20 font-mono font-black text-primary' 
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
+              </div>
 
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                  <div className='space-y-2'>
-                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Divisa de la Operación</label>
-                    <Select value={currencyCode} onValueChange={setCurrencyCode}>
-                      <SelectTrigger className='h-11 rounded-xl bg-white dark:bg-slate-800 border-border-subtle font-bold text-sm'>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className='rounded-xl border-border-subtle shadow-fluent-16'>
-                        {currencySelectorData.map(c => (
-                          <SelectItem key={c.id} value={c.code} className='font-bold text-xs uppercase tracking-wider'>
-                            {c.code} - {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              {/* SECCIÓN 2: REGISTRO Y CAJA (CARD) */}
+              <div className='bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden'>
+                <div className='px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3'>
+                  <div className='size-7 bg-primary/10 rounded flex items-center justify-center text-primary'>
+                    <Building size={16} />
                   </div>
-
+                  <h3 className='text-[11px] font-black uppercase text-slate-500 tracking-widest'>Registro Contable</h3>
+                </div>
+                <div className='p-6 grid grid-cols-1 md:grid-cols-2 gap-6'>
                   <div className='space-y-2'>
-                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Método de Pago</label>
+                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Método de Pago</label>
                     <Select value={paymentMethodId} onValueChange={setPaymentMethodId}>
-                      <SelectTrigger className='h-11 rounded-xl bg-white dark:bg-slate-800 border-border-subtle font-bold text-sm'>
+                      <SelectTrigger className='h-12 rounded-lg bg-slate-50/50 border-slate-200 font-bold text-sm'>
                         <SelectValue placeholder='Seleccionar...' />
                       </SelectTrigger>
-                      <SelectContent className='rounded-xl border-border-subtle shadow-fluent-16'>
+                      <SelectContent className='rounded-xl border-slate-200 shadow-fluent-16'>
                         {paymentMethodOptions.map(m => (
-                          <SelectItem key={m.id} value={m.id} className='font-bold text-xs uppercase tracking-wider'>
-                            {m.label}
+                          <SelectItem key={m.id} value={m.id} className='font-bold text-xs uppercase py-3'>{m.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className='space-y-2'>
+                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Caja Operativa</label>
+                    <Select value={cashRegisterId || CASH_REGISTER_NONE_VALUE} onValueChange={v => setCashRegisterId(v === CASH_REGISTER_NONE_VALUE ? '' : v)}>
+                      <SelectTrigger className='h-12 rounded-lg bg-slate-50/50 border-slate-200 font-bold text-sm'>
+                        <SelectValue placeholder='Seleccionar caja...' />
+                      </SelectTrigger>
+                      <SelectContent className='rounded-xl border-slate-200 shadow-fluent-16 min-w-[300px]'>
+                        <SelectItem value={CASH_REGISTER_NONE_VALUE} className='font-black text-[10px] uppercase text-slate-400 py-4'>Sin Caja</SelectItem>
+                        {cashRegisterOptions.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value} className='py-4 border-b border-slate-50 last:border-none'>
+                            <div className='flex flex-col gap-1'>
+                              <span className='font-black text-[11px] uppercase text-text-main'>{opt.label}</span>
+                              <div className='text-[10px] font-bold text-text-secondary font-mono bg-slate-100 px-2 py-0.5 rounded-md w-fit'>{opt.balanceLabel}</div>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+              </div>
 
-                {normalizeCurrencyCode(currencyCode) !== normalizeCurrencyCode(sale?.currency || DEFAULT_CURRENCY_CODE) && (
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-xl border border-border-subtle shadow-inner'>
-                    <div className='space-y-2'>
-                      <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Tipo de Cambio</label>
-                      <Input 
-                        type='number' 
-                        step='any' 
-                        min='0' 
-                        value={exchangeRate} 
-                        onChange={e => setExchangeRate(e.target.value)} 
-                        placeholder='Ej: 7350' 
-                        className='h-11 rounded-xl bg-white border-border-subtle font-mono font-black' 
-                        required 
-                      />
+              {/* SECCIÓN 3: RESULTADO Y APLICACIÓN (PROMINENTE) */}
+              <div className='bg-white rounded-xl border border-primary/20 shadow-md overflow-hidden ring-1 ring-primary/5'>
+                <div className='px-6 py-4 border-b border-primary/10 bg-primary/5 flex items-center justify-between'>
+                  <div className='flex items-center gap-3'>
+                    <div className='size-7 bg-primary rounded flex items-center justify-center text-white'>
+                      <ArrowUpRight size={16} />
                     </div>
-                    <div className='space-y-2'>
-                      <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Monto Original ({currencyCode})</label>
-                      <Input 
-                        type='number' 
-                        step='any' 
-                        min='0' 
-                        value={originalAmount} 
-                        onChange={e => setOriginalAmount(e.target.value)} 
-                        placeholder='Monto en moneda extranjera' 
-                        className='h-11 rounded-xl bg-white border-border-subtle font-mono font-black' 
-                        required 
-                      />
-                    </div>
+                    <h3 className='text-[11px] font-black uppercase text-primary tracking-widest'>Resumen de Aplicación</h3>
                   </div>
-                )}
-
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6 pt-4'>
+                </div>
+                <div className='p-6 grid grid-cols-1 md:grid-cols-2 gap-8'>
                   <div className='space-y-2'>
-                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Monto a Aplicar</label>
+                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Monto a Aplicar a la Venta</label>
                     <Input
                       type='text'
                       inputMode='numeric'
@@ -476,78 +505,56 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                         setAmountToApply(formatNumberWithDots(parseNumberWithDots(e.target.value)))
                         userEditedAmountToApply.current = true
                       }}
-                      className='h-11 rounded-xl bg-white border-border-subtle font-black font-mono text-lg'
+                      className='h-12 rounded-lg bg-slate-50 border-slate-200 font-black font-mono text-xl focus:ring-primary focus:bg-white'
                     />
-                    {amountToApplyError && <p className='text-[10px] font-black uppercase tracking-widest text-error ml-1'>{amountToApplyError}</p>}
                   </div>
-
                   <div className='space-y-2'>
-                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Vuelto / Saldo a favor</label>
-                    <div className='h-11 flex items-center px-5 bg-primary/5 text-primary font-black rounded-xl border border-primary/10 text-lg tabular-nums font-mono'>
+                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Vuelto a Entregar</label>
+                    <div className='h-12 flex items-center px-5 bg-green-50 text-success font-black rounded-lg border border-green-100 text-xl tabular-nums font-mono shadow-inner'>
                       {formatLocalizedCurrency(change, sale?.currency)}
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Caja Registradora */}
-                <div className='space-y-2'>
-                  <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Caja de Cobro</label>
-                  <Select value={cashRegisterId || CASH_REGISTER_NONE_VALUE} onValueChange={v => setCashRegisterId(v === CASH_REGISTER_NONE_VALUE ? '' : v)}>
-                    <SelectTrigger className='h-11 rounded-xl bg-white dark:bg-slate-800 border-border-subtle font-bold text-sm'>
-                      <SelectValue placeholder='Seleccionar caja...' />
-                    </SelectTrigger>
-                    <SelectContent className='rounded-xl border-border-subtle shadow-fluent-16 min-w-[300px]'>
-                      <SelectItem value={CASH_REGISTER_NONE_VALUE} className='font-black text-[10px] uppercase tracking-widest text-slate-400 py-3'>Sin Caja Asignada</SelectItem>
-                      {cashRegisterOptions.map(opt => (
-                        <SelectItem key={opt.value} value={opt.value} className='py-4 border-b border-slate-50 last:border-none'>
-                          <div className='flex flex-col gap-1'>
-                            <span className='font-black text-[11px] uppercase tracking-tight'>{opt.label}</span>
-                            <div className='flex items-center gap-2 text-[10px] font-bold text-text-secondary font-mono'>{opt.balanceLabel}</div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className='space-y-2 pt-4'>
-                  <label className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-1'>Observaciones Internas</label>
-                  <Textarea
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    placeholder='Detalles operativos...'
-                    rows={2}
-                    className='rounded-xl bg-white border-border-subtle text-sm p-4 resize-none font-medium'
-                  />
-                </div>
-              </section>
+              {/* OBSERVACIONES */}
+              <div className='space-y-2 px-1'>
+                <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Notas del Operador</label>
+                <Textarea
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  placeholder='Detalles operativos del cobro...'
+                  rows={2}
+                  className='rounded-xl bg-white border-slate-200 text-sm p-4 resize-none font-medium focus:ring-primary transition-all'
+                />
+              </div>
 
               {formError && (
-                <div className='p-5 bg-error/5 border border-error/20 rounded-xl flex items-center gap-4'>
+                <div className='p-5 bg-error/5 border border-error/20 rounded-xl flex items-center gap-4 animate-in shake duration-500'>
                   <AlertCircle className="text-error" size={20} />
-                  <span className='text-[10px] font-black uppercase tracking-widest text-error leading-relaxed'>{formError}</span>
+                  <span className='text-[11px] font-black uppercase text-error tracking-tight'>{formError}</span>
                 </div>
               )}
             </div>
 
-            <footer className='mt-10 flex flex-col sm:flex-row gap-4 pt-10 border-t border-border-subtle'>
+            <footer className='mt-10 flex flex-col sm:flex-row gap-4 pt-10 border-t border-slate-200'>
               <Button
                 type='button'
                 variant='outline'
                 onClick={() => handleDialogChange(false)}
-                className='w-full sm:flex-1 h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-border-subtle hover:bg-slate-50 transition-all'
+                className='h-12 rounded-lg border-slate-200 text-slate-600 font-black uppercase text-xs tracking-widest hover:bg-slate-50 transition-all sm:flex-1'
               >
                 Cancelar
               </Button>
               <Button
                 type='submit'
                 disabled={isSubmitDisabled}
-                className='w-full sm:flex-[2] h-12 rounded-xl bg-primary hover:bg-primary-hover text-white font-black uppercase text-[10px] tracking-widest shadow-fluent-8 transition-all active:scale-[0.98]'
+                className='h-12 rounded-lg bg-primary hover:bg-primary-hover text-white font-black uppercase text-xs tracking-widest shadow-md transition-all active:scale-[0.98] sm:flex-[2]'
               >
                 {isSubmitting ? (
-                  <div className='flex items-center gap-2'><Loader2 size={16} className='animate-spin' /> Procesando...</div>
+                  <div className='flex items-center gap-2'><Loader2 size={18} className='animate-spin' /> Procesando...</div>
                 ) : (
-                  <div className='flex items-center gap-2'><CheckCircle2 size={16} /> Registrar Cobro</div>
+                  <div className='flex items-center gap-2'><CheckCircle2 size={18} /> Registrar Cobro</div>
                 )}
               </Button>
             </footer>

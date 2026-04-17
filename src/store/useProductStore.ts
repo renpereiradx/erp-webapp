@@ -26,7 +26,55 @@ const _jitter = base => {
   return base + rand * 0.3 * base // +-30%
 }
 
-const useProductStore = create()(
+interface ProductState {
+  products: any[];
+  serviceCourts: any[];
+  productsById: Record<string, any>;
+  pageCache: Record<number, any>;
+  pageCacheTTL: number;
+  searchCache: Record<string, any>;
+  cacheTTL: number;
+  cacheHits: number;
+  cacheMisses: number;
+  selectedIds: string[];
+  selectedProduct: any | null;
+  loading: boolean;
+  error: string | null;
+  fetchAbortController: AbortController | null;
+  errorCounters: Record<string, number>;
+  lastErrorCode: string | null;
+  lastErrorHintKey: string | null;
+  isOffline: boolean;
+  _testing: {
+    overrideTTL: number | null;
+    fastRetries: boolean;
+    overrideRetryConfig: any | null;
+  };
+  circuit: {
+    openUntil: number;
+    failures: number;
+    threshold: number;
+    cooldownMs: number;
+  };
+  circuitOpen: boolean;
+  circuitTimeoutId: any | null;
+  categories: any[];
+  currentPage: number;
+  pageSize: number;
+  totalProducts: number;
+  totalPages: number;
+  lastSearchTerm: string;
+  filters: {
+    search: string;
+    category: string;
+    status: string;
+    sortBy: string;
+    sortOrder: string;
+  };
+  [key: string]: any; // Allow actions for now
+}
+
+const useProductStore = create<ProductState>()(
   devtools(
     (set, get) => ({
       // =================== ESTADO ===================
@@ -1764,7 +1812,7 @@ const useProductStore = create()(
           },
           circuitOpen: false,
           circuitTimeoutId: null,
-          _testing: { overrideTTL: null },
+          _testing: { overrideTTL: null, fastRetries: false, overrideRetryConfig: null },
           pageCacheTTL: 120000,
           cacheTTL: 120000,
         }),
@@ -1980,7 +2028,7 @@ const useProductStore = create()(
         }
       },
       setTestingTTL: ms =>
-        set({ pageCacheTTL: ms, cacheTTL: ms, _testing: { overrideTTL: ms } }),
+        set(s => ({ pageCacheTTL: ms, cacheTTL: ms, _testing: { ...s._testing, overrideTTL: ms } })),
       // Toggle fast retry mode (1 attempt, 0 delay) for tests
       setTestingFastRetries: flag =>
         set(s => ({ _testing: { ...s._testing, fastRetries: !!flag } })),

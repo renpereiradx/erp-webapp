@@ -40,8 +40,8 @@ const InventoryAdjustmentManualPage = () => {
   // Formulario de ajuste
   const [formData, setFormData] = useState({
     quantityAdjustment: '',
-    reasonCategory: 'PHYSICAL_COUNT',
-    details: REASON_DETAIL_TEMPLATES['PHYSICAL_COUNT'],
+    reasonCategory: 'INVENTORY_COUNT',
+    details: REASON_DETAIL_TEMPLATES['INVENTORY_COUNT'],
     approvalLevel: 'operator',
   })
   const [formErrors, setFormErrors] = useState({})
@@ -150,8 +150,8 @@ const InventoryAdjustmentManualPage = () => {
     setFormErrors({})
     setFormData({
       quantityAdjustment: '',
-      reasonCategory: 'PHYSICAL_COUNT',
-      details: REASON_DETAIL_TEMPLATES['PHYSICAL_COUNT'],
+      reasonCategory: 'INVENTORY_COUNT',
+      details: REASON_DETAIL_TEMPLATES['INVENTORY_COUNT'],
       approvalLevel: 'operator',
     })
   }
@@ -208,26 +208,26 @@ const InventoryAdjustmentManualPage = () => {
       unit: selectedProduct.base_unit || 'unit',
     }
     const result = await createManualAdjustment(adjustmentData)
-    if (result.success) {
+    if (result && result.success) {
       setSuccessMessage('Ajuste creado exitosamente')
       await loadHistory(selectedProduct.product_id)
       setFormData({
         quantityAdjustment: '',
-        reasonCategory: 'PHYSICAL_COUNT',
-        details: REASON_DETAIL_TEMPLATES['PHYSICAL_COUNT'],
+        reasonCategory: 'INVENTORY_COUNT',
+        details: REASON_DETAIL_TEMPLATES['INVENTORY_COUNT'],
         approvalLevel: 'operator',
       })
       setSelectedProduct(prev => ({ ...prev, stock_quantity: newQuantity }))
     } else {
-      setFormErrors({ submit: result.message || result.error || 'Error al crear ajuste' })
+      setFormErrors({ submit: result?.message || result?.error || 'Error al crear ajuste' })
     }
   }
 
   const handleClear = () => {
     setFormData({
       quantityAdjustment: '',
-      reasonCategory: 'PHYSICAL_COUNT',
-      details: REASON_DETAIL_TEMPLATES['PHYSICAL_COUNT'],
+      reasonCategory: 'INVENTORY_COUNT',
+      details: REASON_DETAIL_TEMPLATES['INVENTORY_COUNT'],
       approvalLevel: 'operator',
     })
     setFormErrors({})

@@ -270,6 +270,9 @@ const useInventoryStore = create(
             
             set({ loadingCreate: false });
             return { success: true, data: result };
+          } else {
+            set({ error: result.message || 'Error al crear ajuste', loadingCreate: false });
+            return { success: false, error: result.message || 'Error al crear ajuste' };
           }
         } catch (error) {
           set({ error: error.message || 'Error al crear ajuste', loadingCreate: false });

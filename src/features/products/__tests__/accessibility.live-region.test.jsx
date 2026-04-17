@@ -1,8 +1,8 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { screen, act } from '@testing-library/react';
-import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
-import Products from '@/pages/Products.jsx';
+import { renderWithTheme } from '@/utils/themeTestUtils';
+import Products from '@/pages/Products';
 import * as productStore from '@/store/useProductStore';
 
 // Mock store selectors minimalmente

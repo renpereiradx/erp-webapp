@@ -8,7 +8,7 @@ interface ProductDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: ProductOperationInfoResponse | any;
-  onEdit?: () => void;
+  onEdit?: (product: any) => void;
 }
 
 /**
@@ -19,7 +19,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
   const { t } = useI18n();
 
   useEffect(() => {
-    const handleEscape = (e) => {
+    const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) onClose();
     };
     document.addEventListener('keydown', handleEscape);

@@ -6,19 +6,20 @@
 export const DEFAULT_REASONS = {
   // Ajustes Manuales
   MANUAL_ADJUSTMENT: {
-    PHYSICAL_COUNT: 'Ajuste por conteo físico',
-    DAMAGED_GOODS: 'Producto dañado o vencido',
-    INVENTORY_CORRECTION: 'Corrección de inventario',
+    INVENTORY_COUNT: 'Ajuste por conteo físico',
+    DAMAGE: 'Producto dañado o vencido',
+    CORRECTION: 'Corrección de inventario',
     SYSTEM_ERROR: 'Corrección por error del sistema',
-    THEFT_LOSS: 'Pérdida por robo o extravío',
+    THEFT: 'Pérdida por robo o extravío',
     SUPPLIER_ERROR: 'Error en entrega del proveedor',
-    EXPIRATION: 'Producto vencido',
+    EXPIRY: 'Producto vencido',
     BREAKAGE: 'Producto roto o dañado',
     QUALITY_CONTROL: 'Rechazo por control de calidad',
-    INITIAL_STOCK: 'Configuración de stock inicial',
+    INITIAL_COUNT: 'Configuración de stock inicial',
     RECLASSIFICATION: 'Reclasificación de producto',
     OTHER: 'Otro motivo (especificar en metadata)',
   },
+
 
   // Transacciones de Stock
   STOCK_TRANSACTION: {
@@ -265,8 +266,8 @@ export function validateMetadata(metadata, reasonType) {
 
   // Validaciones específicas por tipo
   const typeValidations = {
-    PHYSICAL_COUNT: ['operator', 'location'],
-    DAMAGED_GOODS: ['damage_type', 'disposal_method'],
+    INVENTORY_COUNT: ['operator', 'location'],
+    DAMAGE: ['damage_type', 'disposal_method'],
     SYSTEM_ERROR: ['error_type', 'detection_method'],
   }
 

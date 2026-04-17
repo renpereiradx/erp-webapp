@@ -7,8 +7,8 @@ import {
   RefreshCw,
   Calendar,
 } from 'lucide-react'
-import { ExchangeRateService } from '../../services/exchangeRateService.js'
-import { CurrencyService } from '../../services/currencyService.js'
+import { ExchangeRateService } from '../../services/exchangeRateService'
+import { CurrencyService } from '../../services/currencyService'
 
 // Cache compartido para evitar reintentos infinitos cuando el backend no expone los endpoints
 const failedCurrencyCache = new Set()

@@ -32,8 +32,8 @@ const SellerProfitability = () => {
   if (loading) return <div className="p-16 text-center animate-pulse text-slate-500 font-medium">Auditando desempeño del equipo comercial...</div>;
   if (error) return <div className="p-10 text-center text-rose-500 bg-rose-50 border border-rose-100 rounded-xl m-6 font-semibold">Error de sincronización: {error}</div>;
 
-  const { sellers, summary } = data;
-  const topSeller = sellers[0];
+  const { sellers = [], summary = {} } = data || {};
+  const topSeller = sellers && sellers.length > 0 ? sellers[0] : null;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
@@ -75,8 +75,8 @@ const SellerProfitability = () => {
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <p className={`font-black text-slate-900 dark:text-white font-mono tracking-tighter ${getDynamicFontClass(summary.average_profit_per_seller || 15450000, { baseClass: 'text-2xl', mediumClass: 'text-xl' })}`}>
-              {formatPYG(summary.average_profit_per_seller || 15450000)}
+            <p className={`font-black text-slate-900 dark:text-white font-mono tracking-tighter ${getDynamicFontClass(summary?.average_profit_per_seller || 15450000, { baseClass: 'text-2xl', mediumClass: 'text-xl' })}`}>
+              {formatPYG(summary?.average_profit_per_seller || 15450000)}
             </p>
             <p className="text-emerald-600 dark:text-emerald-400 text-[10px] font-black flex items-center gap-1 mt-1 uppercase tracking-widest">
               <Zap size={12} fill="currentColor" /> +5.2% vs mes ant.
@@ -92,12 +92,12 @@ const SellerProfitability = () => {
             </div>
             <div className="flex flex-col min-w-0">
               <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none">Top Vendedor</p>
-              <p className="text-base font-black text-slate-900 dark:text-white uppercase truncate">{summary.top_seller_name || topSeller.seller_name}</p>
+              <p className="text-base font-black text-slate-900 dark:text-white uppercase truncate">{summary?.top_seller_name || topSeller?.seller_name || 'Sin datos'}</p>
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <p className={`font-black text-slate-900 dark:text-white font-mono tracking-tighter ${getDynamicFontClass(topSeller.gross_profit, { baseClass: 'text-2xl', mediumClass: 'text-xl' })}`}>
-              {formatPYG(topSeller.gross_profit)}
+            <p className={`font-black text-slate-900 dark:text-white font-mono tracking-tighter ${getDynamicFontClass(topSeller?.gross_profit || 0, { baseClass: 'text-2xl', mediumClass: 'text-xl' })}`}>
+              {formatPYG(topSeller?.gross_profit || 0)}
             </p>
             <p className="text-[#137fec] text-[9px] font-black uppercase tracking-widest">Beneficio Neto Acumulado</p>
           </div>
@@ -127,7 +127,7 @@ const SellerProfitability = () => {
 
         {/* Mobile: Seller Card List */}
         <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800">
-          {sellers.map((s, idx) => (
+          {sellers?.map((s, idx) => (
             <div key={idx} className="p-4 space-y-4 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -173,7 +173,7 @@ const SellerProfitability = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50 text-sm font-medium">
-              {sellers.map((s, idx) => (
+              {sellers?.map((s, idx) => (
                 <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all cursor-pointer">
                   <td className="px-6 py-4">
                     <span className={`flex items-center justify-center size-7 rounded-lg font-black font-mono text-xs ${
@@ -208,7 +208,7 @@ const SellerProfitability = () => {
         </div>
         
         <div className="px-5 md:px-6 py-4 bg-slate-50/30 dark:bg-slate-950/30 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">Auditoría consolidada • {sellers.length} Ejecutivos Activos</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">Auditoría consolidada • {sellers?.length || 0} Ejecutivos Activos</p>
           <div className="flex gap-2">
             <button className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 disabled:opacity-30 hover:bg-white transition-all"><ChevronLeft size={16} /></button>
             <button className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[#137fec] hover:bg-blue-50 transition-all shadow-sm"><ChevronRight size={16} /></button>
@@ -246,7 +246,7 @@ const SellerProfitability = () => {
 
             {/* Polished Legend */}
             <div className="flex-1 w-full space-y-2 md:space-y-3">
-              {sellers.slice(0, 3).map((s, i) => {
+              {sellers?.slice(0, 3).map((s, i) => {
                 const colors = ['bg-[#137fec]', 'bg-[#137fec]/70', 'bg-[#137fec]/40'];
                 const percentages = ['32%', '27%', '23%'];
                 return (
@@ -286,7 +286,7 @@ const SellerProfitability = () => {
             </div>
           </div>
           <div className="space-y-6 md:space-y-8">
-            {sellers.slice(0, 4).map((s, i) => (
+            {sellers?.slice(0, 4).map((s, i) => (
               <div key={i} className="space-y-2 md:space-y-3 group/item">
                 <div className="flex justify-between text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none">
                   <span className="group-hover/item:text-emerald-500 transition-colors truncate max-w-[150px] md:max-w-none">{s.seller_name}</span>

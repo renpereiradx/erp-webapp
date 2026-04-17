@@ -1,34 +1,20 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Search,
-  Download,
   X,
   Plus,
-  User,
   Calendar,
   MoreVertical,
   Eye,
   Ban,
   Package,
-  ChevronRight,
-  Truck,
-  CreditCard,
-  Hash,
-  Tag,
-  Percent,
-  DollarSign,
   AlertCircle,
   ShoppingCart,
-  FileText,
-  ArrowRight,
   Check,
-  Minus,
   History,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import DataState from '@/components/ui/DataState'
-import SegmentedControl from '@/components/ui/SegmentedControl'
 import { useI18n } from '@/lib/i18n'
 import useDashboardStore from '@/store/useDashboardStore'
 import useAuthStore from '@/store/useAuthStore'
@@ -218,7 +204,7 @@ const Purchases = () => {
     return parsedDate.toISOString().split('T')[0]
   }
 
-  const mergePurchaseOrdersById = (baseOrders = [], incomingOrders = []) => {
+  const mergePurchaseOrdersById = (baseOrders: any[] = [], incomingOrders: any[] = []) => {
     const mergedOrders = [...baseOrders]
     const knownIds = new Set(
       baseOrders
@@ -251,7 +237,7 @@ const Purchases = () => {
     const effectiveEndDate = getInclusiveEndDate(toDate)
 
     let currentPage = 1
-    let aggregatedOrders = []
+    let aggregatedOrders: any[] = []
 
     while (currentPage <= maxPages) {
       const pageResponse = await purchaseService.getPurchasesByDateRange(
@@ -453,7 +439,7 @@ const Purchases = () => {
         setModalTaxRatePercent(taxInfo.rate || 0);
       }
     } catch (err: any) {
-      toast({
+      toast.toast({
         title: 'Error',
         description: 'No se pudo cargar el detalle del producto para compra',
         variant: 'destructive',
@@ -643,7 +629,7 @@ const Purchases = () => {
     }
   }
 
-  const formatCurrency = (amt, curr) => {
+  const formatCurrency = (amt: any, curr?: any) => {
     const code = normalizeCurrencyCode(curr || paymentCurrency)
     return new Intl.NumberFormat('es-PY', {
       style: 'currency',
@@ -774,14 +760,16 @@ const Purchases = () => {
         },
       )
 
-      // [INTEGRACION] Una vez registrado el pago inicial, marcamos la orden como COMPLETED
-      // para que el stock se procese y la orden cambie de estado visualmente.
+      // [INTEGRACION] El endpoint /purchase/{id}/status no existe actualmente en el backend (404).
+      // Se comenta la llamada para evitar que el flujo de pago falle. 
+      // El estado debería ser gestionado por el backend tras el registro del pago.
+      /*
       try {
         await purchaseService.updatePurchaseOrderStatus(orderId, 'COMPLETED', 'Pago inicial registrado tras creación')
       } catch (statusError) {
         console.warn('Could not update order status to COMPLETED:', statusError)
-        // No fallamos el proceso si solo falla el cambio de estado, ya que el pago se registró
       }
+      */
 
       toast.success('Pago registrado correctamente')
       setShowInstantPayment(false)
@@ -887,7 +875,7 @@ const Purchases = () => {
                     <tbody className='divide-y divide-[var(--fluent-border-neutral,#E1DFDD)] dark:divide-[var(--fluent-neutral-grey-140,#484644)]'>
                       {purchaseItems.length === 0 ? (
                         <tr>
-                          <td colSpan='8' className='py-12 text-center'>
+                          <td colSpan={8} className='py-12 text-center'>
                             <div className='flex flex-col items-center gap-2 text-[var(--fluent-text-tertiary,#8A8886)]'>
                               <Package size={32} strokeWidth={1.5} />
                               <p className='text-sm'>
@@ -1328,7 +1316,7 @@ const Purchases = () => {
                     {purchaseOrders.length === 0 ? (
                       <tr>
                         <td
-                          colSpan='6'
+                          colSpan={6}
                           className='py-16 text-center text-[var(--fluent-text-tertiary,#8A8886)] text-sm'
                         >
                           No se encontraron registros de compra
@@ -1878,7 +1866,7 @@ const Purchases = () => {
                         </span>
                         <span className='text-sm font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
                           {formatCurrency(
-                            (modalQuantity || 0) * (modalUnitPrice || 0),
+                            (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0),
                           )}
                         </span>
                       </div>
@@ -1890,7 +1878,7 @@ const Purchases = () => {
                         </span>
                         <span className='text-sm font-semibold text-[var(--fluent-brand-primary,#0078D4)]'>
                           {formatCurrency(
-                            (modalQuantity || 0) * effectiveSalePrice,
+                            (Number(modalQuantity) || 0) * effectiveSalePrice,
                           )}
                         </span>
                       </div>
@@ -1902,15 +1890,15 @@ const Purchases = () => {
                         </span>
                         <div className='text-right'>
                           <span
-                            className={`text-lg font-bold ${(modalQuantity || 0) * effectiveSalePrice - (modalQuantity || 0) * (modalUnitPrice || 0) >= 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}
+                            className={`text-lg font-bold ${(Number(modalQuantity) || 0) * effectiveSalePrice - (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0) >= 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}
                           >
                             {formatCurrency(
-                              (modalQuantity || 0) * effectiveSalePrice -
-                                (modalQuantity || 0) * (modalUnitPrice || 0),
+                              (Number(modalQuantity) || 0) * effectiveSalePrice -
+                                (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0),
                             )}
                           </span>
-                          {(modalQuantity || 0) > 0 &&
-                            (modalUnitPrice || 0) > 0 && (
+                          {(Number(modalQuantity) || 0) > 0 &&
+                            (Number(modalUnitPrice) || 0) > 0 && (
                               <span className='ml-1.5 text-xs font-medium text-[var(--fluent-semantic-success,#107C10)]'>
                                 (+{effectiveProfitPct.toFixed(1)}%)
                               </span>

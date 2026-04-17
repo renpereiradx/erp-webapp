@@ -1,7 +1,7 @@
 # 💳 API de Métodos de Pago, Monedas y Cajas Registradoras
 
 **Versión:** 1.1
-**Fecha:** Marzo 2026
+**Fecha:** 22 de Marzo de 2026
 **Endpoint Base:** `http://localhost:5050`
 
 ---
@@ -686,7 +686,7 @@ Retorna la caja abierta del usuario autenticado.
 
 ### 4.6 Registrar Movimiento de Efectivo
 
-**Endpoint:** `POST /cash-movements`
+**Endpoint:** `POST /cash-movements/`
 
 **Tipos de Movimiento:**
 
@@ -701,7 +701,7 @@ Retorna la caja abierta del usuario autenticado.
   "movement_type": "INCOME",
   "amount": 150000,
   "category": "SALE",
-  "description": "Venta producto #123",
+  "concept": "Venta producto #123",
   "reference_type": "SALE",
   "reference_id": "SALE-123"
 }
@@ -715,9 +715,26 @@ Retorna la caja abierta del usuario autenticado.
 | `movement_type`    | string | Sí        | INCOME o EXPENSE                             |
 | `amount`           | float  | Sí        | Monto del movimiento                         |
 | `category`         | string | No        | Categoría (SALE, PURCHASE, ADJUSTMENT, etc.) |
-| `description`      | string | No        | Descripción del movimiento                   |
+| `concept`          | string | Sí        | Concepto del movimiento (obligatorio)        |
 | `reference_type`   | string | No        | Tipo de referencia (SALE, PURCHASE)          |
 | `reference_id`     | string | No        | ID de la referencia                          |
+
+> Importante: `POST /cash-registers/{id}/movements` no existe para crear movimientos.
+> Esa ruta es solo de lectura (`GET`) para listar movimientos.
+
+**Llamada frontend recomendada (crear movimiento):**
+
+```js
+await api.post('/cash-movements/', {
+  cash_register_id: 26,
+  movement_type: 'INCOME', // o 'EXPENSE'
+  amount: 150000,
+  concept: 'Venta producto #123',
+  category: 'SALE',
+  reference_type: 'SALE',
+  reference_id: 'SALE-123',
+})
+```
 
 **Response (201 Created):**
 

@@ -1,7 +1,7 @@
 # API Unificada: Ventas y Cobros de Ventas
 
-**Versión:** 2.0  
-**Fecha:** 2026-03-05  
+**Versión:** 2.3  
+**Fecha:** 2026-03-29  
 **Base URL (Swagger):** `http://localhost:5050`
 
 ---
@@ -39,9 +39,36 @@ Content-Type: application/json
 - **Errores de negocio de venta:** pueden devolver objeto estructurado `SaleErrorResponse` con `error_code`.
 - **Errores en cobros:** varios endpoints retornan JSON con `success=false`, `error`, `error_code`; otros usan `http.Error` (texto plano).
 - **Campos monetarios:** `number/double`.
+- **Contrato fiscal por línea en `details[]`:** usar `unit_price`, `unit_price_with_tax`, `unit_price_without_tax`, `tax_amount`, `applied_tax_rate`, `subtotal`, `total_with_tax`.
+- **Regla frontend recomendada:** no recalcular impuestos si esos campos vienen en respuesta; renderizar directo desde backend.
 - **Filtros backend habilitados en endpoints de estado de pago:**
   - `GET /sale/date_range/payment-status` soporta `payment_status` (PAID, PENDING, PARTIAL, CANCELLED).
   - `GET /sale/client_name/{name}/payment-status` soporta `start_date`, `end_date` y `payment_status`.
+
+### Nota de consistencia (actualización 2026-03-28)
+
+Se corrigió la lectura de detalles en consultas de ventas para evitar duplicados por historial de precios en `products.unit_prices`.
+
+- Endpoints corregidos:
+  - `GET /sale/{id}`
+  - `GET /sale/date_range`
+  - `GET /sale/client_name/{name}`
+- Regla aplicada en backend para `base_price`:
+  - `up.unit = COALESCE(sd.unit, 'unit')`
+  - `up.effective_to IS NULL`
+
+### Nota de compatibilidad (actualización 2026-03-29)
+
+Se aplicaron correcciones para ventas con descuentos/modificación de precio y para reservas convertidas a venta.
+
+- `POST /sale/`:
+  - restaura helpers de metadata de cambios de precio (`create_price_change_metadata`, `register_price_change_in_metadata`).
+  - corrige resolución de precio activo en detalles para evitar arrastre entre productos.
+- Contrato recomendado para frontend:
+  - enviar `reserve_id` en raíz cuando la venta proviene de reserva.
+  - enviar `reserve_id` en el ítem del servicio reservado.
+  - no enviar `unit: "service"` (valor inválido por constraint). Usar unidades válidas como `unit`, `hour`, etc.
+  - si se usa `sale_price` para fijar precio final, no combinar con `discount_amount`/`discount_percent` en el mismo ítem para evitar doble ajuste.
 
 ---
 
@@ -142,7 +169,13 @@ Content-Type: application/json
   - `client_id` (requerido)
   - `product_details[]` (requerido salvo cuando se usa `reserve_id`)
   - opcionales: `sale_id`, `reserve_id`, `payment_method_id`, `currency_id`, `allow_price_modifications`.
+- **Reglas importantes de `product_details[]`:**
+  - `unit` debe pertenecer al catálogo permitido por DB (ej: `unit`, `hour`, `kg`, `l`, `can`, etc.).
+  - `unit: "service"` no es válido y produce `chk_sales_order_details_valid_unit`.
+  - para ítems de reserva, enviar `reserve_id` también a nivel de detalle.
+  - `sale_price` y `discount_*` son acumulativos en backend; usar una sola estrategia por ítem cuando el objetivo es un ajuste único.
 - **Carga de producto recomendada para frontend:** usar `GET /products/{id}/sale`.
+- **UI recomendada:** cargar producto con `GET /products/{id}/sale` antes de construir el carrito.
 - **Ejemplo body:**
 
 ```json
@@ -200,6 +233,38 @@ Content-Type: application/json
   - `page` (default 1)
   - `page_size` (default 50)
 - **Respuesta exitosa (200):** `PaginatedSalesResponse` (`data[]`, `pagination`).
+- **Forma de respuesta (importante):**
+
+```json
+{
+  "data": [
+    {
+      "sale": { "sale_id": "SALE-..." },
+      "details": [
+        {
+          "id": 123,
+          "unit_price": 17500,
+          "unit_price_with_tax": 17500,
+          "unit_price_without_tax": 17500,
+          "tax_amount": 0,
+          "applied_tax_rate": 0,
+          "subtotal": 35000,
+          "total_with_tax": 35000
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "page_size": 50,
+    "total_records": 1,
+    "total_pages": 1,
+    "has_next": false,
+    "has_previous": false
+  }
+}
+```
+
 - **Errores:**
   - `400`: faltan/son inválidas las fechas.
   - `401`: no autorizado.
@@ -271,6 +336,7 @@ Content-Type: application/json
 - **Objetivo:** obtener una venta por ID.
 - **Path params:** `id` (string, requerido).
 - **Respuesta exitosa (200):** `SaleEnhancedResponse`.
+- **Validación funcional esperada:** `details.length` debe coincidir con las filas reales de `transactions.sales_order_details` para ese `sale_id`.
 - **Errores:**
   - `401`: no autorizado.
   - `404`: venta no encontrada.
@@ -384,7 +450,7 @@ Content-Type: application/json
   "amount_received": 150000,
   "payment_method_id": 1,
   "currency_id": 2,
-  "exchange_rate": 7350.50,
+  "exchange_rate": 7350.5,
   "original_amount": 20.41,
   "payment_reference": "REC-0001"
 }

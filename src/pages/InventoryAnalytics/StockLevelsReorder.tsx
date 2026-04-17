@@ -10,6 +10,14 @@ export const StockLevelsReorder: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [reorderTypeFilter, setReorderTypeFilter] = useState<'ALL' | 'URGENT' | 'SOON'>('ALL');
+
+  const statusOptions = [
+    { id: 'ALL', label: 'Todos' },
+    { id: 'IN_STOCK', label: 'En Stock' },
+    { id: 'LOW_STOCK', label: 'Bajo Stock' },
+    { id: 'OUT_OF_STOCK', label: 'Sin Stock' },
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,6 +38,43 @@ export const StockLevelsReorder: React.FC = () => {
 
     fetchData();
   }, []);
+
+  // Determine the base list of products to filter
+  const getBaseProducts = () => {
+    if (reorderTypeFilter === 'URGENT') return reorderData?.urgent_reorders || [];
+    if (reorderTypeFilter === 'SOON') return reorderData?.soon_reorders || [];
+    return stockData?.products || [];
+  };
+
+  // Helper to resolve a unified status string
+  const resolveUnifiedStatus = (product: any) => {
+    const raw = product.status || product.priority || '';
+    if (raw === 'URGENT' || raw === 'OUT_OF_STOCK') return 'OUT_OF_STOCK';
+    if (raw === 'HIGH' || raw === 'LOW_STOCK' || raw === 'MEDIUM') return 'LOW_STOCK';
+    if (raw === 'OVERSTOCK') return 'OVERSTOCK';
+    return 'IN_STOCK';
+  };
+
+  // Filter products based on search term, status and reorder type
+  const filteredProducts = getBaseProducts().filter(product => {
+    const name = product.product_name || '';
+    const sku = product.sku || '';
+    const category = product.category_name || '';
+
+    const matchesSearch = 
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      category.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const unifiedStatus = resolveUnifiedStatus(product);
+    const matchesStatus = statusFilter === 'ALL' || unifiedStatus === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  // Calculate estimated cost for "Soon" reorders
+  const urgentCost = reorderData?.urgent_reorders.reduce((sum, p) => sum + p.estimated_cost, 0) || 0;
+  const soonCost = reorderData?.soon_reorders.reduce((sum, p) => sum + p.estimated_cost, 0) || 0;
 
   if (loading) {
     return <div className="p-8 text-center">Cargando niveles de stock...</div>;
@@ -59,18 +104,28 @@ export const StockLevelsReorder: React.FC = () => {
             />
           </div>
         </div>
-        <div className="flex gap-2">
-          {['ALL', 'IN_STOCK', 'LOW_STOCK', 'OUT_OF_STOCK'].map((status) => (
+        <div className="flex gap-2 items-center">
+          {reorderTypeFilter !== 'ALL' && (
+            <button 
+              onClick={() => setReorderTypeFilter('ALL')}
+              className="px-3 py-2 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 rounded-lg text-xs font-bold flex items-center gap-1 animate-pulse border border-rose-200 dark:border-rose-800"
+            >
+              <span className="material-symbols-outlined text-sm">close</span>
+              Quitar Filtro Reorden
+            </button>
+          )}
+          <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2 hidden md:block"></div>
+          {statusOptions.map((opt) => (
             <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
+              key={opt.id}
+              onClick={() => setStatusFilter(opt.id)}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition-all uppercase tracking-wider ${
-                statusFilter === status 
+                statusFilter === opt.id 
                 ? 'bg-primary text-white shadow-md' 
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
               }`}
             >
-              {status === 'ALL' ? 'Todos' : status.replace('_', ' ')}
+              {opt.label}
             </button>
           ))}
         </div>
@@ -81,20 +136,25 @@ export const StockLevelsReorder: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ReorderAlertCard 
             count={reorderData.summary.urgent_count}
-            cost={`Gs. ${reorderData.summary.estimated_cost.toLocaleString('es-PY')}`}
+            cost={`Gs. ${urgentCost.toLocaleString('es-PY')}`}
             type="URGENT"
+            onClick={() => setReorderTypeFilter('URGENT')}
           />
           <ReorderAlertCard 
             count={reorderData.summary.soon_count}
-            cost={`Gs. ${(reorderData.summary.estimated_cost * 0.4).toLocaleString('es-PY')}`}
+            cost={`Gs. ${soonCost.toLocaleString('es-PY')}`}
             type="HIGH"
+            onClick={() => setReorderTypeFilter('SOON')}
           />
         </div>
       )}
 
       {/* Main Table */}
       {stockData && (
-        <StockLevelsTable products={stockData.products} />
+        <StockLevelsTable 
+          products={filteredProducts} 
+          totalItems={stockData.pagination.total_items}
+        />
       )}
     </main>
   );

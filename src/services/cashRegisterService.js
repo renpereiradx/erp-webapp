@@ -16,7 +16,7 @@ const API_ENDPOINTS = {
   cashRegisterMovementsFilter: id => `/cash-registers/${id}/movements/filter`,
   cashRegisterReport: id => `/cash-registers/${id}/report`,
   cashRegisterAudits: id => `/cash-registers/${id}/audits`,
-  cashMovements: '/cash-movements',
+  cashMovements: '/cash-movements/',
   voidMovement: id => `/cash-movements/${id}/void`,
   cashAudits: '/cash-audits',
   cashAuditsDenominations: '/cash-audits/denominations',
@@ -331,7 +331,7 @@ export const cashRegisterService = {
   },
 
   /**
-   * Registra un movimiento manual de efectivo (POST /cash-movements)
+   * Registra un movimiento manual de efectivo (POST /cash-movements/)
    * @param {Object} movementData
    * @returns {Promise<Object>}
    */
@@ -340,7 +340,17 @@ export const cashRegisterService = {
 
     try {
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.post(API_ENDPOINTS.cashMovements, movementData)
+        const payload = {
+          cash_register_id: Number(movementData.cash_register_id),
+          movement_type: movementData.movement_type,
+          amount: Number(movementData.amount),
+          concept: movementData.concept?.trim(),
+          category: movementData.category || undefined,
+          reference_type: movementData.reference_type || undefined,
+          reference_id: movementData.reference_id || undefined,
+        }
+
+        return await apiClient.post(API_ENDPOINTS.cashMovements, payload)
       })
 
       telemetry.record('cash_register.service.create_movement', {
@@ -456,6 +466,66 @@ export const cashRegisterService = {
         duration: Date.now() - startTime,
         error: error.message,
         operation: 'getAuditsByRegister',
+      })
+      throw error
+    }
+  },
+
+  // =================== PAGOS INTEGRADOS CON CAJA ===================
+
+  /**
+   * Procesa cobro de venta con integración de caja (v3.0)
+   * @param {Object} paymentData 
+   * @returns {Promise<Object>}
+   */
+  async processSalePaymentWithCashRegister(paymentData) {
+    const startTime = Date.now()
+
+    try {
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.processSalePaymentCashRegister(paymentData)
+      })
+
+      telemetry.record('cash_register.service.sale_payment', {
+        duration: Date.now() - startTime,
+        saleId: paymentData.sales_order_id,
+      })
+
+      return result
+    } catch (error) {
+      telemetry.record('cash_register.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'processSalePaymentWithCashRegister',
+      })
+      throw error
+    }
+  },
+
+  /**
+   * Procesa pago de compra con integración de caja (v2.0)
+   * @param {Object} paymentData 
+   * @returns {Promise<Object>}
+   */
+  async processPurchasePaymentWithCashRegister(paymentData) {
+    const startTime = Date.now()
+
+    try {
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.processPurchasePaymentCashRegister(paymentData)
+      })
+
+      telemetry.record('cash_register.service.purchase_payment', {
+        duration: Date.now() - startTime,
+        purchaseOrderId: paymentData.purchase_order_id,
+      })
+
+      return result
+    } catch (error) {
+      telemetry.record('cash_register.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'processPurchasePaymentWithCashRegister',
       })
       throw error
     }

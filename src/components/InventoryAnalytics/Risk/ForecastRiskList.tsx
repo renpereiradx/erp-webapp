@@ -55,28 +55,40 @@ export const ForecastRiskList: React.FC<ForecastRiskListProps> = ({ products }) 
           Pronóstico de Agotamiento
         </h3>
       </div>
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {products.map((product) => {
           const styles = getRiskStyles(product.risk);
           return (
-            <div key={product.product_id} className={`bg-white dark:bg-slate-900 p-4 rounded-lg border-l-4 ${styles.border} border border-slate-200 dark:border-slate-800 shadow-sm`}>
-              <div className="flex justify-between items-start mb-2">
-                <span className="font-bold text-slate-900 dark:text-white">{product.product_name}</span>
-                <span className={`text-[10px] font-bold uppercase tracking-wider ${styles.badgeText} px-2 py-0.5 ${styles.badgeBg} rounded`}>
-                  {styles.label}
+            <div key={product.product_id} className={`bg-white dark:bg-slate-900 p-4 rounded-lg border-l-4 ${styles.border} border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all`}>
+              <div className="flex justify-between items-start mb-2 gap-2">
+                <span className="font-bold text-slate-900 dark:text-white leading-tight">{product.product_name}</span>
+                <span className={`text-[10px] font-black uppercase tracking-wider ${styles.badgeText} px-2 py-0.5 ${styles.badgeBg} rounded border border-current/10 shrink-0`}>
+                  Riesgo {styles.label}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                <div className="flex flex-col">
-                  <span className="text-slate-400 text-xs">Días restantes</span>
-                  <span className={`${styles.daysText} font-bold`}>{product.days_until_stockout} días</span>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                <div className="flex flex-col border-r border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-400 text-[10px] uppercase font-bold tracking-tight">Días para Agotamiento</span>
+                  <span className={`${styles.daysText} font-black text-lg font-mono`}>{Number(product.days_until_stockout).toFixed(1)} días</span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-slate-400 text-xs">Stock Proyectado</span>
-                  <span className="font-medium">{product.forecasted_stock} unidades</span>
+                <div className="flex flex-col pl-2">
+                  <span className="text-slate-400 text-[10px] uppercase font-bold tracking-tight">Stock Actual</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 text-lg font-mono">{product.current_stock || 0} <span className="text-[10px] font-normal font-display">uds.</span></span>
                 </div>
               </div>
-              <button className={`w-full py-1.5 text-xs font-bold rounded border border-transparent transition-all ${styles.button}`}>
+
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2 mb-3 border border-slate-100 dark:border-slate-800">
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-slate-500 font-bold uppercase">Pedido Sugerido:</span>
+                  <span className="text-primary font-black font-mono">+{product.recommended_order || 0} unidades</span>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => alert(`Iniciando orden de compra para: ${product.product_name}`)}
+                className={`w-full py-2 text-xs font-black rounded uppercase tracking-widest transition-all shadow-sm ${styles.button}`}
+              >
                 {styles.buttonLabel}
               </button>
             </div>

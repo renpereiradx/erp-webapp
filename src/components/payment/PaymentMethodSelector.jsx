@@ -6,7 +6,7 @@ import {
   Search,
   CreditCard,
 } from 'lucide-react'
-import { PaymentMethodService } from '../../services/paymentMethodService.js'
+import { PaymentMethodService } from '../../services/paymentMethodService'
 
 /**
  * Payment Method Selector Component

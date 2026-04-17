@@ -46,6 +46,17 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         // Stitch design specific colors
+        surface: "hsl(var(--surface))",
+        text: {
+          main: "hsl(var(--text-main))",
+          secondary: "hsl(var(--text-secondary))",
+        },
+        border: {
+          subtle: "hsl(var(--border-subtle))",
+        },
+        success: "#107c10",
+        error: "#c50f1f",
+        warning: "#d83b01",
         "background-light": "#f0f2f5",
         "background-dark": "#101922",
         "surface-light": "#ffffff",
@@ -64,7 +75,10 @@ export default {
       },
       fontFamily: {
         "display": ["Inter", "system-ui", "sans-serif"],
+        "montserrat": ["Montserrat", "sans-serif"],
+        "public": ["Public Sans", "sans-serif"],
         "mono": ["JetBrains Mono", "monospace"],
+        "ibm": ["IBM Plex Mono", "monospace"],
         "tabular": ["Inter", "monospace"]
       },
       borderRadius: {

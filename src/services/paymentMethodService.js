@@ -1,6 +1,6 @@
-import { apiClient } from './api.js'
-import { paymentApiDebug } from './paymentApiDebug.js'
-import { DEMO_CONFIG } from '../config/demoAuth.js'
+import { apiClient } from './api'
+import { paymentApiDebug } from './paymentApiDebug'
+import { DEMO_CONFIG } from '../config/demoAuth'
 
 const SERVICE_NAME = 'PaymentMethodService'
 
@@ -45,11 +45,11 @@ const logPaymentFailure = (
 class PaymentMethodService {
   /**
    * Obtiene todos los métodos de pago disponibles
-   * @returns {Promise<import('../types/payment.js').PaymentMethod[]>}
+   * @returns {Promise<import('../types/payment').PaymentMethod[]>}
    */
   static async getAll() {
     if (DEMO_CONFIG.enabled) {
-      const { getDemoPaymentMethods } = await import('../config/demoData.js')
+      const { getDemoPaymentMethods } = await import('../config/demoData')
       return getDemoPaymentMethods()
     }
     try {
@@ -76,7 +76,7 @@ class PaymentMethodService {
   /**
    * Obtiene un método de pago por ID
    * @param {number} id - Payment method ID
-   * @returns {Promise<import('../types/payment.js').PaymentMethod>}
+   * @returns {Promise<import('../types/payment').PaymentMethod>}
    */
   static async getById(id) {
     try {
@@ -96,7 +96,7 @@ class PaymentMethodService {
   /**
    * Obtiene un método de pago por código
    * @param {string} code - Payment method code
-   * @returns {Promise<import('../types/payment.js').PaymentMethod>}
+   * @returns {Promise<import('../types/payment').PaymentMethod>}
    */
   static async getByCode(code) {
     try {
@@ -136,7 +136,7 @@ class PaymentMethodService {
   /**
    * Busca métodos de pago por descripción (búsqueda local)
    * @param {string} searchTerm - Término de búsqueda
-   * @returns {Promise<import('../types/payment.js').PaymentMethod[]>}
+   * @returns {Promise<import('../types/payment').PaymentMethod[]>}
    */
   static async searchByDescription(searchTerm) {
     try {
@@ -165,7 +165,7 @@ class PaymentMethodService {
   /**
    * Obtiene métodos de pago filtrados por tipo común
    * @param {string} type - Tipo de método: 'cash', 'card', 'digital', 'bank'
-   * @returns {Promise<import('../types/payment.js').PaymentMethod[]>}
+   * @returns {Promise<import('../types/payment').PaymentMethod[]>}
    */
   static async getByType(type) {
     try {
@@ -197,7 +197,7 @@ class PaymentMethodService {
 
   /**
    * Obtiene el método de pago por defecto (efectivo)
-   * @returns {Promise<import('../types/payment.js').PaymentMethod|null>}
+   * @returns {Promise<import('../types/payment').PaymentMethod|null>}
    */
   static async getDefaultPaymentMethod() {
     try {
@@ -220,7 +220,7 @@ class PaymentMethodService {
 
   /**
    * Formatea el código del método de pago
-   * @param {import('../types/payment.js').PaymentMethod} paymentMethod - Payment method object
+   * @param {import('../types/payment').PaymentMethod} paymentMethod - Payment method object
    * @returns {string}
    */
   static formatMethodCode(paymentMethod) {
@@ -232,7 +232,7 @@ class PaymentMethodService {
 
   /**
    * Formatea la descripción completa del método de pago
-   * @param {import('../types/payment.js').PaymentMethod} paymentMethod - Payment method object
+   * @param {import('../types/payment').PaymentMethod} paymentMethod - Payment method object
    * @returns {string}
    */
   static formatMethodDescription(paymentMethod) {
@@ -246,7 +246,7 @@ class PaymentMethodService {
 
   /**
    * Verifica si un método de pago requiere información adicional
-   * @param {import('../types/payment.js').PaymentMethod} paymentMethod - Payment method object
+   * @param {import('../types/payment').PaymentMethod} paymentMethod - Payment method object
    * @returns {boolean}
    */
   static requiresAdditionalInfo(paymentMethod) {
@@ -266,7 +266,7 @@ class PaymentMethodService {
 
   /**
    * Obtiene información adicional requerida por el método de pago
-   * @param {import('../types/payment.js').PaymentMethod} paymentMethod - Payment method object
+   * @param {import('../types/payment').PaymentMethod} paymentMethod - Payment method object
    * @returns {string[]} Array de campos requeridos
    */
   static getRequiredFields(paymentMethod) {
@@ -292,7 +292,7 @@ class PaymentMethodService {
   /**
    * Crea un nuevo método de pago
    * @param {{ method_code: string, description: string, is_active?: boolean, requires_additional_info?: boolean, metadata?: Record<string, any> }} data
-   * @returns {Promise<import('../types/payment.js').PaymentMethod>}
+   * @returns {Promise<import('../types/payment').PaymentMethod>}
    */
   static async create(data) {
     if (!PAYMENT_METHOD_WRITE_ENABLED) {
@@ -306,7 +306,7 @@ class PaymentMethodService {
       throw new Error(message)
     }
     if (DEMO_CONFIG.enabled) {
-      const { createDemoPaymentMethod } = await import('../config/demoData.js')
+      const { createDemoPaymentMethod } = await import('../config/demoData')
       return createDemoPaymentMethod(data)
     }
     try {
@@ -331,11 +331,11 @@ class PaymentMethodService {
    * Actualiza un método de pago existente
    * @param {number} id
    * @param {{ method_code: string, description: string, is_active?: boolean, requires_additional_info?: boolean, metadata?: Record<string, any> }} data
-   * @returns {Promise<import('../types/payment.js').PaymentMethod>}
+   * @returns {Promise<import('../types/payment').PaymentMethod>}
    */
   static async update(id, data) {
     if (DEMO_CONFIG.enabled) {
-      const { updateDemoPaymentMethod } = await import('../config/demoData.js')
+      const { updateDemoPaymentMethod } = await import('../config/demoData')
       return updateDemoPaymentMethod(id, data)
     }
     if (!PAYMENT_METHOD_WRITE_ENABLED) {
@@ -382,7 +382,7 @@ class PaymentMethodService {
    */
   static async delete(id) {
     if (DEMO_CONFIG.enabled) {
-      const { updateDemoPaymentMethod } = await import('../config/demoData.js')
+      const { updateDemoPaymentMethod } = await import('../config/demoData')
       updateDemoPaymentMethod(id, { is_active: false })
       return
     }

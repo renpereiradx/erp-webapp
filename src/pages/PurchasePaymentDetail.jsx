@@ -115,25 +115,21 @@ const PurchasePaymentDetailPage = () => {
   }
 
   const handlePaymentSubmit = async (paymentData) => {
-    try {
-      await processPayment({
-        orderId: paymentData.orderId,
-        amount: paymentData.amount,
-        payment_method_id: paymentData.paymentMethodId,
-        currency_code: paymentData.currencyCode,
-        currency_id: paymentData.currencyId,
-        exchange_rate: paymentData.exchange_rate,
-        original_amount: paymentData.original_amount,
-        reference: paymentData.reference,
-        cash_register_id: paymentData.cashRegisterId,
-        notes: paymentData.notes
-      })
-      setRegisterModalOpen(false)
-      fetchOrder(orderId)
-      showSuccess('Pago registrado exitosamente')
-    } catch (err) {
-      throw err
-    }
+    await processPayment({
+      orderId: paymentData.orderId,
+      amount: paymentData.amount,
+      payment_method_id: paymentData.paymentMethodId,
+      currency_code: paymentData.currencyCode,
+      currency_id: paymentData.currencyId,
+      exchange_rate: paymentData.exchange_rate,
+      original_amount: paymentData.original_amount,
+      reference: paymentData.reference,
+      cash_register_id: paymentData.cashRegisterId,
+      notes: paymentData.notes
+    })
+    setRegisterModalOpen(false)
+    fetchOrder(orderId)
+    showSuccess('Pago registrado exitosamente')
   }
 
   useEffect(() => { if (orderId) fetchOrder(orderId) }, [orderId, fetchOrder])

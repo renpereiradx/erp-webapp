@@ -27,13 +27,13 @@ const API_ENDPOINTS = {
 const isDemoMode = () => {
   return (
     import.meta.env.VITE_APP_MODE === 'demo' ||
-    import.meta.env.MODE === 'demo' ||
-    true
-  ) // Forzamos true para desarrollo inicial si no hay API
+    import.meta.env.MODE === 'demo'
+  )
 }
 
 /**
- * Helper para manejar peticiones con fallback a mock data en modo demo o error 404
+ * Helper para manejar peticiones a la API real.
+ * Si isDemoMode está activo, usa los datos de prueba.
  */
 const _handleRequest = async (endpoint, params = {}, mockFallback) => {
   if (isDemoMode()) {
@@ -48,15 +48,6 @@ const _handleRequest = async (endpoint, params = {}, mockFallback) => {
       `[InventoryAnalyticsService] Error fetching ${endpoint}:`,
       error,
     )
-
-    // Fallback si la API no existe aún (404)
-    if (error.status === 404 || error.response?.status === 404) {
-      console.warn(
-        `[InventoryAnalyticsService] Endpoint ${endpoint} not found. Returning mock data.`,
-      )
-      return { success: true, data: mockFallback }
-    }
-
     throw error
   }
 }

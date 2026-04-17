@@ -17,17 +17,17 @@ export const useAgingReport = (period = 'month') => {
       setLoading(true);
       setError(null);
       try {
-        // Ejecutamos peticiones en paralelo (Endpoints 8, 9 y 12)
-        const [summaryRes, reportRes, statsRes] = await Promise.all([
-          receivablesService.getAgingSummary(),
+        // Ejecutamos peticiones en paralelo (Endpoints 1, 9 y 12)
+        const [overviewRes, reportRes, statsRes] = await Promise.all([
+          receivablesService.getSummary(period),
           receivablesService.getDetailedAging(),
           receivablesService.getStatistics(period)
         ]);
 
         if (isMounted) {
-          if (summaryRes?.success && reportRes?.success && statsRes?.success) {
+          if (overviewRes?.success && reportRes?.success && statsRes?.success) {
             setData({
-              summary: summaryRes.data,
+              overview: overviewRes.data,
               detailed: reportRes.data,
               statistics: statsRes.data
             });

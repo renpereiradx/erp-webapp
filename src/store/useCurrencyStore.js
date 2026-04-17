@@ -78,7 +78,7 @@ const useCurrencyStore = create()(
           // Fetch exchange rates and merge them
           let enrichedCurrencies = data
           try {
-            const { ExchangeRateService } = await import('@/services/exchangeRateService.js')
+            const { ExchangeRateService } = await import('@/services/exchangeRateService')
             const rates = await ExchangeRateService.getLatestAll()
 
             if (Array.isArray(rates) && rates.length > 0) {

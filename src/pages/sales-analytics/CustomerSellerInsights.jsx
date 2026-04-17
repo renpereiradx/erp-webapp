@@ -73,28 +73,28 @@ const CustomerSellerInsights = () => {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <InsightKPICard 
             title="Total Clientes" 
-            value={customerData.summary.total_customers} 
+            value={customerData?.summary?.total_customers || 0} 
             growth={12} 
-            subtext={`${customerData.summary.returning_customers} Recurrentes | ${customerData.summary.new_customers} Nuevos`}
+            subtext={`${customerData?.summary?.returning_customers || 0} Recurrentes | ${customerData?.summary?.new_customers || 0} Nuevos`}
             icon={<Users className="text-[#0f79eb]/60" size={24} />}
           />
           <InsightKPICard 
             title="Lifetime Value (LTV)" 
-            value={formatCurrency(customerData.summary.average_lifetime_value)} 
+            value={formatCurrency(customerData?.summary?.average_lifetime_value || 0)} 
             growth={5.4} 
             subtext="Promedio por cliente"
             icon={<Wallet className="text-[#0f79eb]/60" size={24} />}
           />
           <InsightKPICard 
             title="Tasa de Retención" 
-            value={`${customerData.summary.customer_retention_rate}%`} 
+            value={`${customerData?.summary?.customer_retention_rate || 0}%`} 
             growth={-2.1} 
             subtext="Churn rate: 13.9%"
             icon={<RefreshCw className="text-[#0f79eb]/60" size={24} />}
           />
           <InsightKPICard 
             title="Venta Clientes Top" 
-            value={formatCurrency(customerData.summary.top_customer_revenue)} 
+            value={formatCurrency(customerData?.summary?.top_customer_revenue || 0)} 
             growth={15} 
             subtext="Máximo histórico individual"
             icon={<Star className="text-[#0f79eb]/60" size={24} />}
@@ -121,7 +121,7 @@ const CustomerSellerInsights = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {customerData.customers.map((cust) => (
+                  {customerData?.customers?.map((cust) => (
                     <tr key={cust.customer_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{cust.customer_name}</td>
                       <td className="px-6 py-4 text-slate-500 font-mono text-xs font-bold">{cust.customer_ruc}</td>
@@ -137,6 +137,13 @@ const CustomerSellerInsights = () => {
                       <td className="px-6 py-4 text-right text-slate-500 font-mono text-xs font-bold">{new Date(cust.last_purchase).toLocaleDateString()}</td>
                     </tr>
                   ))}
+                  {(!customerData?.customers || customerData.customers.length === 0) && (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-8 text-center text-slate-400 font-medium italic text-xs uppercase tracking-widest">
+                        Sin datos de clientes disponibles
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -163,12 +170,12 @@ const CustomerSellerInsights = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {sellerData.sellers.map((seller) => (
+                  {sellerData?.sellers?.map((seller) => (
                     <tr key={seller.seller_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full bg-[#0f79eb]/10 flex items-center justify-center text-[#0f79eb] font-black overflow-hidden font-mono">
-                            {seller.seller_name.charAt(0)}
+                            {seller.seller_name?.charAt(0) || '?'}
                           </div>
                           <div>
                             <p className="font-bold text-slate-900 dark:text-white">{seller.seller_name}</p>
@@ -188,6 +195,13 @@ const CustomerSellerInsights = () => {
                       </td>
                     </tr>
                   ))}
+                  {(!sellerData?.sellers || sellerData.sellers.length === 0) && (
+                    <tr>
+                      <td colSpan="4" className="px-6 py-8 text-center text-slate-400 font-medium italic text-xs uppercase tracking-widest">
+                        Sin datos de vendedores disponibles
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

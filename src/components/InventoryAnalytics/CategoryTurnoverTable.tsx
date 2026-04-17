@@ -45,16 +45,24 @@ export const CategoryTurnoverTable: React.FC<CategoryTurnoverTableProps> = ({ ca
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
-            {categories.map((cat) => (
-              <tr key={cat.id} className="text-sm hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                <td className="py-4 px-2 font-bold text-slate-800 dark:text-slate-200">{cat.name}</td>
-                <td className="py-4 px-2 font-mono font-bold text-primary">{cat.turnoverRate}x</td>
-                <td className="py-4 px-2 text-right font-mono">{cat.unitsSold.toLocaleString()}</td>
-                <td className="py-4 px-2 text-center">
-                  {getPerformanceBadge(cat.performance)}
-                </td>
-              </tr>
-            ))}
+            {categories.map((cat) => {
+              // Soporte para ambos formatos (API snake_case y Mock camelCase)
+              const turnoverRate = cat.turnoverRate ?? (cat as any).turnover_rate;
+              const unitsSold = cat.unitsSold ?? (cat as any).units_sold;
+              const categoryName = cat.name ?? (cat as any).category_name;
+              const categoryId = cat.id ?? (cat as any).category_id;
+
+              return (
+                <tr key={categoryId} className="text-sm hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                  <td className="py-4 px-2 font-bold text-slate-800 dark:text-slate-200">{categoryName}</td>
+                  <td className="py-4 px-2 font-mono font-bold text-primary">{Number(turnoverRate).toFixed(2)}x</td>
+                  <td className="py-4 px-2 text-right font-mono">{(unitsSold || 0).toLocaleString('es-PY')}</td>
+                  <td className="py-4 px-2 text-center">
+                    {getPerformanceBadge(cat.performance)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -170,16 +170,18 @@ export const priceAdjustmentService = {
         return await apiClient.post('/manual_adjustment/price', {
           product_id: adjustmentData.product_id,
           new_price: adjustmentData.new_price,
-          unit: adjustmentData.unit || 'UNIT',
+          unit: adjustmentData.unit || 'unit',
           reason: adjustmentData.reason,
           metadata: {
-            source: 'manual_api_v2.1',
-            system_version: '2.1.0-frontend',
+            source: 'manual_price_adjustment',
+            system_version: '4.3.0-frontend',
+            reason_category: adjustmentData.reason_category || 'COST_CHANGE',
             change_type: adjustmentData.new_price > (adjustmentData.old_price || 0) ? 'increase' : 'decrease',
             old_price: adjustmentData.old_price,
             new_price: adjustmentData.new_price,
             price_difference: adjustmentData.new_price - (adjustmentData.old_price || 0),
-            unit: adjustmentData.unit || 'UNIT',
+            unit: adjustmentData.unit || 'unit',
+            timestamp: new Date().toISOString(),
             ...adjustmentData.metadata
           }
         });

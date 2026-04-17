@@ -37,7 +37,7 @@ export default defineConfig({
     // 🔧 Solo escanear archivos relevantes para evitar errores con specs/temp
     entries: [
       'index.html',
-      'src/main.jsx'
+      'src/main.tsx'
     ],
     // Add cache invalidation
     esbuildOptions: {
@@ -77,6 +77,7 @@ export default defineConfig({
         target: 'http://localhost:5050',
         changeOrigin: true,
         secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       }
     }
   },

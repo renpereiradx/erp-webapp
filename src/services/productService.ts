@@ -394,7 +394,7 @@ export const productService = {
       // Intentar endpoint específico de reactivación primero
       // Si no existe, usar updateProduct con state: true
       try {
-        return await apiClient.reactivateProduct(productId)
+        return await (apiClient as any).reactivateProduct(productId)
       } catch (reactivateError) {
         // Si no existe endpoint específico, usar update con state: true
         return await apiClient.updateProduct(productId, { state: true })
@@ -413,7 +413,7 @@ export const productService = {
    */
   getProductPrice: async productId => {
     try {
-      return await apiClient.getProductPrice(productId)
+      return await (apiClient as any).getProductPrice(productId)
     } catch (error) {
       throw toApiError(error, 'Error al obtener precio')
     }
@@ -427,7 +427,7 @@ export const productService = {
    */
   createProductPrice: async (productId, priceData) => {
     try {
-      return await apiClient.setProductPrice(productId, priceData)
+      return await (apiClient as any).setProductPrice(productId, priceData)
     } catch (error) {
       throw toApiError(error, 'Error al crear precio')
     }
@@ -441,7 +441,7 @@ export const productService = {
    */
   updateProductPriceByProductId: async (productId, priceData) => {
     try {
-      return await apiClient.updateProductPrice(productId, priceData)
+      return await (apiClient as any).updateProductPrice(productId, priceData)
     } catch (error) {
       throw toApiError(error, 'Error al actualizar precio')
     }
@@ -456,7 +456,7 @@ export const productService = {
    */
   getStockByProductId: async productId => {
     try {
-      return await apiClient.getProductStock(productId)
+      return await (apiClient as any).getProductStock(productId)
     } catch (error) {
       throw toApiError(error, 'Error al obtener stock')
     }
@@ -470,7 +470,7 @@ export const productService = {
    */
   createStock: async (productId, stockData) => {
     try {
-      return await apiClient.createStock(productId, stockData)
+      return await (apiClient as any).createStock(productId, stockData)
     } catch (error) {
       throw toApiError(error, 'Error al crear stock')
     }
@@ -484,7 +484,7 @@ export const productService = {
    */
   updateStockByProductId: async (productId, stockData) => {
     try {
-      return await apiClient.updateStockByProductId(productId, stockData)
+      return await (apiClient as any).updateStockByProductId(productId, stockData)
     } catch (error) {
       throw toApiError(error, 'Error al actualizar stock')
     }
@@ -496,7 +496,7 @@ export const productService = {
    * @returns {Promise<Stock|any>}
    */
   getStockById: async stockId => {
-    return await apiClient.getStockById(stockId)
+    return await (apiClient as any).getStockById(stockId)
   },
 
   // =================== UTILIDADES ===================
@@ -506,7 +506,7 @@ export const productService = {
    * @returns {Promise<any>}
    */
   getCategories: async () => {
-    return await apiClient.getCategories()
+    return await (apiClient as any).getCategories()
   },
 
   // Obtener todas las categorías

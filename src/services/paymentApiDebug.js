@@ -1,4 +1,4 @@
-import { apiClient } from './api.js'
+import { apiClient } from './api'
 
 const DEBUG_GLOBAL_KEY = '__PAYMENT_API_DEBUG__'
 

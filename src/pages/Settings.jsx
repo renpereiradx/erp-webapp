@@ -53,15 +53,15 @@ const SettingsPage = () => {
           <section className="space-y-4">
             <div className="flex items-center gap-3 px-1">
               <span className="material-symbols-outlined text-primary text-xl">manage_accounts</span>
-              <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
+              <h2 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
                 {t('settings.sections.account', 'Cuenta y Seguridad')}
               </h2>
             </div>
             
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3">
               <button 
-                onClick={() => handleNavigate('/perfil')}
-                className="w-full group bg-white p-4 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all flex items-center gap-4 text-left"
+                onClick={() => handleNavigate('/configuracion/perfil')}
+                className="w-full group bg-surface p-4 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all flex items-center gap-4 text-left"
               >
                 <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-white">
                   <User size={20} />
@@ -74,10 +74,10 @@ const SettingsPage = () => {
               </button>
 
               <button 
-                onClick={() => handleNavigate('/usuarios')}
-                className="w-full group bg-white p-4 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all flex items-center gap-4 text-left"
+                onClick={() => handleNavigate('/configuracion/usuarios')}
+                className="w-full group bg-surface p-4 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all flex items-center gap-4 text-left"
               >
-                <div className="size-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center transition-colors group-hover:bg-indigo-600 group-hover:text-white">
+                <div className="size-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center transition-colors group-hover:bg-indigo-600 group-hover:text-white">
                   <Users size={20} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -86,6 +86,20 @@ const SettingsPage = () => {
                 </div>
                 <ChevronRight className="text-slate-300 group-hover:text-indigo-600 transition-colors" size={18} />
               </button>
+
+              <button 
+                onClick={() => handleNavigate('/configuracion/sesiones')}
+                className="w-full group bg-surface p-4 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all flex items-center gap-4 text-left"
+              >
+                <div className="size-10 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 flex items-center justify-center transition-colors group-hover:bg-amber-600 group-hover:text-white">
+                  <Monitor size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-bold text-text-main leading-tight">{t('settings.sessions.title', 'Control de Sesiones')}</h4>
+                  <p className="text-[11px] text-text-secondary font-medium truncate">{t('settings.sessions.desc', 'Monitorea y gestiona sesiones activas en tiempo real')}</p>
+                </div>
+                <ChevronRight className="text-slate-300 group-hover:text-amber-600 transition-colors" size={18} />
+              </button>
             </div>
           </section>
 
@@ -93,18 +107,18 @@ const SettingsPage = () => {
           <section className="space-y-4">
             <div className="flex items-center gap-3 px-1">
               <span className="material-symbols-outlined text-amber-500 text-xl">palette</span>
-              <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
+              <h2 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
                 {t('settings.sections.appearance', 'Personalización')}
               </h2>
             </div>
 
-            <div className="bg-white p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-6">
+            <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-6">
               <div>
                 <h4 className="text-sm font-bold text-text-main">{t('settings.theme.title', 'Tema Visual')}</h4>
                 <p className="text-[11px] text-text-secondary font-medium">{t('settings.theme.description', 'Selecciona el modo de apariencia preferido')}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 p-1 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="grid grid-cols-2 gap-3 p-1 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-800">
                 <button
                   onClick={() => isDark && toggleTheme()}
                   className={`flex items-center justify-center gap-2 py-2.5 rounded-md text-xs font-bold transition-all ${
@@ -118,7 +132,7 @@ const SettingsPage = () => {
                 <button
                   onClick={() => !isDark && toggleTheme()}
                   className={`flex items-center justify-center gap-2 py-2.5 rounded-md text-xs font-bold transition-all ${
-                    isDark ? 'bg-[#1b2631] shadow-sm text-white' : 'text-text-secondary hover:text-text-main'
+                    isDark ? 'bg-surface shadow-sm text-white' : 'text-text-secondary hover:text-text-main'
                   }`}
                 >
                   <Moon size={16} />
@@ -132,18 +146,18 @@ const SettingsPage = () => {
           <section className="space-y-4">
             <div className="flex items-center gap-3 px-1">
               <span className="material-symbols-outlined text-blue-500 text-xl">settings_suggest</span>
-              <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
+              <h2 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
                 {t('settings.sections.system', 'Sistema')}
               </h2>
             </div>
 
-            <div className="bg-white p-6 rounded-xl border border-border-subtle shadow-fluent-2 divide-y divide-slate-50">
+            <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 divide-y divide-slate-50 dark:divide-slate-800">
               <div className="py-4 first:pt-0 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Globe className="text-blue-500" size={18} />
                   <span className="text-sm font-bold text-text-main">{t('settings.language.title', 'Idioma')}</span>
                 </div>
-                <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-full uppercase tracking-tighter">Español</span>
+                <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-full uppercase tracking-tighter">Español</span>
               </div>
 
               <div className="py-4 flex items-center justify-between opacity-50">
@@ -151,7 +165,7 @@ const SettingsPage = () => {
                   <Bell className="text-rose-500" size={18} />
                   <span className="text-sm font-bold text-text-main">{t('settings.notifications.title', 'Notificaciones')}</span>
                 </div>
-                <span className="text-[10px] font-black text-slate-400 bg-slate-100 px-2 py-1 rounded-full uppercase tracking-tighter">Desactivado</span>
+                <span className="text-[10px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full uppercase tracking-tighter">Desactivado</span>
               </div>
             </div>
           </section>
@@ -160,11 +174,11 @@ const SettingsPage = () => {
           <section className="space-y-4">
             <div className="flex items-center gap-3 px-1">
               <span className="material-symbols-outlined text-emerald-500 text-xl">keyboard</span>
-              <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
+              <h2 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
                 {t('settings.sections.shortcuts', 'Accesibilidad')}
               </h2>
             </div>
-            <div className="bg-white rounded-xl border border-border-subtle shadow-fluent-2 overflow-hidden">
+            <div className="bg-surface rounded-xl border border-border-subtle shadow-fluent-2 overflow-hidden">
               <KeyboardShortcuts />
             </div>
           </section>

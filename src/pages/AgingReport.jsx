@@ -30,7 +30,7 @@ import { useAgingReport } from '@/features/receivables/hooks/useAgingReport'
 const AgingReport = () => {
   const { t } = useI18n()
   const toast = useToast()
-  const { data, loading, error } = useAgingReport('month')
+  const { data, loading } = useAgingReport('month')
 
   useEffect(() => {
     document.title = 'Reporte de Antigüedad | ERP System';
@@ -101,11 +101,11 @@ const AgingReport = () => {
 
         {/* Main Analytics Grid */}
         <div className="flex flex-col gap-6">
-          <AgingOverviewCards stats={data?.statistics} />
+          <AgingOverviewCards stats={data?.statistics} overview={data?.overview} />
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-4">
-              <AgingSummaryChart agingData={data?.summary} />
+              <AgingSummaryChart agingData={data?.overview?.aging_summary} />
             </div>
             <div className="lg:col-span-8">
               <BillingVsCollectionChart trendData={data?.statistics?.collection_trend} />

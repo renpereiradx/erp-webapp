@@ -184,12 +184,12 @@ describe('calculatePurchaseSalePriceGs (purchases policy)', () => {
   it('returns 0 for invalid unit price', () => {
     expect(calculatePurchaseSalePriceGs(0, 30)).toBe(0)
     expect(calculatePurchaseSalePriceGs(-100, 30)).toBe(0)
-    expect(calculatePurchaseSalePriceGs(null, 30)).toBe(0)
+    expect(calculatePurchaseSalePriceGs(null as any, 30)).toBe(0)
   })
 
   it('uses 30% default margin when none provided', () => {
     expect(calculatePurchaseSalePriceGs(10000)).toBe(13000)
-    expect(calculatePurchaseSalePriceGs(10000, null)).toBe(13000)
+    expect(calculatePurchaseSalePriceGs(10000, null as any)).toBe(13000)
   })
 
   it('returns a multiple of 50 for various inputs', () => {

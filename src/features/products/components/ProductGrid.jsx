@@ -210,7 +210,9 @@ export default function ProductGrid({
           // batch size metric (approx: items rendered length)
           const batch = products.length;
           import('@/utils/telemetry').then(m => m.telemetry.record('products.render.batch', { batch }));
-        } catch {}
+        } catch {
+          // silent telemetry error
+        }
       }}
     />
   );
