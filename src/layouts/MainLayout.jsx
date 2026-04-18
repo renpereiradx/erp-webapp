@@ -42,6 +42,7 @@ import {
   PlusCircle,
   FileText,
   Clock as ClockIcon,
+  History as HistoryIcon,
   Zap,
   Activity,
   PieChart,
@@ -69,12 +70,23 @@ const MainLayout = ({ children }) => {
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const globalSearchInputRef = useRef(null)
   const searchContainerRef = useRef(null)
+  const searchResultsRef = useRef([])
 
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { t } = useI18n()
   const { matchesShortcut } = useKeyboardShortcutsStore()
+
+  // Scroll selected search item into view
+  useEffect(() => {
+    if (selectedIndex >= 0 && searchResultsRef.current[selectedIndex]) {
+      searchResultsRef.current[selectedIndex].scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth'
+      })
+    }
+  }, [selectedIndex])
 
   // Configuración de navegación
   const navigation = useMemo(
@@ -453,7 +465,7 @@ const MainLayout = ({ children }) => {
         ],
       },
       {
-        name: t('common.services_planning', 'Planificación y Servicios'),
+        name: t('common.services_planning', 'Planificación y Reservas'),
         href: '#',
         icon: Calendar,
         children: [
@@ -941,7 +953,12 @@ const MainLayout = ({ children }) => {
                     {globalSearchResults.map((item, index) => {
                       const Icon = item.icon || Search;
                       return (
-                        <button key={index} onClick={() => { navigate(item.href); setShowGlobalSearch(false); setGlobalSearchTerm(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${index === selectedIndex ? 'bg-primary/5 border-l-4 border-primary' : 'hover:bg-slate-50 border-l-4 border-transparent'}`}>
+                        <button 
+                          key={index} 
+                          ref={el => searchResultsRef.current[index] = el}
+                          onClick={() => { navigate(item.href); setShowGlobalSearch(false); setGlobalSearchTerm(''); }} 
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${index === selectedIndex ? 'bg-primary/5 border-l-4 border-primary' : 'hover:bg-slate-50 border-l-4 border-transparent'}`}
+                        >
                           <div className={`p-1.5 rounded-md ${index === selectedIndex ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400'}`}>
                             <Icon className="size-4" />
                           </div>

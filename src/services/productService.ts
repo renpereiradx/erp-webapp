@@ -204,6 +204,9 @@ export const productService = {
    * @returns {Promise<Product[]|any>}
    */
   getServiceCourts: async () => {
+    if (DEMO_CONFIG.enabled) {
+      return (DEMO_PRODUCT_DATA || []).filter(p => p.product_type === 'SERVICE')
+    }
     try {
       return await retryWithBackoff(async () => {
         return await apiClient.getServiceProducts()

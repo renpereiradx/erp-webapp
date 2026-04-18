@@ -31,6 +31,7 @@ const PeriodComparison = () => {
   const [compareData, setCompareData] = useState(MOCK_COMPARE.data)
   const [chartData, setChartData] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isMounted, setIsMounted] = useState(false)
   
   // Selection state
   const [isCustom, setIsCustom] = useState(false)
@@ -79,6 +80,7 @@ const PeriodComparison = () => {
   }
 
   useEffect(() => {
+    setIsMounted(true)
     fetchData({ period: 'month' })
   }, [])
 
@@ -273,60 +275,62 @@ const PeriodComparison = () => {
             </div>
           </div>
           <div className='h-[300px] w-full font-mono'>
-            <ResponsiveContainer
-              width='100%'
-              height='100%'
-              minWidth={0}
-              minHeight={0}
-            >
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id='colorA' x1='0' y1='0' x2='0' y2='1'>
-                    <stop offset='5%' stopColor='#137fec' stopOpacity={0.1} />
-                    <stop offset='95%' stopColor='#137fec' stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray='3 3'
-                  vertical={false}
-                  stroke='#e2e8f0'
-                />
-                <XAxis
-                  dataKey='label'
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: '8px',
-                    border: 'none',
-                    fontFamily: 'Inter, sans-serif',
-                  }}
-                  formatter={value => [formatCurrency(value), 'Ventas']}
-                />
-                <Area
-                  type='monotone'
-                  dataKey='periodA'
-                  stroke='#137fec'
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill='url(#colorA)'
-                />
-                <Area
-                  type='monotone'
-                  dataKey='periodB'
-                  stroke='#94a3b8'
-                  strokeWidth={2}
-                  fillOpacity={0}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {isMounted && (
+              <ResponsiveContainer
+                width='100%'
+                height='100%'
+                minWidth={0}
+                minHeight={0}
+              >
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id='colorA' x1='0' y1='0' x2='0' y2='1'>
+                      <stop offset='5%' stopColor='#137fec' stopOpacity={0.1} />
+                      <stop offset='95%' stopColor='#137fec' stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray='3 3'
+                    vertical={false}
+                    stroke='#e2e8f0'
+                  />
+                  <XAxis
+                    dataKey='label'
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '8px',
+                      border: 'none',
+                      fontFamily: 'Inter, sans-serif',
+                    }}
+                    formatter={value => [formatCurrency(value), 'Ventas']}
+                  />
+                  <Area
+                    type='monotone'
+                    dataKey='periodA'
+                    stroke='#137fec'
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill='url(#colorA)'
+                  />
+                  <Area
+                    type='monotone'
+                    dataKey='periodB'
+                    stroke='#94a3b8'
+                    strokeWidth={2}
+                    fillOpacity={0}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>

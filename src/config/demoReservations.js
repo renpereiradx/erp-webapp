@@ -1,7 +1,7 @@
 /**
  * Demo data for Reservations and Schedules
  */
-import API_CONFIG from '@/config/api.config';
+import { DEMO_CONFIG } from '@/config/demoAuth';
 
 export const DEMO_RESERVATIONS = [
   {
@@ -82,4 +82,4 @@ export const DEMO_SCHEDULES = [
   }
 ];
 
-export const IS_DEMO_MODE = API_CONFIG.useDemo;
+export const IS_DEMO_MODE = DEMO_CONFIG.enabled;
