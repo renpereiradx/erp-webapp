@@ -11,31 +11,32 @@ import {
   Percent,
   Package,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  MoreVertical
 } from 'lucide-react';
 
 /**
- * Formateador de moneda en Guaraníes
+ * Formateador de moneda en Guaraníes (PYG)
+ * Estilo técnico y limpio para ERP
  */
 const formatPYG = (value) => {
   return new Intl.NumberFormat('es-PY', {
-    style: 'currency',
-    currency: 'PYG',
+    style: 'decimal',
     minimumFractionDigits: 0,
-  }).format(value).replace('PYG', 'Gs.');
+  }).format(value);
 };
 
 const PerformanceBadge = ({ performance }) => {
   const styles = {
-    EXCELLENT: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-    GOOD: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    AVERAGE: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-    POOR: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-    LOSS: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400',
+    EXCELLENT: 'bg-[#dff6dd] text-[#107c10]',
+    GOOD: 'bg-[#dff6dd]/60 text-[#107c10]',
+    AVERAGE: 'bg-[#fff4ce] text-[#794500]',
+    POOR: 'bg-[#fde7e9] text-[#a4262c]',
+    LOSS: 'bg-[#fde7e9] text-[#a4262c] border border-[#fde7e9]',
   };
 
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${styles[performance] || ''}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-tight ${styles[performance] || 'bg-slate-100 text-slate-600'}`}>
       {performance}
     </span>
   );
@@ -45,151 +46,161 @@ const ProductProfitability = () => {
   const [params, setParams] = useState({ period: 'month', page: 1, page_size: 10 });
   const { data, loading, error } = useProfitability('getProducts', params);
 
-  if (loading) return <div className="p-8 text-center animate-pulse text-slate-500">Cargando análisis de productos...</div>;
-  if (error) return <div className="p-8 text-center text-rose-500 bg-rose-50 border border-rose-100 rounded-lg m-4">Error: {error}</div>;
+  if (loading) return (
+    <div className="p-20 text-center animate-in fade-in duration-700">
+      <div className="flex flex-col items-center gap-4">
+        <div className="size-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
+        <p className="text-sm font-semibold text-slate-400 tracking-wide uppercase">Analizando rentabilidad...</p>
+      </div>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="p-10 text-center animate-in slide-in-from-top-4 duration-500">
+      <div className="max-w-md mx-auto bg-[#fde7e9] border border-[#fde7e9] p-6 rounded-xl text-[#a4262c]">
+        <h4 className="font-bold text-sm uppercase mb-2">Error de Sincronización</h4>
+        <p className="text-xs font-medium">{error}</p>
+      </div>
+    </div>
+  );
 
   const { products, summary, pagination } = data || {};
 
   if (!data) return null;
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="space-y-10 animate-in fade-in duration-700 pb-20">
+      {/* Header Section - Modern & Airy */}
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 border-l-4 border-primary pl-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Rentabilidad por Producto</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Análisis detallado de márgenes por SKU en Gs.</p>
-        </div>
-        <div className="flex gap-2 md:gap-3">
-          <button className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-semibold hover:bg-slate-50 transition-all shadow-sm">
-            <Download size={16} className="md:w-[18px] md:h-[18px]" /> <span className="hidden sm:inline">Exportar</span>
-          </button>
-          <button className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#137fec] text-white px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-semibold hover:bg-blue-600 transition-all shadow-lg shadow-blue-500/20">
-            <RefreshCcw size={16} className="md:w-[18px] md:h-[18px]" /> <span>Actualizar</span>
-          </button>
-        </div>
-      </div>
-
-      {/* KPI Metrics - Scroll horizontal en mobile */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-        <div className="bg-white dark:bg-slate-900 p-5 md:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">Productos</p>
-            <Package className="text-[#137fec]" size={18} />
-          </div>
-          <p className="text-slate-900 dark:text-white text-2xl font-bold font-mono">{summary?.total_products || 0}</p>
-          <p className="text-emerald-600 text-[10px] font-bold mt-2">RENTABLES: {summary?.profitable_products || 0}</p>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-5 md:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">Margen Promedio</p>
-            <Percent className="text-amber-500" size={18} />
-          </div>
-          <p className="text-slate-900 dark:text-white text-2xl font-bold font-mono">{summary?.average_margin || 0}%</p>
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1 rounded-full mt-3 overflow-hidden">
-            <div className="bg-amber-500 h-full" style={{ width: `${summary?.average_margin || 0}%` }}></div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-5 md:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">Beneficio Total</p>
-            <TrendingUp className="text-emerald-500" size={18} />
-          </div>
-          <p className={`text-slate-900 dark:text-white font-bold font-mono ${getDynamicFontClass(summary?.total_profit, { baseClass: 'text-2xl', mediumClass: 'text-xl', smallClass: 'text-lg', extraSmallClass: 'text-base' })}`}>
-            {formatPYG(summary?.total_profit || 0)}
+          <nav className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-3">
+            <span>Rentabilidad</span> <ChevronRight size={10} /> <span className="text-primary">Productos</span>
+          </nav>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-none">Análisis de Productos</h1>
+          <p className="text-sm font-medium text-slate-500 mt-3 max-w-lg">
+            Monitoreo técnico de márgenes operativos y desempeño financiero por SKU en Guaraníes (Gs.)
           </p>
-          <p className="text-slate-400 text-[9px] font-bold mt-2 uppercase">TOTAL VENTAS: {formatPYG(summary?.total_revenue || 0)}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 bg-white border border-slate-200 px-5 py-2.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+            <Download size={16} /> <span>EXPORTAR</span>
+          </button>
+          <button className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-lg text-xs font-bold hover:bg-primary-hover transition-all shadow-lg shadow-primary/20">
+            <RefreshCcw size={16} /> <span>ACTUALIZAR</span>
+          </button>
         </div>
       </div>
 
-      {/* Main Content Section */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
-        {/* Table Header / Toolbar */}
-        <div className="px-4 md:px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-transparent space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h3 className="text-slate-900 dark:text-white font-bold text-xs uppercase tracking-widest">Detalle Operativo</h3>
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-              <input 
-                className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20" 
-                placeholder="Filtrar por SKU o nombre..." 
-              />
+      {/* KPI Metrics - Fluent 2 Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <div className="bg-white p-8 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">SKUs Analizados</p>
+            <div className="p-2 bg-primary/10 text-primary rounded-lg group-hover:scale-110 transition-transform">
+              <Package size={20} />
             </div>
+          </div>
+          <p className="text-slate-900 text-3xl font-bold tracking-tight">{summary?.total_products || 0}</p>
+          <div className="flex items-center gap-2 mt-4">
+             <span className="size-1.5 rounded-full bg-success"></span>
+             <p className="text-success text-[10px] font-bold uppercase tracking-tight">Rentables: {summary?.profitable_products || 0}</p>
           </div>
         </div>
 
-        {/* Mobile: Card List (Visible solo en mobile) */}
-        <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800">
-          {products?.map((item) => (
-            <div key={item.product_id} className="p-4 space-y-3 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors">
-              <div className="flex justify-between items-start gap-2">
-                <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-slate-900 dark:text-white text-sm truncate uppercase tracking-tight">{item.product_name}</span>
-                  <span className="text-[10px] font-mono text-slate-400 font-bold">{item.sku}</span>
-                </div>
-                <PerformanceBadge performance={item.performance} />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 pt-1">
-                <div className="space-y-1">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Ventas / Unid.</p>
-                  <p className="text-xs font-bold font-mono text-slate-700 dark:text-slate-300">{formatPYG(item.revenue)} <span className="text-[10px] opacity-60">({item.units_sold}u)</span></p>
-                </div>
-                <div className="space-y-1 text-right">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Beneficio / Margen</p>
-                  <p className={`text-xs font-black font-mono ${item.gross_profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                    {formatPYG(item.gross_profit)} <span className="ml-1 text-[10px]">({item.gross_margin_pct}%)</span>
-                  </p>
-                </div>
-              </div>
+        <div className="bg-white p-8 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Margen Bruto Promedio</p>
+            <div className="p-2 bg-amber-100 text-[#794500] rounded-lg group-hover:scale-110 transition-transform">
+              <Percent size={20} />
             </div>
-          ))}
-          {(!products || products.length === 0) && (
-            <div className="p-8 text-center text-slate-500 text-xs italic">
-              No se encontraron datos de productos.
-            </div>
-          )}
+          </div>
+          <p className="text-slate-900 text-3xl font-bold tracking-tight">{summary?.average_margin || 0}%</p>
+          <div className="w-full bg-[#f3f2f1] h-1.5 rounded-full mt-5 overflow-hidden">
+            <div className="bg-amber-500 h-full transition-all duration-1000 ease-out" style={{ width: `${summary?.average_margin || 0}%` }}></div>
+          </div>
         </div>
 
-        {/* Desktop: Table (Oculta en mobile) */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left text-xs whitespace-nowrap">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tighter">
+        <div className="bg-white p-8 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Beneficio Operativo Total</p>
+            <div className="p-2 bg-[#dff6dd] text-[#107c10] rounded-lg group-hover:scale-110 transition-transform">
+              <TrendingUp size={20} />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-xs font-bold text-slate-400">Gs.</span>
+            <p className={`text-slate-900 font-bold tracking-tighter font-mono ${getDynamicFontClass(summary?.total_profit, { baseClass: 'text-3xl', mediumClass: 'text-2xl', smallClass: 'text-xl', extraSmallClass: 'text-lg' })}`}>
+              {formatPYG(summary?.total_profit || 0)}
+            </p>
+          </div>
+          <p className="text-slate-400 text-[9px] font-bold mt-4 uppercase tracking-widest">INGRESOS: {formatPYG(summary?.total_revenue || 0)}</p>
+        </div>
+      </div>
+
+      {/* Main Data Grid Section - Fluent 2 Table */}
+      <div className="bg-white border border-border-subtle rounded-xl overflow-hidden shadow-fluent-2">
+        {/* Table Toolbar */}
+        <div className="px-8 py-6 border-b border-border-subtle bg-[#f3f2f1]/30 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <h3 className="text-slate-900 font-bold text-xs uppercase tracking-[0.2em]">Detalle de Rentabilidad</h3>
+          <div className="relative w-full md:w-80 group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={16} />
+            <input 
+              className="w-full pl-11 pr-4 py-2.5 bg-[#f3f2f1] border border-transparent rounded-lg text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" 
+              placeholder="Buscar por SKU o nombre de producto..." 
+            />
+          </div>
+        </div>
+
+        {/* Data Grid */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left whitespace-nowrap">
+            <thead className="bg-white border-b border-border-subtle text-[10px] font-bold uppercase text-slate-400 tracking-wider">
               <tr>
-                <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Producto / SKU</th>
-                <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-center">Ventas</th>
-                <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-right">Ingresos (Gs.)</th>
-                <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-right">Beneficio (Gs.)</th>
-                <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-right">Margen</th>
-                <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-right">Markup</th>
-                <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-center">Desempeño</th>
+                <th className="px-8 py-5">Identificación de Producto</th>
+                <th className="px-6 py-5 text-center">Unid.</th>
+                <th className="px-6 py-5 text-right">Ingresos (Gs.)</th>
+                <th className="px-6 py-5 text-right">Beneficio (Gs.)</th>
+                <th className="px-6 py-5 text-right">Margen</th>
+                <th className="px-6 py-5 text-right">Markup</th>
+                <th className="px-8 py-5 text-center">Desempeño</th>
+                <th className="px-4 py-5 w-10"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+            <tbody className="divide-y divide-slate-100 text-sm">
               {products?.map((item) => (
-                <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-default">
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-bold text-slate-900 dark:text-white leading-none uppercase tracking-tight">{item.product_name}</span>
-                      <span className="text-[10px] font-mono text-slate-500 uppercase tracking-tight">{item.sku}</span>
+                <tr key={item.product_id} className="hover:bg-[#f3f2f1]/50 transition-colors group">
+                  <td className="px-8 py-6">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-bold text-slate-900 leading-none tracking-tight group-hover:text-primary transition-colors uppercase text-sm">{item.product_name}</span>
+                      <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">{item.sku}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center font-mono font-bold">{item.units_sold}</td>
-                  <td className="px-6 py-4 text-right font-mono font-medium">{formatPYG(item.revenue)}</td>
-                  <td className={`px-6 py-4 text-right font-bold font-mono ${item.gross_profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                    {formatPYG(item.gross_profit)}
+                  <td className="px-6 py-6 text-center font-mono font-bold text-slate-600">{item.units_sold}</td>
+                  <td className="px-6 py-6 text-right font-mono font-semibold text-slate-700">{formatPYG(item.revenue)}</td>
+                  <td className={`px-6 py-6 text-right font-bold font-mono ${item.gross_profit >= 0 ? 'text-[#107c10]' : 'text-[#d13438]'}`}>
+                    {item.gross_profit < 0 && '-'}{formatPYG(Math.abs(item.gross_profit))}
                   </td>
-                  <td className="px-6 py-4 text-right font-mono font-bold">{item.gross_margin_pct}%</td>
-                  <td className="px-6 py-4 text-right font-mono text-slate-500">{item.markup}%</td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-6 py-6 text-right font-mono font-bold text-slate-900">{item.gross_margin_pct}%</td>
+                  <td className="px-6 py-6 text-right font-mono text-slate-400 font-medium">{item.markup}%</td>
+                  <td className="px-6 py-6 text-center">
                     <PerformanceBadge performance={item.performance} />
+                  </td>
+                  <td className="px-4 py-6 text-right">
+                    <button className="text-slate-300 hover:text-primary transition-colors p-1 rounded-md hover:bg-primary/5">
+                      <MoreVertical size={18} />
+                    </button>
                   </td>
                 </tr>
               ))}
               {(!products || products.length === 0) && (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-slate-500 text-xs italic">
-                    No hay datos disponibles para mostrar en la tabla.
+                  <td colSpan="8" className="px-8 py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="p-4 bg-slate-50 rounded-full text-slate-300">
+                        <Package size={32} />
+                      </div>
+                      <p className="text-slate-400 font-semibold text-sm uppercase tracking-wider">No se encontraron resultados</p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -197,18 +208,31 @@ const ProductProfitability = () => {
           </table>
         </div>
         
-        {/* Pagination - Adaptativa */}
-        <div className="px-4 md:px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/30 dark:bg-transparent">
-          <span className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest">
-            Pág. {pagination?.page || 1} / {pagination?.total_pages || 1}
-          </span>
+        {/* Pagination - Professional Style */}
+        <div className="px-8 py-5 border-t border-border-subtle flex items-center justify-between bg-[#f3f2f1]/20">
           <div className="flex items-center gap-2">
-            <button className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30 hover:bg-white transition-colors">
-              <ChevronLeft size={14} />
-            </button>
-            <button className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-white transition-colors text-[#137fec]">
-              <ChevronRight size={14} />
-            </button>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              Mostrando {products?.length || 0} de {pagination?.total_items || 0} productos
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              Página {pagination?.page || 1} de {pagination?.total_pages || 1}
+            </span>
+            <div className="flex items-center gap-2">
+              <button 
+                disabled={pagination?.page === 1}
+                className="p-2 rounded-lg border border-border-base bg-white disabled:opacity-30 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button 
+                disabled={pagination?.page === pagination?.total_pages}
+                className="p-2 rounded-lg border border-border-base bg-white disabled:opacity-30 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm text-primary"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
         </div>
       </div>

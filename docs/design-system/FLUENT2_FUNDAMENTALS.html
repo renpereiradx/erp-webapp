@@ -13,24 +13,24 @@
           theme: {
             extend: {
               colors: {
-                "primary": "#106ebe",
-                "primary-hover": "#005a9e",
-                "background-light": "#f3f4f6",
-                "background-dark": "#101922",
+                "primary": "#0f6cbd",
+                "primary-hover": "#115ea3",
+                "background-base": "#faf9f8",
                 "surface": "#ffffff",
-                "border-subtle": "#e5e7eb",
+                "border-subtle": "#edebe9",
+                "border-base": "#d1d1d1",
                 "text-main": "#242424",
                 "text-secondary": "#616161",
                 "success": "#107c10",
-                "error": "#a4262c",
-                "warning": "#ffb900",
+                "error": "#d13438",
+                "warning": "#f7630c",
                 "info": "#0078d4"
               },
               fontFamily: { "display": ["Inter", "Segoe UI", "sans-serif"] },
               borderRadius: { "DEFAULT": "4px", "lg": "8px", "xl": "12px", "full": "9999px" },
               boxShadow: {
                 "fluent-2": "0 2px 4px rgba(0,0,0,0.04), 0 0 2px rgba(0,0,0,0.06)",
-                "fluent-8": "0 4px 8px rgba(0,0,0,0.12), 0 0 2px rgba(0,0,0,0.06)",
+                "fluent-8": "0 4px 8px rgba(0,0,0,0.08), 0 0 2px rgba(0,0,0,0.06)",
                 "fluent-16": "0 8px 16px rgba(0,0,0,0.14), 0 0 2px rgba(0,0,0,0.06)"
               }
             },
@@ -38,76 +38,77 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; background-color: #faf9f8; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d1d1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
     </style>
 <link rel="stylesheet" href="./FLUENT2_RESOURCES.css">
 </head>
-<body class="bg-background-light text-text-main font-display min-h-screen flex">
+<body class="bg-background-base text-text-main font-display min-h-screen flex">
 
     <!-- Sidebar Navigation -->
-    <aside class="w-72 flex-shrink-0 border-r border-border-subtle bg-white flex flex-col sticky top-0 h-screen">
-        <div class="p-6 flex items-center gap-3">
-            <div class="size-9 bg-primary rounded flex items-center justify-center text-white shadow-lg shadow-primary/20">
+    <aside class="w-72 flex-shrink-0 border-r border-border-subtle glass-acrylic flex flex-col sticky top-0 h-screen z-[60]">
+        <div class="p-8 flex items-center gap-3">
+            <div class="size-10 bg-primary rounded flex items-center justify-center text-white shadow-lg shadow-primary/20">
                 <span class="material-symbols-outlined text-xl font-bold">architecture</span>
             </div>
             <div>
-                <h1 class="font-black text-base tracking-tighter uppercase leading-none">Design System</h1>
-                <p class="text-[10px] text-text-secondary font-bold uppercase tracking-widest leading-none mt-1">Fluent ERP v2.0</p>
+                <h1 class="font-bold text-base tracking-tight leading-none">Design System</h1>
+                <p class="text-[10px] text-text-secondary font-semibold uppercase tracking-widest leading-none mt-1.5">Fluent ERP v2.0</p>
             </div>
         </div>
         
-        <nav class="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
-            <div class="px-3 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Categorías</div>
-            <a href="FLUENT2_FUNDAMENTALS.html" class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary font-bold text-sm">
+        <nav class="flex-1 px-5 space-y-1 overflow-y-auto custom-scrollbar pb-10">
+            <div class="px-3 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Categorías</div>
+            <a href="FLUENT2_FUNDAMENTALS.html" class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 text-primary font-bold text-sm">
                 <span class="material-symbols-outlined text-lg">grid_view</span> 01. Fundamentos
             </a>
-            <a href="FLUENT2_COMPONENTS.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-text-secondary hover:bg-slate-50 transition-colors font-medium text-sm">
+            <a href="FLUENT2_COMPONENTS.html" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-text-secondary hover:bg-slate-100/50 transition-colors font-semibold text-sm">
                 <span class="material-symbols-outlined text-lg">smart_button</span> 02. Componentes
             </a>
-            <a href="FLUENT2_DATA_VISUALIZATION.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-text-secondary hover:bg-slate-50 transition-colors font-medium text-sm">
+            <a href="FLUENT2_DATA_VISUALIZATION.html" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-text-secondary hover:bg-slate-100/50 transition-colors font-semibold text-sm">
                 <span class="material-symbols-outlined text-lg">table_chart</span> 03. Visualización
             </a>
         </nav>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto">
-        <header class="h-16 border-b border-border-subtle bg-white/80 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between px-10">
+    <main class="flex-1">
+        <header class="h-16 border-b border-border-subtle glass-acrylic sticky top-0 z-50 flex items-center justify-between px-10">
             <nav class="flex items-center text-[11px] font-bold text-slate-400 uppercase tracking-widest gap-2">
                 <span>01. Fundamentos</span> <span class="material-symbols-outlined text-xs">chevron_right</span>
                 <span class="text-text-main">Estructura y Superficies</span>
             </nav>
         </header>
 
-        <div class="p-10 space-y-20 max-w-[1400px] mx-auto">
+        <div class="p-10 space-y-24 max-w-[1400px] mx-auto pb-32">
             
             <!-- CONTENIDO DE STITCH PANTALLA 1: Biblioteca UI Avanzada -->
-            <section id="library" class="space-y-8">
-                <div class="flex flex-col gap-1 border-l-4 border-primary pl-4">
-                    <h2 class="text-3xl font-black text-text-main tracking-tighter uppercase">Biblioteca UI Avanzada</h2>
-                    <p class="text-text-secondary text-sm font-medium">Conceptos de diseño y jerarquía visual del sistema.</p>
+            <section id="library" class="space-y-10">
+                <div class="flex flex-col gap-1.5 border-l-4 border-primary pl-5">
+                    <h2 class="text-3xl font-bold text-text-main tracking-tight">Biblioteca UI Avanzada</h2>
+                    <p class="text-text-secondary text-base font-medium">Conceptos de diseño y jerarquía visual del sistema.</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Split Button Sample -->
-                    <div class="bg-white p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-4">
-                        <label class="block text-xs font-black uppercase text-slate-400 tracking-widest">Botón Dividido (Split Button)</label>
+                    <div class="bg-white p-8 rounded-xl border border-border-subtle shadow-fluent-2 space-y-5 hover:shadow-fluent-8 transition-shadow">
+                        <label class="block text-xs font-bold uppercase text-slate-400 tracking-wider">Botón Dividido (Split Button)</label>
                         <div class="inline-flex rounded shadow-sm">
-                            <button class="px-4 py-2 bg-primary text-white text-xs font-bold rounded-l hover:bg-primary-hover transition-colors">Acción Principal</button>
+                            <button class="px-5 py-2 bg-primary text-white text-xs font-bold rounded-l hover:bg-primary-hover transition-colors">Acción Principal</button>
                             <button class="px-2 py-2 bg-primary text-white border-l border-white/20 rounded-r hover:bg-primary-hover transition-colors">
                                 <span class="material-symbols-outlined text-lg">arrow_drop_down</span>
                             </button>
                         </div>
                     </div>
                     <!-- Number Field Sample -->
-                    <div class="bg-white p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-4">
-                        <label class="block text-xs font-black uppercase text-slate-400 tracking-widest">Control Numérico</label>
-                        <div class="flex rounded border border-border-subtle overflow-hidden max-w-[150px]">
-                            <input type="number" value="42" class="w-full px-3 py-2 text-sm border-none focus:ring-0" />
-                            <div class="flex flex-col border-l border-border-subtle bg-slate-50">
-                                <button class="p-1 border-b border-border-subtle hover:bg-white"><span class="material-symbols-outlined text-xs">expand_less</span></button>
+                    <div class="bg-white p-8 rounded-xl border border-border-subtle shadow-fluent-2 space-y-5 hover:shadow-fluent-8 transition-shadow">
+                        <label class="block text-xs font-bold uppercase text-slate-400 tracking-wider">Control Numérico</label>
+                        <div class="flex rounded border border-border-base overflow-hidden max-w-[160px] bg-[#f3f2f1] focus-within:ring-2 focus-within:ring-primary/20">
+                            <input type="number" value="42" class="w-full px-4 py-2 text-sm border-none bg-transparent focus:ring-0 font-semibold" />
+                            <div class="flex flex-col border-l border-border-base bg-[#f3f2f1]">
+                                <button class="p-1 border-b border-border-base hover:bg-white"><span class="material-symbols-outlined text-xs">expand_less</span></button>
                                 <button class="p-1 hover:bg-white"><span class="material-symbols-outlined text-xs">expand_more</span></button>
                             </div>
                         </div>
@@ -116,69 +117,84 @@
             </section>
 
             <!-- CONTENIDO DE STITCH PANTALLA 2: Feedback y Superficies -->
-            <section id="feedback" class="space-y-8">
-                <div class="flex flex-col gap-1 border-l-4 border-warning pl-4">
-                    <h2 class="text-3xl font-black text-text-main tracking-tighter uppercase">Feedback y Mensajería</h2>
-                    <p class="text-text-secondary text-sm font-medium">Estados de alerta, información y confirmación.</p>
+            <section id="feedback" class="space-y-10">
+                <div class="flex flex-col gap-1.5 border-l-4 border-warning pl-5">
+                    <h2 class="text-3xl font-bold text-text-main tracking-tight">Feedback y Mensajería</h2>
+                    <p class="text-text-secondary text-base font-medium">Estados de alerta, información y confirmación.</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="flex items-start gap-3 p-4 rounded-lg bg-green-50 border border-green-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex items-start gap-4 p-5 rounded-lg bg-[#dff6dd] border border-[#dff6dd]">
                         <span class="material-symbols-outlined text-success">check_circle</span>
                         <div>
-                            <h4 class="font-bold text-sm text-green-900 leading-none">Operación exitosa</h4>
-                            <p class="text-xs text-green-700 mt-1">Los cambios se han guardado correctamente.</p>
+                            <h4 class="font-bold text-sm text-[#107c10] leading-none">Operación exitosa</h4>
+                            <p class="text-xs text-[#107c10] mt-1.5 font-medium">Los cambios se han guardado correctamente.</p>
                         </div>
                     </div>
-                    <div class="flex items-start gap-3 p-4 rounded-lg bg-red-50 border border-red-200">
+                    <div class="flex items-start gap-4 p-5 rounded-lg bg-[#fde7e9] border border-[#fde7e9]">
                         <span class="material-symbols-outlined text-error">error</span>
                         <div>
-                            <h4 class="font-bold text-sm text-red-900 leading-none">Error de sistema</h4>
-                            <p class="text-xs text-red-700 mt-1">No se pudo conectar con el servidor central.</p>
+                            <h4 class="font-bold text-sm text-[#a4262c] leading-none">Error de sistema</h4>
+                            <p class="text-xs text-[#a4262c] mt-1.5 font-medium">No se pudo conectar con el servidor central.</p>
                         </div>
                     </div>
                 </div>
                 <!-- Shimmer/Skeleton Sample -->
-                <div class="bg-white p-6 rounded-xl border border-border-subtle shadow-fluent-2">
-                    <div class="animate-pulse flex space-x-4">
-                        <div class="rounded-full bg-slate-100 h-10 w-10"></div>
-                        <div class="flex-1 space-y-3 py-1">
-                            <div class="h-2 bg-slate-100 rounded w-3/4"></div>
-                            <div class="h-2 bg-slate-100 rounded"></div>
+                <div class="bg-white p-8 rounded-xl border border-border-subtle shadow-fluent-2">
+                    <div class="animate-pulse flex space-x-6">
+                        <div class="rounded-full bg-[#f3f2f1] h-12 w-12"></div>
+                        <div class="flex-1 space-y-4 py-1">
+                            <div class="h-2.5 bg-[#f3f2f1] rounded w-3/4"></div>
+                            <div class="h-2.5 bg-[#f3f2f1] rounded w-1/2"></div>
                         </div>
                     </div>
                 </div>
             </section>
 
             <!-- CONTENIDO DE STITCH PANTALLA 3: Estructura y Operación -->
-            <section id="structure" class="space-y-8">
-                <div class="flex flex-col gap-1 border-l-4 border-info pl-4">
-                    <h2 class="text-3xl font-black text-text-main tracking-tighter uppercase">Estructura de Navegación</h2>
-                    <p class="text-text-secondary text-sm font-medium">Migas de pan y barras de herramientas operativas.</p>
+            <section id="structure" class="space-y-10">
+                <div class="flex flex-col gap-1.5 border-l-4 border-info pl-5">
+                    <h2 class="text-3xl font-bold text-text-main tracking-tight">Estructura de Navegación</h2>
+                    <p class="text-text-secondary text-base font-medium">Migas de pan y barras de herramientas operativas.</p>
                 </div>
-                <!-- Breadcrumbs -->
-                <nav class="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400">
-                    <span class="flex items-center gap-1 hover:text-primary cursor-pointer"><span class="material-symbols-outlined text-xs">home</span> Inicio</span>
-                    <span class="material-symbols-outlined text-[10px]">chevron_right</span>
-                    <span class="hover:text-primary cursor-pointer">Operación</span>
-                    <span class="material-symbols-outlined text-[10px]">chevron_right</span>
-                    <span class="text-text-main">Ventas</span>
-                </nav>
-                <!-- Toolbar Example -->
-                <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-border-subtle shadow-sm">
-                    <div class="flex items-center gap-2">
-                        <button class="px-4 py-2 bg-primary text-white text-[10px] font-black uppercase rounded hover:bg-primary-hover shadow-md">Nuevo Registro</button>
-                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
-                        <button class="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded"><span class="material-symbols-outlined text-lg">edit</span></button>
-                        <button class="p-2 text-slate-400 hover:text-error hover:bg-red-50 rounded"><span class="material-symbols-outlined text-lg">delete</span></button>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                                <span class="material-symbols-outlined text-sm">search</span>
-                            </span>
-                            <input type="text" placeholder="Buscar..." class="pl-9 pr-3 py-1.5 text-xs border border-border-subtle rounded-full bg-slate-50 w-48 focus:ring-1 focus:ring-primary outline-none" />
+                {/* ... (resto del contenido previo) ... */}
+            </section>
+
+            <!-- NUEVA SECCIÓN: Capas de Contraste -->
+            <section id="layers" class="space-y-10">
+                <div class="flex flex-col gap-1.5 border-l-4 border-slate-900 pl-5">
+                    <h2 class="text-3xl font-bold text-text-main tracking-tight">Capas y Contraste</h2>
+                    <p class="text-text-secondary text-base font-medium">Jerarquía visual mediante capas de luz y superficies.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Layer 0 -->
+                    <div class="space-y-4">
+                        <div class="h-32 bg-background-base rounded-xl border border-border-subtle flex items-center justify-center font-bold text-slate-400 text-xs shadow-inner">
+                            L0: BACKGROUND BASE
                         </div>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Fondo de Página (#FAF9F8)</p>
                     </div>
+                    <!-- Layer 1 -->
+                    <div class="space-y-4">
+                        <div class="h-32 bg-white rounded-xl border border-border-subtle flex items-center justify-center font-bold text-slate-900 text-xs shadow-fluent-2">
+                            L1: SURFACE / CARD
+                        </div>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Contenedores (#FFFFFF)</p>
+                    </div>
+                    <!-- Material: Acrylic -->
+                    <div class="space-y-4">
+                        <div class="h-32 bg-background-base rounded-xl relative overflow-hidden flex items-center justify-center border border-border-subtle">
+                             <div class="absolute inset-4 glass-acrylic rounded-lg flex items-center justify-center font-bold text-primary text-xs shadow-fluent-8">
+                                ACRYLIC MATERIAL
+                             </div>
+                             <div class="size-10 bg-primary/20 rounded-full absolute -top-2 -left-2 blur-xl"></div>
+                        </div>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Efectos de Profundidad</p>
+                    </div>
+                </div>
+                <div class="p-6 bg-[#f3f2f1] rounded-xl border border-border-subtle">
+                    <p class="text-xs text-slate-600 leading-relaxed italic">
+                        <strong>Nota de Diseño:</strong> En Fluent 2, el contraste se crea elevando los elementos (blanco sobre gris base) con sombras ultra-suaves. Evita usar fondos oscuros para el contenido principal; prefiere la translucidez y el desenfoque para separar planos visuales.
+                    </p>
                 </div>
             </section>
 

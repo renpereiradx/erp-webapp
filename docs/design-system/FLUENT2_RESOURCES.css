@@ -24,20 +24,63 @@
 }
 
 :root {
-    --primary-color: #106ebe;
-    --primary-hover: #005a9e;
-    --bg-light: #f3f4f6;
+    --primary-color: #0f6cbd;
+    --primary-hover: #115ea3;
+    
+    /* Background Layers - Hierarchy */
+    --bg-base: #faf9f8;        /* Layer 0: Page background */
+    --bg-subtle: #f3f2f1;      /* Layer 0.5: Grouping background */
+    --surface: #ffffff;        /* Layer 1: Cards and Surfaces */
+    
     --text-main: #242424;
-    --border-subtle: #e5e7eb;
+    --text-secondary: #616161;
+    --border-subtle: #edebe9;
+    --border-base: #d1d1d1;
+    
+    --shadow-fluent-2: 0 2px 4px rgba(0,0,0,0.04), 0 0 2px rgba(0,0,0,0.06);
+    --shadow-fluent-8: 0 4px 8px rgba(0,0,0,0.08), 0 0 2px rgba(0,0,0,0.06);
+    --shadow-fluent-16: 0 8px 16px rgba(0,0,0,0.12), 0 0 2px rgba(0,0,0,0.06);
 }
 
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
+    background-color: var(--bg-base);
+    color: var(--text-main);
+}
+
+/* Base Texture for Background (Optional Premium Touch) */
+.bg-grainy {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    opacity: 0.015;
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+}
+
+/* Material Effects */
+.glass-acrylic {
+    background-color: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.glass-mica {
+    background-color: rgba(250, 249, 248, 0.8) !important;
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
 }
 
 .font-mono {
     font-family: 'JetBrains Mono', monospace;
+}
+
+/* Global Transitions */
+* {
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* Utility for Material Icons local */
