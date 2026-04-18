@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Info, Ban, Trash2, ShieldCheck, CheckCircle, Mail, KeyRound, Edit2, History, Monitor, Calendar, User as UserIcon, Unlock
 } from 'lucide-react';
-import { EditUserModal } from '@/components/users/EditUserModal';
+import { UserModal } from '@/components/users/UserModal';
 import { ManageRolesPanel } from '@/components/users/ManageRolesPanel';
 import { User } from '@/types';
 
@@ -18,7 +18,7 @@ const UserDetailedProfile = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const { selectedUser: user, loading, fetchUserById, activateUser, deactivateUser, deleteUser } = useUserStore() as any;
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRolesModalOpen, setIsRolesModalOpen] = useState(false);
 
   useEffect(() => { if (id) fetchUserById(id); }, [id, fetchUserById]);
@@ -78,7 +78,7 @@ const UserDetailedProfile = () => {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="h-11 border-border-subtle font-bold uppercase text-[11px] tracking-widest bg-white" onClick={() => alert('Próximamente')}><KeyRound size={18} className="mr-2 text-slate-400" />Reset</Button>
-          <Button onClick={() => setIsEditModalOpen(true)} className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest px-6 h-11 shadow-lg shadow-primary/20"><Edit2 size={18} className="mr-2" />{t('users.actions.edit')}</Button>
+          <Button onClick={() => setIsModalOpen(true)} className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest px-6 h-11 shadow-lg shadow-primary/20"><Edit2 size={18} className="mr-2" />{t('users.actions.edit')}</Button>
         </div>
       </header>
 
@@ -139,7 +139,7 @@ const UserDetailedProfile = () => {
                       <CheckCircle size={16} className="text-success" />
                     </div>
                     <p className="text-[11px] text-text-secondary font-medium leading-relaxed">
-                      {role.id === 'admin' ? t('users.roles.adminFull') : t('users.roles.standardFull')}
+                      {role.id === 'F2VLso' ? t('users.roles.adminFull') : t('users.roles.standardFull')}
                     </p>
                   </div>
                 ))}
@@ -174,7 +174,7 @@ const UserDetailedProfile = () => {
         </div>
       </div>
 
-      <EditUserModal user={user} open={isEditModalOpen} onOpenChange={(open) => { setIsEditModalOpen(open); if (!open) fetchUserById(user.id); }} />
+      <UserModal user={user} open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); if (!open) fetchUserById(user.id); }} />
       <ManageRolesPanel user={user} open={isRolesModalOpen} onOpenChange={setIsRolesModalOpen} />
     </div>
   );

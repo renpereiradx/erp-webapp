@@ -68,14 +68,14 @@ export function ManageRolesModal({ user, open, onOpenChange }) {
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                       isAssigned ? 'bg-primary text-white' : 'bg-subtle text-secondary'
                     }`}>
-                      {role.id === 'admin' ? <ShieldAlert size={20} /> : <Shield size={20} />}
+                      {role.id === 'F2VLso' ? <ShieldAlert size={20} /> : <Shield size={20} />}
                     </div>
                     <div>
                       <p className={`font-bold ${isAssigned ? 'text-primary' : 'text-primary'}`}>
                         {role.name}
                       </p>
                       <p className="text-xs text-secondary">
-                        {role.id === 'admin' 
+                        {role.id === 'F2VLso' 
                           ? t('users.roles.adminFull', 'Acceso total al sistema') 
                           : t('users.roles.standardFull', 'Acceso operativo estándar')}
                       </p>

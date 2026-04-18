@@ -61,6 +61,7 @@ export const inventoryManagement = {
   'inventoryManagement.viewModal.previousQuantity': 'Cantidad Anterior',
   'inventoryManagement.viewModal.quantityChecked': 'Cantidad Contada',
   'inventoryManagement.viewModal.difference': 'Diferencia',
+  'inventoryManagement.viewModal.showing_items': 'Mostrando {count} productos',
   'inventoryManagement.viewModal.close': 'Cerrar',
 
   // Create Modal

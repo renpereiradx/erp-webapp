@@ -20,7 +20,7 @@ export const getApiBaseUrl = () => {
   }
   
   // 3. Fallback para desarrollo
-  return 'http://localhost:5050';
+  return '/api';
 };
 
 /**

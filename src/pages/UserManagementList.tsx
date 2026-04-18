@@ -13,8 +13,7 @@ import {
 } from '@/components/ui/table';
 import { useI18n } from '@/lib/i18n';
 import { useNavigate } from 'react-router-dom';
-import { CreateUserModal } from '@/components/users/CreateUserModal';
-import { EditUserModal } from '@/components/users/EditUserModal';
+import { UserModal } from '@/components/users/UserModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,8 +49,7 @@ export default function UserManagementList() {
   } = useUserStore() as any;
   
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
 
   React.useEffect(() => {
@@ -65,9 +63,46 @@ export default function UserManagementList() {
 
   const selectedCount = selectedUsers.length;
 
+  const handleBulkActivate = async () => {
+    for (const id of selectedUsers) {
+      await useUserStore.getState().activateUser(id);
+    }
+    setSelectedUsers([]);
+    fetchUsers();
+  };
+
+  const handleBulkDeactivate = async () => {
+    for (const id of selectedUsers) {
+      await useUserStore.getState().deactivateUser(id);
+    }
+    setSelectedUsers([]);
+    fetchUsers();
+  };
+
+  const handleBulkDelete = async () => {
+    if (window.confirm(t('users.confirmBulkDelete', { count: selectedCount }) || `¿Estás seguro de eliminar ${selectedCount} usuarios?`)) {
+      for (const id of selectedUsers) {
+        await deleteUser(id);
+      }
+      setSelectedUsers([]);
+    }
+  };
+
+  const handleEditSelected = () => {
+    if (selectedCount === 1) {
+      const user = users.find((u: User) => u.id === selectedUsers[0]);
+      if (user) handleEditClick(user);
+    }
+  };
+
+  const handleCreateClick = () => {
+    setUserToEdit(null);
+    setIsModalOpen(true);
+  };
+
   const handleEditClick = (user: User) => {
     setUserToEdit(user);
-    setIsEditModalOpen(true);
+    setIsModalOpen(true);
   };
 
   const handleDeleteClick = async (user: User) => {
@@ -97,7 +132,7 @@ export default function UserManagementList() {
           <Button variant="outline" className="h-11 border-border-subtle font-bold uppercase text-[11px] tracking-widest bg-white">
             <Download size={18} className="mr-2 text-slate-400" />{t('users.export')}
           </Button>
-          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest px-6 h-11">
+          <Button onClick={handleCreateClick} className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest px-6 h-11">
             <Plus size={18} className="mr-2" />{t('users.addUser')}
           </Button>
         </div>
@@ -162,9 +197,14 @@ export default function UserManagementList() {
               <span className="text-xs font-black text-primary uppercase tracking-widest">{t('users.selectedUsers', { count: selectedCount })}</span>
               <div className="w-px h-4 bg-primary/20"></div>
               <div className="flex gap-2">
-                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-primary hover:bg-primary/10">Activar</Button>
-                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100">Desactivar</Button>
-                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-error hover:bg-error/10">Eliminar</Button>
+                {selectedCount === 1 && (
+                  <Button variant="ghost" size="sm" onClick={handleEditSelected} className="h-8 text-[10px] font-black uppercase text-primary hover:bg-primary/10">
+                    <Edit size={12} className="mr-1.5" /> {t('users.actions.edit')}
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={handleBulkActivate} className="h-8 text-[10px] font-black uppercase text-primary hover:bg-primary/10">Activar</Button>
+                <Button variant="ghost" size="sm" onClick={handleBulkDeactivate} className="h-8 text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100">Desactivar</Button>
+                <Button variant="ghost" size="sm" onClick={handleBulkDelete} className="h-8 text-[10px] font-black uppercase text-error hover:bg-error/10">Eliminar</Button>
               </div>
             </div>
             <button className="p-1 hover:bg-primary/10 rounded-full text-primary" onClick={() => setSelectedUsers([])}><X size={16} /></button>
@@ -206,7 +246,7 @@ export default function UserManagementList() {
                 <TableCell className="py-4 px-6">
                   <div className="flex flex-wrap gap-1">
                     {user.roles?.map(role => (
-                      <Badge key={role.id} className={`border-none text-[9px] font-black uppercase tracking-wider h-5 ${role.id === "admin" ? "bg-indigo-50 text-indigo-600" : "bg-slate-100 text-slate-500"}`}>{role.name}</Badge>
+                      <Badge key={role.id} className={`border-none text-[9px] font-black uppercase tracking-wider h-5 ${role.id === "F2VLso" ? "bg-indigo-50 text-indigo-600" : "bg-slate-100 text-slate-500"}`}>{role.name}</Badge>
                     ))}
                   </div>
                 </TableCell>
@@ -262,8 +302,7 @@ export default function UserManagementList() {
         </div>
       </div>
 
-      <CreateUserModal open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen} />
-      <EditUserModal user={userToEdit} open={isEditModalOpen} onOpenChange={setIsEditModalOpen} />
+      <UserModal open={isModalOpen} onOpenChange={setIsModalOpen} user={userToEdit} />
     </div>
   );
 }

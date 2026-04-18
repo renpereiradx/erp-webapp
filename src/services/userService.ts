@@ -104,9 +104,11 @@ export const userService = {
    */
   updateUser: async (id: string, userData: Partial<User>): Promise<SuccessResponse & { data: User }> => {
     if (DEMO_CONFIG.enabled) {
+      // Intentar encontrar el usuario original en la lista demo para mantener coherencia
+      const originalUser = DEMO_USERS_LIST.find(u => u.id === id) || DEMO_USERS_LIST[0];
       return {
         success: true,
-        data: { ...DEMO_USERS_LIST[0], ...userData, id } as User,
+        data: { ...originalUser, ...userData, id } as User,
         message: 'Usuario actualizado (Modo Demo)'
       };
     }

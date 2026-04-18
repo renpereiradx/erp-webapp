@@ -20,9 +20,9 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     email: 'admin@demo.com',
     password: 'admin123',
     name: 'Admin Demo',
-    role: 'admin',
+    role: 'F2VLso',
     role_id: 1,
-    permissions: ['read', 'write', 'delete', 'admin']
+    permissions: ['read', 'write', 'delete', 'F2VLso']
   },
   manager: {
     id: 2,
@@ -48,9 +48,9 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     email: 'demo',
     password: 'demo',
     name: 'Demo User',
-    role: 'admin',
+    role: 'F2VLso',
     role_id: 1,
-    permissions: ['read', 'write', 'delete', 'admin']
+    permissions: ['read', 'write', 'delete', 'F2VLso']
   }
 };
 
@@ -106,12 +106,13 @@ export const validateDemoCredentials = (email?: string, password?: string): Demo
 export const generateDemoLoginResponse = (user: DemoUser) => ({
   success: true,
   token: DEMO_TOKEN,
+  role_id: user.role === 'F2VLso' ? 'F2VLso' : user.role.toUpperCase(), // Asegurar que role_id esté presente (ej: "F2VLso")
   user: {
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
-    role_id: user.role_id,
+    role_id: user.role.toUpperCase(),
     permissions: user.permissions
   },
   message: 'Demo login successful'

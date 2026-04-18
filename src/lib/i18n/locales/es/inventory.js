@@ -85,4 +85,15 @@ export const inventory = {
   'inventory.validation.quantity_required': 'Cantidad es requerida',
   'inventory.validation.quantity_positive': 'Cantidad debe ser mayor a 0',
   'inventory.validation.reason_required': 'Motivo es requerido',
+
+  // Ajuste Manual
+  'inventory.adjustment.manual_title': 'Ajuste Manual de Stock',
+  'inventory.adjustment.new_adjustment': 'Nuevo Ajuste',
+  'inventory.adjustment.history': 'Historial de Ajustes',
+  'inventory.adjustment.search_product': 'Buscar Producto',
+  'inventory.adjustment.stock_actual': 'Stock Actual',
+  'inventory.adjustment.real_stock': 'Stock Real',
+  'inventory.adjustment.reason_category': 'Categoría Motivo',
+  'inventory.adjustment.approval_level': 'Nivel de Aprobación',
+  'inventory.adjustment.success': 'Ajuste de inventario realizado con éxito',
 }

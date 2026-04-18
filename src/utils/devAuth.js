@@ -28,7 +28,8 @@ export const autoLogin = async () => {
   if (existingToken) {
     // Verificar si el token es válido haciendo una llamada rápida
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5050'}/category/`, {
+      const baseUrl = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${baseUrl}/category/`, {
         headers: {
           'Authorization': existingToken, // Sin "Bearer " según el formato que funciona
           'Content-Type': 'application/json'

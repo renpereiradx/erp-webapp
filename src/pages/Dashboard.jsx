@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
 import useDashboardStore from '../store/useDashboardStore';
 import { formatTimeInParaguayTimezone } from '@/utils/timeUtils';
+import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
 import {
   DollarSign,
   ShoppingCart,
@@ -39,7 +40,19 @@ import {
 const Dashboard = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const { summary, alerts, activities, loading, error, fetchDashboardData } = useDashboardStore();
+  const { 
+    summary, 
+    alerts, 
+    activities, 
+    trends,
+    profitabilityTrends,
+    receivablesOverview,
+    payablesOverview,
+    salesPerformance,
+    loading, 
+    error, 
+    fetchDashboardData 
+  } = useDashboardStore();
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {
@@ -51,26 +64,17 @@ const Dashboard = () => {
     setLastUpdated(new Date());
   };
 
-  // Mock Data for "Revenue vs Expenses" Area Chart
-  // In a future step, this could also be fetched from /dashboard/trends or similar
-  const revenueExpensesData = useMemo(() => [
-    { name: 'Jan 1', revenue: 4000, expenses: 2400 },
-    { name: 'Jan 5', revenue: 3000, expenses: 1398 },
-    { name: 'Jan 10', revenue: 2000, expenses: 9800 },
-    { name: 'Jan 15', revenue: 2780, expenses: 3908 },
-    { name: 'Jan 20', revenue: 1890, expenses: 4800 },
-    { name: 'Jan 25', revenue: 2390, expenses: 3800 },
-    { name: 'Jan 30', revenue: 3490, expenses: 4300 },
-  ], []);
-
-  const formatCurrency = (val) => {
-    if (val === undefined || val === null) return '-';
-    return new Intl.NumberFormat('es-PY', { 
-      style: 'currency', 
-      currency: 'PYG', 
-      maximumFractionDigits: 0 
-    }).format(val);
-  };
+  // Chart Data from Profitability API
+  const revenueExpensesData = useMemo(() => {
+    if (profitabilityTrends?.data_points) {
+      return profitabilityTrends.data_points.map(dp => ({
+        name: dp.label,
+        revenue: dp.revenue,
+        expenses: dp.cost
+      }));
+    }
+    return [];
+  }, [profitabilityTrends]);
 
   const getTimeAgo = (timestamp) => {
     if (!timestamp) return '';
@@ -121,6 +125,16 @@ const Dashboard = () => {
   const receivablesOverdue = summary?.receivables?.overdue_count || 0;
   const payablesTotal = summary?.payables?.total_pending || 0;
 
+  // Trend mapping
+  const salesTrendPct = trends?.sales?.change_percentage || 0;
+  const purchasesTrendPct = trends?.purchases?.change_percentage || 0;
+  const profitTrendPct = trends?.gross_margin?.change_percentage || 0;
+  const txTrendPct = salesPerformance?.comparison?.transactions_change_pct || 0;
+
+  // Collection rates
+  const collectionRate = receivablesOverview?.collection_rate || 0;
+  const paymentRate = payablesOverview?.payment_rate || 0;
+
   return (
     <div className="space-y-8">
       {/* 1. Header */}
@@ -152,9 +166,10 @@ const Dashboard = () => {
                    <div className="size-12 rounded-lg bg-blue-50 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                        <DollarSign size={24} />
                    </div>
-                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-success text-xs font-bold">
-                       <TrendingUp size={14} />
-                       <span>12%</span>
+                   <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${salesTrendPct >= 0 ? 'bg-green-50 text-success' : 'bg-red-50 text-error'}`}>
+                       {salesTrendPct >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                       <span>{formatNumber(Math.abs(salesTrendPct), 1)}%</span>
+
                    </div>
                </div>
                <div>
@@ -169,9 +184,10 @@ const Dashboard = () => {
                    <div className="size-12 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
                        <ShoppingCart size={24} />
                    </div>
-                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-50 text-error text-xs font-bold">
-                       <TrendingDown size={14} />
-                       <span>5%</span>
+                   <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${purchasesTrendPct <= 0 ? 'bg-green-50 text-success' : 'bg-red-50 text-error'}`}>
+                       {purchasesTrendPct <= 0 ? <TrendingDown size={14} /> : <TrendingUp size={14} />}
+                       <span>{formatNumber(Math.abs(purchasesTrendPct), 1)}%</span>
+
                    </div>
                </div>
                <div>
@@ -186,9 +202,10 @@ const Dashboard = () => {
                    <div className="size-12 rounded-lg bg-green-50 flex items-center justify-center text-success group-hover:scale-110 transition-transform">
                        <TrendingUp size={24} />
                    </div>
-                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-success text-xs font-bold">
-                       <TrendingUp size={14} />
-                       <span>18%</span>
+                   <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${profitTrendPct >= 0 ? 'bg-green-50 text-success' : 'bg-red-50 text-error'}`}>
+                       {profitTrendPct >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                       <span>{formatNumber(Math.abs(profitTrendPct), 1)}%</span>
+
                    </div>
                </div>
                <div>
@@ -203,9 +220,10 @@ const Dashboard = () => {
                    <div className="size-12 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
                        <Receipt size={24} />
                    </div>
-                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-success text-xs font-bold">
-                       <TrendingUp size={14} />
-                       <span>2%</span>
+                   <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${txTrendPct >= 0 ? 'bg-green-50 text-success' : 'bg-red-50 text-error'}`}>
+                       {txTrendPct >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                       <span>{formatNumber(Math.abs(txTrendPct), 1)}%</span>
+
                    </div>
                </div>
                 <div>
@@ -236,7 +254,7 @@ const Dashboard = () => {
                    </div>
                </div>
                <div className="h-[300px] w-full">
-                    {revenueExpensesData && revenueExpensesData.length > 0 && (
+                    {revenueExpensesData && revenueExpensesData.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={revenueExpensesData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                 <defs>
@@ -284,6 +302,10 @@ const Dashboard = () => {
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
+                    ) : (
+                        <div className="h-full flex items-center justify-center bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                            <p className="text-sm text-text-secondary font-medium">{t('common.noData', 'No hay datos disponibles para el período')}</p>
+                        </div>
                     )}
                 </div>
            </div>
@@ -329,11 +351,11 @@ const Dashboard = () => {
                         
                         <div className="space-y-2">
                             <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-success rounded-full" style={{ width: '75%' }}></div>
+                                <div className="h-full bg-success rounded-full" style={{ width: '100%' }}></div>
                             </div>
                             <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-text-secondary">
-                                <span>{t('dashboard.operations.cashRegister.target', 'Meta')}</span>
-                                <span className="text-text-main">{formatCurrency(5500000)}</span>
+                                <span>{t('dashboard.operations.cashRegister.active', 'Cajas Abiertas')}</span>
+                                <span className="text-text-main">{summary?.cash_registers?.open_count || 0}</span>
                             </div>
                         </div>
                     </div>
@@ -358,10 +380,10 @@ const Dashboard = () => {
                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary group-hover:text-primary transition-colors">{t('dashboard.finance.receivables', 'Cuentas por Cobrar')}</p>
                                <h4 className="text-xl font-black text-text-main">{formatCurrency(receivablesTotal)}</h4>
                            </div>
-                           <span className="text-xs font-bold text-success bg-green-50 px-2 py-1 rounded">+8.5%</span>
+                           <span className="text-xs font-bold text-success bg-green-50 px-2 py-1 rounded">{formatNumber(collectionRate, 1)}% {t('dashboard.finance.collected', 'Cobrado')}</span>
                        </div>
                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-primary rounded-full" style={{ width: '65%' }}></div>
+                            <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${collectionRate}%` }}></div>
                        </div>
                    </div>
                     {/* Payables */}
@@ -371,10 +393,10 @@ const Dashboard = () => {
                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary group-hover:text-primary transition-colors">{t('dashboard.finance.payables', 'Cuentas por Pagar')}</p>
                                <h4 className="text-xl font-black text-text-main">{formatCurrency(payablesTotal)}</h4>
                            </div>
-                           <span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded">Normal</span>
+                           <span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded">{formatNumber(paymentRate, 1)}% {t('dashboard.finance.paid', 'Pagado')}</span>
                        </div>
                         <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-orange-500 rounded-full" style={{ width: '40%' }}></div>
+                            <div className="h-full bg-orange-500 rounded-full transition-all duration-1000" style={{ width: `${paymentRate}%` }}></div>
                         </div>
                    </div>
                </div>

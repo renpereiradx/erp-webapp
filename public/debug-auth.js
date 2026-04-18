@@ -20,7 +20,7 @@ window.debugAuth = function() {
     tokenFormat: token ? (token.startsWith('Bearer ') ? 'Con prefijo Bearer' : 'Sin prefijo Bearer') : 'N/A',
     hasUserData: !!userData,
     userData: userData ? JSON.parse(userData) : null,
-    apiBaseUrl: 'http://localhost:5050',
+    apiBaseUrl: '/api',
     currentUrl: window.location.href
   };
 
@@ -58,7 +58,7 @@ window.debugAuth = function() {
 
   // Test de conexión al backend
   console.log('\n🌐 Testing backend connection...');
-  fetch('http://localhost:5050/', { method: 'GET' })
+  fetch('/api/', { method: 'GET' })
     .then(res => {
       console.log('✅ Backend respondió:', res.status, res.statusText);
       return res.text();
@@ -69,7 +69,7 @@ window.debugAuth = function() {
   // Test de autenticación
   if (token) {
     console.log('\n🔐 Testing authentication...');
-    fetch('http://localhost:5050/sale/', {
+    fetch('/api/sale/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

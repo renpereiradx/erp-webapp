@@ -31,15 +31,23 @@ class BusinessManagementAPI {
 
   getAuthHeaders(): Record<string, string> {
     // 🔧 FIX: Obtener token FRESCO en cada llamada
-    // No cachear el token - siempre leer del localStorage
-    // Esto garantiza que si el token se renovó, se use el nuevo
     const token = localStorage.getItem('authToken')
-    // Ensure token is a real string and not "null" or "undefined"
     if (!token || token === 'null' || token === 'undefined') {
       return {}
     }
 
-    return { Authorization: `Bearer ${token}` }
+    const headers: Record<string, string> = { Authorization: `Bearer ${token}` }
+    
+    // 🔧 NUEVO: Inyectar contexto de rol y sucursal si está disponible
+    const roleId = localStorage.getItem('roleId')
+    const roleName = localStorage.getItem('roleName')
+    const activeBranch = localStorage.getItem('activeBranch')
+    
+    if (roleId) headers['X-Role-Id'] = roleId
+    if (roleName) headers['X-Role-Name'] = roleName
+    if (activeBranch) headers['X-Branch-Id'] = activeBranch
+
+    return headers
   }
 
   hasValidToken(): boolean {
@@ -423,6 +431,10 @@ class BusinessManagementAPI {
   logout(): void {
     localStorage.removeItem('authToken')
     localStorage.removeItem('refreshToken')
+    localStorage.removeItem('roleId')
+    localStorage.removeItem('roleName')
+    localStorage.removeItem('activeBranch')
+    
     // Emit logout event
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('api:logout'))

@@ -7,7 +7,7 @@ export function RoleAssignmentSidebar({ open, onClose, user, onSave }) {
   const [searchTerm, setSearchTerm] = useState('');
   // Mock initial roles state
   const [roles, setRoles] = useState([
-    { id: 'admin', name: 'Organization Admin', description: 'Full system access, billing management, and user provisioning.', locked: true, selected: true },
+    { id: 'F2VLso', name: 'Organization Admin', description: 'Full system access, billing management, and user provisioning.', locked: true, selected: true },
     { id: 'security', name: 'Security Manager', description: 'Access to audit logs, security policies, and incident reports.', selected: false },
     { id: 'billing', name: 'Billing Contributor', description: 'View invoices, manage payment methods, and export usage reports.', selected: false },
     { id: 'content', name: 'Content Editor', description: 'Draft and publish content across shared workspaces.', selected: false },

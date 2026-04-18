@@ -7,7 +7,7 @@ import { apiService as apiClient } from '@/services/api';
 import { telemetry } from '@/utils/telemetry';
 
 // Configuración base
-const API_BASE_URL = 'http://localhost:5050';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Helper para hacer peticiones con reintentos
 const _fetchWithRetry = async (requestFn, maxRetries = 2) => {

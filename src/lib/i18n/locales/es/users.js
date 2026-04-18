@@ -107,6 +107,10 @@ export const users = {
   'users.form.discard': 'Descartar Cambios',
   'users.form.createButton': 'Crear Perfil de Usuario',
   'users.form.saveButton': 'Guardar Cambios',
+  'users.form.createSuccess': 'Usuario creado correctamente',
+  'users.form.updateSuccess': 'Usuario actualizado correctamente',
+  'users.form.createError': 'Error al crear el usuario',
+  'users.form.updateError': 'Error al actualizar el usuario',
   
   // Errores
   'users.errors.cannotRemoveLastRole': 'El usuario debe tener al menos un rol.',

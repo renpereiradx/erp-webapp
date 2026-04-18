@@ -12,6 +12,8 @@ import {
   INVENTORY_STATUS_OPTIONS,
 } from '@/constants/inventoryDefaults'
 
+import { formatNumber } from '@/utils/currencyUtils'
+
 // Iconos de Lucide React
 import {
   ArrowLeft,
@@ -1023,7 +1025,8 @@ const InventoryManagement = () => {
                                   <span className='block font-bold text-sm leading-tight'>{product.product_name}</span>
                                   <span className={`text-[10px] font-mono font-bold uppercase ${highlightedIndex === index ? 'text-white/70' : 'text-primary'}`}>ID: {product.product_id}</span>
                                 </div>
-                                <span className={`text-[10px] font-black uppercase ${highlightedIndex === index ? 'text-white/90' : 'text-slate-400'}`}>Stock: {product.stock_quantity || 0}</span>
+                                <span className={`text-[10px] font-black uppercase ${highlightedIndex === index ? 'text-white/90' : 'text-slate-400'}`}>Stock: {formatNumber(product.stock_quantity || 0)}</span>
+
                               </div>
                             ))
                           )}
@@ -1057,7 +1060,8 @@ const InventoryManagement = () => {
                                       <span className="text-[10px] text-primary font-mono font-bold uppercase">{item.product_id}</span>
                                     </div>
                                   </td>
-                                  <td className="py-3 px-4 text-center tabular-nums font-medium text-slate-500">{item.current_quantity}</td>
+                                  <td className="py-3 px-4 text-center tabular-nums font-medium text-slate-500">{formatNumber(item.current_quantity)}</td>
+
                                   <td className="py-3 px-4">
                                     <input
                                       type='number'
@@ -1241,7 +1245,7 @@ const InventoryManagement = () => {
                       {t('inventoryManagement.viewModal.items')}
                     </h3>
                     <div className="text-[10px] font-bold text-slate-400 uppercase">
-                      Mostrando {selectedInventory.items.length} productos
+                      {t('inventoryManagement.viewModal.showing_items', { count: selectedInventory.items.length })}
                     </div>
                   </div>
                   
@@ -1276,8 +1280,8 @@ const InventoryManagement = () => {
                                   </div>
                                 </div>
                               </td>
-                              <td className="py-4 px-4 text-center tabular-nums text-slate-500 font-medium">{item.previous_quantity}</td>
-                              <td className="py-4 px-4 text-center tabular-nums font-black text-text-main">{item.quantity_checked}</td>
+                              <td className="py-4 px-4 text-center tabular-nums text-slate-500 font-medium">{formatNumber(item.previous_quantity)}</td>
+                              <td className="py-4 px-4 text-center tabular-nums font-black text-text-main">{formatNumber(item.quantity_checked)}</td>
                               <td className={`py-4 px-6 text-right tabular-nums`}>
                                 <div className={`inline-flex items-center gap-1 px-2 py-1 rounded font-black text-[11px] ${
                                   diff > 0 ? 'bg-green-50 text-success' : 
@@ -1287,7 +1291,7 @@ const InventoryManagement = () => {
                                   {diff > 0 && <span className="material-symbols-outlined text-xs">trending_up</span>}
                                   {diff < 0 && <span className="material-symbols-outlined text-xs">trending_down</span>}
                                   {diff === 0 && <span className="material-symbols-outlined text-xs">remove</span>}
-                                  {diff > 0 ? `+${diff}` : diff}
+                                  {diff > 0 ? `+${formatNumber(diff)}` : formatNumber(diff)}
                                 </div>
                               </td>
                             </tr>

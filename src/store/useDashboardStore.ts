@@ -5,16 +5,54 @@ import {
   getDemoDashboardData
 } from '../config/demoData';
 import { dashboardService } from '../services/dashboardService';
+import { receivablesService } from '../services/receivablesService';
+import { payablesService } from '../services/payablesService';
+import salesAnalyticsService from '../services/salesAnalyticsService';
+import profitabilityService from '../features/profitability/services/profitabilityService';
 
 // Interfaces para el estado del Dashboard
 export interface DashboardSummary {
-  sales_today: number;
-  sales_this_week: number;
-  sales_this_month: number;
-  total_revenue: number;
-  revenue_trend: string | number;
-  active_customers: number;
-  low_stock_alerts: number;
+  sales?: {
+    total: number;
+    count: number;
+    average_ticket: number;
+    currency: string;
+  };
+  purchases?: {
+    total: number;
+    count: number;
+    currency: string;
+  };
+  profit?: {
+    gross: number;
+    margin_percentage: number;
+  };
+  inventory?: {
+    total_products: number;
+    low_stock_count: number;
+    out_of_stock_count: number;
+    total_value: number;
+  };
+  cash_registers?: {
+    open_count: number;
+    total_balance: number;
+  };
+  receivables?: {
+    total_pending: number;
+    overdue_count: number;
+  };
+  payables?: {
+    total_pending: number;
+    due_this_week: number;
+  };
+  // Fallback for legacy demo mapping
+  sales_today?: number;
+  sales_this_week?: number;
+  sales_this_month?: number;
+  total_revenue?: number;
+  revenue_trend?: string | number;
+  active_customers?: number;
+  low_stock_alerts?: number;
 }
 
 export interface DashboardKPIs {
@@ -42,9 +80,12 @@ export interface DashboardKPIs {
 
 export interface DashboardAlert {
   id: string | number;
-  severity: 'info' | 'warning' | 'error' | 'success';
+  severity: 'info' | 'warning' | 'error' | 'success' | 'critical';
   message: string;
   category: string;
+  title?: string;
+  action_url?: string;
+  created_at?: string;
 }
 
 export interface DashboardActivity {
@@ -53,6 +94,8 @@ export interface DashboardActivity {
   description: string;
   timestamp: string;
   user?: string;
+  amount?: number;
+  details?: any;
 }
 
 export interface TopProduct {
@@ -74,12 +117,19 @@ export interface DashboardState {
   alerts: DashboardAlert[];
   activities: DashboardActivity[];
   
+  // Nuevos estados dinámicos
+  trends: any | null;
+  profitabilityTrends: any | null;
+  receivablesOverview: any | null;
+  payablesOverview: any | null;
+  salesPerformance: any | null;
+
   // Estados de carga y error
   loading: boolean;
   error: string | null;
 
   // Estado para nuevas páginas
-  salesHeatmap: any | null; // Se puede refinar a futuro
+  salesHeatmap: any | null; 
   topProducts: TopProduct[];
   topProductsMetrics: {
     total_revenue: number;
@@ -101,6 +151,11 @@ const useDashboardStore = create<DashboardState>()(
       kpis: null,
       alerts: [],
       activities: [],
+      trends: null,
+      profitabilityTrends: null,
+      receivablesOverview: null,
+      payablesOverview: null,
+      salesPerformance: null,
       loading: false,
       error: null,
       salesHeatmap: null,
@@ -162,6 +217,55 @@ const useDashboardStore = create<DashboardState>()(
             const response = await dashboardService.getSalesHeatmap(weeks);
             set({ salesHeatmap: response.data, loading: false });
         } catch(error: any) {
+            if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
+                console.log('🔄 Dashboard: Mapeando Heatmap de modo demo...');
+                
+                // Generar datos realistas de heatmap para demo
+                const demoHeatmap = [];
+                const days = [0, 1, 2, 3, 4, 5, 6]; // Sun to Sat (matches API days)
+                const startHour = 8;
+                const endHour = 21;
+
+                for (const day of days) {
+                    for (let hour = startHour; hour <= endHour; hour++) {
+                        // Lógica para picos realistas
+                        let intensity = 0.1 + Math.random() * 0.3;
+                        
+                        // Picos de almuerzo (12-14)
+                        if (hour >= 12 && hour <= 14) intensity += 0.4;
+                        // Picos de tarde (18-20)
+                        if (hour >= 18 && hour <= 20) intensity += 0.3;
+                        // Fines de semana más activos
+                        if (day === 5 || day === 6) intensity += 0.2;
+                        
+                        const salesCount = Math.floor(intensity * 15);
+                        const totalAmount = salesCount * (50000 + Math.random() * 150000);
+
+                        if (salesCount > 0) {
+                            demoHeatmap.push({
+                                day,
+                                hour,
+                                sales_count: salesCount,
+                                total_amount: totalAmount
+                            });
+                        }
+                    }
+                }
+
+                set({ 
+                    salesHeatmap: {
+                        heatmap: demoHeatmap,
+                        peak_times: [
+                            { day: 'Sábado', hour: 19 },
+                            { day: 'Viernes', hour: 13 }
+                        ]
+                    }, 
+                    loading: false, 
+                    error: null 
+                });
+                return;
+            }
+
             console.error('❌ Dashboard: Error loading heatmap:', error.message);
             set({ error: error.message, loading: false });
         }
@@ -225,10 +329,24 @@ const useDashboardStore = create<DashboardState>()(
           const results = await Promise.allSettled([
              dashboardService.getSummary(),
              dashboardService.getAlerts(),
-             dashboardService.getRecentActivity()
+             dashboardService.getRecentActivity(),
+             dashboardService.getTrends('month'),
+             profitabilityService.getTrends({ period: 'month' }),
+             receivablesService.getSummary('month'),
+             payablesService.getOverview(),
+             salesAnalyticsService.getPerformance({ period: 'month', compare: true })
           ]);
 
-          const [summaryRes, alertsRes, activityRes] = results;
+          const [
+            summaryRes, 
+            alertsRes, 
+            activityRes, 
+            trendsRes, 
+            profitTrendsRes, 
+            receivablesRes, 
+            payablesRes,
+            salesPerfRes
+          ] = results;
 
           if (summaryRes.status === 'rejected') {
             throw summaryRes.reason;
@@ -240,22 +358,39 @@ const useDashboardStore = create<DashboardState>()(
             ? (alertsRes.value.data as any).alerts 
             : [];
             
-          if (alertsRes.status === 'rejected') {
-            console.warn('⚠️ Dashboard: Falló la carga de alertas:', (alertsRes.reason as any).message);
-          }
-
           const activitiesData = activityRes.status === 'fulfilled' 
             ? (activityRes.value.data as any).activities 
             : [];
 
-          if (activityRes.status === 'rejected') {
-            console.warn('⚠️ Dashboard: Falló la carga de actividad reciente:', (activityRes.reason as any).message);
-          }
+          const trendsData = trendsRes.status === 'fulfilled'
+            ? trendsRes.value.data
+            : null;
+
+          const profitTrendsData = profitTrendsRes.status === 'fulfilled'
+            ? profitTrendsRes.value.data
+            : null;
+
+          const receivablesData = receivablesRes.status === 'fulfilled'
+            ? receivablesRes.value.data
+            : null;
+
+          const payablesData = payablesRes.status === 'fulfilled'
+            ? payablesRes.value.data
+            : null;
+
+          const salesPerfData = salesPerfRes.status === 'fulfilled'
+            ? salesPerfRes.value.data
+            : null;
 
           set({
             summary: summaryData,
             alerts: alertsData,
             activities: activitiesData,
+            trends: trendsData,
+            profitabilityTrends: profitTrendsData,
+            receivablesOverview: receivablesData,
+            payablesOverview: payablesData,
+            salesPerformance: salesPerfData,
             loading: false,
             error: null
           });
@@ -269,6 +404,25 @@ const useDashboardStore = create<DashboardState>()(
               
               set({
                 summary: {
+                  sales: {
+                    total: data.salesStats.today,
+                    count: 15,
+                    average_ticket: data.salesStats.avgOrderValue,
+                    currency: 'PYG',
+                    // Adding trend for heatmap page
+                    trend: data.salesStats.trend
+                  },
+                  cash_registers: {
+                    open_count: 3,
+                    total_balance: 15000000
+                  },
+                  inventory: {
+                    total_products: data.productStats.total,
+                    low_stock_count: data.productStats.lowStock,
+                    out_of_stock_count: data.productStats.outOfStock,
+                    total_value: 450000000
+                  },
+                  // Legacy fields for backward compatibility
                   sales_today: data.salesStats.today,
                   sales_this_week: data.salesStats.thisWeek,
                   sales_this_month: data.salesStats.thisMonth,
@@ -281,7 +435,26 @@ const useDashboardStore = create<DashboardState>()(
                   { id: 1, severity: 'warning', message: `Stock bajo en ${data.productStats.lowStock} productos`, category: 'inventory' },
                   { id: 2, severity: 'info', message: `${data.clientStats.new_this_month} nuevos clientes este mes`, category: 'sales' }
                 ],
-                activities: (charts as any).recentActivity,
+                activities: (charts as any).recentActivity.map((a: any) => ({
+                  ...a,
+                  // Convert demo 'time' (HH:mm) to full today's timestamp if timestamp is missing
+                  timestamp: a.timestamp || (a.time ? `${new Date().toISOString().split('T')[0]}T${a.time}:00Z` : new Date().toISOString())
+                })),
+                trends: null,
+                profitabilityTrends: {
+                  data_points: [
+                    { label: 'Jan 1', revenue: 4000, cost: 2400 },
+                    { label: 'Jan 5', revenue: 3000, cost: 1398 },
+                    { label: 'Jan 10', revenue: 2000, cost: 9800 },
+                    { label: 'Jan 15', revenue: 2780, cost: 3908 },
+                    { label: 'Jan 20', revenue: 1890, cost: 4800 },
+                    { label: 'Jan 25', revenue: 2390, cost: 3800 },
+                    { label: 'Jan 30', revenue: 3490, cost: 4300 },
+                  ]
+                },
+                receivablesOverview: { collection_rate: 65 },
+                payablesOverview: { payment_rate: 40 },
+                salesPerformance: { comparison: { transactions_change_pct: 2 } },
                 loading: false,
                 error: null
               });

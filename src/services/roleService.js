@@ -3,7 +3,7 @@ import { DEMO_CONFIG } from '../config/demoAuth';
 
 // 🧪 Datos de roles para modo demo
 const DEMO_ROLES = [
-    { id: 'admin', name: 'Administrador', description: 'Acceso total al sistema' },
+    { id: 'F2VLso', name: 'Administrador', description: 'Acceso total al sistema' },
     { id: 'manager', name: 'Gerente', description: 'Gestión de operaciones y reportes' },
     { id: 'user', name: 'Usuario', description: 'Acceso limitado a funciones básicas' }
 ];
@@ -12,7 +12,7 @@ const DEMO_PERMISSIONS = [
     { id: 'read', name: 'Leer', description: 'Permite ver recursos' },
     { id: 'write', name: 'Escribir', description: 'Permite crear y editar recursos' },
     { id: 'delete', name: 'Eliminar', description: 'Permite borrar recursos' },
-    { id: 'admin', name: 'Admin', description: 'Funciones administrativas' }
+    { id: 'F2VLso', name: 'Admin', description: 'Funciones administrativas' }
 ];
 
 /**

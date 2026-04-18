@@ -3,7 +3,7 @@ import { act } from 'react';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const handlers = [
   // search by name returns two items

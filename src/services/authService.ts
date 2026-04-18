@@ -126,7 +126,9 @@ const authService = {
 
     // Para API real, intentar logout en el servidor
     try {
-      return await apiService.logout();
+      // 🔧 FIX: Llamar al endpoint real para invalidar la sesión en el backend
+      // Esto usará apiClient.makeRequest que inyecta todos los headers (Token, Role, Branch)
+      return await apiService.post('/auth/logout');
     } catch (error) {
       // Si falla el logout de API, está OK - el token se limpia en AuthContext
       console.warn('Server logout failed:', error);

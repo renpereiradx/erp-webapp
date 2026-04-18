@@ -16,13 +16,12 @@ interface RoleGuardProps {
  * RoleGuard component to protect routes or sections based on user roles.
  * Prevents 403 Forbidden errors by checking permissions before rendering protected content.
  */
-const RoleGuard: React.FC<RoleGuardProps> = ({ 
-  children, 
-  allowedRoles = ['ADMIN'], 
+const RoleGuard: React.FC<RoleGuardProps> = ({
+  children,
+  allowedRoles = ['F2VLso'],
   redirectTo,
-  showError = true 
-}) => {
-  const { user, isAuthenticated, loading, authLoading } = useAuth();
+  showError = true
+}) => {  const { user, isAuthenticated, loading, authLoading } = useAuth();
   const navigate = useNavigate();
 
   if (loading || authLoading) {
@@ -49,6 +48,16 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
       return <Navigate to={redirectTo} replace />;
     }
 
+    // Map common role IDs to human-readable names for the error message
+    const roleNames: Record<string, string> = {
+      'F2VLso': 'Administrador',
+      'VENDEDOR': 'Vendedor',
+      'GESTOR': 'Gestor',
+      // Add more common mappings if needed
+    };
+
+    const displayRoles = allowedRoles.map(role => roleNames[role] || role).join(', ');
+
     if (showError) {
       return (
         <div className="flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in-95 duration-300">
@@ -59,8 +68,8 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
             Acceso Restringido
           </h2>
           <p className="text-text-secondary max-w-md mb-8">
-            Lo sentimos, no tienes los permisos suficientes para acceder a esta sección. 
-            Esta funcionalidad está reservada para usuarios con rol: <span className="font-bold">{allowedRoles.join(', ')}</span>.
+            Lo sentimos, no tienes los permisos suficientes para acceder a esta sección.
+            Esta funcionalidad está reservada para usuarios con rol: <span className="font-bold">{displayRoles}</span>.
           </p>
           <div className="flex gap-4">
             <Button variant="outline" onClick={() => navigate(-1)}>
@@ -76,7 +85,6 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
 
     return null;
   }
-
   return <>{children}</>;
 };
 

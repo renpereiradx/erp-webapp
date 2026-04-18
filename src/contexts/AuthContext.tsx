@@ -43,7 +43,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
           const response = await userService.getMe();
           if (response.success && response.data) {
-            setUser(response.data);
+            const userData = response.data;
+            
+            // 🔧 FIX: Persistir roles encontrados en /me para el cliente API
+            // Si el backend los devuelve aquí, los guardamos para los headers
+            if (userData.role_id) localStorage.setItem('roleId', userData.role_id);
+            if (userData.role_name) localStorage.setItem('roleName', userData.role_name);
+            if (userData.active_branch) localStorage.setItem('activeBranch', userData.active_branch.toString());
+
+            setUser({
+              ...userData,
+              // Mantener compatibilidad si vienen en el objeto o en localStorage
+              role_id: userData.role_id || localStorage.getItem('roleId') || undefined,
+              role_name: userData.role_name || localStorage.getItem('roleName') || undefined
+            });
           }
         } catch (e) {
           // Silent error: If token is invalid/expired, it's expected during init or refresh
@@ -66,8 +79,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (result.success && result.token) {
         // Guardar token en localStorage
         apiService.setToken(result.token);
-
-        // Verificar que el token se guardó correctamente
+        
+        // 🔧 NUEVO: Persistir información de rol para el cliente API
+        if (result.role_id) localStorage.setItem('roleId', result.role_id);
+        if (result.role_name) localStorage.setItem('roleName', result.role_name);
         const savedToken = apiService.getToken();
         if (!savedToken || savedToken !== result.token) {
           throw new Error('Error al guardar el token de autenticación');
@@ -81,7 +96,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
           const meResponse = await userService.getMe();
           if (meResponse.success && meResponse.data) {
-            setUser(meResponse.data);
+            // 🔧 FIX: Fusionar datos de /me con el role_id crítico del login
+            // Esto asegura que role_id no se pierda si /me no lo devuelve en la raíz
+            setUser({
+              ...meResponse.data,
+              role_id: result.role_id || meResponse.data.role_id,
+              role_name: result.role_name || meResponse.data.role_name
+            });
           } else {
             // Fallback al usuario de la respuesta de login si /me falla
             setUser(result.user);

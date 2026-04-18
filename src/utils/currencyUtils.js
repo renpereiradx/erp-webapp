@@ -34,6 +34,40 @@ export const formatPYG = (amount, { showSymbol = true, compact = false } = {}) =
 };
 
 /**
+ * Formats an amount with the specified currency code.
+ * @param {number|string} amount - The value to format
+ * @param {string} currencyCode - ISO 4217 currency code (default: 'PYG')
+ * @returns {string} Formatted currency string
+ */
+export const formatCurrency = (amount, currencyCode = 'PYG') => {
+  const numericAmount = Number(amount) || 0;
+  const isPYG = currencyCode === 'PYG';
+  
+  return new Intl.NumberFormat('es-PY', {
+    style: 'currency',
+    currency: currencyCode,
+    minimumFractionDigits: isPYG ? 0 : 2,
+    maximumFractionDigits: isPYG ? 0 : 2,
+  }).format(numericAmount);
+};
+
+/**
+ * Formats a generic number with consistent decimals.
+ * @param {number|string} value - The value to format
+ * @param {number} decimals - Maximum number of decimal places (default: 2)
+ * @returns {string} Formatted number string
+ */
+export const formatNumber = (value, decimals = 2) => {
+  const numericValue = Number(value);
+  if (isNaN(numericValue)) return '0';
+  
+  return new Intl.NumberFormat('es-PY', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: decimals,
+  }).format(numericValue);
+};
+
+/**
  * Normalizes an input value to a valid numeric amount for PYG.
  * Guaraníes do not use decimals in practice.
  * @param {string|number} value 
@@ -74,6 +108,8 @@ export const normalizeCurrencyCode = (code) => {
 
 export default {
   formatPYG,
+  formatCurrency,
+  formatNumber,
   normalizePYG,
   normalizeCurrencyCode
 };

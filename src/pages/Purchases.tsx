@@ -28,7 +28,7 @@ import {
   purchasePaymentsMvpService,
 } from '@/services/purchasePaymentsMvpService'
 import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog'
-import { normalizeCurrencyCode } from '@/utils/currencyUtils'
+import { normalizeCurrencyCode, formatCurrency, formatNumber } from '@/utils/currencyUtils'
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
 import { calculatePurchaseSalePriceGs, calculateProfitMargin } from '@/domain/purchase/pricing/purchasePricingPolicy'
@@ -629,15 +629,6 @@ const Purchases = () => {
     }
   }
 
-  const formatCurrency = (amt: any, curr?: any) => {
-    const code = normalizeCurrencyCode(curr || paymentCurrency)
-    return new Intl.NumberFormat('es-PY', {
-      style: 'currency',
-      currency: code,
-      minimumFractionDigits: code === 'PYG' ? 0 : 2,
-      maximumFractionDigits: code === 'PYG' ? 0 : 2,
-    }).format(amt || 0)
-  }
   const formatDate = d => (d ? new Date(d).toLocaleDateString('es-PY') : '-')
 
   // Helper functions for status display
@@ -797,9 +788,11 @@ const Purchases = () => {
             <ShoppingCart size={28} />
           </div>
           <div>
-            <h1 className='text-3xl font-black text-text-main tracking-tighter uppercase leading-none'>Gestión de Compras</h1>
+            <h1 className='text-3xl font-black text-text-main tracking-tighter uppercase leading-none'>
+              {t('purchases.management.title', 'Gestión de Compras')}
+            </h1>
             <p className='text-text-secondary text-sm font-medium mt-1'>
-              Abastecimiento y órdenes de compra a proveedores
+              {t('purchases.management.subtitle', 'Abastecimiento y órdenes de compra a proveedores')}
             </p>
           </div>
         </div>
@@ -864,11 +857,11 @@ const Purchases = () => {
                       <tr>
                         <th className='px-4 py-3'>ID / SKU</th>
                         <th className='px-4 py-3'>Producto</th>
-                        <th className='px-4 py-3 text-center'>Cant.</th>
-                        <th className='px-4 py-3 text-right'>Costo Unit.</th>
-                        <th className='px-4 py-3 text-right'>Margen</th>
-                        <th className='px-4 py-3 text-right'>Subtotal</th>
-                        <th className='px-4 py-3 text-right'>Venta Esp.</th>
+                        <th className='px-4 py-3 text-center'>{t('purchases.form.quantity', 'Cant.')}</th>
+                        <th className='px-4 py-3 text-right'>{t('purchases.form.unit_price', 'Costo Unit.')}</th>
+                        <th className='px-4 py-3 text-right'>{t('purchases.form.profit_margin', 'Margen')}</th>
+                        <th className='px-4 py-3 text-right'>{t('purchases.form.subtotal', 'Subtotal')}</th>
+                        <th className='px-4 py-3 text-right'>{t('purchases.modal.sale_price', 'Venta Esp.')}</th>
                         <th className='px-4 py-3 w-12'></th>
                       </tr>
                     </thead>
@@ -879,7 +872,7 @@ const Purchases = () => {
                             <div className='flex flex-col items-center gap-2 text-[var(--fluent-text-tertiary,#8A8886)]'>
                               <Package size={32} strokeWidth={1.5} />
                               <p className='text-sm'>
-                                No hay artículos seleccionados
+                                {t('purchases.form.no_products', 'No hay artículos seleccionados')}
                               </p>
                             </div>
                           </td>
@@ -908,7 +901,7 @@ const Purchases = () => {
                               </div>
                             </td>
                             <td className='px-4 py-3 text-center font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
-                              {item.quantity}
+                              {formatNumber(item.quantity)}
                             </td>
                             <td className='px-4 py-3 text-right text-sm text-[var(--fluent-text-secondary,#605E5C)]'>
                               {formatCurrency(item.unit_price)}

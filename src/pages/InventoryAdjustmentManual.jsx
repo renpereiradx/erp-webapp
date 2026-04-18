@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Search, Package, Send, RefreshCw, X } from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
+import { formatNumber } from '@/utils/currencyUtils'
 import useInventoryStore from '@/store/useInventoryStore'
 import useAuthStore from '@/store/useAuthStore'
 import { productService } from '@/services/productService'
@@ -12,6 +14,7 @@ import {
 import { getUnitLabel } from '@/constants/units'
 
 const InventoryAdjustmentManualPage = () => {
+  const { t } = useI18n()
   const navigate = useNavigate()
 
   // Store hooks
@@ -264,10 +267,10 @@ const InventoryAdjustmentManualPage = () => {
           </button>
           <div className='flex flex-col gap-1 border-l-4 border-primary pl-4'>
             <h1 className='text-2xl font-black text-text-main tracking-tighter uppercase'>
-              Ajuste Manual de Stock
+              {t('inventory.adjustment.manual_title', 'Ajuste Manual de Stock')}
             </h1>
             <p className='text-text-secondary text-xs font-medium uppercase tracking-widest'>
-              Gestión Unitaria de Inventario
+              {t('inventory.subtitle', 'Gestión de Inventario')}
             </p>
           </div>
         </div>
@@ -301,7 +304,8 @@ const InventoryAdjustmentManualPage = () => {
                   <p className='text-xs font-mono text-primary font-bold truncate'>{selectedProduct.product_id}</p>
                   <h3 className='text-lg font-bold text-text-main leading-tight truncate'>{selectedProduct.product_name}</h3>
                   <p className='text-sm text-text-secondary mt-1'>
-                    Stock Actual: <span className='font-bold text-text-main'>{selectedProduct.stock_quantity || 0}</span> {getUnitLabel(selectedProduct.base_unit || 'unit')}
+                    Stock Actual: <span className='font-bold text-text-main'>{formatNumber(selectedProduct.stock_quantity || 0)}</span>
+ {getUnitLabel(selectedProduct.base_unit || 'unit')}
                   </p>
                 </div>
               </div>
@@ -446,9 +450,10 @@ const InventoryAdjustmentManualPage = () => {
                         <tr key={index} className='hover:bg-gray-50 transition-colors'>
                           <td className='py-3 px-6 font-medium'>{formatDate(item.adjustment_date)}</td>
                           <td className='py-3 px-4 text-text-secondary'>{item.metadata?.operator || item.user_id || 'N/A'}</td>
-                          <td className={`py-3 px-4 font-black ${item.value_change > 0 ? 'text-success' : 'text-error'}`}>
-                            {item.value_change > 0 ? '+' : ''}{item.value_change}
+                          <td className={`py-3 px-4 font-bold text-right ${item.value_change > 0 ? 'text-success' : 'text-error'}`}>
+                            {item.value_change > 0 ? '+' : ''}{formatNumber(item.value_change)}
                           </td>
+
                           <td className='py-3 px-4 italic text-slate-500'>{item.reason}</td>
                           <td className='py-3 px-6 text-right'>
                             <span className='px-2 py-1 rounded-full bg-slate-100 text-slate-600 font-bold uppercase text-[9px]'>
@@ -556,9 +561,10 @@ const InventoryAdjustmentManualPage = () => {
                           <p className={`text-[10px] font-mono font-bold uppercase ${highlightedIndex === index ? 'text-white/80' : 'text-primary'}`}>
                             {product.product_id}
                           </p>
-                          <p className={`text-[10px] font-bold uppercase ${highlightedIndex === index ? 'text-white/80' : 'text-slate-400'}`}>
-                            Stock: {product.stock_quantity || 0}
+                          <p className={`text-[10px] font-black uppercase ${highlightedIndex === index ? 'text-white/90' : 'text-slate-400'}`}>
+                            Stock: {formatNumber(product.stock_quantity || 0)}
                           </p>
+
                         </div>
                         <h4 className='font-bold leading-tight truncate'>{product.product_name}</h4>
                       </div>

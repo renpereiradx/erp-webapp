@@ -27,7 +27,7 @@ export const ApiStatusIndicator = ({
 
   const checkEndpoint = async (endpoint) => {
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5050';
+      const baseUrl = import.meta.env.VITE_API_URL || '/api';
       const response = await fetch(`${baseUrl}${endpoint.path}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }

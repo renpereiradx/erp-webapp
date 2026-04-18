@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
 import useDashboardStore from '../store/useDashboardStore';
-import { formatPYG } from '@/utils/currencyUtils';
+import { formatPYG, formatNumber } from '@/utils/currencyUtils';
 import { formatTimeInParaguayTimezone } from '@/utils/timeUtils';
 
 /**
@@ -128,17 +128,17 @@ const DetailedKPIs = () => {
           <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[18px]">arrow_drop_down</span>
         </div>
         
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
-          Región: Global
-          <span className="material-symbols-outlined text-[18px] text-slate-400">arrow_drop_down</span>
+        <button className="flex items-center gap-2 px-3 py-1.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-400 cursor-not-allowed">
+          {t('dashboard.filters.region', 'Región: Global')}
+          <span className="material-symbols-outlined text-[18px]">lock</span>
         </button>
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
-          Depto: Todos
-          <span className="material-symbols-outlined text-[18px] text-slate-400">arrow_drop_down</span>
+        <button className="flex items-center gap-2 px-3 py-1.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-400 cursor-not-allowed">
+          {t('dashboard.filters.department', 'Depto: Todos')}
+          <span className="material-symbols-outlined text-[18px]">lock</span>
         </button>
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
-          Moneda: PYG
-          <span className="material-symbols-outlined text-[18px] text-slate-400">arrow_drop_down</span>
+        <button className="flex items-center gap-2 px-3 py-1.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-400 cursor-not-allowed">
+          {t('dashboard.filters.currency', 'Moneda: PYG')}
+          <span className="material-symbols-outlined text-[18px]">lock</span>
         </button>
         <button className="ml-auto text-sm text-primary font-medium hover:underline" onClick={() => setPeriod('month')}>{t('common.clearFilters', 'Limpiar filtros')}</button>
       </div>
@@ -158,13 +158,8 @@ const DetailedKPIs = () => {
           </div>
           <div className="mt-auto">
             <div className="flex items-end justify-between gap-1 h-12">
-              <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-sm h-full flex items-end overflow-hidden z-10">
-                <div className="w-1/6 bg-primary/30 h-[40%]"></div>
-                <div className="w-1/6 bg-primary/40 h-[60%]"></div>
-                <div className="w-1/6 bg-primary/50 h-[50%]"></div>
-                <div className="w-1/6 bg-primary/60 h-[70%]"></div>
-                <div className="w-1/6 bg-primary/80 h-[55%]"></div>
-                <div className="w-1/6 bg-primary h-[85%]"></div>
+              <div className="w-full h-full flex items-center justify-center border border-dashed border-slate-200 dark:border-slate-700 rounded text-[10px] text-slate-400">
+                {t('dashboard.trends.notAvailable', 'Tendencia no disponible')}
               </div>
             </div>
             <p className="text-xs text-text-secondary mt-2 relative z-10">{vsLast30Days}</p>
@@ -179,20 +174,13 @@ const DetailedKPIs = () => {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.kpi.netProfit', 'Margen Neto')}</p>
-              <h3 className="text-2xl font-bold text-text-main mt-1">{netMargin}%</h3>
+              <h3 className="text-2xl font-bold text-text-main mt-1">{formatNumber(netMargin)}%</h3>
             </div>
           </div>
           <div className="mt-auto relative z-10">
-            <svg className="w-full h-10 text-purple-500 stroke-current" fill="none" viewBox="0 0 100 40">
-              <path d="M0 30 Q 20 10 40 25 T 100 5" strokeLinecap="round" strokeWidth="2"></path>
-              <defs>
-                <linearGradient id="purpleGradient" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#a855f7" stopOpacity="0.2"></stop>
-                  <stop offset="100%" stopColor="#a855f7" stopOpacity="0"></stop>
-                </linearGradient>
-              </defs>
-              <path d="M0 30 Q 20 10 40 25 T 100 5 V 40 H 0 Z" fill="url(#purpleGradient)" stroke="none"></path>
-            </svg>
+            <div className="h-10 w-full flex items-center justify-center border border-dashed border-purple-100 dark:border-purple-900/30 rounded text-[10px] text-purple-400">
+              {t('dashboard.trends.notAvailable', 'Tendencia no disponible')}
+            </div>
             <p className="text-xs text-text-secondary mt-2">{vsLast30Days}</p>
           </div>
         </div>
@@ -209,17 +197,8 @@ const DetailedKPIs = () => {
             </div>
           </div>
           <div className="mt-auto relative z-10">
-            <div className="flex items-end justify-between gap-1 h-12">
-              <div className="w-full h-full flex items-end justify-between gap-1">
-                <div className="w-1.5 bg-blue-200 dark:bg-slate-700 rounded-full h-[40%]"></div>
-                <div className="w-1.5 bg-blue-200 dark:bg-slate-700 rounded-full h-[60%]"></div>
-                <div className="w-1.5 bg-blue-200 dark:bg-slate-700 rounded-full h-[50%]"></div>
-                <div className="w-1.5 bg-blue-200 dark:bg-slate-700 rounded-full h-[80%]"></div>
-                <div className="w-1.5 bg-blue-200 dark:bg-slate-700 rounded-full h-[55%]"></div>
-                <div className="w-1.5 bg-blue-200 dark:bg-slate-700 rounded-full h-[70%]"></div>
-                <div className="w-1.5 bg-blue-200 dark:bg-slate-700 rounded-full h-[45%]"></div>
-                <div className="w-1.5 bg-blue-400 rounded-full h-[65%]"></div>
-              </div>
+            <div className="h-12 w-full flex items-center justify-center border border-dashed border-blue-100 dark:border-blue-900/30 rounded text-[10px] text-blue-400">
+              {t('dashboard.trends.notAvailable', 'Tendencia no disponible')}
             </div>
             <p className="text-xs text-text-secondary mt-2">{vsLast30Days}</p>
           </div>
@@ -235,18 +214,26 @@ const DetailedKPIs = () => {
               <p className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.kpi.inventoryValue', 'Valor Inventario')}</p>
               <h3 className="text-2xl font-bold text-text-main mt-1">{formatCurrency(inventoryValue)}</h3>
             </div>
-            <span className="flex items-center text-xs font-bold text-success bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full border border-green-100 dark:border-green-800/50">
-              <span className="material-symbols-outlined text-[14px] mr-0.5">check_circle</span>
-              Saludable
-            </span>
+            {daysOfInventory < 180 ? (
+              <span className="flex items-center text-xs font-bold text-success bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full border border-green-100 dark:border-green-800/50">
+                <span className="material-symbols-outlined text-[14px] mr-0.5">check_circle</span>
+                {t('dashboard.inventory.status.healthy', 'Saludable')}
+              </span>
+            ) : (
+              <span className="flex items-center text-xs font-bold text-warning bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-full border border-amber-100 dark:border-amber-800/50">
+                <span className="material-symbols-outlined text-[14px] mr-0.5">warning</span>
+                {t('dashboard.inventory.status.overstock', 'Exceso Stock')}
+              </span>
+            )}
           </div>
           <div className="mt-auto w-full relative z-10">
             <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 mt-4 overflow-hidden">
-              <div className="bg-orange-400 h-2 rounded-full" style={{ width: '75%' }}></div>
+              {/* TODO: Integrate with inventory health API field */}
+              <div className="bg-orange-400 h-2 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, turnoverRate * 10)}%` }}></div>
             </div>
             <div className="flex justify-between mt-2 text-xs text-text-secondary">
-              <span>Nivel de Stock</span>
-              <span className="font-medium text-text-main">75%</span>
+              <span>{t('dashboard.dashboard.inventoryHealth', 'Índice de Salud')}</span>
+              <span className="font-medium text-text-main">{formatNumber(Math.min(100, turnoverRate * 10))}%</span>
             </div>
           </div>
         </div>
@@ -267,12 +254,12 @@ const DetailedKPIs = () => {
             </div>
             <div className="flex justify-between items-center group">
               <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.salesPerDay', 'Ventas por Día')}</span>
-              <span className="text-lg font-bold text-text-main">{salesPerDay}</span>
+              <span className="text-lg font-bold text-text-main">{formatNumber(salesPerDay)}</span>
             </div>
             <div className="space-y-3">
                 <div className="flex justify-between items-center group">
                     <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.convRate', 'Tasa de Conversión')}</span>
-                    <span className="text-lg font-bold text-primary">{convRate}%</span>
+                    <span className="text-lg font-bold text-primary">{formatNumber(convRate)}%</span>
                 </div>
                 <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${convRate}%` }}></div>
@@ -294,7 +281,8 @@ const DetailedKPIs = () => {
             <div className="space-y-3">
                 <div className="flex justify-between items-center group">
                   <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.grossMargin', 'Margen Bruto')}</span>
-                  <span className="text-lg font-bold text-text-main">{grossMargin}%</span>
+                  <span className="text-lg font-bold text-text-main">{formatNumber(grossMargin)}%</span>
+
                 </div>
                 <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div className="h-full bg-success rounded-full transition-all duration-1000" style={{ width: `${grossMargin}%` }}></div>
@@ -302,11 +290,11 @@ const DetailedKPIs = () => {
             </div>
             <div className="flex justify-between items-center group">
               <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.netMargin', 'Margen Neto')}</span>
-              <span className="text-lg font-bold text-success">{netMargin}%</span>
+              <span className="text-lg font-bold text-success">{formatNumber(netMargin)}%</span>
             </div>
             <div className="flex justify-between items-center group border-t border-border-subtle pt-4">
               <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.operatingRatio', 'Ratio Gasto Operativo')}</span>
-              <span className="text-lg font-bold text-warning">{opExpenseRatio}%</span>
+              <span className="text-lg font-bold text-warning">{formatNumber(opExpenseRatio)}%</span>
             </div>
           </div>
         </div>
@@ -319,11 +307,11 @@ const DetailedKPIs = () => {
           <div className="p-6 space-y-6 flex-1">
             <div className="flex justify-between items-center group">
               <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.turnoverRate', 'Tasa de Rotación')}</span>
-              <span className="text-lg font-bold text-text-main">{turnoverRate}x</span>
+              <span className="text-lg font-bold text-text-main">{formatNumber(turnoverRate)}x</span>
             </div>
             <div className="flex justify-between items-center group">
               <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.daysOfInventory', 'Días de Inventario')}</span>
-              <span className="text-lg font-bold text-text-main">{daysOfInventory} {t('common.days', 'días')}</span>
+              <span className="text-lg font-bold text-text-main">{formatNumber(daysOfInventory)} {t('common.days', 'días')}</span>
             </div>
             <div className="flex justify-between items-center group border-t border-border-subtle pt-4">
               <span className="text-sm font-medium text-text-secondary">{t('dashboard.dashboard.totalSKUs', 'Total SKUs Activos')}</span>

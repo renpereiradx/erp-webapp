@@ -13,6 +13,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string;
   role_id: string;
+  role_name?: string;
 }
 
 export interface User {
@@ -22,6 +23,8 @@ export interface User {
   email: string;
   username?: string;
   status: string;
+  role_id?: string;
+  role_name?: string;
   avatar_url?: string;
   roles?: Array<{ id: string; name: string }>;
   phone?: string;
@@ -1416,7 +1419,7 @@ export const HTTP_STATUS = {
 } as const;
 
 export const DEFAULT_API_CONFIG: ApiConfig = {
-  baseUrl: 'http://localhost:5050',
+  baseUrl: '/api',
   timeout: 10000,
   defaultHeaders: {
     'Content-Type': 'application/json'

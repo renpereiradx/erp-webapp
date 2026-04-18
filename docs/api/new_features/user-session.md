@@ -49,7 +49,8 @@ Tambien soporta email:
 ```json
 {
   "token": "<jwt>",
-  "role_id": "ADMIN"
+  "role_id": "F2VLso",
+  "role_name": "ADMIN"
 }
 ```
 

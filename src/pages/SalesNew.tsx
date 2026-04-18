@@ -51,6 +51,8 @@ import { CurrencyService } from '@/services/currencyService';
 import { productService } from '@/services/productService';
 import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog';
 import { salePaymentService } from '@/services/salePaymentService';
+import { useI18n } from '@/lib/i18n';
+import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
 import ToastContainer from '@/components/ui/ToastContainer';
 
 interface CartItem {
@@ -119,16 +121,6 @@ export const PRICE_CHANGE_REASONS = [
   { id: 'peak_hours', label: '🔺 Tarifa por hora pico', type: 'increase' },
   { id: 'holiday_surcharge', label: '🔺 Recargo por feriado', type: 'increase' },
 ];
-
-const formatCurrency = (value: number, currencyCode = 'PYG'): string => {
-  const isPYG = currencyCode === 'PYG';
-  return new Intl.NumberFormat('es-PY', {
-    style: 'currency',
-    currency: currencyCode,
-    minimumFractionDigits: isPYG ? 0 : 2,
-    maximumFractionDigits: isPYG ? 0 : 2,
-  }).format(value || 0);
-};
 
 const formatDateTime = (value: string | Date | null | undefined): string => {
   if (!value) return '—';
@@ -236,6 +228,7 @@ const getItemLineTotal = (item: CartItem): number => {
 }
 
 const SalesNew: React.FC = () => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const toast = useToast();
   const productSearchInputRef = useRef<HTMLInputElement>(null);
@@ -1141,14 +1134,18 @@ const SalesNew: React.FC = () => {
             <ShoppingCart size={28} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">Punto de Venta</h1>
-            <p className="text-text-secondary text-sm font-medium mt-1">Facturación y registro de operaciones</p>
+            <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">
+              {t('sales.title', 'Punto de Venta')}
+            </h1>
+            <p className="text-text-secondary text-sm font-medium mt-1">
+              {t('sales.subtitle', 'Facturación y registro de operaciones')}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit">
           {[
-            { id: 'new-sale' as const, label: 'Nueva Venta', icon: <Plus size={16} /> },
-            { id: 'history' as const, label: 'Historial', icon: <History size={16} /> },
+            { id: 'new-sale' as const, label: t('sales.tab.new', 'Nueva Venta'), icon: <Plus size={16} /> },
+            { id: 'history' as const, label: t('sales.tab.history', 'Historial'), icon: <History size={16} /> },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn(
               'flex items-center gap-2 px-6 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all',
@@ -1249,7 +1246,7 @@ const SalesNew: React.FC = () => {
                                           'px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter shrink-0',
                                           availableStock > 0 ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
                                         )}>
-                                          DISP: {availableStock}
+                                          DISP: {formatNumber(availableStock)}
                                           {quantityInCart > 0 && <span className="ml-1 text-slate-400">({quantityInCart} en carrito)</span>}
                                         </div>
                                       </div>
@@ -1353,7 +1350,8 @@ const SalesNew: React.FC = () => {
                                 {item.isFromPendingSale && <Badge className="mr-2 bg-amber-100 text-amber-700 hover:bg-amber-100 border-none text-[9px] uppercase">Persistido</Badge>}
                                 {item.name}
                               </td>
-                              <td className="py-2 px-3 text-right">{item.quantity}</td>
+                              <td className="py-2 px-3 text-right">{formatNumber(item.quantity)}</td>
+
                               <td className="py-2 px-3 text-right">{formatCurrency(getItemBaseUnitPrice(item))}</td>
                               <td className="py-2 px-3 text-right text-red-500">-{formatCurrency(getItemLineDiscount(item))}</td>
                               <td className="py-2 px-3 text-right font-bold">{formatCurrency(getItemLineTotal(item))}</td>

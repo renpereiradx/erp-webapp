@@ -17,7 +17,7 @@ const PaymentApiDiagnostic = () => {
   ];
 
   const testEndpoint = async (endpoint) => {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5050';
+    const baseUrl = import.meta.env.VITE_API_URL || '/api';
     const fullUrl = `${baseUrl}${endpoint.url}`;
 
     try {
@@ -111,7 +111,7 @@ const PaymentApiDiagnostic = () => {
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h3 className="font-medium text-blue-900 mb-2">Configuración de Entorno</h3>
           <div className="text-sm text-blue-800 space-y-1">
-            <div><strong>Base URL:</strong> {import.meta.env.VITE_API_URL || 'http://localhost:5050'}</div>
+            <div><strong>Base URL:</strong> {import.meta.env.VITE_API_URL || '/api'}</div>
             <div><strong>Auth Token:</strong> {localStorage.getItem('authToken') ? '✅ Presente' : '❌ No encontrado'}</div>
             <div><strong>Frontend URL:</strong> {window.location.origin}</div>
           </div>

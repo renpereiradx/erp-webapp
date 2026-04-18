@@ -311,39 +311,39 @@ function AppContent() {
                       <Route path='/configuracion/perfil' element={<MyProfileAndSecurity />} />
                       
                       <Route path='/configuracion/usuarios' element={
-                        <RoleGuard allowedRoles={['ADMIN']}>
+                        <RoleGuard allowedRoles={['F2VLso']}>
                           <UserManagementList />
                         </RoleGuard>
                       } />
                       <Route path='/configuracion/usuarios/:id' element={
-                        <RoleGuard allowedRoles={['ADMIN']}>
+                        <RoleGuard allowedRoles={['F2VLso']}>
                           <UserDetailedProfile />
                         </RoleGuard>
                       } />
                       <Route path='/configuracion/sesiones' element={
-                        <RoleGuard allowedRoles={['ADMIN']}>
+                        <RoleGuard allowedRoles={['F2VLso']}>
                           <AdminSessionsDashboard />
                         </RoleGuard>
                       } />
                       
                       {/* Auditoría */}
                       <Route path='/auditoria' element={
-                        <RoleGuard allowedRoles={['ADMIN']}>
+                        <RoleGuard allowedRoles={['F2VLso']}>
                           <AuditDashboard />
                         </RoleGuard>
                       } />
                       <Route path='/auditoria/logs' element={
-                        <RoleGuard allowedRoles={['ADMIN']}>
+                        <RoleGuard allowedRoles={['F2VLso']}>
                           <AuditLogs />
                         </RoleGuard>
                       } />
                       <Route path='/auditoria/logs/:id' element={
-                        <RoleGuard allowedRoles={['ADMIN']}>
+                        <RoleGuard allowedRoles={['F2VLso']}>
                           <AuditLogDetail />
                         </RoleGuard>
                       } />
                       <Route path='/auditoria/usuarios/:id' element={
-                        <RoleGuard allowedRoles={['ADMIN']}>
+                        <RoleGuard allowedRoles={['F2VLso']}>
                           <AuditUserActivity />
                         </RoleGuard>
                       } />

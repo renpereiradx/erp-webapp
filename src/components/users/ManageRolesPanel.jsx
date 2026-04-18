@@ -136,7 +136,7 @@ export function ManageRolesPanel({ user, open, onOpenChange }) {
                           <span className="role-sidebar__role-name">{role.name}</span>
                         </div>
                         <p className="role-sidebar__role-desc">
-                          {role.id === 'admin' 
+                          {role.id === 'F2VLso' 
                             ? t('users.roles.adminFull', 'Full system access, billing management, and user provisioning.') 
                             : t('users.roles.standardFull', 'Access to operative features.')}
                         </p>

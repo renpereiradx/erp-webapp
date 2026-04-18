@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import useDashboardStore from '@/store/useDashboardStore'
 import { formatPYG } from '@/utils/currencyUtils';
+import categoryService from '@/services/categoryService';
 
 const hours = [
   '8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM', '6PM', '7PM', '8PM', '9PM'
@@ -22,15 +23,35 @@ const SalesHeatmap = () => {
 
     const [selectedLocation, setSelectedLocation] = useState('All Locations')
     const [selectedCategory, setSelectedCategory] = useState('All Categories')
+    const [categories, setCategories] = useState([]);
+    const [lastUpdate, setLastUpdate] = useState(new Date());
+    const [analysisWeeks, setAnalysisWeeks] = useState(4);
+
+    const loadData = useCallback(async () => {
+        fetchSalesHeatmap(analysisWeeks);
+        if (!summary) fetchDashboardData();
+        
+        try {
+            const cats = await categoryService.getAll();
+            setCategories(cats || []);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        }
+        setLastUpdate(new Date());
+    }, [fetchSalesHeatmap, fetchDashboardData, summary, analysisWeeks]);
 
     useEffect(() => {
-        fetchSalesHeatmap();
-        if (!summary) fetchDashboardData();
-    }, [fetchSalesHeatmap, fetchDashboardData, summary]);
+        loadData();
+    }, [loadData]);
+
+    const handleRefresh = () => {
+        loadData();
+    };
 
     // Data Processing
     const heatmapData = salesHeatmap?.heatmap || [];
-    const peakTime = salesHeatmap?.peak_times?.[0] || { day: '-', hour: '-' };
+    const peakTimes = salesHeatmap?.peak_times || [];
+    const peakTime = peakTimes[0] || { day: '-', hour: '-' };
 
     // Calculate Max Sales for Intensity
     const maxSales = Math.max(...heatmapData.map(d => d.sales_count), 1);
@@ -77,6 +98,35 @@ const SalesHeatmap = () => {
         return "bg-primary text-white shadow-lg transform hover:scale-105 z-10 font-black"; // Peak
     };
 
+    const getActivityStyle = (type) => {
+        switch(type) {
+            case 'sale': 
+                return { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', icon: 'payments' };
+            case 'product': 
+                return { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-600 dark:text-orange-400', icon: 'inventory_2' };
+            case 'client': 
+                return { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400', icon: 'person' };
+            case 'alert':
+            case 'error':
+                return { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', icon: 'error' };
+            default:
+                return { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-600 dark:text-gray-400', icon: 'info' };
+        }
+    };
+
+    const formatActivityDate = (timestamp) => {
+        if (!timestamp) return 'Reciente';
+        const date = new Date(timestamp);
+        const now = new Date();
+        const isToday = date.toDateString() === now.toDateString();
+        
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        if (isToday) return `Hoy ${timeStr}`;
+        
+        return `${date.toLocaleDateString([], { day: '2-digit', month: 'short' })} ${timeStr}`;
+    };
+
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
         <div className="max-w-[1440px] mx-auto flex flex-col gap-6">
@@ -89,10 +139,10 @@ const SalesHeatmap = () => {
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-500">
-                        {loading ? 'Actualizando...' : 'Última actualización: Justo ahora'}
+                        {loading ? 'Actualizando...' : `Última actualización: ${lastUpdate.toLocaleTimeString()}`}
                     </span>
                     <button 
-                        onClick={() => fetchSalesHeatmap()}
+                        onClick={handleRefresh}
                         disabled={loading}
                         className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                     >
@@ -116,10 +166,10 @@ const SalesHeatmap = () => {
                         <p className="text-[#617589] dark:text-gray-400 text-sm font-medium">Ingresos Totales (Día)</p>
                         <span className="material-symbols-outlined text-primary bg-primary/10 p-1 rounded text-lg">payments</span>
                     </div>
-                    <p className="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">{formatCurrency(summary?.sales?.total || 0)}</p>
-                    <div className="flex items-center gap-1 mt-1 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
-                        <span className="material-symbols-outlined text-base">trending_up</span>
-                        <span>0%</span>
+                    <p className="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">{formatCurrency(summary?.sales?.total || summary?.sales_today || 0)}</p>
+                    <div className={`flex items-center gap-1 mt-1 text-sm font-medium ${(summary?.sales?.trend || summary?.revenue_trend || 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                        <span className="material-symbols-outlined text-base">{(summary?.sales?.trend || summary?.revenue_trend || 0) >= 0 ? 'trending_up' : 'trending_down'}</span>
+                        <span>{Math.abs(summary?.sales?.trend || summary?.revenue_trend || 0)}%</span>
                         <span className="text-gray-400 ml-1 font-normal">vs periodo anterior</span>
                     </div>
                 </div>
@@ -146,8 +196,8 @@ const SalesHeatmap = () => {
                     </div>
                     <p className="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">{formatCurrency(summary?.sales?.average_ticket || 0)}</p>
                     <div className="flex items-center gap-1 mt-1 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
-                        <span className="material-symbols-outlined text-base">trending_up</span>
-                        <span>0%</span>
+                        <span className="material-symbols-outlined text-base">auto_graph</span>
+                        <span>Basado en {summary?.sales?.count || 0} transacciones</span>
                     </div>
                 </div>
 
@@ -174,11 +224,17 @@ const SalesHeatmap = () => {
                      {/* Heatmap Controls */}
                     <div className="bg-white dark:bg-[#1a2632] p-4 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center bg-[#f0f2f4] dark:bg-gray-800 rounded-lg p-1">
-                            <button className="p-1 hover:bg-white dark:hover:bg-gray-700 rounded shadow-sm transition-all text-[#617589] hover:text-primary">
+                            <button 
+                                onClick={() => setAnalysisWeeks(prev => Math.max(1, prev - 1))}
+                                className="p-1 hover:bg-white dark:hover:bg-gray-700 rounded shadow-sm transition-all text-[#617589] hover:text-primary"
+                            >
                                 <span className="material-symbols-outlined">chevron_left</span>
                             </button>
-                            <span className="px-4 text-sm font-bold text-[#111418] dark:text-white">Análisis de últimas 4 semanas</span>
-                            <button className="p-1 hover:bg-white dark:hover:bg-gray-700 rounded shadow-sm transition-all text-[#617589] hover:text-primary">
+                            <span className="px-4 text-sm font-bold text-[#111418] dark:text-white">Análisis de últimas {analysisWeeks} semanas</span>
+                            <button 
+                                onClick={() => setAnalysisWeeks(prev => Math.min(52, prev + 1))}
+                                className="p-1 hover:bg-white dark:hover:bg-gray-700 rounded shadow-sm transition-all text-[#617589] hover:text-primary"
+                            >
                                 <span className="material-symbols-outlined">chevron_right</span>
                             </button>
                         </div>
@@ -202,6 +258,9 @@ const SalesHeatmap = () => {
                                     onChange={(e) => setSelectedCategory(e.target.value)}
                                 >
                                     <option value="All Categories">Todas las Categorías</option>
+                                    {categories.map(cat => (
+                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                    ))}
                                 </select>
                                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#617589]">
                                     <span className="material-symbols-outlined text-lg">expand_more</span>
@@ -274,20 +333,19 @@ const SalesHeatmap = () => {
                             <button className="text-primary text-sm font-medium hover:underline">Ver Todo</button>
                         </div>
                         <div className="p-4 flex flex-col gap-5 overflow-y-auto max-h-[500px]">
-                            {activities && activities.map((item, index) => {
-                                const isAlert = index % 3 === 0;
-                                const bgClass = isAlert ? 'bg-red-100 dark:bg-red-900/30' : 'bg-emerald-100 dark:bg-emerald-900/30';
-                                const textClass = isAlert ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400';
-                                const icon = isAlert ? 'trending_down' : 'flag';
+                            {activities && activities.map((item) => {
+                                const style = getActivityStyle(item.type);
                                 
                                 return (
                                     <div key={item.id} className="flex gap-3">
-                                        <div className={`size-8 rounded-full ${bgClass} ${textClass} flex items-center justify-center flex-shrink-0`}>
-                                            <span className="material-symbols-outlined text-sm">{icon}</span>
+                                        <div className={`size-8 rounded-full ${style.bg} ${style.text} flex items-center justify-center flex-shrink-0`}>
+                                            <span className="material-symbols-outlined text-sm">{style.icon}</span>
                                         </div>
                                         <div className="flex flex-col gap-1">
                                             <p className="text-sm font-medium text-[#111418] dark:text-white leading-snug break-words line-clamp-2">{item.description}</p>
-                                            <p className="text-xs text-[#617589] dark:text-gray-500">{new Date(item.timestamp).toLocaleTimeString()}</p>
+                                            <p className="text-xs text-[#617589] dark:text-gray-500">
+                                                {formatActivityDate(item.timestamp || item.time)}
+                                            </p>
                                         </div>
                                     </div>
                                 );
@@ -303,7 +361,7 @@ const SalesHeatmap = () => {
                      {/* Mini Map Widget */}
                      <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm overflow-hidden flex flex-col">
                         <div className="p-4 border-b border-[#f0f2f4] dark:border-gray-700">
-                            <h3 className="font-bold text-[#111418] dark:text-white">Active Regions</h3>
+                            <h3 className="font-bold text-[#111418] dark:text-white">Sucursales Activas</h3>
                         </div>
                         <div className="h-48 bg-gray-100 dark:bg-gray-800 relative group flex items-center justify-center">
                             <span className="material-symbols-outlined text-5xl text-gray-300 dark:text-gray-600">map</span>

@@ -6,7 +6,7 @@
 const API_CONFIG = {
   // En desarrollo: http://localhost:5050
   // En producción: /api (proxy de Nginx)
-  baseUrl: import.meta.env.VITE_API_URL || '',
+  baseUrl: import.meta.env.VITE_API_URL || '/api',
 
   // Timeout de API en milisegundos
   timeout: parseInt(import.meta.env.VITE_API_TIMEOUT) || 10000,

@@ -169,5 +169,26 @@ export const dashboardService = {
       }
       throw error;
     }
+  },
+
+  /**
+   * Get comparative trends between periods
+   * @param {string} period - 'today', 'week', 'month', 'year'
+   */
+  async getTrends(period = 'month') {
+    const startTime = Date.now();
+    try {
+      _checkDemo();
+
+      const endpoint = `${API_PREFIX}/trends?period=${period}`;
+      const result = await _fetchWithRetry(async () => apiService.get(endpoint));
+      telemetry.record('dashboard.service.trends', { duration: Date.now() - startTime, period });
+      return result;
+    } catch (error) {
+      if (error.message !== 'DEMO_MODE: Using local fallback data') {
+        telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getTrends' });
+      }
+      throw error;
+    }
   }
 };
