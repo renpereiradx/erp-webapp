@@ -3,7 +3,7 @@ import { useBIForecasting, formatCurrency, formatNumber } from '../hooks/useBIFo
 import BIForecastingNav from './BIForecastingNav';
 
 const DashboardPronosticos = () => {
-  const { data, loading, error } = useBIForecasting('dashboard');
+  const { data, loading, error, refetch } = useBIForecasting('dashboard');
 
   if (loading) return <div className="p-8 text-center font-bold text-slate-500">Cargando dashboard...</div>;
   if (error) return <div className="p-8 text-center font-bold text-red-500">Error: {error}</div>;
@@ -21,7 +21,7 @@ const DashboardPronosticos = () => {
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Dashboard de Pronósticos</h1>
           <div className="flex items-center gap-2 mt-1 text-slate-500 dark:text-slate-400">
             <span className="material-symbols-outlined text-sm">calendar_today</span>
-            <p className="text-sm font-medium">Actualizado hoy</p>
+            <p className="text-sm font-medium">{data.updated_text || 'Actualizado hoy'}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -29,7 +29,10 @@ const DashboardPronosticos = () => {
             <span className="material-symbols-outlined text-sm">download</span>
             Exportar
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+          <button 
+            onClick={() => refetch()}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+          >
             <span className="material-symbols-outlined text-sm">sync</span>
             Actualizar
           </button>
@@ -49,7 +52,7 @@ const DashboardPronosticos = () => {
           <div className={`flex items-center gap-1 mt-2 text-sm font-bold ${kpis.ventas_proyectadas.estado === 'UP' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
             <span className="material-symbols-outlined text-sm">{kpis.ventas_proyectadas.estado === 'UP' ? 'trending_up' : 'trending_down'}</span>
             <span>{kpis.ventas_proyectadas.variacion > 0 ? '+' : ''}{kpis.ventas_proyectadas.variacion}%</span>
-            <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">vs. mes anterior</span>
+            <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">{kpis.ventas_proyectadas.label || 'vs. mes anterior'}</span>
           </div>
         </div>
 
@@ -64,7 +67,7 @@ const DashboardPronosticos = () => {
           <div className={`flex items-center gap-1 mt-2 text-sm font-bold ${kpis.ingresos_anuales.estado === 'UP' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
             <span className="material-symbols-outlined text-sm">{kpis.ingresos_anuales.estado === 'UP' ? 'trending_up' : 'trending_down'}</span>
             <span>{kpis.ingresos_anuales.variacion > 0 ? '+' : ''}{kpis.ingresos_anuales.variacion}%</span>
-            <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">objetivo anual</span>
+            <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">{kpis.ingresos_anuales.label || 'objetivo anual'}</span>
           </div>
         </div>
 
@@ -79,7 +82,7 @@ const DashboardPronosticos = () => {
           <div className="flex items-center gap-1 mt-2 text-red-600 dark:text-red-400 text-sm font-bold">
             <span className="material-symbols-outlined text-sm">{kpis.riesgo_inventario.estado === 'UP' ? 'trending_up' : 'trending_down'}</span>
             <span>{kpis.riesgo_inventario.variacion > 0 ? '+' : ''}{kpis.riesgo_inventario.variacion}%</span>
-            <span className="text-red-400 dark:text-red-500 font-normal ml-1">stock crítico</span>
+            <span className="text-red-400 dark:text-red-500 font-normal ml-1">{kpis.riesgo_inventario.label || 'stock crítico'}</span>
           </div>
         </div>
 
@@ -94,7 +97,7 @@ const DashboardPronosticos = () => {
           <div className={`flex items-center gap-1 mt-2 text-sm font-bold ${kpis.demanda_total.estado === 'UP' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
             <span className="material-symbols-outlined text-sm">{kpis.demanda_total.estado === 'UP' ? 'trending_up' : 'trending_down'}</span>
             <span>{kpis.demanda_total.variacion > 0 ? '+' : ''}{kpis.demanda_total.variacion}%</span>
-            <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">proyectado</span>
+            <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">{kpis.demanda_total.label || 'proyectado'}</span>
           </div>
         </div>
       </div>

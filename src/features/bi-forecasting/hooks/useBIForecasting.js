@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import biForecastingService from '@/services/biForecastingService'
 
-export const useBIForecasting = endpoint => {
+export const useBIForecasting = (endpoint, params = {}) => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const refetch = () => setRefreshKey(prev => prev + 1)
 
   useEffect(() => {
     let mounted = true
@@ -16,19 +19,19 @@ export const useBIForecasting = endpoint => {
 
         switch (endpoint) {
           case 'dashboard':
-            response = await biForecastingService.getDashboard()
+            response = await biForecastingService.getDashboard(params)
             break
           case 'inventario':
-            response = await biForecastingService.getSaludInventario()
+            response = await biForecastingService.getSaludInventario(params)
             break
           case 'ventas':
-            response = await biForecastingService.getPronosticoVentas()
+            response = await biForecastingService.getPronosticoVentas(params)
             break
           case 'demanda':
-            response = await biForecastingService.getPronosticoDemanda()
+            response = await biForecastingService.getPronosticoDemanda(params)
             break
           case 'ingresos':
-            response = await biForecastingService.getPronosticoIngresos()
+            response = await biForecastingService.getPronosticoIngresos(params)
             break
           default:
             throw new Error(`Endpoint no soportado: ${endpoint}`)
@@ -60,9 +63,9 @@ export const useBIForecasting = endpoint => {
     return () => {
       mounted = false
     }
-  }, [endpoint])
+  }, [endpoint, refreshKey, JSON.stringify(params)])
 
-  return { data, loading, error }
+  return { data, loading, error, refetch }
 }
 
 export const formatCurrency = value => {
@@ -70,13 +73,16 @@ export const formatCurrency = value => {
   return new Intl.NumberFormat('es-PY', {
     style: 'currency',
     currency: 'PYG',
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 0, // Guaraníes no suelen usar decimales
   })
     .format(value)
     .replace('PYG', '₲')
 }
 
-export const formatNumber = value => {
+export const formatNumber = (value, decimals = 2) => {
   if (value === undefined || value === null) return '0'
-  return new Intl.NumberFormat('es-PY').format(value)
+  return new Intl.NumberFormat('es-PY', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: decimals,
+  }).format(value)
 }
