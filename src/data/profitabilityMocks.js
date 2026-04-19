@@ -45,9 +45,12 @@ export const profitabilityMocks = {
       total_products: 150,
       profitable_products: 130,
       unprofitable_products: 20,
-      average_margin: 28.5,
+      average_margin: 28.54445,
       total_profit: 150000000,
-      total_revenue: 500000000
+      total_revenue: 500000000,
+      total_products_growth: 2.5,
+      margin_growth: -1.2,
+      profit_growth: 8.4
     },
     products: [
       {
@@ -72,7 +75,7 @@ export const profitabilityMocks = {
         revenue: 3000000,
         cost: 2500000,
         gross_profit: 500000,
-        gross_margin_pct: 16.67,
+        gross_margin_pct: 16.66667,
         markup: 20.0,
         performance: "AVERAGE"
       }
@@ -86,9 +89,13 @@ export const profitabilityMocks = {
       total_customers: 500,
       active_customers: 350,
       profitable_customers: 480,
+      inactive_risk_customers: 12,
       average_customer_value: 300000,
       total_profit: 150000000,
-      top_customers_pct: 80.0
+      top_customers_pct: 80.4552,
+      active_customers_growth: 5.2,
+      avg_value_growth: 1.8,
+      top_customers_variation: -0.5
     },
     customers: [
       {
@@ -111,9 +118,13 @@ export const profitabilityMocks = {
     summary: {
       total_categories: 15,
       most_profitable_name: "Electrónica",
+      most_profitable_value: 72000000.45,
+      most_profitable_growth: 12.5,
       least_profitable_name: "Papelería",
+      least_profitable_margin: 8.445,
       average_margin: 25.5,
-      total_profit: 150000000
+      total_profit: 150000000,
+      total_profit_growth: 6.8
     },
     categories: [
       {
@@ -124,38 +135,112 @@ export const profitabilityMocks = {
         revenue: 180000000,
         gross_profit: 72000000,
         gross_margin_pct: 40.0,
+        revenue_contribution_pct: 36.0,
         performance: "EXCELLENT"
+      },
+      {
+        category_id: "2",
+        category_name: "Hogar",
+        product_count: 85,
+        units_sold: 2100,
+        revenue: 120000000,
+        gross_profit: 36000000,
+        gross_margin_pct: 30.0,
+        revenue_contribution_pct: 24.0,
+        performance: "GOOD"
+      },
+      {
+        category_id: "3",
+        category_name: "Deportes",
+        product_count: 42,
+        units_sold: 850,
+        revenue: 95000000,
+        gross_profit: 19000000,
+        gross_margin_pct: 20.0,
+        revenue_contribution_pct: 19.0,
+        performance: "AVERAGE"
+      },
+      {
+        category_id: "4",
+        category_name: "Papelería",
+        product_count: 120,
+        units_sold: 5000,
+        revenue: 105000000,
+        gross_profit: 8872500,
+        gross_margin_pct: 8.45,
+        revenue_contribution_pct: 21.0,
+        performance: "POOR"
       }
+    ]
+  },
+
+  // GET /profitability/sellers
+  sellers: {
+    summary: { 
+      total_sellers: 10, 
+      top_seller_name: "Juan Pérez",
+      average_profit_per_seller: 15450000.75,
+      profit_growth: 5.2,
+      average_operating_margin: 32.445,
+      margin_objective: 30.0
+    },
+    sellers: [
+      {
+        seller_name: "Juan Pérez",
+        total_sales: 150,
+        total_revenue: 75000000,
+        gross_profit: 30000000.45,
+        gross_margin_pct: 40.0,
+        rank: 1
+      },
+      {
+        seller_name: "María García",
+        total_sales: 120,
+        total_revenue: 60000000,
+        gross_profit: 18000000.22,
+        gross_margin_pct: 30.0,
+        rank: 2
+      },
+      {
+        seller_name: "Carlos López",
+        total_sales: 95,
+        total_revenue: 45000000,
+        gross_profit: 9000000.11,
+        gross_margin_pct: 20.0,
+        rank: 3
+      }
+    ],
+    contribution_share: [
+      { label: "Juan Pérez", pct: 32 },
+      { label: "María García", pct: 27 },
+      { label: "Carlos López", pct: 23 },
+      { label: "Otros", pct: 18 }
     ]
   },
 
   // GET /profitability/trends
   trends: {
     granularity: "daily",
+    summary: {
+      trend_direction: "UP",
+      growth_rate: 15.545,
+      previous_growth_rate: 11.3,
+      peak_profit_date: "03 Marzo",
+      peak_profit_value: 8000000.45,
+      total_period_revenue: 450000000,
+      average_gross_margin: 32.44,
+      average_net_margin: 18.256,
+      insights: [
+        { type: "EFFICIENCY", title: "Eficiencia Operativa", message: "Incremento del 12% en rentabilidad por optimización logística." },
+        { type: "WARNING", title: "Alerta de Margen", message: "Se detectó erosión del 2.4% en el segmento tecnológico." }
+      ]
+    },
     data_points: [
       { label: "01 Mar", revenue: 15000000, cost: 9000000, gross_profit: 6000000 },
       { label: "02 Mar", revenue: 12000000, cost: 8000000, gross_profit: 4000000 },
-      { label: "03 Mar", revenue: 18000000, cost: 10000000, gross_profit: 8000000 }
-    ],
-    summary: {
-      trend_direction: "UP",
-      growth_rate: 15.5,
-      average_margin: 30.0
-    }
-  },
-
-  // GET /profitability/sellers
-  sellers: {
-    summary: { total_sellers: 10, top_seller_name: "Juan Pérez" },
-    sellers: [
-      {
-        seller_name: "Juan Pérez",
-        total_sales: 150,
-        total_revenue: 75000000,
-        gross_profit: 30000000,
-        gross_margin_pct: 40.0,
-        rank: 1
-      }
+      { label: "03 Mar", revenue: 18000000, cost: 10000000, gross_profit: 8000000 },
+      { label: "04 Mar", revenue: 14000000, cost: 9500000, gross_profit: 4500000 },
+      { label: "05 Mar", revenue: 16000000, cost: 10000000, gross_profit: 6000000 }
     ]
   },
 
@@ -166,17 +251,40 @@ export const profitabilityMocks = {
       total_profit: 150000000,
       gross_margin_pct: 30.0,
       net_margin_pct: 20.0,
-      roi: 42.86,
+      roi: 42.864445,
       profit_per_transaction: 100000,
       revenue_growth: 5.26,
-      profit_growth: 11.11
+      profit_growth: 11.11,
+      gross_margin_growth: 1.5,
+      net_margin_growth: 0.5,
+      roi_growth: 3.1,
+      profit_per_tx_growth: 0.0
+    },
+    efficiency_trend: {
+      data_points: [
+        { label: "ENE", performance: 60, profit_pct: 24 },
+        { label: "FEB", performance: 75, profit_pct: 30 },
+        { label: "MAR", performance: 65, profit_pct: 26 },
+        { label: "ABR", performance: 85, profit_pct: 34 },
+        { label: "MAY", performance: 90, profit_pct: 36 },
+        { label: "JUN", performance: 70, profit_pct: 28 },
+        { label: "JUL", performance: 80, profit_pct: 32 },
+        { label: "AGO", performance: 95, profit_pct: 38 }
+      ]
     },
     break_even_status: {
       has_reached_break_even: true,
-      performance_status: "ABOVE_BREAK_EVEN"
+      performance_status: "ABOVE_BREAK_EVEN",
+      coverage_required: 18.256,
+      current_progress: 82.5
     },
     alerts: [
-      { type: "PROFIT_GROWTH", severity: "LOW", message: "Excelente crecimiento de beneficios: +11.11%" }
+      { 
+        type: "PROFIT_GROWTH", 
+        severity: "LOW", 
+        message: "Excelente crecimiento de beneficios: +11.11%",
+        time_ago: "Hace 10 min"
+      }
     ]
   }
 };
