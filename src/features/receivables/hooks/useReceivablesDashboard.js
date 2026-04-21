@@ -7,7 +7,7 @@ import { receivablesService } from '@/services/receivablesService'
 const transformSummary = apiData => {
   const overduePercentage =
     apiData.total_pending > 0
-      ? ((apiData.total_overdue / apiData.total_pending) * 100).toFixed(1)
+      ? ((apiData.total_overdue / apiData.total_pending) * 100)
       : 0
 
   return {
@@ -23,7 +23,7 @@ const transformSummary = apiData => {
     totalCount: apiData.total_count || 0,
     overdueCount: apiData.overdue_count || 0,
     avgDaysToCollect: Math.round(apiData.average_days_to_collect || 0),
-    collectionRate: apiData.collection_rate ? Number(apiData.collection_rate).toFixed(2) : 0,
+    collectionRate: apiData.collection_rate || 0,
     collectionTrend: apiData.collection_trend || []
   }
 }

@@ -74,12 +74,13 @@ export default {
         "fluent-gray": "#f3f2f1",
       },
       fontFamily: {
+        "sans": ["Inter", "Public Sans", "system-ui", "sans-serif"],
         "display": ["Inter", "system-ui", "sans-serif"],
         "montserrat": ["Montserrat", "sans-serif"],
         "public": ["Public Sans", "sans-serif"],
         "mono": ["JetBrains Mono", "monospace"],
         "ibm": ["IBM Plex Mono", "monospace"],
-        "tabular": ["Inter", "monospace"]
+        "tabular": ["JetBrains Mono", "monospace"]
       },
       borderRadius: {
         xl: "8px",

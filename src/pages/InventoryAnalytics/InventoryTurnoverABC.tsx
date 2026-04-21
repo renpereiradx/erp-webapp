@@ -3,6 +3,7 @@ import { inventoryAnalyticsService } from '../../services/inventoryAnalyticsServ
 import { SummaryCard } from '../../components/InventoryAnalytics/SummaryCard';
 import { CategoryTurnoverTable } from '../../components/InventoryAnalytics/CategoryTurnoverTable';
 import { ABCParetoChart } from '../../components/InventoryAnalytics/ABCParetoChart';
+import { formatNumber } from '../../utils/currencyUtils';
 
 export const InventoryTurnoverABC: React.FC = () => {
   const [period, setPeriod] = useState('mes');
@@ -70,9 +71,9 @@ export const InventoryTurnoverABC: React.FC = () => {
         <SummaryCard 
           title="Tasa Promedio de Rotación"
           icon="sync_alt"
-          value={`${Number(data.overall?.turnover_rate || 0).toFixed(2)}x`}
+          value={`${formatNumber(data.overall?.turnover_rate)}x`}
           changeValue={data.overall?.turnover_rate_change || 0}
-          changeDescription="Vs. mes anterior"
+          changeDescription={`Vs. periodo anterior (${period})`}
           isPositiveGood={true}
         />
         <SummaryCard 
@@ -80,7 +81,7 @@ export const InventoryTurnoverABC: React.FC = () => {
           icon="calendar_today"
           value={`${Math.round(data.overall?.days_of_inventory || 0)} días`}
           changeValue={data.overall?.days_of_inventory_change || 0}
-          changeDescription="Eficiencia logística"
+          changeDescription="Eficiencia en la gestión de stock"
           isPositiveGood={false}
         />
       </div>
@@ -90,9 +91,9 @@ export const InventoryTurnoverABC: React.FC = () => {
         <CategoryTurnoverTable categories={data.by_category || []} />
         <ABCParetoChart 
           classAProducts={data.abc_class_a || data.class_a || []} 
-          classAPct={data.abc_summary?.class_a_value_pct || data.overall?.class_a_pct || 80}
-          classBPct={data.abc_summary?.class_b_value_pct || data.overall?.class_b_pct || 15}
-          classCPct={data.abc_summary?.class_c_value_pct || data.overall?.class_c_pct || 5}
+          classAPct={data.abc_summary?.class_a_value_pct || data.overall?.class_a_pct}
+          classBPct={data.abc_summary?.class_b_value_pct || data.overall?.class_b_pct}
+          classCPct={data.abc_summary?.class_c_value_pct || data.overall?.class_c_pct}
         />
       </div>
     </div>

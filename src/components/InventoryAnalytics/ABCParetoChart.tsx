@@ -1,5 +1,6 @@
 import React from 'react';
 import { ABCProduct } from '../../data/mockInventoryABCData';
+import { formatNumber, formatPYG } from '../../utils/currencyUtils';
 
 export interface ABCParetoChartProps {
   classAProducts: ABCProduct[];
@@ -44,7 +45,7 @@ export const ABCParetoChart: React.FC<ABCParetoChartProps> = ({
           style={{ height: `${hA}%` }}
         >
           <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-mono z-10 shadow-xl">
-            Clase A: {Number(classAPct).toFixed(1)}%
+            Clase A: {formatNumber(classAPct)}%
           </div>
         </div>
         <div 
@@ -52,7 +53,7 @@ export const ABCParetoChart: React.FC<ABCParetoChartProps> = ({
           style={{ height: `${hB}%` }}
         >
           <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-mono z-10 shadow-xl">
-            Clase B: {Number(classBPct).toFixed(1)}%
+            Clase B: {formatNumber(classBPct)}%
           </div>
         </div>
         <div 
@@ -60,7 +61,7 @@ export const ABCParetoChart: React.FC<ABCParetoChartProps> = ({
           style={{ height: `${hC}%` }}
         >
           <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-mono z-10 shadow-xl">
-            Clase C: {Number(classCPct).toFixed(1)}%
+            Clase C: {formatNumber(classCPct)}%
           </div>
         </div>
         
@@ -96,10 +97,10 @@ export const ABCParetoChart: React.FC<ABCParetoChartProps> = ({
             <div key={product.id || (product as any).product_id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-700/30 border border-slate-100 dark:border-slate-700">
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-slate-800 dark:text-white">{product.name || (product as any).product_name}</span>
-                <span className="text-xs text-slate-500">Representa el <span className="font-mono">{Number(product.percentage || (product as any).value_pct || 0).toFixed(2)}%</span> del valor total</span>
+                <span className="text-xs text-slate-500">Representa el <span className="font-mono">{formatNumber(product.percentage || (product as any).value_pct || 0)}%</span> del valor total</span>
               </div>
               <div className="text-right">
-                <span className="text-sm font-black text-primary font-mono">Gs. {(product.value || (product as any).stock_value || 0).toLocaleString('es-PY')}</span>
+                <span className="text-sm font-black text-primary font-mono">{formatPYG(product.value || (product as any).stock_value || 0)}</span>
               </div>
             </div>
           ))}

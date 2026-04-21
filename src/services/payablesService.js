@@ -116,23 +116,29 @@ export const payablesService = {
     const startTime = Date.now()
     try {
       if (USE_MOCK) {
+        const today = new Date();
         return _mockRes({
-          start_date: "2024-05-24",
-          end_date: "2024-06-24",
+          start_date: today.toISOString().split('T')[0],
+          end_date: new Date(today.getTime() + (days * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
           total_due: 1250000,
-          schedule: accountsPayableData.upcomingPayments.map(p => ({
-            date: `2024-05-${p.date.day}`,
-            day_of_week: "N/A",
-            total_due: p.amount,
-            item_count: 1,
-            items: [{
-              payable_id: p.id,
-              supplier_name: p.vendor,
-              amount: p.amount,
-              priority: p.status === 'Urgente' ? 'HIGH' : 'MEDIUM',
-              days_until_due: 2
-            }]
-          }))
+          schedule: accountsPayableData.upcomingPayments.map((p, index) => {
+            const scheduledDate = new Date();
+            scheduledDate.setDate(today.getDate() + (index * 2) + 1); // Spread payments in future
+            
+            return {
+              date: scheduledDate.toISOString().split('T')[0],
+              day_of_week: "N/A",
+              total_due: p.amount,
+              item_count: 1,
+              items: [{
+                payable_id: p.id,
+                supplier_name: p.vendor,
+                amount: p.amount,
+                priority: p.status === 'Urgente' ? 'HIGH' : 'MEDIUM',
+                days_until_due: (index * 2) + 1
+              }]
+            }
+          })
         })
       }
 

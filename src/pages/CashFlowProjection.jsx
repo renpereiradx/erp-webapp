@@ -28,6 +28,8 @@ const CashFlowProjection = () => {
     filteredData, 
     stats, 
     pendingPayments,
+    bankPositions,
+    insights,
     loading 
   } = useCashFlow();
 
@@ -138,7 +140,10 @@ const CashFlowProjection = () => {
           </div>
 
           <div className="lg:col-span-4">
-            <TreasuryInsights bankPositions={bankPositions} />
+            <TreasuryInsights 
+              bankPositions={bankPositions} 
+              insights={insights}
+            />
           </div>
 
         </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Wallet,
@@ -8,8 +8,6 @@ import {
   Plus,
   ChevronRight,
   Search,
-  TrendingUp,
-  TrendingDown,
   Clock,
   AlertCircle,
   AlertTriangle,
@@ -17,7 +15,7 @@ import {
   ChevronLeft,
 } from 'lucide-react'
 
-import { formatPYG } from '@/utils/currencyUtils'
+import { formatPYG, formatNumber } from '@/utils/currencyUtils'
 import { usePayables } from '../hooks/usePayables'
 
 /**
@@ -34,6 +32,10 @@ const PayablesAgingReport = () => {
     fetchAgingReport,
     fetchStatistics,
   } = usePayables()
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const pageSize = 10;
 
   // 1. Effects for browser synchronization
   useEffect(() => {
@@ -55,8 +57,8 @@ const PayablesAgingReport = () => {
     if (!overview || !statistics)
       return { dpo: '---', overdue: '---', critical: '---' }
     return {
-      dpo: `${statistics.average_dpo || overview.average_days_to_pay || 0} Días`,
-      overdue: `${statistics.overdue_percentage || 0}%`,
+      dpo: `${Math.round(statistics.average_dpo || overview.average_days_to_pay || 0)} Días`,
+      overdue: `${formatNumber(statistics.overdue_percentage || 0)}%`,
       critical: formatPYG(overview.aging_summary?.over_90_days?.amount || 0),
     }
   }, [overview, statistics])
@@ -126,22 +128,24 @@ const PayablesAgingReport = () => {
   }, [distribution])
 
   // Analytical Breakdown Table Data
-  const tableData = useMemo(() => {
+  const filteredTableData = useMemo(() => {
     if (!agingReport?.by_supplier) return []
-    return agingReport.by_supplier.map(s => {
+    
+    const filtered = searchTerm 
+      ? agingReport.by_supplier.filter(s => s.supplier_name.toLowerCase().includes(searchTerm.toLowerCase()))
+      : agingReport.by_supplier;
+
+    return filtered.map(s => {
       // Determine risk level based on overdue amounts
       let risk = 'Mínimo'
-      let riskClass =
-        'bg-fluent-success/10 text-fluent-success border-fluent-success/20'
+      let riskClass = 'bg-fluent-success/10 text-fluent-success border-fluent-success/20'
 
       if (s.over_90_days > 0) {
         risk = 'Crítico'
-        riskClass =
-          'bg-fluent-danger/10 text-fluent-danger border-fluent-danger/20'
+        riskClass = 'bg-fluent-danger/10 text-fluent-danger border-fluent-danger/20'
       } else if (s.days_60_90 > 0 || s.days_30_60 > s.total * 0.5) {
         risk = 'Moderado'
-        riskClass =
-          'bg-fluent-warning/10 text-fluent-warning border-fluent-warning/20'
+        riskClass = 'bg-fluent-warning/10 text-fluent-warning border-fluent-warning/20'
       }
 
       return {
@@ -156,7 +160,13 @@ const PayablesAgingReport = () => {
         riskClass,
       }
     })
-  }, [agingReport])
+  }, [agingReport, searchTerm])
+
+  const paginatedData = useMemo(() => {
+    return filteredTableData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  }, [filteredTableData, currentPage]);
+
+  const totalPages = Math.ceil(filteredTableData.length / pageSize) || 1;
 
   // 4. Loading State
   if (loading && !overview) {
@@ -171,7 +181,7 @@ const PayablesAgingReport = () => {
   }
 
   return (
-    <div className='flex flex-col gap-6 animate-in fade-in duration-500 pb-12'>
+    <div className='flex flex-col gap-6 animate-in fade-in duration-500 pb-12 font-display'>
       {/* Header Section */}
       <div className='flex flex-col gap-4'>
         {/* Breadcrumbs */}
@@ -268,7 +278,7 @@ const PayablesAgingReport = () => {
         <div className='mb-6 space-y-3'>
           <div className='flex flex-wrap gap-2'>
             {distributionSegments.map(segment => {
-              const percentLabel = `${segment.percentage.toFixed(2).replace(/\.00$/, '')}%`
+              const percentLabel = `${formatNumber(segment.percentage)}%`
               return (
                 <span
                   key={segment.key}
@@ -288,10 +298,10 @@ const PayablesAgingReport = () => {
             })}
           </div>
 
-          <div className='relative w-full rounded-2xl bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700 shadow-inner'>
+          <div className='relative w-full rounded-2xl bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700 shadow-inner overflow-hidden'>
             <div className='flex h-12 md:h-16 w-full rounded-xl overflow-hidden'>
               {distributionSegments.map((segment, index) => {
-                const percentLabel = `${segment.percentage.toFixed(2).replace(/\.00$/, '')}%`
+                const percentLabel = `${formatNumber(segment.percentage)}%`
                 const showFullLabel = segment.percentage >= 12
                 const showCompactLabel = segment.percentage >= 6
 
@@ -384,25 +394,15 @@ const PayablesAgingReport = () => {
               <h3 className='text-3xl font-black text-slate-900 dark:text-white tracking-tight'>
                 {agingKpis.dpo}
               </h3>
-              {/* <div className="flex items-center gap-2 mt-2">
-                <span className="flex items-center text-fluent-success text-xs font-bold bg-fluent-success/10 px-2 py-0.5 rounded-md">
-                  <TrendingUp size={14} className="mr-1" /> 2.4%
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">vs. mes anterior (41 d)</span>
-              </div> */}
             </div>
             <div className='bg-primary/10 p-3 rounded-xl flex-shrink-0 text-primary shadow-sm border border-primary/10'>
               <Clock size={20} />
             </div>
           </div>
           <div className='mt-8 h-12 w-full flex items-end gap-1.5 opacity-60'>
-            <div className='flex-1 bg-primary/20 rounded-t-sm h-[40%] transition-all group-hover:bg-primary/30'></div>
-            <div className='flex-1 bg-primary/20 rounded-t-sm h-[55%] transition-all group-hover:bg-primary/30'></div>
-            <div className='flex-1 bg-primary/20 rounded-t-sm h-[45%] transition-all group-hover:bg-primary/30'></div>
-            <div className='flex-1 bg-primary/20 rounded-t-sm h-[70%] transition-all group-hover:bg-primary/30'></div>
-            <div className='flex-1 bg-primary/20 rounded-t-sm h-[60%] transition-all group-hover:bg-primary/30'></div>
-            <div className='flex-1 bg-primary/20 rounded-t-sm h-[85%] transition-all group-hover:bg-primary/30'></div>
-            <div className='flex-1 bg-primary rounded-t-sm h-[100%] shadow-[0_0_8px_rgba(19,127,236,0.4)]'></div>
+            {[40, 55, 45, 70, 60, 85, 100].map((h, i) => (
+              <div key={i} className={`flex-1 bg-primary/${i === 6 ? '100' : '20 rounded-t-sm'} h-[${h}%] transition-all group-hover:bg-primary/30 ${i === 6 ? 'shadow-[0_0_8px_rgba(19,127,236,0.4)]' : ''}`}></div>
+            ))}
           </div>
         </div>
 
@@ -416,18 +416,11 @@ const PayablesAgingReport = () => {
               <h3 className='text-3xl font-black text-slate-900 dark:text-white tracking-tight'>
                 {agingKpis.overdue}
               </h3>
-              {/* <div className="flex items-center gap-2 mt-2">
-                <span className="flex items-center text-fluent-danger text-xs font-bold bg-fluent-danger/10 px-2 py-0.5 rounded-md">
-                  <TrendingUp size={14} className="mr-1" /> 1.2%
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Objetivo: < 10%</span>
-              </div> */}
             </div>
             <div className='bg-orange-500/10 p-3 rounded-xl flex-shrink-0 text-orange-500 shadow-sm border border-orange-500/10'>
               <AlertCircle size={20} />
             </div>
           </div>
-          {/* Circular progress mini simulation */}
           <div className='absolute right-8 bottom-8 w-16 h-16 border-[6px] border-slate-100 dark:border-slate-800 rounded-full flex items-center justify-center shadow-inner'>
             <div
               className='absolute top-0 left-0 w-full h-full border-[6px] border-orange-500 rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(249,115,22,0.4)]'
@@ -449,12 +442,6 @@ const PayablesAgingReport = () => {
               <h3 className='text-3xl font-mono font-black text-fluent-danger tracking-tight break-words tabular-nums'>
                 {agingKpis.critical}
               </h3>
-              {/* <div className="flex items-center gap-2 mt-2">
-                <span className="flex items-center text-fluent-success text-xs font-bold bg-fluent-success/10 px-2 py-0.5 rounded-md">
-                  <TrendingDown size={14} className="mr-1" /> Gs. 12M
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">en recuperación activa</span>
-              </div> */}
             </div>
             <div className='bg-fluent-danger/10 p-3 rounded-xl flex-shrink-0 text-fluent-danger shadow-sm border border-fluent-danger/10'>
               <AlertTriangle size={20} />
@@ -462,22 +449,8 @@ const PayablesAgingReport = () => {
           </div>
           <div className='mt-8 flex items-center gap-3'>
             <span className='text-[9px] font-black text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md uppercase tracking-widest border border-slate-200 dark:border-slate-700'>
-              {tableData.length} PROVEEDORES
+              {filteredTableData.length} PROVEEDORES
             </span>
-            <div className='flex -space-x-2 overflow-hidden'>
-              <div className='inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-[#1b2633] bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-black text-slate-600 dark:text-slate-300'>
-                JD
-              </div>
-              <div className='inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-[#1b2633] bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-black text-slate-600 dark:text-slate-300'>
-                AC
-              </div>
-              <div className='inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-[#1b2633] bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-black text-slate-600 dark:text-slate-300'>
-                ML
-              </div>
-              <div className='h-7 w-7 rounded-full ring-2 ring-white dark:ring-[#1b2633] bg-slate-800 flex items-center justify-center text-[9px] font-black text-white shadow-sm'>
-                +5
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -495,6 +468,11 @@ const PayablesAgingReport = () => {
                 className='w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary/30 outline-none transition-all font-medium'
                 placeholder='Buscar proveedor...'
                 type='text'
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
               />
             </div>
           </div>
@@ -517,7 +495,7 @@ const PayablesAgingReport = () => {
               </tr>
             </thead>
             <tbody className='divide-y divide-slate-50 dark:divide-slate-800/50 text-[13px]'>
-              {tableData.map(row => (
+              {paginatedData.map(row => (
                 <tr
                   key={row.id}
                   className={`${row.risk === 'Crítico' ? 'bg-red-50/30 dark:bg-red-900/10 border-y border-red-100 dark:border-red-900/30' : ''} hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer`}
@@ -566,6 +544,11 @@ const PayablesAgingReport = () => {
                   </td>
                 </tr>
               ))}
+              {paginatedData.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-6 py-12 text-center text-slate-500 italic">No se encontraron proveedores.</td>
+                </tr>
+              )}
             </tbody>
             <tfoot className='bg-slate-50 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700'>
               <tr>
@@ -597,41 +580,37 @@ const PayablesAgingReport = () => {
         {/* Pagination Footer */}
         <div className='px-6 md:px-8 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-[#1b2633]'>
           <p className='text-[10px] font-bold text-slate-400 uppercase tracking-widest'>
-            Mostrando {tableData.length} de 142 proveedores
+            Mostrando {paginatedData.length} de {filteredTableData.length} proveedores
           </p>
           <div className='flex items-center gap-1.5'>
             <button
-              className='p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 disabled:opacity-30'
-              disabled
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              className='p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-slate-800'
+              disabled={currentPage === 1}
             >
               <ChevronLeft size={16} />
             </button>
-            <button className='size-8 rounded-xl bg-primary text-white text-xs font-black shadow-lg shadow-primary/20'>
-              1
-            </button>
-            <button className='size-8 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold transition-colors'>
-              2
-            </button>
-            <button className='size-8 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold transition-colors'>
-              3
-            </button>
-            <span className='px-1 text-slate-400 font-bold'>...</span>
-            <button className='size-8 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold transition-colors'>
-              15
-            </button>
-            <button className='p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors'>
+            
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(p => (
+              <button 
+                key={p}
+                onClick={() => setCurrentPage(p)}
+                className={`size-8 rounded-xl text-xs font-black transition-all ${p === currentPage ? 'bg-primary text-white shadow-lg' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
+              >
+                {p}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              className='p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors'
+              disabled={currentPage === totalPages}
+            >
               <ChevronRight size={16} />
             </button>
           </div>
         </div>
       </section>
-
-      {/* Footer Visual Section: Trend & Summary (Oculto porque no está soportado por los endpoints actuales) */}
-      {/* 
-      <section className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        ... contenido oculto ...
-      </section>
-      */}
     </div>
   )
 }

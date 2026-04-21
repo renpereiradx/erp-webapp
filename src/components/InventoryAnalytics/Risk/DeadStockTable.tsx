@@ -1,5 +1,6 @@
 import React from 'react';
 import { DeadStockProduct } from '../../../types/inventoryAnalytics';
+import { formatPYG } from '../../../utils/currencyUtils';
 
 export interface DeadStockTableProps {
   products: DeadStockProduct[];
@@ -28,7 +29,7 @@ export const DeadStockTable: React.FC<DeadStockTableProps> = ({ products }) => {
               <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-500">
                 <th className="px-6 py-4">Producto</th>
                 <th className="px-6 py-4">Días Inactivo</th>
-                <th className="px-6 py-4">Valor (Gs.)</th>
+                <th className="px-6 py-4 text-right">Valor</th>
                 <th className="px-6 py-4 text-right">Recomendación</th>
               </tr>
             </thead>
@@ -46,8 +47,8 @@ export const DeadStockTable: React.FC<DeadStockTableProps> = ({ products }) => {
                       {Math.round(product.days_since_last_sale)} días
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm font-black text-slate-900 dark:text-white font-mono">
-                    {product.stock_value.toLocaleString('es-PY')}
+                  <td className="px-6 py-4 text-sm font-black text-slate-900 dark:text-white font-mono text-right">
+                    {formatPYG(product.stock_value)}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter border ${

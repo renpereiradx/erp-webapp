@@ -3,6 +3,7 @@ import { inventoryAnalyticsService } from '../../services/inventoryAnalyticsServ
 import { StockLevelsData, ReorderAnalysis } from '../../types/inventoryAnalytics';
 import { ReorderAlertCard } from '../../components/InventoryAnalytics/StockLevels/ReorderAlertCard';
 import { StockLevelsTable } from '../../components/InventoryAnalytics/StockLevels/StockLevelsTable';
+import { formatPYG } from '../../utils/currencyUtils';
 
 export const StockLevelsReorder: React.FC = () => {
   const [stockData, setStockData] = useState<StockLevelsData | null>(null);
@@ -136,13 +137,13 @@ export const StockLevelsReorder: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ReorderAlertCard 
             count={reorderData.summary.urgent_count}
-            cost={`Gs. ${urgentCost.toLocaleString('es-PY')}`}
+            cost={formatPYG(urgentCost)}
             type="URGENT"
             onClick={() => setReorderTypeFilter('URGENT')}
           />
           <ReorderAlertCard 
             count={reorderData.summary.soon_count}
-            cost={`Gs. ${soonCost.toLocaleString('es-PY')}`}
+            cost={formatPYG(soonCost)}
             type="HIGH"
             onClick={() => setReorderTypeFilter('SOON')}
           />

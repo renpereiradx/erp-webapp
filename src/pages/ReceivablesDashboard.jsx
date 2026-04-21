@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronRight
 } from 'lucide-react'
+import { formatPYG, formatNumber } from '@/utils/currencyUtils'
 
 // Hooks
 import { useReceivablesDashboard } from '@/features/receivables/hooks/useReceivablesDashboard'
@@ -99,42 +100,51 @@ const ReceivablesDashboard = () => {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-black text-slate-900 dark:text-white font-mono">
-                  Gs.&nbsp;{(summary.collectionTrend?.reduce((acc, curr) => acc + curr.collected, 0) / 1000000).toFixed(0)}&nbsp;M
+                  {formatPYG(summary.collectionTrend?.reduce((acc, curr) => acc + curr.collected, 0) || 0, { compact: true })}
                 </p>
                 <p className="text-[10px] font-black text-semantic-success uppercase tracking-widest mt-1">Total Cobrado (Periodo)</p>
               </div>
             </div>
             
             <div className="relative h-[280px] w-full mt-4">
-              <div className="absolute inset-0 flex flex-col justify-between text-[10px] font-bold text-slate-400 opacity-50 px-1">
-                <div className="w-full border-b border-slate-100 dark:border-slate-800 pb-1">200M</div>
-                <div className="w-full border-b border-slate-100 dark:border-slate-800 pb-1">150M</div>
-                <div className="w-full border-b border-slate-100 dark:border-slate-800 pb-1">100M</div>
-                <div className="w-full border-b border-slate-100 dark:border-slate-800 pb-1">50M</div>
-                <div className="w-full border-b border-slate-300 dark:border-slate-600 pb-1 font-black">0</div>
-              </div>
-              <svg className="absolute inset-0 h-full w-full pt-6 pb-6 pr-4" preserveAspectRatio="none" viewBox="0 0 100 100">
-                <defs>
-                  <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="#137fec" stopOpacity="0.2" />
-                    <stop offset="100%" stopColor="#137fec" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path 
-                  d={`M0,${100 - (summary.collectionTrend[0]?.collected / 200000000 * 80 || 20)} 
-                     Q15,${100 - (summary.collectionTrend[1]?.collected / 200000000 * 80 || 40)} 33,${100 - (summary.collectionTrend[1]?.collected / 200000000 * 80 || 40)} 
-                     T66,${100 - (summary.collectionTrend[2]?.collected / 200000000 * 80 || 60)} 
-                     T100,${100 - (summary.collectionTrend[3]?.collected / 200000000 * 80 || 80)} V100 H0 Z`} 
-                  fill="url(#chartGradient)" 
-                />
-                <path 
-                  d={`M0,${100 - (summary.collectionTrend[0]?.collected / 200000000 * 80 || 20)} 
-                     L33,${100 - (summary.collectionTrend[1]?.collected / 200000000 * 80 || 40)} 
-                     L66,${100 - (summary.collectionTrend[2]?.collected / 200000000 * 80 || 60)} 
-                     L100,${100 - (summary.collectionTrend[3]?.collected / 200000000 * 80 || 80)}`} 
-                  fill="none" stroke="#137fec" strokeWidth="2.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" 
-                />
-              </svg>
+              {(() => {
+                const maxCollected = Math.max(...(summary.collectionTrend?.map(i => i.collected) || [1000000]));
+                const scaleMax = Math.ceil(maxCollected / 50000000) * 50000000 || 200000000;
+                
+                return (
+                  <>
+                    <div className="absolute inset-0 flex flex-col justify-between text-[10px] font-bold text-slate-400 opacity-50 px-1">
+                      <div className="w-full border-b border-slate-100 dark:border-slate-800 pb-1">{formatPYG(scaleMax, { compact: true, showSymbol: false })}</div>
+                      <div className="w-full border-b border-slate-100 dark:border-slate-800 pb-1">{formatPYG(scaleMax * 0.75, { compact: true, showSymbol: false })}</div>
+                      <div className="w-full border-b border-slate-100 dark:border-slate-800 pb-1">{formatPYG(scaleMax * 0.5, { compact: true, showSymbol: false })}</div>
+                      <div className="w-full border-b border-slate-100 dark:border-slate-800 pb-1">{formatPYG(scaleMax * 0.25, { compact: true, showSymbol: false })}</div>
+                      <div className="w-full border-b border-slate-300 dark:border-slate-600 pb-1 font-black">0</div>
+                    </div>
+                    <svg className="absolute inset-0 h-full w-full pt-6 pb-6 pr-4" preserveAspectRatio="none" viewBox="0 0 100 100">
+                      <defs>
+                        <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+                          <stop offset="0%" stopColor="#137fec" stopOpacity="0.2" />
+                          <stop offset="100%" stopColor="#137fec" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <path 
+                        d={`M0,${100 - (summary.collectionTrend[0]?.collected / scaleMax * 80 || 20)} 
+                           Q15,${100 - (summary.collectionTrend[1]?.collected / scaleMax * 80 || 40)} 33,${100 - (summary.collectionTrend[1]?.collected / scaleMax * 80 || 40)} 
+                           T66,${100 - (summary.collectionTrend[2]?.collected / scaleMax * 80 || 60)} 
+                           T100,${100 - (summary.collectionTrend[3]?.collected / scaleMax * 80 || 80)} V100 H0 Z`} 
+                        fill="url(#chartGradient)" 
+                      />
+                      <path 
+                        d={`M0,${100 - (summary.collectionTrend[0]?.collected / scaleMax * 80 || 20)} 
+                           L33,${100 - (summary.collectionTrend[1]?.collected / scaleMax * 80 || 40)} 
+                           L66,${100 - (summary.collectionTrend[2]?.collected / scaleMax * 80 || 60)} 
+                           L100,${100 - (summary.collectionTrend[3]?.collected / scaleMax * 80 || 80)}`} 
+                        fill="none" stroke="#137fec" strokeWidth="2.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" 
+                      />
+                    </svg>
+                  </>
+                );
+              })()}
             </div>
             <div className="flex justify-between px-2 mt-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
               {summary.collectionTrend?.map((item, idx) => (

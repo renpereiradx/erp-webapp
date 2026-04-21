@@ -132,9 +132,9 @@ const KPICard = ({ title, value, trendValue, isCurrency = true, delay = "0", ico
 
       <div className='flex flex-col gap-1.5'>
         <p className='text-[#617589] text-[11px] font-bold uppercase tracking-[0.05em] font-sans'>{title}</p>
-        <div className="flex items-baseline gap-1.5">
+        <div className="flex items-baseline gap-1.5 mt-1">
           {isCurrency && <span className="text-sm font-bold text-slate-300 font-mono">Gs.</span>}
-          <h3 className='text-[#111418] text-3xl font-black tracking-tight leading-none font-mono truncate'>
+          <h3 className='text-[#111418] text-3xl font-bold tracking-tight leading-none font-mono truncate'>
             {isCurrency ? displayValue : `${displayValue}%`}
           </h3>
         </div>
@@ -246,11 +246,11 @@ const CustomerProfitability = () => {
                     <td className="px-6 py-6">
                       <SegmentBadge segment={c.segment} />
                     </td>
-                    <td className="px-6 py-6 text-center font-mono font-black text-[#617589]">{c.total_purchases}</td>
-                    <td className="px-6 py-6 text-right font-black font-mono text-[#111418] tracking-tighter">{formatPYG(c.total_revenue)}</td>
+                    <td className="px-6 py-6 text-center font-mono font-bold text-[#617589]">{c.total_purchases}</td>
+                    <td className="px-6 py-6 text-right font-bold font-mono text-[#111418] tracking-tighter">{formatPYG(c.total_revenue)}</td>
                     <td className="px-8 py-6 text-right">
                       <div className="flex flex-col items-end gap-2">
-                        <span className="font-black font-mono text-[13px] text-[#107c10]">{formatPercent(c.gross_margin_pct)}%</span>
+                        <span className="font-bold font-mono text-[13px] text-[#107c10]">{formatPercent(c.gross_margin_pct)}%</span>
                         <div className="w-24 h-1.5 bg-[#f3f2f1] rounded-full overflow-hidden">
                           <div className="bg-[#107c10] h-full transition-all duration-1500 ease-out shadow-[0_0_8px_rgba(16,124,16,0.4)]" style={{ width: `${c.gross_margin_pct}%` }}></div>
                         </div>

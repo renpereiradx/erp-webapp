@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import DashboardHeader from '../features/accounts-payable/components/DashboardHeader';
 import FilterRibbon from '../features/accounts-payable/components/FilterRibbon';
 import KPICards from '../features/accounts-payable/components/KPICards';
@@ -6,7 +6,7 @@ import AgingSummary from '../features/accounts-payable/components/AgingSummary';
 import UpcomingPayments from '../features/accounts-payable/components/UpcomingPayments';
 import SuppliersDebtTable from '../features/accounts-payable/components/SuppliersDebtTable';
 import { usePayables } from '../hooks/usePayables';
-import { formatPYG } from '../utils/currencyUtils';
+import { formatPYG, formatNumber } from '../utils/currencyUtils';
 
 /**
  * Main Page for Accounts Payable Executive Dashboard.
@@ -18,10 +18,23 @@ const PayablesDashboard = () => {
     overview, 
     topSuppliers, 
     schedule,
+    pagination,
     fetchOverview,
     fetchTopSuppliers,
     fetchSchedule
   } = usePayables();
+
+  // Local state for interactive features
+  const [filters, setFilters] = useState({
+    period: 'month',
+    currency: 'PYG',
+    search: ''
+  });
+
+  const [suppliersPagination, setSuppliersPagination] = useState({
+    page: 1,
+    pageSize: 5
+  });
 
   // 1. Effects for external synchronization (Browser APIs)
   useEffect(() => {
@@ -29,15 +42,28 @@ const PayablesDashboard = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // 2. Initial Data Fetching
+  // 2. Initial Data Fetching & Reactive Refetching
+  const refreshData = useCallback(() => {
+    fetchOverview(filters.period);
+    fetchTopSuppliers(10); // Dashboard always shows top 10
+    fetchSchedule(30);
+  }, [fetchOverview, fetchTopSuppliers, fetchSchedule, filters.period]);
+
   useEffect(() => {
-    fetchOverview();
-    fetchTopSuppliers();
-    fetchSchedule();
-  }, [fetchOverview, fetchTopSuppliers, fetchSchedule]);
+    refreshData();
+  }, [refreshData]);
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handlePageChange = (newPage) => {
+    // In a real scenario, this would call fetchTopSuppliers with offset
+    // For now, we simulate pagination on the 10 items we have
+    setSuppliersPagination(prev => ({ ...prev, page: newPage }));
+  };
 
   // 3. Derived State / Data Transformations (Calculate During Render)
-  // We use useMemo to avoid re-calculating on every render if overview hasn't changed.
   const transformedKpis = useMemo(() => {
     if (!overview) return [];
     return [
@@ -47,7 +73,7 @@ const PayablesDashboard = () => {
         value: overview.total_pending,
         currency: overview.currency,
         icon: "account_balance_wallet",
-        subtitle: "vs. mes anterior"
+        subtitle: "Capital comprometido"
       },
       {
         id: "total-overdue",
@@ -57,7 +83,7 @@ const PayablesDashboard = () => {
         trend: `${overview.overdue_count} facturas`,
         trendType: "danger",
         icon: "priority_high",
-        subtitle: "requieren atención inmediata",
+        subtitle: "Acción inmediata requerida",
         critical: true
       },
       {
@@ -66,7 +92,7 @@ const PayablesDashboard = () => {
         value: overview.due_this_week,
         currency: overview.currency,
         icon: "calendar_today",
-        subtitle: "Flujo de caja proyectado para 7 días"
+        subtitle: "Flujo proyectado 7 días"
       },
       {
         id: "compliance-rate",
@@ -94,41 +120,52 @@ const PayablesDashboard = () => {
     if (!overview) return {};
     return {
       total: formatPYG(overview.total_pending, { compact: true }),
-      onTime: `${overview.payment_rate}%`,
-      critical: `${overview.aging_summary?.over_90_days?.percentage || 0}%`,
-      avgDays: `${overview.average_days_to_pay} Días`
+      onTime: `${formatNumber(overview.payment_rate)}%`,
+      critical: `${formatNumber(overview.aging_summary?.over_90_days?.percentage || 0)}%`,
+      avgDays: `${Math.round(overview.average_days_to_pay || 0)} Días`
     };
   }, [overview]);
 
   const transformedPayments = useMemo(() => {
+    if (!schedule || schedule.length === 0) return [];
+    
     return schedule.map(s => {
-      const item = s.items[0];
+      const item = s.items?.[0];
+      if (!item) return null;
+      
       const date = new Date(s.date);
       const months = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
       return {
         id: item.payable_id,
         date: { month: months[date.getMonth()], day: date.getDate().toString() },
         vendor: item.supplier_name,
-        invoice: `#PO-${item.payable_id.split('_')[1] || '000'}`,
+        invoice: item.purchase_order_id ? `#${item.purchase_order_id}` : `#FAC-${item.payable_id.split('_')[1] || '000'}`,
         amount: item.amount,
-        status: item.priority === 'HIGH' ? 'Urgente' : 'Programado',
-        statusType: item.priority === 'HIGH' ? 'danger' : 'info'
+        status: item.priority === 'HIGH' || item.priority === 'URGENT' ? 'Urgente' : 'Programado',
+        statusType: item.priority === 'HIGH' || item.priority === 'URGENT' ? 'danger' : 'info'
       };
-    });
+    }).filter(Boolean);
   }, [schedule]);
 
   const transformedVendors = useMemo(() => {
-    return topSuppliers.map(v => ({
+    if (!topSuppliers) return [];
+    
+    // Filter locally by search if needed
+    const filtered = filters.search 
+      ? topSuppliers.filter(s => s.supplier_name.toLowerCase().includes(filters.search.toLowerCase()))
+      : topSuppliers;
+
+    return filtered.map(v => ({
       id: v.supplier_id,
       name: v.supplier_name,
-      rfc: "N/A", // Hidden anyway
+      rfc: v.supplier_ruc || "N/A",
       totalBalance: v.total_pending,
       overdueAmount: v.total_overdue,
-      nextPayment: "Consultar detalle",
+      nextPayment: v.next_due_date ? new Date(v.next_due_date).toLocaleDateString('es-PY') : "Sin pagos pdtes.",
       priority: v.total_overdue > 0 ? 'Alta' : 'Media',
       priorityType: v.total_overdue > 0 ? 'warning' : 'info'
     }));
-  }, [topSuppliers]);
+  }, [topSuppliers, filters.search]);
 
   // 4. Conditional Rendering for Loading State
   if (loading && !overview) {
@@ -141,10 +178,13 @@ const PayablesDashboard = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
-      <DashboardHeader lastUpdate={new Date().toLocaleString('es-PY')} />
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 pb-10">
+      <DashboardHeader lastUpdate={new Date().toLocaleString('es-PY', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} />
       
-      <FilterRibbon />
+      <FilterRibbon 
+        filters={filters} 
+        onFilterChange={handleFilterChange} 
+      />
       
       <KPICards kpis={transformedKpis} />
       
@@ -161,7 +201,16 @@ const PayablesDashboard = () => {
         </div>
       </div>
       
-      <SuppliersDebtTable vendors={transformedVendors} />
+      <SuppliersDebtTable 
+        vendors={transformedVendors.slice((suppliersPagination.page - 1) * suppliersPagination.pageSize, suppliersPagination.page * suppliersPagination.pageSize)} 
+        pagination={{
+          page: suppliersPagination.page,
+          pageSize: suppliersPagination.pageSize,
+          totalItems: transformedVendors.length,
+          totalPages: Math.ceil(transformedVendors.length / suppliersPagination.pageSize)
+        }}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 };

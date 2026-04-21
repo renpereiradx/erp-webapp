@@ -119,7 +119,7 @@ const KPICard = ({ title, value, trendValue, isCurrency = true, delay = "0", ico
         <p className='text-[#617589] text-[11px] font-bold uppercase tracking-[0.05em] font-sans'>{title}</p>
         <div className="flex items-baseline gap-1.5 mt-1">
           {isCurrency && <span className="text-sm font-bold text-slate-300 font-mono">Gs.</span>}
-          <h3 className='text-[#111418] text-3xl font-black tracking-tight leading-none font-mono truncate'>
+          <h3 className='text-[#111418] text-3xl font-bold tracking-tight leading-none font-mono truncate'>
             {isCurrency ? displayValue : `${displayValue}%`}
           </h3>
         </div>
@@ -250,11 +250,11 @@ const SellerProfitability = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-6 text-center font-mono font-black text-[#617589]">{s.total_sales}</td>
+                  <td className="px-6 py-6 text-center font-mono font-bold text-[#617589]">{s.total_sales}</td>
                   <td className="px-6 py-6 text-right font-black font-mono text-[#111418] tracking-tighter">{formatPYG(s.total_revenue)}</td>
-                  <td className="px-6 py-6 text-right font-black font-mono text-[#107c10] tracking-tighter">{formatPYG(s.gross_profit)}</td>
+                  <td className="px-6 py-6 text-right font-bold font-mono text-[#107c10] tracking-tighter">{formatPYG(s.gross_profit)}</td>
                   <td className="px-8 py-6 text-center">
-                    <span className="bg-[#deecf9] text-[#0f6cbd] text-[11px] font-black px-3 py-1 rounded border border-[#0f6cbd]/10 uppercase tracking-widest shadow-sm">
+                    <span className="bg-[#deecf9] text-[#0f6cbd] text-[11px] font-bold px-3 py-1 rounded border border-[#0f6cbd]/10 uppercase tracking-widest shadow-sm">
                       {formatPercent(s.gross_margin_pct)}%
                     </span>
                   </td>
@@ -336,7 +336,7 @@ const SellerProfitability = () => {
                       <span className="text-[12px] font-black text-[#111418] uppercase tracking-tight truncate max-w-[180px]">{item.label}</span>
                     </div>
                     <div className="flex items-center gap-6">
-                      <span className="text-sm font-black font-mono text-[#111418]">{item.pct}%</span>
+                      <span className="text-sm font-semibold font-mono text-[#111418]">{item.pct}%</span>
                       <div className="w-20 h-2 bg-[#f3f2f1] rounded-full overflow-hidden hidden sm:block border border-[#e5e7eb] p-0.5 shadow-inner">
                         <div className={`h-full rounded-full ${colors[i]}`} style={{ width: `${item.pct}%` }}></div>
                       </div>

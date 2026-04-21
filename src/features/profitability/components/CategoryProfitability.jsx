@@ -123,7 +123,7 @@ const KPICard = ({ title, subtitle, value, trendValue, icon: Icon, color = "prim
         <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-tight truncate">{subtitle}</h4>
         <div className="flex items-baseline gap-1.5 mt-1">
           {isCurrency && <span className="text-sm font-bold text-slate-300 font-mono">Gs.</span>}
-          <h3 className='text-[#111418] text-3xl font-black tracking-tight leading-none font-mono truncate'>
+          <h3 className='text-[#111418] text-3xl font-bold tracking-tight leading-none font-mono truncate'>
             {isCurrency ? displayValue : `${displayValue}%`}
           </h3>
         </div>
@@ -259,22 +259,22 @@ const CategoryProfitability = () => {
                     </div>
                   </td>
                   <td className="px-6 py-6 text-center">
-                    <span className="px-3 py-1 bg-[#f3f2f1] rounded font-black font-mono text-[11px] text-slate-600 border border-transparent group-hover:border-[#dbe0e6] transition-colors">
+                    <span className="px-3 py-1 bg-[#f3f2f1] rounded font-semibold font-mono text-[11px] text-slate-600 border border-transparent group-hover:border-[#dbe0e6] transition-colors">
                       {cat.product_count || 0}
                     </span>
                   </td>
-                  <td className="px-6 py-6 text-right font-mono font-black text-[#617589]">{cat.units_sold}</td>
+                  <td className="px-6 py-6 text-right font-mono font-bold text-[#617589]">{cat.units_sold}</td>
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
                       <div className="w-48 bg-[#f3f2f1] h-1.5 rounded-full overflow-hidden">
                         <div className="bg-[#0f6cbd]/30 h-full" style={{ width: `${cat.revenue_contribution_pct}%` }}></div>
                       </div>
-                      <span className="font-mono font-black text-[#617589] text-[11px] w-10">{formatPercent(cat.revenue_contribution_pct)}%</span>
+                      <span className="font-mono font-bold text-[#617589] text-[11px] w-10">{formatPercent(cat.revenue_contribution_pct)}%</span>
                     </div>
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex flex-col items-end gap-2">
-                      <span className={`font-black font-mono text-[13px] ${cat.gross_margin_pct >= 20 ? 'text-[#107c10]' : 'text-[#d13438]'}`}>{formatPercent(cat.gross_margin_pct)}%</span>
+                      <span className={`font-bold font-mono text-[13px] ${cat.gross_margin_pct >= 20 ? 'text-[#107c10]' : 'text-[#d13438]'}`}>{formatPercent(cat.gross_margin_pct)}%</span>
                       <div className="w-24 h-1.5 bg-[#f3f2f1] rounded-full overflow-hidden">
                         <div className={`h-full transition-all duration-1500 ease-out ${cat.gross_margin_pct >= 20 ? 'bg-[#107c10] shadow-[0_0_8px_rgba(16,124,16,0.4)]' : 'bg-[#d13438]'}`} style={{ width: `${cat.gross_margin_pct}%` }}></div>
                       </div>

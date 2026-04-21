@@ -1,6 +1,6 @@
 import React from 'react'
 import { Wallet, TrendingUp, AlertTriangle, CheckCircle2 } from 'lucide-react'
-import { formatPYG } from '@/utils/currencyUtils'
+import { formatPYG, formatNumber } from '@/utils/currencyUtils'
 
 /**
  * Tarjetas de KPI para el reporte de antigüedad de CXC.
@@ -54,7 +54,7 @@ const AgingOverviewCards = ({ stats = {}, overview = {} }) => {
           </div>
         </div>
         <div className="flex items-center gap-1.5 mt-auto">
-          <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tight">{collectionRate}% de efectividad</span>
+          <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tight">{formatNumber(collectionRate)}% de efectividad</span>
         </div>
       </div>
 
@@ -73,7 +73,7 @@ const AgingOverviewCards = ({ stats = {}, overview = {} }) => {
         </div>
         <div className="flex items-center gap-1.5 mt-auto">
           <span className="flex items-center px-1.5 py-0.5 rounded-md bg-fluent-danger/10 text-fluent-danger text-[10px] font-black uppercase tracking-wider">
-            <TrendingUp size={12} className="mr-0.5" /> {overduePercentage}%
+            <TrendingUp size={12} className="mr-0.5" /> {formatNumber(overduePercentage)}%
           </span>
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">mora total</span>
         </div>
@@ -93,7 +93,7 @@ const AgingOverviewCards = ({ stats = {}, overview = {} }) => {
           </div>
         </div>
         <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mt-auto">
-          <div className="bg-orange-500 h-full transition-all duration-1000 shadow-[0_0_8px_rgba(249,115,22,0.4)]" style={{ width: `${over90Percentage}%` }} />
+          <div className="bg-orange-500 h-full transition-all duration-1000 shadow-[0_0_8px_rgba(249,115,22,0.4)]" style={{ width: `${formatNumber(over90Percentage)}%` }} />
         </div>
       </div>
     </div>

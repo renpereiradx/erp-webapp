@@ -4,6 +4,7 @@ import { DeadStockAnalysis, StockForecast } from '../../types/inventoryAnalytics
 import { ImpactCard } from '../../components/InventoryAnalytics/Risk/ImpactCard';
 import { DeadStockTable } from '../../components/InventoryAnalytics/Risk/DeadStockTable';
 import { ForecastRiskList } from '../../components/InventoryAnalytics/Risk/ForecastRiskList';
+import { formatNumber, formatPYG } from '../../utils/currencyUtils';
 
 export const InventoryRisk: React.FC = () => {
   const [deadStockData, setDeadStockData] = useState<DeadStockAnalysis | null>(null);
@@ -48,9 +49,9 @@ export const InventoryRisk: React.FC = () => {
           {deadStockData && (
             <ImpactCard 
               title="Pérdida Potencial por Stock Muerto"
-              value={`Gs. ${deadStockData.summary.potential_loss.toLocaleString('es-PY')}`}
+              value={formatPYG(deadStockData.summary.potential_loss)}
               trend="capital inmovilizado identificado"
-              trendValue={`${deadStockData.summary.percentage_of_stock.toFixed(1)}%`}
+              trendValue={`${formatNumber(deadStockData.summary.percentage_of_stock)}%`}
               trendType="negative"
               icon="trending_down"
               iconColorClass="text-red-600"
@@ -60,9 +61,9 @@ export const InventoryRisk: React.FC = () => {
           {forecastData && (
             <ImpactCard 
               title="Valor de Reorden Recomendado"
-              value={`Gs. ${forecastData.summary.reorder_value.toLocaleString('es-PY')}`}
+              value={formatPYG(forecastData.summary.reorder_value)}
               trend={`para mitigar riesgo en ${forecastData.forecast_days} días`}
-              trendValue={`${forecastData.summary.products_at_risk}`}
+              trendValue={`${forecastData.summary.products_at_risk} SKUs`}
               trendType="positive"
               icon="shopping_cart_checkout"
               iconColorClass="text-primary"
@@ -105,8 +106,8 @@ export const InventoryRisk: React.FC = () => {
                 <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-black rounded-full uppercase tracking-widest animate-pulse">Acción Recomendada</span>
               </div>
               <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium text-base">
-                Su inventario presenta un <span className="font-black font-mono text-rose-600 text-lg">{deadStockData?.summary.percentage_of_stock.toFixed(1)}% de stock sin movimiento</span>. 
-                La ejecución inmediata de las liquidaciones sugeridas liberaría un flujo de caja de <span className="font-black font-mono text-primary text-xl underline decoration-primary/30 underline-offset-4">Gs. {deadStockData?.summary.potential_loss.toLocaleString('es-PY')}</span>, 
+                Su inventario presenta un <span className="font-black font-mono text-rose-600 text-lg">{formatNumber(deadStockData?.summary.percentage_of_stock)}% de stock sin movimiento</span>. 
+                La ejecución inmediata de las liquidaciones sugeridas liberaría un flujo de caja de <span className="font-black font-mono text-primary text-xl underline decoration-primary/30 underline-offset-4">{formatPYG(deadStockData?.summary.potential_loss || 0)}</span>, 
                 capital crítico para cubrir el reabastecimiento de los <span className="font-bold text-slate-900 dark:text-white">{forecastData?.summary.products_at_risk} productos en riesgo</span> de agotamiento detectados.
               </p>
             </div>

@@ -1,6 +1,6 @@
 import React from 'react'
 import { useI18n } from '@/lib/i18n'
-import { formatPYG } from '@/utils/currencyUtils'
+import { formatPYG, formatNumber } from '@/utils/currencyUtils'
 
 /**
  * Grid de tarjetas de resumen para el dashboard de CXC.
@@ -38,7 +38,7 @@ const SummaryCardsGrid = ({ summary = {} }) => {
         </div>
         <div className="flex items-center gap-1.5 mt-auto">
           <span className="flex items-center px-1.5 py-0.5 rounded-md bg-semantic-success/10 text-semantic-success text-[10px] font-black uppercase tracking-wider">
-            <span className="material-symbols-outlined text-[14px] mr-0.5">trending_up</span>{totalTrend}%
+            <span className="material-symbols-outlined text-[14px] mr-0.5">trending_up</span>{formatNumber(totalTrend)}%
           </span>
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">vs mes anterior</span>
         </div>
@@ -59,7 +59,7 @@ const SummaryCardsGrid = ({ summary = {} }) => {
         </div>
         <div className="flex items-center gap-1.5 mt-auto">
           <span className="flex items-center px-1.5 py-0.5 rounded-md bg-semantic-danger/10 text-semantic-danger text-[10px] font-black uppercase tracking-wider">
-            <span className="material-symbols-outlined text-[14px] mr-0.5">trending_up</span>{overduePercentage}%
+            <span className="material-symbols-outlined text-[14px] mr-0.5">trending_up</span>{formatNumber(overduePercentage)}%
           </span>
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">mora total</span>
         </div>
@@ -71,7 +71,7 @@ const SummaryCardsGrid = ({ summary = {} }) => {
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Tasa de Cobranza</p>
             <h2 className="text-xl xl:text-2xl font-black tracking-tight text-slate-900 dark:text-white mt-1.5">
-              {collectionRate}%
+              {formatNumber(collectionRate)}%
             </h2>
           </div>
           <div className="flex size-9 items-center justify-center rounded-xl bg-green-50 dark:bg-green-900/20 text-semantic-success shadow-sm border border-green-100 dark:border-green-900/10 shrink-0">

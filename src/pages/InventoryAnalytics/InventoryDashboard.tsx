@@ -5,6 +5,7 @@ import { KPIWidget } from '../../components/InventoryAnalytics/Dashboard/KPIWidg
 import { StockStatusChart, StockStatusItem } from '../../components/InventoryAnalytics/Dashboard/StockStatusChart';
 import { AlertsPanel, AlertItem } from '../../components/InventoryAnalytics/Dashboard/AlertsPanel';
 import { ABCSummary, ABCItem } from '../../components/InventoryAnalytics/Dashboard/ABCSummary';
+import { formatPYG, formatNumber } from '../../utils/currencyUtils';
 
 export const InventoryDashboard: React.FC = () => {
   const [data, setData] = useState<InventoryDashboardData | null>(null);
@@ -43,10 +44,9 @@ export const InventoryDashboard: React.FC = () => {
     return <div className="p-8 text-center text-rose-500">Error al cargar los datos del dashboard.</div>;
   }
 
-  // Calculamos la ganancia desde el overview si está disponible
+  // Calculamos la ganancia de forma dinámica
   const potentialProfit = overview?.potential_profit || 
-                         (overview?.total_value - overview?.total_cost) || 
-                         (data.kpis.total_value * 0.28); // Fallback dinámico si fallara el overview
+                         (overview?.total_value && overview?.total_cost ? (overview.total_value - overview.total_cost) : data.kpis.potential_profit);
 
   const stockStatusItems: StockStatusItem[] = [
     { label: 'En Stock', percentage: data.stock_status.in_stock_pct, count: data.stock_status.in_stock, colorClass: 'bg-emerald-500', strokeClass: 'stroke-emerald-500' },
@@ -81,7 +81,7 @@ export const InventoryDashboard: React.FC = () => {
       label: 'Clase A (Alta Rotación/Valor)', 
       percentage: data.abc_summary.class_a_value_pct, 
       count: data.abc_summary.class_a_count, 
-      value: `Gs. ${(totalValueForABC * data.abc_summary.class_a_value_pct / 100).toLocaleString('es-PY')}`, 
+      value: formatPYG(totalValueForABC * data.abc_summary.class_a_value_pct / 100), 
       description: 'Productos que representan el 80% del valor total.' 
     },
     { 
@@ -89,7 +89,7 @@ export const InventoryDashboard: React.FC = () => {
       label: 'Clase B (Importancia Media)', 
       percentage: data.abc_summary.class_b_value_pct, 
       count: data.abc_summary.class_b_count, 
-      value: `Gs. ${(totalValueForABC * data.abc_summary.class_b_value_pct / 100).toLocaleString('es-PY')}`, 
+      value: formatPYG(totalValueForABC * data.abc_summary.class_b_value_pct / 100), 
       description: 'Productos que representan el 15% del valor total.' 
     },
     { 
@@ -97,7 +97,7 @@ export const InventoryDashboard: React.FC = () => {
       label: 'Clase C (Bajo Valor Unitario)', 
       percentage: data.abc_summary.class_c_value_pct, 
       count: data.abc_summary.class_c_count, 
-      value: `Gs. ${(totalValueForABC * data.abc_summary.class_c_value_pct / 100).toLocaleString('es-PY')}`, 
+      value: formatPYG(totalValueForABC * data.abc_summary.class_c_value_pct / 100), 
       description: 'Productos que representan el 5% del valor total.' 
     },
   ];
@@ -111,12 +111,14 @@ export const InventoryDashboard: React.FC = () => {
           <p className="text-slate-500 text-sm font-medium">Vista analítica de existencias y KPIs financieros en Guaraníes.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg text-sm font-bold shadow-sm font-mono">
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg text-sm font-bold shadow-sm font-mono text-slate-600 dark:text-slate-300">
             <span className="material-symbols-outlined text-slate-400 text-lg">calendar_today</span>
-            <span>Periodo: Actual</span>
-            <span className="material-symbols-outlined text-slate-400 text-lg">expand_more</span>
+            <span>Periodo: {new Date().toLocaleDateString('es-PY', { month: 'long', year: 'numeric' })}</span>
           </div>
-          <button className="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors shadow-sm uppercase tracking-wider">
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors shadow-sm uppercase tracking-wider"
+          >
             <span className="material-symbols-outlined text-lg">refresh</span>
             Actualizar
           </button>
@@ -127,35 +129,29 @@ export const InventoryDashboard: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPIWidget 
           title="Valor Total del Inventario"
-          value={`Gs. ${data.kpis.total_value.toLocaleString('es-PY')}`}
+          value={formatPYG(data.kpis.total_value)}
           icon="inventory"
-          trend="+4.5% vs mes anterior"
-          trendType="positive"
         />
         <KPIWidget 
           title="Ganancia Potencial"
-          value={`Gs. ${potentialProfit.toLocaleString('es-PY')}`}
+          value={formatPYG(potentialProfit)}
           icon="payments"
           iconColorClass="text-emerald-500"
           bgColorClass="bg-emerald-50 dark:bg-emerald-500/10"
-          trend="+12.3% proyectado"
-          trendType="positive"
         />
         <KPIWidget 
           title="Tasa de Rotación"
-          value={`${Number(data.kpis.turnover_rate).toFixed(2)}x`}
+          value={`${formatNumber(data.kpis.turnover_rate)}x`}
           icon="sync_alt"
           iconColorClass="text-blue-500"
           bgColorClass="bg-blue-50 dark:bg-blue-500/10"
-          badge="En Meta"
         />
         <KPIWidget 
           title="Stock Muerto"
-          value={`${Number(data.kpis.dead_stock_pct).toFixed(2)}%`}
+          value={`${formatNumber(data.kpis.dead_stock_pct)}%`}
           icon="package_2"
           iconColorClass="text-amber-500"
           bgColorClass="bg-amber-50 dark:bg-amber-500/10"
-          badge="Alerta Moderada"
         />
       </div>
 
@@ -165,7 +161,7 @@ export const InventoryDashboard: React.FC = () => {
           <StockStatusChart 
             items={stockStatusItems} 
             totalLabel="Productos" 
-            totalValue={overview?.total_products?.toString() || (data.stock_status.in_stock + data.stock_status.low_stock + data.stock_status.out_of_stock + data.stock_status.overstock).toString()}
+            totalValue={(overview?.total_products || (data.stock_status.in_stock + data.stock_status.low_stock + data.stock_status.out_of_stock + data.stock_status.overstock)).toLocaleString('es-PY')}
           />
         </div>
         <div className="lg:col-span-4">

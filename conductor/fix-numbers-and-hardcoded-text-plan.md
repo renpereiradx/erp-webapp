@@ -1,45 +1,40 @@
-# Plan de Corrección: Formateo de Números e Internacionalización
+# Plan de Refactorización: Dashboard de Analítica de Inventario
 
-Este plan aborda el problema de los números con decimales infinitos y la presencia de código "hardcodeado" (textos fijos en español) en varias páginas críticas del ERP.
+Este plan aborda la eliminación de datos hardcodeados y la normalización del formato numérico en la página `/inventory-analytics/dashboard`.
 
-## Objetivos
-1.  **Formateo de Números:** Asegurar que todos los valores numéricos (cantidades, porcentajes, stocks) se muestren con un máximo de 2 decimales (o 0 para PYG según corresponda).
-2.  **Internacionalización (i18n):** Migrar los textos en español que están fijos en el JSX a los archivos de traducción correspondientes usando la función `t()`.
-3.  **Centralización:** Utilizar utilidades globales para evitar la repetición de lógica de formateo en cada página.
+## Objetivo
+- Eliminar contenido estático (tendencias, insignias, textos) que no provenga de la API.
+- Asegurar que todos los datos numéricos utilicen un máximo de dos decimales con redondeo preciso.
+- Mantener la compatibilidad con los modos `api` y `demo`.
 
-## Archivos y Contextos Clave
--   **Utilidades:** `src/utils/currencyUtils.js` (se extenderá para incluir `formatNumber`).
--   **Traducciones:** `src/lib/i18n/locales/es/*.js` (donde se añadirán nuevas claves).
--   **Páginas Afectadas:**
-    -   `src/pages/Purchases.tsx`
-    -   `src/pages/InventoryManagement.jsx`
-    -   `src/pages/DetailedKPIs.jsx`
-    -   `src/pages/SalesNew.tsx`
-    -   `src/pages/Dashboard.jsx`
+## Archivos Afectados
+- `src/pages/InventoryAnalytics/InventoryDashboard.tsx`
+- `src/types/inventoryAnalytics.ts` (opcional, para añadir campos de tendencia si se decide soportarlos)
 
-## Pasos de Implementación
+## Cambios Propuestos
 
-### Fase 1: Utilidades de Formateo
-1.  Modificar `src/utils/currencyUtils.js` para añadir la función `formatNumber(value, decimals = 2)`.
-2.  Asegurar que `formatPYG` se use correctamente para montos en moneda local (0 decimales).
+### 1. Limpieza de `InventoryDashboard.tsx`
+- **KPIs:**
+    - Eliminar `trend` y `trendType` de los `KPIWidget` ya que no existen en el modelo de datos actual de la API (`InventoryDashboardData`).
+    - Eliminar `badge` de los `KPIWidget` (ej: "En Meta", "Alerta Moderada").
+    - Refactorizar `potentialProfit`: Eliminar el fallback hardcodeado `(data.kpis.total_value * 0.28)` y usar `0` o un cálculo basado estrictamente en datos existentes si `overview` no está disponible.
+- **Header:**
+    - Cambiar "Periodo: Actual" por un valor dinámico o eliminar si no hay control de periodo implementado.
+- **Formato Numérico:**
+    - Revisar todos los lugares donde se muestran números y aplicar `.toFixed(2)` o `Intl.NumberFormat` con `maximumFractionDigits: 2`.
+    - En el Resumen ABC, asegurar que el cálculo de `value` (en Gs.) sea preciso.
 
-### Fase 2: Refactorización de Páginas (Sistemático)
-Para cada página (empezando por `Purchases.tsx` e `InventoryManagement.jsx`):
-1.  **Identificación:** Localizar textos fijos en el JSX (ej. `<h1>Gestión de Compras</h1>`).
-2.  **Traducción:**
-    -   Añadir la clave al archivo de idioma correspondiente (ej. `src/lib/i18n/locales/es/purchases.js`).
-    -   Reemplazar el texto en el JSX por `t('clave.identificador', 'Texto Original')`.
-3.  **Formateo de Números:**
-    -   Identificar variables numéricas renderizadas directamente (ej. `{item.quantity}`).
-    -   Envolverlas en `formatNumber(value)` o la utilidad correspondiente.
-    -   Asegurar que los cálculos complejos (márgenes, porcentajes) usen `.toFixed(2)` antes de ser mostrados o pasen por el formateador.
+### 2. Actualización de Tipos (Opcional pero Recomendado)
+- Si se desea soportar tendencias en el futuro, añadir campos opcionales `trend` y `trend_type` a la interfaz `InventoryDashboardData` en `src/types/inventoryAnalytics.ts`. Por ahora, el enfoque es limpiar lo hardcodeado.
 
-### Fase 3: Validación y Pruebas
-1.  Verificar visualmente que las páginas ya no muestran decimales infinitos.
-2.  Cambiar el idioma del sistema (si es posible) para asegurar que las nuevas claves de traducción funcionan correctamente.
-3.  Ejecutar el linter para asegurar que no se introdujeron errores de sintaxis.
+## Verificación y Pruebas
+1. **Modo Demo:** Verificar que los datos se cargan correctamente desde los mocks y que no aparecen las tendencias/insignias eliminadas.
+2. **Modo API:** Asegurar que la página no rompa si la API real no envía ciertos campos opcionales.
+3. **Formato:** Validar visualmente que todos los números tengan como máximo 2 decimales (ej: 4.20x en lugar de 4.2x si se prefiere consistencia, o simplemente asegurar que no excedan 2).
+4. **Cálculos:** Verificar que `potentialProfit` y los valores del ABC cuadren con los totales.
 
-## Verificación
--   Los números como `22.222222222255` deberán mostrarse como `22.22`.
--   El título "Gestión de Compras" deberá provenir de `t()`.
--   No deberá haber duplicación de la función `formatCurrency` en las páginas refactorizadas.
+## Cronograma de Implementación
+1. Identificación de strings hardcodeados.
+2. Aplicación de formatos numéricos.
+3. Eliminación de props estáticas en componentes.
+4. Validación final.

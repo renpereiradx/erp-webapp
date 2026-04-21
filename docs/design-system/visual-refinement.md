@@ -60,9 +60,35 @@ La fidelidad visual depende de que las clases utilizadas coincidan con la defini
 - **Verificar `tailwind.config.js`**: Si el diseño pide `rounded-xl` (12px), asegúrate de que el token en la configuración no esté sobreescrito por un valor diferente (ej. 8px).
 - **Consistencia de Tokens**: Si se define `xl` como el estándar para tarjetas, evita usar `lg` o `2xl` arbitrariamente en la misma vista para mantener la armonía visual.
 
+---
+
+## 4. Anclas Visuales (Visual Anchors) - Deep Brand Blue
+
+Para destacar KPIs estratégicos o secciones de alta prioridad, se debe evitar el uso de bloques negros puros que rompan la estética ligera. En su lugar, utilizamos el patrón **Deep Brand Blue**.
+
+### Características del Patrón
+- **Fondo:** `bg-gradient-to-br from-[#003966] via-[#004578] to-[#0f6cbd]`
+- **Sombra:** `shadow-2xl shadow-blue-900/20`
+- **Contraste:** Texto blanco (`text-white`) con acentos esmeralda (`text-emerald-300`) para valores positivos.
+
+---
+
+## 5. Jerarquía de Pesos Numéricos (Numerical Contrast)
+
+No todos los números en la interfaz deben tener el mismo peso visual. La jerarquía se establece mediante el contraste de `font-weight` en fuentes monoespaciadas (`font-mono`).
+
+### Escala de Pesos
+- **font-black (900)**: **Métricas Maestras.** Totales globales de la página y anclas visuales.
+- **font-bold (700)**: **Métricas Primarias.** Valores estándar de tarjetas KPI y totales de fila.
+- **font-semibold (600)**: **Métricas Secundarias.** Datos de soporte en tablas (cantidades, markup, costos).
+- **font-medium (500)**: **Métricas de Apoyo.** Paginación, timestamps y metadatos.
+
+---
+
 ### Checklist de Fidelidad Visual
 - [ ] ¿El contenedor padre tiene `rounded-xl` y `overflow-hidden`?
 - [ ] ¿Los elementos con fondo interno respetan los bordes del padre?
 - [ ] ¿Las cifras largas en KPIs usan `min-w-0` para no empujar iconos?
 - [ ] ¿El `tracking-tight` y `font-extrabold` se aplicaron a los títulos principales?
 - [ ] ¿Los espaciados (`gap-*`, `p-*`) siguen la escala de 8px del sistema?
+- [ ] ¿Se aplica contraste de pesos (`black` vs `semibold`) en los números?

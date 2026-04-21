@@ -32,7 +32,7 @@
   <link rel="preload" href="https://github.githubassets.com/assets/MonaSansVF-wdth-wght-opsz-902d64c7ad02.woff2" as="font" type="font/woff2" crossorigin>
 
 
-  <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/light-0c8222dcd7a4f9b7.css" /><link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/light_high_contrast-51c0c6e0c085cc0f.css" /><link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/dark-fc6eec18532c3ae0.css" /><link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/dark_high_contrast-96d7b2bab5a6ae4e.css" /><link data-color-theme="light" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light-0c8222dcd7a4f9b7.css" /><link data-color-theme="light_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_high_contrast-51c0c6e0c085cc0f.css" /><link data-color-theme="light_colorblind" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_colorblind-4dd12c5689d6b012.css" /><link data-color-theme="light_colorblind_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_colorblind_high_contrast-dfa0c9e22ba6ba2b.css" /><link data-color-theme="light_tritanopia" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_tritanopia-9fd9c8859395d1a8.css" /><link data-color-theme="light_tritanopia_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_tritanopia_high_contrast-9c32304a2a8ac631.css" /><link data-color-theme="dark" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark-fc6eec18532c3ae0.css" /><link data-color-theme="dark_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_high_contrast-96d7b2bab5a6ae4e.css" /><link data-color-theme="dark_colorblind" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_colorblind-0c6ca283d4d35cea.css" /><link data-color-theme="dark_colorblind_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_colorblind_high_contrast-2dc46b4919fae81e.css" /><link data-color-theme="dark_tritanopia" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_tritanopia-271332ec9362e8d3.css" /><link data-color-theme="dark_tritanopia_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_tritanopia_high_contrast-eb5bb84e91d6d553.css" /><link data-color-theme="dark_dimmed" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_dimmed-f3aa862f2ac7ead2.css" /><link data-color-theme="dark_dimmed_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_dimmed_high_contrast-206b6b93f856629b.css" />
+  <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/light-8db8ec9d843a6198.css" /><link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/light_high_contrast-1ebc8c2fbf646f62.css" /><link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/dark-5a2079a7af880b5d.css" /><link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/dark_high_contrast-f22f15c407d6eca1.css" /><link data-color-theme="light" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light-8db8ec9d843a6198.css" /><link data-color-theme="light_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_high_contrast-1ebc8c2fbf646f62.css" /><link data-color-theme="light_colorblind" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_colorblind-2c630c094e7e58fe.css" /><link data-color-theme="light_colorblind_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_colorblind_high_contrast-1e74f08f26690427.css" /><link data-color-theme="light_tritanopia" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_tritanopia-a55e823d68b6636a.css" /><link data-color-theme="light_tritanopia_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_tritanopia_high_contrast-2a79786d0d9a72b7.css" /><link data-color-theme="dark" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark-5a2079a7af880b5d.css" /><link data-color-theme="dark_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_high_contrast-f22f15c407d6eca1.css" /><link data-color-theme="dark_colorblind" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_colorblind-f483db49f1126b90.css" /><link data-color-theme="dark_colorblind_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_colorblind_high_contrast-666e5c9bc47065ef.css" /><link data-color-theme="dark_tritanopia" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_tritanopia-1424433ddc9f2f2e.css" /><link data-color-theme="dark_tritanopia_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_tritanopia_high_contrast-76544daae5228ed1.css" /><link data-color-theme="dark_dimmed" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_dimmed-90ebacd7fa543c51.css" /><link data-color-theme="dark_dimmed_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_dimmed_high_contrast-9ab7fa96747a4402.css" />
 
   <style type="text/css">
     :root {
@@ -44,7 +44,7 @@
     }
   </style>
 
-    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-primitives-10bf9dd67e3d70bd.css" />
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-primitives-0f570a01cbe448fb.css" />
     <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-0fcd9af82350aeda.css" />
     <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/global-c9ae636e7affabfe.css" />
     <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/github-c94ab8d1f22049a8.css" />
@@ -52,13 +52,13 @@
 
   
 
-  <script type="application/json" id="client-env">{"locale":"en","featureFlags":["actions_custom_images_storage_billing_ui_visibility","actions_image_version_event","actions_service_container_command","alternate_user_config_repo","arianotify_comprehensive_migration","batch_suggested_changes","billing_discount_threshold_notification","code_scanning_all_branch_query","code_scanning_dfa_degraded_experience_notice","code_view_react_file_upload","codespaces_prebuild_region_target_update","codespaces_tab_react","coding_agent_model_selection","coding_agent_model_selection_all_skus","comment_viewer_copy_raw_markdown","contentful_primer_code_blocks","copilot_agent_image_upload","copilot_agent_snippy","copilot_api_agentic_issue_marshal_yaml","copilot_ask_mode_dropdown","copilot_chat_attach_multiple_images","copilot_chat_clear_model_selection_for_default_change","copilot_chat_enable_tool_call_logs","copilot_chat_explain_error_user_model","copilot_chat_file_redirect","copilot_chat_input_commands","copilot_chat_opening_thread_switch","copilot_chat_reduce_quota_checks","copilot_chat_search_bar_redirect","copilot_chat_selection_attachments","copilot_chat_vision_in_claude","copilot_chat_vision_preview_gate","copilot_custom_copilots","copilot_custom_copilots_feature_preview","copilot_diff_explain_conversation_intent","copilot_diff_reference_context","copilot_duplicate_thread","copilot_extensions_hide_in_dotcom_chat","copilot_extensions_removal_on_marketplace","copilot_features_sql_server_logo","copilot_file_block_ref_matching","copilot_ftp_hyperspace_upgrade_prompt","copilot_icebreakers_experiment_dashboard","copilot_icebreakers_experiment_hyperspace","copilot_immersive_code_block_transition_wrap","copilot_immersive_embedded","copilot_immersive_embedded_mode","copilot_immersive_file_block_transition_open","copilot_immersive_file_preview_keep_mounted","copilot_immersive_job_result_preview","copilot_immersive_layout_routes","copilot_immersive_structured_model_picker","copilot_immersive_task_hyperlinking","copilot_immersive_task_within_chat_thread","copilot_mc_cli_resume_any_users_task","copilot_mission_control_always_send_integration_id","copilot_mission_control_cli_resume_with_task_id","copilot_mission_control_initial_data_spinner","copilot_mission_control_lazy_load_pr_data","copilot_mission_control_scroll_to_bottom_button","copilot_mission_control_task_alive_updates","copilot_org_policy_page_focus_mode","copilot_redirect_header_button_to_agents","copilot_resource_panel","copilot_scroll_preview_tabs","copilot_share_active_subthread","copilot_spaces_ga","copilot_spaces_individual_policies_ga","copilot_spaces_pagination","copilot_spark_empty_state","copilot_spark_handle_nil_friendly_name","copilot_swe_agent_hide_model_picker_if_only_auto","copilot_swe_agent_pr_comment_model_picker","copilot_swe_agent_use_subagents","copilot_task_api_github_rest_style","copilot_unconfigured_is_inherited","copilot_usage_metrics_ga","copilot_workbench_slim_line_top_tabs","custom_instructions_file_references","dashboard_indexeddb_caching","dashboard_lists_max_age_filter","dashboard_universe_2025_feedback_dialog","flex_cta_groups_mvp","global_nav_react","hyperspace_2025_logged_out_batch_1","hyperspace_2025_logged_out_batch_2","hyperspace_2025_logged_out_batch_3","ipm_global_transactional_message_agents","ipm_global_transactional_message_copilot","ipm_global_transactional_message_issues","ipm_global_transactional_message_prs","ipm_global_transactional_message_repos","ipm_global_transactional_message_spaces","issue_cca_modal_open","issue_cca_visualization","issue_fields_global_search","issue_fields_visibility_indicator","issues_expanded_file_types","issues_index_semantic_search","issues_lazy_load_comment_box_suggestions","issues_react_bots_timeline_pagination","issues_react_chrome_container_query_fix","issues_react_prohibit_title_fallback","issues_react_timeline_side_panel","issues_search_type_gql","landing_pages_ninetailed","landing_pages_web_vitals_tracking","lifecycle_label_name_updates","low_quality_classifier","marketing_pages_search_explore_provider","memex_default_issue_create_repository","memex_live_update_hovercard","memex_mwl_filter_field_delimiter","memex_remove_deprecated_type_issue","merge_status_header_feedback","notifications_menu_defer_labels","oauth_authorize_clickjacking_protection","octocaptcha_origin_optimization","primer_react_overlay_max_height_clamp_to_viewport","primer_react_spinner_synchronize_animations","prs_conversations_react","rules_insights_filter_bar_created","sample_network_conn_type","secret_scanning_pattern_alerts_link","session_logs_ungroup_reasoning_text","site_features_copilot_universe","site_homepage_collaborate_video","spark_prompt_secret_scanning","spark_server_connection_status","suppress_automated_browser_vitals","viewscreen_sandbox","webp_support","workbench_store_readonly"],"copilotApiOverrideUrl":"https://api.githubcopilot.com"}</script>
+  <script type="application/json" id="client-env">{"locale":"en","featureFlags":["actions_custom_images_storage_billing_ui_visibility","actions_image_version_event","agent_conflict_resolution","alternate_user_config_repo","arianotify_comprehensive_migration","batch_suggested_changes","billing_discount_threshold_notification","block_user_with_note","code_scanning_alert_tracking_links_phase_2","code_scanning_dfa_degraded_experience_notice","codespaces_prebuild_region_target_update","codespaces_tab_react","coding_agent_model_selection","coding_agent_model_selection_all_skus","coding_agent_third_party_model_ui","comment_viewer_copy_raw_markdown","contentful_primer_code_blocks","copilot_agent_image_upload","copilot_agent_snippy","copilot_api_agentic_issue_marshal_yaml","copilot_ask_mode_dropdown","copilot_automation_session_author","copilot_chat_attach_multiple_images","copilot_chat_clear_model_selection_for_default_change","copilot_chat_enable_tool_call_logs","copilot_chat_explain_error_user_model","copilot_chat_file_redirect","copilot_chat_input_commands","copilot_chat_opening_thread_switch","copilot_chat_reduce_quota_checks","copilot_chat_search_bar_redirect","copilot_chat_selection_attachments","copilot_chat_vision_in_claude","copilot_chat_vision_preview_gate","copilot_custom_copilots","copilot_custom_copilots_feature_preview","copilot_diff_explain_conversation_intent","copilot_diff_reference_context","copilot_duplicate_thread","copilot_extensions_hide_in_dotcom_chat","copilot_extensions_removal_on_marketplace","copilot_features_sql_server_logo","copilot_file_block_ref_matching","copilot_ftp_hyperspace_upgrade_prompt","copilot_icebreakers_experiment_dashboard","copilot_icebreakers_experiment_hyperspace","copilot_immersive_code_block_transition_wrap","copilot_immersive_embedded","copilot_immersive_file_block_transition_open","copilot_immersive_file_preview_keep_mounted","copilot_immersive_job_result_preview","copilot_immersive_layout_routes","copilot_immersive_structured_model_picker","copilot_immersive_task_hyperlinking","copilot_immersive_task_within_chat_thread","copilot_mc_cli_resume_any_users_task","copilot_mission_control_always_send_integration_id","copilot_mission_control_cli_resume_with_task_id","copilot_mission_control_initial_data_spinner","copilot_mission_control_lazy_load_pr_data","copilot_mission_control_scroll_to_bottom_button","copilot_mission_control_task_alive_updates","copilot_org_policy_page_focus_mode","copilot_redirect_header_button_to_agents","copilot_resource_panel","copilot_scroll_preview_tabs","copilot_share_active_subthread","copilot_spaces_ga","copilot_spaces_individual_policies_ga","copilot_spaces_pagination","copilot_spark_empty_state","copilot_spark_handle_nil_friendly_name","copilot_swe_agent_hide_model_picker_if_only_auto","copilot_swe_agent_pr_comment_model_picker","copilot_swe_agent_use_subagents","copilot_task_api_github_rest_style","copilot_unconfigured_is_inherited","copilot_usage_metrics_ga","copilot_workbench_slim_line_top_tabs","custom_instructions_file_references","dashboard_indexeddb_caching","dashboard_lists_max_age_filter","dashboard_universe_2025_feedback_dialog","flex_cta_groups_mvp","global_nav_react","hyperspace_2025_logged_out_batch_1","hyperspace_2025_logged_out_batch_2","hyperspace_2025_logged_out_batch_3","ipm_global_transactional_message_agents","ipm_global_transactional_message_copilot","ipm_global_transactional_message_issues","ipm_global_transactional_message_prs","ipm_global_transactional_message_repos","ipm_global_transactional_message_spaces","issue_cca_modal_open","issue_cca_multi_assign_modal","issue_cca_visualization","issue_fields_global_search","issues_bulk_sync_search_indexing","issues_expanded_file_types","issues_lazy_load_comment_box_suggestions","issues_react_bots_timeline_pagination","issues_react_chrome_container_query_fix","issues_react_relay_cache_index","issues_react_timeline_side_panel","issues_search_type_gql","landing_pages_ninetailed","landing_pages_web_vitals_tracking","lifecycle_label_name_updates","low_quality_classifier","marketing_pages_search_explore_provider","memex_default_issue_create_repository","memex_live_update_hovercard","memex_mwl_filter_field_delimiter","memex_remove_deprecated_type_issue","merge_status_header_feedback","notifications_menu_defer_labels","oauth_authorize_clickjacking_protection","octocaptcha_origin_optimization","prs_conversations_react","rules_insights_filter_bar_created","sample_network_conn_type","secret_scanning_pattern_alerts_link","session_logs_ungroup_reasoning_text","site_features_copilot_universe","site_homepage_collaborate_video","spark_prompt_secret_scanning","spark_server_connection_status","suppress_automated_browser_vitals","ui_skip_on_anchor_click","viewscreen_sandbox","webp_support","workbench_store_readonly"],"copilotApiOverrideUrl":"https://api.githubcopilot.com"}</script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/high-contrast-cookie-26d6bae49dfd2c29.js"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/wp-runtime-fd196445c3d4848f.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/fetch-utilities-78a4114cfa572239.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/wp-runtime-3157b2b78a104788.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/fetch-utilities-23fca2e84f65970f.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/85924-e131bec5f99667e1.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/28839-734cb6d8a7150172.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/34646-bea6b9a63337cd73.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/34646-ea3a02acfb1affb7.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/environment-51c0968cf21c176d.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/runtime-helpers-3bb6f7d6b7a2f531.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/2966-f6796bfd155feae1.js" defer="defer"></script>
@@ -66,33 +66,34 @@
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/41013-7a6deee6d6ff15eb.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/51210-3abb7238871a5b29.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/64247-7de91c52a8aca0eb.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/31721-17b28a26ab4c2e02.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/81683-1370179bf9bdc0f0.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/9338-6be513b239268c6e.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/46740-6606b1026a237412.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/39130-334926c8365e947c.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/github-elements-459d4cd7a0f718d7.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/element-registry-b58bad9e7429d905.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/react-core-e2e4dc7ec809e513.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/53102-7adf5a6968114b74.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/github-elements-f78f5f1cfce010ca.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/element-registry-325e02af032ac05a.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/react-core-18a3c5a721cd6172.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/react-lib-a4cf89fce9a1300a.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/7053-fe40037405b8998b.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/58889-5fa21a6f16a85112.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/58889-d610f96b052eeec5.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/79039-2565b539a6ebc09b.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/61110-93cf7706e5dc8bfa.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/2887-47ac9a4b8862e6bf.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/26533-4df1172b25427069.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/17348-787e0b6b008adb94.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/93716-c0d708c7899c4298.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/86483-92f38323ee870655.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/28153-9a1a3fc3bf344626.js" defer="defer"></script>
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/60481-1a8127058c27e9af.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/46287-cd100bdce32a28f3.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/2498-7a413c8209222158.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/61025-07acdbf2975da96b.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/89627-fbbd31c43d83e10c.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/79087-52380608de8b0939.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/49029-32f138b26aa15ad8.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/99328-5e06da57c4622e21.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/behaviors-d72208d523482ecc.js" defer="defer"></script>
-<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/react-core.bd894c565a04e39a.module.css" />
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/46287-6c0cfc2c01413513.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/2498-3d75f19334baa301.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/61025-bb3e9d6f928ce438.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/89627-9ab4452238989035.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/79087-311cd6c222a9369e.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/49029-6159bf90b476d32f.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/99328-feb98d72e6134e37.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/behaviors-c72395749ee66f70.js" defer="defer"></script>
+<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/react-core.3902c02312ea4c60.module.css" />
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/4244-d5dcb589fae0ecbf.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/notifications-global-206312e9c9776c21.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/notifications-global-3fa46b9a6c6c431f.js" defer="defer"></script>
   
 
   <title>Page not found · GitHub · GitHub</title>
@@ -102,13 +103,13 @@
   <meta name="route-pattern" content="/:user_id/:repository/raw/*name(/*path)" data-turbo-transient>
   <meta name="route-controller" content="blob" data-turbo-transient>
   <meta name="route-action" content="raw" data-turbo-transient>
-  <meta name="fetch-nonce" content="v2:81cfc666-4c52-34eb-7c7c-c37de4b851ad">
+  <meta name="fetch-nonce" content="v2:cbf3daff-01fe-4336-cb3f-4be7e821d5c1">
 
     
   <meta name="current-catalog-service-hash" content="f3abb0cc802f3d7b95fc8762b94bdcb13bf39634c40c357301c4aa1d67a256fb">
 
 
-  <meta name="request-id" content="3B50:2CC33D:1B62AF2:1E966BC:69D935AB" data-turbo-transient="true" /><meta name="html-safe-nonce" content="5fab8ac57232bb1ef98a85819dff94a9225904e2d455dbb2294ef2ccf919f1c6" data-turbo-transient="true" /><meta name="visitor-payload" content="eyJyZWZlcnJlciI6bnVsbCwicmVxdWVzdF9pZCI6IjNCNTA6MkNDMzNEOjFCNjJBRjI6MUU5NjZCQzo2OUQ5MzVBQiIsInZpc2l0b3JfaWQiOiI3OTE3NzQ2MjI3Mzk5NzAxOTMyIiwicmVnaW9uX2VkZ2UiOiJicmF6aWxzb3V0aCIsInJlZ2lvbl9yZW5kZXIiOiJpYWQifQ==" data-turbo-transient="true" /><meta name="visitor-hmac" content="4312304b0e51a18078fbcdc4bd660c8b3328e7d1712aa589a3f8998b7512ee6b" data-turbo-transient="true" />
+  <meta name="request-id" content="D8A2:3CCBB:2260A2A:28E2EF7:69E6244F" data-turbo-transient="true" /><meta name="html-safe-nonce" content="747e1356b7d9e66c043bef30ecb964c3819952e81e83b932e18f5f32b24b590f" data-turbo-transient="true" /><meta name="visitor-payload" content="eyJyZWZlcnJlciI6bnVsbCwicmVxdWVzdF9pZCI6IkQ4QTI6M0NDQkI6MjI2MEEyQToyOEUyRUY3OjY5RTYyNDRGIiwidmlzaXRvcl9pZCI6IjczNTg2OTA0ODIxNzE4MTQ5OTEiLCJyZWdpb25fZWRnZSI6ImJyYXppbHNvdXRoIiwicmVnaW9uX3JlbmRlciI6ImlhZCJ9" data-turbo-transient="true" /><meta name="visitor-hmac" content="553be9b63c0588bf5531f26ccac56cdb0741270f2c24c1a5dec5429e49366f8a" data-turbo-transient="true" />
 
 
     <meta name="hovercard-subject-tag" content="repository:30675533" data-turbo-transient>
@@ -117,7 +118,7 @@
   <meta name="github-keyboard-shortcuts" content="copilot" data-turbo-transient="true" />
   
 
-  <meta name="selected-link" value="/google/fonts/raw/main/ofl/publicsans/PublicSans-Regular.ttf" data-turbo-transient>
+  <meta name="selected-link" value="/google/fonts/raw/main/ofl/publicsans/static/PublicSans-Regular.ttf" data-turbo-transient>
   <link rel="assets" href="https://github.githubassets.com/">
 
     <meta name="google-site-verification" content="Apib7-x98H0j5cPqHWwSMm6dNU4GmODRoqxLiDzdx9I">
@@ -149,7 +150,7 @@
 
     <link rel="fluid-icon" href="https://github.com/fluidicon.png" title="GitHub">
     <meta property="fb:app_id" content="1401488693436528">
-    <meta name="apple-itunes-app" content="app-id=1477376905, app-argument=https://github.com/google/fonts/raw/main/ofl/publicsans/PublicSans-Regular.ttf" />
+    <meta name="apple-itunes-app" content="app-id=1477376905, app-argument=https://github.com/google/fonts/raw/main/ofl/publicsans/static/PublicSans-Regular.ttf" />
 
       <meta property="og:url" content="https://github.com">
   <meta property="og:site_name" content="GitHub">
@@ -189,14 +190,14 @@
         <meta name="expected-hostname" content="github.com">
 
 
-  <meta http-equiv="x-pjax-version" content="28b7e8fdf149214865d8d681d97979f3330b603b29780e12e6f35c5861f11097" data-turbo-track="reload">
+  <meta http-equiv="x-pjax-version" content="31746881dce5713b4a10d85f5162ec61892f5669432b7fff188ac000647147fa" data-turbo-track="reload">
   <meta http-equiv="x-pjax-csp-version" content="568c098497d98702bac1642a2a853732a047a6ced28eabd3e15d50041a890235" data-turbo-track="reload">
   <meta http-equiv="x-pjax-css-version" content="f73979dd458769a2bfe421bdffa891592aaebc73da62484ac7b73821bbc7a00c" data-turbo-track="reload">
-  <meta http-equiv="x-pjax-js-version" content="ac70e43dfcc6e8eb7f49f130d80e90e67a61840bffb8600d39af2c56e053845f" data-turbo-track="reload">
+  <meta http-equiv="x-pjax-js-version" content="a8201d7a61ac1b3472d29008d386e4fbf7d12c1ac0f0047886acf94b30198697" data-turbo-track="reload">
 
   <meta name="turbo-cache-control" content="no-preview" data-turbo-transient="">
 
-      <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/site-d6a4a6738d32d010.css" />
+      <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/site-d209faaa96020e85.css" />
   <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/error-9736b9816c3df531.css" />
   <meta name="is_logged_out_page" content="true">
 
@@ -204,7 +205,7 @@
 
 
 
-      <link rel="canonical" href="https://github.com/google/fonts/raw/main/ofl/publicsans/PublicSans-Regular.ttf" data-turbo-transient>
+      <link rel="canonical" href="https://github.com/google/fonts/raw/main/ofl/publicsans/static/PublicSans-Regular.ttf" data-turbo-transient>
 
 
     <meta name="turbo-body-classes" content="logged-out env-production page-responsive min-height-full d-flex flex-column">
@@ -215,7 +216,7 @@
 
   <meta name="browser-errors-url" content="https://api.github.com/_private/browser/errors">
 
-  <meta name="release" content="db74417cd5cbb6f1042fb89168957e2b804d2110">
+  <meta name="release" content="52dc43e70fc05e73d6f624a50172706d0780e25c">
   <meta name="ui-target" content="full">
 
   <link rel="mask-icon" href="https://github.githubassets.com/assets/pinned-octocat-093da3e6fa40.svg" color="#000000">
@@ -242,8 +243,8 @@
     <span style="width: 0%;" data-view-component="true" class="Progress-item progress-pjax-loader-bar left-0 top-0 color-bg-accent-emphasis"></span>
 </span>      
       
-      <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-react-css.84cd0c8d595d6b96.module.css" />
-<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/keyboard-shortcuts-dialog.226020b781ed6407.module.css" />
+      <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-react-css.1169a8129575ca06.module.css" />
+<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/keyboard-shortcuts-dialog.ae93bdc5a5edda67.module.css" />
 
 <react-partial
   partial-name="keyboard-shortcuts-dialog"
@@ -266,8 +267,8 @@
 
               
 <script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/46752-46c707717fcbe6a9.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/86735-f3e914a229b8e278.js" defer="defer"></script>
-<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/sessions-376c4ed1ca5aceda.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/90350-4433d18838554aeb.js" defer="defer"></script>
+<script crossorigin="anonymous" type="application/javascript" src="https://github.githubassets.com/assets/sessions-e74d03d993e84335.js" defer="defer"></script>
 
 <style>
   /* Override primer focus outline color for marketing header dropdown links for better contrast */
@@ -306,23 +307,23 @@
 
       <div class="d-flex flex-1 flex-order-2 text-right d-lg-none gap-2 flex-justify-end">
           <a
-            href="/login?return_to=https%3A%2F%2Fgithub.com%2Fgoogle%2Ffonts%2Fraw%2Fmain%2Fofl%2Fpublicsans%2FPublicSans-Regular.ttf"
+            href="/login?return_to=https%3A%2F%2Fgithub.com%2Fgoogle%2Ffonts%2Fraw%2Fmain%2Fofl%2Fpublicsans%2Fstatic%2FPublicSans-Regular.ttf"
             class="HeaderMenu-link HeaderMenu-button d-inline-flex f5 no-underline border color-border-default rounded-2 px-2 py-1 color-fg-inherit js-prevent-focus-on-mobile-nav"
-            data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/google/fonts/raw/main/ofl/publicsans/PublicSans-Regular.ttf&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="3431fbe4f35cebd9cbe15941895284e6f704555c82905fdb32ee36ebe82faa1a"
+            data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/google/fonts/raw/main/ofl/publicsans/static/PublicSans-Regular.ttf&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="9b94606c7f9b44a30e078b811ebc133c711b978b2467515e5838e3070d53ce05"
             data-analytics-event="{&quot;category&quot;:&quot;Marketing nav&quot;,&quot;action&quot;:&quot;click to Sign in&quot;,&quot;label&quot;:&quot;ref_page:Marketing;ref_cta:Sign in;ref_loc:Header&quot;}"
           >
             Sign in
           </a>
               <div class="AppHeader-appearanceSettings">
     <react-partial-anchor>
-      <button data-target="react-partial-anchor.anchor" id="icon-button-a7171ad7-42f4-4c8e-b5ef-19142b4a85de" aria-labelledby="tooltip-c465879f-1426-4566-8dd1-3ee0750b13ab" type="button" disabled="disabled" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--medium AppHeader-button HeaderMenu-link border cursor-wait">  <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-sliders Button-visual">
+      <button data-target="react-partial-anchor.anchor" id="icon-button-288b8918-f9ab-4ea8-9700-167fae6a85af" aria-labelledby="tooltip-d9d3099a-abfb-498d-8a07-4a262c8b5177" type="button" disabled="disabled" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--medium AppHeader-button HeaderMenu-link border cursor-wait">  <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-sliders Button-visual">
     <path d="M15 2.75a.75.75 0 0 1-.75.75h-4a.75.75 0 0 1 0-1.5h4a.75.75 0 0 1 .75.75Zm-8.5.75v1.25a.75.75 0 0 0 1.5 0v-4a.75.75 0 0 0-1.5 0V2H1.75a.75.75 0 0 0 0 1.5H6.5Zm1.25 5.25a.75.75 0 0 0 0-1.5h-6a.75.75 0 0 0 0 1.5h6ZM15 8a.75.75 0 0 1-.75.75H11.5V10a.75.75 0 1 1-1.5 0V6a.75.75 0 0 1 1.5 0v1.25h2.75A.75.75 0 0 1 15 8Zm-9 5.25v-2a.75.75 0 0 0-1.5 0v1.25H1.75a.75.75 0 0 0 0 1.5H4.5v1.25a.75.75 0 0 0 1.5 0v-2Zm9 0a.75.75 0 0 1-.75.75h-6a.75.75 0 0 1 0-1.5h6a.75.75 0 0 1 .75.75Z"></path>
 </svg>
-</button><tool-tip id="tooltip-c465879f-1426-4566-8dd1-3ee0750b13ab" for="icon-button-a7171ad7-42f4-4c8e-b5ef-19142b4a85de" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute">Appearance settings</tool-tip>
+</button><tool-tip id="tooltip-d9d3099a-abfb-498d-8a07-4a262c8b5177" for="icon-button-288b8918-f9ab-4ea8-9700-167fae6a85af" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute">Appearance settings</tool-tip>
 
       <template data-target="react-partial-anchor.template">
-        <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-react-css.84cd0c8d595d6b96.module.css" />
-<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/appearance-settings.35f40c3a620f34f6.module.css" />
+        <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-react-css.1169a8129575ca06.module.css" />
+<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/appearance-settings.fef6f84625f0c138.module.css" />
 
 <react-partial
   partial-name="appearance-settings"
@@ -346,8 +347,8 @@
 
     <div class="HeaderMenu js-header-menu height-fit position-lg-relative d-lg-flex flex-column flex-auto top-0">
       <div class="HeaderMenu-wrapper d-flex flex-column flex-self-start flex-lg-row flex-auto rounded rounded-lg-0">
-            <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-react-css.84cd0c8d595d6b96.module.css" />
-<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/marketing-navigation.0d7de310f74771c9.module.css" />
+            <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-react-css.1169a8129575ca06.module.css" />
+<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/marketing-navigation.e73a9c6ad3677d4a.module.css" />
 
 <react-partial
   partial-name="marketing-navigation"
@@ -366,7 +367,7 @@
                 
 
 
-<qbsearch-input class="search-input" data-scope="" data-custom-scopes-path="/search/custom_scopes" data-delete-custom-scopes-csrf="kDCKm0VoyQw8YKpbkeloYY-Mxh_SHq56_L1QLBh8l5grVUHjxc9GSRmhGgVUE5KJLKGaHituCxdE2dpC7cmL2w" data-max-custom-scopes="10" data-header-redesign-enabled="false" data-initial-value="" data-blackbird-suggestions-path="/search/suggestions" data-jump-to-suggestions-path="/_graphql/GetSuggestedNavigationDestinations" data-current-repository="" data-current-org="" data-current-owner="" data-logged-in="false" data-copilot-chat-enabled="false" data-nl-search-enabled="false" data-retain-scroll-position="true">
+<qbsearch-input class="search-input" data-scope="" data-custom-scopes-path="/search/custom_scopes" data-delete-custom-scopes-csrf="2dNHrr0k5C28AQDyzcI0Nn3kaOf_xltwwTZO8wqpHSr73BcJoobT_N6j7n-8geIaYSmLGUdDzXL8919JGuDHSw" data-max-custom-scopes="10" data-header-redesign-enabled="false" data-initial-value="" data-blackbird-suggestions-path="/search/suggestions" data-jump-to-suggestions-path="/_graphql/GetSuggestedNavigationDestinations" data-current-repository="" data-current-org="" data-current-owner="" data-logged-in="false" data-copilot-chat-enabled="false" data-nl-search-enabled="false" data-retain-scroll-position="true">
   <div
     class="search-input-container search-with-dialog position-relative d-flex flex-row flex-items-center tmp-mr-4 rounded"
     data-action="click:qbsearch-input#searchInputContainerClicked"
@@ -430,7 +431,7 @@
           ></div>
           <div class="QueryBuilder-InputWrapper">
             <div aria-hidden="true" class="QueryBuilder-Sizer" data-target="query-builder.sizer"></div>
-            <input id="query-builder-test" name="query-builder-test" value="" autocomplete="off" type="text" role="combobox" spellcheck="false" aria-expanded="false" aria-describedby="validation-5904e6ec-43bb-4c27-816e-dcdf10a5338e" data-target="query-builder.input" data-action="
+            <input id="query-builder-test" name="query-builder-test" value="" autocomplete="off" type="text" role="combobox" spellcheck="false" aria-expanded="false" aria-describedby="validation-d8912bff-1b8f-46ef-8391-80af6c8c8e19" data-target="query-builder.input" data-action="
           input:query-builder#inputChange
           blur:query-builder#inputBlur
           keydown:query-builder#inputKeydown
@@ -671,7 +672,7 @@
             ></ul>
 
         </div>
-      <div class="FormControl-inlineValidation" id="validation-5904e6ec-43bb-4c27-816e-dcdf10a5338e" hidden="hidden">
+      <div class="FormControl-inlineValidation" id="validation-d8912bff-1b8f-46ef-8391-80af6c8c8e19" hidden="hidden">
         <span class="FormControl-inlineValidation--visual">
           <svg aria-hidden="true" height="12" viewBox="0 0 12 12" version="1.1" width="12" data-view-component="true" class="octicon octicon-alert-fill">
     <path d="M4.855.708c.5-.896 1.79-.896 2.29 0l4.675 8.351a1.312 1.312 0 0 1-1.146 1.954H1.33A1.313 1.313 0 0 1 .183 9.058ZM7 7V3H5v4Zm-1 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"></path>
@@ -712,7 +713,7 @@
   
 </div>
       <scrollable-region data-labelled-by="feedback-dialog-title">
-        <div data-view-component="true" class="Overlay-body">        <!-- '"` --><!-- </textarea></xmp> --></option></form><form id="code-search-feedback-form" data-turbo="false" action="/search/feedback" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="cVtdpt5T6UZ1xGqeW-2ZqkQjdh23KxwGNNlpsATnL9SiasuNtvF8dM9Z-QLNiZtU5gnMaehYIM4O5Hxr9wLekQ" />
+        <div data-view-component="true" class="Overlay-body">        <!-- '"` --><!-- </textarea></xmp> --></option></form><form id="code-search-feedback-form" data-turbo="false" action="/search/feedback" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="p4ceEOfkgAxQqIonBeJGX-LDPd3Zqt6l_2xRGOHQM2UZKTBzgsK55GYE6lC5EgHGwDITi26zNdmY5pw0EwMF3A" />
           <p>We read every piece of feedback, and take your input very seriously.</p>
           <textarea name="feedback" class="form-control width-full mb-2" style="height: 120px" id="feedback"></textarea>
           <input name="include_email" id="include_email" aria-label="Include my email address so I can be contacted" class="form-control mr-2" type="checkbox">
@@ -750,7 +751,7 @@
         <div data-view-component="true" class="Overlay-body">        <div data-target="custom-scopes.customScopesModalDialogFlash"></div>
 
         <div hidden class="create-custom-scope-form" data-target="custom-scopes.createCustomScopeForm">
-        <!-- '"` --><!-- </textarea></xmp> --></option></form><form id="custom-scopes-dialog-form" data-turbo="false" action="/search/custom_scopes" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="-uyTDJSqBpInf7r8k3hkI46jnwq05YabB7okybUeBX0JgN1s9gRStbTQHksdjhA5p1TIKMgF706-1-vJDj_Y-Q" />
+        <!-- '"` --><!-- </textarea></xmp> --></option></form><form id="custom-scopes-dialog-form" data-turbo="false" action="/search/custom_scopes" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="c-S7fRYHdmIBriR6DpK8KWsdMNu92ogMAicYuxWuFaqZKITIsV9MObjG2WNQh7IQeB6CjUIfJp0O0nbt7elWOw" />
           <div data-target="custom-scopes.customScopesModalDialogFlash"></div>
 
           <input type="hidden" id="custom_scope_id" name="custom_scope_id" data-target="custom-scopes.customScopesIdField">
@@ -768,7 +769,7 @@
                 placeholder="github-ruby"
                 required
                 maxlength="50">
-              <input type="hidden" value="VgVenFEYcEANtI5_k5BapxtMGB2Ci5LJqcYdHW5c0mmncuzPw3kRfefE3WuMaKvy236bNQC7kJtr8OgUBN-EVw" data-csrf="true" />
+              <input type="hidden" value="GasJ0OW27jARYoWglvoTdQt6vEJQN_i9mgGvpZB16aWZ8Lq_d8KU0ioXO_-bFPApbUg4b-8vSfxQyE59TQDDBg" data-csrf="true" />
             </auto-check>
           </div>
 
@@ -810,10 +811,10 @@
 
             <div class="position-relative HeaderMenu-link-wrap d-lg-inline-block">
               <a
-                href="/login?return_to=https%3A%2F%2Fgithub.com%2Fgoogle%2Ffonts%2Fraw%2Fmain%2Fofl%2Fpublicsans%2FPublicSans-Regular.ttf"
+                href="/login?return_to=https%3A%2F%2Fgithub.com%2Fgoogle%2Ffonts%2Fraw%2Fmain%2Fofl%2Fpublicsans%2Fstatic%2FPublicSans-Regular.ttf"
                 class="HeaderMenu-link HeaderMenu-link--sign-in HeaderMenu-button flex-shrink-0 no-underline d-none d-lg-inline-flex border border-lg-0 rounded px-2 py-1"
                 style="margin-left: 12px;"
-                data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/google/fonts/raw/main/ofl/publicsans/PublicSans-Regular.ttf&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="3431fbe4f35cebd9cbe15941895284e6f704555c82905fdb32ee36ebe82faa1a"
+                data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/google/fonts/raw/main/ofl/publicsans/static/PublicSans-Regular.ttf&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="9b94606c7f9b44a30e078b811ebc133c711b978b2467515e5838e3070d53ce05"
                 data-analytics-event="{&quot;category&quot;:&quot;Marketing nav&quot;,&quot;action&quot;:&quot;click to go to homepage&quot;,&quot;label&quot;:&quot;ref_page:Marketing;ref_cta:Sign in;ref_loc:Header&quot;}"
               >
                 Sign in
@@ -823,7 +824,7 @@
     <h4 data-view-component="true" class="color-fg-default mb-2 tmp-mb-2">                    Sign in to GitHub
 </h4>
                         
-<!-- '"` --><!-- </textarea></xmp> --></option></form><form data-turbo="false" action="/session" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="U_Jrla3jNdY5cI1J-ikv2EI7ITLY6ArP4mOctiThJaCGCKfDeuHysKu2IG-NBvHFRo85iDkt9V0WGciZAFtoVA" />  <input type="hidden" name="add_account" id="add_account" autocomplete="off" class="form-control" />
+<!-- '"` --><!-- </textarea></xmp> --></option></form><form data-turbo="false" action="/session" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="IxaVh7k79ZIEufNWki7WBuELKjQX1Zh5YFKuLsvGWOuELU-X5VKIsY0FzDsVLLMAUYlwU9zvUviPHUp-h8L-Ow" />  <input type="hidden" name="add_account" id="add_account" autocomplete="off" class="form-control" />
 
     <label for="login_field">
       Username or email address
@@ -841,17 +842,17 @@
 <input type="hidden" class="js-support" name="javascript-support" value="unknown">
 <input type="hidden" class="js-webauthn-support" name="webauthn-support" value="unknown">
 <input type="hidden" class="js-webauthn-iuvpaa-support" name="webauthn-iuvpaa-support" value="unknown">
-<input type="hidden" name="return_to" id="return_to" value="https://github.com/google/fonts/raw/main/ofl/publicsans/PublicSans-Regular.ttf" autocomplete="off" class="form-control" />
+<input type="hidden" name="return_to" id="return_to" value="https://github.com/google/fonts/raw/main/ofl/publicsans/static/PublicSans-Regular.ttf" autocomplete="off" class="form-control" />
 <input type="hidden" name="allow_signup" id="allow_signup" autocomplete="off" class="form-control" />
 <input type="hidden" name="client_id" id="client_id" autocomplete="off" class="form-control" />
 <input type="hidden" name="integration" id="integration" autocomplete="off" class="form-control" />
-<input type="text" name="required_field_eba6" hidden="hidden" class="form-control" /><input type="hidden" name="timestamp" value="1775842732279" autocomplete="off" class="form-control" /><input type="hidden" name="timestamp_secret" value="066cf29529e7438d022655fcaa1d1c5261cc4fd5f21aef3e08c299aa132e2e58" autocomplete="off" class="form-control" />
+<input type="text" name="required_field_2d9e" hidden="hidden" class="form-control" /><input type="hidden" name="timestamp" value="1776690255946" autocomplete="off" class="form-control" /><input type="hidden" name="timestamp_secret" value="134bb2639766588a9dc264c459b66fb5e6eb2f57bd5c19545eeb9d6dbec857a1" autocomplete="off" class="form-control" />
 
     <input type="submit" name="commit" value="Sign in" class="btn btn-primary btn-block js-sign-in-button" data-disable-with="Signing in…" data-signin-label="Sign in" data-sso-label="Sign in with your identity provider" development="false" disable-emu-sso="false" />
   </div>
 </form>  <webauthn-status class="js-webauthn-login-emu-control">
         <div data-target="webauthn-status.partial" class="d-flex flex-justify-between flex-column tmp-mt-3 mb-0" hidden>
-          <a href="/login?return_to=https%3A%2F%2Fgithub.com%2Fgoogle%2Ffonts%2Fraw%2Fmain%2Fofl%2Fpublicsans%2FPublicSans-Regular.ttf" data-analytics-event="{&quot;category&quot;:&quot;passkey_404_login&quot;,&quot;action&quot;:&quot;clicked&quot;,&quot;label&quot;:null}" data-view-component="true" class="Button--link Button--medium Button">  <span class="Button-content">
+          <a href="/login?return_to=https%3A%2F%2Fgithub.com%2Fgoogle%2Ffonts%2Fraw%2Fmain%2Fofl%2Fpublicsans%2Fstatic%2FPublicSans-Regular.ttf" data-analytics-event="{&quot;category&quot;:&quot;passkey_404_login&quot;,&quot;action&quot;:&quot;clicked&quot;,&quot;label&quot;:null}" data-view-component="true" class="Button--link Button--medium Button">  <span class="Button-content">
     <span class="Button-label">or continue with other methods</span>
   </span>
 </a>
@@ -861,24 +862,24 @@
 
 </div></div>            </div>
 
-              <a href="/signup?ref_cta=Sign+up&amp;ref_loc=header+logged+out&amp;ref_page=%2Fgoogle%2Ffonts%2Fraw%2Fmain%2Fofl%2Fpublicsans%2FPublicSans-Regular.ttf&amp;source=header"
+              <a href="/signup?ref_cta=Sign+up&amp;ref_loc=header+logged+out&amp;ref_page=%2Fgoogle%2Ffonts%2Fraw%2Fmain%2Fofl%2Fpublicsans%2Fstatic%2FPublicSans-Regular.ttf&amp;source=header"
                 class="HeaderMenu-link HeaderMenu-link--sign-up HeaderMenu-button flex-shrink-0 d-flex d-lg-inline-flex no-underline border color-border-default rounded px-2 py-1"
-                data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/google/fonts/raw/main/ofl/publicsans/PublicSans-Regular.ttf&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="3431fbe4f35cebd9cbe15941895284e6f704555c82905fdb32ee36ebe82faa1a"
-                data-analytics-event="{&quot;category&quot;:&quot;Sign up&quot;,&quot;action&quot;:&quot;click to sign up for account&quot;,&quot;label&quot;:&quot;ref_page:/google/fonts/raw/main/ofl/publicsans/PublicSans-Regular.ttf;ref_cta:Sign up;ref_loc:header logged out&quot;}"
+                data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/google/fonts/raw/main/ofl/publicsans/static/PublicSans-Regular.ttf&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="9b94606c7f9b44a30e078b811ebc133c711b978b2467515e5838e3070d53ce05"
+                data-analytics-event="{&quot;category&quot;:&quot;Sign up&quot;,&quot;action&quot;:&quot;click to sign up for account&quot;,&quot;label&quot;:&quot;ref_page:/google/fonts/raw/main/ofl/publicsans/static/PublicSans-Regular.ttf;ref_cta:Sign up;ref_loc:header logged out&quot;}"
               >
                 Sign up
               </a>
 
                 <div class="AppHeader-appearanceSettings">
     <react-partial-anchor>
-      <button data-target="react-partial-anchor.anchor" id="icon-button-a2a9d42f-546e-47d6-91a9-05c09c1febd7" aria-labelledby="tooltip-f2f94da9-925a-411e-84f0-e1000e527180" type="button" disabled="disabled" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--medium AppHeader-button HeaderMenu-link border cursor-wait">  <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-sliders Button-visual">
+      <button data-target="react-partial-anchor.anchor" id="icon-button-e451bf48-0e7d-430c-a859-cdf5b8bceb0c" aria-labelledby="tooltip-985960ca-4cc3-49b4-a158-49df974bea31" type="button" disabled="disabled" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--medium AppHeader-button HeaderMenu-link border cursor-wait">  <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-sliders Button-visual">
     <path d="M15 2.75a.75.75 0 0 1-.75.75h-4a.75.75 0 0 1 0-1.5h4a.75.75 0 0 1 .75.75Zm-8.5.75v1.25a.75.75 0 0 0 1.5 0v-4a.75.75 0 0 0-1.5 0V2H1.75a.75.75 0 0 0 0 1.5H6.5Zm1.25 5.25a.75.75 0 0 0 0-1.5h-6a.75.75 0 0 0 0 1.5h6ZM15 8a.75.75 0 0 1-.75.75H11.5V10a.75.75 0 1 1-1.5 0V6a.75.75 0 0 1 1.5 0v1.25h2.75A.75.75 0 0 1 15 8Zm-9 5.25v-2a.75.75 0 0 0-1.5 0v1.25H1.75a.75.75 0 0 0 0 1.5H4.5v1.25a.75.75 0 0 0 1.5 0v-2Zm9 0a.75.75 0 0 1-.75.75h-6a.75.75 0 0 1 0-1.5h6a.75.75 0 0 1 .75.75Z"></path>
 </svg>
-</button><tool-tip id="tooltip-f2f94da9-925a-411e-84f0-e1000e527180" for="icon-button-a2a9d42f-546e-47d6-91a9-05c09c1febd7" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute">Appearance settings</tool-tip>
+</button><tool-tip id="tooltip-985960ca-4cc3-49b4-a158-49df974bea31" for="icon-button-e451bf48-0e7d-430c-a859-cdf5b8bceb0c" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute">Appearance settings</tool-tip>
 
       <template data-target="react-partial-anchor.template">
-        <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-react-css.84cd0c8d595d6b96.module.css" />
-<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/appearance-settings.35f40c3a620f34f6.module.css" />
+        <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-react-css.1169a8129575ca06.module.css" />
+<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/appearance-settings.fef6f84625f0c138.module.css" />
 
 <react-partial
   partial-name="appearance-settings"
@@ -912,10 +913,10 @@
         <span class="js-stale-session-flash-signed-out" hidden>You signed out in another tab or window. <a class="Link--inTextBlock" href="">Reload</a> to refresh your session.</span>
         <span class="js-stale-session-flash-switched" hidden>You switched accounts on another tab or window. <a class="Link--inTextBlock" href="">Reload</a> to refresh your session.</span>
 
-    <button id="icon-button-faa77b94-6ac3-4bcf-815c-79505218a9ac" aria-labelledby="tooltip-9dc04ac3-b359-4350-a104-99adbc821ebb" type="button" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--medium flash-close js-flash-close">  <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-x Button-visual">
+    <button id="icon-button-ea0fda47-6ec1-4f4a-a7f1-7424f2a52110" aria-labelledby="tooltip-e7523958-0d36-4bfa-b13d-c0b364922ca0" type="button" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--medium flash-close js-flash-close">  <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-x Button-visual">
     <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"></path>
 </svg>
-</button><tool-tip id="tooltip-9dc04ac3-b359-4350-a104-99adbc821ebb" for="icon-button-faa77b94-6ac3-4bcf-815c-79505218a9ac" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute">Dismiss alert</tool-tip>
+</button><tool-tip id="tooltip-e7523958-0d36-4bfa-b13d-c0b364922ca0" for="icon-button-ea0fda47-6ec1-4f4a-a7f1-7424f2a52110" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute">Dismiss alert</tool-tip>
 
 
   

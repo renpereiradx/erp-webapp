@@ -3,14 +3,9 @@
 @tailwind utilities;
 
 /* =============================================================================
-   FONTS CONFIGURATION
+   FONTS CONFIGURATION - GOOGLE FONTS (RELIABLE WEIGHTS)
    ============================================================================= */
-@font-face {
-  font-family: 'JetBrains Mono';
-  src: url('/fonts/jetbrains-mono.ttf') format('truetype');
-  font-weight: 100 800;
-  font-display: swap;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600;700;800&family=Public+Sans:wght@400;600;700;900&display=swap');
 
 /* =============================================================================
    GLOBAL DENSITY & RESET

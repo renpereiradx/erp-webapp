@@ -5,53 +5,55 @@ import { Filter, Search } from 'lucide-react';
  * Filter ribbon for accounts payable dashboard.
  * Polished to match Stitch perfectly with rounded-xl.
  */
-const FilterRibbon = () => {
+const FilterRibbon = ({ filters = {}, onFilterChange = () => {} }) => {
+  const handleChange = (key, value) => {
+    if (typeof onFilterChange === 'function') {
+      onFilterChange(key, value);
+    }
+  };
+
   return (
-    <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-wrap items-center gap-6 overflow-hidden">
+    <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-wrap items-center gap-6 overflow-hidden font-display">
       <div className="flex flex-col gap-1.5">
         <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Periodo</label>
-        <select className="bg-slate-50 dark:bg-slate-900 border border-transparent focus:border-primary/30 rounded-lg text-sm font-medium focus:ring-4 focus:ring-primary/10 min-w-[180px] p-2.5 outline-none transition-all">
-          <option>Este Mes (Mayo 2024)</option>
-          <option>Último Trimestre</option>
-          <option>Año Fiscal 2024</option>
+        <select 
+          value={filters.period || 'month'}
+          onChange={(e) => handleChange('period', e.target.value)}
+          className="bg-slate-50 dark:bg-slate-900 border border-transparent focus:border-primary/30 rounded-lg text-sm font-medium focus:ring-4 focus:ring-primary/10 min-w-[180px] p-2.5 outline-none transition-all cursor-pointer"
+        >
+          <option value="today">Hoy</option>
+          <option value="week">Esta Semana</option>
+          <option value="month">Este Mes</option>
+          <option value="quarter">Último Trimestre</option>
+          <option value="year">Año Fiscal</option>
         </select>
-      </div>
-      
-      <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Proveedor</label>
-        <select className="bg-slate-50 dark:bg-slate-900 border border-transparent focus:border-primary/30 rounded-lg text-sm font-medium focus:ring-4 focus:ring-primary/10 min-w-[220px] p-2.5 outline-none transition-all">
-          <option>Todos los proveedores</option>
-          <option>Global Logistics S.A.</option>
-          <option>Tech Solutions Inc.</option>
-          <option>Office Depot Corp.</option>
-        </select>
-      </div>
-      
-      <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Prioridad</label>
-        <div className="flex gap-2">
-          <span className="px-3.5 py-2 bg-primary/10 text-primary rounded-lg text-xs font-bold border border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors">Alta</span>
-          <span className="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold border border-transparent cursor-pointer hover:border-slate-300 transition-colors">Media</span>
-          <span className="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold border border-transparent cursor-pointer hover:border-slate-300 transition-colors">Baja</span>
-        </div>
       </div>
       
       <div className="flex flex-col gap-1.5">
         <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Moneda</label>
-        <select className="bg-slate-50 dark:bg-slate-900 border border-transparent focus:border-primary/30 rounded-lg text-sm font-medium focus:ring-4 focus:ring-primary/10 p-2.5 outline-none transition-all">
-          <option>PYG - Guaraní</option>
-          <option>USD - Dólar</option>
-          <option>EUR - Euro</option>
+        <select 
+          value={filters.currency || 'PYG'}
+          onChange={(e) => handleChange('currency', e.target.value)}
+          className="bg-slate-50 dark:bg-slate-900 border border-transparent focus:border-primary/30 rounded-lg text-sm font-medium focus:ring-4 focus:ring-primary/10 p-2.5 outline-none transition-all cursor-pointer"
+        >
+          <option value="PYG">PYG - Guaraní</option>
+          <option value="USD">USD - Dólar</option>
         </select>
       </div>
       
       <div className="ml-auto flex items-center gap-2">
-        <button className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+        <button className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all" title="Filtros avanzados">
           <Filter className="w-5 h-5" />
         </button>
-        <button className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
-          <Search className="w-5 h-5" />
-        </button>
+        <div className="relative group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+          <input 
+            type="text"
+            placeholder="Buscar..."
+            onChange={(e) => handleChange('search', e.target.value)}
+            className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-transparent focus:border-primary/30 rounded-lg text-sm outline-none transition-all w-48 focus:w-64"
+          />
+        </div>
       </div>
     </div>
   );

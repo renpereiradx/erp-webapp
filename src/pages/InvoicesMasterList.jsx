@@ -26,7 +26,7 @@ import {
   ExternalLink,
   User
 } from 'lucide-react';
-import { formatPYG } from '@/utils/currencyUtils';
+import { formatPYG, formatNumber } from '@/utils/currencyUtils';
 import { usePayables } from '@/hooks/usePayables';
 
 /**
@@ -348,7 +348,7 @@ const InvoicesMasterList = () => {
                           <td className="px-6 py-5">
                             <div className="flex flex-col gap-1">
                               <span className="text-[12px] font-mono font-black text-slate-900 dark:text-white">#{invoice.id}</span>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Ref. Interna</span>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Documento Oficial</span>
                             </div>
                           </td>
                           <td className="px-3 py-5">
@@ -378,7 +378,7 @@ const InvoicesMasterList = () => {
                               <span className={`text-[12px] font-black ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>
                                 {invoice.dueDate}
                               </span>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Límite de Pago</span>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Vencimiento</span>
                             </div>
                           </td>
                           <td className="px-3 py-5 text-right">
@@ -389,14 +389,14 @@ const InvoicesMasterList = () => {
                                 </span>
                                 {invoice.pendingAmount > 0 && (
                                   <span className={`text-[10px] font-mono font-bold tabular-nums ${isOverdue ? 'text-red-600' : 'text-slate-500'}`}>
-                                    Deuda: {formatCurrency(invoice.pendingAmount)}
+                                    Pdte: {formatCurrency(invoice.pendingAmount)}
                                   </span>
                                 )}
                               </div>
                               <div className="w-24 ml-auto h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
                                 <div 
                                   className={`h-full transition-all duration-1000 ${isOverdue ? 'bg-red-500' : 'bg-primary'}`} 
-                                  style={{ width: `${progress}%` }}
+                                  style={{ width: `${formatNumber(progress)}%` }}
                                 ></div>
                               </div>
                             </div>

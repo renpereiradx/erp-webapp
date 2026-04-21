@@ -1,5 +1,6 @@
 import React from 'react';
 import { StockForecastProduct } from '../../../types/inventoryAnalytics';
+import { formatNumber } from '../../../utils/currencyUtils';
 
 export interface ForecastRiskListProps {
   products: StockForecastProduct[];
@@ -70,7 +71,7 @@ export const ForecastRiskList: React.FC<ForecastRiskListProps> = ({ products }) 
               <div className="grid grid-cols-2 gap-4 text-sm mb-4">
                 <div className="flex flex-col border-r border-slate-100 dark:border-slate-800">
                   <span className="text-slate-400 text-[10px] uppercase font-bold tracking-tight">Días para Agotamiento</span>
-                  <span className={`${styles.daysText} font-black text-lg font-mono`}>{Number(product.days_until_stockout).toFixed(1)} días</span>
+                  <span className={`${styles.daysText} font-black text-lg font-mono`}>{formatNumber(product.days_until_stockout)} días</span>
                 </div>
                 <div className="flex flex-col pl-2">
                   <span className="text-slate-400 text-[10px] uppercase font-bold tracking-tight">Stock Actual</span>

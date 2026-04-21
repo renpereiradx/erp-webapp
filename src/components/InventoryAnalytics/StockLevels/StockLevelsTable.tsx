@@ -1,5 +1,6 @@
 import React from 'react';
 import { StockLevelProduct } from '../../../types/inventoryAnalytics';
+import { formatNumber, formatPYG } from '../../../utils/currencyUtils';
 
 export interface StockLevelsTableProps {
   products: StockLevelProduct[];
@@ -95,17 +96,17 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, to
                   </td>
                   <td className="py-4 px-4 text-center font-mono">
                     <span className={`font-bold ${daysStock <= 5 ? 'text-rose-500' : 'text-slate-700 dark:text-slate-300'}`}>
-                      {Number(daysStock).toFixed(1)} d
+                      {formatNumber(daysStock)} d
                     </span>
                   </td>
                   <td className="py-4 px-4 text-center">
                     {getStatusBadge(status)}
                   </td>
                   <td className="py-4 px-4 text-right font-medium font-mono">
-                    Gs. {(unitCost || 0).toLocaleString('es-PY')}
+                    {formatPYG(unitCost || 0)}
                   </td>
                   <td className="py-4 px-4 text-right font-black text-primary font-mono">
-                    Gs. {(totalValue || 0).toLocaleString('es-PY')}
+                    {formatPYG(totalValue || 0)}
                   </td>
                   <td className="py-4 px-4 text-center">
                     <button className="p-2 text-slate-400 hover:text-primary transition-colors">

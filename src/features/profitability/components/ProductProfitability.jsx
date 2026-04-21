@@ -131,7 +131,7 @@ const KPICard = ({ title, value, trendValue, isCurrency = true, delay = "0", ico
         <p className='text-[#617589] text-[11px] font-bold uppercase tracking-[0.05em] font-sans'>{title}</p>
         <div className="flex items-baseline gap-1.5">
           {isCurrency && <span className="text-sm font-bold text-slate-300 font-mono">Gs.</span>}
-          <h3 className='text-[#111418] text-3xl font-black tracking-tight leading-none font-mono truncate'>
+          <h3 className='text-3xl font-bold tracking-tight leading-none font-mono truncate'>
             {isCurrency ? displayValue : `${displayValue}%`}
           </h3>
         </div>
@@ -251,13 +251,13 @@ const ProductProfitability = () => {
                       <span className="text-[10px] font-mono font-black text-slate-400 uppercase tracking-tighter bg-slate-50 w-fit px-2 py-0.5 rounded border border-slate-100">{item.sku}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-6 text-center font-mono font-black text-[#617589]">{item.units_sold}</td>
-                  <td className="px-6 py-6 text-right font-mono font-black text-[#111418]">{formatPYG(item.revenue)}</td>
-                  <td className={`px-6 py-6 text-right font-black font-mono ${item.gross_profit >= 0 ? 'text-[#107c10]' : 'text-[#d13438]'}`}>
+                  <td className="px-6 py-6 text-center font-mono font-bold text-[#617589]">{item.units_sold}</td>
+                  <td className="px-6 py-6 text-right font-mono font-bold text-[#111418]">{formatPYG(item.revenue)}</td>
+                  <td className={`px-6 py-6 text-right font-bold font-mono ${item.gross_profit >= 0 ? 'text-[#107c10]' : 'text-[#d13438]'}`}>
                     {item.gross_profit < 0 ? '-' : '+'}{formatPYG(Math.abs(item.gross_profit))}
                   </td>
-                  <td className="px-6 py-6 text-right font-mono font-black text-[#111418]">{formatPercent(item.gross_margin_pct)}%</td>
-                  <td className="px-6 py-6 text-right font-mono text-slate-400 font-bold">{formatPercent(item.markup)}%</td>
+                  <td className="px-6 py-6 text-right font-mono font-bold text-[#111418]">{formatPercent(item.gross_margin_pct)}%</td>
+                  <td className="px-6 py-6 text-right font-mono text-slate-400 font-semibold">{formatPercent(item.markup)}%</td>
                   <td className="px-6 py-6 text-center">
                     <PerformanceBadge performance={item.performance} />
                   </td>

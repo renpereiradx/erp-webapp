@@ -1,6 +1,6 @@
 import React from 'react';
 import { Wallet, AlertCircle, Calendar, Zap, TrendingUp, TrendingDown, Info } from 'lucide-react';
-import { formatPYG } from '@/utils/currencyUtils';
+import { formatPYG, formatNumber } from '@/utils/currencyUtils';
 
 /**
  * KPI Cards for accounts payable dashboard.
@@ -8,7 +8,7 @@ import { formatPYG } from '@/utils/currencyUtils';
  */
 const KPICard = ({ title, value, currency, trend, trendType, icon: Icon, subtitle, isPercentage, progress, critical, id }) => {
   const formatValue = (val) => {
-    if (isPercentage) return `${val}%`;
+    if (isPercentage) return `${formatNumber(val)}%`;
     return formatPYG(val);
   };
 
