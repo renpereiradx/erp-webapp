@@ -150,5 +150,3 @@ const KpiSection = ({ coverageRatio, netFlow, totalInflows, totalOutflows }) => 
 };
 
 export default KpiSection;
-
-export default KpiSection;

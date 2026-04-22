@@ -613,7 +613,35 @@ const MainLayout = ({ children }) => {
       })
     }
 
-    return items
+    // Filtrar resultados del módulo de BI para el buscador global
+    return items.filter(item => {
+      const name = item.name.toLowerCase()
+      const category = item.category.toLowerCase()
+      const parent = (item.parent || '').toLowerCase()
+      
+      const isBI = name.includes('bi') || 
+                   category.includes('bi') || 
+                   parent.includes('bi') ||
+                   name.includes('analítica') || 
+                   category.includes('analítica') || 
+                   name.includes('pronóstico') || 
+                   category.includes('pronóstico') ||
+                   category.includes('inteligencia de negocios') ||
+                   parent.includes('inteligencia de negocios')
+      
+      // No filtrar si explícitamente es de Finanzas, Configuración, Reservas, Inventario o Caja
+      // (aunque estuvieran bajo el nodo de Inteligencia de Negocios en el sidebar)
+      const isCoreModule = category.includes('finanzas') || 
+                          category.includes('configuración') || 
+                          category.includes('reservas') || 
+                          category.includes('inventario') || 
+                          category.includes('caja') ||
+                          category.includes('comercial')
+      
+      if (isCoreModule) return true
+      
+      return !isBI
+    })
   }, [navigation, distinctSearchableRoutes])
 
   const normalizeText = (text) => {
@@ -952,9 +980,10 @@ const MainLayout = ({ children }) => {
                   <div className="py-2">
                     {globalSearchResults.map((item, index) => {
                       const Icon = item.icon || Search;
+                      const uniqueKey = `search-result-${item.href}-${index}`;
                       return (
                         <button 
-                          key={index} 
+                          key={uniqueKey} 
                           ref={el => searchResultsRef.current[index] = el}
                           onClick={() => { navigate(item.href); setShowGlobalSearch(false); setGlobalSearchTerm(''); }} 
                           className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${index === selectedIndex ? 'bg-primary/5 border-l-4 border-primary' : 'hover:bg-slate-50 border-l-4 border-transparent'}`}

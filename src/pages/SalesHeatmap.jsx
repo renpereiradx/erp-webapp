@@ -333,11 +333,12 @@ const SalesHeatmap = () => {
                             <button className="text-primary text-sm font-medium hover:underline">Ver Todo</button>
                         </div>
                         <div className="p-4 flex flex-col gap-5 overflow-y-auto max-h-[500px]">
-                            {activities && activities.map((item) => {
+                            {activities && activities.map((item, index) => {
                                 const style = getActivityStyle(item.type);
+                                const uniqueKey = item.id ? `activity-${item.id}-${index}` : `activity-idx-${index}`;
                                 
                                 return (
-                                    <div key={item.id} className="flex gap-3">
+                                    <div key={uniqueKey} className="flex gap-3">
                                         <div className={`size-8 rounded-full ${style.bg} ${style.text} flex items-center justify-center flex-shrink-0`}>
                                             <span className="material-symbols-outlined text-sm">{style.icon}</span>
                                         </div>
