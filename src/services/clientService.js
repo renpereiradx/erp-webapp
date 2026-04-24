@@ -1,11 +1,14 @@
 // src/services/clientService.js
-import apiService from './api';
+import { apiClient } from './api';
 import { telemetry } from '../utils/telemetry';
 import { clientListData } from './mocks/clientMock';
 
 // Según docs/api/CLIENT_API.md los endpoints usan prefijo singular `/client`
 const API_PREFIX = '/client';
 const USE_MOCK = import.meta.env.VITE_USE_DEMO === 'true';
+
+// Opciones comunes para clientes: no requieren contexto de sucursal
+const CLIENT_OPTIONS = { skipBranchContext: true };
 
 // Helper to simulate API delay
 const _mockRes = (data, delay = 500) =>
@@ -49,18 +52,10 @@ export const clientService = {
         return _mockRes(filtered);
       }
       const endpoint = `${API_PREFIX}/name/${encodeURIComponent(name)}`;
-      const result = await _fetchWithRetry(async () => apiService.get(endpoint));
-      // Parsear si la respuesta es string JSON
-      let parsedResult = result;
-      if (typeof result === 'string') {
-        try {
-          parsedResult = JSON.parse(result);
-        } catch (e) {
-          console.error('[clientService.searchByName] JSON parse error:', e);
-        }
-      }
+      const result = await _fetchWithRetry(async () => apiClient.get(endpoint, CLIENT_OPTIONS));
+      
       telemetry.record('client.service.search', { duration: Date.now() - startTime, name });
-      return parsedResult;
+      return result;
     } catch (error) {
       telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'searchByName' });
       throw error;
@@ -75,18 +70,10 @@ export const clientService = {
         return _mockRes(client || null);
       }
       const endpoint = `${API_PREFIX}/${id}`;
-      const result = await _fetchWithRetry(async () => apiService.get(endpoint));
-      // Parsear si la respuesta es string JSON
-      let parsedResult = result;
-      if (typeof result === 'string') {
-        try {
-          parsedResult = JSON.parse(result);
-        } catch (e) {
-          console.error('[clientService.getById] JSON parse error:', e);
-        }
-      }
+      const result = await _fetchWithRetry(async () => apiClient.get(endpoint, CLIENT_OPTIONS));
+      
       telemetry.record('client.service.getById', { duration: Date.now() - startTime });
-      return parsedResult;
+      return result;
     } catch (error) {
       telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getById' });
       throw error;
@@ -102,7 +89,10 @@ export const clientService = {
           total: clientListData.length
         });
       }
-      const result = await _fetchWithRetry(async () => apiService.getClients({ page, pageSize }));
+      // Corregido: GET /client/{page}/{pageSize} según la guía
+      const endpoint = `${API_PREFIX}/${page}/${pageSize}`;
+      const result = await _fetchWithRetry(async () => apiClient.get(endpoint, CLIENT_OPTIONS));
+      
       telemetry.record('client.service.getAll', { duration: Date.now() - startTime, page, pageSize });
       return result;
     } catch (error) {
@@ -115,10 +105,10 @@ export const clientService = {
     const startTime = Date.now();
     
     try {
-      // Ensure endpoint has trailing slash as documented: POST /client/
+      // POST /client/
       const endpoint = `${API_PREFIX}/`;
       const result = await _fetchWithRetry(async () => {
-        return await apiService.post(endpoint, data);
+        return await apiClient.post(endpoint, data, CLIENT_OPTIONS);
       });
       
       telemetry.record('client.service.create', {
@@ -141,7 +131,7 @@ export const clientService = {
     
     try {
       const result = await _fetchWithRetry(async () => {
-        return await apiService.put(`${API_PREFIX}/${id}`, data);
+        return await apiClient.put(`${API_PREFIX}/${id}`, data, CLIENT_OPTIONS);
       });
       
       telemetry.record('client.service.update', {
@@ -162,8 +152,8 @@ export const clientService = {
   async delete(id) {
     const startTime = Date.now();
     try {
-      // Documentado como PUT /client/delete/{id}
-      const result = await _fetchWithRetry(async () => apiService.put(`${API_PREFIX}/delete/${id}`, {}));
+      // PUT /client/delete/{id}
+      const result = await _fetchWithRetry(async () => apiClient.put(`${API_PREFIX}/delete/${id}`, {}, CLIENT_OPTIONS));
       telemetry.record('client.service.delete', { duration: Date.now() - startTime });
       return result;
     } catch (error) {
@@ -172,3 +162,5 @@ export const clientService = {
     }
   }
 };
+
+export default clientService;

@@ -51,6 +51,7 @@ import {
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 import { distinctSearchableRoutes } from '@/config/searchableRoutes'
 import { useToast } from '@/hooks/useToast'
+import BranchSwitcher from '@/components/BranchSwitcher'
 
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -1004,6 +1005,7 @@ const MainLayout = ({ children }) => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <BranchSwitcher />
             <div className="flex items-center gap-1">
               <button className="p-2 text-text-secondary hover:bg-slate-100 !rounded-lg transition-colors relative group">
                 <span className="material-symbols-outlined">notifications</span>

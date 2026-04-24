@@ -1,9 +1,10 @@
-import api from './api';
+import { apiClient } from './api';
 import { UserSession, SessionConfig, UserActivity, PaginatedResponse, SuccessResponse } from '@/types';
 import { DEMO_CONFIG } from '../config/demoAuth';
 
 const BASE_URL = '/sessions';
 const ADMIN_BASE_URL = '/admin/sessions';
+const SESSION_OPTIONS = { skipBranchContext: true };
 
 // 🧪 Datos de sesiones para modo demo
 const DEMO_SESSIONS: UserSession[] = [
@@ -14,7 +15,10 @@ const DEMO_SESSIONS: UserSession[] = [
     user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
     last_activity: new Date().toISOString(),
     created_at: new Date(Date.now() - 3600000).toISOString(),
-    is_current: true
+    is_current: true,
+    device_type: 'desktop',
+    is_active: true,
+    expires_at: new Date(Date.now() + 3600000).toISOString()
   },
   {
     id: 'sess_2',
@@ -23,7 +27,10 @@ const DEMO_SESSIONS: UserSession[] = [
     user_agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148',
     last_activity: new Date(Date.now() - 86400000).toISOString(),
     created_at: new Date(Date.now() - 90000000).toISOString(),
-    is_current: false
+    is_current: false,
+    device_type: 'mobile',
+    is_active: false,
+    expires_at: new Date(Date.now() - 1000).toISOString()
   }
 ];
 
@@ -36,7 +43,7 @@ export const sessionService = {
       return { success: true, data: DEMO_SESSIONS };
     }
     try {
-      return await api.get(`${BASE_URL}/active`);
+      return await apiClient.get(`${BASE_URL}/active`, SESSION_OPTIONS);
     } catch (error) {
       console.error('Error fetching active sessions:', error);
       throw error;
@@ -62,7 +69,7 @@ export const sessionService = {
       };
     }
     try {
-      return await api.get(`${BASE_URL}/history`, { params });
+      return await apiClient.get(`${BASE_URL}/history`, { ...SESSION_OPTIONS, params });
     } catch (error) {
       console.error('Error fetching session history:', error);
       throw error;
@@ -77,7 +84,7 @@ export const sessionService = {
       return { success: true, message: 'Sesión revocada (Demo)' };
     }
     try {
-      return await api.post(`${BASE_URL}/${id}/revoke`);
+      return await apiClient.post(`${BASE_URL}/${id}/revoke`, null, SESSION_OPTIONS);
     } catch (error) {
       console.error(`Error revoking session ${id}:`, error);
       throw error;
@@ -92,7 +99,7 @@ export const sessionService = {
       return { success: true, revoked_count: 1, message: 'Sesiones revocadas (Demo)' };
     }
     try {
-      return await api.post(`${BASE_URL}/revoke-all`);
+      return await apiClient.post(`${BASE_URL}/revoke-all`, null, SESSION_OPTIONS);
     } catch (error) {
       console.error('Error revoking all other sessions:', error);
       throw error;
@@ -118,7 +125,7 @@ export const sessionService = {
       };
     }
     try {
-      return await api.get(`${BASE_URL}/activity`, { params });
+      return await apiClient.get(`${BASE_URL}/activity`, { ...SESSION_OPTIONS, params });
     } catch (error) {
       console.error('Error fetching activity log:', error);
       throw error;
@@ -133,16 +140,33 @@ export const sessionService = {
       return {
         success: true,
         data: {
-          max_active_sessions: 5,
+          id: 1,
+          role_id: 'admin',
+          max_concurrent_sessions: 5,
           session_timeout_minutes: 60,
-          remember_me_days: 30
+          inactivity_timeout_minutes: 30,
+          require_device_verification: false,
+          allow_multiple_locations: true,
+          force_logout_on_password_change: true
         }
       };
     }
     try {
-      return await api.get(`${BASE_URL}/config`);
+      return await apiClient.get(`${BASE_URL}/config`, SESSION_OPTIONS);
     } catch (error) {
       console.error('Error fetching session config:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Limpia sesiones expiradas (requiere permiso sessions:admin).
+   */
+  cleanupSessions: async (): Promise<SuccessResponse & { cleaned_count?: number }> => {
+    try {
+      return await apiClient.post(`${BASE_URL}/cleanup`, null, SESSION_OPTIONS);
+    } catch (error) {
+      console.error('Error cleaning up sessions:', error);
       throw error;
     }
   },
@@ -159,7 +183,7 @@ export const sessionService = {
       return { success: true, data: DEMO_SESSIONS };
     }
     try {
-      return await api.get(`${ADMIN_BASE_URL}/all`, { params });
+      return await apiClient.get(`${ADMIN_BASE_URL}/all`, { ...SESSION_OPTIONS, params });
     } catch (error) {
       console.error('Error fetching all active sessions (admin):', error);
       throw error;
@@ -174,7 +198,7 @@ export const sessionService = {
       return { success: true, message: 'Sesión revocada por admin (Demo)' };
     }
     try {
-      return await api.post(`${ADMIN_BASE_URL}/${id}/revoke`);
+      return await apiClient.post(`${ADMIN_BASE_URL}/${id}/revoke`, null, SESSION_OPTIONS);
     } catch (error) {
       console.error(`Error revoking session ${id} (admin):`, error);
       throw error;

@@ -3,8 +3,6 @@
  * Sistema de autenticación completo con sistema de temas robusto
  */
 
-import React from 'react'
-console.log('🚀 App.tsx loaded - TS Version');
 import {
   BrowserRouter as Router,
   Routes,
@@ -104,6 +102,7 @@ import InventoryDashboard from '@/pages/InventoryAnalytics/InventoryDashboard'
 import StockLevelsReorder from '@/pages/InventoryAnalytics/StockLevelsReorder'
 import InventoryRisk from '@/pages/InventoryAnalytics/InventoryRisk'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext.tsx'
+import { BranchProvider } from '@/contexts/BranchContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import RoleGuard from '@/components/auth/RoleGuard'
@@ -411,8 +410,10 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        {/* AnnouncementProvider temporarily disabled due to React 19 hooks compatibility */}
-        <AppContent />
+        <BranchProvider>
+          {/* AnnouncementProvider temporarily disabled due to React 19 hooks compatibility */}
+          <AppContent />
+        </BranchProvider>
       </AuthProvider>
     </ThemeProvider>
   )

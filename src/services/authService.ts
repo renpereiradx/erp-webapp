@@ -64,16 +64,20 @@ const authService = {
         duration: Date.now() - startTime,
       });
 
-      // Normalizar la respuesta del backend
+      // Normalizar la respuesta del backend según USER-SESION.md
       const token = result.token || result.data?.token;
       const refreshToken = result.refresh_token || result.data?.refresh_token;
       const user = result.user || result.data?.user || result.data;
       const role_id = result.role_id || result.data?.role_id;
+      const allowed_branches = result.allowed_branches || result.data?.allowed_branches;
+      const active_branch = result.active_branch || result.data?.active_branch;
       
-      // Asegurarnos de que el refreshToken se guarde si viene en la respuesta del login
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
+      // Guardar tokens y contexto
+      if (token) apiService.setToken(token);
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+      if (role_id) localStorage.setItem('roleId', role_id);
+      if (active_branch) localStorage.setItem('activeBranch', active_branch.toString());
+      if (allowed_branches) localStorage.setItem('allowedBranches', JSON.stringify(allowed_branches));
 
       return {
         success: true,
@@ -81,6 +85,8 @@ const authService = {
         refreshToken,
         user,
         role_id,
+        allowed_branches,
+        active_branch,
         ...result
       };
     } catch (error: any) {
@@ -95,7 +101,21 @@ const authService = {
   // Mantener otros métodos si existen y son necesarios
   refreshToken: async (refreshToken: string): Promise<any> => {
     try {
-      return await apiService.post('/auth/refresh', { refresh_token: refreshToken });
+      const result = await apiService.post('/auth/refresh', { refresh_token: refreshToken });
+      
+      if (result.success && result.access_token) {
+        // Actualizar tokens en localStorage
+        apiService.setToken(result.access_token);
+        if (result.refresh_token) {
+          localStorage.setItem('refreshToken', result.refresh_token);
+        }
+        
+        // Al refrescar, el backend recalcula sucursales
+        if (result.active_branch) localStorage.setItem('activeBranch', result.active_branch.toString());
+        if (result.allowed_branches) localStorage.setItem('allowedBranches', JSON.stringify(result.allowed_branches));
+      }
+      
+      return result;
     } catch (error) {
       console.error('Error refreshing token:', error);
       throw error;

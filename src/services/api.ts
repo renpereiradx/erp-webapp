@@ -5,6 +5,8 @@
 
 import BusinessManagementAPI from './BusinessManagementAPI'
 import API_CONFIG from '@/config/api.config'
+import clientService from './clientService'
+import supplierService from './supplierService'
 
 // Instancia única del cliente API usando configuración centralizada
 const businessAPI = new BusinessManagementAPI({
@@ -47,13 +49,21 @@ export const apiService: any = {
   updateProduct: (id: string | number, data: any) => (apiClient as any).updateProduct(id, data),
   deleteProduct: (id: string | number) => (apiClient as any).deleteProduct(id),
 
-  // Métodos de clientes
-  getClients: (params: any) => (apiClient as any).getClients(params),
-  getClientById: (id: string | number) => (apiClient as any).getClientById(id),
-  searchClientsByName: (name: string) => (apiClient as any).searchClientsByName(name),
-  createClient: (data: any) => (apiClient as any).createClient(data),
-  updateClient: (id: string | number, data: any) => (apiClient as any).updateClient(id, data),
-  deleteClient: (id: string | number) => (apiClient as any).deleteClient(id),
+  // Métodos de clientes (redirigiendo al nuevo clientService para consistencia)
+  getClients: (params: any) => clientService.getAll(params?.page, params?.pageSize),
+  getClientById: (id: string | number) => clientService.getById(id),
+  searchClientsByName: (name: string) => clientService.searchByName(name),
+  createClient: (data: any) => clientService.create(data),
+  updateClient: (id: string | number, data: any) => clientService.update(id, data),
+  deleteClient: (id: string | number) => clientService.delete(id),
+
+  // Métodos de proveedores (redirigiendo al nuevo supplierService para consistencia)
+  getSuppliers: (params: any) => supplierService.getAll(params),
+  getSupplierById: (id: string | number) => supplierService.getById(id),
+  searchSuppliersByName: (name: string) => supplierService.searchByName(name),
+  createSupplier: (data: any) => supplierService.create(data),
+  updateSupplier: (id: string | number, data: any) => supplierService.update(id, data),
+  deleteSupplier: (id: string | number) => supplierService.delete(id),
 
   // Métodos de categorías
   getAllCategories: () => (apiClient as any).getAllCategories(),

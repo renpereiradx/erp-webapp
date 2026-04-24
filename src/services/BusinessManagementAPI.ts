@@ -7,6 +7,7 @@ import API_CONFIG from '@/config/api.config'
 interface RequestOptions extends RequestInit {
   params?: Record<string, any>;
   skipAuth?: boolean;
+  skipBranchContext?: boolean;
   _retry?: boolean;
 }
 
@@ -29,8 +30,7 @@ class BusinessManagementAPI {
   // UTILITY METHODS
   // ============================================================================
 
-  getAuthHeaders(): Record<string, string> {
-    // 🔧 FIX: Obtener token FRESCO en cada llamada
+  getAuthHeaders(options: RequestOptions = {}): Record<string, string> {
     const token = localStorage.getItem('authToken')
     if (!token || token === 'null' || token === 'undefined') {
       return {}
@@ -38,14 +38,20 @@ class BusinessManagementAPI {
 
     const headers: Record<string, string> = { Authorization: `Bearer ${token}` }
     
-    // 🔧 NUEVO: Inyectar contexto de rol y sucursal si está disponible
     const roleId = localStorage.getItem('roleId')
     const roleName = localStorage.getItem('roleName')
     const activeBranch = localStorage.getItem('activeBranch')
     
     if (roleId) headers['X-Role-Id'] = roleId
     if (roleName) headers['X-Role-Name'] = roleName
-    if (activeBranch) headers['X-Branch-Id'] = activeBranch
+    
+    // Solo inyectar X-Branch-Id si:
+    // 1. Hay una sucursal activa
+    // 2. NO se está enviando un branch_id por query params
+    // 3. No se ha solicitado explícitamente saltar el contexto de sucursal (útil para visión global de admins)
+    if (activeBranch && !options.params?.branch_id && !options.skipBranchContext) {
+      headers['X-Branch-Id'] = activeBranch
+    }
 
     return headers
   }
@@ -55,7 +61,6 @@ class BusinessManagementAPI {
   }
 
   async makeRequest(endpoint: string, options: RequestOptions = {}): Promise<any> {
-    // 🔧 NUEVO: Procesar query params si existen
     let url = `${this.baseUrl}${endpoint}`
     if (options.params) {
       const searchParams = new URLSearchParams()
@@ -70,10 +75,7 @@ class BusinessManagementAPI {
       }
     }
 
-    // 🔧 FIX: Obtener token FRESCO en cada request (no solo al inicio)
-    // Esto garantiza que si el token cambió o se renovó, se use el nuevo
-    // skipAuth permite omitir autenticación para endpoints públicos (login/signup)
-    const authHeaders = options.skipAuth ? {} : this.getAuthHeaders()
+    const authHeaders = options.skipAuth ? {} : this.getAuthHeaders(options)
 
     // ⚠️ IMPORTANTE: fetch() NO soporta 'timeout' como propiedad
     // Necesitamos usar AbortController para timeout

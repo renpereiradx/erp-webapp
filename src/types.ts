@@ -32,6 +32,8 @@ export interface User {
   updated_at?: string;
   last_login_at?: string;
   sessions_count?: number;
+  active_branch?: number | null;
+  allowed_branches?: number[];
 }
 
 export interface UserSession {
@@ -79,6 +81,34 @@ export interface UserActivity {
   response_status?: number;
   duration_ms?: number;
   created_at: string;
+}
+
+// ============================================================================
+// SUPPLIER TYPES
+// ============================================================================
+
+export interface Supplier {
+  id: string;
+  name: string;
+  contact_info?: Record<string, any>;
+  tax_id?: string;
+  status: boolean;
+  user_id?: string;
+  party_id?: string;
+  created_at?: string;
+}
+
+export interface CreateSupplierRequest {
+  name: string;
+  contact_info?: Record<string, any>;
+  tax_id?: string;
+}
+
+export interface UpdateSupplierRequest {
+  name?: string;
+  contact_info?: Record<string, any>;
+  tax_id?: string;
+  status?: boolean;
 }
 
 // ============================================================================
@@ -267,14 +297,17 @@ export interface CreateStockRequest {
 export interface Client {
   id: string;
   name: string;
-  last_name?: string;
-  lastName?: string; // Frontend convenience
+  last_name: string;
   document_id?: string;
-  documentId?: string; // Frontend convenience
   status: boolean;
   user_id?: string;
   created_at?: string; // ISO 8601 date string
   contact?: string;
+  email?: string;
+  party_id?: string;
+  // Frontend convenience aliases
+  lastName?: string;
+  documentId?: string;
 }
 
 export interface CreateClientRequest {

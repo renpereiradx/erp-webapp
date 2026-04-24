@@ -50,12 +50,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (userData.role_id) localStorage.setItem('roleId', userData.role_id);
             if (userData.role_name) localStorage.setItem('roleName', userData.role_name);
             if (userData.active_branch) localStorage.setItem('activeBranch', userData.active_branch.toString());
+            if (userData.allowed_branches) localStorage.setItem('allowedBranches', JSON.stringify(userData.allowed_branches));
 
             setUser({
               ...userData,
               // Mantener compatibilidad si vienen en el objeto o en localStorage
               role_id: userData.role_id || localStorage.getItem('roleId') || undefined,
-              role_name: userData.role_name || localStorage.getItem('roleName') || undefined
+              role_name: userData.role_name || localStorage.getItem('roleName') || undefined,
+              active_branch: userData.active_branch || (localStorage.getItem('activeBranch') ? parseInt(localStorage.getItem('activeBranch')!) : undefined),
+              allowed_branches: userData.allowed_branches || (localStorage.getItem('allowedBranches') ? JSON.parse(localStorage.getItem('allowedBranches')!) : undefined)
             });
           }
         } catch (e) {
