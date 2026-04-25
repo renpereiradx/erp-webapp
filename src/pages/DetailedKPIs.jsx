@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
+import { useBranch } from '@/contexts/BranchContext';
 import useDashboardStore from '../store/useDashboardStore';
 import { formatPYG, formatNumber } from '@/utils/currencyUtils';
 import { formatTimeInParaguayTimezone } from '@/utils/timeUtils';
@@ -12,6 +13,7 @@ import { formatTimeInParaguayTimezone } from '@/utils/timeUtils';
 const DetailedKPIs = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const { currentBranchId } = useBranch();
   const [period, setPeriod] = useState('month');
   const { summary, kpis, alerts, fetchDashboardData, fetchKPIData, loading, error } = useDashboardStore();
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -25,7 +27,7 @@ const DetailedKPIs = () => {
         setLastUpdated(new Date());
     };
     loadData();
-  }, [fetchDashboardData, fetchKPIData, period]);
+  }, [fetchDashboardData, fetchKPIData, period, currentBranchId]);
 
   const formatCurrency = (val) => formatPYG(val);
 

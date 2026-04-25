@@ -4,11 +4,11 @@ import {
   DEMO_CONFIG_DASHBOARD, 
   getDemoDashboardData
 } from '../config/demoData';
-import { dashboardService } from '../services/dashboardService';
-import { receivablesService } from '../services/receivablesService';
-import { payablesService } from '../services/payablesService';
-import salesAnalyticsService from '../services/salesAnalyticsService';
-import profitabilityService from '../features/profitability/services/profitabilityService';
+import { dashboardService } from '../services/bi/dashboardService';
+import { receivablesService } from '../services/bi/receivablesService';
+import { payablesService } from '../services/bi/payablesService';
+import { salesAnalyticsService } from '../services/bi/salesAnalyticsService';
+import { inventoryAnalyticsService } from '../services/bi/inventoryAnalyticsService';
 
 // Interfaces para el estado del Dashboard
 export interface DashboardSummary {

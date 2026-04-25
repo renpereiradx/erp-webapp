@@ -7,6 +7,12 @@ import BusinessManagementAPI from './BusinessManagementAPI'
 import API_CONFIG from '@/config/api.config'
 import clientService from './clientService'
 import supplierService from './supplierService'
+import branchService from './branchService'
+import branchTransferService from './branchTransferService'
+import taxClassificationService from './taxClassificationService'
+import budgetService from './budgetService'
+import purchaseRequisitionService from './purchaseRequisitionService'
+import costPricingService from './costPricingService'
 
 // Instancia única del cliente API usando configuración centralizada
 const businessAPI = new BusinessManagementAPI({
@@ -64,6 +70,36 @@ export const apiService: any = {
   createSupplier: (data: any) => supplierService.create(data),
   updateSupplier: (id: string | number, data: any) => supplierService.update(id, data),
   deleteSupplier: (id: string | number) => supplierService.delete(id),
+
+  // Métodos de sucursales
+  getBranches: (filters: any) => branchService.getBranches(filters),
+  getBranchById: (id: number) => branchService.getBranchById(id),
+  createBranch: (data: any) => branchService.createBranch(data),
+  updateBranch: (id: number, data: any) => branchService.updateBranch(id, data),
+
+  // Métodos de transferencias entre sucursales
+  getBranchTransfers: (filters: any) => branchTransferService.getTransfers(filters),
+  getBranchTransferById: (id: number) => branchTransferService.getTransferById(id),
+  createBranchTransfer: (data: any) => branchTransferService.createTransfer(data),
+  updateBranchTransferStatus: (id: number, data: any) => branchTransferService.updateTransferStatus(id, data),
+
+  // Métodos de presupuestos
+  getBudgets: (filters: any) => budgetService.getBudgets(filters),
+  getBudgetById: (id: string) => budgetService.getBudgetById(id),
+  createBudget: (data: any) => budgetService.createBudget(data),
+  updateBudgetStatus: (id: string, data: any) => budgetService.updateBudgetStatus(id, data),
+  convertBudgetToSale: (id: string) => budgetService.convertToSale(id),
+
+  // Métodos de requisiciones de compra
+  getPurchaseRequisitions: (filters: any) => purchaseRequisitionService.getRequisitions(filters),
+  getPurchaseRequisitionById: (id: string) => purchaseRequisitionService.getRequisitionById(id),
+  createPurchaseRequisition: (data: any) => purchaseRequisitionService.createRequisition(data),
+  updatePurchaseRequisitionStatus: (id: string, data: any) => purchaseRequisitionService.updateStatus(id, data),
+
+  // Métodos de Costos y Precios
+  getProductPricingHistory: (productId: string, params: any) => costPricingService.getPricingHistory(productId, params),
+  getProfitabilityAnalysis: (productId: string) => costPricingService.getProfitabilityAnalysis(productId),
+  updateProductPrice: (productId: string, data: any) => costPricingService.setUnitPrice(productId, data),
 
   // Métodos de categorías
   getAllCategories: () => (apiClient as any).getAllCategories(),

@@ -30,7 +30,7 @@ class BusinessManagementAPI {
   // UTILITY METHODS
   // ============================================================================
 
-  getAuthHeaders(options: RequestOptions = {}): Record<string, string> {
+  getAuthHeaders(endpoint: string, options: RequestOptions = {}): Record<string, string> {
     const token = localStorage.getItem('authToken')
     if (!token || token === 'null' || token === 'undefined') {
       return {}
@@ -49,7 +49,11 @@ class BusinessManagementAPI {
     // 1. Hay una sucursal activa
     // 2. NO se está enviando un branch_id por query params
     // 3. No se ha solicitado explícitamente saltar el contexto de sucursal (útil para visión global de admins)
-    if (activeBranch && !options.params?.branch_id && !options.skipBranchContext) {
+    // 4. NO es un endpoint de gestión de sucursales (/branches/*) o clientes (/client/*)
+    const isBranchManagement = endpoint.includes('/branches/') || endpoint.startsWith('/branches');
+    const isClientApi = endpoint.includes('/client/') || endpoint.startsWith('/client');
+    
+    if (activeBranch && !options.params?.branch_id && !options.skipBranchContext && !isBranchManagement && !isClientApi) {
       headers['X-Branch-Id'] = activeBranch
     }
 
@@ -75,7 +79,7 @@ class BusinessManagementAPI {
       }
     }
 
-    const authHeaders = options.skipAuth ? {} : this.getAuthHeaders(options)
+    const authHeaders = options.skipAuth ? {} : this.getAuthHeaders(endpoint, options)
 
     // ⚠️ IMPORTANTE: fetch() NO soporta 'timeout' como propiedad
     // Necesitamos usar AbortController para timeout
@@ -158,6 +162,13 @@ class BusinessManagementAPI {
       let errorData
       try {
         errorData = await response.json()
+        
+        // Manejo específico de Rate Limit
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After');
+          errorData.retry_after = retryAfter ? parseInt(retryAfter) : 60;
+          errorData.code = 'RATE_LIMIT_EXCEEDED';
+        }
       } catch (e) {
         errorData = { message: `HTTP Error ${response.status}` }
       }

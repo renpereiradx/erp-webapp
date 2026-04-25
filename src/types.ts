@@ -34,6 +34,7 @@ export interface User {
   sessions_count?: number;
   active_branch?: number | null;
   allowed_branches?: number[];
+  permissions?: string[]; // Formato: "recurso:acción"
 }
 
 export interface UserSession {
@@ -1209,6 +1210,517 @@ export interface SystemIntegrityReport {
 }
 
 // ============================================================================
+// BRANCH TYPES
+// ============================================================================
+
+export interface Branch {
+  id: number;
+  code: string;
+  name: string;
+  branch_type: string;
+  legal_name?: string;
+  trade_name?: string;
+  ruc?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  phone?: string;
+  email?: string;
+  is_active: boolean;
+  allows_sales: boolean;
+  allows_purchases: boolean;
+  is_warehouse: boolean;
+  manager_user_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateBranchRequest {
+  code: string;
+  name: string;
+  branch_type: string;
+  legal_name?: string;
+  trade_name?: string;
+  ruc?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  phone?: string;
+  email?: string;
+  allows_sales?: boolean;
+  allows_purchases?: boolean;
+  is_warehouse?: boolean;
+  manager_user_id?: string;
+}
+
+export interface UpdateBranchRequest {
+  name?: string;
+  branch_type?: string;
+  legal_name?: string;
+  trade_name?: string;
+  ruc?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  phone?: string;
+  email?: string;
+  is_active?: boolean;
+  allows_sales?: boolean;
+  allows_purchases?: boolean;
+  is_warehouse?: boolean;
+  manager_user_id?: string;
+}
+
+export interface BranchFiscalConfig {
+  id: number;
+  branch_id: number;
+  establishment_code: string;
+  expedition_point: string;
+  document_type: string;
+  timbrado: string;
+  valid_from?: string;
+  valid_to?: string;
+  invoice_prefix?: string;
+  next_invoice_number: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface CreateBranchFiscalConfigRequest {
+  establishment_code: string;
+  expedition_point: string;
+  document_type: string;
+  timbrado: string;
+  valid_from?: string;
+  valid_to?: string;
+  invoice_prefix?: string;
+  next_invoice_number?: number;
+  is_active?: boolean;
+}
+
+export interface UserBranchAccess {
+  id: number;
+  user_id: string;
+  branch_id: number;
+  access_type: 'ADMIN' | 'OPERATOR' | 'VIEWER' | string;
+  is_default_branch: boolean;
+  granted_at: string;
+  granted_by?: string;
+}
+
+export interface GrantBranchAccessRequest {
+  user_id: string;
+  access_type: 'ADMIN' | 'OPERATOR' | 'VIEWER' | string;
+  is_default_branch?: boolean;
+}
+
+export interface UpdateBranchAccessRequest {
+  access_type?: string;
+  is_default_branch?: boolean;
+}
+
+// ============================================================================
+// BRANCH TRANSFER TYPES
+// ============================================================================
+
+export interface BranchTransfer {
+  id: number;
+  transfer_code: string;
+  source_branch_id: number;
+  destination_branch_id: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SHIPPED' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED';
+  transfer_type: 'STANDARD' | 'URGENT' | 'RETURN' | 'ADJUSTMENT';
+  notes?: string;
+  requested_by: string;
+  requested_date: string;
+  updated_at?: string;
+  source_branch_name?: string;      // JOIN
+  destination_branch_name?: string; // JOIN
+}
+
+export interface BranchTransferItem {
+  id: number;
+  transfer_id: number;
+  product_id: string;
+  quantity_requested: number;
+  quantity_approved?: number;
+  quantity_shipped?: number;
+  quantity_received?: number;
+  unit_cost?: number;
+  notes?: string;
+  product_name?: string; // JOIN
+}
+
+export interface CreateBranchTransferRequest {
+  source_branch_id: number;
+  destination_branch_id: number;
+  transfer_type?: string;
+  notes?: string;
+  items: Array<{
+    product_id: string;
+    quantity_requested: number;
+    unit_cost?: number;
+    notes?: string;
+  }>;
+}
+
+export interface UpdateBranchTransferStatusRequest {
+  new_status: string;
+  notes?: string;
+  rejection_reason?: string;
+  shipping_tracking_number?: string;
+  items?: Array<{
+    product_id: string;
+    quantity_approved?: number;
+    quantity_shipped?: number;
+    quantity_received?: number;
+    notes?: string;
+  }>;
+}
+
+// = ============================================================================
+// TAX CLASSIFICATION TYPES
+// ============================================================================
+
+export interface SifenCodeInfo {
+  code: string;
+  name: string;
+  description: string;
+  default_tax_rate_id: number;
+  default_tax_rate_code: string;
+  default_rate_percent: number;
+}
+
+export interface ProductTaxClassification {
+  id: number;
+  product_id: string;
+  classification_code: string;
+  default_tax_rate_id: number;
+  effective_from: string;
+  effective_to?: string;
+  notes?: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AssignTaxClassificationRequest {
+  product_id: string;
+  classification_code: string;
+  tax_rate_id?: number;
+  effective_from?: string;
+  effective_to?: string;
+  notes?: string;
+}
+
+export interface BulkAssignTaxClassificationRequest {
+  product_ids: string[];
+  classification_code: string;
+  tax_rate_id?: number;
+  notes?: string;
+}
+
+export interface AutoClassifyRequest {
+  category_id: number;
+  classification_code: string;
+}
+
+// ============================================================================
+// PRODUCT & CATEGORY TYPES (v3.2.0)
+// ============================================================================
+
+export interface TaxRate {
+  id: number;
+  tax_name: string;
+  code: 'IVA10' | 'IVA5' | 'EXENTO' | 'ISC' | 'IVA_DIGITAL' | 'IMPORT' | string;
+  rate: number;
+  country: string;
+  jurisdiction_type: string;
+  operation_type: string;
+  description?: string;
+  is_default: boolean;
+  is_active: boolean;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  default_tax_rate_id?: number;
+  default_tax_rate?: TaxRate;
+  parent_id?: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UnitPrice {
+  id: number;
+  product_id: string;
+  unit: string;
+  price_per_unit: number;
+  effective_date: string;
+}
+
+export interface UnitCostSummary {
+  unit: string;
+  last_cost: number;
+  last_purchase_date: string;
+  weighted_avg_cost_6m: number;
+  total_purchases: number;
+  cost_variance_percent: number;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  barcode?: string;
+  state: boolean;
+  category_id?: number;
+  category?: Category;
+  product_type: 'PHYSICAL' | 'SERVICE' | 'PRODUCTION';
+  origin?: 'NACIONAL' | 'IMPORTADO';
+  brand?: string;
+  base_unit?: string;
+  override_tax_rate_id?: number;
+  target_margin_percent?: number;
+  pricing_strategy?: 'MANUAL' | 'AUTOMATIC';
+  applicable_tax_rate?: TaxRate;
+  created_at: string;
+  updated_at: string;
+  description?: string;
+  price?: number; // Legacy compatibility
+}
+
+export interface ProductEnriched extends Product {
+  purchase_price?: number;
+  stock_quantity?: number;
+  stock_unit?: string;
+  stock_status: 'in_stock' | 'low_stock' | 'medium_stock' | 'out_of_stock';
+  has_valid_stock: boolean;
+  has_valid_price: boolean;
+  has_unit_pricing: boolean;
+  unit_prices?: UnitPrice[];
+}
+
+export interface ProductOperationInfoResponse {
+  product_id: string;
+  product_name: string;
+  barcode?: string;
+  state: boolean;
+  category?: { id: number; name: string };
+  product_type: string;
+  origin?: string;
+  brand?: string;
+  base_unit?: string;
+  created_at: string;
+  updated_at: string;
+  unit_prices: UnitPrice[];
+  unit_costs_summary: UnitCostSummary[];
+  stock_quantity: number;
+  description?: string;
+  tax: {
+    classification_code: string;
+    resolution_source: string;
+    rate: { id: number; tax_name: string; code: string; rate: number };
+  };
+  financial_health: {
+    has_prices: boolean;
+    has_costs: boolean;
+    has_stock: boolean;
+    price_count: number;
+    cost_units_count: number;
+    last_updated: string;
+  };
+  stock_status: string;
+  has_valid_stock: boolean;
+  has_valid_prices: boolean;
+  has_valid_costs: boolean;
+  best_margin_unit?: string;
+  best_margin_percent?: number;
+}
+
+// ============================================================================
+// COST & PRICING TYPES
+// ============================================================================
+
+export interface PricingHistoryEntry {
+  id: number;
+  product_id: string;
+  unit: string;
+  price_per_unit: number;
+  effective_date: string;
+  user_id: string;
+  user_name: string;
+  notes?: string;
+}
+
+export interface UnitPriceUpdate {
+  unit: string;
+  price_per_unit: number;
+  notes?: string;
+}
+
+export interface ProfitabilityAnalysis {
+  product_id: string;
+  unit: string;
+  last_cost: number;
+  current_price: number;
+  gross_margin_amount: number;
+  gross_margin_percent: number;
+  target_margin_percent: number;
+  margin_status: 'HEALTHY' | 'LOW' | 'CRITICAL' | 'NEGATIVE';
+  last_cost_date: string;
+  last_price_date: string;
+}
+
+// ============================================================================
+// AUDIT TYPES
+// ============================================================================
+
+export interface AuditLog {
+  id: number;
+  user_id: string;
+  action: string;
+  category: 'AUTH' | 'USER' | 'SALE' | 'PURCHASE' | string;
+  entity_type: string;
+  entity_id: string;
+  old_values?: any;
+  new_values?: any;
+  ip_address: string;
+  user_agent: string;
+  created_at: string;
+}
+
+export interface EntityHistoryEntry {
+  id: number;
+  action: string;
+  user_id: string;
+  user_name: string;
+  created_at: string;
+  old_values?: any;
+  new_values?: any;
+}
+
+export interface AuditDashboardSummary {
+  summary: {
+    total_events: number;
+    events_today: number;
+    events_this_week: number;
+    events_this_month: number;
+  };
+  by_category: Record<string, number>;
+  by_action: Record<string, number>;
+  top_users: Array<{ user_id: string; user_name: string; count: number }>;
+}
+
+// ============================================================================
+// BUDGET TYPES
+// ============================================================================
+
+export interface Budget {
+  id: string;
+  budget_number: string;
+  client_id: string;
+  branch_id: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'CONVERTED';
+  total_amount: number;
+  tax_amount: number;
+  discount_amount: number;
+  currency_id: number;
+  exchange_rate: number;
+  valid_until: string;
+  notes?: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  client_name?: string; // JOIN
+}
+
+export interface BudgetItem {
+  id: number;
+  budget_id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  tax_rate_id: number;
+  discount_percent?: number;
+  notes?: string;
+  product_name?: string; // JOIN
+}
+
+export interface CreateBudgetRequest {
+  client_id: string;
+  valid_until?: string;
+  notes?: string;
+  currency_id?: number;
+  items: Array<{
+    product_id: string;
+    quantity: number;
+    unit_price?: number;
+    tax_rate_id?: number;
+    discount_percent?: number;
+  }>;
+}
+
+export interface UpdateBudgetStatusRequest {
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'CONVERTED';
+  notes?: string;
+}
+
+// ============================================================================
+// PURCHASE REQUISITION TYPES
+// ============================================================================
+
+export interface PurchaseRequisition {
+  id: string;
+  user_id: string;
+  user_name: string;
+  branch_id: number;
+  status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+  supplier_id?: string;
+  supplier_name?: string;
+  notes?: string;
+  metadata?: any;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PurchaseRequisitionDetail {
+  id: number;
+  purchase_requisition_id: string;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit?: string;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH';
+  notes?: string;
+  created_at: string;
+}
+
+export interface CreatePurchaseRequisitionRequest {
+  supplier_id?: string;
+  branch_id?: number;
+  notes?: string;
+  details: Array<{
+    product_id: string;
+    quantity: number;
+    unit?: string;
+    priority?: string;
+    notes?: string;
+  }>;
+  metadata?: any;
+}
+
+export interface UpdateRequisitionStatusRequest {
+  new_status: string;
+  notes?: string;
+}
+
+// ============================================================================
 // PAGINATION TYPES
 // ============================================================================
 
@@ -1439,6 +1951,43 @@ export const API_ENDPOINTS = {
   STOCK_TRANSACTION_VALIDATE_CONSISTENCY: '/stock-transaction/validate-consistency',
   // System Integrity
   SYSTEM_INTEGRITY_CHECK: '/system/integrity-check',
+
+  // Branches Administration
+  BRANCHES: '/branches',
+  BRANCH_BY_ID: (id: number) => `/branches/${id}`,
+  BRANCH_FISCAL_CONFIG: (branchId: number) => `/branches/${branchId}/fiscal-config`,
+  BRANCH_FISCAL_CONFIG_UPDATE: (id: number) => `/branches/fiscal-config/${id}`,
+  BRANCH_ACCESS: (branchId: number) => `/branches/${branchId}/access`,
+  BRANCH_ACCESS_UPDATE: (branchId: number, userId: string) => `/branches/${branchId}/access/${userId}`,
+  USER_BRANCHES: (userId: string) => `/users/${userId}/branches`,
+
+  // Branch Transfers
+  BRANCH_TRANSFERS: '/branch-transfers',
+  BRANCH_TRANSFER_BY_ID: (id: number) => `/branch-transfers/${id}`,
+  BRANCH_TRANSFER_STATUS: (id: number) => `/branch-transfers/${id}/status`,
+
+  // Budgets (v2.0)
+  BUDGETS: '/budget',
+  BUDGET_BY_ID: (id: string) => `/budget/${id}`,
+  BUDGET_STATUS: (id: string) => `/budget/${id}/status`,
+  BUDGET_BY_CLIENT: (clientId: string) => `/budget/client/${clientId}`,
+  BUDGET_CONVERT_TO_SALE: (id: string) => `/budget/${id}/convert-to-sale`,
+
+  // Purchase Requisitions (v2.0)
+  PURCHASE_REQUISITIONS: '/purchase-requisitions',
+  PURCHASE_REQUISITION_BY_ID: (id: string) => `/purchase-requisitions/${id}`,
+  PURCHASE_REQUISITION_STATUS: (id: string) => `/purchase-requisitions/${id}/status`,
+  PURCHASE_REQUISITIONS_MY: '/purchase-requisitions/my',
+
+  // Security & Audit (v1.5)
+  AUDIT_LOGS: '/api/v1/audit/logs',
+  AUDIT_ENTITY_HISTORY: (type: string, id: string) => `/api/v1/audit/entity/${type}/${id}/history`,
+  AUDIT_DASHBOARD: '/api/v1/audit/dashboard',
+
+  // Pricing & Costs (v3.2)
+  PRICING_UNITS: (productId: string) => `/products/${productId}/units`,
+  PRICING_HISTORY: (productId: string) => `/products/${productId}/pricing-history`,
+  PROFITABILITY_ANALYSIS: (productId: string) => `/products/${productId}/profitability`,
 } as const;
 
 export const HTTP_STATUS = {

@@ -4,6 +4,7 @@ import { useI18n } from '@/lib/i18n'
 import useInventoryManagementStore from '@/store/useInventoryManagementStore'
 import useDashboardStore from '@/store/useDashboardStore'
 import useAuthStore from '@/store/useAuthStore'
+import { useBranch } from '@/contexts/BranchContext'
 import { productService } from '@/services/productService'
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
@@ -37,6 +38,7 @@ const InventoryManagement = () => {
   const toast = useToast()
   const { fetchDashboardData } = useDashboardStore()
   const { user } = useAuthStore()
+  const { currentBranchId } = useBranch()
 
   // Store hooks
   const {
@@ -197,10 +199,10 @@ const InventoryManagement = () => {
     }
   }, [])
 
-  // Cargar inventarios al montar y cuando cambia la paginación
+  // Cargar inventarios al montar, cuando cambia la paginación o la sucursal activa
   useEffect(() => {
     fetchInventories(pagination.page, pagination.pageSize)
-  }, [fetchInventories, pagination.page, pagination.pageSize])
+  }, [fetchInventories, pagination.page, pagination.pageSize, currentBranchId])
 
   // Calcular índices para paginación
   const startIndex = (pagination.page - 1) * pagination.pageSize

@@ -21,6 +21,12 @@ import TopProductsOverview from '@/pages/TopProductsOverview'
 import Products from '@/pages/Products'
 import Clients from '@/pages/Clients'
 import Suppliers from '@/pages/Suppliers'
+import BudgetManagement from '@/pages/BudgetManagement'
+import BudgetCreate from '@/pages/BudgetCreate'
+import BudgetDetail from '@/pages/BudgetDetail'
+import PurchaseRequisitionList from '@/pages/PurchaseRequisitionList'
+import PurchaseRequisitionCreate from '@/pages/PurchaseRequisitionCreate'
+import PurchaseRequisitionDetail from '@/pages/PurchaseRequisitionDetail'
 import SalesNew from '@/pages/SalesNew'
 import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
 import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
@@ -47,6 +53,7 @@ import Currencies from '@/pages/Currencies'
 import ExchangeRates from '@/pages/ExchangeRates'
 import Login from '@/pages/Login.tsx'
 import Settings from '@/pages/Settings'
+import BranchManagement from '@/pages/BranchManagement'
 import UserManagementList from '@/pages/UserManagementList.tsx'
 import UserDetailedProfile from '@/pages/UserDetailedProfile.tsx'
 import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity.tsx'
@@ -266,13 +273,18 @@ function AppContent() {
                         path='/ajuste-inventario-unitario'
                         element={<InventoryAdjustmentManual />}
                       />
-                      <Route
-                        path='/ajuste-inventario-masivo'
-                        element={<InventoryManagement />}
-                      />
+                      <Route path='/ajuste-inventario-masivo' element={<InventoryManagement />} />
+
+                      {/* Rutas de Requisiciones de Compra */}
+                      <Route path='/logistica/requisiciones' element={<PurchaseRequisitionList />} />
+                      <Route path='/logistica/requisiciones/nueva' element={<PurchaseRequisitionCreate />} />
+                      <Route path='/logistica/requisiciones/:id' element={<PurchaseRequisitionDetail />} />
 
                       {/* --- RUTAS AISLADAS TEMPORALMENTE PARA REFACTORING --- */}
                       <Route path='/compras' element={<Purchases />} />
+                      <Route path='/comercial/presupuestos' element={<BudgetManagement />} />
+                      <Route path='/comercial/presupuestos/nuevo' element={<BudgetCreate />} />
+                      <Route path='/comercial/presupuestos/:id' element={<BudgetDetail />} />
 
                       {/* Nuevas rutas de sistemas de pagos */}
                       <Route
@@ -308,6 +320,11 @@ function AppContent() {
                       {/* Configuración */}
                       <Route path='/configuracion' element={<Settings />} />
                       <Route path='/configuracion/perfil' element={<MyProfileAndSecurity />} />
+                      <Route path='/configuracion/sucursales' element={
+                        <RoleGuard allowedRoles={['F2VLso']}>
+                          <BranchManagement />
+                        </RoleGuard>
+                      } />
                       
                       <Route path='/configuracion/usuarios' element={
                         <RoleGuard allowedRoles={['F2VLso']}>

@@ -20,6 +20,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   clearError: () => void;
   initializeAuth: () => Promise<void>;
+  hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,6 +32,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+
+  const hasPermission = useCallback((permission: string): boolean => {
+    if (!user) return false;
+    // El rol ADMIN siempre tiene todos los permisos
+    if (user.role_id === 'admin') return true;
+    if (!user.permissions) return false;
+    return user.permissions.includes(permission);
+  }, [user]);
 
   const initializeAuth = useCallback(async () => {
     try {
@@ -207,7 +216,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       login,
       logout,
       clearError,
-      initializeAuth
+      initializeAuth,
+      hasPermission
     }}>
       {children}
     </AuthContext.Provider>

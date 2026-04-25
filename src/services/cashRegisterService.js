@@ -15,6 +15,7 @@ const API_ENDPOINTS = {
   cashRegisterMovements: id => `/cash-registers/${id}/movements`,
   cashRegisterMovementsFilter: id => `/cash-registers/${id}/movements/filter`,
   cashRegisterReport: id => `/cash-registers/${id}/report`,
+  cashRegisterBalanceSummary: id => `/cash-registers/${id}/balance-summary`,
   cashRegisterAudits: id => `/cash-registers/${id}/audits`,
   cashMovements: '/cash-movements/',
   voidMovement: id => `/cash-movements/${id}/void`,
@@ -398,6 +399,37 @@ export const cashRegisterService = {
         duration: Date.now() - startTime,
         error: error.message,
         operation: 'voidMovement',
+      })
+      throw error
+    }
+  },
+
+  /**
+   * Obtiene un resumen del balance de la caja (v1.1)
+   * @param {number} cashRegisterId
+   * @returns {Promise<Object>}
+   */
+  async getBalanceSummary(cashRegisterId) {
+    const startTime = Date.now()
+
+    try {
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.get(
+          API_ENDPOINTS.cashRegisterBalanceSummary(cashRegisterId)
+        )
+      })
+
+      telemetry.record('cash_register.service.balance_summary', {
+        duration: Date.now() - startTime,
+        cashRegisterId,
+      })
+
+      return result
+    } catch (error) {
+      telemetry.record('cash_register.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getBalanceSummary',
       })
       throw error
     }

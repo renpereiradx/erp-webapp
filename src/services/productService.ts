@@ -1,564 +1,205 @@
 /**
- * Servicio para la gestión de productos en el sistema ERP
- * Implementa sistema modular de mock data sin valores hardcodeados
- * Incluye fallback robusto para funcionalidad completa offline
+ * Servicio para la gestión de productos en el sistema ERP (v3.2.0)
+ * Implementa soporte nativo para TypeScript y el contexto multi-sucursal.
  */
 
-import { apiClient } from './api'
-import BusinessManagementAPI from './BusinessManagementAPI'
-import { ApiError, toApiError } from '@/utils/ApiError'
-// Removed MockDataService import - using real API only
-import { telemetryService } from './telemetryService'
-import { DEMO_CONFIG } from '@/config/demoAuth'
-import { DEMO_PRODUCT_DATA } from '@/config/demoData'
+import { apiClient } from './api';
+import { ApiError, toApiError } from '@/utils/ApiError';
+import { telemetryService } from './telemetryService';
+import { 
+  Product, 
+  ProductEnriched, 
+  ProductOperationInfoResponse, 
+  Category, 
+  API_ENDPOINTS, 
+  PaginatedResponse 
+} from '@/types';
 
 /**
  * Helper para retry con backoff exponencial en errores de red
  */
-const retryWithBackoff = async (fn, maxRetries = 2, baseDelay = 1000) => {
-  if (DEMO_CONFIG.enabled) return await fn()
-  let lastError
+const retryWithBackoff = async <T>(fn: () => Promise<T>, maxRetries = 2, baseDelay = 1000): Promise<T> => {
+  let lastError;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await fn()
-    } catch (error) {
-      lastError = error
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
 
-      // No hacer retry si es AbortError o si es el último intento
-      if (error?.name === 'AbortError' || attempt === maxRetries) {
-        throw error
-      }
+      if (error?.name === 'AbortError' || attempt === maxRetries) throw error;
 
-      // Solo hacer retry en errores de red
       const isNetworkError =
         error.message?.includes('ERR_CONNECTION_TIMED_OUT') ||
         error.message?.includes('Network Error') ||
         error.message?.includes('Failed to fetch') ||
-        error.code === 'NETWORK_ERROR'
+        error.code === 'NETWORK_ERROR';
 
-      if (!isNetworkError) {
-        throw error
-      }
+      if (!isNetworkError) throw error;
 
-      // Esperar antes del siguiente intento (backoff exponencial)
-      const delay = baseDelay * Math.pow(2, attempt)
-      await new Promise(resolve => setTimeout(resolve, delay))
+      const delay = baseDelay * Math.pow(2, attempt);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
 
-  throw lastError
-}
-
-/**
- * @typedef {import('@/types').Product} Product
- * @typedef {import('@/types').ProductPrice} ProductPrice
- * @typedef {import('@/types').Stock} Stock
- */
+  throw lastError;
+};
 
 export const productService = {
-  // =================== PRODUCTOS ===================
+  // =================== PRODUCTOS (LECTURA) ===================
 
   /**
-   * Obtiene productos paginados ordenados por fecha de creación (más recientes primero)
-   * @param {number} page - Número de página (comienza en 1)
-   * @param {number} pageSize - Cantidad de productos por página
-   * @param {Object} options - Opciones adicionales
-   * @param {AbortSignal} options.signal - Signal para cancelar la petición
-   * @returns {Promise<Product[]>} Array de productos enriquecidos con timestamps
+   * Obtiene productos paginados (v3.0+)
    */
-  getProductsPaginated: async (page = 1, pageSize = 10, options = {}) => {
-    if (DEMO_CONFIG.enabled) {
-      return (DEMO_PRODUCT_DATA || []).slice((page - 1) * pageSize, page * pageSize)
-    }
+  async getProducts(page = 1, pageSize = 10, options: any = {}): Promise<ProductEnriched[]> {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getProductsPaginated(page, pageSize, options)
-      })
+        return await apiClient.getProductsPaginated(page, pageSize, options);
+      });
     } catch (error) {
-      if (error?.name === 'AbortError') throw error
-      throw toApiError(error, 'Error al obtener productos paginados')
+      if (error?.name === 'AbortError') throw error;
+      throw toApiError(error, 'Error al obtener productos paginados');
     }
   },
 
   /**
-   * Alias para getProductsPaginated para compatibilidad con stores y tests
+   * Obtiene todos los productos (v3.0+)
    */
-  getProducts: async (page = 1, pageSize = 10, options = {}) => {
-    return await productService.getProductsPaginated(page, pageSize, options)
-  },
-
-  // Obtener un producto por ID
-  /**
-   * @param {string} productId
-   * @returns {Promise<Product|any>}
-   */
-  getProductById: async productId => {
-    if (DEMO_CONFIG.enabled) {
-      const product = (DEMO_PRODUCT_DATA || []).find(p => String(p.id) === String(productId))
-      return product || DEMO_PRODUCT_DATA[0]
-    }
-    const startTime = performance.now()
-
+  async getAll(): Promise<ProductEnriched[]> {
     try {
-      // Using financial endpoint which includes price data
-      const result = await retryWithBackoff(async () => {
-        return await apiClient.getProductInfoById(productId)
-      })
-
-      telemetryService?.recordMetric('product_fetched_by_id_api', 1)
-      return result
+      return await apiClient.get('/products/all');
     } catch (error) {
-      // En lugar de usar mock data, retornar error apropiado
-      throw new ApiError(
-        `No se pudo cargar el producto con ID ${productId}. Verifique la conexión a la API.`,
-        'API_UNAVAILABLE',
-        503,
-        { originalError: error.message, productId },
-      )
-    } finally {
-      const endTime = performance.now()
-      telemetryService?.recordMetric(
-        'get_product_by_id_duration',
-        endTime - startTime,
-      )
+      throw toApiError(error, 'Error al obtener catálogo de productos');
     }
   },
 
-  // Obtener un producto enriquecido por ID (con precios, stock, descripción)
   /**
-   * @param {string} productId
-   * @returns {Promise<ProductOperationInfoResponse|any>}
+   * Obtiene un producto por ID con datos enriquecidos (v3.0+)
    */
-  getProductByIdEnriched: async (productId: string) => {
-    if (DEMO_CONFIG.enabled) {
-      const product = (DEMO_PRODUCT_DATA || []).find(p => String(p.id) === String(productId))
-      return product || DEMO_PRODUCT_DATA[0]
-    }
-    try {
-      // Use financial endpoint which includes enriched data
-      const product = await apiClient.getProductInfoById(productId)
-      return product
-    } catch (error) {
-      const norm = toApiError(error, 'Error al obtener producto enriquecido')
-      throw norm
-    }
-  },
-
-  // Buscar productos por nombre
-  /**
-   * @param {string} name
-   * @returns {Promise<any[]>}
-   */
-  searchProductsByName: async (name: string) => {
-    if (DEMO_CONFIG.enabled) {
-      return (DEMO_PRODUCT_DATA || []).filter(p => 
-        p.name?.toLowerCase().includes(name.toLowerCase())
-      )
-    }
-    try {
-      return await apiClient.searchProductsByName(name)
-    } catch (error) {
-      throw toApiError(error, 'Error al buscar productos por nombre')
-    }
-  },
-
-  // Buscar producto por código de barras
-  /**
-   * @param {string} barcode
-   * @returns {Promise<ProductOperationInfoResponse|any>}
-   */
-  getProductByBarcode: async (barcode: string) => {
-    if (DEMO_CONFIG.enabled) {
-      const product = (DEMO_PRODUCT_DATA || []).find(p => String(p.barcode) === String(barcode))
-      return product || DEMO_PRODUCT_DATA[0]
-    }
+  async getById(id: string): Promise<ProductEnriched> {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getProductByBarcode(barcode)
-      })
+        return await apiClient.getProductById(id);
+      });
     } catch (error) {
-      throw toApiError(error, 'Error al buscar producto por código de barras')
+      throw toApiError(error, `Error al obtener producto ${id}`);
     }
   },
 
-  // Obtener servicios de canchas de beach tennis
   /**
-   * @returns {Promise<Product[]|any>}
+   * Búsqueda inteligente por nombre o código (v3.0+)
    */
-  getBeachTennisCourts: async () => {
+  async search(term: string, options: any = {}): Promise<ProductEnriched[]> {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getServiceProducts()
-      })
+        return await apiClient.searchProducts(term, options);
+      });
     } catch (error) {
-      throw toApiError(
-        error,
-        'Error al obtener servicios de canchas de beach tennis',
-      )
+      if (error?.name === 'AbortError') throw error;
+      throw toApiError(error, 'Error en la búsqueda de productos');
     }
   },
 
-  // Obtener productos de servicios de canchas (enriquecidos)
+  // =================== PRODUCTOS (OPERATIVO v3.2.0) ===================
+
   /**
-   * @returns {Promise<Product[]|any>}
+   * Obtiene información operativa completa para un producto (v3.2.0)
    */
-  getServiceCourts: async () => {
-    if (DEMO_CONFIG.enabled) {
-      return (DEMO_PRODUCT_DATA || []).filter(p => p.product_type === 'SERVICE')
-    }
+  async getInfo(id: string): Promise<ProductOperationInfoResponse> {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getServiceProducts()
-      })
+        return await apiClient.getProductInfoById(id);
+      });
     } catch (error) {
-      throw toApiError(
-        error,
-        'Error al obtener servicios de canchas enriquecidos',
-      )
+      throw toApiError(error, 'Error al obtener información operativa del producto');
     }
   },
 
-  // =================== INFO ENRICHED PRODUCTS ===================
-
-  // Obtener producto enriquecido con información operativa por ID
   /**
-   * @param {string} productId
-   * @returns {Promise<ProductOperationInfoResponse|any>}
+   * Obtiene información operativa por código de barras (v3.2.0)
    */
-  getProductByIdInfo: async productId => {
+  async getInfoByBarcode(barcode: string): Promise<ProductOperationInfoResponse> {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getProductInfoById(productId)
-      })
+        return await apiClient.getProductInfoByBarcode(barcode);
+      });
     } catch (error) {
-      throw toApiError(
-        error,
-        'Error al obtener producto enriquecido con información operativa',
-      )
+      throw toApiError(error, 'Error al buscar producto por código de barras');
     }
   },
 
-  // Obtener producto enriquecido con información operativa por código de barras
   /**
-   * @param {string} barcode
-   * @returns {Promise<ProductOperationInfoResponse|any>}
+   * Búsqueda operativa por nombre con info completa (v3.2.0)
    */
-  getProductByBarcodeInfo: async (barcode: string) => {
-    if (DEMO_CONFIG.enabled) {
-      const product = (DEMO_PRODUCT_DATA || []).find(p => String(p.barcode) === String(barcode))
-      return product || DEMO_PRODUCT_DATA[0]
-    }
+  async searchInfo(name: string, options: { limit?: number; signal?: AbortSignal } = {}): Promise<ProductOperationInfoResponse[]> {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getProductInfoByBarcode(barcode)
-      })
+        return await apiClient.searchProductsInfoByName(name, options);
+      });
     } catch (error) {
-      throw toApiError(
-        error,
-        'Error al buscar producto financiero por código de barras',
-      )
+      if (error?.name === 'AbortError') throw error;
+      throw toApiError(error, 'Error en búsqueda operativa');
     }
   },
 
   /**
-   * Obtiene un producto optimizado para el flujo de COMPRA
-   * @param {string} productId
-   * @returns {Promise<ProductOperationInfoResponse|any>}
+   * Obtiene datos de producto optimizados para VENTA (v3.2.0)
    */
-  getProductForPurchase: async (productId: string) => {
-    if (DEMO_CONFIG.enabled) {
-      const product = (DEMO_PRODUCT_DATA || []).find(p => String(p.id) === String(productId))
-      return product || DEMO_PRODUCT_DATA[0]
-    }
+  async getForSale(id: string): Promise<ProductOperationInfoResponse> {
     try {
-      return await retryWithBackoff(async () => {
-        return await apiClient.getProductForPurchase(productId)
-      })
+      return await apiClient.getProductForSale(id);
     } catch (error) {
-      throw toApiError(error, 'Error al obtener datos de producto para compra')
+      throw toApiError(error, 'Error al cargar producto para venta');
     }
   },
 
   /**
-   * Obtiene un producto optimizado para el flujo de VENTA
-   * @param {string} productId
-   * @returns {Promise<ProductOperationInfoResponse|any>}
+   * Obtiene datos de producto optimizados para COMPRA (v3.2.0)
    */
-  getProductForSale: async (productId: string) => {
-    if (DEMO_CONFIG.enabled) {
-      const product = (DEMO_PRODUCT_DATA || []).find(p => String(p.id) === String(productId))
-      return product || DEMO_PRODUCT_DATA[0]
-    }
+  async getForPurchase(id: string): Promise<ProductOperationInfoResponse> {
     try {
-      return await retryWithBackoff(async () => {
-        return await apiClient.getProductForSale(productId)
-      })
+      return await apiClient.getProductForPurchase(id);
     } catch (error) {
-      throw toApiError(error, 'Error al obtener datos de producto para venta')
+      throw toApiError(error, 'Error al cargar producto para compra');
     }
   },
 
-  // Buscar productos enriquecido con información operativas por nombre
-  /**
-   * @param {string} name - Término de búsqueda
-   * @param {{ limit?: number, signal?: AbortSignal }} [options] - Opciones de búsqueda
-   * @returns {Promise<ProductOperationInfoResponse[]|any>}
-   */
-  searchProductsInfo: async (name: string, options = {}) => {
-    if (DEMO_CONFIG.enabled) {
-      return (DEMO_PRODUCT_DATA || []).filter(p => 
-        p.name?.toLowerCase().includes(name.toLowerCase())
-      )
-    }
-    const { limit = 50, signal } = options
+  // =================== PRODUCTOS (MUTACIÓN) ===================
+
+  async create(data: Partial<Product>): Promise<ProductEnriched> {
     try {
-      return await retryWithBackoff(async () => {
-        return await apiClient.searchProductsInfoByName(name, {
-          limit,
-          signal,
-        })
-      })
+      return await apiClient.createProduct(data);
     } catch (error) {
-      // Permitimos que AbortError se propague tal cual
-      if (error?.name === 'AbortError') throw error
-      throw toApiError(
-        error,
-        'Error al buscar productos financieros por nombre',
-      )
+      throw toApiError(error, 'Error al crear producto');
     }
   },
 
-  // Búsqueda inteligente: por ID, nombre o código de barras
-  /**
-   * @param {string} searchTerm
-   * @param {{ signal?: AbortSignal }} [options]
-   * @returns {Promise<Product[]|Product|any>}
-   */
-  searchProducts: async (searchTerm, { signal } = {}) => {
+  async update(id: string, data: Partial<Product>): Promise<ProductEnriched> {
     try {
-      return await retryWithBackoff(async () => {
-        return await apiClient.searchProducts(searchTerm, { signal })
-      })
+      return await apiClient.updateProduct(id, data);
     } catch (error) {
-      // Permitimos que AbortError se propague tal cual
-      if (error?.name === 'AbortError') throw error
-      throw toApiError(error, 'Error al buscar productos')
+      throw toApiError(error, 'Error al actualizar producto');
     }
   },
 
-  // Crear un nuevo producto
-  /**
-   * @param {Partial<Product>} productData
-   * @returns {Promise<Product|any>}
-   */
-  createProduct: async productData => {
+  async delete(id: string): Promise<{ message: string }> {
     try {
-      return await apiClient.createProduct(productData)
+      return await apiClient.deleteProduct(id);
     } catch (error) {
-      throw toApiError(error, 'Error al crear producto')
+      throw toApiError(error, 'Error al eliminar producto');
     }
   },
 
-  // Actualizar un producto existente
-  /**
-   * @param {string} productId
-   * @param {Partial<Product>} productData
-   * @returns {Promise<Product|any>}
-   */
-  updateProduct: async (productId, productData) => {
+  // =================== CATEGORÍAS ===================
+
+  async getCategories(): Promise<Category[]> {
     try {
-      return await apiClient.updateProduct(productId, productData)
+      const response = await apiClient.get('/categories');
+      return Array.isArray(response) ? response : (response.data || []);
     } catch (error) {
-      throw toApiError(error, 'Error al actualizar producto')
+      throw toApiError(error, 'Error al obtener categorías');
     }
-  },
+  }
+};
 
-  // Eliminar producto (soft delete)
-  /**
-   * @param {string} productId
-   * @returns {Promise<boolean|any>}
-   */
-  deleteProduct: async productId => {
-    try {
-      return await apiClient.deleteProduct(productId)
-    } catch (error) {
-      throw toApiError(error, 'Error al eliminar producto')
-    }
-  },
-
-  // Reactivar producto (cambiar state a true)
-  /**
-   * @param {string} productId
-   * @returns {Promise<Product|any>}
-   */
-  reactivateProduct: async productId => {
-    try {
-      // Intentar endpoint específico de reactivación primero
-      // Si no existe, usar updateProduct con state: true
-      try {
-        return await (apiClient as any).reactivateProduct(productId)
-      } catch (reactivateError) {
-        // Si no existe endpoint específico, usar update con state: true
-        return await apiClient.updateProduct(productId, { state: true })
-      }
-    } catch (error) {
-      throw toApiError(error, 'Error al reactivar producto')
-    }
-  },
-
-  // =================== PRECIOS ===================
-
-  // Obtener precio de producto
-  /**
-   * @param {string} productId
-   * @returns {Promise<ProductPrice|any>}
-   */
-  getProductPrice: async productId => {
-    try {
-      return await (apiClient as any).getProductPrice(productId)
-    } catch (error) {
-      throw toApiError(error, 'Error al obtener precio')
-    }
-  },
-
-  // Crear precio por Product ID
-  /**
-   * @param {string} productId
-   * @param {Partial<ProductPrice>} priceData
-   * @returns {Promise<ProductPrice|any>}
-   */
-  createProductPrice: async (productId, priceData) => {
-    try {
-      return await (apiClient as any).setProductPrice(productId, priceData)
-    } catch (error) {
-      throw toApiError(error, 'Error al crear precio')
-    }
-  },
-
-  // Actualizar precio por Product ID
-  /**
-   * @param {string} productId
-   * @param {Partial<ProductPrice>} priceData
-   * @returns {Promise<ProductPrice|any>}
-   */
-  updateProductPriceByProductId: async (productId, priceData) => {
-    try {
-      return await (apiClient as any).updateProductPrice(productId, priceData)
-    } catch (error) {
-      throw toApiError(error, 'Error al actualizar precio')
-    }
-  },
-
-  // =================== STOCK ===================
-
-  // Obtener stock por Product ID
-  /**
-   * @param {string} productId
-   * @returns {Promise<Stock|any>}
-   */
-  getStockByProductId: async productId => {
-    try {
-      return await (apiClient as any).getProductStock(productId)
-    } catch (error) {
-      throw toApiError(error, 'Error al obtener stock')
-    }
-  },
-
-  // Crear stock
-  /**
-   * @param {string} productId
-   * @param {Partial<Stock>} stockData
-   * @returns {Promise<Stock|any>}
-   */
-  createStock: async (productId, stockData) => {
-    try {
-      return await (apiClient as any).createStock(productId, stockData)
-    } catch (error) {
-      throw toApiError(error, 'Error al crear stock')
-    }
-  },
-
-  // Actualizar stock por Product ID
-  /**
-   * @param {string} productId
-   * @param {Partial<Stock>} stockData
-   * @returns {Promise<Stock|any>}
-   */
-  updateStockByProductId: async (productId, stockData) => {
-    try {
-      return await (apiClient as any).updateStockByProductId(productId, stockData)
-    } catch (error) {
-      throw toApiError(error, 'Error al actualizar stock')
-    }
-  },
-
-  // Obtener stock por ID
-  /**
-   * @param {number} stockId
-   * @returns {Promise<Stock|any>}
-   */
-  getStockById: async stockId => {
-    return await (apiClient as any).getStockById(stockId)
-  },
-
-  // =================== UTILIDADES ===================
-
-  // Obtener categorías de productos
-  /**
-   * @returns {Promise<any>}
-   */
-  getCategories: async () => {
-    return await (apiClient as any).getCategories()
-  },
-
-  // Obtener todas las categorías
-  /**
-   * @returns {Promise<any[]>}
-   */
-  getAllCategories: async () => {
-    try {
-      return await retryWithBackoff(async () => {
-        const api = new BusinessManagementAPI()
-        return api.getAllCategories()
-      })
-    } catch (error) {
-      throw toApiError(error, 'Error al obtener categorías')
-    }
-  },
-
-  // Validar estructura de datos antes de envío
-  /**
-   * @param {Partial<Product>} productData
-   * @returns {true}
-   */
-  validateProductData: productData => {
-    const required = ['name']
-    const missing = required.filter(field => !productData[field])
-    if (missing.length > 0) {
-      throw new Error(`Campos requeridos faltantes: ${missing.join(', ')}`)
-    }
-    return true
-  },
-
-  validatePriceData: priceData => {
-    if (
-      !priceData.costPrice &&
-      priceData.costPrice !== 0 &&
-      !priceData.cost_price &&
-      priceData.cost_price !== 0
-    ) {
-      throw new Error('cost_price es requerido')
-    }
-    return true
-  },
-
-  validateStockData: stockData => {
-    if (!stockData.quantity && stockData.quantity !== 0) {
-      throw new Error('quantity es requerido')
-    }
-    return true
-  },
-}
-
-export default productService
+export default productService;

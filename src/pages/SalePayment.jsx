@@ -53,6 +53,7 @@ import DataState from '@/components/ui/DataState'
 import ToastContainer from '@/components/ui/ToastContainer'
 import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModal'
 import { useI18n } from '@/lib/i18n'
+import { useBranch } from '@/contexts/BranchContext'
 import { useToast } from '@/hooks/useToast'
 import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
@@ -367,6 +368,7 @@ const SaleCard = React.memo(({
 const SalePayment = () => {
   const { lang } = useI18n()
   const navigate = useNavigate()
+  const { currentBranchId } = useBranch()
   const {
     toasts,
     removeToast,
@@ -537,16 +539,17 @@ const SalePayment = () => {
   }
 
   // Limpiar caché cuando cambian filtros base
-  // Efecto para búsqueda inteligente (Auto-fetch al cambiar filtros)
+  // Efecto para búsqueda inteligente (Auto-fetch al cambiar filtros o sucursal)
   useEffect(() => {
+    // Al cambiar de sucursal o filtros base, debemos limpiar el caché para asegurar integridad
+    pagesCache.current.clear();
+    
     const timer = setTimeout(() => {
-      // Solo disparar si ha pasado 1s desde el último cambio en el nombre
-      // o inmediatamente si es estado/fecha
       handleLoadSales(1);
     }, selectedClientName ? 800 : 0);
 
     return () => clearTimeout(timer);
-  }, [selectedStatus, dateRange.start_date, dateRange.end_date]);
+  }, [selectedStatus, dateRange.start_date, dateRange.end_date, currentBranchId]);
 
   // Manejar cambio de nombre por separado con debounce más largo
   useEffect(() => {

@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useI18n } from '@/lib/i18n'
+import { useBranch } from '@/contexts/BranchContext'
 import { useCashRegisterStore } from '@/store/useCashRegisterStore'
 import useDashboardStore from '@/store/useDashboardStore'
 import { Input } from '@/components/ui/input'
@@ -52,6 +53,7 @@ const NewCashRegister: React.FC = () => {
   const { t } = useI18n()
   const { fetchDashboardData } = useDashboardStore()
   const { addToast, toasts, removeToast } = useToast()
+  const { currentBranchId } = useBranch()
 
   const {
     activeCashRegister,
@@ -85,7 +87,7 @@ const NewCashRegister: React.FC = () => {
 
   useEffect(() => {
     getActiveCashRegister()
-  }, [getActiveCashRegister])
+  }, [getActiveCashRegister, currentBranchId])
 
   const formatNumber = (value: string) => {
     if (!value) return ''

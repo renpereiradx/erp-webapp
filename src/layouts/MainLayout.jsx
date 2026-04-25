@@ -373,6 +373,7 @@ const MainLayout = ({ children }) => {
             icon: ShoppingCart,
             children: [
               { name: 'Nueva Venta', href: '/ventas', icon: PlusCircle },
+              { name: 'Presupuestos', href: '/comercial/presupuestos', icon: FileText },
               {
                 name: 'Agenda y Reservas',
                 href: '/gestion-agenda',
@@ -427,6 +428,7 @@ const MainLayout = ({ children }) => {
         icon: Package,
         children: [
           { name: t('products.title', 'Productos'), href: '/productos', icon: Package },
+          { name: 'Requisiciones', href: '/logistica/requisiciones', icon: ClipboardList },
           {
             name: t('productAdjustments.title', 'Ajustes de Stock'),
             href: '#',
@@ -482,6 +484,11 @@ const MainLayout = ({ children }) => {
         href: '#',
         icon: Settings,
         children: [
+          {
+            name: t('branches.title', 'Sucursales'),
+            href: '/configuracion/sucursales',
+            icon: Building2,
+          },
           {
             name: t('common.financeConfig', 'Config. Financiera'),
             href: '#',
