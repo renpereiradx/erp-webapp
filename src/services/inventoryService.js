@@ -508,7 +508,7 @@ export const inventoryService = {
       const enrichedMetadata = {
         source: 'manual_adjustment',
         timestamp: new Date().toISOString(),
-        system_version: '4.2.0-frontend',
+        system_version: '4.3.0-frontend',
         ...(transactionData.metadata || {}),
       };
 
@@ -719,7 +719,7 @@ export const inventoryService = {
       const enrichedMetadata = {
         source: 'manual_adjustment',
         timestamp: new Date().toISOString(),
-        system_version: '4.2.0-frontend',
+        system_version: '4.3.0-frontend',
         ...(adjustmentData.metadata || {}),
       };
 

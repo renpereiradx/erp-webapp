@@ -174,13 +174,13 @@ export const priceAdjustmentService = {
           reason: adjustmentData.reason,
           metadata: {
             source: 'manual_price_adjustment',
-            system_version: '4.3.0-frontend',
-            reason_category: adjustmentData.reason_category || 'COST_CHANGE',
+            system_version: '2.1.0-frontend',
+            adjustment_type: adjustmentData.adjustment_type || adjustmentData.reason_category || 'COST_CHANGE',
             change_type: adjustmentData.new_price > (adjustmentData.old_price || 0) ? 'increase' : 'decrease',
             old_price: adjustmentData.old_price,
             new_price: adjustmentData.new_price,
             price_difference: adjustmentData.new_price - (adjustmentData.old_price || 0),
-            unit: adjustmentData.unit || 'unit',
+            unit: (adjustmentData.unit || 'unit').toLowerCase(),
             timestamp: new Date().toISOString(),
             ...adjustmentData.metadata
           }

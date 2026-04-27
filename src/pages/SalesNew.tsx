@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   CreditCard,
   DollarSign,
@@ -230,6 +230,7 @@ const getItemLineTotal = (item: CartItem): number => {
 const SalesNew: React.FC = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const productSearchInputRef = useRef<HTMLInputElement>(null);
   const clientSearchInputRef = useRef<HTMLInputElement>(null);
@@ -305,6 +306,60 @@ const SalesNew: React.FC = () => {
   const [productHighlightedIndex, setProductHighlightedIndex] = useState(-1);
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [selectedProductQuantity, setSelectedProductQuantity] = useState(1);
+
+  // Efecto para manejar navegación desde el Dashboard de Reservas
+  useEffect(() => {
+    const navState = location.state as { reserve_id?: number, client_id?: string, product_id?: string };
+    if (navState?.reserve_id) {
+      handleLoadSpecificReservation(navState.reserve_id, navState.client_id, navState.product_id);
+      // Limpiar estado para evitar recargas infinitas
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  const handleLoadSpecificReservation = async (reserveId: number, clientId?: string, productId?: string) => {
+    try {
+      // 1. Intentar cargar el cliente si viene el ID
+      if (clientId) {
+        await searchClients(clientId);
+        // El store de clientes debería tener el resultado ahora
+      }
+
+      // 2. Obtener detalle de la reserva desde la API
+      const resData = await apiService.get(`/reserve/${reserveId}`);
+      const reservation = resData?.data || resData;
+
+      if (reservation) {
+        // Añadir al carrito
+        const item: CartItem = {
+          id: `RES-${reserveId}-${Date.now()}`,
+          productId: reservation.product_id || productId || '',
+          name: reservation.product_name || 'Servicio de reserva',
+          quantity: 1,
+          price: reservation.total_amount || 0,
+          originalPrice: reservation.total_amount || 0,
+          discount: 0,
+          discountType: 'amount',
+          discountInput: 0,
+          discountReason: '',
+          taxRate: reservation.tax_rate || 0.10,
+          unit: reservation.unit || 'hour',
+          reserve_id: reserveId,
+        };
+
+        setItems(prev => {
+          // Evitar duplicados
+          if (prev.some(i => i.reserve_id === reserveId)) return prev;
+          return [...prev, item];
+        });
+
+        toast.success(`Reserva #${reserveId} cargada correctamente`);
+      }
+    } catch (error) {
+      console.error('Error cargando reserva específica:', error);
+      toast.error('No se pudo cargar el detalle de la reserva');
+    }
+  };
 
   const saleTotals = useMemo(() => saleService.calculateLocalTotals(items), [items]);
   const subtotal = saleTotals.subtotal;

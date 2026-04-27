@@ -530,16 +530,27 @@ const Purchases = () => {
     try {
       const orderData = {
         supplier_id: selectedSupplier.id,
-        status: 'PENDING',
+        status: 'COMPLETED',
         order_details: purchaseItems.map(i => ({
-          ...i,
-          supplier_id: selectedSupplier.id,
+          product_id: i.product_id,
+          quantity: Number(i.quantity),
+          unit_price: Number(i.unit_price),
+          unit: (i.unit || 'unit').toLowerCase(),
+          profit_pct: i.pricing_mode === 'margin' ? Number(i.profit_pct) : undefined,
+          explicit_sale_price: i.pricing_mode === 'sale_price' ? Number(i.explicit_sale_price || i.sale_price) : undefined,
+          tax_rate_id: i.tax_rate_id,
+          price_includes_tax: i.price_includes_tax !== false,
+          metadata: {
+            pricing_mode: i.pricing_mode,
+            original_profit_pct: i.profit_pct,
+            original_sale_price: i.sale_price
+          }
         })),
         auto_update_prices: true,
-        // Eliminamos el envío de payment_method_id y currency_id en este paso inicial.
-        // ...
         metadata: {
           purchase_notes: purchaseNotes,
+          system_version: '1.1.0-frontend',
+          operator_id: user?.id || user?.user_id
         },
       }
       const result =
@@ -547,12 +558,15 @@ const Purchases = () => {
       if (result.success) {
         setPurchaseItems([])
         setPurchaseNotes('')
-        // Manejar advertencias si existen (API v2.6)
+        // Manejar advertencias si existen (API v2.6 / v1.1)
         if (result.warnings && result.warnings.length > 0) {
           result.warnings.forEach(warning => {
             console.warn('Purchase Warning:', warning)
+            const productName = warning.product_name || warning.name || 'Producto';
+            const observedRate = warning.observed_tax_rate || warning.tax_rate;
             toast.warning(
-              `Advertencia: ${warning.product_name} tiene una tasa de IVA diferente a la esperada.`,
+              `Advertencia Fiscal: ${productName} tiene una tasa de IVA observada de ${observedRate}% diferente a la esperada.`,
+              { duration: 6000 }
             )
           })
         }

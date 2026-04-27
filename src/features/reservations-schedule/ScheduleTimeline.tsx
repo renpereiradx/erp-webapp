@@ -10,6 +10,7 @@ interface ScheduleTimelineProps {
   onShowDetail: (slot: ScheduleSlot) => void;
   onConfirm: (reserveId: number) => Promise<void>;
   onCancel: (reserveId: number) => Promise<void>;
+  onInvoice?: (reserveId: number, clientId: string) => void;
 }
 
 interface ReservationGroup {
@@ -89,7 +90,8 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   onSelectSlot,
   onShowDetail,
   onConfirm,
-  onCancel
+  onCancel,
+  onInvoice
 }) => {
   const groupedItems = useMemo(() => groupSlotsByReservation(slots), [slots]);
 
@@ -237,6 +239,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     const isCancelled = statusConfig.label === 'CANCELADO';
     const isCompleted = statusConfig.label === 'COMPLETADO';
     const canConfirm = statusConfig.label === 'RESERVADO';
+    const isConfirmed = statusConfig.label === 'CONFIRMADO';
     const canCancel = !isCancelled && !isCompleted;
 
     const firstSlot = group.slots[0];
@@ -278,33 +281,35 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
           </div>
 
           {!isCancelled && !isCompleted && (
-            <div className="flex gap-2 mt-1">
-              {canConfirm && (
+            <div className="flex flex-col gap-2 mt-1">
+              {isConfirmed && onInvoice && (
                 <button
-                  onClick={() => onConfirm(group.reserve_id as number)}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-200/50"
+                  onClick={() => onInvoice(group.reserve_id as number, firstSlot.reserve?.client_id || '')}
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md shadow-slate-200"
                 >
-                  <span className="material-icons-round text-[16px]">check_circle</span>
-                  <span className="text-[10px] font-black uppercase">Confirmar</span>
+                  <span className="material-icons-round text-[16px]">receipt_long</span>
+                  <span className="text-[10px] font-black uppercase">Facturar</span>
                 </button>
               )}
-              {canCancel && (
-                <button
-                  onClick={() => onCancel(group.reserve_id as number)}
-                  className="py-2.5 px-4 rounded-xl transition-all flex items-center justify-center border-2 border-amber-200 text-amber-600 hover:bg-amber-100"
-                >
-                  <span className="material-icons-round text-[16px]">close</span>
-                </button>
-              )}
-              {(isCancelled || isCompleted) && (
-                <button
-                  onClick={() => firstSlot && onShowDetail(firstSlot)}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
-                >
-                  <span className="material-icons-round text-[16px]">visibility</span>
-                  <span className="text-[10px] font-bold uppercase">Ver Detalle</span>
-                </button>
-              )}
+              <div className="flex gap-2 w-full">
+                {canConfirm && (
+                  <button
+                    onClick={() => onConfirm(group.reserve_id as number)}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-200/50"
+                  >
+                    <span className="material-icons-round text-[16px]">check_circle</span>
+                    <span className="text-[10px] font-black uppercase">Confirmar</span>
+                  </button>
+                )}
+                {canCancel && (
+                  <button
+                    onClick={() => onCancel(group.reserve_id as number)}
+                    className="py-2.5 px-4 rounded-xl transition-all flex items-center justify-center border-2 border-amber-200 text-amber-600 hover:bg-amber-100"
+                  >
+                    <span className="material-icons-round text-[16px]">close</span>
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

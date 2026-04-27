@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useReservation } from '../../hooks/useReservation';
 import { ScheduleTimeline } from './ScheduleTimeline';
@@ -10,6 +11,7 @@ import { ScheduleSlot } from '../../domain/reservation';
 type PanelMode = 'closed' | 'new' | 'detail';
 
 const ReservationDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const {
     productId,
     setProductId,
@@ -91,6 +93,16 @@ const ReservationDashboard: React.FC = () => {
     } catch (err) {
       toast.error('Error al actualizar configuración');
     }
+  };
+
+  const handleInvoice = (reserveId: number, clientId: string) => {
+    navigate('/ventas', { 
+      state: { 
+        reserve_id: reserveId,
+        client_id: clientId,
+        product_id: productId
+      } 
+    });
   };
 
   // Calcular duración máxima permitida según slots consecutivos disponibles
@@ -253,6 +265,7 @@ const ReservationDashboard: React.FC = () => {
               onShowDetail={handleShowDetail}
               onConfirm={handleConfirm}
               onCancel={handleCancel}
+              onInvoice={handleInvoice}
             />
           )}
         </div>
@@ -315,6 +328,7 @@ const ReservationDashboard: React.FC = () => {
                     slot={detailSlot!}
                     onConfirm={handleConfirm}
                     onCancel={handleCancel}
+                    onInvoice={handleInvoice}
                     onClose={() => setPanelMode('closed')}
                   />
                 )}

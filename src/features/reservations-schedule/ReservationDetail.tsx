@@ -5,6 +5,7 @@ interface ReservationDetailProps {
   slot: ScheduleSlot;
   onConfirm: (reserveId: number) => Promise<void>;
   onCancel: (reserveId: number) => Promise<void>;
+  onInvoice?: (reserveId: number, clientId: string) => void;
   onClose: () => void;
 }
 
@@ -12,6 +13,7 @@ export const ReservationDetail: React.FC<ReservationDetailProps> = ({
   slot,
   onConfirm,
   onCancel,
+  onInvoice,
   onClose
 }) => {
   const [isProcessing, setIsProcessing] = React.useState(false);
@@ -64,6 +66,12 @@ export const ReservationDetail: React.FC<ReservationDetailProps> = ({
       await onCancel(slot.reserve.id);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleInvoice = () => {
+    if (slot.reserve?.id && onInvoice) {
+      onInvoice(slot.reserve.id, slot.reserve.client_id || '');
     }
   };
 
@@ -128,6 +136,16 @@ export const ReservationDetail: React.FC<ReservationDetailProps> = ({
       )}
 
       <div className="pt-4 space-y-3">
+        {(isConfirmed || isCompleted) && onInvoice && (
+          <button
+            onClick={handleInvoice}
+            className="w-full bg-slate-900 py-4 rounded-2xl text-white font-black shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-xs"
+          >
+            <span className="material-icons-round text-sm">receipt_long</span>
+            Facturar Servicio
+          </button>
+        )}
+
         {!isCancelled && !isCompleted && isReserved && (
           <button
             onClick={handleConfirm}

@@ -74,6 +74,8 @@ const InventoryManagement = () => {
   const [inventoryForm, setInventoryForm] = useState({
     metadata: {
       operator: '',
+      verified_by: '',
+      approved_by: '',
       location: '',
       counting_method: 'manual',
       verification: 'single_check',
@@ -310,7 +312,7 @@ const InventoryManagement = () => {
         ...inventoryForm.metadata,
         timestamp: new Date().toISOString(),
         system_version: '4.3.0-frontend',
-        operator: user?.name || user?.id || 'manual_operator',
+        operator: user?.name || user?.id || inventoryForm.metadata.operator || 'manual_operator',
       },
     }
 
@@ -903,15 +905,41 @@ const InventoryManagement = () => {
                       </div>
                       <div className='flex flex-col gap-1.5'>
                         <label className='text-xs font-bold text-text-secondary uppercase tracking-wider'>
-                          {t('inventoryManagement.createModal.location')} *
+                          Ubicación *
                         </label>
                         <input
                           type='text'
                           className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
-                          placeholder={t('inventoryManagement.createModal.locationPlaceholder')}
+                          placeholder="Ej. Depósito A, Estantería 5"
                           value={inventoryForm.metadata.location}
                           onChange={e => handleMetadataChange('location', e.target.value)}
                         />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className='flex flex-col gap-1.5'>
+                          <label className='text-xs font-bold text-text-secondary uppercase tracking-wider'>
+                            Verificado por
+                          </label>
+                          <input
+                            type='text'
+                            className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
+                            placeholder="Nombre supervisor"
+                            value={inventoryForm.metadata.verified_by}
+                            onChange={e => handleMetadataChange('verified_by', e.target.value)}
+                          />
+                        </div>
+                        <div className='flex flex-col gap-1.5'>
+                          <label className='text-xs font-bold text-text-secondary uppercase tracking-wider'>
+                            Aprobado por
+                          </label>
+                          <input
+                            type='text'
+                            className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
+                            placeholder="Nombre gerente"
+                            value={inventoryForm.metadata.approved_by}
+                            onChange={e => handleMetadataChange('approved_by', e.target.value)}
+                          />
+                        </div>
                       </div>
                       <div className='flex flex-col gap-1.5'>
                         <label className='text-xs font-bold text-text-secondary uppercase tracking-wider'>

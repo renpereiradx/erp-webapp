@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useReservationSchedule } from '@/hooks/useReservationSchedule';
 import { ScheduleSlot } from '@/domain/reservation/models';
 
 const ReservationScheduleDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const {
     selectedProduct,
     setSelectedProduct,
@@ -22,6 +24,40 @@ const ReservationScheduleDashboard: React.FC = () => {
   const [selectedSlot, setSelectedSlot] = useState<ScheduleSlot | null>(null);
   const [clientId, setClientId] = useState('');
   const [duration, setDuration] = useState(1);
+
+  // Lógica de agrupación de slots para visualización unificada de reservas multi-hora
+  const groupedSlots = useMemo(() => {
+    const result: { type: 'SINGLE' | 'GROUP'; slots: ScheduleSlot[]; reservation_id?: number }[] = [];
+    let currentGroup: ScheduleSlot[] = [];
+    let currentResId: number | undefined = undefined;
+
+    slots.forEach((slot) => {
+      if (slot.reservation_id && slot.status !== 'AVAILABLE' && slot.status !== 'CANCELLED') {
+        if (slot.reservation_id === currentResId) {
+          currentGroup.push(slot);
+        } else {
+          if (currentGroup.length > 0) {
+            result.push({ type: currentGroup.length > 1 ? 'GROUP' : 'SINGLE', slots: [...currentGroup], reservation_id: currentResId });
+          }
+          currentGroup = [slot];
+          currentResId = slot.reservation_id;
+        }
+      } else {
+        if (currentGroup.length > 0) {
+          result.push({ type: currentGroup.length > 1 ? 'GROUP' : 'SINGLE', slots: [...currentGroup], reservation_id: currentResId });
+          currentGroup = [];
+          currentResId = undefined;
+        }
+        result.push({ type: 'SINGLE', slots: [slot] });
+      }
+    });
+
+    if (currentGroup.length > 0) {
+      result.push({ type: currentGroup.length > 1 ? 'GROUP' : 'SINGLE', slots: [...currentGroup], reservation_id: currentResId });
+    }
+
+    return result;
+  }, [slots]);
 
   const handleOpenModal = (slot: ScheduleSlot) => {
     setSelectedSlot(slot);
@@ -71,6 +107,18 @@ const ReservationScheduleDashboard: React.FC = () => {
       start_time: selectedSlot.start_time,
       duration: 1,
     }).then(() => handleCloseModal());
+  };
+
+  const handleInvoiceReservation = () => {
+    if (!selectedSlot || !selectedSlot.reservation_id) return;
+    // Redirigir a ventas con el reserve_id en el estado de navegación
+    navigate('/ventas/nueva', { 
+      state: { 
+        reserve_id: selectedSlot.reservation_id,
+        client_id: selectedSlot.client_id,
+        product_id: selectedProduct
+      } 
+    });
   };
 
   return (
@@ -193,15 +241,17 @@ const ReservationScheduleDashboard: React.FC = () => {
             {isLoading && slots.length === 0 && <p className="text-center text-slate-500 col-span-3">Cargando horarios...</p>}
             {!isLoading && slots.length === 0 && <p className="text-center text-slate-500 col-span-3">No hay horarios generados para esta fecha.</p>}
             
-            {slots.map((slot, index) => {
-              const isAvailable = slot.status === 'AVAILABLE';
-              const isReserved = slot.status === 'RESERVED' || slot.status === 'PENDING';
-              const isConfirmed = slot.status === 'CONFIRMED' || slot.status === 'COMPLETED';
-              const isCancelled = slot.status === 'CANCELLED';
+            {groupedSlots.map((group, groupIndex) => {
+              // Si es un grupo, tomamos info del primer slot para el header visual
+              const mainSlot = group.slots[0];
+              const isAvailable = mainSlot.status === 'AVAILABLE';
+              const isReserved = mainSlot.status === 'RESERVED' || mainSlot.status === 'PENDING';
+              const isConfirmed = mainSlot.status === 'CONFIRMED' || mainSlot.status === 'COMPLETED';
+              const isCancelled = mainSlot.status === 'CANCELLED';
 
               let borderColor = 'border-slate-200';
               let badgeColor = '';
-              let badgeText = slot.status;
+              let badgeText = mainSlot.status;
 
               if (isReserved) {
                 borderColor = 'border-l-4 border-[#EAB308]';
@@ -216,13 +266,16 @@ const ReservationScheduleDashboard: React.FC = () => {
                 borderColor = 'border border-slate-200 border-dashed hover:border-blue-500/50 hover:bg-blue-50';
               }
 
-              const timeRange = `${new Date(slot.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${new Date(slot.end_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+              // Rango de tiempo para el grupo completo
+              const startTime = new Date(mainSlot.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+              const endTime = new Date(group.slots[group.slots.length - 1].end_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+              const timeRange = `${startTime} - ${endTime}`;
 
               return (
                 <div 
-                  key={index} 
-                  onClick={() => handleOpenModal(slot)}
-                  className={`bg-white p-4 rounded-xl shadow-sm transition-all cursor-pointer group ${borderColor}`}
+                  key={groupIndex} 
+                  onClick={() => handleOpenModal(mainSlot)}
+                  className={`bg-white p-4 rounded-xl shadow-sm transition-all cursor-pointer group ${borderColor} ${group.type === 'GROUP' ? 'ring-2 ring-blue-100 ring-offset-2' : ''}`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className={`font-mono text-lg font-bold tracking-tighter ${isAvailable ? 'text-slate-400 group-hover:text-blue-600' : 'text-slate-700'}`}>
@@ -231,15 +284,18 @@ const ReservationScheduleDashboard: React.FC = () => {
                     {isAvailable ? (
                       <span className="material-symbols-outlined text-slate-300 group-hover:text-blue-500">add_circle</span>
                     ) : (
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeColor}`}>{badgeText}</span>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeColor}`}>{badgeText}</span>
+                        {group.type === 'GROUP' && <span className="text-[9px] font-black text-blue-500 uppercase tracking-tighter">Multi-Hora ({group.slots.length}h)</span>}
+                      </div>
                     )}
                   </div>
                   {isAvailable ? (
                     <div className="text-sm font-medium text-slate-400 group-hover:text-blue-500/70">Disponible</div>
                   ) : (
                     <>
-                      <div className="text-sm font-medium text-slate-800">{slot.client_name || slot.client_id || 'Cliente Anónimo'}</div>
-                      <div className="text-xs text-slate-400 mt-1">ID: {slot.reservation_id}</div>
+                      <div className="text-sm font-medium text-slate-800">{mainSlot.client_name || mainSlot.client_id || 'Cliente Anónimo'}</div>
+                      <div className="text-xs text-slate-400 mt-1">ID: {mainSlot.reservation_id}</div>
                     </>
                   )}
                 </div>
@@ -330,13 +386,22 @@ const ReservationScheduleDashboard: React.FC = () => {
                 )}
 
                 {(selectedSlot.status === 'CONFIRMED' || selectedSlot.status === 'COMPLETED') && (
-                  <button 
-                    onClick={handleCancelReservation}
-                    disabled={isLoading}
-                    className="w-full py-3 bg-[#BA1A1A]/10 text-[#BA1A1A] text-xs font-bold rounded-xl hover:bg-[#BA1A1A]/20 transition-all uppercase tracking-wide"
-                  >
-                    Cancelar Reserva
-                  </button>
+                  <div className="flex flex-col gap-3">
+                    <button 
+                      onClick={handleInvoiceReservation}
+                      className="w-full py-3.5 bg-slate-900 text-white text-sm font-black rounded-xl shadow-lg hover:bg-slate-800 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+                    >
+                      <span className="material-symbols-outlined">receipt_long</span>
+                      Facturar Servicio
+                    </button>
+                    <button 
+                      onClick={handleCancelReservation}
+                      disabled={isLoading}
+                      className="w-full py-3 bg-[#BA1A1A]/10 text-[#BA1A1A] text-xs font-bold rounded-xl hover:bg-[#BA1A1A]/20 transition-all uppercase tracking-wide"
+                    >
+                      Cancelar Reserva
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

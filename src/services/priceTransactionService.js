@@ -85,7 +85,8 @@ export const priceTransactionService = {
           metadata: {
             ...transactionData.metadata,
             source: 'web_ui',
-            created_by: 'current_user'
+            created_by: 'current_user',
+            system_version: '1.0.0-frontend'
           }
         });
       });

@@ -45,10 +45,20 @@ class ReservationUnifiedService {
   async getSlotsByDate(productId: string, date: string): Promise<ScheduleSlot[]> {
     try {
       const response = await apiClient.get(`/schedules/product/${productId}/date/${date}/all`);
-      return response.data?.slots || [];
+      return response.data?.slots || response.data || [];
     } catch (e) {
        console.error(e);
        return [];
+    }
+  }
+
+  async getAvailableSchedules(productId: string, date: string, duration: number): Promise<ScheduleSlot[]> {
+    try {
+      const response = await apiClient.get(`/reserve/available-schedules?product_id=${productId}&date=${date}&duration=${duration}`);
+      return response.data?.available_slots || response.data || [];
+    } catch (e) {
+      console.error(e);
+      return [];
     }
   }
 

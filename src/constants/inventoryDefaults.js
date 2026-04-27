@@ -41,37 +41,37 @@ export const DEFAULT_METADATA_TEMPLATES = {
   INVENTORY_COUNT: {
     source: 'physical_count',
     adjustment_type: 'INVENTORY_COUNT',
-    inventory_type: 'MONTHLY', // Default v4.2
-    status: 'COMPLETED', // Default v4.2
-    operator: '', // A completar por el usuario
-    verification: 'single_check', // o "double_check"
-    location: '', // ubicación del conteo
-    counting_method: 'manual', // o "barcode_scanner"
+    inventory_type: 'MONTHLY',
+    status: 'COMPLETED',
+    operator: '',
+    verification: 'single_check',
+    location: '',
+    counting_method: 'manual',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.2.0-frontend',
+    system_version: '4.3.0-frontend',
   },
 
   // Producto Dañado
   DAMAGE: {
     source: 'manual_adjustment',
     adjustment_type: 'DAMAGE',
-    damage_severity: 'total', // "partial", "total"
-    disposal_method: '', // "discard", "return_supplier", "repair"
+    damage_severity: 'total',
+    disposal_method: '',
     operator: '',
     location: '',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.2.0-frontend',
+    system_version: '4.3.0-frontend',
   },
 
   // Producto Vencido
   EXPIRY: {
     source: 'manual_adjustment',
     adjustment_type: 'EXPIRY',
-    expiry_date: '', // ISO date string
+    expiry_date: '',
     operator: '',
     location: '',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.2.0-frontend',
+    system_version: '4.3.0-frontend',
   },
 
   // Robo o Extravío
@@ -81,7 +81,7 @@ export const DEFAULT_METADATA_TEMPLATES = {
     operator: '',
     location: '',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.2.0-frontend',
+    system_version: '4.3.0-frontend',
   },
 
   // Devolución
@@ -92,7 +92,7 @@ export const DEFAULT_METADATA_TEMPLATES = {
     operator: '',
     location: '',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.2.0-frontend',
+    system_version: '4.3.0-frontend',
   },
 
   // Corrección
@@ -105,7 +105,7 @@ export const DEFAULT_METADATA_TEMPLATES = {
     operator: '',
     location: '',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.2.0-frontend',
+    system_version: '4.3.0-frontend',
   },
 
   // Configuración Inicial
@@ -115,7 +115,7 @@ export const DEFAULT_METADATA_TEMPLATES = {
     operator: '',
     location: '',
     timestamp: () => new Date().toISOString(),
-    system_version: '4.2.0-frontend',
+    system_version: '4.3.0-frontend',
   },
 
   // Genérico/Mínimo
@@ -125,12 +125,12 @@ export const DEFAULT_METADATA_TEMPLATES = {
     timestamp: () => new Date().toISOString(),
     operator: '',
     location: '',
-    system_version: '4.2.0-frontend',
+    system_version: '4.3.0-frontend',
     notes: '',
   },
 }
 
-// Para dropdowns en el frontend - Alineado con adjustment_type enum v4.1
+// Para dropdowns en el frontend - Alineado con adjustment_type enum v4.3
 export const REASON_OPTIONS = [
   { value: 'INVENTORY_COUNT', label: 'Conteo físico', icon: '📊' },
   { value: 'DAMAGE', label: 'Producto dañado', icon: '❌' },
@@ -139,7 +139,6 @@ export const REASON_OPTIONS = [
   { value: 'RETURN', label: 'Devolución', icon: '📦' },
   { value: 'CORRECTION', label: 'Corrección de inventario', icon: '🔧' },
   { value: 'INITIAL_COUNT', label: 'Stock inicial', icon: '🏁' },
-  { value: 'OTHER', label: 'Otro motivo', icon: '📝' },
 ]
 
 // Plantillas de texto predeterminadas para cada categoría de motivo
@@ -189,6 +188,61 @@ export const INVENTORY_STATUS_OPTIONS = [
   { value: 'APPROVED', label: 'Aprobado' },
   { value: 'REJECTED', label: 'Rechazado' },
 ]
+
+export const PRICE_ADJUSTMENT_TYPES = [
+  { value: 'MARKET_UPDATE', label: 'Actualización de Mercado' },
+  { value: 'COMPETITOR_ADJUSTMENT', label: 'Ajuste por Competencia' },
+  { value: 'PROMOTION', label: 'Promoción / Oferta' },
+  { value: 'COST_CHANGE', label: 'Cambio en Costo' },
+  { value: 'CURRENCY_ADJUSTMENT', label: 'Ajuste por Divisa' },
+  { value: 'CORRECTION', label: 'Corrección' },
+  { value: 'SEASONAL', label: 'Estacional' },
+]
+
+export const DEFAULT_PRICE_METADATA_TEMPLATES = {
+  MARKET_UPDATE: {
+    source: 'manual_price_adjustment',
+    adjustment_type: 'MARKET_UPDATE',
+    system_version: '2.1.0-frontend',
+    timestamp: () => new Date().toISOString(),
+  },
+  COMPETITOR_ADJUSTMENT: {
+    source: 'manual_price_adjustment',
+    adjustment_type: 'COMPETITOR_ADJUSTMENT',
+    system_version: '2.1.0-frontend',
+    timestamp: () => new Date().toISOString(),
+  },
+  PROMOTION: {
+    source: 'manual_price_adjustment',
+    adjustment_type: 'PROMOTION',
+    system_version: '2.1.0-frontend',
+    timestamp: () => new Date().toISOString(),
+  },
+  COST_CHANGE: {
+    source: 'manual_price_adjustment',
+    adjustment_type: 'COST_CHANGE',
+    system_version: '2.1.0-frontend',
+    timestamp: () => new Date().toISOString(),
+  },
+  CURRENCY_ADJUSTMENT: {
+    source: 'manual_price_adjustment',
+    adjustment_type: 'CURRENCY_ADJUSTMENT',
+    system_version: '2.1.0-frontend',
+    timestamp: () => new Date().toISOString(),
+  },
+  CORRECTION: {
+    source: 'manual_price_adjustment',
+    adjustment_type: 'CORRECTION',
+    system_version: '2.1.0-frontend',
+    timestamp: () => new Date().toISOString(),
+  },
+  SEASONAL: {
+    source: 'manual_price_adjustment',
+    adjustment_type: 'SEASONAL',
+    system_version: '2.1.0-frontend',
+    timestamp: () => new Date().toISOString(),
+  },
+}
 
 /**
  * Función helper para generar requests con valores por defecto
@@ -259,11 +313,6 @@ export function suggestReason(reasonType) {
  * @returns {boolean} True si es válida
  */
 export function validateMetadata(metadata, reasonType) {
-  const required = {
-    source: true,
-    timestamp: true,
-  }
-
   // Validaciones específicas por tipo
   const typeValidations = {
     INVENTORY_COUNT: ['operator', 'location'],

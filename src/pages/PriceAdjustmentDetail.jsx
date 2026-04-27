@@ -28,6 +28,7 @@ const PriceAdjustmentDetail = () => {
     unit: 'UNIT',
     reason: '',
     reasonTemplate: '',
+    approved_by: '',
     metadata: ''
   });
 
@@ -245,6 +246,8 @@ const PriceAdjustmentDetail = () => {
             : 0,
         system_version: '2.1.0-frontend',
         notes: formData.reason.trim(),
+        approved_by: formData.approved_by || undefined,
+        unit: formData.unit.toLowerCase(),
       },
     }
 
@@ -418,6 +421,20 @@ const PriceAdjustmentDetail = () => {
                 {formErrors.reason && (
                   <p className="text-error text-[10px] font-bold uppercase">{formErrors.reason}</p>
                 )}
+              </div>
+
+              <div className='flex flex-col gap-1.5'>
+                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">
+                  {t('priceAdjustmentDetail.field.approvedBy', 'Aprobado por (Opcional)')}
+                </label>
+                <input
+                  name="approved_by"
+                  type="text"
+                  value={formData.approved_by}
+                  onChange={handleChange}
+                  placeholder="ej. Juan Pérez (Gerente)"
+                  className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                />
               </div>
 
               <div className='flex flex-col gap-1.5'>

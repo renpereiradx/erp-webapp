@@ -173,12 +173,12 @@ export const purchaseService = {
         responseData = response.data
         purchaseOrderId = response.data.purchase_order_id || response.data.id
         message = response.data.message
-        warnings = response.data.warnings || []
+        warnings = response.data.warnings || response.data.items_with_tax_discrepancies || []
       } else if (response?.purchase_order_id || response?.id) {
         responseData = response
         purchaseOrderId = response.purchase_order_id || response.id
         message = response.message
-        warnings = response.warnings || []
+        warnings = response.warnings || response.items_with_tax_discrepancies || []
       } else {
         responseData = response
         purchaseOrderId = null
@@ -190,7 +190,7 @@ export const purchaseService = {
         supplier_id: orderData.supplier_id,
         items_count: orderData.order_details?.length || 0,
         auto_pricing: orderData.auto_update_prices,
-        warnings_count: warnings.length,
+        warnings_count: Array.isArray(warnings) ? warnings.length : 0,
       })
 
       return {
@@ -198,7 +198,7 @@ export const purchaseService = {
         data: responseData,
         purchase_order_id: purchaseOrderId,
         message: message,
-        warnings: warnings, // API v2.6
+        warnings: warnings, // API v2.6 / v1.1 Purchase Pricing
       }
     } catch (error: any) {
       console.error('Error en /purchase/complete:', error)

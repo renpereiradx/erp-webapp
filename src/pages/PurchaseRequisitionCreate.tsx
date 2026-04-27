@@ -17,7 +17,7 @@ import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/useToast';
 import { purchaseRequisitionService } from '@/services/purchaseRequisitionService';
 import { productService } from '@/services/productService';
-import { supplierService } from '@/services/supplierService';
+import supplierService from '@/services/supplierService';
 import { Product, CreatePurchaseRequisitionRequest } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
