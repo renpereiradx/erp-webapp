@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import auditService from '@/services/auditService';
+import auditService from '@/services/bi/auditService';
 
 export default function AuditUserActivity() {
   const { id } = useParams<{ id: string }>();

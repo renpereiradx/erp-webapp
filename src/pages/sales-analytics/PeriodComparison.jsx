@@ -24,7 +24,7 @@ import {
   Users,
   BarChart2,
 } from 'lucide-react'
-import salesAnalyticsService from '@/services/salesAnalyticsService'
+import salesAnalyticsService from '@/services/bi/salesAnalyticsService'
 import { MOCK_COMPARE } from '@/services/mocks/salesAnalyticsMock'
 
 const PeriodComparison = () => {

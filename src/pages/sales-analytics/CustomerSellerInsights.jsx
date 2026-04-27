@@ -12,7 +12,7 @@ import {
   TrendingUp,
   TrendingDown
 } from 'lucide-react';
-import salesAnalyticsService from '@/services/salesAnalyticsService';
+import salesAnalyticsService from '@/services/bi/salesAnalyticsService';
 import { MOCK_BY_CUSTOMER, MOCK_BY_SELLER } from '@/services/mocks/salesAnalyticsMock';
 
 const CustomerSellerInsights = () => {

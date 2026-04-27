@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { receivablesService } from '@/services/receivablesService';
+import { receivablesService } from '@/services/bi/receivablesService';
 
 /**
  * Hook personalizado para manejar la lógica del Reporte de Antigüedad y Estadísticas.

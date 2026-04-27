@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { receivablesService } from '@/services/receivablesService'
+import { receivablesService } from '@/services/bi/receivablesService'
 
 /**
  * Transforma la respuesta de /receivables/overview al formato esperado por SummaryCardsGrid

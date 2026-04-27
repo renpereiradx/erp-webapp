@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { payablesService } from '@/services/payablesService';
+import { payablesService } from '@/services/bi/payablesService';
 
 /**
  * Custom hook to handle Cash Flow logic with real API integration.

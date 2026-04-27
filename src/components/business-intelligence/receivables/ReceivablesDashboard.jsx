@@ -3,7 +3,7 @@ import ReceivablesSummaryCards from './ReceivablesSummaryCards';
 import ReceivablesAgingChart from './ReceivablesAgingChart';
 import ReceivablesForecastChart from './ReceivablesForecastChart';
 import ReceivablesTopDebtors from './ReceivablesTopDebtors';
-import { receivablesService } from '@/services/receivablesService';
+import { receivablesService } from '@/services/bi/receivablesService';
 import DashboardNav from '@/components/business-intelligence/DashboardNav';
 
 // Default initial state

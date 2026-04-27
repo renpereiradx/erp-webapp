@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { receivablesService } from '@/services/receivablesService'
+import { receivablesService } from '@/services/bi/receivablesService'
 
 /**
  * Transform API response to format expected by UI components

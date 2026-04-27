@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { inventoryAnalyticsService } from '../../services/inventoryAnalyticsService';
+import { inventoryAnalyticsService } from '@/services/bi/inventoryAnalyticsService';
 import { StockLevelsData, ReorderAnalysis } from '../../types/inventoryAnalytics';
 import { ReorderAlertCard } from '../../components/InventoryAnalytics/StockLevels/ReorderAlertCard';
 import { StockLevelsTable } from '../../components/InventoryAnalytics/StockLevels/StockLevelsTable';

@@ -20,7 +20,7 @@ import {
   Info,
   Banknote,
 } from 'lucide-react'
-import salesAnalyticsService from '@/services/salesAnalyticsService'
+import salesAnalyticsService from '@/services/bi/salesAnalyticsService'
 import { MOCK_VELOCITY } from '@/services/mocks/salesAnalyticsMock'
 
 const TrendsVelocity = () => {

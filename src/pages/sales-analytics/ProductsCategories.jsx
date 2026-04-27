@@ -14,7 +14,7 @@ import {
   Plus,
   RefreshCcw
 } from 'lucide-react';
-import salesAnalyticsService from '@/services/salesAnalyticsService';
+import salesAnalyticsService from '@/services/bi/salesAnalyticsService';
 
 const ProductsCategories = () => {
   const [categoriesData, setCategoriesData] = useState(null);

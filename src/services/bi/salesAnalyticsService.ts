@@ -88,6 +88,42 @@ export const salesAnalyticsService = {
       console.error('Error fetching sales velocity:', error);
       throw error;
     }
+  },
+
+  /**
+   * Compara ventas entre dos periodos
+   */
+  async comparePeriods(params: any = {}): Promise<any> {
+    try {
+      return await apiClient.get('/sales-analytics/compare', { params });
+    } catch (error: any) {
+      console.error('Error comparing periods:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene insights por cliente
+   */
+  async getByCustomer(params: BIParams = {}): Promise<any> {
+    try {
+      return await apiClient.get('/sales-analytics/by-customer', { params });
+    } catch (error: any) {
+      console.error('Error fetching sales by customer:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene insights por vendedor
+   */
+  async getBySeller(params: BIParams = {}): Promise<any> {
+    try {
+      return await apiClient.get('/sales-analytics/by-seller', { params });
+    } catch (error: any) {
+      console.error('Error fetching sales by seller:', error);
+      throw error;
+    }
   }
 };
 

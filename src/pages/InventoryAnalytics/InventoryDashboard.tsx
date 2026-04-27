@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { inventoryAnalyticsService } from '../../services/inventoryAnalyticsService';
+import { inventoryAnalyticsService } from '@/services/bi/inventoryAnalyticsService';
 import { InventoryDashboardData } from '../../types/inventoryAnalytics';
 import { KPIWidget } from '../../components/InventoryAnalytics/Dashboard/KPIWidget';
 import { StockStatusChart, StockStatusItem } from '../../components/InventoryAnalytics/Dashboard/StockStatusChart';

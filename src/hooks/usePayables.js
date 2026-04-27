@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { payablesService } from '../services/payablesService'
+import { payablesService } from '@/services/bi/payablesService'
 import { useToast } from './useToast'
 
 /**

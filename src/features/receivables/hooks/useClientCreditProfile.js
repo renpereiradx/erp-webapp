@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { receivablesService } from '@/services/receivablesService';
+import { receivablesService } from '@/services/bi/receivablesService';
 import { clientService } from '@/services/clientService';
 
 /**

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { financialReportsService } from '../services/financialReportsService'
+import { financialReportsService } from '@/services/bi/financialReportsService'
 import { useToast } from './useToast'
 
 export const useFinancialReports = () => {

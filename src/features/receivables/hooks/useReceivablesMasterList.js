@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { receivablesService } from '@/services/receivablesService'
+import { receivablesService } from '@/services/bi/receivablesService'
 
 /**
  * Genera un color de avatar basado en el nombre del cliente

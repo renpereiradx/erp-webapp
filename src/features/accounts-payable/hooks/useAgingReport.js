@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { receivablesService } from '@/services/receivablesService'
+import { receivablesService } from '@/services/bi/receivablesService'
 import { agingData as mockData } from '../data/agingMockData'
 
 /**

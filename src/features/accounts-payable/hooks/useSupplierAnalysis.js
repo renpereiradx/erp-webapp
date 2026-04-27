@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { payablesService } from '@/services/payablesService';
+import { payablesService } from '@/services/bi/payablesService';
 
 /**
  * Custom hook to manage supplier analysis data and logic.

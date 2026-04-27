@@ -55,11 +55,43 @@ export const auditService = {
   /**
    * Obtiene el resumen del dashboard de auditoría
    */
-  async getDashboardSummary(): Promise<AuditDashboardSummary> {
+  async getDashboardSummary(params: { period?: string } = {}): Promise<AuditDashboardSummary> {
     try {
-      return await apiClient.get(API_ENDPOINTS.AUDIT_DASHBOARD);
+      return await apiClient.get(API_ENDPOINTS.AUDIT_DASHBOARD, { params });
     } catch (error: any) {
       console.error('Error fetching audit dashboard summary:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Alias para getDashboardSummary (compatibilidad con UI antigua)
+   */
+  async getSummary(period: string = 'month'): Promise<any> {
+    return this.getDashboardSummary({ period });
+  },
+
+  /**
+   * Obtiene un log específico por ID
+   */
+  async getLogById(id: string | number): Promise<any> {
+    try {
+      const response = await apiClient.get(`${API_ENDPOINTS.AUDIT_LOGS}/${id}`);
+      return (response as any).data || response;
+    } catch (error: any) {
+      console.error(`Error fetching audit log ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene el reporte de actividad de un usuario
+   */
+  async getUserActivity(userId: string | number, period: string = 'month'): Promise<any> {
+    try {
+      return await apiClient.get(`/audit/users/${userId}/activity`, { params: { period } });
+    } catch (error: any) {
+      console.error(`Error fetching activity for user ${userId}:`, error);
       throw error;
     }
   }

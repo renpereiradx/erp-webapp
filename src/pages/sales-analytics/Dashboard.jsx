@@ -20,7 +20,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
-import salesAnalyticsService from '@/services/salesAnalyticsService'
+import salesAnalyticsService from '@/services/bi/salesAnalyticsService'
 import { MOCK_DASHBOARD } from '@/services/mocks/salesAnalyticsMock'
 
 const Dashboard = () => {
