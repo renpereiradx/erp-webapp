@@ -45,6 +45,7 @@ import ProductDetailsModal from '@/components/ProductDetailsModal'
 import { cn } from '@/lib/utils'
 import { telemetry } from '@/utils/telemetry'
 import { useToast } from '@/hooks/useToast'
+import ToastContainer from '@/components/ui/ToastContainer'
 
 /**
  * Custom hook para debounce
@@ -100,6 +101,20 @@ const Products = () => {
     clearError,
   } = useProductStore()
 
+  // Record store errors in telemetry
+  const { errorFrom } = toast
+  const lastErrorRef = useRef(null)
+
+  useEffect(() => {
+    if (error && error !== lastErrorRef.current) {
+      telemetry.record('products.error.store', { message: error });
+      errorFrom(error);
+      lastErrorRef.current = error;
+    } else if (!error) {
+      lastErrorRef.current = null;
+    }
+  }, [error, errorFrom]);
+
   // Estados locales
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedIds, setSelectedIds] = useState([])
@@ -121,14 +136,6 @@ const Products = () => {
     fetchProductsPaginated(1, 10)
     fetchCategories()
   }, [fetchProductsPaginated, fetchCategories])
-
-  // Record store errors in telemetry
-  useEffect(() => {
-    if (error) {
-      telemetry.record('products.error.store', { message: error });
-      toast.errorFrom(error);
-    }
-  }, [error, toast]);
 
   // Auto-focus y atajo F2
   useEffect(() => {
@@ -670,6 +677,9 @@ const Products = () => {
         product={selectedProduct}
         onEdit={handleEditFromDetails}
       />
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
     </div>
   )
 }

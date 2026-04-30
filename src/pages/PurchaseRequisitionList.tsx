@@ -22,8 +22,6 @@ import { useBranch } from '@/contexts/BranchContext';
 import { PurchaseRequisition } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -92,142 +90,142 @@ const PurchaseRequisitionList: React.FC = () => {
   const getStatusBadge = (status: PurchaseRequisition['status']) => {
     switch (status) {
       case 'DRAFT':
-        return <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1.5 font-black uppercase text-[10px] tracking-tighter">BORRADOR</Badge>;
+        return <span className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent">BORRADOR</span>;
       case 'PENDING':
-        return <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1.5 font-black uppercase text-[10px] tracking-tighter"><Clock size={12}/> PENDIENTE</Badge>;
+        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent bg-[#fff4ce] text-[#794500]"><span className="size-1.5 rounded-full bg-[#794500]" /> PENDIENTE</span>;
       case 'APPROVED':
-        return <Badge className="bg-green-100 text-green-700 border-green-200 gap-1.5 font-black uppercase text-[10px] tracking-tighter"><CheckCircle2 size={12}/> APROBADO</Badge>;
+        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent bg-[#dff6dd] text-[#107c10]"><span className="size-1.5 rounded-full bg-[#107c10]" /> APROBADO</span>;
       case 'REJECTED':
-        return <Badge className="bg-red-100 text-red-700 border-red-200 gap-1.5 font-black uppercase text-[10px] tracking-tighter"><XCircle size={12}/> RECHAZADO</Badge>;
+        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent bg-[#fde7e9] text-[#a4262c]"><span className="size-1.5 rounded-full bg-[#a4262c]" /> RECHAZADO</span>;
       case 'CANCELLED':
-        return <Badge className="bg-slate-200 text-slate-400 border-slate-300 gap-1.5 font-black uppercase text-[10px] tracking-tighter">CANCELADO</Badge>;
+        return <span className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent">CANCELADO</span>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <span className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent">{status}</span>;
     }
   };
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+    <div className="flex flex-col gap-8 animate-in fade-in duration-500 font-display">
       <ToastContainer />
       
       {/* Header de Página */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-primary pl-5">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-text-main flex items-center gap-3">
-            <ClipboardList className="text-primary" size={32} />
+          <h1 className="text-3xl font-bold tracking-tight text-text-main">
             {t('logistics.requisitions.title', 'Requisiciones de Compra')}
           </h1>
-          <p className="text-text-secondary font-medium mt-1">
+          <p className="text-text-secondary text-base font-medium mt-1.5">
             Gestiona las solicitudes de mercadería y suministros de la sucursal.
           </p>
         </div>
-        <Button 
-          className="bg-primary hover:bg-primary-hover text-white font-bold h-11 px-6 shadow-fluent-8"
-          onClick={() => navigate('/logistica/requisiciones/nueva')}
-        >
-          <Plus size={20} className="mr-2" />
-          Nueva Solicitud
-        </Button>
       </div>
 
-      {/* Herramientas y Filtros */}
-      <Card className="border-border-subtle shadow-fluent-2 bg-surface overflow-hidden">
-        <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-center">
-          <div className="relative flex-1 w-full">
+      {/* Grid de Datos Alta Densidad Fluent 2 */}
+      <div className="bg-white rounded-xl shadow-fluent-shadow border border-border-subtle overflow-hidden">
+        {/* Barra de Herramientas y Filtros (Integrada) */}
+        <div className="px-8 py-5 border-b border-border-subtle bg-[#f3f2f1]/50 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <Input 
               placeholder="Buscar por ID, usuario o proveedor..." 
-              className="pl-10 h-10 bg-slate-50/50 border-slate-200 focus:bg-white transition-all w-full"
+              className="pl-10 h-10 bg-white border-border-base focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <div className="flex items-center gap-4">
+            <div className="flex bg-white p-1 rounded-lg border border-border-base shadow-sm">
                 {['ALL', 'PENDING', 'APPROVED', 'REJECTED'].map((status) => (
                     <button
                         key={status}
                         onClick={() => setStatusFilter(status)}
-                        className={`px-3 py-1.5 text-[10px] font-black uppercase rounded-md transition-all ${
+                        className={`px-4 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all ${
                             statusFilter === status 
-                            ? 'bg-white text-primary shadow-sm' 
-                            : 'text-slate-500 hover:text-slate-700'
+                            ? 'bg-primary/10 text-primary' 
+                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                         }`}
                     >
                         {status === 'ALL' ? 'Todos' : status}
                     </button>
                 ))}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            
+            <div className="h-8 w-px bg-border-base hidden md:block"></div>
 
-      {/* Grid de Requisiciones */}
-      <div className="bg-white rounded-xl shadow-fluent-8 border border-border-subtle overflow-hidden">
+            <Button 
+                className="bg-primary hover:bg-primary-hover text-white text-[10px] font-bold uppercase rounded shadow-sm transition-all px-5 py-2 h-auto"
+                onClick={() => navigate('/logistica/requisiciones/nueva')}
+            >
+                <Plus size={14} className="mr-1.5" />
+                Nueva Solicitud
+            </Button>
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="p-20"><DataState variant="loading" /></div>
         ) : filteredRequisitions.length === 0 ? (
           <div className="p-20"><DataState variant="empty" title="No hay requisiciones pendientes" /></div>
         ) : (
-          <Table>
-            <TableHeader className="bg-slate-50/50 border-b border-border-subtle">
-              <TableRow>
-                <TableHead className="w-[120px] font-black text-[10px] uppercase text-slate-400 py-5 pl-8">ID Solicitud</TableHead>
-                <TableHead className="font-black text-[10px] uppercase text-slate-400 py-5">Solicitante</TableHead>
-                <TableHead className="font-black text-[10px] uppercase text-slate-400 py-5 text-center">Estado</TableHead>
-                <TableHead className="font-black text-[10px] uppercase text-slate-400 py-5">Proveedor Sugerido</TableHead>
-                <TableHead className="font-black text-[10px] uppercase text-slate-400 py-5">Fecha</TableHead>
-                <TableHead className="w-[80px] py-5 pr-8"></TableHead>
+          <Table className="w-full text-left">
+            <TableHeader className="bg-white border-b border-border-subtle">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="py-5 pl-8 text-[11px] font-bold uppercase text-slate-400 tracking-wider w-[140px]">ID Solicitud</TableHead>
+                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Solicitante</TableHead>
+                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider text-center">Estado</TableHead>
+                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Proveedor Sugerido</TableHead>
+                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Fecha</TableHead>
+                <TableHead className="py-5 pr-8 w-12"></TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="divide-y divide-slate-100 text-xs">
               {filteredRequisitions.map((req) => (
                 <TableRow 
                   key={req.id} 
-                  className="group hover:bg-slate-50/80 transition-colors cursor-pointer"
+                  className="hover:bg-slate-50/80 group transition-colors cursor-pointer border-none"
                   onClick={() => navigate(`/logistica/requisiciones/${req.id}`)}
                 >
-                  <TableCell className="py-4 pl-8">
+                  <TableCell className="py-5 pl-8">
                     <span className="font-mono font-black text-primary text-sm">#{req.id.substring(0, 8)}</span>
                   </TableCell>
-                  <TableCell className="py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                        <User size={14} />
+                  <TableCell className="py-5">
+                    <div className="flex items-center gap-4">
+                      <div className="size-10 rounded-full border border-border-subtle bg-[#f3f2f1] flex items-center justify-center font-bold text-text-secondary">
+                        <User size={18} />
                       </div>
-                      <span className="font-bold text-sm text-text-main">{req.user_name}</span>
+                      <span className="font-bold text-sm text-text-main group-hover:text-primary transition-colors">{req.user_name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="py-4 text-center">
+                  <TableCell className="py-5 text-center">
                     {getStatusBadge(req.status)}
                   </TableCell>
-                  <TableCell className="py-4">
-                    <span className="text-xs font-bold text-slate-600">{req.supplier_name || 'Sin asignar'}</span>
+                  <TableCell className="py-5">
+                    <span className="text-xs font-bold text-text-main">{req.supplier_name || 'Sin asignar'}</span>
                   </TableCell>
-                  <TableCell className="py-4">
-                    <div className="flex items-center gap-2 text-[11px] text-text-secondary font-medium">
-                      <Calendar size={12} className="text-slate-400" />
+                  <TableCell className="py-5">
+                    <div className="flex items-center gap-2 text-xs text-text-secondary font-medium">
+                      <Calendar size={14} className="text-slate-400" />
                       {new Date(req.created_at).toLocaleDateString()}
                     </div>
                   </TableCell>
-                  <TableCell className="py-4 pr-8 text-right">
+                  <TableCell className="py-5 pr-8 text-right" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-primary">
-                          <MoreVertical size={18} />
-                        </Button>
+                        <button className="text-slate-300 hover:text-primary transition-colors opacity-0 group-hover:opacity-100">
+                          <span className="material-symbols-outlined text-xl">more_vert</span>
+                        </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-fluent-16">
-                        <DropdownMenuItem className="gap-3 text-xs font-bold">
-                          <FileText size={14} className="text-slate-400" /> Ver Detalle
+                      <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-fluent-16 rounded-xl border-border-subtle">
+                        <DropdownMenuItem className="gap-3 text-xs font-bold text-text-main hover:bg-slate-50 rounded-lg cursor-pointer" onClick={() => navigate(`/logistica/requisiciones/${req.id}`)}>
+                          <span className="material-symbols-outlined text-lg text-text-secondary">description</span> Ver Detalle
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-3 text-xs font-bold text-primary bg-primary/5">
-                          <ArrowRight size={14} /> Generar Orden de Compra
+                        <DropdownMenuItem className="gap-3 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg cursor-pointer">
+                          <span className="material-symbols-outlined text-lg">add_shopping_cart</span> Generar Orden de Compra
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="gap-3 text-xs font-bold text-red-600">
-                          <XCircle size={14} /> Cancelar Solicitud
+                        <DropdownMenuSeparator className="bg-border-subtle" />
+                        <DropdownMenuItem className="gap-3 text-xs font-bold text-error hover:bg-error/5 hover:text-error rounded-lg cursor-pointer">
+                          <span className="material-symbols-outlined text-lg">cancel</span> Cancelar Solicitud
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

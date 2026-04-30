@@ -127,6 +127,15 @@ export const common = {
   'errors.hint.NOT_FOUND': 'El recurso no existe o fue eliminado.',
   'errors.hint.VALIDATION': 'Por favor corrige los errores en el formulario.',
   'errors.hint.TIMEOUT': 'La solicitud tardó demasiado tiempo.',
+  'errors.hint.RATE_LIMIT':
+    'Demasiadas solicitudes, espera e intenta de nuevo.',
+  'errors.hint.CONFLICT': 'Conflicto de estado, refresca los datos.',
+  'errors.hint.UNKNOWN': 'Ocurrió un error inesperado.',
+
+  // Toast de error
+  'errors.toast.copy_code': 'Copiar código',
+  'errors.toast.retry': 'Reintentar',
+  'errors.toast.diagnostics': 'Diagnóstico',
 
   // Acciones adicionales
   'common.action.view_detail': 'Ver Detalle',

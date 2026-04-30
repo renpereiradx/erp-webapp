@@ -127,138 +127,136 @@ const BudgetManagement: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+    <div className="flex flex-col gap-8 animate-in fade-in duration-500 font-display">
       <ToastContainer />
       
       {/* Header de Página */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-primary pl-5">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-text-main flex items-center gap-3">
-            <FileText className="text-primary" size={32} />
+          <h1 className="text-3xl font-bold tracking-tight text-text-main">
             {t('commercial.budgets.title', 'Presupuestos y Cotizaciones')}
           </h1>
-          <p className="text-text-secondary font-medium mt-1">
+          <p className="text-text-secondary text-base font-medium mt-1.5">
             Gestiona las ofertas comerciales y conviértelas en ventas firmes.
           </p>
         </div>
-        <div className="flex gap-2">
-            <Button variant="outline" className="font-bold h-11 px-4 border-border-base">
-                <Printer size={20} className="mr-2" />
-                Imprimir Reporte
-            </Button>
-            <Button 
-            className="bg-primary hover:bg-primary-hover text-white font-bold h-11 px-6 shadow-fluent-8"
-            onClick={() => navigate('/comercial/presupuestos/nuevo')}
-            >
-            <Plus size={20} className="mr-2" />
-            Nueva Cotización
-            </Button>
-        </div>
       </div>
 
-      {/* Barra de Herramientas y Filtros */}
-      <Card className="border-border-subtle shadow-fluent-2 bg-surface overflow-hidden">
-        <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-center">
-          <div className="relative flex-1 w-full">
+      {/* Tabla de Datos de Alta Densidad (Fluent 2) */}
+      <div className="bg-white rounded-xl shadow-fluent-shadow border border-border-subtle overflow-hidden">
+        {/* Barra de Herramientas y Filtros (Integrada) */}
+        <div className="px-8 py-5 border-b border-border-subtle bg-[#f3f2f1]/50 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <Input 
-              placeholder="Buscar por Nº de presupuesto o cliente..." 
-              className="pl-10 h-10 bg-slate-50/50 border-slate-200 focus:bg-white transition-all w-full"
+              placeholder="Buscar por Nº o cliente..." 
+              className="pl-10 h-10 bg-white border-border-base focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <div className="flex items-center gap-4">
+            <div className="flex bg-white p-1 rounded-lg border border-border-base shadow-sm">
                 {['ALL', 'PENDING', 'APPROVED', 'CONVERTED'].map((status) => (
                     <button
                         key={status}
                         onClick={() => setStatusFilter(status)}
-                        className={`px-3 py-1.5 text-[10px] font-black uppercase rounded-md transition-all ${
+                        className={`px-4 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all ${
                             statusFilter === status 
-                            ? 'bg-white text-primary shadow-sm' 
-                            : 'text-slate-500 hover:text-slate-700'
+                            ? 'bg-primary/10 text-primary' 
+                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                         }`}
                     >
                         {status === 'ALL' ? 'Todos' : status}
                     </button>
                 ))}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            
+            <div className="h-8 w-px bg-border-base hidden md:block"></div>
 
-      {/* Tabla de Datos */}
-      <div className="bg-white rounded-xl shadow-fluent-8 border border-border-subtle overflow-hidden">
+            <Button variant="outline" size="sm" className="bg-white border border-border-base text-[10px] font-bold uppercase rounded hover:bg-slate-50 transition-all px-4 py-1.5 h-auto">
+                <Printer size={14} className="mr-1.5" />
+                Imprimir
+            </Button>
+            <Button 
+                className="bg-primary hover:bg-primary-hover text-white text-[10px] font-bold uppercase rounded shadow-sm transition-all px-5 py-2 h-auto"
+                onClick={() => navigate('/comercial/presupuestos/nuevo')}
+            >
+                <Plus size={14} className="mr-1.5" />
+                Nueva Cotización
+            </Button>
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="p-20"><DataState variant="loading" /></div>
         ) : filteredBudgets.length === 0 ? (
           <div className="p-20"><DataState variant="empty" title="No se encontraron presupuestos" /></div>
         ) : (
-          <Table>
-            <TableHeader className="bg-slate-50/50 border-b border-border-subtle">
-              <TableRow>
-                <TableHead className="w-[120px] font-black text-[10px] uppercase text-slate-400 py-5 pl-8">Presupuesto</TableHead>
-                <TableHead className="font-black text-[10px] uppercase text-slate-400 py-5">Cliente</TableHead>
-                <TableHead className="font-black text-[10px] uppercase text-slate-400 py-5 text-center">Estado</TableHead>
-                <TableHead className="font-black text-[10px] uppercase text-slate-400 py-5 text-right">Total</TableHead>
-                <TableHead className="font-black text-[10px] uppercase text-slate-400 py-5">Validez</TableHead>
-                <TableHead className="w-[80px] py-5 pr-8"></TableHead>
+          <Table className="w-full text-left">
+            <TableHeader className="bg-white border-b border-border-subtle">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="py-5 pl-8 text-[11px] font-bold uppercase text-slate-400 tracking-wider w-[140px]">Presupuesto</TableHead>
+                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Cliente</TableHead>
+                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider text-center">Estado</TableHead>
+                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider text-right">Total</TableHead>
+                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Validez</TableHead>
+                <TableHead className="py-5 pr-8 w-12"></TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="divide-y divide-slate-100 text-xs">
               {filteredBudgets.map((budget) => (
                 <TableRow 
                   key={budget.id} 
-                  className="group hover:bg-slate-50/80 transition-colors cursor-pointer"
+                  className="hover:bg-slate-50/80 group transition-colors cursor-pointer border-none"
                   onClick={() => navigate(`/comercial/presupuestos/${budget.id}`)}
                 >
-                  <TableCell className="py-4 pl-8">
+                  <TableCell className="py-5 pl-8">
                     <span className="font-mono font-black text-primary text-sm">#{budget.budget_number}</span>
                   </TableCell>
-                  <TableCell className="py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                        <User size={14} />
+                  <TableCell className="py-5">
+                    <div className="flex items-center gap-4">
+                      <div className="size-10 rounded-full border border-border-subtle bg-[#f3f2f1] flex items-center justify-center font-bold text-text-secondary">
+                        <User size={18} />
                       </div>
-                      <span className="font-bold text-sm text-text-main">{budget.client_name || 'Consumidor Final'}</span>
+                      <span className="font-bold text-sm text-text-main group-hover:text-primary transition-colors">{budget.client_name || 'Consumidor Final'}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="py-4 text-center">
+                  <TableCell className="py-5 text-center">
                     {getStatusBadge(budget.status)}
                   </TableCell>
-                  <TableCell className="py-4 text-right">
+                  <TableCell className="py-5 text-right">
                     <span className="font-mono font-black text-sm text-text-main">{formatPYG(budget.total_amount)}</span>
                   </TableCell>
-                  <TableCell className="py-4">
-                    <div className="flex items-center gap-2 text-[11px] text-text-secondary font-medium">
-                      <Calendar size={12} className="text-slate-400" />
+                  <TableCell className="py-5">
+                    <div className="flex items-center gap-2 text-xs text-text-secondary font-medium">
+                      <Calendar size={14} className="text-slate-400" />
                       {new Date(budget.valid_until).toLocaleDateString()}
                     </div>
                   </TableCell>
-                  <TableCell className="py-4 pr-8 text-right">
+                  <TableCell className="py-5 pr-8 text-right" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-primary">
-                          <MoreVertical size={18} />
-                        </Button>
+                        <button className="text-slate-300 hover:text-primary transition-colors opacity-0 group-hover:opacity-100">
+                          <span className="material-symbols-outlined text-xl">more_vert</span>
+                        </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-fluent-16">
-                        <DropdownMenuItem className="gap-3 text-xs font-bold">
-                          <FileSearch size={14} className="text-slate-400" /> Ver Detalle
+                      <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-fluent-16 rounded-xl border-border-subtle">
+                        <DropdownMenuItem className="gap-3 text-xs font-bold text-text-main hover:bg-slate-50 rounded-lg cursor-pointer" onClick={() => navigate(`/comercial/presupuestos/${budget.id}`)}>
+                          <span className="material-symbols-outlined text-lg text-text-secondary">search</span> Ver Detalle
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-3 text-xs font-bold">
-                          <Printer size={14} className="text-slate-400" /> Imprimir PDF
+                        <DropdownMenuItem className="gap-3 text-xs font-bold text-text-main hover:bg-slate-50 rounded-lg cursor-pointer">
+                          <span className="material-symbols-outlined text-lg text-text-secondary">print</span> Imprimir PDF
                         </DropdownMenuItem>
                         {budget.status === 'APPROVED' && (
-                            <DropdownMenuItem className="gap-3 text-xs font-bold text-primary bg-primary/5" onClick={() => handleConvertToSale(budget.id)}>
-                                <ArrowRightLeft size={14} /> Convertir en Venta
+                            <DropdownMenuItem className="gap-3 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg cursor-pointer" onClick={() => handleConvertToSale(budget.id)}>
+                                <span className="material-symbols-outlined text-lg">swap_horiz</span> Convertir en Venta
                             </DropdownMenuItem>
                         )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="gap-3 text-xs font-bold text-red-600">
-                          <XCircle size={14} /> Cancelar Presupuesto
+                        <DropdownMenuSeparator className="bg-border-subtle" />
+                        <DropdownMenuItem className="gap-3 text-xs font-bold text-error hover:bg-error/5 hover:text-error rounded-lg cursor-pointer">
+                          <span className="material-symbols-outlined text-lg">cancel</span> Cancelar Presupuesto
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -268,33 +266,35 @@ const BudgetManagement: React.FC = () => {
             </TableBody>
           </Table>
         )}
-      </div>
-
-      {/* Paginación */}
-      <div className="flex items-center justify-between px-2">
-        <p className="text-xs text-slate-500 font-medium">
-          Mostrando página {page} de {totalPages}
-        </p>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            disabled={page === 1}
-            onClick={() => setPage(p => p - 1)}
-            className="h-8 font-bold text-[10px] uppercase"
-          >
-            Anterior
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            disabled={page === totalPages}
-            onClick={() => setPage(p => p + 1)}
-            className="h-8 font-bold text-[10px] uppercase"
-          >
-            Siguiente
-          </Button>
-        </div>
+        
+        {/* Paginación */}
+        {filteredBudgets.length > 0 && !isLoading && (
+            <div className="px-8 py-5 border-t border-border-subtle bg-slate-50/50 flex items-center justify-between">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                Página {page} de {totalPages}
+                </p>
+                <div className="flex gap-2">
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={page === 1}
+                    onClick={() => setPage(p => p - 1)}
+                    className="h-8 font-bold text-[10px] uppercase border-border-base bg-white hover:bg-slate-50 px-4"
+                >
+                    Anterior
+                </Button>
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={page === totalPages}
+                    onClick={() => setPage(p => p + 1)}
+                    className="h-8 font-bold text-[10px] uppercase border-border-base bg-white hover:bg-slate-50 px-4"
+                >
+                    Siguiente
+                </Button>
+                </div>
+            </div>
+        )}
       </div>
     </div>
   );

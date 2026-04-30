@@ -3,7 +3,7 @@
  * Provides easy-to-use methods for showing success, error, and info messages
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { toApiError } from '@/utils/ApiError'
 import { useI18n } from '@/lib/i18n'
 
@@ -178,18 +178,32 @@ export const useToast = () => {
     setToasts([])
   }, [])
 
-  return {
-    toasts,
-    toast,
-    addToast,
-    removeToast,
-    success,
-    error,
-    warning,
-    errorFrom,
-    info,
-    clear,
-  }
+  return useMemo(
+    () => ({
+      toasts,
+      toast,
+      addToast,
+      removeToast,
+      success,
+      error,
+      warning,
+      errorFrom,
+      info,
+      clear,
+    }),
+    [
+      toasts,
+      toast,
+      addToast,
+      removeToast,
+      success,
+      error,
+      warning,
+      errorFrom,
+      info,
+      clear,
+    ],
+  )
 }
 
 export default useToast

@@ -105,4 +105,12 @@ export const common = {
   'errors.hint.NOT_FOUND': 'The resource does not exist or was removed.',
   'errors.hint.VALIDATION': 'Please correct the errors in the form.',
   'errors.hint.TIMEOUT': 'The request took too long.',
+  'errors.hint.RATE_LIMIT': 'Too many requests, wait and retry.',
+  'errors.hint.CONFLICT': 'State conflict, refresh the data.',
+  'errors.hint.UNKNOWN': 'An unexpected error occurred.',
+
+  // Error toasts
+  'errors.toast.copy_code': 'Copy code',
+  'errors.toast.retry': 'Retry',
+  'errors.toast.diagnostics': 'Diagnostics',
 }
