@@ -4,6 +4,7 @@ import ReceivablesAgingChart from './ReceivablesAgingChart';
 import ReceivablesForecastChart from './ReceivablesForecastChart';
 import ReceivablesTopDebtors from './ReceivablesTopDebtors';
 import { receivablesService } from '@/services/bi/receivablesService';
+import biForecastingService from '@/services/biForecastingService';
 import DashboardNav from '@/components/business-intelligence/DashboardNav';
 
 // Default initial state
@@ -32,7 +33,7 @@ const ReceivablesDashboard = () => {
         const [summaryRes, agingRes, forecastRes, debtorsRes] = await Promise.all([
           receivablesService.getSummary(),
           receivablesService.getAging(),
-          receivablesService.getForecast(),
+          biForecastingService.getPronosticoIngresos(),
           receivablesService.getTopDebtors()
         ]);
 

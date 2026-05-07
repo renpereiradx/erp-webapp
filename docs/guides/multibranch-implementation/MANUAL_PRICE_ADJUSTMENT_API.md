@@ -3,7 +3,7 @@
 > **Disclaimer:** Esta guía contiene ejemplos JSON y TypeScript/JavaScript para ilustración de payloads y respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
 **Versión:** 2.1  
-**Fecha:** 19 de Marzo de 2026  
+**Fecha:** 2026-05-06  
 **Endpoint Base:** `http://localhost:5050`
 
 ---
@@ -46,7 +46,11 @@ No hay breaking changes en los endpoints existentes, pero el comportamiento inte
 http://localhost:5050
 ```
 
-### Headers Requeridos
+### Autenticación
+
+- Header: `Authorization: Bearer <jwt_token>`
+
+### Headers requeridos (cuando aplica)
 
 ```http
 Content-Type: application/json
@@ -60,10 +64,20 @@ Authorization: Bearer <jwt_token>
 - Fallback: `active_branch` del token JWT
 - Restricción: sucursal debe estar en `allowed_branches`
 
-```http
-Content-Type: application/json
-Authorization: Bearer <jwt_token>
-```
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
+
+## Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+## Respuesta estándar
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
+## Paginación estándar
+
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
 
@@ -342,6 +356,18 @@ Endpoint de diagnóstico para verificar la salud e integridad de las integracion
 }
 ```
 
+### 6. Ajuste Manual de Stock (Genérico)
+
+**`POST /manual_adjustment/`**
+
+Crea un ajuste manual de stock genérico (cantidad, tipo de ajuste, motivo).
+
+### 7. Listar Ajustes Manuales
+
+**`GET /manual_adjustment/{page}/{pageSize}`**
+
+Lista paginada de todos los ajustes manuales registrados.
+
 ---
 
 ## 🔍 Validaciones y Reglas de Negocio
@@ -430,3 +456,7 @@ curl -X GET "http://localhost:5050/manual_adjustment/price/recent?days=1&limit=1
 
 - Si recibe un error `Product with ID [...] does not exist`, informe al usuario que el producto ya no es válido o fue eliminado.
 - Para errores de validación, resalte los campos del formulario que son incorrectos.
+
+---
+
+_Última actualización: 2026-05-06 — FASE 3 verificada. Agregados 2 endpoints faltantes (POST /manual_adjustment/, GET /manual_adjustment/{page}/{pageSize}). 7 endpoints documentados._

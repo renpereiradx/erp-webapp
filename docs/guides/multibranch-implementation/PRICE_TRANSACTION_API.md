@@ -35,7 +35,11 @@
 http://localhost:5050
 ```
 
-### Headers Requeridos
+### Autenticación
+
+- Header: `Authorization: Bearer <jwt_token>`
+
+### Headers requeridos (cuando aplica)
 
 ```http
 Content-Type: application/json
@@ -49,12 +53,19 @@ Authorization: Bearer <jwt_token>
 - Fallback: `active_branch` del token JWT
 - Restricción: sucursal debe estar en `allowed_branches`
 
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
+
 ```typescript
 {
   "Content-Type": "application/json",
   "Authorization": "Bearer <jwt_token>"
 }
 ```
+
+### Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
 
 ### Formato de Respuesta Estándar
 
@@ -67,6 +78,17 @@ interface APIResponse<T> {
   timestamp?: string
 }
 ```
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
+### Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+### Paginación estándar
+
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
 
@@ -108,6 +130,8 @@ interface PriceTransactionRequest {
   product_id: string // ID del producto (requerido)
   transaction_type: string // Tipo de transacción (requerido)
   new_price: number // Nuevo precio (requerido, > 0)
+  unit?: string // Unidad de medida (opcional: "unit", "kg", "l", etc.)
+  price_type: string // `SELLING_PRICE` o `COST` (requerido)
   effective_date?: string // Fecha efectiva (opcional, default: now)
   reference_type?: string // Tipo de referencia (opcional)
   reference_id?: string // ID de referencia (opcional)
@@ -1680,5 +1704,9 @@ export default PriceManagementDashboard;
 ---
 
 **Versión:** 1.0  
-**Fecha:** Septiembre 2025  
+**Fecha:** 2026-05-06  
 **Mantenido por:** Equipo de Desarrollo
+
+---
+
+_Última actualización: 2026-05-06 — FASE 4 verificada. PriceTransactionRequest actualizado (agregados `unit` y `price_type` requeridos). PriceTransactionResponse verificado (7/7 OK)._

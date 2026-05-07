@@ -3,8 +3,23 @@
 > **Disclaimer:** Esta guía contiene ejemplos JSON y TypeScript/JavaScript para ilustración de payloads y respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
 **Versión:** 1.1
-**Fecha:** 22 de Marzo de 2026
+**Fecha:** 2026-05-06
 **Estado:** Vigente con la API actual
+
+## Base URL
+
+`http://localhost:5050`
+
+## Autenticación
+
+- Header: `Authorization: Bearer <jwt_token>`
+
+## Headers requeridos (cuando aplica)
+
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
 
 ---
 
@@ -25,6 +40,21 @@ Principio clave:
 - O header: `X-Branch-ID: <id>`
 - Fallback: `active_branch` del token JWT
 - Restricción: sucursal debe estar en `allowed_branches`
+
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
+
+## Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+## Respuesta estándar
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
+## Paginación estándar
+
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
 
@@ -89,6 +119,17 @@ Si no viene `explicit_sale_price`:
 ---
 
 ## 4. IVA en compras (actual)
+
+### 4.0 Price Includes Tax — Dos Modos
+
+El campo `price_includes_tax` en cada línea de detalle (`purchase_order_details`) controla cómo se interpreta el precio:
+
+| `price_includes_tax` | Comportamiento | Ejemplo (IVA 10%) |
+|---|---|---|
+| `true` (default) | El precio **INCLUYE** IVA → el backend extrae el IVA | Precio 1,210 → Neto 1,100, IVA 110 |
+| `false` | El precio **EXCLUYE** IVA → el backend agrega el IVA | Precio 1,000 → Neto 1,000, IVA 100, Total 1,100 |
+
+> El frontend debe enviar este campo explícitamente en cada línea de detalle de compra.
 
 ### 4.1 Resolución de tasa
 
@@ -169,7 +210,61 @@ Consultar `GET /purchase/{id}` o endpoints enriquecidos de compra para ver el de
 
 ---
 
-## 7. Recomendaciones frontend
+## 7. Endpoints de Órdenes de Compra (CRUD)
+
+> **Nota:** Esta sección documenta los endpoints completos de gestión de compras. La sección 2 (`POST /purchase/complete`) es el endpoint de integración pricing-compra.
+
+### POST /purchase/
+
+**Descripción:** Crea una nueva orden de compra (sin completar).
+
+### GET /purchase/{id}
+
+**Descripción:** Obtiene una orden de compra por ID.
+
+### POST /purchase/complete
+
+**Descripción:** Crea y completa una orden de compra con cálculo de pricing integrado. Ver [sección 2](#2-payload-soportado-hoy-en-post-purchasecomplete) para el payload completo.
+
+### PUT /purchase/cancel/{id}
+
+**Descripción:** Cancela una orden de compra (requiere permisos).
+
+### POST /purchase/{id}/cancel
+
+**Descripción:** Solicita cancelación de orden de compra (flujo de aprobación).
+
+### GET /purchase/{id}/preview-cancellation
+
+**Descripción:** Previsualiza los efectos de cancelar una orden de compra (stock, pagos, IVA).
+
+### GET /purchase/{id}/supplier/{supplier_name}
+
+**Descripción:** Obtiene órdenes de compra de un proveedor por nombre.
+
+### GET /purchase/supplier_id/{supplier_id}
+
+**Descripción:** Obtiene órdenes de compra por ID de proveedor (Party ID).
+
+### GET /purchase/supplier_name/{name}
+
+**Descripción:** Busca órdenes de compra por nombre parcial de proveedor.
+
+### GET /purchase/date_range/
+
+**Descripción:** Lista órdenes de compra en rango de fechas (`start_date`, `end_date`).
+
+### POST /purchase/payment/process
+
+**Descripción:** Procesa un pago total o parcial de una orden de compra.
+
+### GET /purchase/payment/statistics
+
+**Descripción:** Estadísticas de pagos de compras.
+
+---
+
+## 9. Recomendaciones frontend
 
 1. Redondear montos para PYG en UI antes de enviar.
 2. Usar `explicit_sale_price` solo cuando usuario fija precio final manual.
@@ -179,7 +274,7 @@ Consultar `GET /purchase/{id}` o endpoints enriquecidos de compra para ver el de
 
 ---
 
-## 8. Checklist de implementación
+## 10. Checklist de implementación
 
 - [ ] Soportar selector de modo: margen vs explícito
 - [ ] Enviar `explicit_sale_price` solo en modo explícito
@@ -190,8 +285,12 @@ Consultar `GET /purchase/{id}` o endpoints enriquecidos de compra para ver el de
 
 ---
 
-## 9. Referencias
+## 11. Referencias
 
 - `docs/guides/frontend/PURCHASE_ORDERS_API_GUIDE.md`
 - `docs/guides/frontend/PRODUCT_API_GUIDE.md`
 - `docs/guides/frontend/SALES_API_GUIDE.md`
+
+---
+
+_Última actualización: 2026-05-06 — FASE 5 verificada. Agregada seccion 4.0 "Price Includes Tax — Dos Modos" (true=precio incluye IVA y se extrae; false=precio excluye IVA y se agrega). Reglas de calculo verificadas._

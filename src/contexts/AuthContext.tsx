@@ -113,7 +113,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setUser({
               ...meResponse.data,
               role_id: result.role_id || meResponse.data.role_id,
-              role_name: result.role_name || meResponse.data.role_name
+              role_name: result.role_name || meResponse.data.role_name,
+              active_branch: result.active_branch || meResponse.data.active_branch,
+              allowed_branches: result.allowed_branches || meResponse.data.allowed_branches
             });
           } else {
             // Fallback al usuario de la respuesta de login si /me falla

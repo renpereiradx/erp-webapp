@@ -16,7 +16,7 @@ import {
 /**
  * Servicio para la administración de sucursales, configuración fiscal y accesos.
  * Estos endpoints NO requieren contexto de sucursal activa ya que son administrativos.
- * La exclusión del header X-Branch-Id está manejada automáticamente en BusinessManagementAPI.ts.
+ * La exclusión del header X-Branch-ID está manejada automáticamente en BusinessManagementAPI.ts.
  */
 export const branchService = {
   // =================== GESTIÓN DE SUCURSALES ===================

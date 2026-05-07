@@ -19,6 +19,18 @@ export const financialReportsService = {
   },
 
   /**
+   * Flujo de Efectivo (Cash Flow)
+   */
+  async getCashFlow(params: BIParams = {}): Promise<any> {
+    try {
+      return await apiClient.get('/financial-reports/cash-flow', { params });
+    } catch (error: any) {
+      console.error('Error fetching cash flow:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Reporte de IVA (VAT Report)
    */
   async getVATReport(params: BIParams = {}): Promise<any> {

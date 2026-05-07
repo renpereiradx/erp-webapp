@@ -8,12 +8,34 @@
 
 - Header: `Authorization: Bearer <jwt_token>`
 
+## Headers requeridos (cuando aplica)
+
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
+
 ## Contexto de Sucursal
 
 - Query param: `?branch_id=<id>`
 - O header: `X-Branch-ID: <id>`
 - Fallback: `active_branch` del token JWT
 - Restricción: sucursal debe estar en `allowed_branches`
+
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
+
+## Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+## Respuesta estándar
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
+## Paginación estándar
+
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
 
@@ -118,7 +140,7 @@
 | Campo      | Tipo   | Descripción                                                                     |
 | ---------- | ------ | ------------------------------------------------------------------------------- |
 | data       | array  | Lista de `BudgetSummary`                                                        |
-| pagination | object | `page`, `page_size`, `total_records`, `total_pages`, `has_next`, `has_previous` |
+| pagination | object | `{ page, page_size, total_items, total_pages, has_next, has_prev }`             |
 
 **BudgetSummary:**
 | Campo | Tipo | Descripción |
@@ -510,4 +532,4 @@
 
 ---
 
-_Última actualización: 2026-04-22 — Reescrita post-Party Model + Multi-Branch._
+_Última actualización: 2026-05-06 — Consistencia cross-documento verificada._

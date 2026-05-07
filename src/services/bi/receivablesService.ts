@@ -79,43 +79,6 @@ export const receivablesService = {
   },
 
   /**
-   * Lista maestra de cuentas por cobrar (con paginación y filtros)
-   */
-  async getMasterList(filters: any = {}, pagination: any = {}, sorting: any = {}): Promise<any> {
-    try {
-      const params = { ...filters, ...pagination, ...sorting };
-      return await apiClient.get('/receivables/master-list', { params });
-    } catch (error: any) {
-      console.error('Error fetching receivables master list:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Detalle de una transacción específica
-   */
-  async getTransactionDetail(id: string): Promise<any> {
-    try {
-      return await apiClient.get(`/receivables/transaction/${id}`);
-    } catch (error: any) {
-      console.error(`Error fetching detail for transaction ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Historial de cambios de una transacción
-   */
-  async getTransactionHistory(id: string): Promise<any> {
-    try {
-      return await apiClient.get(`/receivables/transaction/${id}/history`);
-    } catch (error: any) {
-      console.error(`Error fetching history for transaction ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
    * Análisis de riesgo de un cliente
    */
   async getClientRisk(clientId: string): Promise<any> {
@@ -132,30 +95,6 @@ export const receivablesService = {
    */
   async getClientRiskAnalysis(clientId: string): Promise<any> {
     return this.getClientRisk(clientId);
-  },
-
-  /**
-   * Perfil de crédito del cliente
-   */
-  async getClientProfile(clientId: string): Promise<any> {
-    try {
-      return await apiClient.get(`/receivables/client/${clientId}/profile`);
-    } catch (error: any) {
-      console.error(`Error fetching profile for client ${clientId}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Proyección de cobranzas (Forecast)
-   */
-  async getForecast(params: BIParams = {}): Promise<any> {
-    try {
-      return await apiClient.get('/receivables/forecast', { params });
-    } catch (error: any) {
-      console.error('Error fetching receivables forecast:', error);
-      throw error;
-    }
   },
 
   /**

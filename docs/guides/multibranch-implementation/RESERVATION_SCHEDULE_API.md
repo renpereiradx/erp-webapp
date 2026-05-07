@@ -31,10 +31,20 @@ Authorization: Bearer <jwt_token>
 - Fallback: `active_branch` del token JWT
 - Restricción: sucursal debe estar en `allowed_branches`
 
-```http
-Content-Type: application/json
-Authorization: Bearer <jwt_token>
-```
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
+
+## Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+## Respuesta estándar
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
+## Paginación estándar
+
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ## Modelos Principales
 
@@ -275,3 +285,7 @@ Payload recomendado:
 Regla de descuento:
 
 - Para llegar al monto final del servicio, usar una sola estrategia por ítem (`sale_price` o `discount_*`), no ambas al mismo tiempo.
+
+---
+
+_Última actualización: 2026-05-06 — Consistencia cross-documento verificada._

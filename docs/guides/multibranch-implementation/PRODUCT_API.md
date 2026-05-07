@@ -3,8 +3,41 @@
 > **Disclaimer:** Esta guía contiene ejemplos JSON para ilustración de respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
 **Versión:** 3.2.0
-**Fecha:** 22 de Marzo de 2026
+**Fecha:** 2026-05-06
 **Endpoint Base:** `http://localhost:5050`
+
+## Autenticación
+
+- Header: `Authorization: Bearer <jwt_token>`
+
+## Headers requeridos (cuando aplica)
+
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
+
+## Contexto de Sucursal
+
+- Query param: `?branch_id=<id>`
+- O header: `X-Branch-ID: <id>`
+- Fallback: `active_branch` del token JWT
+- Restricción: sucursal debe estar en `allowed_branches`
+
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
+
+## Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+## Respuesta estándar
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
+## Paginación estándar
+
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ## Historial de Cambios
 
@@ -66,20 +99,6 @@ Los productos ahora incluyen información completa de IVA (Impuesto al Valor Agr
 | `IMPORT`      | Impuesto de importación       | Variable |
 
 ---
-
-### Headers Requeridos
-
-```http
-Content-Type: application/json
-Authorization: Bearer <jwt_token>
-```
-
-### Contexto de Sucursal
-
-- Query param: `?branch_id=<id>`
-- O header: `X-Branch-ID: <id>`
-- Fallback: `active_branch` del token JWT
-- Restricción: sucursal debe estar en `allowed_branches`
 
 ---
 
@@ -146,8 +165,14 @@ Estructura de tasa de impuesto.
 | `jurisdiction_type` | string         | Tipo de jurisdiccion                                              |
 | `operation_type`    | string         | Tipo de operacion: `NACIONAL`, `CANASTA`, `EXEMPT`, etc.          |
 | `description`       | string \| null | Descripcion detallada                                             |
+| `effective_start`   | string         | Fecha de inicio de vigencia (ISO 8601)                            |
+| `effective_end`     | string \| null | Fecha de fin de vigencia (ISO 8601)                               |
 | `is_default`        | boolean        | Si es la tasa por defecto del sistema                             |
 | `is_active`         | boolean        | Si la tasa esta activa                                            |
+| `created_at`        | string         | Fecha de creacion (ISO 8601)                                      |
+| `updated_at`        | string         | Fecha de ultima actualizacion (ISO 8601)                          |
+| `created_by`        | string \| null | ID del usuario creador                                            |
+| `updated_by`        | string \| null | ID del usuario que actualizo                                      |
 
 ### ProductOperationInfoResponse
 
@@ -743,6 +768,62 @@ Asigna un precio de venta a una unidad de medida.
 
 ---
 
+### 16. Obtener Informacion Financiera del Producto
+
+**`GET /products/{id}/financial`**
+
+Retorna datos financieros completos del producto: costos, márgenes, rentabilidad, histórico de compras.
+
+---
+
+### 17. Obtener Informacion Financiera por Codigo de Barras
+
+**`GET /products/financial/barcode/{barcode}`**
+
+Equivalente a `GET /products/{id}/financial` pero usando código de barras.
+
+---
+
+### 18. Buscar Productos Financieros por Nombre
+
+**`GET /products/financial/search/{name}`**
+
+Busca productos con su información financiera completa.
+
+---
+
+### 19. Obtener Alertas de Margen
+
+**`GET /products/{id}/margin-alert`**
+
+Retorna alertas sobre márgenes del producto (margen bajo, negativo, etc.).
+
+---
+
+### 20. Reporte de Margen
+
+**`GET /products/{id}/margin-report`**
+
+Reporte detallado de márgenes del producto (histórico, tendencia, comparativa).
+
+---
+
+### 21. Comparativa de Proveedores
+
+**`GET /products/{id}/supplier-comparison`**
+
+Comparativa de costos entre proveedores para el producto.
+
+---
+
+### 22. Costo Promedio Ponderado
+
+**`GET /products/{id}/weighted-average`**
+
+Retorna el costo promedio ponderado calculado del producto.
+
+---
+
 ## Validaciones
 
 | Campo          | Regla                                        |
@@ -776,5 +857,11 @@ Asigna un precio de venta a una unidad de medida.
 | ----------- | ------------------------------------ | ---------------------------------------------- |
 | 400         | Datos invalidos o validacion fallida | Verificar el body y los campos requeridos      |
 | 401         | Token JWT invalido o ausente         | Verificar que se envia el header Authorization |
+| 403         | `branch_id` fuera de `allowed_branches` | Verificar contexto de sucursal               |
 | 404         | Producto no encontrado               | Verificar el ID o codigo de barras             |
+| 409         | Conflicto de estado                  | Reintentar o validar transicion                |
 | 500         | Error interno del servidor           | Reportar al equipo de backend                  |
+
+---
+
+_Última actualización: 2026-05-06 — FASE 4 verificada. Modelo TaxRate actualizado (16 campos, agregados effective_start/end, created_at/updated_at, created_by/updated_by). Modelos ProductEnriched, Category, ProductOperationInfoResponse verificados._

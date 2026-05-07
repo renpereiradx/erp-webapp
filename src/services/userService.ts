@@ -249,6 +249,26 @@ export const userService = {
   },
 
   /**
+   * Obtener los roles de un usuario
+   */
+  getUserRoles: async (id: string): Promise<SuccessResponse & { data: Array<{ id: string; name: string }> }> => {
+    if (DEMO_CONFIG.enabled) {
+      return {
+        success: true,
+        data: [{ id: 'admin', name: 'ADMIN' }]
+      };
+    }
+
+    try {
+      const response = await api.get(`${BASE_URL}/${id}/roles`);
+      return response;
+    } catch (error) {
+      console.error(`Error fetching roles for user ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
    * Asignar rol a usuario
    */
   assignRole: async (userId: string, roleId: string): Promise<SuccessResponse> => {

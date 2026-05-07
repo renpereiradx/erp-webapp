@@ -8,6 +8,22 @@
 
 - Header: `Authorization: Bearer <jwt_token>`
 
+## Headers requeridos (cuando aplica)
+
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
+
+## Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+## Respuesta estándar
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
 ## Contexto de Sucursal (BI)
 
 - Query param: `?branch_id=<id>`
@@ -15,16 +31,26 @@
 - Fallback: `active_branch` del token JWT
 - Restricción: sucursal debe estar en `allowed_branches`
 
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
+
 > **IMPORTANTE:** Los endpoints de BI usan `resolveBIContextFromAuth`, que tiene reglas más estrictas que los endpoints transaccionales.
 
 ### Reglas de Branch Context para BI
 
-| Condición                                           | Comportamiento                                                    |
-| --------------------------------------------------- | ----------------------------------------------------------------- |
-| Usuario **ADMIN** sin enviar `branch_id`            | Puede consultar **todas** las sucursales (branch context = `nil`) |
-| Usuario **non-ADMIN** sin enviar `branch_id`        | `400 Bad Request` — debe especificar sucursal                     |
-| Usuario con `branch_id` fuera de `allowed_branches` | `403 Forbidden`                                                   |
-| `branch_id` inválido (no es entero positivo)        | `400 Bad Request`                                                 |
+| Condición                                                | Código HTTP        | Comportamiento                                                    |
+| -------------------------------------------------------- | ------------------ | ----------------------------------------------------------------- |
+| Usuario **ADMIN** sin enviar `branch_id`                 | 200 OK             | Consulta **todas** las sucursales (branch context = `nil`)        |
+| Usuario **non-ADMIN** sin enviar `branch_id`             | **400 Bad Request**    | Debe especificar sucursal                                         |
+| Usuario con `branch_id` fuera de `allowed_branches`      | **403 Forbidden**      |                                                                   |
+| `branch_id` inválido (no es entero positivo, ej: -1, 0)  | **400 Bad Request**    | `parseOptionalBranchID` rechaza `branchID <= 0`                   |
+| `branch_id` inexistente (ej: 9999) con usuario scoped    | **403 Forbidden**      | No está en `allowed_branches`                                     |
+| `branch_id` inexistente (ej: 9999) con ADMIN             | 200 OK (datos vacíos)  | Pasa validación, SQL retorna ceros (COALESCE) — no nulls          |
+| `X-Branch-ID` header vs `?branch_id` query param        | —                  | Query param tiene prioridad sobre header. Ambos pasan misma validación |
+| Branch sin datos                                         | 200 OK (ceros)     | Todos los repositorios usan `COALESCE(SUM(...), 0)` — nunca retornan null |
+
+> **Verificado (2026-05-05):** Los 113 endpoints BI usan `resolveBIContextFromAuth` para branch filtering.  
+> Los bugs B1-B15 de branch filtering fueron corregidos. 0 bugs pendientes.  
+> 8/8 edge cases validados con tests unitarios en `handlers/branch_context_test.go`.
 
 ### RBAC Financiero
 
@@ -490,7 +516,37 @@
 
 ---
 
+### Pronósticos (Forecast)
+
+> **Nota:** Estos endpoints están disponibles en dos rutas equivalentes:  
+> `GET /forecast/*` y `GET /api/v1/forecast/*`. Ambas retornan los mismos datos y usan los mismos handlers.  
+> Se recomienda usar `/forecast/*` como ruta canónica.
+
+#### GET /forecast/sales
+
+**Descripción:** Pronóstico de ventas futuras basado en histórico.
+
+#### GET /forecast/inventory
+
+**Descripción:** Pronóstico de inventario futuro basado en velocidad de venta.
+
+#### GET /forecast/demand
+
+**Descripción:** Pronóstico de demanda por producto y categoría.
+
+#### GET /forecast/revenue
+
+**Descripción:** Pronóstico de ingresos futuros por categoría y período.
+
+#### GET /forecast/dashboard
+
+**Descripción:** Dashboard consolidado de pronósticos (ventas + inventario + demanda + ingresos).
+
+---
+
 ### Costos y Tendencias Globales
+
+> **Nota:** Estos endpoints no forman parte del módulo BI puro, pero usan `resolveBIContextFromAuth` y son útiles para análisis complementario.
 
 #### GET /cost-trends
 
@@ -502,17 +558,40 @@
 
 ---
 
+## Discrepancias de Datos Conocidas
+
+El backend tiene datos de prueba con limitaciones que el frontend debe conocer para no interpretar como bugs:
+
+| # | Discrepancia | Detalle | Impacto |
+|---|---|---|---|
+| D1 | PO 30 (branch 2) sin `purchase_order_details` | La orden de compra id=30 en branch 2 tiene `total_amount=100,000` pero 0 líneas de detalle | Purchase Ledger y VAT Purchases retornan 0 para branch 2 |
+| D2 | `sales_orders.total_amount` != `SUM(sales_order_details)` | Diferencia de 5,000.12 en datos históricos | `total_amount` (316,688) vs suma de detalles (311,687.88) no cuadran exactamente en algunos reportes |
+| D3 | Branch 1 sin caja OPEN | No hay `cash_registers` con status `OPEN` en branch 1 | `beginning_cash` de branch 1 = 0 en Cash Flow Statement |
+
+---
+
+## Correcciones de Bugs (B16-B18)
+
+Los siguientes endpoints fueron corregidos en 2026-05-04 para eliminar duplicación de `total_sales` cuando las órdenes de venta tienen múltiples líneas de detalle. Las queries ahora usan CTEs separadas (`order_stats` + `product_stats`) para evitar que `SUM(s.total_amount)` se multiplique por cada línea:
+
+- `GET /sales-analytics/by-seller` — `total_sales` ya no se duplica
+- `GET /sales-analytics/compare` — `total_sales` ya no se duplica
+- `GET /sales-analytics/dashboard` — KPIs ya no duplican `total_sales`
+
+---
+
 ## Parámetros Comunes de Query
 
 La mayoría de endpoints de BI aceptan:
 
-| Parámetro  | Tipo | Requerido   | Descripción                                 |
-| ---------- | ---- | ----------- | ------------------------------------------- |
-| branch_id  | int  | Condicional | ID de sucursal (obligatorio para non-ADMIN) |
-| start_date | date | No          | Fecha inicio (YYYY-MM-DD)                   |
-| end_date   | date | No          | Fecha fin (YYYY-MM-DD)                      |
-| page       | int  | No          | Número de página                            |
-| page_size  | int  | No          | Elementos por página                        |
+| Parámetro  | Tipo   | Requerido   | Descripción                                 |
+| ---------- | ------ | ----------- | ------------------------------------------- |
+| branch_id  | int    | Condicional | ID de sucursal (obligatorio para non-ADMIN) |
+| start_date | date   | No          | Fecha inicio (YYYY-MM-DD)                   |
+| end_date   | date   | No          | Fecha fin (YYYY-MM-DD)                      |
+| period     | string | No          | Período predefinido (month, quarter, year)  |
+| page       | int    | No          | Número de página                            |
+| page_size  | int    | No          | Elementos por página                        |
 
 ## Errores Comunes
 
@@ -526,4 +605,4 @@ La mayoría de endpoints de BI aceptan:
 
 ---
 
-_Última actualización: 2026-04-22 — Creada desde cero post-Multi-Branch + Party Model._
+_Última actualización: 2026-05-06 — FASE 2 completada. 115 endpoints BI documentados (113 verificados + 2 cost-trends). Discrepancias D1/D2/D3 documentadas. Bugs B16-B18 reflejados. Edge cases completos. Forecast endpoints agregados._

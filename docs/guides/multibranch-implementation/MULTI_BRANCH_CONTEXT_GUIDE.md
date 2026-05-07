@@ -8,14 +8,34 @@
 
 - Header: `Authorization: Bearer <jwt_token>`
 
+## Headers requeridos (cuando aplica)
+
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
+
 ## Contexto de Sucursal
 
 Todas las operaciones transaccionales y de inteligencia de negocio (BI) requieren contexto de sucursal. El sistema resuelve la sucursal activa mediante la siguiente jerarquía:
 
-1. **Query param:** `?branch_id=<id>`
+1. **Query param:** `?branch_id=<id>` (prioridad)
 2. **Header:** `X-Branch-ID: <id>`
 3. **Fallback:** `active_branch` del token JWT
-4. **Fallback final:** Primera sucursal en `allowed_branches` (ordenada ascendentemente)
+4. **Restricción:** `branch_id` debe estar en `allowed_branches`
+
+## Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+## Respuesta estándar
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
+## Paginación estándar
+
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
 
@@ -28,7 +48,7 @@ Decodificar el payload del JWT (segunda parte del token, base64). Los claims rel
 | Claim              | Tipo        | Descripción                                                                                                         |
 | ------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------- |
 | `user_id`          | string      | ID del usuario autenticado                                                                                          |
-| `role_id`          | string      | Rol del usuario (ej: `admin`, `buyer`, `vendor`)                                                                    |
+| `role_id`          | string      | Rol del usuario (`ADMIN`, `BUYER`, `SUPPLIES`, `VENDOR`, `CLIENT`)                                                  |
 | `session_id`       | int64       | ID de sesión activa                                                                                                 |
 | `token_type`       | string      | `access` o `refresh`                                                                                                |
 | `allowed_branches` | int[]       | Lista de IDs de sucursales a las que el usuario tiene acceso                                                        |
@@ -102,7 +122,7 @@ Usado en: Dashboard, Cuentas por Cobrar, Cuentas por Pagar, Reportes Financieros
 
 1. Ejecuta `resolveBranchContextFromAuth` primero (misma lógica de arriba).
 2. Luego aplica reglas adicionales:
-   - **ADMIN (`role_id == "admin"`)**: puede omitir `branch_id`. Si lo omite, el BI no filtra por sucursal (visión global).
+    - **ADMIN (`role_id == "ADMIN"`)**: puede omitir `branch_id`. Si lo omite, el BI no filtra por sucursal (visión global).
    - **Non-ADMIN**:
      - Si no tiene `allowed_branches` configurados y envía un `branch_id` explícito: `403 Forbidden`.
      - Si `branchID` es `nil` (no envió explícito ni tiene fallback): `400 Bad Request` — "branch context required for BI".
@@ -157,4 +177,4 @@ Usado en: Dashboard, Cuentas por Cobrar, Cuentas por Pagar, Reportes Financieros
 
 ---
 
-_Última actualización: 2026-04-22_
+_Última actualización: 2026-05-06 — Consistencia cross-documento verificada._

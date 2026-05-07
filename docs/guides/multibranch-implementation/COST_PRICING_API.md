@@ -8,6 +8,13 @@
 
 - Header: `Authorization: Bearer <jwt_token>`
 
+## Headers requeridos (cuando aplica)
+
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
+
 ## Contexto de Sucursal (BI)
 
 - Query param: `?branch_id=<id>`
@@ -16,6 +23,21 @@
 - Restricción: sucursal debe estar en `allowed_branches`
 
 > **Nota:** Los endpoints de costos y precios usan `resolveBIContextFromAuth`. Ver [Guía de Contexto Multi-Sucursal](./MULTI_BRANCH_CONTEXT_GUIDE.md) para reglas detalladas de BI.
+
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
+
+## Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+## Respuesta estándar
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
+## Paginación estándar
+
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
 
@@ -62,82 +84,6 @@
 | 403    | `branch_id` fuera de `allowed_branches` |
 | 404    | Producto no encontrado                  |
 | 500    | Error interno                           |
-
----
-
-### GET /products/{product_id}/pricing-info/{unit}
-
-**Descripción:** Obtiene información de precios para una unidad específica.
-
-#### Headers
-
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
-
-#### Query Parameters
-
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
-
-#### Response 200
-
-Igual estructura que `GET /products/{product_id}/pricing-info`.
-
----
-
-### POST /products/{product_id}/costs
-
-**Descripción:** Registra un nuevo costo de compra para un producto.
-
-#### Headers
-
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
-| Content-Type  | Sí          | `application/json`          |
-
-#### Query Parameters
-
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
-
-#### Request Body
-
-| Campo              | Tipo     | Requerido | Descripción                                         |
-| ------------------ | -------- | --------- | --------------------------------------------------- |
-| unit               | string   | Sí        | Unidad de medida (`kg`, `caja`, `unit`, etc.)       |
-| cost_per_unit      | decimal  | Sí        | Costo por unidad                                    |
-| supplier_id        | string   | No        | ID del proveedor (Party ID)                         |
-| purchase_date      | datetime | Sí        | Fecha de compra                                     |
-| quantity_purchased | decimal  | Sí        | Cantidad comprada                                   |
-| metadata           | object   | No        | Metadatos adicionales (invoice_number, notes, etc.) |
-
-#### Response 201
-
-| Campo                       | Tipo    | Descripción                             |
-| --------------------------- | ------- | --------------------------------------- |
-| success                     | bool    | `true`                                  |
-| cost_id                     | int     | ID del costo registrado                 |
-| impact.old_weighted_average | decimal | Promedio ponderado anterior             |
-| impact.new_weighted_average | decimal | Nuevo promedio ponderado                |
-| impact.margin_change        | decimal | Cambio en el margen                     |
-| impact.new_margin_percent   | decimal | Nuevo margen porcentual                 |
-| alerts                      | array   | Alertas generadas (cost_increase, etc.) |
-
-#### Errores
-
-| Código | Condición                                                          |
-| ------ | ------------------------------------------------------------------ |
-| 400    | Body inválido, campos requeridos faltantes, o `branch_id` inválido |
-| 401    | Token ausente o inválido                                           |
-| 403    | `branch_id` fuera de `allowed_branches`                            |
-| 404    | Producto no encontrado                                             |
-| 500    | Error interno                                                      |
 
 ---
 
@@ -517,7 +463,6 @@ Registro de compra completo con detalles adicionales.
 | Método | Endpoint                             | Descripción                |
 | ------ | ------------------------------------ | -------------------------- |
 | GET    | `/products/{id}/pricing-info`        | Info completa de precios   |
-| GET    | `/products/{id}/pricing-info/{unit}` | Info de precios por unidad |
 | POST   | `/products/{id}/costs`               | Registrar nuevo costo      |
 | GET    | `/products/{id}/costs/history`       | Historial de costos        |
 | GET    | `/products/{id}/costs/last`          | Último costo               |
@@ -530,4 +475,4 @@ Registro de compra completo con detalles adicionales.
 
 ---
 
-_Última actualización: 2026-04-22 — Reescrita post-Party Model + Multi-Branch. Eliminados ejemplos de código JS. `supplier_id` corregido a `string`._
+_Última actualización: 2026-05-06 — FASE 3 verificada. Eliminado endpoint inexistente `/products/{id}/pricing-info/{unit}`. 10 endpoints documentados._

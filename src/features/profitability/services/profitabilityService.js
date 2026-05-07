@@ -1,6 +1,6 @@
-import { profitabilityMocks } from '@/data/profitabilityMocks'
-import { DEMO_CONFIG } from '@/config/demoAuth'
 import { apiClient } from '@/services/api'
+import { DEMO_CONFIG } from '@/config/demoAuth'
+import { profitabilityMocks } from '@/data/profitabilityMocks'
 
 const isDemo = DEMO_CONFIG.enabled
 
@@ -25,10 +25,10 @@ const profitabilityService = {
     )
   },
 
-  getOverview: async (period = 'month') => {
+  getOverview: async (params = {}) => {
     return get(
       '/profitability/overview',
-      { period },
+      params,
       profitabilityMocks.overview,
     )
   },
@@ -41,10 +41,10 @@ const profitabilityService = {
     return get('/profitability/customers', params, profitabilityMocks.customers)
   },
 
-  getCategories: async (period = 'month') => {
+  getCategories: async (params = {}) => {
     return get(
       '/profitability/categories',
-      { period },
+      params,
       profitabilityMocks.categories,
     )
   },
@@ -53,8 +53,8 @@ const profitabilityService = {
     return get('/profitability/trends', params, profitabilityMocks.trends)
   },
 
-  getSellers: async (period = 'month') => {
-    return get('/profitability/sellers', { period }, profitabilityMocks.sellers)
+  getSellers: async (params = {}) => {
+    return get('/profitability/sellers', params, profitabilityMocks.sellers)
   },
 }
 

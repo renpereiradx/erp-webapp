@@ -99,7 +99,7 @@ const BudgetDetail: React.FC = () => {
           </Button>
           <div>
             <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-black tracking-tight text-text-main">Presupuesto #{budget.budget_number}</h1>
+                <h1 className="text-2xl font-black tracking-tight text-text-main">Presupuesto #{budget.id.substring(0, 8).toUpperCase()}</h1>
                 <Badge className={
                     budget.status === 'CONVERTED' ? 'bg-blue-100 text-blue-700' :
                     budget.status === 'APPROVED' ? 'bg-green-100 text-green-700' :

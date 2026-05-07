@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { payablesService } from '@/services/bi/payablesService';
+import { financialReportsService } from '@/services/bi/financialReportsService';
 
 /**
  * Custom hook to handle Cash Flow logic with real API integration.
@@ -24,7 +24,7 @@ export const useCashFlow = () => {
     setLoading(true);
     try {
       const days = parseInt(period.replace('D', ''));
-      const response = await payablesService.getCashFlowProjection(days);
+      const response = await financialReportsService.getCashFlow({ days });
       
       if (response.success) {
         const cf = response.data;

@@ -27,28 +27,6 @@ export const payablesService = {
   },
 
   /**
-   * Proyección de flujo de caja (Cash Flow)
-   */
-  async getCashFlow(params: any = {}): Promise<{ success: boolean, data: any }> {
-    try {
-      // Si params es un número, tratarlo como días
-      const queryParams = typeof params === 'number' ? { days: params } : params;
-      const response = await apiClient.get('/payables/cash-flow', { params: queryParams });
-      return { success: true, data: response.data || response };
-    } catch (error: any) {
-      console.error('Error fetching cash flow projection:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Alias para getCashFlow (Compatibilidad)
-   */
-  async getCashFlowProjection(days: number): Promise<any> {
-    return this.getCashFlow(days);
-  },
-
-  /**
    * Lista de pagos urgentes
    */
   async getUrgent(params: BIParams = {}): Promise<{ data: any[] }> {

@@ -8,12 +8,34 @@
 
 - Header: `Authorization: Bearer <jwt_token>`
 
+## Headers requeridos (cuando aplica)
+
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
+
 ## Contexto de Sucursal
 
 - Query param: `?branch_id=<id>`
 - O header: `X-Branch-ID: <id>`
 - Fallback: `active_branch` del token JWT
 - Restricción: sucursal debe estar en `allowed_branches`
+
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
+
+## Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+## Respuesta estándar
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
+## Paginación estándar
+
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
 
@@ -44,7 +66,7 @@
 | role_id          | string | ID del rol del usuario               |
 | role_name        | string | Nombre del rol                       |
 | allowed_branches | int[]  | Sucursales permitidas                |
-| active_branch    | int    | Sucursal default del usuario         |
+| active_branch    | int \| null | Sucursal default del usuario         |
 
 #### Response 429 (Rate Limit)
 
@@ -191,7 +213,7 @@
 | role_name        | string   | Nombre del rol                       |
 | permissions      | array    | Lista de permisos (`recurso:acción`) |
 | allowed_branches | int[]    | Sucursales permitidas                |
-| active_branch    | int      | Sucursal default                     |
+| active_branch    | int \| null | Sucursal default                     |
 | created_at       | datetime | Fecha de creación                    |
 | updated_at       | datetime | Fecha de actualización               |
 
@@ -375,6 +397,7 @@ El sistema usa permisos en formato `recurso:acción`:
 |-------|------|-------------|
 | id | int | ID del log |
 | user_id | string | Usuario que ejecutó la acción |
+| branch_id | int | ID de sucursal donde ocurrió el evento (nullable) |
 | action | string | Acción realizada |
 | category | string | Categoría |
 | entity_type | string | Tipo de entidad afectada |
@@ -422,6 +445,7 @@ El sistema usa permisos en formato `recurso:acción`:
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
 | id | int | ID del cambio |
+| branch_id | int | ID de sucursal donde ocurrió el cambio (nullable) |
 | action | string | Acción realizada |
 | user_id | string | Usuario que realizó el cambio |
 | user_name | string | Nombre del usuario |
@@ -483,7 +507,7 @@ El payload del JWT contiene:
 | `session_id`       | int64  | ID de sesión            |
 | `token_type`       | string | `access` o `refresh`    |
 | `allowed_branches` | int[]  | Sucursales permitidas   |
-| `active_branch`    | int    | Sucursal default        |
+| `active_branch`    | int \| null | Sucursal default        |
 | `exp`              | int64  | Timestamp de expiración |
 | `iat`              | int64  | Timestamp de emisión    |
 
@@ -500,6 +524,19 @@ El payload del JWT contiene:
 | 403         | `forbidden branch_id`   | Sucursal fuera de `allowed_branches`      |
 | 400         | `invalid branch_id`     | `branch_id` no es entero positivo         |
 | 429         | `RATE_LIMIT_EXCEEDED`   | Límite de requests excedido               |
+
+> **Nota:** Además de los códigos HTTP anteriores, algunos endpoints devuelven códigos de error internos en `error.code`.
+
+## Errores Comunes (HTTP)
+
+| Código | Condición                                     |
+| ------ | --------------------------------------------- |
+| 400    | Parámetros inválidos                          |
+| 401    | Token ausente o inválido                      |
+| 403    | Sin permisos o `branch_id` fuera de accesos   |
+| 404    | Recurso no encontrado                         |
+| 409    | Conflicto de estado o duplicado               |
+| 500    | Error interno                                 |
 
 ---
 
@@ -520,4 +557,4 @@ El payload del JWT contiene:
 
 ---
 
-_Última actualización: 2026-04-22 — Reescrita post-Party Model + Multi-Branch. Eliminados ejemplos de código JS/TS._
+_Última actualización: 2026-05-06 — FASE 6 verificada. Agregado campo `branch_id` a Log Entry y Change Entry de audit logs (migración 20260429193353). Rate limits, RBAC, y auditoría verificados._

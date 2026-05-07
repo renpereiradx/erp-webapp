@@ -42,19 +42,22 @@ class BusinessManagementAPI {
     const roleName = localStorage.getItem('roleName')
     const activeBranch = localStorage.getItem('activeBranch')
     
-    if (roleId) headers['X-Role-Id'] = roleId
+    if (roleId) headers['X-Role-ID'] = roleId
     if (roleName) headers['X-Role-Name'] = roleName
     
-    // Solo inyectar X-Branch-Id si:
+    // Solo inyectar X-Branch-ID si:
     // 1. Hay una sucursal activa
     // 2. NO se está enviando un branch_id por query params
-    // 3. No se ha solicitado explícitamente saltar el contexto de sucursal (útil para visión global de admins)
-    // 4. NO es un endpoint de gestión de sucursales (/branches/*) o clientes (/client/*)
+    // 3. No se ha solicitado explícitamente saltar el contexto de sucursal
+    // 4. NO es un endpoint de administración global (sucursales, clientes, usuarios, auth)
     const isBranchManagement = endpoint.includes('/branches/') || endpoint.startsWith('/branches');
     const isClientApi = endpoint.includes('/client/') || endpoint.startsWith('/client');
+    const isAuthEndpoint = endpoint.includes('/auth/') || endpoint.startsWith('/auth') || endpoint === '/login';
+    const isUserAdmin = endpoint.includes('/users/') || endpoint.startsWith('/api/v1/users');
     
-    if (activeBranch && !options.params?.branch_id && !options.skipBranchContext && !isBranchManagement && !isClientApi) {
-      headers['X-Branch-Id'] = activeBranch
+    if (activeBranch && !options.params?.branch_id && !options.skipBranchContext && 
+        !isBranchManagement && !isClientApi && !isAuthEndpoint && !isUserAdmin) {
+      headers['X-Branch-ID'] = activeBranch
     }
 
     return headers
@@ -325,7 +328,7 @@ class BusinessManagementAPI {
   }
 
   async processSalePaymentCashRegister(data: any, options: RequestOptions = {}): Promise<any> {
-    return this.post('/payment/process-partial', data, options)
+    return this.post('/cash-registers/payments/sale', data, options)
   }
 
   async getSalePaymentStatus(id: string | number, options: RequestOptions = {}): Promise<any> {

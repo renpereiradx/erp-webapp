@@ -8,12 +8,34 @@
 
 - Header: `Authorization: Bearer <jwt_token>`
 
+## Headers requeridos (cuando aplica)
+
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
+
 ## Contexto de Sucursal
 
 - Query param: `?branch_id=<id>`
 - O header: `X-Branch-ID: <id>`
 - Fallback: `active_branch` del token JWT
 - Restricción: sucursal debe estar en `allowed_branches`
+
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
+
+## Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+## Respuesta estándar
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
+## Paginación estándar
+
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
 
@@ -143,6 +165,33 @@
 | unit_cost | float | Costo unitario (nullable) |
 | notes | string | Notas (nullable) |
 
+**BranchTransfer (modelo completo):**
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | int | ID de la transferencia |
+| transfer_code | string | Código generado |
+| source_branch_id | int | Sucursal origen |
+| destination_branch_id | int | Sucursal destino |
+| status | string | Estado actual |
+| transfer_type | string | Tipo: `STANDARD`, `URGENT`, `RETURN`, `ADJUSTMENT` |
+| requested_date | datetime | Fecha de solicitud |
+| requested_by | string | Usuario solicitante |
+| approved_date | datetime | Fecha de aprobación (nullable) |
+| approved_by | string | Usuario que aprobó (nullable) |
+| rejected_date | datetime | Fecha de rechazo (nullable) |
+| rejected_by | string | Usuario que rechazó (nullable) |
+| shipped_date | datetime | Fecha de envío (nullable) |
+| shipped_by | string | Usuario que envió (nullable) |
+| received_date | datetime | Fecha de recepción (nullable) |
+| received_by | string | Usuario que recibió (nullable) |
+| cancelled_date | datetime | Fecha de cancelación (nullable) |
+| cancelled_by | string | Usuario que canceló (nullable) |
+| notes | string | Notas generales (nullable) |
+| rejection_reason | string | Razón de rechazo (nullable) |
+| shipping_tracking_number | string | Número de seguimiento de envío (nullable) |
+| created_at | datetime | Fecha de creación |
+| updated_at | datetime | Fecha de última actualización |
+
 #### Errores
 
 | Código | Condición                   |
@@ -218,11 +267,19 @@
 
 **Permisos por transición:**
 
-- `APPROVED`: Requiere rol ADMIN o SUPPLIES
-- `SHIPPED`: Requiere rol ADMIN o SUPPLIES
-- `RECEIVED`: Requiere rol ADMIN o BUYER en sucursal destino
-- `REJECTED`: Requiere rol ADMIN
-- `CANCELLED`: Requiere rol ADMIN
+| Transición | Roles permitidos | Restricción de sucursal |
+|---|---|---|
+| `PENDING → APPROVED` | ADMIN, SUPPLIES, BUYER | Sucursal origen con acceso escritura (FULL/LIMITED) |
+| `PENDING → REJECTED` | ADMIN, SUPPLIES, BUYER | Sucursal origen con acceso escritura |
+| `PENDING → CANCELLED` | ADMIN, SUPPLIES, BUYER | Sucursal origen con acceso escritura |
+| `APPROVED → SHIPPED` | ADMIN, SUPPLIES | Sucursal origen con acceso escritura |
+| `SHIPPED → IN_TRANSIT` | ADMIN, SUPPLIES | Origen **o** destino con acceso escritura |
+| `IN_TRANSIT → RECEIVED` | ADMIN, SUPPLIES, BUYER | Sucursal destino con acceso escritura |
+| `REJECTED → PENDING` | ADMIN, SUPPLIES | Sucursal origen |
+
+> **Creación de transferencias:** ADMIN, SUPPLIES y BUYER pueden crear transferencias.  
+> El usuario debe tener acceso a **ambas** sucursales (origen y destino).  
+> `REJECTED` requiere `rejection_reason`. `SHIPPED` requiere `shipping_tracking_number`.
 
 ---
 
@@ -262,4 +319,4 @@
 
 ---
 
-_Última actualización: 2026-04-22 — Creada desde cero post-Multi-Branch + Party Model._
+_Última actualización: 2026-05-06 — FASE 5 verificada. Permisos de transición corregidos (BUYER puede APPROVED/REJECTED/CANCELLED en sucursal origen; ADMIN/SUPPLIES para SHIPPED/IN_TRANSIT; RECEIVED requiere BUYER/ADMIN/SUPPLIES en destino). Restricciones de sucursal por transición documentadas._

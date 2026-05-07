@@ -3,7 +3,7 @@
 > **Disclaimer:** Esta guía contiene ejemplos JSON y TypeScript/JavaScript para ilustración de payloads y respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
 **Versión:** 4.3  
-**Fecha:** 31 de Marzo de 2026  
+**Fecha:** 2026-05-06  
 **Endpoint Base:** `http://localhost:5050`
 
 ---
@@ -30,7 +30,11 @@ Esta API gestiona el sistema de inventarios y ajustes manuales. Permite realizar
 http://localhost:5050
 ```
 
-### Headers Requeridos
+### Autenticación
+
+- Header: `Authorization: Bearer <jwt_token>`
+
+### Headers requeridos (cuando aplica)
 
 ```http
 Content-Type: application/json
@@ -44,10 +48,20 @@ Authorization: Bearer <jwt_token>
 - Fallback: `active_branch` del token JWT
 - Restricción: sucursal debe estar en `allowed_branches`
 
-```http
-Content-Type: application/json
-Authorization: Bearer <jwt_token>
-```
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
+
+## Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+## Respuesta estándar
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
+## Paginación estándar
+
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
 
@@ -610,6 +624,50 @@ Obtiene el historial completo de movimientos de stock para un producto, enriquec
 
 ---
 
+#### 8. Registrar Transacción de Stock
+
+**`POST /stock-transactions/`**
+
+Registra un nuevo movimiento de stock (entrada, salida, ajuste, transferencia).
+
+#### 9. Obtener Transacción de Stock por ID
+
+**`GET /stock-transactions/{id}`**
+
+Obtiene una transacción de stock específica.
+
+#### 10. Validar Consistencia de Stock
+
+**`GET /stock-transactions/validate-consistency`**
+
+Verifica que los saldos de stock sean consistentes con el historial de transacciones.
+
+#### 11. Reporte de Discrepancias
+
+**`GET /stock-transactions/discrepancy-report`**
+
+Reporte de discrepancias entre stock físico y stock teórico.
+
+#### 12. Resumen de Movimientos
+
+**`GET /stock-transactions/movement-summary`**
+
+Resumen agregado de movimientos de stock (entradas, salidas, neto) por período.
+
+#### 13. Transacciones por Rango de Fechas
+
+**`GET /stock-transactions/by-date`**
+
+Lista transacciones de stock filtradas por rango de fechas (`start_date`, `end_date`).
+
+#### 14. Tipos de Transacción
+
+**`GET /stock-transactions/types`**
+
+Lista los tipos de transacción de stock soportados.
+
+---
+
 ## 🔍 Validaciones y Reglas de Negocio
 
 ### Pre-Procesamiento (Validar en Frontend)
@@ -747,3 +805,5 @@ const metadata = createAdjustmentMetadata('DAMAGED_GOODS', 'user_123', {
 | `Internal Server Error` | 500         | Error inesperado en el backend.                             | Reportar el error. El frontend no puede solucionarlo.                  |
 
 ---
+
+_Última actualización: 2026-05-06 — FASE 3 verificada. Agregados 7 endpoints de stock-transactions (POST /, GET /{id}, validate-consistency, discrepancy-report, movement-summary, by-date, types). 14 endpoints documentados._

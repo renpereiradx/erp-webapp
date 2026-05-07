@@ -8,9 +8,29 @@
 
 - Header: `Authorization: Bearer <jwt_token>`
 
+## Headers requeridos (cuando aplica)
+
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
+
 ## Contexto de Sucursal
 
 Los endpoints de autenticación (`/login`, `/auth/*`) no requieren `branch_id`. Sin embargo, el token JWT devuelto incluye claims de sucursal (`allowed_branches`, `active_branch`) que el frontend debe usar para endpoints transaccionales y BI. Ver `MULTI_BRANCH_CONTEXT_GUIDE.md`.
+
+## Formato de fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params de fecha: `YYYY-MM-DD`
+
+## Respuesta estándar
+
+`{ success: bool, data?, message?, error?, pagination? }`
+
+## Paginación estándar
+
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
 
@@ -535,4 +555,4 @@ Base path: `/admin/sessions`
 
 ---
 
-_Última actualización: 2026-04-22_
+_Última actualización: 2026-05-06 — Consistencia cross-documento verificada._

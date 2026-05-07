@@ -12,8 +12,11 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+  refresh_token?: string;
   role_id: string;
   role_name?: string;
+  allowed_branches?: number[];
+  active_branch?: number | null;
 }
 
 export interface User {
@@ -393,7 +396,8 @@ export type CreateInventoryRequest = InventoryItemInput[];
 export interface CashRegister {
   id: number;
   name: string;
-  status: "OPEN" | "CLOSED";
+  status: "OPEN" | "CLOSED" | "SUSPENDED" | string;
+  branch_id?: number;
   initial_balance: number;
   current_balance: number;
   opened_at: string;
@@ -401,11 +405,38 @@ export interface CashRegister {
   closed_at?: string;
   closed_by?: string | number;
   final_balance?: number;
+  expected_balance?: number;
   difference?: number; // v1.1 field
   total_income?: number; // v1.1 field
   total_expenses?: number; // v1.1 field
+  max_balance_limit?: number;
   location?: string;
   description?: string;
+  notes?: string;
+}
+
+export interface CashMovement {
+  id: number;
+  cash_register_id: number;
+  branch_id?: number;
+  movement_type: "INCOME" | "EXPENSE" | "ADJUSTMENT" | "REFUND" | "OPENING" | "CLOSING" | "TRANSFER_IN" | "TRANSFER_OUT" | string;
+  amount: number;
+  concept?: string;
+  category?: "SALE" | "PURCHASE" | "ADJUSTMENT" | "REFUND" | "OPENING" | "CLOSING" | "WITHDRAWAL" | "DEPOSIT" | "TRANSFER" | string;
+  reference_type?: string;
+  reference_id?: string;
+  related_payment_id?: number;
+  related_sale_id?: string;
+  related_purchase_id?: number;
+  created_by: string;
+  created_at: string;
+  voided_by?: string;
+  voided_at?: string;
+  void_reason?: string;
+}
+
+export interface CashMovementReport extends CashMovement {
+  // Can contain additional fields provided specifically in the report endpoint
 }
 
 export interface OpenCashRegisterRequest {
@@ -417,31 +448,6 @@ export interface OpenCashRegisterRequest {
 export interface CloseCashRegisterRequest {
   final_notes?: string;
   counted_cash?: number;
-}
-
-export interface CashRegisterMovement {
-  id: number;
-  cash_register_id: number;
-  movement_type: "INCOME" | "EXPENSE";
-  amount: number;
-  category?: string;
-  description?: string;
-  running_balance?: number;
-  is_voided?: boolean;
-  reference_type?: string;
-  reference_id?: string;
-  created_at: string;
-  created_by_name?: string;
-}
-
-export interface RegisterMovementRequest {
-  cash_register_id: number;
-  movement_type: "INCOME" | "EXPENSE";
-  amount: number;
-  category?: string;
-  description?: string;
-  reference_type?: string;
-  reference_id?: string;
 }
 
 export interface CashRegisterReport {
@@ -1331,12 +1337,25 @@ export interface BranchTransfer {
   transfer_code: string;
   source_branch_id: number;
   destination_branch_id: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SHIPPED' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED';
-  transfer_type: 'STANDARD' | 'URGENT' | 'RETURN' | 'ADJUSTMENT';
-  notes?: string;
-  requested_by: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SHIPPED' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED' | string;
+  transfer_type: 'STANDARD' | 'URGENT' | 'RETURN' | 'ADJUSTMENT' | string;
   requested_date: string;
-  updated_at?: string;
+  requested_by: string;
+  approved_date?: string;
+  approved_by?: string;
+  rejected_date?: string;
+  rejected_by?: string;
+  shipped_date?: string;
+  shipped_by?: string;
+  received_date?: string;
+  received_by?: string;
+  cancelled_date?: string;
+  cancelled_by?: string;
+  notes?: string;
+  rejection_reason?: string;
+  shipping_tracking_number?: string;
+  created_at: string;
+  updated_at: string;
   source_branch_name?: string;      // JOIN
   destination_branch_name?: string; // JOIN
 }
@@ -1623,21 +1642,24 @@ export interface AuditDashboardSummary {
 
 export interface Budget {
   id: string;
-  budget_number: string;
   client_id: string;
-  branch_id: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'CONVERTED';
+  branch_id?: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'CONVERTED' | 'CANCELLED' | string;
   total_amount: number;
-  tax_amount: number;
-  discount_amount: number;
-  currency_id: number;
-  exchange_rate: number;
-  valid_until: string;
+  tax_amount?: number;
+  discount_amount?: number;
+  currency_id?: number;
+  exchange_rate?: number;
+  valid_until?: string;
   notes?: string;
-  created_by: string;
+  created_by?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   client_name?: string; // JOIN
+  budget_date?: string;
+  is_expired?: boolean;
+  days_until_expiry?: number;
+  items_count?: number;
 }
 
 export interface BudgetItem {
