@@ -10,23 +10,23 @@ import { createAdjustmentRequest, DEFAULT_REASONS, DEFAULT_METADATA_TEMPLATES } 
 const API_ENDPOINTS = {
   // Inventarios masivos
   inventory: '/inventory/',
-  inventoryInvalidate: '/api/inventory/invalidate',
-  inventoryDiscrepancies: '/api/inventory/discrepancies',
+  inventoryInvalidate: '/inventory/invalidate',
+  inventoryDiscrepancies: '/inventory/discrepancies',
   
   // Transacciones de stock
-  stockTransactions: '/api/stock-transaction',
-  stockTransactionTypes: '/api/stock-transaction/types',
-  stockTransactionsByProduct: '/api/stock-transaction/history',
-  validateConsistency: '/api/stock-transaction/validate-consistency',
-  stockTransactionsByDate: '/api/stock-transaction/by-date',
-  stockTransactionById: '/api/stock-transaction',
+  stockTransactions: '/stock-transactions/',
+  stockTransactionTypes: '/stock-transactions/types',
+  stockTransactionsByProduct: '/stock-transactions/product',
+  validateConsistency: '/stock-transactions/validate-consistency',
+  stockTransactionsByDate: '/stock-transactions/by-date',
+  stockTransactionById: '/stock-transactions',
   
   // Ajustes manuales
   manualAdjustment: '/manual_adjustment/',
   manualAdjustmentHistory: '/manual_adjustment/product',
   
   // Sistema
-  systemIntegrityCheck: '/api/system/integrity-check'
+  systemIntegrityCheck: '/system/integrity-check'
 };
 
 // Helper para mock data cuando los endpoints no estén disponibles
@@ -161,8 +161,8 @@ export const inventoryService = {
 
     try {
       const result = await _fetchWithRetry(async () => {
-        // La API espera los parámetros en la ruta: /inventory/{page}/{pageSize}
-        return await apiClient.get(`${API_ENDPOINTS.inventory}${page}/${pageSize}`);
+        // La API espera los parámetros en la ruta principal: /{page}/{pageSize}
+        return await apiClient.get(`/${page}/${pageSize}`);
       });
 
       telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {

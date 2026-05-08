@@ -6,12 +6,6 @@
 import { apiService as apiClient } from '@/services/api';
 import { telemetry } from '@/utils/telemetry';
 
-// Demo data configuration (seguiremos patrón cuando se implemente)
-const DEMO_CONFIG_PRICE_ADJUSTMENT = {
-  enabled: false,
-  useRealAPI: true, // Usar API real siempre
-};
-
 // Helper function to transform API data to frontend format
 const transformAdjustmentData = (adjustments) => {
   return (adjustments || []).map(adjustment => ({
@@ -27,96 +21,6 @@ const transformAdjustmentData = (adjustments) => {
     unit: adjustment.metadata?.unit || adjustment.unit || 'UNIT',
     product_id: adjustment.product_id || adjustment.product_name || `AJUSTE_${adjustment.adjustment_id || adjustment.id || 'SIN_ID'}`
   }));
-};
-
-// Demo data for development/fallback
-const getDemoPriceAdjustments = async () => {
-  // Simular delay de red
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  return [
-    {
-      id: 1,
-      product_id: "PROD_BANANA_001",
-      user_id: "user123",
-      old_price: 15.00,
-      new_price: 16.50,
-      price_change: 1.50,
-      price_change_percent: 10.00,
-      unit: "UNIT",
-      reason: "Market price adjustment due to supplier cost increase",
-      effective_date: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      unit_price_id: 26,
-      metadata: {
-        adjustment_category: "market_driven",
-        approval_id: "APPR-123",
-        source: "demo_data"
-      }
-    },
-    {
-      id: 2,
-      product_id: "PROD_RICE_002",
-      user_id: "user456",
-      old_price: 12.00,
-      new_price: 11.00,
-      price_change: -1.00,
-      price_change_percent: -8.33,
-      unit: "kg",
-      reason: "Promotional pricing for bulk sales",
-      effective_date: new Date(Date.now() - 86400000).toISOString(),
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-      unit_price_id: 27,
-      metadata: {
-        adjustment_category: "promotion",
-        approval_id: "APPR-124",
-        source: "demo_data"
-      }
-    }
-  ];
-};
-
-const getDemoProductHistory = async (productId) => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  return {
-    product_id: productId,
-    history: [
-      {
-        adjustment_id: 12,
-        adjustment_type: "price",
-        old_value: 15.00,
-        new_value: 16.50,
-        value_change: 1.50,
-        user_id: "user123",
-        adjustment_date: new Date().toISOString(),
-        reason: "Market price adjustment",
-        metadata: {
-          adjustment_category: "market_driven",
-          source: "demo_data"
-        },
-        related_transaction_id: null
-      },
-      {
-        adjustment_id: 18,
-        adjustment_type: "stock",
-        old_value: 150.0,
-        new_value: 250.0,
-        value_change: 100.0,
-        user_id: "user456",
-        adjustment_date: new Date(Date.now() - 172800000).toISOString(),
-        reason: "Inventory recount",
-        metadata: {
-          location: "Warehouse A",
-          source: "demo_data"
-        },
-        related_transaction_id: 47
-      }
-    ],
-    limit: 10,
-    offset: 0,
-    count: 2
-  };
 };
 
 // Helper con retry simple (máx 2 reintentos)

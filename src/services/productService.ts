@@ -164,6 +164,65 @@ export const productService = {
     }
   },
 
+  // =================== PRODUCTOS (FINANCIERO v3.2.0) ===================
+
+  async getFinancial(id: string): Promise<any> {
+    try {
+      return await apiClient.getProductFinancial(id);
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener información financiera del producto');
+    }
+  },
+
+  async getFinancialByBarcode(barcode: string): Promise<any> {
+    try {
+      return await apiClient.getProductFinancialByBarcode(barcode);
+    } catch (error) {
+      throw toApiError(error, 'Error al buscar información financiera por código de barras');
+    }
+  },
+
+  async searchFinancial(name: string, options: any = {}): Promise<any> {
+    try {
+      return await apiClient.searchProductsFinancialByName(name, options);
+    } catch (error) {
+      if (error?.name === 'AbortError') throw error;
+      throw toApiError(error, 'Error en búsqueda de información financiera');
+    }
+  },
+
+  async getMarginAlert(id: string): Promise<any> {
+    try {
+      return await apiClient.getProductMarginAlert(id);
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener alertas de margen del producto');
+    }
+  },
+
+  async getMarginReport(id: string): Promise<any> {
+    try {
+      return await apiClient.getProductMarginReport(id);
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener reporte de margen del producto');
+    }
+  },
+
+  async getSupplierComparison(id: string): Promise<any> {
+    try {
+      return await apiClient.getProductSupplierComparison(id);
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener comparativa de proveedores del producto');
+    }
+  },
+
+  async getWeightedAverage(id: string): Promise<any> {
+    try {
+      return await apiClient.getProductWeightedAverage(id);
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener costo promedio ponderado del producto');
+    }
+  },
+
   // =================== PRODUCTOS (MUTACIÓN) ===================
 
   async create(data: Partial<Product>): Promise<ProductEnriched> {

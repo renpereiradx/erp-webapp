@@ -356,6 +356,7 @@ export interface Inventory {
   user_id: string;               // ID del usuario que realizó el inventario
   check_date: string;            // Fecha del conteo (ISO 8601)
   state: boolean;                // Estado del inventario (activo/inválido)
+  metadata: object;              // Metadatos de la operación
 }
 
 export interface InventoryItem {
@@ -1103,6 +1104,89 @@ export interface ChangeStatistics {
 }
 
 // ============================================================================
+// PRICE TRANSACTIONS TYPES (v1.0)
+// ============================================================================
+
+export interface PriceTransactionRequest {
+  product_id: string;
+  transaction_type: string;
+  new_price: number;
+  unit?: string;
+  price_type: string;
+  effective_date?: string;
+  reference_type?: string;
+  reference_id?: string;
+  reason?: string;
+  currency_id?: string;
+  exchange_rate?: number;
+  cost_factor?: number;
+  margin_percent?: number;
+  metadata?: Record<string, any>;
+}
+
+export interface PriceTransactionResponse {
+  transaction_id: number;
+  product_id: string;
+  old_price: number;
+  new_price: number;
+  price_change: number;
+  message: string;
+  metadata?: Record<string, any>;
+}
+
+export interface PriceTransactionHistory {
+  transaction_id: number;
+  product_id: string;
+  product_name: string;
+  transaction_type: string;
+  old_price: number;
+  new_price: number;
+  price_change: number;
+  price_change_percent?: number;
+  effective_date: string;
+  reference_type?: string;
+  reference_id?: string;
+  user_id: string;
+  user_name: string;
+  transaction_date: string;
+  reason?: string;
+  metadata?: Record<string, any>;
+  currency_id: string;
+  exchange_rate: number;
+  cost_factor?: number;
+  margin_percent?: number;
+}
+
+export interface PriceConsistencyReport {
+  product_id: string;
+  product_name: string;
+  current_price: number;
+  last_transaction_price: number;
+  price_difference: number;
+  last_transaction_id?: number;
+  last_transaction_date?: string;
+  consistency_status: 'CONSISTENT' | 'INCONSISTENT' | 'NO_PRICE_DATA' | 'MISSING_CURRENT_PRICE' | 'NO_PRICE_TRANSACTIONS';
+  recommendations: string[];
+}
+
+export interface PriceVarianceReport {
+  product_id: string;
+  product_name: string;
+  transaction_count: number;
+  price_at_start?: number;
+  price_at_end?: number;
+  total_price_change?: number;
+  total_change_percent?: number;
+  avg_price?: number;
+  min_price?: number;
+  max_price?: number;
+  price_volatility?: number;
+  last_transaction_date?: string;
+  last_transaction_type?: string;
+  last_change_reason?: string;
+}
+
+// ============================================================================
 // MANUAL ADJUSTMENT TYPES
 // ============================================================================
 
@@ -1113,7 +1197,7 @@ export interface ManualAdjustment {
   new_quantity: number;          // Cantidad nueva (numeric(10,2))
   adjustment_date: string;       // Fecha del ajuste (ISO 8601)
   reason: string;                // Motivo del ajuste
-  metadata?: object | null;      // Metadatos adicionales (JSON)
+  metadata: object | null;      // Metadatos adicionales (JSON)
   user_id: string;               // ID del usuario que realizó el ajuste
 }
 
@@ -1460,17 +1544,23 @@ export interface TaxRate {
   jurisdiction_type: string;
   operation_type: string;
   description?: string;
+  effective_start: string;
+  effective_end?: string | null;
   is_default: boolean;
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by?: string | null;
+  updated_by?: string | null;
 }
 
 export interface Category {
   id: number;
   name: string;
-  description?: string;
-  default_tax_rate_id?: number;
-  default_tax_rate?: TaxRate;
-  parent_id?: number;
+  description?: string | null;
+  default_tax_rate_id?: number | null;
+  default_tax_rate?: TaxRate | null;
+  parent_id?: number | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -1496,33 +1586,32 @@ export interface UnitCostSummary {
 export interface Product {
   id: string;
   name: string;
-  barcode?: string;
+  barcode?: string | null;
   state: boolean;
-  category_id?: number;
-  category?: Category;
-  product_type: 'PHYSICAL' | 'SERVICE' | 'PRODUCTION';
-  origin?: 'NACIONAL' | 'IMPORTADO';
-  brand?: string;
-  base_unit?: string;
-  override_tax_rate_id?: number;
-  target_margin_percent?: number;
-  pricing_strategy?: 'MANUAL' | 'AUTOMATIC';
-  applicable_tax_rate?: TaxRate;
+  category_id: number;
+  category?: Category | null;
+  product_type: 'PHYSICAL' | 'SERVICE' | 'PRODUCTION' | string;
+  origin?: 'NACIONAL' | 'IMPORTADO' | string | null;
+  brand?: string | null;
+  base_unit?: string | null;
+  override_tax_rate_id?: number | null;
+  target_margin_percent?: number | null;
+  pricing_strategy?: 'MANUAL' | 'AUTOMATIC' | string | null;
+  applicable_tax_rate?: TaxRate | null;
   created_at: string;
   updated_at: string;
-  description?: string;
-  price?: number; // Legacy compatibility
+  description?: string | null;
 }
 
 export interface ProductEnriched extends Product {
-  purchase_price?: number;
-  stock_quantity?: number;
-  stock_unit?: string;
-  stock_status: 'in_stock' | 'low_stock' | 'medium_stock' | 'out_of_stock';
+  purchase_price?: number | null;
+  stock_quantity?: number | null;
+  stock_unit?: string | null;
+  stock_status: 'in_stock' | 'low_stock' | 'medium_stock' | 'out_of_stock' | string;
   has_valid_stock: boolean;
   has_valid_price: boolean;
   has_unit_pricing: boolean;
-  unit_prices?: UnitPrice[];
+  unit_prices?: UnitPrice[] | null;
 }
 
 export interface ProductOperationInfoResponse {
@@ -1878,6 +1967,13 @@ export const API_ENDPOINTS = {
   // Products operative (v3.2)
   PRODUCTS_SALE: (id: string) => `/products/${id}/sale`,
   PRODUCTS_PURCHASE: (id: string) => `/products/${id}/purchase`,
+  PRODUCTS_FINANCIAL: (id: string) => `/products/${id}/financial`,
+  PRODUCTS_FINANCIAL_BARCODE: (barcode: string) => `/products/financial/barcode/${barcode}`,
+  PRODUCTS_FINANCIAL_SEARCH: (name: string) => `/products/financial/search/${name}`,
+  PRODUCTS_MARGIN_ALERT: (id: string) => `/products/${id}/margin-alert`,
+  PRODUCTS_MARGIN_REPORT: (id: string) => `/products/${id}/margin-report`,
+  PRODUCTS_SUPPLIER_COMPARISON: (id: string) => `/products/${id}/supplier-comparison`,
+  PRODUCTS_WEIGHTED_AVERAGE: (id: string) => `/products/${id}/weighted-average`,
 
   // Sale and Purchase Operations (v2.7+)
   SALE_CREATE: '/sale/',
@@ -2007,8 +2103,15 @@ export const API_ENDPOINTS = {
   AUDIT_DASHBOARD: '/api/v1/audit/dashboard',
 
   // Pricing & Costs (v3.2)
-  PRICING_UNITS: (productId: string) => `/products/${productId}/units`,
-  PRICING_HISTORY: (productId: string) => `/products/${productId}/pricing-history`,
+  PRICING_INFO: (productId: string) => `/products/${productId}/pricing-info`,
+  COSTS_HISTORY: (productId: string) => `/products/${productId}/costs/history`,
+  COSTS_LAST: (productId: string) => `/products/${productId}/costs/last`,
+  COSTS_LAST_RECORD: (productId: string) => `/products/${productId}/costs/last-record`,
+  COSTS_SUMMARY: (productId: string) => `/products/${productId}/costs/summary`,
+  COST_TRENDS: (productId: string) => `/products/${productId}/cost-trends`,
+  COST_METHODS: (productId: string) => `/products/${productId}/cost-methods`,
+  SUPPLIER_COST_ANALYSIS: (supplierId: string) => `/suppliers/${supplierId}/cost-analysis`,
+  GLOBAL_COST_TRENDS: '/cost-trends',
   PROFITABILITY_ANALYSIS: (productId: string) => `/products/${productId}/profitability`,
 } as const;
 

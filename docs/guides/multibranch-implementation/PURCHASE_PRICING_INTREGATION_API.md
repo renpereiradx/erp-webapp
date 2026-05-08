@@ -2,9 +2,9 @@
 
 > **Disclaimer:** Esta guía contiene ejemplos JSON y TypeScript/JavaScript para ilustración de payloads y respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
-**Versión:** 1.1
-**Fecha:** 2026-05-06
-**Estado:** Vigente con la API actual
+**Versión:** 1.2
+**Fecha:** 2026-05-07
+**Estado:** Vigente con la API actual (multi-branch)
 
 ## Base URL
 
@@ -91,7 +91,8 @@ interface ProcessCompletePurchaseOrderDetail {
 Campos a nivel request:
 
 - `supplier_id`, `status`, `order_details`
-- opcionales: `payment_method_id`, `currency_id`, `auto_update_prices`, `default_profit_margin`, `metadata`
+- opcionales: `branch_id`, `payment_method_id`, `currency_id`, `auto_update_prices`, `default_profit_margin`, `metadata`
+- `branch_id`: Si se omite, el backend lo inyecta automáticamente del contexto de sucursal (query param `?branch_id=`, header `X-Branch-ID`, o fallback del JWT)
 
 ---
 
@@ -160,6 +161,7 @@ Consultar `GET /purchase/{id}` o endpoints enriquecidos de compra para ver el de
 {
   "supplier_id": "SUP_001",
   "status": "COMPLETED",
+  "branch_id": 1,
   "order_details": [
     {
       "product_id": "PROD_BANANA_001",
@@ -180,6 +182,7 @@ Consultar `GET /purchase/{id}` o endpoints enriquecidos de compra para ver el de
 {
   "supplier_id": "SUP_001",
   "status": "COMPLETED",
+  "branch_id": 1,
   "order_details": [
     {
       "product_id": "FL8K0xxRzjX0VAND78u842kzKcM",
@@ -202,11 +205,26 @@ Consultar `GET /purchase/{id}` o endpoints enriquecidos de compra para ver el de
 - `success`
 - `purchase_order_id`
 - `total_amount`
+- `branch_id` — sucursal asignada a la compra
 - `items_processed`
 - `cost_entries_created`
 - `prices_updated`
 - `message`
 - `warnings` (cuando aplica, por ejemplo discrepancias fiscales)
+
+### 6.1 Consulta de compras (GET)
+
+Todos los endpoints de consulta (`GET /purchase/{id}`, `/purchase/supplier_id/{id}`, `/purchase/supplier_name/{name}`, `/purchase/date_range/`) ahora devuelven:
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `branch_id` | int \| null | Sucursal de la compra |
+| `payment_method` | string | Código real del método (ej: `CASH`, `TRANSFER`, `CREDIT_CARD`) |
+| `currency` | string | Código real de la moneda (ej: `PYG`, `USD`, `BRL`) |
+| `payment_method_id` | int \| null | ID del método de pago |
+| `currency_id` | int \| null | ID de la moneda |
+
+> **Nota:** Antes los campos `payment_method` y `currency` devolvían strings genéricos como `"Payment Method 1"`. Ahora devuelven los códigos reales de la base de datos.
 
 ---
 
@@ -264,7 +282,7 @@ Consultar `GET /purchase/{id}` o endpoints enriquecidos de compra para ver el de
 
 ---
 
-## 9. Recomendaciones frontend
+## 8. Recomendaciones frontend
 
 1. Redondear montos para PYG en UI antes de enviar.
 2. Usar `explicit_sale_price` solo cuando usuario fija precio final manual.
@@ -274,23 +292,26 @@ Consultar `GET /purchase/{id}` o endpoints enriquecidos de compra para ver el de
 
 ---
 
-## 10. Checklist de implementación
+## 9. Checklist de implementación
 
 - [ ] Soportar selector de modo: margen vs explícito
 - [ ] Enviar `explicit_sale_price` solo en modo explícito
 - [ ] Enviar `profit_pct` en modo margen
+- [ ] Enviar `branch_id` en el body o vía query param `?branch_id=`
 - [ ] Consumir `GET /products/{id}/purchase` para precarga de formulario
 - [ ] Mostrar desglose fiscal de backend al confirmar
+- [ ] Mostrar `branch_id` y sucursal asignada en la UI de confirmación
+- [ ] Usar `payment_method` y `currency` reales (no strings genéricos) en pantallas de detalle
 - [ ] Manejar `warnings` en respuesta de compra
 
 ---
 
-## 11. Referencias
+## 10. Referencias
 
-- `docs/guides/frontend/PURCHASE_ORDERS_API_GUIDE.md`
-- `docs/guides/frontend/PRODUCT_API_GUIDE.md`
-- `docs/guides/frontend/SALES_API_GUIDE.md`
+- `PURCHASE_ORDERS_API.md` — API completa de órdenes de compra
+- `PRODUCT_API.md` — API de productos
+- `MULTI_BRANCH_CONTEXT_GUIDE.md` — Guía de contexto multi-sucursal
 
 ---
 
-_Última actualización: 2026-05-06 — FASE 5 verificada. Agregada seccion 4.0 "Price Includes Tax — Dos Modos" (true=precio incluye IVA y se extrae; false=precio excluye IVA y se agrega). Reglas de calculo verificadas._
+_Última actualización: 2026-05-07 — Fase 5 bugfix multi-branch. Agregado `branch_id` en request body (auto-inyectado), `branch_id` en response, sección 6.1 (payment_method/currency con códigos reales reemplazando strings genéricos), ejemplos actualizados con `branch_id`, checklist actualizado con ítems de sucursal._

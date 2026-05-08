@@ -254,6 +254,34 @@ class BusinessManagementAPI {
     return this.get(`/products/${id}/purchase`, options)
   }
 
+  async getProductFinancial(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/${id}/financial`, options)
+  }
+
+  async getProductFinancialByBarcode(barcode: string, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/financial/barcode/${barcode}`, options)
+  }
+
+  async searchProductsFinancialByName(name: string, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/financial/search/${encodeURIComponent(name)}`, options)
+  }
+
+  async getProductMarginAlert(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/${id}/margin-alert`, options)
+  }
+
+  async getProductMarginReport(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/${id}/margin-report`, options)
+  }
+
+  async getProductSupplierComparison(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/${id}/supplier-comparison`, options)
+  }
+
+  async getProductWeightedAverage(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/products/${id}/weighted-average`, options)
+  }
+
   async createProduct(data: any, options: RequestOptions = {}): Promise<any> {
     return this.post('/products', data, options)
   }

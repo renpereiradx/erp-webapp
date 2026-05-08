@@ -1,9 +1,9 @@
 # Documentacion Multibranch Implementation — Checklist de Validacion Cruzada
 
-> **Ultima verificacion**: 2026-05-06 (completada)
+> **Ultima verificacion**: 2026-05-07 (actualizada post-bugfix multi-branch)
 > **Plan de verificacion**: `conductor/FRONTEND_DOCUMENTATION_VERIFICATION_PLAN.md`
 
-## Documentos (19)
+## Documentos (20)
 
 | # | Archivo | Criticidad | Ultima verificacion | Estado |
 |---|---|---|---|---|
@@ -23,9 +23,10 @@
 | 14 | `PRICE_TRANSACTION_API.md` | P2 | 2026-05-06 | ✅ |
 | 15 | `MANUAL_PRICE_ADJUSTMENT_API.md` | P2 | 2026-05-06 | ✅ |
 | 16 | `INVENTORY_ADJUSTMENTS_PRICE_API.md` | P2 | 2026-05-06 | ✅ |
-| 17 | `PURCHASE_PRICING_INTREGATION_API.md` | P2 | 2026-05-06 | ✅ |
-| 18 | `CLIENT_API.md` | P2 | 2026-05-06 | ✅ |
-| 19 | `SUPPLIER_API.md` | P2 | 2026-05-06 | ✅ |
+| 17 | `PURCHASE_PRICING_INTREGATION_API.md` | P2 | 2026-05-07 | ✅ |
+| 18 | `PURCHASE_ORDERS_API.md` | P2 | 2026-05-07 | ✅ |
+| 19 | `CLIENT_API.md` | P2 | 2026-05-06 | ✅ |
+| 20 | `SUPPLIER_API.md` | P2 | 2026-05-06 | ✅ |
 
 ---
 

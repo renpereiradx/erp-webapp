@@ -74,6 +74,8 @@ export const priceTransactionService = {
           product_id: transactionData.product_id,
           transaction_type: transactionData.transaction_type,
           new_price: transactionData.new_price,
+          unit: transactionData.unit,
+          price_type: transactionData.price_type,
           effective_date: transactionData.effective_date,
           reference_type: transactionData.reference_type,
           reference_id: transactionData.reference_id,
@@ -441,6 +443,10 @@ export const priceTransactionService = {
     
     if (!data.transaction_type || data.transaction_type.trim() === '') {
       errors.push('Tipo de transacción es requerido');
+    }
+    
+    if (!data.price_type || data.price_type.trim() === '') {
+      errors.push('Tipo de precio (price_type) es requerido');
     }
     
     if (!data.new_price || data.new_price <= 0) {
