@@ -147,7 +147,7 @@ Usado en: Dashboard, Cuentas por Cobrar, Cuentas por Pagar, Reportes Financieros
 | **Presupuestos** (`/budget/*`)                                     | Transaccional           | Sí (usa fallback)             |
 | **Caja** (`/cash-register/*`)                                      | Transaccional           | Sí (usa fallback)             |
 | **Reservas** (`/reserves/*`)                                       | Transaccional           | Sí (usa fallback)             |
-| **Productos** (`/product/*`)                                       | Transaccional / Lectura | Sí (usa fallback)             |
+| **Productos** (`/products/*`, `/stock/*`)                       | Transaccional / Lectura | Sí (usa fallback)             |
 | **Ajustes de Inventario** (`/inventory/*`, `/manual-adjustment/*`) | Transaccional           | Sí (usa fallback)             |
 | **Órdenes de Reabastecimiento** (`/purchase-requisition/*`)        | Transaccional           | Sí (usa fallback)             |
 | **Transferencias entre Sucursales** (`/branch-transfers/*`)        | Transaccional           | Sí (usa fallback)             |
@@ -177,4 +177,4 @@ Usado en: Dashboard, Cuentas por Cobrar, Cuentas por Pagar, Reportes Financieros
 
 ---
 
-_Última actualización: 2026-05-06 — Consistencia cross-documento verificada._
+_Última actualización: 2026-05-07 — Productos y stock ahora filtran por sucursal. Endpoints de productos requieren branch context para stock correcto._

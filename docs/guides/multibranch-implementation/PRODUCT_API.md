@@ -2,8 +2,8 @@
 
 > **Disclaimer:** Esta guía contiene ejemplos JSON para ilustración de respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
-**Versión:** 3.2.0
-**Fecha:** 2026-05-06
+**Versión:** 3.3.0
+**Fecha:** 2026-05-07
 **Endpoint Base:** `http://localhost:5050`
 
 ## Autenticación
@@ -26,6 +26,26 @@ Authorization: Bearer <jwt_token>
 
 > **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
 
+## Contexto de Sucursal en Productos
+
+Los productos son **globales** (la tabla `products.products` NO tiene `branch_id`), pero el **stock sí es por sucursal** (la tabla `products.stock` tiene `branch_id` con UNIQUE constraint en `(id_product, branch_id)`).
+
+Esto significa que:
+
+1. **Endpoints de lectura** (`GET /products/*`): Devuelven el mismo producto en todas las sucursales, pero el `stock_quantity` y `stock_branch_id` corresponden a la sucursal del contexto. Sin `branch_id`, el stock puede ser de cualquier sucursal.
+2. **Endpoints de escritura** (`POST /products`, `PUT /products/{id}`): Crean/actualizan el producto globalmente, pero la respuesta incluye el stock filtrado por la sucursal del usuario.
+3. **Endpoints de stock** (`POST /stock/{product_id}`, `PUT /stock/{id}`, `PUT /stock/product/{product_id}`): Siempre operan sobre el stock de la sucursal del usuario autenticado.
+
+### Ejemplo: Filtrar stock por sucursal
+
+```http
+GET /products/list/1/10?branch_id=1
+GET /products/all?branch_id=2
+GET /products/abc123?branch_id=1
+```
+
+La respuesta incluirá `stock_branch_id: 1` y `stock_quantity` correspondiente a esa sucursal.
+
 ## Formato de fechas
 
 - Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
@@ -40,6 +60,15 @@ Authorization: Bearer <jwt_token>
 `{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ## Historial de Cambios
+
+### v3.3.0 - 07 de Mayo de 2026
+
+- **CAMBIO CRITICO**: Todos los endpoints de ProductEnriched ahora filtran stock por sucursal usando el contexto de branch. Sin `branch_id`, el stock puede ser de cualquier sucursal (legacy behavior).
+- **CAMBIO CRITICO**: `POST /stock/{product_id}` ahora crea stock con el `branch_id` del usuario autenticado. Antes no asignaba sucursal, causando errores con UNIQUE constraint `(id_product, branch_id)`.
+- **CAMBIO CRITICO**: `PUT /stock/{id}` y `PUT /stock/product/{product_id}` ahora filtran por `branch_id`. Solo actualizan stock de la sucursal del usuario.
+- **NUEVO**: Campo `stock_branch_id` en respuestas `ProductEnriched`. Indica de qué sucursal es el stock devuelto.
+- **NUEVO**: Campo `branch_id` en respuestas de Stock (`GET /stock/{id}`, `GET /stock/product/{product_id}`).
+- **NUEVO**: `POST /products` y `PUT /products/{id}` ahora re-fetch con branch context para devolver stock correcto en la respuesta.
 
 ### v3.2.0 - 22 de Marzo de 2026
 
@@ -128,6 +157,7 @@ Respuesta estandar para todos los endpoints de productos.
 | `purchase_price`        | number \| null | Precio de compra mas reciente                           |
 | `stock_quantity`        | number \| null | Cantidad en stock                                       |
 | `stock_unit`            | string \| null | Unidad del stock (ej: `kg`, `l`)                        |
+| `stock_branch_id`      | number \| null | ID de la sucursal del stock mostrado                   |
 | `stock_status`          | string         | `in_stock`, `low_stock`, `medium_stock`, `out_of_stock` |
 | `has_valid_stock`       | boolean        | Si tiene stock registrado                               |
 | `has_valid_price`       | boolean        | Si tiene al menos un precio                             |
@@ -205,6 +235,122 @@ Estructura completa para UI transaccional y detalle de producto.
 | `has_valid_costs`     | boolean        | Si tiene costos                                                                   |
 | `best_margin_unit`    | string \| null | Unidad con mejor margen                                                           |
 | `best_margin_percent` | number \| null | Porcentaje del mejor margen                                                       |
+
+---
+
+## Endpoints de Stock
+
+### Stock — Estructura de Datos
+
+| Campo           | Tipo           | Descripcion                                              |
+| --------------- | -------------- | ------------------------------------------------------- |
+| `id`            | number         | ID unico del registro de stock                          |
+| `product_id`    | string         | ID del producto                                         |
+| `quantity`      | number         | Cantidad en stock (soporta decimales)                   |
+| `unit`          | string \| null | Unidad de medida del stock (ej: `kg`, `l`, `unit`)      |
+| `effective_date` | string        | Fecha de vigencia del registro (ISO 8601)               |
+| `user_id`       | string         | ID del usuario que creó/actualizó el registro           |
+| `branch_id`     | number \| null | ID de la sucursal del stock                             |
+| `metadata`      | object \| null | Metadatos adicionales en JSON                           |
+
+> **Nota sobre `branch_id`**: Al crear stock (`POST /stock/{product_id}`), el sistema asigna automáticamente el `branch_id` del usuario autenticado. Al actualizar (`PUT /stock/{id}` o `PUT /stock/product/{product_id}`), solo se actualiza el stock de la sucursal del usuario. Al consultar (`GET /stock/{id}` o `GET /stock/product/{product_id}`), se filtra por la sucursal del contexto.
+
+### Crear Stock
+
+**`POST /stock/{product_id}`**
+
+Crea un registro de stock para un producto en la sucursal del usuario autenticado.
+
+**Parámetros de URL:**
+
+| Campo         | Tipo   | Descripcion        |
+| ------------- | ------ | ------------------ |
+| `product_id`  | string | ID del producto    |
+
+**Request Body:**
+
+```json
+{
+  "quantity": 100,
+  "unit": "unit",
+  "metadata": {}
+}
+```
+
+**Parámetros:**
+
+| Campo      | Tipo   | Requerido | Descripcion                          |
+| ---------- | ------ | --------- | ------------------------------------ |
+| `quantity`  | number | Si        | Cantidad de stock                    |
+| `unit`      | string | No        | Unidad de medida                     |
+| `metadata`  | object | No        | Metadatos adicionales en JSON        |
+
+> **Importante:** El `branch_id` se toma automáticamente del contexto de sucursal del usuario. No se envía en el body.
+
+**Response (200 OK):**
+
+```json
+{
+  "message": "Stock added"
+}
+```
+
+**Errores:**
+
+| HTTP Status | Descripcion                                      |
+| ----------- | ------------------------------------------------ |
+| 400         | Datos invalidos                                  |
+| 401         | Token JWT invalido o ausente                     |
+| 500         | Error interno (ej: UNIQUE violation si ya existe stock para ese producto en esa sucursal) |
+
+---
+
+### Obtener Stock por ID
+
+**`GET /stock/{id}`**
+
+Retorna el registro de stock filtrado por la sucursal del usuario.
+
+---
+
+### Obtener Stock por Producto
+
+**`GET /stock/product/{product_id}`**
+
+Retorna el registro de stock más reciente del producto, filtrado por la sucursal del contexto.
+
+---
+
+### Actualizar Stock por ID
+
+**`PUT /stock/{id}`**
+
+Actualiza un registro de stock. Solo actualiza si el registro pertenece a la sucursal del usuario.
+
+**Request Body:**
+
+```json
+{
+  "quantity": 150,
+  "unit": "unit",
+  "metadata": {}
+}
+```
+
+**Errores:**
+
+| HTTP Status | Descripcion                                                   |
+| ----------- | ------------------------------------------------------------- |
+| 404         | Stock no encontrado o no pertenece a la sucursal del usuario |
+| 401         | Token JWT invalido o ausente                                  |
+
+---
+
+### Actualizar Stock por Producto
+
+**`PUT /stock/product/{product_id}`**
+
+Actualiza el registro de stock más reciente del producto en la sucursal del usuario.
 
 ---
 
@@ -427,6 +573,7 @@ Retorna un producto enriquecido con stock, precios, descripcion, categoria e IVA
   "purchase_price": 8500,
   "stock_quantity": 50,
   "stock_unit": "unit",
+  "stock_branch_id": 1,
   "stock_status": "in_stock",
   "has_valid_stock": true,
   "has_valid_price": true,
@@ -864,4 +1011,4 @@ Retorna el costo promedio ponderado calculado del producto.
 
 ---
 
-_Última actualización: 2026-05-06 — FASE 4 verificada. Modelo TaxRate actualizado (16 campos, agregados effective_start/end, created_at/updated_at, created_by/updated_by). Modelos ProductEnriched, Category, ProductOperationInfoResponse verificados._
+_Última actualización: 2026-05-07 — v3.3.0: Stock ahora filtra por sucursal en todos los endpoints. Nuevo campo `stock_branch_id` en ProductEnriched. Nuevo campo `branch_id` en respuestas de Stock. Endpoints de stock documentados con branch context._
