@@ -1,7 +1,8 @@
 import { apiClient } from './api';
 import { telemetry } from '../utils/telemetry';
 
-const API_PREFIX = '/supplier';
+// Según docs/guides/multibranch-implementation/PARTY_API_GUIDE.md usamos la API unificada
+const API_PREFIX = '/api/v1/parties';
 
 // Opciones comunes para proveedores: no requieren contexto de sucursal
 const SUPPLIER_OPTIONS = { skipBranchContext: true };
@@ -27,16 +28,15 @@ const supplierService = {
     const startTime = Date.now();
     try {
       let endpoint;
-      // GET /supplier/{page}/{pageSize}
       if (params.page && params.pageSize) {
-        endpoint = `${API_PREFIX}/${params.page}/${params.pageSize}`;
+        endpoint = `${API_PREFIX}?party_type=SUPPLIER&page=${params.page}&page_size=${params.pageSize}`;
       } else {
-        endpoint = `${API_PREFIX}/1/50`;
+        endpoint = `${API_PREFIX}?party_type=SUPPLIER&page=1&page_size=50`;
       }
       
       const result = await _fetchWithRetry(() => apiClient.get(endpoint, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.load', { duration: Date.now() - startTime });
-      return result;
+      return result.data?.items || result.items || result;
     } catch (error) {
       telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getAll' });
       throw error;
@@ -49,7 +49,7 @@ const supplierService = {
       const endpoint = `${API_PREFIX}/${id}`;
       const result = await _fetchWithRetry(() => apiClient.get(endpoint, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.getById', { duration: Date.now() - startTime });
-      return result;
+      return result.data || result;
     } catch (error) {
       telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getById' });
       throw error;
@@ -59,10 +59,10 @@ const supplierService = {
   searchByName: async (name) => {
     const startTime = Date.now();
     try {
-      const endpoint = `${API_PREFIX}/name/${encodeURIComponent(name)}`;
+      const endpoint = `${API_PREFIX}?party_type=SUPPLIER&search=${encodeURIComponent(name)}`;
       const result = await _fetchWithRetry(() => apiClient.get(endpoint, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.search', { duration: Date.now() - startTime, name });
-      return result;
+      return result.data?.items || result.items || result;
     } catch (error) {
       telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'searchByName' });
       throw error;
@@ -72,11 +72,16 @@ const supplierService = {
   create: async (data) => {
     const startTime = Date.now();
     try {
-      // POST /supplier/
-      const endpoint = `${API_PREFIX}/`;
-      const result = await _fetchWithRetry(() => apiClient.post(endpoint, data, SUPPLIER_OPTIONS));
+      const endpoint = `${API_PREFIX}`;
+      const payload = {
+        ...data,
+        party_type: 'SUPPLIER',
+        first_name: data.first_name || data.name || '',
+      };
+      
+      const result = await _fetchWithRetry(() => apiClient.post(endpoint, payload, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.create', { duration: Date.now() - startTime });
-      return result;
+      return result.data || result;
     } catch (error) {
       telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'create' });
       throw error;
@@ -86,9 +91,18 @@ const supplierService = {
   update: async (id, data) => {
     const startTime = Date.now();
     try {
-      const result = await _fetchWithRetry(() => apiClient.put(`${API_PREFIX}/${id}`, data, SUPPLIER_OPTIONS));
+      const payload = { ...data };
+      if (payload.status === true) payload.status = 'active';
+      if (payload.status === false) payload.status = 'inactive';
+      
+      if (payload.name && !payload.first_name) {
+        payload.first_name = payload.name;
+        delete payload.name;
+      }
+
+      const result = await _fetchWithRetry(() => apiClient.put(`${API_PREFIX}/${id}`, payload, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.update', { duration: Date.now() - startTime });
-      return result;
+      return result.data || result;
     } catch (error) {
       telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'update' });
       throw error;
@@ -98,10 +112,9 @@ const supplierService = {
   delete: async (id) => {
     const startTime = Date.now();
     try {
-      // PUT /supplier/delete/{id}
-      const result = await _fetchWithRetry(() => apiClient.put(`${API_PREFIX}/delete/${id}`, {}, SUPPLIER_OPTIONS));
+      const result = await _fetchWithRetry(() => apiClient.delete(`${API_PREFIX}/${id}`, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.delete', { duration: Date.now() - startTime });
-      return result;
+      return result.data || result;
     } catch (error) {
       telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'delete' });
       throw error;

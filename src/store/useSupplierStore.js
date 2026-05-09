@@ -37,14 +37,23 @@ const useSupplierStore = create()(
           }
           
           // Normalizar estructura de datos
-          const normalizedData = data.map(supplier => ({
-            ...supplier,
-            id: supplier.id || supplier.ID,
-            name: supplier.name || supplier.Name || 'Sin nombre',
-            contact_info: supplier.contact_info || supplier.contactInfo || {},
-            tax_id: supplier.tax_id || supplier.taxId || supplier.ruc,
-            status: supplier.status !== undefined ? supplier.status : true
-          })).filter(s => s.id);
+          const normalizedData = data.map(supplier => {
+            let status = true;
+            if (typeof supplier.status === 'string') {
+              status = supplier.status === 'active';
+            } else if (supplier.status !== undefined) {
+              status = !!supplier.status;
+            }
+
+            return {
+              ...supplier,
+              id: supplier.id || supplier.ID,
+              name: supplier.first_name || supplier.name || supplier.Name || 'Sin nombre',
+              contact_info: supplier.contact_info || supplier.contactInfo || {},
+              tax_id: supplier.tax_id || supplier.taxId || supplier.ruc,
+              status
+            };
+          }).filter(s => s.id);
           
           set({ suppliers: normalizedData, loading: false });
           
@@ -89,14 +98,23 @@ const useSupplierStore = create()(
           }
           
           // Normalizar resultados
-          const normalized = result.map(supplier => ({
-            ...supplier,
-            id: supplier.id || supplier.ID,
-            name: supplier.name || supplier.Name || 'Sin nombre',
-            contact_info: supplier.contact_info || supplier.contactInfo || {},
-            tax_id: supplier.tax_id || supplier.taxId || supplier.ruc,
-            status: supplier.status !== undefined ? supplier.status : true
-          })).filter(s => s.id);
+          const normalized = result.map(supplier => {
+            let status = true;
+            if (typeof supplier.status === 'string') {
+              status = supplier.status === 'active';
+            } else if (supplier.status !== undefined) {
+              status = !!supplier.status;
+            }
+
+            return {
+              ...supplier,
+              id: supplier.id || supplier.ID,
+              name: supplier.first_name || supplier.name || supplier.Name || 'Sin nombre',
+              contact_info: supplier.contact_info || supplier.contactInfo || {},
+              tax_id: supplier.tax_id || supplier.taxId || supplier.ruc,
+              status
+            };
+          }).filter(s => s.id);
           
           set({ searchResults: normalized, lastSearchTerm: trimmed, loading: false });
           return normalized;

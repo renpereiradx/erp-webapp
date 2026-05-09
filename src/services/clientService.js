@@ -3,8 +3,8 @@ import { apiClient } from './api';
 import { telemetry } from '../utils/telemetry';
 import { clientListData } from './mocks/clientMock';
 
-// Según docs/api/CLIENT_API.md los endpoints usan prefijo singular `/client`
-const API_PREFIX = '/client';
+// Según docs/guides/multibranch-implementation/PARTY_API_GUIDE.md usamos la API unificada
+const API_PREFIX = '/api/v1/parties';
 const USE_MOCK = import.meta.env.VITE_USE_DEMO === 'true';
 
 // Opciones comunes para clientes: no requieren contexto de sucursal
@@ -45,17 +45,17 @@ export const clientService = {
       if (USE_MOCK) {
         const term = name.toLowerCase();
         const filtered = clientListData.filter(c => 
-          (c.name || '').toLowerCase().includes(term) || 
+          (c.name || c.first_name || '').toLowerCase().includes(term) || 
           (c.last_name || '').toLowerCase().includes(term) ||
           (c.document_id || '').toLowerCase().includes(term)
         );
         return _mockRes(filtered);
       }
-      const endpoint = `${API_PREFIX}/name/${encodeURIComponent(name)}`;
+      const endpoint = `${API_PREFIX}?party_type=CLIENT&search=${encodeURIComponent(name)}`;
       const result = await _fetchWithRetry(async () => apiClient.get(endpoint, CLIENT_OPTIONS));
       
       telemetry.record('client.service.search', { duration: Date.now() - startTime, name });
-      return result;
+      return result.data?.items || result.items || result;
     } catch (error) {
       telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'searchByName' });
       throw error;
@@ -73,7 +73,7 @@ export const clientService = {
       const result = await _fetchWithRetry(async () => apiClient.get(endpoint, CLIENT_OPTIONS));
       
       telemetry.record('client.service.getById', { duration: Date.now() - startTime });
-      return result;
+      return result.data || result;
     } catch (error) {
       telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getById' });
       throw error;
@@ -89,12 +89,11 @@ export const clientService = {
           total: clientListData.length
         });
       }
-      // Corregido: GET /client/{page}/{pageSize} según la guía
-      const endpoint = `${API_PREFIX}/${page}/${pageSize}`;
+      const endpoint = `${API_PREFIX}?party_type=CLIENT&page=${page}&page_size=${pageSize}`;
       const result = await _fetchWithRetry(async () => apiClient.get(endpoint, CLIENT_OPTIONS));
       
       telemetry.record('client.service.getAll', { duration: Date.now() - startTime, page, pageSize });
-      return result;
+      return result.data || result;
     } catch (error) {
       telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getAll' });
       throw error;
@@ -105,17 +104,30 @@ export const clientService = {
     const startTime = Date.now();
     
     try {
-      // POST /client/
-      const endpoint = `${API_PREFIX}/`;
+      const endpoint = `${API_PREFIX}`;
+      // Formatear payload a Party Model si es necesario, o pasar data que enviaría el componente
+      const payload = {
+        ...data,
+        party_type: 'CLIENT',
+        first_name: data.first_name || data.name || '',
+      };
+      // Evitamos sobrescribir last_name si ya existe en data
+      if (data.lastName && !data.last_name) {
+         payload.last_name = data.lastName;
+      }
+      if (data.documentId && !data.document_id) {
+         payload.document_id = data.documentId;
+      }
+
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.post(endpoint, data, CLIENT_OPTIONS);
+        return await apiClient.post(endpoint, payload, CLIENT_OPTIONS);
       });
       
       telemetry.record('client.service.create', {
         duration: Date.now() - startTime
       });
       
-      return result;
+      return result.data || result;
     } catch (error) {
       telemetry.record('client.service.error', {
         duration: Date.now() - startTime,
@@ -130,15 +142,32 @@ export const clientService = {
     const startTime = Date.now();
     
     try {
+      const payload = { ...data };
+      if (payload.status === true) payload.status = 'active';
+      if (payload.status === false) payload.status = 'inactive';
+      
+      if (payload.name && !payload.first_name) {
+        payload.first_name = payload.name;
+        delete payload.name;
+      }
+      if (payload.lastName && !payload.last_name) {
+        payload.last_name = payload.lastName;
+        delete payload.lastName;
+      }
+      if (payload.documentId && !payload.document_id) {
+        payload.document_id = payload.documentId;
+        delete payload.documentId;
+      }
+
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.put(`${API_PREFIX}/${id}`, data, CLIENT_OPTIONS);
+        return await apiClient.put(`${API_PREFIX}/${id}`, payload, CLIENT_OPTIONS);
       });
       
       telemetry.record('client.service.update', {
         duration: Date.now() - startTime
       });
       
-      return result;
+      return result.data || result;
     } catch (error) {
       telemetry.record('client.service.error', {
         duration: Date.now() - startTime,
@@ -152,10 +181,9 @@ export const clientService = {
   async delete(id) {
     const startTime = Date.now();
     try {
-      // PUT /client/delete/{id}
-      const result = await _fetchWithRetry(async () => apiClient.put(`${API_PREFIX}/delete/${id}`, {}, CLIENT_OPTIONS));
+      const result = await _fetchWithRetry(async () => apiClient.delete(`${API_PREFIX}/${id}`, CLIENT_OPTIONS));
       telemetry.record('client.service.delete', { duration: Date.now() - startTime });
-      return result;
+      return result.data || result;
     } catch (error) {
       telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'delete' });
       throw error;

@@ -9,22 +9,37 @@ const normalizeClient = c => {
   if (!c || typeof c !== 'object') return null
   
   const id = c.id || c.ID || c.client_id || c._id
-  const name = c.name || c.client_name || 'Cliente'
+  const name = c.first_name || c.name || c.client_name || 'Cliente'
   const lastName = c.last_name || c.lastName || ''
   const documentId = c.document_id || c.documentId || c.tax_id || ''
-  const status = c.status !== undefined ? c.status : true
+  
+  // Convertir status 'active'/'inactive' a boolean para el frontend
+  let status = true;
+  if (typeof c.status === 'string') {
+    status = c.status === 'active';
+  } else if (c.status !== undefined) {
+    status = !!c.status;
+  }
   
   let contactObj = { email: '', phone: '' }
-  if (c.contact && typeof c.contact === 'object') {
+  if (c.contact_info) {
     contactObj = {
-      email: c.contact.email || '',
-      phone: c.contact.phone || '',
+      email: c.email || c.contact_info.email || '',
+      phone: c.phone || c.contact_info.phone || '',
+      ...c.contact_info
+    }
+  } else if (c.contact && typeof c.contact === 'object') {
+    contactObj = {
+      email: c.email || c.contact.email || '',
+      phone: c.phone || c.contact.phone || '',
       ...c.contact
     }
   } else if (typeof c.contact === 'string') {
     contactObj = c.contact.includes('@') 
-      ? { email: c.contact, phone: '' } 
-      : { email: '', phone: c.contact }
+      ? { email: c.contact, phone: c.phone || '' } 
+      : { email: c.email || '', phone: c.contact || c.phone || '' }
+  } else {
+    contactObj = { email: c.email || '', phone: c.phone || '' }
   }
 
   const displayName = [name, lastName].filter(Boolean).join(' ').trim()
@@ -63,7 +78,7 @@ const useClientStore = create()(
         set({ loading: true, error: null })
         try {
           const response = await clientService.getAll(page, pageSize)
-          const rawClients = response.clients || response.data || (Array.isArray(response) ? response : [])
+          const rawClients = response.items || response.clients || response.data || (Array.isArray(response) ? response : [])
           const total = response.total || response.totalClients || rawClients.length
           
           const normalized = rawClients.map(normalizeClient).filter(Boolean)

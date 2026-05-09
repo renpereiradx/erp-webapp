@@ -19,8 +19,7 @@ import SalesHeatmap from '@/pages/SalesHeatmap'
 import ConsolidatedAlerts from '@/pages/ConsolidatedAlerts'
 import TopProductsOverview from '@/pages/TopProductsOverview'
 import Products from '@/pages/Products'
-import Clients from '@/pages/Clients'
-import Suppliers from '@/pages/Suppliers'
+import PartiesPage from '@/pages/PartiesPage'
 import BudgetManagement from '@/pages/BudgetManagement'
 import BudgetCreate from '@/pages/BudgetCreate'
 import BudgetDetail from '@/pages/BudgetDetail'
@@ -219,8 +218,7 @@ function AppContent() {
                       <Route path='/receivables/client-profile/:clientId' element={<ClientCreditProfile />} />
                       <Route path='/receivables/aging-report' element={<AgingReport />} />
                       <Route path='/productos' element={<Products />} />
-                      <Route path='/clientes' element={<Clients />} />
-                      <Route path='/proveedores' element={<Suppliers />} />
+                      <Route path='/parties' element={<PartiesPage />} />
                       <Route path='/payables/suppliers/:id/analysis' element={<SupplierAnalysis />} />
                       <Route path='/ventas' element={<SalesNew />} />
                       

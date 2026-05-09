@@ -461,13 +461,9 @@ const MainLayout = ({ children }) => {
         ],
       },
       {
-        name: t('common.directory', 'Directorio y Contactos'),
-        href: '#',
+        name: t('common.directory', 'Directorio de Contactos'),
+        href: '/parties',
         icon: Users,
-        children: [
-          { name: t('clients.title', 'Clientes'), href: '/clientes', icon: Users },
-          { name: t('suppliers.title', 'Proveedores'), href: '/proveedores', icon: Truck },
-        ],
       },
       {
         name: t('common.services_planning', 'Planificación y Reservas'),

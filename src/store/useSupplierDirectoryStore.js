@@ -77,6 +77,8 @@ const normalizeSupplier = supplier => {
   if (!id && id !== 0) return null
 
   const name =
+    supplier.first_name ??
+    lowerEntries.first_name ??
     supplier.name ??
     supplier.displayName ??
     lowerEntries.name ??
@@ -87,11 +89,19 @@ const normalizeSupplier = supplier => {
     supplier.ruc ??
     lowerEntries.tax_id ??
     ''
-  const statusValue = Object.prototype.hasOwnProperty.call(supplier, 'status')
-    ? Boolean(supplier.status)
-    : Object.prototype.hasOwnProperty.call(lowerEntries, 'status')
-    ? Boolean(lowerEntries.status)
-    : true
+  
+  let statusValue = true;
+  if (typeof supplier.status === 'string') {
+    statusValue = supplier.status === 'active';
+  } else if (Object.prototype.hasOwnProperty.call(supplier, 'status')) {
+    statusValue = Boolean(supplier.status);
+  } else if (Object.prototype.hasOwnProperty.call(lowerEntries, 'status')) {
+    if (typeof lowerEntries.status === 'string') {
+      statusValue = lowerEntries.status === 'active';
+    } else {
+      statusValue = Boolean(lowerEntries.status);
+    }
+  }
 
   const createdAt =
     supplier.created_at ?? supplier.createdAt ?? lowerEntries.created_at ?? null
