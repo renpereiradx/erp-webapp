@@ -1,6 +1,6 @@
 # Documentacion Multibranch Implementation — Checklist de Validacion Cruzada
 
-> **Ultima verificacion**: 2026-05-07 (actualizada post-bugfix multi-branch productos)
+> **Ultima verificacion**: 2026-05-08 (actualizada post-bugfix multi-branch ventas)
 > **Plan de verificacion**: `conductor/FRONTEND_DOCUMENTATION_VERIFICATION_PLAN.md`
 
 ## Documentos (20)
@@ -8,7 +8,7 @@
 | # | Archivo | Criticidad | Ultima verificacion | Estado |
 |---|---|---|---|---|
 | 1 | `BI_API.md` | P0 | 2026-05-06 | ✅ |
-| 2 | `MULTI_BRANCH_CONTEXT_GUIDE.md` | P0 | 2026-05-06 | ✅ |
+| 2 | `MULTI_BRANCH_CONTEXT_GUIDE.md` | P0 | 2026-05-08 | ✅ |
 | 3 | `BRANCH_API.md` | P0 | 2026-05-06 | ✅ |
 | 4 | `USER-SESION_API.md` | P0 | 2026-05-06 | ✅ |
 | 5 | `SECURITY_FRONTEND_INTEGRATION.md` | P0 | 2026-05-06 | ✅ |
@@ -17,7 +17,7 @@
 | 8 | `BUDGET_API.md` | P1 | 2026-05-06 | ✅ |
 | 9 | `PURCHASE_REQUISITION.md` | P1 | 2026-05-06 | ✅ |
 | 10 | `BRANCH_TRANSFER_API.md` | P1 | 2026-05-06 | ✅ |
-| 11 | `RESERVATION_SCHEDULE_API.md` | P1 | 2026-05-06 | ✅ |
+| 11 | `RESERVATION_SCHEDULE_API.md` | P1 | 2026-05-08 | ✅ |
 | 12 | `TAX_CLASIFICATION_API.md` | P2 | 2026-05-06 | ✅ |
 | 13 | `COST_PRICING_API.md` | P2 | 2026-05-06 | ✅ |
 | 14 | `PRICE_TRANSACTION_API.md` | P2 | 2026-05-06 | ✅ |
@@ -26,7 +26,7 @@
 | 17 | `PURCHASE_PRICING_INTREGATION_API.md` | P2 | 2026-05-07 | ✅ |
 | 18 | `PURCHASE_ORDERS_API.md` | P2 | 2026-05-07 | ✅ |
 | 19 | `CLIENT_API.md` | P2 | 2026-05-06 | ✅ |
-| 20 | `SUPPLIER_API.md` | P2 | 2026-05-06 | ✅ |
+| 20 | `SUPPLIER_API.md` | P2 | 2026-05-06 | ✅
 
 ---
 
@@ -89,4 +89,4 @@ Al crear o actualizar un documento en este directorio, verificar:
 
 ---
 
-_Actualizado: 2026-05-07 — PRODUCT_API.md v3.3.0 con branch context para stock._
+_Actualizado: 2026-05-08 — RESERVATION_SCHEDULE_API.md y MULTI_BRANCH_CONTEXT_GUIDE.md actualizados post-bugfix multi-branch reservas: branch_id en request/response, ownership validation, SQL functions branch-aware._

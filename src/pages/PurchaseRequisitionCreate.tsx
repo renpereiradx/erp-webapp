@@ -15,6 +15,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/useToast';
+import { useBranch } from '@/contexts/BranchContext';
 import { purchaseRequisitionService } from '@/services/purchaseRequisitionService';
 import { productService } from '@/services/productService';
 import supplierService from '@/services/supplierService';
@@ -35,6 +36,7 @@ const PurchaseRequisitionCreate: React.FC = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { currentBranchId } = useBranch();
 
   // --- Estado de la Requisición ---
   const [selectedSupplier, setSelectedSupplier] = useState<any | null>(null);
@@ -101,6 +103,7 @@ const PurchaseRequisitionCreate: React.FC = () => {
     try {
       const request: CreatePurchaseRequisitionRequest = {
         supplier_id: selectedSupplier?.id,
+        branch_id: currentBranchId || undefined,
         notes,
         details: items.map(i => ({
           product_id: i.product_id,

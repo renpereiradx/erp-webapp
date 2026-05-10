@@ -7,6 +7,7 @@ export interface ManageReserveRequest {
   client_id: string;
   start_time: string; // ISO-8601
   duration: number; // hours
+  branch_id?: number;
 }
 
 export interface GenerateSchedulesForDateRequest {
@@ -37,6 +38,7 @@ export interface ScheduleSlot {
     client_name: string;
     client_id: string;
   };
+  branch_id?: number;
 }
 
 export interface ProductScheduleConfig {

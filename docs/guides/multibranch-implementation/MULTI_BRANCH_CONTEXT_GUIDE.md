@@ -177,4 +177,78 @@ Usado en: Dashboard, Cuentas por Cobrar, Cuentas por Pagar, Reportes Financieros
 
 ---
 
-_Última actualización: 2026-05-07 — Productos y stock ahora filtran por sucursal. Endpoints de productos requieren branch context para stock correcto._
+## Multi-Branch en Reservas — Detalle
+
+### Operaciones de Escritura (POST /reserve/manage)
+
+El endpoint `POST /reserve/manage` ahora es branch-aware:
+
+| Accion | Valida branch ownership | Inyecta branch_id |
+|--------|------------------------|-------------------|
+| CREATE | No (asigna branch del contexto) | Si — del body, header o JWT |
+| UPDATE | Si — la reserva debe pertenecer al branch | Si |
+| CANCEL | Si — la reserva debe pertenecer al branch | Si |
+| CONFIRM | Si — la reserva debe pertenecer al branch | Si |
+
+**Jerarquia de branch_id:**
+1. `branch_id` en el body JSON del request
+2. Si no viene en body: `?branch_id=` query param o `X-Branch-ID` header
+3. Si tampoco: `active_branch` del JWT
+
+**Errores de branch ownership (403 implicito en el SQL):**
+```json
+{"success": false, "error": "Reservation 42 does not belong to branch 3", "action": "CONFIRM"}
+```
+
+### Operaciones de Lectura (GET /reserve/*)
+
+Todos los endpoints GET de reservas filtran por `branch_id`:
+
+| Endpoint | Parametro | Comportamiento sin branch |
+|----------|-----------|--------------------------|
+| `GET /reserve/{id}` | `?branch_id=` | Retorna la reserva solo si pertenece al branch |
+| `GET /reserve/product/{id}` | `?branch_id=` | Lista reservas del producto en el branch |
+| `GET /reserve/client/{id}` | `?branch_id=` | Lista reservas del cliente en el branch |
+| `GET /reserve/all` | `?branch_id=` | Lista todas las reservas del branch |
+| `GET /reserve/date-range` | `?branch_id=` | Lista reservas en rango del branch |
+| `GET /reserve/client/name/{name}` | `?branch_id=` | Busqueda por nombre en el branch |
+| `GET /reserve/report` | `?branch_id=` (+ `start_date`, `end_date`, etc.) | Reporte filtrado por branch |
+| `GET /reserve/consistency/check` | `?branch_id=` | Diagnostica consistencia solo del branch |
+
+### Horarios Disponibles (GET /reserve/available-schedules)
+
+```bash
+# Filtrar por sucursal
+GET /reserve/available-schedules?product_id=CANCHA_01&date=2026-05-10&duration_hours=2&branch_id=1
+```
+
+Si se omite `branch_id`, retorna horarios de todas las sucursales (comportamiento legacy).
+
+### Schedules con Informacion de Reserva
+
+`GET /schedules/product/{productId}/date/{date}/all` ahora filtra por branch:
+
+```bash
+GET /schedules/product/CANCHA_01/date/2026-05-10/all?branch_id=2
+```
+
+Las reservas mostradas en los slots (`reserved_by`, `reserve_id`) corresponden exclusivamente al branch especificado.
+
+### SQL Functions Branch-Aware
+
+Las siguientes funciones SQL internas ahora aceptan `p_branch_id`:
+
+| Function | Params | Default |
+|----------|--------|---------|
+| `manage_reserve` | 8 params (agregado `p_branch_id`) | `NULL` (fallback a user default branch) |
+| `get_available_schedules` | 4 params (agregado `p_branch_id`) | `NULL` |
+| `check_schedule_availability` | 4 params (agregado `p_branch_id`) | `NULL` |
+| `is_reserve_available_for_sale` | 2 params (agregado `p_branch_id`) | `NULL` |
+| `get_schedules_with_reservation_info` | 3 params (agregado `p_branch_id`) | `NULL` |
+| `get_available_reserves` | 5 params (agregado `p_branch_id`) | `NULL` |
+
+Todas las funciones usan `NULL` como default para `p_branch_id`, lo que mantiene retrocompatibilidad: si se omite, no filtra por branch.
+
+---
+
+_Última actualización: 2026-05-08 — Post-bugfix multi-branch reservas: branch_id en request/response de ManageReserve, ownership validation en UPDATE/CANCEL/CONFIRM, branch filtering en todos los endpoints GET de reservas y horarios disponibles, consistency check branch-aware._

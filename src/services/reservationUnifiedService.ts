@@ -14,6 +14,7 @@ export interface ManageReserveRequest {
   client_id: string;
   start_time: string; // ISO-8601
   duration: number; // hours
+  branch_id?: number;
 }
 
 export interface GenerateSchedulesRequest {
@@ -42,9 +43,10 @@ class ReservationUnifiedService {
     return response.data;
   }
 
-  async getSlotsByDate(productId: string, date: string): Promise<ScheduleSlot[]> {
+  async getSlotsByDate(productId: string, date: string, branchId?: number): Promise<ScheduleSlot[]> {
     try {
-      const response = await apiClient.get(`/schedules/product/${productId}/date/${date}/all`);
+      const url = `/schedules/product/${productId}/date/${date}/all${branchId ? `?branch_id=${branchId}` : ''}`;
+      const response = await apiClient.get(url);
       return response.data?.slots || response.data || [];
     } catch (e) {
        console.error(e);
@@ -52,9 +54,11 @@ class ReservationUnifiedService {
     }
   }
 
-  async getAvailableSchedules(productId: string, date: string, duration: number): Promise<ScheduleSlot[]> {
+  async getAvailableSchedules(productId: string, date: string, duration: number, branchId?: number): Promise<ScheduleSlot[]> {
     try {
-      const response = await apiClient.get(`/reserve/available-schedules?product_id=${productId}&date=${date}&duration=${duration}`);
+      let url = `/reserve/available-schedules?product_id=${productId}&date=${date}&duration_hours=${duration}`;
+      if (branchId) url += `&branch_id=${branchId}`;
+      const response = await apiClient.get(url);
       return response.data?.available_slots || response.data || [];
     } catch (e) {
       console.error(e);
@@ -67,9 +71,10 @@ class ReservationUnifiedService {
     return response.data;
   }
 
-  async getAllReservations(): Promise<Reservation[]> {
+  async getAllReservations(branchId?: number): Promise<Reservation[]> {
     try {
-      const response = await apiClient.get(`/reserve/all`);
+      const url = `/reserve/all${branchId ? `?branch_id=${branchId}` : ''}`;
+      const response = await apiClient.get(url);
       return Array.isArray(response.data) ? response.data : response.data?.reservations || [];
     } catch (e) {
       console.error(e);
@@ -77,9 +82,44 @@ class ReservationUnifiedService {
     }
   }
 
-  async getReservationReport(startDate: string, endDate: string): Promise<ReservationReport | null> {
+  async getReservationsByProductId(productId: string, branchId?: number): Promise<Reservation[]> {
     try {
-      const response = await apiClient.get(`/reserve/report?start_date=${startDate}&end_date=${endDate}`);
+      const url = `/reserve/product/${productId}${branchId ? `?branch_id=${branchId}` : ''}`;
+      const response = await apiClient.get(url);
+      return Array.isArray(response.data) ? response.data : response.data?.reservations || [];
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  }
+
+  async getReservationsByClientId(clientId: string, branchId?: number): Promise<Reservation[]> {
+    try {
+      const url = `/reserve/client/${clientId}${branchId ? `?branch_id=${branchId}` : ''}`;
+      const response = await apiClient.get(url);
+      return Array.isArray(response.data) ? response.data : response.data?.reservations || [];
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  }
+
+  async getReservationsByClientName(clientName: string, branchId?: number): Promise<Reservation[]> {
+    try {
+      const url = `/reserve/client/name/${encodeURIComponent(clientName)}${branchId ? `?branch_id=${branchId}` : ''}`;
+      const response = await apiClient.get(url);
+      return Array.isArray(response.data) ? response.data : response.data?.reservations || [];
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  }
+
+  async getReservationReport(startDate: string, endDate: string, branchId?: number): Promise<ReservationReport | null> {
+    try {
+      let url = `/reserve/report?start_date=${startDate}&end_date=${endDate}`;
+      if (branchId) url += `&branch_id=${branchId}`;
+      const response = await apiClient.get(url);
       return response.data;
     } catch (e) {
       console.error(e);
@@ -87,9 +127,10 @@ class ReservationUnifiedService {
     }
   }
 
-  async checkConsistency(): Promise<ConsistencyIssue[]> {
+  async checkConsistency(branchId?: number): Promise<ConsistencyIssue[]> {
     try {
-      const response = await apiClient.get(`/reserve/consistency/check`);
+      const url = `/reserve/consistency/check${branchId ? `?branch_id=${branchId}` : ''}`;
+      const response = await apiClient.get(url);
       return Array.isArray(response.data) ? response.data : response.data?.issues || [];
     } catch (e) {
       console.error(e);

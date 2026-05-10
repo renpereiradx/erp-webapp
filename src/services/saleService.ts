@@ -359,63 +359,70 @@ export const saleService = {
         return status === 'PENDING'
       })
 
-    // 1) Intentar por client_id (algunos backends no tienen este endpoint)
+    // 1) Intentar por el nuevo endpoint especifico
     try {
-      const response = await apiClient.getSalesByClientId(clientId, 1, 100)
+      const response = await apiClient.getPendingSalesByClientId(clientId)
       const { data } = this.extractSalesAndPagination(response)
-      return { success: true, data: onlyPending(data) }
-    } catch (errorById: any) {
-      const notFoundById =
-        String(errorById?.message || '')
-          .toLowerCase()
-          .includes('not found') ||
-        String(errorById?.message || '')
-          .toLowerCase()
-          .includes('endpoint')
-
-      // 2) Fallback por client_name si tenemos nombre
-      if (notFoundById && clientName) {
-        try {
-          const byName = await apiClient.getSalesByClientName(clientName, 1, 100)
-          const { data } = this.extractSalesAndPagination(byName)
-          return { success: true, data: onlyPending(data) }
-        } catch (errorByName) {
-          console.warn('Fallback by client_name failed:', errorByName)
-        }
-      }
-
-      // 3) Fallback final por rango de fechas y filtro local
+      return { success: true, data: data }
+    } catch (errorPendingEndpoint: any) {
+      // Si el endpoint no existe aun, hacemos fallback a filtrar manualmente
       try {
-        const endDate = new Date()
-        const startDate = new Date()
-        startDate.setDate(endDate.getDate() - 90)
+        const response = await apiClient.getSalesByClientId(clientId, 1, 100)
+        const { data } = this.extractSalesAndPagination(response)
+        return { success: true, data: onlyPending(data) }
+      } catch (errorById: any) {
+        const notFoundById =
+          String(errorById?.message || '')
+            .toLowerCase()
+            .includes('not found') ||
+          String(errorById?.message || '')
+            .toLowerCase()
+            .includes('endpoint')
 
-        const fallback = await apiClient.getSalesByDateRange(
-          startDate.toISOString().split('T')[0],
-          endDate.toISOString().split('T')[0],
-          1,
-          200,
-        )
+        // 2) Fallback por client_name si tenemos nombre
+        if (notFoundById && clientName) {
+          try {
+            const byName = await apiClient.getSalesByClientName(clientName, 1, 100)
+            const { data } = this.extractSalesAndPagination(byName)
+            return { success: true, data: onlyPending(data) }
+          } catch (errorByName) {
+            console.warn('Fallback by client_name failed:', errorByName)
+          }
+        }
 
-        const { data } = this.extractSalesAndPagination(fallback)
-        const filteredByClient = data.filter((s: any) => {
-          const saleClientId = String(
-            s.sale?.client_id || s.client_id || s.clientId || '',
+        // 3) Fallback final por rango de fechas y filtro local
+        try {
+          const endDate = new Date()
+          const startDate = new Date()
+          startDate.setDate(endDate.getDate() - 90)
+
+          const fallback = await apiClient.getSalesByDateRange(
+            startDate.toISOString().split('T')[0],
+            endDate.toISOString().split('T')[0],
+            1,
+            200,
           )
-          const saleClientName = String(s.sale?.client_name || s.client_name || '')
 
-          if (saleClientId && String(clientId)) {
-            return saleClientId === String(clientId)
-          }
-          if (clientName) {
-            return saleClientName.toLowerCase() === String(clientName).toLowerCase()
-          }
-          return false
-        })
+          const { data } = this.extractSalesAndPagination(fallback)
+          const filteredByClient = data.filter((s: any) => {
+            const saleClientId = String(
+              s.sale?.client_id || s.client_id || s.clientId || '',
+            )
+            const saleClientName = String(s.sale?.client_name || s.client_name || '')
 
-        return { success: true, data: onlyPending(filteredByClient) }
-      } catch (fallbackError: any) {
-        return { success: false, error: fallbackError.message || errorById?.message }
+            if (saleClientId && String(clientId)) {
+              return saleClientId === String(clientId)
+            }
+            if (clientName) {
+              return saleClientName.toLowerCase() === String(clientName).toLowerCase()
+            }
+            return false
+          })
+
+          return { success: true, data: onlyPending(filteredByClient) }
+        } catch (fallbackError: any) {
+          return { success: false, error: fallbackError.message || errorById?.message }
+        }
       }
     }
   },

@@ -14,6 +14,7 @@ export interface Reservation {
   duration: number;    // Hours
   status: ReservationStatus;
   created_at?: string;
+  branch_id?: number;
 }
 
 export interface ScheduleSlot {
@@ -24,6 +25,7 @@ export interface ScheduleSlot {
   reservation_id?: number;
   client_name?: string;
   client_id?: string;
+  branch_id?: number;
 }
 
 export interface ScheduleConfig {

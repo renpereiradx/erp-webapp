@@ -394,13 +394,13 @@ export const useSalesLogic = () => {
       product_details: allItems.map(item => {
         const productDetail = {
           product_id: item.product_id || item.id,
-          quantity: item.quantity
+          quantity: item.quantity,
+          unit: item.unit && item.unit !== 'service' ? item.unit : (item.fromReservation ? 'hour' : 'unit')
         };
 
         // Información adicional para productos de reserva (opcional)
-        if (item.fromReservation) {
-          productDetail.from_reservation = true;
-          productDetail.reservation_id = item.reservation_id;
+        if (item.fromReservation && item.reservation_id) {
+          productDetail.reserve_id = item.reservation_id;
         }
 
         // Solo agregar campos opcionales si tienen valores válidos
@@ -422,7 +422,6 @@ export const useSalesLogic = () => {
           // Siempre enviar el precio de la reserva como sale_price para evitar conflictos
           productDetail.sale_price = item.price;
           productDetail.price_change_reason = `Precio de reserva confirmada #${item.reservation_id} - Tarifa especial aplicada según reserva`;
-
         }
 
         // DESCUENTOS (NUEVO) - Solo incluir si tienen valores

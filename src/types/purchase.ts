@@ -51,11 +51,16 @@ export interface PurchaseOrderHeader {
   order_date: string;
   total_amount: number;
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  branch_id?: number | null; // NUEVO CAMPO - ID de Sucursal
   supplier_id: number;
   supplier_name: string;
   supplier_status: boolean; // NUEVO CAMPO - Estado del proveedor (activo/inactivo)
   user_id: string;
   user_name: string;
+  payment_method_id?: number | null;
+  payment_method?: string;
+  currency_id?: number | null;
+  currency?: string;
 }
 
 export interface PurchaseOrderItemEnhanced {
@@ -74,6 +79,11 @@ export interface PurchaseOrderItemEnhanced {
   unit: string;             // Unidad del producto ("kg", "unit", "box", etc.)
   tax_rate: number;         // Tasa de impuesto aplicada
   tax_rate_id: number;      // ID de la tasa de impuesto
+  unit_price_with_tax?: number;    // NUEVO CAMPO v2.6
+  unit_price_without_tax?: number; // NUEVO CAMPO v2.6
+  tax_amount?: number;             // NUEVO CAMPO v2.6
+  total_line_with_tax?: number;    // NUEVO CAMPO v2.6
+  applied_tax_rate?: number;       // NUEVO CAMPO v2.6
   profit_pct: number;       // Porcentaje de ganancia del producto
   line_total: number;       // Total calculado por línea
   sale_price: number;       // Precio de venta calculado dinámicamente

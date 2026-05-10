@@ -269,6 +269,16 @@ export const purchasePaymentService = {
         apiData.cash_register_id = resolvedCashRegisterId
       }
 
+      // Contexto Multi-sucursal (v1.0)
+      const resolvedBranchId = 
+        paymentData.branch_id ?? 
+        paymentData.branchId ?? 
+        localStorage.getItem('activeBranch') ?? 
+        null
+      if (resolvedBranchId) {
+        apiData.branch_id = Number(resolvedBranchId)
+      }
+
       // Backend endpoint is now fully implemented
 
       const result = await _fetchWithRetry(async () => {
@@ -383,12 +393,17 @@ export const purchasePaymentService = {
 
     try {
       const result = await _fetchWithRetry(async () => {
+        const params = {};
+        if (cancellationData.branch_id) {
+          params.branch_id = cancellationData.branch_id;
+        }
+        
         return await apiClient.put(`/purchase/cancel/${purchaseOrderId}`, {
           cancellation_reason: cancellationData.reason || 'Cancelled by user',
           force_cancel: cancellationData.force_cancel || false,
           user_id: cancellationData.user_id,
           ...cancellationData,
-        })
+        }, { params })
       })
 
       telemetry.record('purchase_payment.service.cancel_order', {

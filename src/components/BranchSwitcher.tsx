@@ -1,7 +1,6 @@
 import React from 'react';
 import { useBranch } from '@/contexts/BranchContext';
 import { Building2, ChevronDown, Globe, Check } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 
 const BranchSwitcher = () => {
   const { currentBranchId, allowedBranches, changeBranch, canViewGlobal } = useBranch();

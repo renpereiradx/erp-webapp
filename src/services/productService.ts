@@ -11,6 +11,8 @@ import {
   ProductEnriched, 
   ProductOperationInfoResponse, 
   Category, 
+  Stock,
+  CreateStockRequest,
   API_ENDPOINTS, 
   PaginatedResponse 
 } from '@/types';
@@ -246,6 +248,48 @@ export const productService = {
       return await apiClient.deleteProduct(id);
     } catch (error) {
       throw toApiError(error, 'Error al eliminar producto');
+    }
+  },
+
+  // =================== STOCK (v3.3.0) ===================
+
+  async createStock(productId: string, data: CreateStockRequest): Promise<{ message: string }> {
+    try {
+      return await apiClient.createStock(productId, data);
+    } catch (error) {
+      throw toApiError(error, 'Error al crear stock para el producto');
+    }
+  },
+
+  async getStockById(id: number): Promise<{ data: Stock }> {
+    try {
+      return await apiClient.getStockById(id);
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener stock por ID');
+    }
+  },
+
+  async getStockByProductId(productId: string): Promise<{ data: Stock }> {
+    try {
+      return await apiClient.getStockByProductId(productId);
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener stock por producto');
+    }
+  },
+
+  async updateStockById(id: number, data: Partial<Stock>): Promise<{ message: string }> {
+    try {
+      return await apiClient.updateStockById(id, data);
+    } catch (error) {
+      throw toApiError(error, 'Error al actualizar stock por ID');
+    }
+  },
+
+  async updateStockByProductId(productId: string, data: Partial<Stock>): Promise<{ message: string }> {
+    try {
+      return await apiClient.updateStockByProductId(productId, data);
+    } catch (error) {
+      throw toApiError(error, 'Error al actualizar stock por producto');
     }
   },
 

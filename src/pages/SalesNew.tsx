@@ -1032,6 +1032,7 @@ const SalesNew: React.FC = () => {
               product_id: item.productId,
               quantity: Number(item.quantity) || 1,
               unit: item.unit || 'unit',
+              ...(item.reserve_id && { reserve_id: item.reserve_id }),
               ...(hasModification && {
                 sale_price: currentPrice,
                 price_change_reason: (item.discountReason || 'Ajuste de precio aplicado').trim() || 'Ajuste de precio',
@@ -1108,6 +1109,7 @@ const SalesNew: React.FC = () => {
             const currentPrice = Number(item.price) || 0;
             const originalPrice = Number(item.originalPrice) || 0;
             const hasModification = Math.abs(currentPrice - originalPrice) > 0.01;
+            const discountInputVal = Number(item.discountInput) || 0;
 
             const detail: any = {
               product_id: item.productId,
@@ -1127,6 +1129,13 @@ const SalesNew: React.FC = () => {
             if (hasModification) {
               detail.sale_price = currentPrice;
               detail.price_change_reason = (item.discountReason || 'Ajuste de precio').trim();
+              
+              if (item.discountType === 'percent') {
+                detail.discount_percent = discountInputVal;
+              } else {
+                detail.discount_amount = discountInputVal;
+              }
+              detail.discount_reason = (item.discountReason || 'Ajuste de precio').trim();
             }
 
             return detail;

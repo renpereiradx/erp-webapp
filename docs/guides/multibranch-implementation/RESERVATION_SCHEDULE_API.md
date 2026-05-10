@@ -57,13 +57,22 @@ Authorization: Bearer <jwt_token>
   "product_id": "CANCHA_01",
   "client_id": "CLIENT_01",
   "start_time": "2026-03-24T16:00:00Z",
-  "duration": 2
+  "duration": 2,
+  "branch_id": 1
 }
 ```
 
-- `action`: `CREATE | UPDATE | CONFIRM | CANCEL`
-- `reserve_id`: requerido para `UPDATE`, `CONFIRM`, `CANCEL`
-- `duration`: horas (entero positivo)
+| Campo | Tipo | Requerido | Descripcion |
+|-------|------|-----------|-------------|
+| `action` | string | Si | `CREATE \| UPDATE \| CONFIRM \| CANCEL` |
+| `reserve_id` | int64 | Condicional | Requerido para `UPDATE`, `CONFIRM`, `CANCEL` |
+| `product_id` | string | Condicional | Requerido para `CREATE` |
+| `client_id` | string | Condicional | Requerido para `CREATE` |
+| `start_time` | string | Condicional | ISO-8601. Requerido para `CREATE`. Vacio para `CONFIRM`/`CANCEL` |
+| `duration` | int | Condicional | Horas (entero positivo). Default 1 |
+| `branch_id` | int \| null | No | ID de sucursal. Si se omite, se usa el branch del contexto de autenticacion (`X-Branch-ID` o `active_branch` del JWT) |
+
+> **Nota multi-branch:** Si `branch_id` no se envia en el body, el backend lo resuelve automaticamente desde el contexto de autenticacion (`X-Branch-ID` header, `?branch_id` query param, o `active_branch` del JWT). Las operaciones de escritura (CREATE/UPDATE/CANCEL/CONFIRM) validan ownership del branch: no se puede modificar/cancelar/confirmar una reserva de otra sucursal si se envia `branch_id` explicitamente.
 
 ### GenerateSchedulesForDateRequest
 
@@ -101,23 +110,46 @@ Reglas:
 
 Todos requieren JWT.
 
-| Metodo | Endpoint                        | Descripcion                                                    |
-| ------ | ------------------------------- | -------------------------------------------------------------- |
-| `POST` | `/reserve/manage`               | Crear/actualizar/confirmar/cancelar reserva                    |
-| `GET`  | `/reserve/available-schedules`  | Horarios disponibles para reservar por producto/fecha/duracion |
-| `GET`  | `/reserve/report`               | Reporte de reservas por rango y filtros                        |
-| `GET`  | `/reserve/consistency/check`    | Diagnostico de consistencia reserva/venta/horarios             |
-| `GET`  | `/reserve/all`                  | Lista completa de reservas                                     |
-| `GET`  | `/reserve/date-range`           | Reservas por rango de fechas                                   |
-| `GET`  | `/reserve/client/name/{name}`   | Busqueda por nombre de cliente                                 |
-| `GET`  | `/reserve/product/{product_id}` | Reservas por producto                                          |
-| `GET`  | `/reserve/client/{client_id}`   | Reservas por cliente                                           |
-| `GET`  | `/reserve/{id}`                 | Reserva por ID                                                 |
+| Metodo | Endpoint | Descripcion | Branch Context |
+| ------ | ------------------------------- | -------------------------------------------------------------- | -------------- |
+| `POST` | `/reserve/manage` | Crear/actualizar/confirmar/cancelar reserva | Si — body o header |
+| `GET` | `/reserve/available-schedules` | Horarios disponibles para reservar por producto/fecha/duracion | Si — query param |
+| `GET` | `/reserve/report` | Reporte de reservas por rango y filtros | Si — query param |
+| `GET` | `/reserve/consistency/check` | Diagnostico de consistencia reserva/venta/horarios | Si — query param |
+| `GET` | `/reserve/all` | Lista completa de reservas | Si — query param |
+| `GET` | `/reserve/date-range` | Reservas por rango de fechas | Si — query param |
+| `GET` | `/reserve/client/name/{name}` | Busqueda por nombre de cliente | Si — query param |
+| `GET` | `/reserve/product/{product_id}` | Reservas por producto | Si — query param |
+| `GET` | `/reserve/client/{client_id}` | Reservas por cliente | Si — query param |
+| `GET` | `/reserve/{id}` | Reserva por ID | Si — query param |
+
+> **Todos los endpoints GET de reservas** aceptan `?branch_id=<id>` o header `X-Branch-ID` para filtrar resultados por sucursal. Si se omite, el sistema usa `active_branch` del JWT.
+
+### Ejemplos con branch context
+
+```bash
+# Obtener horarios disponibles en sucursal 2
+curl "http://localhost:5050/reserve/available-schedules?product_id=CANCHA_01&date=2026-05-10&duration_hours=2&branch_id=2" \
+  -H "Authorization: Bearer <token>"
+
+# Obtener reserva por ID en sucursal 1
+curl "http://localhost:5050/reserve/42?branch_id=1" \
+  -H "Authorization: Bearer <token>"
+
+# Consultar consistencia por sucursal
+curl "http://localhost:5050/reserve/consistency/check?branch_id=2" \
+  -H "Authorization: Bearer <token>"
+
+# Reporte de reservas filtrado por sucursal y fechas
+curl "http://localhost:5050/reserve/report?start_date=2026-05-01&end_date=2026-05-31&branch_id=1" \
+  -H "Authorization: Bearer <token>"
+```
 
 Ejemplo rapido:
 
 ```bash
-curl -X POST "http://localhost:5050/reserve/manage" \
+# Crear reserva en sucursal 2
+curl -X POST "http://localhost:5050/reserve/manage?branch_id=2" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -125,8 +157,37 @@ curl -X POST "http://localhost:5050/reserve/manage" \
     "product_id":"CANCHA_01",
     "client_id":"CLIENT_01",
     "start_time":"2026-03-24T16:00:00Z",
-    "duration":2
+    "duration":2,
+    "branch_id":2
   }'
+```
+
+> Tip: `branch_id` puede ir tanto en el body JSON como via query param `?branch_id=` o header `X-Branch-ID`. Si se envia en ambos, el del body tiene prioridad.
+
+### Respuesta de ManageReserve (branch-aware)
+
+La respuesta JSON de `manage_reserve` ahora incluye `branch_id`:
+
+```json
+{
+  "success": true,
+  "action": "CREATE",
+  "reserve_id": 42,
+  "total_amount": 120000,
+  "hourly_price": 60000,
+  "branch_id": 2,
+  "message": "Reservation created successfully"
+}
+```
+
+Errores de branch ownership:
+
+```json
+{
+  "success": false,
+  "error": "Reservation 42 does not belong to branch 3",
+  "action": "CONFIRM"
+}
 ```
 
 ## Endpoints de Horarios (`/schedules`)
@@ -200,6 +261,64 @@ curl -X POST "http://localhost:5050/schedules/product/CANCHA_01/config" \
 - `400`: validacion de entrada
 - `401`: token ausente/invalido
 - `500`: error interno
+
+## Modelo de respuesta: ReserveRiched (branch-aware)
+
+Todas las responses de GET de reservas incluyen `branch_id`:
+
+```json
+{
+  "id": 42,
+  "product_id": "CANCHA_01",
+  "product_name": "Cancha de Fútbol",
+  "product_description": "Cancha profesional",
+  "client_id": "CLIENT_01",
+  "client_name": "Juan Pérez",
+  "start_time": "2026-03-24T16:00:00Z",
+  "end_time": "2026-03-24T18:00:00Z",
+  "duration": 2,
+  "total_amount": 120000,
+  "status": "RESERVED",
+  "user_id": "USR_001",
+  "user_name": "Admin User",
+  "reserve_date": "2026-03-24",
+  "branch_id": 2
+}
+```
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `branch_id` | int \| null | ID de la sucursal a la que pertenece la reserva. `null` si no esta asignada |
+
+## Modelo de respuesta: ReservationReport (branch-aware)
+
+```json
+{
+  "reserve_id": 42,
+  "product_name": "Cancha de Fútbol",
+  "client_name": "Juan Pérez",
+  "start_time": "2026-03-24T16:00:00Z",
+  "end_time": "2026-03-24T18:00:00Z",
+  "duration_hours": 2,
+  "total_amount": 120000,
+  "status": "CONFIRMED",
+  "created_by": "Admin User",
+  "days_until_reservation": 5,
+  "branch_id": 2
+}
+```
+
+## Modelo de respuesta: AvailableSchedule (branch-aware)
+
+```json
+{
+  "start_time": "2026-03-25T15:00:00Z",
+  "end_time": "2026-03-25T16:00:00Z",
+  "available_consecutive_hours": 3
+}
+```
+
+> **Nota:** `AvailableSchedule` no incluye `branch_id` en la respuesta. El filtrado por branch se realiza via query param `?branch_id=` en el endpoint.
 
 ## Modelo de respuesta: ScheduleWithReservationInfo
 
@@ -288,4 +407,4 @@ Regla de descuento:
 
 ---
 
-_Última actualización: 2026-05-06 — Consistencia cross-documento verificada._
+_Última actualización: 2026-05-08 — Multi-branch bugfix: branch_id en request/response, branch ownership validation, consistent branch filtering en todos los endpoints GET._

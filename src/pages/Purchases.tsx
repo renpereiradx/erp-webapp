@@ -33,6 +33,7 @@ import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
 import { calculatePurchaseSalePriceGs, calculateProfitMargin } from '@/domain/purchase/pricing/purchasePricingPolicy'
 import { PurchaseWithFullDetails } from '@/types'
+import { useBranch } from '@/contexts/BranchContext'
 
 /**
  * Purchases Page - Fluent Design System 2
@@ -45,6 +46,7 @@ const Purchases = () => {
   const toast = useToast()
   const { fetchDashboardData } = useDashboardStore()
   const { user } = useAuthStore()
+  const { currentBranchId } = useBranch()
 
   // Business Logic States
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseWithFullDetails[]>([])
@@ -528,9 +530,15 @@ const Purchases = () => {
     if (!selectedSupplier || purchaseItems.length === 0) return
     setLoading(true)
     try {
+      // Resolver moneda seleccionada para enviar ID
+      const selectedCurrency = (currencies || []).find(c => c.currency_code === paymentCurrency);
+      
       const orderData = {
         supplier_id: selectedSupplier.id,
         status: 'COMPLETED',
+        branch_id: currentBranchId || undefined, // Contexto Multi-sucursal (v1.0)
+        payment_method_id: paymentMethod ? Number(paymentMethod) : undefined,
+        currency_id: selectedCurrency?.id || undefined,
         order_details: purchaseItems.map(i => ({
           product_id: i.product_id,
           quantity: Number(i.quantity),

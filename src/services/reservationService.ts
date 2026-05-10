@@ -23,20 +23,20 @@ export const reservationService = {
     });
   },
 
-  getAvailableSchedules: async (productId: string, date: string, duration: number) => {
-    return apiClient.makeRequest('/reserve/available-schedules', {
-      params: { product_id: productId, date, duration }
-    });
+  getAvailableSchedules: async (productId: string, date: string, duration: number, branchId?: number) => {
+    const params: any = { product_id: productId, date, duration };
+    if (branchId) params.branch_id = branchId;
+    return apiClient.makeRequest('/reserve/available-schedules', { params });
   },
 
-  getReservationById: async (reserveId: number) => {
-    return apiClient.makeRequest(`/reserve/${reserveId}`);
+  getReservationById: async (reserveId: number, branchId?: number) => {
+    return apiClient.makeRequest(`/reserve/${reserveId}${branchId ? `?branch_id=${branchId}` : ''}`);
   },
 
-  getReservationsByDateRange: async (startDate: string, endDate: string) => {
-    return apiClient.makeRequest('/reserve/date-range', {
-      params: { start_date: startDate, end_date: endDate }
-    });
+  getReservationsByDateRange: async (startDate: string, endDate: string, branchId?: number) => {
+    const params: any = { start_date: startDate, end_date: endDate };
+    if (branchId) params.branch_id = branchId;
+    return apiClient.makeRequest('/reserve/date-range', { params });
   },
 
   getReservationReport: async (params: any = {}) => {
@@ -49,9 +49,10 @@ export const reservationService = {
   // HORARIOS (SCHEDULES)
   // ==========================================
   
-  getSchedulesForProductAndDate: async (productId: string, date: string): Promise<ScheduleSlot[]> => {
+  getSchedulesForProductAndDate: async (productId: string, date: string, branchId?: number): Promise<ScheduleSlot[]> => {
     try {
-      const response = await apiClient.makeRequest(`/schedules/product/${productId}/date/${date}/all`);
+      const url = `/schedules/product/${productId}/date/${date}/all${branchId ? `?branch_id=${branchId}` : ''}`;
+      const response = await apiClient.makeRequest(url);
       let slots: any[] = [];
       if (Array.isArray(response)) slots = response;
       else if (response && Array.isArray(response.data)) slots = response.data;

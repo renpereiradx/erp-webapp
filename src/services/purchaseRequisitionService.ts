@@ -73,6 +73,30 @@ export const purchaseRequisitionService = {
   },
 
   /**
+   * Lista requisiciones filtradas por estado
+   */
+  async getRequisitionsByStatus(status: string): Promise<{ data: PurchaseRequisition[]; success: boolean }> {
+    try {
+      return await apiClient.get(API_ENDPOINTS.PURCHASE_REQUISITIONS_BY_STATUS(status));
+    } catch (error: any) {
+      console.error(`Error fetching requisitions by status ${status}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Lista requisiciones de un usuario específico
+   */
+  async getRequisitionsByUser(userId: string): Promise<{ data: PurchaseRequisition[]; success: boolean }> {
+    try {
+      return await apiClient.get(API_ENDPOINTS.PURCHASE_REQUISITIONS_BY_USER(userId));
+    } catch (error: any) {
+      console.error(`Error fetching requisitions for user ${userId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
    * Obtiene una requisición completa con sus detalles
    */
   async getRequisitionById(id: string): Promise<{ 

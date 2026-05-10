@@ -51,7 +51,7 @@ class BusinessManagementAPI {
     // 3. No se ha solicitado explícitamente saltar el contexto de sucursal
     // 4. NO es un endpoint de administración global (sucursales, clientes, usuarios, auth)
     const isBranchManagement = endpoint.includes('/branches/') || endpoint.startsWith('/branches');
-    const isClientApi = endpoint.includes('/client/') || endpoint.startsWith('/client');
+    const isClientApi = endpoint.startsWith('/client/') || endpoint === '/client';
     const isAuthEndpoint = endpoint.includes('/auth/') || endpoint.startsWith('/auth') || endpoint === '/login';
     const isUserAdmin = endpoint.includes('/users/') || endpoint.startsWith('/api/v1/users');
     
@@ -294,6 +294,30 @@ class BusinessManagementAPI {
     return this.delete(`/products/${id}`, options)
   }
 
+  // ============================================================================
+  // STOCK METHODS (v3.3.0)
+  // ============================================================================
+
+  async createStock(productId: string, data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post(`/stock/${productId}`, data, options)
+  }
+
+  async getStockById(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/stock/${id}`, options)
+  }
+
+  async getStockByProductId(productId: string, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/stock/product/${productId}`, options)
+  }
+
+  async updateStockById(id: string | number, data: any, options: RequestOptions = {}): Promise<any> {
+    return this.put(`/stock/${id}`, data, options)
+  }
+
+  async updateStockByProductId(productId: string, data: any, options: RequestOptions = {}): Promise<any> {
+    return this.put(`/stock/product/${productId}`, data, options)
+  }
+
   async getAllCategories(options: RequestOptions = {}): Promise<any> {
     return this.get('/products/all-categories', options)
   }
@@ -318,6 +342,10 @@ class BusinessManagementAPI {
       ...options,
       params: { ...options.params, page, page_size: pageSize }
     })
+  }
+
+  async getPendingSalesByClientId(clientId: string, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/sale/client_id/${clientId}/pending`, options)
   }
 
   async getSalesByClientName(name: string, page = 1, pageSize = 50, options: RequestOptions = {}): Promise<any> {
@@ -348,7 +376,8 @@ class BusinessManagementAPI {
   }
 
   async cancelSale(id: string | number, reason: string, options: RequestOptions = {}): Promise<any> {
-    return this.put(`/sale/${id}`, { cancellation_reason: reason }, options)
+    const updatedOptions = { ...options, params: { ...options.params, reason } }
+    return this.put(`/sale/${id}`, {}, updatedOptions)
   }
 
   async processSalePayment(data: any, options: RequestOptions = {}): Promise<any> {
@@ -375,11 +404,32 @@ class BusinessManagementAPI {
   // PURCHASE METHODS
   // ============================================================================
 
+  async createCompletePurchase(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/purchase/complete', data, options)
+  }
+
+  async cancelPurchaseOrder(data: any, options: RequestOptions = {}): Promise<any> {
+    const id = data.purchase_order_id || data.id;
+    return this.post(`/purchase/${id}/cancel`, data, options)
+  }
+
+  async previewPurchaseCancellation(id: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/purchase/${id}/preview-cancellation`, options)
+  }
+
   async getPurchasesByDateRange(startDate: string, endDate: string, page = 1, pageSize = 50, options: RequestOptions = {}): Promise<any> {
     return this.get('/purchase/date_range/', {
       ...options,
       params: { ...options.params, start_date: startDate, end_date: endDate, page, page_size: pageSize }
     })
+  }
+
+  async getPurchasesBySupplierId(supplierId: string | number, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/purchase/supplier_id/${supplierId}`, options)
+  }
+
+  async getPurchasesBySupplierName(name: string, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/purchase/supplier_name/${encodeURIComponent(name)}`, options)
   }
 
   async getPurchaseById(id: string | number, options: RequestOptions = {}): Promise<any> {

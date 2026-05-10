@@ -272,26 +272,21 @@ export interface CreateProductPriceRequest {
 // STOCK TYPES
 // ============================================================================
 
-export interface StockEntity {
-  name: string;
-}
-
 export interface Stock {
   id: number;
   product_id: string;
   quantity: number;
-  exp: string; // Date string YYYY-MM-DD
-  entity: StockEntity;
-  min_stock?: number;
-  max_stock?: number;
+  unit?: string | null;
+  effective_date?: string; // Date string YYYY-MM-DD
+  user_id?: string;
+  branch_id?: number | null;
+  metadata?: Record<string, any> | null;
 }
 
 export interface CreateStockRequest {
   quantity: number;
-  expirationDate: string;
-  exp?: string; // Legacy support
-  entityName?: string;
-  entity?: StockEntity;
+  unit?: string;
+  metadata?: Record<string, any>;
 }
 
 // ============================================================================
@@ -606,6 +601,7 @@ export interface PurchaseOrderRequest {
   supplier_id: number;
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED' | string;
   order_details: PurchaseOrderDetailRequest[];
+  branch_id?: number;
   payment_method_id?: number;
   currency_id?: number;
   auto_update_prices?: boolean;
@@ -639,6 +635,7 @@ export interface PurchaseRiched {
   order_date: string;
   total_amount: number;
   status: string;
+  branch_id?: number | null;
   supplier_id: number;
   supplier_name: string;
   supplier_status: boolean;
@@ -657,6 +654,7 @@ export interface PurchaseRiched {
 export interface PurchaseItemFullRiched {
   id: number;
   purchase_id: number;
+  purchase_order_id?: number;
   product_id: string;
   product_name: string;
   quantity: number;
@@ -665,12 +663,17 @@ export interface PurchaseItemFullRiched {
   sale_price: number;
   profit_pct: number;
   unit: string;
+  unit_price_with_tax?: number;
+  unit_price_without_tax?: number;
+  tax_amount?: number;
   tax_rate_id: number;
   tax_rate: number;
+  applied_tax_rate?: number;
   exp_date?: string;
   user_id: string;
   user_name: string;
   line_total: number;
+  total_line_with_tax?: number;
   metadata: PurchaseOrderDetailMetadata;
 }
 
@@ -824,6 +827,8 @@ export interface PurchasePaymentStatistics {
 export interface SaleOrderDetailRequest {
   product_id: string;
   quantity: number;
+  unit?: string | null;
+  reserve_id?: number | null;
   tax_rate_id?: number | null;
   sale_price?: number;
   price_change_reason?: string;
@@ -838,6 +843,7 @@ export interface SaleOrderDetailRequest {
 export interface SaleRequest {
   sale_id?: string;
   client_id: string;
+  branch_id?: number;
   reserve_id?: number;
   allow_price_modifications: boolean;
   product_details: SaleOrderDetailRequest[];
@@ -1607,6 +1613,7 @@ export interface ProductEnriched extends Product {
   purchase_price?: number | null;
   stock_quantity?: number | null;
   stock_unit?: string | null;
+  stock_branch_id?: number | null;
   stock_status: 'in_stock' | 'low_stock' | 'medium_stock' | 'out_of_stock' | string;
   has_valid_stock: boolean;
   has_valid_price: boolean;
@@ -1692,6 +1699,7 @@ export interface ProfitabilityAnalysis {
 export interface AuditLog {
   id: number;
   user_id: string;
+  branch_id?: number;
   action: string;
   category: 'AUTH' | 'USER' | 'SALE' | 'PURCHASE' | string;
   entity_type: string;
@@ -1705,6 +1713,7 @@ export interface AuditLog {
 
 export interface EntityHistoryEntry {
   id: number;
+  branch_id?: number;
   action: string;
   user_id: string;
   user_name: string;
@@ -1958,7 +1967,10 @@ export const API_ENDPOINTS = {
   PRODUCT_PRICE_CREATE: (productId: string) => `/product_price/product_id/${productId}`,
   PRODUCT_PRICE_BY_PRODUCT_ID: (productId: string) => `/product_price/product_id/${productId}`,
   STOCK_CREATE: (productId: string) => `/stock/${productId}`,
-  STOCK_BY_PRODUCT_ID: (productId: string) => `/stock/product_id/${productId}`,
+  STOCK_BY_ID: (id: number) => `/stock/${id}`,
+  STOCK_BY_PRODUCT_ID: (productId: string) => `/stock/product/${productId}`,
+  STOCK_UPDATE: (id: number) => `/stock/${id}`,
+  STOCK_UPDATE_BY_PRODUCT: (productId: string) => `/stock/product/${productId}`,
   CLIENT_CREATE: '/client/',
   CLIENT_BY_ID: (id: string) => `/client/${id}`,
   CLIENT_BY_NAME: (name: string) => `/client/name/${name}`,
@@ -2095,6 +2107,8 @@ export const API_ENDPOINTS = {
   PURCHASE_REQUISITIONS: '/purchase-requisitions',
   PURCHASE_REQUISITION_BY_ID: (id: string) => `/purchase-requisitions/${id}`,
   PURCHASE_REQUISITION_STATUS: (id: string) => `/purchase-requisitions/${id}/status`,
+  PURCHASE_REQUISITIONS_BY_STATUS: (status: string) => `/purchase-requisitions/status/${status}`,
+  PURCHASE_REQUISITIONS_BY_USER: (userId: string) => `/purchase-requisitions/user/${userId}`,
   PURCHASE_REQUISITIONS_MY: '/purchase-requisitions/my',
 
   // Security & Audit (v1.5)
