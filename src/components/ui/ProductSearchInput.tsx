@@ -90,7 +90,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
     if (trimmedTerm.length < 3) return [];
     
     try {
-      const results = await productService.searchProducts(trimmedTerm);
+      const results = await productService.search(trimmedTerm);
       const productsArray = Array.isArray(results) ? results : results ? [results] : [];
       
       const filteredProducts = productsArray

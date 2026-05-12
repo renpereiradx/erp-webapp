@@ -64,7 +64,7 @@ const PurchaseRequisitionCreate: React.FC = () => {
     setProductSearch(term);
     if (term.length < 2) return;
     try {
-      const results = await productService.searchProductsByName(term);
+      const results = await productService.search(term);
       setFoundProducts(results || []);
     } catch (err) {}
   };

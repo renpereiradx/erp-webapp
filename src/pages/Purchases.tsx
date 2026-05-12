@@ -358,7 +358,7 @@ const Purchases = () => {
       setSearchingProducts(true)
       setShowProductDropdown(true)
       try {
-        const res = await productService.searchProductsInfo(
+        const res = await productService.searchInfo(
           modalProductSearch.trim(),
           { limit: 10 },
         )

@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { useI18n } from '../lib/i18n';
+import { useI18n } from '@/lib/i18n';
 import { X, Edit, Package, Info, Layout, Activity, TrendingUp, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
-import { Button } from './ui/button';
-import { ProductOperationInfoResponse } from '../types';
+import { Button } from '@/components/ui/button';
+import { ProductOperationInfoResponse } from '@/types';
 
 interface ProductDetailsModalProps {
   isOpen: boolean;

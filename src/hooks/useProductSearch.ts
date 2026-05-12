@@ -101,7 +101,7 @@ export function useProductSearch(options: UseProductSearchOptions = {}): UseProd
     setError(null);
 
     try {
-      const results = await productService.searchProducts(trimmedTerm, {
+      const results = await productService.search(trimmedTerm, {
         signal: abortController.signal,
       });
 

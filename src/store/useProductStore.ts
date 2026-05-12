@@ -658,7 +658,7 @@ const useProductStore = create<ProductState>()(
 
           if (searchTerm && searchTerm.trim()) {
             try {
-              response = await productService.searchProducts(searchTerm.trim())
+              response = await productService.search(searchTerm.trim())
             } catch (searchError) {
               if (DEMO_CONFIG_PRODUCTS.enabled) {
                 console.log('🔄 Products Store: Buscando en mocks (fallback)...');
@@ -841,7 +841,7 @@ const useProductStore = create<ProductState>()(
               ;(async () => {
                 try {
                   const fresh = await get()._withRetry(
-                    () => productService.searchProductsInfo(term),
+                    () => productService.searchInfo(term),
                     { attempts: 2, telemetryKey: 'products.search.revalidate' }
                   )
                   const freshArr = Array.isArray(fresh) ? fresh : [fresh]
@@ -882,7 +882,7 @@ const useProductStore = create<ProductState>()(
             set(s => ({ cacheMisses: s.cacheMisses + 1 }))
             telemetry.record('products.search.cache.miss', { term })
             // Usar financial search para obtener datos completos con precios y costos
-            const response = await productService.searchProductsInfo(
+            const response = await productService.searchInfo(
               term,
               { signal: options.signal }
             )
@@ -933,7 +933,7 @@ const useProductStore = create<ProductState>()(
           telemetry.record('products.search.cache.miss', { term })
           // Usar financial search para obtener datos completos con precios y costos
           const response = await get()._withRetry(
-            () => productService.searchProductsInfo(term),
+            () => productService.searchInfo(term),
             { telemetryKey: 'products.search' }
           )
           const products = Array.isArray(response) ? response : [response]
@@ -1079,7 +1079,7 @@ const useProductStore = create<ProductState>()(
         if (state.loading) return // evitar competir con fetch principal
         if (get()._circuitOpen()) return // no prefetch si circuito abierto
         try {
-          const res = await productService.getProducts(next, state.pageSize)
+          const res = await productService.getProductsPaginated(next, state.pageSize)
           const arr = Array.isArray(res) ? res : [res]
           set(s => ({
             pageCache: {
@@ -1211,7 +1211,7 @@ const useProductStore = create<ProductState>()(
         try {
           const response = await get()._withRetry(
             () =>
-              productService.searchProductsInfo(searchTerm.trim(), {
+              productService.searchInfo(searchTerm.trim(), {
                 limit,
                 signal,
               }),
@@ -2071,3 +2071,4 @@ if (typeof window !== 'undefined') {
 }
 
 export default useProductStore
+

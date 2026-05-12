@@ -444,7 +444,7 @@ const SalesNew: React.FC = () => {
       if (term.length >= 3) {
         setIsSearchingProducts(true);
         try {
-          const results = await productService.searchProducts(term);
+          const results = await productService.search(term);
           const allResults = Array.isArray(results) ? results : results ? [results] : [];
           const activeResults = (allResults as Record<string, unknown>[]).filter(p => {
             if (typeof p.status === 'boolean') return p.status;

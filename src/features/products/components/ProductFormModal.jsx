@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useI18n } from '../lib/i18n'
-import useProductStore from '../store/useProductStore'
-import BusinessManagementAPI from '../services/BusinessManagementAPI'
-import { getGroupedUnitOptions } from '../constants/units'
+import { useI18n } from '@/lib/i18n'
+import useProductStore from '@/store/useProductStore'
+import BusinessManagementAPI from '@/services/BusinessManagementAPI'
+import { getGroupedUnitOptions } from '@/constants/units'
 import { X, Save, Trash2, AlertTriangle, Package, Info, ChevronDown, CheckCircle2, Plus, RefreshCw } from 'lucide-react'
-import { Button } from './ui/button'
+import { Button } from '@/components/ui/button'
 
 /**
  * ProductFormModal Component
@@ -49,7 +49,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
   const loadCategories = async () => {
     setLoadingCategories(true)
     try {
-      const { categoryService } = await import('../services/categoryService')
+      const { categoryService } = await import("@/services/categoryService");
       const response = await categoryService.getAll()
       setCategories(Array.isArray(response) ? response : [])
     } catch (error) {

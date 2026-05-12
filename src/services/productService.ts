@@ -53,7 +53,7 @@ export const productService = {
   /**
    * Obtiene productos paginados (v3.0+)
    */
-  async getProducts(page = 1, pageSize = 10, options: any = {}): Promise<ProductEnriched[]> {
+  async getProductsPaginated(page = 1, pageSize = 10, options: any = {}): Promise<ProductEnriched[]> {
     try {
       return await retryWithBackoff(async () => {
         return await apiClient.getProductsPaginated(page, pageSize, options);

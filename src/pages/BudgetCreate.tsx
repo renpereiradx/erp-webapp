@@ -79,7 +79,7 @@ const BudgetCreate: React.FC = () => {
     }
     setIsSearchingProduct(true);
     try {
-      const results = await productService.searchProductsByName(term);
+      const results = await productService.searchInfo(term);
       setFoundProducts(results || []);
     } catch (error) {
       console.error("Error searching product:", error);
