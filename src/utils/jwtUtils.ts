@@ -11,11 +11,12 @@ export interface JWTPayload {
   active_branch: number | null;
   exp: number;
   iat: number;
+  jti?: string;
 }
 
 /**
- * Decodifica el payload de un JWT sin validación de firma
- * Útil para obtener claims en el frontend de forma síncrona
+ * Decodifica el payload de un JWT sin validación de firma.
+ * Útil para obtener claims en el frontend de forma síncrona.
  */
 export const decodeJWTPayload = (token: string): JWTPayload | null => {
   try {
@@ -23,7 +24,7 @@ export const decodeJWTPayload = (token: string): JWTPayload | null => {
     if (parts.length !== 3) return null;
 
     const payload = parts[1];
-    // Manejar base64 con soporte para caracteres especiales
+    // Manejar base64url con soporte para caracteres especiales
     const decodedPayload = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
     return JSON.parse(decodedPayload);
   } catch (error) {
@@ -31,3 +32,33 @@ export const decodeJWTPayload = (token: string): JWTPayload | null => {
     return null;
   }
 };
+
+/**
+ * Obtiene el session_id del access token activo en localStorage.
+ * Se usa para identificar cuál sesión de la lista es la "actual".
+ */
+export const getCurrentSessionId = (): number | null => {
+  const token = localStorage.getItem('authToken');
+  if (!token || token === 'null' || token === 'undefined') return null;
+  return decodeJWTPayload(token)?.session_id ?? null;
+};
+
+/**
+ * Obtiene todos los claims del access token activo en localStorage.
+ */
+export const getJwtClaims = (): JWTPayload | null => {
+  const token = localStorage.getItem('authToken');
+  if (!token || token === 'null' || token === 'undefined') return null;
+  return decodeJWTPayload(token);
+};
+
+/**
+ * Verifica si el access token almacenado ha expirado localmente.
+ * No reemplaza la validación del backend.
+ */
+export const isTokenExpired = (): boolean => {
+  const claims = getJwtClaims();
+  if (!claims?.exp) return true;
+  return Date.now() / 1000 > claims.exp;
+};
+

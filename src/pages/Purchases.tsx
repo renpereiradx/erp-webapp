@@ -145,7 +145,8 @@ const Purchases = () => {
 
   const getPaymentMethodLabel = method =>
     fixMojibakeText(
-      method?.description ||
+      method?.name ||
+        method?.description ||
         method?.method_code ||
         `Método ${method?.id || ''}`,
     )
@@ -157,6 +158,11 @@ const Purchases = () => {
         currency?.description ||
         currency?.currency_code ||
         '',
+    )
+
+  const getSupplierName = supplier =>
+    fixMojibakeText(
+      supplier?.first_name || supplier?.name || supplier?.Name || 'Proveedor sin nombre'
     )
 
   // Filtering Logic
@@ -323,6 +329,9 @@ const Purchases = () => {
         if (cash) setPaymentMethod(String(cash.id))
         const base = (currs || []).find(c => c.is_base_currency)
         if (base) setPaymentCurrency(base.currency_code)
+      } catch (err: any) {
+        console.error('Error loading initial data:', err)
+        setError(err.message || 'Error al cargar datos iniciales')
       } finally {
         setLoading(false)
       }
@@ -341,6 +350,9 @@ const Purchases = () => {
       try {
         const res = await supplierService.searchByName(supplierSearch)
         setSupplierResults(Array.isArray(res) ? res : res.data || [])
+      } catch (err) {
+        console.error('Error searching suppliers:', err)
+        setSupplierResults([])
       } finally {
         setSearchingSuppliers(false)
       }
@@ -365,6 +377,9 @@ const Purchases = () => {
         setModalProductResults(
           (Array.isArray(res) ? res : []).filter(p => p.state !== false),
         )
+      } catch (err) {
+        console.error('Error searching products:', err)
+        setModalProductResults([])
       } finally {
         setSearchingProducts(false)
       }
@@ -413,7 +428,7 @@ const Purchases = () => {
 
     try {
       setSearchingProducts(true);
-      const fullProduct = await productService.getProductForPurchase(productId);
+      const fullProduct = await productService.getForPurchase(productId);
       
       const normalizedProduct = {
         ...fullProduct,
@@ -645,7 +660,12 @@ const Purchases = () => {
           }),
         )
         fetchDashboardData()
+      } else {
+        toast.error(result?.error || result?.message || 'Error al anular orden de compra')
       }
+    } catch (err: any) {
+      console.error('Error in handleConfirmCancellation:', err)
+      toast.error(err?.message || 'Error inesperado al anular la compra')
     } finally {
       setLoading(false)
     }
@@ -1153,7 +1173,7 @@ const Purchases = () => {
                     <div className='p-4 bg-[rgba(0,120,212,0.08)] dark:bg-[rgba(0,120,212,0.15)] border border-[rgba(0,120,212,0.2)] rounded-[var(--fluent-corner-radius-large,6px)]'>
                       <div className='font-semibold text-[var(--fluent-brand-primary,#0078D4)] text-sm flex items-center gap-2'>
                         <div className='w-2 h-2 rounded-full bg-[var(--fluent-brand-primary,#0078D4)] animate-pulse'></div>
-                        {selectedSupplier.name}
+                        {getSupplierName(selectedSupplier)}
                       </div>
                       <div className='mt-3 space-y-1.5'>
                         <div className='flex items-center gap-2 text-xs text-[var(--fluent-text-secondary,#605E5C)]'>
@@ -1181,7 +1201,7 @@ const Purchases = () => {
                       Método de Pago
                     </label>
                     <select
-                      className='w-full px-3 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all cursor-pointer'
+                      className='w-full px-3 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all cursor-pointer'
                       value={paymentMethod}
                       onChange={e => setPaymentMethod(e.target.value)}
                     >
@@ -1198,7 +1218,7 @@ const Purchases = () => {
                       Moneda de Transacción
                     </label>
                     <select
-                      className='w-full px-3 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all cursor-pointer'
+                      className='w-full px-3 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all cursor-pointer'
                       value={paymentCurrency}
                       onChange={e => setPaymentCurrency(e.target.value)}
                     >

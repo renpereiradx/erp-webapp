@@ -46,18 +46,24 @@ export interface UserSession {
   token_hash?: string;
   ip_address: string;
   user_agent: string;
-  device_type: 'desktop' | 'mobile' | 'tablet' | string;
+  device_type: 'desktop' | 'mobile' | 'tablet' | 'unknown' | string;
   location_info?: string;
   is_active: boolean;
-  is_current?: boolean;
+  is_current?: boolean; // Calculado en frontend via JWT claim session_id
   is_idle?: boolean;
   is_anomaly?: boolean;
   last_activity: string; // ISO Date
   expires_at: string; // ISO Date
   created_at: string; // ISO Date
-  revoked_at?: string;
-  revoked_by?: string;
-  revoke_reason?: string;
+  revoked_at?: string | null;
+  revoked_by?: string | null;
+  revoke_reason?: string | null;
+  // Campos enriquecidos planos retornados por /sessions/active y /sessions/history
+  user_first_name?: string;
+  user_last_name?: string;
+  user_username?: string;
+  user_email?: string;
+  // Objeto anidado (compatibilidad con implementaciones previas)
   user?: Partial<User>;
 }
 

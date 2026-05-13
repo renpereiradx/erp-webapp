@@ -38,9 +38,9 @@ export const sessionService = {
   /**
    * Obtiene las sesiones activas del usuario actual.
    */
-  getActiveSessions: async (): Promise<SuccessResponse & { data: UserSession[] }> => {
+  getActiveSessions: async (): Promise<SuccessResponse & { data: UserSession[]; count?: number }> => {
     if (DEMO_CONFIG.enabled) {
-      return { success: true, data: DEMO_SESSIONS };
+      return { success: true, data: DEMO_SESSIONS, count: DEMO_SESSIONS.length };
     }
     try {
       return await apiClient.get(`${BASE_URL}/active`, SESSION_OPTIONS);
@@ -53,19 +53,18 @@ export const sessionService = {
   /**
    * Obtiene el historial de sesiones del usuario.
    */
-  getSessionHistory: async (params: { page?: number; page_size?: number } = { page: 1, page_size: 20 }): Promise<PaginatedResponse<UserSession>> => {
+  /**
+   * Obtiene el historial completo de sesiones (activas e inactivas).
+   * El backend retorna: { success, data, page, page_size, count }
+   */
+  getSessionHistory: async (params: { page?: number; page_size?: number } = { page: 1, page_size: 20 }): Promise<SuccessResponse & { data: UserSession[]; page: number; page_size: number; count: number }> => {
     if (DEMO_CONFIG.enabled) {
       return {
         success: true,
         data: DEMO_SESSIONS,
-        pagination: {
-          page: 1,
-          page_size: 20,
-          total_items: DEMO_SESSIONS.length,
-          total_pages: 1,
-          has_next: false,
-          has_prev: false
-        }
+        page: 1,
+        page_size: 20,
+        count: DEMO_SESSIONS.length,
       };
     }
     try {
@@ -107,6 +106,22 @@ export const sessionService = {
   },
 
   /**
+   * Cierra todas las sesiones activas del usuario (incluyendo la actual).
+   * Endpoint: POST /auth/logout-all
+   */
+  logoutAllSessions: async (): Promise<SuccessResponse & { sessions_revoked?: number }> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, sessions_revoked: 1, message: 'Sesiones cerradas (Demo)' };
+    }
+    try {
+      return await apiClient.post('/auth/logout-all', null, SESSION_OPTIONS);
+    } catch (error) {
+      console.error('Error logging out all sessions:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Obtiene el log de actividad del usuario.
    */
   getActivityLog: async (params: { page?: number; page_size?: number } = { page: 1, page_size: 20 }): Promise<PaginatedResponse<UserActivity>> => {
@@ -122,7 +137,7 @@ export const sessionService = {
           has_next: false,
           has_prev: false
         }
-      };
+      } as any;
     }
     try {
       return await apiClient.get(`${BASE_URL}/activity`, { ...SESSION_OPTIONS, params });

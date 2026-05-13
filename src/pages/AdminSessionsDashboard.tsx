@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useI18n } from '@/lib/i18n';
 import sessionService from '@/services/sessionService';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserSession } from '@/types';
 
@@ -16,7 +14,6 @@ interface Metrics {
 }
 
 export default function AdminSessionsDashboard() {
-  const { t } = useI18n();
   const [sessions, setSessions] = useState<UserSession[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,25 +71,58 @@ export default function AdminSessionsDashboard() {
     }
   };
 
-  const handleRevokeAll = () => {
-    if (window.confirm('¿Está seguro de que desea revocar TODAS las sesiones activas?')) {
-      toast.info('Funcionalidad de revocar todas las sesiones en desarrollo');
+  const handleRevokeAll = async () => {
+    if (window.confirm('¿Está seguro de que desea revocar TODAS las sesiones activas del sistema?')) {
+      try {
+        const response = await sessionService.logoutAllSessions();
+        const count = response.sessions_revoked ?? 0;
+        toast.success(`${count} sesión(es) cerrada(s) exitosamente`);
+        fetchSessions();
+      } catch (err: any) {
+        toast.error(err.message || 'Error al revocar todas las sesiones');
+      }
     }
   };
 
-  // Filtrado
+  /** Obtiene nombre completo desde campos enriquecidos planos o anidados */
+  const getDisplayName = (session: UserSession): string => {
+    if (session.user_first_name || session.user_last_name)
+      return `${session.user_first_name ?? ''} ${session.user_last_name ?? ''}`.trim();
+    if (session.user?.first_name || session.user?.last_name)
+      return `${session.user.first_name ?? ''} ${session.user.last_name ?? ''}`.trim();
+    return session.user_username || session.user?.username || 'Usuario Desconocido';
+  };
+
+  const getDisplayEmail = (session: UserSession): string =>
+    session.user_email || session.user?.email || `ID: ${session.user_id}`;
+
+  const getAvatarInitial = (session: UserSession): string =>
+    (session.user_first_name || session.user?.first_name || session.user_username || session.user?.username || 'U').charAt(0).toUpperCase();
+
+  const getDeviceIcon = (deviceType: string): string => {
+    switch (deviceType) {
+      case 'mobile':  return 'smartphone';
+      case 'tablet':  return 'tablet_mac';
+      case 'desktop': return 'laptop_mac';
+      default:        return 'devices';
+    }
+  };
+
+  // Filtrado usando campos planos enriquecidos + legacy anidados
   const filteredSessions = sessions.filter(session => {
-    const matchesSearch = 
-      session.user?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = !searchTerm ||
+      getDisplayName(session).toLowerCase().includes(searchLower) ||
+      getDisplayEmail(session).toLowerCase().includes(searchLower) ||
       session.ip_address?.includes(searchTerm) ||
-      session.device_type?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-    const matchesStatus = statusFilter === 'All' || 
-      (statusFilter === 'Active' && session.is_active !== false) ||
+      session.device_type?.toLowerCase().includes(searchLower) ||
+      session.location_info?.toLowerCase().includes(searchLower);
+
+    const matchesStatus = statusFilter === 'All' ||
+      (statusFilter === 'Active'  && session.is_active !== false) ||
       (statusFilter === 'Revoked' && session.is_active === false) ||
-      (statusFilter === 'Idle' && session.is_idle === true);
-      
+      (statusFilter === 'Idle'    && session.is_idle === true);
+
     return matchesSearch && matchesStatus;
   });
 
@@ -104,7 +134,7 @@ export default function AdminSessionsDashboard() {
         </div>
         <h2 className="text-2xl font-black text-text-main uppercase tracking-tight mb-2">Acceso Denegado</h2>
         <p className="text-text-secondary max-w-md mb-8">Esta es una sección administrativa. Tu usuario no cuenta con los permisos necesarios para gestionar sesiones globales.</p>
-        <Button onClick={() => window.history.back()}>Volver</Button>
+        <Button className="mt-4" onClick={() => window.history.back()}>Volver</Button>
       </div>
     );
   }
@@ -199,17 +229,19 @@ export default function AdminSessionsDashboard() {
                   <tr key={session.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors group">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src={session.user?.avatar_url} />
+                        <Avatar className="w-8 h-8" color="primary">
+                          <AvatarImage className="object-cover" src={session.user?.avatar_url} />
                           <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                            {session.user?.first_name?.charAt(0) || session.user?.username?.charAt(0) || 'U'}
+                            {getAvatarInitial(session)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
                           <span className="text-sm font-semibold text-text-main">
-                            {session.user?.first_name ? `${session.user.first_name} ${session.user.last_name || ''}` : session.user?.username || 'Usuario Desconocido'}
+                            {getDisplayName(session)}
                           </span>
-                          <span className="text-[10px] text-text-secondary">{session.user?.email || `ID: ${session.user_id}`}</span>
+                          <span className="text-[10px] text-text-secondary font-mono">
+                            {getDisplayEmail(session)}
+                          </span>
                         </div>
                       </div>
                     </td>
@@ -219,9 +251,16 @@ export default function AdminSessionsDashboard() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-slate-400 text-sm">
-                          {session.device_type === 'mobile' ? 'smartphone' : 'laptop_mac'}
+                          {getDeviceIcon(session.device_type)}
                         </span>
-                        <span className="text-sm text-text-secondary">{session.user_agent ? (session.user_agent.length > 20 ? session.user_agent.substring(0, 20) + '...' : session.user_agent) : 'Browser / OS'}</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm text-text-secondary capitalize">{session.device_type || 'Desconocido'}</span>
+                          {session.user_agent && (
+                            <span className="text-[10px] text-text-secondary opacity-60" title={session.user_agent}>
+                              {session.user_agent.length > 24 ? session.user_agent.substring(0, 24) + '…' : session.user_agent}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -231,18 +270,33 @@ export default function AdminSessionsDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-text-secondary">
-                        {session.last_activity ? new Date(session.last_activity).toLocaleString() : 'Recientemente'}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-text-secondary">
+                          {session.last_activity ? new Date(session.last_activity).toLocaleString() : 'Recientemente'}
+                        </span>
+                        {session.expires_at && (
+                          <span className="text-[10px] text-text-secondary opacity-60">
+                            Exp: {new Date(session.expires_at).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {session.is_active === false ? (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-error/10 text-error uppercase">Revocada</span>
-                      ) : session.is_idle ? (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-warning/10 text-warning uppercase">Inactiva</span>
-                      ) : (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-success/10 text-success uppercase">Activa</span>
-                      )}
+                      <div className="flex flex-col gap-1">
+                        {session.is_active === false ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-error/10 text-error uppercase w-fit">Revocada</span>
+                        ) : session.is_idle ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-warning/10 text-warning uppercase w-fit">Inactiva</span>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-success/10 text-success uppercase w-fit">Activa</span>
+                        )}
+                        {session.is_anomaly && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-fluent-danger/10 text-fluent-danger uppercase w-fit flex items-center gap-0.5">
+                            <span className="material-symbols-outlined text-[11px]">warning</span>
+                            Anomalía
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <Button 
