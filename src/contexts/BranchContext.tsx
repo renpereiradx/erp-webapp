@@ -41,9 +41,17 @@ export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       }
 
       // Consolidar allowed_branches (priorizar objeto user, luego JWT, luego localStorage)
-      const finalAllowedBranches = user?.allowed_branches || jwtAllowedBranches || JSON.parse(localStorage.getItem('allowedBranches') || '[]');
+      // Usar filter(Boolean) para limpiar posibles nulos
+      const finalAllowedBranches = (user?.allowed_branches?.length ? user.allowed_branches : null) || 
+                                   (jwtAllowedBranches?.length ? jwtAllowedBranches : null) || 
+                                   JSON.parse(localStorage.getItem('allowedBranches') || '[]');
+      
       setAllowedBranches(finalAllowedBranches);
-      setCanViewGlobal(user?.role_id === 'admin');
+      
+      // El rol 'F2VLso' es el ID de Administrador en el sistema real
+      const isAdmin = user?.role_id === 'admin' || user?.role_id === 'F2VLso' || 
+                      user?.roles?.some(r => r.id === 'admin' || r.id === 'F2VLso');
+      setCanViewGlobal(!!isAdmin);
 
       // Resolución de sucursal activa según jerarquía
       if (urlBranchId && !isNaN(parseInt(urlBranchId))) {

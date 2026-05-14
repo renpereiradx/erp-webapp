@@ -27,12 +27,32 @@ const BranchSelection = () => {
       try {
         setLoading(true);
         // Obtener todas las sucursales para tener los nombres
-        // En una app real, esto podría ser un endpoint específico que devuelva solo las permitidas con nombres
         const response = await branchService.getBranches({ is_active: true, page_size: 100 });
-        const allBranches = response.data;
+        
+        // Manejar diferentes formatos de respuesta (paginado o array directo)
+        const allBranches = Array.isArray(response) 
+          ? response 
+          : (response && response.data ? response.data : []);
+        
+        console.log('Sucursales cargadas:', allBranches);
+        console.log('Sucursales permitidas (IDs):', allowedBranches);
         
         // Filtrar solo las que el usuario tiene permitidas
-        const userBranches = allBranches.filter(b => allowedBranches.includes(b.id));
+        // Si es admin o tiene permiso global, mostramos todas las que devolvió la API
+        let userBranches = [];
+        const allowedIds = Array.isArray(allowedBranches) 
+            ? allowedBranches.map(b => typeof b === 'object' ? (b as any).id : b) 
+            : [];
+
+        if (canViewGlobal || allowedIds.length === 0) {
+          // Si es admin o por alguna razón no tiene IDs asignados, 
+          // pero la API devolvió sucursales, mostramos todas como candidatos
+          userBranches = allBranches;
+        } else {
+          userBranches = allBranches.filter(b => allowedIds.includes(b.id));
+        }
+        
+        console.log('Sucursales finales a mostrar:', userBranches);
         setBranches(userBranches);
       } catch (err) {
         console.error('Error fetching branches:', err);

@@ -308,14 +308,13 @@ const Purchases = () => {
         setStartDate(start)
         setEndDate(end)
 
-        const [orders, methods, currs, taxes] = await Promise.all([
-          fetchPurchaseOrdersByDateRange(start, end),
-          PaymentMethodService.getAll(),
-          CurrencyService.getAll(),
-          purchaseService.getTaxRates(1, 100),
+        // Cargar configuración base con catch individual para que no bloquee toda la pantalla
+        const [methods, currs, taxes] = await Promise.all([
+          PaymentMethodService.getAll().catch(() => []),
+          CurrencyService.getAll().catch(() => []),
+          purchaseService.getTaxRates(1, 100).catch(() => ({ success: false, data: [] })),
         ])
 
-        setPurchaseOrders(Array.isArray(orders) ? orders : [])
         setPaymentMethods(methods || [])
         setCurrencies(currs || [])
         if (taxes.success) setTaxRates(taxes.data || [])
@@ -329,6 +328,16 @@ const Purchases = () => {
         if (cash) setPaymentMethod(String(cash.id))
         const base = (currs || []).find(c => c.is_base_currency)
         if (base) setPaymentCurrency(base.currency_code)
+
+        // Cargar órdenes
+        try {
+          const orders = await fetchPurchaseOrdersByDateRange(start, end)
+          setPurchaseOrders(Array.isArray(orders) ? orders : [])
+        } catch (ordersErr: any) {
+          console.error('Error loading purchase orders:', ordersErr)
+          setError(ordersErr.message || 'Error al cargar las compras. Aún puedes registrar nuevas compras.')
+          setPurchaseOrders([])
+        }
       } catch (err: any) {
         console.error('Error loading initial data:', err)
         setError(err.message || 'Error al cargar datos iniciales')
