@@ -55,10 +55,13 @@ export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       } else if (jwtBranchId !== null) {
         setCurrentBranchId(jwtBranchId);
         localStorage.setItem('activeBranch', jwtBranchId.toString());
-      } else if (finalAllowedBranches.length > 0) {
-        // Fallback final: Primera sucursal disponible
+      } else if (finalAllowedBranches.length === 1) {
+        // Si solo hay una sucursal, la seleccionamos automáticamente
         setCurrentBranchId(finalAllowedBranches[0]);
         localStorage.setItem('activeBranch', finalAllowedBranches[0].toString());
+      } else {
+        // Si hay múltiples o ninguna, dejamos que el usuario elija o se mantenga en global
+        setCurrentBranchId(null);
       }
     } else {
       setCurrentBranchId(null);

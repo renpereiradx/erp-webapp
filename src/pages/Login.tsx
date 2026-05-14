@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
 import { useAuth } from '../contexts/AuthContext.tsx';
 import { Eye, EyeOff, ShieldCheck, Lock, User } from 'lucide-react';
@@ -11,6 +12,7 @@ import { DEMO_CONFIG } from '../config/demoAuth';
 
 const Login = () => {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const { login, loading, error, clearError } = useAuth();
 
   const [formData, setFormData] = useState({ username: '', password: '' });
@@ -30,7 +32,10 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      await login(formData);
+      const result = await login(formData);
+      if (result.success) {
+        navigate('/select-branch');
+      }
     } catch (error) {
       // El error es manejado por el AuthContext y mostrado al usuario.
     }

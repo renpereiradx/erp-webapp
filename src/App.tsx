@@ -51,6 +51,7 @@ import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
 import Currencies from '@/pages/Currencies'
 import ExchangeRates from '@/pages/ExchangeRates'
 import Login from '@/pages/Login.tsx'
+import BranchSelection from '@/pages/BranchSelection.tsx'
 import Settings from '@/pages/Settings'
 import BranchManagement from '@/pages/BranchManagement'
 import UserManagementList from '@/pages/UserManagementList.tsx'
@@ -108,14 +109,17 @@ import InventoryDashboard from '@/pages/InventoryAnalytics/InventoryDashboard'
 import StockLevelsReorder from '@/pages/InventoryAnalytics/StockLevelsReorder'
 import InventoryRisk from '@/pages/InventoryAnalytics/InventoryRisk'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext.tsx'
-import { BranchProvider } from '@/contexts/BranchContext'
+import { BranchProvider, useBranch } from '@/contexts/BranchContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import RoleGuard from '@/components/auth/RoleGuard'
+import { useLocation } from 'react-router-dom'
 
 // Componente de protección de rutas
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading, authLoading } = useAuth()
+  const { isAuthenticated, loading, authLoading, user } = useAuth()
+  const { currentBranchId, allowedBranches } = useBranch()
+  const location = useLocation()
 
   if (loading || authLoading) {
     return (
@@ -127,6 +131,17 @@ const ProtectedRoute = ({ children }) => {
 
   if (!isAuthenticated) {
     return <Navigate to='/login' replace />
+  }
+
+  // Si está autenticado pero no tiene sucursal seleccionada y tiene opciones disponibles,
+  // redirigir a selección de sucursal (a menos que ya esté allí)
+  // Nota: Los admins pueden estar en currentBranchId === null (Visión Global)
+  const isSelectingBranch = location.pathname === '/select-branch'
+  const hasMultipleOptions = allowedBranches.length > 1
+  const hasNoBranchSelected = currentBranchId === null && !localStorage.getItem('activeBranch')
+
+  if (!isSelectingBranch && hasMultipleOptions && hasNoBranchSelected && user?.role_id !== 'admin') {
+    return <Navigate to='/select-branch' replace />
   }
 
   return children
@@ -159,6 +174,16 @@ function AppContent() {
                 ) : (
                   <Login />
                 )
+              }
+            />
+
+            {/* Selección de Sucursal - Protegida pero fuera del MainLayout */}
+            <Route
+              path='/select-branch'
+              element={
+                <ProtectedRoute>
+                  <BranchSelection />
+                </ProtectedRoute>
               }
             />
 
