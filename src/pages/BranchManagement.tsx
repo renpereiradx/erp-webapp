@@ -43,6 +43,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import DataState from '@/components/ui/DataState';
 import ToastContainer from '@/components/ui/ToastContainer';
 import BranchModal from '@/features/branches/components/BranchModal';
@@ -55,6 +63,7 @@ const BranchManagement: React.FC = () => {
   const { t } = useI18n();
   const { addToast } = useToast();
   const { currentBranchId } = useBranch();
+  const queryClient = useQueryClient();
   
   // Estados de datos
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,6 +72,23 @@ const BranchManagement: React.FC = () => {
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'fiscal' | 'access'>('info');
+
+  const [branchToDeactivate, setBranchToDeactivate] = useState<Branch | null>(null);
+
+  const handleDeactivate = (branch: Branch) => {
+    setBranchToDeactivate(branch);
+  };
+
+  const confirmDeactivate = () => {
+    if (!branchToDeactivate) return;
+    branchService.updateBranch(branchToDeactivate.id, { is_active: false })
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['branches'] });
+        addToast('Sucursal desactivada', 'success');
+        setBranchToDeactivate(null);
+      })
+      .catch((error) => addToast(error.message || 'Error al desactivar', 'error'));
+  };
 
   const { data: response, isLoading, isError } = useQuery({
     queryKey: ['branches'],
@@ -266,6 +292,32 @@ const BranchManagement: React.FC = () => {
           branch={selectedBranch}
           initialTab={activeTab}
         />
+      )}
+
+      {/* Modal de Desactivar Sucursal */}
+      {branchToDeactivate && (
+        <Dialog open={!!branchToDeactivate} onOpenChange={() => setBranchToDeactivate(null)}>
+          <DialogContent className="sm:max-w-md font-display p-6 sm:p-8 gap-6">
+            <DialogHeader className="gap-3">
+              <div className="size-12 rounded-full bg-error/10 flex items-center justify-center mb-2 mx-auto">
+                <span className="material-symbols-outlined text-3xl text-error">warning</span>
+              </div>
+              <DialogTitle className="text-xl font-bold text-center text-slate-800">
+                Desactivar Sucursal
+              </DialogTitle>
+              <DialogDescription className="text-sm text-slate-500 text-center mt-2 px-2">
+                ¿Estás seguro de que deseas desactivar la sucursal <strong className="font-bold text-slate-800">{branchToDeactivate.name}</strong>?<br/><br/>
+                Esta acción evitará que se registren nuevas operaciones en esta sucursal, pero conservará el historial.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-3 mt-6 sm:justify-center w-full">
+              <Button variant="ghost" className="h-11 px-6 font-bold text-slate-600" onClick={() => setBranchToDeactivate(null)}>Cancelar</Button>
+              <Button variant="destructive" className="h-11 px-8 font-bold bg-error hover:bg-error/90 text-white shadow-lg shadow-error/20" onClick={confirmDeactivate}>
+                Desactivar Sucursal
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

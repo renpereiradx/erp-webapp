@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -173,55 +174,59 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto font-display">
-        <DialogHeader className="pb-2 border-b">
-          <DialogTitle className="text-xl font-bold flex items-center gap-3">
-            <div className="size-8 bg-primary/10 text-primary rounded flex items-center justify-center">
-              <Building2 size={18} />
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto font-display p-6 sm:p-8 gap-6">
+        <DialogHeader className="pb-4 border-b">
+          <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+            <div className="size-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+              <Building2 size={20} />
             </div>
             {isEditing ? `Gestionar: ${branch.name}` : 'Nueva Sucursal'}
           </DialogTitle>
+          <DialogDescription className="text-slate-500 mt-1.5 text-sm">
+            {isEditing ? 'Administre la información general, configuración fiscal y permisos de usuario para esta sucursal.' : 'Complete los campos obligatorios para registrar una nueva sucursal en el sistema.'}
+          </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue={initialTab} className="mt-4">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-100/50 p-1">
-            <TabsTrigger value="info" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs">
+        <Tabs defaultValue={initialTab} className="mt-2">
+          <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-lg">
+            <TabsTrigger value="info" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs py-2 rounded-md">
               Información General
             </TabsTrigger>
-            <TabsTrigger value="fiscal" disabled={!isEditing} className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs">
+            <TabsTrigger value="fiscal" disabled={!isEditing} className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs py-2 rounded-md">
               Config. Fiscal
             </TabsTrigger>
-            <TabsTrigger value="access" disabled={!isEditing} className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs">
+            <TabsTrigger value="access" disabled={!isEditing} className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs py-2 rounded-md">
               Accesos
             </TabsTrigger>
           </TabsList>
 
           {/* TAB: INFORMACIÓN GENERAL */}
-          <TabsContent value="info" className="py-6 animate-in fade-in duration-300">
-            <form id="branch-form" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Código de Sucursal *</label>
+          <TabsContent value="info" className="pt-6 animate-in fade-in duration-300">
+            <form id="branch-form" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Código de Sucursal *</label>
                   <Input 
                     value={formData.code || ''} 
                     onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
                     disabled={isEditing}
-                    className="font-mono font-bold"
+                    className="font-mono font-bold h-11"
                     placeholder="Ej: MATRIZ"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Nombre Comercial *</label>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Nombre Comercial *</label>
                   <Input 
                     value={formData.name || ''} 
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     placeholder="Ej: Sucursal Central"
+                    className="h-11"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Tipo de Sucursal</label>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Tipo de Sucursal</label>
                   <select 
-                    className="w-full h-10 px-3 border border-border-base rounded-md bg-white text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none"
+                    className="w-full h-11 px-3 border border-slate-200 rounded-md bg-white text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none hover:bg-slate-50 transition-colors"
                     value={formData.branch_type || 'POINT_OF_SALE'}
                     onChange={(e) => setFormData({...formData, branch_type: e.target.value})}
                   >
@@ -231,58 +236,65 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     <option value="DISTRIBUTION_CENTER">Centro de Distribución</option>
                   </select>
                 </div>
-                <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                <div className="flex items-start gap-3 p-4 bg-amber-50/50 rounded-xl border border-amber-100/50">
                   <input 
                     type="checkbox" 
                     id="is_warehouse"
-                    className="size-5 rounded border-slate-300 text-primary focus:ring-primary/20"
+                    className="mt-0.5 size-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500/20"
                     checked={formData.is_warehouse || false}
                     onChange={(e) => setFormData({...formData, is_warehouse: e.target.checked})}
                   />
-                  <label htmlFor="is_warehouse" className="text-xs font-bold text-slate-600 cursor-pointer">
-                    Esta ubicación opera como depósito físico
+                  <label htmlFor="is_warehouse" className="text-sm font-medium text-amber-900 cursor-pointer leading-tight">
+                    Esta ubicación opera como depósito físico y mantiene inventario
                   </label>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Razón Social</label>
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Razón Social</label>
                   <Input 
                     value={formData.legal_name || ''} 
                     onChange={(e) => setFormData({...formData, legal_name: e.target.value})}
                     placeholder="Empresa S.A."
+                    className="h-11"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">RUC</label>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">RUC</label>
                   <Input 
                     value={formData.ruc || ''} 
                     onChange={(e) => setFormData({...formData, ruc: e.target.value})}
                     placeholder="80000000-0"
+                    className="h-11"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Dirección Física</label>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Dirección Física</label>
                   <Input 
                     value={formData.address || ''} 
                     onChange={(e) => setFormData({...formData, address: e.target.value})}
                     placeholder="Calle Principal 123"
+                    className="h-11"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Teléfono</label>
+                   <div className="space-y-2">
+                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Teléfono</label>
                     <Input 
                       value={formData.phone || ''} 
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="h-11"
+                      placeholder="+595 900 000000"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Email</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Email</label>
                     <Input 
                       value={formData.email || ''} 
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="h-11"
+                      placeholder="info@empresa.com"
                     />
                   </div>
                 </div>
@@ -291,47 +303,56 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
           </TabsContent>
 
           {/* TAB: CONFIGURACIÓN FISCAL */}
-          <TabsContent value="fiscal" className="py-6 animate-in fade-in duration-300 space-y-6">
+          <TabsContent value="fiscal" className="pt-6 animate-in fade-in duration-300 space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Receipt size={16} className="text-primary" /> Timbrados y Puntos de Expedición
+              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <Receipt size={18} className="text-primary" /> Timbrados y Puntos de Expedición
               </h3>
               <Button 
                 size="sm" 
-                className="h-8 text-[10px] font-black uppercase bg-primary hover:bg-primary-hover"
+                className="h-9 px-4 text-xs font-bold uppercase bg-primary hover:bg-primary-hover shadow-sm"
                 onClick={() => setShowAddFiscal(!showAddFiscal)}
               >
-                {showAddFiscal ? 'Cerrar' : <><Plus size={14} className="mr-1" /> Nuevo Timbrado</>}
+                {showAddFiscal ? 'Cancelar' : <><Plus size={16} className="mr-1.5" /> Nuevo Timbrado</>}
               </Button>
             </div>
 
             {showAddFiscal && (
-              <div className="p-4 bg-slate-50 border rounded-xl animate-in slide-in-from-top-2 duration-300">
-                <div className="grid grid-cols-3 gap-3">
-                  <Input 
-                    placeholder="Establecimiento (001)" 
-                    className="text-xs h-9" 
-                    value={fiscalForm.establishment_code}
-                    onChange={(e) => setFiscalForm({...fiscalForm, establishment_code: e.target.value})}
-                  />
-                  <Input 
-                    placeholder="Punto Exped. (001)" 
-                    className="text-xs h-9"
-                    value={fiscalForm.expedition_point}
-                    onChange={(e) => setFiscalForm({...fiscalForm, expedition_point: e.target.value})}
-                  />
-                  <Input 
-                    placeholder="Número Timbrado" 
-                    className="text-xs h-9"
-                    value={fiscalForm.timbrado}
-                    onChange={(e) => setFiscalForm({...fiscalForm, timbrado: e.target.value})}
-                  />
+              <div className="p-5 bg-slate-50 border border-slate-200 rounded-xl animate-in slide-in-from-top-2 duration-300 shadow-sm">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Establecimiento</label>
+                    <Input 
+                      placeholder="001" 
+                      className="text-sm h-11 font-mono" 
+                      value={fiscalForm.establishment_code}
+                      onChange={(e) => setFiscalForm({...fiscalForm, establishment_code: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Punto de Expedición</label>
+                    <Input 
+                      placeholder="001" 
+                      className="text-sm h-11 font-mono"
+                      value={fiscalForm.expedition_point}
+                      onChange={(e) => setFiscalForm({...fiscalForm, expedition_point: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Número de Timbrado</label>
+                    <Input 
+                      placeholder="12345678" 
+                      className="text-sm h-11 font-mono"
+                      value={fiscalForm.timbrado}
+                      onChange={(e) => setFiscalForm({...fiscalForm, timbrado: e.target.value})}
+                    />
+                  </div>
                 </div>
-                <div className="mt-3 flex justify-end gap-2">
-                   <Button size="sm" variant="ghost" className="h-8 text-[10px] font-bold" onClick={() => setShowAddFiscal(false)}>Cancelar</Button>
+                <div className="mt-4 flex justify-end gap-3">
+                   <Button size="sm" variant="ghost" className="h-10 text-xs font-bold" onClick={() => setShowAddFiscal(false)}>Descartar</Button>
                    <Button 
                     size="sm" 
-                    className="h-8 text-[10px] font-bold px-4 bg-primary text-white border-none" 
+                    className="h-10 text-xs font-bold px-6 bg-primary text-white shadow-sm" 
                     onClick={() => addFiscalMutation.mutate(fiscalForm)}
                     disabled={addFiscalMutation.isPending}
                    >
@@ -342,32 +363,39 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
             )}
 
             {loadingFiscal ? (
-              <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+              <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-primary size-8" /></div>
             ) : !fiscalConfigs?.configs?.length && !fiscalConfigs?.data?.length ? (
-              <div className="p-10 border-2 border-dashed rounded-xl text-center space-y-2">
-                <p className="text-xs font-bold text-slate-400 uppercase">Sin configuraciones fiscales</p>
-                <p className="text-[10px] text-slate-400">Define los puntos de expedición para facturación electrónica.</p>
+              <div className="p-12 border-2 border-dashed border-slate-200 rounded-xl text-center space-y-3 bg-slate-50/50">
+                <div className="mx-auto size-12 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                  <Receipt className="text-slate-400 size-6" />
+                </div>
+                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Sin configuraciones fiscales</p>
+                <p className="text-sm text-slate-400 max-w-sm mx-auto">Define los puntos de expedición para habilitar la facturación electrónica en esta sucursal.</p>
               </div>
             ) : (
-              <div className="border rounded-lg overflow-hidden">
+              <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                 <Table>
-                  <TableHeader className="bg-slate-50">
-                    <TableRow>
-                      <TableHead className="text-[10px] font-bold uppercase">Establ. / Punto</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Tipo</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Timbrado</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Validez</TableHead>
-                      <TableHead className="w-10"></TableHead>
+                  <TableHeader className="bg-slate-50 border-b border-slate-200">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Establ. / Punto</TableHead>
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Tipo</TableHead>
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Timbrado</TableHead>
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Validez</TableHead>
+                      <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody className="divide-y divide-slate-100">
                     {(fiscalConfigs?.configs || fiscalConfigs?.data || []).map((cfg: BranchFiscalConfig) => (
-                      <TableRow key={cfg.id} className="text-xs">
-                        <TableCell className="font-bold">{cfg.establishment_code}-{cfg.expedition_point}</TableCell>
-                        <TableCell>{cfg.document_type}</TableCell>
-                        <TableCell className="font-mono">{cfg.timbrado}</TableCell>
-                        <TableCell className="text-slate-500">{cfg.valid_to ? new Date(cfg.valid_to).toLocaleDateString() : 'Indefinido'}</TableCell>
-                        <TableCell><Button variant="ghost" size="sm" className="size-8 p-0 text-slate-300 hover:text-error"><Trash2 size={14} /></Button></TableCell>
+                      <TableRow key={cfg.id} className="text-sm hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="py-4 px-4 font-bold text-slate-700">{cfg.establishment_code}-{cfg.expedition_point}</TableCell>
+                        <TableCell className="py-4 px-4 text-slate-600 font-medium">{cfg.document_type}</TableCell>
+                        <TableCell className="py-4 px-4 font-mono font-medium text-slate-600">{cfg.timbrado}</TableCell>
+                        <TableCell className="py-4 px-4 text-slate-500">{cfg.valid_to ? new Date(cfg.valid_to).toLocaleDateString() : 'Indefinido'}</TableCell>
+                        <TableCell className="py-4 px-4 text-right">
+                          <Button variant="ghost" size="sm" className="size-8 p-0 text-slate-400 hover:text-error hover:bg-error/10">
+                            <Trash2 size={16} />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -377,51 +405,51 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
           </TabsContent>
 
           {/* TAB: ACCESOS */}
-          <TabsContent value="access" className="py-6 animate-in fade-in duration-300 space-y-6">
+          <TabsContent value="access" className="pt-6 animate-in fade-in duration-300 space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <ShieldCheck size={16} className="text-success" /> Usuarios Autorizados
+              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <ShieldCheck size={18} className="text-success" /> Usuarios Autorizados
               </h3>
               <Button 
                 size="sm" 
-                className="h-8 text-[10px] font-black uppercase border-success text-success hover:bg-success/5" 
+                className="h-9 px-4 text-xs font-bold uppercase border-success text-success hover:bg-success/5 shadow-sm" 
                 variant="outline"
                 onClick={() => setShowAddAccess(!showAddAccess)}
               >
-                {showAddAccess ? 'Cerrar' : <><UserPlus size={14} className="mr-1" /> Asignar Usuario</>}
+                {showAddAccess ? 'Cancelar' : <><UserPlus size={16} className="mr-1.5" /> Asignar Usuario</>}
               </Button>
             </div>
 
             {showAddAccess && (
-              <div className="p-4 bg-slate-50 border rounded-xl animate-in slide-in-from-top-2 duration-300">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold uppercase text-slate-400">ID del Usuario</label>
+              <div className="p-5 bg-success/5 border border-success/20 rounded-xl animate-in slide-in-from-top-2 duration-300 shadow-sm">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase text-success/70 tracking-wider">ID del Usuario</label>
                     <Input 
                       placeholder="Ej: usr_abc123" 
-                      className="text-xs h-9" 
+                      className="text-sm h-11 border-success/30 focus:border-success focus:ring-success/20 bg-white" 
                       value={accessForm.user_id}
                       onChange={(e) => setAccessForm({...accessForm, user_id: e.target.value})}
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold uppercase text-slate-400">Nivel de Acceso</label>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase text-success/70 tracking-wider">Nivel de Acceso</label>
                     <select 
-                      className="w-full h-9 px-2 border rounded-md text-xs bg-white"
+                      className="w-full h-11 px-3 border border-success/30 rounded-md text-sm font-medium bg-white focus:ring-2 focus:ring-success/20 outline-none"
                       value={accessForm.access_type}
                       onChange={(e) => setAccessForm({...accessForm, access_type: e.target.value})}
                     >
-                      <option value="FULL">Acceso Total</option>
-                      <option value="LIMITED">Solo Transacciones</option>
-                      <option value="READ_ONLY">Solo Lectura</option>
+                      <option value="FULL">Acceso Total (Gestión)</option>
+                      <option value="LIMITED">Solo Transacciones (Operativo)</option>
+                      <option value="READ_ONLY">Solo Lectura (Auditoría)</option>
                     </select>
                   </div>
                 </div>
-                <div className="mt-3 flex justify-end gap-2">
-                   <Button size="sm" variant="ghost" className="h-8 text-[10px] font-bold" onClick={() => setShowAddAccess(false)}>Cancelar</Button>
+                <div className="mt-4 flex justify-end gap-3">
+                   <Button size="sm" variant="ghost" className="h-10 text-xs font-bold text-slate-600 hover:text-slate-800" onClick={() => setShowAddAccess(false)}>Descartar</Button>
                    <Button 
                     size="sm" 
-                    className="h-8 text-[10px] font-bold px-4 bg-success hover:bg-success/90 text-white border-none"
+                    className="h-10 text-xs font-bold px-6 bg-success hover:bg-success/90 text-white shadow-sm"
                     onClick={() => grantAccessMutation.mutate(accessForm)}
                     disabled={grantAccessMutation.isPending}
                    >
@@ -432,46 +460,51 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
             )}
 
             {loadingAccess ? (
-              <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+              <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-success size-8" /></div>
             ) : !accessList?.access?.length && !accessList?.data?.length ? (
-              <div className="p-10 border-2 border-dashed rounded-xl text-center space-y-2">
-                <p className="text-xs font-bold text-slate-400 uppercase">Sin accesos configurados</p>
-                <p className="text-[10px] text-slate-400">Los administradores globales siempre tienen acceso.</p>
+              <div className="p-12 border-2 border-dashed border-slate-200 rounded-xl text-center space-y-3 bg-slate-50/50">
+                <div className="mx-auto size-12 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                  <ShieldCheck className="text-slate-400 size-6" />
+                </div>
+                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Sin accesos configurados</p>
+                <p className="text-sm text-slate-400 max-w-sm mx-auto">Actualmente solo los administradores globales tienen acceso a esta sucursal.</p>
               </div>
             ) : (
-              <div className="border rounded-lg overflow-hidden">
+              <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                 <Table>
-                  <TableHeader className="bg-slate-50">
-                    <TableRow>
-                      <TableHead className="text-[10px] font-bold uppercase">Usuario</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Nivel de Acceso</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Otorgado el</TableHead>
-                      <TableHead className="w-10"></TableHead>
+                  <TableHeader className="bg-slate-50 border-b border-slate-200">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Usuario</TableHead>
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Nivel de Acceso</TableHead>
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Otorgado el</TableHead>
+                      <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody className="divide-y divide-slate-100">
                     {(accessList?.access || accessList?.data || []).map((acc: UserBranchAccess) => (
-                      <TableRow key={acc.id} className="text-xs">
-                        <TableCell className="font-bold flex items-center gap-2">
-                           <div className="size-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px]">{acc.user_id.substring(0,2).toUpperCase()}</div>
-                           ID: {acc.user_id}
+                      <TableRow key={acc.id} className="text-sm hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="py-4 px-4 font-bold text-slate-700 flex items-center gap-3">
+                           <div className="size-8 rounded-full bg-slate-200 flex items-center justify-center text-xs text-slate-600">{acc.user_id.substring(0,2).toUpperCase()}</div>
+                           <span className="font-mono text-xs">{acc.user_id}</span>
                         </TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                            acc.access_type === 'FULL' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                        <TableCell className="py-4 px-4">
+                          <span className={`px-3 py-1 rounded-md text-[11px] font-black uppercase tracking-wider border ${
+                            acc.access_type === 'FULL' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
+                            acc.access_type === 'LIMITED' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                            'bg-slate-100 text-slate-600 border-slate-200'
                           }`}>
                             {acc.access_type}
                           </span>
                         </TableCell>
-                        <TableCell className="text-slate-500">{new Date(acc.granted_at).toLocaleDateString()}</TableCell>
-                        <TableCell>
+                        <TableCell className="py-4 px-4 text-slate-500">{new Date(acc.granted_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="py-4 px-4 text-right">
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="size-8 p-0 text-slate-300 hover:text-error"
+                            className="size-8 p-0 text-slate-400 hover:text-error hover:bg-error/10"
                             onClick={() => revokeAccessMutation.mutate(acc.user_id)}
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={16} />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -483,15 +516,15 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
           </TabsContent>
         </Tabs>
 
-        <DialogFooter className="mt-6 pt-4 border-t gap-3">
-          <Button variant="ghost" onClick={onClose} className="text-xs font-bold">Cancelar</Button>
+        <DialogFooter className="mt-4 pt-6 border-t gap-3">
+          <Button variant="ghost" onClick={onClose} className="text-sm h-11 px-6 font-bold text-slate-600">Cancelar</Button>
           <Button 
             type="submit" 
             form="branch-form" 
             disabled={saveMutation.isPending}
-            className="bg-primary hover:bg-primary-hover text-white text-xs font-bold px-8 shadow-lg shadow-primary/20"
+            className="bg-primary hover:bg-primary-hover text-white text-sm h-11 px-8 font-bold shadow-lg shadow-primary/20"
           >
-            {saveMutation.isPending ? 'Guardando...' : isEditing ? 'Actualizar Sucursal' : 'Crear Sucursal'}
+            {saveMutation.isPending ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Crear Sucursal'}
           </Button>
         </DialogFooter>
       </DialogContent>
