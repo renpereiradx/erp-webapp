@@ -172,6 +172,19 @@ class BusinessManagementAPI {
           errorData.retry_after = retryAfter ? parseInt(retryAfter) : 60;
           errorData.code = 'RATE_LIMIT_EXCEEDED';
         }
+        
+        // Manejo específico de RBAC
+        if (response.status === 403 && typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('api:forbidden', { 
+            detail: errorData.message || 'Acceso denegado: No cuentas con los permisos necesarios.' 
+          }));
+        }
+        
+        if (response.status === 405 && typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('api:method_not_allowed', { 
+            detail: errorData.message || 'Operación no permitida en este módulo (Solo lectura).' 
+          }));
+        }
       } catch (e) {
         errorData = { message: `HTTP Error ${response.status}` }
       }

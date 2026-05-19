@@ -35,8 +35,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const hasPermission = useCallback((permission: string): boolean => {
     if (!user) return false;
-    // El rol ADMIN siempre tiene todos los permisos
-    if (user.role_id === 'admin') return true;
+    // El rol ADMIN siempre tiene todos los permisos (F2VLso es el nuevo ID, admin se mantiene por retrocompatibilidad)
+    if (user.role_id === 'admin' || user.role_id === 'F2VLso') return true;
     if (!user.permissions) return false;
     return user.permissions.includes(permission);
   }, [user]);
@@ -138,7 +138,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Manejar errores de red o del servidor
       let errorMessage = 'Error de conexión. Verifica tu conexión a internet.';
       
-      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+      if (error.code === 'RATE_LIMIT_EXCEEDED' || error.message?.includes('429')) {
+        const retryAfter = error.retry_after || 15;
+        errorMessage = `Demasiados intentos. Por favor, intenta de nuevo en ${retryAfter} segundos.`;
+      } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
         errorMessage = 'Credenciales incorrectas';
       } else if (error.message?.includes('404')) {
         errorMessage = 'Usuario no encontrado';

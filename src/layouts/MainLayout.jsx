@@ -77,7 +77,7 @@ const MainLayout = ({ children }) => {
 
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, hasPermission } = useAuth()
   const { t } = useI18n()
   const { matchesShortcut } = useKeyboardShortcutsStore()
 
@@ -93,16 +93,19 @@ const MainLayout = ({ children }) => {
 
   // Configuración de navegación
   const navigation = useMemo(
-    () => [
+    () => {
+      const navItems = [
       {
         name: t('common.bi', 'Inteligencia de Negocios'),
         href: '#',
         icon: BarChart3,
+        permission: 'analytics:read',
         children: [
           {
             name: t('common.dashboard', 'Dashboard'),
             href: '#',
             icon: LayoutDashboard,
+            permission: 'dashboard:read',
             children: [
               {
                 name: t('common.home', 'Resumen Ejecutivo'),
@@ -236,6 +239,7 @@ const MainLayout = ({ children }) => {
             name: t('inventory.analytics', 'Analítica de Inventario'),
             href: '#',
             icon: Package,
+            permission: 'analytics:read',
             children: [
               {
                 name: t('inventory.analytics.dashboard', 'Dashboard de Inventario'),
@@ -263,6 +267,7 @@ const MainLayout = ({ children }) => {
             name: t('receivables.title', 'Cuentas por Cobrar'),
             href: '#',
             icon: CreditCard,
+            permission: 'receivables:read',
             children: [
               {
                 name: t('receivables.summary', 'Resumen'),
@@ -290,6 +295,7 @@ const MainLayout = ({ children }) => {
             name: t('payables.title', 'Cuentas por Pagar'),
             href: '#',
             icon: CircleDollarSign,
+            permission: 'payables:read',
             children: [
               {
                 name: t('payables.summary', 'Resumen Ejecutivo'),
@@ -317,6 +323,7 @@ const MainLayout = ({ children }) => {
             name: 'Reportes Financieros',
             href: '#',
             icon: FileText,
+            permission: 'reports:read',
             children: [
               {
                 name: 'Resumen Financiero BI',
@@ -349,6 +356,7 @@ const MainLayout = ({ children }) => {
             name: 'Auditoría de Sistema',
             href: '#',
             icon: Shield,
+            permission: 'audit:read',
             children: [
               {
                 name: 'Dashboard de Auditoría',
@@ -373,13 +381,15 @@ const MainLayout = ({ children }) => {
             name: t('sales.title', 'Ventas'),
             href: '#',
             icon: ShoppingCart,
+            permission: 'sales:read',
             children: [
               { name: 'Nueva Venta', href: '/ventas', icon: PlusCircle },
-              { name: 'Presupuestos', href: '/comercial/presupuestos', icon: FileText },
+              { name: 'Presupuestos', href: '/comercial/presupuestos', icon: FileText, permission: 'budgets:read' },
               {
                 name: 'Agenda y Reservas',
                 href: '/gestion-agenda',
                 icon: Calendar,
+                permission: 'reserves:read'
               },
             ],
           },
@@ -387,11 +397,13 @@ const MainLayout = ({ children }) => {
             name: t('purchases.title', 'Compras'),
             href: '/compras',
             icon: ShoppingBag,
+            permission: 'purchases:read'
           },
           {
             name: t('common.payments', 'Pagos y Cobros'),
             href: '#',
             icon: DollarSign,
+            permission: 'payments:read',
             children: [
               {
                 name: t('sales.payments', 'Cobros Ventas'),
@@ -409,6 +421,7 @@ const MainLayout = ({ children }) => {
             name: t('cashRegister.title', 'Caja'),
             href: '#',
             icon: DollarSign,
+            permission: 'cash:read',
             children: [
               {
                 name: t('cashRegister.openClose', 'Apertura y Cierre'),
@@ -428,8 +441,9 @@ const MainLayout = ({ children }) => {
         name: t('common.inventory_logistics', 'Logística e Inventario'),
         href: '#',
         icon: Package,
+        permission: 'inventory:read',
         children: [
-          { name: t('products.title', 'Productos'), href: '/productos', icon: Package },
+          { name: t('products.title', 'Productos'), href: '/productos', icon: Package, permission: 'products:read' },
           { name: 'Requisiciones', href: '/logistica/requisiciones', icon: ClipboardList },
           {
             name: t('productAdjustments.title', 'Ajustes de Stock'),
@@ -464,11 +478,13 @@ const MainLayout = ({ children }) => {
         name: t('common.directory', 'Directorio de Contactos'),
         href: '/parties',
         icon: Users,
+        permission: 'parties:read'
       },
       {
         name: t('common.services_planning', 'Planificación y Reservas'),
         href: '#',
         icon: Calendar,
+        permission: 'reserves:read',
         children: [
           {
             name: t('reservations.title', 'Gestión de Agenda'),
@@ -486,11 +502,13 @@ const MainLayout = ({ children }) => {
             name: t('branches.title', 'Sucursales'),
             href: '/configuracion/sucursales',
             icon: Building2,
+            permission: 'branches:read'
           },
           {
             name: t('common.financeConfig', 'Config. Financiera'),
             href: '#',
             icon: Coins,
+            permission: 'tax:read',
             children: [
               {
                 name: t('currencies.title', 'Monedas'),
@@ -508,6 +526,7 @@ const MainLayout = ({ children }) => {
             name: 'Usuarios y Seguridad',
             href: '#',
             icon: Shield,
+            permission: 'users:read',
             children: [
               {
                 name: 'Gestión de Usuarios',
@@ -523,14 +542,33 @@ const MainLayout = ({ children }) => {
                 name: 'Mi Perfil',
                 href: '/configuracion/perfil',
                 icon: User,
+                permission: undefined // Mi perfil es accesible por todos
               },
             ],
           },
           { name: t('settings.title', 'Ajustes Generales'), href: '/configuracion', icon: Settings },
         ],
       },
-    ],
-    [t]
+    ];
+
+    // Recursively filter navigation items based on permissions
+    const filterNavItems = (items) => {
+      return items.filter(item => {
+        if (item.permission && !hasPermission(item.permission)) {
+          return false;
+        }
+        if (item.children) {
+          item.children = filterNavItems(item.children);
+          // Only keep parent if it has children or if it's explicitly allowed
+          return item.children.length > 0 || !item.permission;
+        }
+        return true;
+      });
+    };
+
+    return filterNavItems(navItems);
+    },
+    [t, hasPermission]
   )
 
   const isActive = useCallback((href) => {

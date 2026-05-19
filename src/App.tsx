@@ -114,7 +114,9 @@ import { BranchProvider, useBranch } from '@/contexts/BranchContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import RoleGuard from '@/components/auth/RoleGuard'
+import PermissionGuard from '@/components/auth/PermissionGuard'
 import { useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 
 // Componente de protección de rutas
 const ProtectedRoute = ({ children }) => {
@@ -141,7 +143,7 @@ const ProtectedRoute = ({ children }) => {
   const hasMultipleOptions = allowedBranches.length > 1
   const hasNoBranchSelected = currentBranchId === null && !localStorage.getItem('activeBranch')
 
-  if (!isSelectingBranch && hasMultipleOptions && hasNoBranchSelected && user?.role_id !== 'admin') {
+  if (!isSelectingBranch && hasMultipleOptions && hasNoBranchSelected && user?.role_id !== 'admin' && user?.role_id !== 'F2VLso') {
     return <Navigate to='/select-branch' replace />
   }
 
@@ -151,6 +153,27 @@ const ProtectedRoute = ({ children }) => {
 // Componente interno que usa los hooks
 function AppContent() {
   const { isAuthenticated, loading } = useAuth()
+
+  useEffect(() => {
+    const handleForbidden = (e: any) => {
+      import('sonner').then(({ toast }) => {
+        toast.error(e.detail || 'Acceso denegado: No cuentas con los permisos necesarios.');
+      });
+    };
+    const handleMethodNotAllowed = (e: any) => {
+      import('sonner').then(({ toast }) => {
+        toast.warning(e.detail || 'Operación no permitida en este módulo (Solo lectura).');
+      });
+    };
+
+    window.addEventListener('api:forbidden', handleForbidden);
+    window.addEventListener('api:method_not_allowed', handleMethodNotAllowed);
+
+    return () => {
+      window.removeEventListener('api:forbidden', handleForbidden);
+      window.removeEventListener('api:method_not_allowed', handleMethodNotAllowed);
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -243,10 +266,10 @@ function AppContent() {
                       <Route path='/receivables/overdue' element={<OverdueAccounts />} />
                       <Route path='/receivables/client-profile/:clientId' element={<ClientCreditProfile />} />
                       <Route path='/receivables/aging-report' element={<AgingReport />} />
-                      <Route path='/productos' element={<Products />} />
-                      <Route path='/parties' element={<PartiesPage />} />
+                      <Route path='/productos' element={<PermissionGuard permission="products:read"><Products /></PermissionGuard>} />
+                      <Route path='/parties' element={<PermissionGuard permission="parties:read"><PartiesPage /></PermissionGuard>} />
                       <Route path='/payables/suppliers/:id/analysis' element={<SupplierAnalysis />} />
-                      <Route path='/ventas' element={<SalesNew />} />
+                      <Route path='/ventas' element={<PermissionGuard permission="sales:read"><SalesNew /></PermissionGuard>} />
                       
                       {/* Sales Analytics Routes */}
                       <Route path='/sales-analytics/dashboard' element={<SalesAnalyticsDashboard />} />
