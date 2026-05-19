@@ -1,19 +1,20 @@
 # Guía de API de Sucursales para Frontend
 
-## Base URL
+## 🔧 Configuración General
 
-`http://localhost:5050`
+### Base URL
+http://localhost:5050
 
-## Autenticación
-
-- Header: `Authorization: Bearer <jwt_token>`
-
-## Headers requeridos (cuando aplica)
-
+### Headers Requeridos
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
+
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
+
+### Formato de Respuesta Estándar
+`{ success: bool, data?, message?, error?, pagination? }`
 
 ## Contexto de Sucursal
 
@@ -22,520 +23,652 @@ Authorization: Bearer <jwt_token>
 - Fallback: `active_branch` del token JWT
 - Restricción: sucursal debe estar en `allowed_branches`
 
-> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
+---
 
-## Formato de fechas
+## Política de Soft Delete
 
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
+Las sucursales se eliminan de forma lógica (soft delete). **No existe un endpoint DELETE para sucursales.**
 
-## Respuesta estándar
+- Para **desactivar** una sucursal: `PUT /branches/{id}` con `{"is_active": false}`
+- Para **reactivar** una sucursal: `PUT /branches/{id}` con `{"is_active": true}`
+- Las sucursales inactivas se excluyen de `GET /branches` por defecto; usar `?include_inactive=true` para incluirlas
+- **No se puede desactivar** una sucursal si algún usuario la tiene como sucursal default (`is_default_branch = true`). Primero debe reasignarse la sucursal default del usuario.
 
-`{ success: bool, data?, message?, error?, pagination? }`
+---
 
-## Paginación estándar
+## Permisos de Administración
 
-`{ page, page_size, total_items, total_pages, has_next, has_prev }`
+Los siguientes endpoints requieren rol **ADMIN** (`role_id = "F2VLso"`):
+
+| Endpoint | Permiso |
+|----------|---------|
+| `POST /branches` | Solo ADMIN |
+| `PUT /branches/{id}` | Solo ADMIN |
+| `POST /branches/{branch_id}/fiscal-config` | Solo ADMIN |
+| `PUT /branches/fiscal-config/{id}` | Solo ADMIN |
+| `POST /branches/{branch_id}/access` | Solo ADMIN |
+| `PUT /branches/{branch_id}/access/{user_id}` | Solo ADMIN |
+| `DELETE /branches/{branch_id}/access/{user_id}` | Solo ADMIN |
+
+Los endpoints de lectura (`GET`) están disponibles para todos los usuarios autenticados, filtrados por sus sucursales permitidas.
 
 ---
 
 ## Endpoints
 
 ### POST /branches
-
-**Descripción:** Crea una nueva sucursal.
+**Descripción:** Crea una nueva sucursal. **Requiere rol ADMIN.**
 
 #### Headers
-
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
-
-| Campo            | Tipo   | Requerido | Descripción                           |
-| ---------------- | ------ | --------- | ------------------------------------- |
-| code             | string | Sí        | Código único de la sucursal           |
-| name             | string | Sí        | Nombre de la sucursal                 |
-| branch_type      | string | Sí        | Tipo de sucursal                      |
-| legal_name       | string | No        | Razón social                          |
-| trade_name       | string | No        | Nombre comercial                      |
-| ruc              | string | No        | RUC (Registro Único de Contribuyente) |
-| address          | string | No        | Dirección                             |
-| city             | string | No        | Ciudad                                |
-| state            | string | No        | Departamento/Estado                   |
-| country          | string | No        | País                                  |
-| phone            | string | No        | Teléfono                              |
-| email            | string | No        | Correo electrónico                    |
-| allows_sales     | bool   | No        | Permite ventas. Default: `true`       |
-| allows_purchases | bool   | No        | Permite compras. Default: `true`      |
-| is_warehouse     | bool   | No        | Es depósito. Default: `false`         |
-| manager_user_id  | string | No        | ID del usuario gestor                 |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| code | string | Sí | Código único de la sucursal (se convierte a mayúsculas) |
+| name | string | Sí | Nombre de la sucursal |
+| branch_type | string | No | Tipo de sucursal. Valores: `POINT_OF_SALE`, `WAREHOUSE`, `HEADQUARTERS`, `DISTRIBUTION_CENTER`. Default: `POINT_OF_SALE` |
+| legal_name | string | No | Razón social |
+| trade_name | string | No | Nombre comercial |
+| ruc | string | No | RUC (Registro Único de Contribuyente) |
+| address | string | No | Dirección |
+| city | string | No | Ciudad |
+| state | string | No | Departamento/Estado |
+| country | string | No | País |
+| phone | string | No | Teléfono |
+| email | string | No | Correo electrónico |
+| allows_sales | bool | No | Permite ventas. Default: `true` |
+| allows_purchases | bool | No | Permite compras. Default: `false` |
+| is_warehouse | bool | No | Es depósito. Default: `false` |
+| manager_user_id | string | No | ID del usuario gestor |
 
 #### Response 201
-
-| Campo       | Tipo     | Descripción       |
-| ----------- | -------- | ----------------- |
-| id          | int      | ID de la sucursal |
-| code        | string   | Código            |
-| name        | string   | Nombre            |
-| branch_type | string   | Tipo              |
-| is_active   | bool     | Estado activo     |
-| created_at  | datetime | Fecha de creación |
+```json
+{
+  "id": 1,
+  "code": "MATRIZ",
+  "name": "Sucursal Matriz",
+  "branch_type": "POINT_OF_SALE",
+  "legal_name": "Empresa S.A.",
+  "trade_name": "Mi Negocio",
+  "ruc": "80012345-6",
+  "address": "Av. Principal 123",
+  "city": "Asunción",
+  "state": "Central",
+  "country": "PY",
+  "phone": "+59521123456",
+  "email": "sucursal@empresa.com",
+  "is_active": true,
+  "allows_sales": true,
+  "allows_purchases": false,
+  "is_warehouse": false,
+  "manager_user_id": "usr_abc123",
+  "created_at": "2026-04-22T10:00:00Z",
+  "updated_at": "2026-04-22T10:00:00Z",
+  "created_by": "usr_abc123"
+}
+```
 
 #### Errores
-
-| Código | Condición                                   |
-| ------ | ------------------------------------------- |
-| 400    | Body inválido o campos requeridos faltantes |
-| 401    | Token ausente o inválido                    |
-| 409    | Código de sucursal ya existe                |
-| 500    | Error interno                               |
+| Código | Condición |
+|--------|-----------|
+| 400 | Body inválido, campos requeridos faltantes, o branch_type inválido |
+| 401 | Token ausente o inválido |
+| 403 | Usuario no es administrador |
+| 409 | Código de sucursal ya existe |
+| 500 | Error interno |
 
 ---
 
 ### GET /branches
-
-**Descripción:** Lista todas las sucursales.
+**Descripción:** Lista sucursales con paginación. Filtra por sucursales del usuario según JWT.
 
 #### Headers
-
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
 #### Query Parameters
-
-| Parámetro | Tipo | Requerido | Descripción               |
-| --------- | ---- | --------- | ------------------------- |
-| is_active | bool | No        | Filtrar por estado activo |
-| page      | int  | No        | Número de página          |
-| page_size | int  | No        | Elementos por página      |
+| Parámetro | Tipo | Default | Descripción |
+|-----------|------|---------|-------------|
+| include_inactive | bool | `false` | Incluir sucursales inactivas (soft delete) |
+| page | int | `1` | Número de página |
+| page_size | int | `20` | Elementos por página (máx. 100) |
 
 #### Response 200
-
-| Campo      | Tipo   | Descripción               |
-| ---------- | ------ | ------------------------- |
-| data       | array  | Lista de `Branch`         |
-| pagination | object | Información de paginación |
-
-**Branch:**
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | int | ID de la sucursal |
-| code | string | Código único |
-| name | string | Nombre |
-| branch_type | string | Tipo de sucursal |
-| legal_name | string | Razón social (nullable) |
-| trade_name | string | Nombre comercial (nullable) |
-| ruc | string | RUC (nullable) |
-| address | string | Dirección (nullable) |
-| city | string | Ciudad (nullable) |
-| state | string | Departamento (nullable) |
-| country | string | País (nullable) |
-| phone | string | Teléfono (nullable) |
-| email | string | Correo (nullable) |
-| is_active | bool | Estado activo |
-| allows_sales | bool | Permite ventas |
-| allows_purchases | bool | Permite compras |
-| is_warehouse | bool | Es depósito |
-| manager_user_id | string | ID del gestor (nullable) |
-| created_at | datetime | Fecha de creación |
-| updated_at | datetime | Fecha de actualización |
+```json
+{
+  "branches": [
+    {
+      "id": 1,
+      "code": "MATRIZ",
+      "name": "Sucursal Matriz",
+      "branch_type": "POINT_OF_SALE",
+      "legal_name": "Empresa S.A.",
+      "trade_name": "Mi Negocio",
+      "ruc": "80012345-6",
+      "address": "Av. Principal 123",
+      "city": "Asunción",
+      "state": "Central",
+      "country": "PY",
+      "phone": "+59521123456",
+      "email": "sucursal@empresa.com",
+      "is_active": true,
+      "allows_sales": true,
+      "allows_purchases": true,
+      "is_warehouse": false,
+      "manager_user_id": "usr_abc123",
+      "created_at": "2026-04-22T10:00:00Z",
+      "updated_at": "2026-04-22T10:00:00Z",
+      "created_by": "usr_abc123"
+    }
+  ],
+  "total": 15,
+  "page": 1,
+  "page_size": 20
+}
+```
 
 #### Errores
-
-| Código | Condición                |
-| ------ | ------------------------ |
-| 401    | Token ausente o inválido |
-| 500    | Error interno            |
+| Código | Condición |
+|--------|-----------|
+| 401 | Token ausente o inválido |
+| 500 | Error interno |
 
 ---
 
 ### GET /branches/{id}
-
-**Descripción:** Obtiene una sucursal por ID.
+**Descripción:** Obtiene una sucursal por ID. El usuario debe tener acceso a la sucursal.
 
 #### Headers
-
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
 #### Response 200
-
-Estructura `Branch` completa.
+```json
+{
+  "branch": {
+    "id": 1,
+    "code": "MATRIZ",
+    "name": "Sucursal Matriz",
+    "branch_type": "POINT_OF_SALE",
+    "legal_name": "Empresa S.A.",
+    "trade_name": "Mi Negocio",
+    "ruc": "80012345-6",
+    "address": "Av. Principal 123",
+    "city": "Asunción",
+    "state": "Central",
+    "country": "PY",
+    "phone": "+59521123456",
+    "email": "sucursal@empresa.com",
+    "is_active": true,
+    "allows_sales": true,
+    "allows_purchases": true,
+    "is_warehouse": false,
+    "manager_user_id": "usr_abc123",
+    "created_at": "2026-04-22T10:00:00Z",
+    "updated_at": "2026-04-22T10:00:00Z",
+    "created_by": "usr_abc123"
+  }
+}
+```
 
 #### Errores
-
-| Código | Condición                              |
-| ------ | -------------------------------------- |
-| 400    | `id` inválido                          |
-| 401    | Token ausente o inválido               |
-| 403    | Sucursal no autorizada para el usuario |
-| 404    | Sucursal no encontrada                 |
-| 500    | Error interno                          |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | Sucursal no autorizada para el usuario |
+| 404 | Sucursal no encontrada |
+| 500 | Error interno |
 
 ---
 
 ### PUT /branches/{id}
+**Descripción:** Actualiza una sucursal existente (actualización parcial). **Requiere rol ADMIN.**
 
-**Descripción:** Actualiza una sucursal existente.
+#### Soft Delete vía PUT
+Enviar `{"is_active": false}` para desactivar (soft delete). Se bloquea si la sucursal es default de algún usuario.
 
 #### Headers
-
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
-
-| Campo            | Tipo   | Requerido | Descripción      |
-| ---------------- | ------ | --------- | ---------------- |
-| name             | string | No        | Nombre           |
-| branch_type      | string | No        | Tipo             |
-| legal_name       | string | No        | Razón social     |
-| trade_name       | string | No        | Nombre comercial |
-| ruc              | string | No        | RUC              |
-| address          | string | No        | Dirección        |
-| city             | string | No        | Ciudad           |
-| state            | string | No        | Departamento     |
-| country          | string | No        | País             |
-| phone            | string | No        | Teléfono         |
-| email            | string | No        | Correo           |
-| is_active        | bool   | No        | Estado activo    |
-| allows_sales     | bool   | No        | Permite ventas   |
-| allows_purchases | bool   | No        | Permite compras  |
-| is_warehouse     | bool   | No        | Es depósito      |
-| manager_user_id  | string | No        | ID del gestor    |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| name | string | No | Nombre |
+| branch_type | string | No | Tipo: `POINT_OF_SALE`, `WAREHOUSE`, `HEADQUARTERS`, `DISTRIBUTION_CENTER` |
+| legal_name | string | No | Razón social (null para limpiar) |
+| trade_name | string | No | Nombre comercial (null para limpiar) |
+| ruc | string | No | RUC (null para limpiar) |
+| address | string | No | Dirección (null para limpiar) |
+| city | string | No | Ciudad (null para limpiar) |
+| state | string | No | Departamento (null para limpiar) |
+| country | string | No | País (null para limpiar) |
+| phone | string | No | Teléfono (null para limpiar) |
+| email | string | No | Correo (null para limpiar) |
+| is_active | bool | No | Estado activo (soft delete) |
+| allows_sales | bool | No | Permite ventas |
+| allows_purchases | bool | No | Permite compras |
+| is_warehouse | bool | No | Es depósito |
+| manager_user_id | string | No | ID del gestor (null para limpiar) |
 
 #### Response 200
-
-Estructura `Branch` actualizada.
+Estructura `Branch` actualizada dentro de `{"branch": {...}}`.
 
 #### Errores
-
-| Código | Condición                     |
-| ------ | ----------------------------- |
-| 400    | `id` inválido o body inválido |
-| 401    | Token ausente o inválido      |
-| 403    | Sucursal no autorizada        |
-| 404    | Sucursal no encontrada        |
-| 500    | Error interno                 |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` inválido, body inválido, branch_type inválido, o no se puede desactivar (sucursal default de usuario) |
+| 401 | Token ausente o inválido |
+| 403 | Usuario no es administrador, o sucursal no autorizada |
+| 404 | Sucursal no encontrada |
+| 500 | Error interno |
 
 ---
 
 ### POST /branches/{branch_id}/fiscal-config
-
-**Descripción:** Crea configuración fiscal para una sucursal.
+**Descripción:** Crea configuración fiscal para una sucursal. **Requiere rol ADMIN.**
 
 #### Headers
-
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
-
-| Campo               | Tipo     | Requerido | Descripción                       |
-| ------------------- | -------- | --------- | --------------------------------- |
-| establishment_code  | string   | Sí        | Código de establecimiento (SIFEN) |
-| expedition_point    | string   | Sí        | Punto de expedición               |
-| document_type       | string   | Sí        | Tipo de documento fiscal          |
-| timbrado            | string   | Sí        | Número de timbrado                |
-| valid_from          | datetime | No        | Fecha inicio de validez           |
-| valid_to            | datetime | No        | Fecha fin de validez              |
-| invoice_prefix      | string   | No        | Prefijo de factura                |
-| next_invoice_number | int      | No        | Próximo número de factura         |
-| is_active           | bool     | No        | Estado activo                     |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| establishment_code | string | Sí | Código de establecimiento (SIFEN) |
+| expedition_point | string | Sí | Punto de expedición |
+| document_type | string | No | Tipo de documento fiscal: `FACTURA`, `NOTA_CREDITO`, `NOTA_DEBITO`. Default: `FACTURA` |
+| timbrado | string | Sí | Número de timbrado |
+| valid_from | datetime | No | Fecha inicio de validez |
+| valid_to | datetime | No | Fecha fin de validez |
+| invoice_prefix | string | No | Prefijo de factura |
+| next_invoice_number | int | No | Próximo número de factura. Default: `1` |
+| is_active | bool | No | Estado activo. Default: `true` |
 
 #### Response 201
-
-| Campo               | Tipo     | Descripción               |
-| ------------------- | -------- | ------------------------- |
-| id                  | int      | ID de la config           |
-| branch_id           | int      | ID de la sucursal         |
-| establishment_code  | string   | Código de establecimiento |
-| expedition_point    | string   | Punto de expedición       |
-| document_type       | string   | Tipo de documento         |
-| timbrado            | string   | Timbrado                  |
-| next_invoice_number | int      | Próximo número            |
-| is_active           | bool     | Estado                    |
-| created_at          | datetime | Fecha de creación         |
+```json
+{
+  "id": 1,
+  "branch_id": 1,
+  "establishment_code": "001",
+  "expedition_point": "001",
+  "document_type": "FACTURA",
+  "timbrado": "12345678",
+  "valid_from": "2026-01-01T00:00:00Z",
+  "valid_to": "2027-12-31T23:59:59Z",
+  "invoice_prefix": "001-001-",
+  "next_invoice_number": 1,
+  "is_active": true,
+  "created_at": "2026-04-22T10:00:00Z",
+  "updated_at": "2026-04-22T10:00:00Z",
+  "created_by": "usr_abc123",
+  "updated_by": "usr_abc123"
+}
+```
 
 #### Errores
-
-| Código | Condición                                   |
-| ------ | ------------------------------------------- |
-| 400    | Body inválido o campos requeridos faltantes |
-| 401    | Token ausente o inválido                    |
-| 404    | Sucursal no encontrada                      |
-| 500    | Error interno                               |
+| Código | Condición |
+|--------|-----------|
+| 400 | Body inválido, campos requeridos faltantes, o document_type inválido |
+| 401 | Token ausente o inválido |
+| 403 | Usuario no es administrador, o sucursal no autorizada |
+| 404 | Sucursal no encontrada |
+| 500 | Error interno |
 
 ---
 
 ### GET /branches/{branch_id}/fiscal-config
-
 **Descripción:** Lista configuraciones fiscales de una sucursal.
 
 #### Headers
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+#### Query Parameters
+| Parámetro | Tipo | Default | Descripción |
+|-----------|------|---------|-------------|
+| active_only | bool | `false` | Solo configuraciones activas |
 
 #### Response 200
-
-| Campo | Tipo  | Descripción                   |
-| ----- | ----- | ----------------------------- |
-| data  | array | Lista de `BranchFiscalConfig` |
+```json
+{
+  "configs": [
+    {
+      "id": 1,
+      "branch_id": 1,
+      "establishment_code": "001",
+      "expedition_point": "001",
+      "document_type": "FACTURA",
+      "timbrado": "12345678",
+      "valid_from": "2026-01-01T00:00:00Z",
+      "valid_to": "2027-12-31T23:59:59Z",
+      "invoice_prefix": "001-001-",
+      "next_invoice_number": 1,
+      "is_active": true,
+      "created_at": "2026-04-22T10:00:00Z",
+      "updated_at": "2026-04-22T10:00:00Z",
+      "created_by": "usr_abc123",
+      "updated_by": "usr_abc123"
+    }
+  ]
+}
+```
 
 #### Errores
+| Código | Condición |
+|--------|-----------|
+| 400 | `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | Sucursal no autorizada |
+| 404 | Sucursal no encontrada |
+| 500 | Error interno |
 
-| Código | Condición                |
-| ------ | ------------------------ |
-| 400    | `branch_id` inválido     |
-| 401    | Token ausente o inválido |
-| 404    | Sucursal no encontrada   |
-| 500    | Error interno            |
+---
+
+### GET /branches/fiscal-config/{id}
+**Descripción:** Obtiene una configuración fiscal individual por su ID.
+
+#### Headers
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+
+#### Response 200
+```json
+{
+  "config": {
+    "id": 1,
+    "branch_id": 1,
+    "establishment_code": "001",
+    "expedition_point": "001",
+    "document_type": "FACTURA",
+    "timbrado": "12345678",
+    "valid_from": "2026-01-01T00:00:00Z",
+    "valid_to": "2027-12-31T23:59:59Z",
+    "invoice_prefix": "001-001-",
+    "next_invoice_number": 1,
+    "is_active": true,
+    "created_at": "2026-04-22T10:00:00Z",
+    "updated_at": "2026-04-22T10:00:00Z",
+    "created_by": "usr_abc123",
+    "updated_by": "usr_abc123"
+  }
+}
+```
+
+#### Errores
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | Sucursal de la config no autorizada |
+| 404 | Configuración fiscal no encontrada |
+| 500 | Error interno |
 
 ---
 
 ### PUT /branches/fiscal-config/{id}
-
-**Descripción:** Actualiza una configuración fiscal.
+**Descripción:** Actualiza una configuración fiscal. **Requiere rol ADMIN.**
 
 #### Headers
-
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
-
-| Campo               | Tipo     | Requerido | Descripción               |
-| ------------------- | -------- | --------- | ------------------------- |
-| establishment_code  | string   | No        | Código de establecimiento |
-| expedition_point    | string   | No        | Punto de expedición       |
-| document_type       | string   | No        | Tipo de documento         |
-| timbrado            | string   | No        | Timbrado                  |
-| valid_from          | datetime | No        | Fecha inicio              |
-| valid_to            | datetime | No        | Fecha fin                 |
-| invoice_prefix      | string   | No        | Prefijo                   |
-| next_invoice_number | int      | No        | Próximo número            |
-| is_active           | bool     | No        | Estado                    |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| establishment_code | string | No | Código de establecimiento |
+| expedition_point | string | No | Punto de expedición |
+| document_type | string | No | Tipo: `FACTURA`, `NOTA_CREDITO`, `NOTA_DEBITO` |
+| timbrado | string | No | Timbrado |
+| valid_from | datetime | No | Fecha inicio |
+| valid_to | datetime | No | Fecha fin |
+| invoice_prefix | string | No | Prefijo |
+| next_invoice_number | int | No | Próximo número (debe ser > 0) |
+| is_active | bool | No | Estado activo |
 
 #### Response 200
-
 Estructura `BranchFiscalConfig` actualizada.
 
 #### Errores
-
-| Código | Condición                     |
-| ------ | ----------------------------- |
-| 400    | `id` inválido o body inválido |
-| 401    | Token ausente o inválido      |
-| 404    | Configuración no encontrada   |
-| 500    | Error interno                 |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` inválido, body inválido, o next_invoice_number <= 0 |
+| 401 | Token ausente o inválido |
+| 403 | Usuario no es administrador |
+| 404 | Configuración no encontrada |
+| 500 | Error interno |
 
 ---
 
 ### POST /branches/{branch_id}/access
-
-**Descripción:** Otorga acceso a un usuario sobre una sucursal.
+**Descripción:** Otorga acceso a un usuario sobre una sucursal. **Requiere rol ADMIN.**
 
 #### Headers
-
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
-
-| Campo             | Tipo   | Requerido | Descripción                                    |
-| ----------------- | ------ | --------- | ---------------------------------------------- |
-| user_id           | string | Sí        | ID del usuario                                 |
-| access_type       | string | Sí        | Tipo de acceso: `ADMIN`, `OPERATOR`, `VIEWER`  |
-| is_default_branch | bool   | No        | Marcar como sucursal default. Default: `false` |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| user_id | string | Sí | ID del usuario |
+| access_type | string | No | Tipo de acceso: `FULL`, `LIMITED`, `READ_ONLY`. Default: `FULL` |
+| is_default_branch | bool | No | Marcar como sucursal default. Default: `false` |
 
 #### Response 201
-
-| Campo             | Tipo     | Descripción           |
-| ----------------- | -------- | --------------------- |
-| id                | int      | ID del acceso         |
-| user_id           | string   | ID del usuario        |
-| branch_id         | int      | ID de la sucursal     |
-| access_type       | string   | Tipo de acceso        |
-| is_default_branch | bool     | Es default            |
-| granted_at        | datetime | Fecha de otorgamiento |
+```json
+{
+  "id": 1,
+  "user_id": "usr_abc123",
+  "branch_id": 1,
+  "access_type": "FULL",
+  "is_default_branch": true,
+  "granted_at": "2026-04-22T10:00:00Z",
+  "granted_by": "usr_admin456"
+}
+```
 
 #### Errores
-
-| Código | Condición                                   |
-| ------ | ------------------------------------------- |
-| 400    | Body inválido o campos requeridos faltantes |
-| 401    | Token ausente o inválido                    |
-| 404    | Sucursal o usuario no encontrado            |
-| 409    | El usuario ya tiene acceso a esta sucursal  |
-| 500    | Error interno                               |
+| Código | Condición |
+|--------|-----------|
+| 400 | Body inválido, user_id vacío, o access_type inválido |
+| 401 | Token ausente o inválido |
+| 403 | Usuario no es administrador, o sucursal no autorizada |
+| 404 | Sucursal o usuario no encontrado |
+| 409 | El usuario ya tiene acceso a esta sucursal |
+| 500 | Error interno |
 
 ---
 
 ### GET /branches/{branch_id}/access
-
 **Descripción:** Lista accesos de usuarios para una sucursal.
 
 #### Headers
-
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
 #### Response 200
-
-| Campo | Tipo  | Descripción                 |
-| ----- | ----- | --------------------------- |
-| data  | array | Lista de `UserBranchAccess` |
-
-**UserBranchAccess:**
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | int | ID del acceso |
-| user_id | string | ID del usuario |
-| branch_id | int | ID de la sucursal |
-| access_type | string | Tipo de acceso |
-| is_default_branch | bool | Es default |
-| granted_at | datetime | Fecha de otorgamiento |
-| granted_by | string | ID del usuario que otorgó (nullable) |
+```json
+{
+  "access": [
+    {
+      "id": 1,
+      "user_id": "usr_abc123",
+      "branch_id": 1,
+      "access_type": "FULL",
+      "is_default_branch": true,
+      "granted_at": "2026-04-22T10:00:00Z",
+      "granted_by": "usr_admin456"
+    }
+  ]
+}
+```
 
 #### Errores
-
-| Código | Condición                |
-| ------ | ------------------------ |
-| 400    | `branch_id` inválido     |
-| 401    | Token ausente o inválido |
-| 404    | Sucursal no encontrada   |
-| 500    | Error interno            |
+| Código | Condición |
+|--------|-----------|
+| 400 | `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | Sucursal no autorizada |
+| 404 | Sucursal no encontrada |
+| 500 | Error interno |
 
 ---
 
 ### PUT /branches/{branch_id}/access/{user_id}
-
-**Descripción:** Actualiza el acceso de un usuario a una sucursal.
+**Descripción:** Actualiza el acceso de un usuario a una sucursal. **Requiere rol ADMIN.**
 
 #### Headers
-
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
-
-| Campo             | Tipo   | Requerido | Descripción    |
-| ----------------- | ------ | --------- | -------------- |
-| access_type       | string | No        | Tipo de acceso |
-| is_default_branch | bool   | No        | Es default     |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| access_type | string | No | Tipo de acceso: `FULL`, `LIMITED`, `READ_ONLY` |
+| is_default_branch | bool | No | Es default |
 
 #### Response 200
-
 Estructura `UserBranchAccess` actualizada.
 
 #### Errores
-
-| Código | Condición                         |
-| ------ | --------------------------------- |
-| 400    | `branch_id` o `user_id` inválidos |
-| 401    | Token ausente o inválido          |
-| 404    | Acceso no encontrado              |
-| 500    | Error interno                     |
+| Código | Condición |
+|--------|-----------|
+| 400 | `branch_id` o `user_id` inválidos, o access_type inválido |
+| 401 | Token ausente o inválido |
+| 403 | Usuario no es administrador, o sucursal no autorizada |
+| 404 | Acceso no encontrado |
+| 500 | Error interno |
 
 ---
 
 ### DELETE /branches/{branch_id}/access/{user_id}
-
-**Descripción:** Revoca el acceso de un usuario a una sucursal.
+**Descripción:** Revoca el acceso de un usuario a una sucursal. **Requiere rol ADMIN.**
 
 #### Headers
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
-
-#### Response 204
-
-Sin contenido.
+#### Response 200
+```json
+{
+  "message": "Acceso eliminado correctamente"
+}
+```
 
 #### Errores
-
-| Código | Condición                         |
-| ------ | --------------------------------- |
-| 400    | `branch_id` o `user_id` inválidos |
-| 401    | Token ausente o inválido          |
-| 404    | Acceso no encontrado              |
-| 500    | Error interno                     |
+| Código | Condición |
+|--------|-----------|
+| 400 | `branch_id` o `user_id` inválidos |
+| 401 | Token ausente o inválido |
+| 403 | Usuario no es administrador, o sucursal no autorizada |
+| 500 | Error interno |
 
 ---
 
 ### GET /users/{user_id}/branches
-
 **Descripción:** Lista las sucursales a las que un usuario tiene acceso.
 
 #### Headers
-
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
 #### Response 200
+```json
+{
+  "access": [
+    {
+      "id": 1,
+      "user_id": "usr_abc123",
+      "branch_id": 1,
+      "access_type": "FULL",
+      "is_default_branch": true,
+      "granted_at": "2026-04-22T10:00:00Z",
+      "granted_by": "usr_admin456"
+    }
+  ]
+}
+```
 
-| Campo | Tipo  | Descripción                 |
-| ----- | ----- | --------------------------- |
-| data  | array | Lista de `UserBranchAccess` |
+> **Nota:** Si el usuario autenticado no es el dueño del `user_id` solicitado, solo se retornan las sucursales que ambos tienen en común.
 
 #### Errores
-
-| Código | Condición                |
-| ------ | ------------------------ |
-| 400    | `user_id` inválido       |
-| 401    | Token ausente o inválido |
-| 404    | Usuario no encontrado    |
-| 500    | Error interno            |
+| Código | Condición |
+|--------|-----------|
+| 400 | `user_id` vacío |
+| 401 | Token ausente o inválido |
+| 403 | Sin sucursales en común |
+| 404 | Usuario no encontrado |
+| 500 | Error interno |
 
 ---
 
+## Tipos de Sucursal
+
+| Tipo | Descripción |
+|------|-------------|
+| `POINT_OF_SALE` | Punto de venta (default) |
+| `WAREHOUSE` | Depósito/almacén |
+| `HEADQUARTERS` | Casa matriz |
+| `DISTRIBUTION_CENTER` | Centro de distribución |
+
 ## Tipos de Acceso
 
-| Tipo       | Descripción                |
-| ---------- | -------------------------- |
-| `ADMIN`    | Acceso total a la sucursal |
-| `OPERATOR` | Puede operar transacciones |
-| `VIEWER`   | Solo lectura               |
+| Tipo | Descripción |
+|------|-------------|
+| `FULL` | Acceso total a la sucursal (default al crear) |
+| `LIMITED` | Puede operar transacciones |
+| `READ_ONLY` | Solo lectura |
+
+## Tipos de Documento Fiscal
+
+| Tipo | Descripción |
+|------|-------------|
+| `FACTURA` | Factura electrónica (default) |
+| `NOTA_CREDITO` | Nota de crédito |
+| `NOTA_DEBITO` | Nota de débito |
 
 ---
 
 ## Resumen de Endpoints
 
-| Método | Endpoint                                 | Descripción              |
-| ------ | ---------------------------------------- | ------------------------ |
-| POST   | `/branches`                              | Crear sucursal           |
-| GET    | `/branches`                              | Listar sucursales        |
-| GET    | `/branches/{id}`                         | Obtener sucursal         |
-| PUT    | `/branches/{id}`                         | Actualizar sucursal      |
-| POST   | `/branches/{branch_id}/fiscal-config`    | Crear config fiscal      |
-| GET    | `/branches/{branch_id}/fiscal-config`    | Listar configs fiscales  |
-| PUT    | `/branches/fiscal-config/{id}`           | Actualizar config fiscal |
-| POST   | `/branches/{branch_id}/access`           | Otorgar acceso           |
-| GET    | `/branches/{branch_id}/access`           | Listar accesos           |
-| PUT    | `/branches/{branch_id}/access/{user_id}` | Actualizar acceso        |
-| DELETE | `/branches/{branch_id}/access/{user_id}` | Revocar acceso           |
-| GET    | `/users/{user_id}/branches`              | Sucursales del usuario   |
+| Método | Endpoint | Descripción | Permiso |
+|--------|----------|-------------|---------|
+| POST | `/branches` | Crear sucursal | ADMIN |
+| GET | `/branches` | Listar sucursales (paginado) | Autenticado |
+| GET | `/branches/{id}` | Obtener sucursal | Autenticado |
+| PUT | `/branches/{id}` | Actualizar sucursal (soft delete vía `is_active`) | ADMIN |
+| POST | `/branches/{branch_id}/fiscal-config` | Crear config fiscal | ADMIN |
+| GET | `/branches/{branch_id}/fiscal-config` | Listar configs fiscales | Autenticado |
+| GET | `/branches/fiscal-config/{id}` | Obtener config fiscal individual | Autenticado |
+| PUT | `/branches/fiscal-config/{id}` | Actualizar config fiscal | ADMIN |
+| POST | `/branches/{branch_id}/access` | Otorgar acceso | ADMIN |
+| GET | `/branches/{branch_id}/access` | Listar accesos | Autenticado |
+| PUT | `/branches/{branch_id}/access/{user_id}` | Actualizar acceso | ADMIN |
+| DELETE | `/branches/{branch_id}/access/{user_id}` | Revocar acceso | ADMIN |
+| GET | `/users/{user_id}/branches` | Sucursales del usuario | Autenticado |
 
 ---
 
-_Última actualización: 2026-05-06 — Consistencia cross-documento verificada._
+*Última actualización: 2026-05-19*

@@ -61,42 +61,34 @@ const BranchSwitcher = () => {
           </div>
           
           <div className="p-1 max-h-64 overflow-y-auto custom-scrollbar">
-            {/* Opción Global para Admins */}
-            {canViewGlobal && (
-              <button
-                onClick={() => { changeBranch(null); setIsOpen(false); }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                  currentBranchId === null 
-                    ? 'bg-amber-50 text-amber-700' 
-                    : 'text-text-secondary hover:bg-slate-50 hover:text-text-main'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Globe size={14} className={currentBranchId === null ? 'text-amber-600' : 'text-slate-400'} />
-                  <span>Visión Global (Admin)</span>
-                </div>
-                {currentBranchId === null && <Check size={14} />}
-              </button>
-            )}
-
             {/* Lista de Sucursales */}
-            {allowedBranches.map((branchId) => (
-              <button
-                key={branchId}
-                onClick={() => { changeBranch(branchId); setIsOpen(false); }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                  currentBranchId === branchId 
-                    ? 'bg-primary/5 text-primary' 
-                    : 'text-text-secondary hover:bg-slate-50 hover:text-text-main'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Building2 size={14} className={currentBranchId === branchId ? 'text-primary' : 'text-slate-400'} />
-                  <span>Sucursal {branchId}</span>
-                </div>
-                {currentBranchId === branchId && <Check size={14} />}
-              </button>
-            ))}
+            {allowedBranches.map((branchId) => {
+              // En un caso real, necesitaríamos obtener el nombre/tipo de la sucursal.
+              // Por ahora, asumimos que 'branches' está disponible o que debemos hacer un fetch si no existe.
+              // Usaremos un identificador placeholder mientras resolvemos la falta de data en el contexto.
+              return (
+                <button
+                  key={branchId}
+                  onClick={() => { changeBranch(branchId); setIsOpen(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                    currentBranchId === branchId 
+                      ? 'bg-primary/5 text-primary' 
+                      : 'text-text-secondary hover:bg-slate-50 hover:text-text-main'
+                  }`}
+                >
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="flex items-center gap-2">
+                       <Building2 size={12} className={currentBranchId === branchId ? 'text-primary' : 'text-slate-400'} />
+                       <span className="text-sm">Sucursal {branchId}</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium pl-5 uppercase">
+                      Punto de Venta • Asunción
+                    </span>
+                  </div>
+                  {currentBranchId === branchId && <Check size={14} />}
+                </button>
+              );
+            })}
           </div>
           
           <div className="p-2 border-t border-slate-50 bg-slate-50/30">

@@ -9,6 +9,7 @@ import {
   Route,
   Navigate,
 } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import MainLayout from '@/layouts/MainLayout'
 import PriceAdjustmentLayout from '@/layouts/PriceAdjustmentLayout'
@@ -445,17 +446,30 @@ function AppContent() {
   )
 }
 
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+})
+
 // Componente principal que provee los contextos
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <BranchProvider>
-          {/* AnnouncementProvider temporarily disabled due to React 19 hooks compatibility */}
-          <AppContent />
-        </BranchProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <BranchProvider>
+            {/* AnnouncementProvider temporarily disabled due to React 19 hooks compatibility */}
+            <AppContent />
+          </BranchProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   )
 }
 

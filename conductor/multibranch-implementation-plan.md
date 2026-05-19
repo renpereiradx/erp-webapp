@@ -1,45 +1,52 @@
-# Plan de Implementación: Contexto Multi-Sucursal (Frontend)
+# Plan de Implementación: Sistema Multi-Sucursal (Frontend)
 
 ## Objetivo
-Implementar la infraestructura base en el frontend para soportar la arquitectura multi-sucursal del backend, respetando la jerarquía de resolución de contexto para operaciones transaccionales y de Inteligencia de Negocio (BI).
+Implementar la infraestructura completa en el frontend para soportar la arquitectura multi-sucursal. Esto incluye la gestión del contexto activo (Branch Switcher) y las interfaces de administración (CRUD de sucursales, configuraciones fiscales y accesos), respetando los lineamientos de diseño de Fluent 2 y la nueva arquitectura basada en features con TypeScript.
 
-## Archivos Clave y Contexto
-- `src/types.ts`: Modelo de datos del usuario.
-- `src/services/BusinessManagementAPI.ts`: Cliente base de la API.
-- `src/contexts/AuthContext.tsx`: Gestión de sesión.
-- **Nuevos Archivos:** `src/contexts/BranchContext.tsx`, `src/components/BranchSwitcher.tsx`.
+## Arquitectura y Dependencias
+- **Lógica de Estado del Servidor:** `@tanstack/react-query` (Debe ser instalado).
+- **Lógica de Estado UI Global:** `zustand`.
+- **Estructura de Archivos:** Feature-Sliced Design (`src/features/branches/` y `src/domain/branches/`).
 
-## Pasos de Implementación
+## Fases de Implementación
 
-### Fase 1: Actualización de Tipos
-- **Archivo:** `src/types.ts`
-- **Acción:** Ampliar la interfaz `User` agregando las propiedades opcionales `active_branch?: number | null` y `allowed_branches?: number[]`. Esto mapea los claims del JWT devueltos por el endpoint `/me`.
+### Fase 1: Fundamentos (Dominio y API)
+- **Tipos Base (`src/domain/branches/models.ts`):** 
+  - Definir interfaces `Branch`, `BranchFiscalConfig`, `UserBranchAccess`, y tipos para peticiones.
+- **Tipos Globales (`src/types.ts`):**
+  - Ampliar la interfaz `User` con `active_branch?: number | null` y `allowed_branches?: number[]`.
+- **Servicios API (`src/features/branches/services/branchService.ts`):**
+  - Implementar el cliente con `axios` mapeando todos los endpoints descritos en `BRANCH_API.md`.
+- **Intercepción de Axios (`src/services/BusinessManagementAPI.ts` o equivalente):**
+  - Asegurar la inyección del header `X-Branch-ID` si no viene en los params de las llamadas.
 
-### Fase 2: Cliente API Inteligente
-- **Archivo:** `src/services/BusinessManagementAPI.ts`
-- **Acción:**
-  1. Validar que `getAuthHeaders` extraiga correctamente el `activeBranch` de `localStorage` y lo inyecte como header `X-Branch-ID`.
-  2. Modificar `makeRequest` para garantizar que si un servicio envía explícitamente un parámetro `branch_id` en `options.params`, este tenga prioridad absoluta (el backend ya prioriza los query params sobre el header).
+### Fase 2: Gestión de Contexto Global
+- **Zustand Store (`src/features/branches/hooks/useBranchStore.ts`):**
+  - Manejar `currentBranchId`, `allowedBranches`, `canViewGlobal`.
+  - Sincronizar cambios con `localStorage`.
+- **Integración con AuthContext:**
+  - Extraer y persistir las sucursales permitidas tras el inicio de sesión.
+- **Instalación y Setup de React Query:**
+  - Configurar `QueryClientProvider` en el nivel superior de la aplicación (`src/App.tsx` o `main.tsx`).
 
-### Fase 3: Nuevo Contexto de Sucursal
-- **Archivo:** `src/contexts/BranchContext.tsx`
-- **Acción:** Crear un contexto (`BranchContext` y `BranchProvider`) independiente del `AuthContext`.
-  - **Estado:** Manejar la sucursal seleccionada (`currentBranchId`), las sucursales permitidas (`allowedBranches`) y un flag para saber si el usuario tiene privilegios globales (`canViewGlobal`).
-  - **Lógica:** Implementar la función `changeBranch(id: number | null)`. Esta función actualizará el estado de React y el `localStorage`, asegurando que las siguientes llamadas API utilicen el nuevo contexto. Si es administrador, puede seleccionar `null` ("Todas las sucursales") para operaciones de BI.
+### Fase 3: Interfaz de Selección (Branch Switcher)
+- **Componente (`src/features/branches/components/BranchSwitcher.tsx`):**
+  - Menú desplegable usando Fluent 2.
+  - Renderizado condicional basado en `allowedBranches`.
+  - Opción de "Visión Global / Todas las Sucursales" para administradores.
+- **Integración Visual:** Ubicar el componente en la cabecera (Header) o en la barra lateral del layout principal.
 
-### Fase 4: Integración con Autenticación
-- **Archivo:** `src/contexts/AuthContext.tsx`
-- **Acción:** Ajustar `initializeAuth` y `login` para que extraigan `active_branch` y `allowed_branches` de la respuesta de `/me` y persistan estos valores iniciales en `localStorage`, preparando el terreno para el `BranchContext`.
+### Fase 4: Panel de Gestión (CRUD)
+- **Data Grids (Alta Densidad):**
+  - Vista principal con lista de sucursales (`src/features/branches/pages/BranchesPage.tsx`).
+  - Utilizar el diseño visual de "Grids de Alta Densidad" de Fluent 2 (espaciado, checkmarks, badges de estado).
+- **Formularios de Configuración:**
+  - Formularios para Crear/Editar Sucursales.
+  - Gestión de Configuraciones Fiscales por sucursal.
+- **Gestión de Accesos:**
+  - Interfaz para asignar y revocar roles (`ADMIN`, `OPERATOR`, `VIEWER`) a los usuarios en sucursales específicas.
 
-### Fase 5: Componente UI de Selección
-- **Archivo:** `src/components/BranchSwitcher.tsx` (o directorio similar)
-- **Acción:** Construir un componente visual (ej: un Dropdown) que consuma el `BranchContext`.
-  - Si el usuario tiene más de una sucursal en `allowed_branches`, mostrar el selector.
-  - Si es administrador, incluir la opción "Visión Global" o "Todas las Sucursales" (`id: null`).
-  - Si solo tiene una sucursal y no es admin, ocultar o deshabilitar el selector.
-
-## Verificación y Pruebas
-1. Iniciar sesión con un usuario con múltiples sucursales y verificar que la UI muestre el selector.
-2. Cambiar de sucursal y comprobar que `localStorage` se actualiza.
-3. Observar las peticiones en red y confirmar que el header `X-Branch-ID` coincide con la selección.
-4. (Administradores) Seleccionar "Todas las Sucursales" y verificar que las peticiones de BI funcionen sin enviar el header restrictivo.
+## Verificación
+1. Validar el funcionamiento del CRUD usando mocks o integrando con el backend.
+2. Confirmar que el `BranchSwitcher` altera correctamente el header en peticiones subsecuentes.
+3. Verificar la responsividad y consistencia visual con los componentes de `FLUENT2_COMPONENTS.html`.

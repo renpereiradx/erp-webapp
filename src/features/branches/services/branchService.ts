@@ -1,5 +1,5 @@
-import { apiClient } from './api';
-import { telemetry } from '../utils/telemetry';
+import { apiClient } from '@/services/api';
+import { telemetry } from '@/utils/telemetry';
 import { 
   Branch, 
   CreateBranchRequest, 
@@ -11,7 +11,7 @@ import {
   UpdateBranchAccessRequest,
   API_ENDPOINTS,
   PaginatedResponse
-} from '../types';
+} from '@/types';
 
 /**
  * Servicio para la administración de sucursales, configuración fiscal y accesos.

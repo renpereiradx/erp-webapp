@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBranch } from '@/contexts/BranchContext';
-import { branchService } from '@/services/branchService';
+import { branchService } from '@/features/branches/services/branchService';
 import { Branch } from '@/types';
 import { Building2, Globe, ArrowRight, Loader2, LogOut } from 'lucide-react';
-import { useI18n } from '@/lib/i18n';
 
 const BranchSelection = () => {
-  const { t } = useI18n();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { changeBranch, allowedBranches, canViewGlobal } = useBranch();
@@ -30,16 +28,17 @@ const BranchSelection = () => {
         const response = await branchService.getBranches({ is_active: true, page_size: 100 });
         
         // Manejar diferentes formatos de respuesta (paginado o array directo)
+        // La guía indica que la clave es 'branches'
         const allBranches = Array.isArray(response) 
           ? response 
-          : (response && response.data ? response.data : []);
+          : (response && response.branches ? response.branches : (response && response.data ? response.data : []));
         
         console.log('Sucursales cargadas:', allBranches);
         console.log('Sucursales permitidas (IDs):', allowedBranches);
         
         // Filtrar solo las que el usuario tiene permitidas
         // Si es admin o tiene permiso global, mostramos todas las que devolvió la API
-        let userBranches = [];
+        let userBranches: Branch[] = [];
         const allowedIds = Array.isArray(allowedBranches) 
             ? allowedBranches.map(b => typeof b === 'object' ? (b as any).id : b) 
             : [];
@@ -63,7 +62,7 @@ const BranchSelection = () => {
     };
 
     fetchBranchDetails();
-  }, [allowedBranches]);
+  }, [allowedBranches, canViewGlobal]);
 
   const handleSelectBranch = (branchId: number | null) => {
     changeBranch(branchId);
@@ -72,9 +71,9 @@ const BranchSelection = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-background-base flex flex-col items-center justify-center p-4">
         <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
-        <p className="text-sm font-bold text-slate-500 uppercase tracking-widest animate-pulse">
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">
           Cargando sucursales disponibles...
         </p>
       </div>
@@ -82,20 +81,20 @@ const BranchSelection = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-display">
-      <div className="w-full max-w-4xl">
-        <div className="flex justify-between items-center mb-10">
-          <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none mb-2">
+    <div className="min-h-screen bg-background-base flex items-center justify-center p-6 font-display">
+      <div className="w-full max-w-[1200px] flex flex-col gap-6 animate-in fade-in duration-500">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col gap-1.5 border-l-4 border-primary pl-5">
+            <h1 className="text-3xl font-bold text-text-main tracking-tight">
               Seleccionar Punto de Venta
             </h1>
-            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">
+            <p className="text-text-secondary text-base font-medium">
               Bienvenido, {user?.first_name} {user?.last_name} &bull; Elige una sucursal para comenzar
             </p>
           </div>
           <button
             onClick={logout}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-600 uppercase tracking-widest hover:bg-slate-100 transition-all shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 border border-border-base text-text-main text-xs font-bold rounded hover:bg-slate-50 transition-all shadow-sm bg-white"
           >
             <LogOut size={16} />
             <span>Cerrar Sesión</span>
@@ -103,67 +102,43 @@ const BranchSelection = () => {
         </div>
 
         {error && (
-          <div className="mb-8 p-4 bg-red-50 border-l-4 border-red-500 rounded flex items-center gap-3">
-            <span className="material-symbols-outlined text-red-500">error</span>
-            <p className="text-sm font-bold text-red-700">{error}</p>
+          <div className="mb-4 flex items-start gap-4 p-5 rounded-lg bg-[#fde7e9] border border-[#fde7e9]">
+            <span className="material-symbols-outlined text-error">error</span>
+            <div>
+              <h4 className="font-bold text-sm text-[#a4262c] leading-none">Error</h4>
+              <p className="text-xs text-[#a4262c] mt-1.5 font-medium">{error}</p>
+            </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Opción Global para Admins */}
-          {canViewGlobal && (
-            <button
-              onClick={() => handleSelectBranch(null)}
-              className="group relative bg-amber-500 rounded-2xl p-6 text-left shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden border-2 border-amber-400"
-            >
-              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
-                <Globe size={120} />
-              </div>
-              <div className="relative z-10 flex flex-col h-full">
-                <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center text-white mb-6 border border-white/30">
-                  <Globe size={24} />
-                </div>
-                <h3 className="text-2xl font-black text-white uppercase tracking-tighter leading-tight mb-2">
-                  Visión Global
-                </h3>
-                <p className="text-white/80 text-xs font-bold uppercase tracking-widest mb-auto">
-                  Acceso administrativo completo
-                </p>
-                <div className="mt-8 flex items-center gap-2 text-white font-black uppercase tracking-widest text-[10px]">
-                  <span>Ingresar</span>
-                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </button>
-          )}
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Sucursales */}
           {branches.length > 0 ? (
             branches.map((branch) => (
               <button
                 key={branch.id}
                 onClick={() => handleSelectBranch(branch.id)}
-                className="group relative bg-white rounded-2xl p-6 text-left shadow-sm border border-slate-200 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                className="group p-8 bg-white rounded-xl border border-border-subtle shadow-fluent-2 space-y-5 hover:shadow-fluent-8 hover:-translate-y-1 hover:border-primary/30 transition-all text-left relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 p-8 opacity-5 text-primary group-hover:scale-110 transition-transform duration-500">
                   <Building2 size={120} />
                 </div>
                 <div className="relative z-10 flex flex-col h-full">
-                  <div className="bg-slate-100 w-12 h-12 rounded-xl flex items-center justify-center text-slate-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors mb-6 border border-slate-200 group-hover:border-primary/20">
+                  <div className="size-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center transition-colors mb-2">
                     <Building2 size={24} />
                   </div>
-                  <div className="mb-2">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
                       ID: {branch.code || branch.id}
                     </span>
-                    <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter leading-tight group-hover:text-primary transition-colors">
+                    <h3 className="text-xl font-bold tracking-tight text-text-main group-hover:text-primary transition-colors">
                       {branch.name}
                     </h3>
                   </div>
-                  <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-auto line-clamp-2">
+                  <p className="text-sm text-text-secondary font-medium mt-1 line-clamp-2">
                     {branch.address || 'Sin dirección registrada'} &bull; {branch.city || ''}
                   </p>
-                  <div className="mt-8 flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                  <div className="mt-8 flex items-center gap-1.5 text-primary font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                     <span>Conectarse</span>
                     <ArrowRight size={14} />
                   </div>
@@ -172,14 +147,14 @@ const BranchSelection = () => {
             ))
           ) : (
             !loading && !canViewGlobal && (
-              <div className="col-span-full py-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Building2 size={40} className="text-slate-300" />
+              <div className="col-span-full py-20 text-center bg-white rounded-xl border border-border-subtle shadow-fluent-2 flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-[#f3f2f1] rounded-full flex items-center justify-center mb-6">
+                  <Building2 size={32} className="text-slate-400" />
                 </div>
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-2">
+                <h3 className="text-xl font-bold text-text-main tracking-tight mb-2">
                   No tienes sucursales asignadas
                 </h3>
-                <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-md mx-auto">
+                <p className="text-text-secondary text-sm font-medium max-w-md">
                   Contacta a un administrador para que te otorgue acceso a un punto de venta.
                 </p>
               </div>
@@ -187,18 +162,18 @@ const BranchSelection = () => {
           )}
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">
+        <div className="mt-12 pt-8 border-t border-border-subtle flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">
             ERP Webapp &bull; Core Engine v2.0.4
           </p>
-          <div className="flex gap-6 opacity-40">
+          <div className="flex gap-6 opacity-60">
             <div className="flex items-center gap-1.5">
-               <span className="material-symbols-outlined text-sm">verified_user</span>
-               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Security Active</span>
+               <span className="material-symbols-outlined text-sm text-success">verified_user</span>
+               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Security Active</span>
             </div>
             <div className="flex items-center gap-1.5">
-               <span className="material-symbols-outlined text-sm">cloud_done</span>
-               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Synced to Cloud</span>
+               <span className="material-symbols-outlined text-sm text-info">cloud_done</span>
+               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Synced to Cloud</span>
             </div>
           </div>
         </div>

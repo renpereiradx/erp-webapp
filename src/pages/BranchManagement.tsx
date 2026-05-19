@@ -19,8 +19,10 @@ import {
   Edit2
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { useBranch } from '@/contexts/BranchContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/useToast';
-import { branchService } from '@/services/branchService';
+import { branchService } from '@/features/branches/services/branchService';
 import { Branch, UserBranchAccess, BranchFiscalConfig } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +45,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import DataState from '@/components/ui/DataState';
 import ToastContainer from '@/components/ui/ToastContainer';
+import BranchModal from '@/features/branches/components/BranchModal';
 
 /**
  * BranchManagement - Página administrativa de sucursales (Fluent 2.0)
@@ -51,10 +54,9 @@ import ToastContainer from '@/components/ui/ToastContainer';
 const BranchManagement: React.FC = () => {
   const { t } = useI18n();
   const { addToast } = useToast();
+  const { currentBranchId } = useBranch();
   
   // Estados de datos
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Estado de modales (Controlado localmente para agilidad MVP)
@@ -62,21 +64,18 @@ const BranchManagement: React.FC = () => {
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'fiscal' | 'access'>('info');
 
-  const fetchBranches = async () => {
-    setIsLoading(true);
-    try {
-      const response = await branchService.getBranches();
-      setBranches(response.data || []);
-    } catch (error) {
-      addToast(t('common.error.load', 'Error al cargar sucursales'), 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: response, isLoading, isError } = useQuery({
+    queryKey: ['branches'],
+    queryFn: () => branchService.getBranches(),
+  });
+
+  const branches = response?.branches || response?.data || [];
 
   useEffect(() => {
-    fetchBranches();
-  }, []);
+    if (isError) {
+      addToast(t('common.error.load', 'Error al cargar sucursales'), 'error');
+    }
+  }, [isError, addToast, t]);
 
   const filteredBranches = useMemo(() => {
     return branches.filter(b => 
@@ -222,9 +221,28 @@ const BranchManagement: React.FC = () => {
                           <span className="material-symbols-outlined text-lg text-text-secondary">admin_panel_settings</span> Accesos de Usuario
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-border-subtle" />
-                        <DropdownMenuItem className="gap-3 text-xs font-bold text-error hover:bg-error/5 hover:text-error rounded-lg cursor-pointer">
-                          <span className="material-symbols-outlined text-lg">delete</span> Desactivar Sucursal
-                        </DropdownMenuItem>
+                        {branch.is_active ? (
+                          <DropdownMenuItem 
+                            className="gap-3 text-xs font-bold text-error hover:bg-error/5 hover:text-error rounded-lg cursor-pointer"
+                            onClick={() => handleDeactivate(branch)}
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span> Desactivar Sucursal
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem 
+                            className="gap-3 text-xs font-bold text-success hover:bg-success/5 hover:text-success rounded-lg cursor-pointer"
+                            onClick={() => {
+                              branchService.updateBranch(branch.id, { is_active: true })
+                                .then(() => {
+                                  queryClient.invalidateQueries({ queryKey: ['branches'] });
+                                  addToast('Sucursal reactivada', 'success');
+                                })
+                                .catch((error) => addToast(error.message || 'Error', 'error'));
+                            }}
+                          >
+                            <span className="material-symbols-outlined text-lg">restore</span> Reactivar Sucursal
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -240,6 +258,15 @@ const BranchManagement: React.FC = () => {
           <strong className="font-bold">Nota de Configuración:</strong> Los cambios realizados en la configuración fiscal y los accesos tienen efecto inmediato tras el refresco del token de sesión por parte de los usuarios afectados.
         </p>
       </div>
+
+      {isBranchModalOpen && (
+        <BranchModal 
+          isOpen={isBranchModalOpen} 
+          onClose={() => setIsBranchModalOpen(false)} 
+          branch={selectedBranch}
+          initialTab={activeTab}
+        />
+      )}
     </div>
   );
 };
