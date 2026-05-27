@@ -128,23 +128,40 @@ export interface UpdateSupplierRequest {
 export interface Category {
   id: number;
   name: string;
-  description?: string;
+  description?: string | null;
+  default_tax_rate_id?: number | null;
+  default_tax_rate?: TaxRate | null;
+  parent_id?: number | null;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Product {
   id: string;
   name: string;
   code?: string;
+  barcode?: string | null;
   state?: boolean;
-  is_active: boolean;
+  is_active?: boolean;
   category_id: number;
   id_category?: number; // Legacy field
+  category?: Category | null;
   price?: number;
-  stock_quantity?: number;
-  description?: string;
-  product_type?: string;
+  stock_quantity?: number | null;
+  product_type?: 'PHYSICAL' | 'SERVICE' | 'PRODUCTION' | string;
+  origin?: 'NACIONAL' | 'IMPORTADO' | string | null;
+  brand?: string | null;
+  base_unit?: string | null;
+  is_variable_measure?: boolean;
+  scale_code?: string | null;
+  override_tax_rate_id?: number | null;
+  target_margin_percent?: number | null;
+  pricing_strategy?: 'MANUAL' | 'AUTOMATIC' | string | null;
+  applicable_tax_rate?: TaxRate | null;
   created_at?: string;
   updated_at?: string;
+  description?: string | null;
 }
 
 // ============================================================================
@@ -156,8 +173,18 @@ export interface UnitPrice {
   product_id: string;
   unit: string;
   price_per_unit: number;
-  effective_date: string; // ISO 8601 date string
+  effective_date?: string; // ISO 8601 date string (legacy)
+  updated_at?: string; // ISO 8601 date string
 }
+
+export interface UnitConversion {
+  from_unit: string;
+  to_unit: string;
+  factor: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 
 export interface UnitCostSummary {
   unit: string;
@@ -1566,54 +1593,7 @@ export interface TaxRate {
   updated_by?: string | null;
 }
 
-export interface Category {
-  id: number;
-  name: string;
-  description?: string | null;
-  default_tax_rate_id?: number | null;
-  default_tax_rate?: TaxRate | null;
-  parent_id?: number | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
 
-export interface UnitPrice {
-  id: number;
-  product_id: string;
-  unit: string;
-  price_per_unit: number;
-  effective_date: string;
-}
-
-export interface UnitCostSummary {
-  unit: string;
-  last_cost: number;
-  last_purchase_date: string;
-  weighted_avg_cost_6m: number;
-  total_purchases: number;
-  cost_variance_percent: number;
-}
-
-export interface Product {
-  id: string;
-  name: string;
-  barcode?: string | null;
-  state: boolean;
-  category_id: number;
-  category?: Category | null;
-  product_type: 'PHYSICAL' | 'SERVICE' | 'PRODUCTION' | string;
-  origin?: 'NACIONAL' | 'IMPORTADO' | string | null;
-  brand?: string | null;
-  base_unit?: string | null;
-  override_tax_rate_id?: number | null;
-  target_margin_percent?: number | null;
-  pricing_strategy?: 'MANUAL' | 'AUTOMATIC' | string | null;
-  applicable_tax_rate?: TaxRate | null;
-  created_at: string;
-  updated_at: string;
-  description?: string | null;
-}
 
 export interface ProductEnriched extends Product {
   purchase_price?: number | null;
@@ -1627,42 +1607,8 @@ export interface ProductEnriched extends Product {
   unit_prices?: UnitPrice[] | null;
 }
 
-export interface ProductOperationInfoResponse {
-  product_id: string;
-  product_name: string;
-  barcode?: string;
-  state: boolean;
-  category?: { id: number; name: string };
-  product_type: string;
-  origin?: string;
-  brand?: string;
-  base_unit?: string;
-  created_at: string;
-  updated_at: string;
-  unit_prices: UnitPrice[];
-  unit_costs_summary: UnitCostSummary[];
-  stock_quantity: number;
-  description?: string;
-  tax: {
-    classification_code: string;
-    resolution_source: string;
-    rate: { id: number; tax_name: string; code: string; rate: number };
-  };
-  financial_health: {
-    has_prices: boolean;
-    has_costs: boolean;
-    has_stock: boolean;
-    price_count: number;
-    cost_units_count: number;
-    last_updated: string;
-  };
-  stock_status: string;
-  has_valid_stock: boolean;
-  has_valid_prices: boolean;
-  has_valid_costs: boolean;
-  best_margin_unit?: string;
-  best_margin_percent?: number;
-}
+// La interfaz ProductOperationInfoResponse ya se encuentra declarada arriba (líneas 193-227).
+// Se ha removido esta declaración duplicada para evitar conflictos de tipo en la compilación de TS.
 
 // ============================================================================
 // COST & PRICING TYPES
@@ -2133,6 +2079,25 @@ export const API_ENDPOINTS = {
   SUPPLIER_COST_ANALYSIS: (supplierId: string) => `/suppliers/${supplierId}/cost-analysis`,
   GLOBAL_COST_TRENDS: '/cost-trends',
   PROFITABILITY_ANALYSIS: (productId: string) => `/products/${productId}/profitability`,
+
+  // Cost Transactions (v2.0 - 2026-05-23)
+  COST_TRANSACTIONS: '/cost-transactions',
+  COST_TRANSACTIONS_MANUAL_ADJUSTMENT: '/cost-transactions/manual-adjustment',
+  COST_TRANSACTIONS_HISTORY: (productId: string) => `/cost-transactions/product/${productId}/history`,
+  COST_TRANSACTIONS_BY_DATE: '/cost-transactions/by-date',
+  COST_TRANSACTIONS_BY_ID: (id: number | string) => `/cost-transactions/${id}`,
+
+  // Barcode & Scale Operations (v4.0)
+  SALES_SCAN: '/sales/scan',
+  BARCODE_DECODE: '/barcode/decode',
+  BARCODE_GENERATE: '/barcode/generate',
+  SCALE_WEIGH: '/scale/weigh-item',
+  SCALE_LABEL: '/scale/generate-label',
+  SCALE_CATALOG: '/scale/catalog',
+  SCALES: '/scales',
+  SCALES_BY_ID: (id: number | string) => `/scales/${id}`,
+  LABEL_FORMATS: '/label-formats',
+  LABEL_FORMATS_BY_ID: (id: number | string) => `/label-formats/${id}`,
 } as const;
 
 export const HTTP_STATUS = {
@@ -2168,3 +2133,142 @@ export const isSuccessResponse = (response: any): response is SuccessResponse =>
 export const isPaginatedResponse = <T>(response: any): response is PaginatedResponse<T> => {
   return response && Array.isArray(response.data) && typeof response.total === 'number';
 };
+
+// ============================================================================
+// COST TRANSACTIONS TYPES
+// ============================================================================
+
+export interface CostTransactionRequest {
+  product_id: string;
+  unit: string;
+  transaction_type: 'COST_UPDATE' | 'MANUAL_ADJUSTMENT' | string;
+  new_cost: number;
+  effective_date?: string;
+  reference_type?: string;
+  reference_id?: string;
+  reason?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface CostManualAdjustmentRequest {
+  product_id: string;
+  unit: string;
+  new_cost: number;
+  reason: string;
+  metadata?: Record<string, any>;
+}
+
+export interface CostTransactionResponse {
+  transaction_id: number;
+  product_id: string;
+  old_price: number;
+  new_price: number;
+  price_change: number;
+  price_change_percent: number;
+  price_type: 'cost_price';
+  message: string;
+  metadata?: Record<string, any>;
+}
+
+// ============================================================================
+// BARCODE & SCALE TYPES (v4.0)
+// ============================================================================
+
+export type BarcodeType = 'STANDARD' | 'VARIABLE_PRICE' | 'VARIABLE_WEIGHT';
+
+export interface DecodedBarcode {
+  type: BarcodeType;
+  product_id: string;
+  scale_code: string;
+  total_price?: string; // decimal string
+  weight?: string; // decimal string
+  quantity?: string; // decimal string (only returned from /sales/scan)
+  unit: string;
+}
+
+export interface ScanResult {
+  decoded_barcode: DecodedBarcode;
+  product_name: string;
+  price_per_unit: string; // decimal string
+  subtotal: string; // decimal string
+  subtotal_with_tax: string; // decimal string
+  tax_amount: string; // decimal string
+  in_stock: boolean;
+  stock_quantity: string; // decimal string
+  is_variable_measure: boolean;
+}
+
+export interface WeighItemResponse {
+  product_id: string;
+  product_name: string;
+  scale_code: string;
+  quantity: string; // decimal string
+  unit: string;
+  price_per_unit: string; // decimal string
+  subtotal: string; // decimal string
+  subtotal_with_tax: string; // decimal string
+  tax_amount: string; // decimal string
+  tax_rate: string; // decimal string (e.g. "10")
+  tax_code: string; // "IVA10", "IVA5", "EXENTO"
+  barcode: string;
+  label_data: Record<string, any> | null;
+}
+
+export interface LabelData {
+  product_name: string;
+  weight: string; // decimal string
+  unit: string;
+  price_per_unit: string; // decimal string
+  total_price: string; // decimal string
+  barcode: string;
+  date: string; // YYYY-MM-DD
+  template: string;
+}
+
+export interface ScaleCatalogItem {
+  scale_code: string;
+  product_id: string;
+  product_name: string;
+  price_per_unit: string; // decimal string
+  unit: string;
+  base_unit: string;
+  is_variable_measure: boolean;
+}
+
+export interface Scale {
+  id: number;
+  name: string;
+  location?: string;
+  ip_address?: string;
+  port?: number;
+  protocol?: 'TCP' | 'RS232' | 'USB' | string;
+  model?: string;
+  branch_id?: number;
+  is_connected: boolean;
+  is_active: boolean;
+  label_format_id?: number;
+  last_sync_at?: string | null;
+  sync_status: 'PENDING' | 'SUCCESS' | 'FAILED' | string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LabelFormat {
+  id: number;
+  name: string;
+  barcode_type?: 'EAN13_VARIABLE_PRICE' | 'EAN13_VARIABLE_WEIGHT' | 'CODE128' | string;
+  prefix?: string;
+  scale_code_digits?: number;
+  value_digits?: number;
+  label_width_mm?: number;
+  label_height_mm?: number;
+  includes_product_name: boolean;
+  includes_weight: boolean;
+  includes_unit_price: boolean;
+  includes_total_price: boolean;
+  includes_date: boolean;
+  template?: string;
+  created_at: string;
+  updated_at: string;
+}
+

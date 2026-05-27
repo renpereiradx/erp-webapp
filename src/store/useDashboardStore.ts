@@ -331,7 +331,7 @@ const useDashboardStore = create<DashboardState>()(
              dashboardService.getSummary(),
              dashboardService.getAlerts(),
              dashboardService.getRecentActivity(),
-             dashboardService.getTrends('month'),
+             dashboardService.getTrends({ period: 'month' }),
              profitabilityService.getTrends({ period: 'month' }),
              receivablesService.getSummary('month'),
              payablesService.getOverview(),
@@ -356,11 +356,11 @@ const useDashboardStore = create<DashboardState>()(
           const summaryData = summaryRes.value.data;
           
           const alertsData = alertsRes.status === 'fulfilled' 
-            ? (alertsRes.value.data as any).alerts 
+            ? ((alertsRes.value.data as any).alerts || []) 
             : [];
             
           const activitiesData = activityRes.status === 'fulfilled' 
-            ? (activityRes.value.data as any).activities 
+            ? ((activityRes.value.data as any).activities || []) 
             : [];
 
           const trendsData = trendsRes.status === 'fulfilled'

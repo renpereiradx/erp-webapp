@@ -49,6 +49,8 @@ export interface ProductEnriched {
   brand?: string | null;
   base_unit?: string | null;
   override_tax_rate_id?: number | null;
+  is_variable_measure?: boolean;
+  scale_code?: string | null;
   target_margin_percent?: string | null;
   pricing_strategy?: 'MANUAL' | 'AUTOMATIC' | null;
   applicable_tax_rate?: TaxRate | null;

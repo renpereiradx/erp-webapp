@@ -675,8 +675,47 @@ const useProductStore = create<ProductState>()(
               }
             }
 
-            products = Array.isArray(response) ? response : [response]
+            products = (Array.isArray(response) ? response : [response]).filter(Boolean)
             totalCount = products.length
+
+            if (totalCount === 0) {
+              const term = searchTerm.trim();
+              const isNumeric = /^\d+$/.test(term);
+              if (isNumeric) {
+                try {
+                  const prod = await productService.getProductByBarcode(term);
+                  if (prod) {
+                    products = [prod];
+                    totalCount = 1;
+                  }
+                } catch (e) {
+                  try {
+                    const prod = await productService.getById(term);
+                    if (prod) {
+                      products = [prod];
+                      totalCount = 1;
+                    }
+                  } catch (e2) {}
+                }
+              } else {
+                try {
+                  const prod = await productService.getById(term);
+                  if (prod) {
+                    products = [prod];
+                    totalCount = 1;
+                  }
+                } catch (e) {
+                  try {
+                    const prod = await productService.getProductByBarcode(term);
+                    if (prod) {
+                      products = [prod];
+                      totalCount = 1;
+                    }
+                  } catch (e2) {}
+                }
+              }
+            }
+
             if (totalCount === 0) {
               set({
                 products: [],
@@ -801,6 +840,35 @@ const useProductStore = create<ProductState>()(
         }
         try {
           const term = termRaw
+          const fetchInfoWithFallback = async (searchTerm: string, signal?: AbortSignal) => {
+            const res = await productService.searchInfo(searchTerm, { signal });
+            let prods = (Array.isArray(res) ? res : [res]).filter(Boolean);
+            if (prods.length === 0) {
+              const isNumeric = /^\d+$/.test(searchTerm);
+              if (isNumeric) {
+                try {
+                  const prod = await productService.getInfoByBarcode(searchTerm);
+                  if (prod) prods = [prod];
+                } catch (e) {
+                  try {
+                    const prod = await productService.getInfo(searchTerm);
+                    if (prod) prods = [prod];
+                  } catch (e2) {}
+                }
+              } else {
+                try {
+                  const prod = await productService.getInfo(searchTerm);
+                  if (prod) prods = [prod];
+                } catch (e) {
+                  try {
+                    const prod = await productService.getInfoByBarcode(searchTerm);
+                    if (prod) prods = [prod];
+                  } catch (e2) {}
+                }
+              }
+            }
+            return prods;
+          };
           const state = get()
           const { searchCache, cacheTTL } = state
           const now = Date.now()
@@ -841,10 +909,10 @@ const useProductStore = create<ProductState>()(
               ;(async () => {
                 try {
                   const fresh = await get()._withRetry(
-                    () => productService.searchInfo(term),
+                    () => fetchInfoWithFallback(term),
                     { attempts: 2, telemetryKey: 'products.search.revalidate' }
                   )
-                  const freshArr = Array.isArray(fresh) ? fresh : [fresh]
+                  const freshArr = fresh
                   set(s => ({
                     searchCache: {
                       ...s.searchCache,
@@ -882,11 +950,11 @@ const useProductStore = create<ProductState>()(
             set(s => ({ cacheMisses: s.cacheMisses + 1 }))
             telemetry.record('products.search.cache.miss', { term })
             // Usar financial search para obtener datos completos con precios y costos
-            const response = await productService.searchInfo(
+            const response = await fetchInfoWithFallback(
               term,
-              { signal: options.signal }
+              options.signal
             )
-            const products = Array.isArray(response) ? response : [response]
+            const products = response
             const totalCount = products.length
             const paginated = products.slice(0, pageSize)
             const byId = Object.fromEntries(
@@ -933,10 +1001,10 @@ const useProductStore = create<ProductState>()(
           telemetry.record('products.search.cache.miss', { term })
           // Usar financial search para obtener datos completos con precios y costos
           const response = await get()._withRetry(
-            () => productService.searchInfo(term),
+            () => fetchInfoWithFallback(term),
             { telemetryKey: 'products.search' }
           )
-          const products = Array.isArray(response) ? response : [response]
+          const products = response
           const totalCount = products.length
           const paginated = products.slice(0, pageSize)
           const byId = Object.fromEntries(
@@ -1058,11 +1126,15 @@ const useProductStore = create<ProductState>()(
           telemetry.record('products.pageCache.direct.hit', { page })
           return { data: pc.products, total: state.totalProducts }
         }
-        return await get().fetchProducts(
-          page,
-          state.pageSize,
-          state.lastSearchTerm || ''
-        )
+        if (state.lastSearchTerm) {
+          return await get().fetchProducts(
+            page,
+            state.pageSize,
+            state.lastSearchTerm
+          )
+        } else {
+          return await get().fetchProductsPaginated(page, state.pageSize)
+        }
       },
 
       // Función para prefetch de la siguiente página

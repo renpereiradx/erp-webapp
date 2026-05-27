@@ -44,6 +44,8 @@ import useClientStore from '@/store/useClientStore';
 import useSaleStore from '@/store/useSaleStore';
 import useDashboardStore from '@/store/useDashboardStore';
 import { useToast } from '@/hooks/useToast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useBranch } from '@/contexts/BranchContext';
 import saleService from '@/services/saleService';
 import apiService from '@/services/api.ts';
 import { PaymentMethodService } from '@/services/paymentMethodService';
@@ -232,6 +234,9 @@ const SalesNew: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();
+  const { hasPermission } = useAuth();
+  const { currentBranchId } = useBranch();
+  const canWrite = hasPermission('sales:write');
   const productSearchInputRef = useRef<HTMLInputElement>(null);
   const clientSearchInputRef = useRef<HTMLInputElement>(null);
   const dropdownQuantityInputRef = useRef<HTMLInputElement>(null);
@@ -251,6 +256,7 @@ const SalesNew: React.FC = () => {
   const { fetchDashboardData } = useDashboardStore();
 
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isScanningBarcode, setIsScanningBarcode] = useState(false);
   const [searchTerm] = useState('');
   const [generalDiscount] = useState(0);
 
@@ -500,20 +506,31 @@ const SalesNew: React.FC = () => {
         } else if (event.key === 'ArrowUp') {
           event.preventDefault();
           setProductHighlightedIndex(prev => (prev > 0 ? prev - 1 : prev));
-        } else if (event.key === 'Enter' && productHighlightedIndex >= 0) {
-          event.preventDefault();
-          const selectedProduct = productSearchResults[productHighlightedIndex];
-          if (selectedProduct) {
-            if (document.activeElement !== dropdownQuantityInputRef.current) {
-              dropdownQuantityInputRef.current?.focus();
-              dropdownQuantityInputRef.current?.select();
-            } else {
-              addProductToCart(selectedProduct, selectedProductQuantity);
-              setProductSearchTerm('');
-              setProductHighlightedIndex(-1);
-              setSelectedProductQuantity(1);
-              setShowProductDropdown(false);
-              productSearchInputRef.current?.focus();
+        } else if (event.key === 'Enter') {
+          const term = productSearchTerm.trim();
+          const isBarcode = /^\d{8,14}$/.test(term);
+          
+          if (isBarcode) {
+            event.preventDefault();
+            handleBarcodeScan(term);
+            return;
+          }
+
+          if (productHighlightedIndex >= 0) {
+            event.preventDefault();
+            const selectedProduct = productSearchResults[productHighlightedIndex];
+            if (selectedProduct) {
+              if (document.activeElement !== dropdownQuantityInputRef.current) {
+                dropdownQuantityInputRef.current?.focus();
+                dropdownQuantityInputRef.current?.select();
+              } else {
+                addProductToCart(selectedProduct, selectedProductQuantity);
+                setProductSearchTerm('');
+                setProductHighlightedIndex(-1);
+                setSelectedProductQuantity(1);
+                setShowProductDropdown(false);
+                productSearchInputRef.current?.focus();
+              }
             }
           }
         } else if (event.key === 'Escape') {
@@ -526,7 +543,7 @@ const SalesNew: React.FC = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, productSearchResults, productHighlightedIndex, selectedProductQuantity]);
+  }, [activeTab, productSearchResults, productHighlightedIndex, selectedProductQuantity, productSearchTerm, handleBarcodeScan]);
 
   const handleHistoryFilter = async () => {
     const term = historySearch.trim();
@@ -612,6 +629,80 @@ const SalesNew: React.FC = () => {
       return [...prev, newItem];
     });
   }, []);
+
+  const handleBarcodeScan = useCallback(async (barcode: string) => {
+    if (isScanningBarcode) return;
+    
+    setIsScanningBarcode(true);
+    const scanToast = toast.loading('Buscando producto por código de barras...');
+    
+    try {
+      const response = await saleService.salesScan(barcode, currentBranchId || undefined);
+      
+      if (response?.success && response.data) {
+        const scanResult = response.data;
+        const decoded = scanResult.decoded_barcode;
+        const isVariable = !!scanResult.is_variable_measure;
+        const quantity = isVariable ? Number(decoded.quantity || 1) : 1;
+        const price = Number(scanResult.price_per_unit || 0);
+        
+        const cartItem: CartItem = {
+          id: isVariable 
+            ? `VAR-${decoded.product_id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            : `${decoded.product_id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          productId: decoded.product_id,
+          name: scanResult.product_name || 'Producto Escaneado',
+          quantity,
+          price: price,
+          originalPrice: price,
+          stock: Number(scanResult.stock_quantity || 0),
+          discount: 0,
+          discountType: 'amount',
+          discountInput: 0,
+          discountReason: '',
+          taxRate: Number(scanResult.subtotal) > 0 
+            ? Number((Number(scanResult.tax_amount) / Number(scanResult.subtotal)).toFixed(2)) 
+            : 0.10,
+          unit: decoded.unit || 'unit',
+        };
+        
+        setItems(prev => {
+          if (isVariable) {
+            return [...prev, cartItem];
+          } else {
+            const existingIndex = prev.findIndex(item => item.productId === cartItem.productId && !item.reserve_id);
+            if (existingIndex >= 0) {
+              return prev.map((item, index) => 
+                index === existingIndex 
+                  ? { ...item, quantity: item.quantity + 1 }
+                  : item
+              );
+            } else {
+              return [...prev, cartItem];
+            }
+          }
+        });
+        
+        toast.dismiss(scanToast);
+        toast.success(`Agregado: ${scanResult.product_name} (${quantity} ${decoded.unit || 'unit'})`);
+        setProductSearchTerm('');
+        setShowProductDropdown(false);
+        setProductHighlightedIndex(-1);
+      } else {
+        toast.dismiss(scanToast);
+        toast.error(response?.error || 'Producto no encontrado por código de barras');
+      }
+    } catch (error: any) {
+      toast.dismiss(scanToast);
+      console.error('Error al escanear código de barras:', error);
+      toast.error(error?.message || 'Error al buscar el código de barras');
+    } finally {
+      setIsScanningBarcode(false);
+      setTimeout(() => {
+        productSearchInputRef.current?.focus();
+      }, 50);
+    }
+  }, [isScanningBarcode, currentBranchId, toast, setItems]);
 
   const handleSelectClient = async (client: Client) => {
     setSelectedClient(client);
@@ -1598,7 +1689,7 @@ const SalesNew: React.FC = () => {
                   <div className="flex flex-col justify-end gap-2">
                     <Button
                       onClick={handleSaveSale}
-                      disabled={isProcessingSale || items.length === 0}
+                      disabled={isProcessingSale || items.length === 0 || !canWrite}
                       className={cn(
                         "w-full h-12 text-base font-black uppercase tracking-widest transition-all",
                         currentSaleId ? "bg-amber-600 hover:bg-amber-700 shadow-amber-200" : "shadow-primary/20"
@@ -1771,7 +1862,7 @@ const SalesNew: React.FC = () => {
                                 <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="size-8"><MoreVertical size={16} /></Button></DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
                                   <DropdownMenuItem onClick={() => handleViewSale(sale)} className="gap-2"><Eye size={14} /> Ver Detalle</DropdownMenuItem>
-                                  {sale.status !== 'CANCELLED' && (
+                                  {sale.status !== 'CANCELLED' && canWrite && (
                                     <DropdownMenuItem onClick={() => handleCancelSale(sale)} className="gap-2 text-red-600 focus:text-red-600"><Ban size={14} /> Anular Venta</DropdownMenuItem>
                                   )}
                                 </DropdownMenuContent>
@@ -2062,7 +2153,7 @@ const SalesNew: React.FC = () => {
               </div>
               <div className="flex gap-3 pt-2">
                 <Button variant="outline" onClick={() => setShowCancelSaleModal(false)} className="flex-1">Cancelar</Button>
-                <Button onClick={handleConfirmCancelSale} disabled={cancelSubmitting} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold">{cancelSubmitting ? 'Anulando...' : 'Sí, Anular'}</Button>
+                <Button onClick={handleConfirmCancelSale} disabled={cancelSubmitting || !canWrite} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold">{cancelSubmitting ? 'Anulando...' : 'Sí, Anular'}</Button>
               </div>
             </CardContent>
           </Card>
@@ -2336,6 +2427,7 @@ const SalesNew: React.FC = () => {
                 return;
               }
               toast.error('Error al registrar cobro');
+              throw e;
             }
           }}
           onLeavePending={() => {

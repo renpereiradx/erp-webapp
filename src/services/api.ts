@@ -152,6 +152,24 @@ export const apiService: any = {
     }
   },
 
+  // Barcode & Scale Operations (v4.0)
+  salesScan: (barcode: string, branchId?: number) => apiClient.salesScan(barcode, branchId),
+  decodeBarcode: (barcode: string) => apiClient.decodeBarcode(barcode),
+  generateBarcode: (scaleCode: string, value: number) => apiClient.generateBarcode(scaleCode, value),
+  weighItem: (productId: string, weight: number, unit?: string, branchId?: number) => apiClient.weighItem(productId, weight, unit, branchId),
+  generateLabel: (productId: string, weight: number, totalPrice: number, formatId: number) => apiClient.generateLabel(productId, weight, totalPrice, formatId),
+  getScaleCatalog: (branchId?: number) => apiClient.getScaleCatalog(branchId),
+  getScales: (branchId?: number) => apiClient.getScales(branchId),
+  getScaleById: (id: number | string) => apiClient.getScaleById(id),
+  createScale: (data: any) => apiClient.createScale(data),
+  updateScale: (id: number | string, data: any) => apiClient.updateScale(id, data),
+  deleteScale: (id: number | string) => apiClient.deleteScale(id),
+  getLabelFormats: () => apiClient.getLabelFormats(),
+  getLabelFormatById: (id: number | string) => apiClient.getLabelFormatById(id),
+  createLabelFormat: (data: any) => apiClient.createLabelFormat(data),
+  updateLabelFormat: (id: number | string, data: any) => apiClient.updateLabelFormat(id, data),
+  deleteLabelFormat: (id: number | string) => apiClient.deleteLabelFormat(id),
+
   // Utilidades
   isAuthenticated: () => !!localStorage.getItem('authToken'),
   getToken: () => localStorage.getItem('authToken'),

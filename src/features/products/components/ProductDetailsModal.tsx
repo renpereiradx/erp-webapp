@@ -1,8 +1,16 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useI18n } from '@/lib/i18n';
-import { X, Edit, Package, Info, Layout, Activity, TrendingUp, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { X, Edit, Package, Info, Layout, Activity, TrendingUp, CheckCircle2, AlertTriangle, ShieldCheck, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProductOperationInfoResponse } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { formatCurrency } from '@/utils/currencyUtils';
+import {
+  ProductPriceHistoryDialog,
+  ProductCostHistoryDialog,
+  ProductPriceAdjustmentDialog,
+  ProductCostAdjustmentDialog
+} from './ProductHistoryModals';
 
 interface ProductDetailsModalProps {
   isOpen: boolean;
@@ -17,6 +25,18 @@ interface ProductDetailsModalProps {
  */
 export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }: ProductDetailsModalProps) {
   const { t } = useI18n();
+  const { hasPermission } = useAuth();
+  const canWrite = hasPermission('products:write');
+
+  // Sub-modal states
+  const [isPriceHistoryOpen, setIsPriceHistoryOpen] = useState(false);
+  const [isCostHistoryOpen, setIsCostHistoryOpen] = useState(false);
+  const [isPriceAdjustmentOpen, setIsPriceAdjustmentOpen] = useState(false);
+  const [isCostAdjustmentOpen, setIsCostAdjustmentOpen] = useState(false);
+  
+  // Track specific row unit and value for adjusting
+  const [selectedUnit, setSelectedUnit] = useState('unit');
+  const [selectedValue, setSelectedValue] = useState(0);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -122,6 +142,20 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                       {product.tax?.rate?.rate != null ? ` (${product.tax.rate.rate}%)` : ''}
                     </p>
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Medida Variable</label>
+                    <p className="text-sm font-semibold text-gray-800">
+                      {product.is_variable_measure ? 'Sí' : 'No'}
+                    </p>
+                  </div>
+                  {product.is_variable_measure && (
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Código de Balanza</label>
+                      <p className="text-sm font-semibold text-gray-800 tabular-nums">
+                        {product.scale_code || '-'}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 {description && (
                   <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-100">
@@ -144,16 +178,42 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                         <tr>
                           <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase">{t('products.details.table.unit')}</th>
                           <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase">{t('products.details.table.price')}</th>
-                          <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase text-right">Vigencia</th>
+                          <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase">Vigencia</th>
+                          <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase text-right">Acciones</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
-                        {unitPrices.map((up) => (
+                        {unitPrices.map((up: any) => (
                           <tr key={up.id} className="hover:bg-gray-50/50 transition-colors">
                             <td className="py-3 px-4 text-sm font-semibold text-gray-700">{up.unit || '-'}</td>
-                            <td className="py-3 px-4 text-sm font-bold text-[#106ebe] tabular-nums">${up.price_per_unit?.toFixed(2) || '0.00'}</td>
-                            <td className="py-3 px-4 text-xs text-gray-400 text-right">
-                              {up.effective_date ? new Date(up.effective_date).toLocaleDateString('es') : '-'}
+                            <td className="py-3 px-4 text-sm font-bold text-[#106ebe] tabular-nums">{formatCurrency(up.price_per_unit)}</td>
+                            <td className="py-3 px-4 text-xs text-gray-400">
+                              {up.updated_at || up.effective_date ? new Date(up.updated_at || up.effective_date).toLocaleDateString('es') : '-'}
+                            </td>
+                            <td className="py-3 px-4 text-right whitespace-nowrap space-x-1">
+                              <button
+                                onClick={() => {
+                                  setSelectedUnit(up.unit || 'unit');
+                                  setIsPriceHistoryOpen(true);
+                                }}
+                                className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700 inline-flex items-center"
+                                title="Ver Historial de Precios"
+                              >
+                                <Clock size={14} />
+                              </button>
+                              {canWrite && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedUnit(up.unit || 'unit');
+                                    setSelectedValue(up.price_per_unit || 0);
+                                    setIsPriceAdjustmentOpen(true);
+                                  }}
+                                  className="p-1 hover:bg-gray-100 rounded text-[#106ebe] hover:text-[#005a9e] inline-flex items-center"
+                                  title="Ajustar Precio"
+                                >
+                                  <Edit size={14} />
+                                </button>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -177,17 +237,43 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                           <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase">Unidad</th>
                           <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase">Último Costo</th>
                           <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase">Promedio 6m</th>
-                          <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase text-right">Variación</th>
+                          <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase">Variación</th>
+                          <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase text-right">Acciones</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
-                        {unitCostsSummary.map((cs, i) => (
+                        {unitCostsSummary.map((cs: any, i: number) => (
                           <tr key={i} className="hover:bg-gray-50/50 transition-colors">
                             <td className="py-3 px-4 text-sm font-semibold text-gray-700">{cs.unit || '-'}</td>
-                            <td className="py-3 px-4 text-sm font-medium text-gray-800 tabular-nums">${cs.last_cost?.toFixed(2) || '0.00'}</td>
-                            <td className="py-3 px-4 text-sm text-gray-500 tabular-nums">${cs.weighted_avg_cost_6m?.toFixed(2) || '0.00'}</td>
-                            <td className={`py-3 px-4 text-xs font-bold text-right ${cs.cost_variance_percent > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                            <td className="py-3 px-4 text-sm font-medium text-gray-800 tabular-nums">{formatCurrency(cs.last_cost)}</td>
+                            <td className="py-3 px-4 text-sm text-gray-500 tabular-nums">{formatCurrency(cs.weighted_avg_cost_6m)}</td>
+                            <td className={`py-3 px-4 text-xs font-bold ${cs.cost_variance_percent > 0 ? 'text-red-600' : 'text-green-600'}`}>
                               {cs.cost_variance_percent != null ? `${cs.cost_variance_percent > 0 ? '+' : ''}${cs.cost_variance_percent.toFixed(1)}%` : '-'}
+                            </td>
+                            <td className="py-3 px-4 text-right whitespace-nowrap space-x-1">
+                              <button
+                                onClick={() => {
+                                  setSelectedUnit(cs.unit || 'unit');
+                                  setIsCostHistoryOpen(true);
+                                }}
+                                className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700 inline-flex items-center"
+                                title="Ver Historial de Costos"
+                              >
+                                <Clock size={14} />
+                              </button>
+                              {canWrite && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedUnit(cs.unit || 'unit');
+                                    setSelectedValue(cs.last_cost || 0);
+                                    setIsCostAdjustmentOpen(true);
+                                  }}
+                                  className="p-1 hover:bg-gray-100 rounded text-[#106ebe] hover:text-[#005a9e] inline-flex items-center"
+                                  title="Ajustar Costo"
+                                >
+                                  <Edit size={14} />
+                                </button>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -292,6 +378,53 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
           )}
         </div>
       </div>
+
+      {/* Sub-modals for pricing and cost transactions */}
+      {isPriceHistoryOpen && (
+        <ProductPriceHistoryDialog
+          productId={productId}
+          productName={productName}
+          isOpen={isPriceHistoryOpen}
+          onClose={() => setIsPriceHistoryOpen(false)}
+        />
+      )}
+
+      {isCostHistoryOpen && (
+        <ProductCostHistoryDialog
+          productId={productId}
+          productName={productName}
+          isOpen={isCostHistoryOpen}
+          onClose={() => setIsCostHistoryOpen(false)}
+        />
+      )}
+
+      {isPriceAdjustmentOpen && (
+        <ProductPriceAdjustmentDialog
+          productId={productId}
+          productName={productName}
+          currentPriceOrCost={selectedValue}
+          unit={selectedUnit}
+          isOpen={isPriceAdjustmentOpen}
+          onClose={() => setIsPriceAdjustmentOpen(false)}
+          onSuccess={() => {
+            // Se puede emitir un evento para refrescar los datos o usar toast.
+          }}
+        />
+      )}
+
+      {isCostAdjustmentOpen && (
+        <ProductCostAdjustmentDialog
+          productId={productId}
+          productName={productName}
+          currentPriceOrCost={selectedValue}
+          unit={selectedUnit}
+          isOpen={isCostAdjustmentOpen}
+          onClose={() => setIsCostAdjustmentOpen(false)}
+          onSuccess={() => {
+            // Se puede emitir un evento para refrescar los datos o usar toast.
+          }}
+        />
+      )}
     </div>
   );
 }

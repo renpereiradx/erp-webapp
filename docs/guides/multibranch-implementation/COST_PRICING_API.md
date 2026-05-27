@@ -1,205 +1,285 @@
-# Guía de API de Costos y Precios para Frontend
+# Guia de API de Costos y Precios para Frontend
 
-## Base URL
+**Versión:** 1.1
 
-`http://localhost:5050`
+## 🔧 Configuración General
 
-## Autenticación
+### Base URL
+http://localhost:5050
 
-- Header: `Authorization: Bearer <jwt_token>`
-
-## Headers requeridos (cuando aplica)
-
+### Headers Requeridos
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
 
-## Contexto de Sucursal (BI)
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
+
+### Formato de Respuesta Estándar
+`{ success: bool, data?, message?, error?, pagination? }`
+
+### Formato de Fechas
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+
+### Resolución de Unidad (`unit`)
+
+> **Nota:** Cuando el campo `unit` está vacío o no se envía, el sistema resuelve la unidad en el siguiente orden:
+> 1. `unit` enviado en el request (si existe)
+> 2. `base_unit` del producto (configurado en el catálogo)
+> 3. `"unit"` como fallback final
+>
+> **Recomendación frontend:** Siempre que sea posible, enviar el `base_unit` del producto como valor de `unit` para evitar ambigüedades.
+- Query params: `YYYY-MM-DD`
+
+### Paginación Estándar
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
+
+### Contexto de Sucursal (BI)
 
 - Query param: `?branch_id=<id>`
 - O header: `X-Branch-ID: <id>`
 - Fallback: `active_branch` del token JWT
-- Restricción: sucursal debe estar en `allowed_branches`
+- Restriccion: sucursal debe estar en `allowed_branches`
 
-> **Nota:** Los endpoints de costos y precios usan `resolveBIContextFromAuth`. Ver [Guía de Contexto Multi-Sucursal](./MULTI_BRANCH_CONTEXT_GUIDE.md) para reglas detalladas de BI.
-
-> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
-
-## Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
-
-`{ success: bool, data?, message?, error?, pagination? }`
-
-## Paginación estándar
-
-`{ page, page_size, total_items, total_pages, has_next, has_prev }`
+> **Nota:** Los endpoints de costos y precios usan `resolveBIContextFromAuth`. Ver [Guia de Contexto Multi-Sucursal](./MULTI_BRANCH_CONTEXT_GUIDE.md) para reglas detalladas de BI.
 
 ---
+
+## Permisos del Módulo
+
+> **Nota:** A partir de la implementación RBAC por módulo (2026-05-19), todos los endpoints de este módulo están protegidos por middleware de permisos. Ver [SECURITY_FRONTEND_INTEGRATION_GUIDE.md](./SECURITY_FRONTEND_INTEGRATION_GUIDE.md) para la matriz completa de roles.
+
+| Método HTTP | Permiso Requerido |
+|-------------|-------------------|
+| GET / HEAD | `products:read` |
+| POST / PUT / DELETE / PATCH | `products:write` |
+
+- Admin (`role_id = "F2VLso"`) tiene acceso total sin verificación de permisos.
+- Sin el permiso de lectura → `403 Forbidden`
+- Intentar escritura en módulo de solo lectura → `405 Method Not Allowed`
 
 ## Endpoints
 
 ### GET /products/{product_id}/pricing-info
 
-**Descripción:** Obtiene información completa de precios y costos de un producto.
-
-#### Headers
-
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+**Descripcion:** Obtiene informacion completa de precios y costos de un producto.
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parametro | Tipo | Requerido | Descripcion |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explicita |
 
 #### Response 200
 
-| Campo             | Tipo    | Descripción                  |
-| ----------------- | ------- | ---------------------------- |
-| product_id        | string  | ID del producto              |
-| product_name      | string  | Nombre del producto          |
-| unit              | string  | Unidad de medida             |
-| current_cost      | decimal | Costo actual (última compra) |
-| weighted_avg_cost | decimal | Costo promedio ponderado     |
-| selling_price     | decimal | Precio de venta actual       |
-| margin_amount     | decimal | Margen en valor absoluto     |
-| margin_percent    | decimal | Margen en porcentaje         |
-| cost_source       | string  | Fuente del costo             |
-| price_source      | string  | Fuente del precio            |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| product_id | string | ID del producto |
+| product_name | string | Nombre del producto |
+| unit | string | Unidad de medida |
+| current_cost | decimal | Costo actual (ultima compra) |
+| weighted_avg_cost | decimal | Costo promedio ponderado |
+| selling_price | decimal | Precio de venta actual |
+| margin_amount | decimal | Margen en valor absoluto |
+| margin_percent | decimal | Margen en porcentaje |
+| cost_source | string | Fuente del costo |
+| price_source | string | Fuente del precio |
 
 #### Errores
 
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `branch_id` inválido                    |
-| 401    | Token ausente o inválido                |
-| 403    | `branch_id` fuera de `allowed_branches` |
-| 404    | Producto no encontrado                  |
-| 500    | Error interno                           |
+| Codigo | Condicion |
+|--------|-----------|
+| 400 | `branch_id` invalido |
+| 401 | Token ausente o invalido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Producto no encontrado |
+| 500 | Error interno |
+
+---
+
+### GET /products/{product_id}/pricing-info/{unit}
+
+**Descripcion:** Obtiene informacion de precios para una unidad especifica.
+
+#### Query Parameters
+
+| Parametro | Tipo | Requerido | Descripcion |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explicita |
+
+#### Response 200
+
+Igual estructura que `GET /products/{product_id}/pricing-info`.
+
+---
+
+### POST /products/{product_id}/costs
+
+**Descripcion:** Registra un cambio de costo para un producto via `register_cost_transaction()`.
+Este endpoint actualiza `unit_costs` (estado actual unico por producto+unidad) y crea auditoria en `price_transactions` con `price_type='cost_price'`.
+
+> **Migracion 2026-05-25:** `unit_costs` ahora almacena solo el estado actual (1 fila por producto+unidad).
+> Las columnas `effective_from`, `effective_to` fueron eliminadas; el historial completo de costos vive en `price_transactions`.
+> Los campos `supplier_id`, `purchase_order_id`, `purchase_date`, `quantity_purchased` fueron removidos de `unit_costs`.
+> Para datos de proveedor y cantidad de compra, consulte `purchase_order_details`.
+
+#### Headers
+
+| Header | Requerido | Descripcion |
+|--------|-----------|-------------|
+| Authorization | Si | Bearer token |
+| X-Branch-ID | Condicional | Si no se envia `?branch_id` |
+| Content-Type | Si | `application/json` |
+
+#### Query Parameters
+
+| Parametro | Tipo | Requerido | Descripcion |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explicita |
+
+#### Request Body
+
+| Campo | Tipo | Requerido | Descripcion |
+|-------|------|-----------|-------------|
+| unit | string | Si | Unidad de medida (`kg`, `caja`, `unit`, etc.). Si se omite, se usa `base_unit` del producto |
+| cost_per_unit | decimal | Si | Costo por unidad (> 0) |
+| source | string | No | Fuente del costo (`PURCHASE`, `MANUAL`) |
+| source_id | string | No | ID de referencia (purchase_order_id, etc.) |
+| effective_date | datetime | No | Fecha de la transaccion de auditoria (default: NOW()). Se guarda en `price_transactions`; `unit_costs` refleja solo el estado actual. |
+| metadata | object | No | Metadatos adicionales |
+
+#### Response 201
+
+Registro de transaccion de costo (`PriceTransaction`):
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| transaction_id | int | ID de la transaccion en price_transactions |
+| product_id | string | ID del producto |
+| old_price | decimal | Costo anterior |
+| new_price | decimal | Nuevo costo |
+| price_change | decimal | Cambio en el costo |
+| price_change_percent | decimal | Cambio porcentual |
+| price_type | string | `cost_price` |
+| message | string | Mensaje de confirmacion |
+| metadata | object | Metadatos enriquecidos |
+
+#### Errores
+
+| Codigo | Condicion |
+|--------|-----------|
+| 400 | Body invalido, campos requeridos faltantes, o `branch_id` invalido |
+| 401 | Token ausente o invalido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Producto no encontrado |
+| 500 | Error interno |
 
 ---
 
 ### GET /products/{product_id}/costs/history
 
-**Descripción:** Obtiene el historial de costos de un producto.
-
-#### Headers
-
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+**Descripcion:** Obtiene el historial de costos de un producto.
 
 #### Query Parameters
 
-| Parámetro | Tipo   | Requerido | Descripción                 |
-| --------- | ------ | --------- | --------------------------- |
-| branch_id | int    | No        | ID de sucursal explícita    |
-| unit      | string | No        | Filtrar por unidad          |
-| months    | int    | No        | Período en meses (3, 6, 12) |
+| Parametro | Tipo | Requerido | Descripcion |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explicita |
+| unit | string | No | Filtrar por unidad |
+| months | int | No | Periodo en meses (3, 6, 12) |
 
 #### Response 200
 
-| Campo            | Tipo    | Descripción                                     |
-| ---------------- | ------- | ----------------------------------------------- |
-| product_id       | string  | ID del producto                                 |
-| unit             | string  | Unidad de medida                                |
-| cost_history     | array   | Lista de entradas de costo                      |
-| weighted_average | decimal | Promedio ponderado del período                  |
-| cost_trend       | string  | Tendencia: `increasing`, `decreasing`, `stable` |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| product_id | string | ID del producto |
+| unit | string | Unidad de medida |
+| cost_history | array | Lista de entradas de costo |
+| weighted_average | decimal | Promedio ponderado del periodo |
+| cost_trend | string | Tendencia: `increasing`, `decreasing`, `stable` |
 
 **Cost History Entry:**
-| Campo | Tipo | Descripción |
+
+| Campo | Tipo | Descripcion |
 |-------|------|-------------|
 | id | int | ID del costo |
 | cost_per_unit | decimal | Costo por unidad |
-| supplier_id | string | ID del proveedor |
-| purchase_date | datetime | Fecha de compra |
-| quantity_purchased | decimal | Cantidad comprada |
+| updated_at | datetime | Fecha de ultima actualizacion del estado actual |
+| source | string | Fuente del costo (`PURCHASE`, `MANUAL`) |
+| source_id | string | ID de referencia |
+| created_by | string | Usuario creador |
+| created_at | datetime | Fecha de creacion |
 | metadata | object | Metadatos adicionales |
+
+> **Migracion 2026-05-25:** `unit_costs` ya no almacena historial. El historial completo de costos vive en `price_transactions` (`price_type='cost_price'`).
+> Las columnas `effective_from` y `effective_to` fueron eliminadas de `unit_costs`.
+> Para estadisticas de cantidad y proveedor, usar `GET /products/{id}/costs/weighted-average` que consulta `purchase_order_details`.
 
 #### Errores
 
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `branch_id` inválido                    |
-| 401    | Token ausente o inválido                |
-| 403    | `branch_id` fuera de `allowed_branches` |
-| 404    | Producto no encontrado                  |
-| 500    | Error interno                           |
+| Codigo | Condicion |
+|--------|-----------|
+| 400 | `branch_id` invalido |
+| 401 | Token ausente o invalido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Producto no encontrado |
+| 500 | Error interno |
 
 ---
 
 ### GET /products/{product_id}/costs/last
 
-**Descripción:** Obtiene el último costo de compra de un producto.
-
-#### Headers
-
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+**Descripcion:** Obtiene el ultimo costo de compra de un producto.
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parametro | Tipo | Requerido | Descripcion |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explicita |
 
 #### Response 200
 
 Estructura `ProductCost`:
-| Campo | Tipo | Descripción |
+
+| Campo | Tipo | Descripcion |
 |-------|------|-------------|
 | id | int | ID del costo |
 | product_id | string | ID del producto |
 | unit | string | Unidad |
 | cost_per_unit | decimal | Costo por unidad |
-| supplier_id | string | ID del proveedor (nullable) |
-| purchase_order_id | int | ID de orden de compra (nullable) |
-| purchase_date | datetime | Fecha de compra |
-| quantity_purchased | decimal | Cantidad comprada |
-| created_by | string | Usuario que registró |
+| updated_at | datetime | Fecha de ultima actualizacion |
+| source | string | Fuente del costo (`PURCHASE`, `MANUAL`) |
+| source_id | string | ID de referencia |
+| created_by | string | Usuario que registro |
 | created_at | datetime | Fecha de registro |
 | metadata | object | Metadatos adicionales |
 
+> **Migracion 2026-05-25:** `unit_costs` almacena solo el estado actual (1 fila por producto+unidad).
+> Las columnas `effective_from` y `effective_to` fueron eliminadas; el historial completo vive en `price_transactions`.
+> **Migracion 2026-05-23:** `supplier_id`, `purchase_order_id`, `purchase_date`, `quantity_purchased` fueron removidos.
+> La fuente canonica para datos de proveedor y cantidades es `transactions.purchase_order_details`.
+
 #### Errores
 
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `branch_id` inválido                    |
-| 401    | Token ausente o inválido                |
-| 403    | `branch_id` fuera de `allowed_branches` |
-| 404    | Producto no encontrado                  |
-| 500    | Error interno                           |
+| Codigo | Condicion |
+|--------|-----------|
+| 400 | `branch_id` invalido |
+| 401 | Token ausente o invalido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Producto no encontrado |
+| 500 | Error interno |
 
 ---
 
 ### GET /products/{product_id}/costs/last-record
 
-**Descripción:** Obtiene el último registro de compra completo.
-
-#### Headers
-
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+**Descripcion:** Obtiene el ultimo registro de compra completo.
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parametro | Tipo | Requerido | Descripcion |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explicita |
 
 #### Response 200
 
@@ -207,88 +287,76 @@ Registro de compra completo con detalles adicionales.
 
 #### Errores
 
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `branch_id` inválido                    |
-| 401    | Token ausente o inválido                |
-| 403    | `branch_id` fuera de `allowed_branches` |
-| 404    | Producto no encontrado                  |
-| 500    | Error interno                           |
+| Codigo | Condicion |
+|--------|-----------|
+| 400 | `branch_id` invalido |
+| 401 | Token ausente o invalido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Producto no encontrado |
+| 500 | Error interno |
 
 ---
 
 ### GET /products/{product_id}/costs/summary
 
-**Descripción:** Obtiene un resumen de costos de un producto.
-
-#### Headers
-
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+**Descripcion:** Obtiene un resumen de costos de un producto.
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parametro | Tipo | Requerido | Descripcion |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explicita |
 
 #### Response 200
 
-| Campo              | Tipo     | Descripción             |
-| ------------------ | -------- | ----------------------- |
-| product_id         | string   | ID del producto         |
-| total_purchases    | int      | Total de compras        |
-| total_quantity     | decimal  | Cantidad total comprada |
-| avg_cost           | decimal  | Costo promedio          |
-| min_cost           | decimal  | Costo mínimo            |
-| max_cost           | decimal  | Costo máximo            |
-| last_purchase_date | datetime | Fecha de última compra  |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| product_id | string | ID del producto |
+| total_entries | int | Total de entradas de costo en unit_costs |
+| min_cost | decimal | Costo minimo (desde unit_costs) |
+| max_cost | decimal | Costo maximo (desde unit_costs) |
+| weighted_avg_cost | decimal | Promedio ponderado (desde purchase_order_details) |
+
+> **Migracion 2026-05-23:** `total_quantity` y `last_purchase_date` ya no se computan directamente desde `unit_costs`.
+> Para datos de cantidad y fechas de compra, use `GET /purchase/` con filtro por producto.
 
 #### Errores
 
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `branch_id` inválido                    |
-| 401    | Token ausente o inválido                |
-| 403    | `branch_id` fuera de `allowed_branches` |
-| 404    | Producto no encontrado                  |
-| 500    | Error interno                           |
+| Codigo | Condicion |
+|--------|-----------|
+| 400 | `branch_id` invalido |
+| 401 | Token ausente o invalido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Producto no encontrado |
+| 500 | Error interno |
 
 ---
 
 ### GET /products/{product_id}/cost-trends
 
-**Descripción:** Obtiene tendencias de costos de un producto.
-
-#### Headers
-
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+**Descripcion:** Obtiene tendencias de costos de un producto.
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
-| months    | int  | No        | Período en meses         |
+| Parametro | Tipo | Requerido | Descripcion |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explicita |
+| months | int | No | Periodo en meses |
 
 #### Response 200
 
-| Campo                         | Tipo    | Descripción                          |
-| ----------------------------- | ------- | ------------------------------------ |
-| product_id                    | string  | ID del producto                      |
-| product_name                  | string  | Nombre del producto                  |
-| trend_analysis.direction      | string  | `increasing`, `decreasing`, `stable` |
-| trend_analysis.change_percent | decimal | Porcentaje de cambio                 |
-| trend_analysis.volatility     | string  | `low`, `medium`, `high`              |
-| monthly_averages              | array   | Promedios mensuales                  |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| product_id | string | ID del producto |
+| product_name | string | Nombre del producto |
+| trend_analysis.direction | string | `increasing`, `decreasing`, `stable` |
+| trend_analysis.change_percent | decimal | Porcentaje de cambio |
+| trend_analysis.volatility | string | `low`, `medium`, `high` |
+| monthly_averages | array | Promedios mensuales |
 
 **Monthly Average:**
-| Campo | Tipo | Descripción |
+
+| Campo | Tipo | Descripcion |
 |-------|------|-------------|
 | month | string | Mes (YYYY-MM) |
 | average_cost | decimal | Costo promedio |
@@ -297,116 +365,147 @@ Registro de compra completo con detalles adicionales.
 
 #### Errores
 
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `branch_id` inválido                    |
-| 401    | Token ausente o inválido                |
-| 403    | `branch_id` fuera de `allowed_branches` |
-| 404    | Producto no encontrado                  |
-| 500    | Error interno                           |
+| Codigo | Condicion |
+|--------|-----------|
+| 400 | `branch_id` invalido |
+| 401 | Token ausente o invalido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Producto no encontrado |
+| 500 | Error interno |
 
 ---
 
 ### GET /products/{product_id}/cost-methods
 
-**Descripción:** Obtiene los métodos de cálculo de costos disponibles.
+**Descripcion:** Obtiene los metodos de calculo de costos disponibles.
 
 #### Headers
 
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripcion |
+|--------|-----------|-------------|
+| Authorization | Si | Bearer token |
 
 #### Response 200
 
-| Campo   | Tipo  | Descripción                 |
-| ------- | ----- | --------------------------- |
-| methods | array | Lista de métodos de cálculo |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| methods | array | Lista de metodos de calculo |
 
 **Method:**
-| Campo | Tipo | Descripción |
+
+| Campo | Tipo | Descripcion |
 |-------|------|-------------|
-| code | string | Código del método |
-| name | string | Nombre del método |
-| description | string | Descripción |
+| code | string | Codigo del metodo |
+| name | string | Nombre del metodo |
+| description | string | Descripcion |
 
 #### Errores
 
-| Código | Condición                |
-| ------ | ------------------------ |
-| 401    | Token ausente o inválido |
-| 500    | Error interno            |
+| Codigo | Condicion |
+|--------|-----------|
+| 401 | Token ausente o invalido |
+| 500 | Error interno |
 
 ---
 
 ### GET /suppliers/{supplier_id}/cost-analysis
 
-**Descripción:** Análisis de costos por proveedor.
-
-#### Headers
-
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+**Descripcion:** Analisis de costos por proveedor desde `purchase_order_details` JOIN `purchase_orders` (fuente canonica).
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parametro | Tipo | Requerido | Descripcion |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explicita |
+| product_id | string | No | Filtrar por producto especifico |
+| months | int | No | Periodo en meses (default: 6) |
 
 #### Response 200
 
-| Campo           | Tipo    | Descripción          |
-| --------------- | ------- | -------------------- |
-| supplier_id     | string  | ID del proveedor     |
-| supplier_name   | string  | Nombre del proveedor |
-| total_purchases | int     | Total de compras     |
-| total_amount    | decimal | Monto total          |
-| avg_cost        | decimal | Costo promedio       |
-| products        | array   | Productos comprados  |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| supplier_id | string | ID del proveedor |
+| supplier_name | string | Nombre del proveedor (desde parties) |
+| period_months | int | Periodo analizado |
+| total_purchases | int | Total de lineas de compra |
+| total_spent | decimal | Gasto total (Σ cost_per_unit × quantity) |
+| total_quantity | decimal | Cantidad total comprada |
+| average_cost | decimal | Costo promedio ponderado |
+| min_cost | decimal | Costo unitario minimo |
+| max_cost | decimal | Costo unitario maximo |
+| cost_stability | decimal | Rango de variacion (max - min) |
+| product_count | int | Productos distintos comprados |
+| product_ids | array | IDs de productos comprados |
+| recent_purchases | array | Ultimas compras (max 5) |
 
 #### Errores
 
-| Código | Condición                                     |
-| ------ | --------------------------------------------- |
-| 400    | `supplier_id` inválido o `branch_id` inválido |
-| 401    | Token ausente o inválido                      |
-| 403    | `branch_id` fuera de `allowed_branches`       |
-| 404    | Proveedor no encontrado                       |
-| 500    | Error interno                                 |
+| Codigo | Condicion |
+|--------|-----------|
+| 400 | `supplier_id` invalido o `branch_id` invalido |
+| 401 | Token ausente o invalido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Proveedor no encontrado |
+| 500 | Error interno |
 
 ---
 
-### GET /cost-trends
+### GET /products/{product_id}/supplier-comparison
 
-**Descripción:** Tendencias globales de costos.
-
-#### Headers
-
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+**Descripcion:** Compara proveedores para un producto agrupando por supplier_id desde `purchase_order_details` JOIN `purchase_orders`. Calcula estadisticas por proveedor y detecta el mejor (menor costo promedio).
 
 #### Query Parameters
 
-| Parámetro | Tipo   | Requerido | Descripción                         |
-| --------- | ------ | --------- | ----------------------------------- |
-| branch_id | int    | No        | ID de sucursal explícita            |
-| period    | string | No        | Período: `month`, `quarter`, `year` |
+| Parametro | Tipo | Requerido | Descripcion |
+|-----------|------|-----------|-------------|
+| unit | string | No | Unidad de medida |
+| months | int | No | Periodo en meses (default: 6) |
 
 #### Response 200
 
-| Campo  | Tipo  | Descripción         |
-| ------ | ----- | ------------------- |
+Por proveedor (`suppliers` object, key: supplier_id):
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| supplier_id | string | ID del proveedor |
+| supplier_name | string | Nombre del proveedor |
+| total_quantity | decimal | Cantidad total comprada |
+| total_spent | decimal | Gasto total |
+| min_cost | decimal | Costo unitario minimo |
+| max_cost | decimal | Costo unitario maximo |
+| avg_cost | decimal | Costo promedio ponderado |
+| last_purchase | datetime | Fecha de ultima compra |
+
+Globales:
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| product_id | string | ID del producto |
+| period_months | int | Periodo analizado |
+| suppliers | object | Mapa por supplier_id con estadisticas |
+| best_supplier | string | supplier_id con menor avg_cost |
+| best_avg_cost | decimal | Costo promedio del mejor proveedor |
+
+### GET /cost-trends
+
+**Descripcion:** Tendencias globales de costos.
+
+#### Query Parameters
+
+| Parametro | Tipo | Requerido | Descripcion |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explicita |
+| period | string | No | Periodo: `month`, `quarter`, `year` |
+
+#### Response 200
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
 | trends | array | Lista de tendencias |
 
 **Trend:**
-| Campo | Tipo | Descripción |
+
+| Campo | Tipo | Descripcion |
 |-------|------|-------------|
-| period | string | Período |
+| period | string | Periodo |
 | avg_cost_change | decimal | Cambio promedio de costo |
 | products_affected | int | Productos afectados |
 | top_increases | array | Mayores aumentos |
@@ -414,12 +513,12 @@ Registro de compra completo con detalles adicionales.
 
 #### Errores
 
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `branch_id` inválido                    |
-| 401    | Token ausente o inválido                |
-| 403    | `branch_id` fuera de `allowed_branches` |
-| 500    | Error interno                           |
+| Codigo | Condicion |
+|--------|-----------|
+| 400 | `branch_id` invalido |
+| 401 | Token ausente o invalido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 500 | Error interno |
 
 ---
 
@@ -427,52 +526,128 @@ Registro de compra completo con detalles adicionales.
 
 ### ProductCost
 
-| Campo              | Tipo     | Descripción                      |
-| ------------------ | -------- | -------------------------------- |
-| id                 | int      | ID único                         |
-| product_id         | string   | ID del producto                  |
-| unit               | string   | Unidad de medida                 |
-| cost_per_unit      | decimal  | Costo por unidad                 |
-| supplier_id        | string   | ID del proveedor (nullable)      |
-| purchase_order_id  | int      | ID de orden de compra (nullable) |
-| purchase_date      | datetime | Fecha de compra                  |
-| quantity_purchased | decimal  | Cantidad comprada                |
-| created_by         | string   | Usuario creador                  |
-| created_at         | datetime | Fecha de creación                |
-| metadata           | object   | Metadatos adicionales            |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| id | int | ID unico |
+| product_id | string | ID del producto |
+| unit | string | Unidad de medida |
+| cost_per_unit | decimal | Costo por unidad |
+| updated_at | datetime | Fecha de ultima actualizacion del estado actual |
+| source | string | Fuente (`PURCHASE`, `MANUAL`) |
+| source_id | string | ID de referencia |
+| created_by | string | Usuario creador |
+| created_at | datetime | Fecha de creacion |
+| metadata | object | Metadatos adicionales |
 
 ### PricingInfo
 
-| Campo             | Tipo    | Descripción              |
-| ----------------- | ------- | ------------------------ |
-| product_id        | string  | ID del producto          |
-| product_name      | string  | Nombre del producto      |
-| unit              | string  | Unidad                   |
-| current_cost      | decimal | Costo actual             |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| product_id | string | ID del producto |
+| product_name | string | Nombre del producto |
+| unit | string | Unidad |
+| current_cost | decimal | Costo actual |
 | weighted_avg_cost | decimal | Costo promedio ponderado |
-| selling_price     | decimal | Precio de venta          |
-| margin_amount     | decimal | Margen en valor          |
-| margin_percent    | decimal | Margen en porcentaje     |
-| cost_source       | string  | Fuente del costo         |
-| price_source      | string  | Fuente del precio        |
+| selling_price | decimal | Precio de venta |
+| margin_amount | decimal | Margen en valor |
+| margin_percent | decimal | Margen en porcentaje |
+| cost_source | string | Fuente del costo |
+| price_source | string | Fuente del precio |
+
+---
+
+## Cost Transactions API (Nuevo 2026-05-23)
+
+Los endpoints de `cost-transactions` gestionan el registro, consulta y ajuste manual de costos con
+auditoria unificada en `price_transactions` (`price_type='cost_price'`).
+
+### POST /cost-transactions
+
+**Descripcion:** Registra un cambio de costo via `register_cost_transaction()` (SQL function).
+Actualiza `unit_costs` (estado actual unico por producto+unidad) y escribe auditoria en `price_transactions`.
+
+#### Request Body
+
+| Campo | Tipo | Requerido | Descripcion |
+|-------|------|-----------|-------------|
+| product_id | string | Si | ID del producto |
+| unit | string | Si | Unidad de medida. Si se omite, se usa `base_unit` del producto |
+| transaction_type | string | Si | `COST_UPDATE` \| `MANUAL_ADJUSTMENT` |
+| new_cost | decimal | Si | Nuevo costo por unidad (> 0) |
+| effective_date | datetime | No | Fecha de la transaccion de auditoria (default: NOW()). Se guarda en `price_transactions`; `unit_costs` refleja solo el estado actual. |
+| reference_type | string | No | Tipo de referencia |
+| reference_id | string | No | ID de referencia |
+| reason | string | No | Motivo del cambio |
+| metadata | object | No | Metadatos adicionales |
+
+#### Response 201
+
+`PriceTransaction` con `price_type: "cost_price"`. Ver [PriceTransactionResponse](PRICE_TRANSACTIONS_API_GUIDE.md).
+
+---
+
+### POST /cost-transactions/manual-adjustment
+
+**Descripcion:** Ajuste manual de costo via `manage_cost_adjustment()` (SQL function).
+Valida, audita y rota el costo activo con `source='MANUAL'`.
+
+#### Request Body
+
+| Campo | Tipo | Requerido | Descripcion |
+|-------|------|-----------|-------------|
+| product_id | string | Si | ID del producto |
+| unit | string | Si | Unidad de medida. Si se omite, se usa `base_unit` del producto |
+| new_cost | decimal | Si | Nuevo costo (>= 0) |
+| reason | string | Si | Motivo del ajuste |
+| metadata | object | No | Metadatos adicionales |
+
+---
+
+### GET /cost-transactions/product/{product_id}/history
+
+**Descripcion:** Historial de transacciones de costo para un producto.
+
+Query params: `unit`, `limit`, `offset`.
+
+---
+
+### GET /cost-transactions/by-date
+
+**Descripcion:** Transacciones de costo por rango de fechas.
+
+Query params: `start_date`, `end_date`, `limit`, `offset`.
+
+---
+
+### GET /cost-transactions/{id}
+
+**Descripcion:** Obtiene una transaccion de costo por ID.
 
 ---
 
 ## Resumen de Endpoints
 
-| Método | Endpoint                             | Descripción                |
-| ------ | ------------------------------------ | -------------------------- |
-| GET    | `/products/{id}/pricing-info`        | Info completa de precios   |
-| POST   | `/products/{id}/costs`               | Registrar nuevo costo      |
-| GET    | `/products/{id}/costs/history`       | Historial de costos        |
-| GET    | `/products/{id}/costs/last`          | Último costo               |
-| GET    | `/products/{id}/costs/last-record`   | Último registro completo   |
-| GET    | `/products/{id}/costs/summary`       | Resumen de costos          |
-| GET    | `/products/{id}/cost-trends`         | Tendencias de costos       |
-| GET    | `/products/{id}/cost-methods`        | Métodos de cálculo         |
-| GET    | `/suppliers/{id}/cost-analysis`      | Análisis por proveedor     |
-| GET    | `/cost-trends`                       | Tendencias globales        |
+| Metodo | Endpoint | Descripcion |
+|--------|----------|-------------|
+| GET | `/products/{id}/pricing-info` | Info completa de precios |
+| GET | `/products/{id}/pricing-info/{unit}` | Info de precios por unidad |
+| POST | `/products/{id}/costs` | Registrar nuevo costo |
+| GET | `/products/{id}/costs/history` | Historial de costos |
+| GET | `/products/{id}/costs/last` | Ultimo costo |
+| GET | `/products/{id}/costs/last-record` | Ultimo registro completo |
+| GET | `/products/{id}/costs/summary` | Resumen de costos |
+| GET | `/products/{id}/costs/weighted-average` | Promedio ponderado (desde purchase_order_details) |
+| GET | `/products/{id}/cost-trends` | Tendencias de costos |
+| GET | `/products/{id}/cost-methods` | Metodos de calculo |
+| GET | `/suppliers/{id}/cost-analysis` | Analisis por proveedor (desde purchase_order_details) |
+| GET | `/products/{id}/supplier-comparison` | Comparacion de proveedores con mejor proveedor |
+| GET | `/cost-trends` | Tendencias globales |
+| POST | `/cost-transactions` | Registrar transaccion de costo |
+| POST | `/cost-transactions/manual-adjustment` | Ajuste manual de costo |
+| GET | `/cost-transactions/{id}` | Obtener transaccion de costo |
+| GET | `/cost-transactions/product/{id}/history` | Historial de costo del producto |
+| GET | `/cost-transactions/by-date` | Costos por rango de fechas |
 
 ---
 
-_Última actualización: 2026-05-06 — FASE 3 verificada. Eliminado endpoint inexistente `/products/{id}/pricing-info/{unit}`. 10 endpoints documentados._
+_Ultima actualizacion: 2026-05-23_

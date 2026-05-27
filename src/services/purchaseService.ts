@@ -10,7 +10,6 @@ import { validatePurchaseOrder } from '@/domain/purchase/validators/purchaseOrde
 import { calculatePurchaseTotals as domainCalculatePurchaseTotals } from '@/domain/purchase/calculations/purchaseCalculator'
 import { 
   PurchaseOrderRequest, 
-  PurchaseOrderOperationResponse
 } from '@/types'
 import { telemetryService } from './telemetryService'
 
@@ -378,7 +377,7 @@ export const purchaseService = {
       return {
         success: true,
         data: DEMO_PURCHASE_ORDERS_DATA,
-        pagination: { page: 1, pageSize: 50, hasNext: false, hasPrevious: false },
+        pagination: { page: 1, pageSize: 50, hasNext: false, hasPrevious: false, totalPages: null as number | null, totalRecords: null as number | null },
       }
     }
     try {

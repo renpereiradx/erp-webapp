@@ -4,7 +4,7 @@ import { productService } from '@/services/productService';
 
 describe('useProductStore searchProducts abort', () => {
   test('retorna aborted:true y no actualiza estado en cancelación', async () => {
-    const spy = vi.spyOn(productService, 'searchProducts').mockImplementation((_term, { signal } = {}) => {
+    const spy = vi.spyOn(productService, 'searchInfo').mockImplementation((_term, { signal } = {}) => {
       return new Promise((resolve, reject) => {
         if (signal) {
           signal.addEventListener('abort', () => reject(Object.assign(new Error('Aborted'), { name: 'AbortError' })));

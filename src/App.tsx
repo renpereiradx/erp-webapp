@@ -28,6 +28,7 @@ import PurchaseRequisitionList from '@/pages/PurchaseRequisitionList'
 import PurchaseRequisitionCreate from '@/pages/PurchaseRequisitionCreate'
 import PurchaseRequisitionDetail from '@/pages/PurchaseRequisitionDetail'
 import SalesNew from '@/pages/SalesNew'
+import ScaleConfigPage from '@/features/scales/components/ScaleConfigPage'
 import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
 import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
 import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
@@ -387,6 +388,11 @@ function AppContent() {
                         <RoleGuard allowedRoles={['F2VLso']}>
                           <AdminSessionsDashboard />
                         </RoleGuard>
+                      } />
+                      <Route path='/configuracion/balanzas' element={
+                        <PermissionGuard permission="products:read">
+                          <ScaleConfigPage />
+                        </PermissionGuard>
                       } />
                       
                       {/* Auditoría */}

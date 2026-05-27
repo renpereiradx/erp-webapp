@@ -3,7 +3,7 @@
 > **Disclaimer:** Esta guía contiene ejemplos JSON y TypeScript/JavaScript para ilustración de payloads y respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
 **Versión:** 2.1  
-**Fecha:** 2026-05-06  
+**Fecha:** 19 de Mayo de 2026  
 **Endpoint Base:** `http://localhost:5050`
 
 ---
@@ -41,42 +41,24 @@ No hay breaking changes en los endpoints existentes, pero el comportamiento inte
 ## 🔧 Configuración General
 
 ### Base URL
-
-```
 http://localhost:5050
-```
 
-### Autenticación
-
-- Header: `Authorization: Bearer <jwt_token>`
-
-### Headers requeridos (cuando aplica)
-
+### Headers Requeridos
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
 
-### Contexto de Sucursal
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
 
-- Query param: `?branch_id=<id>`
-- O header: `X-Branch-ID: <id>`
-- Fallback: `active_branch` del token JWT
-- Restricción: sucursal debe estar en `allowed_branches`
-
-> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
-
-## Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
-
+### Formato de Respuesta Estándar
 `{ success: bool, data?, message?, error?, pagination? }`
 
-## Paginación estándar
+### Formato de Fechas
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params: `YYYY-MM-DD`
 
+### Paginación Estándar
 `{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
@@ -140,7 +122,6 @@ El campo `metadata` en ajustes de precio es validado contra un JSON Schema en el
 Crea o actualiza el precio de venta para una unidad de producto específica. Este es el endpoint principal para realizar ajustes.
 
 **Request Body:**
-
 ```json
 {
   "product_id": "PROD_BANANA_001",
@@ -157,16 +138,15 @@ Crea o actualiza el precio de venta para una unidad de producto específica. Est
 
 **Parámetros:**
 
-| Campo        | Tipo   | Requerido | Descripción                                                                         |
-| ------------ | ------ | --------- | ----------------------------------------------------------------------------------- |
-| `product_id` | string | ✅ Sí     | ID único del producto a ajustar.                                                    |
-| `new_price`  | number | ✅ Sí     | El nuevo precio de venta. Debe ser >= 0.                                            |
-| `unit`       | string | ❌ No     | La unidad de medida para el precio (ej. "UNIT", "caja", "kg"). **Default: "UNIT"**. |
-| `reason`     | string | ✅ Sí     | Justificación del cambio de precio.                                                 |
-| `metadata`   | object | ❌ No     | Objeto JSON para datos adicionales (auditoría, etc.).                               |
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `product_id` | string | ✅ Sí | ID único del producto a ajustar. |
+| `new_price` | number | ✅ Sí | El nuevo precio de venta. Debe ser >= 0. |
+| `unit` | string | ❌ No | La unidad de medida para el precio (ej. "UNIT", "caja", "kg"). **Default: "UNIT"**. |
+| `reason` | string | ✅ Sí | Justificación del cambio de precio. |
+| `metadata` | object | ❌ No | Objeto JSON para datos adicionales (auditoría, etc.). |
 
 **Response (200 OK):**
-
 ```json
 {
   "message": "Manual price adjustment successful"
@@ -177,13 +157,13 @@ Crea o actualiza el precio de venta para una unidad de producto específica. Est
 
 **Errores Posibles:**
 
-| Mensaje de Error                           | HTTP Status | Causa                                                           |
-| ------------------------------------------ | ----------- | --------------------------------------------------------------- |
-| `Product with ID [..] does not exist`      | 500         | El `product_id` enviado no corresponde a un producto existente. |
-| `Price cannot be negative`                 | 500         | El `new_price` es menor que 0.                                  |
-| `Reason is required for price adjustments` | 500         | El campo `reason` está vacío.                                   |
-| (Error de decodificación JSON)             | 400         | El cuerpo de la solicitud no es un JSON válido.                 |
-| (Error de autenticación)                   | 401         | El token JWT es inválido, ha expirado o no se proporcionó.      |
+| Mensaje de Error | HTTP Status | Causa |
+|---|---|---|
+| `Product with ID [..] does not exist` | 500 | El `product_id` enviado no corresponde a un producto existente. |
+| `Price cannot be negative` | 500 | El `new_price` es menor que 0. |
+| `Reason is required for price adjustments` | 500 | El campo `reason` está vacío. |
+| (Error de decodificación JSON) | 400 | El cuerpo de la solicitud no es un JSON válido. |
+| (Error de autenticación) | 401 | El token JWT es inválido, ha expirado o no se proporcionó. |
 
 ---
 
@@ -195,19 +175,18 @@ Recupera el historial completo de ajustes de precios para un producto específic
 
 **Parámetros de URL:**
 
-| Parámetro   | Tipo   | Descripción                  |
-| ----------- | ------ | ---------------------------- |
+| Parámetro | Tipo | Descripción |
+|---|---|---|
 | `productId` | string | ID del producto a consultar. |
 
 **Parámetros de Query:**
 
-| Parámetro | Tipo   | Requerido | Descripción                                              |
-| --------- | ------ | --------- | -------------------------------------------------------- |
-| `limit`   | number | ❌ No     | Número máximo de resultados a devolver. **Default: 50**. |
-| `offset`  | number | ❌ No     | Desplazamiento para paginación. **Default: 0**.          |
+| Parámetro | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `limit` | number | ❌ No | Número máximo de resultados a devolver. **Default: 50**. |
+| `offset` | number | ❌ No | Desplazamiento para paginación. **Default: 0**. |
 
 **Response (200 OK):**
-
 ```json
 {
   "product_id": "PROD_BANANA_001",
@@ -245,13 +224,12 @@ Obtiene una lista de los ajustes de precios más recientes en todo el sistema. I
 
 **Parámetros de Query:**
 
-| Parámetro | Tipo   | Requerido | Descripción                                             |
-| --------- | ------ | --------- | ------------------------------------------------------- |
-| `days`    | number | ❌ No     | Número de días hacia atrás para buscar. **Default: 7**. |
-| `limit`   | number | ❌ No     | Número máximo de resultados. **Default: 50**.           |
+| Parámetro | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `days` | number | ❌ No | Número de días hacia atrás para buscar. **Default: 7**. |
+| `limit` | number | ❌ No | Número máximo de resultados. **Default: 50**. |
 
 **Response (200 OK):**
-
 ```json
 {
   "adjustments": [
@@ -290,16 +268,15 @@ Busca ajustes de precios dentro de un rango de fechas específico, con filtros o
 
 **Parámetros de Query:**
 
-| Parámetro    | Tipo   | Requerido | Descripción                                     |
-| ------------ | ------ | --------- | ----------------------------------------------- |
-| `start_date` | string | ❌ No     | Fecha de inicio (formato `YYYY-MM-DD`).         |
-| `end_date`   | string | ❌ No     | Fecha de fin (formato `YYYY-MM-DD`).            |
-| `product_id` | string | ❌ No     | Filtrar por un ID de producto específico.       |
-| `limit`      | number | ❌ No     | Máximo de resultados. **Default: 50**.          |
-| `offset`     | number | ❌ No     | Desplazamiento para paginación. **Default: 0**. |
+| Parámetro | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `start_date` | string | ❌ No | Fecha de inicio (formato `YYYY-MM-DD`). |
+| `end_date` | string | ❌ No | Fecha de fin (formato `YYYY-MM-DD`). |
+| `product_id` | string | ❌ No | Filtrar por un ID de producto específico. |
+| `limit` | number | ❌ No | Máximo de resultados. **Default: 50**. |
+| `offset` | number | ❌ No | Desplazamiento para paginación. **Default: 0**. |
 
 **Response (200 OK):**
-
 ```json
 {
   "adjustments": [
@@ -341,7 +318,6 @@ Busca ajustes de precios dentro de un rango de fechas específico, con filtros o
 Endpoint de diagnóstico para verificar la salud e integridad de las integraciones financieras del sistema.
 
 **Response (200 OK):**
-
 ```json
 {
   "integration_status": "FULLY_INTEGRATED",
@@ -356,17 +332,81 @@ Endpoint de diagnóstico para verificar la salud e integridad de las integracion
 }
 ```
 
+---
+
 ### 6. Ajuste Manual de Stock (Genérico)
 
-**`POST /manual_adjustment/`**
+**Endpoint:** `POST /manual_adjustment/`
 
-Crea un ajuste manual de stock genérico (cantidad, tipo de ajuste, motivo).
+Crea un ajuste manual de stock genérico. Permite registrar ajustes de cantidad, tipo de ajuste y motivo asociado a un producto.
+
+**Request Body:**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `product_id` | string | ✅ Sí | ID único del producto a ajustar. |
+| `quantity` | number | ✅ Sí | Cantidad del ajuste (positivo o negativo). |
+| `adjustment_type` | string | ✅ Sí | Tipo de ajuste (ej. "STOCK_IN", "STOCK_OUT", "CORRECTION"). |
+| `reason` | string | ✅ Sí | Justificación del ajuste. |
+| `branch_id` | number | ❌ No | ID de la sucursal (opcional, usa contexto por defecto). |
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Manual adjustment created successfully",
+  "data": {
+    "adjustment_id": 1,
+    "product_id": "PROD_BANANA_001",
+    "quantity": 50,
+    "adjustment_type": "STOCK_IN",
+    "reason": "Inventario inicial"
+  }
+}
+```
+
+---
 
 ### 7. Listar Ajustes Manuales
 
-**`GET /manual_adjustment/{page}/{pageSize}`**
+**Endpoint:** `GET /manual_adjustment/{page}/{pageSize}`
 
-Lista paginada de todos los ajustes manuales registrados.
+Lista paginada de todos los ajustes manuales registrados en el sistema.
+
+**Parámetros de URL:**
+
+| Parámetro | Tipo | Descripción |
+|---|---|---|
+| `page` | number | Número de página (1-indexed). |
+| `pageSize` | number | Cantidad de registros por página. |
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "adjustment_id": 1,
+      "product_id": "PROD_BANANA_001",
+      "adjustment_type": "price",
+      "old_value": 20.0,
+      "new_value": 18.75,
+      "value_change": -1.25,
+      "reason": "Ajuste semanal de precios",
+      "adjustment_date": "2026-05-19T12:00:00Z",
+      "user_id": "user_001"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "page_size": 10,
+    "total_items": 1,
+    "total_pages": 1,
+    "has_next": false,
+    "has_prev": false
+  }
+}
+```
 
 ---
 
@@ -405,7 +445,6 @@ curl -X POST http://localhost:5050/manual_adjustment/price \
 ```
 
 **Resultado:**
-
 - ✅ El precio de "PROD_BANANA_001" para la unidad "unit" se actualiza a 18.75.
 - ✅ Se crea un registro en `manual_price_adjustments`.
 - ✅ Se crea una transacción en `price_transactions`.
@@ -420,7 +459,6 @@ curl -X GET "http://localhost:5050/manual_adjustment/product/PROD_BANANA_001/his
 ```
 
 **Resultado:**
-
 - ✅ Devuelve un JSON con los últimos 5 ajustes de precio para ese producto.
 
 ### Caso 3: Ver los ajustes más recientes en el sistema
@@ -433,7 +471,6 @@ curl -X GET "http://localhost:5050/manual_adjustment/price/recent?days=1&limit=1
 ```
 
 **Resultado:**
-
 - ✅ Devuelve una lista de los últimos 10 ajustes de precios realizados en las últimas 24 horas.
 
 ---
@@ -459,4 +496,4 @@ curl -X GET "http://localhost:5050/manual_adjustment/price/recent?days=1&limit=1
 
 ---
 
-_Última actualización: 2026-05-06 — FASE 3 verificada. Agregados 2 endpoints faltantes (POST /manual_adjustment/, GET /manual_adjustment/{page}/{pageSize}). 7 endpoints documentados._
+_Última actualización: 2026-05-19_

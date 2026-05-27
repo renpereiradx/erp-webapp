@@ -6,22 +6,45 @@
 **Fecha:** 2026-05-07
 **Estado:** Vigente con la API actual (multi-branch)
 
-## Base URL
+---
 
-`http://localhost:5050`
+## 🔧 Configuración General
 
-## Autenticación
+### Base URL
+http://localhost:5050
 
-- Header: `Authorization: Bearer <jwt_token>`
-
-## Headers requeridos (cuando aplica)
-
+### Headers Requeridos
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
 
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
+
+### Formato de Respuesta Estándar
+`{ success: bool, data?, message?, error?, pagination? }`
+
+### Formato de Fechas
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params: `YYYY-MM-DD`
+
+### Paginación Estándar
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
+
 ---
+
+## Permisos del Módulo
+
+> **Nota:** A partir de la implementación RBAC por módulo (2026-05-19), todos los endpoints de este módulo están protegidos por middleware de permisos. Ver [SECURITY_FRONTEND_INTEGRATION_GUIDE.md](./SECURITY_FRONTEND_INTEGRATION_GUIDE.md) para la matriz completa de roles.
+
+| Método HTTP | Permiso Requerido |
+|-------------|-------------------|
+| GET / HEAD | `purchases:read` |
+| POST / PUT / DELETE / PATCH | `purchases:write` |
+
+- Admin (`role_id = "F2VLso"`) tiene acceso total sin verificación de permisos.
+- Sin el permiso de lectura → `403 Forbidden`
+- Intentar escritura en módulo de solo lectura → `405 Method Not Allowed`
 
 ## Resumen
 
@@ -31,30 +54,6 @@ Principio clave:
 
 - El frontend muestra preview.
 - El backend calcula y persiste (fuente de verdad).
-
----
-
-## Contexto de Sucursal
-
-- Query param: `?branch_id=<id>`
-- O header: `X-Branch-ID: <id>`
-- Fallback: `active_branch` del token JWT
-- Restricción: sucursal debe estar en `allowed_branches`
-
-> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
-
-## Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
-
-`{ success: bool, data?, message?, error?, pagination? }`
-
-## Paginación estándar
-
-`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
 
@@ -78,13 +77,13 @@ Para registrar compra completa:
 
 ```typescript
 interface ProcessCompletePurchaseOrderDetail {
-  product_id: string
-  quantity: number // > 0
-  unit_price: number // costo de compra > 0
-  unit?: string // default backend: "unit"
-  profit_pct?: number // modo margen automatico
-  explicit_sale_price?: number // modo precio explicito (prioridad)
-  tax_rate_id?: number // override opcional de IVA
+  product_id: string;
+  quantity: number;          // > 0
+  unit_price: number;        // costo de compra > 0
+  unit?: string;             // default backend: base_unit del producto (fallback: "unit")
+  profit_pct?: number;       // modo margen automatico
+  explicit_sale_price?: number; // modo precio explicito (prioridad)
+  tax_rate_id?: number;      // override opcional de IVA
 }
 ```
 
@@ -212,7 +211,21 @@ Consultar `GET /purchase/{id}` o endpoints enriquecidos de compra para ver el de
 - `message`
 - `warnings` (cuando aplica, por ejemplo discrepancias fiscales)
 
-### 6.1 Consulta de compras (GET)
+### 6.1 Procesamiento de costo al completar compra
+
+Al completar una compra con `POST /purchase/complete`, el backend ahora:
+
+1. Procesa los detalles de la orden (`purchase_order_details`)
+2. Registra cada linea con costo en `unit_costs` via `register_cost_transaction()` (actualiza estado actual; el historial queda en `price_transactions` con `price_type='cost_price'`)
+3. Crea auditoria en `price_transactions` con `price_type='cost_price'`
+4. Calcula el promedio ponderado desde `purchase_order_details` (fuente canonica)
+
+> **Migracion 2026-05-25:** `unit_costs` ahora almacena solo el estado actual (1 fila por producto+unidad).
+> Las columnas `effective_from` y `effective_to` fueron eliminadas; el historial completo de costos vive en `price_transactions`.
+> **Migracion 2026-05-23:** `unit_costs` ya no almacena `supplier_id`, `purchase_order_id`, `purchase_date`, o `quantity_purchased`.
+> Para consultar esos datos, use `purchase_order_details` directamente o el endpoint `GET /products/{id}/costs/weighted-average`.
+
+### 6.2 Consulta de compras (GET)
 
 Todos los endpoints de consulta (`GET /purchase/{id}`, `/purchase/supplier_id/{id}`, `/purchase/supplier_name/{name}`, `/purchase/date_range/`) ahora devuelven:
 
@@ -308,10 +321,11 @@ Todos los endpoints de consulta (`GET /purchase/{id}`, `/purchase/supplier_id/{i
 
 ## 10. Referencias
 
-- `PURCHASE_ORDERS_API.md` — API completa de órdenes de compra
-- `PRODUCT_API.md` — API de productos
+- `PURCHASE_ORDERS_API_GUIDE.md` — API completa de órdenes de compra
+- `PRODUCT_API_GUIDE.md` — API de productos
 - `MULTI_BRANCH_CONTEXT_GUIDE.md` — Guía de contexto multi-sucursal
+- `SALES_API_GUIDE.md` — API de ventas
 
 ---
 
-_Última actualización: 2026-05-07 — Fase 5 bugfix multi-branch. Agregado `branch_id` en request body (auto-inyectado), `branch_id` en response, sección 6.1 (payment_method/currency con códigos reales reemplazando strings genéricos), ejemplos actualizados con `branch_id`, checklist actualizado con ítems de sucursal._
+_Última actualización: 2026-05-23_

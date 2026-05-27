@@ -2,11 +2,29 @@
 
 > **Disclaimer:** Esta guía contiene ejemplos JSON para ilustración de respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
-**Versión:** 3.3.0
-**Fecha:** 11 de Mayo de 2026
+**Versión:** 3.4.0
+**Fecha:** 26 de Mayo de 2026
 **Endpoint Base:** `http://localhost:5050`
 
+## Permisos del Módulo
+
+> **Nota:** A partir de la implementación RBAC por módulo (2026-05-19), todos los endpoints de este módulo están protegidos por middleware de permisos. Ver [SECURITY_FRONTEND_INTEGRATION_GUIDE.md](./SECURITY_FRONTEND_INTEGRATION_GUIDE.md) para la matriz completa de roles.
+
+| Método HTTP | Permiso Requerido |
+|-------------|-------------------|
+| GET / HEAD | `products:read` |
+| POST / PUT / DELETE / PATCH | `products:write` |
+
+- Admin (`role_id = "F2VLso"`) tiene acceso total sin verificación de permisos.
+- Sin el permiso de lectura → `403 Forbidden`
+- Intentar escritura en módulo de solo lectura → `405 Method Not Allowed`
+
 ## Historial de Cambios
+
+### v3.4.0 - 26 de Mayo de 2026
+- **NUEVO**: Campos `is_variable_measure` (boolean) y `scale_code` (string | null) en `ProductEnriched` y request bodies de crear/actualizar.
+- **NUEVO**: Soporte para productos de medida variable (peso, volumen, área, longitud).
+- **NUEVO**: `scale_code` para integración con balanzas EAN-13 (código corto único entre productos de medida variable activos).
 
 ### v3.3.0 - 11 de Mayo de 2026
 - **CORRECCION**: Agregados campos faltantes en `ProductEnriched`: `stock_id`, `stock_branch_id`, `stock_updated_at`, `tax_classification`.
@@ -103,6 +121,8 @@ Respuesta estandar para todos los endpoints de productos.
 | `origin` | string \| null | `NACIONAL` \| `IMPORTADO` |
 | `brand` | string \| null | Marca del producto |
 | `base_unit` | string \| null | Unidad base: `kg`, `meter`, `l`, `unit`, etc. |
+| `is_variable_measure` | boolean | TRUE si el producto se vende por medida variable (peso, volumen, área, longitud). FALSE para productos contables por unidad. |
+| `scale_code` | string \| null | Código corto de balanza para barcode EAN-13 (1-5 dígitos). Único entre productos de medida variable activos. |
 | `override_tax_rate_id` | number \| null | ID de tasa de IVA especifica (anula la de categoria) |
 | `target_margin_percent` | string \| null | Porcentaje de margen objetivo (ej: "30") |
 | `pricing_strategy` | string \| null | `MANUAL` \| `AUTOMATIC` |
@@ -236,7 +256,9 @@ Crea un nuevo producto con su descripcion de forma atomica.
   "barcode": "7891234567890",
   "origin": "IMPORTADO",
   "brand": "Coca-Cola",
-  "base_unit": "unit"
+  "base_unit": "unit",
+  "is_variable_measure": false,
+  "scale_code": null
 }
 ```
 
@@ -252,6 +274,8 @@ Crea un nuevo producto con su descripcion de forma atomica.
 | `origin` | string | No | `NACIONAL` o `IMPORTADO` |
 | `brand` | string | No | Marca del producto |
 | `base_unit` | string | No | Unidad base: `kg`, `l`, `meter`, `unit`, etc. |
+| `is_variable_measure` | boolean | No | TRUE para productos de medida variable. Default: `false` |
+| `scale_code` | string | No | Código corto de balanza (1-5 dígitos). Solo para productos con `is_variable_measure=true` |
 
 > **Nota sobre IVA:** El IVA se determina automaticamente desde la tax classification o la categoria. Si necesitas sobrescribirlo, usa `PUT /products/{id}` con `override_tax_rate_id`.
 
@@ -282,7 +306,9 @@ Actualiza los datos de un producto y su descripcion.
   "product_type": "PHYSICAL",
   "origin": "NACIONAL",
   "brand": "Coca-Cola",
-  "base_unit": "unit"
+  "base_unit": "unit",
+  "is_variable_measure": false,
+  "scale_code": null
 }
 ```
 
@@ -291,6 +317,8 @@ Actualiza los datos de un producto y su descripcion.
 | Campo | Tipo | Requerido | Descripcion |
 |-------|------|-----------|-------------|
 | `state` | boolean | Si | Estado del producto (true=activo, false=inactivo) |
+| `is_variable_measure` | boolean | No | TRUE para productos de medida variable. Default: `false` |
+| `scale_code` | string | No | Código corto de balanza (1-5 dígitos). Solo para productos con `is_variable_measure=true` |
 
 > **Nota:** Para sobrescribir el IVA de la categoria, actualizar via base de datos o usar endpoints administrativos.
 
@@ -367,7 +395,7 @@ Retorna un producto enriquecido con stock, precios, descripcion, categoria e IVA
       "product_id": "A-7oarkDR",
       "unit": "unit",
       "price_per_unit": 10000,
-      "effective_date": "2025-11-14T15:04:36.97626Z"
+      "updated_at": "2025-11-14T15:04:36.97626Z"
     }
   ],
   "has_unit_pricing": true,
@@ -562,7 +590,7 @@ Retorna informacion completa: categoria, IVA, costos, precios, stock, auditoria 
       "product_id": "",
       "unit": "unit",
       "price_per_unit": 10000,
-      "effective_date": "2025-11-14T15:04:36.97626Z"
+      "updated_at": "2025-11-14T15:04:36.97626Z"
     }
   ],
   "unit_costs_summary": [
@@ -824,7 +852,7 @@ Retorna las unidades de medida con precios asignados.
       "product_id": "A-7oarkDR",
       "unit": "unit",
       "price_per_unit": 10000,
-      "effective_date": "2025-11-14T15:04:36.97626Z"
+      "updated_at": "2025-11-14T15:04:36.97626Z"
     }
   ]
 }
@@ -850,12 +878,13 @@ Asigna un precio de venta a una unidad de medida.
 ```json
 {
   "message": "Unit price created successfully",
-  "data": {
-    "id": 0,
-    "product_id": "abc123",
-    "unit": "kg",
-    "price_per_unit": 15000,
-    "effective_date": "2026-02-24T15:30:00Z"
+    "data": {
+      "id": 0,
+      "product_id": "abc123",
+      "unit": "kg",
+      "price_per_unit": 15000,
+      "updated_at": "2026-02-24T15:30:00Z"
+    }
   }
 }
 ```

@@ -1,39 +1,32 @@
 # Guía de API de Presupuestos para Frontend
 
-## Base URL
+## 🔧 Configuración General
 
-`http://localhost:5050`
+### Base URL
 
-## Autenticación
+```
+http://localhost:5050
+```
 
-- Header: `Authorization: Bearer <jwt_token>`
-
-## Headers requeridos (cuando aplica)
+### Headers Requeridos
 
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
 
-## Contexto de Sucursal
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
 
-- Query param: `?branch_id=<id>`
-- O header: `X-Branch-ID: <id>`
-- Fallback: `active_branch` del token JWT
-- Restricción: sucursal debe estar en `allowed_branches`
-
-> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
-
-## Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
+### Formato de Respuesta Estándar
 
 `{ success: bool, data?, message?, error?, pagination? }`
 
-## Paginación estándar
+### Formato de Fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params: `YYYY-MM-DD`
+
+### Paginación Estándar
 
 `{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
@@ -47,29 +40,29 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
-| Content-Type  | Sí          | `application/json`          |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
+| Content-Type | Sí | `application/json` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción                                       |
-| --------- | ---- | --------- | ------------------------------------------------- |
-| branch_id | int  | No        | ID de sucursal explícita. Prioridad sobre header. |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita. Prioridad sobre header. |
 
 #### Request Body
 
-| Campo             | Tipo     | Requerido | Descripción                                                  |
-| ----------------- | -------- | --------- | ------------------------------------------------------------ |
-| client_id         | string   | Sí        | ID del cliente (Party ID)                                    |
-| branch_id         | int      | No        | ID de sucursal. Si se omite, usa el branch context resuelto. |
-| valid_until       | datetime | No        | Fecha de vencimiento del presupuesto                         |
-| budget_details    | array    | Sí        | Mínimo 1 item. Ver detalle abajo.                            |
-| payment_method_id | int      | No        | ID del método de pago                                        |
-| currency_id       | int      | No        | ID de la moneda                                              |
-| notes             | string   | No        | Notas adicionales                                            |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| client_id | string | Sí | ID del cliente (Party ID) |
+| branch_id | int | No | ID de sucursal. Si se omite, usa el branch context resuelto. |
+| valid_until | datetime | No | Fecha de vencimiento del presupuesto |
+| budget_details | array | Sí | Mínimo 1 item. Ver detalle abajo. |
+| payment_method_id | int | No | ID del método de pago |
+| currency_id | int | No | ID de la moneda |
+| notes | string | No | Notas adicionales |
 
 **Budget Detail Item:**
 | Campo | Tipo | Requerido | Descripción |
@@ -85,25 +78,25 @@ Authorization: Bearer <jwt_token>
 
 #### Response 201
 
-| Campo        | Tipo   | Descripción                  |
-| ------------ | ------ | ---------------------------- |
-| success      | bool   | `true`                       |
-| budget_id    | string | ID generado del presupuesto  |
-| total_amount | float  | Monto total calculado        |
-| items_count  | int    | Cantidad de líneas           |
-| message      | string | Mensaje de éxito             |
-| created_at   | string | Fecha de creación (ISO 8601) |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| budget_id | string | ID generado del presupuesto |
+| total_amount | float | Monto total calculado |
+| items_count | int | Cantidad de líneas |
+| message | string | Mensaje de éxito |
+| created_at | string | Fecha de creación (ISO 8601) |
 
 #### Errores
 
-| Código | Condición                                                                        |
-| ------ | -------------------------------------------------------------------------------- |
-| 400    | Body inválido, `client_id` vacío, `budget_details` vacío, o `branch_id` inválido |
-| 401    | Token ausente o inválido                                                         |
-| 403    | `branch_id` explícito fuera de `allowed_branches`                                |
-| 404    | Cliente o producto no encontrado                                                 |
-| 409    | -                                                                                |
-| 500    | Error interno del servidor                                                       |
+| Código | Condición |
+|--------|-----------|
+| 400 | Body inválido, `client_id` vacío, `budget_details` vacío, o `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` explícito fuera de `allowed_branches` |
+| 404 | Cliente o producto no encontrado |
+| 409 | - |
+| 500 | Error interno del servidor |
 
 #### Notas
 
@@ -117,30 +110,30 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
 
 #### Query Parameters
 
-| Parámetro       | Tipo     | Requerido | Descripción                                                                                 |
-| --------------- | -------- | --------- | ------------------------------------------------------------------------------------------- |
-| branch_id       | int      | No        | ID de sucursal explícita                                                                    |
-| client_id       | string   | No        | Filtrar por cliente                                                                         |
-| status          | string   | No        | Filtrar por estado (`PENDING`, `APPROVED`, `REJECTED`, `EXPIRED`, `CONVERTED`, `CANCELLED`) |
-| start_date      | datetime | No        | Fecha inicio                                                                                |
-| end_date        | datetime | No        | Fecha fin                                                                                   |
-| page            | int      | No        | Número de página (default: 1)                                                               |
-| page_size       | int      | No        | Elementos por página (default: 10)                                                          |
-| include_expired | bool     | No        | Incluir presupuestos expirados                                                              |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita |
+| client_id | string | No | Filtrar por cliente |
+| status | string | No | Filtrar por estado (`PENDING`, `APPROVED`, `REJECTED`, `EXPIRED`, `CONVERTED`, `CANCELLED`) |
+| start_date | datetime | No | Fecha inicio |
+| end_date | datetime | No | Fecha fin |
+| page | int | No | Número de página (default: 1) |
+| page_size | int | No | Elementos por página (default: 10) |
+| include_expired | bool | No | Incluir presupuestos expirados |
 
 #### Response 200
 
-| Campo      | Tipo   | Descripción                                                                     |
-| ---------- | ------ | ------------------------------------------------------------------------------- |
-| data       | array  | Lista de `BudgetSummary`                                                        |
-| pagination | object | `{ page, page_size, total_items, total_pages, has_next, has_prev }`             |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| data | array | Lista de `BudgetSummary` |
+| pagination | object | `{ page, page_size, total_items, total_pages, has_next, has_prev }` |
 
 **BudgetSummary:**
 | Campo | Tipo | Descripción |
@@ -158,12 +151,12 @@ Authorization: Bearer <jwt_token>
 
 #### Errores
 
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `branch_id` inválido                    |
-| 401    | Token ausente o inválido                |
-| 403    | `branch_id` fuera de `allowed_branches` |
-| 500    | Error interno                           |
+| Código | Condición |
+|--------|-----------|
+| 400 | `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 500 | Error interno |
 
 ---
 
@@ -173,24 +166,24 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita |
 
 #### Response 200
 
-| Campo   | Tipo   | Descripción              |
-| ------- | ------ | ------------------------ |
-| success | bool   | `true`                   |
-| data    | object | `BudgetOrderWithDetails` |
-| error   | string | Solo en caso de error    |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| data | object | `BudgetOrderWithDetails` |
+| error | string | Solo en caso de error |
 
 **BudgetOrderWithDetails.budget (BudgetOrderRiched):**
 | Campo | Tipo | Descripción |
@@ -239,13 +232,13 @@ Authorization: Bearer <jwt_token>
 
 #### Errores
 
-| Código | Condición                                |
-| ------ | ---------------------------------------- |
-| 400    | `budget_id` vacío o `branch_id` inválido |
-| 401    | Token ausente o inválido                 |
-| 403    | `branch_id` fuera de `allowed_branches`  |
-| 404    | Presupuesto no encontrado                |
-| 500    | Error interno                            |
+| Código | Condición |
+|--------|-----------|
+| 400 | `budget_id` vacío o `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Presupuesto no encontrado |
+| 500 | Error interno |
 
 ---
 
@@ -255,32 +248,32 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
 
 #### Query Parameters
 
-| Parámetro       | Tipo | Requerido | Descripción              |
-| --------------- | ---- | --------- | ------------------------ |
-| branch_id       | int  | No        | ID de sucursal explícita |
-| include_expired | bool | No        | Incluir expirados        |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita |
+| include_expired | bool | No | Incluir expirados |
 
 #### Response 200
 
-| Campo | Tipo  | Descripción              |
-| ----- | ----- | ------------------------ |
-| data  | array | Lista de `BudgetSummary` |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| data | array | Lista de `BudgetSummary` |
 
 #### Errores
 
-| Código | Condición                                |
-| ------ | ---------------------------------------- |
-| 400    | `client_id` vacío o `branch_id` inválido |
-| 401    | Token ausente o inválido                 |
-| 403    | `branch_id` fuera de `allowed_branches`  |
-| 500    | Error interno                            |
+| Código | Condición |
+|--------|-----------|
+| 400 | `client_id` vacío o `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 500 | Error interno |
 
 ---
 
@@ -290,37 +283,37 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita |
 
 #### Path Parameters
 
-| Parámetro | Tipo   | Requerido | Descripción                                                                    |
-| --------- | ------ | --------- | ------------------------------------------------------------------------------ |
-| status    | string | Sí        | Estado: `PENDING`, `APPROVED`, `REJECTED`, `EXPIRED`, `CONVERTED`, `CANCELLED` |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| status | string | Sí | Estado: `PENDING`, `APPROVED`, `REJECTED`, `EXPIRED`, `CONVERTED`, `CANCELLED` |
 
 #### Response 200
 
-| Campo | Tipo  | Descripción              |
-| ----- | ----- | ------------------------ |
-| data  | array | Lista de `BudgetSummary` |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| data | array | Lista de `BudgetSummary` |
 
 #### Errores
 
-| Código | Condición                                               |
-| ------ | ------------------------------------------------------- |
-| 400    | `status` vacío, estado inválido, o `branch_id` inválido |
-| 401    | Token ausente o inválido                                |
-| 403    | `branch_id` fuera de `allowed_branches`                 |
-| 500    | Error interno                                           |
+| Código | Condición |
+|--------|-----------|
+| 400 | `status` vacío, estado inválido, o `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 500 | Error interno |
 
 ---
 
@@ -330,45 +323,45 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
-| Content-Type  | Sí          | `application/json`          |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
+| Content-Type | Sí | `application/json` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita |
 
 #### Request Body
 
-| Campo      | Tipo   | Requerido | Descripción       |
-| ---------- | ------ | --------- | ----------------- |
-| new_status | string | Sí        | Nuevo estado      |
-| notes      | string | No        | Notas adicionales |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| new_status | string | Sí | Nuevo estado |
+| notes | string | No | Notas adicionales |
 
 #### Response 200
 
-| Campo           | Tipo   | Descripción            |
-| --------------- | ------ | ---------------------- |
-| success         | bool   | `true`                 |
-| budget_id       | string | ID del presupuesto     |
-| previous_status | string | Estado anterior        |
-| new_status      | string | Estado nuevo           |
-| message         | string | Descripción del cambio |
-| updated_at      | string | Fecha de actualización |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| budget_id | string | ID del presupuesto |
+| previous_status | string | Estado anterior |
+| new_status | string | Estado nuevo |
+| message | string | Descripción del cambio |
+| updated_at | string | Fecha de actualización |
 
 #### Errores
 
-| Código | Condición                                                                             |
-| ------ | ------------------------------------------------------------------------------------- |
-| 400    | `budget_id` vacío, `new_status` inválido, transición inválida, o `branch_id` inválido |
-| 401    | Token ausente o inválido                                                              |
-| 403    | `branch_id` fuera de `allowed_branches`                                               |
-| 404    | Presupuesto no encontrado                                                             |
-| 500    | Error interno                                                                         |
+| Código | Condición |
+|--------|-----------|
+| 400 | `budget_id` vacío, `new_status` inválido, transición inválida, o `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Presupuesto no encontrado |
+| 500 | Error interno |
 
 #### Notas
 
@@ -389,45 +382,45 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
-| Content-Type  | Sí          | `application/json`          |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
+| Content-Type | Sí | `application/json` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita |
 
 #### Request Body
 
-| Campo                     | Tipo | Requerido | Descripción                                                                           |
-| ------------------------- | ---- | --------- | ------------------------------------------------------------------------------------- |
-| branch_id                 | int  | No        | ID de sucursal para la venta resultante. Si se omite, usa el branch context resuelto. |
-| allow_price_modifications | bool | No        | Permitir cambios de precio en la venta. Default: `false`                              |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal para la venta resultante. Si se omite, usa el branch context resuelto. |
+| allow_price_modifications | bool | No | Permitir cambios de precio en la venta. Default: `false` |
 
 #### Response 200
 
-| Campo        | Tipo   | Descripción             |
-| ------------ | ------ | ----------------------- |
-| success      | bool   | `true`                  |
-| budget_id    | string | ID del presupuesto      |
-| sale_id      | string | ID de la venta generada |
-| message      | string | Mensaje de éxito        |
-| converted_at | string | Fecha de conversión     |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| budget_id | string | ID del presupuesto |
+| sale_id | string | ID de la venta generada |
+| message | string | Mensaje de éxito |
+| converted_at | string | Fecha de conversión |
 
 #### Errores
 
-| Código | Condición                                                          |
-| ------ | ------------------------------------------------------------------ |
-| 400    | Presupuesto expirado, cancelado, rechazado, o `branch_id` inválido |
-| 401    | Token ausente o inválido                                           |
-| 403    | `branch_id` fuera de `allowed_branches`                            |
-| 404    | Presupuesto no encontrado                                          |
-| 409    | Presupuesto ya convertido                                          |
-| 500    | Error interno                                                      |
+| Código | Condición |
+|--------|-----------|
+| 400 | Presupuesto expirado, cancelado, rechazado, o `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Presupuesto no encontrado |
+| 409 | Presupuesto ya convertido |
+| 500 | Error interno |
 
 #### Notas
 
@@ -442,39 +435,39 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
 #### Response 200
 
-| Campo           | Tipo   | Descripción                            |
-| --------------- | ------ | -------------------------------------- |
-| success         | bool   | `true`                                 |
-| expired_count   | int    | Cantidad de presupuestos marcados      |
-| expired_budgets | array  | Lista de IDs de presupuestos expirados |
-| message         | string | Mensaje de éxito                       |
-| executed_at     | string | Fecha de ejecución                     |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| expired_count | int | Cantidad de presupuestos marcados |
+| expired_budgets | array | Lista de IDs de presupuestos expirados |
+| message | string | Mensaje de éxito |
+| executed_at | string | Fecha de ejecución |
 
 #### Errores
 
-| Código | Condición                |
-| ------ | ------------------------ |
-| 401    | Token ausente o inválido |
-| 500    | Error interno            |
+| Código | Condición |
+|--------|-----------|
+| 401 | Token ausente o inválido |
+| 500 | Error interno |
 
 ---
 
 ## Estados del Presupuesto
 
-| Estado      | Descripción        | Transiciones Válidas                            |
-| ----------- | ------------------ | ----------------------------------------------- |
-| `PENDING`   | En espera          | `APPROVED`, `REJECTED`, `EXPIRED`, `CANCELLED`  |
-| `APPROVED`  | Aprobado           | `CONVERTED`, `REJECTED`, `EXPIRED`, `CANCELLED` |
-| `REJECTED`  | Rechazado          | `PENDING`                                       |
-| `EXPIRED`   | Expirado           | `PENDING`                                       |
-| `CONVERTED` | Convertido a venta | Ninguna                                         |
-| `CANCELLED` | Cancelado          | `PENDING`                                       |
+| Estado | Descripción | Transiciones Válidas |
+|--------|-------------|---------------------|
+| `PENDING` | En espera | `APPROVED`, `REJECTED`, `EXPIRED`, `CANCELLED` |
+| `APPROVED` | Aprobado | `CONVERTED`, `REJECTED`, `EXPIRED`, `CANCELLED` |
+| `REJECTED` | Rechazado | `PENDING` |
+| `EXPIRED` | Expirado | `PENDING` |
+| `CONVERTED` | Convertido a venta | Ninguna |
+| `CANCELLED` | Cancelado | `PENDING` |
 
 ---
 
@@ -482,54 +475,54 @@ Authorization: Bearer <jwt_token>
 
 ### BudgetOrder
 
-| Campo                | Tipo     | Descripción                              |
-| -------------------- | -------- | ---------------------------------------- |
-| id                   | string   | ID único del presupuesto                 |
-| client_id            | string   | ID del cliente (Party ID)                |
-| budget_date          | datetime | Fecha de creación                        |
-| valid_until          | datetime | Fecha de vencimiento (nullable)          |
-| total_amount         | float    | Monto total                              |
-| status               | string   | Estado actual                            |
-| user_id              | string   | ID del usuario creador                   |
-| payment_method_id    | int      | ID método de pago (nullable)             |
-| currency_id          | int      | ID de moneda (nullable)                  |
-| notes                | string   | Notas (nullable)                         |
-| metadata             | jsonb    | Metadatos adicionales                    |
-| converted_to_sale_id | string   | ID de venta si fue convertido (nullable) |
-| converted_at         | datetime | Fecha de conversión (nullable)           |
-| created_at           | datetime | Fecha de creación                        |
-| updated_at           | datetime | Fecha de última modificación             |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | string | ID único del presupuesto |
+| client_id | string | ID del cliente (Party ID) |
+| budget_date | datetime | Fecha de creación |
+| valid_until | datetime | Fecha de vencimiento (nullable) |
+| total_amount | float | Monto total |
+| status | string | Estado actual |
+| user_id | string | ID del usuario creador |
+| payment_method_id | int | ID método de pago (nullable) |
+| currency_id | int | ID de moneda (nullable) |
+| notes | string | Notas (nullable) |
+| metadata | jsonb | Metadatos adicionales |
+| converted_to_sale_id | string | ID de venta si fue convertido (nullable) |
+| converted_at | datetime | Fecha de conversión (nullable) |
+| created_at | datetime | Fecha de creación |
+| updated_at | datetime | Fecha de última modificación |
 
 ### BudgetOrderDetail
 
-| Campo            | Tipo   | Descripción                       |
-| ---------------- | ------ | --------------------------------- |
-| id               | int    | ID único del detalle              |
-| budget_order_id  | string | ID del presupuesto padre          |
-| product_id       | string | ID del producto                   |
-| quantity         | float  | Cantidad                          |
-| unit             | string | Unidad de medida (nullable)       |
-| unit_price       | float  | Precio unitario                   |
-| discount_amount  | float  | Monto de descuento                |
-| discount_percent | float  | Porcentaje de descuento           |
-| tax_rate_id      | int    | ID de tasa de impuesto (nullable) |
-| notes            | string | Notas (nullable)                  |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | int | ID único del detalle |
+| budget_order_id | string | ID del presupuesto padre |
+| product_id | string | ID del producto |
+| quantity | float | Cantidad |
+| unit | string | Unidad de medida (nullable) |
+| unit_price | float | Precio unitario |
+| discount_amount | float | Monto de descuento |
+| discount_percent | float | Porcentaje de descuento |
+| tax_rate_id | int | ID de tasa de impuesto (nullable) |
+| notes | string | Notas (nullable) |
 
 ---
 
 ## Resumen de Endpoints
 
-| Método | Endpoint                      | Descripción                     |
-| ------ | ----------------------------- | ------------------------------- |
-| POST   | `/budgets`                    | Crear presupuesto               |
-| GET    | `/budgets`                    | Listar presupuestos con filtros |
-| GET    | `/budgets/{id}`               | Obtener presupuesto por ID      |
-| GET    | `/budgets/client/{client_id}` | Listar por cliente              |
-| GET    | `/budgets/status/{status}`    | Listar por estado               |
-| PUT    | `/budgets/{id}/status`        | Actualizar estado               |
-| POST   | `/budgets/{id}/convert`       | Convertir a venta               |
-| POST   | `/budgets/mark-expired`       | Marcar expirados                |
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/budgets` | Crear presupuesto |
+| GET | `/budgets` | Listar presupuestos con filtros |
+| GET | `/budgets/{id}` | Obtener presupuesto por ID |
+| GET | `/budgets/client/{client_id}` | Listar por cliente |
+| GET | `/budgets/status/{status}` | Listar por estado |
+| PUT | `/budgets/{id}/status` | Actualizar estado |
+| POST | `/budgets/{id}/convert` | Convertir a venta |
+| POST | `/budgets/mark-expired` | Marcar expirados |
 
 ---
 
-_Última actualización: 2026-05-06 — Consistencia cross-documento verificada._
+_Última actualización: 2026-05-19_

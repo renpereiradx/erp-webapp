@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const handlers = [
   // search by name returns two items
-  http.get(`${API_URL}/products/name/:name`, ({ params }) => {
+  http.get(`${API_URL}/products/info/search/:name`, ({ params }) => {
     const { name } = params;
     return HttpResponse.json([
       { id: 'A1', name: `${name}-one`, is_active: true, category_id: 1 },

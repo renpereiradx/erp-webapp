@@ -16,6 +16,19 @@ Authorization: Bearer <jwt_token>
 ### Formato de Respuesta Estándar
 `{ success: bool, data?, message?, error?, pagination? }`
 
+## Permisos del Módulo
+
+> **Nota:** A partir de la implementación RBAC por módulo (2026-05-19), todos los endpoints de este módulo están protegidos por middleware de permisos. Ver [SECURITY_FRONTEND_INTEGRATION_GUIDE.md](./SECURITY_FRONTEND_INTEGRATION_GUIDE.md) para la matriz completa de roles.
+
+| Método HTTP | Permiso Requerido |
+|-------------|-------------------|
+| GET / HEAD | `branches:read` |
+| POST / PUT / DELETE / PATCH | `branches:write` |
+
+- Admin (`role_id = "F2VLso"`) tiene acceso total sin verificación de permisos.
+- Sin el permiso de lectura → `403 Forbidden`
+- Intentar escritura en módulo de solo lectura → `405 Method Not Allowed`
+
 ## Contexto de Sucursal
 
 - Query param: `?branch_id=<id>`
@@ -112,6 +125,8 @@ Los endpoints de lectura (`GET`) están disponibles para todos los usuarios aute
 }
 ```
 
+> **Comportamiento:** Al crear una sucursal, el creador recibe automáticamente acceso `FULL` en `users.user_branch_access` y, si no tiene ninguna sucursal default, esta se marca como su sucursal default.
+
 #### Errores
 | Código | Condición |
 |--------|-----------|
@@ -124,7 +139,7 @@ Los endpoints de lectura (`GET`) están disponibles para todos los usuarios aute
 ---
 
 ### GET /branches
-**Descripción:** Lista sucursales con paginación. Filtra por sucursales del usuario según JWT.
+**Descripción:** Lista sucursales con paginación. Los usuarios ADMIN ven todas las sucursales activas. Los usuarios no-ADMIN ven solo las sucursales en sus `allowed_branches` del JWT. El campo `total` refleja la cantidad de sucursales visibles después del filtro.
 
 #### Headers
 | Header | Requerido | Descripción |

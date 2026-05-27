@@ -1,25 +1,65 @@
 # Guía de API de Órdenes de Compra para Frontend
 
-**Versión:** 1.0  
-**Fecha:** 07 de Mayo de 2026  
+**Versión:** 1.3  
+**Fecha:** 26 de Mayo de 2026  
 **Estado:** Vigente (multi-branch)
 
 ---
 
-## Base URL
-`http://localhost:5050`
+## 🔧 Configuración General
 
-## Autenticación
-- Header: `Authorization: Bearer <jwt_token>`
+### Base URL
+http://localhost:5050
 
-## Contexto de Sucursal
-- Query param: `?branch_id=<id>`
-- O header: `X-Branch-ID: <id>`
-- Fallback: `active_branch` del token JWT
-- Restricción: sucursal debe estar en `allowed_branches`
-- Ver guía completa en `docs/guides/frontend/MULTI_BRANCH_CONTEXT_GUIDE.md`
+### Headers Requeridos
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
+
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
+
+### Formato de Respuesta Estándar
+`{ success: bool, data?, message?, error?, pagination? }`
+
+### Formato de Fechas
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params: `YYYY-MM-DD`
+
+### Paginación Estándar
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ---
+
+## Permisos del Módulo
+
+> **Nota:** A partir de la implementación RBAC por módulo (2026-05-19), todos los endpoints de este módulo están protegidos por middleware de permisos. Ver [SECURITY_FRONTEND_INTEGRATION_GUIDE.md](./SECURITY_FRONTEND_INTEGRATION_GUIDE.md) para la matriz completa de roles.
+
+| Método HTTP | Permiso Requerido |
+|-------------|-------------------|
+| GET / HEAD | `purchases:read` |
+| POST / PUT / DELETE / PATCH | `purchases:write` |
+
+- Admin (`role_id = "F2VLso"`) tiene acceso total sin verificación de permisos.
+- Sin el permiso de lectura → `403 Forbidden`
+- Intentar escritura en módulo de solo lectura → `405 Method Not Allowed`
+
+## Unidades Permitidas
+
+El campo `unit` en `order_details` se valida contra la siguiente lista de unidades permitidas:
+
+| Categoría | Unidades |
+|-----------|----------|
+| **Discretas** | `unit`, `pair`, `set`, `dozen`, `box`, `pack`, `bag`, `case`, `bundle`, `tray`, `bottle`, `can`, `jar`, `carton`, `stick`, `slice`, `portion` |
+| **Peso** | `kg`, `g`, `lb`, `oz`, `ton` |
+| **Volumen** | `l`, `ml`, `gal` |
+| **Longitud** | `meter`, `cm` |
+| **Área** | `sqm`, `sqft` |
+| **Tiempo** | `hour`, `day`, `month`, `roll` |
+
+> **Nota:** Si el campo `unit` está vacío o no se envía, el sistema usa el `base_unit` del producto como default. Si el producto tampoco tiene `base_unit`, usa `"unit"` como fallback. Para productos de medida variable (ej: productos pesables), se recomienda enviar explícitamente la unidad correcta (ej: `"kg"`).
+>
+> **Nota técnica (v1.3):** A partir de esta versión, el campo `unit` es una columna nativa de la tabla `purchase_order_details` (no solo metadata JSONB). Esto garantiza consistencia en las consultas y mejor performance. El sistema automáticamente pobla esta columna al crear órdenes de compra y hace backfill de datos históricos.
 
 ## Endpoints
 
@@ -44,23 +84,23 @@
 
 ### Request Body
 
-| Campo | Tipo | Requerido | Descripción |
-|-------|------|-----------|-------------|
-| `supplier_id` | string | Sí | ID del proveedor (Party ID) |
-| `status` | string | Sí | `PENDING`, `COMPLETED`, o `CANCELLED` |
-| `purchase_items` | json | Sí | Array de items (raw JSON) |
-| `branch_id` | int | No | ID de sucursal. Si se omite, auto-inyectado del contexto |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `supplier_id` | string | **Requerido.** ID del proveedor (Party ID) |
+| `status` | string | **Requerido.** `PENDING`, `COMPLETED`, o `CANCELLED` |
+| `purchase_items` | json | **Requerido.** Array de items (raw JSON) |
+| `branch_id` | int | ID de sucursal. Si se omite, auto-inyectado del contexto |
 
 ### Items (dentro de `purchase_items`)
 
-| Campo | Tipo | Requerido | Descripción |
-|-------|------|-----------|-------------|
-| `product_id` | string | Sí | ID del producto |
-| `quantity` | number | Sí | Cantidad (> 0) |
-| `unit_price` | number | Sí | Precio unitario de compra |
-| `unit` | string | No | Unidad: `kg`, `l`, `unit`, etc. |
-| `tax_rate_id` | int | No | ID de tasa de IVA. Si se omite, se resuelve por jerarquía fiscal |
-| `profit_pct` | number | No | Margen de beneficio sugerido |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `product_id` | string | **Requerido.** ID del producto |
+| `quantity` | number | **Requerido.** Cantidad (> 0) |
+| `unit_price` | number | **Requerido.** Precio unitario de compra |
+| `unit` | string | Unidad: `kg`, `l`, `unit`, etc. Default: `base_unit` del producto |
+| `tax_rate_id` | int | ID de tasa de IVA. Si se omite, se resuelve por jerarquía fiscal |
+| `profit_pct` | number | Margen de beneficio sugerido |
 
 ### Ejemplo
 
@@ -94,29 +134,29 @@
 
 ### Request Body
 
-| Campo | Tipo | Requerido | Descripción |
-|-------|------|-----------|-------------|
-| `supplier_id` | string | Sí | ID del proveedor |
-| `status` | string | Sí | `PENDING` o `COMPLETED` |
-| `order_details` | array | Sí | Array de items (ver abajo) |
-| `branch_id` | int | No | ID de sucursal. Auto-inyectado si se omite |
-| `payment_method_id` | int | No | ID de método de pago |
-| `currency_id` | int | No | ID de moneda |
-| `auto_update_prices` | bool | No | Actualizar precios de venta automáticamente |
-| `default_profit_margin` | number | No | Margen default si no se especifica por item |
-| `metadata` | object | No | Metadatos adicionales |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `supplier_id` | string | **Requerido.** ID del proveedor |
+| `status` | string | **Requerido.** `PENDING` o `COMPLETED` |
+| `order_details` | array | **Requerido.** Array de items (ver abajo) |
+| `branch_id` | int | ID de sucursal. Auto-inyectado si se omite |
+| `payment_method_id` | int | ID de método de pago |
+| `currency_id` | int | ID de moneda |
+| `auto_update_prices` | bool | Actualizar precios de venta automáticamente |
+| `default_profit_margin` | number | Margen default si no se especifica por item |
+| `metadata` | object | Metadatos adicionales |
 
 ### Items (`order_details`)
 
-| Campo | Tipo | Requerido | Descripción |
-|-------|------|-----------|-------------|
-| `product_id` | string | Sí | ID del producto |
-| `quantity` | number | Sí | Cantidad (> 0) |
-| `unit_price` | number | Sí | Precio unitario de compra (> 0) |
-| `unit` | string | No | Unidad. Default backend: `"unit"` |
-| `profit_pct` | number | No | Margen automático (%) |
-| `explicit_sale_price` | number | No | Precio de venta explícito (prioridad sobre profit_pct) |
-| `tax_rate_id` | int | No | Override de tasa de IVA |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `product_id` | string | **Requerido.** ID del producto |
+| `quantity` | number | **Requerido.** Cantidad (> 0) |
+| `unit_price` | number | **Requerido.** Precio unitario de compra (> 0) |
+| `unit` | string | Unidad. Default backend: `base_unit` del producto (fallback: `"unit"`) |
+| `profit_pct` | number | Margen automático (%) |
+| `explicit_sale_price` | number | Precio de venta explícito (prioridad sobre profit_pct) |
+| `tax_rate_id` | int | Override de tasa de IVA |
 
 ### Ejemplo
 
@@ -206,13 +246,13 @@ Lista compras por nombre de proveedor (búsqueda parcial, case-insensitive). Mis
 
 Lista compras por rango de fechas con paginación. Misma estructura de respuesta.
 
-| Query Param | Tipo | Requerido | Default | Descripción |
-|-------------|------|-----------|---------|-------------|
-| `start_date` | string | Sí | — | Fecha inicio (`YYYY-MM-DD`) |
-| `end_date` | string | Sí | — | Fecha fin (`YYYY-MM-DD`) |
-| `page` | int | No | 1 | Número de página |
-| `page_size` | int | No | 50 | Items por página |
-| `branch_id` | int | No | contexto | Filtro de sucursal |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `start_date` | string | **Requerido.** Fecha inicio (`YYYY-MM-DD`) |
+| `end_date` | string | **Requerido.** Fecha fin (`YYYY-MM-DD`) |
+| `page` | int | Default: `1`. Número de página |
+| `page_size` | int | Default: `50`. Items por página |
+| `branch_id` | int | Default: contexto. Filtro de sucursal |
 
 ---
 
@@ -224,8 +264,8 @@ Ambos endpoints hacen lo mismo. Incluyen validación de pertenencia a sucursal.
 
 > **Importante:** Si el usuario tiene `allowed_branches` configurados, el sistema valida que la compra pertenezca a una sucursal autorizada. Si no pertenece, devuelve `404 Not Found`.
 
-| Query Param / Header | Tipo | Descripción |
-|----------------------|------|-------------|
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
 | `branch_id` | int | Sucursal del usuario |
 
 **Respuesta éxito:**
@@ -252,18 +292,18 @@ Procesa un pago parcial o total para una orden de compra.
 
 #### Request Body
 
-| Campo | Tipo | Requerido | Descripción |
-|-------|------|-----------|-------------|
-| `purchase_order_id` | int | Sí | ID de la orden (> 0) |
-| `amount_paid` | number | Sí | Monto a pagar (> 0) |
-| `payment_method_id` | int | Sí | ID del método de pago (> 0) |
-| `branch_id` | int | No | ID de sucursal. Auto-inyectado si se omite |
-| `payment_reference` | string | No | Referencia del pago |
-| `payment_notes` | string | No | Notas del pago |
-| `cash_register_id` | int | No | ID de caja registradora |
-| `currency_id` | int | No | ID de moneda (multimoneda) |
-| `exchange_rate` | number | No | Tipo de cambio (> 0 si se usa) |
-| `original_amount` | number | No | Monto en moneda original |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `purchase_order_id` | int | **Requerido.** ID de la orden (> 0) |
+| `amount_paid` | number | **Requerido.** Monto a pagar (> 0) |
+| `payment_method_id` | int | **Requerido.** ID del método de pago (> 0) |
+| `branch_id` | int | ID de sucursal. Auto-inyectado si se omite |
+| `payment_reference` | string | Referencia del pago |
+| `payment_notes` | string | Notas del pago |
+| `cash_register_id` | int | ID de caja registradora |
+| `currency_id` | int | ID de moneda (multimoneda) |
+| `exchange_rate` | number | Tipo de cambio (> 0 si se usa) |
+| `original_amount` | number | Monto en moneda original |
 
 #### Ejemplo
 
@@ -334,6 +374,13 @@ Obtiene estadísticas agregadas de pagos de compras.
 
 ## 7. Referencias
 
-- `PURCHASE_PRICING_INTREGATION_API.md` — Guía de pricing en compras
+- `PURCHASE_PRICING_INTEGRATION_GUIDE.md` — Guía de pricing en compras
 - `MULTI_BRANCH_CONTEXT_GUIDE.md` — Guía completa de contexto multi-sucursal
-- `TAX_CLASIFICATION_API.md` — API de clasificación fiscal (IVA)
+- `TAX_CLASSIFICATION_API_GUIDE.md` — API de clasificación fiscal (IVA)
+- `PAYMENT_METHOD_CURRENCY_CASH_API_GUIDE.md` — API de métodos de pago y monedas
+- `PRODUCT_API_GUIDE.md` — API de productos
+- `SALES_API_GUIDE.md` — API de ventas
+
+---
+
+_Última actualización: 2026-05-19_

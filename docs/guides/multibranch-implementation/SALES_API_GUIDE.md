@@ -1,5 +1,36 @@
 # Guía de API de Ventas para Frontend
 
+**Versión:** 1.4  
+**Fecha:** 27 de Mayo de 2026
+
+## Permisos del Módulo
+
+> **Nota:** A partir de la implementación RBAC por módulo (2026-05-19), todos los endpoints de este módulo están protegidos por middleware de permisos. Ver [SECURITY_FRONTEND_INTEGRATION_GUIDE.md](./SECURITY_FRONTEND_INTEGRATION_GUIDE.md) para la matriz completa de roles.
+
+| Método HTTP | Permiso Requerido |
+|-------------|-------------------|
+| GET / HEAD | `sales:read` |
+| POST / PUT / DELETE / PATCH | `sales:write` |
+
+- Admin (`role_id = "F2VLso"`) tiene acceso total sin verificación de permisos.
+- Sin el permiso de lectura → `403 Forbidden`
+- Intentar escritura en módulo de solo lectura → `405 Method Not Allowed`
+
+## Unidades Permitidas
+
+El campo `unit` en `product_details` se valida contra la siguiente lista de unidades permitidas:
+
+| Categoría | Unidades |
+|-----------|----------|
+| **Discretas** | `unit`, `pair`, `set`, `dozen`, `box`, `pack`, `bag`, `case`, `bundle`, `tray`, `bottle`, `can`, `jar`, `carton`, `stick`, `slice`, `portion` |
+| **Peso** | `kg`, `g`, `lb`, `oz`, `ton` |
+| **Volumen** | `l`, `ml`, `gal` |
+| **Longitud** | `meter`, `cm` |
+| **Área** | `sqm`, `sqft` |
+| **Tiempo** | `hour`, `day`, `month`, `roll` |
+
+> **Nota:** Si el campo `unit` está vacío o no se envía, el sistema busca el precio usando el `base_unit` del producto. Si el producto tampoco tiene `base_unit`, usa `"unit"` como fallback.
+
 ## Base URL
 `http://localhost:5050`
 
@@ -48,7 +79,7 @@
 |-------|------|-----------|-------------|
 | product_id | string | Sí | ID del producto |
 | quantity | float | Sí | Cantidad (> 0) |
-| unit | string | No | Unidad de medida (`kg`, `l`, `unit`, etc.) |
+| unit | string | No | Unidad de medida (`kg`, `l`, `unit`, etc.). Default: `base_unit` del producto |
 | reserve_id | int | No | ID de reserva para este item |
 | tax_rate_id | int | No | Tasa de impuesto explícita |
 | sale_price | float | No | Precio modificado (requiere `allow_price_modifications`) |
@@ -150,7 +181,7 @@ Igual estructura que `POST /sale/`.
 | product_type | string | `PHYSICAL` o `SERVICE` |
 | quantity | float | Cantidad |
 | unit | string | Unidad de medida |
-| base_price | float | Precio base sin descuento |
+| base_price | float | Precio base sin descuento (calculado respetando la unidad del producto) |
 | unit_price | float | Precio unitario final |
 | unit_price_with_tax | float | Precio con IVA |
 | unit_price_without_tax | float | Precio sin IVA |
@@ -163,6 +194,8 @@ Igual estructura que `POST /sale/`.
 | reserve_id | int | ID de reserva |
 | tax_rate_id | int | ID de la tasa de impuesto |
 | tax_rate | float | Alias de `applied_tax_rate` |
+
+> **Nota técnica (v1.3):** El cálculo del `base_price` y totales de la venta ahora respeta el campo `unit` de cada detalle. Esto significa que para productos de medida variable (ej: `unit: "kg"`), el sistema busca el precio correspondiente a esa unidad específica en lugar de usar siempre la unidad por defecto.
 
 #### Errores
 | Código | Condición |
@@ -544,7 +577,7 @@ Estructura paginada con estado de pago.
 |-------|------|-----------|-------------|
 | product_id | string | Sí | ID del producto |
 | quantity | float | Sí | Cantidad (> 0) |
-| unit | string | No | Unidad de medida |
+| unit | string | No | Unidad de medida. Default: `base_unit` del producto |
 
 #### Response 200
 | Campo | Tipo | Descripción |
@@ -591,6 +624,104 @@ Estructura paginada con estado de pago.
 | Código | Condición |
 |--------|-----------|
 | 400 | `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 500 | Error interno |
+
+---
+
+### POST /sales/scan
+**Descripción:** Escanea un barcode EAN-13 (estándar o de precio/peso variable) y devuelve la información completa del producto decodificado para agregarlo a una venta. **No** agrega automáticamente el producto a la venta — el frontend decide si agregarlo.
+
+#### Headers
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
+| Content-Type | Sí | `application/json` |
+
+#### Request Body
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| barcode | string | Sí | Barcode EAN-13 de 13 dígitos |
+| branch_id | int | No | ID de sucursal. Default: sucursal activa del token |
+
+#### Response 200 — ScanResult
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| decoded_barcode | object | `DecodedBarcode` con tipo, product_id, scale_code, total_price, quantity, unit |
+| decoded_barcode.type | string | `STANDARD`, `VARIABLE_PRICE`, o `VARIABLE_WEIGHT` |
+| decoded_barcode.product_id | string | ID del producto |
+| decoded_barcode.scale_code | string | Código de balanza (solo barcode variable) |
+| decoded_barcode.total_price | decimal | Precio total embebido (solo barcode de precio variable) |
+| decoded_barcode.weight | decimal | Peso embebido (solo barcode de peso variable) |
+| decoded_barcode.quantity | decimal | Cantidad calculada (variable price: total_price / price_per_unit) |
+| decoded_barcode.unit | string | Unidad de medida |
+| product_name | string | Nombre del producto |
+| price_per_unit | decimal | Precio por unidad |
+| subtotal | decimal | Subtotal sin IVA |
+| subtotal_with_tax | decimal | Subtotal con IVA |
+| tax_amount | decimal | Monto del IVA |
+| in_stock | bool | Si hay stock disponible |
+| stock_quantity | decimal | Cantidad en stock |
+| is_variable_measure | bool | Si el producto es de medida variable |
+
+#### Ejemplo de Request
+```json
+{
+  "barcode": "2000010024625",
+  "branch_id": 1
+}
+```
+
+#### Ejemplo de Response (barcode de precio variable)
+```json
+{
+  "decoded_barcode": {
+    "type": "VARIABLE_PRICE",
+    "product_id": "TOM_KG",
+    "scale_code": "0001",
+    "total_price": "24625",
+    "quantity": "1.97",
+    "unit": "kg"
+  },
+  "product_name": "Tomate por Kg",
+  "price_per_unit": "12500",
+  "subtotal": "22386.36",
+  "subtotal_with_tax": "24625",
+  "tax_amount": "2238.64",
+  "in_stock": true,
+  "stock_quantity": "48.03",
+  "is_variable_measure": true
+}
+```
+
+#### Ejemplo de Response (barcode estándar)
+```json
+{
+  "decoded_barcode": {
+    "type": "STANDARD",
+    "product_id": "PROD_001",
+    "scale_code": "",
+    "total_price": "0",
+    "quantity": "1",
+    "unit": "unit"
+  },
+  "product_name": "Coca-Cola 500ml",
+  "price_per_unit": "7000",
+  "subtotal": "6363.64",
+  "subtotal_with_tax": "7000",
+  "tax_amount": "636.36",
+  "in_stock": true,
+  "stock_quantity": "150",
+  "is_variable_measure": false
+}
+```
+
+#### Errores
+| Código | Condición |
+|--------|-----------|
+| 400 | `barcode` vacío, check digit inválido, o producto no encontrado |
 | 401 | Token ausente o inválido |
 | 403 | `branch_id` fuera de `allowed_branches` |
 | 500 | Error interno |
@@ -647,7 +778,8 @@ Estructura paginada con estado de pago.
 | PUT | `/sale/{id}/confirm-payment` | Confirmar pago |
 | POST | `/sale/{id}/products` | Agregar productos a venta |
 | GET | `/sale/price-changes/report` | Reporte de cambios de precio |
+| POST | `/sales/scan` | Escanear barcode EAN-13 para POS |
 
 ---
 
-*Última actualización: 2026-05-08 — Post-bugfix multi-branch: branch_id en todas las responses, validación de branch ownership en cancelación, discount_amount y product_type en todos los detalles.*
+*Última actualización: 2026-05-27 — Fase 4: endpoint `/sales/scan` para barcode EAN-13 estándar y de precio/peso variable.*

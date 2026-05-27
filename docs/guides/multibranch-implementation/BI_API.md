@@ -1,28 +1,27 @@
 # Guía de API de Business Intelligence (BI) para Frontend
 
-## Base URL
+## 🔧 Configuración General
 
-`http://localhost:5050`
+### Base URL
+http://localhost:5050
 
-## Autenticación
-
-- Header: `Authorization: Bearer <jwt_token>`
-
-## Headers requeridos (cuando aplica)
-
+### Headers Requeridos
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
 
-## Formato de fechas
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
 
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
-
+### Formato de Respuesta Estándar
 `{ success: bool, data?, message?, error?, pagination? }`
+
+### Formato de Fechas
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params: `YYYY-MM-DD`
+
+### Paginación Estándar
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ## Contexto de Sucursal (BI)
 
@@ -31,22 +30,20 @@ Authorization: Bearer <jwt_token>
 - Fallback: `active_branch` del token JWT
 - Restricción: sucursal debe estar en `allowed_branches`
 
-> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
-
 > **IMPORTANTE:** Los endpoints de BI usan `resolveBIContextFromAuth`, que tiene reglas más estrictas que los endpoints transaccionales.
 
 ### Reglas de Branch Context para BI
 
-| Condición                                                | Código HTTP        | Comportamiento                                                    |
-| -------------------------------------------------------- | ------------------ | ----------------------------------------------------------------- |
-| Usuario **ADMIN** sin enviar `branch_id`                 | 200 OK             | Consulta **todas** las sucursales (branch context = `nil`)        |
-| Usuario **non-ADMIN** sin enviar `branch_id`             | **400 Bad Request**    | Debe especificar sucursal                                         |
-| Usuario con `branch_id` fuera de `allowed_branches`      | **403 Forbidden**      |                                                                   |
-| `branch_id` inválido (no es entero positivo, ej: -1, 0)  | **400 Bad Request**    | `parseOptionalBranchID` rechaza `branchID <= 0`                   |
-| `branch_id` inexistente (ej: 9999) con usuario scoped    | **403 Forbidden**      | No está en `allowed_branches`                                     |
-| `branch_id` inexistente (ej: 9999) con ADMIN             | 200 OK (datos vacíos)  | Pasa validación, SQL retorna ceros (COALESCE) — no nulls          |
-| `X-Branch-ID` header vs `?branch_id` query param        | —                  | Query param tiene prioridad sobre header. Ambos pasan misma validación |
-| Branch sin datos                                         | 200 OK (ceros)     | Todos los repositorios usan `COALESCE(SUM(...), 0)` — nunca retornan null |
+| Condición | Código HTTP | Comportamiento |
+|-----------|-------------|----------------|
+| Usuario **ADMIN** sin enviar `branch_id` | 200 OK | Consulta **todas** las sucursales (branch context = `nil`) |
+| Usuario **non-ADMIN** sin enviar `branch_id` | **400 Bad Request** | Debe especificar sucursal |
+| Usuario con `branch_id` fuera de `allowed_branches` | **403 Forbidden** | |
+| `branch_id` inválido (no es entero positivo, ej: -1, 0) | **400 Bad Request** | `parseOptionalBranchID` rechaza `branchID <= 0` |
+| `branch_id` inexistente (ej: 9999) con usuario scoped | **403 Forbidden** | No está en `allowed_branches` |
+| `branch_id` inexistente (ej: 9999) con ADMIN | 200 OK (datos vacíos) | Pasa validación, SQL retorna ceros (COALESCE) — no nulls |
+| `X-Branch-ID` header vs `?branch_id` query param | — | Query param tiene prioridad sobre header. Ambos pasan misma validación |
+| Branch sin datos | 200 OK (ceros) | Todos los repositorios usan `COALESCE(SUM(...), 0)` — nunca retornan null |
 
 > **Verificado (2026-05-05):** Los 113 endpoints BI usan `resolveBIContextFromAuth` para branch filtering.  
 > Los bugs B1-B15 de branch filtering fueron corregidos. 0 bugs pendientes.  
@@ -54,14 +51,15 @@ Authorization: Bearer <jwt_token>
 
 ### RBAC Financiero
 
-| Rol        | Dashboard | Cuentas por Cobrar/Pagar | Reportes Financieros | Análisis de Ventas | Análisis de Inventario | Rentabilidad |
-| ---------- | --------- | ------------------------ | -------------------- | ------------------ | ---------------------- | ------------ |
-| `ADMIN`    | ✅        | ✅                       | ✅                   | ✅                 | ✅                     | ✅           |
-| `BUYER`    | ✅        | ✅ Lectura               | ✅ Lectura           | ✅                 | ✅ Lectura             | ✅ Lectura   |
-| `SUPPLIES` | ✅        | ❌                       | ❌                   | ✅                 | ✅                     | ❌           |
-| `VENDOR`   | ❌        | ❌                       | ❌                   | ❌                 | ❌                     | ❌           |
-| `CLIENT`   | ❌        | ❌                       | ❌                   | ❌                 | ❌                     | ❌           |
+| Rol | Dashboard | Cuentas por Cobrar/Pagar | Reportes Financieros | Análisis de Ventas | Análisis de Inventario | Rentabilidad |
+|-----|-----------|--------------------------|----------------------|--------------------|------------------------|--------------|
+| `ADMIN` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `BUYER` | ✅ | ✅ Lectura | ✅ Lectura | ✅ | ✅ Lectura | ✅ Lectura |
+| `SUPPLIES` | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ |
+| `VENDOR` | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `CLIENT` | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
+> **Nota:** El role `ADMIN` se identifica con `role_id = "F2VLso"` en el JWT.  
 > Roles `SUPPLIES`, `VENDOR` y `CLIENT` reciben `403 Forbidden` en endpoints financieros sensibles.
 
 ---
@@ -584,25 +582,25 @@ Los siguientes endpoints fueron corregidos en 2026-05-04 para eliminar duplicaci
 
 La mayoría de endpoints de BI aceptan:
 
-| Parámetro  | Tipo   | Requerido   | Descripción                                 |
-| ---------- | ------ | ----------- | ------------------------------------------- |
-| branch_id  | int    | Condicional | ID de sucursal (obligatorio para non-ADMIN) |
-| start_date | date   | No          | Fecha inicio (YYYY-MM-DD)                   |
-| end_date   | date   | No          | Fecha fin (YYYY-MM-DD)                      |
-| period     | string | No          | Período predefinido (month, quarter, year)  |
-| page       | int    | No          | Número de página                            |
-| page_size  | int    | No          | Elementos por página                        |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | Condicional | ID de sucursal (obligatorio para non-ADMIN) |
+| start_date | date | No | Fecha inicio (YYYY-MM-DD) |
+| end_date | date | No | Fecha fin (YYYY-MM-DD) |
+| period | string | No | Período predefinido (month, quarter, year) |
+| page | int | No | Número de página |
+| page_size | int | No | Elementos por página |
 
 ## Errores Comunes
 
-| Código | Condición                                                                    |
-| ------ | ---------------------------------------------------------------------------- |
-| 400    | `branch_id` ausente (non-ADMIN), inválido, o parámetros incorrectos          |
-| 401    | Token ausente o inválido                                                     |
-| 403    | Rol no autorizado para el recurso, o `branch_id` fuera de `allowed_branches` |
-| 404    | Recurso no encontrado                                                        |
-| 500    | Error interno                                                                |
+| Código | Condición |
+|--------|-----------|
+| 400 | `branch_id` ausente (non-ADMIN), inválido, o parámetros incorrectos |
+| 401 | Token ausente o inválido |
+| 403 | Rol no autorizado para el recurso, o `branch_id` fuera de `allowed_branches` |
+| 404 | Recurso no encontrado |
+| 500 | Error interno |
 
 ---
 
-_Última actualización: 2026-05-06 — FASE 2 completada. 115 endpoints BI documentados (113 verificados + 2 cost-trends). Discrepancias D1/D2/D3 documentadas. Bugs B16-B18 reflejados. Edge cases completos. Forecast endpoints agregados._
+_Última actualización: 2026-05-19_

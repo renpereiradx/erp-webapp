@@ -5,6 +5,11 @@ import { renderWithTheme } from '@/utils/themeTestUtils';
 import Products from '@/pages/Products';
 import * as productStore from '@/store/useProductStore';
 
+import { MemoryRouter } from 'react-router-dom';
+import { AnnouncementProvider } from '@/contexts/AnnouncementContext';
+
+vi.mock('@/features/products/components/ProductDetailsModal', () => ({ default: () => null }));
+
 // Mock store selectors minimalmente
 
 vi.mock('@/store/useProductStore', async (orig) => {
@@ -21,7 +26,13 @@ vi.mock('@/store/useProductStore', async (orig) => {
 
 describe('Products accessibility live region', () => {
   test('announces results after search state changes', async () => {
-  renderWithTheme(<Products />);
+    renderWithTheme(
+      <AnnouncementProvider>
+        <MemoryRouter>
+          <Products />
+        </MemoryRouter>
+      </AnnouncementProvider>
+    );
     // Buscar la región aria-live
     const live = await screen.findByRole('status', { hidden: true }).catch(() => null);
     // Si no encuentra por role status, fallback query by text container with aria-live

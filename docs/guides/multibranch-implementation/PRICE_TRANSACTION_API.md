@@ -1,148 +1,140 @@
-# 💰 Guía de Integración Frontend - API de Transacciones de Precio v1.0
+# Guia de Integracion Frontend - API de Transacciones de Precio v1.0
 
-> **Disclaimer:** Esta guía contiene ejemplos JSON y TypeScript/JavaScript para ilustración de payloads y respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
+> **Disclaimer:** Esta guia contiene ejemplos JSON y TypeScript/JavaScript para ilustracion de payloads y respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definicion de campos** como fuente de verdad.
 
-## 📋 Índice
+## Indice
 
-1. [Configuración General](#configuración-general)
-2. [Introducción al Sistema](#introducción-al-sistema)
+1. [Configuracion General](#configuracion-general)
+2. [Introduccion al Sistema](#introduccion-al-sistema)
 3. [API de Transacciones](#api-de-transacciones)
 4. [API de Consultas y Reportes](#api-de-consultas-y-reportes)
 5. [Tipos de Transacciones](#tipos-de-transacciones)
 6. [Validaciones y Consistencia](#validaciones-y-consistencia)
-7. [Códigos de Error](#códigos-de-error)
-8. [Ejemplos de Integración](#ejemplos-de-integración)
+7. [Codigos de Error](#codigos-de-error)
+8. [Ejemplos de Integracion](#ejemplos-de-integracion)
 
-## 🆕 **Nuevo en v1.0 - Septiembre 2025**
+## Nuevo en v1.0 - Septiembre 2025
 
-- ✅ **Sistema completo de auditoría** de precios con PostgreSQL
-- ✅ **8 tipos de transacciones** (ajustes manuales, mercado, costos, promociones, etc.)
-- ✅ **Validación automática de consistencia** de precios
-- ✅ **Reportes de variación** con análisis de volatilidad
-- ✅ **Historial completo** de cambios de precio por producto
-- ✅ **Metadatos enriquecidos** en formato JSON
-- ✅ **Integración completa** con sistema de usuarios y productos
-- ✅ **API REST robusta** con 7 endpoints especializados
-- ✅ **Independiente de stock_transactions** - arquitectura separada
+- **Sistema completo de auditoria** de precios con PostgreSQL
+- **8 tipos de transacciones** (ajustes manuales, mercado, costos, promociones, etc.)
+- **Validacion automatica de consistencia** de precios
+- **Reportes de variacion** con analisis de volatilidad
+- **Historial completo** de cambios de precio por producto
+- **Metadatos enriquecidos** en formato JSON
+- **Integracion completa** con sistema de usuarios y productos
+- **API REST robusta** con 7 endpoints especializados
+- **Independiente de stock_transactions** - arquitectura separada
 
 ---
 
-## 🔧 Configuración General
+## Configuracion General
 
 ### Base URL
-
-```
 http://localhost:5050
-```
 
-### Autenticación
-
-- Header: `Authorization: Bearer <jwt_token>`
-
-### Headers requeridos (cuando aplica)
-
+### Headers Requeridos
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
+
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
+
+### Formato de Respuesta Estandar
+`{ success: bool, data?, message?, error?, pagination? }`
+
+### Formato de Fechas
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params: `YYYY-MM-DD`
+
+### Paginacion Estandar
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ### Contexto de Sucursal
 
 - Query param: `?branch_id=<id>`
 - O header: `X-Branch-ID: <id>`
 - Fallback: `active_branch` del token JWT
-- Restricción: sucursal debe estar en `allowed_branches`
-
-> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
-
-```typescript
-{
-  "Content-Type": "application/json",
-  "Authorization": "Bearer <jwt_token>"
-}
-```
-
-### Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-### Formato de Respuesta Estándar
-
-```typescript
-interface APIResponse<T> {
-  success: boolean
-  data?: T
-  message?: string
-  error?: string
-  timestamp?: string
-}
-```
-
-`{ success: bool, data?, message?, error?, pagination? }`
-
-### Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-### Paginación estándar
-
-`{ page, page_size, total_items, total_pages, has_next, has_prev }`
+- Restriccion: sucursal debe estar en `allowed_branches`
 
 ---
 
-## 🏗️ Introducción al Sistema
+## Permisos del Módulo
 
-El **Sistema de Transacciones de Precio** proporciona un control completo y auditable de todos los cambios de precio en el inventario. Cada transacción queda registrada de manera inmutable con trazabilidad completa y análisis de tendencias.
+> **Nota:** A partir de la implementación RBAC por módulo (2026-05-19), todos los endpoints de este módulo están protegidos por middleware de permisos. Ver [SECURITY_FRONTEND_INTEGRATION_GUIDE.md](./SECURITY_FRONTEND_INTEGRATION_GUIDE.md) para la matriz completa de roles.
 
-### Características Principales
+| Método HTTP | Permiso Requerido |
+|-------------|-------------------|
+| GET / HEAD | `products:read` |
+| POST / PUT / DELETE / PATCH | `products:write` |
 
-- **Auditoría Completa**: Cada cambio de precio queda registrado permanentemente
-- **Validación Automática**: El sistema valida consistencia entre precios y transacciones
+- Admin (`role_id = "F2VLso"`) tiene acceso total sin verificación de permisos.
+- Sin el permiso de lectura → `403 Forbidden`
+- Intentar escritura en módulo de solo lectura → `405 Method Not Allowed`
+
+## Introduccion al Sistema
+
+El **Sistema de Transacciones de Precio** proporciona un control completo y auditable de todos los cambios de precio en el inventario. Cada transaccion queda registrada de manera inmutable con trazabilidad completa y analisis de tendencias.
+
+### Caracteristicas Principales
+
+- **Auditoria Completa**: Cada cambio de precio y costo queda registrado permanentemente
+- **Dual Price Type**: Soporta `selling_price` (precio de venta) y `cost_price` (costo)
+- **Validacion Automatica**: El sistema valida consistencia entre precios y transacciones
 - **Tipos Flexibles**: 8 tipos diferentes de transacciones de precio
-- **Metadatos Ricos**: Información adicional para análisis de mercado
-- **Reportes Inteligentes**: Análisis automático de variación y volatilidad
-- **Integración Total**: Conectado con productos, usuarios y precios actuales
+- **Metadatos Ricos**: Informacion adicional para analisis de mercado
+- **Reportes Inteligentes**: Analisis automatico de variacion y volatilidad
+- **Integracion Total**: Conectado con productos, usuarios y precios actuales
 - **Arquitectura Independiente**: Sistema separado de stock_transactions
 
-### Flujo Típico de Uso
+> **Nuevo 2026-05-25:** `price_type='cost_price'` registra costos en `price_transactions` via
+> `register_cost_transaction()`. `unit_costs` ahora almacena solo el estado actual (1 fila por producto+unidad);
+> el historial completo de costos vive en `price_transactions`.
+> Los endpoints de costo estan en `/cost-transactions`. Ver [COST_PRICING_API_GUIDE.md](./COST_PRICING_API_GUIDE.md).
 
-1. **Registrar Transacciones** → Cambios de precio con contexto
-2. **Consultar Historial** → Ver evolución de precios por producto
-3. **Validar Consistencia** → Verificar integridad precio-transacciones
-4. **Generar Reportes** → Análisis de variación y tendencias de precio
+### Flujo Tipico de Uso
+
+1. **Registrar Transacciones** -> Cambios de precio con contexto
+2. **Registrar Costos** -> Cambios de costo via `/cost-transactions` o compras
+3. **Consultar Historial** -> Ver evolucion de precios por producto
+4. **Validar Consistencia** -> Verificar integridad precio-transacciones
+5. **Generar Reportes** -> Analisis de variacion y tendencias de precio
 
 ---
 
-## 💰 API de Transacciones
+## API de Transacciones
 
-### 1. Registrar Nueva Transacción de Precio
+### 1. Registrar Nueva Transaccion de Precio
 
 **Endpoint:** `POST /price-transactions`
 
-**Descripción:** Registra un nuevo cambio de precio con actualización automática de la tabla de precios.
+**Descripcion:** Registra un nuevo cambio de precio con actualizacion automatica de la tabla de precios.
 
 #### Request Body
 
 ```typescript
 interface PriceTransactionRequest {
-  product_id: string // ID del producto (requerido)
-  transaction_type: string // Tipo de transacción (requerido)
-  new_price: number // Nuevo precio (requerido, > 0)
-  unit?: string // Unidad de medida (opcional: "unit", "kg", "l", etc.)
-  price_type: string // `SELLING_PRICE` o `COST` (requerido)
-  effective_date?: string // Fecha efectiva (opcional, default: now)
-  reference_type?: string // Tipo de referencia (opcional)
-  reference_id?: string // ID de referencia (opcional)
-  reason?: string // Motivo del cambio (opcional)
-  currency_id?: string // ID de moneda (opcional, default: USD)
-  exchange_rate?: number // Tipo de cambio (opcional, default: 1.0)
-  cost_factor?: number // Factor de costo (opcional)
-  margin_percent?: number // Porcentaje de margen (opcional)
+  product_id: string        // ID del producto (requerido)
+  transaction_type: string  // Tipo de transaccion (requerido)
+  new_price: number         // Nuevo precio (requerido, > 0)
+  unit?: string             // Unidad de medida (opcional: "unit", "kg", "l", etc.)
+  price_type: string        // `SELLING_PRICE` o `COST` (requerido)
+  effective_date?: string   // Fecha efectiva (opcional, default: now)
+  reference_type?: string   // Tipo de referencia (opcional)
+  reference_id?: string     // ID de referencia (opcional)
+  reason?: string           // Motivo del cambio (opcional)
+  currency_id?: string      // ID de moneda (opcional, default: USD)
+  exchange_rate?: number    // Tipo de cambio (opcional, default: 1.0)
+  cost_factor?: number      // Factor de costo (opcional)
+  margin_percent?: number   // Porcentaje de margen (opcional)
   metadata?: Record<string, any> // Metadatos adicionales (opcional)
 }
 ```
+
+> **price_type**: `SELLING_PRICE` → registro en `unit_prices` + auditoria en `price_transactions`.
+> `COST` → delega a `register_cost_transaction()` con `price_type='cost_price'` en la DB
+> y actualiza `unit_costs` (estado actual unico por producto+unidad).
+> Para costos, prefiera los endpoints de `/cost-transactions`.
 
 #### Ejemplo - Ajuste Manual de Precio
 
@@ -154,7 +146,7 @@ const manualAdjustmentData = {
   effective_date: '2025-09-04T10:00:00Z',
   reference_type: 'manual_adjustment',
   reference_id: 'ADJ456',
-  reason: 'Aumento de precio por análisis de mercado',
+  reason: 'Aumento de precio por analisis de mercado',
   cost_factor: 0.65,
   margin_percent: 35.0,
   metadata: {
@@ -180,7 +172,7 @@ const response = await fetch('/price-transactions', {
 })
 ```
 
-#### Ejemplo - Actualización de Mercado
+#### Ejemplo - Actualizacion de Mercado
 
 ```typescript
 const marketUpdateData = {
@@ -189,7 +181,7 @@ const marketUpdateData = {
   new_price: 18.5,
   reference_type: 'market_update',
   reference_id: 'MKT789',
-  reason: 'Actualización basada en análisis de mercado competitivo',
+  reason: 'Actualizacion basada en analisis de mercado competitivo',
   metadata: {
     competitor_analysis: {
       avg_price: 19.25,
@@ -211,7 +203,7 @@ const promotionData = {
   effective_date: '2025-02-01T00:00:00Z',
   reference_type: 'promotion',
   reference_id: 'PROMO2025FEB',
-  reason: 'Promoción de San Valentín - 20% descuento',
+  reason: 'Promocion de San Valentin - 20% descuento',
   metadata: {
     promotion_type: 'percentage_discount',
     discount_percent: 20,
@@ -241,7 +233,7 @@ interface PriceTransactionResponse {
 
 **Endpoint:** `GET /price-transactions/types`
 
-**Descripción:** Obtiene los tipos de transacciones de precio disponibles con sus descripciones.
+**Descripcion:** Obtiene los tipos de transacciones de precio disponibles con sus descripciones.
 
 #### Response
 
@@ -280,7 +272,6 @@ const getPriceTransactionTypes = async () => {
   })
   const data = await response.json()
 
-  // Crear dropdown para el frontend
   const options = data.transaction_types.map(type => ({
     value: type,
     label: data.description[type],
@@ -292,17 +283,17 @@ const getPriceTransactionTypes = async () => {
 
 ---
 
-## 📊 API de Consultas y Reportes
+## API de Consultas y Reportes
 
 ### 1. Historial de Precios por Producto
 
 **Endpoint:** `GET /price-transactions/product/{product_id}/history`
 
-**Parámetros:**
+**Parametros:**
 
 - `product_id` (path): ID del producto
-- `limit` (query): Límite de resultados (default: 50)
-- `offset` (query): Offset para paginación (default: 0)
+- `limit` (query): Limite de resultados (default: 50)
+- `offset` (query): Offset para paginacion (default: 0)
 
 #### Ejemplo
 
@@ -365,9 +356,9 @@ interface PriceTransactionHistory {
 
 **Endpoint:** `GET /price-transactions/validate-consistency`
 
-**Parámetros:**
+**Parametros:**
 
-- `product_id` (query, opcional): ID del producto específico
+- `product_id` (query, opcional): ID del producto especifico
 
 #### Ejemplo - Validar Todos los Precios
 
@@ -379,7 +370,6 @@ const validateAllPrices = async () => {
 
   const data = await response.json()
 
-  // Filtrar productos con inconsistencias
   const inconsistencies = data.reports.filter(
     report => report.consistency_status !== 'CONSISTENT',
   )
@@ -396,7 +386,7 @@ const validateAllPrices = async () => {
 }
 ```
 
-#### Ejemplo - Validar Producto Específico
+#### Ejemplo - Validar Producto Especifico
 
 ```typescript
 const validateProductPrice = async (productId: string) => {
@@ -432,17 +422,17 @@ interface PriceConsistencyReport {
 }
 ```
 
-### 3. Reporte de Variación de Precios
+### 3. Reporte de Variacion de Precios
 
 **Endpoint:** `GET /price-transactions/variance-report`
 
-**Parámetros:**
+**Parametros:**
 
 - `date_from` (query, opcional): Fecha inicio (YYYY-MM-DD)
 - `date_to` (query, opcional): Fecha fin (YYYY-MM-DD)
-- `transaction_type` (query, opcional): Filtrar por tipo específico
-- `limit` (query, opcional): Límite de resultados (default: 100)
-- `offset` (query, opcional): Offset para paginación (default: 0)
+- `transaction_type` (query, opcional): Filtrar por tipo especifico
+- `limit` (query, opcional): Limite de resultados (default: 100)
+- `offset` (query, opcional): Offset para paginacion (default: 0)
 
 #### Ejemplo
 
@@ -511,13 +501,13 @@ interface PriceVarianceReport {
 
 **Endpoint:** `GET /price-transactions/by-date`
 
-**Parámetros:**
+**Parametros:**
 
 - `start_date` (query, requerido): Fecha inicio (YYYY-MM-DD)
 - `end_date` (query, requerido): Fecha fin (YYYY-MM-DD)
 - `transaction_type` (query, opcional): Filtrar por tipo
-- `limit` (query, opcional): Límite de resultados (default: 100)
-- `offset` (query, opcional): Offset para paginación (default: 0)
+- `limit` (query, opcional): Limite de resultados (default: 100)
+- `offset` (query, opcional): Offset para paginacion (default: 0)
 
 #### Ejemplo
 
@@ -547,7 +537,7 @@ const getPriceTransactionsByDate = async (
   return await response.json()
 }
 
-// Ejemplo para últimos 30 días
+// Ejemplo para ultimos 30 dias
 const getLast30DaysPriceChanges = async () => {
   const endDate = new Date().toISOString().split('T')[0]
   const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
@@ -558,7 +548,7 @@ const getLast30DaysPriceChanges = async () => {
 }
 ```
 
-### 5. Obtener Transacción por ID
+### 5. Obtener Transaccion por ID
 
 **Endpoint:** `GET /price-transactions/{id}`
 
@@ -572,9 +562,9 @@ const getPriceTransactionById = async (transactionId: number) => {
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Transacción de precio no encontrada')
+      throw new Error('Transaccion de precio no encontrada')
     }
-    throw new Error('Error al obtener transacción de precio')
+    throw new Error('Error al obtener transaccion de precio')
   }
 
   return await response.json()
@@ -583,12 +573,12 @@ const getPriceTransactionById = async (transactionId: number) => {
 
 ---
 
-## 🏷️ Tipos de Transacciones
+## Tipos de Transacciones
 
 ### 1. MANUAL_ADJUSTMENT - Ajustes Manuales
 
-**Descripción:** Ajustes manuales de precio realizados por usuarios autorizados  
-**Uso Típico:** Correcciones, ajustes estratégicos  
+**Descripcion:** Ajustes manuales de precio realizados por usuarios autorizados
+**Uso Tipico:** Correcciones, ajustes estrategicos
 **Campos Recomendados:**
 
 - `reason`: Motivo detallado del ajuste
@@ -597,17 +587,17 @@ const getPriceTransactionById = async (transactionId: number) => {
 
 ### 2. MARKET_UPDATE - Actualizaciones de Mercado
 
-**Descripción:** Cambios de precio basados en condiciones del mercado  
-**Uso Típico:** Seguimiento competencia, demanda  
+**Descripcion:** Cambios de precio basados en condiciones del mercado
+**Uso Tipico:** Seguimiento competencia, demanda
 **Campos Recomendados:**
 
 - `reference_type`: "market_update"
 - `metadata`: competitor_analysis, market_trend, data_sources
 
-### 3. COST_UPDATE - Actualización de Costos
+### 3. COST_UPDATE - Actualizacion de Costos
 
-**Descripción:** Cambios de precio debido a variaciones en costos  
-**Uso Típico:** Inflación, costos de materiales  
+**Descripcion:** Cambios de precio debido a variaciones en costos
+**Uso Tipico:** Inflacion, costos de materiales
 **Campos Recomendados:**
 
 - `cost_factor`: Factor de costo actualizado
@@ -615,8 +605,8 @@ const getPriceTransactionById = async (transactionId: number) => {
 
 ### 4. SUPPLIER_CHANGE - Cambio de Proveedor
 
-**Descripción:** Ajustes de precio por cambios de proveedor  
-**Uso Típico:** Nuevos proveedores, negociaciones  
+**Descripcion:** Ajustes de precio por cambios de proveedor
+**Uso Tipico:** Nuevos proveedores, negociaciones
 **Campos Recomendados:**
 
 - `reference_type`: "supplier_change"
@@ -624,8 +614,8 @@ const getPriceTransactionById = async (transactionId: number) => {
 
 ### 5. PROMOTION - Promociones
 
-**Descripción:** Cambios de precio promocionales temporales  
-**Uso Típico:** Ofertas, descuentos estacionales  
+**Descripcion:** Cambios de precio promocionales temporales
+**Uso Tipico:** Ofertas, descuentos estacionales
 **Campos Recomendados:**
 
 - `reference_type`: "promotion"
@@ -633,8 +623,8 @@ const getPriceTransactionById = async (transactionId: number) => {
 
 ### 6. CURRENCY_ADJUSTMENT - Ajuste Cambiario
 
-**Descripción:** Ajustes de precio por fluctuaciones de moneda  
-**Uso Típico:** Productos importados, mercados internacionales  
+**Descripcion:** Ajustes de precio por fluctuaciones de moneda
+**Uso Tipico:** Productos importados, mercados internacionales
 **Campos Recomendados:**
 
 - `exchange_rate`: Nuevo tipo de cambio
@@ -642,17 +632,17 @@ const getPriceTransactionById = async (transactionId: number) => {
 
 ### 7. INITIAL_PRICE - Precio Inicial
 
-**Descripción:** Establecimiento de precio inicial para productos nuevos  
-**Uso Típico:** Lanzamiento de productos  
+**Descripcion:** Establecimiento de precio inicial para productos nuevos
+**Uso Tipico:** Lanzamiento de productos
 **Campos Recomendados:**
 
 - `reference_type`: "initial_price"
 - `metadata`: pricing_strategy, market_research
 
-### 8. BULK_UPDATE - Actualización Masiva
+### 8. BULK_UPDATE - Actualizacion Masiva
 
-**Descripción:** Actualizaciones masivas de precios en múltiples productos  
-**Uso Típico:** Ajustes por categoría, inflación general  
+**Descripcion:** Actualizaciones masivas de precios en multiples productos
+**Uso Tipico:** Ajustes por categoria, inflacion general
 **Campos Recomendados:**
 
 - `reference_type`: "bulk_update"
@@ -660,15 +650,15 @@ const getPriceTransactionById = async (transactionId: number) => {
 
 ---
 
-## ✅ Validaciones y Consistencia
+## Validaciones y Consistencia
 
-### Validaciones Automáticas
+### Validaciones Automaticas
 
 1. **Producto Existente**: Verifica que el product_id exista
 2. **Usuario Autenticado**: Valida que el usuario tenga permisos
-3. **Tipo Válido**: Confirma que transaction_type sea válido
+3. **Tipo Valido**: Confirma que transaction_type sea valido
 4. **Precio Positivo**: new_price debe ser mayor que 0
-5. **Moneda Válida**: Verifica que currency_id sea válida
+5. **Moneda Valida**: Verifica que currency_id sea valida
 
 ### Estados de Consistencia
 
@@ -682,7 +672,7 @@ const interpretConsistencyStatus = (status: string) => {
     },
     INCONSISTENT: {
       level: 'error',
-      message: 'Precio actual no coincide con última transacción',
+      message: 'Precio actual no coincide con ultima transaccion',
       action: 'Sincronizar precio o revisar transacciones',
     },
     NO_PRICE_DATA: {
@@ -698,7 +688,7 @@ const interpretConsistencyStatus = (status: string) => {
     NO_PRICE_TRANSACTIONS: {
       level: 'info',
       message: 'No hay transacciones de precio registradas',
-      action: 'Crear transacción inicial',
+      action: 'Crear transaccion inicial',
     },
   }
 
@@ -714,9 +704,9 @@ const interpretConsistencyStatus = (status: string) => {
 
 ---
 
-## ❌ Códigos de Error
+## Codigos de Error
 
-### Errores de Validación (400)
+### Errores de Validacion (400)
 
 ```typescript
 {
@@ -725,7 +715,7 @@ const interpretConsistencyStatus = (status: string) => {
 }
 
 {
-  "error": "Tipo de transacción inválido: INVALID_TYPE",
+  "error": "Tipo de transaccion invalido: INVALID_TYPE",
   "code": "INVALID_TRANSACTION_TYPE"
 }
 
@@ -735,12 +725,12 @@ const interpretConsistencyStatus = (status: string) => {
 }
 
 {
-  "error": "Datos de entrada inválidos",
+  "error": "Datos de entrada invalidos",
   "code": "INVALID_REQUEST_BODY"
 }
 ```
 
-### Errores de Autorización (401)
+### Errores de Autorizacion (401)
 
 ```typescript
 {
@@ -749,7 +739,7 @@ const interpretConsistencyStatus = (status: string) => {
 }
 
 {
-  "error": "Token inválido o expirado",
+  "error": "Token invalido o expirado",
   "code": "INVALID_TOKEN"
 }
 ```
@@ -763,7 +753,7 @@ const interpretConsistencyStatus = (status: string) => {
 }
 
 {
-  "error": "Transacción de precio no encontrada",
+  "error": "Transaccion de precio no encontrada",
   "code": "PRICE_TRANSACTION_NOT_FOUND"
 }
 
@@ -803,17 +793,17 @@ const interpretConsistencyStatus = (status: string) => {
 
 ---
 
-## 🚀 Ejemplos de Integración
+## Ejemplos de Integracion
 
 ### Componente React - Registro de Transacciones de Precio
 
 ```typescript
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 
 interface PriceTransactionFormProps {
-  productId: string;
-  currentPrice?: number;
-  onSuccess?: (transaction: PriceTransactionResponse) => void;
+  productId: string
+  currentPrice?: number
+  onSuccess?: (transaction: PriceTransactionResponse) => void
 }
 
 const PriceTransactionForm: React.FC<PriceTransactionFormProps> = ({
@@ -821,7 +811,7 @@ const PriceTransactionForm: React.FC<PriceTransactionFormProps> = ({
   currentPrice,
   onSuccess
 }) => {
-  const [transactionTypes, setTransactionTypes] = useState<Record<string, string>>({});
+  const [transactionTypes, setTransactionTypes] = useState<Record<string, string>>({})
   const [formData, setFormData] = useState({
     transaction_type: '',
     new_price: currentPrice || 0,
@@ -829,38 +819,37 @@ const PriceTransactionForm: React.FC<PriceTransactionFormProps> = ({
     reference_id: '',
     cost_factor: '',
     margin_percent: ''
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Cargar tipos de transacciones al montar
   useEffect(() => {
     const loadTransactionTypes = async () => {
       try {
         const response = await fetch('/price-transactions/types', {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        const data = await response.json();
-        setTransactionTypes(data.description);
+        })
+        const data = await response.json()
+        setTransactionTypes(data.description)
       } catch (err) {
-        console.error('Error loading transaction types:', err);
+        console.error('Error loading transaction types:', err)
       }
-    };
+    }
 
-    loadTransactionTypes();
-  }, []);
+    loadTransactionTypes()
+  }, [])
 
   const calculatePriceChange = () => {
-    if (!currentPrice || !formData.new_price) return null;
-    const change = formData.new_price - currentPrice;
-    const percent = (change / currentPrice) * 100;
-    return { change, percent };
-  };
+    if (!currentPrice || !formData.new_price) return null
+    const change = formData.new_price - currentPrice
+    const percent = (change / currentPrice) * 100
+    return { change, percent }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
 
     try {
       const requestData = {
@@ -876,7 +865,7 @@ const PriceTransactionForm: React.FC<PriceTransactionFormProps> = ({
           timestamp: new Date().toISOString(),
           previous_price: currentPrice
         }
-      };
+      }
 
       const response = await fetch('/price-transactions', {
         method: 'POST',
@@ -885,16 +874,15 @@ const PriceTransactionForm: React.FC<PriceTransactionFormProps> = ({
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify(requestData)
-      });
+      })
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al registrar transacción de precio');
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al registrar transaccion de precio')
       }
 
-      const transaction = await response.json();
+      const transaction = await response.json()
 
-      // Reset form
       setFormData({
         transaction_type: '',
         new_price: 0,
@@ -902,18 +890,18 @@ const PriceTransactionForm: React.FC<PriceTransactionFormProps> = ({
         reference_id: '',
         cost_factor: '',
         margin_percent: ''
-      });
+      })
 
-      onSuccess?.(transaction);
+      onSuccess?.(transaction)
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError(err instanceof Error ? err.message : 'Error desconocido')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const priceChange = calculatePriceChange();
+  const priceChange = calculatePriceChange()
 
   return (
     <form onSubmit={handleSubmit} className="price-transaction-form">
@@ -932,7 +920,7 @@ const PriceTransactionForm: React.FC<PriceTransactionFormProps> = ({
       )}
 
       <div className="form-group">
-        <label htmlFor="transaction_type">Tipo de Transacción:</label>
+        <label htmlFor="transaction_type">Tipo de Transaccion:</label>
         <select
           id="transaction_type"
           value={formData.transaction_type}
@@ -1020,80 +1008,80 @@ const PriceTransactionForm: React.FC<PriceTransactionFormProps> = ({
         {loading ? 'Registrando...' : 'Registrar Cambio de Precio'}
       </button>
     </form>
-  );
-};
+  )
+}
 
-export default PriceTransactionForm;
+export default PriceTransactionForm
 ```
 
 ### Componente React - Historial de Precios
 
 ```typescript
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 
 interface PriceHistoryProps {
-  productId: string;
+  productId: string
 }
 
 const PriceHistory: React.FC<PriceHistoryProps> = ({ productId }) => {
-  const [history, setHistory] = useState<PriceTransactionHistory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const limit = 20;
+  const [history, setHistory] = useState<PriceTransactionHistory[]>([])
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(0)
+  const [hasMore, setHasMore] = useState(true)
+  const limit = 20
 
   const loadHistory = async (pageNum = 0, append = false) => {
     try {
-      setLoading(true);
-      const offset = pageNum * limit;
+      setLoading(true)
+      const offset = pageNum * limit
       const response = await fetch(
         `/price-transactions/product/${productId}/history?limit=${limit}&offset=${offset}`,
         {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         }
-      );
+      )
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (append) {
-        setHistory(prev => [...prev, ...data.history]);
+        setHistory(prev => [...prev, ...data.history])
       } else {
-        setHistory(data.history);
+        setHistory(data.history)
       }
 
-      setHasMore(data.history.length === limit);
-      setPage(pageNum);
+      setHasMore(data.history.length === limit)
+      setPage(pageNum)
 
     } catch (error) {
-      console.error('Error loading price history:', error);
+      console.error('Error loading price history:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    loadHistory();
-  }, [productId]);
+    loadHistory()
+  }, [productId])
 
   const loadMore = () => {
     if (!loading && hasMore) {
-      loadHistory(page + 1, true);
+      loadHistory(page + 1, true)
     }
-  };
+  }
 
   const formatTransactionType = (type: string) => {
     const types = {
-      'MANUAL_ADJUSTMENT': '🔧 Ajuste Manual',
-      'MARKET_UPDATE': '📊 Actualización de Mercado',
-      'COST_UPDATE': '💰 Actualización de Costos',
-      'SUPPLIER_CHANGE': '🏭 Cambio de Proveedor',
-      'PROMOTION': '🎉 Promoción',
-      'CURRENCY_ADJUSTMENT': '💱 Ajuste Cambiario',
-      'INITIAL_PRICE': '🎯 Precio Inicial',
-      'BULK_UPDATE': '📦 Actualización Masiva'
-    };
-    return types[type] || type;
-  };
+      'MANUAL_ADJUSTMENT': 'Ajuste Manual',
+      'MARKET_UPDATE': 'Actualizacion de Mercado',
+      'COST_UPDATE': 'Actualizacion de Costos',
+      'SUPPLIER_CHANGE': 'Cambio de Proveedor',
+      'PROMOTION': 'Promocion',
+      'CURRENCY_ADJUSTMENT': 'Ajuste Cambiario',
+      'INITIAL_PRICE': 'Precio Inicial',
+      'BULK_UPDATE': 'Actualizacion Masiva'
+    }
+    return types[type] || type
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('es-ES', {
@@ -1102,197 +1090,146 @@ const PriceHistory: React.FC<PriceHistoryProps> = ({ productId }) => {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    });
-  };
+    })
+  }
 
   const formatPriceChange = (change: number, percent?: number) => {
-    const sign = change >= 0 ? '+' : '';
-    const color = change >= 0 ? 'green' : 'red';
-    const percentText = percent ? ` (${sign}${percent.toFixed(2)}%)` : '';
+    const sign = change >= 0 ? '+' : ''
+    const percentText = percent ? ` (${sign}${percent.toFixed(2)}%)` : ''
 
-    return (
-      <span style={{ color }}>
-        {sign}${change.toFixed(2)}{percentText}
-      </span>
-    );
-  };
+    return `${sign}$${change.toFixed(2)}${percentText}`
+  }
+
+  if (history.length === 0 && !loading) {
+    return <p>No hay cambios de precio registrados para este producto.</p>
+  }
 
   return (
     <div className="price-history">
       <h3>Historial de Precios</h3>
 
-      {history.length === 0 && !loading ? (
-        <p>No hay cambios de precio registrados para este producto.</p>
-      ) : (
-        <div className="history-list">
-          {history.map((transaction) => (
-            <div key={transaction.transaction_id} className="history-item">
-              <div className="transaction-header">
-                <span className="transaction-type">
-                  {formatTransactionType(transaction.transaction_type)}
-                </span>
-                <span className="transaction-date">
-                  {formatDate(transaction.transaction_date)}
-                </span>
-              </div>
-
-              <div className="price-details">
-                <div className="price-change-info">
-                  <div className="price-flow">
-                    <span className="old-price">${transaction.old_price.toFixed(2)}</span>
-                    <span className="arrow">→</span>
-                    <span className="new-price">${transaction.new_price.toFixed(2)}</span>
-                  </div>
-                  <div className="change-amount">
-                    {formatPriceChange(transaction.price_change, transaction.price_change_percent)}
-                  </div>
-                </div>
-
-                {transaction.reason && (
-                  <div className="reason">
-                    <strong>Motivo:</strong> {transaction.reason}
-                  </div>
-                )}
-
-                {transaction.reference_id && (
-                  <div className="reference">
-                    <strong>Referencia:</strong> {transaction.reference_id}
-                  </div>
-                )}
-
-                <div className="additional-info">
-                  {transaction.cost_factor && (
-                    <span className="cost-factor">
-                      Costo: {(transaction.cost_factor * 100).toFixed(1)}%
-                    </span>
-                  )}
-                  {transaction.margin_percent && (
-                    <span className="margin">
-                      Margen: {transaction.margin_percent.toFixed(1)}%
-                    </span>
-                  )}
-                  <span className="currency">
-                    {transaction.currency_id}
-                  </span>
-                </div>
-
-                {transaction.user_name && (
-                  <div className="user">
-                    <strong>Usuario:</strong> {transaction.user_name}
-                  </div>
-                )}
-
-                {transaction.metadata && Object.keys(transaction.metadata).length > 0 && (
-                  <details className="metadata">
-                    <summary>Información adicional</summary>
-                    <pre>{JSON.stringify(transaction.metadata, null, 2)}</pre>
-                  </details>
-                )}
-              </div>
+      <div className="history-list">
+        {history.map((transaction) => (
+          <div key={transaction.transaction_id} className="history-item">
+            <div className="transaction-header">
+              <span className="transaction-type">
+                {formatTransactionType(transaction.transaction_type)}
+              </span>
+              <span className="transaction-date">
+                {formatDate(transaction.transaction_date)}
+              </span>
             </div>
-          ))}
-        </div>
-      )}
+
+            <div className="price-details">
+              <div className="price-change-info">
+                <div className="price-flow">
+                  <span className="old-price">${transaction.old_price.toFixed(2)}</span>
+                  <span className="arrow">-></span>
+                  <span className="new-price">${transaction.new_price.toFixed(2)}</span>
+                </div>
+                <div className="change-amount">
+                  {formatPriceChange(transaction.price_change, transaction.price_change_percent)}
+                </div>
+              </div>
+
+              {transaction.reason && (
+                <div className="reason">
+                  <strong>Motivo:</strong> {transaction.reason}
+                </div>
+              )}
+
+              {transaction.reference_id && (
+                <div className="reference">
+                  <strong>Referencia:</strong> {transaction.reference_id}
+                </div>
+              )}
+
+              {transaction.user_name && (
+                <div className="user">
+                  <strong>Usuario:</strong> {transaction.user_name}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
 
       {hasMore && (
         <button onClick={loadMore} disabled={loading} className="load-more-btn">
-          {loading ? 'Cargando...' : 'Cargar más'}
+          {loading ? 'Cargando...' : 'Cargar mas'}
         </button>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default PriceHistory;
+export default PriceHistory
 ```
 
-### Componente React - Validación de Consistencia de Precios
+### Componente React - Validacion de Consistencia de Precios
 
 ```typescript
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 
 interface PriceConsistencyCheckProps {
-  productId?: string;
+  productId?: string
 }
 
 const PriceConsistencyCheck: React.FC<PriceConsistencyCheckProps> = ({ productId }) => {
-  const [reports, setReports] = useState<PriceConsistencyReport[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [reports, setReports] = useState<PriceConsistencyReport[]>([])
+  const [loading, setLoading] = useState(false)
   const [summary, setSummary] = useState<{
-    total: number;
-    inconsistent: number;
-    consistency_rate: number;
-  } | null>(null);
+    total: number
+    inconsistent: number
+    consistency_rate: number
+  } | null>(null)
 
   const runConsistencyCheck = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
       const url = productId
         ? `/price-transactions/validate-consistency?product_id=${productId}`
-        : '/price-transactions/validate-consistency';
+        : '/price-transactions/validate-consistency'
 
       const response = await fetch(url, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
+      })
 
-      const data = await response.json();
-      const reportArray = Array.isArray(data.reports) ? data.reports : [data];
-      setReports(reportArray);
+      const data = await response.json()
+      const reportArray = Array.isArray(data.reports) ? data.reports : [data]
+      setReports(reportArray)
 
-      // Calculate summary
-      const inconsistent = reportArray.filter(r => r.consistency_status !== 'CONSISTENT');
+      const inconsistent = reportArray.filter(r => r.consistency_status !== 'CONSISTENT')
       setSummary({
         total: reportArray.length,
         inconsistent: inconsistent.length,
         consistency_rate: ((reportArray.length - inconsistent.length) / reportArray.length) * 100
-      });
+      })
 
     } catch (error) {
-      console.error('Error checking price consistency:', error);
+      console.error('Error checking price consistency:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const getStatusIcon = (status: string) => {
     const icons = {
-      'CONSISTENT': '✅',
-      'INCONSISTENT': '❌',
-      'NO_PRICE_DATA': '⚠️',
-      'MISSING_CURRENT_PRICE': '🔍',
-      'NO_PRICE_TRANSACTIONS': '📝'
-    };
-    return icons[status] || '❓';
-  };
-
-  const getStatusColor = (status: string) => {
-    const colors = {
-      'CONSISTENT': 'green',
-      'INCONSISTENT': 'red',
-      'NO_PRICE_DATA': 'orange',
-      'MISSING_CURRENT_PRICE': 'orange',
-      'NO_PRICE_TRANSACTIONS': 'blue'
-    };
-    return colors[status] || 'gray';
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels = {
-      'CONSISTENT': 'Consistente',
-      'INCONSISTENT': 'Inconsistente',
-      'NO_PRICE_DATA': 'Sin datos de precio',
-      'MISSING_CURRENT_PRICE': 'Precio actual faltante',
-      'NO_PRICE_TRANSACTIONS': 'Sin transacciones de precio'
-    };
-    return labels[status] || status;
-  };
+      'CONSISTENT': 'OK',
+      'INCONSISTENT': 'XX',
+      'NO_PRICE_DATA': '--',
+      'MISSING_CURRENT_PRICE': '??',
+      'NO_PRICE_TRANSACTIONS': '..'
+    }
+    return icons[status] || '?'
+  }
 
   return (
     <div className="price-consistency-check">
       <div className="check-header">
-        <h3>Validación de Consistencia de Precios</h3>
+        <h3>Validacion de Consistencia de Precios</h3>
         <button onClick={runConsistencyCheck} disabled={loading}>
-          {loading ? 'Validando...' : 'Ejecutar Validación'}
+          {loading ? 'Validando...' : 'Ejecutar Validacion'}
         </button>
       </div>
 
@@ -1304,15 +1241,11 @@ const PriceConsistencyCheck: React.FC<PriceConsistencyCheckProps> = ({ productId
           </div>
           <div className="summary-item">
             <span>Inconsistentes:</span>
-            <span style={{ color: summary.inconsistent > 0 ? 'red' : 'green' }}>
-              {summary.inconsistent}
-            </span>
+            <span>{summary.inconsistent}</span>
           </div>
           <div className="summary-item">
             <span>Tasa de Consistencia:</span>
-            <span style={{ color: summary.consistency_rate === 100 ? 'green' : 'orange' }}>
-              {summary.consistency_rate.toFixed(1)}%
-            </span>
+            <span>{summary.consistency_rate.toFixed(1)}%</span>
           </div>
         </div>
       )}
@@ -1326,59 +1259,16 @@ const PriceConsistencyCheck: React.FC<PriceConsistencyCheckProps> = ({ productId
                   {getStatusIcon(report.consistency_status)}
                 </span>
                 <span className="product-name">{report.product_name}</span>
-                <span
-                  className="consistency-status"
-                  style={{ color: getStatusColor(report.consistency_status) }}
-                >
-                  {getStatusLabel(report.consistency_status)}
-                </span>
-              </div>
-
-              <div className="report-details">
-                <div className="price-comparison">
-                  <div>
-                    <strong>Precio Actual:</strong> ${report.current_price.toFixed(2)}
-                  </div>
-                  <div>
-                    <strong>Última Transacción:</strong> ${report.last_transaction_price.toFixed(2)}
-                  </div>
-                  {report.consistency_status === 'INCONSISTENT' && (
-                    <div className="difference">
-                      <strong>Diferencia:</strong>
-                      <span style={{ color: 'red' }}>
-                        ${Math.abs(report.price_difference).toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {report.last_transaction_date && (
-                  <div className="last-transaction">
-                    <strong>Última Transacción:</strong> {' '}
-                    {new Date(report.last_transaction_date).toLocaleDateString('es-ES')}
-                  </div>
-                )}
-
-                {report.recommendations.length > 0 && (
-                  <div className="recommendations">
-                    <strong>Recomendaciones:</strong>
-                    <ul>
-                      {report.recommendations.map((rec, index) => (
-                        <li key={index}>{rec}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
             </div>
           ))}
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default PriceConsistencyCheck;
+export default PriceConsistencyCheck
 ```
 
 ### Hook Personalizado para Price Transactions
@@ -1558,60 +1448,46 @@ export const usePriceTransactions = (): UsePriceTransactionsResult => {
 ### Componente Dashboard de Precios
 
 ```typescript
-import React, { useState, useEffect } from 'react';
-import { usePriceTransactions } from './hooks/usePriceTransactions';
-import PriceTransactionForm from './components/PriceTransactionForm';
-import PriceHistory from './components/PriceHistory';
-import PriceConsistencyCheck from './components/PriceConsistencyCheck';
+import React, { useState, useEffect } from 'react'
 
 const PriceManagementDashboard: React.FC = () => {
-  const { getVarianceReport, error } = usePriceTransactions();
-  const [selectedProductId, setSelectedProductId] = useState<string>('');
-  const [currentPrice, setCurrentPrice] = useState<number>(0);
+  const [selectedProductId, setSelectedProductId] = useState<string>('')
+  const [currentPrice, setCurrentPrice] = useState<number>(0)
   const [dashboardData, setDashboardData] = useState({
     totalProducts: 0,
     recentChanges: 0,
     avgVolatility: 0
-  });
+  })
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    loadDashboardData()
+  }, [])
 
   const loadDashboardData = async () => {
     try {
-      // Obtener datos de últimos 30 días
-      const endDate = new Date().toISOString().split('T')[0];
+      const endDate = new Date().toISOString().split('T')[0]
       const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        .toISOString().split('T')[0];
-
-      const varianceReport = await getVarianceReport(startDate, endDate);
+        .toISOString().split('T')[0]
 
       setDashboardData({
-        totalProducts: varianceReport.total_products,
-        recentChanges: varianceReport.reports.filter(r => r.transaction_count > 0).length,
-        avgVolatility: varianceReport.summary?.avg_volatility || 0
-      });
+        totalProducts: 100,
+        recentChanges: 25,
+        avgVolatility: 3.5
+      })
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      console.error('Error loading dashboard data:', error)
     }
-  };
+  }
 
   const handleTransactionSuccess = (transaction: PriceTransactionResponse) => {
-    console.log('Price transaction registered:', transaction);
-    setCurrentPrice(transaction.new_price);
-    loadDashboardData(); // Refresh dashboard
-  };
+    console.log('Price transaction registered:', transaction)
+    setCurrentPrice(transaction.new_price)
+    loadDashboardData()
+  }
 
   return (
     <div className="price-management-dashboard">
-      <h1>Gestión de Precios</h1>
-
-      {error && (
-        <div className="error-banner">
-          Error: {error}
-        </div>
-      )}
+      <h1>Gestion de Precios</h1>
 
       <div className="dashboard-stats">
         <div className="stat-card">
@@ -1628,85 +1504,58 @@ const PriceManagementDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="product-selector">
-        <label htmlFor="product-select">Seleccionar Producto:</label>
-        <select
-          id="product-select"
-          value={selectedProductId}
-          onChange={(e) => setSelectedProductId(e.target.value)}
-        >
-          <option value="">Seleccionar producto...</option>
-          {/* Aquí irían los productos cargados dinámicamente */}
-        </select>
-      </div>
-
       <div className="management-sections">
         <section className="register-section">
           {selectedProductId && (
-            <PriceTransactionForm
-              productId={selectedProductId}
-              currentPrice={currentPrice}
-              onSuccess={handleTransactionSuccess}
-            />
+            <p>Producto seleccionado: {selectedProductId}</p>
           )}
-        </section>
-
-        <section className="history-section">
-          {selectedProductId && (
-            <PriceHistory productId={selectedProductId} />
-          )}
-        </section>
-
-        <section className="consistency-section">
-          <PriceConsistencyCheck productId={selectedProductId} />
         </section>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default PriceManagementDashboard;
+export default PriceManagementDashboard
 ```
 
 ---
 
-## 📝 Notas Adicionales
+## Notas Adicionales
 
-### Mejores Prácticas
+### Mejores Practicas
 
-1. **Siempre incluir contexto** en reason y metadata para auditoría
-2. **Validar consistencia** regularmente, especialmente después de cambios masivos
-3. **Usar tipos específicos** de transacciones para mejor clasificación
+1. **Siempre incluir contexto** en reason y metadata para auditoria
+2. **Validar consistencia** regularmente, especialmente despues de cambios masivos
+3. **Usar tipos especificos** de transacciones para mejor clasificacion
 4. **Implementar aprobaciones** para cambios significativos de precio
-5. **Monitorear volatilidad** para detectar anomalías
+5. **Monitorear volatilidad** para detectar anomalias
 
 ### Consideraciones de Rendimiento
 
-- Las consultas de historial soportan paginación para grandes volúmenes
-- Los reportes de variación pueden ser costosos para muchos productos
+- Las consultas de historial soportan paginacion para grandes volumenes
+- Los reportes de variacion pueden ser costosos para muchos productos
 - Considerar cache para tipos de transacciones y datos frecuentes
-- Usar índices en fechas y product_id para optimizar consultas
+- Usar indices en fechas y product_id para optimizar consultas
 
 ### Seguridad
 
-- Todas las operaciones requieren autenticación JWT
-- Validar permisos para cambios de precio según roles de usuario
+- Todas las operaciones requieren autenticacion JWT
+- Validar permisos para cambios de precio segun roles de usuario
 - Auditar todos los accesos a reportes de precio
-- Proteger metadatos sensibles (costos, márgenes)
+- Proteger metadatos sensibles (costos, margenes)
 
-### Integración con Otros Sistemas
+### Integracion con Otros Sistemas
 
-- **Manual Adjustments**: Integración automática mediante función especializada
-- **Products.Prices**: Actualización automática del precio actual
+- **Manual Adjustments**: Integracion automatica mediante funcion especializada
+- **Products.Prices**: Actualizacion automatica del precio actual
 - **Stock Transactions**: Sistemas independientes sin interferencias
-- **Reporting**: Datos disponibles para análisis de BI
+- **Reporting**: Datos disponibles para analisis de BI
 
 ---
 
-**Versión:** 1.0  
-**Fecha:** 2026-05-06  
+**Version:** 1.0
 **Mantenido por:** Equipo de Desarrollo
 
 ---
 
-_Última actualización: 2026-05-06 — FASE 4 verificada. PriceTransactionRequest actualizado (agregados `unit` y `price_type` requeridos). PriceTransactionResponse verificado (7/7 OK)._
+_Ultima actualizacion: 2026-05-19_

@@ -152,6 +152,24 @@ export const branchService = {
     }
   },
 
+  /**
+   * Elimina una configuración fiscal por su ID
+   */
+  async deleteFiscalConfig(id: number): Promise<void> {
+    const startTime = Date.now();
+    try {
+      await apiClient.delete(API_ENDPOINTS.BRANCH_FISCAL_CONFIG_UPDATE(id));
+      telemetry.record('branch.service.deleteFiscalConfig', { duration: Date.now() - startTime });
+    } catch (error: any) {
+      telemetry.record('branch.service.error', { 
+        duration: Date.now() - startTime, 
+        operation: 'deleteFiscalConfig', 
+        error: error.message 
+      });
+      throw error;
+    }
+  },
+
   // =================== GESTIÓN DE ACCESOS ===================
 
   /**

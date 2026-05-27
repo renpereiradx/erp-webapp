@@ -1,33 +1,23 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
-  Building2, 
   Plus, 
   Search, 
-  MoreVertical, 
-  ShieldCheck, 
-  Receipt, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  CheckCircle2, 
-  XCircle,
-  Clock,
-  Warehouse,
-  ChevronRight,
-  Settings2,
+  Building2, 
+  Download, 
+  MoreHorizontal,
+  Edit2,
   Trash2,
-  Edit2
+  Shield,
+  Receipt,
+  Warehouse
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { useBranch } from '@/contexts/BranchContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/useToast';
 import { branchService } from '@/features/branches/services/branchService';
-import { Branch, UserBranchAccess, BranchFiscalConfig } from '@/types';
+import { Branch } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -56,24 +46,42 @@ import ToastContainer from '@/components/ui/ToastContainer';
 import BranchModal from '@/features/branches/components/BranchModal';
 
 /**
- * BranchManagement - Página administrativa de sucursales (Fluent 2.0)
- * Permite gestionar la estructura física y legal de la empresa.
+ * BranchManagement - Página de gestión de sucursales (Fluent Design 2)
  */
 const BranchManagement: React.FC = () => {
   const { t } = useI18n();
-  const { addToast } = useToast();
-  const { currentBranchId } = useBranch();
+  const { addToast, toasts, removeToast } = useToast();
   const queryClient = useQueryClient();
   
   // Estados de datos
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Estado de modales (Controlado localmente para agilidad MVP)
-  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'info' | 'fiscal' | 'access'>('info');
-
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [activeTab, setActiveTab] = useState<'general' | 'fiscal' | 'access'>('general');
   const [branchToDeactivate, setBranchToDeactivate] = useState<Branch | null>(null);
+
+  // Mutations
+  const updateBranchMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => branchService.updateBranch(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      addToast(t('common.success.update', 'Cambios guardados correctamente'), 'success');
+      setBranchToDeactivate(null);
+    },
+    onError: (error: any) => addToast(error.message || 'Error al actualizar', 'error')
+  });
+
+  const handleEdit = (branch: Branch, tab: 'general' | 'fiscal' | 'access' = 'general') => {
+    setSelectedBranch(branch);
+    setActiveTab(tab);
+    setIsBranchModalOpen(true);
+  };
+
+  const handleCreate = () => {
+    setSelectedBranch(null);
+    setActiveTab('general');
+    setIsBranchModalOpen(true);
+  };
 
   const handleDeactivate = (branch: Branch) => {
     setBranchToDeactivate(branch);
@@ -81,21 +89,15 @@ const BranchManagement: React.FC = () => {
 
   const confirmDeactivate = () => {
     if (!branchToDeactivate) return;
-    branchService.updateBranch(branchToDeactivate.id, { is_active: false })
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: ['branches'] });
-        addToast('Sucursal desactivada', 'success');
-        setBranchToDeactivate(null);
-      })
-      .catch((error) => addToast(error.message || 'Error al desactivar', 'error'));
+    updateBranchMutation.mutate({ id: branchToDeactivate.id, data: { is_active: false } });
   };
 
   const { data: response, isLoading, isError } = useQuery({
     queryKey: ['branches'],
-    queryFn: () => branchService.getBranches(),
+    queryFn: () => branchService.getBranches({ page_size: 100 }), // Aumentamos el límite para asegurar visibilidad
   });
 
-  const branches = response?.branches || response?.data || [];
+  const branches = (response as any)?.branches || response?.data || [];
 
   useEffect(() => {
     if (isError) {
@@ -104,171 +106,163 @@ const BranchManagement: React.FC = () => {
   }, [isError, addToast, t]);
 
   const filteredBranches = useMemo(() => {
-    return branches.filter(b => 
+    return branches.filter((b: any) => 
       b.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       b.code.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [branches, searchTerm]);
 
+  // Lógica de Exportación CSV
+  const exportToCSV = () => {
+    if (filteredBranches.length === 0) return;
+    
+    const headers = ['Código', 'Nombre', 'Razón Social', 'RUC', 'Tipo', 'Estado', 'Ciudad', 'Teléfono'];
+    const rows = filteredBranches.map((b: any) => [
+      b.code,
+      b.name,
+      b.legal_name || '',
+      b.ruc || '',
+      b.branch_type || '',
+      b.is_active ? 'Activo' : 'Inactivo',
+      b.city || '',
+      b.phone || ''
+    ]);
+
+    const csvContent = [headers, ...rows].map(e => e.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `sucursales_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-500 font-display">
-      <ToastContainer />
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
       
       {/* Header de Página */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-primary pl-5">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-text-main">
-            {t('settings.branches.title', 'Gestión de Sucursales')}
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3">
+            {t('branch.management.title', 'Gestión de Sucursales')}
+            <span className="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-1 rounded-md">
+              {branches.length} en total
+            </span>
           </h1>
-          <p className="text-text-secondary text-base font-medium mt-1.5">
-            Administra las sedes físicas, depósitos y su configuración legal.
-          </p>
+          <p className="text-sm text-slate-500 font-medium">{t('branch.management.subtitle', 'Configura y administra los puntos de venta, almacenes y sus parámetros fiscales.')}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            className="h-11 px-6 font-bold border-2 hover:bg-slate-50 gap-2"
+            onClick={exportToCSV}
+            disabled={filteredBranches.length === 0}
+          >
+            <Download size={18} />
+            {t('common.export', 'Exportar')}
+          </Button>
+          <Button 
+            className="h-11 px-8 font-black gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
+            onClick={handleCreate}
+          >
+            <Plus size={20} />
+            {t('branch.management.new', 'Nueva Sucursal')}
+          </Button>
         </div>
       </div>
 
-      {/* Grid de Datos Alta Densidad Fluent 2 */}
-      <div className="bg-white rounded-xl shadow-fluent-shadow border border-border-subtle overflow-hidden">
-        {/* Barra de Herramientas / Filtros integrada (Alta Densidad) */}
-        <div className="px-8 py-5 border-b border-border-subtle bg-[#f3f2f1]/50 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+      {/* Controles de Tabla */}
+      <div className="bg-white rounded-2xl shadow-fluent-lg border border-border-subtle overflow-hidden">
+        <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/30">
+          <div className="relative w-full md:w-96">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
             <Input 
-              placeholder="Buscar por nombre o código..." 
-              className="pl-10 h-10 bg-white border-border-base focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium text-sm"
+              placeholder={t('common.search', 'Buscar por nombre o código...')}
+              className="pl-10 h-11 border-slate-200 focus:border-primary focus:ring-primary/20 rounded-xl"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="bg-white border border-border-base text-[10px] font-bold uppercase rounded hover:bg-slate-50 transition-all px-4 py-1.5 h-auto">
-              Exportar CSV
-            </Button>
-            <Button 
-              className="bg-primary hover:bg-primary-hover text-white text-[10px] font-bold uppercase rounded shadow-sm transition-all px-5 py-2 h-auto"
-              onClick={() => {
-                setSelectedBranch(null);
-                setIsBranchModalOpen(true);
-              }}
-            >
-              <Plus size={14} className="mr-1.5" />
-              Nueva Sucursal
-            </Button>
-          </div>
         </div>
 
         {isLoading ? (
-          <div className="p-20"><DataState variant="loading" /></div>
+          <div className="p-20 flex justify-center"><DataState type="loading" /></div>
+        ) : isError ? (
+          <div className="p-20 flex justify-center"><DataState type="error" /></div>
         ) : filteredBranches.length === 0 ? (
-          <div className="p-20"><DataState variant="empty" title="No se encontraron sucursales" /></div>
+          <div className="p-20 flex justify-center"><DataState type="empty" /></div>
         ) : (
-          <Table className="w-full text-left">
-            <TableHeader className="bg-white border-b border-border-subtle">
+          <Table>
+            <TableHeader className="bg-slate-50/80">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="py-5 pl-8 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Código</TableHead>
-                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Nombre / Razón Social</TableHead>
-                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider text-center">Tipo</TableHead>
-                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider text-center">Estado</TableHead>
-                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Contacto</TableHead>
-                <TableHead className="py-5 pr-8 w-12"></TableHead>
+                <TableHead className="py-4 px-6 font-bold text-slate-600">{t('common.code', 'Código')}</TableHead>
+                <TableHead className="py-4 px-6 font-bold text-slate-600">{t('common.name', 'Nombre')}</TableHead>
+                <TableHead className="py-4 px-6 font-bold text-slate-600">{t('common.type', 'Tipo')}</TableHead>
+                <TableHead className="py-4 px-6 font-bold text-slate-600">{t('common.status', 'Estado')}</TableHead>
+                <TableHead className="py-4 px-6 text-right font-bold text-slate-600">{t('common.actions', 'Acciones')}</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="divide-y divide-slate-100 text-xs">
-              {filteredBranches.map((branch) => (
-                <TableRow key={branch.id} className="hover:bg-slate-50/80 group transition-colors cursor-pointer border-none" onClick={() => {
-                  setSelectedBranch(branch);
-                  setIsBranchModalOpen(true);
-                }}>
-                  <TableCell className="py-5 pl-8">
-                    <span className="font-mono font-black text-primary text-sm">{branch.code}</span>
+            <TableBody>
+              {filteredBranches.map((branch: any) => (
+                <TableRow key={branch.id} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
+                  <TableCell className="py-5 px-6">
+                    <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                      {branch.code}
+                    </span>
                   </TableCell>
-                  <TableCell className="py-5">
-                    <div className="flex items-center gap-4">
-                      <div className={`size-10 rounded-full border border-border-subtle flex items-center justify-center font-bold ${branch.is_warehouse ? 'bg-amber-50 text-amber-700' : 'bg-[#f3f2f1] text-text-secondary'}`}>
-                        {branch.is_warehouse ? <Warehouse size={18} /> : <Building2 size={18} />}
+                  <TableCell className="py-5 px-6">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        {branch.is_warehouse ? <Warehouse size={20} /> : <Building2 size={20} />}
                       </div>
-                      <div>
-                        <p className="font-bold text-sm text-text-main leading-none mb-1 group-hover:text-primary transition-colors">{branch.name}</p>
-                        <p className="text-[11px] text-text-secondary font-semibold uppercase tracking-tight">{branch.legal_name || 'Sin razón social'}</p>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-slate-800">{branch.name}</span>
+                        <span className="text-xs text-slate-500">{branch.city || t('common.no_location', 'Sin ubicación')}</span>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="py-5 text-center">
-                    <span className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent">
-                      {branch.branch_type}
+                  <TableCell className="py-5 px-6">
+                    <span className="text-sm font-medium text-slate-600 capitalize">
+                      {branch.branch_type?.toLowerCase().replace('_', ' ') || 'Punto de Venta'}
                     </span>
                   </TableCell>
-                  <TableCell className="py-5 text-center">
-                    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent ${branch.is_active ? 'bg-[#dff6dd] text-[#107c10]' : 'bg-slate-100 text-slate-500'}`}>
-                      <span className={`size-1.5 rounded-full ${branch.is_active ? 'bg-[#107c10]' : 'bg-slate-400'}`} />
-                      {branch.is_active ? 'ACTIVO' : 'INACTIVO'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-5">
-                    <div className="flex flex-col gap-1.5">
-                      {branch.phone && (
-                        <div className="flex items-center gap-2 text-xs text-text-secondary font-medium">
-                          <Phone size={14} className="text-slate-400" /> {branch.phone}
-                        </div>
-                      )}
-                      {branch.address && (
-                        <div className="flex items-center gap-2 text-xs text-text-secondary font-medium truncate max-w-[200px]" title={branch.address}>
-                          <MapPin size={14} className="text-slate-400" /> {branch.address}
-                        </div>
-                      )}
+                  <TableCell className="py-5 px-6">
+                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      branch.is_active ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      <div className={`size-1.5 rounded-full ${branch.is_active ? 'bg-success' : 'bg-slate-400'}`} />
+                      {branch.is_active ? t('common.active', 'Activo') : t('common.inactive', 'Inactivo')}
                     </div>
                   </TableCell>
-                  <TableCell className="py-5 pr-8 text-right" onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="py-5 px-6 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="text-slate-300 hover:text-primary transition-colors opacity-0 group-hover:opacity-100">
-                          <span className="material-symbols-outlined text-xl">more_vert</span>
-                        </button>
+                        <Button variant="ghost" className="size-8 p-0 rounded-full hover:bg-slate-200">
+                          <MoreHorizontal size={16} />
+                        </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-fluent-16 rounded-xl border-border-subtle">
-                        <DropdownMenuItem className="gap-3 text-xs font-bold text-text-main hover:bg-slate-50 rounded-lg cursor-pointer" onClick={() => {
-                           setSelectedBranch(branch);
-                           setIsBranchModalOpen(true);
-                           setActiveTab('info');
-                        }}>
-                          <span className="material-symbols-outlined text-lg text-text-secondary">edit</span> Editar Información
+                      <DropdownMenuContent align="end" className="w-56 font-display rounded-xl shadow-fluent-lg">
+                        <DropdownMenuItem onClick={() => handleEdit(branch, 'general')} className="gap-2 py-2.5 cursor-pointer">
+                          <Edit2 size={14} className="text-slate-500" />
+                          <span className="font-medium">{t('common.edit', 'Editar Información')}</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-3 text-xs font-bold text-text-main hover:bg-slate-50 rounded-lg cursor-pointer" onClick={() => {
-                           setSelectedBranch(branch);
-                           setIsBranchModalOpen(true);
-                           setActiveTab('fiscal');
-                        }}>
-                          <span className="material-symbols-outlined text-lg text-text-secondary">receipt_long</span> Configuración Fiscal
+                        <DropdownMenuItem onClick={() => handleEdit(branch, 'fiscal')} className="gap-2 py-2.5 cursor-pointer">
+                          <Receipt size={14} className="text-slate-500" />
+                          <span className="font-medium">{t('branch.actions.fiscal', 'Configuración Fiscal')}</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-3 text-xs font-bold text-text-main hover:bg-slate-50 rounded-lg cursor-pointer" onClick={() => {
-                           setSelectedBranch(branch);
-                           setIsBranchModalOpen(true);
-                           setActiveTab('access');
-                        }}>
-                          <span className="material-symbols-outlined text-lg text-text-secondary">admin_panel_settings</span> Accesos de Usuario
+                        <DropdownMenuItem onClick={() => handleEdit(branch, 'access')} className="gap-2 py-2.5 cursor-pointer">
+                          <Shield size={14} className="text-slate-500" />
+                          <span className="font-medium">{t('branch.actions.access', 'Control de Accesos')}</span>
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-border-subtle" />
-                        {branch.is_active ? (
-                          <DropdownMenuItem 
-                            className="gap-3 text-xs font-bold text-error hover:bg-error/5 hover:text-error rounded-lg cursor-pointer"
-                            onClick={() => handleDeactivate(branch)}
-                          >
-                            <span className="material-symbols-outlined text-lg">delete</span> Desactivar Sucursal
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem 
-                            className="gap-3 text-xs font-bold text-success hover:bg-success/5 hover:text-success rounded-lg cursor-pointer"
-                            onClick={() => {
-                              branchService.updateBranch(branch.id, { is_active: true })
-                                .then(() => {
-                                  queryClient.invalidateQueries({ queryKey: ['branches'] });
-                                  addToast('Sucursal reactivada', 'success');
-                                })
-                                .catch((error) => addToast(error.message || 'Error', 'error'));
-                            }}
-                          >
-                            <span className="material-symbols-outlined text-lg">restore</span> Reactivar Sucursal
-                          </DropdownMenuItem>
-                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => handleDeactivate(branch)}
+                          className="gap-2 py-2.5 text-error focus:text-error cursor-pointer"
+                          disabled={!branch.is_active}
+                        >
+                          <Trash2 size={14} />
+                          <span className="font-bold">{t('common.deactivate', 'Desactivar Sucursal')}</span>
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

@@ -1,32 +1,122 @@
-# Documentacion Multibranch Implementation — Checklist de Validacion Cruzada
+# Índice de Guías de API para Frontend
 
-> **Ultima verificacion**: 2026-05-08 (actualizada post-bugfix multi-branch ventas)
-> **Plan de verificacion**: `conductor/FRONTEND_DOCUMENTATION_VERIFICATION_PLAN.md`
+## Descripción General
 
-## Documentos (20)
+Este directorio contiene todas las guías de integración API para desarrolladores frontend. Cada guía sigue la [plantilla estandarizada](./API_DOCUMENTATION_TEMPLATE.md) y refleja el contrato actual post-migraciones Multi-Branch + Party Model.
 
-| # | Archivo | Criticidad | Ultima verificacion | Estado |
-|---|---|---|---|---|
-| 1 | `BI_API.md` | P0 | 2026-05-06 | ✅ |
-| 2 | `MULTI_BRANCH_CONTEXT_GUIDE.md` | P0 | 2026-05-08 | ✅ |
-| 3 | `BRANCH_API.md` | P0 | 2026-05-06 | ✅ |
-| 4 | `USER-SESION_API.md` | P0 | 2026-05-06 | ✅ |
-| 5 | `SECURITY_FRONTEND_INTEGRATION.md` | P0 | 2026-05-06 | ✅ |
-| 6 | `PRODUCT_API.md` | P1 | 2026-05-07 | ✅ |
-| 7 | `CASH_REGISTER_API.md` | P1 | 2026-05-06 | ✅ |
-| 8 | `BUDGET_API.md` | P1 | 2026-05-06 | ✅ |
-| 9 | `PURCHASE_REQUISITION.md` | P1 | 2026-05-06 | ✅ |
-| 10 | `BRANCH_TRANSFER_API.md` | P1 | 2026-05-06 | ✅ |
-| 11 | `RESERVATION_SCHEDULE_API.md` | P1 | 2026-05-08 | ✅ |
-| 12 | `TAX_CLASIFICATION_API.md` | P2 | 2026-05-06 | ✅ |
-| 13 | `COST_PRICING_API.md` | P2 | 2026-05-06 | ✅ |
-| 14 | `PRICE_TRANSACTION_API.md` | P2 | 2026-05-06 | ✅ |
-| 15 | `MANUAL_PRICE_ADJUSTMENT_API.md` | P2 | 2026-05-06 | ✅ |
-| 16 | `INVENTORY_ADJUSTMENTS_PRICE_API.md` | P2 | 2026-05-06 | ✅ |
-| 17 | `PURCHASE_PRICING_INTREGATION_API.md` | P2 | 2026-05-07 | ✅ |
-| 18 | `PURCHASE_ORDERS_API.md` | P2 | 2026-05-07 | ✅ |
-| 19 | `CLIENT_API.md` | P2 | 2026-05-06 | ✅ |
-| 20 | `SUPPLIER_API.md` | P2 | 2026-05-06 | ✅
+> ℹ️ Este README se mantiene sincronizado entre los directorios `backend/docs/guides/frontend/` y `frontend/docs/guides/multibranch-implementation/`.
+
+---
+
+## Guías Base (Leer Primero)
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**MULTI_BRANCH_CONTEXT_GUIDE.md**](./MULTI_BRANCH_CONTEXT_GUIDE.md) | Contexto Multi-Sucursal: claims JWT, `branch_id`, `X-Branch-ID`, resolución de sucursal, errores 400/403 | ✅ Completado | 2026-04-22 |
+| [**API_DOCUMENTATION_TEMPLATE.md**](./API_DOCUMENTATION_TEMPLATE.md) | Plantilla estandarizada para documentar endpoints API del frontend | ✅ Completado | 2026-05-19 |
+| [**SETUP_INITIALIZATION_FRONTEND_GUIDE.md**](./SETUP_INITIALIZATION_FRONTEND_GUIDE.md) | Guía de configuración inicial y puesta en marcha del frontend | ✅ Completado | 2026-05-19 |
+| [**FRONTEND_API_DOCUMENTATION_GUIDE.md**](./FRONTEND_API_DOCUMENTATION_GUIDE.md) | Guía general de documentación API: convenciones, estándares y buenas prácticas | ✅ Completado | 2026-05-19 |
+| [**API_UPDATES_2026_01_23.md**](./API_UPDATES_2026_01_23.md) | Registro de cambios y actualizaciones de la API al 23 de enero 2026 | ✅ Completado | 2026-01-23 |
+
+---
+
+## Guías por Módulo
+
+### Autenticación y Seguridad
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**USER_API_GUIDE.md**](./USER_API_GUIDE.md) | CRUD de usuarios `/api/v1/users` (crear, listar, actualizar, eliminar, cambiar estado, roles, contraseña) | ✅ Completado | 2026-05-08 |
+| [**USER_SESSION_FRONTEND_INTEGRATION_GUIDE.md**](./USER_SESSION_FRONTEND_INTEGRATION_GUIDE.md) | Login, JWT, claims `allowed_branches`/`active_branch`, refresh tokens | ✅ Completado | 2026-04-22 |
+| [**SECURITY_FRONTEND_INTEGRATION_GUIDE.md**](./SECURITY_FRONTEND_INTEGRATION_GUIDE.md) | RBAC, rate limiting, auditoría, branch context (parcial — requiere rewrite completo) | 📝 En corrección | 2026-04-22 |
+
+### Clientes y Proveedores (Party Model) — API Unificada
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**PARTY_API_GUIDE.md**](./PARTY_API_GUIDE.md) | API unificada `/api/v1/parties` (clientes, proveedores, CLIENT_SUPPLIER, cambio de tipo) + endpoints alias `/api/v1/clients`, `/api/v1/suppliers` | ✅ Completado | 2026-05-08 |
+| [CLIENT_API_GUIDE.md](./CLIENT_API_GUIDE.md) | ⚠️ Deprecado — CRUD clientes legacy `/client/*` | 🔴 Archivado | 2026-04-22 |
+| [SUPPLIER_API_GUIDE.md](./SUPPLIER_API_GUIDE.md) | ⚠️ Deprecado — CRUD proveedores legacy `/supplier/*` | 🔴 Archivado | 2026-04-22 |
+
+### Ventas
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**SALES_API_GUIDE.md**](./SALES_API_GUIDE.md) | 16 endpoints de ventas, branch context, modelos `Sale`/`SaleDetailRiched`, IVA y descuentos | ✅ Completado | 2026-04-22 |
+| [**SALES_ADD_PRODUCTS_EXISTING_SALE_CONTRACT.md**](./SALES_ADD_PRODUCTS_EXISTING_SALE_CONTRACT.md) | Contrato funcional para agregar productos a venta existente | 🟢 Probablemente inmune | - |
+
+### Compras y Requisiciones
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**PURCHASE_ORDERS_API_GUIDE.md**](./PURCHASE_ORDERS_API_GUIDE.md) | API completa de órdenes de compra: CRUD, pagos, cancelación, branch_id, estructuras de respuesta | ✅ Completado | 2026-05-07 |
+| [**PURCHASE_REQUISITION_API_GUIDE.md**](./PURCHASE_REQUISITION_API_GUIDE.md) | Requisiciones de compra, `supplier_id: string`, branch context | ✅ Completado | 2026-04-22 |
+| [**PURCHASE_PRICING_INTEGRATION_GUIDE.md**](./PURCHASE_PRICING_INTEGRATION_GUIDE.md) | Integración compras-pricing, cálculo de precio de venta, IVA, branch_id, payment_method/currency reales | ✅ Completado | 2026-05-07 |
+
+### Presupuestos
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**BUDGET_API_GUIDE.md**](./BUDGET_API_GUIDE.md) | Presupuestos/cotizaciones, branch context, conversión a venta | ✅ Completado | 2026-04-22 |
+
+### Productos
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**PRODUCT_API_GUIDE.md**](./PRODUCT_API_GUIDE.md) | Gestión de productos, lectura enriquecida, branch context (falta sección) | 🔄 En verificación | 2026-04-22 |
+| [**CATEGORY_IVA_API_GUIDE.md**](./CATEGORY_IVA_API_GUIDE.md) | Categorías e IVA, rutas verificadas | ✅ Completado | 2026-04-22 |
+| [**PRODUCT_DISCOUNTS_GUIDE.md**](./PRODUCT_DISCOUNTS_GUIDE.md) | Descuentos por producto, configuración y aplicación en transacciones | ✅ Completado | 2026-05-19 |
+
+### Inventario y Ajustes
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**INVENTORY_ADJUSTMENTS_PRICE_API_GUIDE.md**](./INVENTORY_ADJUSTMENTS_PRICE_API_GUIDE.md) | Ajustes de inventario, branch context (falta sección) | 🔄 En verificación | 2026-04-22 |
+
+### Costos y Precios
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**COST_PRICING_API_GUIDE.md**](./COST_PRICING_API_GUIDE.md) | Costos y precios, `supplier_id: *string`, BI branch context, guía en inglés con JS | 🔄 En verificación | 2026-04-22 |
+| [**MANUAL_PRICE_ADJUSTMENTS_API_GUIDE.md**](./MANUAL_PRICE_ADJUSTMENTS_API_GUIDE.md) | Ajustes manuales de precio, falta branch context | 🔄 En verificación | 2026-04-22 |
+| [**PRICE_TRANSACTIONS_API_GUIDE.md**](./PRICE_TRANSACTIONS_API_GUIDE.md) | Transacciones de precio, falta branch context | 🔄 En verificación | 2026-04-22 |
+
+### Reservas y Horarios
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**RESERVATION_SCHEDULE_FRONTEND_GUIDE.md**](./RESERVATION_SCHEDULE_FRONTEND_GUIDE.md) | Reservas y horarios, falta branch context | 🔄 En verificación | 2026-04-22 |
+
+### Cajas Registradoras
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**CASH_REGISTER_API_GUIDE.md**](./CASH_REGISTER_API_GUIDE.md) | Cajas registradoras, apertura/cierre, movimientos, pagos, branch context | ✅ Completado | 2026-04-22 |
+
+### Pagos y Monedas
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**PAYMENT_METHOD_CURRENCY_CASH_API_GUIDE.md**](./PAYMENT_METHOD_CURRENCY_CASH_API_GUIDE.md) | Métodos de pago, monedas, tipos de cambio, rutas verificadas | ✅ Completado | 2026-04-22 |
+
+### Multi-Sucursal
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**BRANCH_API_GUIDE.md**](./BRANCH_API_GUIDE.md) | CRUD sucursales, config fiscal, accesos por usuario | ✅ Completado | 2026-04-22 |
+| [**BRANCH_TRANSFER_API_GUIDE.md**](./BRANCH_TRANSFER_API_GUIDE.md) | Transferencias entre sucursales, workflow de 7 estados | ✅ Completado | 2026-04-22 |
+
+### Fiscal y Clasificación
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**TAX_CLASSIFICATION_API_GUIDE.md**](./TAX_CLASSIFICATION_API_GUIDE.md) | Jerarquía IVA (6 niveles), códigos SIFEN, asignación a productos | ✅ Completado | 2026-04-22 |
+
+### Business Intelligence (BI)
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**BI_API_GUIDE.md**](./BI_API_GUIDE.md) | Dashboard, cobranzas, pagos, reportes financieros, analytics, reglas BI branch context, RBAC | ✅ Completado | 2026-04-22 |
 
 ---
 
@@ -80,13 +170,28 @@ Al crear o actualizar un documento en este directorio, verificar:
 
 ---
 
-## Referencias
+## Convenciones de Estado
 
-- `conductor/FRONTEND_DOCUMENTATION_VERIFICATION_PLAN.md` — Plan maestro
-- `conductor/FRONTEND_DOCUMENTATION_VERIFICATION_STATUS.md` — Estado de verificacion
-- `conductor/FRONTEND_DOC_VERIFICATION_REPORT.md` — Reporte final
-- `conductor/FRONTEND_DOCUMENTATION_CORRECTION_PLAN.md` — Plan de correccion (docs/guides/frontend/)
+| Icono | Estado | Significado |
+|-------|--------|-------------|
+| ✅ | Completado | Guía verificada y actualizada al contrato actual |
+| 🔄 | En verificación | Verificada contra código, requiere ajustes menores |
+| 📝 | En corrección | Correcciones en progreso |
+| ⏳ | Pendiente | Aún no verificada |
+| 🔴 | Archivado | Guía obsoleta, movida a `docs/archive/` |
 
 ---
 
-_Actualizado: 2026-05-08 — RESERVATION_SCHEDULE_API.md y MULTI_BRANCH_CONTEXT_GUIDE.md actualizados post-bugfix multi-branch reservas: branch_id en request/response, ownership validation, SQL functions branch-aware._
+## Próximos Pasos
+
+1. **Prioridad 1:** Completar correcciones de guías en verificación (PRODUCT, INVENTORY, COST_PRICING, MANUAL_PRICE_ADJUSTMENTS, PRICE_TRANSACTIONS, RESERVATION)
+2. **Prioridad 2:** Rewrite completo de SECURITY_FRONTEND_INTEGRATION_GUIDE.md (eliminar código JS/TS, estandarizar a plantilla)
+3. **Prioridad 3:** Agregar ejemplos de uso y casos prácticos en las guías base recién añadidas
+4. **Prioridad 4:** Verificar guías restantes no listadas en este índice
+
+---
+
+**Última actualización del índice**: 2026-05-19
+**Total de guías documentadas**: 31
+**Guías completadas**: 22
+**Guías deprecadas**: 2

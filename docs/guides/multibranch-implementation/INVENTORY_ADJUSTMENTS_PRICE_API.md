@@ -1,75 +1,61 @@
-# 📦 API de Ajustes de Inventario
+# API de Ajustes de Inventario
 
 > **Disclaimer:** Esta guía contiene ejemplos JSON y TypeScript/JavaScript para ilustración de payloads y respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
-**Versión:** 4.3  
-**Fecha:** 2026-05-06  
+**Version:** 4.3
 **Endpoint Base:** `http://localhost:5050`
 
 ---
 
-## 📋 Descripción General
+## Descripcion General
 
-Esta API gestiona el sistema de inventarios y ajustes manuales. Permite realizar ajustes de stock, registrar movimientos, validar la consistencia del inventario y generar reportes de discrepancias. La versión 4.0 introduce un sistema de metadatos obligatorios para todas las operaciones, garantizando una trazabilidad y auditoría completas.
+Esta API gestiona el sistema de inventarios y ajustes manuales. Permite realizar ajustes de stock, registrar movimientos, validar la consistencia del inventario y generar reportes de discrepancias. La version 4.0 introduce un sistema de metadatos obligatorios para todas las operaciones, garantizando una trazabilidad y auditoria completas.
 
-### Características Principales
+### Caracteristicas Principales
 
-- ✅ Ajustes de stock manuales con transacciones atómicas.
-- ✅ Creación y gestión de inventarios físicos completos.
-- ✅ Historial detallado de todos los movimientos y ajustes por producto.
-- ✅ Endpoints para validar la consistencia del stock y la integridad del sistema.
-- ✅ Sistema de metadatos con validación opcional y generación automática de plantilla.
-
----
+- Ajustes de stock manuales con transacciones atomicas.
+- Creacion y gestion de inventarios fisicos completos.
+- Historial detallado de todos los movimientos y ajustes por producto.
+- Endpoints para validar la consistencia del stock y la integridad del sistema.
+- Sistema de metadatos con validacion opcional y generacion automatica de plantilla.
 
 ## 🔧 Configuración General
 
 ### Base URL
-
-```
 http://localhost:5050
-```
 
-### Autenticación
-
-- Header: `Authorization: Bearer <jwt_token>`
-
-### Headers requeridos (cuando aplica)
-
+### Headers Requeridos
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
+
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
+
+### Formato de Respuesta Estándar
+`{ success: bool, data?, message?, error?, pagination? }`
+
+### Formato de Fechas
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params: `YYYY-MM-DD`
+
+### Paginación Estándar
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ### Contexto de Sucursal
 
 - Query param: `?branch_id=<id>`
 - O header: `X-Branch-ID: <id>`
 - Fallback: `active_branch` del token JWT
-- Restricción: sucursal debe estar en `allowed_branches`
-
-> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
-
-## Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
-
-`{ success: bool, data?, message?, error?, pagination? }`
-
-## Paginación estándar
-
-`{ page, page_size, total_items, total_pages, has_next, has_prev }`
+- Restriccion: sucursal debe estar en `allowed_branches`
 
 ---
 
-## 📋 Validación de Metadata
+## Validacion de Metadata
 
-El campo `metadata` en ajustes de stock es validado contra un JSON Schema en el backend. Si la estructura no es válida, el API devuelve un error 400 con detalles.
+El campo `metadata` en ajustes de stock es validado contra un JSON Schema en el backend. Si la estructura no es valida, el API devuelve un error 400 con detalles.
 
-### Estructura Válida para Metadata de Ajuste de Stock
+### Estructura Valida para Metadata de Ajuste de Stock
 
 ```json
 {
@@ -87,14 +73,14 @@ El campo `metadata` en ajustes de stock es validado contra un JSON Schema en el 
 }
 ```
 
-### Ejemplo de Metadata Válida
+### Ejemplo de Metadata Valida
 
 ```json
 {
   "adjustment_type": "INVENTORY_COUNT",
   "location": "Almacen Principal",
   "verified_by": "supervisor_01",
-  "notes": "Conteo físico realizado al final del turno"
+  "notes": "Conteo fisico realizado al final del turno"
 }
 ```
 
@@ -109,11 +95,11 @@ El campo `metadata` en ajustes de stock es validado contra un JSON Schema en el 
 
 ---
 
-## 📋 Validación de Metadata de Inventario
+## Validacion de Metadata de Inventario
 
 El campo `metadata` en inventarios es validado contra un JSON Schema en el backend.
 
-### Estructura Válida para Metadata de Inventario
+### Estructura Valida para Metadata de Inventario
 
 ```json
 {
@@ -138,12 +124,12 @@ El campo `metadata` en inventarios es validado contra un JSON Schema en el backe
 }
 ```
 
-### Ejemplo de Metadata de Inventario Válida
+### Ejemplo de Metadata de Inventario Valida
 
 ```json
 {
   "inventory_type": "MONTHLY",
-  "location": "Almacén Central",
+  "location": "Almacen Central",
   "warehouse": "A",
   "shelf": "A-1",
   "verified_by": "supervisor_01",
@@ -153,41 +139,41 @@ El campo `metadata` en inventarios es validado contra un JSON Schema en el backe
 }
 ```
 
-### Generación Automática
+### Generacion Automatica
 
-Si no se envía `metadata` o se envía un objeto vacío `{}`, el backend genera una plantilla por defecto automáticamente.
+Si no se envia `metadata` o se envia un objeto vacio `{}`, el backend genera una plantilla por defecto automaticamente.
 
 **Para Ajustes Manuales (`POST /manual_adjustment/`):**
 
-- `operator`: ID del usuario extraído del JWT
+- `operator`: ID del usuario extraido del JWT
 - `reason_category`: "MANUAL_ADJUSTMENT"
-- `notes`: Copia del campo `reason` si está presente
+- `notes`: Copia del campo `reason` si esta presente
 
 **Para Inventarios (`POST /inventory/`):**
 
-- `operator`: ID del usuario extraído del JWT
+- `operator`: ID del usuario extraido del JWT
 - `reason_category`: "INVENTORY_CHECK"
 - `items_count`: Cantidad de items en el inventario
 - `status`: "COMPLETED"
 
 ---
 
-## 📊 Modelos de Datos
+## Modelos de Datos
 
-A continuación se detallan las estructuras de datos principales utilizadas en la API.
+A continuacion se detallan las estructuras de datos principales utilizadas en la API.
 
 ### ManualAdjustment
 
 ```typescript
 interface ManualAdjustment {
-  id: number // ID único del ajuste
-  product_id: string // ID del producto ajustado
-  old_quantity: number // Cantidad antes del ajuste
-  new_quantity: number // Cantidad nueva final
-  adjustment_date: string // Fecha del ajuste (ISO 8601)
-  reason: string // Motivo del ajuste
-  metadata: object | null // Metadatos de trazabilidad
-  user_id: string // ID del usuario que realizó el ajuste
+  id: number                    // ID unico del ajuste
+  product_id: string            // ID del producto ajustado
+  old_quantity: number          // Cantidad antes del ajuste
+  new_quantity: number          // Cantidad nueva final
+  adjustment_date: string       // Fecha del ajuste (ISO 8601)
+  reason: string                // Motivo del ajuste
+  metadata: object | null       // Metadatos de trazabilidad
+  user_id: string               // ID del usuario que realizo el ajuste
 }
 ```
 
@@ -199,7 +185,7 @@ interface Inventory {
   user_id: string
   check_date: string // ISO 8601
   state: boolean // `true` para activo, `false` para invalidado
-  metadata: object // Metadatos opcionales de la operación
+  metadata: object // Metadatos opcionales de la operacion
 }
 
 interface InventoryItem {
@@ -256,7 +242,7 @@ interface ProductAdjustmentHistory {
 
 ---
 
-## 🔗 Endpoints de la API
+## Endpoints de la API
 
 ### Ajustes Manuales
 
@@ -264,7 +250,7 @@ interface ProductAdjustmentHistory {
 
 **Endpoint:** `POST /manual_adjustment/`
 
-Crea un nuevo ajuste manual de stock. El sistema genera una transacción de stock de tipo "ADJUSTMENT" de forma automática y atómica.
+Crea un nuevo ajuste manual de stock. El sistema genera una transaccion de stock de tipo "ADJUSTMENT" de forma automatica y atomica.
 
 **Request Body:**
 
@@ -272,7 +258,7 @@ Crea un nuevo ajuste manual de stock. El sistema genera una transacción de stoc
 {
   "product_id": "PROD_ABC_001",
   "new_quantity": 150.5,
-  "reason": "Ajuste por conteo físico",
+  "reason": "Ajuste por conteo fisico",
   "metadata": {
     "source": "manual_adjustment",
     "timestamp": "2025-11-20T15:00:00Z",
@@ -284,14 +270,14 @@ Crea un nuevo ajuste manual de stock. El sistema genera una transacción de stoc
 }
 ```
 
-**Parámetros:**
+**Parametros:**
 
-| Campo          | Tipo   | Requerido | Descripción                                                                                                  |
-| -------------- | ------ | --------- | ------------------------------------------------------------------------------------------------------------ |
-| `product_id`   | string | ✅ Sí     | ID del producto a ajustar. Debe existir.                                                                     |
-| `new_quantity` | int    | ✅ Sí     | La nueva cantidad final del producto (≥ 0).                                                                  |
-| `reason`       | string | ✅ Sí     | Motivo claro y descriptivo del ajuste.                                                                       |
-| `metadata`     | object | ❌ No     | Objeto con datos de trazabilidad. Si no se proporciona, se genera automáticamente. Ver sección de Metadatos. |
+| Campo | Tipo | Requerido | Descripcion |
+|-------|------|-----------|-------------|
+| `product_id` | string | Si | ID del producto a ajustar. Debe existir. |
+| `new_quantity` | int | Si | La nueva cantidad final del producto (>= 0). |
+| `reason` | string | Si | Motivo claro y descriptivo del ajuste. |
+| `metadata` | object | No | Objeto con datos de trazabilidad. Si no se proporciona, se genera automaticamente. Ver seccion de Metadatos. |
 
 **Response (200 OK):** `MessageResponse`
 
@@ -303,31 +289,31 @@ Crea un nuevo ajuste manual de stock. El sistema genera una transacción de stoc
 
 **Errores Posibles:**
 
-| Error                              | HTTP Status | Descripción                                              |
-| ---------------------------------- | ----------- | -------------------------------------------------------- |
-| `"Invalid request body"`           | 400         | El JSON es inválido o faltan campos requeridos.          |
-| `"Unauthorized"`                   | 401         | El token JWT es inválido, ha expirado o no fue provisto. |
-| `"Product not found"`              | 404         | El `product_id` enviado no existe.                       |
-| `"Error creating adjustment: ..."` | 500         | Error interno del servidor al procesar el ajuste.        |
+| Error | HTTP Status | Descripcion |
+|-------|-------------|-------------|
+| `"Invalid request body"` | 400 | El JSON es invalido o faltan campos requeridos. |
+| `"Unauthorized"` | 401 | El token JWT es invalido, ha expirado o no fue provisto. |
+| `"Product not found"` | 404 | El `product_id` enviado no existe. |
+| `"Error creating adjustment: ..."` | 500 | Error interno del servidor al procesar el ajuste. |
 
 #### 2. Obtener Historial de Ajustes de Producto
 
 **Endpoint:** `GET /manual_adjustment/product/{productId}/history`
 
-Obtiene todos los ajustes de precio y stock para un producto específico.
+Obtiene todos los ajustes de precio y stock para un producto especifico.
 
-**Parámetros de URL:**
+**Parametros de URL:**
 
-| Campo       | Tipo   | Descripción                  |
-| ----------- | ------ | ---------------------------- |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
 | `productId` | string | ID del producto a consultar. |
 
 **Query Parameters:**
 
-| Campo    | Tipo   | Requerido | Descripción                                |
-| -------- | ------ | --------- | ------------------------------------------ |
-| `limit`  | number | ❌ No     | Número máximo de registros (default: 50).  |
-| `offset` | number | ❌ No     | Número de registros a saltar (default: 0). |
+| Campo | Tipo | Requerido | Descripcion |
+|-------|------|-----------|-------------|
+| `limit` | number | No | Numero maximo de registros (default: 50). |
+| `offset` | number | No | Numero de registros a saltar (default: 0). |
 
 **Response (200 OK):**
 
@@ -343,7 +329,7 @@ Obtiene todos los ajustes de precio y stock para un producto específico.
       "value_change": 10,
       "user_id": "jJkV4F6HR",
       "adjustment_date": "2025-11-20T11:25:49.176714Z",
-      "reason": "Configuración de stock inicial",
+      "reason": "Configuracion de stock inicial",
       "metadata": {
         "notes": "Stock inicial",
         "source": "manual_adjustment",
@@ -360,7 +346,7 @@ Obtiene todos los ajustes de precio y stock para un producto específico.
       "value_change": 10000,
       "user_id": "jJkV4F6HR",
       "adjustment_date": "2025-11-13T13:32:21.305547Z",
-      "reason": "Declaración de precio inicial para carga de inventario",
+      "reason": "Declaracion de precio inicial para carga de inventario",
       "metadata": {
         "source": "manual_api",
         "new_price": 10000,
@@ -388,7 +374,7 @@ Crea un nuevo ajuste de precio para un producto. El sistema registra el cambio d
   "product_id": "PROD_ABC_001",
   "new_price": 12500.0,
   "unit": "unit",
-  "reason": "Actualización de precio de proveedor",
+  "reason": "Actualizacion de precio de proveedor",
   "metadata": {
     "source": "manual_price_adjustment",
     "operator": "marcelo_p",
@@ -397,15 +383,15 @@ Crea un nuevo ajuste de precio para un producto. El sistema registra el cambio d
 }
 ```
 
-**Parámetros:**
+**Parametros:**
 
-| Campo        | Tipo   | Requerido | Descripción                                 |
-| ------------ | ------ | --------- | ------------------------------------------- |
-| `product_id` | string | ✅ Sí     | ID del producto a ajustar. Debe existir.    |
-| `new_price`  | number | ✅ Sí     | Nuevo precio (debe ser ≥ 0).                |
-| `unit`       | string | ❌ No     | Unidad de medida (ej. "unit", "kg").        |
-| `reason`     | string | ✅ Sí     | Motivo del ajuste de precio.                |
-| `metadata`   | object | ❌ No     | Objeto con datos de trazabilidad. Opcional. |
+| Campo | Tipo | Requerido | Descripcion |
+|-------|------|-----------|-------------|
+| `product_id` | string | Si | ID del producto a ajustar. Debe existir. |
+| `new_price` | number | Si | Nuevo precio (debe ser >= 0). |
+| `unit` | string | No | Unidad de medida (ej. "unit", "kg"). |
+| `reason` | string | Si | Motivo del ajuste de precio. |
+| `metadata` | object | No | Objeto con datos de trazabilidad. Opcional. |
 
 **Response (200 OK):** `MessageResponse`
 
@@ -417,21 +403,21 @@ Crea un nuevo ajuste de precio para un producto. El sistema registra el cambio d
 
 **Errores Posibles:**
 
-| Error                                    | HTTP Status | Descripción                                              |
-| ---------------------------------------- | ----------- | -------------------------------------------------------- |
-| `"Invalid request body"`                 | 400         | El JSON es inválido o faltan campos requeridos.          |
-| `"Unauthorized"`                         | 401         | El token JWT es inválido, ha expirado o no fue provisto. |
-| `"Product not found"`                    | 404         | El `product_id` enviado no existe.                       |
-| `"new_price must be non-negative"`       | 400         | El precio no puede ser negativo.                         |
-| `"Error creating price adjustment: ..."` | 500         | Error interno del servidor.                              |
+| Error | HTTP Status | Descripcion |
+|-------|-------------|-------------|
+| `"Invalid request body"` | 400 | El JSON es invalido o faltan campos requeridos. |
+| `"Unauthorized"` | 401 | El token JWT es invalido, ha expirado o no fue provisto. |
+| `"Product not found"` | 404 | El `product_id` enviado no existe. |
+| `"new_price must be non-negative"` | 400 | El precio no puede ser negativo. |
+| `"Error creating price adjustment: ..."` | 500 | Error interno del servidor. |
 
-### Gestión de Inventarios
+### Gestion de Inventarios
 
-#### 3. Crear un Inventario Físico
+#### 3. Crear un Inventario Fisico
 
 **Endpoint:** `POST /inventory/`
 
-Crea un nuevo inventario físico. El sistema compara las cantidades contadas (`quantity_checked`) con el stock actual y genera transacciones de ajuste para cada producto con discrepancias.
+Crea un nuevo inventario fisico. El sistema compara las cantidades contadas (`quantity_checked`) con el stock actual y genera transacciones de ajuste para cada producto con discrepancias.
 
 **Request Body:**
 
@@ -459,14 +445,14 @@ Crea un nuevo inventario físico. El sistema compara las cantidades contadas (`q
 }
 ```
 
-**Parámetros:**
+**Parametros:**
 
-| Campo                      | Tipo                   | Requerido | Descripción                                                                        |
-| -------------------------- | ---------------------- | --------- | ---------------------------------------------------------------------------------- |
-| `items`                    | `InventoryItemInput[]` | ✅ Sí     | Array de productos contados.                                                       |
-| `items[].product_id`       | string                 | ✅ Sí     | ID del producto.                                                                   |
-| `items[].quantity_checked` | number                 | ✅ Sí     | Cantidad física contada (≥ 0).                                                     |
-| `metadata`                 | object                 | ❌ No     | Objeto con datos de trazabilidad. Si no se proporciona, se genera automáticamente. |
+| Campo | Tipo | Requerido | Descripcion |
+|-------|------|-----------|-------------|
+| `items` | `InventoryItemInput[]` | Si | Array de productos contados. |
+| `items[].product_id` | string | Si | ID del producto. |
+| `items[].quantity_checked` | number | Si | Cantidad fisica contada (>= 0). |
+| `metadata` | object | No | Objeto con datos de trazabilidad. Si no se proporciona, se genera automaticamente. |
 
 **Response (200 OK):**
 
@@ -480,13 +466,13 @@ Crea un nuevo inventario físico. El sistema compara las cantidades contadas (`q
 
 **Endpoint:** `PUT /inventory/{id}`
 
-Invalida un inventario existente y revierte automáticamente todas las transacciones de stock que generó.
+Invalida un inventario existente y revierte automaticamente todas las transacciones de stock que genero.
 
-**Parámetros de URL:**
+**Parametros de URL:**
 
-| Campo | Tipo   | Descripción                    |
-| ----- | ------ | ------------------------------ |
-| `id`  | number | ID del inventario a invalidar. |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `id` | number | ID del inventario a invalidar. |
 
 **Response (200 OK):**
 
@@ -504,12 +490,12 @@ Invalida un inventario existente y revierte automáticamente todas las transacci
 
 Obtiene una lista paginada de todos los inventarios realizados.
 
-**Parámetros de URL:**
+**Parametros de URL:**
 
-| Campo      | Tipo   | Descripción                         |
-| ---------- | ------ | ----------------------------------- |
-| `page`     | number | Número de página a obtener.         |
-| `pageSize` | number | Cantidad de inventarios por página. |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `page` | number | Numero de pagina a obtener. |
+| `pageSize` | number | Cantidad de inventarios por pagina. |
 
 **Response (200 OK):** `Inventory[]`
 
@@ -544,13 +530,13 @@ Obtiene una lista paginada de todos los inventarios realizados.
 
 **Endpoint:** `GET /inventory/{id}`
 
-Obtiene la información detallada de un inventario, incluyendo la cabecera y todos sus items.
+Obtiene la informacion detallada de un inventario, incluyendo la cabecera y todos sus items.
 
-**Parámetros de URL:**
+**Parametros de URL:**
 
-| Campo | Tipo   | Descripción                    |
-| ----- | ------ | ------------------------------ |
-| `id`  | number | ID del inventario a consultar. |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `id` | number | ID del inventario a consultar. |
 
 **Response (200 OK):** `DetailedInventory`
 
@@ -590,10 +576,10 @@ Obtiene la información detallada de un inventario, incluyendo la cabecera y tod
 
 Obtiene el historial completo de movimientos de stock para un producto, enriquecido con nombres de producto y usuario.
 
-**Parámetros de URL:**
+**Parametros de URL:**
 
-| Campo        | Tipo   | Descripción                  |
-| ------------ | ------ | ---------------------------- |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
 | `product_id` | string | ID del producto a consultar. |
 
 **Response (200 OK):** `StockTransaction[]` (enriquecido)
@@ -611,9 +597,9 @@ Obtiene el historial completo de movimientos de stock para un producto, enriquec
     "reference_type": "ADJUSTMENT",
     "reference_id": "45",
     "user_id": "USR_789",
-    "user_name": "Juan Pérez",
+    "user_name": "Juan Perez",
     "transaction_date": "2025-09-06T12:00:00Z",
-    "reason": "Ajuste por conteo físico",
+    "reason": "Ajuste por conteo fisico",
     "metadata": {
       "source": "manual_adjustment",
       "operator": "warehouse_manager"
@@ -624,17 +610,17 @@ Obtiene el historial completo de movimientos de stock para un producto, enriquec
 
 ---
 
-#### 8. Registrar Transacción de Stock
+#### 8. Registrar Transaccion de Stock
 
 **`POST /stock-transactions/`**
 
 Registra un nuevo movimiento de stock (entrada, salida, ajuste, transferencia).
 
-#### 9. Obtener Transacción de Stock por ID
+#### 9. Obtener Transaccion de Stock por ID
 
 **`GET /stock-transactions/{id}`**
 
-Obtiene una transacción de stock específica.
+Obtiene una transaccion de stock especifica.
 
 #### 10. Validar Consistencia de Stock
 
@@ -646,13 +632,13 @@ Verifica que los saldos de stock sean consistentes con el historial de transacci
 
 **`GET /stock-transactions/discrepancy-report`**
 
-Reporte de discrepancias entre stock físico y stock teórico.
+Reporte de discrepancias entre stock fisico y stock teorico.
 
 #### 12. Resumen de Movimientos
 
 **`GET /stock-transactions/movement-summary`**
 
-Resumen agregado de movimientos de stock (entradas, salidas, neto) por período.
+Resumen agregado de movimientos de stock (entradas, salidas, neto) por periodo.
 
 #### 13. Transacciones por Rango de Fechas
 
@@ -660,83 +646,83 @@ Resumen agregado de movimientos de stock (entradas, salidas, neto) por período.
 
 Lista transacciones de stock filtradas por rango de fechas (`start_date`, `end_date`).
 
-#### 14. Tipos de Transacción
+#### 14. Tipos de Transaccion
 
 **`GET /stock-transactions/types`**
 
-Lista los tipos de transacción de stock soportados.
+Lista los tipos de transaccion de stock soportados.
 
 ---
 
-## 🔍 Validaciones y Reglas de Negocio
+## Validaciones y Reglas de Negocio
 
 ### Pre-Procesamiento (Validar en Frontend)
 
-1.  ✅ Para **Ajustes Manuales**, `new_quantity` debe ser un número entero mayor o igual a cero.
-2.  ✅ Para **Inventarios**, cada `quantity_checked` debe ser un número mayor o igual a cero.
-3.  ✅ El campo `reason` para ajustes debe tener entre 5 y 200 caracteres.
-4.  ⚠️ El objeto `metadata` es **opcional**. Si no se proporciona, el backend genera una plantilla automáticamente con el ID del operador y categoría "MANUAL_ADJUSTMENT".
-5.  ✅ Para **Transacciones de Stock**, `quantity_change` **no puede ser cero**.
+1. Para **Ajustes Manuales**, `new_quantity` debe ser un numero entero mayor o igual a cero.
+2. Para **Inventarios**, cada `quantity_checked` debe ser un numero mayor o igual a cero.
+3. El campo `reason` para ajustes debe tener entre 5 y 200 caracteres.
+4. El objeto `metadata` es **opcional**. Si no se proporciona, el backend genera una plantilla automaticamente con el ID del operador y categoria "MANUAL_ADJUSTMENT".
+5. Para **Transacciones de Stock**, `quantity_change` **no puede ser cero**.
 
 ### Metadatos (Opcionales)
 
-Todas las operaciones que modifican el stock (`/manual_adjustment`, `/inventory`) soportan un objeto `metadata` con estructura opcional. Si no se proporciona, el backend genera una plantilla automáticamente.
+Todas las operaciones que modifican el stock (`/manual_adjustment`, `/inventory`) soportan un objeto `metadata` con estructura opcional. Si no se proporciona, el backend genera una plantilla automaticamente.
 
-**Estructura Mínima Recomendada para `metadata`:**
+**Estructura Minima Recomendada para `metadata`:**
 
 ```typescript
 interface MetadataMinima {
-  source: string // Origen de la operación. E.g., "physical_count", "manual_adjustment"
-  timestamp?: string // Fecha y hora en formato ISO 8601. E.g., new Date().toISOString()
-  operator: string // ID o nombre del usuario/operador que realiza la acción
+  source: string      // Origen de la operacion. E.g., "physical_count", "manual_adjustment"
+  timestamp?: string  // Fecha y hora en formato ISO 8601. E.g., new Date().toISOString()
+  operator: string    // ID o nombre del usuario/operador que realiza la accion
 }
 ```
 
-**Campos Adicionales Opcionales por Operación:**
+**Campos Adicionales Opcionales por Operacion:**
 
 - **Para Inventarios (`POST /inventory`):**
-  - `location`: string (Ubicación física donde se hizo el conteo).
-  - `counting_method`: string (Método usado: `manual`, `barcode_scanner`, `rfid`).
-  - `verification`: string (Nivel de verificación: `single_check`, `double_check`).
+  - `location`: string (Ubicacion fisica donde se hizo el conteo).
+  - `counting_method`: string (Metodo usado: `manual`, `barcode_scanner`, `rfid`).
+  - `verification`: string (Nivel de verificacion: `single_check`, `double_check`).
 
 - **Para Ajustes Manuales (`POST /manual_adjustment`):**
-  - `reason_category`: string (Categoría del motivo. Ver `REASON_OPTIONS`).
-  - `approval_level`: string (Nivel de aprobación: `operator`, `supervisor`, `manager`).
+  - `reason_category`: string (Categoria del motivo. Ver `REASON_OPTIONS`).
+  - `approval_level`: string (Nivel de aprobacion: `operator`, `supervisor`, `manager`).
 
-**Generación Automática:**
-Si no se envía `metadata` o se envía un objeto vacío `{}`, el backend genera una plantilla por defecto automáticamente.
+**Generacion Automatica:**
+Si no se envia `metadata` o se envia un objeto vacio `{}`, el backend genera una plantilla por defecto automaticamente.
 
 **Para Ajustes Manuales (`POST /manual_adjustment/`):**
 
-- `operator`: ID del usuario extraído del JWT
+- `operator`: ID del usuario extraido del JWT
 - `reason_category`: "MANUAL_ADJUSTMENT"
-- `notes`: Copia del campo `reason` si está presente
+- `notes`: Copia del campo `reason` si esta presente
 
 **Para Inventarios (`POST /inventory/`):**
 
-- `operator`: ID del usuario extraído del JWT
+- `operator`: ID del usuario extraido del JWT
 - `reason_category`: "INVENTORY_CHECK"
 - `items_count`: Cantidad de items en el inventario
 - `status`: "COMPLETED"
 
 ---
 
-## 🎯 Recomendaciones de Implementación
+## Recomendaciones de Implementacion
 
 ### 1. Selectores de UI para `reason` y `metadata`
 
-Para facilitar la carga de datos, se recomienda usar menús desplegables (selects) en el frontend.
+Para facilitar la carga de datos, se recomienda usar menus desplegables (selects) en el frontend.
 
 **Opciones para `reason_category` en Ajustes de Stock:**
 
 ```javascript
 const REASON_OPTIONS = [
   { value: 'INVENTORY_COUNT', label: 'Conteo de inventario', icon: '📊' },
-  { value: 'DAMAGE', label: 'Producto dañado', icon: '❌' },
+  { value: 'DAMAGE', label: 'Producto danado', icon: '❌' },
   { value: 'EXPIRY', label: 'Producto vencido', icon: '⏰' },
-  { value: 'THEFT', label: 'Pérdida/Robo', icon: '🚫' },
-  { value: 'RETURN', label: 'Devolución', icon: '↩️' },
-  { value: 'CORRECTION', label: 'Corrección', icon: '🔧' },
+  { value: 'THEFT', label: 'Perdida/Robo', icon: '🚫' },
+  { value: 'RETURN', label: 'Devolucion', icon: '↩️' },
+  { value: 'CORRECTION', label: 'Correccion', icon: '🔧' },
   { value: 'INITIAL_COUNT', label: 'Conteo inicial', icon: '🏁' },
   { value: 'MANUAL_ADJUSTMENT', label: 'Ajuste manual (default)', icon: '📝' },
 ]
@@ -747,24 +733,23 @@ const REASON_OPTIONS = [
 ```javascript
 const ADJUSTMENT_TYPE_OPTIONS = [
   { value: 'INVENTORY_COUNT', label: 'Conteo de inventario' },
-  { value: 'DAMAGE', label: 'Daño' },
+  { value: 'DAMAGE', label: 'Dano' },
   { value: 'EXPIRY', label: 'Vencimiento' },
-  { value: 'THEFT', label: 'Robo/Pérdida' },
-  { value: 'RETURN', label: 'Devolución' },
-  { value: 'CORRECTION', label: 'Corrección' },
+  { value: 'THEFT', label: 'Robo/Perdida' },
+  { value: 'RETURN', label: 'Devolucion' },
+  { value: 'CORRECTION', label: 'Correccion' },
   { value: 'INITIAL_COUNT', label: 'Conteo inicial' },
 ]
 ```
 
-### 2. Función Helper para construir `metadata`
+### 2. Funcion Helper para construir `metadata`
 
-Una función helper en el frontend puede simplificar la creación de los `metadata` obligatorios.
+Una funcion helper en el frontend puede simplificar la creacion de los `metadata` obligatorios.
 
 ```javascript
 function createAdjustmentMetadata(reasonCategory, operatorId, customData = {}) {
-  // Validación básica en frontend
   if (!reasonCategory || !operatorId) {
-    throw new Error('La categoría del motivo y el operador son obligatorios.')
+    throw new Error('La categoria del motivo y el operador son obligatorios.')
   }
 
   const baseMetadata = {
@@ -772,7 +757,7 @@ function createAdjustmentMetadata(reasonCategory, operatorId, customData = {}) {
     timestamp: new Date().toISOString(),
     operator: operatorId,
     reason_category: reasonCategory,
-    approval_level: 'operator', // Default, puede ser sobreescrito
+    approval_level: 'operator',
   }
 
   return { ...baseMetadata, ...customData }
@@ -783,27 +768,24 @@ const metadata = createAdjustmentMetadata('DAMAGED_GOODS', 'user_123', {
   supervisor: 'super_456',
   documentation: 'REF-001',
 })
-
-// `metadata` está listo para ser incluido en el request body
-// de `POST /manual_adjustment/`.
 ```
 
-### 3. Sincronización de Estado Post-Operación
+### 3. Sincronizacion de Estado Post-Operacion
 
-- **Después de un ajuste o inventario exitoso**, es crucial invalidar los datos de stock en caché y volver a solicitar el historial de transacciones (`GET /stock-transactions/product/{id}`) para reflejar los cambios.
-- Muestre una notificación al usuario indicando que la operación fue exitosa y que el stock ha sido actualizado.
-
----
-
-## ❌ Códigos de Error Comunes
-
-| Error                   | HTTP Status | Descripción                                                 | Solución                                                               |
-| ----------------------- | ----------- | ----------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `Bad Request`           | 400         | Faltan campos, tipos de dato incorrectos o JSON malformado. | Validar el request body en el frontend antes de enviarlo.              |
-| `Unauthorized`          | 401         | Token JWT inválido, expirado o no provisto.                 | Renovar el token o asegurar que se envíe en el header `Authorization`. |
-| `Not Found`             | 404         | El recurso (ej. `product_id`) no existe.                    | Verificar que los IDs sean correctos antes de la operación.            |
-| `Internal Server Error` | 500         | Error inesperado en el backend.                             | Reportar el error. El frontend no puede solucionarlo.                  |
+- **Despues de un ajuste o inventario exitoso**, es crucial invalidar los datos de stock en cache y volver a solicitar el historial de transacciones (`GET /stock-transactions/product/{id}`) para reflejar los cambios.
+- Muestre una notificacion al usuario indicando que la operacion fue exitosa y que el stock ha sido actualizado.
 
 ---
 
-_Última actualización: 2026-05-06 — FASE 3 verificada. Agregados 7 endpoints de stock-transactions (POST /, GET /{id}, validate-consistency, discrepancy-report, movement-summary, by-date, types). 14 endpoints documentados._
+## Codigos de Error Comunes
+
+| Error | HTTP Status | Descripcion | Solucion |
+|-------|-------------|-------------|----------|
+| `Bad Request` | 400 | Faltan campos, tipos de dato incorrectos o JSON malformado. | Validar el request body en el frontend antes de enviarlo. |
+| `Unauthorized` | 401 | Token JWT invalido, expirado o no provisto. | Renovar el token o asegurar que se envie en el header `Authorization`. |
+| `Not Found` | 404 | El recurso (ej. `product_id`) no existe. | Verificar que los IDs sean correctos antes de la operacion. |
+| `Internal Server Error` | 500 | Error inesperado en el backend. | Reportar el error. El frontend no puede solucionarlo. |
+
+---
+
+_Ultima actualizacion: 2026-05-19_

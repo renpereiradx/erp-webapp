@@ -1,9 +1,9 @@
 import { apiClient } from './api';
-import { telemetry } from '../utils/telemetry';
 import { 
-  PricingInfo, 
-  ProductCost,
-  API_ENDPOINTS 
+  API_ENDPOINTS,
+  CostTransactionRequest,
+  CostManualAdjustmentRequest,
+  CostTransactionResponse
 } from '../types';
 
 /**
@@ -14,7 +14,7 @@ export const costPricingService = {
   /**
    * Obtiene información completa de precios y costos de un producto.
    */
-  async getPricingInfo(productId: string, params: { branch_id?: number } = {}): Promise<{ data: PricingInfo }> {
+  async getPricingInfo(productId: string, params: { branch_id?: number } = {}): Promise<{ data: any }> {
     try {
       return await apiClient.get(API_ENDPOINTS.PRICING_INFO(productId), { params });
     } catch (error: any) {
@@ -38,7 +38,7 @@ export const costPricingService = {
   /**
    * Obtiene el último costo de compra de un producto.
    */
-  async getLastCost(productId: string, params: { branch_id?: number } = {}): Promise<{ data: ProductCost }> {
+  async getLastCost(productId: string, params: { branch_id?: number } = {}): Promise<{ data: any }> {
     try {
       return await apiClient.get(API_ENDPOINTS.COSTS_LAST(productId), { params });
     } catch (error: any) {
@@ -86,7 +86,7 @@ export const costPricingService = {
   /**
    * Obtiene los métodos de cálculo de costos disponibles.
    */
-  async getCostMethods(): Promise<{ methods: any[] }> {
+  async getCostMethods(productId: string): Promise<{ methods: any[] }> {
     try {
       return await apiClient.get(API_ENDPOINTS.COST_METHODS(productId));
     } catch (error: any) {
@@ -115,6 +115,66 @@ export const costPricingService = {
       return await apiClient.get(API_ENDPOINTS.GLOBAL_COST_TRENDS, { params });
     } catch (error: any) {
       console.error('Error fetching global cost trends:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Registrar una transacción de costo (POST /cost-transactions)
+   */
+  async registerCostTransaction(data: CostTransactionRequest): Promise<{ success: boolean; data: CostTransactionResponse }> {
+    try {
+      return await apiClient.post(API_ENDPOINTS.COST_TRANSACTIONS, data);
+    } catch (error: any) {
+      console.error('Error registering cost transaction:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Ajuste manual de costo (POST /cost-transactions/manual-adjustment)
+   */
+  async registerManualCostAdjustment(data: CostManualAdjustmentRequest): Promise<{ success: boolean; data: CostTransactionResponse }> {
+    try {
+      return await apiClient.post(API_ENDPOINTS.COST_TRANSACTIONS_MANUAL_ADJUSTMENT, data);
+    } catch (error: any) {
+      console.error('Error registering manual cost adjustment:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Historial de transacciones de costo de un producto (GET /cost-transactions/product/{id}/history)
+   */
+  async getCostTransactionHistory(productId: string, params: { unit?: string; limit?: number; offset?: number } = {}): Promise<{ history: CostTransactionResponse[]; count: number }> {
+    try {
+      return await apiClient.get(API_ENDPOINTS.COST_TRANSACTIONS_HISTORY(productId), { params });
+    } catch (error: any) {
+      console.error('Error fetching cost transaction history:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Transacciones de costo por rango de fechas (GET /cost-transactions/by-date)
+   */
+  async getCostTransactionsByDate(params: { start_date: string; end_date: string; limit?: number; offset?: number }): Promise<{ transactions: CostTransactionResponse[]; count: number }> {
+    try {
+      return await apiClient.get(API_ENDPOINTS.COST_TRANSACTIONS_BY_DATE, { params });
+    } catch (error: any) {
+      console.error('Error fetching cost transactions by date:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtener una transacción de costo por ID (GET /cost-transactions/{id})
+   */
+  async getCostTransactionById(id: number | string): Promise<{ data: CostTransactionResponse }> {
+    try {
+      return await apiClient.get(API_ENDPOINTS.COST_TRANSACTIONS_BY_ID(id));
+    } catch (error: any) {
+      console.error(`Error fetching cost transaction ${id}:`, error);
       throw error;
     }
   }

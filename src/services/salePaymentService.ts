@@ -135,9 +135,21 @@ export const salePaymentService = {
     }
     const startTime = Date.now();
 
+    // Normalizar datos para asegurar tipos numéricos en el backend (Go)
+    const normalizedData = {
+      ...paymentData,
+      amount_received: paymentData.amount_received ? Number(paymentData.amount_received) : 0,
+      payment_method_id: paymentData.payment_method_id ? Number(paymentData.payment_method_id) : (paymentData.paymentMethodId ? Number(paymentData.paymentMethodId) : 0),
+      cash_register_id: paymentData.cash_register_id && String(paymentData.cash_register_id).trim() !== '' ? Number(paymentData.cash_register_id) : null,
+    };
+
+    if (normalizedData.cash_register_id === null || isNaN(normalizedData.cash_register_id) || normalizedData.cash_register_id <= 0) {
+      delete normalizedData.cash_register_id;
+    }
+
     try {
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.processSalePaymentCashRegister(paymentData);
+        return await apiClient.processSalePaymentCashRegister(normalizedData);
       });
 
       telemetry.record('sale_payment.service.cash_register_payment', {

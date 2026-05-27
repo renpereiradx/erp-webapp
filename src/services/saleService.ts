@@ -491,7 +491,7 @@ export const saleService = {
         return { success: false, error: 'Validación de dominio fallida', details: validation.errors };
       }
 
-      const response = await apiClient.createSale(saleData)
+      const response = await apiClient.createSaleWithUnits(saleData)
 
       const saleId =
         response?.sale_id ||
@@ -527,6 +527,46 @@ export const saleService = {
       return { success: true, data: response }
     } catch (error: any) {
       console.error(`Error reverting sale ${id}:`, error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  async updateSale(id: string | number, saleData: any) {
+    try {
+      const response = await apiClient.makeRequest(`/sale/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(saleData)
+      })
+      return { success: true, data: response }
+    } catch (error: any) {
+      console.error(`Error updating sale ${id}:`, error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  async completeSale(id: string, paymentData: any) {
+    return this.processPayment(id, paymentData)
+  },
+
+  async refundSale(id: string | number, refundData: any) {
+    try {
+      const response = await apiClient.makeRequest(`/sale/${id}/refund`, {
+        method: 'POST',
+        body: JSON.stringify(refundData)
+      })
+      return { success: true, data: response }
+    } catch (error: any) {
+      console.error(`Error refunding sale ${id}:`, error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  async calculateTotal(items: any[], clientId: string | null = null) {
+    try {
+      const totals = this.calculateLocalTotals(items)
+      return { success: true, data: totals }
+    } catch (error: any) {
+      console.error('Error calculating total:', error)
       return { success: false, error: error.message }
     }
   },
@@ -595,6 +635,16 @@ export const saleService = {
       return { success: true, data: response }
     } catch (error: any) {
       console.error('Error fetching top products:', error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  async salesScan(barcode: string, branchId?: number) {
+    try {
+      const response = await apiClient.salesScan(barcode, branchId)
+      return { success: true, data: response }
+    } catch (error: any) {
+      console.error('Error scanning barcode in saleService:', error)
       return { success: false, error: error.message }
     }
   },

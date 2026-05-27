@@ -165,6 +165,49 @@ class BusinessManagementAPI {
       let errorData
       try {
         errorData = await response.json()
+
+        // 🔧 FIX: Intentar refresh silencioso en caso de error de branch_id no autorizado para el rol
+        if (response.status === 403) {
+          const errorMsg = errorData?.error?.message || errorData?.message || '';
+          if (errorMsg.includes('forbidden branch_id') && !options._retry && !endpoint.includes('/auth/refresh')) {
+            options._retry = true;
+            const refreshToken = localStorage.getItem('refreshToken');
+            
+            if (refreshToken && refreshToken !== 'null' && refreshToken !== 'undefined') {
+              try {
+                const refreshResponse = await fetch(`${this.baseUrl}/auth/refresh`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ refresh_token: refreshToken })
+                });
+                
+                if (refreshResponse.ok) {
+                  const data = await refreshResponse.json();
+                  if (data.success && data.access_token) {
+                    localStorage.setItem('authToken', data.access_token);
+                    if (data.refresh_token) {
+                      localStorage.setItem('refreshToken', data.refresh_token);
+                    }
+                    if (data.allowed_branches) {
+                      localStorage.setItem('allowedBranches', JSON.stringify(data.allowed_branches));
+                    }
+                    if (data.active_branch) {
+                      localStorage.setItem('activeBranch', data.active_branch.toString());
+                    }
+                    
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(new CustomEvent('auth:token_refreshed', { detail: data }));
+                    }
+                    
+                    return await this.makeRequest(endpoint, options);
+                  }
+                }
+              } catch (refreshError) {
+                console.error('Error auto-refreshing token on forbidden branch_id:', refreshError);
+              }
+            }
+          }
+        }
         
         // Manejo específico de Rate Limit
         if (response.status === 429) {
@@ -248,7 +291,7 @@ class BusinessManagementAPI {
   }
 
   async searchProductsInfoByName(name: string, options: RequestOptions = {}): Promise<any> {
-    const { limit = 50, ...rest } = options;
+    const { limit = 50, ...rest } = options as any;
     return this.get(`/products/info/search/${encodeURIComponent(name)}`, {
       ...rest,
       params: { ...rest.params, limit }
@@ -331,6 +374,23 @@ class BusinessManagementAPI {
     return this.put(`/stock/product/${productId}`, data, options)
   }
 
+  // ============================================================================
+  // UNIT CONVERSIONS METHODS (v1.0.0)
+  // ============================================================================
+
+  async getUnitConversions(options: RequestOptions = {}): Promise<any> {
+    return this.get('/unit-conversions', options)
+  }
+
+  async createUnitConversion(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/unit-conversions', data, options)
+  }
+
+  async deleteUnitConversion(fromUnit: string, toUnit: string, options: RequestOptions = {}): Promise<any> {
+    return this.delete(`/unit-conversions/${fromUnit}/${toUnit}`, options)
+  }
+
+
   async getAllCategories(options: RequestOptions = {}): Promise<any> {
     return this.get('/products/all-categories', options)
   }
@@ -378,6 +438,10 @@ class BusinessManagementAPI {
 
   async createSale(data: any, options: RequestOptions = {}): Promise<any> {
     return this.post('/sale/', data, options)
+  }
+
+  async createSaleWithUnits(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/sale/with-units', data, options)
   }
 
   async addProductsToSale(saleId: string | number, data: any, options: RequestOptions = {}): Promise<any> {
@@ -560,6 +624,78 @@ class BusinessManagementAPI {
       body: formData,
       ...restOptions,
     })
+  }
+
+  // ============================================================================
+  // BARCODE & SCALE METHODS (v4.0)
+  // ============================================================================
+
+  async salesScan(barcode: string, branchId?: number, options: RequestOptions = {}): Promise<any> {
+    return this.post('/sales/scan', { barcode, branch_id: branchId }, options)
+  }
+
+  async decodeBarcode(barcode: string, options: RequestOptions = {}): Promise<any> {
+    return this.post('/barcode/decode', { barcode }, options)
+  }
+
+  async generateBarcode(scaleCode: string, value: number, options: RequestOptions = {}): Promise<any> {
+    return this.post('/barcode/generate', { scale_code: scaleCode, value }, options)
+  }
+
+  async weighItem(productId: string, weight: number, unit?: string, branchId?: number, options: RequestOptions = {}): Promise<any> {
+    return this.post('/scale/weigh-item', { product_id: productId, weight, unit, branch_id: branchId }, options)
+  }
+
+  async generateLabel(productId: string, weight: number, totalPrice: number, formatId: number, options: RequestOptions = {}): Promise<any> {
+    return this.post('/scale/generate-label', { product_id: productId, weight, total_price: totalPrice, format_id: formatId }, options)
+  }
+
+  async getScaleCatalog(branchId?: number, options: RequestOptions = {}): Promise<any> {
+    const params = branchId ? { ...options.params, branch_id: branchId } : options.params
+    return this.get('/scale/catalog', { ...options, params })
+  }
+
+  // CRUD Scales
+  async getScales(branchId?: number, options: RequestOptions = {}): Promise<any> {
+    const params = branchId ? { ...options.params, branch_id: branchId } : options.params
+    return this.get('/scales', { ...options, params })
+  }
+
+  async getScaleById(id: number | string, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/scales/${id}`, options)
+  }
+
+  async createScale(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/scales', data, options)
+  }
+
+  async updateScale(id: number | string, data: any, options: RequestOptions = {}): Promise<any> {
+    return this.put(`/scales/${id}`, data, options)
+  }
+
+  async deleteScale(id: number | string, options: RequestOptions = {}): Promise<any> {
+    return this.makeRequest(`/scales/${id}`, { method: 'DELETE', ...options })
+  }
+
+  // CRUD Label Formats
+  async getLabelFormats(options: RequestOptions = {}): Promise<any> {
+    return this.get('/label-formats', options)
+  }
+
+  async getLabelFormatById(id: number | string, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/label-formats/${id}`, options)
+  }
+
+  async createLabelFormat(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/label-formats', data, options)
+  }
+
+  async updateLabelFormat(id: number | string, data: any, options: RequestOptions = {}): Promise<any> {
+    return this.put(`/label-formats/${id}`, data, options)
+  }
+
+  async deleteLabelFormat(id: number | string, options: RequestOptions = {}): Promise<any> {
+    return this.makeRequest(`/label-formats/${id}`, { method: 'DELETE', ...options })
   }
 }
 

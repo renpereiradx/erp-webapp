@@ -10,41 +10,42 @@ Esta guia unifica la integracion frontend de:
 - Consulta y generacion de horarios (`/schedules/*`)
 - Configuracion de ventana de generacion por producto
 
-Base URL (local): `http://localhost:5050`
+## 🔧 Configuración General
 
-## Autenticacion
+### Base URL
+http://localhost:5050
 
-- Requieren JWT: todo `/reserve/*`, y endpoints de generacion/configuracion write en `/schedules/*`.
-- No requieren JWT: consultas de horarios (`GET /schedules/...`) y `GET /schedules/product/{productId}/config`.
-
-Headers comunes:
-
+### Headers Requeridos
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
+
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
+
+### Formato de Respuesta Estándar
+`{ success: bool, data?, message?, error?, pagination? }`
+
+### Formato de Fechas
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params: `YYYY-MM-DD`
+
+### Paginación Estándar
+`{ page, page_size, total_items, total_pages, has_next, has_prev }`
+
+### Autenticacion
+
+- Requieren JWT: todo `/reserve/*`, y endpoints de generacion/configuracion write en `/schedules/*`.
+- No requieren JWT: consultas de horarios (`GET /schedules/...`) y `GET /schedules/product/{productId}/config`.
 
 ### Contexto de Sucursal
 
 - Query param: `?branch_id=<id>`
 - O header: `X-Branch-ID: <id>`
 - Fallback: `active_branch` del token JWT
-- Restricción: sucursal debe estar en `allowed_branches`
+- Restriccion: sucursal debe estar en `allowed_branches`
 
 > **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
-
-## Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
-
-`{ success: bool, data?, message?, error?, pagination? }`
-
-## Paginación estándar
-
-`{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
 ## Modelos Principales
 
@@ -62,15 +63,15 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
-| Campo | Tipo | Requerido | Descripcion |
-|-------|------|-----------|-------------|
-| `action` | string | Si | `CREATE \| UPDATE \| CONFIRM \| CANCEL` |
-| `reserve_id` | int64 | Condicional | Requerido para `UPDATE`, `CONFIRM`, `CANCEL` |
-| `product_id` | string | Condicional | Requerido para `CREATE` |
-| `client_id` | string | Condicional | Requerido para `CREATE` |
-| `start_time` | string | Condicional | ISO-8601. Requerido para `CREATE`. Vacio para `CONFIRM`/`CANCEL` |
-| `duration` | int | Condicional | Horas (entero positivo). Default 1 |
-| `branch_id` | int \| null | No | ID de sucursal. Si se omite, se usa el branch del contexto de autenticacion (`X-Branch-ID` o `active_branch` del JWT) |
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `action` | string | `CREATE \| UPDATE \| CONFIRM \| CANCEL` |
+| `reserve_id` | int64 | Requerido para `UPDATE`, `CONFIRM`, `CANCEL` |
+| `product_id` | string | Requerido para `CREATE` |
+| `client_id` | string | Requerido para `CREATE` |
+| `start_time` | string | ISO-8601. Requerido para `CREATE`. Vacio para `CONFIRM`/`CANCEL` |
+| `duration` | int | Horas (entero positivo). Default 1 |
+| `branch_id` | int \| null | ID de sucursal. Si se omite, se usa el branch del contexto de autenticacion (`X-Branch-ID` o `active_branch` del JWT) |
 
 > **Nota multi-branch:** Si `branch_id` no se envia en el body, el backend lo resuelve automaticamente desde el contexto de autenticacion (`X-Branch-ID` header, `?branch_id` query param, o `active_branch` del JWT). Las operaciones de escritura (CREATE/UPDATE/CANCEL/CONFIRM) validan ownership del branch: no se puede modificar/cancelar/confirmar una reserva de otra sucursal si se envia `branch_id` explicitamente.
 
@@ -124,6 +125,15 @@ Todos requieren JWT.
 | `GET` | `/reserve/{id}` | Reserva por ID | Si — query param |
 
 > **Todos los endpoints GET de reservas** aceptan `?branch_id=<id>` o header `X-Branch-ID` para filtrar resultados por sucursal. Si se omite, el sistema usa `active_branch` del JWT.
+
+### Operaciones de Escritura (POST /reserve/manage)
+
+| Accion | `branch_id` en body | Valida ownership | Error si no pertenece al branch |
+|--------|---------------------|-----------------|--------------------------------|
+| CREATE | Opcional (se inyecta del contexto) | No | — |
+| UPDATE | Opcional | Si | "Reservation X does not belong to branch Y" |
+| CANCEL | Opcional | Si | "Reservation X does not belong to branch Y" |
+| CONFIRM | Opcional | Si | "Reservation X does not belong to branch Y" |
 
 ### Ejemplos con branch context
 
@@ -194,27 +204,27 @@ Errores de branch ownership:
 
 ### Consulta (sin JWT)
 
-| Metodo | Endpoint                                               | Descripcion                               |
+| Metodo | Endpoint | Descripcion |
 | ------ | ------------------------------------------------------ | ----------------------------------------- |
-| `GET`  | `/schedules/available`                                 | Disponibilidad global (filtros por query) |
-| `GET`  | `/schedules/today`                                     | Horarios del dia actual                   |
-| `GET`  | `/schedules/product/{productId}/date/{date}/available` | Horarios disponibles por producto/fecha   |
-| `GET`  | `/schedules/product/{productId}/date/{date}/all`       | Todos los slots + estado de reserva       |
-| `GET`  | `/schedules/product/{productId}/all`                   | Todos los horarios de producto            |
-| `GET`  | `/schedules/product/{productId}`                       | Horarios de producto (paginado)           |
-| `GET`  | `/schedules/{id}`                                      | Horario por ID                            |
-| `GET`  | `/schedules/product/{productId}/config`                | Config activa de generacion por producto  |
+| `GET` | `/schedules/available` | Disponibilidad global (filtros por query) |
+| `GET` | `/schedules/today` | Horarios del dia actual |
+| `GET` | `/schedules/product/{productId}/date/{date}/available` | Horarios disponibles por producto/fecha |
+| `GET` | `/schedules/product/{productId}/date/{date}/all` | Todos los slots + estado de reserva |
+| `GET` | `/schedules/product/{productId}/all` | Todos los horarios de producto |
+| `GET` | `/schedules/product/{productId}` | Horarios de producto (paginado) |
+| `GET` | `/schedules/{id}` | Horario por ID |
+| `GET` | `/schedules/product/{productId}/config` | Config activa de generacion por producto |
 
 ### Generacion / configuracion (con JWT)
 
-| Metodo | Endpoint                                | Descripcion                                     |
+| Metodo | Endpoint | Descripcion |
 | ------ | --------------------------------------- | ----------------------------------------------- |
-| `POST` | `/schedules/generate/daily`             | Generacion diaria                               |
-| `POST` | `/schedules/generate/today`             | Generar para hoy                                |
-| `POST` | `/schedules/generate/tomorrow`          | Generar para manana                             |
-| `POST` | `/schedules/generate/date`              | Generar por fecha usando config por producto    |
-| `POST` | `/schedules/generate/date/custom-range` | Generar por fecha con rango explicito           |
-| `POST` | `/schedules/generate/next-days`         | Generar proximos N dias                         |
+| `POST` | `/schedules/generate/daily` | Generacion diaria |
+| `POST` | `/schedules/generate/today` | Generar para hoy |
+| `POST` | `/schedules/generate/tomorrow` | Generar para manana |
+| `POST` | `/schedules/generate/date` | Generar por fecha usando config por producto |
+| `POST` | `/schedules/generate/date/custom-range` | Generar por fecha con rango explicito |
+| `POST` | `/schedules/generate/next-days` | Generar proximos N dias |
 | `POST` | `/schedules/product/{productId}/config` | Crear/actualizar config de ventana por producto |
 
 Ejemplo: generar por fecha con config por producto
@@ -256,11 +266,14 @@ curl -X POST "http://localhost:5050/schedules/product/CANCHA_01/config" \
 
 ## Codigos de respuesta comunes
 
-- `200`: operacion exitosa
-- `201`: recurso creado (ej. config de horario por producto)
-- `400`: validacion de entrada
-- `401`: token ausente/invalido
-- `500`: error interno
+| Codigo | Condicion |
+|--------|-----------|
+| 200 | Operacion exitosa |
+| 201 | Recurso creado (ej. config de horario por producto) |
+| 400 | Parametros invalidos, horario no disponible, reserva ya cancelada |
+| 401 | Token ausente/invalido |
+| 403 | Branch ownership: reserva no pertenece a la sucursal |
+| 500 | Error interno (SQL error, etc.) |
 
 ## Modelo de respuesta: ReserveRiched (branch-aware)
 
@@ -351,13 +364,13 @@ Todas las responses de GET de reservas incluyen `branch_id`:
 ]
 ```
 
-### Importante: Detección de overlap para reservas multi-hora
+### Importante: Deteccion de overlap para reservas multi-hora
 
-Cuando un cliente reserva 2+ horas (ej: 15:00-17:00), el sistema detecta automáticamente todos los slots cubiertos:
+Cuando un cliente reserva 2+ horas (ej: 15:00-17:00), el sistema detecta automaticamente todos los slots cubiertos:
 
 - Reserva de 15:00 a 17:00 (2 horas) -> Los slots 15:00-16:00 y 16:00-17:00 aparecen como ocupados
-- Ambos slots tendrán el mismo `reserve_id` y `reserved_by`
-- El campo `is_available` será `false` para ambos slots
+- Ambos slots tendran el mismo `reserve_id` y `reserved_by`
+- El campo `is_available` sera `false` para ambos slots
 
 El frontend debe agrupar visualmente slots con el mismo `reserve_id` para mostrar la reserva completa.
 
@@ -368,14 +381,14 @@ El frontend debe agrupar visualmente slots con el mismo `reserve_id` para mostra
 - Para fecha/hora en payload usar ISO-8601.
 - Mantener zona horaria de negocio en UI (`America/Asuncion`) para evitar desfasajes.
 - **Reservas multi-hora**: Cuando muestres slots ocupados, agrupa por `reserve_id` para indicar visualmente que es la misma reserva.
-- **Campo `reserved_by`**: Contiene "Nombre Apellido" del cliente que reservó. Úsalo para mostrar quién ocupa el slot.
+- **Campo `reserved_by`**: Contiene "Nombre Apellido" del cliente que reservo. Usalo para mostrar quien ocupa el slot.
 
 ## Integracion Reserva -> Venta (obligatorio)
 
 Cuando conviertas una reserva confirmada en venta (`POST /sale/`):
 
-- Enviar `reserve_id` en el request raíz de la venta.
-- En el detalle del producto de servicio reservado, enviar también `reserve_id`.
+- Enviar `reserve_id` en el request raiz de la venta.
+- En el detalle del producto de servicio reservado, enviar tambien `reserve_id`.
 - No reutilizar `reserve_id` en productos adicionales (ej: bebidas, snacks).
 
 Payload recomendado:
@@ -403,8 +416,8 @@ Payload recomendado:
 
 Regla de descuento:
 
-- Para llegar al monto final del servicio, usar una sola estrategia por ítem (`sale_price` o `discount_*`), no ambas al mismo tiempo.
+- Para llegar al monto final del servicio, usar una sola estrategia por item (`sale_price` o `discount_*`), no ambas al mismo tiempo.
 
 ---
 
-_Última actualización: 2026-05-08 — Multi-branch bugfix: branch_id en request/response, branch ownership validation, consistent branch filtering en todos los endpoints GET._
+_Ultima actualizacion: 2026-05-19_

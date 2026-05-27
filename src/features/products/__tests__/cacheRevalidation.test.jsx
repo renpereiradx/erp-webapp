@@ -10,8 +10,7 @@ vi.mock('@/services/productService', async (orig) => {
       ...mod.productService,
       getProducts: vi.fn(async (page, size) => Array.from({ length: size }, (_, i) => ({ id: `P${page}-${i}`, name: `Prod ${page}-${i}` }))),
       getProductsPaginated: vi.fn(async (page, size) => Array.from({ length: size }, (_, i) => ({ id: `P${page}-${i}`, name: `Prod ${page}-${i}` }))),
-      searchProducts: vi.fn(async (term) => [{ id: 'S1', name: term }]),
-      searchProductsInfo: vi.fn(async (term) => [{ id: 'S1', name: term }])
+      searchInfo: vi.fn(async (term) => [{ id: 'S1', name: term }])
     }
   };
 });
@@ -47,7 +46,7 @@ describe('Cache revalidation & trimming', () => {
     await act(async () => { await store.searchProducts('term'); });
     // Allow background revalidation promise to start/finish
     await new Promise(resolve => setTimeout(resolve, 10));
-    expect(productService.searchProductsInfo).toHaveBeenCalledTimes(2);
+    expect(productService.searchInfo).toHaveBeenCalledTimes(2);
   });
 
   test('page cache trimming removes old entries beyond limit', async () => {

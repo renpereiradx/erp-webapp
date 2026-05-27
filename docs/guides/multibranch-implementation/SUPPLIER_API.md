@@ -1,242 +1,203 @@
-# Guía de API de Proveedores para Frontend
+# ⚠️ DEPRECADO — Guía de API de Proveedores para Frontend
 
-## Base URL
+> **Esta guía está deprecada.** La API de proveedores ha sido reemplazada por la API unificada de Parties.
+> Consulta la nueva guía: **[PARTY_API_GUIDE.md](./PARTY_API_GUIDE.md)**
+>
+> Las rutas `/supplier/*` siguen funcionando por compatibilidad, pero usa `/api/v1/suppliers` o `/api/v1/parties` para nuevas integraciones.
 
-`http://localhost:5050`
+---
 
-## Autenticación
+## 🔧 Configuración General
 
-- Header: `Authorization: Bearer <jwt_token>`
+### Base URL
+http://localhost:5050
 
-## Headers requeridos (cuando aplica)
-
+### Headers Requeridos
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
 
-## Contexto de Sucursal
-
-Los endpoints de proveedores no requieren `branch_id` ni `X-Branch-ID`. La autenticación JWT es suficiente.
-
-## Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
-
+### Formato de Respuesta Estándar
 `{ success: bool, data?, message?, error?, pagination? }`
 
-## Paginación estándar
-
-`{ page, page_size, total_items, total_pages, has_next, has_prev }`
+## Contexto de Sucursal
+Los endpoints de proveedores no requieren `branch_id` ni `X-Branch-ID`. La autenticación JWT es suficiente.
 
 ---
 
 ## Endpoints
 
 ### POST /supplier/
-
 **Descripción:** Crea un nuevo proveedor.
 
 #### Headers
-
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|-------|------|-----------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
-
-| Campo        | Tipo   | Requerido | Descripción                                                    |
-| ------------ | ------ | --------- | -------------------------------------------------------------- |
-| name         | string | Sí        | Nombre del proveedor                                           |
-| contact_info | object | No        | JSON libre con datos de contacto (email, phone, address, etc.) |
-| tax_id       | string | No        | RUC/RFC o identificación fiscal                                |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| name | string | Sí | Nombre del proveedor |
+| contact_info | object | No | JSON libre con datos de contacto (email, phone, address, etc.) |
+| tax_id | string | No | RUC/RFC o identificación fiscal |
 
 #### Response 201
-
-| Campo        | Tipo   | Descripción                               |
-| ------------ | ------ | ----------------------------------------- |
-| id           | string | ID único generado automáticamente         |
-| name         | string | Nombre del proveedor                      |
-| contact_info | object | Información de contacto en formato JSON   |
-| tax_id       | string | Identificación fiscal                     |
-| status       | bool   | `true` = activo, `false` = inactivo       |
-| created_at   | string | Fecha de creación (ISO 8601)              |
-| user_id      | string | ID del usuario que creó el registro       |
-| party_id     | string | ID en tabla `users.parties` (Party Model) |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | string | ID único generado automáticamente |
+| name | string | Nombre del proveedor |
+| contact_info | object | Información de contacto en formato JSON |
+| tax_id | string | Identificación fiscal |
+| status | bool | `true` = activo, `false` = inactivo |
+| created_at | string | Fecha de creación (ISO 8601) |
+| user_id | string | ID del usuario que creó el registro |
+| party_id | string | ID en tabla `users.parties` (Party Model) |
 
 #### Errores
-
-| Código | Condición                      |
-| ------ | ------------------------------ |
-| 400    | `name` vacío                   |
-| 401    | Token JWT inválido o ausente   |
-| 500    | Error interno al guardar en DB |
+| Código | Condición |
+|--------|-----------|
+| 400 | `name` vacío |
+| 401 | Token JWT inválido o ausente |
+| 500 | Error interno al guardar en DB |
 
 ---
 
 ### GET /supplier/{id}
-
 **Descripción:** Obtiene un proveedor por su ID.
 
 #### Headers
-
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|-------|------|-----------|
+| Authorization | Sí | Bearer token |
 
 #### Path Parameters
-
-| Parámetro | Tipo   | Requerido | Descripción      |
-| --------- | ------ | --------- | ---------------- |
-| id        | string | Sí        | ID del proveedor |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| id | string | Sí | ID del proveedor |
 
 #### Response 200
-
 Mismo schema que Response 201 de `POST /supplier/`.
 
 #### Errores
-
-| Código | Condición                      |
-| ------ | ------------------------------ |
-| 400    | `id` vacío                     |
-| 401    | Token JWT inválido o ausente   |
-| 500    | Error interno de base de datos |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` vacío |
+| 401 | Token JWT inválido o ausente |
+| 500 | Error interno de base de datos |
 
 ---
 
 ### GET /supplier/name/{name}
-
 **Descripción:** Busca proveedores por nombre (búsqueda parcial).
 
 #### Headers
-
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|-------|------|-----------|
+| Authorization | Sí | Bearer token |
 
 #### Path Parameters
-
-| Parámetro | Tipo   | Requerido | Descripción         |
-| --------- | ------ | --------- | ------------------- |
-| name      | string | Sí        | Término de búsqueda |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| name | string | Sí | Término de búsqueda |
 
 #### Response 200
-
 Array de objetos con el mismo schema que Response 201 de `POST /supplier/`.
 
 #### Errores
-
-| Código | Condición                      |
-| ------ | ------------------------------ |
-| 400    | `name` vacío                   |
-| 401    | Token JWT inválido o ausente   |
-| 500    | Error interno de base de datos |
+| Código | Condición |
+|--------|-----------|
+| 400 | `name` vacío |
+| 401 | Token JWT inválido o ausente |
+| 500 | Error interno de base de datos |
 
 ---
 
 ### GET /supplier/{page}/{pageSize}
-
 **Descripción:** Lista proveedores con paginación.
 
 #### Headers
-
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|-------|------|-----------|
+| Authorization | Sí | Bearer token |
 
 #### Path Parameters
-
-| Parámetro | Tipo | Requerido | Descripción                      |
-| --------- | ---- | --------- | -------------------------------- |
-| page      | int  | Sí        | Número de página (>= 1)          |
-| pageSize  | int  | Sí        | Cantidad de elementos por página |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| page | int | Sí | Número de página (>= 1) |
+| pageSize | int | Sí | Cantidad de elementos por página |
 
 #### Response 200
-
 Array de objetos con el mismo schema que Response 201 de `POST /supplier/`.
 
 #### Errores
-
-| Código | Condición                                            |
-| ------ | ---------------------------------------------------- |
-| 400    | `page` o `pageSize` vacíos, o no son enteros válidos |
-| 401    | Token JWT inválido o ausente                         |
-| 500    | Error interno de base de datos                       |
+| Código | Condición |
+|--------|-----------|
+| 400 | `page` o `pageSize` vacíos, o no son enteros válidos |
+| 401 | Token JWT inválido o ausente |
+| 500 | Error interno de base de datos |
 
 ---
 
 ### PUT /supplier/{id}
-
 **Descripción:** Actualiza un proveedor existente.
 
 #### Headers
-
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|-------|------|-----------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Path Parameters
-
-| Parámetro | Tipo   | Requerido | Descripción                   |
-| --------- | ------ | --------- | ----------------------------- |
-| id        | string | Sí        | ID del proveedor a actualizar |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| id | string | Sí | ID del proveedor a actualizar |
 
 #### Request Body
-
-| Campo        | Tipo   | Requerido | Descripción                      |
-| ------------ | ------ | --------- | -------------------------------- |
-| name         | string | Sí        | Nombre del proveedor             |
-| contact_info | object | No        | JSON libre con datos de contacto |
-| tax_id       | string | No        | Identificación fiscal            |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| name | string | Sí | Nombre del proveedor |
+| contact_info | object | No | JSON libre con datos de contacto |
+| tax_id | string | No | Identificación fiscal |
 
 #### Response 200
-
 Mismo schema que Response 201 de `POST /supplier/`.
 
 #### Errores
-
-| Código | Condición                      |
-| ------ | ------------------------------ |
-| 400    | `id` vacío, o `name` vacío     |
-| 401    | Token JWT inválido o ausente   |
-| 500    | Error interno de base de datos |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` vacío, o `name` vacío |
+| 401 | Token JWT inválido o ausente |
+| 500 | Error interno de base de datos |
 
 ---
 
 ### PUT /supplier/delete/{id}
-
 **Descripción:** Elimina un proveedor de forma lógica (soft delete). Cambia `status` a `false`.
 
 #### Headers
-
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|-------|------|-----------|
+| Authorization | Sí | Bearer token |
 
 #### Path Parameters
-
-| Parámetro | Tipo   | Requerido | Descripción                 |
-| --------- | ------ | --------- | --------------------------- |
-| id        | string | Sí        | ID del proveedor a eliminar |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| id | string | Sí | ID del proveedor a eliminar |
 
 #### Response 200
-
-| Campo   | Tipo   | Descripción          |
-| ------- | ------ | -------------------- |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
 | message | string | `"Supplier deleted"` |
 
 #### Errores
-
-| Código | Condición                      |
-| ------ | ------------------------------ |
-| 400    | `id` vacío                     |
-| 401    | Token JWT inválido o ausente   |
-| 500    | Error interno de base de datos |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` vacío |
+| 401 | Token JWT inválido o ausente |
+| 500 | Error interno de base de datos |
 
 ---
 
@@ -250,4 +211,4 @@ Mismo schema que Response 201 de `POST /supplier/`.
 
 ---
 
-_Última actualización: 2026-05-06 — Consistencia cross-documento verificada._
+*Última actualización: 2026-05-19*

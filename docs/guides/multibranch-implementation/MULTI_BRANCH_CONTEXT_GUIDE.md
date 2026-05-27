@@ -8,12 +8,7 @@
 
 - Header: `Authorization: Bearer <jwt_token>`
 
-## Headers requeridos (cuando aplica)
-
-```http
-Content-Type: application/json
-Authorization: Bearer <jwt_token>
-```
+Los formatos de headers, fechas, estructura de respuesta y paginación siguen el estándar de la API.
 
 ## Contexto de Sucursal
 
@@ -22,20 +17,7 @@ Todas las operaciones transaccionales y de inteligencia de negocio (BI) requiere
 1. **Query param:** `?branch_id=<id>` (prioridad)
 2. **Header:** `X-Branch-ID: <id>`
 3. **Fallback:** `active_branch` del token JWT
-4. **Restricción:** `branch_id` debe estar en `allowed_branches`
-
-## Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
-
-`{ success: bool, data?, message?, error?, pagination? }`
-
-## Paginación estándar
-
-`{ page, page_size, total_items, total_pages, has_next, has_prev }`
+4. **Fallback final:** Primera sucursal en `allowed_branches` (ordenada ascendentemente)
 
 ---
 
@@ -45,14 +27,14 @@ Todas las operaciones transaccionales y de inteligencia de negocio (BI) requiere
 
 Decodificar el payload del JWT (segunda parte del token, base64). Los claims relevantes son:
 
-| Claim              | Tipo        | Descripción                                                                                                         |
-| ------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| `user_id`          | string      | ID del usuario autenticado                                                                                          |
-| `role_id`          | string      | Rol del usuario (`ADMIN`, `BUYER`, `SUPPLIES`, `VENDOR`, `CLIENT`)                                                  |
-| `session_id`       | int64       | ID de sesión activa                                                                                                 |
-| `token_type`       | string      | `access` o `refresh`                                                                                                |
-| `allowed_branches` | int[]       | Lista de IDs de sucursales a las que el usuario tiene acceso                                                        |
-| `active_branch`    | int \| null | Sucursal marcada como default en `users.user_branch_access`; si no hay default, es la primera de `allowed_branches` |
+| Claim | Tipo | Descripción |
+|-------|------|-------------|
+| `user_id` | string | ID del usuario autenticado |
+| `role_id` | string | Rol del usuario. La comparación en código usa el ID canónico (`"F2VLso"` para ADMIN, `"BUYR01"` para BUYER, `"VNDR01"` para VENDOR, etc.). Nombres de display: `ADMIN`, `BUYER`, `SUPPLIES`, `VENDOR`, `CLIENT`. |
+| `session_id` | int64 | ID de sesión activa |
+| `token_type` | string | `access` o `refresh` |
+| `allowed_branches` | int[] | Lista de IDs de sucursales a las que el usuario tiene acceso |
+| `active_branch` | int \| null | Sucursal marcada como default en `users.user_branch_access`; si no hay default, es la primera de `allowed_branches` |
 
 ### Comportamiento de `active_branch`
 
@@ -70,16 +52,16 @@ Usado en: Ventas, Compras, Presupuestos, Caja, Reservas, Productos, Ajustes de I
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción                                       |
-| --------- | ---- | --------- | ------------------------------------------------- |
-| branch_id | int  | No        | ID de sucursal explícita. Prioridad sobre header. |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita. Prioridad sobre header. |
 
 #### Resolución
 
@@ -93,11 +75,11 @@ Usado en: Ventas, Compras, Presupuestos, Caja, Reservas, Productos, Ajustes de I
 
 #### Errores
 
-| Código           | Condición                                              |
-| ---------------- | ------------------------------------------------------ |
-| 401 Unauthorized | Token inválido o ausente                               |
-| 400 Bad Request  | `branch_id` no es un entero positivo válido            |
-| 403 Forbidden    | `branch_id` explícito está fuera de `allowed_branches` |
+| Código | Condición |
+|--------|-----------|
+| 401 Unauthorized | Token inválido o ausente |
+| 400 Bad Request | `branch_id` no es un entero positivo válido |
+| 403 Forbidden | `branch_id` explícito está fuera de `allowed_branches` |
 
 ---
 
@@ -107,22 +89,22 @@ Usado en: Dashboard, Cuentas por Cobrar, Cuentas por Pagar, Reportes Financieros
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción                       |
-| --------- | ---- | --------- | --------------------------------- |
-| branch_id | int  | Ver notas | Requerido para usuarios non-ADMIN |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | Ver notas | Requerido para usuarios non-ADMIN |
 
 #### Resolución
 
 1. Ejecuta `resolveBranchContextFromAuth` primero (misma lógica de arriba).
 2. Luego aplica reglas adicionales:
-    - **ADMIN (`role_id == "ADMIN"`)**: puede omitir `branch_id`. Si lo omite, el BI no filtra por sucursal (visión global).
+   - **ADMIN** (ID canónico `"F2VLso"`, verificado via `claims.RoleID == constants.RoleAdmin`): puede omitir `branch_id`. Si lo omite, el BI no filtra por sucursal (visión global).
    - **Non-ADMIN**:
      - Si no tiene `allowed_branches` configurados y envía un `branch_id` explícito: `403 Forbidden`.
      - Si `branchID` es `nil` (no envió explícito ni tiene fallback): `400 Bad Request` — "branch context required for BI".
@@ -130,40 +112,42 @@ Usado en: Dashboard, Cuentas por Cobrar, Cuentas por Pagar, Reportes Financieros
 
 #### Errores
 
-| Código           | Condición                                                                                               |
-| ---------------- | ------------------------------------------------------------------------------------------------------- |
-| 401 Unauthorized | Token inválido o ausente                                                                                |
-| 400 Bad Request  | `branch_id` inválido, o BI sin branch context para non-ADMIN                                            |
-| 403 Forbidden    | `branch_id` fuera de `allowed_branches`, o non-ADMIN sin accesos configurados enviando branch explícito |
+| Código | Condición |
+|--------|-----------|
+| 401 Unauthorized | Token inválido o ausente |
+| 400 Bad Request | `branch_id` inválido, o BI sin branch context para non-ADMIN |
+| 403 Forbidden | `branch_id` fuera de `allowed_branches`, o non-ADMIN sin accesos configurados enviando branch explícito |
 
 ---
 
 ## Tabla Resumen: Módulos que Requieren Branch Context
 
-| Módulo                                                             | Tipo de Contexto        | Rol ADMIN puede omitir branch |
-| ------------------------------------------------------------------ | ----------------------- | ----------------------------- |
-| **Ventas** (`/sale/*`)                                             | Transaccional           | Sí (usa fallback)             |
-| **Compras** (`/purchase/*`)                                        | Transaccional           | Sí (usa fallback)             |
-| **Presupuestos** (`/budget/*`)                                     | Transaccional           | Sí (usa fallback)             |
-| **Caja** (`/cash-register/*`)                                      | Transaccional           | Sí (usa fallback)             |
-| **Reservas** (`/reserves/*`)                                       | Transaccional           | Sí (usa fallback)             |
-| **Productos** (`/products/*`, `/stock/*`)                       | Transaccional / Lectura | Sí (usa fallback)             |
-| **Ajustes de Inventario** (`/inventory/*`, `/manual-adjustment/*`) | Transaccional           | Sí (usa fallback)             |
-| **Órdenes de Reabastecimiento** (`/purchase-requisition/*`)        | Transaccional           | Sí (usa fallback)             |
-| **Transferencias entre Sucursales** (`/branch-transfers/*`)        | Transaccional           | Sí (usa fallback)             |
-| **Manufactura** (`/manufacturing/*`)                               | Transaccional           | Sí (usa fallback)             |
-| **Transacciones de Precio** (`/price-transactions/*`)              | Transaccional           | Sí (usa fallback)             |
-| **Auditoría** (`/audit/*`, `/cash-audit/*`)                        | Transaccional           | Sí (usa fallback)             |
-| **Dashboard** (`/dashboard/*`)                                     | BI                      | **Sí** (visión global)        |
-| **Cuentas por Cobrar** (`/receivables/*`)                          | BI                      | **Sí** (visión global)        |
-| **Cuentas por Pagar** (`/payables/*`)                              | BI                      | **Sí** (visión global)        |
-| **Reportes Financieros** (`/financial-reports/*`)                  | BI                      | **Sí** (visión global)        |
-| **Análisis de Ventas** (`/sales-analytics/*`)                      | BI                      | **Sí** (visión global)        |
-| **Análisis de Inventario** (`/inventory-analytics/*`)              | BI                      | **Sí** (visión global)        |
-| **Costos** (`/costs/*`)                                            | BI                      | **Sí** (visión global)        |
-| **Forecast** (`/forecast/*`)                                       | BI                      | **Sí** (visión global)        |
-| **Profitability** (`/profitability/*`)                             | BI                      | **Sí** (visión global)        |
-| **Gestión de Sucursales** (`/branches/*`)                          | Administración          | Sí (no aplica filtro)         |
+| Módulo | Tipo de Contexto | Rol ADMIN puede omitir branch |
+|--------|------------------|------------------------------|
+| **Ventas** (`/sale/*`) | Transaccional | Sí (usa fallback) |
+| **Compras** (`/purchase/*`) | Transaccional | Sí (usa fallback) |
+| **Presupuestos** (`/budget/*`) | Transaccional | Sí (usa fallback) |
+| **Caja** (`/cash-register/*`) | Transaccional | Sí (usa fallback) |
+| **Reservas** (`/reserves/*`) | Transaccional | Sí (usa fallback) |
+| **Productos** (`/products/*`, `/stock/*`) | Transaccional / Lectura | Sí (usa fallback) |
+| **Ajustes de Inventario** (`/inventory/*`, `/manual-adjustment/*`) | Transaccional | Sí (usa fallback) |
+| **Órdenes de Reabastecimiento** (`/purchase-requisition/*`) | Transaccional | Sí (usa fallback) |
+| **Transferencias entre Sucursales** (`/branch-transfers/*`) | Transaccional | Sí (usa fallback) |
+| **Manufactura** (`/manufacturing/*`) | Transaccional | Sí (usa fallback) |
+| **Transacciones de Precio** (`/price-transactions/*`) | Transaccional | Sí (usa fallback) |
+| **Auditoría** (`/audit/*`, `/cash-audit/*`) | Transaccional | Sí (usa fallback) |
+| **Dashboard** (`/dashboard/*`) | BI | **Sí** (visión global) |
+| **Cuentas por Cobrar** (`/receivables/*`) | BI | **Sí** (visión global) |
+| **Cuentas por Pagar** (`/payables/*`) | BI | **Sí** (visión global) |
+| **Reportes Financieros** (`/financial-reports/*`) | BI | **Sí** (visión global) |
+| **Análisis de Ventas** (`/sales-analytics/*`) | BI | **Sí** (visión global) |
+| **Análisis de Inventario** (`/inventory-analytics/*`) | BI | **Sí** (visión global) |
+| **Costos** (`/costs/*`) | BI | **Sí** (visión global) |
+| **Forecast** (`/forecast/*`) | BI | **Sí** (visión global) |
+| **Profitability** (`/profitability/*`) | BI | **Sí** (visión global) |
+| **Gestión de Sucursales** (`/branches/*`) | Administración | ADMIN para escritura, todos para lectura (filtro por JWT) |
+
+> **Nota sobre Clientes y Proveedores:** Los endpoints legacy `/client/` y `/supplier/` siguen funcionando, pero todo nuevo desarrollo debe usar la API unificada `/api/v1/parties`.
 
 ---
 
@@ -174,6 +158,9 @@ Usado en: Dashboard, Cuentas por Cobrar, Cuentas por Pagar, Reportes Financieros
 - **Sin accesos configurados:** Usuarios legacy sin entradas en `users.user_branch_access` no tienen restricción de sucursal en endpoints transaccionales, pero en BI pueden recibir `400` si no envían explícitamente un `branch_id`.
 - **Cambio de sucursal activa:** El frontend puede cambiar la sucursal activa del usuario enviando un `branch_id` diferente en cada request. No es necesario refrescar el token JWT.
 - **Token refresh:** Al refrescar el token, `allowed_branches` y `active_branch` se recalculan desde la base de datos (`users.user_branch_access`).
+- **Soft delete de sucursales:** Las sucursales se desactivan con `PUT /branches/{id}` enviando `{"is_active": false}`. No existe endpoint DELETE. Se bloquea la desactivación si algún usuario tiene esa sucursal como default.
+- **Permisos ADMIN:** Los endpoints de escritura en `/branches` (crear, actualizar, config fiscal, acceso de usuarios) requieren rol ADMIN (`role_id = "F2VLso"`). Los endpoints de lectura muestran todas las sucursales para ADMIN; los no-ADMIN ven solo las sucursales en `allowed_branches` del JWT.
+- **Auto-grant al crear sucursal:** `POST /branches` otorga automáticamente al creador acceso `FULL` a la nueva sucursal mediante un registro en `users.user_branch_access`. Si el creador no tiene sucursal default, esta se marca como tal. Esto asegura que el creador pueda ver la sucursal inmediatamente después de crearla.
 
 ---
 
@@ -251,4 +238,4 @@ Todas las funciones usan `NULL` como default para `p_branch_id`, lo que mantiene
 
 ---
 
-_Última actualización: 2026-05-08 — Post-bugfix multi-branch reservas: branch_id en request/response de ManageReserve, ownership validation en UPDATE/CANCEL/CONFIRM, branch filtering en todos los endpoints GET de reservas y horarios disponibles, consistency check branch-aware._
+_Última actualización: 2026-05-19 — Fusión documentación frontend/backend: jerarquía 4 niveles, role_id canónico F2VLso para ADMIN, rutas /products/*, sección detallada de reservas, soft delete de sucursales, permisos ADMIN, nota sobre API unificada /api/v1/parties._

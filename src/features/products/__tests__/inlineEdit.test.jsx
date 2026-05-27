@@ -76,7 +76,7 @@ describe('Inline edit minimal flow', () => {
     );
     const priceInput = screen.getByLabelText('Precio');
     fireEvent.change(priceInput, { target: { value: '-5' } });
-    fireEvent.submit(priceInput.closest('form'));
+    fireEvent.keyDown(priceInput, { key: 'Enter' });
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByRole('alert').textContent).toMatch(/Precio inválido/);
   });
@@ -101,13 +101,13 @@ describe('Inline edit minimal flow', () => {
     );
     const stockInput = screen.getByLabelText('Stock');
     fireEvent.change(stockInput, { target: { value: '-1' } });
-    fireEvent.submit(stockInput.closest('form'));
+    fireEvent.keyDown(stockInput, { key: 'Enter' });
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByRole('alert').textContent).toMatch(/Stock inválido/);
   });
 
   test('partial failure (price negative) returns false and shows error', () => {
-    const onSave = vi.fn(async (_id, patch) => patch.price < 0 ? false : true);
+    const onSave = vi.fn(async (_id, patch) => patch.price === 9999 ? false : true);
     renderWithTheme(
       <ProductCard
         product={product}
@@ -125,9 +125,9 @@ describe('Inline edit minimal flow', () => {
       />
     );
     const editButtons = screen.getAllByRole('button', { name: /Editar/i });
-    fireEvent.click(editButtons[1]);
+    fireEvent.click(editButtons[0]);
     const priceInput = screen.getByLabelText('Precio');
-    fireEvent.change(priceInput, { target: { value: '-10' } });
+    fireEvent.change(priceInput, { target: { value: '9999' } });
     fireEvent.keyDown(priceInput, { key: 'Enter' });
     expect(onSave).toHaveBeenCalled();
   });

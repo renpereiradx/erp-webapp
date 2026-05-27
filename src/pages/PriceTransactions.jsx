@@ -22,10 +22,14 @@ import DataState from '@/components/ui/DataState';
 import { useI18n } from '@/lib/i18n';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { usePriceTransactions } from '@/hooks/usePriceTransactions';
+import { useCostTransactions } from '@/hooks/useCostTransactions';
+import { useAuth } from '@/contexts/AuthContext';
 
 const PriceTransactionsPage = () => {
   const { t } = useI18n();
   const { styles, isNeoBrutalism } = useThemeStyles();
+  const { hasPermission } = useAuth();
+  const canWrite = hasPermission('products:write');
   const {
     loading,
     error,
@@ -41,10 +45,22 @@ const PriceTransactionsPage = () => {
     interpretConsistencyStatus
   } = usePriceTransactions();
 
+  const {
+    loading: costLoading,
+    error: costError,
+    registerCostTransaction,
+    registerManualCostAdjustment,
+    getCostTransactionsByDate,
+    getCostTransactionHistory,
+    clearError: clearCostError
+  } = useCostTransactions();
+
   // Estados principales
-  const [activeTab, setActiveTab] = useState('register');
+  const [activeTab, setActiveTab] = useState(canWrite ? 'register' : 'recent');
   const [transactionTypes, setTransactionTypes] = useState({});
   const [recentTransactions, setRecentTransactions] = useState([]);
+  const [priceType, setPriceType] = useState('SELLING_PRICE'); // 'SELLING_PRICE' o 'COST_PRICE'
+  const [recentPriceType, setRecentPriceType] = useState('SELLING_PRICE'); // 'SELLING_PRICE' o 'COST_PRICE'
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productHistory, setProductHistory] = useState([]);
   const [consistencyReports, setConsistencyReports] = useState([]);
@@ -79,7 +95,7 @@ const PriceTransactionsPage = () => {
   // Cargar datos iniciales
   useEffect(() => {
     loadInitialData();
-  }, []);
+  }, [recentPriceType]);
 
   const loadInitialData = async () => {
     try {
@@ -88,8 +104,21 @@ const PriceTransactionsPage = () => {
       setTransactionTypes(typesResult.description || {});
       
       // Cargar transacciones recientes
-      const recentResult = await getRecentTransactions(20);
-      setRecentTransactions(recentResult.transactions || recentResult || []);
+      if (recentPriceType === 'SELLING_PRICE') {
+        const recentResult = await getRecentTransactions(20);
+        setRecentTransactions(recentResult.transactions || recentResult || []);
+      } else {
+        const today = new Date();
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const params = {
+          start_date: thirtyDaysAgo.toISOString().split('T')[0],
+          end_date: today.toISOString().split('T')[0],
+          limit: 20,
+          offset: 0
+        };
+        const costResult = await getCostTransactionsByDate(params);
+        setRecentTransactions(costResult.transactions || costResult.data?.transactions || costResult.data || costResult || []);
+      }
     } catch (err) {
       console.error('Error loading initial data:', err);
     }
@@ -116,25 +145,64 @@ const PriceTransactionsPage = () => {
       return;
     }
 
-    try {
-      const transactionData = {
-        product_id: selectedProduct.id || selectedProduct.product_id,
-        transaction_type: formData.transaction_type,
-        new_price: parseFloat(formData.new_price),
-        effective_date: formData.effective_date || undefined,
-        reference_type: formData.reference_type || undefined,
-        reference_id: formData.reference_id || undefined,
-        reason: formData.reason || undefined,
-        cost_factor: formData.cost_factor ? parseFloat(formData.cost_factor) : undefined,
-        margin_percent: formData.margin_percent ? parseFloat(formData.margin_percent) : undefined,
-        metadata: {
-          ...formData.metadata,
-          form_submission: true,
-          timestamp: new Date().toISOString()
-        }
-      };
+    if (formData.transaction_type === 'MANUAL_ADJUSTMENT' && !formData.reason?.trim()) {
+      alert('Debe proporcionar un motivo para realizar un ajuste manual');
+      return;
+    }
 
-      const result = await registerTransaction(transactionData);
+    try {
+      if (priceType === 'SELLING_PRICE') {
+        const transactionData = {
+          product_id: selectedProduct.id || selectedProduct.product_id,
+          transaction_type: formData.transaction_type,
+          new_price: parseFloat(formData.new_price),
+          effective_date: formData.effective_date || undefined,
+          reference_type: formData.reference_type || undefined,
+          reference_id: formData.reference_id || undefined,
+          reason: formData.reason || undefined,
+          cost_factor: formData.cost_factor ? parseFloat(formData.cost_factor) : undefined,
+          margin_percent: formData.margin_percent ? parseFloat(formData.margin_percent) : undefined,
+          metadata: {
+            ...formData.metadata,
+            form_submission: true,
+            timestamp: new Date().toISOString()
+          }
+        };
+
+        await registerTransaction(transactionData);
+      } else {
+        const productId = selectedProduct.id || selectedProduct.product_id;
+        const unit = selectedProduct.unit || 'unit';
+        const newCost = parseFloat(formData.new_price);
+        const reasonText = formData.reason || 'Ajuste manual de costo';
+
+        if (formData.transaction_type === 'MANUAL_ADJUSTMENT') {
+          await registerManualCostAdjustment({
+            product_id: productId,
+            unit,
+            new_cost: newCost,
+            reason: reasonText,
+            metadata: {
+              source: 'web_ui',
+              reference_id: formData.reference_id
+            }
+          });
+        } else {
+          await registerCostTransaction({
+            product_id: productId,
+            unit,
+            transaction_type: formData.transaction_type || 'COST_UPDATE',
+            new_cost: newCost,
+            effective_date: formData.effective_date || undefined,
+            reference_type: formData.reference_type || undefined,
+            reference_id: formData.reference_id || undefined,
+            reason: reasonText,
+            metadata: {
+              source: 'web_ui'
+            }
+          });
+        }
+      }
       
       // Resetear formulario
       setFormData({
@@ -153,7 +221,7 @@ const PriceTransactionsPage = () => {
       // Recargar transacciones recientes
       await loadInitialData();
       
-      alert('Transacción de precio registrada exitosamente');
+      alert('Transacción registrada exitosamente');
     } catch (err) {
       console.error('Error registering transaction:', err);
       alert('Error al registrar transacción: ' + err.message);
@@ -163,8 +231,13 @@ const PriceTransactionsPage = () => {
   // Handlers de reportes
   const handleLoadProductHistory = async (productId) => {
     try {
-      const result = await getProductHistory(productId, 0, 50);
-      setProductHistory(result.history || []);
+      if (recentPriceType === 'COST_PRICE') {
+        const result = await getCostTransactionHistory(productId, { limit: 50, offset: 0 });
+        setProductHistory(result.history || result.data?.history || result.data || result || []);
+      } else {
+        const result = await getProductHistory(productId, 0, 50);
+        setProductHistory(result.history || []);
+      }
       setShowHistoryModal(true);
     } catch (err) {
       console.error('Error loading history:', err);
@@ -265,10 +338,12 @@ const PriceTransactionsPage = () => {
         </div>
         
         <div className="flex gap-2">
-          <Button onClick={() => setActiveTab('register')} variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
-            Nueva Transacción
-          </Button>
+          {canWrite && (
+            <Button onClick={() => setActiveTab('register')} variant="outline">
+              <Plus className="w-4 h-4 mr-2" />
+              Nueva Transacción
+            </Button>
+          )}
           <Button onClick={handleValidateConsistency} variant="outline">
             <CheckCircle className="w-4 h-4 mr-2" />
             Validar Consistencia
@@ -283,7 +358,7 @@ const PriceTransactionsPage = () => {
       {/* Pestañas principales */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="register">Registrar Transacción</TabsTrigger>
+          <TabsTrigger value="register" disabled={!canWrite}>Registrar Transacción</TabsTrigger>
           <TabsTrigger value="recent">Transacciones Recientes</TabsTrigger>
           <TabsTrigger value="reports">Reportes y Análisis</TabsTrigger>
           <TabsTrigger value="consistency">Validación</TabsTrigger>
@@ -303,6 +378,28 @@ const PriceTransactionsPage = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmitTransaction} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Tipo de Operación */}
+                  <div>
+                    <Label htmlFor="price_type">Tipo de Operación</Label>
+                    <Select 
+                      value={priceType} 
+                      onValueChange={(value) => {
+                        setPriceType(value);
+                        setFormData(prev => ({ ...prev, transaction_type: '' }));
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar operación..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SELLING_PRICE">Precio de Venta</SelectItem>
+                        <SelectItem value="COST_PRICE">Costo de Compra</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
                 {/* Selector de producto */}
                 <div>
                   <Label htmlFor="product">Producto</Label>
@@ -340,16 +437,23 @@ const PriceTransactionsPage = () => {
                         <SelectValue placeholder="Seleccionar tipo..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(transactionTypes).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
+                        {priceType === 'SELLING_PRICE' ? (
+                          Object.entries(transactionTypes).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                          ))
+                        ) : (
+                          <>
+                            <SelectItem value="COST_UPDATE">Actualización de Costo (COST_UPDATE)</SelectItem>
+                            <SelectItem value="MANUAL_ADJUSTMENT">Ajuste Manual de Costo (MANUAL_ADJUSTMENT)</SelectItem>
+                          </>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Nuevo precio */}
                   <div>
-                    <Label htmlFor="new_price">Nuevo Precio</Label>
+                    <Label htmlFor="new_price">{priceType === 'SELLING_PRICE' ? 'Nuevo Precio' : 'Nuevo Costo'}</Label>
                     <Input
                       id="new_price"
                       type="number"
@@ -400,38 +504,40 @@ const PriceTransactionsPage = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Factor de costo */}
-                  <div>
-                    <Label htmlFor="cost_factor">Factor de Costo (opcional)</Label>
-                    <Input
-                      id="cost_factor"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="1"
-                      value={formData.cost_factor}
-                      onChange={(e) => setFormData(prev => ({ ...prev, cost_factor: e.target.value }))}
-                      placeholder="0.65"
-                    />
-                    <p className="text-xs text-muted-foreground">Valor entre 0 y 1</p>
-                  </div>
+                {priceType === 'SELLING_PRICE' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Factor de costo */}
+                    <div>
+                      <Label htmlFor="cost_factor">Factor de Costo (opcional)</Label>
+                      <Input
+                        id="cost_factor"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="1"
+                        value={formData.cost_factor}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cost_factor: e.target.value }))}
+                        placeholder="0.65"
+                      />
+                      <p className="text-xs text-muted-foreground">Valor entre 0 y 1</p>
+                    </div>
 
-                  {/* Margen porcentual */}
-                  <div>
-                    <Label htmlFor="margin_percent">Margen Porcentual (opcional)</Label>
-                    <Input
-                      id="margin_percent"
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      value={formData.margin_percent}
-                      onChange={(e) => setFormData(prev => ({ ...prev, margin_percent: e.target.value }))}
-                      placeholder="35.0"
-                    />
-                    <p className="text-xs text-muted-foreground">Porcentaje de margen</p>
+                    {/* Margen porcentual */}
+                    <div>
+                      <Label htmlFor="margin_percent">Margen Porcentual (opcional)</Label>
+                      <Input
+                        id="margin_percent"
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={formData.margin_percent}
+                        onChange={(e) => setFormData(prev => ({ ...prev, margin_percent: e.target.value }))}
+                        placeholder="35.0"
+                      />
+                      <p className="text-xs text-muted-foreground">Porcentaje de margen</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Razón */}
                 <div>
@@ -487,20 +593,42 @@ const PriceTransactionsPage = () => {
         {/* Transacciones Recientes */}
         <TabsContent value="recent" className="space-y-6">
           {/* Búsqueda */}
-          <div className="flex gap-4 items-center">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por producto, tipo, razón..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          <div className="flex gap-4 items-center justify-between flex-wrap">
+            <div className="flex gap-4 items-center flex-1 min-w-[300px]">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por producto, tipo, razón..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button onClick={loadInitialData} variant="outline" size="sm">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Actualizar
+              </Button>
             </div>
-            <Button onClick={loadInitialData} variant="outline" size="sm">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Actualizar
-            </Button>
+            
+            {/* Toggle para Precios/Costos en listado */}
+            <div className="flex border border-gray-200 rounded-lg p-0.5 bg-gray-50">
+              <Button 
+                onClick={() => setRecentPriceType('SELLING_PRICE')} 
+                variant={recentPriceType === 'SELLING_PRICE' ? 'default' : 'ghost'} 
+                size="sm"
+                className="h-8 text-xs"
+              >
+                Precios de Venta
+              </Button>
+              <Button 
+                onClick={() => setRecentPriceType('COST_PRICE')} 
+                variant={recentPriceType === 'COST_PRICE' ? 'default' : 'ghost'} 
+                size="sm"
+                className="h-8 text-xs"
+              >
+                Costos de Compra
+              </Button>
+            </div>
           </div>
 
           {/* Estadísticas rápidas */}
@@ -596,32 +724,47 @@ const PriceTransactionsPage = () => {
                             </div>
                           </div>
                           
-                          {/* Información del cambio de precio */}
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div>
-                              <p className="text-xs text-muted-foreground uppercase tracking-wide">Precio Anterior</p>
-                              <p className="text-lg font-bold">{formatCurrency(transaction.old_price)}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground uppercase tracking-wide">Precio Nuevo</p>
-                              <p className="text-lg font-bold">{formatCurrency(transaction.new_price)}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground uppercase tracking-wide">Cambio</p>
-                              <p className={`text-lg font-bold ${getPriceChangeColor(transaction.price_change)}`}>
-                                {transaction.price_change > 0 ? '+' : ''}{formatCurrency(Math.abs(transaction.price_change))}
-                                {transaction.price_change_percent && (
-                                  <span className="text-sm ml-2">
-                                    ({transaction.price_change_percent.toFixed(1)}%)
-                                  </span>
-                                )}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground uppercase tracking-wide">Moneda</p>
-                              <p className="text-lg font-bold">{transaction.currency_id}</p>
-                            </div>
-                          </div>
+                          {/* Información del cambio de precio/costo */}
+                          {(() => {
+                            const isCost = recentPriceType === 'COST_PRICE' || transaction.price_type === 'cost_price';
+                            const oldPrice = transaction.old_price != null ? transaction.old_price : 0;
+                            const newPrice = transaction.new_price || transaction.cost_per_unit || 0;
+                            const change = transaction.price_change != null ? transaction.price_change : (newPrice - oldPrice);
+                            const changePercent = transaction.price_change_percent || (oldPrice ? (change / oldPrice) * 100 : 0);
+                            const currency = transaction.currency_id || 'PYG';
+                            
+                            return (
+                              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                  <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                                    {isCost ? 'Costo Anterior' : 'Precio Anterior'}
+                                  </p>
+                                  <p className="text-lg font-bold">{formatCurrency(oldPrice)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                                    {isCost ? 'Costo Nuevo' : 'Precio Nuevo'}
+                                  </p>
+                                  <p className="text-lg font-bold">{formatCurrency(newPrice)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Cambio</p>
+                                  <p className={`text-lg font-bold ${getPriceChangeColor(change)}`}>
+                                    {change > 0 ? '+' : ''}{formatCurrency(change)}
+                                    {changePercent != null && (
+                                      <span className="text-sm ml-2">
+                                        ({changePercent.toFixed(1)}%)
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Moneda/Unidad</p>
+                                  <p className="text-lg font-bold">{currency} {transaction.unit && `/ ${transaction.unit}`}</p>
+                                </div>
+                              </div>
+                            );
+                          })()}
                           
                           {/* Razón y metadatos */}
                           {transaction.reason && (
@@ -836,7 +979,7 @@ const PriceTransactionsPage = () => {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className={`${styles.card()} w-full max-w-4xl max-h-[90vh] overflow-y-auto`}>
             <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-lg font-semibold">Historial de Precios</h2>
+              <h2 className="text-lg font-semibold">{recentPriceType === 'COST_PRICE' ? 'Historial de Costos' : 'Historial de Precios'}</h2>
               <Button
                 onClick={() => setShowHistoryModal(false)}
                 variant="ghost"

@@ -13,11 +13,14 @@ import {
   ShoppingCart,
   Check,
   History,
+  CheckCircle,
+  Building,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import useDashboardStore from '@/store/useDashboardStore'
 import useAuthStore from '@/store/useAuthStore'
+import { useAuth } from '@/contexts/AuthContext'
 import supplierService from '@/services/supplierService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
 import { CurrencyService } from '@/services/currencyService'
@@ -28,7 +31,7 @@ import {
   purchasePaymentsMvpService,
 } from '@/services/purchasePaymentsMvpService'
 import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog'
-import { normalizeCurrencyCode, formatCurrency, formatNumber } from '@/utils/currencyUtils'
+import { formatCurrency, formatNumber } from '@/utils/currencyUtils'
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
 import { calculatePurchaseSalePriceGs, calculateProfitMargin } from '@/domain/purchase/pricing/purchasePricingPolicy'
@@ -46,6 +49,8 @@ const Purchases = () => {
   const toast = useToast()
   const { fetchDashboardData } = useDashboardStore()
   const { user } = useAuthStore()
+  const { hasPermission } = useAuth()
+  const canWrite = hasPermission('purchases:write')
   const { currentBranchId } = useBranch()
 
   // Business Logic States
@@ -101,6 +106,14 @@ const Purchases = () => {
   const [orderToCancel, setOrderToCancel] = useState<any>(null)
   const [showInstantPayment, setShowInstantPayment] = useState<boolean>(false)
   const [createdOrderData, setCreatedOrderData] = useState<any>(null)
+  const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false)
+  const [latestPurchaseResult, setLatestPurchaseResult] = useState<{
+    id: any;
+    total_amount: number;
+    branch_id: any;
+    warnings: any[];
+    details: any[];
+  } | null>(null)
 
   const fixMojibakeText = value => {
     if (value === null || value === undefined) return ''
@@ -266,12 +279,9 @@ const Purchases = () => {
       const previousCount = aggregatedOrders.length
       aggregatedOrders = mergePurchaseOrdersById(aggregatedOrders, pageData)
 
-      const hasNextFromMeta =
-        pageResponse?.pagination?.hasNext === true ||
-        pageResponse?.pagination?.has_next === true ||
-        pageResponse?.pagination?.hasMore === true
+      const hasNextFromMeta = pageResponse?.pagination?.hasNext === true
 
-      const totalPages = Number(pageResponse?.pagination?.totalPages)
+      const totalPages = pageResponse?.pagination?.totalPages ? Number(pageResponse.pagination.totalPages) : 0
       const hasNextByTotalPages =
         Number.isFinite(totalPages) && totalPages > 0
           ? currentPage < totalPages
@@ -437,7 +447,7 @@ const Purchases = () => {
 
     try {
       setSearchingProducts(true);
-      const fullProduct = await productService.getForPurchase(productId);
+      const fullProduct = await productService.getForPurchase(productId) as any;
       
       const normalizedProduct = {
         ...fullProduct,
@@ -588,20 +598,20 @@ const Purchases = () => {
       const result =
         await purchaseService.createEnhancedPurchaseOrder(orderData)
       if (result.success) {
+        let dbDetails: any[] = []
+        let dbPurchase: any = null
+        try {
+          const detailRes = await purchaseService.getPurchaseById(result.purchase_order_id)
+          if (detailRes.success && detailRes.data) {
+            dbDetails = detailRes.data.details || detailRes.data.order_details || []
+            dbPurchase = detailRes.data.purchase || detailRes.data
+          }
+        } catch (err) {
+          console.error('Error fetching fresh purchase details:', err)
+        }
+
         setPurchaseItems([])
         setPurchaseNotes('')
-        // Manejar advertencias si existen (API v2.6 / v1.1)
-        if (result.warnings && result.warnings.length > 0) {
-          result.warnings.forEach(warning => {
-            console.warn('Purchase Warning:', warning)
-            const productName = warning.product_name || warning.name || 'Producto';
-            const observedRate = warning.observed_tax_rate || warning.tax_rate;
-            toast.warning(
-              `Advertencia Fiscal: ${productName} tiene una tasa de IVA observada de ${observedRate}% diferente a la esperada.`,
-              { duration: 6000 }
-            )
-          })
-        }
 
         const selectedPaymentMethod = paymentMethods.find(
           method => String(method.id) === String(paymentMethod),
@@ -609,7 +619,7 @@ const Purchases = () => {
 
         setCreatedOrderData({
           id: result.purchase_order_id,
-          totalAmount: purchaseItems.reduce(
+          totalAmount: result.total_amount || dbPurchase?.total_amount || purchaseItems.reduce(
             (s, i) => s + i.quantity * i.unit_price,
             0,
           ),
@@ -619,7 +629,16 @@ const Purchases = () => {
             ? getPaymentMethodLabel(selectedPaymentMethod)
             : null,
         })
-        setShowInstantPayment(true)
+
+        setLatestPurchaseResult({
+          id: result.purchase_order_id,
+          total_amount: result.total_amount || dbPurchase?.total_amount || 0,
+          branch_id: result.branch_id || dbPurchase?.branch_id || currentBranchId || 1,
+          warnings: result.warnings || [],
+          details: dbDetails
+        })
+
+        setShowConfirmationModal(true)
         fetchDashboardData()
       } else {
         // Manejar errores de validación (API v2.7)
@@ -670,7 +689,7 @@ const Purchases = () => {
         )
         fetchDashboardData()
       } else {
-        toast.error(result?.error || result?.message || 'Error al anular orden de compra')
+        toast.error((result as any)?.error || (result as any)?.message || 'Error al anular orden de compra')
       }
     } catch (err: any) {
       console.error('Error in handleConfirmCancellation:', err)
@@ -733,7 +752,7 @@ const Purchases = () => {
         setPurchaseOrders(Array.isArray(orders) ? orders : [])
       }
     } catch (filterError) {
-      setError(filterError.message || 'Error al filtrar compras')
+      setError((filterError as any).message || 'Error al filtrar compras')
       setPurchaseOrders([])
     } finally {
       setLoading(false)
@@ -818,9 +837,10 @@ const Purchases = () => {
       setActiveTab('historial')
       await handleFilter()
     } catch (paymentError) {
-      const message = paymentError?.message || 'No se pudo registrar el pago'
+      const message = (paymentError as any)?.message || 'No se pudo registrar el pago'
       setError(message)
       toast.error(message)
+      throw paymentError
     }
   }
 
@@ -894,8 +914,9 @@ const Purchases = () => {
                     </p>
                   </div>
                   <button
-                    className='w-full sm:w-auto bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white px-4 py-2 rounded-[var(--fluent-corner-radius-medium,4px)] font-semibold text-sm shadow-[var(--fluent-shadow-2)] active:scale-[0.98] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] flex items-center justify-center gap-2'
+                    className='w-full sm:w-auto bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white px-4 py-2 rounded-[var(--fluent-corner-radius-medium,4px)] font-semibold text-sm shadow-[var(--fluent-shadow-2)] active:scale-[0.98] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none'
                     onClick={() => setIsModalOpen(true)}
+                    disabled={!canWrite}
                   >
                     <Plus size={16} strokeWidth={2.5} />
                     Agregar Artículo
@@ -1106,7 +1127,8 @@ const Purchases = () => {
                       disabled={
                         !selectedSupplier ||
                         purchaseItems.length === 0 ||
-                        loading
+                        loading ||
+                        !canWrite
                       }
                     >
                       {loading ? 'Procesando...' : 'Confirmar y Guardar Compra'}
@@ -1391,13 +1413,24 @@ const Purchases = () => {
                             className='hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] transition-colors duration-[duration:var(--fluent-duration-faster,100ms)]'
                           >
                             <td className='px-5 py-3.5 font-semibold text-[var(--fluent-brand-primary,#0078D4)] text-sm'>
-                              #{order.id}
+                              <div>#{order.id}</div>
+                              {order.branch_id && (
+                                <div className='text-[10px] text-gray-400 dark:text-gray-500 font-normal flex items-center gap-1 mt-0.5'>
+                                  <Building size={10} className="inline mr-1" />
+                                  <span>Sucursal: {order.branch_id}</span>
+                                </div>
+                              )}
                             </td>
                             <td className='px-5 py-3.5 text-[var(--fluent-text-secondary,#605E5C)] text-sm'>
                               {formatDate(order.order_date)}
                             </td>
                             <td className='px-5 py-3.5 font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white text-sm'>
-                              {order.supplier_name || '-'}
+                              <div>{order.supplier_name || '-'}</div>
+                              {order.payment_method && (
+                                <div className='text-[10px] text-gray-400 dark:text-gray-500 font-normal mt-0.5'>
+                                  Pago: <span className='font-semibold'>{order.payment_method}</span>
+                                </div>
+                              )}
                             </td>
                             <td className='px-5 py-3.5 text-right font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
                               {formatCurrency(
@@ -1456,7 +1489,7 @@ const Purchases = () => {
                                       />{' '}
                                       Ver Detalle
                                     </button>
-                                    {!isCancelled && (
+                                    {!isCancelled && canWrite && (
                                       <button
                                         onClick={() =>
                                           handleCancelPurchase(order)
@@ -2018,10 +2051,116 @@ const Purchases = () => {
                 Cancelar
               </button>
               <button
-                className='flex-1 py-2.5 bg-[var(--fluent-semantic-danger,#D13438)] hover:bg-[#B52E31] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all text-sm'
+                className='flex-1 py-2.5 bg-[var(--fluent-semantic-danger,#D13438)] hover:bg-[#B52E31] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all text-sm disabled:opacity-50 disabled:pointer-events-none'
                 onClick={handleConfirmCancellation}
+                disabled={!canWrite}
               >
                 Sí, Anular
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showConfirmationModal && latestPurchaseResult && (
+        <div className='fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4'>
+          <div
+            className='absolute inset-0 bg-black/50 backdrop-blur-sm'
+            onClick={() => setShowConfirmationModal(false)}
+          ></div>
+          <div className='relative bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] w-full max-w-lg rounded-[var(--fluent-corner-radius-xlarge,8px)] shadow-[var(--fluent-shadow-64)] p-6 border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] flex flex-col max-h-[90vh]'>
+            <div className='flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 pb-3 shrink-0'>
+              <div className='w-10 h-10 bg-[rgba(16,124,16,0.1)] text-[var(--fluent-semantic-success,#107C10)] rounded-full flex items-center justify-center'>
+                <CheckCircle size={22} />
+              </div>
+              <div>
+                <h3 className='text-lg font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
+                  Compra Registrada
+                </h3>
+                <p className='text-xs text-[var(--fluent-text-secondary,#605E5C)]'>
+                  Orden de compra #{latestPurchaseResult.id} guardada con éxito.
+                </p>
+              </div>
+            </div>
+
+            <div className='flex-1 overflow-y-auto py-4 space-y-4 pr-1'>
+              <div className='grid grid-cols-2 gap-4 text-left p-3 bg-gray-50 dark:bg-gray-800/40 rounded-lg'>
+                <div>
+                  <span className='block text-[10px] font-bold text-gray-400 uppercase tracking-tight'>Monto Total</span>
+                  <span className='text-base font-bold text-text-main'>{formatCurrency(latestPurchaseResult.total_amount, paymentCurrency)}</span>
+                </div>
+                <div>
+                  <span className='block text-[10px] font-bold text-gray-400 uppercase tracking-tight'>Sucursal Asignada</span>
+                  <span className='text-sm font-semibold text-text-main flex items-center gap-1 mt-0.5'>
+                    <Building size={12} className="text-primary" />
+                    Sucursal #{latestPurchaseResult.branch_id}
+                  </span>
+                </div>
+              </div>
+
+              {latestPurchaseResult.warnings.length > 0 && (
+                <div className='p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 rounded-lg text-left space-y-1.5'>
+                  <div className='flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-semibold text-xs uppercase tracking-wider'>
+                    <AlertCircle size={14} /> Advertencias Fiscales
+                  </div>
+                  <ul className='list-disc pl-4 text-xs text-amber-800 dark:text-amber-300 space-y-1'>
+                    {latestPurchaseResult.warnings.map((w, idx) => (
+                      <li key={idx}>
+                        {w.product_name || w.name || 'Producto'}: Tasa observada del {w.observed_tax_rate || w.tax_rate}% difiere de la esperada.
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {latestPurchaseResult.details.length > 0 && (
+                <div className='space-y-1.5 text-left'>
+                  <span className='block text-[10px] font-bold text-gray-400 uppercase tracking-tight'>Liquidación Fiscal por Ítem</span>
+                  <div className='border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden'>
+                    <table className='w-full text-xs text-left border-collapse'>
+                      <thead className='bg-gray-50 dark:bg-gray-800/60 font-semibold text-gray-500'>
+                        <tr>
+                          <th className='px-3 py-2'>Producto</th>
+                          <th className='px-2 py-2 text-center'>Cant.</th>
+                          <th className='px-2 py-2 text-center'>IVA</th>
+                          <th className='px-3 py-2 text-right'>Fuente</th>
+                        </tr>
+                      </thead>
+                      <tbody className='divide-y divide-gray-100 dark:divide-gray-800'>
+                        {latestPurchaseResult.details.map((detail, idx) => (
+                          <tr key={idx} className='hover:bg-gray-50/50 dark:hover:bg-gray-800/20'>
+                            <td className='px-3 py-2 font-medium truncate max-w-[140px]'>{detail.name || detail.product_name || `Producto #${detail.product_id}`}</td>
+                            <td className='px-2 py-2 text-center'>{formatNumber(detail.quantity)}</td>
+                            <td className='px-2 py-2 text-center font-semibold text-primary'>{detail.applied_tax_rate ?? detail.tax_rate ?? 0}%</td>
+                            <td className='px-3 py-2 text-right text-text-secondary italic text-[10px]'>{detail.tax_resolution_source || 'default'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className='flex gap-3 pt-3 border-t border-gray-100 dark:border-gray-800 shrink-0'>
+              <button
+                className='flex-1 py-2.5 font-medium text-[var(--fluent-text-secondary,#605E5C)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] transition-colors text-sm'
+                onClick={() => {
+                  setShowConfirmationModal(false)
+                  setActiveTab('historial')
+                  handleFilter()
+                }}
+              >
+                Ver en Historial
+              </button>
+              <button
+                className='flex-1 py-2.5 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all text-sm'
+                onClick={() => {
+                  setShowConfirmationModal(false)
+                  setShowInstantPayment(true)
+                }}
+              >
+                Registrar Pago
               </button>
             </div>
           </div>

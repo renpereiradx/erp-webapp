@@ -1,39 +1,32 @@
 # Guía de API de Requisiciones de Compra para Frontend
 
-## Base URL
+## 🔧 Configuración General
 
-`http://localhost:5050`
+### Base URL
 
-## Autenticación
+```
+http://localhost:5050
+```
 
-- Header: `Authorization: Bearer <jwt_token>`
-
-## Headers requeridos (cuando aplica)
+### Headers Requeridos
 
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
 
-## Contexto de Sucursal
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
 
-- Query param: `?branch_id=<id>`
-- O header: `X-Branch-ID: <id>`
-- Fallback: `active_branch` del token JWT
-- Restricción: sucursal debe estar en `allowed_branches`
-
-> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
-
-## Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
+### Formato de Respuesta Estándar
 
 `{ success: bool, data?, message?, error?, pagination? }`
 
-## Paginación estándar
+### Formato de Fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params: `YYYY-MM-DD`
+
+### Paginación Estándar
 
 `{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
@@ -47,27 +40,27 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
-| Content-Type  | Sí          | `application/json`          |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
+| Content-Type | Sí | `application/json` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción                                       |
-| --------- | ---- | --------- | ------------------------------------------------- |
-| branch_id | int  | No        | ID de sucursal explícita. Prioridad sobre header. |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita. Prioridad sobre header. |
 
 #### Request Body
 
-| Campo       | Tipo   | Requerido | Descripción                                                  |
-| ----------- | ------ | --------- | ------------------------------------------------------------ |
-| supplier_id | string | No        | ID del proveedor sugerido (Party ID)                         |
-| branch_id   | int    | No        | ID de sucursal. Si se omite, usa el branch context resuelto. |
-| notes       | string | No        | Notas generales                                              |
-| details     | array  | Sí        | Mínimo 1 item. Ver detalle abajo.                            |
-| metadata    | object | No        | Metadatos adicionales                                        |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| supplier_id | string | No | ID del proveedor sugerido (Party ID) |
+| branch_id | int | No | ID de sucursal. Si se omite, usa el branch context resuelto. |
+| notes | string | No | Notas generales |
+| details | array | Sí | Mínimo 1 item. Ver detalle abajo. |
+| metadata | object | No | Metadatos adicionales |
 
 **Detail Item:**
 | Campo | Tipo | Requerido | Descripción |
@@ -80,23 +73,23 @@ Authorization: Bearer <jwt_token>
 
 #### Response 201
 
-| Campo       | Tipo   | Descripción                   |
-| ----------- | ------ | ----------------------------- |
-| success     | bool   | `true`                        |
-| id          | string | ID generado de la requisición |
-| items_count | int    | Cantidad de líneas            |
-| message     | string | Mensaje de éxito              |
-| created_at  | string | Fecha de creación (ISO 8601)  |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| id | string | ID generado de la requisición |
+| items_count | int | Cantidad de líneas |
+| message | string | Mensaje de éxito |
+| created_at | string | Fecha de creación (ISO 8601) |
 
 #### Errores
 
-| Código | Condición                                                                                   |
-| ------ | ------------------------------------------------------------------------------------------- |
-| 400    | Body inválido, `details` vacío, `product_id` vacío, `quantity` <= 0, o `branch_id` inválido |
-| 401    | Token ausente o inválido                                                                    |
-| 403    | `branch_id` fuera de `allowed_branches`                                                     |
-| 404    | Producto no encontrado                                                                      |
-| 500    | Error interno                                                                               |
+| Código | Condición |
+|--------|-----------|
+| 400 | Body inválido, `details` vacío, `product_id` vacío, `quantity` <= 0, o `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Producto no encontrado |
+| 500 | Error interno |
 
 ---
 
@@ -106,30 +99,30 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
 
 #### Query Parameters
 
-| Parámetro   | Tipo   | Requerido | Descripción                     |
-| ----------- | ------ | --------- | ------------------------------- |
-| branch_id   | int    | No        | ID de sucursal explícita        |
-| status      | string | No        | Filtrar por estado              |
-| user_id     | string | No        | Filtrar por solicitante         |
-| supplier_id | string | No        | Filtrar por proveedor sugerido  |
-| start_date  | date   | No        | Fecha inicio (YYYY-MM-DD)       |
-| end_date    | date   | No        | Fecha fin (YYYY-MM-DD)          |
-| page        | int    | No        | Número de página (default: 1)   |
-| page_size   | int    | No        | Elementos por página (max: 100) |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita |
+| status | string | No | Filtrar por estado |
+| user_id | string | No | Filtrar por solicitante |
+| supplier_id | string | No | Filtrar por proveedor sugerido |
+| start_date | date | No | Fecha inicio (YYYY-MM-DD) |
+| end_date | date | No | Fecha fin (YYYY-MM-DD) |
+| page | int | No | Número de página (default: 1) |
+| page_size | int | No | Elementos por página (max: 100) |
 
 #### Response 200
 
-| Campo   | Tipo  | Descripción                    |
-| ------- | ----- | ------------------------------ |
-| success    | bool   | `true`                                      |
-| data       | array  | Lista de `PurchaseRequisition`             |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| data | array | Lista de `PurchaseRequisition` |
 | pagination | object | `{ page, page_size, total_items, total_pages, has_next, has_prev }` |
 
 **PurchaseRequisition:**
@@ -148,12 +141,12 @@ Authorization: Bearer <jwt_token>
 
 #### Errores
 
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `branch_id` inválido                    |
-| 401    | Token ausente o inválido                |
-| 403    | `branch_id` fuera de `allowed_branches` |
-| 500    | Error interno                           |
+| Código | Condición |
+|--------|-----------|
+| 400 | `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 500 | Error interno |
 
 ---
 
@@ -163,25 +156,25 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita |
 
 #### Response 200
 
-| Campo   | Tipo   | Descripción                      |
-| ------- | ------ | -------------------------------- |
-| success | bool   | `true`                           |
-| data    | object | `PurchaseRequisitionWithDetails` |
-| message | string | Mensaje opcional                 |
-| error   | string | Solo en caso de error            |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| data | object | `PurchaseRequisitionWithDetails` |
+| message | string | Mensaje opcional |
+| error | string | Solo en caso de error |
 
 **PurchaseRequisitionWithDetails:**
 | Campo | Tipo | Descripción |
@@ -204,13 +197,13 @@ Authorization: Bearer <jwt_token>
 
 #### Errores
 
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `id` vacío o `branch_id` inválido       |
-| 401    | Token ausente o inválido                |
-| 403    | `branch_id` fuera de `allowed_branches` |
-| 404    | Requisición no encontrada               |
-| 500    | Error interno                           |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` vacío o `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Requisición no encontrada |
+| 500 | Error interno |
 
 ---
 
@@ -220,39 +213,39 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita |
 
 #### Path Parameters
 
-| Parámetro | Tipo   | Requerido | Descripción                                                     |
-| --------- | ------ | --------- | --------------------------------------------------------------- |
-| status    | string | Sí        | Estado: `DRAFT`, `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED` |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| status | string | Sí | Estado: `DRAFT`, `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED` |
 
 #### Response 200
 
-| Campo   | Tipo  | Descripción                    |
-| ------- | ----- | ------------------------------ |
-| success    | bool   | `true`                                      |
-| data       | array  | Lista de `PurchaseRequisition`             |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| data | array | Lista de `PurchaseRequisition` |
 | pagination | object | `{ page, page_size, total_items, total_pages, has_next, has_prev }` |
 
 #### Errores
 
-| Código | Condición                                               |
-| ------ | ------------------------------------------------------- |
-| 400    | `status` vacío, estado inválido, o `branch_id` inválido |
-| 401    | Token ausente o inválido                                |
-| 403    | `branch_id` fuera de `allowed_branches`                 |
-| 500    | Error interno                                           |
+| Código | Condición |
+|--------|-----------|
+| 400 | `status` vacío, estado inválido, o `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 500 | Error interno |
 
 ---
 
@@ -262,33 +255,33 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita |
 
 #### Response 200
 
-| Campo   | Tipo  | Descripción                    |
-| ------- | ----- | ------------------------------ |
-| success    | bool   | `true`                                      |
-| data       | array  | Lista de `PurchaseRequisition`             |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| data | array | Lista de `PurchaseRequisition` |
 | pagination | object | `{ page, page_size, total_items, total_pages, has_next, has_prev }` |
 
 #### Errores
 
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `branch_id` inválido                    |
-| 401    | Token ausente o inválido                |
-| 403    | `branch_id` fuera de `allowed_branches` |
-| 500    | Error interno                           |
+| Código | Condición |
+|--------|-----------|
+| 400 | `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 500 | Error interno |
 
 ---
 
@@ -298,39 +291,39 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita |
 
 #### Path Parameters
 
-| Parámetro | Tipo   | Requerido | Descripción    |
-| --------- | ------ | --------- | -------------- |
-| user_id   | string | Sí        | ID del usuario |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| user_id | string | Sí | ID del usuario |
 
 #### Response 200
 
-| Campo   | Tipo  | Descripción                    |
-| ------- | ----- | ------------------------------ |
-| success    | bool   | `true`                                      |
-| data       | array  | Lista de `PurchaseRequisition`             |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| data | array | Lista de `PurchaseRequisition` |
 | pagination | object | `{ page, page_size, total_items, total_pages, has_next, has_prev }` |
 
 #### Errores
 
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `branch_id` inválido                    |
-| 401    | Token ausente o inválido                |
-| 403    | `branch_id` fuera de `allowed_branches` |
-| 500    | Error interno                           |
+| Código | Condición |
+|--------|-----------|
+| 400 | `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 500 | Error interno |
 
 ---
 
@@ -340,45 +333,45 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
-| Content-Type  | Sí          | `application/json`          |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
+| Content-Type | Sí | `application/json` |
 
 #### Query Parameters
 
-| Parámetro | Tipo | Requerido | Descripción              |
-| --------- | ---- | --------- | ------------------------ |
-| branch_id | int  | No        | ID de sucursal explícita |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explícita |
 
 #### Request Body
 
-| Campo      | Tipo   | Requerido | Descripción       |
-| ---------- | ------ | --------- | ----------------- |
-| new_status | string | Sí        | Nuevo estado      |
-| notes      | string | No        | Notas adicionales |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| new_status | string | Sí | Nuevo estado |
+| notes | string | No | Notas adicionales |
 
 #### Response 200
 
-| Campo           | Tipo   | Descripción            |
-| --------------- | ------ | ---------------------- |
-| success         | bool   | `true`                 |
-| id              | string | ID de la requisición   |
-| previous_status | string | Estado anterior        |
-| new_status      | string | Estado nuevo           |
-| message         | string | Descripción del cambio |
-| updated_at      | string | Fecha de actualización |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| id | string | ID de la requisición |
+| previous_status | string | Estado anterior |
+| new_status | string | Estado nuevo |
+| message | string | Descripción del cambio |
+| updated_at | string | Fecha de actualización |
 
 #### Errores
 
-| Código | Condición                                                                      |
-| ------ | ------------------------------------------------------------------------------ |
-| 400    | `id` vacío, `new_status` inválido, transición inválida, o `branch_id` inválido |
-| 401    | Token ausente o inválido                                                       |
-| 403    | `branch_id` fuera de `allowed_branches`                                        |
-| 404    | Requisición no encontrada                                                      |
-| 500    | Error interno                                                                  |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` vacío, `new_status` inválido, transición inválida, o `branch_id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | `branch_id` fuera de `allowed_branches` |
+| 404 | Requisición no encontrada |
+| 500 | Error interno |
 
 #### Notas
 
@@ -394,13 +387,13 @@ Authorization: Bearer <jwt_token>
 
 ## Estados de la Requisición
 
-| Estado      | Descripción                 | Transiciones Válidas                |
-| ----------- | --------------------------- | ----------------------------------- |
-| `DRAFT`     | Borrador inicial            | `PENDING`, `CANCELLED`              |
-| `PENDING`   | Pendiente de aprobación     | `APPROVED`, `REJECTED`, `CANCELLED` |
-| `APPROVED`  | Aprobado, listo para compra | `CANCELLED`                         |
-| `REJECTED`  | Rechazado                   | `DRAFT`, `PENDING`                  |
-| `CANCELLED` | Cancelado                   | `DRAFT`                             |
+| Estado | Descripción | Transiciones Válidas |
+|--------|-------------|---------------------|
+| `DRAFT` | Borrador inicial | `PENDING`, `CANCELLED` |
+| `PENDING` | Pendiente de aprobación | `APPROVED`, `REJECTED`, `CANCELLED` |
+| `APPROVED` | Aprobado, listo para compra | `CANCELLED` |
+| `REJECTED` | Rechazado | `DRAFT`, `PENDING` |
+| `CANCELLED` | Cancelado | `DRAFT` |
 
 ---
 
@@ -408,48 +401,48 @@ Authorization: Bearer <jwt_token>
 
 ### PurchaseRequisition
 
-| Campo         | Tipo     | Descripción                                    |
-| ------------- | -------- | ---------------------------------------------- |
-| id            | string   | ID único de la requisición                     |
-| user_id       | string   | ID del usuario solicitante                     |
-| user_name     | string   | Nombre del solicitante                         |
-| branch_id     | int      | ID de sucursal (nullable)                      |
-| status        | string   | Estado actual                                  |
-| supplier_id   | string   | ID del proveedor sugerido (Party ID, nullable) |
-| supplier_name | string   | Nombre del proveedor sugerido                  |
-| notes         | string   | Notas adicionales (nullable)                   |
-| metadata      | jsonb    | Metadatos adicionales                          |
-| created_at    | datetime | Fecha de creación                              |
-| updated_at    | datetime | Fecha de última modificación                   |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | string | ID único de la requisición |
+| user_id | string | ID del usuario solicitante |
+| user_name | string | Nombre del solicitante |
+| branch_id | int | ID de sucursal (nullable) |
+| status | string | Estado actual |
+| supplier_id | string | ID del proveedor sugerido (Party ID, nullable) |
+| supplier_name | string | Nombre del proveedor sugerido |
+| notes | string | Notas adicionales (nullable) |
+| metadata | jsonb | Metadatos adicionales |
+| created_at | datetime | Fecha de creación |
+| updated_at | datetime | Fecha de última modificación |
 
 ### PurchaseRequisitionDetail
 
-| Campo                   | Tipo     | Descripción                        |
-| ----------------------- | -------- | ---------------------------------- |
-| id                      | int      | ID único del detalle               |
-| purchase_requisition_id | string   | ID de la requisición padre         |
-| product_id              | string   | ID del producto                    |
-| product_name            | string   | Nombre del producto                |
-| quantity                | float    | Cantidad requerida                 |
-| unit                    | string   | Unidad de medida (nullable)        |
-| priority                | string   | Prioridad: `LOW`, `MEDIUM`, `HIGH` |
-| notes                   | string   | Notas del ítem (nullable)          |
-| created_at              | datetime | Fecha de creación                  |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | int | ID único del detalle |
+| purchase_requisition_id | string | ID de la requisición padre |
+| product_id | string | ID del producto |
+| product_name | string | Nombre del producto |
+| quantity | float | Cantidad requerida |
+| unit | string | Unidad de medida (nullable) |
+| priority | string | Prioridad: `LOW`, `MEDIUM`, `HIGH` |
+| notes | string | Notas del ítem (nullable) |
+| created_at | datetime | Fecha de creación |
 
 ---
 
 ## Resumen de Endpoints
 
-| Método | Endpoint                                 | Descripción        |
-| ------ | ---------------------------------------- | ------------------ |
-| POST   | `/purchase-requisitions`                 | Crear requisición  |
-| GET    | `/purchase-requisitions`                 | Listar con filtros |
-| GET    | `/purchase-requisitions/{id}`            | Obtener por ID     |
-| GET    | `/purchase-requisitions/status/{status}` | Listar por estado  |
-| GET    | `/purchase-requisitions/my`              | Mis requisiciones  |
-| GET    | `/purchase-requisitions/user/{user_id}`  | Listar por usuario |
-| PUT    | `/purchase-requisitions/{id}/status`     | Actualizar estado  |
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/purchase-requisitions` | Crear requisición |
+| GET | `/purchase-requisitions` | Listar con filtros |
+| GET | `/purchase-requisitions/{id}` | Obtener por ID |
+| GET | `/purchase-requisitions/status/{status}` | Listar por estado |
+| GET | `/purchase-requisitions/my` | Mis requisiciones |
+| GET | `/purchase-requisitions/user/{user_id}` | Listar por usuario |
+| PUT | `/purchase-requisitions/{id}/status` | Actualizar estado |
 
 ---
 
-_Última actualización: 2026-05-06 — Consistencia cross-documento verificada._
+_Última actualización: 2026-05-19_

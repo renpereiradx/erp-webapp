@@ -203,10 +203,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setError('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
     };
 
+    const handleTokenRefreshed = (event: CustomEvent) => {
+      const data = event.detail;
+      if (data && data.access_token) {
+        setToken(data.access_token);
+        
+        // Recargar datos actualizados del usuario (/me) para sincronizar estado de react
+        userService.getMe().then(response => {
+          if (response.success && response.data) {
+            const userData = response.data;
+            setUser({
+              ...userData,
+              role_id: data.role_id || userData.role_id || localStorage.getItem('roleId') || undefined,
+              role_name: data.role_name || userData.role_name || localStorage.getItem('roleName') || undefined,
+              active_branch: data.active_branch || userData.active_branch,
+              allowed_branches: data.allowed_branches || userData.allowed_branches
+            });
+          }
+        }).catch(err => {
+          console.error("Error al refrescar información del usuario tras token refresh:", err);
+        });
+      }
+    };
+
     window.addEventListener('api:unauthorized', handleUnauthorized);
+    window.addEventListener('auth:token_refreshed', handleTokenRefreshed as EventListener);
 
     return () => {
       window.removeEventListener('api:unauthorized', handleUnauthorized);
+      window.removeEventListener('auth:token_refreshed', handleTokenRefreshed as EventListener);
     };
   }, [initializeAuth]);
 

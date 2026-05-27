@@ -1,39 +1,32 @@
 # Guía de API de Transferencias entre Sucursales para Frontend
 
-## Base URL
+## 🔧 Configuración General
 
-`http://localhost:5050`
+### Base URL
 
-## Autenticación
+```
+http://localhost:5050
+```
 
-- Header: `Authorization: Bearer <jwt_token>`
-
-## Headers requeridos (cuando aplica)
+### Headers Requeridos
 
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
 
-## Contexto de Sucursal
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
 
-- Query param: `?branch_id=<id>`
-- O header: `X-Branch-ID: <id>`
-- Fallback: `active_branch` del token JWT
-- Restricción: sucursal debe estar en `allowed_branches`
-
-> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
-
-## Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
+### Formato de Respuesta Estándar
 
 `{ success: bool, data?, message?, error?, pagination? }`
 
-## Paginación estándar
+### Formato de Fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params: `YYYY-MM-DD`
+
+### Paginación Estándar
 
 `{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
@@ -47,20 +40,20 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
 
-| Campo                 | Tipo   | Requerido | Descripción                                                       |
-| --------------------- | ------ | --------- | ----------------------------------------------------------------- |
-| source_branch_id      | int    | Sí        | ID de sucursal origen                                             |
-| destination_branch_id | int    | Sí        | ID de sucursal destino                                            |
-| transfer_type         | string | No        | `STANDARD`, `URGENT`, `RETURN`, `ADJUSTMENT`. Default: `STANDARD` |
-| notes                 | string | No        | Notas generales                                                   |
-| items                 | array  | Sí        | Lista de productos a transferir                                   |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| source_branch_id | int | Sí | ID de sucursal origen |
+| destination_branch_id | int | Sí | ID de sucursal destino |
+| transfer_type | string | No | `STANDARD`, `URGENT`, `RETURN`, `ADJUSTMENT`. Default: `STANDARD` |
+| notes | string | No | Notas generales |
+| items | array | Sí | Lista de productos a transferir |
 
 **Item:**
 | Campo | Tipo | Requerido | Descripción |
@@ -72,26 +65,26 @@ Authorization: Bearer <jwt_token>
 
 #### Response 201
 
-| Campo                 | Tipo     | Descripción                   |
-| --------------------- | -------- | ----------------------------- |
-| id                    | int      | ID de la transferencia        |
-| transfer_code         | string   | Código generado               |
-| source_branch_id      | int      | Sucursal origen               |
-| destination_branch_id | int      | Sucursal destino              |
-| status                | string   | `PENDING`                     |
-| transfer_type         | string   | Tipo de transferencia         |
-| requested_by          | string   | Usuario solicitante           |
-| requested_date        | datetime | Fecha de solicitud            |
-| items                 | array    | Lista de `BranchTransferItem` |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | int | ID de la transferencia |
+| transfer_code | string | Código generado |
+| source_branch_id | int | Sucursal origen |
+| destination_branch_id | int | Sucursal destino |
+| status | string | `PENDING` |
+| transfer_type | string | Tipo de transferencia |
+| requested_by | string | Usuario solicitante |
+| requested_date | datetime | Fecha de solicitud |
+| items | array | Lista de `BranchTransferItem` |
 
 #### Errores
 
-| Código | Condición                                                                             |
-| ------ | ------------------------------------------------------------------------------------- |
-| 400    | Body inválido, `source_branch_id` o `destination_branch_id` inválidos, o items vacíos |
-| 401    | Token ausente o inválido                                                              |
-| 403    | Sucursal origen o destino no autorizada                                               |
-| 500    | Error interno                                                                         |
+| Código | Condición |
+|--------|-----------|
+| 400 | Body inválido, `source_branch_id` o `destination_branch_id` inválidos, o items vacíos |
+| 401 | Token ausente o inválido |
+| 403 | Sucursal origen o destino no autorizada |
+| 500 | Error interno |
 
 ---
 
@@ -101,37 +94,37 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido   | Descripción                 |
-| ------------- | ----------- | --------------------------- |
-| Authorization | Sí          | Bearer token                |
-| X-Branch-ID   | Condicional | Si no se envía `?branch_id` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| X-Branch-ID | Condicional | Si no se envía `?branch_id` |
 
 #### Query Parameters
 
-| Parámetro             | Tipo   | Requerido | Descripción                             |
-| --------------------- | ------ | --------- | --------------------------------------- |
-| branch_id             | int    | No        | Filtrar por sucursal (origen o destino) |
-| status                | string | No        | Filtrar por estado                      |
-| source_branch_id      | int    | No        | Filtrar por origen                      |
-| destination_branch_id | int    | No        | Filtrar por destino                     |
-| page                  | int    | No        | Número de página                        |
-| page_size             | int    | No        | Elementos por página                    |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | Filtrar por sucursal (origen o destino) |
+| status | string | No | Filtrar por estado |
+| source_branch_id | int | No | Filtrar por origen |
+| destination_branch_id | int | No | Filtrar por destino |
+| page | int | No | Número de página |
+| page_size | int | No | Elementos por página |
 
 #### Response 200
 
-| Campo      | Tipo   | Descripción               |
-| ---------- | ------ | ------------------------- |
-| data       | array  | Lista de `BranchTransfer` |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| data | array | Lista de `BranchTransfer` |
 | pagination | object | Información de paginación |
 
 #### Errores
 
-| Código | Condición                |
-| ------ | ------------------------ |
-| 400    | Parámetros inválidos     |
-| 401    | Token ausente o inválido |
-| 403    | Sucursal no autorizada   |
-| 500    | Error interno            |
+| Código | Condición |
+|--------|-----------|
+| 400 | Parámetros inválidos |
+| 401 | Token ausente o inválido |
+| 403 | Sucursal no autorizada |
+| 500 | Error interno |
 
 ---
 
@@ -141,16 +134,16 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
 #### Response 200
 
-| Campo    | Tipo           | Descripción                   |
-| -------- | -------------- | ----------------------------- |
-| transfer | BranchTransfer | Cabecera de la transferencia  |
-| items    | array          | Lista de `BranchTransferItem` |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| transfer | BranchTransfer | Cabecera de la transferencia |
+| items | array | Lista de `BranchTransferItem` |
 
 **BranchTransferItem:**
 | Campo | Tipo | Descripción |
@@ -194,13 +187,13 @@ Authorization: Bearer <jwt_token>
 
 #### Errores
 
-| Código | Condición                   |
-| ------ | --------------------------- |
-| 400    | `id` inválido               |
-| 401    | Token ausente o inválido    |
-| 403    | Sucursal no autorizada      |
-| 404    | Transferencia no encontrada |
-| 500    | Error interno               |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` inválido |
+| 401 | Token ausente o inválido |
+| 403 | Sucursal no autorizada |
+| 404 | Transferencia no encontrada |
+| 500 | Error interno |
 
 ---
 
@@ -210,20 +203,20 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
 
-| Campo                    | Tipo   | Requerido | Descripción                          |
-| ------------------------ | ------ | --------- | ------------------------------------ |
-| new_status               | string | Sí        | Nuevo estado                         |
-| notes                    | string | No        | Notas adicionales                    |
-| rejection_reason         | string | No        | Razón de rechazo (si aplica)         |
-| shipping_tracking_number | string | No        | Número de seguimiento (si aplica)    |
-| items                    | array  | No        | Actualización de cantidades por item |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| new_status | string | Sí | Nuevo estado |
+| notes | string | No | Notas adicionales |
+| rejection_reason | string | No | Razón de rechazo (si aplica) |
+| shipping_tracking_number | string | No | Número de seguimiento (si aplica) |
+| items | array | No | Actualización de cantidades por item |
 
 **Item Update:**
 | Campo | Tipo | Requerido | Descripción |
@@ -236,22 +229,22 @@ Authorization: Bearer <jwt_token>
 
 #### Response 200
 
-| Campo      | Tipo     | Descripción            |
-| ---------- | -------- | ---------------------- |
-| id         | int      | ID de la transferencia |
-| status     | string   | Nuevo estado           |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | int | ID de la transferencia |
+| status | string | Nuevo estado |
 | updated_at | datetime | Fecha de actualización |
 
 #### Errores
 
-| Código | Condición                                                       |
-| ------ | --------------------------------------------------------------- |
-| 400    | `id` inválido, `new_status` inválido, o transición no permitida |
-| 401    | Token ausente o inválido                                        |
-| 403    | Sin permisos para realizar esta transición                      |
-| 404    | Transferencia no encontrada                                     |
-| 409    | Transición inválida para el estado actual                       |
-| 500    | Error interno                                                   |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` inválido, `new_status` inválido, o transición no permitida |
+| 401 | Token ausente o inválido |
+| 403 | Sin permisos para realizar esta transición |
+| 404 | Transferencia no encontrada |
+| 409 | Transición inválida para el estado actual |
+| 500 | Error interno |
 
 #### Notas
 
@@ -268,7 +261,7 @@ Authorization: Bearer <jwt_token>
 **Permisos por transición:**
 
 | Transición | Roles permitidos | Restricción de sucursal |
-|---|---|---|
+|------------|------------------|-------------------------|
 | `PENDING → APPROVED` | ADMIN, SUPPLIES, BUYER | Sucursal origen con acceso escritura (FULL/LIMITED) |
 | `PENDING → REJECTED` | ADMIN, SUPPLIES, BUYER | Sucursal origen con acceso escritura |
 | `PENDING → CANCELLED` | ADMIN, SUPPLIES, BUYER | Sucursal origen con acceso escritura |
@@ -277,46 +270,46 @@ Authorization: Bearer <jwt_token>
 | `IN_TRANSIT → RECEIVED` | ADMIN, SUPPLIES, BUYER | Sucursal destino con acceso escritura |
 | `REJECTED → PENDING` | ADMIN, SUPPLIES | Sucursal origen |
 
-> **Creación de transferencias:** ADMIN, SUPPLIES y BUYER pueden crear transferencias.  
-> El usuario debe tener acceso a **ambas** sucursales (origen y destino).  
+> **Creación de transferencias:** ADMIN, SUPPLIES y BUYER pueden crear transferencias.
+> El usuario debe tener acceso a **ambas** sucursales (origen y destino).
 > `REJECTED` requiere `rejection_reason`. `SHIPPED` requiere `shipping_tracking_number`.
 
 ---
 
 ## Estados de Transferencia
 
-| Estado       | Descripción                               |
-| ------------ | ----------------------------------------- |
-| `PENDING`    | Solicitud creada, pendiente de aprobación |
-| `APPROVED`   | Aprobada, lista para envío                |
-| `REJECTED`   | Rechazada                                 |
-| `SHIPPED`    | Enviada desde origen                      |
-| `IN_TRANSIT` | En tránsito                               |
-| `RECEIVED`   | Recibida en destino                       |
-| `CANCELLED`  | Cancelada                                 |
+| Estado | Descripción |
+|--------|-------------|
+| `PENDING` | Solicitud creada, pendiente de aprobación |
+| `APPROVED` | Aprobada, lista para envío |
+| `REJECTED` | Rechazada |
+| `SHIPPED` | Enviada desde origen |
+| `IN_TRANSIT` | En tránsito |
+| `RECEIVED` | Recibida en destino |
+| `CANCELLED` | Cancelada |
 
 ---
 
 ## Tipos de Transferencia
 
-| Tipo         | Descripción            |
-| ------------ | ---------------------- |
-| `STANDARD`   | Transferencia estándar |
-| `URGENT`     | Transferencia urgente  |
-| `RETURN`     | Devolución             |
-| `ADJUSTMENT` | Ajuste de inventario   |
+| Tipo | Descripción |
+|------|-------------|
+| `STANDARD` | Transferencia estándar |
+| `URGENT` | Transferencia urgente |
+| `RETURN` | Devolución |
+| `ADJUSTMENT` | Ajuste de inventario |
 
 ---
 
 ## Resumen de Endpoints
 
-| Método | Endpoint                        | Descripción           |
-| ------ | ------------------------------- | --------------------- |
-| POST   | `/branch-transfers`             | Crear transferencia   |
-| GET    | `/branch-transfers`             | Listar transferencias |
-| GET    | `/branch-transfers/{id}`        | Obtener transferencia |
-| PUT    | `/branch-transfers/{id}/status` | Actualizar estado     |
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/branch-transfers` | Crear transferencia |
+| GET | `/branch-transfers` | Listar transferencias |
+| GET | `/branch-transfers/{id}` | Obtener transferencia |
+| PUT | `/branch-transfers/{id}/status` | Actualizar estado |
 
 ---
 
-_Última actualización: 2026-05-06 — FASE 5 verificada. Permisos de transición corregidos (BUYER puede APPROVED/REJECTED/CANCELLED en sucursal origen; ADMIN/SUPPLIES para SHIPPED/IN_TRANSIT; RECEIVED requiere BUYER/ADMIN/SUPPLIES en destino). Restricciones de sucursal por transición documentadas._
+_Última actualización: 2026-05-19_

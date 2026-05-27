@@ -10,6 +10,7 @@ import {
   CreateBranchFiscalConfigRequest
 } from '@/types';
 import { branchService } from '@/features/branches/services/branchService';
+import { userService } from '@/services/userService';
 import { useToast } from '@/hooks/useToast';
 import {
   Dialog,
@@ -30,7 +31,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Building2, Plus, Trash2, ShieldCheck, Receipt, UserPlus, Loader2, Check } from 'lucide-react';
+import { Building2, Plus, Trash2, ShieldCheck, Receipt, UserPlus, Loader2 } from 'lucide-react';
 
 interface BranchModalProps {
   isOpen: boolean;
@@ -96,6 +97,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
         phone: '',
         email: '',
         is_warehouse: false,
+        is_active: true,
       });
     }
     setShowAddFiscal(false);
@@ -163,6 +165,23 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
     }
   });
 
+  const deleteFiscalMutation = useMutation({
+    mutationFn: (id: number) => branchService.deleteFiscalConfig(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branch-fiscal', branch?.id] });
+      addToast('Configuración fiscal eliminada', 'success');
+    },
+    onError: (error: any) => addToast(error.message || 'Error al eliminar configuración', 'error')
+  });
+
+  // Query para obtener usuarios (para el selector de accesos)
+  const { data: usersResponse } = useQuery({
+    queryKey: ['users-list'],
+    queryFn: () => userService.getUsers({ page_size: 100 }),
+    enabled: isOpen && isEditing
+  });
+  const users = (usersResponse as any)?.users || usersResponse?.data || [];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.code) {
@@ -174,18 +193,20 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto font-display p-6 sm:p-8 gap-6">
-        <DialogHeader className="pb-4 border-b">
-          <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col font-display p-0 gap-0 border-none shadow-fluent-64">
+        <DialogHeader className="p-6 sm:p-8 pb-4 border-b bg-white">
+          <DialogTitle className="text-2xl font-black flex items-center gap-3 text-text-main">
             <div className="size-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
               <Building2 size={20} />
             </div>
             {isEditing ? `Gestionar: ${branch.name}` : 'Nueva Sucursal'}
           </DialogTitle>
-          <DialogDescription className="text-slate-500 mt-1.5 text-sm">
+          <DialogDescription className="text-text-secondary mt-1.5 text-sm font-medium">
             {isEditing ? 'Administre la información general, configuración fiscal y permisos de usuario para esta sucursal.' : 'Complete los campos obligatorios para registrar una nueva sucursal en el sistema.'}
           </DialogDescription>
         </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8 pt-4">
 
         <Tabs defaultValue={initialTab} className="mt-2">
           <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-lg">
@@ -364,7 +385,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
 
             {loadingFiscal ? (
               <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-primary size-8" /></div>
-            ) : !fiscalConfigs?.configs?.length && !fiscalConfigs?.data?.length ? (
+            ) : !(fiscalConfigs as any)?.configs?.length && !fiscalConfigs?.data?.length ? (
               <div className="p-12 border-2 border-dashed border-slate-200 rounded-xl text-center space-y-3 bg-slate-50/50">
                 <div className="mx-auto size-12 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                   <Receipt className="text-slate-400 size-6" />
@@ -385,14 +406,24 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     </TableRow>
                   </TableHeader>
                   <TableBody className="divide-y divide-slate-100">
-                    {(fiscalConfigs?.configs || fiscalConfigs?.data || []).map((cfg: BranchFiscalConfig) => (
+                    {((fiscalConfigs as any)?.configs || fiscalConfigs?.data || []).map((cfg: BranchFiscalConfig) => (
                       <TableRow key={cfg.id} className="text-sm hover:bg-slate-50/50 transition-colors">
                         <TableCell className="py-4 px-4 font-bold text-slate-700">{cfg.establishment_code}-{cfg.expedition_point}</TableCell>
                         <TableCell className="py-4 px-4 text-slate-600 font-medium">{cfg.document_type}</TableCell>
                         <TableCell className="py-4 px-4 font-mono font-medium text-slate-600">{cfg.timbrado}</TableCell>
                         <TableCell className="py-4 px-4 text-slate-500">{cfg.valid_to ? new Date(cfg.valid_to).toLocaleDateString() : 'Indefinido'}</TableCell>
                         <TableCell className="py-4 px-4 text-right">
-                          <Button variant="ghost" size="sm" className="size-8 p-0 text-slate-400 hover:text-error hover:bg-error/10">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="size-8 p-0 text-slate-400 hover:text-error hover:bg-error/10"
+                            onClick={() => {
+                              if (window.confirm('¿Estás seguro de eliminar esta configuración fiscal?')) {
+                                deleteFiscalMutation.mutate(cfg.id);
+                              }
+                            }}
+                            disabled={deleteFiscalMutation.isPending}
+                          >
                             <Trash2 size={16} />
                           </Button>
                         </TableCell>
@@ -424,13 +455,19 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
               <div className="p-5 bg-success/5 border border-success/20 rounded-xl animate-in slide-in-from-top-2 duration-300 shadow-sm">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-success/70 tracking-wider">ID del Usuario</label>
-                    <Input 
-                      placeholder="Ej: usr_abc123" 
-                      className="text-sm h-11 border-success/30 focus:border-success focus:ring-success/20 bg-white" 
+                    <label className="text-[11px] font-bold uppercase text-success/70 tracking-wider">Usuario</label>
+                    <select 
+                      className="w-full h-11 px-3 border border-success/30 rounded-md text-sm font-medium bg-white focus:ring-2 focus:ring-success/20 outline-none"
                       value={accessForm.user_id}
                       onChange={(e) => setAccessForm({...accessForm, user_id: e.target.value})}
-                    />
+                    >
+                      <option value="">Seleccionar usuario...</option>
+                      {users.map(user => (
+                        <option key={user.id} value={user.id}>
+                          {user.first_name} {user.last_name} ({user.username})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold uppercase text-success/70 tracking-wider">Nivel de Acceso</label>
@@ -461,7 +498,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
 
             {loadingAccess ? (
               <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-success size-8" /></div>
-            ) : !accessList?.access?.length && !accessList?.data?.length ? (
+            ) : !(accessList as any)?.access?.length && !accessList?.data?.length ? (
               <div className="p-12 border-2 border-dashed border-slate-200 rounded-xl text-center space-y-3 bg-slate-50/50">
                 <div className="mx-auto size-12 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                   <ShieldCheck className="text-slate-400 size-6" />
@@ -481,7 +518,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     </TableRow>
                   </TableHeader>
                   <TableBody className="divide-y divide-slate-100">
-                    {(accessList?.access || accessList?.data || []).map((acc: UserBranchAccess) => (
+                    {((accessList as any)?.access || accessList?.data || []).map((acc: UserBranchAccess) => (
                       <TableRow key={acc.id} className="text-sm hover:bg-slate-50/50 transition-colors">
                         <TableCell className="py-4 px-4 font-bold text-slate-700 flex items-center gap-3">
                            <div className="size-8 rounded-full bg-slate-200 flex items-center justify-center text-xs text-slate-600">{acc.user_id.substring(0,2).toUpperCase()}</div>
@@ -515,8 +552,9 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
             )}
           </TabsContent>
         </Tabs>
+        </div>
 
-        <DialogFooter className="mt-4 pt-6 border-t gap-3">
+        <DialogFooter className="p-6 sm:p-8 bg-[#f3f2f1]/50 border-t gap-3">
           <Button variant="ghost" onClick={onClose} className="text-sm h-11 px-6 font-bold text-slate-600">Cancelar</Button>
           <Button 
             type="submit" 

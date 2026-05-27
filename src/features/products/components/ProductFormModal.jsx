@@ -28,6 +28,8 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
     origin: '',
     base_unit: 'unit',
     tax_rate_id: '',
+    is_variable_measure: false,
+    scale_code: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -62,7 +64,8 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
   const loadTaxRates = async () => {
     setLoadingTaxRates(true)
     try {
-      const response = await apiClient.getTaxRates(1, 100)
+      const { taxRateService } = await import('@/services/taxRateService')
+      const response = await taxRateService.getPaginated(1, 100)
       if (Array.isArray(response)) setTaxRates(response)
       else if (response && response.tax_rates) setTaxRates(response.tax_rates)
       else setTaxRates([])
@@ -87,11 +90,14 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
           origin: product.origin || '',
           base_unit: product.base_unit || 'unit',
           tax_rate_id: (product.override_tax_rate_id || product.tax_rate_id)?.toString() || '',
+          is_variable_measure: product.is_variable_measure || false,
+          scale_code: product.scale_code || '',
         })
       } else {
         setFormData({
           name: '', category: '', productType: 'PHYSICAL', description: '',
           barcode: '', brand: '', origin: '', base_unit: 'unit', tax_rate_id: '',
+          is_variable_measure: false, scale_code: '',
         })
       }
       setErrors({})
@@ -128,6 +134,8 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
         origin: formData.origin || undefined,
         base_unit: formData.base_unit || 'unit',
         override_tax_rate_id: formData.tax_rate_id ? parseInt(formData.tax_rate_id) : undefined,
+        is_variable_measure: formData.is_variable_measure,
+        scale_code: formData.is_variable_measure ? (formData.scale_code?.trim() || null) : null,
         state: true,
         is_active: true,
       }
@@ -349,6 +357,47 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
                         </select>
                         <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                       </div>
+                    </div>
+
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center justify-between p-3 bg-white border border-border-subtle rounded-xl shadow-sm">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-text-main">Medida Variable</span>
+                          <span className="text-[9px] text-text-secondary font-black uppercase tracking-wider">Venta por peso/volumen</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          name="is_variable_measure"
+                          checked={formData.is_variable_measure}
+                          onChange={e => {
+                            setFormData(prev => ({
+                              ...prev,
+                              is_variable_measure: e.target.checked,
+                              scale_code: e.target.checked ? prev.scale_code : ''
+                            }))
+                          }}
+                          className="size-5 rounded border-border-subtle text-primary focus:ring-primary/20 accent-primary cursor-pointer"
+                        />
+                      </div>
+
+                      {formData.is_variable_measure && (
+                        <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-200">
+                          <label className={labelClass}>Código de Balanza</label>
+                          <input
+                            name="scale_code"
+                            value={formData.scale_code}
+                            onChange={e => {
+                              const val = e.target.value.replace(/\D/g, '').slice(0, 5)
+                              setFormData(prev => ({ ...prev, scale_code: val }))
+                            }}
+                            placeholder="Ej: 123"
+                            className={inputClass}
+                          />
+                          <p className="text-[9px] text-text-secondary font-black uppercase tracking-wider">
+                            Código corto para balanzas EAN-13 (1-5 dígitos)
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 

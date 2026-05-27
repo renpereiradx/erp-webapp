@@ -14,7 +14,8 @@ import {
   Stock,
   CreateStockRequest,
   API_ENDPOINTS, 
-  PaginatedResponse 
+  PaginatedResponse,
+  UnitConversion
 } from '@/types';
 
 /**
@@ -251,6 +252,18 @@ export const productService = {
     }
   },
 
+  async createProduct(data: Partial<Product>): Promise<ProductEnriched> {
+    return this.create(data);
+  },
+
+  async updateProduct(id: string, data: Partial<Product>): Promise<ProductEnriched> {
+    return this.update(id, data);
+  },
+
+  async deleteProduct(id: string): Promise<{ message: string }> {
+    return this.delete(id);
+  },
+
   // =================== STOCK (v3.3.0) ===================
 
   async createStock(productId: string, data: CreateStockRequest): Promise<{ message: string }> {
@@ -301,6 +314,75 @@ export const productService = {
       return Array.isArray(response) ? response : (response.data || []);
     } catch (error) {
       throw toApiError(error, 'Error al obtener categorías');
+    }
+  },
+
+  validateProductData(productData: any) {
+    if (!productData) {
+      throw new Error('Los datos del producto son requeridos');
+    }
+    if (!productData.name || typeof productData.name !== 'string' || productData.name.trim() === '') {
+      throw new Error('El nombre del producto es requerido');
+    }
+    if (productData.category_id === undefined || productData.category_id === null || isNaN(Number(productData.category_id))) {
+      throw new Error('La categoría del producto es requerida');
+    }
+    if (productData.price !== undefined && productData.price !== null && Number(productData.price) < 0) {
+      throw new Error('El precio del producto no puede ser negativo');
+    }
+  },
+
+  async reactivateProduct(id: string): Promise<ProductEnriched> {
+    return this.update(id, { state: true, is_active: true });
+  },
+
+  async getProductByIdInfo(id: string): Promise<ProductOperationInfoResponse> {
+    return this.getInfo(id);
+  },
+
+  async getProductByBarcodeInfo(barcode: string): Promise<ProductOperationInfoResponse> {
+    return this.getInfoByBarcode(barcode);
+  },
+
+  async getProductById(id: string): Promise<ProductEnriched> {
+    return this.getById(id);
+  },
+
+  async getProductByBarcode(barcode: string): Promise<ProductEnriched> {
+    try {
+      return await retryWithBackoff(async () => {
+        return await apiClient.getProductByBarcode(barcode);
+      });
+    } catch (error) {
+      throw toApiError(error, `Error al obtener producto por código de barras ${barcode}`);
+    }
+  },
+
+
+  // =================== CONVERSIONES DE UNIDAD (v1.0.0) ===================
+
+  async getUnitConversions(): Promise<UnitConversion[]> {
+    try {
+      const response = await apiClient.getUnitConversions();
+      return response.data || [];
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener conversiones de unidad');
+    }
+  },
+
+  async createUnitConversion(data: Omit<UnitConversion, 'created_at' | 'updated_at'>): Promise<UnitConversion> {
+    try {
+      return await apiClient.createUnitConversion(data);
+    } catch (error) {
+      throw toApiError(error, 'Error al crear/actualizar conversión de unidad');
+    }
+  },
+
+  async deleteUnitConversion(fromUnit: string, toUnit: string): Promise<{ message: string }> {
+    try {
+      return await apiClient.deleteUnitConversion(fromUnit, toUnit);
+    } catch (error) {
+      throw toApiError(error, 'Error al eliminar conversión de unidad');
     }
   }
 };

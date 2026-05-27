@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   Palette,
   Monitor,
-  Command
+  Command,
+  Scale
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import KeyboardShortcuts from '@/components/ui/KeyboardShortcuts';
@@ -166,6 +167,20 @@ const SettingsPage = () => {
                   <span className="text-sm font-bold text-text-main">{t('settings.notifications.title', 'Notificaciones')}</span>
                 </div>
                 <span className="text-[10px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full uppercase tracking-tighter">Desactivado</span>
+              </div>
+
+              <div 
+                onClick={() => handleNavigate('/configuracion/balanzas')}
+                className="py-4 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Scale className="text-primary" size={18} />
+                  <span className="text-sm font-bold text-text-main">{t('settings.scales.title', 'Balanzas y Etiquetas')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-full uppercase tracking-tighter">Configurar</span>
+                  <ChevronRight size={14} className="text-slate-400" />
+                </div>
               </div>
             </div>
           </section>

@@ -1,248 +1,209 @@
-# Guía de API de Clientes para Frontend
+# ⚠️ DEPRECADO — Guía de API de Clientes para Frontend
 
-## Base URL
+> **Esta guía está deprecada.** La API de clientes ha sido reemplazada por la API unificada de Parties.
+> Consulta la nueva guía: **[PARTY_API_GUIDE.md](./PARTY_API_GUIDE.md)**
+>
+> Las rutas `/client/*` siguen funcionando por compatibilidad, pero usa `/api/v1/clients` o `/api/v1/parties` para nuevas integraciones.
 
-`http://localhost:5050`
+---
 
-## Autenticación
+## 🔧 Configuración General
 
-- Header: `Authorization: Bearer <jwt_token>`
+### Base URL
+http://localhost:5050
 
-## Headers requeridos (cuando aplica)
-
+### Headers Requeridos
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
 
-## Contexto de Sucursal
-
-Los endpoints de clientes no requieren `branch_id` ni `X-Branch-ID`. La autenticación JWT es suficiente.
-
-## Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
-
+### Formato de Respuesta Estándar
 `{ success: bool, data?, message?, error?, pagination? }`
 
-## Paginación estándar
-
-`{ page, page_size, total_items, total_pages, has_next, has_prev }`
+## Contexto de Sucursal
+Los endpoints de clientes no requieren `branch_id` ni `X-Branch-ID`. La autenticación JWT es suficiente.
 
 ---
 
 ## Endpoints
 
 ### POST /client/
-
 **Descripción:** Crea un nuevo cliente.
 
 #### Headers
-
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|-------|------|-----------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
-
-| Campo       | Tipo   | Requerido | Descripción                             |
-| ----------- | ------ | --------- | --------------------------------------- |
-| name        | string | Sí        | Nombre del cliente                      |
-| last_name   | string | Sí        | Apellido del cliente                    |
-| document_id | string | No        | Documento de identidad (CI, RUC, etc.)  |
-| contact     | string | No        | Teléfono u otra información de contacto |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| name | string | Sí | Nombre del cliente |
+| last_name | string | Sí | Apellido del cliente |
+| document_id | string | No | Documento de identidad (CI, RUC, etc.) |
+| contact | string | No | Teléfono u otra información de contacto |
 
 #### Response 201
-
-| Campo       | Tipo   | Descripción                               |
-| ----------- | ------ | ----------------------------------------- |
-| id          | string | ID único generado (shortid)               |
-| name        | string | Nombre del cliente                        |
-| last_name   | string | Apellido del cliente                      |
-| document_id | string | Documento de identidad                    |
-| status      | bool   | `true` = activo, `false` = inactivo       |
-| user_id     | string | ID del usuario que creó el registro       |
-| created_at  | string | Fecha de creación (ISO 8601)              |
-| contact     | string | Información de contacto                   |
-| email       | string | Email del cliente (si aplica)             |
-| party_id    | string | ID en tabla `users.parties` (Party Model) |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | string | ID único generado (shortid) |
+| name | string | Nombre del cliente |
+| last_name | string | Apellido del cliente |
+| document_id | string | Documento de identidad |
+| status | bool | `true` = activo, `false` = inactivo |
+| user_id | string | ID del usuario que creó el registro |
+| created_at | string | Fecha de creación (ISO 8601) |
+| contact | string | Información de contacto |
+| email | string | Email del cliente (si aplica) |
+| party_id | string | ID en tabla `users.parties` (Party Model) |
 
 #### Errores
-
-| Código | Condición                                   |
-| ------ | ------------------------------------------- |
-| 400    | `name` o `last_name` vacíos                 |
-| 401    | Token JWT inválido o ausente                |
-| 500    | Error interno al generar ID o guardar en DB |
+| Código | Condición |
+|--------|-----------|
+| 400 | `name` o `last_name` vacíos |
+| 401 | Token JWT inválido o ausente |
+| 500 | Error interno al generar ID o guardar en DB |
 
 ---
 
 ### GET /client/{id}
-
 **Descripción:** Obtiene un cliente por su ID.
 
 #### Headers
-
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|-------|------|-----------|
+| Authorization | Sí | Bearer token |
 
 #### Path Parameters
-
-| Parámetro | Tipo   | Requerido | Descripción    |
-| --------- | ------ | --------- | -------------- |
-| id        | string | Sí        | ID del cliente |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| id | string | Sí | ID del cliente |
 
 #### Response 200
-
 Mismo schema que Response 201 de `POST /client/`.
 
 #### Errores
-
-| Código | Condición                      |
-| ------ | ------------------------------ |
-| 400    | `id` vacío                     |
-| 401    | Token JWT inválido o ausente   |
-| 404    | Cliente no encontrado          |
-| 500    | Error interno de base de datos |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` vacío |
+| 401 | Token JWT inválido o ausente |
+| 404 | Cliente no encontrado |
+| 500 | Error interno de base de datos |
 
 ---
 
 ### GET /client/name/{name}
-
 **Descripción:** Busca clientes por nombre (búsqueda parcial en nombre y apellido).
 
 #### Headers
-
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|-------|------|-----------|
+| Authorization | Sí | Bearer token |
 
 #### Path Parameters
-
-| Parámetro | Tipo   | Requerido | Descripción         |
-| --------- | ------ | --------- | ------------------- |
-| name      | string | Sí        | Término de búsqueda |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| name | string | Sí | Término de búsqueda |
 
 #### Response 200
-
 Array de objetos con el mismo schema que Response 201 de `POST /client/`.
 
 #### Errores
-
-| Código | Condición                      |
-| ------ | ------------------------------ |
-| 400    | `name` vacío                   |
-| 401    | Token JWT inválido o ausente   |
-| 404    | No se encontraron clientes     |
-| 500    | Error interno de base de datos |
+| Código | Condición |
+|--------|-----------|
+| 400 | `name` vacío |
+| 401 | Token JWT inválido o ausente |
+| 404 | No se encontraron clientes |
+| 500 | Error interno de base de datos |
 
 ---
 
 ### GET /client/{page}/{pageSize}
-
 **Descripción:** Lista clientes con paginación.
 
 #### Headers
-
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|-------|------|-----------|
+| Authorization | Sí | Bearer token |
 
 #### Path Parameters
-
-| Parámetro | Tipo | Requerido | Descripción                      |
-| --------- | ---- | --------- | -------------------------------- |
-| page      | int  | Sí        | Número de página (>= 1)          |
-| pageSize  | int  | Sí        | Cantidad de elementos por página |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| page | int | Sí | Número de página (>= 1) |
+| pageSize | int | Sí | Cantidad de elementos por página |
 
 #### Response 200
-
 Array de objetos con el mismo schema que Response 201 de `POST /client/`.
 
 #### Errores
-
-| Código | Condición                                            |
-| ------ | ---------------------------------------------------- |
-| 400    | `page` o `pageSize` vacíos, o no son enteros válidos |
-| 401    | Token JWT inválido o ausente                         |
-| 500    | Error interno de base de datos                       |
+| Código | Condición |
+|--------|-----------|
+| 400 | `page` o `pageSize` vacíos, o no son enteros válidos |
+| 401 | Token JWT inválido o ausente |
+| 500 | Error interno de base de datos |
 
 ---
 
 ### PUT /client/{id}
-
 **Descripción:** Actualiza un cliente existente.
 
 #### Headers
-
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|-------|------|-----------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Path Parameters
-
-| Parámetro | Tipo   | Requerido | Descripción                 |
-| --------- | ------ | --------- | --------------------------- |
-| id        | string | Sí        | ID del cliente a actualizar |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| id | string | Sí | ID del cliente a actualizar |
 
 #### Request Body
-
-| Campo       | Tipo   | Requerido | Descripción             |
-| ----------- | ------ | --------- | ----------------------- |
-| name        | string | Sí        | Nombre del cliente      |
-| last_name   | string | Sí        | Apellido del cliente    |
-| document_id | string | No        | Documento de identidad  |
-| contact     | string | No        | Información de contacto |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| name | string | Sí | Nombre del cliente |
+| last_name | string | Sí | Apellido del cliente |
+| document_id | string | No | Documento de identidad |
+| contact | string | No | Información de contacto |
 
 #### Response 200
-
 Mismo schema que Response 201 de `POST /client/`.
 
 #### Errores
-
-| Código | Condición                               |
-| ------ | --------------------------------------- |
-| 400    | `id` vacío, o `name`/`last_name` vacíos |
-| 401    | Token JWT inválido o ausente            |
-| 500    | Error interno de base de datos          |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` vacío, o `name`/`last_name` vacíos |
+| 401 | Token JWT inválido o ausente |
+| 500 | Error interno de base de datos |
 
 ---
 
 ### PUT /client/delete/{id}
-
 **Descripción:** Elimina un cliente de forma lógica (soft delete). Cambia `status` a `false`.
 
 #### Headers
-
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|-------|------|-----------|
+| Authorization | Sí | Bearer token |
 
 #### Path Parameters
-
-| Parámetro | Tipo   | Requerido | Descripción               |
-| --------- | ------ | --------- | ------------------------- |
-| id        | string | Sí        | ID del cliente a eliminar |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| id | string | Sí | ID del cliente a eliminar |
 
 #### Response 200
-
-| Campo   | Tipo   | Descripción        |
-| ------- | ------ | ------------------ |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
 | message | string | `"Client deleted"` |
 
 #### Errores
-
-| Código | Condición                      |
-| ------ | ------------------------------ |
-| 400    | `id` vacío                     |
-| 401    | Token JWT inválido o ausente   |
-| 500    | Error interno de base de datos |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` vacío |
+| 401 | Token JWT inválido o ausente |
+| 500 | Error interno de base de datos |
 
 ---
 
@@ -256,4 +217,4 @@ Mismo schema que Response 201 de `POST /client/`.
 
 ---
 
-_Última actualización: 2026-05-06 — Consistencia cross-documento verificada._
+*Última actualización: 2026-05-19*

@@ -1,39 +1,32 @@
 # Guía de API de Clasificación Fiscal para Frontend
 
-## Base URL
+## 🔧 Configuración General
 
-`http://localhost:5050`
+### Base URL
 
-## Autenticación
+```
+http://localhost:5050
+```
 
-- Header: `Authorization: Bearer <jwt_token>`
-
-## Headers requeridos (cuando aplica)
+### Headers Requeridos
 
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
 
-## Contexto de Sucursal
+> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`. Ver [MULTI_BRANCH_CONTEXT_GUIDE.md](./MULTI_BRANCH_CONTEXT_GUIDE.md).
 
-- Query param: `?branch_id=<id>`
-- O header: `X-Branch-ID: <id>`
-- Fallback: `active_branch` del token JWT
-- Restricción: sucursal debe estar en `allowed_branches`
-
-> **Nota:** `?branch_id` tiene prioridad sobre `X-Branch-ID`.
-
-## Formato de fechas
-
-- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
-- Query params de fecha: `YYYY-MM-DD`
-
-## Respuesta estándar
+### Formato de Respuesta Estándar
 
 `{ success: bool, data?, message?, error?, pagination? }`
 
-## Paginación estándar
+### Formato de Fechas
+
+- Payloads: ISO 8601 (`2026-03-24T15:30:00Z`)
+- Query params: `YYYY-MM-DD`
+
+### Paginación Estándar
 
 `{ page, page_size, total_items, total_pages, has_next, has_prev }`
 
@@ -47,15 +40,15 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
 #### Response 200
 
-| Campo | Tipo  | Descripción                       |
-| ----- | ----- | --------------------------------- |
-| data  | array | Lista de códigos de clasificación |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| data | array | Lista de códigos de clasificación |
 
 **Clasificación:**
 | Campo | Tipo | Descripción |
@@ -69,10 +62,10 @@ Authorization: Bearer <jwt_token>
 
 #### Errores
 
-| Código | Condición                |
-| ------ | ------------------------ |
-| 401    | Token ausente o inválido |
-| 500    | Error interno            |
+| Código | Condición |
+|--------|-----------|
+| 401 | Token ausente o inválido |
+| 500 | Error interno |
 
 ---
 
@@ -82,22 +75,22 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
 #### Response 200
 
-| Campo | Tipo   | Descripción                   |
-| ----- | ------ | ----------------------------- |
-| data  | object | Mapa de código → tasa default |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| data | object | Mapa de código → tasa default |
 
 #### Errores
 
-| Código | Condición                |
-| ------ | ------------------------ |
-| 401    | Token ausente o inválido |
-| 500    | Error interno            |
+| Código | Condición |
+|--------|-----------|
+| 401 | Token ausente o inválido |
+| 500 | Error interno |
 
 ---
 
@@ -107,33 +100,33 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
 #### Response 200
 
-| Campo               | Tipo     | Descripción                      |
-| ------------------- | -------- | -------------------------------- |
-| id                  | int      | ID de la clasificación           |
-| product_id          | string   | ID del producto                  |
-| classification_code | string   | Código SIFEN                     |
-| default_tax_rate_id | int      | ID de tasa default               |
-| effective_from      | datetime | Fecha inicio de vigencia         |
-| effective_to        | datetime | Fecha fin de vigencia (nullable) |
-| notes               | string   | Notas                            |
-| created_by          | string   | Usuario creador                  |
-| created_at          | datetime | Fecha de creación                |
-| updated_at          | datetime | Fecha de actualización           |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | int | ID de la clasificación |
+| product_id | string | ID del producto |
+| classification_code | string | Código SIFEN |
+| default_tax_rate_id | int | ID de tasa default |
+| effective_from | datetime | Fecha inicio de vigencia |
+| effective_to | datetime | Fecha fin de vigencia (nullable) |
+| notes | string | Notas |
+| created_by | string | Usuario creador |
+| created_at | datetime | Fecha de creación |
+| updated_at | datetime | Fecha de actualización |
 
 #### Errores
 
-| Código | Condición                   |
-| ------ | --------------------------- |
-| 400    | `id` inválido               |
-| 401    | Token ausente o inválido    |
-| 404    | Clasificación no encontrada |
-| 500    | Error interno               |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` inválido |
+| 401 | Token ausente o inválido |
+| 404 | Clasificación no encontrada |
+| 500 | Error interno |
 
 ---
 
@@ -143,30 +136,30 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
 #### Response 200
 
-| Campo               | Tipo     | Descripción            |
-| ------------------- | -------- | ---------------------- |
-| id                  | int      | ID de la clasificación |
-| product_id          | string   | ID del producto        |
-| classification_code | string   | Código SIFEN           |
-| default_tax_rate_id | int      | ID de tasa default     |
-| effective_from      | datetime | Fecha inicio           |
-| effective_to        | datetime | Fecha fin (nullable)   |
-| notes               | string   | Notas                  |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | int | ID de la clasificación |
+| product_id | string | ID del producto |
+| classification_code | string | Código SIFEN |
+| default_tax_rate_id | int | ID de tasa default |
+| effective_from | datetime | Fecha inicio |
+| effective_to | datetime | Fecha fin (nullable) |
+| notes | string | Notas |
 
 #### Errores
 
-| Código | Condición                              |
-| ------ | -------------------------------------- |
-| 400    | `product_id` vacío                     |
-| 401    | Token ausente o inválido               |
-| 404    | Producto no tiene clasificación activa |
-| 500    | Error interno                          |
+| Código | Condición |
+|--------|-----------|
+| 400 | `product_id` vacío |
+| 401 | Token ausente o inválido |
+| 404 | Producto no tiene clasificación activa |
+| 500 | Error interno |
 
 ---
 
@@ -176,29 +169,29 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
 #### Path Parameters
 
-| Parámetro | Tipo   | Requerido | Descripción                                                                         |
-| --------- | ------ | --------- | ----------------------------------------------------------------------------------- |
-| code      | string | Sí        | Código: `CANASTA`, `GENERAL`, `EXENTO`, `IMPORT`, `DIGITAL`, `TURISMO`, `SELECTIVE` |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| code | string | Sí | Código: `CANASTA`, `GENERAL`, `EXENTO`, `IMPORT`, `DIGITAL`, `TURISMO`, `SELECTIVE` |
 
 #### Response 200
 
-| Campo | Tipo  | Descripción                             |
-| ----- | ----- | --------------------------------------- |
-| data  | array | Lista de clasificaciones con ese código |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| data | array | Lista de clasificaciones con ese código |
 
 #### Errores
 
-| Código | Condición                |
-| ------ | ------------------------ |
-| 400    | `code` vacío             |
-| 401    | Token ausente o inválido |
-| 500    | Error interno            |
+| Código | Condición |
+|--------|-----------|
+| 400 | `code` vacío |
+| 401 | Token ausente o inválido |
+| 500 | Error interno |
 
 ---
 
@@ -208,41 +201,41 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
 
-| Campo               | Tipo     | Requerido | Descripción                                                    |
-| ------------------- | -------- | --------- | -------------------------------------------------------------- |
-| product_id          | string   | Sí        | ID del producto                                                |
-| classification_code | string   | Sí        | Código SIFEN                                                   |
-| tax_rate_id         | int      | No        | ID de tasa específica. Si se omite, usa la default del código. |
-| effective_from      | datetime | No        | Fecha inicio de vigencia. Default: fecha actual.               |
-| effective_to        | datetime | No        | Fecha fin de vigencia                                          |
-| notes               | string   | No        | Notas                                                          |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| product_id | string | Sí | ID del producto |
+| classification_code | string | Sí | Código SIFEN |
+| tax_rate_id | int | No | ID de tasa específica. Si se omite, usa la default del código. |
+| effective_from | datetime | No | Fecha inicio de vigencia. Default: fecha actual. |
+| effective_to | datetime | No | Fecha fin de vigencia |
+| notes | string | No | Notas |
 
 #### Response 201
 
-| Campo               | Tipo   | Descripción                   |
-| ------------------- | ------ | ----------------------------- |
-| id                  | int    | ID de la clasificación creada |
-| product_id          | string | ID del producto               |
-| classification_code | string | Código asignado               |
-| tax_rate_id         | int    | ID de tasa aplicada           |
-| message             | string | Confirmación                  |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | int | ID de la clasificación creada |
+| product_id | string | ID del producto |
+| classification_code | string | Código asignado |
+| tax_rate_id | int | ID de tasa aplicada |
+| message | string | Confirmación |
 
 #### Errores
 
-| Código | Condición                                            |
-| ------ | ---------------------------------------------------- |
-| 400    | Body inválido, `product_id` vacío, o código inválido |
-| 401    | Token ausente o inválido                             |
-| 404    | Producto no encontrado                               |
-| 409    | El producto ya tiene una clasificación activa        |
-| 500    | Error interno                                        |
+| Código | Condición |
+|--------|-----------|
+| 400 | Body inválido, `product_id` vacío, o código inválido |
+| 401 | Token ausente o inválido |
+| 404 | Producto no encontrado |
+| 409 | El producto ya tiene una clasificación activa |
+| 500 | Error interno |
 
 ---
 
@@ -252,36 +245,36 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
 
-| Campo               | Tipo   | Requerido | Descripción               |
-| ------------------- | ------ | --------- | ------------------------- |
-| product_ids         | array  | Sí        | Lista de IDs de productos |
-| classification_code | string | Sí        | Código SIFEN a asignar    |
-| tax_rate_id         | int    | No        | ID de tasa específica     |
-| notes               | string | No        | Notas                     |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| product_ids | array | Sí | Lista de IDs de productos |
+| classification_code | string | Sí | Código SIFEN a asignar |
+| tax_rate_id | int | No | ID de tasa específica |
+| notes | string | No | Notas |
 
 #### Response 200
 
-| Campo           | Tipo  | Descripción                      |
-| --------------- | ----- | -------------------------------- |
-| success         | bool  | `true`                           |
-| processed_count | int   | Cantidad de productos procesados |
-| failed_count    | int   | Cantidad de fallidos             |
-| failures        | array | Lista de errores por producto    |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| processed_count | int | Cantidad de productos procesados |
+| failed_count | int | Cantidad de fallidos |
+| failures | array | Lista de errores por producto |
 
 #### Errores
 
-| Código | Condición                   |
-| ------ | --------------------------- |
-| 400    | Body inválido o lista vacía |
-| 401    | Token ausente o inválido    |
-| 500    | Error interno               |
+| Código | Condición |
+|--------|-----------|
+| 400 | Body inválido o lista vacía |
+| 401 | Token ausente o inválido |
+| 500 | Error interno |
 
 ---
 
@@ -291,34 +284,34 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
 
-| Campo               | Tipo   | Requerido | Descripción        |
-| ------------------- | ------ | --------- | ------------------ |
-| category_id         | int    | Sí        | ID de la categoría |
-| classification_code | string | Sí        | Código a asignar   |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| category_id | int | Sí | ID de la categoría |
+| classification_code | string | Sí | Código a asignar |
 
 #### Response 200
 
-| Campo            | Tipo   | Descripción            |
-| ---------------- | ------ | ---------------------- |
-| success          | bool   | `true`                 |
-| classified_count | int    | Productos clasificados |
-| message          | string | Confirmación           |
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| success | bool | `true` |
+| classified_count | int | Productos clasificados |
+| message | string | Confirmación |
 
 #### Errores
 
-| Código | Condición                                |
-| ------ | ---------------------------------------- |
-| 400    | `category_id` inválido o código inválido |
-| 401    | Token ausente o inválido                 |
-| 404    | Categoría no encontrada                  |
-| 500    | Error interno                            |
+| Código | Condición |
+|--------|-----------|
+| 400 | `category_id` inválido o código inválido |
+| 401 | Token ausente o inválido |
+| 404 | Categoría no encontrada |
+| 500 | Error interno |
 
 ---
 
@@ -328,20 +321,20 @@ Authorization: Bearer <jwt_token>
 
 #### Headers
 
-| Header        | Requerido | Descripción        |
-| ------------- | --------- | ------------------ |
-| Authorization | Sí        | Bearer token       |
-| Content-Type  | Sí        | `application/json` |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
+| Content-Type | Sí | `application/json` |
 
 #### Request Body
 
-| Campo               | Tipo     | Requerido | Descripción        |
-| ------------------- | -------- | --------- | ------------------ |
-| classification_code | string   | No        | Nuevo código SIFEN |
-| tax_rate_id         | int      | No        | Nueva tasa         |
-| effective_from      | datetime | No        | Nueva fecha inicio |
-| effective_to        | datetime | No        | Nueva fecha fin    |
-| notes               | string   | No        | Notas              |
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| classification_code | string | No | Nuevo código SIFEN |
+| tax_rate_id | int | No | Nueva tasa |
+| effective_from | datetime | No | Nueva fecha inicio |
+| effective_to | datetime | No | Nueva fecha fin |
+| notes | string | No | Notas |
 
 #### Response 200
 
@@ -349,12 +342,12 @@ Estructura de clasificación actualizada.
 
 #### Errores
 
-| Código | Condición                     |
-| ------ | ----------------------------- |
-| 400    | `id` inválido o body inválido |
-| 401    | Token ausente o inválido      |
-| 404    | Clasificación no encontrada   |
-| 500    | Error interno                 |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` inválido o body inválido |
+| 401 | Token ausente o inválido |
+| 404 | Clasificación no encontrada |
+| 500 | Error interno |
 
 ---
 
@@ -364,9 +357,9 @@ Estructura de clasificación actualizada.
 
 #### Headers
 
-| Header        | Requerido | Descripción  |
-| ------------- | --------- | ------------ |
-| Authorization | Sí        | Bearer token |
+| Header | Requerido | Descripción |
+|--------|-----------|-------------|
+| Authorization | Sí | Bearer token |
 
 #### Response 204
 
@@ -374,12 +367,12 @@ Sin contenido.
 
 #### Errores
 
-| Código | Condición                   |
-| ------ | --------------------------- |
-| 400    | `id` inválido               |
-| 401    | Token ausente o inválido    |
-| 404    | Clasificación no encontrada |
-| 500    | Error interno               |
+| Código | Condición |
+|--------|-----------|
+| 400 | `id` inválido |
+| 401 | Token ausente o inválido |
+| 404 | Clasificación no encontrada |
+| 500 | Error interno |
 
 ---
 
@@ -398,33 +391,33 @@ Cuando el sistema determina la tasa de IVA para un producto en una transacción,
 
 ## Códigos SIFEN
 
-| Código      | Nombre              | Descripción                          | Tasa Default |
-| ----------- | ------------------- | ------------------------------------ | ------------ |
-| `CANASTA`   | Canasta Básica      | Productos de canasta básica          | 5%           |
-| `GENERAL`   | General             | Bienes y servicios generales         | 10%          |
-| `EXENTO`    | Exento              | Exportaciones, transporte, educación | 0%           |
-| `IMPORT`    | Importaciones       | Bienes importados                    | 10%          |
-| `DIGITAL`   | Servicios Digitales | Servicios digitales internacionales  | 10%          |
-| `TURISMO`   | Turismo             | Servicios turísticos                 | Variable     |
-| `SELECTIVE` | ISC                 | Impuesto selectivo al consumo        | Variable     |
+| Código | Nombre | Descripción | Tasa Default |
+|--------|--------|-------------|--------------|
+| `CANASTA` | Canasta Básica | Productos de canasta básica | 5% |
+| `GENERAL` | General | Bienes y servicios generales | 10% |
+| `EXENTO` | Exento | Exportaciones, transporte, educación | 0% |
+| `IMPORT` | Importaciones | Bienes importados | 10% |
+| `DIGITAL` | Servicios Digitales | Servicios digitales internacionales | 10% |
+| `TURISMO` | Turismo | Servicios turísticos | Variable |
+| `SELECTIVE` | ISC | Impuesto selectivo al consumo | Variable |
 
 ---
 
 ## Resumen de Endpoints
 
-| Método | Endpoint                                   | Descripción                      |
-| ------ | ------------------------------------------ | -------------------------------- |
-| GET    | `/tax-classification/info`                 | Info de códigos SIFEN            |
-| GET    | `/tax-classification/defaults`             | Tasas default por código         |
-| GET    | `/tax-classification/{id}`                 | Clasificación por ID             |
-| GET    | `/tax-classification/product/{product_id}` | Clasificación activa de producto |
-| GET    | `/tax-classification/code/{code}`          | Clasificaciones por código       |
-| POST   | `/tax-classification/assign`               | Asignar a producto               |
-| POST   | `/tax-classification/bulk-assign`          | Asignación masiva                |
-| POST   | `/tax-classification/auto-classify`        | Auto-clasificar por categoría    |
-| PUT    | `/tax-classification/{id}`                 | Actualizar clasificación         |
-| DELETE | `/tax-classification/{id}`                 | Eliminar clasificación           |
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/tax-classification/info` | Info de códigos SIFEN |
+| GET | `/tax-classification/defaults` | Tasas default por código |
+| GET | `/tax-classification/{id}` | Clasificación por ID |
+| GET | `/tax-classification/product/{product_id}` | Clasificación activa de producto |
+| GET | `/tax-classification/code/{code}` | Clasificaciones por código |
+| POST | `/tax-classification/assign` | Asignar a producto |
+| POST | `/tax-classification/bulk-assign` | Asignación masiva |
+| POST | `/tax-classification/auto-classify` | Auto-clasificar por categoría |
+| PUT | `/tax-classification/{id}` | Actualizar clasificación |
+| DELETE | `/tax-classification/{id}` | Eliminar clasificación |
 
 ---
 
-_Última actualización: 2026-05-06 — Consistencia cross-documento verificada._
+_Última actualización: 2026-05-19_

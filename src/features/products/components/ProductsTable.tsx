@@ -77,10 +77,16 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
             {t('products.table.stock')}
           </TableHead>
           <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">
-            {t('products.modal.field.purchase_price', 'Costo de Compra')}
+            <div className="flex flex-col">
+              <span>{t('products.modal.field.purchase_price', 'Costo de Compra')}</span>
+              <span className="text-[9px] font-semibold text-slate-400 normal-case tracking-normal mt-0.5 font-sans">Costo Neto Adq.</span>
+            </div>
           </TableHead>
           <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">
-            {t('products.details.table.price', 'Precio de Venta')}
+            <div className="flex flex-col">
+              <span>{t('products.details.table.price', 'Precio de Venta')}</span>
+              <span className="text-[9px] font-semibold text-slate-400 normal-case tracking-normal mt-0.5 font-sans">P.V.P. (Con IVA)</span>
+            </div>
           </TableHead>
           <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">
             {t('products.table.created_at', 'Creado')}
@@ -128,12 +134,19 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                       <Package size={20} />
                     )}
                   </div>
-                  <span
-                    className="font-bold text-text-main cursor-pointer hover:text-primary transition-colors"
-                    onClick={() => onOpenDetailsModal(product)}
-                  >
-                    {productName}
-                  </span>
+                  <div className="flex flex-col">
+                    <span
+                      className="font-bold text-text-main cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => onOpenDetailsModal(product)}
+                    >
+                      {productName}
+                    </span>
+                    {product.is_variable_measure && (
+                      <span className="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded mt-1 w-max uppercase tracking-wider font-display">
+                        Medida Variable
+                      </span>
+                    )}
+                  </div>
                 </div>
               </TableCell>
               <TableCell className="text-text-secondary font-medium px-4 text-sm">
@@ -158,14 +171,32 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                 </span>
               </TableCell>
               <TableCell className="px-4">
-                <span className="text-xs font-bold text-text-secondary tabular-nums">
-                  {formatCurrency(purchaseCost)}
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-text-secondary tabular-nums">
+                    {formatCurrency(purchaseCost)}
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-mono">Neto</span>
+                </div>
               </TableCell>
               <TableCell className="px-4">
-                <span className="text-sm font-black text-primary tabular-nums">
-                  {formatCurrency(salesPrice)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-black text-primary tabular-nums">
+                      {formatCurrency(salesPrice)}
+                    </span>
+                    <span className="text-[9px] text-slate-400 font-mono">Con IVA</span>
+                  </div>
+                  {salesPrice > 0 && purchaseCost > 0 && (
+                    <span className={cn(
+                      "text-[9px] font-bold px-1.5 py-0.5 rounded font-mono shrink-0",
+                      salesPrice > purchaseCost 
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-100" 
+                        : "bg-rose-50 text-rose-700 border border-rose-100"
+                    )}>
+                      {Math.round(((salesPrice - purchaseCost) / salesPrice) * 100)}% marg.
+                    </span>
+                  )}
+                </div>
               </TableCell>
               <TableCell className="text-text-secondary tabular-nums px-4 text-xs font-mono">
                 {product.created_at

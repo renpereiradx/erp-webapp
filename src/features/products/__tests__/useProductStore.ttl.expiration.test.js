@@ -24,7 +24,7 @@ describe('TTL expiration behaviour', () => {
 
     const firstData = [ { id: 'X1', name: 'Prod X1' } ];
     const secondData = [ { id: 'X1', name: 'Prod X1 v2' } ];
-    const spy = vi.spyOn(productService, 'getProducts')
+    const spy = vi.spyOn(productService, 'getProductsPaginated')
       .mockResolvedValueOnce(firstData)
       .mockResolvedValueOnce(secondData);
 
@@ -57,7 +57,7 @@ describe('TTL expiration behaviour', () => {
     const firstSearch = [ { id: 'S1', name: 'abc-one' } ];
     const secondSearch = [ { id: 'S1', name: 'abc-one' }, { id: 'S2', name: 'abc-two' } ];
 
-    const spy = vi.spyOn(productService, 'searchProductsInfo')
+    const spy = vi.spyOn(productService, 'searchInfo')
       .mockResolvedValueOnce(firstSearch)
       .mockResolvedValueOnce(secondSearch);
 
