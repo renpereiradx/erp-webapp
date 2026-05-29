@@ -68,6 +68,8 @@ const Purchases = () => {
   const [supplierResults, setSupplierResults] = useState<any[]>([])
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
   const [searchingSuppliers, setSearchingSuppliers] = useState<boolean>(false)
+  const [activeSupplierIndex, setActiveSupplierIndex] = useState<number>(-1)
+  const [showSupplierDropdown, setShowSupplierDropdown] = useState<boolean>(false)
   const supplierSearchRef = useRef<HTMLDivElement>(null)
 
   // Payment Details States
@@ -97,6 +99,9 @@ const Purchases = () => {
   const [purchaseNotes, setPurchaseNotes] = useState<string>('')
   const modalProductSearchRef = useRef<HTMLInputElement>(null)
   const productDropdownRef = useRef<HTMLDivElement>(null)
+  const modalQuantityRef = useRef<HTMLInputElement>(null)
+  const isSelectingProductRef = useRef<boolean>(false)
+  const isSelectingSupplierRef = useRef<boolean>(false)
   const [activeProductIndex, setActiveProductIndex] = useState<number>(-1)
 
   // UI Support States
@@ -360,12 +365,18 @@ const Purchases = () => {
 
   // Search Hooks
   useEffect(() => {
+    if (isSelectingSupplierRef.current) {
+      isSelectingSupplierRef.current = false
+      return
+    }
     if (!supplierSearch || supplierSearch.length < 2) {
       setSupplierResults([])
+      setShowSupplierDropdown(false)
       return
     }
     const timer = setTimeout(async () => {
       setSearchingSuppliers(true)
+      setShowSupplierDropdown(true)
       try {
         const res = await supplierService.searchByName(supplierSearch)
         setSupplierResults(Array.isArray(res) ? res : res.data || [])
@@ -380,6 +391,49 @@ const Purchases = () => {
   }, [supplierSearch])
 
   useEffect(() => {
+    if (!showSupplierDropdown || supplierResults.length === 0) {
+      setActiveSupplierIndex(-1)
+      return
+    }
+    setActiveSupplierIndex(0)
+  }, [showSupplierDropdown, supplierResults])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        supplierSearchRef.current &&
+        !supplierSearchRef.current.contains(event.target as Node)
+      ) {
+        setShowSupplierDropdown(false)
+      }
+      if (
+        productDropdownRef.current &&
+        !productDropdownRef.current.contains(event.target as Node) &&
+        modalProductSearchRef.current &&
+        !modalProductSearchRef.current.contains(event.target as Node)
+      ) {
+        setShowProductDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isModalOpen) {
+      setTimeout(() => {
+        modalProductSearchRef.current?.focus()
+      }, 50)
+    }
+  }, [isModalOpen])
+
+  useEffect(() => {
+    if (isSelectingProductRef.current) {
+      isSelectingProductRef.current = false
+      return
+    }
     if (!modalProductSearch.trim() || modalProductSearch.trim().length < 2) {
       setModalProductResults([])
       setShowProductDropdown(false)
@@ -437,13 +491,56 @@ const Purchases = () => {
   // Handlers
   const handleSupplierSelect = s => {
     setSelectedSupplier(s)
-    setSupplierSearch(s.name || '')
+    isSelectingSupplierRef.current = true
+    setSupplierSearch(getSupplierName(s) || '')
     setSupplierResults([])
+    setShowSupplierDropdown(false)
+  }
+
+  const handleSupplierSearchKeyDown = event => {
+    if (!supplierResults.length) {
+      return
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setShowSupplierDropdown(true)
+      setActiveSupplierIndex(prev =>
+        prev < supplierResults.length - 1 ? prev + 1 : 0,
+      )
+      return
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setShowSupplierDropdown(true)
+      setActiveSupplierIndex(prev =>
+        prev > 0 ? prev - 1 : supplierResults.length - 1,
+      )
+      return
+    }
+
+    if (
+      event.key === 'Enter' &&
+      showSupplierDropdown &&
+      activeSupplierIndex >= 0
+    ) {
+      event.preventDefault()
+      handleSupplierSelect(supplierResults[activeSupplierIndex])
+      return
+    }
+
+    if (event.key === 'Escape') {
+      setShowSupplierDropdown(false)
+      setActiveSupplierIndex(-1)
+    }
   }
 
   const handleProductSelect = async (p: any) => {
     const productId = p.id || p.product_id;
     if (!productId) return;
+
+    isSelectingProductRef.current = true;
 
     try {
       setSearchingProducts(true);
@@ -457,6 +554,7 @@ const Purchases = () => {
         unit: fullProduct.base_unit || fullProduct.unit || 'unit',
         cost_price: Number(fullProduct.purchase_price || fullProduct.unit_cost || 0),
         stock: Number(fullProduct.stock_quantity || fullProduct.stock || 0),
+        last_purchase_cost: fullProduct.unit_costs_summary?.[0]?.last_cost ?? Number(fullProduct.purchase_price || fullProduct.unit_cost || 0),
       };
 
       setModalSelectedProduct(normalizedProduct);
@@ -474,6 +572,9 @@ const Purchases = () => {
         setModalTaxRateId(taxInfo.id);
         setModalTaxRatePercent(taxInfo.rate || 0);
       }
+      setTimeout(() => {
+        modalQuantityRef.current?.focus();
+      }, 100);
     } catch (err: any) {
       toast.toast({
         title: 'Error',
@@ -1174,28 +1275,38 @@ const Purchases = () => {
                         className='w-full pl-9 pr-9 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all'
                         value={supplierSearch}
                         onChange={e => setSupplierSearch(e.target.value)}
+                        onFocus={() => setShowSupplierDropdown(true)}
+                        onKeyDown={handleSupplierSearchKeyDown}
                       />
                       {searchingSuppliers && (
                         <div className='absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[var(--fluent-brand-primary,#0078D4)] border-t-transparent rounded-full animate-spin'></div>
                       )}
                     </div>
 
-                    {supplierResults.length > 0 && (
-                      <div className='absolute top-full left-0 right-0 mt-1 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] overflow-hidden z-30 py-1'>
-                        {supplierResults.map(s => (
-                          <button
-                            key={s.id}
-                            className='w-full px-4 py-2.5 text-left hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] transition-colors flex justify-between items-center'
-                            onClick={() => handleSupplierSelect(s)}
-                          >
-                            <span className='font-medium text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white'>
-                              {s.name}
-                            </span>
-                            <span className='text-xs text-[var(--fluent-text-tertiary,#8A8886)]'>
-                              ID: {s.id}
-                            </span>
-                          </button>
-                        ))}
+                    {showSupplierDropdown && supplierResults.length > 0 && (
+                      <div className='absolute top-full left-0 right-0 mt-1 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] overflow-hidden z-30 py-1 max-h-[220px] overflow-y-auto'>
+                        {supplierResults.map((s, index) => {
+                          const isActive = activeSupplierIndex === index
+                          return (
+                            <button
+                              key={s.id}
+                              className={`w-full px-4 py-2.5 text-left border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] last:border-none flex justify-between items-center transition-colors ${
+                                isActive
+                                  ? 'bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-130,#605E5C)] ring-1 ring-inset ring-[var(--fluent-brand-primary,#0078D4)]'
+                                  : 'hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)]'
+                              }`}
+                              onClick={() => handleSupplierSelect(s)}
+                              onMouseEnter={() => setActiveSupplierIndex(index)}
+                            >
+                              <span className={`font-medium text-sm ${isActive ? 'text-[var(--fluent-brand-primary,#0078D4)]' : 'text-[var(--fluent-text-primary,#212121)] dark:text-white'}`}>
+                                {getSupplierName(s)}
+                              </span>
+                              <span className='text-xs text-[var(--fluent-text-tertiary,#8A8886)]'>
+                                ID: {s.id}
+                              </span>
+                            </button>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
@@ -1211,6 +1322,12 @@ const Purchases = () => {
                           <Calendar size={12} /> Registrado:{' '}
                           {formatDate(selectedSupplier.created_at)}
                         </div>
+                        {selectedSupplier.tax_id && (
+                          <div className='flex items-center gap-2 text-xs text-[var(--fluent-text-secondary,#605E5C)]'>
+                            <Building size={12} /> RUC / Tax ID:{' '}
+                            <span className='font-semibold'>{selectedSupplier.tax_id}</span>
+                          </div>
+                        )}
                         <div className='text-xs text-[var(--fluent-text-tertiary,#8A8886)]'>
                           ID: {selectedSupplier.id}
                         </div>
@@ -1554,12 +1671,14 @@ const Purchases = () => {
                     <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
                       Buscar Producto
                     </label>
-                    <div className='relative' ref={modalProductSearchRef}>
+                    <div className='relative'>
                       <Search
                         className='absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fluent-text-tertiary,#8A8886)]'
                         size={16}
                       />
                       <input
+                        ref={modalProductSearchRef}
+                        autoFocus
                         type='text'
                         className='w-full pl-9 pr-9 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all'
                         placeholder='Buscar por SKU, EAN o Nombre...'
@@ -1617,9 +1736,6 @@ const Purchases = () => {
                                       <span className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
                                         ID: {p.id || p.product_id || '-'}
                                       </span>
-                                      <span className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
-                                        SKU: {p.sku || p.product_sku || '-'}
-                                      </span>
                                     </div>
                                   </div>
                                   <div className='text-right flex-shrink-0 ml-3'>
@@ -1629,16 +1745,19 @@ const Purchases = () => {
                                         Activo
                                       </div>
                                     )}
+                                    <div className='text-[10px] text-[var(--fluent-text-secondary,#605E5C)] dark:text-slate-300'>
+                                      Últ. costo:
+                                    </div>
                                     <div className='text-sm font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
                                       {formatCurrency(
-                                        p.cost_price || p.unit_cost || 0,
+                                        p.unit_costs_summary?.[0]?.last_cost ?? p.cost_price ?? p.unit_cost ?? 0
                                       )}
                                     </div>
                                     <div
-                                      className={`text-[10px] font-medium ${(p.stock || p.quantity_available || 0) > 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}
+                                      className={`text-[10px] font-medium ${(p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0) > 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}
                                     >
                                       Stock:{' '}
-                                      {p.stock || p.quantity_available || 0}
+                                      {p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0}
                                     </div>
                                   </div>
                                 </div>
@@ -1679,12 +1798,14 @@ const Purchases = () => {
                             </div>
                             <div>
                               <p className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
-                                SKU
+                                Últ. Costo
                               </p>
-                              <p className='text-xs text-[var(--fluent-text-secondary,#605E5C)]'>
-                                {modalSelectedProduct.sku ||
-                                  modalSelectedProduct.product_sku ||
-                                  '-'}
+                              <p className='text-xs text-[var(--fluent-text-secondary,#605E5C)] font-semibold'>
+                                {formatCurrency(
+                                  modalSelectedProduct.last_purchase_cost ||
+                                    modalSelectedProduct.cost_price ||
+                                    0
+                                )}
                               </p>
                             </div>
                             <div>
@@ -1720,6 +1841,7 @@ const Purchases = () => {
                         Cantidad
                       </label>
                       <input
+                        ref={modalQuantityRef}
                         type='number'
                         className='w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all'
                         value={modalQuantity}

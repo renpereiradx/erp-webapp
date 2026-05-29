@@ -22,6 +22,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+
 import {
   Table,
   TableBody,
@@ -30,12 +31,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import DataState from '@/components/ui/DataState'
 import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModal'
 import { useI18n } from '@/lib/i18n'
@@ -45,12 +40,13 @@ import { clientService } from '@/services/clientService'
 import { useToast } from '@/hooks/useToast'
 import { normalizeCurrencyCode } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
+import ToastContainer from '@/components/ui/ToastContainer'
 
 const SalesOrderDetail = () => {
   const { saleId } = useParams<{ saleId: string }>()
   const navigate = useNavigate()
   const { lang } = useI18n()
-  const { error: showError, success: showSuccess } = useToast()
+  const { error: showError, success: showSuccess, toasts, removeToast } = useToast()
 
   const [sale, setSale] = useState<any>(null)
   const [payments, setPayments] = useState<any[]>([])
@@ -87,7 +83,7 @@ const SalesOrderDetail = () => {
         console.info('ℹ️ Usando fallback para estado de pago (Backend inestable)')
       }
 
-      let clientDetails = null
+      let clientDetails: any = null
       try {
         const clientId =
           saleHeader.client_id || (paymentStatus && paymentStatus.client_id)
@@ -580,6 +576,7 @@ const SalesOrderDetail = () => {
           </div>
         </div>
       )}
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   )
 }
