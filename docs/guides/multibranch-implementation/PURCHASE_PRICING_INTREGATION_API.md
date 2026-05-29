@@ -84,6 +84,7 @@ interface ProcessCompletePurchaseOrderDetail {
   profit_pct?: number;       // modo margen automatico
   explicit_sale_price?: number; // modo precio explicito (prioridad)
   tax_rate_id?: number;      // override opcional de IVA
+  price_includes_tax?: boolean; // si el precio incluye IVA (default: true)
 }
 ```
 
@@ -167,7 +168,8 @@ Consultar `GET /purchase/{id}` o endpoints enriquecidos de compra para ver el de
       "quantity": 50,
       "unit_price": 2500,
       "unit": "kg",
-      "profit_pct": 35
+      "profit_pct": 35,
+      "price_includes_tax": true
     }
   ],
   "auto_update_prices": true,
@@ -189,7 +191,8 @@ Consultar `GET /purchase/{id}` o endpoints enriquecidos de compra para ver el de
       "unit_price": 5000,
       "unit": "unit",
       "explicit_sale_price": 9000,
-      "tax_rate_id": 5
+      "tax_rate_id": 5,
+      "price_includes_tax": true
     }
   ]
 }
@@ -310,6 +313,7 @@ Todos los endpoints de consulta (`GET /purchase/{id}`, `/purchase/supplier_id/{i
 - [ ] Soportar selector de modo: margen vs explícito
 - [ ] Enviar `explicit_sale_price` solo en modo explícito
 - [ ] Enviar `profit_pct` en modo margen
+- [ ] Enviar `price_includes_tax` en cada línea de detalle (default: `true`)
 - [ ] Enviar `branch_id` en el body o vía query param `?branch_id=`
 - [ ] Consumir `GET /products/{id}/purchase` para precarga de formulario
 - [ ] Mostrar desglose fiscal de backend al confirmar

@@ -1,8 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import purchaseService from '@/services/purchaseService'
-import { telemetryService } from '@/services/telemetryService'
-import { calculatePurchaseSalePriceGs } from '@/domain/purchase/pricing/purchasePricingPolicy'
 import { calculatePurchaseTotals } from '@/domain/purchase/calculations/purchaseCalculator'
 import { 
   PurchaseOrderRequest, 
@@ -339,6 +337,7 @@ const usePurchaseStore = create<PurchaseState>()(
               unit: options.unit || product.unit || 'unit',
               profit_pct: options.profit_pct || 30,
               tax_rate: options.tax_rate || 0.10,
+              price_includes_tax: options.price_includes_tax !== false,
             },
           ]
         }

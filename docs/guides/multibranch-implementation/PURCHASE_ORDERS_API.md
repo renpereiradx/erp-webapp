@@ -157,6 +157,7 @@ El campo `unit` en `order_details` se valida contra la siguiente lista de unidad
 | `profit_pct` | number | Margen automático (%) |
 | `explicit_sale_price` | number | Precio de venta explícito (prioridad sobre profit_pct) |
 | `tax_rate_id` | int | Override de tasa de IVA |
+| `price_includes_tax` | bool | Si el precio incluye IVA. Default: `true` si el producto ya tiene precio, sino usa `true` |
 
 ### Ejemplo
 
@@ -175,7 +176,9 @@ El campo `unit` en `order_details` se valida contra la siguiente lista de unidad
       "quantity": 50,
       "unit_price": 2500,
       "unit": "kg",
-      "profit_pct": 35
+      "profit_pct": 35,
+      "tax_rate_id": 1,
+      "price_includes_tax": true
     }
   ]
 }
