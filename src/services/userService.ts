@@ -44,6 +44,13 @@ export const userService = {
 
     try {
       const response = await api.get(BASE_URL, { params });
+      if (response && Array.isArray(response.data)) {
+        response.data.forEach((u: any) => {
+          if (u && u.avatar_url && u.avatar_url.includes('example.com')) {
+            u.avatar_url = '';
+          }
+        });
+      }
       return response;
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -65,6 +72,9 @@ export const userService = {
 
     try {
       const response = await api.get(`${BASE_URL}/${id}`);
+      if (response && response.data && response.data.avatar_url && response.data.avatar_url.includes('example.com')) {
+        response.data.avatar_url = '';
+      }
       return response;
     } catch (error) {
       console.error(`Error fetching user ${id}:`, error);
@@ -173,6 +183,9 @@ export const userService = {
     }
 
     const response = await api.get(`${BASE_URL}/me`);
+    if (response && response.data && response.data.avatar_url && response.data.avatar_url.includes('example.com')) {
+      response.data.avatar_url = '';
+    }
     return response;
   },
 

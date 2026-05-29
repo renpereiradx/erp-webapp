@@ -46,12 +46,15 @@ function Avatar({
 
 function AvatarImage({
   className,
+  src,
   ...props
 }) {
+  const sanitizedSrc = src && src.includes('example.com') ? '' : src;
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
       className={cn("avatar__image", className)}
+      src={sanitizedSrc}
       {...props} />
   );
 }

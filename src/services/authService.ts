@@ -68,6 +68,9 @@ const authService = {
       const token = result.token || result.data?.token;
       const refreshToken = result.refresh_token || result.data?.refresh_token;
       const user = result.user || result.data?.user || result.data;
+      if (user && user.avatar_url && user.avatar_url.includes('example.com')) {
+        user.avatar_url = '';
+      }
       const role_id = result.role_id || result.data?.role_id;
       const allowed_branches = result.allowed_branches || result.data?.allowed_branches;
       const active_branch = result.active_branch || result.data?.active_branch;

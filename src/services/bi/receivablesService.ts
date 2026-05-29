@@ -79,6 +79,18 @@ export const receivablesService = {
   },
 
   /**
+   * Obtiene el perfil/cuentas de un cliente específico
+   */
+  async getClientProfile(clientId: string): Promise<any> {
+    try {
+      return await apiClient.get(`/receivables/client/${clientId}`);
+    } catch (error: any) {
+      console.error(`Error fetching profile for client ${clientId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
    * Análisis de riesgo de un cliente
    */
   async getClientRisk(clientId: string): Promise<any> {

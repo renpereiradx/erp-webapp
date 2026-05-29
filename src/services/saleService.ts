@@ -491,7 +491,7 @@ export const saleService = {
         return { success: false, error: 'Validación de dominio fallida', details: validation.errors };
       }
 
-      const response = await apiClient.createSaleWithUnits(saleData)
+      const response = await apiClient.createSale(saleData)
 
       const saleId =
         response?.sale_id ||

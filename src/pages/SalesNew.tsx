@@ -313,6 +313,80 @@ const SalesNew: React.FC = () => {
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [selectedProductQuantity, setSelectedProductQuantity] = useState(1);
 
+  const handleBarcodeScan = useCallback(async (barcode: string) => {
+    if (isScanningBarcode) return;
+    
+    setIsScanningBarcode(true);
+    const scanToast = toast.loading('Buscando producto por código de barras...');
+    
+    try {
+      const response = await saleService.salesScan(barcode, currentBranchId || undefined);
+      
+      if (response?.success && response.data) {
+        const scanResult = response.data;
+        const decoded = scanResult.decoded_barcode;
+        const isVariable = !!scanResult.is_variable_measure;
+        const quantity = isVariable ? Number(decoded.quantity || 1) : 1;
+        const price = Number(scanResult.price_per_unit || 0);
+        
+        const cartItem: CartItem = {
+          id: isVariable 
+            ? `VAR-${decoded.product_id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            : `${decoded.product_id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          productId: decoded.product_id,
+          name: scanResult.product_name || 'Producto Escaneado',
+          quantity,
+          price: price,
+          originalPrice: price,
+          stock: Number(scanResult.stock_quantity || 0),
+          discount: 0,
+          discountType: 'amount',
+          discountInput: 0,
+          discountReason: '',
+          taxRate: Number(scanResult.subtotal) > 0 
+            ? Number((Number(scanResult.tax_amount) / Number(scanResult.subtotal)).toFixed(2)) 
+            : 0.10,
+          unit: decoded.unit || 'unit',
+        };
+        
+        setItems(prev => {
+          if (isVariable) {
+            return [...prev, cartItem];
+          } else {
+            const existingIndex = prev.findIndex(item => item.productId === cartItem.productId && !item.reserve_id);
+            if (existingIndex >= 0) {
+              return prev.map((item, index) => 
+                index === existingIndex 
+                  ? { ...item, quantity: item.quantity + 1 }
+                  : item
+              );
+            } else {
+              return [...prev, cartItem];
+            }
+          }
+        });
+        
+        toast.dismiss(scanToast);
+        toast.success(`Agregado: ${scanResult.product_name} (${quantity} ${decoded.unit || 'unit'})`);
+        setProductSearchTerm('');
+        setShowProductDropdown(false);
+        setProductHighlightedIndex(-1);
+      } else {
+        toast.dismiss(scanToast);
+        toast.error(response?.error || 'Producto no encontrado por código de barras');
+      }
+    } catch (error: any) {
+      toast.dismiss(scanToast);
+      console.error('Error al escanear código de barras:', error);
+      toast.error(error?.message || 'Error al buscar el código de barras');
+    } finally {
+      setIsScanningBarcode(false);
+      setTimeout(() => {
+        productSearchInputRef.current?.focus();
+      }, 50);
+    }
+  }, [isScanningBarcode, currentBranchId, toast, setItems]);
+
   // Efecto para manejar navegación desde el Dashboard de Reservas
   useEffect(() => {
     const navState = location.state as { reserve_id?: number, client_id?: string, product_id?: string };
@@ -629,80 +703,6 @@ const SalesNew: React.FC = () => {
       return [...prev, newItem];
     });
   }, []);
-
-  const handleBarcodeScan = useCallback(async (barcode: string) => {
-    if (isScanningBarcode) return;
-    
-    setIsScanningBarcode(true);
-    const scanToast = toast.loading('Buscando producto por código de barras...');
-    
-    try {
-      const response = await saleService.salesScan(barcode, currentBranchId || undefined);
-      
-      if (response?.success && response.data) {
-        const scanResult = response.data;
-        const decoded = scanResult.decoded_barcode;
-        const isVariable = !!scanResult.is_variable_measure;
-        const quantity = isVariable ? Number(decoded.quantity || 1) : 1;
-        const price = Number(scanResult.price_per_unit || 0);
-        
-        const cartItem: CartItem = {
-          id: isVariable 
-            ? `VAR-${decoded.product_id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-            : `${decoded.product_id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          productId: decoded.product_id,
-          name: scanResult.product_name || 'Producto Escaneado',
-          quantity,
-          price: price,
-          originalPrice: price,
-          stock: Number(scanResult.stock_quantity || 0),
-          discount: 0,
-          discountType: 'amount',
-          discountInput: 0,
-          discountReason: '',
-          taxRate: Number(scanResult.subtotal) > 0 
-            ? Number((Number(scanResult.tax_amount) / Number(scanResult.subtotal)).toFixed(2)) 
-            : 0.10,
-          unit: decoded.unit || 'unit',
-        };
-        
-        setItems(prev => {
-          if (isVariable) {
-            return [...prev, cartItem];
-          } else {
-            const existingIndex = prev.findIndex(item => item.productId === cartItem.productId && !item.reserve_id);
-            if (existingIndex >= 0) {
-              return prev.map((item, index) => 
-                index === existingIndex 
-                  ? { ...item, quantity: item.quantity + 1 }
-                  : item
-              );
-            } else {
-              return [...prev, cartItem];
-            }
-          }
-        });
-        
-        toast.dismiss(scanToast);
-        toast.success(`Agregado: ${scanResult.product_name} (${quantity} ${decoded.unit || 'unit'})`);
-        setProductSearchTerm('');
-        setShowProductDropdown(false);
-        setProductHighlightedIndex(-1);
-      } else {
-        toast.dismiss(scanToast);
-        toast.error(response?.error || 'Producto no encontrado por código de barras');
-      }
-    } catch (error: any) {
-      toast.dismiss(scanToast);
-      console.error('Error al escanear código de barras:', error);
-      toast.error(error?.message || 'Error al buscar el código de barras');
-    } finally {
-      setIsScanningBarcode(false);
-      setTimeout(() => {
-        productSearchInputRef.current?.focus();
-      }, 50);
-    }
-  }, [isScanningBarcode, currentBranchId, toast, setItems]);
 
   const handleSelectClient = async (client: Client) => {
     setSelectedClient(client);
@@ -1143,6 +1143,8 @@ const SalesNew: React.FC = () => {
           setSelectedClient(null);
           fetchDashboardData();
           handleHistoryFilter();
+        } else {
+          toast.error(response?.error || 'No se pudieron agregar los productos a la venta');
         }
       } else {
         // 1. Validar unicidad de reserve_id y productId para reservas (Instrucción: permitir solo uno por producto)
@@ -1255,6 +1257,8 @@ const SalesNew: React.FC = () => {
           });
           setShowInstantCollection(true);
           fetchDashboardData();
+        } else {
+          toast.error(response?.error || 'No se pudo registrar la venta');
         }
       }
     } catch (error) {

@@ -521,26 +521,38 @@ Authorization: Bearer <jwt_token>
 
 | Campo | Tipo | Requerido | Descripción |
 |-------|------|-----------|-------------|
-| sale_id | string | Sí | ID de la venta |
-| amount | float | Sí | Monto del pago |
-| payment_method_id | int | No | ID del método de pago |
-| notes | string | No | Notas |
+| sales_order_id | string | Sí | ID de la venta (`SALE-XXXX`) |
+| amount_received | float | Sí | Monto total recibido en efectivo u otro medio |
+| amount_to_apply | float | No | Monto a aplicar a la venta (por defecto igual a `amount_received`) |
+| payment_method_id | int | Sí | ID del método de pago |
+| cash_register_id | int | No | ID de la caja registradora activa |
+| payment_reference | string | No | Referencia del pago |
+| payment_notes | string | No | Notas adicionales del pago |
+| currency_id | int | No | ID de la moneda del pago |
+| exchange_rate | float | No | Tipo de cambio (por defecto 1.0) |
+| original_amount | float | No | Monto original en la moneda seleccionada |
 
 #### Response 200
 
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| success | bool | `true` |
+| success | bool | `true` si el pago se procesó exitosamente |
 | payment_id | int | ID del pago registrado |
 | sale_id | string | ID de la venta |
-| amount | float | Monto pagado |
-| message | string | Mensaje de éxito |
+| client_name | string | Nombre del cliente |
+| message | string | Mensaje descriptivo del resultado |
+| payment_complete | bool | `true` si la venta se saldó completamente |
+| requires_change | bool | `true` si corresponde vuelto al cliente |
+| processed_at | string | Timestamp de procesamiento (ISO 8601) |
+| processed_by | string | ID de usuario del cajero |
+| payment_summary | object | Resumen del estado de la venta y montos pagados |
+| cash_summary | object | Resumen del manejo de efectivo e impacto neto |
 
 #### Errores
 
 | Código | Condición |
 |--------|-----------|
-| 400 | `sale_id` vacío, `amount` inválido, o `branch_id` inválido |
+| 400 | `sales_order_id` vacío, `amount_received` inválido, `payment_method_id` inválido, o `branch_id` inválido |
 | 401 | Token ausente o inválido |
 | 403 | `branch_id` fuera de `allowed_branches` |
 | 404 | Venta o caja activa no encontrada |

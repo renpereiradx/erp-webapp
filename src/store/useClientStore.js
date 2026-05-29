@@ -74,6 +74,8 @@ const useClientStore = create()(
       loading: false,
       error: null,
 
+      clearError: () => set({ error: null }),
+
       fetchClients: async (page = 1, pageSize = 10) => {
         set({ loading: true, error: null })
         try {
