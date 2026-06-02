@@ -469,6 +469,20 @@ class BusinessManagementAPI {
     return this.get(`/sale/${id}/payment-status`, options)
   }
 
+  async getSalesWithPaymentStatusByDateRange(startDate: string, endDate: string, page = 1, pageSize = 50, options: RequestOptions = {}): Promise<any> {
+    return this.get('/sale/date_range/payment-status', {
+      ...options,
+      params: { ...options.params, start_date: startDate, end_date: endDate, page, page_size: pageSize }
+    })
+  }
+
+  async getSalesWithPaymentStatusByClientName(name: string, page = 1, pageSize = 50, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/sale/client_name/${encodeURIComponent(name)}/payment-status`, {
+      ...options,
+      params: { ...options.params, page, page_size: pageSize }
+    })
+  }
+
   async getSalePaymentDetails(saleId: string | number, options: RequestOptions = {}): Promise<any> {
     return this.get(`/payment/details/${saleId}`, options)
   }

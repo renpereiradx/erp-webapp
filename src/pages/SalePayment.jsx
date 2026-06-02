@@ -482,21 +482,17 @@ const SalePayment = () => {
           const sale = item.sale || item
           const totalPaid = Number(sale.total_paid) || Number(sale.amount_paid) || 0
           const rawTotal = Number(sale.total_amount) || Number(sale.total) || 0
-          const rawBalance = sale.balance_due !== undefined ? Number(sale.balance_due) : null
-          
-          const status = normalizeSaleStatus({ ...sale, total_paid: totalPaid, balance_due: rawBalance ?? (rawTotal - totalPaid) })
-          const isPaid = status === 'PAID'
+          const rawBalance = (sale.balance_due !== undefined && sale.balance_due !== null) ? Number(sale.balance_due) : null
           
           let finalTotal = rawTotal
-          let finalBalance = rawBalance ?? Math.max(0, rawTotal - totalPaid)
+          let finalBalance = rawBalance !== null ? rawBalance : Math.max(0, rawTotal - totalPaid)
           
-          if (totalPaid > 0 && Math.abs(rawTotal - finalBalance) < 1 && rawTotal > 0) {
-            finalTotal = totalPaid + finalBalance
-          } else if (totalPaid > 0 && rawTotal > 0 && rawTotal > totalPaid && rawBalance === null) {
-            finalBalance = rawTotal - totalPaid
-          }
-
-          if (isPaid) finalBalance = 0
+          const status = normalizeSaleStatus({ ...sale, total_paid: totalPaid, balance_due: finalBalance })
+          
+          if (status === 'PAID' || status === 'CANCELLED') finalBalance = 0
+          
+          let paymentProgress = finalTotal > 0 ? ((finalTotal - finalBalance) / finalTotal) * 100 : 0
+          if (status === 'CANCELLED') paymentProgress = 0
           
           return {
             ...sale,
@@ -511,6 +507,7 @@ const SalePayment = () => {
             total_amount: finalTotal,
             total_paid: totalPaid,
             balance_due: finalBalance,
+            payment_progress: paymentProgress,
           }
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -624,7 +621,8 @@ const SalePayment = () => {
   const handlePaymentSubmit = async paymentData => {
     await salePaymentService.processSalePaymentWithCashRegister(paymentData)
     showSuccess('Cobro registrado exitosamente')
-    handleLoadSales(pagination.page)
+    pagesCache.current.clear()
+    handleLoadSales(pagination.page, true)
   }
 
   const handleCancelSale = async sale => {
@@ -660,7 +658,8 @@ const SalePayment = () => {
       )
       if (result.success) {
         showSuccess('Venta anulada exitosamente.')
-        handleLoadSales(pagination.page)
+        pagesCache.current.clear()
+        handleLoadSales(pagination.page, true)
       }
     } catch (err) {
       showError('No se pudo anular la venta')
@@ -693,7 +692,7 @@ const SalePayment = () => {
         )
       case 'PENDING':
         return (
-          <Badge className='bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-none font-medium text-xs px-2 py-0.5'>
+          <Badge className='bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none font-medium text-xs px-2 py-0.5'>
             Pendiente
           </Badge>
         )

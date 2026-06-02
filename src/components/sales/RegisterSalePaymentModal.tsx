@@ -157,7 +157,13 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
         return s === 'OPEN' || s === 'ACTIVE'
       }) : []
       setCashRegisters(openRegs)
-      if (activeReg?.id) setCashRegisterId(c => c || String(activeReg.id))
+      
+      if (activeReg?.id) {
+        const isActiveInBranch = openRegs.some(cr => String(cr.id) === String(activeReg.id));
+        if (isActiveInBranch) {
+          setCashRegisterId(c => c || String(activeReg.id))
+        }
+      }
     } catch (e) { console.error('Error loading modal data:', e) }
     finally { setCashRegistersLoading(false) }
   }, [])

@@ -47,6 +47,7 @@ import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBranch } from '@/contexts/BranchContext';
 import saleService from '@/services/saleService';
+import clientService from '@/services/clientService';
 import apiService from '@/services/api.ts';
 import { PaymentMethodService } from '@/services/paymentMethodService';
 import { CurrencyService } from '@/services/currencyService';
@@ -399,15 +400,43 @@ const SalesNew: React.FC = () => {
 
   const handleLoadSpecificReservation = async (reserveId: number, clientId?: string, productId?: string) => {
     try {
-      // 1. Intentar cargar el cliente si viene el ID
-      if (clientId) {
-        await searchClients(clientId);
-        // El store de clientes debería tener el resultado ahora
-      }
-
-      // 2. Obtener detalle de la reserva desde la API
+      // Obtener detalle de la reserva desde la API primero
       const resData = await apiService.get(`/reserve/${reserveId}`);
       const reservation = resData?.data || resData;
+
+      // 1. Intentar cargar el cliente si viene el ID
+      let clientSet = false;
+      if (clientId) {
+        try {
+          const clientData = await clientService.getById(clientId);
+          if (clientData) {
+            setSelectedClient(clientData);
+            clientSet = true;
+          }
+        } catch (e) {
+          console.warn('Could not fetch exact client via party api, trying legacy endpoint', e);
+          try {
+             // Fallback al endpoint legacy
+             const legacyData = await apiService.get(`/client/${clientId}`);
+             if (legacyData?.data) {
+                setSelectedClient(legacyData.data);
+                clientSet = true;
+             }
+          } catch (e2) {
+             console.warn('Could not fetch legacy client either', e2);
+          }
+        }
+      }
+
+      // Fallback incondicional si no se pudo cargar desde la API pero tenemos la reserva
+      if (!clientSet && reservation && (reservation.client_name || reservation.client_id)) {
+         setSelectedClient({
+            id: reservation.client_id || clientId || `temp-${Date.now()}`,
+            name: reservation.client_name || 'Cliente de Reserva',
+            displayName: reservation.client_name || 'Cliente de Reserva',
+            document_id: reservation.client_document_id || ''
+         } as any);
+      }
 
       if (reservation) {
         // Añadir al carrito

@@ -107,18 +107,27 @@ export const useReservation = (initialProductId?: string) => {
         throw new Error('Faltan datos requeridos para la reserva');
       }
 
-      await reservationService.manageReserve({
+      const branchIdStr = localStorage.getItem('activeBranch');
+      const branchId = branchIdStr ? parseInt(branchIdStr, 10) : undefined;
+
+      const payload: any = {
         action: 'CREATE',
         product_id: productId,
         client_id: clientId,
         start_time: startTime,
         duration: Number(duration) || 1,
-      });
+        branch_id: branchId,
+      };
+
+      const res = await reservationService.manageReserve(payload);
+      if (res?.data?.success === false) throw new Error(res.data.error || 'Error al crear reserva');
+      if (res?.success === false) throw new Error(res.error || 'Error al crear reserva');
       
       await fetchSchedules();
-    } catch (err) {
-      setError('Error al crear reserva');
-      throw err;
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Error al crear reserva';
+      setError(msg);
+      throw new Error(msg);
     }
   };
 
@@ -126,18 +135,25 @@ export const useReservation = (initialProductId?: string) => {
     try {
       if (!reserveId) throw new Error('ID de reserva no válido');
 
-      await reservationService.manageReserve({
+      const branchIdStr = localStorage.getItem('activeBranch');
+      const branchId = branchIdStr ? parseInt(branchIdStr, 10) : undefined;
+
+      const payload: any = {
         action: 'CONFIRM',
         reserve_id: reserveId,
         product_id: productId,
-        client_id: '', 
-        start_time: '',
-        duration: 0,
-      });
+        branch_id: branchId,
+      };
+
+      const res = await reservationService.manageReserve(payload);
+      if (res?.data?.success === false) throw new Error(res.data.error || 'Error al confirmar reserva');
+      if (res?.success === false) throw new Error(res.error || 'Error al confirmar reserva');
+      
       await fetchSchedules();
-    } catch (err) {
-      setError('Error al confirmar reserva');
-      throw err;
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Error al confirmar reserva';
+      setError(msg);
+      throw new Error(msg);
     }
   };
 
@@ -145,18 +161,25 @@ export const useReservation = (initialProductId?: string) => {
     try {
       if (!reserveId) throw new Error('ID de reserva no válido');
 
-      await reservationService.manageReserve({
+      const branchIdStr = localStorage.getItem('activeBranch');
+      const branchId = branchIdStr ? parseInt(branchIdStr, 10) : undefined;
+
+      const payload: any = {
         action: 'CANCEL',
         reserve_id: reserveId,
         product_id: productId,
-        client_id: '',
-        start_time: '',
-        duration: 0,
-      });
+        branch_id: branchId,
+      };
+
+      const res = await reservationService.manageReserve(payload);
+      if (res?.data?.success === false) throw new Error(res.data.error || 'Error al cancelar reserva');
+      if (res?.success === false) throw new Error(res.error || 'Error al cancelar reserva');
+      
       await fetchSchedules();
-    } catch (err) {
-      setError('Error al cancelar reserva');
-      throw err;
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Error al cancelar reserva';
+      setError(msg);
+      throw new Error(msg);
     }
   };
 

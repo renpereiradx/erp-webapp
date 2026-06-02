@@ -138,9 +138,14 @@ const InstantPaymentDialog = ({
           setCashRegisters(rawRegisters)
           
           if (activeRegister) {
-            setCashRegisterId(activeRegister.id || activeRegister.cash_register_id)
-          } else if (rawRegisters.length > 0) {
-            // No default if no active register, user must choose or leave null
+            const activeId = activeRegister.id || activeRegister.cash_register_id;
+            const isActiveInBranch = rawRegisters.some(r => (r.id || r.cash_register_id) === activeId);
+            if (isActiveInBranch) {
+              setCashRegisterId(activeId)
+            } else {
+              setCashRegisterId(null)
+            }
+          } else {
             setCashRegisterId(null)
           }
         } catch (err) {

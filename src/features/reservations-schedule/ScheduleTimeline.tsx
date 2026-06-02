@@ -38,13 +38,29 @@ const groupSlotsByReservation = (slots: ScheduleSlot[]): GroupedItem[] => {
   );
 
   for (const slot of sortedSlots) {
-    if (slot.reserve?.id) {
-      const existing = reservationGroups.get(slot.reserve.id);
+    const resId = slot.reserve?.id || (slot as any).reserve_id || (slot as any).reservation_id;
+    
+    if (resId) {
+      const existing = reservationGroups.get(resId);
+      const clientName = slot.reserve?.client_name || (slot as any).reserved_by || (slot as any).client_name;
+      const resStatus = slot.reserve?.status || (slot as any).reserve_status || slot.status;
+      const clientId = slot.reserve?.client_id || (slot as any).client_id;
+      
+      // Asegurarnos de que el slot tenga la info para onInvoice() si viene plana
+      if (!slot.reserve) {
+         slot.reserve = {
+            id: resId,
+            client_name: clientName,
+            client_id: clientId,
+            status: resStatus
+         } as any;
+      }
+
       if (!existing) {
-        reservationGroups.set(slot.reserve.id, {
-          reserve_id: slot.reserve.id,
-          client_name: slot.reserve.client_name,
-          reserve_status: slot.status,
+        reservationGroups.set(resId, {
+          reserve_id: resId,
+          client_name: clientName,
+          reserve_status: resStatus,
           start_time: slot.start_time,
           end_time: slot.end_time,
           slot_count: 1,
@@ -54,7 +70,7 @@ const groupSlotsByReservation = (slots: ScheduleSlot[]): GroupedItem[] => {
         existing.slots.push(slot);
         existing.end_time = slot.end_time;
         existing.slot_count = existing.slots.length;
-        existing.reserve_status = slot.status;
+        existing.reserve_status = resStatus;
       }
     } else {
       availableSlots.push(slot);
@@ -186,7 +202,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
               ? 'bg-red-50 border-red-500 animate-pulse'
               : isAvailable
                 ? 'bg-white border-emerald-100 hover:border-emerald-400 hover:shadow-[0_10px_20px_-5px_rgba(16,185,129,0.1)] cursor-pointer'
-                : 'bg-slate-50 border-slate-200/60 opacity-80'
+                : 'bg-slate-100 border-slate-300 opacity-70 cursor-not-allowed'
         }`}
         onClick={() => isAvailable && onSelectSlot(slot.start_time)}
       >
@@ -195,17 +211,17 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
             ? 'bg-blue-600 text-white'
             : hasConflict
               ? 'bg-red-600 text-white'
-              : isAvailable ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-100 border-slate-200'
+              : isAvailable ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-200 border-slate-300'
         }`}>
           <span className={`font-mono text-xs font-black ${
-            isHighlighted || hasConflict ? 'text-white' : isAvailable ? 'text-emerald-700' : 'text-slate-500'
+            isHighlighted || hasConflict ? 'text-white' : isAvailable ? 'text-emerald-700' : 'text-slate-600'
           }`}>
             {formatTime(slot.start_time)}
           </span>
           <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-            isHighlighted || hasConflict ? 'bg-white/20 text-white' : isAvailable ? 'text-emerald-600 bg-emerald-100/50' : 'text-slate-600 bg-white'
+            isHighlighted || hasConflict ? 'bg-white/20 text-white' : isAvailable ? 'text-emerald-600 bg-emerald-100/50' : 'text-slate-600 bg-slate-300/50'
           }`}>
-            {isSelectedStart ? 'INICIO' : isHighlighted ? 'INCLUIDO' : hasConflict ? 'CONFLICTO' : 'DISPONIBLE'}
+            {isSelectedStart ? 'INICIO' : isHighlighted ? 'INCLUIDO' : hasConflict ? 'CONFLICTO' : isAvailable ? 'DISPONIBLE' : 'NO DISPONIBLE'}
           </span>
         </div>
 
@@ -218,14 +234,14 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
           ) : (
             <div className="text-center space-y-1">
               <span className={`material-icons-round text-3xl transition-colors ${
-                isHighlighted ? 'text-blue-500' : 'text-emerald-300 group-hover:text-emerald-500'
+                isHighlighted ? 'text-blue-500' : isAvailable ? 'text-emerald-300 group-hover:text-emerald-500' : 'text-slate-400'
               }`}>
-                {isSelectedStart ? 'stars' : isHighlighted ? 'check_circle' : 'add_circle'}
+                {isSelectedStart ? 'stars' : isHighlighted ? 'check_circle' : isAvailable ? 'add_circle' : 'block'}
               </span>
               <p className={`text-[10px] font-black uppercase tracking-tighter transition-colors ${
-                isHighlighted ? 'text-blue-600' : 'text-emerald-600/60 group-hover:text-emerald-700'
+                isHighlighted ? 'text-blue-600' : isAvailable ? 'text-emerald-600/60 group-hover:text-emerald-700' : 'text-slate-500'
               }`}>
-                {isSelectedStart ? 'Hora de Inicio' : isHighlighted ? 'Bloque Seleccionado' : 'Disponible'}
+                {isSelectedStart ? 'Hora de Inicio' : isHighlighted ? 'Bloque Seleccionado' : isAvailable ? 'Disponible' : 'No Disponible'}
               </p>
             </div>
           )}

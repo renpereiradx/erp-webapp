@@ -286,9 +286,15 @@ export const salePaymentService = {
   async getSalesByDateRangeWithPaymentStatus(filters: any = {}) {
     const startTime = Date.now();
     try {
-      // Reutilizar lógica de saleService que ya maneja extracción y paginación
-      const { saleService } = await import('./saleService');
-      const result = await saleService.getSalesByDateRange(filters);
+      const { start_date, end_date, page = 1, page_size = 50, ...rest } = filters;
+      const today = new Date().toISOString().split('T')[0];
+      const result = await apiClient.getSalesWithPaymentStatusByDateRange(
+        start_date || today,
+        end_date || today,
+        page,
+        page_size,
+        { params: rest }
+      );
 
       telemetry.record('sale_payment.service.list_with_status', {
         duration: Date.now() - startTime,
@@ -312,18 +318,15 @@ export const salePaymentService = {
   async getSalesByClientNameWithPaymentStatus(clientName: string, filters: any = {}) {
     const startTime = Date.now();
     try {
-      const { saleService } = await import('./saleService');
-      const result = await saleService.getSalesByClientName(
-        clientName, 
-        filters.page, 
-        filters.page_size,
-        {
-          start_date: filters.start_date,
-          end_date: filters.end_date
-        }
+      const { page = 1, page_size = 50, ...rest } = filters;
+      const result = await apiClient.getSalesWithPaymentStatusByClientName(
+        clientName,
+        page,
+        page_size,
+        { params: rest }
       );
 
-      telemetry.record('sale_payment.service.client_list_with_status', {
+      telemetry.record('sale_payment.service.list_by_client_with_status', {
         duration: Date.now() - startTime,
         clientName,
         startDate: filters.start_date,

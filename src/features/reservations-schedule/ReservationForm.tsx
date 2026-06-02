@@ -97,7 +97,10 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
 
     setIsSubmitting(true);
     try {
-      await onSubmit(clientId, startTime, duration, selectedReservationType);
+      let d = startTime.replace(' ', 'T');
+      if (!d.includes('Z') && !d.match(/[-+]\d{2}:\d{2}$/)) d += 'Z';
+      const isoTime = new Date(d).toISOString().split('.')[0] + 'Z';
+      await onSubmit(clientId, isoTime, duration, selectedReservationType);
       setClientId('');
       setClientSearch('');
     } finally {
@@ -108,7 +111,12 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   const formatDateTimeForInput = (dateStr: string) => {
     if (!dateStr) return '';
     try {
-      const date = new Date(dateStr);
+      // Si la fecha ya viene con T, la parseamos tal cual
+      // Si viene con espacio, lo cambiamos a T
+      let d = dateStr.replace(' ', 'T');
+      // Removemos la Z para que new Date lo interprete como hora local y no haga desfase
+      d = d.replace('Z', '');
+      const date = new Date(d);
       if (isNaN(date.getTime())) return '';
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -173,8 +181,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
               type="datetime-local"
               value={formatDateTimeForInput(startTime)}
               onChange={(e) => {
-                const newTime = new Date(e.target.value).toISOString();
-                setStartTime(newTime);
+                setStartTime(e.target.value);
               }}
               className="w-full bg-slate-50 border-none rounded-xl py-4 px-4 font-mono text-blue-600 text-center text-sm font-bold focus:ring-2 focus:ring-blue-100 transition-all outline-none"
             />

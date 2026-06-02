@@ -3,10 +3,10 @@ export type ReserveAction = 'CREATE' | 'UPDATE' | 'CONFIRM' | 'CANCEL';
 export interface ManageReserveRequest {
   action: ReserveAction;
   reserve_id?: number;
-  product_id: string;
-  client_id: string;
-  start_time: string; // ISO-8601
-  duration: number; // hours
+  product_id?: string;
+  client_id?: string;
+  start_time?: string; // ISO-8601
+  duration?: number; // hours
   branch_id?: number;
 }
 

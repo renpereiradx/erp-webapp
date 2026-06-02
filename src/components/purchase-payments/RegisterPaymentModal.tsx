@@ -148,7 +148,13 @@ const RegisterPaymentModal: React.FC<RegisterPaymentModalProps> = ({ open, onOpe
       const [allRegs, activeReg] = registersData
       const openRegs = Array.isArray(allRegs) ? allRegs.filter((cr: any) => (cr?.status || cr?.state || '').toUpperCase() === 'OPEN') : []
       setCashRegisters(openRegs)
-      if (activeReg?.id) setCashRegister(c => c || String(activeReg.id))
+      
+      if (activeReg?.id) {
+        const isActiveInBranch = openRegs.some(cr => String(cr.id) === String(activeReg.id));
+        if (isActiveInBranch) {
+          setCashRegister(c => c || String(activeReg.id))
+        }
+      }
     } catch (e) { console.error('Error loading modal data:', e) }
   }, [])
 
