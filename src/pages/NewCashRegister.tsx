@@ -1,37 +1,27 @@
-/**
- * Cash Register Management Page - v3.0
- * Gestión de Cajas Registradoras (Apertura y Cierre)
- * 
- * Migrated to TypeScript & Fluent Design System 2.0
- */
-
-import React, { useState, useEffect } from 'react'
-import { useI18n } from '@/lib/i18n'
-import { useBranch } from '@/contexts/BranchContext'
-import { useCashRegisterStore } from '@/store/useCashRegisterStore'
-import useDashboardStore from '@/store/useDashboardStore'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import DataState from '@/components/ui/DataState'
-import { useToast } from '@/hooks/useToast'
-import ToastContainer from '@/components/ui/ToastContainer'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import React, { useState, useEffect } from 'react';
+import { useI18n } from '@/lib/i18n';
+import { useBranch } from '@/contexts/BranchContext';
+import { useCashRegisterSession } from '@/features/cash-register/hooks/useCashRegisterSession';
+import useDashboardStore from '@/store/useDashboardStore';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/useToast';
+import ToastContainer from '@/components/ui/ToastContainer';
+import { Label } from '@/components/ui/label';
 import { 
   Calculator, 
   CheckCircle2, 
-  AlertTriangle, 
+  AlertCircle, 
   Info, 
   Wallet, 
   MapPin, 
-  TrendingUp, 
-  TrendingDown,
   History,
   Clock,
   RefreshCw
-} from 'lucide-react'
+} from 'lucide-react';
+import { validateOpenForm, validateCloseForm } from '@/domain/cash-register/validators';
+import { formatCurrency, calculateNetDifference } from '@/domain/cash-register/calculations';
 
 interface OpenForm {
   name: string;
@@ -42,18 +32,16 @@ interface OpenForm {
 }
 
 interface CloseForm {
-  cashier: string;
-  register: string;
   closingDate: string;
   finalBalance: string;
   closingNotes: string;
 }
 
 const NewCashRegister: React.FC = () => {
-  const { t } = useI18n()
-  const { fetchDashboardData } = useDashboardStore()
-  const { addToast, toasts, removeToast } = useToast()
-  const { currentBranchId } = useBranch()
+  const { t } = useI18n();
+  const { fetchDashboardData } = useDashboardStore();
+  const { addToast, toasts, removeToast } = useToast();
+  const { currentBranchId } = useBranch();
 
   const {
     activeCashRegister,
@@ -62,10 +50,10 @@ const NewCashRegister: React.FC = () => {
     isClosingCashRegister,
     openCashRegister,
     closeCashRegister,
-    getActiveCashRegister,
-  } = useCashRegisterStore()
+    refreshActive,
+  } = useCashRegisterSession();
 
-  const [activeTab, setActiveTab] = useState<'open' | 'close'>('open')
+  const [activeTab, setActiveTab] = useState<'open' | 'close'>('open');
 
   const [openForm, setOpenForm] = useState<OpenForm>({
     name: '',
@@ -73,68 +61,71 @@ const NewCashRegister: React.FC = () => {
     openingDate: new Date().toISOString().split('T')[0],
     initialBalance: '',
     openingNotes: '',
-  })
+  });
 
   const [closeForm, setCloseForm] = useState<CloseForm>({
-    cashier: '',
-    register: '',
     closingDate: new Date().toISOString().split('T')[0],
     finalBalance: '',
     closingNotes: '',
-  })
+  });
 
-  const [formError, setFormError] = useState('')
+  const [formError, setFormError] = useState('');
 
-  useEffect(() => {
-    getActiveCashRegister()
-  }, [getActiveCashRegister, currentBranchId])
+  // Fluent 2.0 UI tokens
+  const cardShadow = 'shadow-[0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_4px_rgba(0,0,0,0.12),0_0_2px_rgba(0,0,0,0.14)]';
+  const cardBg = 'bg-white dark:bg-[#252423]';
+  const canvasBg = 'bg-[#f3f2f1] dark:bg-[#11100f]';
+  const borderColor = 'border-slate-200 dark:border-[#3b3a39]';
 
   const formatNumber = (value: string) => {
-    if (!value) return ''
-    const numericValue = value.toString().replace(/\D/g, '')
-    if (!numericValue) return ''
-    return Number(numericValue).toLocaleString('es-PY')
-  }
+    if (!value) return '';
+    const numericValue = value.toString().replace(/\D/g, '');
+    if (!numericValue) return '';
+    return Number(numericValue).toLocaleString('es-PY');
+  };
 
   const parseFormattedNumber = (formattedValue: string) => {
-    if (!formattedValue) return ''
-    return formattedValue.replace(/\./g, '').replace(/,/g, '')
-  }
+    if (!formattedValue) return '';
+    return formattedValue.replace(/\./g, '').replace(/,/g, '');
+  };
 
   const handleAmountChange = (formSetter: React.Dispatch<React.SetStateAction<any>>, field: string, value: string) => {
-    const numericValue = parseFormattedNumber(value)
-    formSetter((prev: any) => ({ ...prev, [field]: numericValue }))
-    setFormError('')
-  }
+    const numericValue = parseFormattedNumber(value);
+    formSetter((prev: any) => ({ ...prev, [field]: numericValue }));
+    setFormError('');
+  };
 
   const handleOpenFormChange = (field: keyof OpenForm, value: string) => {
-    setOpenForm(prev => ({ ...prev, [field]: value }))
-    setFormError('')
-  }
+    setOpenForm(prev => ({ ...prev, [field]: value }));
+    setFormError('');
+  };
 
   const handleCloseFormChange = (field: keyof CloseForm, value: string) => {
-    setCloseForm(prev => ({ ...prev, [field]: value }))
-    setFormError('')
-  }
+    setCloseForm(prev => ({ ...prev, [field]: value }));
+    setFormError('');
+  };
 
   const handleOpenSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setFormError('')
+    e.preventDefault();
+    setFormError('');
 
-    if (!openForm.name.trim()) return setFormError('Debe ingresar un nombre para la caja')
-    const balance = parseFloat(openForm.initialBalance)
-    if (isNaN(balance) || balance < 0) return setFormError('El saldo inicial no es válido')
+    const balance = parseFloat(openForm.initialBalance);
+    const validationError = validateOpenForm(openForm.name, balance);
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
 
     try {
       await openCashRegister({
         name: openForm.name.trim(),
         initial_balance: balance,
         location: openForm.location?.trim() || null,
-        description: openForm.openingNotes?.trim() || null,
-      })
+        notes: openForm.openingNotes?.trim() || null,
+      });
 
-      addToast(t('cashRegister.success.opened', 'Caja registradora abierta exitosamente'), 'success')
-      if (fetchDashboardData) fetchDashboardData()
+      addToast(t('cashRegister.success.opened', 'Caja registradora abierta exitosamente'), 'success');
+      if (fetchDashboardData) fetchDashboardData();
 
       setOpenForm({
         name: '',
@@ -142,20 +133,24 @@ const NewCashRegister: React.FC = () => {
         openingDate: new Date().toISOString().split('T')[0],
         initialBalance: '',
         openingNotes: '',
-      })
+      });
 
-      await getActiveCashRegister()
+      refreshActive();
     } catch (error: any) {
-      setFormError(error.message || 'Error al abrir la caja registradora')
+      setFormError(error.message || 'Error al abrir la caja registradora');
     }
-  }
+  };
 
   const handleCloseSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!activeCashRegister) return setFormError('No hay caja activa')
+    e.preventDefault();
+    if (!activeCashRegister) return setFormError('No hay caja activa');
     
-    const balance = parseFloat(closeForm.finalBalance)
-    if (isNaN(balance) || balance < 0) return setFormError('El saldo ingresado no es válido')
+    const balance = parseFloat(closeForm.finalBalance);
+    const validationError = validateCloseForm(balance);
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
 
     try {
       if (!activeCashRegister.id) {
@@ -165,427 +160,409 @@ const NewCashRegister: React.FC = () => {
       await closeCashRegister(activeCashRegister.id, {
         final_balance: balance,
         notes: closeForm.closingNotes || null,
-      })
+      });
 
-      addToast(t('cashRegister.success.closed', 'Caja registradora cerrada exitosamente'), 'success')
-      if (fetchDashboardData) fetchDashboardData()
+      addToast(t('cashRegister.success.closed', 'Caja registradora cerrada exitosamente'), 'success');
+      if (fetchDashboardData) fetchDashboardData();
 
       setCloseForm({
-        cashier: '',
-        register: '',
         closingDate: new Date().toISOString().split('T')[0],
         finalBalance: '',
         closingNotes: '',
-      })
+      });
 
-      setActiveTab('open')
-      await getActiveCashRegister()
+      setActiveTab('open');
+      refreshActive();
     } catch (error: any) {
-      setFormError(error.message || 'Error al cerrar la caja registradora')
+      setFormError(error.message || 'Error al cerrar la caja registradora');
     }
-  }
-
-  const calculateDifference = () => {
-    if (!activeCashRegister || !closeForm.finalBalance) return 0
-    const finalBalance = parseFloat(closeForm.finalBalance)
-    const currentBalance = activeCashRegister.current_balance || activeCashRegister.initial_balance || 0
-    return finalBalance - currentBalance
-  }
+  };
 
   const formatTimeOpen = () => {
-    if (!activeCashRegister?.opened_at) return null
-    const openedDate = new Date(activeCashRegister.opened_at)
-    const now = new Date()
-    const diffMs = now.getTime() - openedDate.getTime()
-    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-    return diffHrs > 0 ? `${diffHrs}h ${diffMins}m` : `${diffMins}m`
-  }
+    if (!activeCashRegister?.opened_at) return null;
+    const openedDate = new Date(activeCashRegister.opened_at);
+    const now = new Date();
+    const diffMs = now.getTime() - openedDate.getTime();
+    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    return diffHrs > 0 ? `${diffHrs}h ${diffMins}m` : `${diffMins}m`;
+  };
 
-  if (isActiveCashRegisterLoading) return <div className='p-12'><DataState variant='loading' /></div>
-
-  return (
-    <div className='flex flex-col gap-10 animate-in fade-in duration-500 font-display bg-background-light dark:bg-background-dark min-h-full'>
-      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
-
-      {/* Header Section */}
-      <div className='flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2'>
-        <div className='flex items-center gap-5'>
-          <div className='size-14 bg-primary rounded-2xl flex items-center justify-center text-white shadow-fluent-8'>
-            <Calculator size={32} />
-          </div>
-          <div>
-            <h1 className='text-3xl font-black text-text-main tracking-tighter uppercase leading-none'>
-              Jornada de Caja
-            </h1>
-            <p className='text-text-secondary text-sm font-medium mt-1.5'>
-              Control de apertura y cierre de terminales de punto de venta
-            </p>
-          </div>
+  if (isActiveCashRegisterLoading) {
+    return (
+      <div className={`min-h-full ${canvasBg} flex items-center justify-center`}>
+        <div className='flex items-center gap-2 text-slate-500'>
+          <RefreshCw className='animate-spin w-5 h-5' /> Cargando jornada...
         </div>
       </div>
+    );
+  }
 
-      <div className='grid grid-cols-1 xl:grid-cols-12 gap-10 items-start'>
+  const difference = (activeCashRegister && closeForm.finalBalance) 
+    ? parseFloat(closeForm.finalBalance) - (activeCashRegister.current_balance || activeCashRegister.initial_balance || 0)
+    : 0;
+
+  return (
+    <div className={`min-h-full ${canvasBg} text-[#323130] dark:text-[#f3f2f1] p-4 md:p-8 font-sans`}>
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
+
+      {/* HEADER FLUENT */}
+      <header className='flex flex-col justify-start mb-6'>
+        <h1 className='text-2xl font-semibold leading-tight'>Jornada de caja</h1>
+        <p className='text-sm text-slate-500 dark:text-[#a19f9d] mt-1'>
+          Control de apertura y cierre de terminales de punto de venta.
+        </p>
+      </header>
+
+      <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 items-start'>
         
         {/* Sidebar: Active Status Card */}
-        <div className='xl:col-span-4 space-y-8'>
+        <div className='lg:col-span-4 flex flex-col gap-6'>
           {activeCashRegister ? (
-            <Card className='border-none rounded-3xl shadow-fluent-16 bg-white dark:bg-slate-900 overflow-hidden sticky top-24'>
-              <div className='bg-green-50 dark:bg-green-900/20 px-8 py-6 border-b border-green-100 dark:border-green-800/30'>
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2.5'>
-                    <div className='size-3 rounded-full bg-success animate-pulse shadow-[0_0_8px_rgba(16,124,16,0.5)]' />
-                    <span className='text-[11px] font-black uppercase tracking-[0.2em] text-success'>
-                      Terminal Activa
-                    </span>
-                  </div>
-                  <div className='flex items-center gap-2 text-[10px] font-black text-text-secondary bg-white/50 dark:bg-black/20 px-3 py-1.5 rounded-full border border-border-subtle'>
-                    <Clock size={14} />
-                    {formatTimeOpen()}
-                  </div>
+            <div className={`rounded-lg ${cardBg} border ${borderColor} ${cardShadow} flex flex-col overflow-hidden`}>
+              <div className={`px-5 py-4 border-b border-[#107c10]/20 bg-[#dff6dd]/50 dark:bg-[#107c10]/10 flex items-center justify-between`}>
+                <div className='flex items-center gap-2'>
+                  <div className='w-2 h-2 rounded-full bg-[#107c10]'></div>
+                  <span className='text-xs font-semibold text-[#107c10] dark:text-[#54b054]'>
+                    Terminal activa
+                  </span>
+                </div>
+                <div className='flex items-center gap-1.5 text-xs text-[#107c10] dark:text-[#54b054] font-medium'>
+                  <Clock size={14} /> {formatTimeOpen()}
                 </div>
               </div>
 
-              <div className='p-8 space-y-8'>
-                <div className='space-y-1'>
-                  <p className='text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1'>Identificador</p>
-                  <h3 className='text-2xl font-black tracking-tighter uppercase text-text-main leading-tight'>{activeCashRegister.name}</h3>
+              <div className='p-6 flex flex-col gap-6'>
+                <div>
+                  <p className='text-[11px] text-slate-500 dark:text-[#a19f9d] mb-1'>Identificador</p>
+                  <h3 className='text-lg font-semibold leading-tight'>{activeCashRegister.name}</h3>
                 </div>
 
-                <div className='p-6 bg-primary text-white rounded-2xl shadow-fluent-8 relative overflow-hidden group'>
-                  <div className='absolute -right-4 -bottom-4 size-20 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-700'></div>
-                  <p className='text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-2 relative z-10'>Saldo en Sistema</p>
-                  <p className='text-4xl font-black font-mono tracking-tighter tabular-nums relative z-10'>
-                    ₲{(activeCashRegister.current_balance || 0).toLocaleString('es-PY')}
+                <div className='p-4 bg-slate-50 dark:bg-[#201f1e] rounded-md border border-slate-200 dark:border-[#3b3a39]'>
+                  <p className='text-[11px] text-slate-500 dark:text-[#a19f9d] mb-1'>Saldo en sistema</p>
+                  <p className='text-3xl font-semibold font-mono tracking-tight'>
+                    ₲{formatCurrency(activeCashRegister.current_balance || 0)}
                   </p>
                 </div>
 
-                <div className='grid grid-cols-1 gap-4'>
-                  <div className='flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-border-subtle/50 group hover:bg-white dark:hover:bg-slate-800 transition-all'>
-                    <div className='flex items-center gap-3'>
-                      <MapPin className='text-slate-400 group-hover:text-primary transition-colors' size={18} />
-                      <span className='text-[10px] font-black uppercase text-text-secondary'>Ubicación</span>
+                <div className='flex flex-col gap-3'>
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-2 text-slate-500 dark:text-[#a19f9d]'>
+                      <MapPin size={14} />
+                      <span className='text-xs'>Ubicación</span>
                     </div>
-                    <span className='text-xs font-black text-text-main'>{activeCashRegister.location || 'No definida'}</span>
+                    <span className='text-xs font-medium'>{activeCashRegister.location || 'No definida'}</span>
                   </div>
-                  <div className='flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-border-subtle/50 group hover:bg-white dark:hover:bg-slate-800 transition-all'>
-                    <div className='flex items-center gap-3'>
-                      <History className='text-slate-400 group-hover:text-success transition-colors' size={18} />
-                      <span className='text-[10px] font-black uppercase text-text-secondary'>Fondo Inicial</span>
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-2 text-slate-500 dark:text-[#a19f9d]'>
+                      <History size={14} />
+                      <span className='text-xs'>Fondo inicial</span>
                     </div>
-                    <span className='text-xs font-black font-mono text-text-main'>₲{(activeCashRegister.initial_balance || 0).toLocaleString()}</span>
+                    <span className='text-xs font-medium font-mono'>₲{formatCurrency(activeCashRegister.initial_balance || 0)}</span>
                   </div>
                 </div>
 
                 <Button
                   onClick={() => setActiveTab('close')}
-                  className='w-full h-14 bg-error hover:bg-error/90 text-white font-black uppercase tracking-widest text-[11px] rounded-xl shadow-fluent-8 transition-all active:scale-95 flex items-center justify-center gap-2'
+                  className='w-full h-9 bg-[#d13438] hover:bg-[#a4262c] text-white text-sm font-medium rounded-md shadow-sm border-transparent flex justify-center items-center gap-2'
                 >
-                  <CheckCircle2 size={18} />
-                  Cerrar Jornada Operativa
+                  <CheckCircle2 size={16} /> Cerrar jornada
                 </Button>
               </div>
-            </Card>
+            </div>
           ) : (
-            <Card className='border-none rounded-3xl shadow-fluent-2 bg-slate-50 dark:bg-slate-900/50 p-8 border-dashed border-2 border-border-subtle'>
-              <div className='text-center space-y-4'>
-                <Info className='text-slate-300' size={40} />
-                <p className='text-xs font-bold uppercase tracking-widest text-slate-400'>Esperando apertura de terminal</p>
-              </div>
-            </Card>
+            <div className={`rounded-lg ${cardBg} border ${borderColor} ${cardShadow} p-8 flex flex-col items-center justify-center text-center`}>
+              <Info className='w-10 h-10 text-slate-300 dark:text-slate-600 mb-4' />
+              <h3 className='text-base font-semibold mb-2'>Sin terminal activa</h3>
+              <p className='text-xs text-slate-500 dark:text-[#a19f9d]'>
+                No hay una jornada abierta. Inicie la apertura para registrar movimientos.
+              </p>
+            </div>
           )}
         </div>
 
         {/* Main Forms: Tabs Layout */}
-        <div className={activeCashRegister ? 'xl:col-span-8' : 'xl:col-span-12'}>
-          <Card className='border-none rounded-[2rem] shadow-fluent-2 bg-white dark:bg-slate-900 overflow-hidden'>
-            <div className='flex bg-slate-50/80 dark:bg-slate-800/50 p-2 gap-2 border-b border-border-subtle'>
+        <div className='lg:col-span-8'>
+          <div className={`rounded-lg ${cardBg} border ${borderColor} ${cardShadow} flex flex-col overflow-hidden`}>
+            
+            {/* Tabs Header */}
+            <div className={`flex border-b ${borderColor} px-2 pt-2 bg-slate-50/50 dark:bg-[#201f1e]`}>
               <button
                 onClick={() => setActiveTab('open')}
-                className={`flex items-center justify-center gap-3 flex-1 py-4 px-6 rounded-2xl text-xs font-black uppercase tracking-[0.1em] transition-all ${
+                className={`flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold border-b-2 transition-colors ${
                   activeTab === 'open'
-                    ? 'bg-white dark:bg-slate-900 text-primary shadow-fluent-2'
-                    : 'text-text-secondary hover:text-text-main hover:bg-white/50'
+                    ? 'border-[#0f6cbd] text-[#0f6cbd] dark:text-[#4facfe] bg-white dark:bg-[#252423] rounded-t-md'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
                 }`}
               >
-                <Calculator size={20} />
-                Apertura de Caja
+                <Calculator size={16} /> Apertura de caja
               </button>
               <button
                 onClick={() => setActiveTab('close')}
-                className={`flex items-center justify-center gap-3 flex-1 py-4 px-6 rounded-2xl text-xs font-black uppercase tracking-[0.1em] transition-all ${
+                className={`flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold border-b-2 transition-colors ${
                   activeTab === 'close'
-                    ? 'bg-white dark:bg-slate-900 text-primary shadow-fluent-2'
-                    : 'text-text-secondary hover:text-text-main hover:bg-white/50'
+                    ? 'border-[#0f6cbd] text-[#0f6cbd] dark:text-[#4facfe] bg-white dark:bg-[#252423] rounded-t-md'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
                 }`}
               >
-                <CheckCircle2 size={20} />
-                Cierre de Caja
+                <CheckCircle2 size={16} /> Cierre de caja
               </button>
             </div>
 
-            <div className='p-10'>
+            {/* Tab Content */}
+            <div className='p-6 md:p-8'>
               {activeTab === 'open' ? (
-                <div className='space-y-10 animate-in slide-in-from-left-4 duration-300'>
+                <div className='animate-in fade-in duration-300'>
                   {activeCashRegister && (
-                    <div className='bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 rounded-2xl p-6 flex gap-5'>
-                      <AlertTriangle className="text-amber-600 shrink-0" size={28} />
+                    <div className='mb-6 p-4 bg-[#fff4ce] dark:bg-[#fff4ce]/10 border border-[#fde7e9] dark:border-[#fde7e9]/10 rounded-md flex gap-3'>
+                      <AlertCircle className='w-5 h-5 text-[#9d5d00] dark:text-[#fce100] shrink-0' />
                       <div>
-                        <p className='font-black uppercase tracking-tight text-amber-800 text-sm'>Restricción de Operación</p>
-                        <p className='text-amber-700 text-xs mt-1 font-medium leading-relaxed'>
+                        <p className='text-sm font-semibold text-[#9d5d00] dark:text-[#fce100]'>Restricción de operación</p>
+                        <p className='text-xs text-[#794600] dark:text-[#d29200] mt-1'>
                           Ya existe una sesión activa para este terminal. Debe finalizar la jornada actual antes de iniciar una nueva apertura de fondos.
                         </p>
                       </div>
                     </div>
                   )}
 
-                  <form onSubmit={handleOpenSubmit} className='grid grid-cols-1 md:grid-cols-2 gap-10'>
-                    <div className='md:col-span-2 space-y-3'>
-                      <Label className='text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1'>Nombre Identificador *</Label>
-                      <Input
-                        value={openForm.name}
-                        onChange={e => handleOpenFormChange('name', e.target.value)}
-                        placeholder='Ej: CAJA-01 Turno Mañana'
-                        className='h-14 rounded-2xl border-border-subtle font-black uppercase tracking-tight focus:ring-4 focus:ring-primary/5 bg-slate-50 dark:bg-slate-950'
-                        disabled={!!activeCashRegister}
-                        required
-                      />
-                    </div>
-
-                    <div className='space-y-3'>
-                      <Label className='text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1'>Ubicación de Terminal</Label>
-                      <Input
-                        value={openForm.location}
-                        onChange={e => handleOpenFormChange('location', e.target.value)}
-                        placeholder='Punto de Venta Principal'
-                        className='h-14 rounded-2xl border-border-subtle font-bold focus:ring-4 focus:ring-primary/5 bg-slate-50 dark:bg-slate-950'
-                        disabled={!!activeCashRegister}
-                      />
-                    </div>
-
-                    <div className='space-y-3'>
-                      <Label className='text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1'>Fecha Efectiva</Label>
-                      <Input
-                        type='date'
-                        value={openForm.openingDate}
-                        onChange={e => handleOpenFormChange('openingDate', e.target.value)}
-                        className='h-14 rounded-2xl border-border-subtle font-mono font-bold focus:ring-4 focus:ring-primary/5 bg-slate-50 dark:bg-slate-950'
-                        disabled={!!activeCashRegister}
-                      />
-                    </div>
-
-                    <div className='md:col-span-2 space-y-3'>
-                      <Label className='text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1'>Fondo de Maniobra (Sencillo) *</Label>
-                      <div className='relative'>
-                        <span className='absolute inset-y-0 left-0 pl-5 flex items-center text-slate-400 font-black text-xl'>₲</span>
+                  <form onSubmit={handleOpenSubmit} className='flex flex-col gap-6'>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                      <div className='md:col-span-2 space-y-1.5'>
+                        <Label className='text-sm font-semibold text-slate-700 dark:text-[#e1dfdd]'>Nombre identificador *</Label>
                         <Input
-                          type='text'
-                          inputMode='numeric'
-                          value={formatNumber(openForm.initialBalance)}
-                          onChange={e => handleAmountChange(setOpenForm, 'initialBalance', e.target.value)}
-                          placeholder='0'
-                          className='h-16 pl-12 text-2xl font-mono font-black border-border-subtle rounded-2xl tabular-nums bg-slate-50 dark:bg-slate-950 focus:ring-4 focus:ring-primary/5'
+                          value={openForm.name}
+                          onChange={e => handleOpenFormChange('name', e.target.value)}
+                          placeholder='Ej: CAJA-01 Turno Mañana'
+                          className={`h-9 rounded-md border-slate-300 dark:border-[#484644] bg-white dark:bg-[#323130] text-sm focus-visible:ring-1 focus-visible:ring-[#0f6cbd] ${activeCashRegister ? 'opacity-60' : ''}`}
                           disabled={!!activeCashRegister}
                           required
                         />
                       </div>
-                    </div>
 
-                    <div className='md:col-span-2 space-y-3'>
-                      <Label className='text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1'>Notas de Auditoría</Label>
-                      <Textarea
-                        value={openForm.openingNotes}
-                        onChange={e => handleOpenFormChange('openingNotes', e.target.value)}
-                        placeholder="Añada detalles sobre el estado inicial del efectivo o novedades..."
-                        className='resize-none rounded-3xl border-border-subtle bg-slate-50 dark:bg-slate-950 focus:ring-4 focus:ring-primary/5 p-6 font-medium'
-                        disabled={!!activeCashRegister}
-                        rows={4}
-                      />
+                      <div className='space-y-1.5'>
+                        <Label className='text-sm font-semibold text-slate-700 dark:text-[#e1dfdd]'>Ubicación de terminal</Label>
+                        <Input
+                          value={openForm.location}
+                          onChange={e => handleOpenFormChange('location', e.target.value)}
+                          placeholder='Punto de Venta Principal'
+                          className={`h-9 rounded-md border-slate-300 dark:border-[#484644] bg-white dark:bg-[#323130] text-sm focus-visible:ring-1 focus-visible:ring-[#0f6cbd] ${activeCashRegister ? 'opacity-60' : ''}`}
+                          disabled={!!activeCashRegister}
+                        />
+                      </div>
+
+                      <div className='space-y-1.5'>
+                        <Label className='text-sm font-semibold text-slate-700 dark:text-[#e1dfdd]'>Fecha efectiva</Label>
+                        <Input
+                          type='date'
+                          value={openForm.openingDate}
+                          onChange={e => handleOpenFormChange('openingDate', e.target.value)}
+                          className={`h-9 rounded-md border-slate-300 dark:border-[#484644] bg-white dark:bg-[#323130] text-sm focus-visible:ring-1 focus-visible:ring-[#0f6cbd] ${activeCashRegister ? 'opacity-60' : ''}`}
+                          disabled={!!activeCashRegister}
+                        />
+                      </div>
+
+                      <div className='md:col-span-2 space-y-1.5'>
+                        <Label className='text-sm font-semibold text-slate-700 dark:text-[#e1dfdd]'>Fondo inicial de maniobra *</Label>
+                        <div className='relative'>
+                          <span className='absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-semibold'>₲</span>
+                          <Input
+                            type='text'
+                            inputMode='numeric'
+                            value={formatNumber(openForm.initialBalance)}
+                            onChange={e => handleAmountChange(setOpenForm, 'initialBalance', e.target.value)}
+                            placeholder='0'
+                            className={`h-10 pl-8 text-base font-mono font-medium border-slate-300 dark:border-[#484644] bg-white dark:bg-[#323130] rounded-md focus-visible:ring-1 focus-visible:ring-[#0f6cbd] ${activeCashRegister ? 'opacity-60' : ''}`}
+                            disabled={!!activeCashRegister}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className='md:col-span-2 space-y-1.5'>
+                        <Label className='text-sm font-semibold text-slate-700 dark:text-[#e1dfdd]'>Notas de auditoría</Label>
+                        <Textarea
+                          value={openForm.openingNotes}
+                          onChange={e => handleOpenFormChange('openingNotes', e.target.value)}
+                          placeholder="Añada detalles sobre el estado inicial del efectivo o novedades..."
+                          className={`min-h-[100px] resize-none rounded-md border-slate-300 dark:border-[#484644] bg-white dark:bg-[#323130] text-sm focus-visible:ring-1 focus-visible:ring-[#0f6cbd] ${activeCashRegister ? 'opacity-60' : ''}`}
+                          disabled={!!activeCashRegister}
+                        />
+                      </div>
                     </div>
 
                     {formError && activeTab === 'open' && (
-                      <div className='md:col-span-2 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3 animate-in shake-in duration-300'>
-                        <Info className="text-red-500" size={20} />
-                        <p className='text-xs text-red-600 font-black uppercase tracking-widest'>{formError}</p>
+                      <div className='p-3 bg-[#fde7e9] dark:bg-[#fde7e9]/10 border border-[#d13438]/20 rounded-md flex gap-2'>
+                        <Info className="text-[#d13438] w-4 h-4 shrink-0 mt-0.5" />
+                        <p className='text-xs text-[#a4262c] dark:text-[#e35c60] font-medium'>{formError}</p>
                       </div>
                     )}
 
-                    <div className='md:col-span-2 flex gap-4 pt-4'>
-                      <Button
-                        type='submit'
-                        disabled={isOpeningCashRegister || !!activeCashRegister}
-                        className='flex-1 h-14 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[11px] rounded-xl shadow-fluent-8 transition-all active:scale-95'
-                      >
-                        {isOpeningCashRegister ? <RefreshCw className='animate-spin mr-2' size={18} /> : null}
-                        {isOpeningCashRegister ? 'Procesando...' : 'Iniciar Apertura de Caja'}
-                      </Button>
+                    <div className='flex gap-3 pt-4 border-t border-slate-200 dark:border-[#3b3a39]'>
                       <Button
                         type='button'
                         variant='outline'
                         onClick={() => {
-                          setOpenForm({ name: '', location: '', openingDate: new Date().toISOString().split('T')[0], initialBalance: '', openingNotes: '' })
-                          setFormError('')
+                          setOpenForm({ name: '', location: '', openingDate: new Date().toISOString().split('T')[0], initialBalance: '', openingNotes: '' });
+                          setFormError('');
                         }}
-                        className='px-10 h-14 border-border-subtle font-black uppercase tracking-widest text-[11px] rounded-xl hover:bg-slate-50 transition-all'
+                        className='h-9 px-6 text-sm font-medium rounded-md bg-white dark:bg-[#323130] border-slate-300 dark:border-[#484644] hover:bg-slate-50 dark:hover:bg-[#3b3a39]'
                       >
                         Limpiar
+                      </Button>
+                      <Button
+                        type='submit'
+                        disabled={isOpeningCashRegister || !!activeCashRegister}
+                        className='h-9 px-6 text-sm font-medium rounded-md bg-[#0f6cbd] hover:bg-[#115ea5] text-white shadow-sm transition-colors border-transparent'
+                      >
+                        {isOpeningCashRegister ? <RefreshCw className='animate-spin w-4 h-4 mr-2' /> : null}
+                        {isOpeningCashRegister ? 'Abriendo...' : 'Abrir caja'}
                       </Button>
                     </div>
                   </form>
                 </div>
               ) : (
-                <div className='space-y-10 animate-in slide-in-from-right-4 duration-300'>
+                <div className='animate-in fade-in duration-300'>
                   {activeCashRegister ? (
-                    <form onSubmit={handleCloseSubmit} className='space-y-10'>
-                      <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 rounded-2xl p-8 flex flex-col md:flex-row justify-between items-center gap-6'>
-                        <div className='flex gap-5'>
-                          <Info className="text-blue-600 shrink-0" size={28} />
-                          <div>
-                            <p className='font-black uppercase tracking-tight text-blue-800 text-sm'>Estado de Arqueo Requerido</p>
-                            <p className='text-blue-700 text-xs mt-1 font-medium leading-relaxed'>
-                              Ingrese el efectivo total contado físicamente en la terminal <span className='font-black'>{activeCashRegister.name}</span>. El sistema calculará la discrepancia automáticamente.
-                            </p>
-                          </div>
+                    <form onSubmit={handleCloseSubmit} className='flex flex-col gap-6'>
+                      <div className='bg-[#e1dfdd]/30 dark:bg-[#323130] p-5 rounded-md border border-slate-200 dark:border-[#3b3a39] flex flex-col sm:flex-row justify-between gap-4'>
+                        <div>
+                          <p className='text-sm font-semibold'>Arqueo requerido</p>
+                          <p className='text-xs text-slate-500 dark:text-[#a19f9d] mt-1'>
+                            Ingrese el efectivo total contado físicamente en {activeCashRegister.name}.
+                          </p>
                         </div>
-                        <div className='text-right flex-shrink-0'>
-                          <p className='text-[9px] font-black uppercase text-blue-400 tracking-widest mb-1'>Balance de Sistema</p>
-                          <p className='text-2xl font-mono font-black text-blue-800 tabular-nums tracking-tighter'>₲{(activeCashRegister.current_balance || 0).toLocaleString()}</p>
+                        <div className='text-left sm:text-right'>
+                          <p className='text-[11px] text-slate-500 dark:text-[#a19f9d] mb-0.5'>Balance en sistema</p>
+                          <p className='text-lg font-mono font-semibold'>₲{formatCurrency(activeCashRegister.current_balance || 0)}</p>
                         </div>
                       </div>
 
-                      <div className='grid grid-cols-1 md:grid-cols-2 gap-10'>
-                        <div className='space-y-3'>
-                          <Label className='text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1'>Balance Físico Final *</Label>
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                        <div className='md:col-span-2 space-y-1.5'>
+                          <Label className='text-sm font-semibold text-slate-700 dark:text-[#e1dfdd]'>Balance físico final *</Label>
                           <div className='relative'>
-                            <span className='absolute inset-y-0 left-0 pl-5 flex items-center text-slate-400 font-black text-xl'>₲</span>
+                            <span className='absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-semibold'>₲</span>
                             <Input
                               type='text'
                               inputMode='numeric'
                               value={formatNumber(closeForm.finalBalance)}
                               onChange={e => handleAmountChange(setCloseForm, 'finalBalance', e.target.value)}
                               placeholder='0'
-                              className='h-16 pl-12 text-3xl font-mono font-black border-border-subtle rounded-2xl tabular-nums bg-slate-50 dark:bg-slate-950 focus:ring-4 focus:ring-primary/5'
+                              className='h-12 pl-8 text-xl font-mono font-medium border-slate-300 dark:border-[#484644] bg-white dark:bg-[#323130] rounded-md focus-visible:ring-1 focus-visible:ring-[#0f6cbd]'
                               required
                             />
                           </div>
                         </div>
 
-                        <div className='space-y-3'>
-                          <Label className='text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1'>Fecha de Cierre</Label>
+                        <div className='space-y-1.5'>
+                          <Label className='text-sm font-semibold text-slate-700 dark:text-[#e1dfdd]'>Fecha de cierre</Label>
                           <Input
                             type='date'
                             value={closeForm.closingDate}
                             onChange={e => handleCloseFormChange('closingDate', e.target.value)}
-                            className='h-16 rounded-2xl border-border-subtle font-mono font-bold focus:ring-4 focus:ring-primary/5 bg-slate-50 dark:bg-slate-950'
+                            className='h-9 rounded-md border-slate-300 dark:border-[#484644] bg-white dark:bg-[#323130] text-sm focus-visible:ring-1 focus-visible:ring-[#0f6cbd]'
                           />
                         </div>
 
                         {closeForm.finalBalance && (
-                          <div className='md:col-span-2'>
-                            <div className={`rounded-2xl p-8 flex items-center justify-between border-2 animate-in zoom-in-95 duration-300 ${
-                              calculateDifference() === 0 
-                                ? 'bg-green-50 border-green-200 dark:bg-green-900/10' 
-                                : 'bg-red-50 border-red-200 dark:bg-red-900/10'
+                          <div className='md:col-span-2 mt-2'>
+                            <div className={`rounded-md p-4 flex items-center justify-between border ${
+                              difference === 0 
+                                ? 'bg-[#dff6dd]/50 border-[#107c10]/20 dark:bg-[#107c10]/10' 
+                                : 'bg-[#fde7e9]/50 border-[#d13438]/20 dark:bg-[#d13438]/10'
                             }`}>
-                              <div className='flex items-center gap-6'>
-                                <div className={`size-16 rounded-2xl flex items-center justify-center shadow-sm ${
-                                  calculateDifference() === 0 ? 'bg-success text-white' : 'bg-error text-white'
+                              <div className='flex items-center gap-4'>
+                                <div className={`w-10 h-10 rounded flex items-center justify-center ${
+                                  difference === 0 ? 'bg-[#107c10] text-white' : 'bg-[#d13438] text-white'
                                 }`}>
-                                  {calculateDifference() === 0 ? <CheckCircle2 size={32} /> : (calculateDifference() > 0 ? <TrendingUp size={32} /> : <TrendingDown size={32} />)}
+                                  {difference === 0 ? <CheckCircle2 className='w-5 h-5' /> : <AlertCircle className='w-5 h-5' />}
                                 </div>
                                 <div>
-                                  <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${
-                                    calculateDifference() === 0 ? 'text-green-700' : 'text-red-700'
-                                  }`}>
-                                    Discrepancia de Auditoría
+                                  <p className={`text-[11px] font-semibold ${difference === 0 ? 'text-[#107c10] dark:text-[#54b054]' : 'text-[#a4262c] dark:text-[#e35c60]'}`}>
+                                    Diferencia de auditoría
                                   </p>
-                                  <p className={`text-4xl font-mono font-black tabular-nums tracking-tighter ${
-                                    calculateDifference() === 0 ? 'text-green-800' : 'text-red-800'
-                                  }`}>
-                                    {calculateDifference() > 0 ? '+' : ''}₲{calculateDifference().toLocaleString('es-PY')}
+                                  <p className={`text-xl font-mono font-semibold ${difference === 0 ? 'text-[#107c10] dark:text-[#54b054]' : 'text-[#a4262c] dark:text-[#e35c60]'}`}>
+                                    {difference > 0 ? '+' : ''}₲{formatCurrency(difference)}
                                   </p>
                                 </div>
                               </div>
-                              <div className='text-right hidden md:block'>
-                                <Badge className={`uppercase font-black text-[10px] px-4 py-1.5 rounded-full ${
-                                  calculateDifference() === 0 ? 'bg-success text-white' : 'bg-error text-white'
+                              <div className='hidden sm:block'>
+                                <span className={`text-[11px] px-2 py-1 rounded-sm font-semibold ${
+                                  difference === 0 ? 'bg-[#107c10]/10 text-[#107c10] dark:text-[#54b054]' : 'bg-[#d13438]/10 text-[#d13438] dark:text-[#e35c60]'
                                 }`}>
-                                  {calculateDifference() === 0 ? 'Balance Cuadrado' : 'Requiere Justificación'}
-                                </Badge>
+                                  {difference === 0 ? 'Balance cuadrado' : 'Requiere justificación'}
+                                </span>
                               </div>
                             </div>
                           </div>
                         )}
 
-                        <div className='md:col-span-2 space-y-3'>
-                          <Label className='text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1'>Justificación / Observaciones de Cierre</Label>
+                        <div className='md:col-span-2 space-y-1.5'>
+                          <Label className='text-sm font-semibold text-slate-700 dark:text-[#e1dfdd]'>Observaciones de cierre</Label>
                           <Textarea
                             value={closeForm.closingNotes}
                             onChange={e => handleCloseFormChange('closingNotes', e.target.value)}
                             placeholder="Describa el motivo de cualquier discrepancia detectada o novedades durante el turno..."
-                            className='resize-none rounded-3xl border-border-subtle bg-slate-50 dark:bg-slate-950 focus:ring-4 focus:ring-primary/5 p-6 font-medium'
-                            rows={4}
+                            className='min-h-[80px] resize-none rounded-md border-slate-300 dark:border-[#484644] bg-white dark:bg-[#323130] text-sm focus-visible:ring-1 focus-visible:ring-[#0f6cbd]'
                           />
                         </div>
                       </div>
 
                       {formError && activeTab === 'close' && (
-                        <div className='bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3 animate-in shake-in duration-300'>
-                          <Info className="text-red-500" size={20} />
-                          <p className='text-xs text-red-600 font-black uppercase tracking-widest'>{formError}</p>
+                        <div className='p-3 bg-[#fde7e9] dark:bg-[#fde7e9]/10 border border-[#d13438]/20 rounded-md flex gap-2'>
+                          <Info className="text-[#d13438] w-4 h-4 shrink-0 mt-0.5" />
+                          <p className='text-xs text-[#a4262c] dark:text-[#e35c60] font-medium'>{formError}</p>
                         </div>
                       )}
 
-                      <div className='flex gap-4 pt-4'>
-                        <Button
-                          type='submit'
-                          disabled={isClosingCashRegister}
-                          className='flex-1 h-16 bg-error hover:bg-error/90 text-white font-black uppercase tracking-widest text-[11px] rounded-xl shadow-fluent-16 transition-all active:scale-95'
-                        >
-                          {isClosingCashRegister ? <RefreshCw className='animate-spin mr-2' size={18} /> : null}
-                          {isClosingCashRegister ? 'Cerrando Terminal...' : 'Finalizar y Cerrar Caja Registradora'}
-                        </Button>
+                      <div className='flex gap-3 pt-4 border-t border-slate-200 dark:border-[#3b3a39]'>
                         <Button
                           type='button'
                           variant='outline'
                           onClick={() => {
-                            setCloseForm({ cashier: '', register: '', closingDate: new Date().toISOString().split('T')[0], finalBalance: '', closingNotes: '' })
-                            setFormError('')
-                            setActiveTab('open')
+                            setCloseForm({ closingDate: new Date().toISOString().split('T')[0], finalBalance: '', closingNotes: '' });
+                            setFormError('');
+                            setActiveTab('open');
                           }}
-                          className='px-10 h-16 border-border-subtle font-black uppercase tracking-widest text-[11px] rounded-xl hover:bg-slate-50 transition-all'
+                          className='h-9 px-6 text-sm font-medium rounded-md bg-white dark:bg-[#323130] border-slate-300 dark:border-[#484644] hover:bg-slate-50 dark:hover:bg-[#3b3a39]'
                         >
                           Cancelar
+                        </Button>
+                        <Button
+                          type='submit'
+                          disabled={isClosingCashRegister}
+                          className='h-9 px-6 bg-[#d13438] hover:bg-[#a4262c] text-white text-sm font-medium rounded-md shadow-sm border-transparent'
+                        >
+                          {isClosingCashRegister ? <RefreshCw className='animate-spin w-4 h-4 mr-2' /> : null}
+                          {isClosingCashRegister ? 'Cerrando...' : 'Finalizar y cerrar caja'}
                         </Button>
                       </div>
                     </form>
                   ) : (
-                    <div className='py-20 flex flex-col items-center justify-center space-y-8 animate-in zoom-in-95 duration-500'>
-                      <div className='size-32 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-200 dark:text-slate-700 border border-border-subtle shadow-inner'>
-                        <Wallet size={60} />
+                    <div className='py-20 flex flex-col items-center justify-center text-center'>
+                      <div className='w-16 h-16 bg-slate-50 dark:bg-[#323130] rounded-lg flex items-center justify-center mb-4'>
+                        <Wallet className='w-8 h-8 text-slate-400 dark:text-[#a19f9d]' />
                       </div>
-                      <div className='text-center max-w-sm space-y-3'>
-                        <h3 className='text-xl font-black tracking-tighter uppercase text-text-main'>Terminal sin Actividad</h3>
-                        <p className='text-text-secondary text-sm font-medium leading-relaxed'>
-                          No existe una caja abierta actualmente vinculada a su usuario. Inicie una apertura para poder realizar cierres.
-                        </p>
-                      </div>
+                      <h3 className='text-lg font-semibold mb-2'>No hay terminal activa</h3>
+                      <p className='text-sm text-slate-500 dark:text-[#a19f9d] max-w-sm mb-6'>
+                        Debe existir una jornada operativa abierta para poder realizar el cierre.
+                      </p>
                       <Button 
                         onClick={() => setActiveTab('open')} 
-                        className="h-12 px-10 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-fluent-8 transition-all active:scale-95"
+                        className='h-9 px-6 text-sm font-medium rounded-md bg-[#0f6cbd] hover:bg-[#115ea5] text-white shadow-sm border-transparent'
                       >
-                        Abrir Nueva Caja
+                        Ir a Apertura
                       </Button>
                     </div>
                   )}
                 </div>
               )}
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default NewCashRegister
+export default NewCashRegister;

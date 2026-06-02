@@ -71,7 +71,6 @@ export const cashRegisterService = {
       // Manejar el caso donde BusinessManagementAPI intercepta el 204 y devuelve { success: true }
       // Una caja registradora real debería tener al menos un id o un cash_register_id.
       if (result && result.success === true && !result.id && !result.cash_register_id && !result.cash_register && !result.data) {
-        console.log('📭 CashRegister: No active cash register found (Intercepted 204)');
         return null;
       }
 
@@ -79,11 +78,6 @@ export const cashRegisterService = {
     } catch (error) {
       // 204 No Content o 404 significa no hay caja activa - no es un error real
       if (error.status === 204 || error.status === 404) {
-        console.log(
-          '📭 CashRegister: No active cash register found (HTTP ' +
-            error.status +
-            ')'
-        )
         telemetry.record('cash_register.service.no_active', {
           duration: Date.now() - startTime,
         })

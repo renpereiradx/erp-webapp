@@ -1,62 +1,17 @@
-/**
- * Cash Movements Page - v3.0
- * Página de Movimientos de Caja con filtros avanzados y anulación
- * 
- * Migrated to TypeScript & Fluent Design System 2.0
- */
-
-import React, { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useI18n } from '@/lib/i18n'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import SegmentedControl from '@/components/ui/SegmentedControl'
-import DataState from '@/components/ui/DataState'
-import { useToast } from '@/hooks/useToast'
-import ToastContainer from '@/components/ui/ToastContainer'
-import { cashRegisterService } from '@/services/cashRegisterService'
-import { CashRegister, Movement } from '@/store/useCashRegisterStore'
-import { 
-  ArrowUp, 
-  ArrowDown, 
-  Filter, 
-  Plus, 
-  History, 
-  Banknote, 
-  XCircle, 
-  CheckCircle2,
-  Wallet,
-  Calendar,
-  Search,
-  RefreshCw
-} from 'lucide-react'
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useI18n } from '@/lib/i18n';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/useToast';
+import ToastContainer from '@/components/ui/ToastContainer';
+import { cashRegisterService } from '@/services/cashRegisterService';
+import { CashRegister, Movement } from '@/store/useCashRegisterStore';
+import { History, Filter, Plus, Wallet, Search, RefreshCw, X } from 'lucide-react';
 
 interface Filters {
   type: string;
@@ -79,53 +34,46 @@ interface VoidDialog {
 }
 
 const CashMovements: React.FC = () => {
-  const { t } = useI18n()
-  const navigate = useNavigate()
-  const { addToast, toasts, removeToast } = useToast()
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  const { addToast, toasts, removeToast } = useToast();
 
-  // State
-  const [activeCashRegister, setActiveCashRegister] = useState<CashRegister | null>(null)
-  const [isLoadingCashRegister, setIsLoadingCashRegister] = useState(true)
-  const [movements, setMovements] = useState<Movement[]>([])
-  const [isLoadingMovements, setIsLoadingMovements] = useState(false)
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
-  const [filters, setFilters] = useState<Filters>({ type: '', date_from: '', date_to: '' })
-  const [isNewMovementOpen, setIsNewMovementOpen] = useState(false)
+  const [activeCashRegister, setActiveCashRegister] = useState<CashRegister | null>(null);
+  const [isLoadingCashRegister, setIsLoadingCashRegister] = useState(true);
+  const [movements, setMovements] = useState<Movement[]>([]);
+  const [isLoadingMovements, setIsLoadingMovements] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState<Filters>({ type: '', date_from: '', date_to: '' });
+  const [isNewMovementOpen, setIsNewMovementOpen] = useState(false);
   const [newMovementForm, setNewMovementForm] = useState<NewMovementForm>({
     movement_type: 'INCOME',
     concept: '',
     amount: '',
     notes: '',
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [voidDialog, setVoidDialog] = useState<VoidDialog>({
     isOpen: false,
     movement: null,
     reason: '',
     isSubmitting: false,
-  })
-
-  // Data helpers
-  const movementTypes: any[] = [
-    { value: 'INCOME', label: t('cashMovement.type.income', 'Ingreso') },
-    { value: 'EXPENSE', label: t('cashMovement.type.expense', 'Egreso') },
-  ]
+  });
 
   const concepts: Record<'INCOME' | 'EXPENSE', {id: string, name: string}[]> = {
     INCOME: [
-      { id: 'cash_deposit', name: t('cashMovement.concept.deposit', 'Depósito de efectivo') },
-      { id: 'reposition', name: t('cashMovement.concept.reposition', 'Reposición de caja') },
-      { id: 'adjustment_positive', name: t('cashMovement.concept.adjustmentPositive', '[Ajuste] Corrección de saldo') },
-      { id: 'other_income', name: t('cashMovement.concept.otherIncome', 'Otro ingreso') },
+      { id: 'cash_deposit', name: 'Depósito de efectivo' },
+      { id: 'reposition', name: 'Reposición de caja' },
+      { id: 'adjustment_positive', name: '[Ajuste] Corrección de saldo' },
+      { id: 'other_income', name: 'Otro ingreso' },
     ],
     EXPENSE: [
-      { id: 'cash_withdrawal', name: t('cashMovement.concept.withdrawal', 'Retiro de efectivo') },
-      { id: 'purchase', name: t('cashMovement.concept.purchase', 'Compra de insumos') },
-      { id: 'service_payment', name: t('cashMovement.concept.service', 'Pago de servicio') },
-      { id: 'adjustment_negative', name: t('cashMovement.concept.adjustmentNegative', '[Ajuste] Corrección de saldo') },
-      { id: 'other_expense', name: t('cashMovement.concept.otherExpense', 'Otro egreso') },
+      { id: 'cash_withdrawal', name: 'Retiro de efectivo' },
+      { id: 'purchase', name: 'Compra de insumos' },
+      { id: 'service_payment', name: 'Pago de servicio' },
+      { id: 'adjustment_negative', name: '[Ajuste] Corrección de saldo' },
+      { id: 'other_expense', name: 'Otro egreso' },
     ],
-  }
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-PY', {
@@ -133,533 +81,422 @@ const CashMovements: React.FC = () => {
       currency: 'PYG',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   const formatNumber = (value: string) => {
-    if (!value) return ''
-    const numericValue = value.toString().replace(/\D/g, '')
-    if (!numericValue) return ''
-    return Number(numericValue).toLocaleString('es-PY')
-  }
+    if (!value) return '';
+    const numericValue = value.toString().replace(/\D/g, '');
+    if (!numericValue) return '';
+    return Number(numericValue).toLocaleString('es-PY');
+  };
 
   const parseFormattedNumber = (formattedValue: string) => {
-    if (!formattedValue) return ''
-    return formattedValue.replace(/\./g, '').replace(/,/g, '')
-  }
+    if (!formattedValue) return '';
+    return formattedValue.replace(/\./g, '').replace(/,/g, '');
+  };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    const date = new Date(dateString);
     return new Intl.DateTimeFormat('es-ES', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    }).format(date)
-  }
+    }).format(date);
+  };
 
-  const getMovementDisplay = (type: string) => {
-    const displays: Record<string, any> = {
-      INCOME: {
-        icon: <ArrowUp className='w-3.5 h-3.5' />,
-        variant: 'success',
-        label: t('cashMovement.type.income', 'Ingreso'),
-        colorClass: 'text-success bg-green-50 border-green-100 dark:bg-green-900/20 dark:border-green-800',
-      },
-      EXPENSE: {
-        icon: <ArrowDown className='w-3.5 h-3.5' />,
-        variant: 'destructive',
-        label: t('cashMovement.type.expense', 'Egreso'),
-        colorClass: 'text-error bg-red-50 border-red-100 dark:bg-red-900/20 dark:border-red-800',
-      },
-    }
-    return displays[type] || displays.INCOME
-  }
-
-  // API Calls
   const loadActiveCashRegister = useCallback(async () => {
-    setIsLoadingCashRegister(true)
+    setIsLoadingCashRegister(true);
     try {
-      const result = await cashRegisterService.getActiveCashRegister()
-      setActiveCashRegister(result)
+      const result = await cashRegisterService.getActiveCashRegister();
+      setActiveCashRegister(result);
     } catch (error) {
-      console.error('Error loading active cash register:', error)
-      addToast(t('cashMovement.error.loadingCashRegister', 'Error al cargar la caja registradora'), 'error')
+      console.error('Error loading active cash register:', error);
+      addToast(t('cashMovement.error.loadingCashRegister', 'Error al cargar la caja registradora'), 'error');
     } finally {
-      setIsLoadingCashRegister(false)
+      setIsLoadingCashRegister(false);
     }
-  }, [addToast, t])
+  }, [addToast, t]);
 
   const loadMovements = useCallback(async (applyFilters = false) => {
-    if (!activeCashRegister?.id) return
-    setIsLoadingMovements(true)
+    if (!activeCashRegister?.id) return;
+    setIsLoadingMovements(true);
     try {
-      let result
+      let result;
       if (applyFilters && (filters.type || filters.date_from || filters.date_to)) {
-        const filterParams: any = {}
-        if (filters.type) filterParams.type = filters.type
-        if (filters.date_from) filterParams.date_from = filters.date_from
-        if (filters.date_to) filterParams.date_to = filters.date_to
-        result = await cashRegisterService.getFilteredMovements(activeCashRegister.id, filterParams)
+        const filterParams: any = {};
+        if (filters.type) filterParams.type = filters.type;
+        if (filters.date_from) filterParams.date_from = filters.date_from;
+        if (filters.date_to) filterParams.date_to = filters.date_to;
+        result = await cashRegisterService.getFilteredMovements(activeCashRegister.id, filterParams);
       } else {
-        result = await cashRegisterService.getMovements(activeCashRegister.id)
+        result = await cashRegisterService.getMovements(activeCashRegister.id);
       }
-      setMovements(result || [])
+      setMovements(result || []);
     } catch (error) {
-      console.error('Error loading movements:', error)
-      addToast(t('cashMovement.error.loadingMovements', 'Error al cargar los movimientos'), 'error')
+      console.error('Error loading movements:', error);
+      addToast(t('cashMovement.error.loadingMovements', 'Error al cargar los movimientos'), 'error');
     } finally {
-      setIsLoadingMovements(false)
+      setIsLoadingMovements(false);
     }
-  }, [activeCashRegister?.id, filters, addToast, t])
+  }, [activeCashRegister?.id, filters, addToast, t]);
 
-  useEffect(() => { loadActiveCashRegister() }, [loadActiveCashRegister])
-  useEffect(() => { if (activeCashRegister?.id) loadMovements() }, [activeCashRegister?.id, loadMovements])
+  useEffect(() => { loadActiveCashRegister(); }, [loadActiveCashRegister]);
+  useEffect(() => { if (activeCashRegister?.id) loadMovements(); }, [activeCashRegister?.id, loadMovements]);
 
-  // Handlers
-  const handleFilterChange = (field: keyof Filters, value: string) => setFilters(prev => ({ ...prev, [field]: value }))
-  const handleApplyFilters = () => { loadMovements(true); setIsFiltersOpen(false); }
-  const handleClearFilters = () => { setFilters({ type: '', date_from: '', date_to: '' }); loadMovements(false); setIsFiltersOpen(false); }
-  const handleNewMovementChange = (field: keyof NewMovementForm, value: string) => setNewMovementForm(prev => ({ ...prev, [field]: value }))
-  const handleTypeChange = (value: string) => setNewMovementForm(prev => ({ ...prev, movement_type: value as 'INCOME' | 'EXPENSE', concept: '' }))
+  const handleFilterChange = (field: keyof Filters, value: string) => setFilters(prev => ({ ...prev, [field]: value }));
+  const handleApplyFilters = () => { loadMovements(true); setIsFiltersOpen(false); };
+  const handleClearFilters = () => { setFilters({ type: '', date_from: '', date_to: '' }); loadMovements(false); setIsFiltersOpen(false); };
+  const handleNewMovementChange = (field: keyof NewMovementForm, value: string) => setNewMovementForm(prev => ({ ...prev, [field]: value }));
 
   const handleSubmitNewMovement = async () => {
-    if (!activeCashRegister?.id) return addToast(t('cashMovement.error.noActiveCashRegister', 'No hay caja registradora activa'), 'error')
-    const amount = parseFloat(parseFormattedNumber(newMovementForm.amount))
-    if (!amount || amount <= 0) return addToast(t('cashMovement.error.invalidAmount', 'El monto debe ser mayor a 0'), 'error')
-    if (!newMovementForm.concept) return addToast(t('cashMovement.error.noConcept', 'Debe seleccionar un concepto'), 'error')
+    if (!activeCashRegister?.id) return addToast(t('cashMovement.error.noActiveCashRegister', 'No hay caja registradora activa'), 'error');
+    const amount = parseFloat(parseFormattedNumber(newMovementForm.amount));
+    if (!amount || amount <= 0) return addToast(t('cashMovement.error.invalidAmount', 'El monto debe ser mayor a 0'), 'error');
+    if (!newMovementForm.concept) return addToast(t('cashMovement.error.noConcept', 'Debe seleccionar un concepto'), 'error');
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      const conceptLabel = concepts[newMovementForm.movement_type]?.find(c => c.id === newMovementForm.concept)?.name || newMovementForm.concept
+      const conceptLabel = concepts[newMovementForm.movement_type]?.find(c => c.id === newMovementForm.concept)?.name || newMovementForm.concept;
       await cashRegisterService.createMovement({
         cash_register_id: activeCashRegister.id,
         movement_type: newMovementForm.movement_type,
         amount: amount,
         category: newMovementForm.concept,
         concept: conceptLabel + (newMovementForm.notes ? ` - ${newMovementForm.notes}` : ''),
-      })
-      addToast(t('cashMovement.success', 'Movimiento registrado con éxito'), 'success')
-      setNewMovementForm({ movement_type: 'INCOME', concept: '', amount: '', notes: '' })
-      setIsNewMovementOpen(false)
-      loadMovements()
+      });
+      addToast(t('cashMovement.success', 'Movimiento registrado con éxito'), 'success');
+      setNewMovementForm({ movement_type: 'INCOME', concept: '', amount: '', notes: '' });
+      setIsNewMovementOpen(false);
+      loadMovements();
     } catch (error: any) {
-      addToast(error.message || t('cashMovement.error.generic', 'Error al registrar el movimiento'), 'error')
-    } finally { setIsSubmitting(false) }
-  }
-
-  const handleOpenVoidDialog = (movement: Movement) => setVoidDialog({ isOpen: true, movement, reason: '', isSubmitting: false })
+      addToast(error.message || t('cashMovement.error.generic', 'Error al registrar el movimiento'), 'error');
+    } finally { setIsSubmitting(false); }
+  };
 
   const handleVoidMovement = async () => {
-    if (!voidDialog.movement || voidDialog.reason.length < 5) return addToast(t('cashMovement.void.reasonRequired', 'La razón debe tener al menos 5 caracteres'), 'error')
-    setVoidDialog(prev => ({ ...prev, isSubmitting: true }))
+    if (!voidDialog.movement || voidDialog.reason.length < 5) return addToast(t('cashMovement.void.reasonRequired', 'La razón debe tener al menos 5 caracteres'), 'error');
+    setVoidDialog(prev => ({ ...prev, isSubmitting: true }));
     try {
-      await cashRegisterService.voidMovement(voidDialog.movement.movement_id as number, voidDialog.reason)
-      addToast(t('cashMovement.void.success', 'Movimiento anulado correctamente'), 'success')
-      setVoidDialog({ isOpen: false, movement: null, reason: '', isSubmitting: false })
-      loadMovements()
+      await cashRegisterService.voidMovement(voidDialog.movement.movement_id as number, voidDialog.reason);
+      addToast(t('cashMovement.void.success', 'Movimiento anulado correctamente'), 'success');
+      setVoidDialog({ isOpen: false, movement: null, reason: '', isSubmitting: false });
+      loadMovements();
     } catch (error: any) {
-      addToast(error.message || t('cashMovement.void.error', 'Error al anular el movimiento'), 'error')
-      setVoidDialog(prev => ({ ...prev, isSubmitting: false }))
+      addToast(error.message || t('cashMovement.void.error', 'Error al anular el movimiento'), 'error');
+      setVoidDialog(prev => ({ ...prev, isSubmitting: false }));
     }
-  }
+  };
 
-  if (isLoadingCashRegister) return <div className='p-12'><DataState variant='loading' message={t('common.loading', 'Cargando...')} /></div>
+  // Fluent UI Tokens
+  const cardShadow = 'shadow-[0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_4px_rgba(0,0,0,0.12),0_0_2px_rgba(0,0,0,0.14)]';
+  const cardBg = 'bg-white dark:bg-[#252423]';
+  const canvasBg = 'bg-[#f3f2f1] dark:bg-[#11100f]';
+  const borderColor = 'border-slate-200 dark:border-[#3b3a39]';
+  const inputClass = 'h-8 px-3 text-sm rounded-md border-slate-300 dark:border-[#484644] bg-white dark:bg-[#323130] focus-visible:ring-1 focus-visible:ring-[#0f6cbd]';
+
+  if (isLoadingCashRegister) {
+    return (
+      <div className={`min-h-full ${canvasBg} flex items-center justify-center`}>
+        <div className='flex items-center gap-2 text-slate-500'>
+          <RefreshCw className='animate-spin w-5 h-5' /> Cargando movimientos...
+        </div>
+      </div>
+    );
+  }
 
   if (!activeCashRegister) {
     return (
-      <div className='flex flex-col items-center justify-center min-h-[60vh] gap-8 animate-in fade-in duration-500 font-display'>
-        <Card className="border-none bg-surface dark:bg-slate-900 rounded-3xl shadow-fluent-16 overflow-hidden max-w-md w-full">
-          <CardContent className='p-12 text-center flex flex-col items-center'>
-            <div className="size-24 bg-primary/5 rounded-full flex items-center justify-center text-primary mb-8 border border-primary/10 shadow-inner">
-              <Wallet className='w-12 h-12' />
-            </div>
-            <h2 className="text-2xl font-black text-text-main tracking-tighter uppercase mb-3">No hay caja activa</h2>
-            <p className="text-text-secondary text-sm font-medium mb-10 leading-relaxed">Para visualizar o registrar movimientos financieros, debe tener una sesión de caja abierta actualmente.</p>
-            <Button onClick={() => navigate('/caja-registradora')} className="w-full h-14 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[11px] rounded-xl shadow-fluent-8 transition-all active:scale-95">
-              Ir a Caja Registradora
-            </Button>
-          </CardContent>
-        </Card>
+      <div className={`min-h-full ${canvasBg} p-8 flex items-center justify-center`}>
+        <div className={`rounded-lg ${cardBg} border ${borderColor} ${cardShadow} max-w-md w-full p-8 text-center`}>
+          <Wallet className='w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-4' />
+          <h2 className="text-lg font-semibold mb-2">No hay terminal activa</h2>
+          <p className="text-sm text-slate-500 dark:text-[#a19f9d] mb-6">
+            Para visualizar o registrar movimientos de caja, primero debe abrir una jornada operativa.
+          </p>
+          <Button onClick={() => navigate('/caja-registradora')} className="h-9 px-6 bg-[#0f6cbd] hover:bg-[#115ea5] text-white text-sm font-medium rounded-md shadow-sm">
+            Ir a Gestión de Caja
+          </Button>
+        </div>
       </div>
-    )
+    );
   }
 
-  const hasActiveFilters = filters.type || filters.date_from || filters.date_to
+  const hasActiveFilters = filters.type || filters.date_from || filters.date_to;
 
   return (
-    <div className='flex flex-col gap-8 animate-in fade-in duration-500 font-display bg-background-light dark:bg-background-dark min-h-full'>
+    <div className={`min-h-full ${canvasBg} text-[#323130] dark:text-[#f3f2f1] p-4 md:p-8 font-sans`}>
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
 
-      {/* Header with Fluent 2.0 styling */}
-      <header className='flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2'>
-        <div className='space-y-2'>
-          <div className='flex items-center gap-3'>
-            <div className='size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary'>
-              <History className='w-6 h-6' />
-            </div>
-            <h1 className='text-3xl font-black text-text-main tracking-tighter uppercase leading-none'>
-              Movimientos de Caja
-            </h1>
+      <header className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6'>
+        <div>
+          <div className='flex items-center gap-2'>
+            <h1 className='text-2xl font-semibold leading-tight'>Movimientos de caja</h1>
           </div>
-          <div className='flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-bold uppercase tracking-widest text-text-secondary'>
-            <span className='flex items-center gap-1.5'><span className='size-1.5 rounded-full bg-success'></span> {activeCashRegister.name}</span>
-            <span className='text-slate-300'>|</span>
-            <span className='flex items-center gap-1.5 text-primary'>Saldo: <span className='font-mono text-xs font-black'>{formatCurrency(activeCashRegister.current_balance || activeCashRegister.initial_balance || 0)}</span></span>
+          <div className='flex items-center gap-3 mt-1.5'>
+            <div className='flex items-center gap-1.5'>
+              <div className='w-2 h-2 rounded-full bg-[#107c10]'></div>
+              <span className='text-xs font-medium text-slate-500 dark:text-[#a19f9d]'>{activeCashRegister.name}</span>
+            </div>
+            <span className='text-slate-300 dark:text-slate-600'>|</span>
+            <span className='text-xs font-medium text-slate-500 dark:text-[#a19f9d]'>
+              Saldo: <span className='font-mono font-semibold text-[#323130] dark:text-[#f3f2f1]'>₲{formatCurrency(activeCashRegister.current_balance || activeCashRegister.initial_balance || 0)}</span>
+            </span>
           </div>
         </div>
 
-        <div className='flex items-center gap-3'>
+        <div className='flex gap-2'>
           <Button
             variant='outline'
             onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-            className={`h-11 px-5 font-black uppercase tracking-widest text-[10px] rounded-lg border-border-subtle bg-white dark:bg-slate-900 transition-all ${
-              hasActiveFilters ? 'border-primary text-primary bg-primary/5' : ''
+            className={`h-8 px-3 text-xs font-medium rounded-md bg-white dark:bg-[#323130] border-slate-300 dark:border-[#484644] hover:bg-slate-50 dark:hover:bg-[#3b3a39] ${
+              hasActiveFilters ? 'bg-[#ebf3fc] dark:bg-[#00245b] text-[#0f6cbd] dark:text-[#4facfe] border-[#0f6cbd]/30' : ''
             }`}
           >
-            <Filter className='w-4 h-4 mr-2' />
-            {t('common.filters', 'Filtros')}
-            {hasActiveFilters && <span className='size-2 rounded-full bg-primary animate-pulse ml-2' />}
+            <Filter className='w-4 h-4 mr-1.5' /> Filtros
+            {hasActiveFilters && <span className='w-1.5 h-1.5 rounded-full bg-[#0f6cbd] dark:bg-[#4facfe] ml-2' />}
           </Button>
           <Button
             onClick={() => setIsNewMovementOpen(true)}
-            className='h-11 px-6 font-black uppercase tracking-widest text-[10px] rounded-lg shadow-fluent-8 bg-primary hover:bg-primary-hover text-white transition-all active:scale-95'
+            className='h-8 px-4 text-xs font-medium rounded-md bg-[#0f6cbd] hover:bg-[#115ea5] text-white shadow-sm border-transparent'
           >
-            <Plus className='w-4 h-4 mr-2' />
-            {t('cashMovement.newMovement', 'Nuevo Movimiento')}
+            <Plus className='w-4 h-4 mr-1.5' /> Registrar movimiento
           </Button>
         </div>
       </header>
 
-      {/* Filters Panel with Fluent refinement */}
       {isFiltersOpen && (
-        <div className='bg-surface dark:bg-slate-900/50 p-8 rounded-2xl border border-border-subtle shadow-fluent-2 space-y-6 animate-in slide-in-from-top-4 duration-300'>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
-            <div className='space-y-2.5'>
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Tipo de Movimiento</Label>
+        <div className={`mb-6 p-5 rounded-lg ${cardBg} border ${borderColor} ${cardShadow} animate-in slide-in-from-top-2 duration-200`}>
+          <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4'>
+            <div className='space-y-1.5'>
+              <Label className="text-xs font-semibold text-slate-700 dark:text-[#e1dfdd]">Tipo</Label>
               <Select value={filters.type} onValueChange={value => handleFilterChange('type', value)}>
-                <SelectTrigger className="h-11 bg-white dark:bg-slate-950 border-border-subtle rounded-xl font-bold">
+                <SelectTrigger className={inputClass}>
                   <SelectValue placeholder="Todos los tipos" />
                 </SelectTrigger>
-                <SelectContent className='rounded-xl shadow-fluent-16 border-border-subtle'>
-                  <SelectItem value='INCOME' className="font-bold text-xs uppercase tracking-wider">Ingresos (+)</SelectItem>
-                  <SelectItem value='EXPENSE' className="font-bold text-xs uppercase tracking-wider">Egresos (-)</SelectItem>
+                <SelectContent className='rounded-md shadow-lg border-slate-200 dark:border-[#3b3a39]'>
+                  <SelectItem value='INCOME' className='text-sm'>Ingresos</SelectItem>
+                  <SelectItem value='EXPENSE' className='text-sm'>Egresos</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            <div className='space-y-2.5'>
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Desde Fecha</Label>
-              <div className='relative'>
-                <Calendar className='absolute left-3.5 top-3 text-slate-400 w-4 h-4' />
-                <Input type='date' value={filters.date_from} onChange={e => handleFilterChange('date_from', e.target.value)} className="h-11 pl-10 bg-white dark:bg-slate-950 border-border-subtle rounded-xl font-mono font-bold" />
-              </div>
+            <div className='space-y-1.5'>
+              <Label className="text-xs font-semibold text-slate-700 dark:text-[#e1dfdd]">Desde</Label>
+              <Input type='date' value={filters.date_from} onChange={e => handleFilterChange('date_from', e.target.value)} className={inputClass} />
             </div>
-
-            <div className='space-y-2.5'>
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Hasta Fecha</Label>
-              <div className='relative'>
-                <Calendar className='absolute left-3.5 top-3 text-slate-400 w-4 h-4' />
-                <Input type='date' value={filters.date_to} onChange={e => handleFilterChange('date_to', e.target.value)} className="h-11 pl-10 bg-white dark:bg-slate-950 border-border-subtle rounded-xl font-mono font-bold" />
-              </div>
+            <div className='space-y-1.5'>
+              <Label className="text-xs font-semibold text-slate-700 dark:text-[#e1dfdd]">Hasta</Label>
+              <Input type='date' value={filters.date_to} onChange={e => handleFilterChange('date_to', e.target.value)} className={inputClass} />
             </div>
           </div>
-
-          <div className='flex justify-end gap-4 pt-6 border-t border-border-subtle/50'>
-            <Button variant='ghost' onClick={handleClearFilters} className="h-10 px-6 font-black uppercase tracking-widest text-[10px] text-text-secondary hover:text-text-main">
+          <div className='flex justify-end gap-2 pt-4 border-t border-slate-200 dark:border-[#3b3a39]'>
+            <Button variant='ghost' onClick={handleClearFilters} className="h-8 px-4 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
               Limpiar
             </Button>
-            <Button onClick={handleApplyFilters} className="h-10 px-10 bg-primary/10 hover:bg-primary/20 text-primary font-black uppercase tracking-widest text-[10px] rounded-lg">
-              Aplicar Filtros
+            <Button onClick={handleApplyFilters} className="h-8 px-4 text-xs font-medium rounded-md bg-[#0f6cbd] hover:bg-[#115ea5] text-white shadow-sm border-transparent">
+              Aplicar filtros
             </Button>
           </div>
         </div>
       )}
 
-      {/* Movements Data Grid */}
-      <Card className='bg-surface dark:bg-slate-900 rounded-2xl border-none shadow-fluent-2 overflow-hidden'>
+      <div className={`rounded-lg ${cardBg} border ${borderColor} ${cardShadow} flex-1 overflow-hidden`}>
         {isLoadingMovements ? (
-          <div className="py-32">
-            <DataState variant='loading' message="Analizando historial..." />
+          <div className="py-20 flex flex-col items-center justify-center text-slate-500">
+            <RefreshCw className='animate-spin w-6 h-6 mb-2' />
+            <span className='text-sm'>Cargando registros...</span>
           </div>
         ) : movements.length === 0 ? (
-          <div className="py-32 text-center flex flex-col items-center">
-            <div className="size-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-200 dark:text-slate-700 mb-6 border border-border-subtle shadow-inner">
-              <Search className='w-10 h-10' />
-            </div>
-            <h3 className="text-xl font-black text-text-main uppercase tracking-tighter">Sin movimientos</h3>
-            <p className="text-text-secondary text-sm font-medium mt-2">No se encontraron registros que coincidan con los criterios.</p>
+          <div className="py-20 flex flex-col items-center justify-center text-center">
+            <Search className='w-10 h-10 text-slate-300 dark:text-[#a19f9d] mb-3' />
+            <h3 className="text-base font-semibold mb-1">Sin resultados</h3>
+            <p className="text-sm text-slate-500 dark:text-[#a19f9d] max-w-sm">No se encontraron movimientos registrados con los filtros actuales.</p>
             {hasActiveFilters && (
-              <Button variant='link' onClick={handleClearFilters} className='mt-4 text-primary font-black uppercase text-[10px] tracking-widest'>Ver todos los movimientos</Button>
+              <Button variant='link' onClick={handleClearFilters} className='mt-2 text-xs text-[#0f6cbd]'>Ver todos los movimientos</Button>
             )}
           </div>
         ) : (
-          <div className='overflow-x-auto custom-scrollbar'>
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-border-subtle">
-                  <TableHead className='py-5 px-6 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 w-[200px]'>
-                    Fecha y Hora
-                  </TableHead>
-                  <TableHead className='py-5 px-6 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400'>
-                    Concepto Operativo
-                  </TableHead>
-                  <TableHead className='py-5 px-6 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-center'>
-                    Tipo
-                  </TableHead>
-                  <TableHead className='py-5 px-6 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-right'>
-                    Monto
-                  </TableHead>
-                  <TableHead className='py-5 px-6 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-center w-[120px]'>
-                    Acciones
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className='divide-y divide-border-subtle/30'>
+          <div className='overflow-x-auto'>
+            <table className='w-full text-left border-collapse min-w-[700px]'>
+              <thead>
+                <tr className={`border-b ${borderColor} bg-slate-50/50 dark:bg-[#201f1e]`}>
+                  <th className='py-2 px-4 text-xs font-semibold text-slate-500 dark:text-[#a19f9d] w-[140px]'>Fecha y Hora</th>
+                  <th className='py-2 px-4 text-xs font-semibold text-slate-500 dark:text-[#a19f9d]'>Concepto</th>
+                  <th className='py-2 px-4 text-xs font-semibold text-slate-500 dark:text-[#a19f9d]'>Usuario</th>
+                  <th className='py-2 px-4 text-xs font-semibold text-slate-500 dark:text-[#a19f9d] text-right'>Monto</th>
+                  <th className='py-2 px-4 text-xs font-semibold text-slate-500 dark:text-[#a19f9d] text-right'>Balance</th>
+                  <th className='py-2 px-4 text-xs font-semibold text-slate-500 dark:text-[#a19f9d] text-center w-12'></th>
+                </tr>
+              </thead>
+              <tbody className='text-sm'>
                 {movements.map(movement => {
-                  const display = getMovementDisplay(movement.movement_type)
-                  const isVoided = !!movement.voided_at
-
+                  const isIncome = movement.movement_type === 'INCOME';
+                  const isVoided = !!movement.voided_at;
+                  
                   return (
-                    <TableRow
-                      key={movement.movement_id}
-                      className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all group ${
-                        isVoided ? 'opacity-40 grayscale pointer-events-none' : ''
-                      }`}
-                    >
-                      <TableCell className='py-5 px-6'>
-                        <div className='flex flex-col gap-1'>
-                          <span className='font-mono text-xs font-black text-text-main'>{formatDate(movement.created_at)}</span>
-                          <span className='text-[9px] font-bold uppercase text-slate-400 tracking-widest flex items-center gap-1.5'>
-                            <span className='size-1 rounded-full bg-slate-300'></span> {movement.user_full_name || 'Sistema'}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className='py-5 px-6'>
-                        <div className='flex flex-col gap-1'>
-                          <span className='font-black text-sm text-text-main group-hover:text-primary transition-colors'>
-                            {movement.concept}
-                          </span>
+                    <tr key={movement.movement_id} className={`border-b ${borderColor} hover:bg-slate-50 dark:hover:bg-[#292827] transition-colors group ${isVoided ? 'opacity-50 line-through text-slate-400' : ''}`}>
+                      <td className='py-2.5 px-4 text-xs whitespace-nowrap'>{formatDate(movement.created_at)}</td>
+                      <td className='py-2.5 px-4'>
+                        <div className='flex flex-col gap-0.5'>
+                          <div className='flex items-center gap-2'>
+                            {!isVoided && (
+                              <span className={isIncome ? 'text-[#107c10]' : 'text-[#d13438]'}>
+                                {isIncome ? <Plus className='w-3 h-3' /> : <X className='w-3 h-3' />}
+                              </span>
+                            )}
+                            <span className='font-medium'>{movement.concept}</span>
+                          </div>
                           {isVoided && (
-                            <span className='inline-flex items-center gap-1.5 text-[9px] text-error font-black uppercase tracking-widest bg-error/10 px-2 py-0.5 rounded'>
-                              <XCircle className='w-2.5 h-2.5' /> ANULADO: {movement.void_reason}
+                            <span className='text-[10px] text-[#d13438] bg-[#d13438]/10 px-1.5 py-0.5 rounded-sm inline-block max-w-max'>
+                              Anulado: {movement.void_reason}
                             </span>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell className='py-5 px-6 text-center'>
-                        <Badge variant={display.variant} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${display.colorClass}`}>
-                          {display.icon}
-                          {display.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className='py-5 px-6 text-right'>
-                        <div className='flex flex-col gap-1'>
-                          <span className={`font-mono text-lg font-black tabular-nums tracking-tight ${display.variant === 'success' ? 'text-success' : 'text-error'}`}>
-                            {display.variant === 'success' ? '+' : '-'} {formatCurrency(movement.amount)}
-                          </span>
-                          <span className='text-[9px] font-bold uppercase text-slate-400 tracking-widest'>Bal: {formatCurrency(movement.running_balance || 0)}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className='py-5 px-6 text-center'>
+                      </td>
+                      <td className='py-2.5 px-4 text-xs'>{movement.user_full_name || 'Sistema'}</td>
+                      <td className={`py-2.5 px-4 text-right font-mono font-medium ${isVoided ? '' : (isIncome ? 'text-[#107c10] dark:text-[#54b054]' : 'text-[#d13438] dark:text-[#e35c60]')}`}>
+                        {isIncome ? '+' : '-'} ₲{formatCurrency(movement.amount)}
+                      </td>
+                      <td className='py-2.5 px-4 text-right font-mono text-xs'>
+                        ₲{formatCurrency(movement.running_balance || 0)}
+                      </td>
+                      <td className='py-2.5 px-4 text-center'>
                         {!isVoided && (
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            onClick={() => handleOpenVoidDialog(movement)}
-                            className='size-9 rounded-xl text-slate-300 hover:text-error hover:bg-error/10 transition-all opacity-0 group-hover:opacity-100 shadow-sm border border-transparent hover:border-error/20'
+                          <button
+                            onClick={() => setVoidDialog({ isOpen: true, movement, reason: '', isSubmitting: false })}
+                            className='w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-[#d13438] hover:bg-[#d13438]/10 transition-colors opacity-0 group-hover:opacity-100'
                             title='Anular Movimiento'
                           >
-                            <XCircle className='w-5 h-5' />
-                          </Button>
+                            <X className='w-4 h-4' />
+                          </button>
                         )}
-                      </TableCell>
-                    </TableRow>
-                  )
+                      </td>
+                    </tr>
+                  );
                 })}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
         )}
-      </Card>
+      </div>
 
-      {/* New Movement Dialog - Refined with Fluent 2.0 */}
+      {/* New Movement Dialog */}
       <Dialog open={isNewMovementOpen} onOpenChange={setIsNewMovementOpen}>
-        <DialogContent className='rounded-3xl border-none bg-surface dark:bg-background-dark shadow-fluent-16 max-w-xl p-0 overflow-hidden font-display'>
-          <DialogHeader className="p-8 pb-6 bg-slate-50/50 dark:bg-slate-800/50 border-b border-border-subtle text-left">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/10 shadow-inner">
-                <Banknote className='w-7 h-7' />
-              </div>
-              <div>
-                <DialogTitle className="text-2xl font-black tracking-tighter uppercase text-text-main">
-                  {t('cashMovement.newMovement', 'Nuevo Movimiento')}
-                </DialogTitle>
-                <DialogDescription className="text-[10px] font-bold uppercase tracking-widest text-text-secondary mt-1">
-                  Registro manual de entrada o salida de efectivo
-                </DialogDescription>
-              </div>
-            </div>
+        <DialogContent className='max-w-md p-0 overflow-hidden border-slate-200 dark:border-[#3b3a39] bg-white dark:bg-[#252423] gap-0 rounded-lg shadow-xl font-sans'>
+          <DialogHeader className="px-6 py-4 border-b border-slate-200 dark:border-[#3b3a39] bg-slate-50/50 dark:bg-[#201f1e]">
+            <DialogTitle className="text-base font-semibold">Registrar movimiento manual</DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">Agregue fondos o registre egresos directamente en la caja.</DialogDescription>
           </DialogHeader>
 
-          <div className='p-8 space-y-8'>
-            <div className='space-y-3'>
-              <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">
-                Tipo de Transacción
-              </Label>
-              <SegmentedControl
-                options={movementTypes}
-                value={newMovementForm.movement_type}
-                onChange={handleTypeChange}
-                className='h-12 bg-slate-100 dark:bg-slate-900 rounded-xl p-1.5'
+          <div className='p-6 space-y-4'>
+            <div className='flex p-1 bg-slate-100 dark:bg-[#323130] rounded-md'>
+              <button 
+                onClick={() => setNewMovementForm(prev => ({ ...prev, movement_type: 'INCOME', concept: '' }))}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-sm transition-colors ${newMovementForm.movement_type === 'INCOME' ? 'bg-white dark:bg-[#252423] text-[#323130] dark:text-[#f3f2f1] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Ingreso
+              </button>
+              <button 
+                onClick={() => setNewMovementForm(prev => ({ ...prev, movement_type: 'EXPENSE', concept: '' }))}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-sm transition-colors ${newMovementForm.movement_type === 'EXPENSE' ? 'bg-white dark:bg-[#252423] text-[#323130] dark:text-[#f3f2f1] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Egreso
+              </button>
+            </div>
+
+            <div className='space-y-1.5'>
+              <Label className="text-xs font-semibold text-slate-700 dark:text-[#e1dfdd]">Concepto de operación *</Label>
+              <Select value={newMovementForm.concept} onValueChange={value => handleNewMovementChange('concept', value)}>
+                <SelectTrigger className={inputClass}>
+                  <SelectValue placeholder="Seleccione un motivo..." />
+                </SelectTrigger>
+                <SelectContent className='rounded-md shadow-lg border-slate-200 dark:border-[#3b3a39]'>
+                  {concepts[newMovementForm.movement_type].map(concept => (
+                    <SelectItem key={concept.id} value={concept.id} className="text-sm">
+                      {concept.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className='space-y-1.5'>
+              <Label className="text-xs font-semibold text-slate-700 dark:text-[#e1dfdd]">Monto (₲) *</Label>
+              <Input
+                type='text'
+                inputMode='numeric'
+                value={formatNumber(newMovementForm.amount)}
+                onChange={e => handleNewMovementChange('amount', e.target.value)}
+                placeholder='0'
+                className={`${inputClass} font-mono`}
               />
             </div>
 
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
-              <div className='space-y-3'>
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1" htmlFor='concept'>
-                  Concepto Operativo
-                </Label>
-                <Select value={newMovementForm.concept} onValueChange={value => handleNewMovementChange('concept', value)}>
-                  <SelectTrigger id='concept' className="h-12 border-border-subtle rounded-xl font-bold bg-white dark:bg-slate-950 focus:ring-2 focus:ring-primary/10">
-                    <SelectValue placeholder="Seleccione un motivo..." />
-                  </SelectTrigger>
-                  <SelectContent className='rounded-xl shadow-fluent-16 border-border-subtle'>
-                    {concepts[newMovementForm.movement_type].map(concept => (
-                      <SelectItem key={concept.id} value={concept.id} className="font-bold text-xs uppercase tracking-wider py-3">
-                        {concept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className='space-y-3'>
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1" htmlFor='amount'>
-                  Monto de la Operación
-                </Label>
-                <div className='relative'>
-                  <span className='absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 font-black'>₲</span>
-                  <Input
-                    id='amount'
-                    type='text'
-                    inputMode='numeric'
-                    value={formatNumber(newMovementForm.amount)}
-                    onChange={e => handleNewMovementChange('amount', e.target.value)}
-                    placeholder='0'
-                    className='h-12 pl-10 font-mono font-black text-lg border-border-subtle rounded-xl bg-white dark:bg-slate-950 focus:ring-2 focus:ring-primary/10'
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className='space-y-3'>
-              <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1" htmlFor='notes'>
-                Detalles Adicionales
-              </Label>
+            <div className='space-y-1.5'>
+              <Label className="text-xs font-semibold text-slate-700 dark:text-[#e1dfdd]">Notas adicionales</Label>
               <Textarea
-                id='notes'
-                placeholder="Añada cualquier información relevante para auditoría..."
                 value={newMovementForm.notes}
                 onChange={e => handleNewMovementChange('notes', e.target.value)}
-                className='resize-none rounded-xl border-border-subtle bg-white dark:bg-slate-950 focus:ring-2 focus:ring-primary/10 min-h-[100px] p-4'
+                placeholder="Referencia de factura, cliente o detalle..."
+                className='min-h-[80px] resize-none px-3 py-2 text-sm rounded-md border-slate-300 dark:border-[#484644] bg-white dark:bg-[#323130] focus-visible:ring-1 focus-visible:ring-[#0f6cbd]'
               />
             </div>
           </div>
 
-          <DialogFooter className='p-8 bg-slate-50/50 dark:bg-slate-800/50 border-t border-border-subtle flex items-center gap-4'>
-            <Button
-              variant='outline'
-              onClick={() => setIsNewMovementOpen(false)}
-              className='flex-1 h-12 border-border-subtle font-black uppercase tracking-widest text-[11px] rounded-xl hover:bg-white transition-all'
-            >
+          <DialogFooter className='px-6 py-4 border-t border-slate-200 dark:border-[#3b3a39] bg-slate-50/50 dark:bg-[#201f1e] flex gap-2 sm:justify-end'>
+            <Button variant='ghost' onClick={() => setIsNewMovementOpen(false)} className='h-8 text-xs px-4 text-slate-600 hover:bg-slate-200 dark:hover:bg-[#323130]'>
               Cancelar
             </Button>
-            <Button
-              onClick={handleSubmitNewMovement}
-              disabled={isSubmitting}
-              className='flex-1 h-12 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[11px] rounded-xl shadow-fluent-8 transition-all active:scale-95'
-            >
-              {isSubmitting ? <RefreshCw className="animate-spin mr-2 w-4 h-4" /> : <CheckCircle2 className="mr-2 w-4 h-4" />}
-              Guardar Movimiento
+            <Button onClick={handleSubmitNewMovement} disabled={isSubmitting} className='h-8 px-4 text-xs font-medium rounded-md bg-[#0f6cbd] hover:bg-[#115ea5] text-white shadow-sm border-transparent'>
+              {isSubmitting ? <RefreshCw className="animate-spin w-3 h-3 mr-1.5" /> : null}
+              Guardar
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Void Movement Dialog */}
-      <Dialog
-        open={voidDialog.isOpen}
-        onOpenChange={isOpen => !isOpen && setVoidDialog(prev => ({ ...prev, isOpen }))}
-      >
-        <DialogContent className='rounded-3xl border-none bg-surface dark:bg-background-dark shadow-fluent-16 max-w-md p-0 overflow-hidden font-display'>
-          <DialogHeader className="p-8 pb-6 bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-800/30 text-left">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="size-12 bg-red-100 dark:bg-red-800 rounded-xl flex items-center justify-center text-red-600 border border-red-200 shadow-inner">
-                <XCircle className='w-7 h-7' />
-              </div>
-              <div>
-                <DialogTitle className="text-2xl font-black tracking-tighter uppercase text-red-600">
-                  Anular Movimiento
-                </DialogTitle>
-                <DialogDescription className="text-[10px] font-bold uppercase tracking-widest text-red-700/70 mt-1">
-                  Esta acción es irreversible y afectará el saldo actual
-                </DialogDescription>
-              </div>
-            </div>
+      <Dialog open={voidDialog.isOpen} onOpenChange={isOpen => !isOpen && setVoidDialog(prev => ({ ...prev, isOpen }))}>
+        <DialogContent className='max-w-md p-0 overflow-hidden border-slate-200 dark:border-[#3b3a39] bg-white dark:bg-[#252423] gap-0 rounded-lg shadow-xl font-sans'>
+          <DialogHeader className="px-6 py-4 border-b border-[#fde7e9] dark:border-[#d13438]/20 bg-[#fdf3f4] dark:bg-[#d13438]/10">
+            <DialogTitle className="text-base font-semibold text-[#d13438]">Anular movimiento</DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 dark:text-[#a19f9d]">Esta acción es irreversible y revertirá el saldo.</DialogDescription>
           </DialogHeader>
 
-          <div className='p-8 space-y-8'>
+          <div className='p-6 space-y-4'>
             {voidDialog.movement && (
-              <div className='p-5 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-border-subtle space-y-3 relative overflow-hidden'>
-                <div className='absolute left-0 top-0 w-1.5 h-full bg-slate-300'></div>
-                <div className='flex justify-between items-start'>
-                  <span className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Resumen del Registro</span>
-                  <span className='font-mono text-[10px] font-black text-slate-400'>ID: {voidDialog.movement.movement_id}</span>
-                </div>
-                <p className='font-black text-sm text-text-main'>{voidDialog.movement.concept}</p>
-                <p className='font-mono font-black text-lg text-text-main'>{formatCurrency(voidDialog.movement.amount)}</p>
+              <div className='p-3 bg-slate-50 dark:bg-[#323130] rounded-md border border-slate-200 dark:border-[#484644] text-sm'>
+                <p className='font-semibold'>{voidDialog.movement.concept}</p>
+                <p className='font-mono mt-1 text-[#d13438]'>₲{formatCurrency(voidDialog.movement.amount)}</p>
               </div>
             )}
-
-            <div className='space-y-3'>
-              <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1" htmlFor='void-reason'>
-                Razón de Anulación <span className='text-red-500'>*</span>
-              </Label>
+            <div className='space-y-1.5'>
+              <Label className="text-xs font-semibold text-slate-700 dark:text-[#e1dfdd]">Motivo de la anulación *</Label>
               <Input
-                id='void-reason'
                 value={voidDialog.reason}
                 onChange={e => setVoidDialog(prev => ({ ...prev, reason: e.target.value }))}
-                placeholder="Ej: Error en el monto, concepto duplicado..."
-                className='h-12 border-border-subtle rounded-xl font-bold bg-white dark:bg-slate-950 focus:ring-2 focus:ring-red-500/10'
+                placeholder="Ej: Error de tipeo, devolución..."
+                className={inputClass}
               />
-              <p className='text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1'>Mínimo 5 caracteres para auditoría</p>
+              <p className='text-[10px] text-slate-500'>Se requieren al menos 5 caracteres.</p>
             </div>
           </div>
 
-          <DialogFooter className='p-8 bg-slate-50/50 dark:bg-slate-800/50 border-t border-border-subtle flex items-center gap-4'>
-            <Button
-              variant='ghost'
-              onClick={() => setVoidDialog({ isOpen: false, movement: null, reason: '', isSubmitting: false })}
-              className='flex-1 h-12 font-black uppercase tracking-widest text-[11px] rounded-xl hover:bg-white transition-all'
-            >
+          <DialogFooter className='px-6 py-4 border-t border-slate-200 dark:border-[#3b3a39] bg-slate-50/50 dark:bg-[#201f1e] flex gap-2 sm:justify-end'>
+            <Button variant='ghost' onClick={() => setVoidDialog({ isOpen: false, movement: null, reason: '', isSubmitting: false })} className='h-8 text-xs px-4 text-slate-600 hover:bg-slate-200 dark:hover:bg-[#323130]'>
               Cancelar
             </Button>
-            <Button
-              variant='destructive'
-              onClick={handleVoidMovement}
-              disabled={voidDialog.isSubmitting}
-              className='flex-1 h-12 bg-error hover:bg-error/90 text-white font-black uppercase tracking-widest text-[11px] rounded-xl shadow-fluent-8 transition-all active:scale-95'
-            >
-              {voidDialog.isSubmitting ? <RefreshCw className="animate-spin mr-2 w-4 h-4" /> : <CheckCircle2 className="mr-2 w-4 h-4" />}
-              Confirmar Anulación
+            <Button variant='destructive' onClick={handleVoidMovement} disabled={voidDialog.isSubmitting || voidDialog.reason.length < 5} className='h-8 px-4 text-xs font-medium rounded-md bg-[#d13438] hover:bg-[#a4262c] text-white shadow-sm border-transparent'>
+              {voidDialog.isSubmitting ? <RefreshCw className="animate-spin w-3 h-3 mr-1.5" /> : null}
+              Confirmar anulación
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
+  );
+};
 
-export default CashMovements
+export default CashMovements;

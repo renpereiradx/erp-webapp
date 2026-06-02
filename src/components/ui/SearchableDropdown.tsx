@@ -236,7 +236,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
               const isHighlighted = index === highlightedIndex;
               return (
                 <button
-                  key={item.id}
+                  key={item.id ?? index}
                   type="button"
                   onClick={() => {
                     onSelect(item);
