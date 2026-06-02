@@ -158,6 +158,10 @@ const NewCashRegister: React.FC = () => {
     if (isNaN(balance) || balance < 0) return setFormError('El saldo ingresado no es válido')
 
     try {
+      if (!activeCashRegister.id) {
+        return setFormError('No se pudo identificar la caja activa para cerrarla');
+      }
+      
       await closeCashRegister(activeCashRegister.id, {
         final_balance: balance,
         notes: closeForm.closingNotes || null,

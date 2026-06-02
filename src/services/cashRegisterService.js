@@ -67,6 +67,13 @@ export const cashRegisterService = {
       telemetry.record('cash_register.service.get_active', {
         duration: Date.now() - startTime,
       })
+      
+      // Manejar el caso donde BusinessManagementAPI intercepta el 204 y devuelve { success: true }
+      // Una caja registradora real debería tener al menos un id o un cash_register_id.
+      if (result && result.success === true && !result.id && !result.cash_register_id && !result.cash_register && !result.data) {
+        console.log('📭 CashRegister: No active cash register found (Intercepted 204)');
+        return null;
+      }
 
       return result
     } catch (error) {
@@ -132,18 +139,27 @@ export const cashRegisterService = {
    */
   async closeCashRegister(cashRegisterId, closeData = {}) {
     const startTime = Date.now()
+    
+    // Safety check para extraer el ID correcto en caso de que se pase el objeto completo
+    const id = typeof cashRegisterId === 'object' ? 
+      (cashRegisterId?.id || cashRegisterId?.cash_register_id) : 
+      cashRegisterId;
+
+    if (!id || id === 'undefined' || id === 'null') {
+      throw new Error(`ID de caja registradora no válido. Recibido: ${JSON.stringify(cashRegisterId)}`);
+    }
 
     try {
       const result = await _fetchWithRetry(async () => {
         return await apiClient.put(
-          API_ENDPOINTS.closeCashRegister(cashRegisterId),
+          API_ENDPOINTS.closeCashRegister(id),
           closeData
         )
       })
 
       telemetry.record('cash_register.service.close', {
         duration: Date.now() - startTime,
-        cashRegisterId,
+        cashRegisterId: id,
         variance: result.variance || 0,
       })
 

@@ -168,8 +168,24 @@ export const useCashRegisterStore = create<CashRegisterState>()(
         })
 
         try {
-          const activeCashRegister =
+          let activeCashRegister =
             await cashRegisterService.getActiveCashRegister()
+
+          // Normalizar el objeto si viene envuelto
+          if (activeCashRegister) {
+            if (activeCashRegister.cash_register) {
+              activeCashRegister = activeCashRegister.cash_register
+            } else if (activeCashRegister.data) {
+              activeCashRegister = activeCashRegister.data
+            } else if (Array.isArray(activeCashRegister)) {
+              activeCashRegister = activeCashRegister[0] || null
+            }
+            
+            // Asegurar que exista id
+            if (activeCashRegister && !activeCashRegister.id && activeCashRegister.cash_register_id) {
+              activeCashRegister.id = activeCashRegister.cash_register_id
+            }
+          }
 
           set({
             activeCashRegister,
@@ -200,9 +216,24 @@ export const useCashRegisterStore = create<CashRegisterState>()(
         set({ isOpeningCashRegister: true, openCashRegisterError: null })
 
         try {
-          const newCashRegister = await cashRegisterService.openCashRegister(
+          let newCashRegister = await cashRegisterService.openCashRegister(
             cashRegisterData
           )
+
+          // Normalizar el objeto si viene envuelto
+          if (newCashRegister) {
+            if (newCashRegister.cash_register) {
+              newCashRegister = newCashRegister.cash_register
+            } else if (newCashRegister.data) {
+              newCashRegister = newCashRegister.data
+            } else if (Array.isArray(newCashRegister)) {
+              newCashRegister = newCashRegister[0] || null
+            }
+            
+            if (newCashRegister && !newCashRegister.id && newCashRegister.cash_register_id) {
+              newCashRegister.id = newCashRegister.cash_register_id
+            }
+          }
 
           const { cashRegisters } = get()
           set({
