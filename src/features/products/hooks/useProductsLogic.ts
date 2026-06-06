@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import useProductStore from '@/store/useProductStore';
 import { ProductEnriched } from '@/domain/products/models';
 import { useToast } from '@/hooks/useToast';
@@ -12,7 +12,7 @@ export const useProductsLogic = () => {
 
   // Zustand store
   const {
-    products,
+    products: storeProducts,
     loading,
     error,
     totalProducts,
@@ -26,6 +26,19 @@ export const useProductsLogic = () => {
     setCurrentPage,
     clearError,
   } = useProductStore();
+
+  // De-duplicar productos por ID para evitar claves duplicadas de React
+  const products = useMemo(() => {
+    const seen = new Set();
+    return storeProducts.filter((product: any) => {
+      const id = product.id || product.product_id;
+      if (!id || seen.has(id)) {
+        return false;
+      }
+      seen.add(id);
+      return true;
+    });
+  }, [storeProducts]);
 
   const { errorFrom } = toast;
   const lastErrorRef = useRef<string | null>(null);

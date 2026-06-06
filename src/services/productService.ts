@@ -48,6 +48,20 @@ const retryWithBackoff = async <T>(fn: () => Promise<T>, maxRetries = 2, baseDel
   throw lastError;
 };
 
+/**
+ * Helper para eliminar productos duplicados (con el mismo ID) de los listados
+ */
+const deduplicateProducts = <T extends { id?: string; product_id?: string }>(products: T[]): T[] => {
+  if (!Array.isArray(products)) return products;
+  const seen = new Set<string>();
+  return products.filter(p => {
+    const id = p.id || p.product_id;
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+};
+
 export const productService = {
   // =================== PRODUCTOS (LECTURA) ===================
 
@@ -56,9 +70,10 @@ export const productService = {
    */
   async getProductsPaginated(page = 1, pageSize = 10, options: any = {}): Promise<ProductEnriched[]> {
     try {
-      return await retryWithBackoff(async () => {
+      const results = await retryWithBackoff(async () => {
         return await apiClient.getProductsPaginated(page, pageSize, options);
       });
+      return deduplicateProducts(results);
     } catch (error) {
       if (error?.name === 'AbortError') throw error;
       throw toApiError(error, 'Error al obtener productos paginados');
@@ -70,7 +85,8 @@ export const productService = {
    */
   async getAll(): Promise<ProductEnriched[]> {
     try {
-      return await apiClient.get('/products/all');
+      const results = await apiClient.get('/products/all');
+      return deduplicateProducts(results);
     } catch (error) {
       throw toApiError(error, 'Error al obtener catálogo de productos');
     }
@@ -94,9 +110,10 @@ export const productService = {
    */
   async search(term: string, options: any = {}): Promise<ProductEnriched[]> {
     try {
-      return await retryWithBackoff(async () => {
+      const results = await retryWithBackoff(async () => {
         return await apiClient.searchProducts(term, options);
       });
+      return deduplicateProducts(results);
     } catch (error) {
       if (error?.name === 'AbortError') throw error;
       throw toApiError(error, 'Error en la búsqueda de productos');
@@ -136,9 +153,10 @@ export const productService = {
    */
   async searchInfo(name: string, options: { limit?: number; signal?: AbortSignal } = {}): Promise<ProductOperationInfoResponse[]> {
     try {
-      return await retryWithBackoff(async () => {
+      const results = await retryWithBackoff(async () => {
         return await apiClient.searchProductsInfoByName(name, options);
       });
+      return deduplicateProducts(results);
     } catch (error) {
       if (error?.name === 'AbortError') throw error;
       throw toApiError(error, 'Error en búsqueda operativa');

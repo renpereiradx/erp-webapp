@@ -89,7 +89,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
             </div>
           </TableHead>
           <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">
-            {t('products.table.created_at', 'Creado')}
+            {t('common.status', 'Estado')}
           </TableHead>
           <TableHead className="text-right py-4 px-6"></TableHead>
         </TableRow>
@@ -198,10 +198,15 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                   )}
                 </div>
               </TableCell>
-              <TableCell className="text-text-secondary tabular-nums px-4 text-xs font-mono">
-                {product.created_at
-                  ? new Date(product.created_at).toLocaleDateString('es-ES')
-                  : '-'}
+              <TableCell className="px-4">
+                <span className={cn(
+                  "text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-widest", 
+                  product.state === false || product.status === false || product.is_active === false 
+                    ? "bg-red-50 text-red-600 border border-red-100" 
+                    : "bg-green-50 text-green-600 border border-green-100"
+                )}>
+                  {product.state === false || product.status === false || product.is_active === false ? "No Disponible" : "Disponible"}
+                </span>
               </TableCell>
               <TableCell className="text-right px-6">
                 <Button

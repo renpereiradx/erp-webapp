@@ -8,9 +8,16 @@
 }
 
 @font-face {
-    font-family: 'JetBrains Mono';
-    src: url('../../public/fonts/jetbrains-mono.ttf') format('truetype');
-    font-weight: 400 700;
+    font-family: 'Source Code Pro';
+    src: url('../../public/fonts/source-code-pro-regular.ttf') format('truetype');
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Source Code Pro';
+    src: url('../../public/fonts/source-code-pro-bold.ttf') format('truetype');
+    font-weight: 700;
     font-display: swap;
 }
 
@@ -75,7 +82,7 @@ body {
 }
 
 .font-mono {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Source Code Pro', monospace;
 }
 
 /* Global Transitions */

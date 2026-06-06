@@ -78,9 +78,9 @@ export default {
         "display": ["Inter", "system-ui", "sans-serif"],
         "montserrat": ["Montserrat", "sans-serif"],
         "public": ["Public Sans", "sans-serif"],
-        "mono": ["JetBrains Mono", "monospace"],
+        "mono": ["Source Code Pro", "monospace"],
         "ibm": ["IBM Plex Mono", "monospace"],
-        "tabular": ["JetBrains Mono", "monospace"]
+        "tabular": ["Source Code Pro", "monospace"]
       },
       borderRadius: {
         xl: "8px",

@@ -90,7 +90,7 @@ const InventoryAdjustmentManualPage = () => {
 
       setLoadingProducts(true)
       try {
-        const results = await productService.searchProducts(
+        const results = await productService.search(
           productSearchTerm.trim()
         )
         const productsArray = Array.isArray(results) ? results : [results]
@@ -128,7 +128,7 @@ const InventoryAdjustmentManualPage = () => {
   // Cargar historial
   useEffect(() => {
     if (selectedProduct) {
-      loadHistory(selectedProduct.product_id)
+      loadHistory(selectedProduct.id)
     }
   }, [selectedProduct, loadHistory])
 
@@ -204,7 +204,7 @@ const InventoryAdjustmentManualPage = () => {
       system_version: '4.3.0-frontend',
     }
     const adjustmentData = {
-      product_id: selectedProduct.product_id,
+      product_id: selectedProduct.id,
       new_quantity: newQuantity,
       reason: DEFAULT_REASONS.MANUAL_ADJUSTMENT[formData.reasonCategory],
       metadata: metadata,
@@ -213,7 +213,7 @@ const InventoryAdjustmentManualPage = () => {
     const result = await createManualAdjustment(adjustmentData)
     if (result && result.success) {
       setSuccessMessage('Ajuste creado exitosamente')
-      await loadHistory(selectedProduct.product_id)
+      await loadHistory(selectedProduct.id)
       setFormData({
         quantityAdjustment: '',
         reasonCategory: 'INVENTORY_COUNT',
@@ -295,14 +295,14 @@ const InventoryAdjustmentManualPage = () => {
               <div className='flex items-center gap-4'>
                 <div className='size-16 bg-slate-50 border border-border-subtle rounded-lg flex items-center justify-center text-primary overflow-hidden flex-shrink-0'>
                   {selectedProduct.image_url ? (
-                    <img src={selectedProduct.image_url} alt={selectedProduct.product_name} className='w-full h-full object-cover' />
+                    <img src={selectedProduct.image_url} alt={selectedProduct.name} className='w-full h-full object-cover' />
                   ) : (
                     <Package size={32} strokeWidth={1.5} />
                   )}
                 </div>
                 <div className='flex-1 min-w-0'>
-                  <p className='text-xs font-mono text-primary font-bold truncate'>{selectedProduct.product_id}</p>
-                  <h3 className='text-lg font-bold text-text-main leading-tight truncate'>{selectedProduct.product_name}</h3>
+                  <p className='text-xs font-mono text-primary font-bold truncate'>{selectedProduct.id}</p>
+                  <h3 className='text-lg font-bold text-text-main leading-tight truncate'>{selectedProduct.name}</h3>
                   <p className='text-sm text-text-secondary mt-1'>
                     Stock Actual: <span className='font-bold text-text-main'>{formatNumber(selectedProduct.stock_quantity || 0)}</span>
  {getUnitLabel(selectedProduct.base_unit || 'unit')}
@@ -543,7 +543,7 @@ const InventoryAdjustmentManualPage = () => {
                 <div className='grid grid-cols-1 gap-1'>
                   {filteredProducts.map((product, index) => (
                     <div
-                      key={product.product_id}
+                      key={product.id}
                       id={`inventory-product-option-${index}`}
                       className={`p-4 flex gap-4 cursor-pointer rounded-lg transition-all ${highlightedIndex === index ? 'bg-primary text-white' : 'hover:bg-slate-50'}`}
                       onClick={() => handleProductSelect(product)}
@@ -551,7 +551,7 @@ const InventoryAdjustmentManualPage = () => {
                     >
                       <div className='size-12 bg-white rounded-lg flex items-center justify-center text-primary overflow-hidden flex-shrink-0 border border-border-subtle'>
                         {product.image_url ? (
-                          <img src={product.image_url} alt={product.product_name} className='w-full h-full object-cover' />
+                          <img src={product.image_url} alt={product.name} className='w-full h-full object-cover' />
                         ) : (
                           <Package size={24} strokeWidth={1.5} />
                         )}
@@ -559,14 +559,14 @@ const InventoryAdjustmentManualPage = () => {
                       <div className='flex-1 min-w-0'>
                         <div className='flex justify-between items-start'>
                           <p className={`text-[10px] font-mono font-bold uppercase ${highlightedIndex === index ? 'text-white/80' : 'text-primary'}`}>
-                            {product.product_id}
+                            {product.id}
                           </p>
                           <p className={`text-[10px] font-black uppercase ${highlightedIndex === index ? 'text-white/90' : 'text-slate-400'}`}>
                             Stock: {formatNumber(product.stock_quantity || 0)}
                           </p>
 
                         </div>
-                        <h4 className='font-bold leading-tight truncate'>{product.product_name}</h4>
+                        <h4 className='font-bold leading-tight truncate'>{product.name}</h4>
                       </div>
                     </div>
                   ))}

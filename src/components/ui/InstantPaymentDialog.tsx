@@ -125,38 +125,38 @@ const InstantPaymentDialog = ({
       setSelectedMethodId('')
     }
 
-    if (isSale) {
-      const loadCashRegisters = async () => {
-        setCashRegistersLoading(true)
-        try {
-          const [allRegisters, activeRegister] = await Promise.all([
-            cashRegisterService.getCashRegisters().catch(() => []),
-            cashRegisterService.getActiveCashRegister().catch(() => null)
-          ])
-          
-          const rawRegisters = Array.isArray(allRegisters) ? allRegisters : (allRegisters as any)?.data || []
-          setCashRegisters(rawRegisters)
-          
-          if (activeRegister) {
-            const activeId = activeRegister.id || activeRegister.cash_register_id;
-            const isActiveInBranch = rawRegisters.some(r => (r.id || r.cash_register_id) === activeId);
-            if (isActiveInBranch) {
-              setCashRegisterId(activeId)
-            } else {
-              setCashRegisterId(null)
-            }
+    const loadCashRegisters = async () => {
+      setCashRegistersLoading(true)
+      try {
+        const [allRegisters, activeRegister] = await Promise.all([
+          cashRegisterService.getCashRegisters().catch(() => []),
+          cashRegisterService.getActiveCashRegister().catch(() => null)
+        ])
+        
+        const rawRegisters = Array.isArray(allRegisters) ? allRegisters : (allRegisters as any)?.data || []
+        // Filtrar por cajas abiertas
+        const openRegisters = rawRegisters.filter((r: any) => (r.status || r.state || '').toUpperCase() === 'OPEN')
+        setCashRegisters(openRegisters)
+        
+        if (activeRegister) {
+          const activeId = activeRegister.id || activeRegister.cash_register_id;
+          const isActiveInBranch = openRegisters.some(r => (r.id || r.cash_register_id) === activeId);
+          if (isActiveInBranch) {
+            setCashRegisterId(activeId)
           } else {
             setCashRegisterId(null)
           }
-        } catch (err) {
-          console.error('Error loading cash registers:', err)
-        } finally {
-          setCashRegistersLoading(false)
+        } else {
+          setCashRegisterId(null)
         }
+      } catch (err) {
+        console.error('Error loading cash registers:', err)
+      } finally {
+        setCashRegistersLoading(false)
       }
-      loadCashRegisters()
     }
-  }, [open, totalAmount, paymentMethodId, paymentMethods, isSale])
+    loadCashRegisters()
+  }, [open, totalAmount, paymentMethodId, paymentMethods])
 
   useEffect(() => {
     if (!open) return
@@ -207,6 +207,7 @@ const InstantPaymentDialog = ({
           paymentMethodId: selectedMethodId,
           currencyCode: resolvedCurrencyCode,
           notes: notes || null,
+          cash_register_id: cashRegisterId
         })
       }
     } catch (err) {
@@ -347,28 +348,26 @@ const InstantPaymentDialog = ({
               </div>
             )}
 
-            {isSale && (
-              <div className='space-y-2'>
-                <label className='text-sm font-medium leading-none' htmlFor='instant-payment-cash-register'>
-                  {t('sales.registerPaymentModal.cashRegister.label', 'Caja de Cobro')}
-                </label>
-                <select
-                  id='instant-payment-cash-register'
-                  value={cashRegisterId || ''}
-                  onChange={e => setCashRegisterId(e.target.value || null)}
-                  disabled={processing || isCashRegistersLoading}
-                  className='flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm'
-                >
-                  <option value=''>{t('sales.registerPaymentModal.cashRegister.none', 'Sin caja asignada')}</option>
-                  {isCashRegistersLoading && <option disabled>Cargando cajas...</option>}
-                  {cashRegisters.map(reg => (
-                    <option key={reg.id || reg.cash_register_id} value={reg.id || reg.cash_register_id}>
-                      {reg.name || reg.description || `Caja #${reg.id}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div className='space-y-2'>
+              <label className='text-sm font-medium leading-none' htmlFor='instant-payment-cash-register'>
+                {t('sales.registerPaymentModal.cashRegister.label', isSale ? 'Caja de Cobro' : 'Caja Registradora')}
+              </label>
+              <select
+                id='instant-payment-cash-register'
+                value={cashRegisterId || ''}
+                onChange={e => setCashRegisterId(e.target.value || null)}
+                disabled={processing || isCashRegistersLoading}
+                className='flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm'
+              >
+                <option value=''>{t('sales.registerPaymentModal.cashRegister.none', 'Sin caja asignada')}</option>
+                {isCashRegistersLoading && <option disabled>Cargando cajas...</option>}
+                {cashRegisters.map(reg => (
+                  <option key={reg.id || reg.cash_register_id} value={reg.id || reg.cash_register_id}>
+                    {reg.name || reg.description || `Caja #${reg.id || reg.cash_register_id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>

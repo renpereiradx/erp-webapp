@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ProductOperationInfoResponse } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/utils/currencyUtils';
+import { cn } from '@/lib/utils';
 import {
   ProductPriceHistoryDialog,
   ProductCostHistoryDialog,
@@ -113,6 +114,19 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                   <h3 className="font-semibold text-xs uppercase tracking-widest">{t('products.details.section.general_info')}</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('common.status', 'Estado')}</label>
+                    <div>
+                      <span className={cn(
+                        "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest",
+                        product.state === false || product.status === false || product.is_active === false
+                          ? "bg-red-50 text-red-600 border border-red-100"
+                          : "bg-green-50 text-green-600 border border-green-100"
+                      )}>
+                        {product.state === false || product.status === false || product.is_active === false ? "No Disponible" : "Disponible"}
+                      </span>
+                    </div>
+                  </div>
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('products.modal.field.category')}</label>
                     <p className="text-sm font-semibold text-gray-800">{categoryName || '-'}</p>

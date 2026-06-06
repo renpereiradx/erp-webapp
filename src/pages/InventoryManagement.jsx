@@ -135,7 +135,7 @@ const InventoryManagement = () => {
       setSearchLoading(true)
       try {
         // Usar searchProducts que maneja búsqueda inteligente por ID, nombre o barcode
-        const results = await productService.searchProducts(searchTerm.trim())
+        const results = await productService.search(searchTerm.trim())
         const resultsArray = Array.isArray(results) ? results : [results]
 
         // Filtrar solo productos activos (un producto está activo si ninguno de estos campos es false)
@@ -159,8 +159,8 @@ const InventoryManagement = () => {
   const handleSelectProduct = product => {
     // Agregar producto a la lista con toda su información
     const newItem = {
-      product_id: product.product_id,
-      product_name: product.product_name || 'N/A',
+      product_id: product.id,
+      product_name: product.name || 'N/A',
       current_quantity: product.stock_quantity || 0,
       quantity_checked: 0,
     }
@@ -1047,13 +1047,13 @@ const InventoryManagement = () => {
                           ) : (
                             searchResults.map((product, index) => (
                               <div
-                                key={product.product_id}
+                                key={product.id}
                                 className={`p-4 flex justify-between items-center cursor-pointer border-b border-slate-50 last:border-0 transition-all ${highlightedIndex === index ? 'bg-primary text-white' : 'hover:bg-slate-50'}`}
                                 onClick={() => handleSelectProduct(product)}
                               >
                                 <div>
-                                  <span className='block font-bold text-sm leading-tight'>{product.product_name}</span>
-                                  <span className={`text-[10px] font-mono font-bold uppercase ${highlightedIndex === index ? 'text-white/70' : 'text-primary'}`}>ID: {product.product_id}</span>
+                                  <span className='block font-bold text-sm leading-tight'>{product.name}</span>
+                                  <span className={`text-[10px] font-mono font-bold uppercase ${highlightedIndex === index ? 'text-white/70' : 'text-primary'}`}>ID: {product.id}</span>
                                 </div>
                                 <span className={`text-[10px] font-black uppercase ${highlightedIndex === index ? 'text-white/90' : 'text-slate-400'}`}>Stock: {formatNumber(product.stock_quantity || 0)}</span>
 
