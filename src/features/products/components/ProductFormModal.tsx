@@ -1,169 +1,38 @@
-import { useState, useEffect } from 'react'
 import { useI18n } from '@/lib/i18n'
-import useProductStore from '@/store/useProductStore'
-import BusinessManagementAPI from '@/services/BusinessManagementAPI'
 import { getGroupedUnitOptions } from '@/constants/units'
 import { X, Save, Trash2, AlertTriangle, Package, Info, ChevronDown, CheckCircle2, Plus, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useProductForm } from '../hooks/useProductForm';
 
 /**
  * ProductFormModal Component
  * Rediseñado con Tailwind CSS siguiendo fielmente Fluent Design System 2
  */
-export default function ProductFormModal({ isOpen, onClose, product = null }) {
+interface ProductFormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  product?: any | null;
+}
+
+export default function ProductFormModal({ isOpen, onClose, product = null }: ProductFormModalProps) {
   const { t } = useI18n()
-  const { createProduct, updateProduct, deleteProduct } = useProductStore()
-  const apiClient = new BusinessManagementAPI()
-
-  const isEditMode = product !== null
-
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    category: '',
-    productType: 'PHYSICAL',
-    description: '',
-    barcode: '',
-    brand: '',
-    origin: '',
-    base_unit: 'unit',
-    tax_rate_id: '',
-    is_variable_measure: false,
-    scale_code: '',
-  })
-
-  const [errors, setErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [categories, setCategories] = useState([])
-  const [taxRates, setTaxRates] = useState([])
-  const [loadingCategories, setLoadingCategories] = useState(false)
-  const [loadingTaxRates, setLoadingTaxRates] = useState(false)
-
-  useEffect(() => {
-    if (isOpen) {
-      loadCategories()
-      loadTaxRates()
-    }
-  }, [isOpen])
-
-  const loadCategories = async () => {
-    setLoadingCategories(true)
-    try {
-      const { categoryService } = await import("@/services/categoryService");
-      const response = await categoryService.getAll()
-      setCategories(Array.isArray(response) ? response : [])
-    } catch (error) {
-      setCategories([])
-    } finally {
-      setLoadingCategories(false)
-    }
-  }
-
-  const loadTaxRates = async () => {
-    setLoadingTaxRates(true)
-    try {
-      const { taxRateService } = await import('@/services/taxRateService')
-      const response = await taxRateService.getPaginated(1, 100)
-      if (Array.isArray(response)) setTaxRates(response)
-      else if (response && response.tax_rates) setTaxRates(response.tax_rates)
-      else setTaxRates([])
-    } catch (error) {
-      console.error('Error loading tax rates:', error)
-      setTaxRates([])
-    } finally {
-      setLoadingTaxRates(false)
-    }
-  }
-
-  useEffect(() => {
-    if (isOpen) {
-      if (product) {
-        setFormData({
-          name: product.product_name || product.name || '',
-          category: product.category_id?.toString() || product.id_category?.toString() || '',
-          productType: product.product_type || 'PHYSICAL',
-          description: product.description || '',
-          barcode: product.barcode || '',
-          brand: product.brand || '',
-          origin: product.origin || '',
-          base_unit: product.base_unit || 'unit',
-          tax_rate_id: (product.override_tax_rate_id || product.tax_rate_id)?.toString() || '',
-          is_variable_measure: product.is_variable_measure || false,
-          scale_code: product.scale_code || '',
-        })
-      } else {
-        setFormData({
-          name: '', category: '', productType: 'PHYSICAL', description: '',
-          barcode: '', brand: '', origin: '', base_unit: 'unit', tax_rate_id: '',
-          is_variable_measure: false, scale_code: '',
-        })
-      }
-      setErrors({})
-    }
-  }, [isOpen, product])
-
-  const handleChange = e => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }))
-  }
-
-  const validate = () => {
-    const newErrors = {}
-    if (!formData.name.trim()) newErrors.name = t('products.modal.error.name_required')
-    if (!formData.category) newErrors.category = t('products.modal.error.category_required')
-    if (!formData.description.trim()) newErrors.description = 'La descripción es requerida'
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = async e => {
-    e.preventDefault()
-    if (!validate()) return
-    setIsSubmitting(true)
-    try {
-      const productData = {
-        name: formData.name.trim(),
-        category_id: parseInt(formData.category),
-        description: formData.description.trim(),
-        product_type: formData.productType,
-        barcode: formData.barcode?.trim() || undefined,
-        brand: formData.brand?.trim() || undefined,
-        origin: formData.origin || undefined,
-        base_unit: formData.base_unit || 'unit',
-        override_tax_rate_id: formData.tax_rate_id ? parseInt(formData.tax_rate_id) : undefined,
-        is_variable_measure: formData.is_variable_measure,
-        scale_code: formData.is_variable_measure ? (formData.scale_code?.trim() || null) : null,
-        state: true,
-        is_active: true,
-      }
-      const productId = product?.product_id || product?.id
-      if (isEditMode) await updateProduct(productId, productData)
-      else await createProduct(productData)
-      onClose()
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleDelete = async () => {
-    if (!isEditMode) return
-    setIsDeleting(true)
-    try {
-      const productId = product.product_id || product.id
-      await deleteProduct(productId)
-      setShowDeleteConfirm(false)
-      onClose()
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setIsDeleting(false)
-    }
-  }
+  
+  const {
+    formData,
+    errors,
+    isSubmitting,
+    isDeleting,
+    isEditMode,
+    showDeleteConfirm,
+    setShowDeleteConfirm,
+    categories,
+    taxRates,
+    loadingCategories,
+    loadingTaxRates,
+    handleChange,
+    handleSubmit,
+    handleDelete
+  } = useProductForm({ product, isOpen, onClose });
 
   if (!isOpen) return null
 
@@ -172,9 +41,9 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
   const selectClass = "w-full h-11 px-4 bg-white border border-border-subtle rounded-xl text-sm text-text-main font-bold outline-none focus:ring-4 focus:ring-primary/10 transition-all appearance-none cursor-pointer font-display"
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300 font-display">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 glass-mica animate-in fade-in duration-300 font-display">
       <div 
-        className="bg-white rounded-2xl shadow-fluent-16 w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-border-subtle font-display"
+        className="bg-white/90 backdrop-blur-md rounded-2xl shadow-fluent-16 w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-white/20 font-display"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

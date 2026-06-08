@@ -226,10 +226,10 @@ const InstantPaymentDialog = ({
 
   return (
     <AlertDialog open={open}>
-      <AlertDialogContent className='sm:max-w-lg p-0 overflow-hidden radix-dialog__content'>
-        <AlertDialogHeader className='px-6 py-5 border-b bg-muted/30'>
+      <AlertDialogContent className='sm:max-w-lg p-0 overflow-hidden radix-dialog__content glass-acrylic border border-white/20 shadow-2xl shadow-black/10'>
+        <AlertDialogHeader className='px-6 py-5 border-b border-slate-200/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md'>
           <div className='flex items-start gap-3'>
-            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20'>
+            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100/80 dark:bg-green-900/30 backdrop-blur-sm'>
               <CheckCircle2 className='h-5 w-5 text-green-600 dark:text-green-400' />
             </div>
             <div className='space-y-1.5'>
@@ -403,7 +403,7 @@ const InstantPaymentDialog = ({
           )}
         </div>
 
-        <AlertDialogFooter className='px-6 py-4 border-t bg-muted/20 sm:grid sm:grid-cols-2 sm:gap-2 sm:space-x-0'>
+        <AlertDialogFooter className='px-6 py-4 border-t border-slate-200/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md sm:grid sm:grid-cols-2 sm:gap-2 sm:space-x-0'>
           <AlertDialogCancel onClick={onLeavePending} disabled={processing} className='sm:w-full mt-0'>
             {t(`${prefix}.leavePending`, 'Dejar Pendiente')}
           </AlertDialogCancel>

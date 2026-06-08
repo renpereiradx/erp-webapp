@@ -18,8 +18,8 @@ import FinancialSummaryDashboard from '@/pages/FinancialSummaryDashboard'
 import DetailedKPIs from '@/pages/DetailedKPIs'
 import SalesHeatmap from '@/pages/SalesHeatmap'
 import ConsolidatedAlerts from '@/pages/ConsolidatedAlerts'
-import TopProductsOverview from '@/pages/TopProductsOverview'
-import Products from '@/pages/Products'
+import TopProductsOverview from '@/pages/TopProductsOverview';
+import Products from '@/pages/Products';
 import PartiesPage from '@/pages/PartiesPage'
 import BudgetManagement from '@/pages/BudgetManagement'
 import BudgetCreate from '@/pages/BudgetCreate'

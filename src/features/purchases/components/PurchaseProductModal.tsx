@@ -161,14 +161,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                                     Activo
                                   </div>
                                 )}
-                                <div className='text-[10px] text-[var(--fluent-text-secondary,#605E5C)] dark:text-slate-300'>
-                                  Últ. costo:
-                                </div>
-                                <div className='text-sm font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
-                                  {formatCurrency(
-                                    p.unit_costs_summary?.[0]?.last_cost ?? p.cost_price ?? p.unit_cost ?? 0
-                                  )}
-                                </div>
+
                                 <div
                                   className={`text-[10px] font-medium ${(p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0) > 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}
                                 >
@@ -201,7 +194,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                           modalSelectedProduct.product_name ||
                           '-'}
                       </h4>
-                      <div className='grid grid-cols-3 gap-2 mt-2'>
+                      <div className='grid grid-cols-4 gap-2 mt-2'>
                         <div>
                           <p className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
                             ID
@@ -221,6 +214,16 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                               modalSelectedProduct.last_purchase_cost ||
                                 modalSelectedProduct.cost_price ||
                                 0
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <p className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
+                            Precio Venta
+                          </p>
+                          <p className='text-xs text-[var(--fluent-text-secondary,#605E5C)] font-semibold text-[var(--fluent-brand-primary,#0078D4)]'>
+                            {formatCurrency(
+                              modalSelectedProduct.sale_price || modalSelectedProduct.unit_price || modalSelectedProduct.price || 0
                             )}
                           </p>
                         </div>

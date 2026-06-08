@@ -76,10 +76,10 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
 
   return (
     <div 
-      className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 glass-mica animate-in fade-in duration-200 font-display"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="bg-white/90 backdrop-blur-md border border-white/20 rounded-2xl shadow-fluent-16 w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* Header Section */}
         <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">

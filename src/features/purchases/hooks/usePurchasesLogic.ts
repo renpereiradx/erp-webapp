@@ -418,7 +418,7 @@ export const usePurchasesLogic = () => {
       setSearchingProducts(true)
       setShowProductDropdown(true)
       try {
-        const res = await productService.searchInfo(
+        const res = await productService.search(
           modalProductSearch.trim(),
           { limit: 10 },
         )
@@ -530,6 +530,13 @@ export const usePurchasesLogic = () => {
         cost_price: Number(fullProduct.purchase_price || fullProduct.unit_cost || 0),
         stock: Number(fullProduct.stock_quantity || fullProduct.stock || 0),
         last_purchase_cost: fullProduct.unit_costs_summary?.[0]?.last_cost ?? Number(fullProduct.purchase_price || fullProduct.unit_cost || 0),
+        sale_price: Number(
+          fullProduct.sale_price ||
+          fullProduct.price ||
+          fullProduct.unit_price ||
+          (Array.isArray(fullProduct.unit_prices) && (fullProduct.unit_prices[0]?.price_per_unit || fullProduct.unit_prices[0]?.price || fullProduct.unit_prices[0]?.selling_price)) ||
+          0
+        ),
       };
 
       setModalSelectedProduct(normalizedProduct);
