@@ -29,6 +29,7 @@ import PurchaseRequisitionCreate from '@/pages/PurchaseRequisitionCreate'
 import PurchaseRequisitionDetail from '@/pages/PurchaseRequisitionDetail'
 import SalesNew from '@/pages/SalesNew'
 import ScaleConfigPage from '@/features/scales/components/ScaleConfigPage'
+import UnitConversionsPage from '@/features/unit-conversions/components/UnitConversionsPage'
 import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
 import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
 import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
@@ -392,6 +393,11 @@ function AppContent() {
                       <Route path='/configuracion/balanzas' element={
                         <PermissionGuard permission="products:read">
                           <ScaleConfigPage />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/configuracion/conversiones' element={
+                        <PermissionGuard permission="products:read">
+                          <UnitConversionsPage />
                         </PermissionGuard>
                       } />
                       

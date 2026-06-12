@@ -19,6 +19,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
   
   const {
     formData,
+    setFormData,
     errors,
     isSubmitting,
     isDeleting,
@@ -215,9 +216,9 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                     </div>
 
                     <div className="space-y-1.5 relative">
-                      <label className={labelClass}>Unidad de Medida</label>
+                      <label className={labelClass}>Unidad de Medida {isEditMode && <span className="ml-1 text-[9px] text-orange-500 font-bold lowercase bg-orange-50 px-1 rounded">inmutable</span>}</label>
                       <div className="relative">
-                        <select name="base_unit" value={formData.base_unit} onChange={handleChange} className={selectClass}>
+                        <select name="base_unit" value={formData.base_unit} onChange={handleChange} className={`${selectClass} ${errors.base_unit ? 'border-error' : ''}`} disabled={isEditMode}>
                           {getGroupedUnitOptions().map(group => (
                             <optgroup key={group.label} label={group.label} className="font-black uppercase text-[10px]">
                               {group.options.map(opt => <option key={opt.value} value={opt.value} className="font-bold">{opt.label}</option>)}
@@ -226,6 +227,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                         </select>
                         <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                       </div>
+                      {errors.base_unit && <p className="text-[10px] text-error font-black uppercase tracking-widest mt-2">{errors.base_unit}</p>}
                     </div>
 
                     <div className="space-y-3 pt-2">
@@ -248,6 +250,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                           className="size-5 rounded border-border-subtle text-primary focus:ring-primary/20 accent-primary cursor-pointer"
                         />
                       </div>
+                      {errors.is_variable_measure && <p className="text-[10px] text-error font-black uppercase tracking-widest mt-1">{errors.is_variable_measure}</p>}
 
                       {formData.is_variable_measure && (
                         <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-200">
@@ -260,11 +263,12 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                               setFormData(prev => ({ ...prev, scale_code: val }))
                             }}
                             placeholder="Ej: 123"
-                            className={inputClass}
+                            className={`${inputClass} ${errors.scale_code ? 'border-error' : ''}`}
                           />
                           <p className="text-[9px] text-text-secondary font-black uppercase tracking-wider">
                             Código corto para balanzas EAN-13 (1-5 dígitos)
                           </p>
+                          {errors.scale_code && <p className="text-[10px] text-error font-black uppercase tracking-widest">{errors.scale_code}</p>}
                         </div>
                       )}
                     </div>

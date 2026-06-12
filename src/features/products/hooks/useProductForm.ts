@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import useProductStore from '@/store/useProductStore';
+import { useToast } from '@/hooks/useToast';
 
-export const productSchema = z.object({
+export const baseProductSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   category: z.string().min(1, 'La categoría es requerida'),
   productType: z.enum(['PHYSICAL', 'SERVICE']),
@@ -14,14 +15,41 @@ export const productSchema = z.object({
   tax_rate_id: z.string().optional(),
   is_variable_measure: z.boolean().default(false),
   scale_code: z.string().optional(),
-}).refine(data => {
-  if (data.is_variable_measure && (!data.scale_code || data.scale_code.trim() === '')) {
-    return false;
+});
+
+export const productSchema = baseProductSchema.superRefine((data, ctx) => {
+  if (data.is_variable_measure) {
+    if (!data.scale_code || data.scale_code.trim() === '') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El código de balanza es requerido",
+        path: ["scale_code"]
+      });
+    } else if (!/^\d{1,5}$/.test(data.scale_code.trim())) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Debe tener entre 1 y 5 dígitos numéricos",
+        path: ["scale_code"]
+      });
+    }
+
+    const validMeasurableUnits = ['kg', 'g', 'lb', 'oz', 'l', 'ml', 'gal', 'meter', 'cm', 'sqm', 'sqft'];
+    if (!validMeasurableUnits.includes(data.base_unit)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Unidad debe ser de peso o volumen",
+        path: ["base_unit"]
+      });
+    }
   }
-  return true;
-}, {
-  message: "El código de balanza es requerido si la medida es variable",
-  path: ["scale_code"]
+
+  if (data.scale_code && data.scale_code.trim() !== '' && !data.is_variable_measure) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Debe activar medida variable",
+      path: ["is_variable_measure"]
+    });
+  }
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;
@@ -34,6 +62,7 @@ interface UseProductFormProps {
 
 export function useProductForm({ product, isOpen, onClose }: UseProductFormProps) {
   const { createProduct, updateProduct, deleteProduct } = useProductStore();
+  const toast = useToast();
   const isEditMode = product !== null;
 
   const [formData, setFormData] = useState<ProductFormData>({
@@ -130,8 +159,8 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
     
     setFormData(prev => {
       const next = { ...prev, [name]: finalValue };
-      // Validate the specific field immediately
-      const fieldSchema = productSchema.shape[name as keyof typeof productSchema.shape];
+      // Validate the specific field immediately using the base schema
+      const fieldSchema = baseProductSchema.shape[name as keyof typeof baseProductSchema.shape];
       if (fieldSchema) {
         const result = fieldSchema.safeParse(finalValue);
         setErrors(prevErrors => ({
@@ -177,12 +206,19 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
       };
       
       const productId = product?.product_id || product?.id;
-      if (isEditMode) await updateProduct(productId, productData);
-      else await createProduct(productData);
+      if (isEditMode) {
+        const { base_unit, ...updateData } = productData;
+        await updateProduct(productId, updateData);
+        toast.success('Producto actualizado exitosamente');
+      } else {
+        await createProduct(productData);
+        toast.success('Producto creado exitosamente');
+      }
       
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      toast.error(error?.message || 'Error al guardar el producto');
     } finally {
       setIsSubmitting(false);
     }
@@ -194,10 +230,12 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
     try {
       const productId = product?.product_id || product?.id;
       await deleteProduct(productId);
+      toast.success('Producto eliminado exitosamente');
       setShowDeleteConfirm(false);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      toast.error(error?.message || 'Error al eliminar el producto');
     } finally {
       setIsDeleting(false);
     }
@@ -205,6 +243,7 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
 
   return {
     formData,
+    setFormData,
     errors,
     isSubmitting,
     isDeleting,

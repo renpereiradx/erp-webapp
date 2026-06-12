@@ -64,12 +64,14 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
           {latestPurchaseResult.warnings && latestPurchaseResult.warnings.length > 0 && (
             <div className='p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 rounded-lg text-left space-y-1.5'>
               <div className='flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-semibold text-xs uppercase tracking-wider'>
-                <AlertCircle size={14} /> Advertencias Fiscales
+                <AlertCircle size={14} /> Advertencias
               </div>
               <ul className='list-disc pl-4 text-xs text-amber-800 dark:text-amber-300 space-y-1'>
                 {latestPurchaseResult.warnings.map((w: any, idx: number) => (
                   <li key={idx}>
-                    {w.product_name || w.name || 'Producto'}: Tasa observada del {w.observed_tax_rate || w.tax_rate}% difiere de la esperada.
+                    {w.type === 'PRICE_DERIVATION_SKIPPED'
+                      ? `${w.product_name || w.product_id || 'Producto'}: ${w.reason || 'No se pudo derivar precio'}`
+                      : `${w.product_name || w.name || 'Producto'}: Tasa observada del ${w.observed_tax_rate || w.tax_rate}% difiere de la esperada.`}
                   </li>
                 ))}
               </ul>

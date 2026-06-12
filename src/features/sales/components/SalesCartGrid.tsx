@@ -46,8 +46,13 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                 <td className="py-3 px-4 font-medium text-slate-700">
                   {item.isFromPendingSale && <Badge className="mr-2 bg-amber-100 text-amber-700 hover:bg-amber-100 border-none text-[9px] uppercase">Persistido</Badge>}
                   {item.name}
+                  <div className='text-[10px] font-normal text-[var(--fluent-text-tertiary,#8A8886)]'>
+                    Unidad: {item.unit}
+                  </div>
                 </td>
-                <td className="py-3 px-4 text-right font-medium">{formatNumber(item.quantity)}</td>
+                <td className="py-3 px-4 text-right font-medium">
+                  {formatNumber(item.quantity)} <span className='text-[10px] font-normal text-[var(--fluent-text-tertiary,#8A8886)]'>{item.unit}</span>
+                </td>
                 <td className="py-3 px-4 text-right text-slate-600">{formatCurrency(getItemBaseUnitPrice(item))}</td>
                 <td className="py-3 px-4 text-right text-red-500 font-medium">-{formatCurrency(getItemLineDiscount(item))}</td>
                 <td className="py-3 px-4 text-right font-bold text-slate-800">{formatCurrency(getItemLineTotal(item))}</td>

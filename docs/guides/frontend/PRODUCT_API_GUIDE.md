@@ -31,6 +31,8 @@
 - **BREAKING**: `base_unit` es **inmutable** después de la creación. `PUT /products/{id}` rechaza cambios a este campo.
 - **NUEVO**: `GET /products/{id}/info`, `GET /products/info/barcode/{barcode}`, `GET /products/info/search/{name}` ahora incluyen `base_unit` en la respuesta.
 
+> **Ver guía de flujos:** [PRODUCT_UNIT_FLOWS_GUIDE.md](./PRODUCT_UNIT_FLOWS_GUIDE.md) para todos los flujos operativos de productos con unidades de medida.
+>
 > **Ver guía end-to-end:** [WEIGHABLE_PRODUCTS_GUIDE.md](./WEIGHABLE_PRODUCTS_GUIDE.md) para el flujo completo de registro de productos por kg, asignación de código de balanza, pesaje y escaneo en POS.
 
 ### v3.3.0 - 11 de Mayo de 2026

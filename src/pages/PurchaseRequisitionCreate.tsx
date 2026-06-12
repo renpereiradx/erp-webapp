@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/useToast';
 import { useBranch } from '@/contexts/BranchContext';
 import { purchaseRequisitionService } from '@/services/purchaseRequisitionService';
 import { productService } from '@/services/productService';
+import { isDecimalUnit } from '@/constants/units';
 import supplierService from '@/services/supplierService';
 import { Product, CreatePurchaseRequisitionRequest } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -74,10 +75,12 @@ const PurchaseRequisitionCreate: React.FC = () => {
     if (existing) {
       setItems(items.map(i => i.product_id === product.id ? { ...i, quantity: i.quantity + 1 } : i));
     } else {
+      const allowDecimal = isDecimalUnit(product.base_unit || 'unit');
       setItems([...items, {
         product_id: product.id,
         name: product.name,
-        quantity: 1,
+        base_unit: product.base_unit || 'unit',
+        quantity: allowDecimal ? 0.01 : 1,
         priority: 'MEDIUM',
         notes: ''
       }]);
@@ -255,8 +258,14 @@ const PurchaseRequisitionCreate: React.FC = () => {
                             <Input 
                               type="number" 
                               className="w-20 mx-auto text-center font-bold h-9 border-none bg-slate-100 rounded-lg"
+                              step={isDecimalUnit(item.base_unit || 'unit') ? "0.01" : "1"}
                               value={item.quantity}
-                              onChange={(e) => updateItem(item.product_id, 'quantity', parseFloat(e.target.value))}
+                              onChange={(e) => updateItem(item.product_id, 'quantity', e.target.value)}
+                              onBlur={(e) => {
+                                let val = parseFloat(e.target.value) || 0;
+                                if (!isDecimalUnit(item.base_unit || 'unit')) val = Math.floor(val);
+                                updateItem(item.product_id, 'quantity', val);
+                              }}
                             />
                           </td>
                           <td className="py-4 px-4">

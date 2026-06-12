@@ -144,7 +144,7 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onReactivat
               />
             ) : (
               <div className="flex items-center gap-1 font-semibold" style={{ color: stockStatus.color }}>
-                <span>{stockStatus.text} ({productSummary.stock?.quantity ?? 'N/A'})</span>
+                <span>{stockStatus.text} ({productSummary.stock?.quantity ?? 'N/A'} <span className="text-[10px] uppercase">{product.base_unit || 'unit'}</span>)</span>
                 {getStockIcon(stockStatus.status)}
               </div>
             )}

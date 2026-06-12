@@ -95,7 +95,7 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
                     </div>
                   </td>
                   <td className='px-4 py-3 text-center font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
-                    {formatNumber(item.quantity)}
+                    {formatNumber(item.quantity)} <span className='text-[10px] font-normal text-[var(--fluent-text-tertiary,#8A8886)]'>{item.unit}</span>
                   </td>
                   <td className='px-4 py-3 text-right text-sm text-[var(--fluent-text-secondary,#605E5C)]'>
                     {formatCurrency(item.unit_price)}

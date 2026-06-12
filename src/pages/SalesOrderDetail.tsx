@@ -385,7 +385,7 @@ const SalesOrderDetail = () => {
                             <span className="font-black text-text-main text-sm uppercase tracking-tight leading-tight">
                               {item.product_name || item.name}
                             </span>
-                            <span className="bg-slate-100 px-2 py-0.5 rounded text-[9px] font-black text-text-secondary whitespace-nowrap uppercase tracking-widest">x{item.quantity || 1}</span>
+                            <span className="bg-slate-100 px-2 py-0.5 rounded text-[9px] font-black text-text-secondary whitespace-nowrap uppercase tracking-widest">x{item.quantity || 1} {item.unit || ''}</span>
                           </div>
                           <div className="grid grid-cols-2 gap-3 p-4 bg-slate-50 rounded-xl border border-border-subtle">
                             <div className="space-y-1">

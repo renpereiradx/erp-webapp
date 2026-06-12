@@ -11,7 +11,7 @@ import {
   DEFAULT_REASONS,
   REASON_DETAIL_TEMPLATES,
 } from '@/constants/inventoryDefaults'
-import { getUnitLabel } from '@/constants/units'
+import { getUnitLabel, isDecimalUnit as checkDecimalUnit } from '@/constants/units'
 
 const InventoryAdjustmentManualPage = () => {
   const { t } = useI18n()
@@ -20,6 +20,7 @@ const InventoryAdjustmentManualPage = () => {
   // Store hooks
   const {
     createManualAdjustment,
+    createStockTransaction,
     getManualAdjustmentHistory,
     loadingCreate,
     error: storeError,
@@ -203,14 +204,35 @@ const InventoryAdjustmentManualPage = () => {
       notes: formData.details,
       system_version: '4.3.0-frontend',
     }
-    const adjustmentData = {
-      product_id: selectedProduct.id,
-      new_quantity: newQuantity,
-      reason: DEFAULT_REASONS.MANUAL_ADJUSTMENT[formData.reasonCategory],
-      metadata: metadata,
-      unit: selectedProduct.base_unit || 'unit',
+    const isDecimalUnit = selectedProduct && selectedProduct.base_unit && checkDecimalUnit(selectedProduct.base_unit.toLowerCase());
+    
+    let result;
+    if (isDecimalUnit) {
+      const transactionData = {
+        product_id: selectedProduct.id,
+        transaction_type: 'ADJUSTMENT',
+        quantity_change: newQuantity - previousStock,
+        reason: DEFAULT_REASONS.MANUAL_ADJUSTMENT[formData.reasonCategory] || formData.reasonCategory,
+        reference_type: 'manual_adjustment',
+        metadata: {
+          ...metadata,
+          adjustment_type: formData.reasonCategory,
+          previous_stock: previousStock,
+          new_stock: newQuantity
+        }
+      };
+      result = await createStockTransaction(transactionData);
+    } else {
+      const adjustmentData = {
+        product_id: selectedProduct.id,
+        new_quantity: parseInt(newQuantity, 10),
+        reason: DEFAULT_REASONS.MANUAL_ADJUSTMENT[formData.reasonCategory] || formData.reasonCategory,
+        metadata: metadata,
+        unit: selectedProduct.base_unit || 'unit',
+      };
+      result = await createManualAdjustment(adjustmentData);
     }
-    const result = await createManualAdjustment(adjustmentData)
+
     if (result && result.success) {
       setSuccessMessage('Ajuste creado exitosamente')
       await loadHistory(selectedProduct.id)
@@ -334,7 +356,12 @@ const InventoryAdjustmentManualPage = () => {
                     value={formData.quantityAdjustment}
                     onChange={e => setFormData(prev => ({ ...prev, quantityAdjustment: e.target.value }))}
                     disabled={!selectedProduct}
-                    step={selectedProduct && selectedProduct.base_unit && ['basic', 'packing', 'grocery'].includes(getUnitLabel(selectedProduct.base_unit)) ? '1' : '0.01'}
+                    step={selectedProduct && selectedProduct.base_unit && checkDecimalUnit(selectedProduct.base_unit.toLowerCase()) ? '0.01' : '1'}
+                    onBlur={e => {
+                      if (selectedProduct && selectedProduct.base_unit && !checkDecimalUnit(selectedProduct.base_unit.toLowerCase())) {
+                        setFormData(prev => ({ ...prev, quantityAdjustment: String(Math.floor(parseFloat(e.target.value) || 0)) }))
+                      }
+                    }}
                   />
                   {formErrors.quantityAdjustment && <p className='text-error text-[10px] font-bold uppercase'>{formErrors.quantityAdjustment}</p>}
                 </div>

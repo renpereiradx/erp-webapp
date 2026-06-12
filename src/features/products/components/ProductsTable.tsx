@@ -167,7 +167,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                     stockInfo.isLow ? 'text-error' : 'text-text-main'
                   )}
                 >
-                  {stockInfo.display}
+                  {stockInfo.display} <span className="ml-0.5 text-[9px] text-slate-400 uppercase tracking-widest font-sans">{product.base_unit || 'unit'}</span>
                 </span>
               </TableCell>
               <TableCell className="px-4">

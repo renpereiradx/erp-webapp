@@ -14,6 +14,7 @@ import {
 } from '@/constants/inventoryDefaults'
 
 import { formatNumber } from '@/utils/currencyUtils'
+import { isDecimalUnit } from '@/constants/units'
 
 // Iconos de Lucide React
 import {
@@ -237,7 +238,7 @@ const InventoryManagement = () => {
 
   const handleProductChange = (index, field, value) => {
     const newItems = [...inventoryForm.items]
-    newItems[index][field] = parseInt(value) || 0
+    newItems[index][field] = value
     setInventoryForm({ ...inventoryForm, items: newItems })
   }
 
@@ -304,10 +305,16 @@ const InventoryManagement = () => {
 
     // Preparar datos para la API con sanitización
     const inventoryData = {
-      items: inventoryForm.items.map(item => ({
-        product_id: String(item.product_id).trim(),
-        quantity_checked: parseFloat(item.quantity_checked) || 0,
-      })),
+      items: inventoryForm.items.map(item => {
+        let qty = parseFloat(item.quantity_checked) || 0;
+        if (!isDecimalUnit(item.base_unit || 'unit')) {
+          qty = Math.floor(qty);
+        }
+        return {
+          product_id: String(item.product_id).trim(),
+          quantity_checked: qty,
+        };
+      }),
       metadata: {
         ...inventoryForm.metadata,
         timestamp: new Date().toISOString(),
@@ -1093,13 +1100,21 @@ const InventoryManagement = () => {
                                   <td className="py-3 px-4 text-center tabular-nums font-medium text-slate-500">{formatNumber(item.current_quantity)}</td>
 
                                   <td className="py-3 px-4">
-                                    <input
-                                      type='number'
-                                      className='w-24 mx-auto h-8 text-center border border-border-subtle rounded bg-white text-sm font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
-                                      min='0'
-                                      value={item.quantity_checked}
-                                      onChange={e => handleProductChange(index, 'quantity_checked', e.target.value)}
-                                    />
+                                      <input
+                                        type='number'
+                                        className='w-24 mx-auto h-8 text-center border border-border-subtle rounded bg-white text-sm font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
+                                        min='0'
+                                        step={isDecimalUnit((item.base_unit || 'unit').toLowerCase()) ? '0.01' : '1'}
+                                        value={item.quantity_checked}
+                                        onChange={e => handleProductChange(index, 'quantity_checked', e.target.value)}
+                                        onBlur={e => {
+                                          let val = parseFloat(e.target.value) || 0;
+                                          if (!isDecimalUnit((item.base_unit || 'unit').toLowerCase())) {
+                                            val = Math.floor(val);
+                                          }
+                                          handleProductChange(index, 'quantity_checked', val);
+                                        }}
+                                      />
                                   </td>
                                   <td className="py-3 px-4 text-right">
                                     <button

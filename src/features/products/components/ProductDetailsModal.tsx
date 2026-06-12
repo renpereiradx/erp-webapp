@@ -150,6 +150,12 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                     </p>
                   </div>
                   <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Unidad Base</label>
+                    <p className="text-sm font-semibold text-gray-800 uppercase tabular-nums">
+                      {product.base_unit || '-'}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
                     <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Impuesto (IVA)</label>
                     <p className="text-sm font-semibold text-[#106ebe]">
                       {product.tax?.rate?.tax_name || product.applicable_tax_rate?.tax_name || 'No especificado'}

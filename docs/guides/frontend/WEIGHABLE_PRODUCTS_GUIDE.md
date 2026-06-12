@@ -464,6 +464,7 @@ Admin (`role_id = "F2VLso"`) tiene acceso total sin verificación.
 
 ### Guías frontend
 
+- [PRODUCT_UNIT_FLOWS_GUIDE.md](./PRODUCT_UNIT_FLOWS_GUIDE.md) — Flujos operativos de productos con unidades de medida (creación, compra, venta, conversiones)
 - [PRODUCT_API_GUIDE.md](./PRODUCT_API_GUIDE.md) — CRUD de productos, incluyendo `base_unit`, `is_variable_measure`, `scale_code`
 - [BARCODE_API_GUIDE.md](./BARCODE_API_GUIDE.md) — `/barcode/decode`, `/barcode/generate`, formato EAN-13
 - [SCALE_API_GUIDE.md](./SCALE_API_GUIDE.md) — `/scale/weigh-item`, `/scale/generate-label`, `/scale/catalog`, CRUD `/scales` y `/label-formats`

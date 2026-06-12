@@ -509,4 +509,10 @@ curl -X GET "http://localhost:5050/manual_adjustment/price/recent?days=1&limit=1
 
 ---
 
-_Última actualización: 2026-05-19_
+## Ver También
+
+- [PRODUCT_UNIT_FLOWS_GUIDE.md](./PRODUCT_UNIT_FLOWS_GUIDE.md) — Flujos operativos con unidades de medida, incluyendo ajustes de stock/precio y cantidades fraccionarias
+
+---
+
+_Última actualización: 2026-06-09_

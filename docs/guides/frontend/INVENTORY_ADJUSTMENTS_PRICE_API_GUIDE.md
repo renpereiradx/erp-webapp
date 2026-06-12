@@ -801,4 +801,10 @@ const metadata = createAdjustmentMetadata('DAMAGED_GOODS', 'user_123', {
 
 ---
 
-_Ultima actualizacion: 2026-05-19_
+## Ver También
+
+- [PRODUCT_UNIT_FLOWS_GUIDE.md](./PRODUCT_UNIT_FLOWS_GUIDE.md) — Flujos operativos con unidades de medida, incluyendo ajustes de stock con decimales vía `POST /stock-transactions/` y limitaciones de `POST /manual_adjustment/`
+
+---
+
+_Ultima actualizacion: 2026-06-09_

@@ -61,6 +61,7 @@ import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog';
 import { salePaymentService } from '@/services/salePaymentService';
 import { useI18n } from '@/lib/i18n';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
+import { isDecimalUnit } from '@/constants/units';
 import ToastContainer from '@/components/ui/ToastContainer';
 
 interface CartItem {
@@ -100,6 +101,7 @@ interface ProductDisplay {
   stock: number;
   base_unit: string;
   taxRate: number;
+  has_valid_price: boolean;
 }
 
 interface SaleMetadata {
@@ -192,6 +194,7 @@ const getProductDisplay = (product: Record<string, unknown>): ProductDisplay => 
     stock: Number(product.stock_quantity || product.stock || product.quantity || 0),
     base_unit: String(product.base_unit || product.unit || 'unit'),
     taxRate: normalizedTaxRate,
+    has_valid_price: product.has_valid_price !== undefined ? Boolean(product.has_valid_price) : Number(price) > 0,
   };
 };
 
@@ -224,12 +227,12 @@ const getItemDiscountPerUnit = (item: CartItem): number => {
 }
 
 const getItemLineDiscount = (item: CartItem): number => {
-  const quantity = Math.max(1, Number(item.quantity || 1))
+  const quantity = Math.max(0, Number(item.quantity ?? 1))
   return Number((getItemDiscountPerUnit(item) * quantity).toFixed(2))
 }
 
 const getItemLineTotal = (item: CartItem): number => {
-  const quantity = Math.max(1, Number(item.quantity || 1))
+  const quantity = Math.max(0, Number(item.quantity ?? 1))
   const baseTotal = getItemBaseUnitPrice(item) * quantity
   const discountTotal = getItemLineDiscount(item)
   return Math.max(0, Number((baseTotal - discountTotal).toFixed(2)))
@@ -297,7 +300,8 @@ const SalesNew: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedModalProduct, setSelectedModalProduct] = useState<Record<string, unknown> | null>(null);
-  const [modalQuantity, setModalQuantity] = useState(1);
+  const [modalQuantity, setModalQuantity] = useState<number | string>(1);
+  const [modalUnit, setModalUnit] = useState<string>('unit');
   const [modalPrice, setModalPrice] = useState(0);
   const [modalDiscount, setModalDiscount] = useState(0);
   const [modalDiscountType, setModalDiscountType] = useState<'amount' | 'percent'>('amount');
@@ -323,7 +327,7 @@ const SalesNew: React.FC = () => {
   const [showProductDropdown, setShowProductDropdown] = useState(false);
   const [productHighlightedIndex, setProductHighlightedIndex] = useState(-1);
   const [productSearchTerm, setProductSearchTerm] = useState('');
-  const [selectedProductQuantity, setSelectedProductQuantity] = useState(1);
+  const [selectedProductQuantity, setSelectedProductQuantity] = useState<number | string>(1);
 
   const { isScanningBarcode, handleBarcodeScan } = useBarcodeScanner({
     currentBranchId,
@@ -563,7 +567,9 @@ const SalesNew: React.FC = () => {
                 dropdownQuantityInputRef.current?.focus();
                 dropdownQuantityInputRef.current?.select();
               } else {
-                addProductToCart(selectedProduct, selectedProductQuantity);
+                let qty = parseFloat(String(selectedProductQuantity));
+                if (isNaN(qty) || qty <= 0) qty = 1;
+                addProductToCart(selectedProduct, qty);
                 setProductSearchTerm('');
                 setProductHighlightedIndex(-1);
                 setSelectedProductQuantity(1);
@@ -635,6 +641,11 @@ const SalesNew: React.FC = () => {
   };
 
   const addProductToCart = useCallback((product: ProductDisplay, quantity: number = 1) => {
+    if (!product.has_valid_price) {
+      toast.error(`El producto "${product.name}" no tiene un precio configurado. Establezca un precio antes de venderlo.`);
+      return;
+    }
+
     const newItem: CartItem = {
       id: `${product.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       productId: product.id,
@@ -729,7 +740,7 @@ const SalesNew: React.FC = () => {
     }
 
     const loadedItems: CartItem[] = saleDetails.map((detail: any, index: number) => {
-      const quantity = Math.max(1, Number(detail.quantity) || 1)
+      const quantity = Math.max(0, Number(detail.quantity ?? 1))
       const rawFinalUnit = Number(detail.unit_price || detail.price || 0)
       const rawBaseUnit = Number(
         detail.base_price ||
@@ -913,6 +924,7 @@ const SalesNew: React.FC = () => {
       taxRate: item.taxRate,
     });
     setModalQuantity(item.quantity);
+    setModalUnit(item.unit || 'unit');
     setModalPrice(item.price);
     setModalDiscount(item.discountInput);
     setModalDiscountType(item.discountType);
@@ -928,7 +940,10 @@ const SalesNew: React.FC = () => {
 
     const productDisplay = getProductDisplay(selectedModalProduct);
     const originalPrice = productDisplay.price;
-    const parsedModalQuantity = Math.max(1, Number(modalQuantity) || 1);
+    const allowDecimal = isDecimalUnit(modalUnit || productDisplay.base_unit);
+    const minQty = allowDecimal ? 0.01 : 1;
+    let parsedModalQuantity = Math.max(minQty, Number(modalQuantity) || minQty);
+    if (!allowDecimal) parsedModalQuantity = Math.floor(parsedModalQuantity);
     const parsedModalDiscount = Math.max(0, Number(modalDiscount) || 0);
     
     // Si el descuento es > 0, calculamos el precio final desde el descuento
@@ -976,7 +991,7 @@ const SalesNew: React.FC = () => {
       discountInput: currentDiscountInput,
       discountReason: priceChanged ? modalDiscountReason : '',
       taxRate: productDisplay.taxRate,
-      unit: productDisplay.base_unit,
+      unit: modalUnit || productDisplay.base_unit,
       isFromPendingSale: existingItem?.isFromPendingSale || false,
       detailId: existingItem?.detailId,
     };
@@ -989,6 +1004,7 @@ const SalesNew: React.FC = () => {
     });
 
     setModalQuantity(1);
+    setModalUnit('unit');
     setModalDiscount(0);
     setModalPrice(0);
     setEditingItemId(null);
@@ -1107,7 +1123,12 @@ const SalesNew: React.FC = () => {
           fetchDashboardData();
           handleHistoryFilter();
         } else {
-          toast.error(response?.error || 'No se pudieron agregar los productos a la venta');
+          const errMsg = response?.error || response?.message || 'No se pudieron agregar los productos a la venta';
+          if (errMsg.toLowerCase().includes('no existe conversion') || errMsg.toLowerCase().includes('conversión')) {
+            toast.error(`No existe conversión de unidad: ${errMsg}. Registre la conversión primero.`);
+          } else {
+            toast.error(errMsg);
+          }
         }
       } else {
         // 1. Validar unicidad de reserve_id y productId para reservas (Instrucción: permitir solo uno por producto)
@@ -1218,15 +1239,37 @@ const SalesNew: React.FC = () => {
             paymentMethodLabel: (selectedMethod as any)?.name || (selectedMethod as any)?.description || 'Efectivo',
             currencyCode: (selectedCurrency as any)?.code || 'PYG'
           });
+
+          // Trazabilidad y advertencias (PRICE_DERIVATION_SKIPPED, etc)
+          const warnings = response.validation_summary?.warnings || response.warnings || [];
+          if (warnings.length > 0) {
+            warnings.forEach((w: any) => {
+              if (w.type === 'PRICE_DERIVATION_SKIPPED') {
+                toast.warning(`${w.product_name || 'Producto'}: ${w.reason || 'No se pudo derivar precio.'}`);
+              } else {
+                toast.warning(w.message || 'Advertencia de validación al crear la venta.');
+              }
+            });
+          }
+
           setShowInstantCollection(true);
           fetchDashboardData();
         } else {
-          toast.error(response?.error || 'No se pudo registrar la venta');
+          const errMsg = response?.error || response?.message || 'No se pudo registrar la venta';
+          if (errMsg.toLowerCase().includes('no existe conversion') || errMsg.toLowerCase().includes('conversión')) {
+            toast.error(`No existe conversión de unidad: ${errMsg}. Registre la conversión primero.`);
+          } else {
+            toast.error(errMsg);
+          }
         }
       }
-    } catch (error) {
-      console.error('Error al procesar la venta:', error);
-      toast.error('Error al procesar la venta');
+    } catch (error: any) {
+      const errMsg = error?.message || error?.error || 'Error inesperado al procesar la venta';
+      if (errMsg.toLowerCase().includes('no existe conversion') || errMsg.toLowerCase().includes('conversión')) {
+        toast.error(`No existe conversión de unidad: ${errMsg}. Registre la conversión primero.`);
+      } else {
+        toast.error('Ocurrió un error al procesar la venta');
+      }
     } finally {
       setIsProcessingSale(false);
     }
@@ -1234,7 +1277,7 @@ const SalesNew: React.FC = () => {
 
   const modalDisplay = selectedModalProduct ? getProductDisplay(selectedModalProduct) : null;
   const modalUnitPrice = modalDisplay?.price || 0;
-  const parsedModalQuantity = Math.max(1, Number(modalQuantity) || 1);
+  const parsedModalQuantity = Math.max(0, Number(modalQuantity ?? 1));
   const parsedModalDiscount = Math.max(0, Number(modalDiscount) || 0);
   const modalSubtotal = modalUnitPrice * parsedModalQuantity;
   const modalDiscountValue = useMemo(() => {
@@ -1341,7 +1384,9 @@ const SalesNew: React.FC = () => {
                                         toast.error(`Sin stock disponible para ${product.name}`);
                                         return;
                                       }
-                                      addProductToCart(product, selectedProductQuantity);
+                                      let qty = parseFloat(String(selectedProductQuantity));
+                                      if (isNaN(qty) || qty <= 0) qty = 1;
+                                      addProductToCart(product, qty);
                                       setProductSearchTerm('');
                                       setShowProductDropdown(false);
                                       setProductHighlightedIndex(-1);
@@ -1349,56 +1394,87 @@ const SalesNew: React.FC = () => {
                                     }}
                                     onMouseEnter={() => setProductHighlightedIndex(index)}
                                     className={cn(
-                                      "flex-1 flex items-center gap-2 px-3 py-2 text-left transition-colors min-w-0",
+                                      "flex-1 flex items-center gap-2 px-3 py-2.5 text-left transition-colors min-w-0",
                                       availableStock <= 0 && "opacity-60 grayscale-[0.5]"
                                     )}
                                   >
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-1.5">
-                                        <p className="font-black text-[13px] text-slate-800 truncate leading-tight uppercase">{product.name}</p>
-                                        <Badge variant="outline" className="text-[8px] h-4 px-1 font-black uppercase text-slate-400 border-slate-200 shrink-0 bg-white">
+                                    <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <p className="font-bold text-[14px] text-slate-900 truncate leading-none uppercase tracking-tight">{product.name}</p>
+                                        <Badge variant="outline" className="text-[9px] h-5 px-1.5 font-bold uppercase text-slate-400 border-slate-200 shrink-0 bg-slate-50">
                                           #{product.sku}
                                         </Badge>
                                       </div>
-                                      <div className="flex items-center gap-2.5 mt-0.5">
-                                        <p className="text-xs font-black text-primary tracking-tight">
-                                          {formatCurrency(product.price)}
-                                        </p>
-                                        <div className={cn(
-                                          'px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter shrink-0',
-                                          availableStock > 0 ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
-                                        )}>
-                                          DISP: {formatNumber(availableStock)}
-                                          {quantityInCart > 0 && <span className="ml-1 text-slate-400">({quantityInCart} en carrito)</span>}
+                                      <div className="flex items-center gap-3">
+                                        <div className="flex items-baseline gap-1 shrink-0">
+                                          <p className="text-[14px] font-black text-primary tracking-tight leading-none">
+                                            {formatCurrency(product.price)}
+                                          </p>
+                                          <span className="text-[10px] font-bold text-slate-400 uppercase">
+                                            / {product.base_unit}
+                                          </span>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+                                          <div className={cn(
+                                            'px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide flex items-center gap-1 shrink-0',
+                                            availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'
+                                          )}>
+                                            <span className={cn("w-1.5 h-1.5 rounded-full", availableStock > 0 ? "bg-emerald-500" : "bg-red-500")} />
+                                            Stock: {formatNumber(availableStock)} {product.base_unit}
+                                          </div>
+                                          {quantityInCart > 0 && (
+                                            <div className="px-1.5 py-0.5 rounded-md text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 flex items-center gap-1 shrink-0">
+                                              <ShoppingCart size={10} className="shrink-0" />
+                                              {formatNumber(quantityInCart)} en carrito
+                                            </div>
+                                          )}
                                         </div>
                                       </div>
                                     </div>
                                   </button>
 
                                   {isHighlighted && availableStock > 0 && (
-                                    <div className="flex items-center gap-1.5 px-2 py-1.5 mr-1 bg-white rounded-md border border-slate-200 shadow-sm shrink-0 ml-1 animate-in slide-in-from-right-2 duration-200">
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-[8px] font-black uppercase text-slate-400 whitespace-nowrap">
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 mr-1 bg-white rounded-md border border-slate-200 shadow-sm shrink-0 ml-1 animate-in slide-in-from-right-2 duration-200">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-[9px] font-black uppercase text-slate-400 whitespace-nowrap">
                                           Cant:
                                         </span>
                                         <input
                                           ref={dropdownQuantityInputRef}
                                           type="number"
-                                          min="1"
+                                          min={isDecimalUnit(product.base_unit) ? "0.01" : "1"}
+                                          step={isDecimalUnit(product.base_unit) ? "0.01" : "1"}
                                           max={availableStock}
                                           value={selectedProductQuantity}
                                           onChange={(e) => {
-                                            const val = Math.max(1, parseInt(e.target.value) || 1);
-                                            setSelectedProductQuantity(Math.min(val, availableStock));
+                                            setSelectedProductQuantity(e.target.value);
+                                          }}
+                                          onBlur={() => {
+                                            const allowDecimal = isDecimalUnit(product.base_unit);
+                                            const minQty = allowDecimal ? 0.01 : 1;
+                                            let val = parseFloat(String(selectedProductQuantity));
+                                            if (isNaN(val)) val = minQty;
+                                            val = Math.max(minQty, val);
+                                            if (!allowDecimal) val = Math.floor(val);
+                                            val = Math.min(val, availableStock);
+                                            setSelectedProductQuantity(val);
                                           }}
                                           onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                               e.preventDefault();
-                                              if (selectedProductQuantity > availableStock) {
-                                                toast.error('Cantidad excede el stock disponible');
+                                              const allowDecimal = isDecimalUnit(product.base_unit);
+                                              const minQty = allowDecimal ? 0.01 : 1;
+                                              let qty = parseFloat(String(selectedProductQuantity));
+                                              if (isNaN(qty)) qty = minQty;
+                                              qty = Math.max(minQty, qty);
+                                              if (!allowDecimal) qty = Math.floor(qty);
+                                              qty = Math.min(qty, availableStock);
+                                              
+                                              if (qty > availableStock || qty <= 0) {
+                                                toast.error('Cantidad inválida');
                                                 return;
                                               }
-                                              addProductToCart(product, selectedProductQuantity);
+                                              addProductToCart(product, qty);
                                               setProductSearchTerm('');
                                               setShowProductDropdown(false);
                                               setProductHighlightedIndex(-1);
@@ -1418,7 +1494,7 @@ const SalesNew: React.FC = () => {
                                             }
                                             e.stopPropagation();
                                           }}
-                                          className="w-10 h-7 text-xs font-black text-center border-2 border-primary/20 rounded-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                          className="w-14 h-8 text-[13px] font-black text-center border-2 border-primary/20 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                           onClick={(e) => e.stopPropagation()}
                                         />
                                       </div>
@@ -1822,7 +1898,7 @@ const SalesNew: React.FC = () => {
             <CardContent className="p-6 space-y-6">
               {modalDisplay && (
                 <>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] ml-1">Precio Base</label>
                       <div className="relative">
@@ -1866,9 +1942,31 @@ const SalesNew: React.FC = () => {
                           type="number"
                           value={modalQuantity}
                           onChange={(e) => setModalQuantity(e.target.value)}
-                          min="1"
+                          min={isDecimalUnit(modalUnit || 'unit') ? "0.01" : "1"}
+                          step={isDecimalUnit(modalUnit || 'unit') ? "0.01" : "1"}
                           className="h-12 text-sm font-black text-center border-2 border-slate-100 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all rounded-lg"
                         />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] ml-1">Unidad</label>
+                      <div className="relative group">
+                        <Input
+                          type="text"
+                          list="allowed-units"
+                          value={modalUnit}
+                          onChange={(e) => setModalUnit(e.target.value)}
+                          className="h-12 text-sm font-black text-center border-2 border-slate-100 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all rounded-lg"
+                        />
+                        <datalist id="allowed-units">
+                          <option value="unit" />
+                          <option value="kg" />
+                          <option value="g" />
+                          <option value="l" />
+                          <option value="box" />
+                          <option value="pack" />
+                          <option value="dozen" />
+                        </datalist>
                       </div>
                     </div>
                   </div>

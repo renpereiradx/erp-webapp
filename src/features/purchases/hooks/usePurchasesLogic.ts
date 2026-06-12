@@ -62,6 +62,7 @@ export const usePurchasesLogic = () => {
   const [searchingProducts, setSearchingProducts] = useState<boolean>(false)
   const [showProductDropdown, setShowProductDropdown] = useState<boolean>(false)
   const [modalQuantity, setModalQuantity] = useState<string | number>('')
+  const [modalUnit, setModalUnit] = useState<string>('unit')
   const [modalUnitPrice, setModalUnitPrice] = useState<string | number>('')
   const [modalProfitPct, setModalProfitPct] = useState<number>(30)
   const [modalSalePrice, setModalSalePrice] = useState<number>(0)
@@ -192,6 +193,21 @@ export const usePurchasesLogic = () => {
 
     activeElement?.scrollIntoView({ block: 'nearest' })
   }, [activeProductIndex, showProductDropdown])
+
+  useEffect(() => {
+    if (modalTaxRateId === null) {
+      setModalTaxRatePercent(0)
+    } else {
+      const selectedTax = taxRates.find(t => t.id === modalTaxRateId)
+      if (selectedTax) {
+        let finalPercent = Number(selectedTax.rate) || 0
+        if (finalPercent > 0 && finalPercent < 1) {
+          finalPercent = finalPercent * 100
+        }
+        setModalTaxRatePercent(finalPercent)
+      }
+    }
+  }, [modalTaxRateId, taxRates])
 
   const getInclusiveEndDate = dateValue => {
     if (!dateValue) return dateValue
@@ -542,6 +558,7 @@ export const usePurchasesLogic = () => {
       setModalSelectedProduct(normalizedProduct);
       setModalProductSearch(normalizedProduct.name || '');
       setShowProductDropdown(false);
+      setModalUnit(normalizedProduct.unit || 'unit');
 
       const cost = normalizedProduct.cost_price || 0;
       setModalUnitPrice(cost);
@@ -549,10 +566,34 @@ export const usePurchasesLogic = () => {
       // Default pricing: cost * (1 + 0.3)
       setModalSalePrice(Math.ceil((cost * 1.3) / 50) * 50);
 
-      const taxInfo = fullProduct.tax?.rate || fullProduct.applicable_tax_rate;
-      if (taxInfo) {
-        setModalTaxRateId(taxInfo.id);
-        setModalTaxRatePercent(taxInfo.rate || 0);
+      // Jerarquía de impuesto: Impuesto del producto > Impuesto de la categoría
+      let taxId = fullProduct.tax?.rate?.id || fullProduct.applicable_tax_rate?.id || fullProduct.tax_rate_id;
+      let taxRateValue = fullProduct.tax?.rate?.rate || fullProduct.applicable_tax_rate?.rate || fullProduct.tax_rate;
+
+      if (!taxId && fullProduct.category) {
+        const categoryTax = fullProduct.category.default_tax_rate;
+        if (categoryTax) {
+          taxId = categoryTax.id;
+          taxRateValue = categoryTax.rate;
+        } else if (fullProduct.category.default_tax_rate_id) {
+          taxId = fullProduct.category.default_tax_rate_id;
+          const foundTax = taxRates.find(t => t.id === taxId);
+          if (foundTax) {
+            taxRateValue = foundTax.rate;
+          }
+        }
+      }
+
+      if (taxId) {
+        setModalTaxRateId(taxId);
+        let finalPercent = Number(taxRateValue) || 0;
+        if (finalPercent > 0 && finalPercent < 1) {
+          finalPercent = finalPercent * 100;
+        }
+        setModalTaxRatePercent(finalPercent);
+      } else {
+        setModalTaxRateId(null);
+        setModalTaxRatePercent(0);
       }
       setTimeout(() => {
         modalQuantityRef.current?.focus();
@@ -616,7 +657,7 @@ export const usePurchasesLogic = () => {
       sku: modalSelectedProduct.sku || '-',
       quantity: Number(modalQuantity),
       unit_price: Number(modalUnitPrice),
-      unit: modalSelectedProduct.unit || 'unit',
+      unit: modalUnit || 'unit',
       profit_pct: pricingMode === 'margin' ? Number(modalProfitPct) : effectiveProfitPct,
       explicit_sale_price: pricingMode === 'sale_price' ? Number(modalSalePrice) : undefined,
       sale_price: effectiveSalePrice,
@@ -637,6 +678,7 @@ export const usePurchasesLogic = () => {
     setIsModalOpen(false)
     setEditingItemId(null)
     setModalQuantity('')
+    setModalUnit('unit')
     setModalUnitPrice('')
     setModalSelectedProduct(null)
     setModalProductSearch('')
@@ -724,10 +766,15 @@ export const usePurchasesLogic = () => {
         setShowConfirmationModal(true)
         fetchDashboardData()
       } else {
-        // Manejar errores de validación (API v2.7)
-        toast.error(
-          result.message || result.error || 'Error al guardar la compra',
-        )
+        // Manejar errores de validación (API v2.7) y NO_CONVERSION
+        const errMsg = result.message || result.error || 'Error al guardar la compra';
+        if (errMsg.toLowerCase().includes('no existe conversion') || errMsg.toLowerCase().includes('conversión')) {
+          toast.error(
+            `No existe conversión de unidad: ${errMsg}. Registre la conversión antes de comprar en esta unidad.`,
+          )
+        } else {
+          toast.error(errMsg)
+        }
       }
     } catch (err) {
       console.error('Error in handleSavePurchase:', err)
@@ -871,8 +918,11 @@ export const usePurchasesLogic = () => {
     }
   }
 
-  const handleEditItem = item => {
+  const handleEditItem = async item => {
     setEditingItemId(item.id)
+    setIsModalOpen(true)
+    
+    // Set fallback basic product data immediately so UI renders something
     setModalSelectedProduct({
       id: item.product_id,
       name: item.name,
@@ -887,7 +937,17 @@ export const usePurchasesLogic = () => {
     setPricingMode(item.pricing_mode)
     setModalTaxRateId(item.tax_rate_id)
     setModalPriceIncludesTax(item.price_includes_tax !== false)
-    setIsModalOpen(true)
+
+    // Background fetch to enrich product data with category and tax definitions for the UI badges
+    try {
+      const fullProduct = await productService.getForPurchase(item.product_id) as any;
+      setModalSelectedProduct(prev => ({
+        ...fullProduct,
+        ...prev // keep edited values prioritized
+      }));
+    } catch (e) {
+      console.warn("Could not fetch full product data for edit mode", e);
+    }
   }
 
   const handleInstantPaymentConfirm = async paymentPayload => {
@@ -980,6 +1040,7 @@ export const usePurchasesLogic = () => {
     modalSalePrice,
     modalSelectedProduct,
     modalTaxRateId,
+    modalUnit,
     modalUnitPrice,
     openActionMenu,
     orderToCancel,
@@ -1008,6 +1069,7 @@ export const usePurchasesLogic = () => {
     setModalQuantity,
     setModalSalePrice,
     setModalTaxRateId,
+    setModalUnit,
     setModalUnitPrice,
     setOpenActionMenu,
     setPaymentCurrency,

@@ -27,6 +27,8 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
     modalQuantityRef,
     modalQuantity,
     setModalQuantity,
+    modalUnit,
+    setModalUnit,
     modalUnitPrice,
     setModalUnitPrice,
     t,
@@ -253,8 +255,8 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                 </div>
               )}
 
-              {/* Quantity & Cost */}
-              <div className='grid grid-cols-2 gap-3'>
+              {/* Quantity, Unit & Cost */}
+              <div className='grid grid-cols-3 gap-3'>
                 <div className='space-y-1.5'>
                   <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
                     Cantidad
@@ -273,7 +275,32 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                 </div>
                 <div className='space-y-1.5'>
                   <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
-                    Costo Unitario
+                    Unidad
+                  </label>
+                  <input
+                    type='text'
+                    list='allowed-units'
+                    className='w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all'
+                    value={modalUnit}
+                    onChange={e => setModalUnit(e.target.value)}
+                    placeholder='Ej. kg, box, unit'
+                  />
+                  <datalist id='allowed-units'>
+                    <option value='unit' />
+                    <option value='kg' />
+                    <option value='g' />
+                    <option value='l' />
+                    <option value='box' />
+                    <option value='pack' />
+                    <option value='dozen' />
+                  </datalist>
+                  <p className='text-xs text-[var(--fluent-text-tertiary,#8A8886)]'>
+                    Medida de compra
+                  </p>
+                </div>
+                <div className='space-y-1.5'>
+                  <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
+                    Costo Unit.
                   </label>
                   <input
                     type='number'
@@ -282,8 +309,8 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     onChange={e => setModalUnitPrice(e.target.value)}
                     placeholder='0.00'
                   />
-                  <p className='text-xs text-[var(--fluent-text-tertiary,#8A8886)]'>
-                    Precio de compra por unidad
+                  <p className='text-xs text-[var(--fluent-text-tertiary,#8A8886)] truncate' title='Precio de compra por unidad'>
+                    Precio por unidad
                   </p>
                 </div>
               </div>
@@ -315,6 +342,39 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     </option>
                   ))}
                 </select>
+                {modalSelectedProduct && (
+                  <div className='mt-1.5'>
+                    {(() => {
+                      const productTaxId = modalSelectedProduct.tax?.rate?.id || modalSelectedProduct.applicable_tax_rate?.id || modalSelectedProduct.tax_rate_id;
+                      const categoryTaxId = modalSelectedProduct.category?.default_tax_rate?.id || modalSelectedProduct.category?.default_tax_rate_id;
+                      const categoryName = modalSelectedProduct.category?.name || '';
+
+                      if (modalTaxRateId && modalTaxRateId === productTaxId) {
+                        return (
+                          <span className='inline-flex items-center gap-1.5 px-2 py-0.5 text-xs rounded border border-blue-100 dark:border-blue-900/30 bg-blue-50/70 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 font-medium'>
+                            <span className='w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse'></span>
+                            Impuesto específico del producto
+                          </span>
+                        );
+                      } else if (modalTaxRateId && modalTaxRateId === categoryTaxId) {
+                        return (
+                          <span className='inline-flex items-center gap-1.5 px-2 py-0.5 text-xs rounded border border-green-100 dark:border-green-900/30 bg-green-50/70 dark:bg-green-950/20 text-green-600 dark:text-green-400 font-medium'>
+                            <span className='w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse'></span>
+                            Impuesto sugerido por categoría {categoryName ? `(${categoryName})` : ''}
+                          </span>
+                        );
+                      } else if (modalTaxRateId) {
+                        return (
+                          <span className='inline-flex items-center gap-1.5 px-2 py-0.5 text-xs rounded border border-amber-100 dark:border-amber-900/30 bg-amber-50/70 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 font-medium'>
+                            <span className='w-1.5 h-1.5 rounded-full bg-amber-500'></span>
+                            Impuesto personalizado manualmente
+                          </span>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+                )}
               </div>
 
               {/* Price Includes Tax Toggle */}

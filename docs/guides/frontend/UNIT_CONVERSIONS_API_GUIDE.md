@@ -28,6 +28,8 @@
 - **NUEVO**: Sección de "Conversiones de Empaque" documentando que NO vienen pre-cargadas.
 - **NUEVO**: Sección de "Errores de Conversión en Transacciones" con mensajes `NO_CONVERSION`.
 
+> **Ver guía de flujos:** [PRODUCT_UNIT_FLOWS_GUIDE.md](./PRODUCT_UNIT_FLOWS_GUIDE.md) para flujos operativos completos (creación, compra, venta, conversiones de empaque).
+>
 > **Ver guía end-to-end:** [WEIGHABLE_PRODUCTS_GUIDE.md](./WEIGHABLE_PRODUCTS_GUIDE.md) para el flujo completo de productos pesables, incluyendo el rol de las conversiones de unidad en productos de medida variable.
 
 ---
