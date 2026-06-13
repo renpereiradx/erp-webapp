@@ -306,6 +306,7 @@ const SalesNew: React.FC = () => {
   const [modalDiscount, setModalDiscount] = useState(0);
   const [modalDiscountType, setModalDiscountType] = useState<'amount' | 'percent'>('amount');
   const [modalDiscountReason, setModalDiscountReason] = useState('');
+  const [modalCustomReasonText, setModalCustomReasonText] = useState('');
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
   const [showInstantCollection, setShowInstantCollection] = useState(false);
@@ -928,7 +929,11 @@ const SalesNew: React.FC = () => {
     setModalPrice(item.price);
     setModalDiscount(item.discountInput);
     setModalDiscountType(item.discountType);
-    setModalDiscountReason(item.discountReason);
+    
+    const isStandardReason = !item.discountReason || PRICE_CHANGE_REASONS.some(r => r.label === item.discountReason);
+    setModalDiscountReason(isStandardReason ? (item.discountReason || '') : 'Other');
+    setModalCustomReasonText(isStandardReason ? '' : item.discountReason);
+    
     setIsModalOpen(true);
   };
 
@@ -964,9 +969,10 @@ const SalesNew: React.FC = () => {
     }
 
     const priceChanged = Math.abs(finalUnitPrice - originalPrice) > 0.01;
+    const finalReason = modalDiscountReason === 'Other' ? modalCustomReasonText : modalDiscountReason;
 
     // VALIDACIÓN ESTRICTA: Si el precio cambió, la razón es obligatoria
-    if (priceChanged && !modalDiscountReason.trim()) {
+    if (priceChanged && !finalReason.trim()) {
       toast.error('Debes ingresar una razón para el cambio de precio');
       return;
     }
@@ -989,7 +995,7 @@ const SalesNew: React.FC = () => {
       discount: totalDiscountAmount,
       discountType: currentDiscountType,
       discountInput: currentDiscountInput,
-      discountReason: priceChanged ? modalDiscountReason : '',
+      discountReason: priceChanged ? finalReason : '',
       taxRate: productDisplay.taxRate,
       unit: modalUnit || productDisplay.base_unit,
       isFromPendingSale: existingItem?.isFromPendingSale || false,
@@ -1278,7 +1284,7 @@ const SalesNew: React.FC = () => {
   const modalDisplay = selectedModalProduct ? getProductDisplay(selectedModalProduct) : null;
   const modalUnitPrice = modalDisplay?.price || 0;
   const parsedModalQuantity = Math.max(0, Number(modalQuantity ?? 1));
-  const parsedModalDiscount = Math.max(0, Number(modalDiscount) || 0);
+  const parsedModalDiscount = Number(modalDiscount) || 0;
   const modalSubtotal = modalUnitPrice * parsedModalQuantity;
   const modalDiscountValue = useMemo(() => {
     let td = 0;
@@ -1872,230 +1878,218 @@ const SalesNew: React.FC = () => {
 
       {isModalOpen && selectedModalProduct && (
         <div 
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300" 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" 
           onClick={() => setIsModalOpen(false)}
         >
-          <Card 
-            className="relative w-full max-w-lg shadow-fluent-8 rounded-xl animate-in zoom-in-95 duration-300 bg-white border-none overflow-hidden" 
+          <div 
+            className="relative w-full max-w-lg shadow-2xl rounded-xl bg-white overflow-hidden flex flex-col max-h-[95vh]" 
             onClick={(e) => e.stopPropagation()}
           >
-            <CardHeader className="flex flex-row items-center justify-between border-b bg-slate-50/50 px-6 py-4">
+            {/* Header */}
+            <div className="flex flex-row items-start justify-between border-b border-slate-200 bg-white px-6 py-5 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="size-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary shadow-sm">
-                  <ShoppingCart size={20} />
+                <div className="size-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-700 shrink-0">
+                  <ShoppingCart size={20} strokeWidth={2} />
                 </div>
-                <div>
-                  <CardTitle className="text-base font-black tracking-tighter uppercase">{editingItemId ? 'Editar Producto' : 'Producto'}</CardTitle>
+                <div className="flex flex-col">
+                  <h2 className="text-lg font-semibold text-slate-900 leading-tight">
+                    {editingItemId ? 'Editar Detalles' : 'Configurar Producto'}
+                  </h2>
                   {modalDisplay && (
-                    <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{modalDisplay.name}</p>
+                    <p className="text-sm text-slate-500 font-medium mt-0.5">{modalDisplay.name}</p>
                   )}
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 rounded-full">
-                <X size={18} />
+              <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md shrink-0 -mr-2">
+                <X size={20} />
               </Button>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            </div>
+            
+            <div className="overflow-y-auto overflow-x-hidden p-6 space-y-6 flex-1 bg-slate-50/50">
               {modalDisplay && (
-                <>
-                  <div className="grid grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] ml-1">Precio Base</label>
-                      <div className="relative">
-                        <Input
-                          type="text"
-                          value={formatCurrency(modalDisplay.price).replace('₲', '').trim()}
-                          disabled
-                          className="h-12 text-sm font-bold text-center border-slate-100 bg-slate-50 text-slate-400 rounded-lg cursor-not-allowed"
-                        />
-                      </div>
+                <div className="flex flex-col space-y-6">
+                  {/* Grid de Inputs Principales */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    
+                    {/* Cantidad y Unidad */}
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-slate-700">Cantidad</label>
+                      <Input
+                        type="number"
+                        value={modalQuantity}
+                        onChange={(e) => setModalQuantity(e.target.value)}
+                        min={isDecimalUnit(modalUnit || 'unit') ? "0.01" : "1"}
+                        step={isDecimalUnit(modalUnit || 'unit') ? "0.01" : "1"}
+                        className="h-10 text-base font-mono font-medium text-slate-900 bg-white border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-md shadow-sm"
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] ml-1">Precio Final Unit.</label>
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          value={modalPrice}
-                          onChange={(e) => {
-                            const newPrice = Math.max(0, Number(e.target.value));
-                            setModalPrice(newPrice);
-                            // Auto-calculate discount based on new final price
-                            if (newPrice < modalDisplay.price) {
-                              const diff = modalDisplay.price - newPrice;
-                              if (modalDiscountType === 'percent') {
-                                setModalDiscount(Number(((diff / modalDisplay.price) * 100).toFixed(2)));
-                              } else {
-                                setModalDiscount(diff);
-                              }
-                            } else {
-                              setModalDiscount(0);
-                            }
-                          }}
-                          className="h-12 text-sm font-black text-center border-2 border-slate-100 focus:border-primary focus:ring-4 focus:ring-primary/10 text-primary transition-all rounded-lg"
-                        />
-                      </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-slate-700">Unidad de Medida</label>
+                      <Input
+                        type="text"
+                        list="allowed-units"
+                        value={modalUnit}
+                        onChange={(e) => setModalUnit(e.target.value)}
+                        className="h-10 text-base text-slate-900 bg-white border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-md shadow-sm"
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] ml-1">Cantidad</label>
-                      <div className="relative group">
-                        <Input
-                          type="number"
-                          value={modalQuantity}
-                          onChange={(e) => setModalQuantity(e.target.value)}
-                          min={isDecimalUnit(modalUnit || 'unit') ? "0.01" : "1"}
-                          step={isDecimalUnit(modalUnit || 'unit') ? "0.01" : "1"}
-                          className="h-12 text-sm font-black text-center border-2 border-slate-100 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all rounded-lg"
-                        />
-                      </div>
+
+                    {/* Precios */}
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-slate-700">Precio Base Unit.</label>
+                      <Input
+                        type="text"
+                        value={formatCurrency(modalDisplay.price).replace('₲', '').trim()}
+                        disabled
+                        className="h-10 text-base font-mono font-medium text-slate-500 border border-slate-200 bg-slate-100 rounded-md cursor-not-allowed"
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] ml-1">Unidad</label>
-                      <div className="relative group">
-                        <Input
-                          type="text"
-                          list="allowed-units"
-                          value={modalUnit}
-                          onChange={(e) => setModalUnit(e.target.value)}
-                          className="h-12 text-sm font-black text-center border-2 border-slate-100 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all rounded-lg"
-                        />
-                        <datalist id="allowed-units">
-                          <option value="unit" />
-                          <option value="kg" />
-                          <option value="g" />
-                          <option value="l" />
-                          <option value="box" />
-                          <option value="pack" />
-                          <option value="dozen" />
-                        </datalist>
-                      </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-slate-700 text-primary">Precio Final Unit.</label>
+                      <Input
+                        type="number"
+                        value={modalPrice}
+                        onChange={(e) => {
+                          const newPrice = Math.max(0, Number(e.target.value));
+                          setModalPrice(newPrice);
+                          const diff = modalDisplay.price - newPrice;
+                          if (modalDiscountType === 'percent') {
+                            setModalDiscount(Number(((diff / modalDisplay.price) * 100).toFixed(2)));
+                          } else {
+                            setModalDiscount(diff);
+                          }
+                        }}
+                        className="h-10 text-base font-mono font-semibold text-primary bg-white border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-md shadow-sm"
+                      />
                     </div>
                   </div>
 
-                  <div className="space-y-4 pt-2 border-t border-slate-50">
-                    <div className="flex items-center justify-between px-1">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em]">Aplicar Descuento</label>
-                      <SegmentedControl
-                        size="small"
-                        value={modalDiscountType}
-                        onChange={(v) => {
-                          const type = v as 'amount' | 'percent';
-                          setModalDiscountType(type);
-                          // Recalculate input value when switching types to match current final price
-                          if (modalPrice < modalDisplay.price) {
-                             const diff = modalDisplay.price - modalPrice;
-                             if (type === 'percent') {
-                               setModalDiscount(Number(((diff / modalDisplay.price) * 100).toFixed(2)));
-                             } else {
-                               setModalDiscount(diff);
-                             }
-                          }
-                        }}
-                        options={[
-                          { 
-                            value: 'amount', 
-                            label: <span className="font-black tracking-widest ml-1">MONTO</span>, 
-                            icon: <DollarSign size={12} strokeWidth={3} className="text-primary" /> 
-                          },
-                          { 
-                            value: 'percent', 
-                            label: <span className="font-black tracking-widest ml-1">PORC.</span>, 
-                            icon: <Percent size={12} strokeWidth={3} className="text-primary" /> 
-                          }
-                        ]}
-                      />
+                  <hr className="border-slate-200" />
+
+                  {/* Zona de descuentos */}
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <label className="text-sm font-semibold text-slate-800">Ajuste o Descuento</label>
+                      <div className="flex bg-slate-200/60 p-1 rounded-md">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setModalDiscountType('amount');
+                            setModalDiscount(modalDisplay.price - modalPrice);
+                          }}
+                          className={`flex-1 px-3 py-1 text-xs font-semibold rounded transition-all ${
+                            modalDiscountType === 'amount' 
+                              ? 'bg-white text-slate-900 shadow-sm' 
+                              : 'text-slate-600 hover:text-slate-800'
+                          }`}
+                        >
+                          Monto Fijo
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setModalDiscountType('percent');
+                            setModalDiscount(Number((((modalDisplay.price - modalPrice) / modalDisplay.price) * 100).toFixed(2)));
+                          }}
+                          className={`flex-1 px-3 py-1 text-xs font-semibold rounded transition-all ${
+                            modalDiscountType === 'percent' 
+                              ? 'bg-white text-slate-900 shadow-sm' 
+                              : 'text-slate-600 hover:text-slate-800'
+                          }`}
+                        >
+                          Porcentaje
+                        </button>
+                      </div>
                     </div>
                     
-                    <div className="relative group">
-                      <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center size-8 bg-slate-100 rounded-md border border-slate-200 text-slate-500 group-focus-within:bg-primary/10 group-focus-within:border-primary/30 group-focus-within:text-primary transition-colors">
-                        {modalDiscountType === 'percent' ? <Percent size={14} strokeWidth={2.5} /> : <DollarSign size={14} strokeWidth={2.5} />}
-                      </div>
-                      <Input
-                        type="number"
-                        value={modalDiscount}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setModalDiscount(val);
-                          // Auto-calculate final price based on new discount
-                          if (val > 0) {
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="relative group">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-slate-500">
+                          {modalDiscountType === 'percent' ? <Percent size={16} /> : <DollarSign size={16} />}
+                        </div>
+                        <Input
+                          type="number"
+                          value={modalDiscount}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setModalDiscount(val);
                             if (modalDiscountType === 'percent') {
-                              setModalPrice(modalDisplay.price * (1 - val / 100));
+                              setModalPrice(Math.max(0, modalDisplay.price * (1 - val / 100)));
                             } else {
                               setModalPrice(Math.max(0, modalDisplay.price - val));
                             }
-                          } else {
-                            setModalPrice(modalDisplay.price);
-                          }
-                        }}
-                        placeholder="0"
-                        className="h-12 pl-12 pr-4 text-lg font-black border-2 border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all rounded-lg"
-                      />
-                    </div>
-                  </div>
+                          }}
+                          placeholder="0"
+                          className="h-10 pl-9 pr-3 text-base font-mono font-medium border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-md"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] ml-1">Razón del ajuste</label>
-                    <Select value={modalDiscountReason} onValueChange={setModalDiscountReason}>
-                      <SelectTrigger className="w-full h-11 border-2 border-slate-100 rounded-lg font-medium text-sm">
-                        <SelectValue placeholder="Selecciona una razón..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PRICE_CHANGE_REASONS.map(reason => (
-                          <SelectItem key={reason.id} value={reason.label} className="text-sm font-medium">
-                            {reason.label}
-                          </SelectItem>
-                        ))}
-                        <SelectItem value="Other" className="text-sm font-medium">Otras razones...</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <Select value={modalDiscountReason} onValueChange={setModalDiscountReason}>
+                        <SelectTrigger className="w-full h-10 border border-slate-300 rounded-md font-medium text-sm focus:ring-1 focus:ring-primary bg-white">
+                          <SelectValue placeholder="Razón del ajuste..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PRICE_CHANGE_REASONS.map(reason => (
+                            <SelectItem key={reason.id} value={reason.label} className="text-sm">
+                              {reason.label}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="Other" className="text-sm">Otras razones...</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     {modalDiscountReason === 'Other' && (
-                      <Input
-                        value={modalDiscountReason === 'Other' ? '' : modalDiscountReason}
-                        onChange={(e) => setModalDiscountReason(e.target.value)}
-                        placeholder="Especificar motivo detallado..."
-                        className="mt-2 h-10 border-2 border-slate-100 rounded-lg text-sm"
-                      />
-                    )}
-                  </div>
-
-                  <div className="rounded-xl bg-slate-50/80 border border-slate-100 p-5 space-y-4 shadow-inner">
-                    <div className="flex justify-between items-center text-xs font-bold uppercase tracking-tight text-slate-500">
-                      <span>Subtotal Bruto</span>
-                      <span className="font-black text-slate-700">{formatCurrency(modalUnitPrice * modalQuantity)}</span>
-                    </div>
-                    {modalDiscountValue > 0 && (
-                      <div className="flex justify-between items-center text-xs font-bold uppercase tracking-tight text-red-500">
-                        <div className="flex items-center gap-1.5">
-                          <span className="size-1.5 rounded-full bg-red-500"></span>
-                          <span>Descuento Aplicado</span>
-                        </div>
-                        <span className="font-black">-{formatCurrency(modalDiscountValue)}</span>
+                      <div className="animate-in slide-in-from-top-1 duration-200">
+                        <Input
+                          value={modalCustomReasonText}
+                          onChange={(e) => setModalCustomReasonText(e.target.value)}
+                          placeholder="Especificar motivo detallado del ajuste..."
+                          className="h-10 border border-slate-300 rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-white"
+                        />
                       </div>
                     )}
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-200">
-                      <span className="text-xs font-black uppercase tracking-[0.1em] text-slate-400">Total de Línea</span>
-                      <span className="text-2xl font-black text-primary tracking-tighter">{formatCurrency(modalLineTotal)}</span>
+                  </div>
+
+                  {/* Resumen Final: Deep Brand Blue Anchor */}
+                  <div className="bg-gradient-to-br from-[#003966] via-[#004578] to-[#0f6cbd] p-6 rounded-xl shadow-2xl shadow-blue-900/20 text-white mt-2">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-sm font-medium text-blue-100/80">
+                        <span>Subtotal Bruto</span>
+                        <span className="font-mono">{formatCurrency(modalUnitPrice * Number(modalQuantity))}</span>
+                      </div>
+                      {modalDiscountValue !== 0 && (
+                        <div className={`flex justify-between items-center text-sm font-medium ${modalDiscountValue > 0 ? 'text-emerald-300' : 'text-orange-300'}`}>
+                          <span>{modalDiscountValue > 0 ? 'Descuento' : 'Recargo'}</span>
+                          <span className="font-mono">{modalDiscountValue > 0 ? '-' : '+'}{formatCurrency(Math.abs(modalDiscountValue))}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-end pt-3 mt-3 border-t border-blue-400/30">
+                        <span className="text-sm font-semibold text-white">Total a Pagar</span>
+                        <span className="text-3xl font-mono font-black text-white">{formatCurrency(modalLineTotal)}</span>
+                      </div>
                     </div>
                   </div>
-                </>
+                </div>
               )}
-              
-              <div className="flex gap-4 pt-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsModalOpen(false)} 
-                  className="flex-1 h-12 text-xs font-black uppercase tracking-widest border-2 hover:bg-slate-50 transition-all"
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  onClick={handleConfirmAdd} 
-                  className="flex-1 h-12 text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  Confirmar Cambios
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            
+            <div className="flex gap-3 p-6 bg-slate-50 border-t border-slate-200 shrink-0">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsModalOpen(false)} 
+                className="flex-1 h-10 text-sm font-semibold bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-md transition-all"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleConfirmAdd} 
+                className="flex-1 h-10 text-sm font-semibold bg-primary hover:bg-primary/90 text-white shadow-sm rounded-md transition-all"
+              >
+                {editingItemId ? 'Guardar Cambios' : 'Confirmar Adición'}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
