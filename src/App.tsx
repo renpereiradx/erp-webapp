@@ -66,7 +66,7 @@ import AuditLogDetail from '@/pages/AuditLogDetail'
 import AuditUserActivity from '@/pages/AuditUserActivity.tsx'
 // import ProductDetailTest from '@/components/ProductDetailTest';
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';
-import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
+
 import ReceivablesDashboard from '@/pages/ReceivablesDashboard'
 import PayablesDashboard from '@/pages/PayablesDashboard'
 import PayablesAgingReport from '@/pages/PayablesAgingReport'
@@ -434,10 +434,7 @@ function AppContent() {
                       />
                       {/* <Route path="/test-products" element={<ProductDetailTest />} /> */}
                       {/* <Route path="/debug-products" element={<ProductComparisonDebug />} /> */}
-                      <Route
-                        path='/test-purchase-endpoints'
-                        element={<PurchaseEndpointsTest />}
-                      />
+
 
                       {/* Ruta 404 */}
                       <Route

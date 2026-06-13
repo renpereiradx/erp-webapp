@@ -6,5 +6,5 @@ export * from './components/ProductsEmptyState';
 
 export { default as ProductFormModal } from './components/ProductFormModal';
 export { default as ProductDetailsModal } from './components/ProductDetailsModal';
-export { default as DeleteProductModal } from './components/DeleteProductModal';
+
 export * from './hooks/useProductsLogic';
