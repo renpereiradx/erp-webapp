@@ -226,6 +226,7 @@ Si no existe conversión para derivar el precio, se agrega un warning al respons
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
 | `product_id` | string | **Requerido.** ID del producto |
+| `variant_id` | string | ID de la variante (opcional, permite compra por variante específica) |
 | `quantity` | number | **Requerido.** Cantidad (> 0) |
 | `unit_price` | number | **Requerido.** Precio unitario de compra (> 0) |
 | `unit` | string | Unidad. Default backend: `base_unit` del producto (fallback: `"unit"`) |

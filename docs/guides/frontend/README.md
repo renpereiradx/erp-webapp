@@ -65,10 +65,12 @@ Este directorio contiene todas las guías de integración API para desarrollador
 
 | Guía | Descripción | Estado | Última Actualización |
 |------|-------------|--------|---------------------|
-| [**PRODUCT_API_GUIDE.md**](./PRODUCT_API_GUIDE.md) | Gestión de productos, lectura enriquecida, branch context, productos de medida variable | ✅ Actualizado | 2026-05-26 |
+| [**PRODUCT_API_GUIDE.md**](./PRODUCT_API_GUIDE.md) | Gestión de productos, lectura enriquecida, branch context, productos de medida variable | ✅ Actualizado | 2026-06-16 |
+| [**VARIANT_API_GUIDE.md**](./VARIANT_API_GUIDE.md) | FASE 3: Variantes de producto (SKUs), stock/precio independiente, integración ventas/compras | ✅ Completado | 2026-06-16 |
 | [**UNIT_CONVERSIONS_API_GUIDE.md**](./UNIT_CONVERSIONS_API_GUIDE.md) | CRUD de conversiones de unidad `/unit-conversions`, factores de conversión, unidades soportadas | ✅ Completado | 2026-05-26 |
 | [**CATEGORY_IVA_API_GUIDE.md**](./CATEGORY_IVA_API_GUIDE.md) | Categorías e IVA, rutas verificadas | ✅ Completado | 2026-04-22 |
 | [**PRODUCT_DISCOUNTS_GUIDE.md**](./PRODUCT_DISCOUNTS_GUIDE.md) | Descuentos por producto, configuración y aplicación en transacciones | ✅ Completado | 2026-05-19 |
+| [**BRAND_ATTRIBUTE_TAG_API_GUIDE.md**](./BRAND_ATTRIBUTE_TAG_API_GUIDE.md) | FASE 1/2/4/5: Marcas normalizadas, atributos dinámicos (EAV), etiquetas, búsqueda avanzada, herencia | ✅ Completado | 2026-06-16 |
 
 ### Inventario y Ajustes
 
@@ -197,7 +199,7 @@ Al crear o actualizar un documento en este directorio, verificar:
 
 ---
 
-**Última actualización del índice**: 2026-05-29
-**Total de guías documentadas**: 33
-**Guías completadas**: 24
+**Última actualización del índice**: 2026-06-16
+**Total de guías documentadas**: 34
+**Guías completadas**: 25
 **Guías deprecadas**: 2

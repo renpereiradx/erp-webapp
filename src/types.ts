@@ -151,7 +151,10 @@ export interface Product {
   stock_quantity?: number | null;
   product_type?: 'PHYSICAL' | 'SERVICE' | 'PRODUCTION' | string;
   origin?: 'NACIONAL' | 'IMPORTADO' | string | null;
-  brand?: string | null;
+  brand_id?: number | null;
+  brand_name?: string | null;
+  brand_slug?: string | null;
+  brand?: string | null; // Legacy fallback
   base_unit?: string | null;
   is_variable_measure?: boolean;
   scale_code?: string | null;
@@ -162,6 +165,76 @@ export interface Product {
   created_at?: string;
   updated_at?: string;
   description?: string | null;
+}
+
+// ============================================================================
+// PRODUCT ADVANCED SEARCH & FACETS
+// ============================================================================
+
+export interface AdvancedProductSearchPayload {
+  search?: string;
+  category_id?: number;
+  brand_ids?: number[];
+  tag_slugs?: string[];
+  attributes?: Record<string, string[]>;
+  in_stock_only?: boolean;
+  price_min?: string | number;
+  price_max?: string | number;
+  sort_by?: 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'newest';
+  page?: number;
+  page_size?: number;
+  branch_id?: number;
+}
+
+export interface ProductSearchFacetOption {
+  value: string | number;
+  label: string;
+  count?: number;
+}
+
+export interface ProductSearchFacet {
+  code: string;
+  name: string;
+  type: 'list' | 'range' | string;
+  options: ProductSearchFacetOption[];
+}
+
+export interface ProductSearchFacetsResponse {
+  facets: ProductSearchFacet[];
+}
+
+export interface AdvancedProductSearchResponse {
+  data: ProductEnriched[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+// ============================================================================
+// PRODUCT VARIANTS (SKUs)
+// ============================================================================
+
+export interface ProductVariant {
+  id: string;
+  parent_product_id: string;
+  sku: string;
+  variant_name: string;
+  barcode?: string | null;
+  variant_attributes: Record<string, string>;
+  is_active: boolean;
+  display_order: number;
+  stock_quantity?: number | null;
+  current_price?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VariantStockSum {
+  parent_product_id: string;
+  branch_id: number | null;
+  total_stock: number;
+  variant_count: number;
 }
 
 // ============================================================================
@@ -225,7 +298,10 @@ export interface ProductOperationInfoResponse {
   category_id?: number;
   product_type: 'PHYSICAL' | 'SERVICE' | 'PRODUCTION';
   origin?: 'NACIONAL' | 'IMPORTADO' | null;
-  brand?: string | null;
+  brand_id?: number | null;
+  brand_name?: string | null;
+  brand_slug?: string | null;
+  brand?: string | null; // Legacy fallback
   base_unit?: string | null;
   created_at?: string;
   updated_at?: string;

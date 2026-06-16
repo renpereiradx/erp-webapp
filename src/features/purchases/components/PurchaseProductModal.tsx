@@ -1,7 +1,9 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { X, Search, Check, Package } from 'lucide-react'
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic'
 import { formatCurrency } from '@/utils/currencyUtils'
+import { variantService } from '@/services/variantService'
+import { ProductVariant } from '@/types'
 
 export type PurchaseProductModalProps = ReturnType<typeof usePurchasesLogic>
 
@@ -46,8 +48,29 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
     modalSalePrice,
     setModalSalePrice,
     effectiveSalePrice,
-    handleConfirmAddProduct
+    handleConfirmAddProduct,
+    modalVariantId,
+    setModalVariantId,
+    setModalVariantName,
   } = props
+
+  const [variants, setVariants] = useState<ProductVariant[]>([])
+  const [loadingVariants, setLoadingVariants] = useState(false)
+
+  useEffect(() => {
+    if (modalSelectedProduct?.has_variants) {
+      setLoadingVariants(true)
+      const productId = modalSelectedProduct.id || modalSelectedProduct.product_id;
+      variantService.getVariantsByProductId(productId, false)
+        .then(data => setVariants(data))
+        .catch(() => {})
+        .finally(() => setLoadingVariants(false))
+    } else {
+      setVariants([])
+      setModalVariantId(undefined)
+      setModalVariantName(undefined)
+    }
+  }, [modalSelectedProduct])
 
   if (!isModalOpen) return null
 
@@ -181,7 +204,8 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
               {/* Selected Product Card */}
               {modalSelectedProduct ? (
-                <div className='p-4 bg-[rgba(0,120,212,0.06)] dark:bg-[rgba(0,120,212,0.12)] border border-[rgba(0,120,212,0.15)] rounded-[var(--fluent-corner-radius-large,6px)]'>
+                <>
+                  <div className='p-4 bg-[rgba(0,120,212,0.06)] dark:bg-[rgba(0,120,212,0.12)] border border-[rgba(0,120,212,0.15)] rounded-[var(--fluent-corner-radius-large,6px)]'>
                   <div className='flex items-start gap-3'>
                     <div className='w-10 h-10 bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] flex items-center justify-center text-white font-semibold text-lg shrink-0'>
                       {(
@@ -243,6 +267,32 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     </div>
                   </div>
                 </div>
+                
+                {modalSelectedProduct?.has_variants && (
+                  <div className='mt-4'>
+                    <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
+                      Seleccionar Variante <span className='text-[var(--fluent-semantic-danger,#D13438)]'>*</span>
+                    </label>
+                    <div className='relative mt-1.5'>
+                      <select
+                        className='w-full px-3 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all disabled:opacity-50'
+                        value={modalVariantId || ''}
+                        disabled={loadingVariants}
+                        onChange={e => {
+                          const selected = variants.find(v => v.id === e.target.value);
+                          setModalVariantId(selected?.id);
+                          setModalVariantName(selected?.variant_name);
+                        }}
+                      >
+                        <option value="">{loadingVariants ? 'Cargando...' : 'Seleccione una variante...'}</option>
+                        {variants.map(v => (
+                          <option key={v.id} value={v.id}>{v.variant_name} (Stock: {v.stock_quantity || 0})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+                </>
               ) : (
                 <div className='h-24 border-2 border-dashed border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-large,6px)] flex flex-col items-center justify-center'>
                   <Package
@@ -601,7 +651,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
             className='px-5 py-2 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none text-sm'
             onClick={handleConfirmAddProduct}
             disabled={
-              !modalSelectedProduct || !modalQuantity || !modalUnitPrice
+              !modalSelectedProduct || !modalQuantity || !modalUnitPrice || (modalSelectedProduct?.has_variants && !modalVariantId)
             }
           >
             {editingItemId ? 'Guardar Cambios' : 'Agregar a la Orden'}

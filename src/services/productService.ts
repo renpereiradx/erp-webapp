@@ -120,6 +120,34 @@ export const productService = {
     }
   },
 
+  /**
+   * Búsqueda avanzada de productos
+   */
+  async searchAdvanced(payload: any, options: any = {}): Promise<any> {
+    try {
+      return await retryWithBackoff(async () => {
+        return await (apiClient as any).searchProductsAdvanced(payload, options);
+      });
+    } catch (error) {
+      if (error?.name === 'AbortError') throw error;
+      throw toApiError(error, 'Error en la búsqueda avanzada de productos');
+    }
+  },
+
+  /**
+   * Obtener facetas de búsqueda
+   */
+  async getSearchFacets(params: any = {}, options: any = {}): Promise<any> {
+    try {
+      return await retryWithBackoff(async () => {
+        return await (apiClient as any).getProductSearchFacets(params, options);
+      });
+    } catch (error) {
+      if (error?.name === 'AbortError') throw error;
+      throw toApiError(error, 'Error al obtener facetas de búsqueda');
+    }
+  },
+
   // =================== PRODUCTOS (OPERATIVO v3.2.0) ===================
 
   /**

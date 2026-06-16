@@ -58,6 +58,7 @@ import { PaymentMethodService } from '@/services/paymentMethodService';
 import { CurrencyService } from '@/services/currencyService';
 import { productService } from '@/services/productService';
 import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog';
+import { VariantSelectorModal } from '@/features/sales/components/VariantSelectorModal';
 import { salePaymentService } from '@/services/salePaymentService';
 import { useI18n } from '@/lib/i18n';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
@@ -81,6 +82,8 @@ interface CartItem {
   isFromPendingSale?: boolean;
   detailId?: string;
   reserve_id?: number;  // ID numerico de la reserva si aplica
+  variantId?: string;
+  variantName?: string;
 }
 
 interface Client extends SearchableDropdownItem {
@@ -102,6 +105,7 @@ interface ProductDisplay {
   base_unit: string;
   taxRate: number;
   has_valid_price: boolean;
+  has_variants?: boolean;
 }
 
 interface SaleMetadata {
@@ -195,6 +199,7 @@ const getProductDisplay = (product: Record<string, unknown>): ProductDisplay => 
     base_unit: String(product.base_unit || product.unit || 'unit'),
     taxRate: normalizedTaxRate,
     has_valid_price: product.has_valid_price !== undefined ? Boolean(product.has_valid_price) : Number(price) > 0,
+    has_variants: Boolean(product.has_variants),
   };
 };
 
@@ -263,6 +268,10 @@ const SalesNew: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'new-sale' | 'history'>('new-sale');
 
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [variantSelectorProduct, setVariantSelectorProduct] = useState<ProductDisplay | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
   useSalesShortcuts({
     activeTab,
     productSearchInputRef,
@@ -270,12 +279,9 @@ const SalesNew: React.FC = () => {
   });
   const { fetchDashboardData } = useDashboardStore();
 
-  const [items, setItems] = useState<CartItem[]>([]);
-  // isScanningBarcode handled by hook
   const [searchTerm] = useState('');
   const [generalDiscount] = useState(0);
 
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   const [paymentMethodId, setPaymentMethodId] = useState(1);
   const [currencyId, setCurrencyId] = useState(1);
@@ -641,16 +647,23 @@ const SalesNew: React.FC = () => {
     }
   };
 
-  const addProductToCart = useCallback((product: ProductDisplay, quantity: number = 1) => {
+  const addProductToCart = useCallback((product: ProductDisplay, quantity: number = 1, variantId?: string, variantName?: string) => {
+    if (product.has_variants && !variantId) {
+      setVariantSelectorProduct(product);
+      return;
+    }
+
     if (!product.has_valid_price) {
       toast.error(`El producto "${product.name}" no tiene un precio configurado. Establezca un precio antes de venderlo.`);
       return;
     }
 
     const newItem: CartItem = {
-      id: `${product.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: variantId ? `${product.id}-${variantId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` : `${product.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       productId: product.id,
-      name: product.name,
+      name: variantName ? `${product.name} - ${variantName}` : product.name,
+      variantId,
+      variantName,
       quantity,
       price: product.price,
       originalPrice: product.price,
@@ -2299,6 +2312,17 @@ const SalesNew: React.FC = () => {
           paymentMethodId={createdSaleData.paymentMethodId}
           paymentMethodLabel={createdSaleData.paymentMethodLabel}
           paymentMethods={paymentMethods}
+        />
+      )}
+
+      {variantSelectorProduct && (
+        <VariantSelectorModal 
+          product={variantSelectorProduct} 
+          onClose={() => setVariantSelectorProduct(null)} 
+          onSelect={(variant: any, qty: number) => {
+            addProductToCart(variantSelectorProduct, qty, variant.id, variant.variant_name);
+            setVariantSelectorProduct(null);
+          }} 
         />
       )}
 

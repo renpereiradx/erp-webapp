@@ -298,6 +298,14 @@ class BusinessManagementAPI {
     })
   }
 
+  async searchProductsAdvanced(payload: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/products/search/advanced', payload, options);
+  }
+
+  async getProductSearchFacets(params: any = {}, options: RequestOptions = {}): Promise<any> {
+    return this.get('/products/search/facets', { ...options, params });
+  }
+
   async getServiceProducts(options: RequestOptions = {}): Promise<any> {
     return this.get('/products/service-courts', options)
   }
@@ -311,15 +319,15 @@ class BusinessManagementAPI {
   }
 
   async getProductFinancial(id: string | number, options: RequestOptions = {}): Promise<any> {
-    return this.get(`/products/${id}/financial`, options)
+    return this.get(`/products/${id}/info`, options)
   }
 
   async getProductFinancialByBarcode(barcode: string, options: RequestOptions = {}): Promise<any> {
-    return this.get(`/products/financial/barcode/${barcode}`, options)
+    return this.get(`/products/info/barcode/${barcode}`, options)
   }
 
   async searchProductsFinancialByName(name: string, options: RequestOptions = {}): Promise<any> {
-    return this.get(`/products/financial/search/${encodeURIComponent(name)}`, options)
+    return this.get(`/products/info/search/${encodeURIComponent(name)}`, options)
   }
 
   async getProductMarginAlert(id: string | number, options: RequestOptions = {}): Promise<any> {

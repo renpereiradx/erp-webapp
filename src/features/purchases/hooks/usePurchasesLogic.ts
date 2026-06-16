@@ -70,6 +70,8 @@ export const usePurchasesLogic = () => {
   const [modalTaxRateId, setModalTaxRateId] = useState<number | null>(null)
   const [modalTaxRatePercent, setModalTaxRatePercent] = useState<number>(0)
   const [modalPriceIncludesTax, setModalPriceIncludesTax] = useState<boolean>(true)
+  const [modalVariantId, setModalVariantId] = useState<string | undefined>()
+  const [modalVariantName, setModalVariantName] = useState<string | undefined>()
   const [taxRates, setTaxRates] = useState<any[]>([])
   const [purchaseItems, setPurchaseItems] = useState<any[]>([])
   const [purchaseNotes, setPurchaseNotes] = useState<string>('')
@@ -108,9 +110,9 @@ export const usePurchasesLogic = () => {
       ['Ãº', 'ú'],
       ['Ã¼', 'ü'],
       ['Ã±', 'ñ'],
-      ['Ã', 'Á'],
+      ['Ã ', 'Á'],
       ['Ã‰', 'É'],
-      ['Ã', 'Í'],
+      ['Ã ', 'Í'],
       ['Ã“', 'Ó'],
       ['Ãš', 'Ú'],
       ['Ã‘', 'Ñ'],
@@ -553,8 +555,11 @@ export const usePurchasesLogic = () => {
           (Array.isArray(fullProduct.unit_prices) && (fullProduct.unit_prices[0]?.price_per_unit || fullProduct.unit_prices[0]?.price || fullProduct.unit_prices[0]?.selling_price)) ||
           0
         ),
+        has_variants: Boolean(fullProduct.has_variants),
       };
 
+      setModalVariantId(undefined);
+      setModalVariantName(undefined);
       setModalSelectedProduct(normalizedProduct);
       setModalProductSearch(normalizedProduct.name || '');
       setShowProductDropdown(false);
@@ -665,6 +670,8 @@ export const usePurchasesLogic = () => {
       tax_rate_id: modalTaxRateId,
       tax_rate: modalTaxRatePercent,
       price_includes_tax: modalPriceIncludesTax, // API v2.6
+      variant_id: modalVariantId,
+      variant_name: modalVariantName,
     }
     if (editingItemId)
       setPurchaseItems(prev =>
@@ -678,8 +685,11 @@ export const usePurchasesLogic = () => {
     setIsModalOpen(false)
     setEditingItemId(null)
     setModalQuantity('')
-    setModalUnit('unit')
+    setModalUnit('')
     setModalUnitPrice('')
+    setModalVariantId(undefined)
+    setModalVariantName(undefined)
+    setModalTaxRateId(null)
     setModalSelectedProduct(null)
     setModalProductSearch('')
     setModalPriceIncludesTax(true)
@@ -1042,6 +1052,10 @@ export const usePurchasesLogic = () => {
     modalTaxRateId,
     modalUnit,
     modalUnitPrice,
+    modalVariantId,
+    setModalVariantId,
+    modalVariantName,
+    setModalVariantName,
     openActionMenu,
     orderToCancel,
     paymentCurrency,

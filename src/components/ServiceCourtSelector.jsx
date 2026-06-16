@@ -243,7 +243,7 @@ const ServiceCourtSelector = ({ onServiceSelect, onClose }) => {
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className="w-4 h-4 text-gray-400" />
                         <span className="font-medium text-green-600 dark:text-green-400">
-                          {service.price_formatted || `PYG ${service.purchase_price || 'A consultar'}/hora`}
+                          {service.price ? `PYG ${service.price.toLocaleString('es-PY')}/hora` : `PYG ${service.purchase_price || 'A consultar'}/hora`}
                         </span>
                       </div>
                       

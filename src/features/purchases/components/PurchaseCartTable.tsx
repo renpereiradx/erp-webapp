@@ -88,7 +88,7 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
                   </td>
                   <td className='px-4 py-3'>
                     <div className='font-semibold text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white group-hover/row:text-[var(--fluent-brand-primary,#0078D4)] transition-colors'>
-                      {item.name}
+                      {item.variant_name ? `${item.name} - ${item.variant_name}` : item.name}
                     </div>
                     <div className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
                       Unidad: {item.unit}

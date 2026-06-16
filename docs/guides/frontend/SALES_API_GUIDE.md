@@ -123,6 +123,7 @@ El sistema registra la unidad original en el metadata de `stock_transactions`:
 | Campo | Tipo | Requerido | Descripción |
 |-------|------|-----------|-------------|
 | product_id | string | Sí | ID del producto |
+| variant_id | string | No | ID de la variante (requerido si el producto tiene variantes activas) |
 | quantity | float | Sí | Cantidad (> 0) |
 | unit | string | No | Unidad de medida (`kg`, `l`, `unit`, etc.). Default: `base_unit` del producto |
 | reserve_id | int | No | ID de reserva para este item |
@@ -222,6 +223,7 @@ Igual estructura que `POST /sale/`.
 | id | int | ID del detalle |
 | order_id | string | ID de la venta |
 | product_id | string | ID del producto |
+| variant_id | string \| null | ID de la variante (si aplica) |
 | product_name | string | Nombre del producto |
 | product_type | string | `PHYSICAL` o `SERVICE` |
 | quantity | float | Cantidad |

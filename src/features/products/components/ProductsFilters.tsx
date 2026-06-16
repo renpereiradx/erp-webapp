@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Category } from '@/domain/products/models';
+import { ProductSearchFacet, AdvancedProductSearchPayload } from '@/types';
 
 interface ProductsFiltersProps {
   isSearching: boolean;
@@ -27,6 +28,9 @@ interface ProductsFiltersProps {
   categories: Category[];
   onApplyFilters: () => void;
   onClearFilters: () => void;
+  facets?: ProductSearchFacet[];
+  advancedSearchPayload?: AdvancedProductSearchPayload;
+  setAdvancedSearchPayload?: React.Dispatch<React.SetStateAction<AdvancedProductSearchPayload>>;
 }
 
 export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
@@ -42,6 +46,9 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
   categories,
   onApplyFilters,
   onClearFilters,
+  facets = [],
+  advancedSearchPayload = {},
+  setAdvancedSearchPayload,
 }) => {
   const { t } = useI18n();
 
@@ -154,6 +161,45 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Dynamic Facets (Brands, etc) */}
+          {facets.filter(f => f.code === 'brand' || f.code === 'brand_id').map((facet) => (
+            <div key={facet.code} className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
+                {facet.name}
+              </label>
+              <Select
+                value={advancedSearchPayload?.brand_ids?.[0]?.toString() || 'all'}
+                onValueChange={(value) => {
+                  if (setAdvancedSearchPayload) {
+                    setAdvancedSearchPayload(prev => ({
+                      ...prev,
+                      brand_ids: value === 'all' ? undefined : [parseInt(value)]
+                    }));
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full border-border-subtle bg-white h-11 font-bold text-sm rounded-xl shadow-sm">
+                  <SelectValue placeholder={`Seleccionar ${facet.name}`} />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border-subtle shadow-fluent-16">
+                  <SelectItem value="all" className="font-bold text-xs uppercase">
+                    Todas
+                  </SelectItem>
+                  {facet.options.map((opt) => (
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value.toString()}
+                      className="font-bold text-xs uppercase flex justify-between"
+                    >
+                      <span>{opt.label}</span>
+                      {opt.count && <span className="text-slate-400 ml-2">({opt.count})</span>}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ))}
 
           {/* Action Buttons */}
           <div className="flex items-end gap-3">

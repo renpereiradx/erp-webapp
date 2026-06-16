@@ -2,8 +2,8 @@
 
 > **Disclaimer:** Esta guía contiene ejemplos JSON para ilustración de respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
-**Versión:** 3.5.0
-**Fecha:** 5 de Junio de 2026
+**Versión:** 3.7.0
+**Fecha:** 16 de Junio de 2026
 **Endpoint Base:** `http://localhost:5050`
 
 ## Permisos del Módulo
@@ -21,10 +21,22 @@
 
 ## Historial de Cambios
 
-### v3.4.0 - 26 de Mayo de 2026
+### v3.7.0 - 16 de Junio de 2026
+- **NUEVO**: HTTP caching con ETags en todos los endpoints GET de productos. El servidor retorna `ETag` y `Cache-Control: private, max-age=60`. Si el frontend envía `If-None-Match` con el ETag anterior y el contenido no cambió, el servidor responde `304 Not Modified` sin body.
+- **NUEVO**: Caché Redis L1 para productos individuales, listados paginados, búsqueda y facetas (TTL 5-15 min).
+- **NUEVO**: Refresco asíncrono de la materialized view `mv_product_catalog` via `pg_notify` con debounce de 2s (reemplaza triggers síncronos).
+- **NUEVO**: Batch loading de atributos y tags (elimina N+1: de 2N+1 queries a 3 por listado).
+- **CORRECCION**: `stock_updated_at` ahora refleja el timestamp real de la última actualización de stock (antes usaba `NOW()` en cada query).
+
+### v3.6.0 - 16 de Junio de 2026
 - **NUEVO**: Campos `is_variable_measure` (boolean) y `scale_code` (string | null) en `ProductEnriched` y request bodies de crear/actualizar.
 - **NUEVO**: Soporte para productos de medida variable (peso, volumen, área, longitud).
 - **NUEVO**: `scale_code` para integración con balanzas EAN-13 (código corto único entre productos de medida variable activos).
+
+### v3.6.0 - 16 de Junio de 2026
+- **BREAKING**: El campo `brand` (string) fue eliminado. Usar `brand_id` (number) en `POST /products` y `PUT /products/{id}`.
+- **BREAKING**: `ProductEnriched` y `ProductFinancialEnriched` ahora retornan `brand_id`, `brand_name` y `brand_slug` en lugar de `brand`.
+- **NUEVO**: Endpoints de búsqueda avanzada `POST /products/search/advanced` y `GET /products/search/facets`.
 
 ### v3.5.0 - 5 de Junio de 2026
 - **BREAKING**: `base_unit` ahora es **obligatorio** en `POST /products`. El sistema rechaza requests sin este campo.
@@ -128,7 +140,9 @@ Respuesta estandar para todos los endpoints de productos.
 | `category` | object \| null | Ver estructura Category mas abajo |
 | `product_type` | string | `PHYSICAL` \| `SERVICE` \| `PRODUCTION` |
 | `origin` | string \| null | `NACIONAL` \| `IMPORTADO` |
-| `brand` | string \| null | Marca del producto |
+| `brand_id` | number \| null | ID de la marca (`products.brands`) |
+| `brand_name` | string \| null | Nombre de la marca (JOIN) |
+| `brand_slug` | string \| null | Slug de la marca (JOIN) |
 | `base_unit` | string \| null | Unidad base: `kg`, `meter`, `l`, `unit`, etc. |
 | `is_variable_measure` | boolean | TRUE si el producto se vende por medida variable (peso, volumen, área, longitud). FALSE para productos contables por unidad. |
 | `scale_code` | string \| null | Código corto de balanza para barcode EAN-13 (1-5 dígitos). Único entre productos de medida variable activos. |
@@ -216,7 +230,9 @@ Estructura completa para endpoints de info, financial, sale y purchase.
 | `category` | object \| null | Ver estructura Category |
 | `product_type` | string | `PHYSICAL` \| `SERVICE` \| `PRODUCTION` |
 | `origin` | string \| null | `NACIONAL` \| `IMPORTADO` |
-| `brand` | string \| null | Marca del producto |
+| `brand_id` | number \| null | ID de la marca (`products.brands`) |
+| `brand_name` | string \| null | Nombre de la marca (JOIN) |
+| `brand_slug` | string \| null | Slug de la marca (JOIN) |
 | `base_unit` | string \| null | Unidad base |
 | `created_at` | string | Fecha de creacion (ISO 8601) |
 | `updated_at` | string | Fecha de ultima actualizacion (ISO 8601) |
@@ -264,7 +280,7 @@ Crea un nuevo producto con su descripcion de forma atomica.
   "product_type": "PHYSICAL",
   "barcode": "7891234567890",
   "origin": "IMPORTADO",
-  "brand": "Coca-Cola",
+  "brand_id": 13,
   "base_unit": "unit",
   "is_variable_measure": false,
   "scale_code": null
@@ -281,7 +297,7 @@ Crea un nuevo producto con su descripcion de forma atomica.
 | `product_type` | string | No | `PHYSICAL`, `SERVICE` o `PRODUCTION`. Default: `PHYSICAL` |
 | `barcode` | string | No | Codigo de barras |
 | `origin` | string | No | `NACIONAL` o `IMPORTADO` |
-| `brand` | string | No | Marca del producto |
+| `brand_id` | number | No | ID de la marca (`products.brands`) |
 | `base_unit` | string | Si | Unidad base: `kg`, `l`, `meter`, `unit`, etc. **Obligatorio.** |
 | `is_variable_measure` | boolean | No | TRUE para productos de medida variable. Default: `false` |
 | `scale_code` | string | No | Código corto de balanza (1-5 dígitos). Solo para productos con `is_variable_measure=true` |
@@ -314,7 +330,7 @@ Actualiza los datos de un producto y su descripcion.
   "category_id": 10,
   "product_type": "PHYSICAL",
   "origin": "NACIONAL",
-  "brand": "Coca-Cola",
+  "brand_id": 13,
   "base_unit": "unit",
   "is_variable_measure": false,
   "scale_code": null
@@ -383,7 +399,9 @@ Retorna un producto enriquecido con stock, precios, descripcion, categoria e IVA
   "state": true,
   "product_type": "PHYSICAL",
   "origin": "IMPORTADO",
-  "brand": "Coca Cola",
+  "brand_id": 13,
+  "brand_name": "Coca Cola",
+  "brand_slug": "coca-cola",
   "target_margin_percent": "30",
   "pricing_strategy": "MANUAL",
   "created_at": "2025-12-28T10:34:07.877247Z",
@@ -499,6 +517,83 @@ Busqueda parcial case-insensitive por nombre. Retorna todos los productos que co
 | 401 | No autorizado |
 | 500 | Error interno |
 
+### 6.1. Búsqueda Avanzada
+
+**`POST /products/search/advanced`**
+
+Búsqueda con filtros combinados: nombre/barcode, categoría (incluye subcategorías), marcas, tags, atributos dinámicos, rango de precios y stock.
+
+**Request Body:**
+```json
+{
+    "search": "camisa",
+    "category_id": 5,
+    "brand_ids": [1, 3, 7],
+    "tag_slugs": ["oferta", "nuevo"],
+    "attributes": {
+        "color": ["rojo", "azul"],
+        "talla": ["M", "L"]
+    },
+    "in_stock_only": true,
+    "price_min": "50000",
+    "price_max": "200000",
+    "sort_by": "price_asc",
+    "page": 1,
+    "page_size": 20,
+    "branch_id": 1
+}
+```
+
+**Response (200 OK):**
+```json
+{
+    "data": [ /* ProductEnriched[] */ ],
+    "total": 42,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 3
+}
+```
+
+### 6.2. Facetas de Búsqueda
+
+**`GET /products/search/facets?category_id=5&branch_id=1`**
+
+Retorna facetas para construir la UI de filtros: marcas, categorías, atributos filtrables y rango de precios.
+
+**Response (200 OK):**
+```json
+{
+    "facets": [
+        {
+            "code": "brand",
+            "name": "Marca",
+            "type": "list",
+            "options": [
+                {"value": "1", "label": "Nike", "count": 45}
+            ]
+        },
+        {
+            "code": "color",
+            "name": "Color",
+            "type": "list",
+            "options": [
+                {"value": "rojo", "label": "Rojo", "count": 23}
+            ]
+        },
+        {
+            "code": "price",
+            "name": "Precio",
+            "type": "range",
+            "options": [
+                {"value": "min", "label": "50000"},
+                {"value": "max", "label": "500000"}
+            ]
+        }
+    ]
+}
+```
+
 ---
 
 ### 7. Listar Productos con Paginacion
@@ -592,7 +687,9 @@ Retorna informacion completa: categoria, IVA, costos, precios, stock, auditoria 
   },
   "product_type": "PHYSICAL",
   "origin": "IMPORTADO",
-  "brand": "Coca Cola",
+  "brand_id": 13,
+  "brand_name": "Coca Cola",
+  "brand_slug": "coca-cola",
   "created_at": "2025-12-28T10:34:07.877247Z",
   "updated_at": "2025-12-28T10:34:07.877247Z",
   "unit_prices": [
@@ -766,7 +863,9 @@ Retorna el producto completo optimizado para el flujo de venta. Incluye `tax`, `
   "state": true,
   "product_type": "PHYSICAL",
   "origin": "IMPORTADO",
-  "brand": "Coca Cola",
+  "brand_id": 13,
+  "brand_name": "Coca Cola",
+  "brand_slug": "coca-cola",
   "category": {
     "id": 7,
     "name": "Bebidas",
@@ -910,6 +1009,66 @@ Asigna un precio de venta a una unidad de medida.
 | `category_id` | Requerido, debe ser > 0 |
 | `product_type` | `PHYSICAL`, `SERVICE` o `PRODUCTION` |
 | `origin` | `NACIONAL` o `IMPORTADO` (si se proporciona) |
+
+---
+
+## HTTP Caching con ETags
+
+Todos los endpoints GET de productos retornan headers de caché:
+
+```http
+ETag: "ce9c619fb85c70cc"
+Cache-Control: private, max-age=60
+```
+
+### Cómo usar ETags en el frontend
+
+**Primer request** — el servidor retorna `200` con el body y el header `ETag`:
+
+```js
+const response = await fetch('/products/FbIEjozDg', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const product = await response.json();
+const etag = response.headers.get('ETag'); // Guardar este valor
+```
+
+**Segundo request** — enviar `If-None-Match` con el ETag guardado:
+
+```js
+const response = await fetch('/products/FbIEjozDg', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'If-None-Match': etag  // ETag del request anterior
+  }
+});
+
+if (response.status === 304) {
+  // El contenido no cambió, usar el cache local
+  return cachedProduct;
+} else {
+  // El contenido cambió, actualizar cache
+  const product = await response.json();
+  const newEtag = response.headers.get('ETag');
+  return product;
+}
+```
+
+### Comportamiento por método HTTP
+
+| Método | ETag | Descripción |
+|--------|------|-------------|
+| `GET` | ✅ | Retorna `ETag` header. Soporta `If-None-Match` → `304` |
+| `POST` | ❌ | No usa ETag |
+| `PUT` | ❌ | No usa ETag (pero invalida el caché del producto) |
+| `DELETE` | ❌ | No usa ETag (pero invalida el caché del producto) |
+
+### Cuándo invalidar el cache local
+
+El frontend debe descartar su cache local cuando:
+- Recibe un `200` en vez de `304` (el contenido cambió)
+- El usuario crea, actualiza o elimina un producto
+- El usuario modifica stock, precios, atributos o tags de un producto
 
 ---
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { z } from 'zod';
 import useProductStore from '@/store/useProductStore';
 import { useToast } from '@/hooks/useToast';
@@ -9,7 +9,7 @@ export const baseProductSchema = z.object({
   productType: z.enum(['PHYSICAL', 'SERVICE']),
   description: z.string().min(1, 'La descripción es requerida'),
   barcode: z.string().optional(),
-  brand: z.string().optional(),
+  brand_id: z.string().optional(),
   origin: z.string().optional(),
   base_unit: z.string().default('unit'),
   tax_rate_id: z.string().optional(),
@@ -71,7 +71,7 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
     productType: 'PHYSICAL',
     description: '',
     barcode: '',
-    brand: '',
+    brand_id: '',
     origin: '',
     base_unit: 'unit',
     tax_rate_id: '',
@@ -86,13 +86,65 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
   
   const [categories, setCategories] = useState<any[]>([]);
   const [taxRates, setTaxRates] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadingTaxRates, setLoadingTaxRates] = useState(false);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+
+  const loadCategories = useCallback(async (ignore = false) => {
+    setLoadingCategories(true);
+    try {
+      const { categoryService } = await import('@/services/categoryService');
+      const response = await categoryService.getAll();
+      if (!ignore) {
+        setCategories(Array.isArray(response) ? response : []);
+      }
+    } catch (error) {
+      if (!ignore) setCategories([]);
+    } finally {
+      if (!ignore) setLoadingCategories(false);
+    }
+  }, []);
+
+  const loadTaxRates = useCallback(async (ignore = false) => {
+    setLoadingTaxRates(true);
+    try {
+      const { taxRateService } = await import('@/services/taxRateService');
+      const response = await taxRateService.getPaginated(1, 100);
+      if (!ignore) {
+        if (Array.isArray(response)) setTaxRates(response);
+        else if (response && response.tax_rates) setTaxRates(response.tax_rates);
+        else setTaxRates([]);
+      }
+    } catch (error) {
+      console.error('Error loading tax rates:', error);
+      if (!ignore) setTaxRates([]);
+    } finally {
+      if (!ignore) setLoadingTaxRates(false);
+    }
+  }, []);
+
+  const loadBrands = useCallback(async (ignore = false) => {
+    setLoadingBrands(true);
+    try {
+      const { brandService } = await import('@/services/brandService');
+      const response = await brandService.getAll();
+      if (!ignore) {
+        setBrands(Array.isArray(response) ? response : []);
+      }
+    } catch (error) {
+      if (!ignore) setBrands([]);
+    } finally {
+      if (!ignore) setLoadingBrands(false);
+    }
+  }, []);
 
   useEffect(() => {
+    let ignore = false;
     if (isOpen) {
-      loadCategories();
-      loadTaxRates();
+      loadCategories(ignore);
+      loadTaxRates(ignore);
+      loadBrands(ignore);
       
       if (product) {
         setFormData({
@@ -101,7 +153,7 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
           productType: product.product_type || 'PHYSICAL',
           description: product.description || '',
           barcode: product.barcode || '',
-          brand: product.brand || '',
+          brand_id: product.brand_id?.toString() || '',
           origin: product.origin || '',
           base_unit: product.base_unit || 'unit',
           tax_rate_id: (product.override_tax_rate_id || product.tax_rate_id)?.toString() || '',
@@ -111,43 +163,19 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
       } else {
         setFormData({
           name: '', category: '', productType: 'PHYSICAL', description: '',
-          barcode: '', brand: '', origin: '', base_unit: 'unit', tax_rate_id: '',
+          barcode: '', brand_id: '', origin: '', base_unit: 'unit', tax_rate_id: '',
           is_variable_measure: false, scale_code: '',
         });
       }
       setErrors({});
       setShowDeleteConfirm(false);
     }
-  }, [isOpen, product]);
+    return () => {
+      ignore = true;
+    };
+  }, [isOpen, product, loadCategories, loadTaxRates, loadBrands]);
 
-  const loadCategories = async () => {
-    setLoadingCategories(true);
-    try {
-      const { categoryService } = await import('@/services/categoryService');
-      const response = await categoryService.getAll();
-      setCategories(Array.isArray(response) ? response : []);
-    } catch (error) {
-      setCategories([]);
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
 
-  const loadTaxRates = async () => {
-    setLoadingTaxRates(true);
-    try {
-      const { taxRateService } = await import('@/services/taxRateService');
-      const response = await taxRateService.getPaginated(1, 100);
-      if (Array.isArray(response)) setTaxRates(response);
-      else if (response && response.tax_rates) setTaxRates(response.tax_rates);
-      else setTaxRates([]);
-    } catch (error) {
-      console.error('Error loading tax rates:', error);
-      setTaxRates([]);
-    } finally {
-      setLoadingTaxRates(false);
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -195,7 +223,7 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
         description: formData.description.trim(),
         product_type: formData.productType,
         barcode: formData.barcode?.trim() || undefined,
-        brand: formData.brand?.trim() || undefined,
+        brand_id: formData.brand_id ? parseInt(formData.brand_id) : undefined,
         origin: formData.origin || undefined,
         base_unit: formData.base_unit || 'unit',
         override_tax_rate_id: formData.tax_rate_id ? parseInt(formData.tax_rate_id) : undefined,
@@ -252,10 +280,13 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
     setShowDeleteConfirm,
     categories,
     taxRates,
+    brands,
     loadingCategories,
     loadingTaxRates,
+    loadingBrands,
     handleChange,
     handleSubmit,
-    handleDelete
+    handleDelete,
+    loadBrands
   };
 }

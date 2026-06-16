@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProductForm } from '../hooks/useProductForm';
+import { ProductVariantsManager } from './ProductVariantsManager';
 
 /**
  * ProductFormModal Component
@@ -32,7 +33,7 @@ interface ProductFormModalProps {
 
 export default function ProductFormModal({ isOpen, onClose, product = null }: ProductFormModalProps) {
   const { t } = useI18n()
-  const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'measure'>('basic')
+  const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'measure' | 'variants'>('basic')
   
   const {
     formData,
@@ -45,12 +46,30 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
     setShowDeleteConfirm,
     categories,
     taxRates,
+    brands,
     loadingCategories,
     loadingTaxRates,
+    loadingBrands,
     handleChange,
     handleSubmit,
-    handleDelete
+    handleDelete,
+    loadBrands
   } = useProductForm({ product, isOpen, onClose });
+
+  const handleAddBrand = async () => {
+    const name = window.prompt('Ingrese el nombre de la nueva marca:');
+    if (!name?.trim()) return;
+    try {
+      const { brandService } = await import('@/services/brandService');
+      const newBrand = await brandService.create({ name: name.trim() });
+      await loadBrands();
+      if (newBrand?.id) {
+        setFormData(prev => ({ ...prev, brand_id: newBrand.id.toString() }));
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   // Resetear la pestaña activa al abrir el modal
   useEffect(() => {
@@ -77,7 +96,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
       formData.category,
       formData.description,
       formData.barcode,
-      formData.brand,
+      formData.brand_id,
       formData.origin,
       formData.base_unit,
     ];
@@ -170,6 +189,21 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
               <span className="absolute top-2.5 right-[-6px] h-2 w-2 rounded-full bg-error animate-pulse border border-white" />
             )}
           </button>
+
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('variants')}
+              className={`py-3 px-1 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-200 flex items-center gap-2 relative ${
+                activeTab === 'variants'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-text-secondary hover:text-text-main'
+              }`}
+            >
+              <Package size={14} />
+              <span>Variantes (SKUs)</span>
+            </button>
+          )}
         </div>
 
         {/* Form Body con Scroll */}
@@ -326,8 +360,25 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
 
                     {/* Marca */}
                     <div className="space-y-1.5">
-                      <label className={labelClass}>{t('products.modal.field.brand')}</label>
-                      <input name="brand" value={formData.brand} onChange={handleChange} placeholder="Ej: Marca Premium" className={inputClass} />
+                      <div className="flex justify-between items-center">
+                        <label className={labelClass}>{t('products.modal.field.brand')}</label>
+                        <button type="button" onClick={handleAddBrand} className="text-[10px] text-primary hover:underline font-bold uppercase">
+                          + Nueva
+                        </button>
+                      </div>
+                      <div className="relative flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <select name="brand_id" value={formData.brand_id} onChange={handleChange} className={selectClass}>
+                          <option value="">{loadingBrands ? 'Cargando marcas...' : 'Seleccione una marca (opcional)'}</option>
+                          {brands.map(brand => (
+                            <option key={brand.id} value={brand.id}>
+                              {brand.name}
+                            </option>
+                          ))}
+                          </select>
+                          <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                        </div>
+                      </div>
                     </div>
 
                     {/* Propietario o Metadata en edición */}
@@ -456,6 +507,21 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                         style={{ width: `${completitudPct}%` }}
                       />
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CONTENIDO PESTAÑA: VARIANTES */}
+            {activeTab === 'variants' && (
+              <div className="space-y-6 animate-in fade-in duration-200 slide-in-from-left-3">
+                <div className="bg-white p-6 rounded-2xl border border-border-subtle shadow-sm space-y-6">
+                  <div className="flex items-center gap-2 pb-3 border-b border-slate-100 text-slate-800">
+                    <Package size={16} className="text-primary" />
+                    <h3 className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Variantes (SKUs)</h3>
+                  </div>
+                  <div className="pt-4">
+                    <ProductVariantsManager productId={product?.id || product?.product_id} />
                   </div>
                 </div>
               </div>

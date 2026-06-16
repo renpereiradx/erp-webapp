@@ -3,6 +3,8 @@ import useProductStore from '@/store/useProductStore';
 import { ProductEnriched } from '@/domain/products/models';
 import { useToast } from '@/hooks/useToast';
 import { telemetry } from '@/utils/telemetry';
+import { productService } from '@/services/productService';
+import { AdvancedProductSearchPayload, ProductSearchFacet } from '@/types';
 
 export type ViewMode = 'paginated' | 'search';
 
@@ -63,6 +65,11 @@ export const useProductsLogic = () => {
     status: 'all',
   });
 
+  const [facets, setFacets] = useState<ProductSearchFacet[]>([]);
+  const [advancedSearchPayload, setAdvancedSearchPayload] = useState<AdvancedProductSearchPayload>({});
+  const [advancedProducts, setAdvancedProducts] = useState<ProductEnriched[]>([]);
+  const [advancedTotal, setAdvancedTotal] = useState(0);
+
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductEnriched | null>(null);
@@ -70,6 +77,10 @@ export const useProductsLogic = () => {
   useEffect(() => {
     fetchProductsPaginated(1, 10);
     fetchCategories();
+    // Pre-cargar facetas
+    productService.getSearchFacets().then(res => {
+      if (res && res.facets) setFacets(res.facets);
+    }).catch(console.error);
   }, [fetchProductsPaginated, fetchCategories]);
 
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -150,7 +161,19 @@ export const useProductsLogic = () => {
   const handleApplyFilters = () => {
     setFilters(localFilters);
     setShowFilters(false);
-    if (viewMode === 'paginated') {
+    
+    // Si se aplicaron filtros avanzados (usando la nueva API)
+    if (Object.keys(advancedSearchPayload).length > 0) {
+      setViewMode('search');
+      setIsSearching(true);
+      productService.searchAdvanced({ ...advancedSearchPayload, search: searchTerm, page: 1, page_size: 10 })
+        .then(res => {
+          setAdvancedProducts(res.data || []);
+          setAdvancedTotal(res.total || 0);
+        })
+        .catch(console.error)
+        .finally(() => setIsSearching(false));
+    } else if (viewMode === 'paginated') {
       fetchProductsPaginated(1, 10);
     }
   };
@@ -159,8 +182,11 @@ export const useProductsLogic = () => {
     const clearedFilters = { category: 'all', status: 'all' };
     setLocalFilters(clearedFilters);
     setFilters(clearedFilters);
+    setAdvancedSearchPayload({});
     if (viewMode === 'paginated') {
       fetchProductsPaginated(1, 10);
+    } else if (viewMode === 'search') {
+      performSearch(searchTerm); // fallback a la búsqueda simple
     }
   };
 
@@ -257,5 +283,10 @@ export const useProductsLogic = () => {
     handleCloseDetailsModal,
     handleEditFromDetails,
     clearError,
+    facets,
+    advancedSearchPayload,
+    setAdvancedSearchPayload,
+    advancedProducts,
+    advancedTotal,
   };
 };

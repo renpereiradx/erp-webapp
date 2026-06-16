@@ -46,7 +46,10 @@ export interface ProductEnriched {
   category_name?: string | null; // Legacy fallback
   product_type: 'PHYSICAL' | 'SERVICE' | 'PRODUCTION';
   origin?: 'NACIONAL' | 'IMPORTADO' | null;
-  brand?: string | null;
+  brand_id?: number | null;
+  brand_name?: string | null;
+  brand_slug?: string | null;
+  brand?: string | null; // Legacy fallback
   base_unit?: string | null;
   override_tax_rate_id?: number | null;
   is_variable_measure?: boolean;

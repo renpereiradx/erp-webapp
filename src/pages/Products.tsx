@@ -57,10 +57,18 @@ const Products = () => {
     handleCloseDetailsModal,
     handleEditFromDetails,
     clearError,
+    facets,
+    advancedSearchPayload,
+    setAdvancedSearchPayload,
+    advancedProducts,
+    advancedTotal,
   } = useProductsLogic();
 
+  const displayProducts = viewMode === 'search' && Object.keys(advancedSearchPayload).length > 0 ? advancedProducts : products;
+  const displayTotal = viewMode === 'search' && Object.keys(advancedSearchPayload).length > 0 ? advancedTotal : totalProducts;
+
   const startIndex = (currentPage - 1) * 10 + 1;
-  const endIndex = Math.min(currentPage * 10, totalProducts);
+  const endIndex = Math.min(currentPage * 10, displayTotal);
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-display">
@@ -83,11 +91,14 @@ const Products = () => {
         categories={categories}
         onApplyFilters={handleApplyFilters}
         onClearFilters={handleClearFilters}
+        facets={facets}
+        advancedSearchPayload={advancedSearchPayload}
+        setAdvancedSearchPayload={setAdvancedSearchPayload}
       />
 
       <div className="bg-white border border-border-subtle rounded-xl shadow-fluent-2 overflow-hidden">
         <ProductsTable
-          products={products}
+          products={displayProducts}
           selectedIds={selectedIds}
           onToggleSelectAll={toggleSelectAll}
           onToggleSelectProduct={toggleSelectProduct}
@@ -97,8 +108,8 @@ const Products = () => {
           <ProductsEmptyState
             loading={loading}
             error={error}
-            productsLength={products.length}
-            viewMode={viewMode}
+            productsLength={displayProducts.length}
+            isSearching={isSearching}
             searchTerm={searchTerm}
             onRetry={() => {
               clearError();
@@ -108,16 +119,18 @@ const Products = () => {
           />
         </ProductsTable>
 
-        <ProductsPagination
-          startIndex={startIndex}
-          endIndex={endIndex}
-          totalProducts={totalProducts}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          loading={loading}
-          onPreviousPage={handlePreviousPage}
-          onNextPage={handleNextPage}
-        />
+        {!loading && displayProducts.length > 0 && (
+          <ProductsPagination
+            startIndex={startIndex}
+            endIndex={endIndex}
+            totalProducts={displayTotal}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            loading={loading}
+            onPreviousPage={handlePreviousPage}
+            onNextPage={handleNextPage}
+          />
+        )}
       </div>
 
       {/* Modals */}
