@@ -1014,7 +1014,7 @@ Asigna un precio de venta a una unidad de medida.
 
 ## HTTP Caching con ETags
 
-Todos los endpoints GET de productos retornan headers de caché:
+Todos los endpoints GET de productos retornan headers de caché, **excepto `/products/all`** (excluido porque retorna payloads grandes sin paginación):
 
 ```http
 ETag: "ce9c619fb85c70cc"
@@ -1058,7 +1058,7 @@ if (response.status === 304) {
 
 | Método | ETag | Descripción |
 |--------|------|-------------|
-| `GET` | ✅ | Retorna `ETag` header. Soporta `If-None-Match` → `304` |
+| `GET` | ✅ | Retorna `ETag` header. Soporta `If-None-Match` → `304`. **Excepción:** `GET /products/all` no retorna ETag |
 | `POST` | ❌ | No usa ETag |
 | `PUT` | ❌ | No usa ETag (pero invalida el caché del producto) |
 | `DELETE` | ❌ | No usa ETag (pero invalida el caché del producto) |

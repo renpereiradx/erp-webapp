@@ -5,6 +5,7 @@
 
 import { common } from './common'
 import { products } from './products'
+import { categories } from './categories'
 import { purchases } from './purchases'
 import { currencies } from './currencies'
 import { exchangeRates } from './exchangeRates'
@@ -28,6 +29,7 @@ export const en = {
   // Override with English translations where available
   ...common,
   ...products,
+  ...categories,
   ...purchases,
   ...currencies,
   ...exchangeRates,

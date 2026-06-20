@@ -1,23 +1,32 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useI18n } from '@/lib/i18n'
 import { getGroupedUnitOptions } from '@/constants/units'
-import { 
-  X, 
-  Save, 
-  Trash2, 
-  AlertTriangle, 
-  Package, 
-  Info, 
-  ChevronDown, 
-  CheckCircle2, 
-  Plus, 
+import {
+  X,
+  Save,
+  Trash2,
+  AlertTriangle,
+  Package,
+  Info,
+  ChevronDown,
+  CheckCircle2,
+  Plus,
   RefreshCw,
   FileText,
   Settings2,
   Barcode,
-  Percent
+  Percent,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { CategoryManagementModal } from '@/features/categories'
 import { useProductForm } from '../hooks/useProductForm';
 import { ProductVariantsManager } from './ProductVariantsManager';
 
@@ -25,6 +34,8 @@ import { ProductVariantsManager } from './ProductVariantsManager';
  * ProductFormModal Component
  * Rediseñado con Tailwind CSS siguiendo fielmente Fluent Design System 2
  */
+const MANAGE_CATEGORIES_SENTINEL = '__manage_categories__'
+
 interface ProductFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -39,11 +50,17 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
     formData,
     setFormData,
     errors,
+    setErrors,
     isSubmitting,
     isDeleting,
     isEditMode,
     showDeleteConfirm,
     setShowDeleteConfirm,
+    isCategoryManagerOpen,
+    openCategoryManager,
+    closeCategoryManager,
+    handleCategoryCreated,
+    handleCategoryDeleted,
     categories,
     taxRates,
     brands,
@@ -253,19 +270,49 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                       <label className={labelClass}>
                         {t('products.modal.field.category')} <span className="text-error font-black ml-1">*</span>
                       </label>
-                      <div className="relative">
-                        <select
-                          name="category"
-                          value={formData.category}
-                          onChange={handleChange}
-                          className={`${selectClass} ${errors.category ? 'border-error' : ''}`}
-                          disabled={loadingCategories}
+                      <Select
+                        value={formData.category}
+                        onValueChange={v => {
+                          if (v === MANAGE_CATEGORIES_SENTINEL) {
+                            openCategoryManager();
+                            return;
+                          }
+                          setFormData(prev => ({ ...prev, category: v }));
+                          setErrors(prev => ({ ...prev, category: undefined }));
+                        }}
+                        disabled={loadingCategories}
+                      >
+                        <SelectTrigger
+                          className={`h-11 rounded-xl border-border-subtle font-bold ${errors.category ? 'border-error' : ''}`}
+                          data-testid="product-category-trigger"
                         >
-                          <option value="">{loadingCategories ? 'Cargando...' : t('products.modal.placeholder.category')}</option>
-                          {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                        </select>
-                        <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                      </div>
+                          <SelectValue
+                            placeholder={loadingCategories ? 'Cargando...' : t('products.modal.placeholder.category')}
+                          />
+                        </SelectTrigger>
+                        <SelectContent className="">
+                          {categories.map(cat => (
+                            <SelectItem
+                              key={cat.id}
+                              value={cat.id.toString()}
+                              className="font-bold text-xs uppercase tracking-wider"
+                            >
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                          <SelectSeparator className="" />
+                          <SelectItem
+                            value={MANAGE_CATEGORIES_SENTINEL}
+                            className="font-bold text-xs uppercase tracking-wider text-primary focus:text-primary"
+                            data-testid="product-category-manage"
+                          >
+                            <span className="flex items-center gap-2">
+                              <Settings2 size={14} />
+                              {t('products.modal.category.manage')}
+                            </span>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                       {errors.category && <p className="text-[10px] text-error font-black uppercase tracking-widest mt-1.5">{errors.category}</p>}
                     </div>
 
@@ -583,17 +630,17 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
             </p>
             <p className="text-[10px] text-text-secondary mb-8 font-bold uppercase tracking-wider bg-slate-50 p-2.5 rounded-lg border border-slate-200/40">{t('products.modal.delete.warning')}</p>
             <div className="flex items-center gap-3 justify-end">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowDeleteConfirm(false)} 
-                disabled={isDeleting} 
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
                 className="font-black uppercase text-[10px] tracking-widest border-border-subtle h-11 px-5 rounded-xl hover:bg-slate-50 transition-colors"
               >
                 {t('products.modal.action.cancel')}
               </Button>
-              <Button 
-                onClick={handleDelete} 
-                disabled={isDeleting} 
+              <Button
+                onClick={handleDelete}
+                disabled={isDeleting}
                 className="bg-error hover:bg-error/95 text-white font-black uppercase text-[10px] tracking-widest h-11 px-6 rounded-xl shadow-md shadow-error/10 transition-all active:scale-[0.98] flex items-center"
               >
                 {isDeleting ? <RefreshCw size={15} className="animate-spin mr-2" /> : <Trash2 size={15} className="mr-2" />}
@@ -603,6 +650,13 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
           </div>
         </div>
       )}
+
+      <CategoryManagementModal
+        isOpen={isCategoryManagerOpen}
+        onClose={closeCategoryManager}
+        onCreated={handleCategoryCreated}
+        onDeleted={handleCategoryDeleted}
+      />
     </div>
   )
 }

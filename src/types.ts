@@ -244,6 +244,7 @@ export interface VariantStockSum {
 export interface UnitPrice {
   id: number;
   product_id: string;
+  variant_id?: string | null;
   unit: string;
   price_per_unit: number;
   effective_date?: string; // ISO 8601 date string (legacy)
@@ -292,9 +293,12 @@ export interface TaxInfo {
 
 export interface ProductOperationInfoResponse {
   product_id: string;
+  id: string; // Alias para compatibilidad con Product
   product_name: string;
+  name: string; // Alias para compatibilidad con Product
   barcode: string | null;
   state: boolean;
+  is_active: boolean; // Alias para compatibilidad con Product
   category_id?: number;
   product_type: 'PHYSICAL' | 'SERVICE' | 'PRODUCTION';
   origin?: 'NACIONAL' | 'IMPORTADO' | null;

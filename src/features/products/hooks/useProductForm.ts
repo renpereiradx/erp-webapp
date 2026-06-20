@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { z } from 'zod';
 import useProductStore from '@/store/useProductStore';
+import useCategoryStore from '@/store/useCategoryStore';
 import { useToast } from '@/hooks/useToast';
 
 export const baseProductSchema = z.object({
@@ -62,6 +63,7 @@ interface UseProductFormProps {
 
 export function useProductForm({ product, isOpen, onClose }: UseProductFormProps) {
   const { createProduct, updateProduct, deleteProduct } = useProductStore();
+  const { categories, loading: loadingCategories, fetchCategories } = useCategoryStore();
   const toast = useToast();
   const isEditMode = product !== null;
 
@@ -83,28 +85,12 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  
-  const [categories, setCategories] = useState<any[]>([]);
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+
   const [taxRates, setTaxRates] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadingTaxRates, setLoadingTaxRates] = useState(false);
   const [loadingBrands, setLoadingBrands] = useState(false);
-
-  const loadCategories = useCallback(async (ignore = false) => {
-    setLoadingCategories(true);
-    try {
-      const { categoryService } = await import('@/services/categoryService');
-      const response = await categoryService.getAll();
-      if (!ignore) {
-        setCategories(Array.isArray(response) ? response : []);
-      }
-    } catch (error) {
-      if (!ignore) setCategories([]);
-    } finally {
-      if (!ignore) setLoadingCategories(false);
-    }
-  }, []);
 
   const loadTaxRates = useCallback(async (ignore = false) => {
     setLoadingTaxRates(true);
@@ -142,10 +128,12 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
   useEffect(() => {
     let ignore = false;
     if (isOpen) {
-      loadCategories(ignore);
+      if (categories.length === 0) {
+        fetchCategories().catch(() => {});
+      }
       loadTaxRates(ignore);
       loadBrands(ignore);
-      
+
       if (product) {
         setFormData({
           name: product.product_name || product.name || '',
@@ -173,7 +161,7 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
     return () => {
       ignore = true;
     };
-  }, [isOpen, product, loadCategories, loadTaxRates, loadBrands]);
+  }, [isOpen, product, categories.length, fetchCategories, loadTaxRates, loadBrands]);
 
 
 
@@ -269,15 +257,43 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
     }
   };
 
+  const openCategoryManager = useCallback(() => {
+    setIsCategoryManagerOpen(true);
+  }, []);
+
+  const closeCategoryManager = useCallback(() => {
+    setIsCategoryManagerOpen(false);
+  }, []);
+
+  const handleCategoryCreated = useCallback((created: { id: number }) => {
+    setFormData(prev => ({ ...prev, category: created.id.toString() }));
+    setErrors(prev => ({ ...prev, category: undefined }));
+  }, []);
+
+  const handleCategoryDeleted = useCallback((deletedId: number) => {
+    setFormData(prev => {
+      if (prev.category === deletedId.toString()) {
+        return { ...prev, category: '' };
+      }
+      return prev;
+    });
+  }, []);
+
   return {
     formData,
     setFormData,
     errors,
+    setErrors,
     isSubmitting,
     isDeleting,
     isEditMode,
     showDeleteConfirm,
     setShowDeleteConfirm,
+    isCategoryManagerOpen,
+    openCategoryManager,
+    closeCategoryManager,
+    handleCategoryCreated,
+    handleCategoryDeleted,
     categories,
     taxRates,
     brands,

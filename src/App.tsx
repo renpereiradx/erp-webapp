@@ -53,6 +53,7 @@ import SalesOrderDetail from '@/pages/SalesOrderDetail'
 import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
 import Currencies from '@/pages/Currencies'
 import ExchangeRates from '@/pages/ExchangeRates'
+import CategoriesPage from '@/pages/CategoriesPage'
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import Settings from '@/pages/Settings'
@@ -431,6 +432,14 @@ function AppContent() {
                       <Route
                         path='/configuracion/tipos-cambio'
                         element={<ExchangeRates />}
+                      />
+                      <Route
+                        path='/configuracion/categorias'
+                        element={
+                          <PermissionGuard permission="products:read">
+                            <CategoriesPage />
+                          </PermissionGuard>
+                        }
                       />
                       {/* <Route path="/test-products" element={<ProductDetailTest />} /> */}
                       {/* <Route path="/debug-products" element={<ProductComparisonDebug />} /> */}

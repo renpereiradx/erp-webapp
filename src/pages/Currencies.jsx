@@ -7,9 +7,24 @@
 
 import React, { useState, useEffect } from 'react'
 import { useI18n } from '@/lib/i18n'
+import { Plus } from 'lucide-react'
 import useCurrencyStore from '@/store/useCurrencyStore'
-import useCategoryStore from '@/store/useCategoryStore'
 import useTaxRateStore from '@/store/useTaxRateStore'
+import {
+  CategoriesTable,
+  CategoryDrawer,
+  useCategoryManagement,
+} from '@/features/categories'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -42,188 +57,6 @@ const getFlagUrl = (code) => {
   };
   const countryCode = mapping[code.toUpperCase()];
   return countryCode ? `https://flagcdn.com/w40/${countryCode}.png` : null;
-}
-
-// Categories Tab Component
-const CategoriesTab = ({ searchTerm, onEdit, onAdd }) => {
-  const { t } = useI18n()
-  const { categories, loading, fetchCategories } = useCategoryStore()
-
-  useEffect(() => {
-    fetchCategories()
-  }, [])
-
-  const filteredCategories = categories.filter(cat => {
-    if (!searchTerm) return true
-    const term = searchTerm.toLowerCase()
-    return (
-      (cat.name || '').toLowerCase().includes(term) ||
-      (cat.description || '').toLowerCase().includes(term)
-    )
-  })
-
-  return (
-    <div className="space-y-4">
-      <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-border-subtle shadow-fluent-2 flex justify-between items-center">
-        <h3 className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em]">Categorías de Producto</h3>
-        <Button onClick={onAdd} size="sm" className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] px-4 h-9 rounded shadow-fluent-2 flex items-center gap-2">
-          <span className="material-icons-round text-[16px]">add</span>
-          Nueva Categoría
-        </Button>
-      </div>
-
-      <div className="overflow-hidden rounded-xl border border-border-subtle bg-white dark:bg-surface-dark shadow-fluent-2">
-        <Table>
-          <TableHeader className="bg-slate-50/80 dark:bg-slate-800/50">
-            <TableRow>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">Nombre</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">Descripción</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">IVA Defecto</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">Estado</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3 text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-400 font-black uppercase tracking-widest text-xs">{t('common.loading')}</TableCell></TableRow>
-            ) : filteredCategories.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="py-12 text-center text-text-secondary font-bold italic">No se encontraron categorías</TableCell></TableRow>
-            ) : (
-              filteredCategories.map(cat => (
-                <tr key={cat.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-border-subtle">
-                  <TableCell className="py-4 px-3 font-bold text-text-main">{cat.name}</TableCell>
-                  <TableCell className="py-4 px-3 text-xs font-medium text-text-secondary">{cat.description || '-'}</TableCell>
-                  <TableCell className="py-4 px-3 font-mono font-black text-xs text-primary">{cat.default_tax_rate_id ? `ID: ${cat.default_tax_rate_id}` : 'General (10%)'}</TableCell>
-                  <TableCell className="py-4 px-3">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${cat.is_active !== false ? 'bg-green-50 border-green-200 text-success' : 'bg-slate-100 border-slate-200 text-text-secondary'}`}>
-                      {cat.is_active !== false ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-4 px-3 text-right">
-                    <Button variant="ghost" size="icon" className="size-8 text-text-secondary hover:text-primary transition-colors rounded" onClick={() => onEdit(cat)}><span className="material-icons-round text-[18px]">edit</span></Button>
-                  </TableCell>
-                </tr>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  )
-}
-
-// Category Drawer Component
-const CategoryDrawer = ({ isOpen, onClose, category, onSave }) => {
-  const { t } = useI18n()
-  const { taxRates, fetchTaxRates } = useTaxRateStore()
-  const { categories: allCategories } = useCategoryStore()
-  
-  const [formData, setFormData] = useState({
-    name: '', description: '', default_tax_rate_id: '', parent_id: '', is_active: true
-  })
-  const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchTaxRates()
-      if (category) {
-        setFormData({
-          name: category.name || '',
-          description: category.description || '',
-          default_tax_rate_id: category.default_tax_rate_id?.toString() || '',
-          parent_id: category.parent_id?.toString() || '',
-          is_active: category.is_active !== false
-        })
-      } else {
-        setFormData({ name: '', description: '', default_tax_rate_id: '', parent_id: '', is_active: true })
-      }
-    }
-  }, [category, isOpen])
-
-  const handleSubmit = async e => {
-    e.preventDefault()
-    setSaving(true)
-    try {
-      const payload = {
-        ...formData,
-        default_tax_rate_id: formData.default_tax_rate_id ? parseInt(formData.default_tax_rate_id) : null,
-        parent_id: formData.parent_id ? (formData.parent_id === 'none' ? null : parseInt(formData.parent_id)) : null
-      }
-      await onSave(payload); 
-      onClose(); 
-    } catch (error) { 
-      console.error('Failed to save category', error); 
-    } finally { setSaving(false); }
-  }
-
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-surface-dark shadow-fluent-16 z-[100] flex flex-col animate-in slide-in-from-right duration-300 border-l border-border-subtle">
-      <div className="p-6 border-b border-border-subtle flex items-center justify-between">
-        <h3 className="text-xl font-black tracking-tighter text-text-main uppercase">
-          {category ? 'Editar Categoría' : 'Nueva Categoría'}
-        </h3>
-        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-text-secondary transition-colors">
-          <span className="material-icons-round text-[20px]">close</span>
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6 space-y-8">
-        <form id="category-form" onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Nombre</label>
-            <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej: Electrónicos" className="rounded border-border-subtle font-bold" required />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Descripción</label>
-            <Input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Breve descripción..." className="rounded border-border-subtle" />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Tasa de IVA por Defecto</label>
-            <Select value={formData.default_tax_rate_id} onValueChange={v => setFormData({...formData, default_tax_rate_id: v})}>
-              <SelectTrigger className="rounded border-border-subtle font-bold h-11"><SelectValue placeholder="Seleccionar tasa..." /></SelectTrigger>
-              <SelectContent className="rounded-xl shadow-fluent-16 border-border-subtle">
-                {taxRates.map(rate => (
-                  <SelectItem key={rate.id} value={rate.id.toString()} className="font-bold text-xs uppercase tracking-wider">{rate.tax_name || rate.name} ({rate.rate}%)</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Categoría Padre</label>
-            <Select value={formData.parent_id} onValueChange={v => setFormData({...formData, parent_id: v})}>
-              <SelectTrigger className="rounded border-border-subtle font-bold h-11"><SelectValue placeholder="Ninguna (Raíz)" /></SelectTrigger>
-              <SelectContent className="rounded-xl shadow-fluent-16 border-border-subtle">
-                <SelectItem value="none" className="font-bold text-xs uppercase tracking-wider">Ninguna</SelectItem>
-                {allCategories.filter(c => c.id !== category?.id).map(c => (
-                  <SelectItem key={c.id} value={c.id.toString()} className="font-bold text-xs uppercase tracking-wider">{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-border-subtle">
-            <span className="text-xs font-black uppercase tracking-widest text-text-main">Categoría Activa</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.checked})} className="sr-only peer" />
-                <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
-            </label>
-          </div>
-        </form>
-      </div>
-
-      <div className="p-6 border-t border-border-subtle bg-slate-50/50 dark:bg-slate-900/20 flex gap-3">
-        <Button form="category-form" type="submit" className="flex-1 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] h-11 rounded shadow-fluent-2" disabled={saving}>
-          {saving ? 'Guardando...' : 'Guardar Categoría'}
-        </Button>
-        <Button variant="outline" onClick={onClose} className="flex-1 border-border-subtle font-black uppercase tracking-widest text-[10px] h-11 rounded">Cancelar</Button>
-      </div>
-    </div>
-  )
 }
 
 // Tax Rates Tab Component
@@ -673,17 +506,30 @@ const CurrenciesPage = () => {
     currencies, loading: currenciesLoading, searchTerm, fetchCurrencies, createCurrency, updateCurrency, setSearchTerm, getFilteredCurrencies,
   } = useCurrencyStore()
 
-  const { createCategory, updateCategory, deleteCategory } = useCategoryStore()
   const { createTaxRate, updateTaxRate, deleteTaxRate } = useTaxRateStore()
+
+  const {
+    filteredCategories,
+    loading: categoriesLoading,
+    selectedCategory,
+    isDrawerOpen: categoryDrawerOpen,
+    isDeleteDialogOpen: isCategoryDeleteOpen,
+    isDeleting: isDeletingCategory,
+    openCreate: handleOpenCreateCategory,
+    openEdit: handleOpenEditCategory,
+    openDelete: handleOpenDeleteCategory,
+    closeDrawer: handleCloseCategoryDrawer,
+    closeDeleteDialog: handleCloseCategoryDeleteDialog,
+    handleSave: handleSaveCategory,
+    confirmDelete: handleConfirmDeleteCategory,
+  } = useCategoryManagement()
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [methodDrawerOpen, setMethodDrawerOpen] = useState(false)
-  const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false)
   const [taxRateDrawerOpen, setTaxRateDrawerOpen] = useState(false)
 
   const [selectedCurrency, setSelectedCurrency] = useState(null)
   const [selectedMethod, setSelectedMethod] = useState(null)
-  const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedTaxRate, setSelectedTaxRate] = useState(null)
 
   const [activeTab, setActiveTab] = useState('currencies')
@@ -691,14 +537,6 @@ const CurrenciesPage = () => {
   const baseCurrency = currencies.find(c => c.is_base_currency)
 
   useEffect(() => { fetchCurrencies() }, [fetchCurrencies])
-
-  // Handlers for Categories
-  const handleOpenCreateCategory = () => { setSelectedCategory(null); setCategoryDrawerOpen(true); }
-  const handleOpenEditCategory = (cat) => { setSelectedCategory(cat); setCategoryDrawerOpen(true); }
-  const handleSaveCategory = async data => {
-    if (selectedCategory) await updateCategory(selectedCategory.id, data)
-    else await createCategory(data)
-  }
 
   // Handlers for Tax Rates
   const handleOpenCreateTaxRate = () => { setSelectedTaxRate(null); setTaxRateDrawerOpen(true); }
@@ -749,7 +587,7 @@ const CurrenciesPage = () => {
       } else {
         await PaymentMethodService.create(formData)
       }
-      window.location.reload(); 
+      window.location.reload();
     } catch (error) {
       console.error('Error saving payment method', error)
     }
@@ -905,7 +743,23 @@ const CurrenciesPage = () => {
         )}
 
         {activeTab === 'payment-methods' && <PaymentMethodsTab searchTerm={searchTerm} onEdit={handleOpenEditMethod} onAdd={handleOpenCreateMethod} />}
-        {activeTab === 'categories' && <CategoriesTab searchTerm={searchTerm} onEdit={handleOpenEditCategory} onAdd={handleOpenCreateCategory} />}
+        {activeTab === 'categories' && (
+          <div className="space-y-4">
+            <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-border-subtle shadow-fluent-2 flex justify-between items-center">
+              <h3 className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em]">{t('categories.section.title')}</h3>
+              <Button onClick={handleOpenCreateCategory} size="sm" className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] px-4 h-9 rounded shadow-fluent-2 flex items-center gap-2">
+                <Plus size={16} />
+                {t('categories.management.new')}
+              </Button>
+            </div>
+            <CategoriesTable
+              categories={filteredCategories}
+              loading={categoriesLoading}
+              onEdit={handleOpenEditCategory}
+              onDelete={handleOpenDeleteCategory}
+            />
+          </div>
+        )}
         {activeTab === 'tax-rates' && <TaxRatesTab searchTerm={searchTerm} onEdit={handleOpenEditTaxRate} onAdd={handleOpenCreateTaxRate} />}
 
         {activeTab === 'settings' && (
@@ -933,11 +787,41 @@ const CurrenciesPage = () => {
       </div>
 
       {/* Drawer Overlays */}
-      {(drawerOpen || methodDrawerOpen || categoryDrawerOpen || taxRateDrawerOpen) && <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90] transition-all" onClick={() => { handleCloseDrawer(); handleCloseMethodDrawer(); setCategoryDrawerOpen(false); setTaxRateDrawerOpen(false); }} />}
+      {(drawerOpen || methodDrawerOpen || categoryDrawerOpen || taxRateDrawerOpen) && <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90] transition-all" onClick={() => { handleCloseDrawer(); handleCloseMethodDrawer(); handleCloseCategoryDrawer(); setTaxRateDrawerOpen(false); }} />}
       <CurrencyDrawer isOpen={drawerOpen} onClose={handleCloseDrawer} currency={selectedCurrency} onSave={handleSave} baseCurrency={baseCurrency} />
       <PaymentMethodDrawer isOpen={methodDrawerOpen} onClose={handleCloseMethodDrawer} method={selectedMethod} onSave={handleSaveMethod} />
-      <CategoryDrawer isOpen={categoryDrawerOpen} onClose={() => setCategoryDrawerOpen(false)} category={selectedCategory} onSave={handleSaveCategory} />
+      <CategoryDrawer isOpen={categoryDrawerOpen} onClose={handleCloseCategoryDrawer} category={selectedCategory} onSave={handleSaveCategory} />
       <TaxRateDrawer isOpen={taxRateDrawerOpen} onClose={() => setTaxRateDrawerOpen(false)} taxRate={selectedTaxRate} onSave={handleSaveTaxRate} />
+
+      <AlertDialog
+        open={isCategoryDeleteOpen}
+        onOpenChange={open => {
+          if (!open) handleCloseCategoryDeleteDialog()
+        }}
+      >
+        <AlertDialogContent className="">
+          <AlertDialogHeader className="">
+            <AlertDialogTitle className="">Eliminar categoría</AlertDialogTitle>
+            <AlertDialogDescription className="">
+              ¿Estás seguro de que quieres eliminar la categoría{' '}
+              <span className="font-black text-text-main">"{selectedCategory?.name}"</span>?
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="">
+            <AlertDialogCancel className="" disabled={isDeletingCategory}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDeleteCategory}
+              disabled={isDeletingCategory}
+              className="bg-error hover:bg-error/90 text-white"
+            >
+              {isDeletingCategory ? 'Eliminando...' : 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

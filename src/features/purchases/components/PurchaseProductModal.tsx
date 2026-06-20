@@ -61,7 +61,8 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
     if (modalSelectedProduct?.has_variants) {
       setLoadingVariants(true)
       const productId = modalSelectedProduct.id || modalSelectedProduct.product_id;
-      variantService.getVariantsByProductId(productId, false)
+      const activeBranch = localStorage.getItem('activeBranch') ? parseInt(localStorage.getItem('activeBranch') as string) : undefined;
+      variantService.getEnrichedVariants(productId, activeBranch, false)
         .then(data => setVariants(data))
         .catch(() => {})
         .finally(() => setLoadingVariants(false))

@@ -45,13 +45,25 @@ export function VariantFormModal({ productId, isOpen, onClose, onSuccess }: Vari
       if (formData.color) payload.variant_attributes.color = formData.color;
       if (formData.talla) payload.variant_attributes.talla = formData.talla;
       if (formData.sku) payload.sku = formData.sku;
-      if (formData.initial_stock) {
-        payload.initial_stock = parseFloat(formData.initial_stock);
+
+      if (formData.initial_stock || formData.initial_price) {
+        if (!currentBranchId) {
+          toast.error('Debe seleccionar una sucursal activa para establecer stock o precio inicial.');
+          setLoading(false);
+          return;
+        }
+        if (!formData.initial_price) {
+          toast.error('Debe especificar el precio inicial para poder registrar el stock inicial en la sucursal.');
+          setLoading(false);
+          return;
+        }
+
         payload.stock_branch_id = currentBranchId;
-      }
-      if (formData.initial_price) {
         payload.initial_price = parseFloat(formData.initial_price);
-        payload.stock_branch_id = currentBranchId;
+        
+        if (formData.initial_stock) {
+          payload.initial_stock = parseFloat(formData.initial_stock);
+        }
       }
 
       await variantService.createVariant(productId, payload);
@@ -77,7 +89,7 @@ export function VariantFormModal({ productId, isOpen, onClose, onSuccess }: Vari
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <div className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-600 mb-1">Color</label>
@@ -136,12 +148,12 @@ export function VariantFormModal({ productId, isOpen, onClose, onSuccess }: Vari
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" variant="primary" disabled={loading}>
+            <Button type="button" variant="primary" disabled={loading} onClick={handleSubmit}>
               <Save size={16} className="mr-2" />
               {loading ? 'Guardando...' : 'Guardar Variante'}
             </Button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

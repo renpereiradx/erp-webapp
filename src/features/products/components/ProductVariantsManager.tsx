@@ -16,7 +16,8 @@ export function ProductVariantsManager({ productId }: { productId: string }) {
     if (!productId) return;
     setLoading(true);
     try {
-      const data = await variantService.getVariantsByProductId(productId);
+      const activeBranch = localStorage.getItem('activeBranch') ? parseInt(localStorage.getItem('activeBranch') as string) : undefined;
+      const data = await variantService.getEnrichedVariants(productId, activeBranch, true);
       setVariants(data);
     } catch (error) {
       toast.error('Error al cargar variantes');

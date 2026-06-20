@@ -13,7 +13,10 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
   useEffect(() => {
     if (product) {
       setLoading(true);
-      variantService.getVariantsByProductId(product.id, false)
+      // Retrieve activeBranch from local storage for accurate stock/price resolution
+      const activeBranch = localStorage.getItem('activeBranch') ? parseInt(localStorage.getItem('activeBranch') as string) : undefined;
+      
+      variantService.getEnrichedVariants(product.id, activeBranch, false)
         .then(data => setVariants(data))
         .catch(() => toast.error('Error al cargar variantes'))
         .finally(() => setLoading(false));

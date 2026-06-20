@@ -62,6 +62,16 @@ const deduplicateProducts = <T extends { id?: string; product_id?: string }>(pro
   });
 };
 
+const mapProductOperationInfoResponse = (p: any): ProductOperationInfoResponse => {
+  if (!p) return p;
+  return {
+    ...p,
+    id: p.product_id || p.id,
+    name: p.product_name || p.name,
+    is_active: p.state !== undefined ? p.state : p.is_active
+  };
+};
+
 export const productService = {
   // =================== PRODUCTOS (LECTURA) ===================
 
@@ -156,7 +166,8 @@ export const productService = {
   async getInfo(id: string): Promise<ProductOperationInfoResponse> {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getProductInfoById(id);
+        const data = await apiClient.getProductInfoById(id);
+        return mapProductOperationInfoResponse(data);
       });
     } catch (error) {
       throw toApiError(error, 'Error al obtener información operativa del producto');
@@ -169,7 +180,8 @@ export const productService = {
   async getInfoByBarcode(barcode: string): Promise<ProductOperationInfoResponse> {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getProductInfoByBarcode(barcode);
+        const data = await apiClient.getProductInfoByBarcode(barcode);
+        return mapProductOperationInfoResponse(data);
       });
     } catch (error) {
       throw toApiError(error, 'Error al buscar producto por código de barras');
@@ -184,7 +196,7 @@ export const productService = {
       const results = await retryWithBackoff(async () => {
         return await apiClient.searchProductsInfoByName(name, options);
       });
-      return deduplicateProducts(results);
+      return deduplicateProducts(results).map(mapProductOperationInfoResponse);
     } catch (error) {
       if (error?.name === 'AbortError') throw error;
       throw toApiError(error, 'Error en búsqueda operativa');
@@ -196,7 +208,8 @@ export const productService = {
    */
   async getForSale(id: string): Promise<ProductOperationInfoResponse> {
     try {
-      return await apiClient.getProductForSale(id);
+      const data = await apiClient.getProductForSale(id);
+      return mapProductOperationInfoResponse(data);
     } catch (error) {
       throw toApiError(error, 'Error al cargar producto para venta');
     }
@@ -207,7 +220,8 @@ export const productService = {
    */
   async getForPurchase(id: string): Promise<ProductOperationInfoResponse> {
     try {
-      return await apiClient.getProductForPurchase(id);
+      const data = await apiClient.getProductForPurchase(id);
+      return mapProductOperationInfoResponse(data);
     } catch (error) {
       throw toApiError(error, 'Error al cargar producto para compra');
     }

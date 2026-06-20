@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { X, Edit, Package, Info, Layout, Activity, TrendingUp, CheckCircle2, AlertTriangle, ShieldCheck, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ProductOperationInfoResponse } from '@/types';
+import { ProductOperationInfoResponse, ProductVariant } from '@/types';
+import { variantService } from '@/services/variantService';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/utils/currencyUtils';
 import { cn } from '@/lib/utils';
@@ -38,6 +39,23 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
   // Track specific row unit and value for adjusting
   const [selectedUnit, setSelectedUnit] = useState('unit');
   const [selectedValue, setSelectedValue] = useState(0);
+
+  // Variants state
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [loadingVariants, setLoadingVariants] = useState(false);
+
+  const currentProductId = product?.product_id || product?.id;
+
+  useEffect(() => {
+    if (isOpen && currentProductId) {
+      setLoadingVariants(true);
+      const activeBranch = localStorage.getItem('activeBranch') ? parseInt(localStorage.getItem('activeBranch') as string) : undefined;
+      variantService.getEnrichedVariants(currentProductId, activeBranch, true)
+        .then(setVariants)
+        .catch(console.error)
+        .finally(() => setLoadingVariants(false));
+    }
+  }, [isOpen, currentProductId]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -299,6 +317,54 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                </section>
+              )}
+
+              {/* Variants Section */}
+              {(product?.has_variants || variants.length > 0) && (
+                <section>
+                  <div className="flex items-center gap-2 mb-4 text-[#106ebe]">
+                    <Package size={18} />
+                    <h3 className="font-semibold text-xs uppercase tracking-widest">Variantes Registradas</h3>
+                  </div>
+                  <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                    {loadingVariants ? (
+                      <div className="p-8 text-center text-sm text-gray-400">Cargando variantes...</div>
+                    ) : variants.length > 0 ? (
+                      <table className="w-full text-left">
+                        <thead className="bg-gray-50 border-b border-gray-100">
+                          <tr>
+                            <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase">Nombre / SKU</th>
+                            <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase">Precio</th>
+                            <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase">Stock</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                          {variants.map((v) => {
+                            const isOutOfStock = (v.stock_quantity || 0) <= 0;
+                            return (
+                              <tr key={v.id} className={!v.is_active ? 'opacity-50 bg-gray-50/50' : 'hover:bg-gray-50/50 transition-colors'}>
+                                <td className="py-3 px-4">
+                                  <div className="text-sm font-semibold text-gray-800">{v.variant_name}</div>
+                                  <div className="text-[10px] text-gray-400 font-mono mt-0.5">{v.sku}</div>
+                                </td>
+                                <td className="py-3 px-4 text-sm font-bold text-[#106ebe]">
+                                  {v.current_price ? formatCurrency(v.current_price) : '-'}
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full uppercase", isOutOfStock ? "bg-red-50 text-red-600 border border-red-100" : "bg-green-50 text-green-600 border border-green-100")}>
+                                    {v.stock_quantity || 0}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="p-8 text-center text-sm text-gray-400">Este producto no tiene variantes configuradas.</div>
+                    )}
                   </div>
                 </section>
               )}

@@ -80,8 +80,8 @@ Authorization: Bearer <jwt_token>
 | `variant_attributes` | object | Atributos distintivos: `{"color": "rojo", "talla": "M"}` |
 | `is_active` | boolean | Estado de la variante |
 | `display_order` | number | Orden de visualización |
-| `stock_quantity` | number \| null | Cantidad en stock (join calculado) |
-| `current_price` | number \| null | Precio actual (join calculado) |
+| `stock_quantity` | number \| null | Cantidad en stock. **No incluido en GET /products/{id}/variants.** Usar `GET /api/v1/variants/{id}/stock?branch_id=X` para consultar stock. |
+| `current_price` | number \| null | Precio actual. **No incluido en GET /products/{id}/variants.** Usar `GET /products/{id}/units` o el endpoint de pricing del producto padre. |
 | `created_at` | string | Fecha de creación (ISO 8601) |
 | `updated_at` | string | Fecha de última actualización (ISO 8601) |
 
@@ -153,8 +153,6 @@ Crea una nueva variante bajo un producto padre. El SKU y variant_name se auto-ge
   },
   "is_active": true,
   "display_order": 0,
-  "stock_quantity": 50.0,
-  "current_price": 25000.00,
   "created_at": "2026-06-16T10:00:00Z",
   "updated_at": "2026-06-16T10:00:00Z"
 }
@@ -192,8 +190,6 @@ Crea una nueva variante bajo un producto padre. El SKU y variant_name se auto-ge
       "variant_attributes": { "color": "rojo", "talla": "M" },
       "is_active": true,
       "display_order": 0,
-      "stock_quantity": 50.0,
-      "current_price": 25000.00,
       "created_at": "2026-06-16T10:00:00Z",
       "updated_at": "2026-06-16T10:00:00Z"
     }
@@ -201,6 +197,8 @@ Crea una nueva variante bajo un producto padre. El SKU y variant_name se auto-ge
   "total": 1
 }
 ```
+
+> **Nota:** `stock_quantity` y `current_price` no se incluyen en esta respuesta. Para obtener el stock de una variante usar `GET /api/v1/variants/{id}/stock?branch_id=X`. Para el precio, consultar `GET /products/{id}/units`.
 
 ---
 
@@ -344,8 +342,8 @@ Cuando un producto tiene variantes, las transacciones (ventas/compras) pueden es
 3. Por cada variante, mostrar:
    - `variant_name` (ej: "Camisa Polo - color: rojo / talla: M")
    - Atributos de `variant_attributes` para filtros visuales (color swatch, talla selector)
-   - `stock_quantity` para disponibilidad
-   - `current_price` si difiere del padre
+4. Para disponibilidad de stock por sucursal: `GET /api/v1/variants/{id}/stock?branch_id=X`
+5. Para precio por variante: `GET /products/{id}/units` (el precio de variante se resuelve en ese endpoint)
 
 ### Flujo: Crear producto con variantes
 
