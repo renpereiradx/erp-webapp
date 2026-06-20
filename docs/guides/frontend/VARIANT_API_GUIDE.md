@@ -395,6 +395,23 @@ Si hay colisión, añade sufijo numérico (`-1`, `-2`, etc.).
 
 ---
 
+## 12. Ajustes Manuales con Variantes
+
+Los endpoints de ajustes manuales ahora soportan `variant_id` para operaciones granulares:
+
+| Endpoint | Uso con Variante | Guía |
+|---|---|---|
+| `POST /manual_adjustment/` | Enviar `variant_id` para ajustar stock de una variante específica | [Inventory Adjustments Guide](INVENTORY_ADJUSTMENTS_PRICE_API_GUIDE.md) |
+| `POST /manual_adjustment/price` | Enviar `variant_id` para ajustar precio de una variante | [Manual Price Adjustments Guide](MANUAL_PRICE_ADJUSTMENTS_API_GUIDE.md) |
+| `POST /inventory/` | Enviar `variant_id` en cada item para conteo físico por variante | [Inventory Adjustments Guide](INVENTORY_ADJUSTMENTS_PRICE_API_GUIDE.md) |
+
+**Comportamiento:**
+- Si `variant_id` se omite → opera sobre el producto padre (retrocompatibilidad)
+- Si `variant_id` se especifica → opera sobre esa variante específica
+- Los historiales de ajustes y transacciones ahora retornan `variant_id` para auditoría
+
+---
+
 ## Historial de Cambios
 
 ### v1.0.0 - 16 de Junio de 2026

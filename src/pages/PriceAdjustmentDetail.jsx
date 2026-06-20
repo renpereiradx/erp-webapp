@@ -11,6 +11,8 @@ import { useI18n } from '@/lib/i18n';
 import usePriceAdjustmentNewStore from '@/store/usePriceAdjustmentNewStore';
 import { priceAdjustmentService } from '@/services/priceAdjustmentService';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { variantService } from '@/services/variantService';
+import useAuthStore from '@/store/useAuthStore';
 
 const PriceAdjustmentDetail = () => {
   const { t } = useI18n();
@@ -18,6 +20,7 @@ const PriceAdjustmentDetail = () => {
   const location = useLocation();
 
   const { selectedProduct, creating, error, clearError, createPriceAdjustment, resetState } = usePriceAdjustmentNewStore();
+  const { activeBranch } = useAuthStore();
 
   // Obtener producto de la navegación o del store
   const product = location.state?.selectedProduct || selectedProduct;
@@ -38,6 +41,10 @@ const PriceAdjustmentDetail = () => {
   const [history, setHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState(null);
+
+  // Estado para variantes
+  const [variants, setVariants] = useState([]);
+  const [selectedVariantId, setSelectedVariantId] = useState('');
 
   // Plantillas predefinidas para razones de ajuste - Alineado con adjustment_type v2.1
   const reasonTemplates = [
@@ -146,6 +153,22 @@ const PriceAdjustmentDetail = () => {
     };
   }, [resetState]);
 
+  // Cargar variantes si el producto tiene
+  useEffect(() => {
+    if (product && (product.product_id || product.id)) {
+      const fetchVariants = async () => {
+        try {
+          const productId = product.product_id || product.id;
+          const data = await variantService.getEnrichedVariants(productId, activeBranch, false);
+          setVariants(data || []);
+        } catch (err) {
+          console.error('Error fetching variants:', err);
+        }
+      };
+      fetchVariants();
+    }
+  }, [product, activeBranch]);
+
   // Función para cargar el historial de ajustes (compartida entre montaje y actualización)
   const loadHistory = useCallback(async () => {
     if (!product || !product.product_id) return;
@@ -220,16 +243,17 @@ const PriceAdjustmentDetail = () => {
       return
     }
 
-    const currentOldPrice =
-      product.unit_prices?.[0]?.price_per_unit ||
-      product.current_price ||
-      product.price ||
-      0
+    const selectedVariant = variants.find(v => v.variant_id === selectedVariantId);
+    const currentOldPrice = selectedVariant
+      ? (selectedVariant.unit_prices?.[0]?.price_per_unit || selectedVariant.current_price || selectedVariant.price || 0)
+      : (product.unit_prices?.[0]?.price_per_unit || product.current_price || product.price || 0);
+
     const newPrice = parseFloat(formData.new_price)
 
     // Preparar datos para enviar
     const adjustmentData = {
       product_id: product.product_id || product.id,
+      variant_id: selectedVariantId || undefined,
       new_price: newPrice,
       old_price: currentOldPrice,
       unit: formData.unit,
@@ -269,7 +293,11 @@ const PriceAdjustmentDetail = () => {
   }
 
   // Handle different price formats from API (financial endpoint returns unit_prices array)
-  const currentPrice = product.unit_prices?.[0]?.price_per_unit || product.current_price || product.price || 0;
+  const selectedVariant = variants.find(v => v.variant_id === selectedVariantId);
+  const currentPrice = selectedVariant
+    ? (selectedVariant.unit_prices?.[0]?.price_per_unit || selectedVariant.current_price || selectedVariant.price || 0)
+    : (product.unit_prices?.[0]?.price_per_unit || product.current_price || product.price || 0);
+
   const isFormValid = formData.new_price && formData.reason.trim().length >= 10 && Object.keys(formErrors).length === 0;
 
   return (
@@ -333,6 +361,27 @@ const PriceAdjustmentDetail = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {variants.length > 0 && (
+                <div className='flex flex-col gap-1.5'>
+                  <label className="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center justify-between">
+                    <span>{t('priceAdjustmentDetail.field.variant', 'Variante a Ajustar (Opcional)')}</span>
+                    <span className='text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-bold'>NUEVO</span>
+                  </label>
+                  <select
+                    value={selectedVariantId}
+                    onChange={(e) => setSelectedVariantId(e.target.value)}
+                    className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  >
+                    <option value="">{t('priceAdjustmentDetail.variant.base', 'Producto Principal (General)')}</option>
+                    {variants.map(v => (
+                      <option key={v.variant_id} value={v.variant_id}>
+                        {v.variant_name} {v.sku ? `(${v.sku})` : ''} - PYG {(v.unit_prices?.[0]?.price_per_unit || v.current_price || v.price || 0).toLocaleString('es-PY')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div className='flex flex-col gap-1.5'>
                   <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">

@@ -6,6 +6,7 @@ import { formatNumber } from '@/utils/currencyUtils'
 import useInventoryStore from '@/store/useInventoryStore'
 import useAuthStore from '@/store/useAuthStore'
 import { productService } from '@/services/productService'
+import { variantService } from '@/services/variantService'
 import {
   REASON_OPTIONS,
   DEFAULT_REASONS,
@@ -27,11 +28,15 @@ const InventoryAdjustmentManualPage = () => {
     clearError,
   } = useInventoryStore()
 
-  const { user } = useAuthStore()
+  const { user, activeBranch } = useAuthStore()
 
   // Estado local para productos
   const [localProducts, setLocalProducts] = useState([])
   const [loadingProducts, setLoadingProducts] = useState(false)
+
+  // Estado local para variantes
+  const [variants, setVariants] = useState([])
+  const [selectedVariantId, setSelectedVariantId] = useState('')
 
   // Estados locales
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -133,6 +138,24 @@ const InventoryAdjustmentManualPage = () => {
     }
   }, [selectedProduct, loadHistory])
 
+  // Cargar variantes
+  useEffect(() => {
+    if (selectedProduct && selectedProduct.id) {
+      const fetchVariants = async () => {
+        try {
+          const data = await variantService.getEnrichedVariants(selectedProduct.id, activeBranch, false)
+          setVariants(data || [])
+        } catch (err) {
+          console.error('Error fetching variants', err)
+        }
+      }
+      fetchVariants()
+    } else {
+      setVariants([])
+      setSelectedVariantId('')
+    }
+  }, [selectedProduct, activeBranch])
+
   // Atajo de teclado Ctrl+A
   useEffect(() => {
     const handleKeyDown = e => {
@@ -152,6 +175,7 @@ const InventoryAdjustmentManualPage = () => {
     setProductSearchTerm('')
     setSuccessMessage('')
     setFormErrors({})
+    setSelectedVariantId('')
     setFormData({
       quantityAdjustment: '',
       reasonCategory: 'INVENTORY_COUNT',
@@ -190,7 +214,10 @@ const InventoryAdjustmentManualPage = () => {
       setFormErrors({ quantityAdjustment: 'La cantidad resultante no puede ser negativa' })
       return
     }
-    const previousStock = selectedProduct.stock_quantity || 0
+
+    const selectedVariant = variants.find(v => v.variant_id === selectedVariantId)
+    const previousStock = selectedVariant ? (selectedVariant.stock_quantity || 0) : (selectedProduct.stock_quantity || 0)
+
     const metadata = {
       source: 'manual_adjustment',
       timestamp: new Date().toISOString(),
@@ -210,6 +237,7 @@ const InventoryAdjustmentManualPage = () => {
     if (isDecimalUnit) {
       const transactionData = {
         product_id: selectedProduct.id,
+        variant_id: selectedVariantId || undefined,
         transaction_type: 'ADJUSTMENT',
         quantity_change: newQuantity - previousStock,
         reason: DEFAULT_REASONS.MANUAL_ADJUSTMENT[formData.reasonCategory] || formData.reasonCategory,
@@ -225,6 +253,7 @@ const InventoryAdjustmentManualPage = () => {
     } else {
       const adjustmentData = {
         product_id: selectedProduct.id,
+        variant_id: selectedVariantId || undefined,
         new_quantity: parseInt(newQuantity, 10),
         reason: DEFAULT_REASONS.MANUAL_ADJUSTMENT[formData.reasonCategory] || formData.reasonCategory,
         metadata: metadata,
@@ -243,6 +272,13 @@ const InventoryAdjustmentManualPage = () => {
         approvalLevel: 'operator',
       })
       setSelectedProduct(prev => ({ ...prev, stock_quantity: newQuantity }))
+      
+      // Update local variant stock if one was selected
+      if (selectedVariantId) {
+        setVariants(prev => prev.map(v => 
+          v.variant_id === selectedVariantId ? { ...v, stock_quantity: newQuantity } : v
+        ))
+      }
     } else {
       setFormErrors({ submit: result?.message || result?.error || 'Error al crear ajuste' })
     }
@@ -275,6 +311,10 @@ const InventoryAdjustmentManualPage = () => {
       hour: '2-digit', minute: '2-digit',
     }).format(date)
   }
+
+  const currentDisplayedStock = variants.length > 0 && selectedVariantId 
+    ? variants.find(v => v.variant_id === selectedVariantId)?.stock_quantity || 0 
+    : (selectedProduct?.stock_quantity || 0);
 
   return (
     <div className='flex flex-col gap-6 animate-in fade-in duration-500'>
@@ -326,7 +366,7 @@ const InventoryAdjustmentManualPage = () => {
                   <p className='text-xs font-mono text-primary font-bold truncate'>{selectedProduct.id}</p>
                   <h3 className='text-lg font-bold text-text-main leading-tight truncate'>{selectedProduct.name}</h3>
                   <p className='text-sm text-text-secondary mt-1'>
-                    Stock Actual: <span className='font-bold text-text-main'>{formatNumber(selectedProduct.stock_quantity || 0)}</span>
+                    Stock Actual: <span className='font-bold text-text-main'>{formatNumber(currentDisplayedStock)}</span>
  {getUnitLabel(selectedProduct.base_unit || 'unit')}
                   </p>
                 </div>
@@ -346,6 +386,28 @@ const InventoryAdjustmentManualPage = () => {
           <div className='bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden'>
             <h2 className='text-sm font-black uppercase text-text-main tracking-widest mb-6 border-b border-slate-100 pb-3'>Nuevo Ajuste</h2>
             <form onSubmit={handleSubmit} className='space-y-4'>
+              
+              {variants.length > 0 && (
+                <div className='flex flex-col gap-1.5'>
+                  <label className='text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center justify-between'>
+                    <span>Variante a Ajustar (Opcional)</span>
+                    <span className='text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-bold'>NUEVO</span>
+                  </label>
+                  <select
+                    className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
+                    value={selectedVariantId}
+                    onChange={e => setSelectedVariantId(e.target.value)}
+                  >
+                    <option value="">Producto Principal (General)</option>
+                    {variants.map(v => (
+                      <option key={v.variant_id} value={v.variant_id}>
+                        {v.variant_name} {v.sku ? `(${v.sku})` : ''} - Stock: {v.stock_quantity}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className='grid grid-cols-2 gap-4'>
                 <div className='flex flex-col gap-1.5'>
                   <label className='text-xs font-bold text-text-secondary uppercase tracking-wider'>Stock Real</label>

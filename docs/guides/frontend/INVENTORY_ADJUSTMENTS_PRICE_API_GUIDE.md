@@ -181,6 +181,8 @@ A continuacion se detallan las estructuras de datos principales utilizadas en la
 interface ManualAdjustment {
   id: number                    // ID unico del ajuste
   product_id: string            // ID del producto ajustado
+  branch_id?: number            // ID de la sucursal (opcional)
+  variant_id?: string           // ID de la variante (opcional, para productos con variantes)
   old_quantity: number          // Cantidad antes del ajuste
   new_quantity: number          // Cantidad nueva final
   adjustment_date: string       // Fecha del ajuste (ISO 8601)
@@ -205,6 +207,7 @@ interface InventoryItem {
   id: number
   inventory_id: number
   product_id: string
+  variant_id?: string           // ID de la variante (opcional, para conteo por variante)
   quantity_checked: number
   previous_quantity: number
 }
@@ -221,6 +224,8 @@ interface DetailedInventory {
 interface StockTransaction {
   id: number
   product_id: string
+  branch_id?: number            // ID de la sucursal
+  variant_id?: string           // ID de la variante (si aplica)
   transaction_type: string // "PURCHASE", "SALE", "ADJUSTMENT", etc.
   quantity_change: number // Cambio (+/-)
   quantity_before: number
@@ -270,6 +275,7 @@ Crea un nuevo ajuste manual de stock. El sistema genera una transaccion de stock
 ```json
 {
   "product_id": "PROD_ABC_001",
+  "variant_id": "VAR_ROJO_M",
   "new_quantity": 150.5,
   "reason": "Ajuste por conteo fisico",
   "metadata": {
@@ -288,6 +294,7 @@ Crea un nuevo ajuste manual de stock. El sistema genera una transaccion de stock
 | Campo | Tipo | Requerido | Descripcion |
 |-------|------|-----------|-------------|
 | `product_id` | string | Si | ID del producto a ajustar. Debe existir. |
+| `variant_id` | string | No | ID de la variante. Si el producto tiene variantes activas, se recomienda especificar para ajustar stock de una variante especifica. Si se omite, ajusta el stock del producto padre. |
 | `new_quantity` | int | Si | La nueva cantidad final del producto (>= 0). |
 | `reason` | string | Si | Motivo claro y descriptivo del ajuste. |
 | `metadata` | object | No | Objeto con datos de trazabilidad. Si no se proporciona, se genera automaticamente. Ver seccion de Metadatos. |
@@ -385,6 +392,7 @@ Crea un nuevo ajuste de precio para un producto. El sistema registra el cambio d
 ```json
 {
   "product_id": "PROD_ABC_001",
+  "variant_id": "VAR_ROJO_M",
   "new_price": 12500.0,
   "unit": "unit",
   "reason": "Actualizacion de precio de proveedor",
@@ -401,6 +409,7 @@ Crea un nuevo ajuste de precio para un producto. El sistema registra el cambio d
 | Campo | Tipo | Requerido | Descripcion |
 |-------|------|-----------|-------------|
 | `product_id` | string | Si | ID del producto a ajustar. Debe existir. |
+| `variant_id` | string | No | ID de la variante. Si se especifica, ajusta el precio de esa variante. Si se omite, ajusta el precio del producto padre. Respeta la jerarquia de resolucion de precios. |
 | `new_price` | number | Si | Nuevo precio (debe ser >= 0). |
 | `unit` | string | No | Unidad de medida (ej. "unit", "kg"). |
 | `reason` | string | Si | Motivo del ajuste de precio. |
@@ -439,11 +448,17 @@ Crea un nuevo inventario fisico. El sistema compara las cantidades contadas (`qu
   "items": [
     {
       "product_id": "PROD_ABC_001",
+      "variant_id": "VAR_ROJO_M",
       "quantity_checked": 150
     },
     {
-      "product_id": "PROD_DEF_002",
+      "product_id": "PROD_ABC_001",
+      "variant_id": "VAR_AZUL_S",
       "quantity_checked": 75
+    },
+    {
+      "product_id": "PROD_DEF_002",
+      "quantity_checked": 30
     }
   ],
   "metadata": {
@@ -464,6 +479,7 @@ Crea un nuevo inventario fisico. El sistema compara las cantidades contadas (`qu
 |-------|------|-----------|-------------|
 | `items` | `InventoryItemInput[]` | Si | Array de productos contados. |
 | `items[].product_id` | string | Si | ID del producto. |
+| `items[].variant_id` | string | No | ID de la variante. Para productos con variantes, se recomienda enviar un item por cada variante contada (escaneando su SKU/barcode). |
 | `items[].quantity_checked` | number | Si | Cantidad fisica contada (>= 0). |
 | `metadata` | object | No | Objeto con datos de trazabilidad. Si no se proporciona, se genera automaticamente. |
 

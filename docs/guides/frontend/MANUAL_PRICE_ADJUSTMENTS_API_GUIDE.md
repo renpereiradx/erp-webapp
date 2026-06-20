@@ -132,12 +132,13 @@ El campo `metadata` en ajustes de precio es validado contra un JSON Schema en el
 
 **Endpoint:** `POST /manual_adjustment/price`
 
-Crea o actualiza el precio de venta para una unidad de producto específica. Este es el endpoint principal para realizar ajustes.
+Crea o actualiza el precio de venta para una unidad de producto (o variante) específica. Este es el endpoint principal para realizar ajustes.
 
 **Request Body:**
 ```json
 {
   "product_id": "PROD_BANANA_001",
+  "variant_id": "VAR_TALLA_XL",
   "new_price": 18.75,
   "unit": "UNIT",
   "reason": "Ajuste por fluctuación del mercado",
@@ -154,6 +155,7 @@ Crea o actualiza el precio de venta para una unidad de producto específica. Est
 | Campo | Tipo | Requerido | Descripción |
 |---|---|---|---|
 | `product_id` | string | ✅ Sí | ID único del producto a ajustar. |
+| `variant_id` | string | ❌ No | ID de la variante. Si se especifica, ajusta el precio de esa variante usando `upsert_unit_price_with_variant`. Si se omite, ajusta el precio del producto padre. |
 | `new_price` | number | ✅ Sí | El nuevo precio de venta. Debe ser >= 0. |
 | `unit` | string | ❌ No | La unidad de medida para el precio (ej. "UNIT", "caja", "kg"). **Default: "UNIT"**. |
 | `reason` | string | ✅ Sí | Justificación del cambio de precio. |
@@ -358,6 +360,7 @@ Crea un ajuste manual de stock genérico. Permite registrar ajustes de cantidad,
 | Campo | Tipo | Requerido | Descripción |
 |---|---|---|---|
 | `product_id` | string | ✅ Sí | ID único del producto a ajustar. |
+| `variant_id` | string | ❌ No | ID de la variante. Para productos con variantes, permite ajustar stock de una variante específica. |
 | `quantity` | number | ✅ Sí | Cantidad del ajuste (positivo o negativo). |
 | `adjustment_type` | string | ✅ Sí | Tipo de ajuste (ej. "STOCK_IN", "STOCK_OUT", "CORRECTION"). |
 | `reason` | string | ✅ Sí | Justificación del ajuste. |
