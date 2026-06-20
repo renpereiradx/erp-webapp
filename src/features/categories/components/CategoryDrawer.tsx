@@ -116,7 +116,7 @@ export default function CategoryDrawer({
         <button
           type="button"
           onClick={onClose}
-          aria-label={t('common.cancel')}
+          aria-label="Cerrar"
           className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-text-secondary transition-colors"
         >
           <X size={20} />

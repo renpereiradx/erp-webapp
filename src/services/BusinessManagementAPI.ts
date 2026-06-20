@@ -231,6 +231,10 @@ class BusinessManagementAPI {
       } catch (e) {
         errorData = { message: `HTTP Error ${response.status}` }
       }
+      // Log del body crudo para depuración de errores 5xx
+      if (response.status >= 500 && typeof console !== 'undefined') {
+        console.error(`[API ${response.status}] ${endpoint} →`, errorData)
+      }
       throw toApiError(errorData)
     }
 

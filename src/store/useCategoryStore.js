@@ -28,7 +28,7 @@ const useCategoryStore = create()(
           const result = await categoryService.create(categoryData)
           await get().fetchCategories() // Recargar lista
           set({ loading: false })
-          return result
+          return result?.category || result?.data || result
         } catch (error) {
           set({ error: error.message, loading: false })
           throw error
@@ -41,7 +41,7 @@ const useCategoryStore = create()(
           const result = await categoryService.update(id, categoryData)
           await get().fetchCategories()
           set({ loading: false })
-          return result
+          return result?.category || result?.data || result
         } catch (error) {
           set({ error: error.message, loading: false })
           throw error

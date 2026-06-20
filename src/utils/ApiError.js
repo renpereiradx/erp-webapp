@@ -15,7 +15,15 @@ export const toApiError = (err, fallbackMessage = 'Error desconocido', correlati
 
   // Extraer información del backend si existe la estructura err.error
   const backendError = err?.error || {};
-  const message = backendError.message || err?.message || fallbackMessage;
+  // Soportar formatos comunes: {error:{message}}, {message}, {detail} (FastAPI), {errors:[...]}
+  const detailMessage = Array.isArray(err?.detail)
+    ? err.detail.map(d => d?.msg || d?.message || JSON.stringify(d)).join('; ')
+    : err?.detail;
+  const message =
+    backendError.message ||
+    err?.message ||
+    detailMessage ||
+    fallbackMessage;
   let code = backendError.code || err?.code || 'UNKNOWN';
 
   // Si el código sigue siendo UNKNOWN, intentar inferirlo del mensaje (legacy/red)

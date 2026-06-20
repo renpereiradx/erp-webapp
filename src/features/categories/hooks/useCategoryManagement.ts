@@ -97,7 +97,8 @@ export function useCategoryManagement(options: UseCategoryManagementOptions = {}
           closeDrawer()
           return updated
         }
-        const created = await createCategory(values)
+        const { is_active: _isActive, ...createPayload } = values
+        const created = await createCategory(createPayload)
         toast.success(t('categories.toast.created'))
         onCreated?.(created)
         closeDrawer()

@@ -16,13 +16,13 @@ import {
   Settings2,
   Barcode,
   Percent,
+  Tags,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
-  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -34,8 +34,6 @@ import { ProductVariantsManager } from './ProductVariantsManager';
  * ProductFormModal Component
  * Rediseñado con Tailwind CSS siguiendo fielmente Fluent Design System 2
  */
-const MANAGE_CATEGORIES_SENTINEL = '__manage_categories__'
-
 interface ProductFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -273,10 +271,6 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                       <Select
                         value={formData.category}
                         onValueChange={v => {
-                          if (v === MANAGE_CATEGORIES_SENTINEL) {
-                            openCategoryManager();
-                            return;
-                          }
                           setFormData(prev => ({ ...prev, category: v }));
                           setErrors(prev => ({ ...prev, category: undefined }));
                         }}
@@ -300,20 +294,20 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                               {cat.name}
                             </SelectItem>
                           ))}
-                          <SelectSeparator className="" />
-                          <SelectItem
-                            value={MANAGE_CATEGORIES_SENTINEL}
-                            className="font-bold text-xs uppercase tracking-wider text-primary focus:text-primary"
-                            data-testid="product-category-manage"
-                          >
-                            <span className="flex items-center gap-2">
-                              <Settings2 size={14} />
-                              {t('products.modal.category.manage')}
-                            </span>
-                          </SelectItem>
                         </SelectContent>
                       </Select>
                       {errors.category && <p className="text-[10px] text-error font-black uppercase tracking-widest mt-1.5">{errors.category}</p>}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={openCategoryManager}
+                        className="h-auto px-0 py-1 text-[10px] uppercase tracking-widest font-bold text-primary hover:bg-transparent hover:underline flex items-center gap-1.5 justify-start"
+                        data-testid="product-category-manage"
+                      >
+                        <Tags size={12} />
+                        {t('products.modal.category.manage')}
+                      </Button>
                     </div>
 
                     {/* Tipo de Producto */}

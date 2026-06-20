@@ -265,8 +265,13 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
     setIsCategoryManagerOpen(false);
   }, []);
 
-  const handleCategoryCreated = useCallback((created: { id: number }) => {
-    setFormData(prev => ({ ...prev, category: created.id.toString() }));
+  const handleCategoryCreated = useCallback((created: { id: number } | { category?: { id: number } } | { data?: { id: number } }) => {
+    const id =
+      (created as any)?.id ??
+      (created as any)?.category?.id ??
+      (created as any)?.data?.id;
+    if (typeof id !== 'number') return;
+    setFormData(prev => ({ ...prev, category: id.toString() }));
     setErrors(prev => ({ ...prev, category: undefined }));
   }, []);
 

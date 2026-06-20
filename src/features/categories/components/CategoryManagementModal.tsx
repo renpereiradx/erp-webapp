@@ -71,13 +71,11 @@ export default function CategoryManagementModal({
 
   return (
     <div
-      className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300"
-      onClick={onClose}
+      className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-slate-900/30 animate-in fade-in duration-300 pointer-events-none"
       data-testid="category-management-modal"
     >
       <div
-        className="bg-white dark:bg-surface-dark rounded-2xl shadow-fluent-16 w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100"
-        onClick={e => e.stopPropagation()}
+        className="bg-white dark:bg-surface-dark rounded-2xl shadow-fluent-16 w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 pointer-events-auto"
       >
         <div className="px-8 py-5 border-b border-border-subtle flex items-center justify-between bg-gradient-to-r from-primary/[0.03] via-transparent to-transparent">
           <div className="flex items-center gap-3.5">
@@ -96,7 +94,7 @@ export default function CategoryManagementModal({
           <button
             type="button"
             onClick={onClose}
-            aria-label={t('common.cancel')}
+            aria-label="Cerrar"
             className="p-2 hover:bg-slate-100 rounded-full text-text-secondary hover:text-text-main transition-all hover:rotate-90 duration-200"
           >
             <X size={20} />
@@ -140,18 +138,20 @@ export default function CategoryManagementModal({
 
       {isDrawerOpen && (
         <div
-          className="absolute inset-0 z-[1150] bg-black/30 backdrop-blur-sm"
+          className="absolute inset-0 z-[100] bg-black/20 pointer-events-auto"
           onClick={closeDrawer}
           aria-hidden="true"
         />
       )}
 
-      <CategoryDrawer
-        isOpen={isDrawerOpen}
-        onClose={closeDrawer}
-        category={selectedCategory}
-        onSave={handleSave}
-      />
+      <div className="pointer-events-auto">
+        <CategoryDrawer
+          isOpen={isDrawerOpen}
+          onClose={closeDrawer}
+          category={selectedCategory}
+          onSave={handleSave}
+        />
+      </div>
 
       <AlertDialog
         open={isDeleteDialogOpen}
