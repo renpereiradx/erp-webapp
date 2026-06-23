@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Layers } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,7 @@ import useCategoryStore from '@/store/useCategoryStore'
 import useTaxRateStore from '@/store/useTaxRateStore'
 
 import type { Category, CategoryFormValues } from '../types'
+import { CategoryAttributesManager } from './CategoryAttributesManager'
 
 const NONE_VALUE = 'none'
 
@@ -226,6 +227,19 @@ export default function CategoryDrawer({
             </label>
           </div>
         </form>
+
+        {category && (
+          <div className="pt-6 mt-6 border-t border-border-subtle">
+            <h3 className="text-[12px] font-black uppercase tracking-[0.1em] text-text-main mb-4 flex items-center gap-2">
+              <Layers size={16} className="text-primary" />
+              Atributos de la Categoría
+            </h3>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+              Estos atributos se aplicarán a todos los productos de esta categoría.
+            </p>
+            <CategoryAttributesManager categoryId={category.id} />
+          </div>
+        )}
       </div>
 
       <div className="p-6 border-t border-border-subtle bg-slate-50/50 dark:bg-slate-900/20 flex gap-3">

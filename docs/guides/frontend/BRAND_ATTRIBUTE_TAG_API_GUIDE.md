@@ -2,8 +2,8 @@
 
 > **Disclaimer:** Esta guía contiene ejemplos JSON para ilustración de respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
-**Versión:** 2.0.0
-**Fecha:** 16 de Junio de 2026
+**Versión:** 2.3.0
+**Fecha:** 22 de Junio de 2026
 **Endpoint Base:** `http://localhost:5050`
 
 ---
@@ -89,6 +89,7 @@ Authorization: Bearer <jwt_token>
 | `options` | array \| null | Opciones para tipo LIST |
 | `validation_rules` | object \| null | Reglas de validación JSON |
 | `unit_suffix` | string \| null | Sufijo de unidad (ej: "GB", "cm") |
+| `is_variant_attribute` | boolean | Si `true`, este atributo se usa típicamente en variantes (parte stock). La búsqueda avanzada lo busca en `product_variants.variant_attributes` O `product_attributes` (OR), para soportar productos con y sin variantes. Default: `false`. |
 | `is_active` | boolean | Estado del atributo |
 | `created_at` | string | Fecha de creación (ISO 8601) |
 | `updated_at` | string | Fecha de última actualización (ISO 8601) |
@@ -121,6 +122,7 @@ Authorization: Bearer <jwt_token>
 | `color` | string \| null | Color HEX para UI (ej: "#FF5733") |
 | `icon` | string \| null | Icono opcional (ej: "star", "fire") |
 | `tag_type` | string | `GENERAL`, `PROMOTION`, `STATUS`, `SEASON` |
+| `category_id` | number \| null | Categoría a la que pertenece el tag. `null` = tag global (aplica a cualquier producto). Si tiene valor, solo puede asignarse a productos de esa categoría. |
 | `is_active` | boolean | Estado de la etiqueta |
 | `created_at` | string | Fecha de creación (ISO 8601) |
 
@@ -241,9 +243,25 @@ Authorization: Bearer <jwt_token>
   "is_filterable": true,
   "is_visible": true,
   "display_order": 1,
-  "options": ["Rojo", "Azul", "Verde", "Negro"]
+  "options": ["Rojo", "Azul", "Verde", "Negro"],
+  "is_variant_attribute": true
 }
 ```
+
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| `category_id` | number \| null | No | ID de categoría. `null` = global |
+| `name` | string | Sí | Nombre del atributo |
+| `code` | string | Sí | Código único por categoría |
+| `data_type` | string | Sí | `STRING`, `NUMBER`, `BOOLEAN`, `DATE`, `LIST` |
+| `is_required` | boolean | No | Default: `false` |
+| `is_filterable` | boolean | No | Default: `true` |
+| `is_visible` | boolean | No | Default: `true` |
+| `display_order` | number | No | Default: `0` |
+| `options` | array \| null | No | Opciones para tipo `LIST` |
+| `validation_rules` | object \| null | No | Reglas de validación (ej: `{"min": 0, "max": 100}`) |
+| `unit_suffix` | string \| null | No | Sufijo (ej: `"GB"`, `"cm"`) |
+| `is_variant_attribute` | boolean | No | Default: `false`. Si `true`, la búsqueda avanzada busca en variantes O product_attributes |
 
 **Response (201 Created):** Retorna `AttributeDefinition`.
 
@@ -432,11 +450,26 @@ Para atributos de tipo DATE:
   "name": "Nuevo",
   "color": "#FF5733",
   "icon": "star",
-  "tag_type": "STATUS"
+  "tag_type": "STATUS",
+  "category_id": null
 }
 ```
 
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| `name` | string | Sí | Nombre de la etiqueta |
+| `color` | string \| null | No | Color HEX para UI |
+| `icon` | string \| null | No | Icono opcional |
+| `tag_type` | string \| null | No | `GENERAL` (default), `PROMOTION`, `STATUS`, `SEASON` |
+| `category_id` | number \| null | No | `null` = tag global (aplica a cualquier producto). Número = tag exclusivo de esa categoría (valida contra `public.categories`). |
+
 **Response (201 Created):** Retorna `Tag`.
+
+**Errores:**
+
+| HTTP Status | Descripción |
+|-------------|-------------|
+| 400 | Nombre vacío o `category_id` inexistente |
 
 ---
 
@@ -464,9 +497,19 @@ Para atributos de tipo DATE:
 ```json
 {
   "name": "En Oferta",
-  "color": "#00FF00"
+  "color": "#00FF00",
+  "category_id": 5
 }
 ```
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `name` | string \| null | Nuevo nombre (regenera slug) |
+| `color` | string \| null | Nuevo color |
+| `icon` | string \| null | Nuevo icono |
+| `tag_type` | string \| null | Nuevo tipo |
+| `category_id` | number \| null | `null` = no tocar. `0` = convertir en global. Número = amarrar a esa categoría (valida existencia). |
+| `is_active` | boolean \| null | Activar/desactivar |
 
 **Response (200 OK):**
 ```json
@@ -493,6 +536,17 @@ Para atributos de tipo DATE:
 ### 21. Asignar Etiqueta a Producto
 
 **`POST /products/{id}/tags/{tagId}`**
+
+**Validación de categoría:** Si el tag tiene `category_id` definido (no es global), el sistema valida que la categoría del producto coincida. En caso contrario retorna:
+
+```json
+{
+  "error": "tag 9 belongs to category 18 but product A-7oarkDR is in a different category",
+  "code": "INTERNAL_ERROR"
+}
+```
+
+HTTP 400. Los tags globales (`category_id = null`) pueden asignarse a cualquier producto.
 
 **Response (200 OK):**
 ```json
@@ -542,6 +596,8 @@ Para atributos de tipo DATE:
 **`POST /products/search/advanced`**
 
 Filtra productos por nombre/barcode, categoría (incluye subcategorías), marcas, tags y atributos dinámicos. Requiere permiso `products:read`.
+
+**Búsqueda de atributos de variantes:** Si un atributo está marcado con `is_variant_attribute = true` en su definición, la búsqueda lo busca en `product_variants.variant_attributes` (JSONB) **O** en `product_attributes` (EAV), para soportar productos con y sin variantes. Esto significa que filtrar por `color=rojo` encuentra productos que tienen variantes rojas **y** productos sin variantes que tengan `color=rojo` como atributo de producto.
 
 **Request Body:**
 ```json
@@ -712,6 +768,46 @@ Los endpoints de producto que retornan `ProductEnriched` ahora incluyen campos a
 
 ---
 
+---
+
+## Tags en Listados (sin N+1)
+
+Los endpoints de listado de productos (`GET /api/v1/products`, `POST /api/v1/products/search/advanced`) retornan tags y atributos inline en cada producto. **No haga requests adicionales por producto.**
+
+```json
+{
+  "id": "PROD_001",
+  "name": "Camisa Polo",
+  "tags": [
+    {"id": 1, "name": "Nuevo", "slug": "nuevo", "color": "#FF5733"},
+    {"id": 2, "name": "Oferta", "slug": "oferta", "color": "#00FF00"}
+  ]
+}
+```
+
+Solo use `GET /api/v1/products/{id}/tags` cuando necesite los tags de UN producto individual (ficha de detalle) y el producto no venga de un listado ya enriquecido.
+
+La búsqueda avanzada filtra por tags usando `tag_slugs: ["oferta", "nuevo"]` — el backend aplica el operador `&&` (array overlap) de PostgreSQL con índice GIN, no se requiere lógica de filtrado en frontend.
+
+---
+
+## Timing de Cache
+
+| Acción | Refresco de catálogo | Tiempo |
+|--------|---------------------|--------|
+| Crear/editar/eliminar tag | Trigger PostgreSQL en `products.tags` → `pg_notify('catalog_change')` → worker refresca `mv_product_catalog` | ~2-3s |
+| Asignar/quitar tag de producto | Trigger en `products.product_tags` → `pg_notify` → refresh | ~2-3s |
+| Cambio de atributos de producto | Trigger en `products.product_attributes` → `pg_notify` → refresh | ~2-3s |
+| Cambio de definición de atributo | Trigger en `products.attribute_definitions` → `pg_notify` → refresh | ~2-3s |
+| Crear/editar/eliminar variante | Trigger en `products.product_variants` → `pg_notify` → refresh | ~2-3s |
+
+**Estrategia recomendada para el frontend:**
+- Actualización optimista: modificar la UI local tras respuesta exitosa del POST/PUT/DELETE
+- No esperar el refresh del catálogo para mostrar el cambio al usuario
+- Para operaciones que dependen de datos agregados (ej: conteo de productos por tag), esperar ~3s o usar polling
+
+---
+
 ## Validaciones
 
 | Campo | Regla |
@@ -739,6 +835,28 @@ Los endpoints de producto que retornan `ProductEnriched` ahora incluyen campos a
 
 ## Historial de Cambios
 
+### v2.3.0 - 22 de Junio de 2026
+
+- **NUEVO**: Campo `is_variant_attribute` en `products.attribute_definitions` — marca atributos que típicamente se usan en variantes (color, talla, RAM).
+- **NUEVO**: Búsqueda avanzada `POST /products/search/advanced` ahora filtra atributos marcados como `is_variant_attribute` buscando en `product_variants.variant_attributes` **O** `product_attributes` (OR), para soportar productos con y sin variantes.
+- **NUEVO**: Facetas (`GET /products/search/facets`) ahora incluyen valores de `variant_attributes` cuando el atributo está marcado como `is_variant_attribute`.
+- Migración: `20260622115844_add_is_variant_attribute_to_definitions.up.sql`
+
+### v2.2.0 - 22 de Junio de 2026
+
+- **NUEVO**: Campo `category_id` en `products.tags` — los tags ahora pueden ser globales (`category_id = null`) o exclusivos de una categoría.
+- **NUEVO**: Validación al asignar tag a producto: si el tag tiene `category_id`, el producto debe pertenecer a la misma categoría (sino HTTP 400).
+- **NUEVO**: `POST /api/v1/tags` acepta `category_id` (valida existencia contra `public.categories`).
+- **NUEVO**: `PUT /api/v1/tags/{id}` acepta `category_id` (`0` = convertir en global, número = amarrar a categoría).
+- Migración: `20260622110217_add_category_id_to_tags.up.sql`
+
+### v2.1.0 - 20 de Junio de 2026
+
+- Sección: "Tags en Listados (sin N+1)" — los endpoints de listado ya retornan tags inline
+- Sección: "Timing de Cache" — cómo funciona el refresco asíncrono del catálogo tras mutaciones
+- Sección: "Verificación de Existencia en DeleteTag" — `DELETE /tags/{id}` ahora valida que el tag existe antes del soft-delete
+- Guía práctica complementaria: [VARIANT_TAG_USAGE_GUIDE.md](./VARIANT_TAG_USAGE_GUIDE.md)
+
 ### v2.0.0 - 16 de Junio de 2026
 
 - ✅ FASE 2: Endpoints `/products/search/advanced` y `/products/search/facets`
@@ -759,6 +877,6 @@ Los endpoints de producto que retornan `ProductEnriched` ahora incluyen campos a
 
 ---
 
-**Última actualización:** 16 de Junio de 2026
-**Versión:** 2.0.0
+**Última actualización:** 22 de Junio de 2026
+**Versión:** 2.3.0
 **Estado:** ✅ Production Ready

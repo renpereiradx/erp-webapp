@@ -1,7 +1,7 @@
 # 📂 API de Categorías e IVA (Impuesto al Valor Agregado)
 
-**Versión:** 1.2
-**Fecha:** 22 de Marzo de 2026
+**Versión:** 1.3
+**Fecha:** 22 de Junio de 2026
 **Endpoint Base:** `http://localhost:5050`
 
 ---
@@ -25,7 +25,9 @@ Este módulo gestiona la **organización de productos mediante categorías** y l
 
 ### Características Principales
 
-- **Categorías Jerárquicas**: Soporte para categorías padre e hijo con herencia fiscal.
+- **Categorías Jerárquicas**: Soporte para categorías padre e hijo con herencia fiscal, árbol anidado y prevención de ciclos.
+- **Prevención de Ciclos**: Validación automática al asignar `parent_id` para evitar autoreferencias y ciclos en la jerarquía.
+- **Árbol de Categorías**: Endpoint dedicado `GET /category/tree` que devuelve la jerarquía completa anidada.
 - **Clasificación Fiscal SIFEN**: Códigos CANASTA, GENERAL, EXENTO, etc. para facturación electrónica.
 - **Jerarquía de Tasas de 6 Niveles**: Resolución automática de tasas de IVA.
 - **Tasas de IVA Predefinidas**: IVA 10%, IVA 5%, Exento, ISC.
@@ -101,7 +103,80 @@ Authorization: Bearer <jwt_token>
 
 ---
 
-### 3. Crear Categoría
+### 3. Obtener Árbol de Categorías (Jerárquico)
+
+**Endpoint:** `GET /category/tree`
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": 18,
+    "name": "Electrónicos",
+    "description": "Productos electrónicos y tecnología",
+    "default_tax_rate_id": 1,
+    "parent_id": null,
+    "is_active": true,
+    "created_at": "2026-03-01T10:00:00Z",
+    "updated_at": "2026-03-01T10:00:00Z",
+    "children": [
+      {
+        "id": 22,
+        "name": "TV",
+        "description": "Televisores",
+        "default_tax_rate_id": 1,
+        "parent_id": 18,
+        "is_active": true,
+        "created_at": "2026-03-01T10:00:00Z",
+        "updated_at": "2026-03-01T10:00:00Z",
+        "children": [
+          {
+            "id": 25,
+            "name": "OLED",
+            "parent_id": 22,
+            "is_active": true,
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Alimentos y Bebidas",
+    "parent_id": null,
+    "is_active": true,
+    "children": []
+  }
+]
+```
+
+**Campos de respuesta (en cada nodo):**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | int | ID de la categoría |
+| `name` | string | Nombre de la categoría |
+| `parent_id` | int \| null | ID de la categoría padre (null si es raíz) |
+| `children` | array | Subcategorías hijas anidadas recursivamente |
+| `is_active` | bool | Estado activo/inactivo |
+
+**Notas:**
+- Solo incluye categorías activas (`is_active = true`).
+- Las categorías están anidadas recursivamente bajo el campo `children`.
+- Las categorías raíz son aquellas con `parent_id = null` o cuyo padre no está activo (huérfanas).
+- El campo `children` es siempre un array (vacío si no tiene hijas).
+
+**Diferencia con `GET /category/`:** El endpoint `/category/` devuelve una lista plana; `/category/tree` devuelve la jerarquía anidada para construir árboles de navegación en el frontend.
+
+---
+
+### 4. Crear Categoría
 
 **Endpoint:** `POST /category/`
 
@@ -128,7 +203,7 @@ Content-Type: application/json
 | `name` | string | Sí | Nombre de la categoría |
 | `description` | string | No | Descripción de la categoría |
 | `default_tax_rate_id` | int | No | ID de la tasa de IVA por defecto |
-| `parent_id` | int | No | ID de la categoría padre (para jerarquía) |
+| `parent_id` | int | No | ID de la categoría padre (`null` = raíz, `0` = ignorado). Se valida que exista. |
 
 **Response (201 Created):**
 ```json
@@ -141,13 +216,13 @@ Content-Type: application/json
 
 | Código | Descripción |
 |--------|-------------|
-| 400 | El nombre es requerido / JSON inválido |
+| 400 | El nombre es requerido / La categoría padre no existe / JSON inválido |
 | 401 | Token JWT inválido o ausente |
 | 500 | Error al crear categoría |
 
 ---
 
-### 4. Actualizar Categoría
+### 5. Actualizar Categoría
 
 **Endpoint:** `PUT /category/{id}`
 
@@ -181,7 +256,7 @@ Content-Type: application/json
 | `name` | string | No | Nombre de la categoría |
 | `description` | string | No | Descripción de la categoría |
 | `default_tax_rate_id` | int | No | ID de la tasa de IVA por defecto |
-| `parent_id` | int | No | ID de la categoría padre |
+| `parent_id` | int | No | ID de la categoría padre. `0` = quitar padre (volver raíz). Se valida que no cree ciclos (A→B→A) ni autoreferencia. |
 | `is_active` | bool | No | Estado activo/inactivo |
 
 **Response (200 OK):**
@@ -195,14 +270,14 @@ Content-Type: application/json
 
 | Código | Descripción |
 |--------|-------------|
-| 400 | ID inválido / JSON inválido |
+| 400 | ID inválido / JSON inválido / La categoría padre no existe / Una categoría no puede ser su propia padre / Esta relación crearía un ciclo en la jerarquía de categorías |
 | 401 | Token JWT inválido o ausente |
 | 404 | Categoría no encontrada |
 | 500 | Error al actualizar categoría |
 
 ---
 
-### 5. Eliminar Categoría (Soft Delete)
+### 6. Eliminar Categoría (Soft Delete)
 
 **Endpoint:** `DELETE /category/{id}`
 
@@ -715,7 +790,8 @@ Content-Type: application/json
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| GET | `/category/` | Obtener todas las categorías |
+| GET | `/category/` | Obtener todas las categorías (lista plana) |
+| GET | `/category/tree` | Obtener árbol jerárquico de categorías (anidado) |
 | GET | `/category/{id}` | Obtener categoría por ID |
 | POST | `/category/` | Crear nueva categoría |
 | PUT | `/category/{id}` | Actualizar categoría |
@@ -752,6 +828,15 @@ Content-Type: application/json
 ---
 
 ## 📝 Historial de Cambios
+
+### v1.3 - Junio 2026
+- **NUEVO**: `GET /category/tree` — devuelve el árbol jerárquico de categorías con `children` anidados recursivamente.
+- **MEJORA**: `POST /category/` ahora valida que `parent_id` sea una categoría existente.
+- **MEJORA**: `PUT /category/{id}` ahora valida:
+  - Autoreferencia (`parent_id == id`) → 400 rechazado.
+  - Ciclos en la jerarquía (A→B→A) → 400 rechazado.
+  - `parent_id = 0` = quitar padre (volver raíz).
+  - `parent_id` inexistente → 400 rechazado.
 
 ### v1.2 - Marzo 2026
 - **Sistema de Clasificación Fiscal**: Agregados 10 nuevos endpoints para gestión de clasificaciones SIFEN.

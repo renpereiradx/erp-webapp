@@ -132,7 +132,100 @@
   .card-compact {
     @apply p-4 md:p-5;
   }
+
+  /* Stitch Design Components */
+  .gradient-primary {
+    background: linear-gradient(135deg, #005baf 0%, #0074db 100%);
+  }
+  
+  .shadow-level-1 { 
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04); 
+  }
+  .shadow-level-2 { 
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.08); 
+  }
+  
+  .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined', sans-serif !important;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .icon-fill {
+    font-variation-settings: 'FILL' 1;
+  }
+
+  /* Custom Buttons & Inputs from Stitch */
+  .btn-primary {
+    background: linear-gradient(135deg, #005baf 0%, #0074db 100%);
+    color: white;
+    font-weight: bold;
+  }
+  .btn-secondary {
+    background-color: transparent;
+    border: 1px solid #137fec;
+    color: #137fec;
+  }
+  .btn-tertiary {
+    background-color: transparent;
+    border: none;
+    color: #455f89;
+  }
+  .btn-tertiary:hover {
+    color: #0074db;
+  }
+  
+  .form-input-custom {
+    border-radius: 12px;
+    border: 1px solid rgba(69, 95, 137, 0.2);
+    transition: all 0.2s ease-in-out;
+  }
+  .form-input-custom:focus {
+    border-color: #137fec;
+    border-width: 2px;
+    box-shadow: 0 0 0 4px rgba(19, 127, 236, 0.1);
+    outline: none;
+  }
 }
+
+/* Variants specific CSS */
+.shadow-whisper {
+  box-shadow: 0px 4px 20px rgba(19, 127, 236, 0.05);
+}
+.table-row-hover:hover {
+  background-color: theme('colors.surface-bright');
+  box-shadow: inset 2px 0 0 theme('colors.primary');
+}
+.inline-edit-cell {
+  position: relative;
+  cursor: text;
+  transition: all 0.2s;
+  border-bottom: 1px dashed theme('colors.outline-variant');
+}
+.inline-edit-cell:hover {
+  border-bottom-color: theme('colors.primary');
+  background-color: theme('colors.surface-container-low');
+}
+.inline-edit-icon {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.inline-edit-cell:hover .inline-edit-icon {
+  opacity: 1;
+}
+.toggle-checkbox:checked {
+  right: 0;
+  border-color: theme('colors.primary');
+}
+.toggle-checkbox:checked + .toggle-label {
+  background-color: theme('colors.primary');
+}
+
 
 /* Custom scrollbar for better Fluent feel */
 ::-webkit-scrollbar {

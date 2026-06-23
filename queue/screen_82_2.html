@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Atributos y Etiquetas - Etiquetas (Tags)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#ffb68c",
+                        "inverse-primary": "#a8c8ff",
+                        "inverse-on-surface": "#eef1f9",
+                        "surface-tint": "#005eb4",
+                        "outline": "#717785",
+                        "secondary": "#455f89",
+                        "on-primary-fixed": "#001b3c",
+                        "secondary-container": "#b3cdfd",
+                        "on-secondary-container": "#3c5780",
+                        "tertiary": "#964400",
+                        "outline-variant": "#c1c6d5",
+                        "on-secondary-fixed": "#001b3c",
+                        "on-background": "#181c22",
+                        "on-surface": "#181c22",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#ffdbc9",
+                        "inverse-surface": "#2d3137",
+                        "background": "#f8f9ff",
+                        "on-tertiary-container": "#fffbff",
+                        "on-tertiary-fixed": "#321200",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#2c4770",
+                        "on-primary-container": "#fefcff",
+                        "primary-fixed-dim": "#a8c8ff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#d6e3ff",
+                        "primary-container": "#0074db",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#bc5700",
+                        "surface-container": "#ebeef6",
+                        "primary": "#005baf",
+                        "on-tertiary-fixed-variant": "#753400",
+                        "on-surface-variant": "#414753",
+                        "surface-container-high": "#e5e8f1",
+                        "surface-container-low": "#f1f3fc",
+                        "surface-dim": "#d7dae2",
+                        "on-primary-fixed-variant": "#004689",
+                        "surface-container-highest": "#dfe2eb",
+                        "secondary-fixed-dim": "#adc7f7",
+                        "primary-fixed": "#d5e3ff",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#dfe2eb",
+                        "error": "#ba1a1a",
+                        "surface": "#f8f9ff",
+                        "surface-bright": "#f8f9ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "48px",
+                        "sm": "8px",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "lg": "24px",
+                        "container-max": "1280px",
+                        "md": "16px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "title-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-lg": ["Inter"],
+                        "body-sm-bold": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "900" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "800" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "800" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm-bold": ["12px", { "lineHeight": "16px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .whisper-shadow {
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04);
+        }
+        .btn-primary {
+            background: linear-gradient(180deg, #0074db 0%, #005baf 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex">
+<!-- SideNavBar (Shared Component JSON) -->
+<nav aria-label="Sidebar" class="hidden md:flex flex-col h-screen p-md space-y-base bg-surface-container-low docked left-0 w-64 flex-shrink-0 relative z-10 border-r border-outline-variant/20">
+<div class="mb-lg px-sm">
+<h1 class="font-title-md text-title-md font-bold text-primary">Management</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">v2.4.0</p>
+</div>
+<div class="flex flex-col space-y-2 flex-grow">
+<a class="flex items-center px-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="dashboard">dashboard</span>
+<span>Overview</span>
+</a>
+<a class="flex items-center px-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="list_alt">list_alt</span>
+<span>Attributes</span>
+</a>
+<a class="flex items-center px-sm py-2 rounded-lg bg-secondary-container text-on-secondary-container font-bold translate-x-1" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="sell" style="font-variation-settings: 'FILL' 1;">sell</span>
+<span>Tags</span>
+</a>
+<a class="flex items-center px-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="analytics">analytics</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center px-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="history">history</span>
+<span>Audit Log</span>
+</a>
+</div>
+<div class="mt-auto pt-lg border-t border-outline-variant/20 flex flex-col space-y-2">
+<a class="flex items-center px-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center px-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="contact_support">contact_support</span>
+<span>Support</span>
+</a>
+</div>
+</nav>
+<div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+<!-- TopNavBar (Shared Component JSON - Desktop/Tablet) -->
+<header class="flex justify-between items-center w-full px-lg max-w-container-max mx-auto h-16 bg-surface shadow-sm docked full-width top-0 z-20 flex-shrink-0 border-b border-outline-variant/20">
+<div class="flex items-center">
+<span class="font-title-md text-title-md font-black text-primary mr-lg md:hidden">Attribute Manager</span>
+<nav class="hidden md:flex space-x-6 h-full items-center">
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-150 py-4" href="#">Atributos</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-bold h-full flex items-center mt-1" href="#">Etiquetas</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-150 py-4" href="#">Dashboard</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-150 py-4" href="#">Configuraciones</a>
+</nav>
+</div>
+<div class="flex items-center space-x-4">
+<button aria-label="Notifications" class="text-on-surface-variant hover:text-primary transition-colors duration-150">
+<span class="material-symbols-outlined text-[24px]" data-icon="notifications">notifications</span>
+</button>
+<button aria-label="Help" class="text-on-surface-variant hover:text-primary transition-colors duration-150">
+<span class="material-symbols-outlined text-[24px]" data-icon="help">help</span>
+</button>
+<button aria-label="Account" class="text-on-surface-variant hover:text-primary transition-colors duration-150">
+<span class="material-symbols-outlined text-[24px]" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto px-md py-lg md:px-lg md:py-xl max-w-container-max mx-auto w-full">
+<!-- Page Header -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-xl gap-4">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Atributos y Etiquetas</h2>
+<!-- Tabs -->
+<div class="flex border-b border-outline-variant/30 mt-4">
+<a class="px-4 py-2 font-body-sm-bold text-body-sm-bold text-on-surface-variant hover:text-primary transition-colors" href="#">Definición de Atributos</a>
+<a class="px-4 py-2 font-body-sm-bold text-body-sm-bold text-primary border-b-2 border-primary" href="#">Etiquetas (Tags)</a>
+</div>
+</div>
+<button class="btn-primary text-on-primary font-body-sm-bold text-body-sm-bold px-4 py-2 rounded-[10px] flex items-center hover:opacity-90 transition-opacity whitespace-nowrap">
+<span class="material-symbols-outlined mr-2 text-[18px]" data-icon="add">add</span>
+                    Nueva Etiqueta
+                </button>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Left Card: Data Table -->
+<div class="lg:col-span-8 bg-surface-container-lowest rounded-xl whisper-shadow p-lg">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-title-md text-title-md text-on-surface">Etiquetas Activas</h3>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]" data-icon="search">search</span>
+<input class="pl-9 pr-4 py-1.5 border border-outline/20 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-bright w-full max-w-[200px] transition-all" placeholder="Buscar etiqueta..." type="text"/>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-separate border-spacing-0">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps">
+<th class="px-4 py-3 rounded-tl-xl font-medium">Nombre</th>
+<th class="px-4 py-3 font-medium">Slug</th>
+<th class="px-4 py-3 font-medium">Color</th>
+<th class="px-4 py-3 font-medium">Icono</th>
+<th class="px-4 py-3 font-medium">Tipo</th>
+<th class="px-4 py-3 rounded-tr-xl font-medium">Categoría</th>
+</tr>
+</thead>
+<tbody class="font-body-md">
+<tr class="hover:bg-surface-container-low transition-colors duration-150 group">
+<td class="px-4 py-3 border-b border-outline-variant/20 text-on-surface font-medium">Descuento Verano</td>
+<td class="px-4 py-3 border-b border-outline-variant/20 font-data-mono text-data-mono text-secondary">desc-verano</td>
+<td class="px-4 py-3 border-b border-outline-variant/20">
+<div class="flex items-center gap-2">
+<div class="w-4 h-4 rounded-full bg-[#f59e0b] border border-outline-variant/30"></div>
+<span class="font-data-mono text-[12px] text-outline">#f59e0b</span>
+</div>
+</td>
+<td class="px-4 py-3 border-b border-outline-variant/20 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" data-icon="local_offer">local_offer</span>
+</td>
+<td class="px-4 py-3 border-b border-outline-variant/20">
+<span class="inline-flex items-center px-2 py-0.5 rounded-sm bg-tertiary-fixed text-on-tertiary-fixed font-label-caps text-[10px]">PROMOTION</span>
+</td>
+<td class="px-4 py-3 border-b border-outline-variant/20 text-on-surface-variant">Campañas</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors duration-150 group">
+<td class="px-4 py-3 border-b border-outline-variant/20 text-on-surface font-medium">Envío Gratis</td>
+<td class="px-4 py-3 border-b border-outline-variant/20 font-data-mono text-data-mono text-secondary">envio-gratis</td>
+<td class="px-4 py-3 border-b border-outline-variant/20">
+<div class="flex items-center gap-2">
+<div class="w-4 h-4 rounded-full bg-[#10b981] border border-outline-variant/30"></div>
+<span class="font-data-mono text-[12px] text-outline">#10b981</span>
+</div>
+</td>
+<td class="px-4 py-3 border-b border-outline-variant/20 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" data-icon="local_shipping">local_shipping</span>
+</td>
+<td class="px-4 py-3 border-b border-outline-variant/20">
+<span class="inline-flex items-center px-2 py-0.5 rounded-sm bg-primary-fixed text-on-primary-fixed font-label-caps text-[10px]">GENERAL</span>
+</td>
+<td class="px-4 py-3 border-b border-outline-variant/20 text-on-surface-variant">Logística</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors duration-150 group">
+<td class="px-4 py-3 border-b border-outline-variant/20 text-on-surface font-medium">Agotado Temporalmente</td>
+<td class="px-4 py-3 border-b border-outline-variant/20 font-data-mono text-data-mono text-secondary">agotado-temp</td>
+<td class="px-4 py-3 border-b border-outline-variant/20">
+<div class="flex items-center gap-2">
+<div class="w-4 h-4 rounded-full bg-[#ef4444] border border-outline-variant/30"></div>
+<span class="font-data-mono text-[12px] text-outline">#ef4444</span>
+</div>
+</td>
+<td class="px-4 py-3 border-b border-outline-variant/20 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" data-icon="block">block</span>
+</td>
+<td class="px-4 py-3 border-b border-outline-variant/20">
+<span class="inline-flex items-center px-2 py-0.5 rounded-sm bg-error-container text-on-error-container font-label-caps text-[10px]">STATUS</span>
+</td>
+<td class="px-4 py-3 border-b border-outline-variant/20 text-on-surface-variant">Inventario</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors duration-150 group">
+<td class="px-4 py-3 border-b border-outline-variant/20 text-on-surface font-medium">Producto Nuevo</td>
+<td class="px-4 py-3 border-b border-outline-variant/20 font-data-mono text-data-mono text-secondary">nuevo-prod</td>
+<td class="px-4 py-3 border-b border-outline-variant/20">
+<div class="flex items-center gap-2">
+<div class="w-4 h-4 rounded-full bg-[#3b82f6] border border-outline-variant/30"></div>
+<span class="font-data-mono text-[12px] text-outline">#3b82f6</span>
+</div>
+</td>
+<td class="px-4 py-3 border-b border-outline-variant/20 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" data-icon="new_releases">new_releases</span>
+</td>
+<td class="px-4 py-3 border-b border-outline-variant/20">
+<span class="inline-flex items-center px-2 py-0.5 rounded-sm bg-primary-fixed text-on-primary-fixed font-label-caps text-[10px]">GENERAL</span>
+</td>
+<td class="px-4 py-3 border-b border-outline-variant/20 text-on-surface-variant">Catálogo</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Right Card: Form -->
+<div class="lg:col-span-4 bg-surface-container-lowest rounded-xl whisper-shadow p-lg">
+<h3 class="font-title-md text-title-md text-on-surface mb-6">Nueva Etiqueta</h3>
+<form class="space-y-5">
+<!-- Nombre -->
+<div>
+<label class="block font-body-sm-bold text-body-sm-bold text-on-surface mb-1">Nombre</label>
+<input class="w-full px-3 py-2 border border-secondary/20 rounded-DEFAULT bg-surface text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Ej: Black Friday" type="text"/>
+</div>
+<!-- Color Picker Mockup -->
+<div>
+<label class="block font-body-sm-bold text-body-sm-bold text-on-surface mb-1">Color</label>
+<div class="flex gap-2">
+<div class="h-10 w-10 rounded-DEFAULT bg-[#8b5cf6] border border-outline-variant/20 flex-shrink-0 cursor-pointer shadow-sm relative overflow-hidden group">
+<input class="absolute -inset-2 opacity-0 cursor-pointer w-14 h-14" type="color" value="#8b5cf6"/>
+</div>
+<div class="relative flex-1">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-outline font-data-mono text-[14px]">#</span>
+<input class="w-full pl-7 pr-3 py-2 border border-secondary/20 rounded-DEFAULT bg-surface font-data-mono text-data-mono text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors uppercase" type="text" value="8b5cf6"/>
+</div>
+</div>
+</div>
+<!-- Icon Name -->
+<div>
+<label class="block font-body-sm-bold text-body-sm-bold text-on-surface mb-1">Icono (Material)</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]" data-icon="star">star</span>
+<input class="w-full pl-10 pr-3 py-2 border border-secondary/20 rounded-DEFAULT bg-surface text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Ej: star" type="text"/>
+</div>
+</div>
+<!-- Tipo -->
+<div>
+<label class="block font-body-sm-bold text-body-sm-bold text-on-surface mb-1">Tipo</label>
+<div class="relative">
+<select class="w-full pl-3 pr-10 py-2 border border-secondary/20 rounded-DEFAULT bg-surface text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors appearance-none cursor-pointer">
+<option value="general">GENERAL</option>
+<option value="promotion">PROMOTION</option>
+<option value="status">STATUS</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<!-- Categoria -->
+<div>
+<label class="block font-body-sm-bold text-body-sm-bold text-on-surface mb-1">Categoría Assignment</label>
+<div class="relative">
+<select class="w-full pl-3 pr-10 py-2 border border-secondary/20 rounded-DEFAULT bg-surface text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors appearance-none cursor-pointer">
+<option disabled="" selected="" value="">Selecciona categoría...</option>
+<option value="campanas">Campañas</option>
+<option value="logistica">Logística</option>
+<option value="inventario">Inventario</option>
+<option value="catalogo">Catálogo</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<div class="pt-4 mt-2 border-t border-outline-variant/20 flex justify-end gap-3">
+<button class="px-4 py-2 bg-surface-container-low text-on-surface font-body-sm-bold text-body-sm-bold rounded-[10px] hover:bg-surface-container-high transition-colors" type="button">Cancelar</button>
+<button class="px-4 py-2 btn-primary text-on-primary font-body-sm-bold text-body-sm-bold rounded-[10px] hover:opacity-90 transition-opacity" type="button">Guardar Etiqueta</button>
+</div>
+</form>
+</div>
+</div>
+</main>
+<!-- Footer (Shared Component JSON) -->
+<footer class="flex justify-between items-center w-full px-lg py-md max-w-container-max mx-auto bg-surface-container-lowest border-t border-outline-variant/20 flex-shrink-0 z-10">
+<p class="font-label-caps text-label-caps text-on-surface-variant/70">© 2024 AttributeSystem Enterprise. All rights reserved.</p>
+<div class="flex space-x-6">
+<a class="font-label-caps text-label-caps text-on-surface-variant/70 hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant/70 hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant/70 hover:text-primary transition-colors" href="#">API Documentation</a>
+</div>
+</footer>
+</div>
+</body></html>

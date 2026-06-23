@@ -412,7 +412,41 @@ Los endpoints de ajustes manuales ahora soportan `variant_id` para operaciones g
 
 ---
 
+## Patrones de UI para Selector de Variantes
+
+### Opciones Disponibles por Atributo
+
+Para construir selectores de color/talla que solo muestren opciones con stock:
+
+1. `GET /products/{id}/variants` — obtener todas las variantes activas
+2. Extraer atributos únicos: `variant_attributes.color`, `variant_attributes.talla`
+3. Filtrar disponibilidad cruzada: al seleccionar "Rojo", mostrar solo tallas donde exista variante Roja activa
+4. Stock por variante: `GET /api/v1/variants/{id}/stock?branch_id=X`
+
+### ProductCard con Variantes
+
+Cuando un componente muestra una card de producto en listados:
+
+- Si el producto **no tiene variantes**: mostrar `stock_quantity` y `current_price` directo
+- Si el producto **tiene variantes**: el `stock_quantity` en `mv_product_catalog` ya es la suma de todas las variantes activas. Mostrar "múltiples opciones" o el rango de precios.
+- El `ProductEnriched` incluye `stock_quantity` como suma de padre + variantes activas
+
+### Actualización Optimista
+
+Después de crear/editar/eliminar una variante:
+- Actualizar la UI local inmediatamente con los datos retornados
+- El catálogo se refresca asíncronamente en ~2-3 segundos vía trigger PostgreSQL
+- Para operaciones en POS, consultar stock vía `GET /api/v1/variants/{id}/stock` que lee de la tabla fuente
+
+---
+
 ## Historial de Cambios
+
+### v1.1.0 - 20 de Junio de 2026
+
+- Sección "Patrones de UI para Selector de Variantes"
+- Documentación de timing de cache/refresh
+- Nueva guía práctica complementaria: [VARIANT_TAG_USAGE_GUIDE.md](./VARIANT_TAG_USAGE_GUIDE.md)
 
 ### v1.0.0 - 16 de Junio de 2026
 
@@ -426,6 +460,6 @@ Los endpoints de ajustes manuales ahora soportan `variant_id` para operaciones g
 
 ---
 
-**Última actualización:** 16 de Junio de 2026
-**Versión:** 1.0.0
+**Última actualización:** 20 de Junio de 2026
+**Versión:** 1.1.0
 **Estado:** ✅ Production Ready

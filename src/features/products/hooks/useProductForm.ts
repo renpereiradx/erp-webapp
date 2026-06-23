@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/useToast';
 export const baseProductSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   category: z.string().min(1, 'La categoría es requerida'),
-  productType: z.enum(['PHYSICAL', 'SERVICE']),
+  productType: z.enum(['PHYSICAL', 'SERVICE', 'PRODUCTION']),
   description: z.string().min(1, 'La descripción es requerida'),
   barcode: z.string().optional(),
   brand_id: z.string().optional(),
@@ -137,7 +137,7 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
       if (product) {
         setFormData({
           name: product.product_name || product.name || '',
-          category: product.category_id?.toString() || product.id_category?.toString() || '',
+          category: product.category?.id?.toString() || product.category_id?.toString() || product.id_category?.toString() || '',
           productType: product.product_type || 'PHYSICAL',
           description: product.description || '',
           barcode: product.barcode || '',

@@ -13,6 +13,7 @@ import {
   ProductPriceAdjustmentDialog,
   ProductCostAdjustmentDialog
 } from './ProductHistoryModals';
+import { VariantsManagerModal } from '@/components/modals/VariantsManagerModal';
 
 interface ProductDetailsModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
   const [isCostHistoryOpen, setIsCostHistoryOpen] = useState(false);
   const [isPriceAdjustmentOpen, setIsPriceAdjustmentOpen] = useState(false);
   const [isCostAdjustmentOpen, setIsCostAdjustmentOpen] = useState(false);
+  const [isVariantsManagerOpen, setIsVariantsManagerOpen] = useState(false);
   
   // Track specific row unit and value for adjusting
   const [selectedUnit, setSelectedUnit] = useState('unit');
@@ -324,9 +326,21 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
               {/* Variants Section */}
               {(product?.has_variants || variants.length > 0) && (
                 <section>
-                  <div className="flex items-center gap-2 mb-4 text-[#106ebe]">
-                    <Package size={18} />
-                    <h3 className="font-semibold text-xs uppercase tracking-widest">Variantes Registradas</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2 text-[#106ebe]">
+                      <Package size={18} />
+                      <h3 className="font-semibold text-xs uppercase tracking-widest">Variantes Registradas</h3>
+                    </div>
+                    {canWrite && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsVariantsManagerOpen(true)}
+                        className="text-xs border-primary text-primary hover:bg-primary/5"
+                      >
+                        Administrar Variantes
+                      </Button>
+                    )}
                   </div>
                   <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
                     {loadingVariants ? (
@@ -509,6 +523,14 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
           onSuccess={() => {
             // Se puede emitir un evento para refrescar los datos o usar toast.
           }}
+        />
+      )}
+
+      {isVariantsManagerOpen && (
+        <VariantsManagerModal 
+          isOpen={isVariantsManagerOpen}
+          onClose={() => setIsVariantsManagerOpen(false)}
+          product={product}
         />
       )}
     </div>

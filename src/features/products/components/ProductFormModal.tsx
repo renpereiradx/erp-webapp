@@ -17,6 +17,7 @@ import {
   Barcode,
   Percent,
   Tags,
+  Layers,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,6 +30,8 @@ import {
 import { CategoryManagementModal } from '@/features/categories'
 import { useProductForm } from '../hooks/useProductForm';
 import { ProductVariantsManager } from './ProductVariantsManager';
+import { ProductAttributesManager } from './ProductAttributesManager';
+import { ProductTagsManager } from './ProductTagsManager';
 
 /**
  * ProductFormModal Component
@@ -42,7 +45,7 @@ interface ProductFormModalProps {
 
 export default function ProductFormModal({ isOpen, onClose, product = null }: ProductFormModalProps) {
   const { t } = useI18n()
-  const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'measure' | 'variants'>('basic')
+  const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'measure' | 'variants' | 'attributes'>('basic')
   
   const {
     formData,
@@ -96,10 +99,18 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
   // Si la validación del hook arroja algún error, nos movemos a la pestaña correspondiente
   useEffect(() => {
     if (errors && Object.keys(errors).length > 0) {
-      if (errors.name || errors.category || errors.description) {
+      if (errors.name || errors.category || errors.description || errors.productType) {
         setActiveTab('basic');
-      } else if (errors.base_unit || errors.scale_code) {
+      } else if (errors.base_unit || errors.scale_code || errors.barcode) {
         setActiveTab('measure');
+      } else if (errors.tax_rate_id || errors.origin || errors.brand_id) {
+        setActiveTab('details');
+      }
+      
+      // Scroll to top so the banner is visible
+      const formContainer = document.getElementById('product-form-container');
+      if (formContainer) {
+        formContainer.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
   }, [errors]);
@@ -205,24 +216,35 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
             )}
           </button>
 
-          {isEditMode && (
-            <button
-              type="button"
-              onClick={() => setActiveTab('variants')}
-              className={`py-3 px-1 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-200 flex items-center gap-2 relative ${
-                activeTab === 'variants'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-text-secondary hover:text-text-main'
-              }`}
-            >
-              <Package size={14} />
-              <span>Variantes (SKUs)</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setActiveTab('attributes')}
+            className={`py-3 px-1 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-200 flex items-center gap-2 relative ${
+              activeTab === 'attributes'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-text-secondary hover:text-text-main'
+            }`}
+          >
+            <Layers size={14} />
+            <span>Ficha Técnica</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('variants')}
+            className={`py-3 px-1 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-200 flex items-center gap-2 relative ${
+              activeTab === 'variants'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-text-secondary hover:text-text-main'
+            }`}
+          >
+            <Package size={14} />
+            <span>Variantes (SKUs)</span>
+          </button>
         </div>
 
         {/* Form Body con Scroll */}
-        <div className="flex-1 overflow-y-auto p-8 bg-slate-50/30">
+        <div id="product-form-container" className="flex-1 overflow-y-auto p-8 bg-slate-50/30">
           <form id="product-form" onSubmit={handleSubmit} className="space-y-6">
             {Object.keys(errors).length > 0 && (
               <div className="flex items-start gap-3 rounded-xl border border-error/20 bg-error/[0.02] p-4 text-xs text-error animate-in fade-in duration-200">
@@ -432,6 +454,21 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                       </div>
                     )}
                   </div>
+                  
+                  {/* Etiquetas (Tags) */}
+                  <div className="mt-8 pt-6 border-t border-slate-100">
+                    <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-50 text-slate-800">
+                      <Tags size={16} className="text-primary" />
+                      <h3 className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Etiquetas (Tags)</h3>
+                    </div>
+                    <ProductTagsManager 
+                      productId={product?.id || product?.product_id} 
+                      disabled={!isEditMode} 
+                    />
+                    <p className="text-[9px] text-text-secondary font-bold uppercase tracking-wider mt-2 ml-1">
+                      Agregue etiquetas como "Nuevo", "Oferta" o "Destacado" para filtros y catálogos.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -562,7 +599,22 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                     <h3 className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Variantes (SKUs)</h3>
                   </div>
                   <div className="pt-4">
-                    <ProductVariantsManager productId={product?.id || product?.product_id} />
+                    <ProductVariantsManager productId={product?.id || product?.product_id} categoryId={formData.category} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CONTENIDO PESTAÑA: ATRIBUTOS DE PRODUCTO */}
+            {activeTab === 'attributes' && (
+              <div className="space-y-6 animate-in fade-in duration-200 slide-in-from-left-3">
+                <div className="bg-white p-6 rounded-2xl border border-border-subtle shadow-sm space-y-6">
+                  <div className="flex items-center gap-2 pb-3 border-b border-slate-100 text-slate-800">
+                    <Layers size={16} className="text-primary" />
+                    <h3 className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Ficha Técnica (Atributos descriptivos)</h3>
+                  </div>
+                  <div className="pt-2">
+                    <ProductAttributesManager productId={product?.id || product?.product_id} categoryId={formData.category} />
                   </div>
                 </div>
               </div>

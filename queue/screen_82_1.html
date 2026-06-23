@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Atributos y Etiquetas - Definición de Atributos</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#ffb68c",
+                        "inverse-primary": "#a8c8ff",
+                        "inverse-on-surface": "#eef1f9",
+                        "surface-tint": "#005eb4",
+                        "outline": "#717785",
+                        "secondary": "#455f89",
+                        "on-primary-fixed": "#001b3c",
+                        "secondary-container": "#b3cdfd",
+                        "on-secondary-container": "#3c5780",
+                        "tertiary": "#964400",
+                        "outline-variant": "#c1c6d5",
+                        "on-secondary-fixed": "#001b3c",
+                        "on-background": "#181c22",
+                        "on-surface": "#181c22",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#ffdbc9",
+                        "inverse-surface": "#2d3137",
+                        "background": "#f8f9ff",
+                        "on-tertiary-container": "#fffbff",
+                        "on-tertiary-fixed": "#321200",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#2c4770",
+                        "on-primary-container": "#fefcff",
+                        "primary-fixed-dim": "#a8c8ff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#d6e3ff",
+                        "primary-container": "#0074db",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#bc5700",
+                        "surface-container": "#ebeef6",
+                        "primary": "#005baf",
+                        "on-tertiary-fixed-variant": "#753400",
+                        "on-surface-variant": "#414753",
+                        "surface-container-high": "#e5e8f1",
+                        "surface-container-low": "#f1f3fc",
+                        "surface-dim": "#d7dae2",
+                        "on-primary-fixed-variant": "#004689",
+                        "surface-container-highest": "#dfe2eb",
+                        "secondary-fixed-dim": "#adc7f7",
+                        "primary-fixed": "#d5e3ff",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#dfe2eb",
+                        "error": "#ba1a1a",
+                        "surface": "#f8f9ff",
+                        "surface-bright": "#f8f9ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "48px",
+                        "sm": "8px",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "lg": "24px",
+                        "container-max": "1280px",
+                        "md": "16px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "title-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-lg": ["Inter"],
+                        "body-sm-bold": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "900" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "800" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "800" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm-bold": ["12px", { "lineHeight": "16px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .whisper-shadow {
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04);
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #005baf, #0074db);
+            border-radius: 10px;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface-dim shadow-sm docked full-width top-0 z-50">
+<div class="flex justify-between items-center w-full px-lg max-w-container-max mx-auto h-16">
+<div class="flex items-center space-x-lg">
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-black text-primary dark:text-primary-fixed-dim">Attribute Manager</span>
+<nav class="hidden md:flex space-x-md">
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 font-bold flex items-center hover:text-primary dark:hover:text-primary-fixed transition-colors duration-150" href="#">
+                        Atributos
+                    </a>
+<a class="text-on-surface-variant dark:text-outline-variant font-medium flex items-center hover:text-primary dark:hover:text-primary-fixed transition-colors duration-150" href="#">
+                        Etiquetas
+                    </a>
+<a class="text-on-surface-variant dark:text-outline-variant font-medium flex items-center hover:text-primary dark:hover:text-primary-fixed transition-colors duration-150" href="#">
+                        Dashboard
+                    </a>
+<a class="text-on-surface-variant dark:text-outline-variant font-medium flex items-center hover:text-primary dark:hover:text-primary-fixed transition-colors duration-150" href="#">
+                        Configuraciones
+                    </a>
+</nav>
+</div>
+<div class="flex items-center space-x-md">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 0;">search</span>
+<input class="pl-lg pr-sm py-sm rounded-lg bg-surface-container-low border-none focus:ring-2 focus:ring-primary text-body-md w-48" placeholder="Search..." type="text"/>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span></button>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">help</span></button>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span></button>
+</div>
+</div>
+</header>
+<div class="flex flex-1 max-w-container-max mx-auto w-full pt-gutter pb-xl px-lg md:px-gutter gap-gutter relative">
+<!-- SideNavBar (Hidden on Mobile) -->
+<aside class="hidden md:flex flex-col h-full w-64 bg-surface-container-low dark:bg-surface-container-lowest p-md space-y-base rounded-xl sticky top-[88px]">
+<div class="mb-lg px-sm">
+<div class="flex items-center space-x-sm mb-xs">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">SO</div>
+<div>
+<h2 class="font-title-md text-title-md font-bold text-primary dark:text-primary-fixed-dim">Management</h2>
+<p class="font-label-caps text-label-caps text-on-surface-variant">v2.4.0</p>
+</div>
+</div>
+</div>
+<button class="btn-primary py-sm px-md mb-md font-body-sm-bold flex items-center justify-center space-x-xs">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>New Attribute</span>
+</button>
+<nav class="flex-1 space-y-xs">
+<a class="flex items-center px-sm py-sm text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">dashboard</span>
+<span>Overview</span>
+</a>
+<a class="flex items-center px-sm py-sm bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-lg font-bold translate-x-1" href="#">
+<span class="material-symbols-outlined mr-sm">list_alt</span>
+<span>Attributes</span>
+</a>
+<a class="flex items-center px-sm py-sm text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">sell</span>
+<span>Tags</span>
+</a>
+<a class="flex items-center px-sm py-sm text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">analytics</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center px-sm py-sm text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">history</span>
+<span>Audit Log</span>
+</a>
+</nav>
+<div class="pt-md border-t border-outline-variant/20 mt-auto space-y-xs">
+<a class="flex items-center px-sm py-sm text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center px-sm py-sm text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">contact_support</span>
+<span>Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col min-w-0">
+<!-- Page Header -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-lg gap-md">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-background">Atributos y Etiquetas</h1>
+<div class="flex space-x-md mt-sm border-b border-outline-variant/30 w-full">
+<button class="font-body-sm-bold text-body-sm-bold text-primary border-b-2 border-primary pb-sm px-xs">Definición de Atributos</button>
+<button class="font-body-sm-bold text-body-sm-bold text-on-surface-variant pb-sm px-xs hover:text-primary transition-colors">Etiquetas (Tags)</button>
+</div>
+</div>
+<button class="btn-primary py-sm px-lg font-body-sm-bold shadow-sm hover:opacity-90 transition-opacity">Nuevo Atributo</button>
+</div>
+<!-- Bento Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Left Card: Data Table -->
+<div class="lg:col-span-2 bg-surface-container-lowest rounded-[12px] p-lg whisper-shadow flex flex-col h-[600px] overflow-hidden">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-title-md text-title-md text-on-background">Atributos Registrados</h3>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+<input class="pl-[32px] pr-sm py-[6px] rounded bg-surface-container-low border-none text-body-md w-64 focus:ring-1 focus:ring-primary" placeholder="Buscar atributo..." type="text"/>
+</div>
+</div>
+<div class="flex-1 overflow-auto">
+<table class="w-full border-separate border-spacing-0 text-left">
+<thead class="sticky top-0 bg-surface-container-low z-10 rounded-t-[12px]">
+<tr>
+<th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md rounded-tl-[12px]">Nombre</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md">Código</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md">Tipo</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md text-center">Req.</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md text-center">Filt.</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md rounded-tr-[12px]">Variante</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr class="hover:bg-surface-container-low/50 transition-colors duration-150 group cursor-pointer">
+<td class="py-md px-md font-body-md text-on-background font-medium">Color del Producto</td>
+<td class="py-md px-md font-data-mono text-data-mono text-secondary">ATTR_COLOR</td>
+<td class="py-md px-md">
+<span class="inline-flex items-center px-2 py-1 rounded bg-secondary-container/30 text-on-secondary-container font-label-caps text-label-caps">LIST</span>
+</td>
+<td class="py-md px-md text-center">
+<span class="material-symbols-outlined text-primary text-[20px]">check_box</span>
+</td>
+<td class="py-md px-md text-center">
+<span class="material-symbols-outlined text-primary text-[20px]">check_box</span>
+</td>
+<td class="py-md px-md">
+<span class="inline-flex items-center px-2 py-1 rounded bg-[#059669]/10 text-[#059669] font-label-caps text-label-caps">TRUE</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors duration-150 group cursor-pointer bg-surface-container-low/20">
+<td class="py-md px-md font-body-md text-on-background font-medium">Peso (kg)</td>
+<td class="py-md px-md font-data-mono text-data-mono text-secondary">ATTR_WEIGHT</td>
+<td class="py-md px-md">
+<span class="inline-flex items-center px-2 py-1 rounded bg-tertiary-container/10 text-tertiary font-label-caps text-label-caps">NUMBER</span>
+</td>
+<td class="py-md px-md text-center">
+<span class="material-symbols-outlined text-outline-variant text-[20px]">check_box_outline_blank</span>
+</td>
+<td class="py-md px-md text-center">
+<span class="material-symbols-outlined text-primary text-[20px]">check_box</span>
+</td>
+<td class="py-md px-md"></td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors duration-150 group cursor-pointer">
+<td class="py-md px-md font-body-md text-on-background font-medium">Material Principal</td>
+<td class="py-md px-md font-data-mono text-data-mono text-secondary">ATTR_MATERIAL</td>
+<td class="py-md px-md">
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-tint/10 text-surface-tint font-label-caps text-label-caps">STRING</span>
+</td>
+<td class="py-md px-md text-center">
+<span class="material-symbols-outlined text-outline-variant text-[20px]">check_box_outline_blank</span>
+</td>
+<td class="py-md px-md text-center">
+<span class="material-symbols-outlined text-outline-variant text-[20px]">check_box_outline_blank</span>
+</td>
+<td class="py-md px-md"></td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors duration-150 group cursor-pointer">
+<td class="py-md px-md font-body-md text-on-background font-medium">Garantía Extendida</td>
+<td class="py-md px-md font-data-mono text-data-mono text-secondary">ATTR_WARRANTY</td>
+<td class="py-md px-md">
+<span class="inline-flex items-center px-2 py-1 rounded bg-primary-fixed-dim/30 text-on-primary-fixed font-label-caps text-label-caps">BOOLEAN</span>
+</td>
+<td class="py-md px-md text-center">
+<span class="material-symbols-outlined text-outline-variant text-[20px]">check_box_outline_blank</span>
+</td>
+<td class="py-md px-md text-center">
+<span class="material-symbols-outlined text-primary text-[20px]">check_box</span>
+</td>
+<td class="py-md px-md"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Right Card: Editor Form -->
+<div class="bg-surface-container-lowest rounded-[12px] p-lg whisper-shadow flex flex-col h-[600px]">
+<div class="flex justify-between items-center mb-md border-b border-outline-variant/20 pb-sm">
+<h3 class="font-title-md text-title-md text-on-background">Editor de Atributo</h3>
+<div class="flex space-x-xs">
+<button class="p-1 text-on-surface-variant hover:text-error transition-colors rounded"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+</div>
+</div>
+<form class="flex-1 overflow-y-auto pr-xs space-y-md custom-scrollbar">
+<div>
+<label class="block font-body-sm-bold text-body-sm-bold text-on-surface-variant mb-xs">Nombre</label>
+<input class="w-full rounded bg-surface-container-lowest border border-outline/20 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-sm py-[8px]" type="text" value="Color del Producto"/>
+</div>
+<div>
+<label class="block font-body-sm-bold text-body-sm-bold text-on-surface-variant mb-xs">Código <span class="font-normal text-outline text-[11px]">(Autogenerado)</span></label>
+<input class="w-full rounded bg-surface-container-low border border-transparent text-data-mono font-data-mono px-sm py-[8px] text-secondary" readonly="" type="text" value="ATTR_COLOR"/>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<div>
+<label class="block font-body-sm-bold text-body-sm-bold text-on-surface-variant mb-xs">Tipo</label>
+<select class="w-full rounded bg-surface-container-lowest border border-outline/20 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-sm py-[8px]">
+<option>STRING</option>
+<option>NUMBER</option>
+<option>BOOLEAN</option>
+<option selected="">LIST</option>
+</select>
+</div>
+<div>
+<label class="block font-body-sm-bold text-body-sm-bold text-on-surface-variant mb-xs">Categoría</label>
+<select class="w-full rounded bg-surface-container-lowest border border-outline/20 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-sm py-[8px]">
+<option>General</option>
+<option selected="">Apariencia</option>
+<option>Especificaciones</option>
+</select>
+</div>
+</div>
+<!-- Special Area for LIST -->
+<div class="bg-surface-container-low p-sm rounded-lg border border-outline-variant/30">
+<label class="block font-body-sm-bold text-body-sm-bold text-on-background mb-sm flex justify-between items-center">
+                                Opciones de Lista
+                                <button class="text-primary hover:text-primary-container flex items-center text-[11px]" type="button"><span class="material-symbols-outlined text-[14px] mr-[2px]">add</span> Añadir</button>
+</label>
+<div class="space-y-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline cursor-grab text-[18px]">drag_indicator</span>
+<input class="flex-1 rounded bg-surface-container-lowest border border-outline/20 text-body-md px-2 py-1 text-sm" type="text" value="Rojo"/>
+<button class="text-outline hover:text-error"><span class="material-symbols-outlined text-[18px]">close</span></button>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline cursor-grab text-[18px]">drag_indicator</span>
+<input class="flex-1 rounded bg-surface-container-lowest border border-outline/20 text-body-md px-2 py-1 text-sm" type="text" value="Azul"/>
+<button class="text-outline hover:text-error"><span class="material-symbols-outlined text-[18px]">close</span></button>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline cursor-grab text-[18px]">drag_indicator</span>
+<input class="flex-1 rounded bg-surface-container-lowest border border-outline/20 text-body-md px-2 py-1 text-sm" type="text" value="Verde"/>
+<button class="text-outline hover:text-error"><span class="material-symbols-outlined text-[18px]">close</span></button>
+</div>
+</div>
+</div>
+<!-- Config Toggles -->
+<div class="grid grid-cols-2 gap-y-sm gap-x-md pt-sm border-t border-outline-variant/20">
+<label class="flex items-center space-x-2 cursor-pointer">
+<input checked="" class="rounded text-primary border-outline-variant focus:ring-primary w-4 h-4 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-on-background">Requerido</span>
+</label>
+<label class="flex items-center space-x-2 cursor-pointer">
+<input checked="" class="rounded text-primary border-outline-variant focus:ring-primary w-4 h-4 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-on-background">Filtrable</span>
+</label>
+<label class="flex items-center space-x-2 cursor-pointer">
+<input checked="" class="rounded text-primary border-outline-variant focus:ring-primary w-4 h-4 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-on-background">Visible</span>
+</label>
+<label class="flex items-center space-x-2 cursor-pointer">
+<input checked="" class="rounded text-[#059669] border-outline-variant focus:ring-[#059669] w-4 h-4 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-on-background flex items-center">Variante <span class="material-symbols-outlined text-outline ml-1 text-[14px]" title="Define un SKU">info</span></span>
+</label>
+</div>
+</form>
+<div class="pt-md mt-auto border-t border-outline-variant/20 flex justify-end space-x-sm">
+<button class="px-md py-sm rounded bg-surface-container-low text-on-background font-body-sm-bold hover:bg-surface-variant transition-colors">Cancelar</button>
+<button class="px-md py-sm rounded btn-primary font-body-sm-bold hover:opacity-90 transition-opacity">Guardar Cambios</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest dark:bg-surface-dim border-t border-outline-variant/20 docked full-width bottom-0 mt-auto">
+<div class="flex justify-between items-center w-full px-lg py-md max-w-container-max mx-auto">
+<span class="font-label-caps text-label-caps text-on-surface-variant/70">© 2024 AttributeSystem Enterprise. All rights reserved.</span>
+<div class="flex space-x-md">
+<a class="font-label-caps text-label-caps text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Privacy Policy</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Terms of Service</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">API Documentation</a>
+</div>
+</div>
+</footer>
+<style>
+        /* Custom scrollbar for form area to keep it neat */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c6d5;
+            border-radius: 4px;
+        }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+            background: #717785;
+        }
+    </style>
+</body></html>

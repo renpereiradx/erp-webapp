@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-background light text-on-background antialiased" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Clasificación e Impuestos - ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#ebedf7",
+                        "surface-container-high": "#e6e8f1",
+                        "outline-variant": "#c1c6d5",
+                        "primary-fixed": "#d5e3ff",
+                        "inverse-on-surface": "#eef0fa",
+                        "primary-container": "#0074db",
+                        "on-primary-fixed-variant": "#004689",
+                        "tertiary": "#964400",
+                        "on-secondary-container": "#3c5780",
+                        "outline": "#717785",
+                        "surface": "#f9f9ff",
+                        "on-tertiary-container": "#fffbff",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#001b3c",
+                        "tertiary-fixed": "#ffdbc9",
+                        "on-background": "#181c22",
+                        "on-tertiary-fixed-variant": "#753400",
+                        "surface-container-low": "#f1f3fd",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "secondary": "#455f89",
+                        "surface-bright": "#f9f9ff",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#fefcff",
+                        "on-secondary-fixed-variant": "#2c4770",
+                        "tertiary-fixed-dim": "#ffb68c",
+                        "surface-container-highest": "#e0e2ec",
+                        "on-secondary-fixed": "#001b3c",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#d7dae3",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#b3cdfd",
+                        "inverse-primary": "#a8c8ff",
+                        "surface-variant": "#e0e2ec",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#321200",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#d6e3ff",
+                        "on-surface": "#181c22",
+                        "background": "#f9f9ff",
+                        "primary-fixed-dim": "#a8c8ff",
+                        "primary": "#005baf",
+                        "tertiary-container": "#bc5700",
+                        "surface-tint": "#005eb4",
+                        "secondary-fixed-dim": "#adc7f7",
+                        "on-surface-variant": "#414753",
+                        "inverse-surface": "#2d3038"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "md": "16px",
+                        "container-max": "1440px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "base": "4px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "data-table": ["JetBrains Mono"],
+                        "label-caps": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "title-md": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "900" }],
+                        "data-table": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "900" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "900" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        /* Custom Shadows for Elevation */
+        .shadow-level-1 { box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04); }
+        .shadow-level-2 { box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.08); }
+        
+        /* Custom Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, #005baf 0%, #0074db 100%);
+            color: white;
+            font-weight: bold;
+        }
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid #137fec;
+            color: #137fec;
+        }
+        .btn-tertiary {
+            background-color: transparent;
+            border: none;
+            color: #455f89;
+        }
+        .btn-tertiary:hover {
+            color: #0074db;
+        }
+        
+        /* Input Fields */
+        .form-input-custom {
+            border-radius: 12px;
+            border: 1px solid rgba(69, 95, 137, 0.2);
+            transition: all 0.2s ease-in-out;
+        }
+        .form-input-custom:focus {
+            border-color: #137fec;
+            border-width: 2px;
+            box-shadow: 0 0 0 4px rgba(19, 127, 236, 0.1);
+            outline: none;
+        }
+
+        /* Tree Node Hover */
+        .tree-node:hover {
+            background-color: #f1f3fd;
+            color: #137fec;
+        }
+        .tree-node-active {
+            background-color: rgba(19, 127, 236, 0.1);
+            color: #137fec;
+            font-weight: 700;
+        }
+
+        /* Table Row Hover */
+        .table-row-hover:hover {
+            background-color: #f0f4ff;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen md:flex-row bg-background">
+<!-- TopNavBar (Mobile Only) / TopAppBar Logic from JSON -->
+<header class="md:hidden flex justify-between items-center w-full px-lg py-md bg-surface shadow-sm sticky top-0 z-50">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary text-[24px]">menu</span>
+<span class="text-title-md font-title-md font-black text-primary">Clasificación e Impuestos</span>
+</div>
+<div class="flex gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined">search</span>
+<img alt="User profile" class="w-8 h-8 rounded-full object-cover" data-alt="A professional headshot of an ERP system user, well-lit, corporate setting, sharp focus, friendly expression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcCPpOCF48-3vnqWuYv9SgbMP0fqI25--SI6S6G9p_pIE3W0tD8DfSuyyhmIVPV-J-iTwN90HdwfNPPT9EEzlFNT11RZwsgDWwK4TOeMhQ_dIloCj1mqo30xuWcE6vhoiQbJECcDvqqzTZ8zQ7j15bR8qOmFJEDZveMNKIlYfcFvhhADE78D1sl_RWv7SXpxgfSn3xcu1qEJZ_hZMjP28JlobMhim9ANu1CgPLJg0MBsxC-aVFCk3NR2bILHvZXJIFXxVk2tPj2A"/>
+</div>
+</header>
+<!-- SideNavBar (Desktop Only) - Generated from JSON -->
+<nav class="hidden md:flex flex-col h-screen fixed left-0 top-0 z-40 py-lg w-64 bg-surface-container-low border-r border-outline-variant/20">
+<div class="px-lg pb-md border-b border-outline-variant/20">
+<div class="flex items-center gap-sm mb-xs">
+<img alt="ERP Logo" class="w-10 h-10 rounded-lg object-cover" data-alt="A minimalist geometric ERP logo featuring interconnected blue squares on a white background, representing structured data management, crisp lines." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgFFlOp9rflMZlahGzJvXL4QgFqI2fqaL9W3FaoNxY4aRnox7VpxlyMz8SNXKRP5hfKs6C3tOwMibiyI2ObFv7TwMQIhpsfD3X1UtNA8CUimgXo6yk8krMqB4l6ilbYZJaMQBlSP2MyO8iMXj8cfuVU2pGCSifKWYofVMlYVXiYtJFxwN_8fxg--tkdV-FAcGvy8NZQch-ZmO10WE11CZOBQka_iHYoei1cXOzYFSNlDyWP_xyCVdo4aE4Tku475j0s0H1JT-y4w"/>
+<div>
+<h1 class="text-title-md font-title-md font-black text-on-surface">Gesti\u00f3n Fiscal</h1>
+<p class="text-body-sm font-body-sm text-on-surface-variant">v2.4.0</p>
+</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto py-md px-sm flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors cursor-pointer text-body-sm font-body-sm" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+                Inventario
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors cursor-pointer text-body-sm font-body-sm" href="#">
+<span class="material-symbols-outlined">payments</span>
+                Ventas
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors cursor-pointer text-body-sm font-body-sm" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+                Compras
+            </a>
+<!-- Active State -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-primary font-bold border-r-4 border-primary bg-primary/5 cursor-pointer text-body-sm font-body-sm transition-all duration-200" href="#">
+<span class="material-symbols-outlined icon-fill">settings</span>
+                Configuraci\u00f3n
+            </a>
+</div>
+<div class="mt-auto px-sm pt-md border-t border-outline-variant/20">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors cursor-pointer text-body-sm font-body-sm" href="#">
+<span class="material-symbols-outlined">logout</span>
+                Cerrar Sesi\u00f3n
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col w-full md:pl-64 overflow-hidden">
+<!-- Top App Bar for Desktop Content Area (Optional if SideNav is present, but requested by prompt structure) -->
+<div class="hidden md:flex justify-between items-center w-full px-xl py-lg max-w-container-max mx-auto bg-surface-container-lowest shadow-sm z-30 relative">
+<div class="flex flex-col">
+<nav aria-label="Breadcrumb" class="flex text-label-caps font-label-caps text-on-surface-variant mb-xs">
+<ol class="flex items-center space-x-2">
+<li><a class="hover:text-primary transition-colors" href="#">Configuraci\u00f3n</a></li>
+<li><span class="material-symbols-outlined text-[16px]">chevron_right</span></li>
+<li aria-current="page" class="text-primary">Clasificación</li>
+</ol>
+</nav>
+<h1 class="text-headline-lg font-headline-lg text-on-surface tracking-tight">Clasificación e Impuestos</h1>
+</div>
+<!-- Search & Actions -->
+<div class="flex items-center gap-md">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="form-input-custom pl-10 pr-4 py-2 w-64 bg-surface text-body-md font-body-md" placeholder="Buscar..." type="text"/>
+</div>
+<div class="flex gap-xs">
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-highest transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-highest transition-colors"><span class="material-symbols-outlined">settings</span></button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-highest transition-colors"><span class="material-symbols-outlined">help</span></button>
+</div>
+<img alt="User profile" class="w-10 h-10 rounded-full object-cover ml-sm border border-outline-variant/20" data-alt="Professional avatar of a financial software user, smiling slightly, bright corporate lighting, sharp focus on face." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD32yauP0cDHQv784iGzsrjcV1Nqz4FsxqPoqLSlVKd_zaAAeVm0fXwA2zmYEXzmfqHDcUciOAidI-7LekYUt9WuLsICSVm9XEzVMCBep4wARTdkZk4OrUztBymObH6jWJH2JYKSuz2XsHhzrBm-rip4R65P-YbKc8jpsdX5ISqk4mduiO9ou_pLvbZHWFZXmVt0Jp6ftcokl9vJg40p-mzxUADtQ22g2nwTZxUcel32P2idW56zaWlsNyf4yA1CqQ6ou6VLhfSzg"/>
+</div>
+</div>
+<!-- Scrollable Canvas -->
+<div class="flex-1 overflow-y-auto p-md md:p-xl">
+<div class="max-w-container-max mx-auto h-full">
+<!-- Mobile Header Overlay (if needed) -->
+<div class="md:hidden mb-lg">
+<nav aria-label="Breadcrumb" class="flex text-label-caps font-label-caps text-on-surface-variant mb-xs">
+<ol class="flex items-center space-x-2">
+<li>Configuraci\u00f3n</li>
+<li><span class="material-symbols-outlined text-[16px]">chevron_right</span></li>
+<li aria-current="page" class="text-primary">Clasificación</li>
+</ol>
+</nav>
+<h1 class="text-headline-lg-mobile font-headline-lg-mobile text-on-surface">Clasificación e Impuestos</h1>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-lg h-full pb-xl">
+<!-- Column 1: Árbol de Categorías (30% approx -> 4 cols) -->
+<div class="lg:col-span-4 flex flex-col bg-surface-container-lowest rounded-[12px] shadow-level-1 p-lg h-full min-h-[500px]">
+<div class="flex justify-between items-center mb-md border-b border-outline-variant/20 pb-sm">
+<h2 class="text-title-md font-title-md text-on-surface">Árbol de Categorías</h2>
+<button class="text-primary hover:bg-primary/5 p-1 rounded transition-colors"><span class="material-symbols-outlined">add</span></button>
+</div>
+<div class="flex-1 overflow-y-auto pr-xs">
+<!-- Tree Level 1 -->
+<div class="flex items-center justify-between p-sm rounded-lg tree-node cursor-pointer transition-colors group">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[20px] text-on-surface-variant group-hover:text-primary transition-colors">expand_more</span>
+<span class="material-symbols-outlined text-[20px] text-secondary">folder</span>
+<span class="text-body-md font-body-md">Calzado</span>
+</div>
+<div class="hidden group-hover:flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] hover:text-primary">edit</span>
+<span class="material-symbols-outlined text-[18px] hover:text-error">delete</span>
+</div>
+</div>
+<!-- Tree Level 2 -->
+<div class="ml-xl border-l border-outline-variant/30 pl-xs flex flex-col gap-xs py-xs">
+<div class="flex items-center justify-between p-sm rounded-lg tree-node tree-node-active cursor-pointer transition-colors group">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[20px] invisible">expand_more</span>
+<span class="material-symbols-outlined text-[20px] text-primary">folder_open</span>
+<span class="text-body-md font-body-md">Deportivo</span>
+</div>
+<div class="hidden group-hover:flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] hover:text-primary">edit</span>
+<span class="material-symbols-outlined text-[18px] hover:text-error">delete</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-sm rounded-lg tree-node cursor-pointer transition-colors group">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[20px] invisible">expand_more</span>
+<span class="material-symbols-outlined text-[20px] text-secondary">folder</span>
+<span class="text-body-md font-body-md">Formal</span>
+</div>
+<div class="hidden group-hover:flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] hover:text-primary">edit</span>
+<span class="material-symbols-outlined text-[18px] hover:text-error">delete</span>
+</div>
+</div>
+</div>
+<!-- Another Level 1 -->
+<div class="flex items-center justify-between p-sm rounded-lg tree-node cursor-pointer transition-colors group mt-xs">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[20px] text-on-surface-variant">chevron_right</span>
+<span class="material-symbols-outlined text-[20px] text-secondary">folder</span>
+<span class="text-body-md font-body-md">Vestimenta</span>
+</div>
+<div class="hidden group-hover:flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] hover:text-primary">edit</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 2: Detalle de Categoría (40% approx -> 4 cols, making 3 cols 4-4-4 for bento symmetry or 3-5-4 depending on space. Let's use 5 cols for center form) -->
+<div class="lg:col-span-5 flex flex-col bg-surface-container-lowest rounded-[12px] shadow-level-1 p-lg h-full">
+<div class="mb-lg border-b border-outline-variant/20 pb-sm">
+<h2 class="text-title-md font-title-md text-on-surface">Detalle de Categoría</h2>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-xs">Editando: Deportivo</p>
+</div>
+<form class="flex flex-col gap-md flex-1">
+<div>
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-xs" for="cat-name">Nombre de la Categoría</label>
+<input class="w-full form-input-custom px-md py-sm bg-surface text-body-md font-body-md text-on-surface" id="cat-name" type="text" value="Deportivo"/>
+</div>
+<div>
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-xs" for="cat-desc">Descripción</label>
+<textarea class="w-full form-input-custom px-md py-sm bg-surface text-body-md font-body-md text-on-surface resize-none" id="cat-desc" rows="3">Calzado diseñado para actividades deportivas y ejercicio físico.</textarea>
+</div>
+<div>
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-xs" for="cat-parent">Categoría Padre</label>
+<div class="relative">
+<select class="w-full form-input-custom px-md py-sm bg-surface text-body-md font-body-md text-on-surface appearance-none" id="cat-parent">
+<option value="calzado">Calzado</option>
+<option value="none">Ninguna (Raíz)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-xs" for="tax-rate">Tasa de IVA por Defecto</label>
+<div class="relative">
+<select class="w-full form-input-custom px-md py-sm bg-surface text-body-md font-body-md text-on-surface appearance-none" id="tax-rate">
+<option value="10">IVA 10% (Gravado)</option>
+<option value="5">IVA 5% (Gravado)</option>
+<option value="0">Exento</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Classification Chips Example -->
+<div class="mt-sm">
+<span class="text-label-caps font-label-caps text-on-surface-variant block mb-sm">Etiquetas SIFEN Relacionadas</span>
+<div class="flex flex-wrap gap-xs">
+<span class="bg-primary/10 text-primary px-sm py-xs rounded-[12px] text-body-sm font-body-sm">Bienes de Consumo</span>
+<span class="bg-primary/10 text-primary px-sm py-xs rounded-[12px] text-body-sm font-body-sm">Indumentaria</span>
+<button class="border border-dashed border-outline-variant text-on-surface-variant px-sm py-xs rounded-[12px] text-body-sm font-body-sm hover:border-primary hover:text-primary transition-colors flex items-center gap-xs" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span> Añadir
+                                    </button>
+</div>
+</div>
+<div class="mt-auto pt-lg flex justify-end gap-md">
+<button class="btn-tertiary px-lg py-sm rounded-lg text-body-md font-bold transition-colors" type="button">Cancelar</button>
+<button class="btn-primary px-lg py-sm rounded-lg text-body-md shadow-sm hover:shadow-md transition-all" type="button">Guardar Cambios</button>
+</div>
+</form>
+</div>
+<!-- Column 3: Tasas de IVA y Clasificación SIFEN (30% approx -> 3 cols) -->
+<div class="lg:col-span-3 flex flex-col bg-surface-container-lowest rounded-[12px] shadow-level-1 p-lg h-full">
+<div class="flex justify-between items-start mb-md border-b border-outline-variant/20 pb-sm">
+<h2 class="text-title-md font-title-md text-on-surface leading-tight">Tasas de IVA y<br/>Clasificación SIFEN</h2>
+<button class="btn-secondary px-sm py-xs rounded-lg text-body-sm font-bold flex items-center gap-xs shrink-0 ml-sm">
+<span class="material-symbols-outlined text-[18px]">add</span> Nueva
+                            </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="p-sm text-label-caps font-label-caps text-on-surface-variant rounded-tl-[12px] font-bold">Código</th>
+<th class="p-sm text-label-caps font-label-caps text-on-surface-variant font-bold">Nombre</th>
+<th class="p-sm text-label-caps font-label-caps text-on-surface-variant font-bold text-right">Tasa</th>
+<th class="p-sm text-label-caps font-label-caps text-on-surface-variant rounded-tr-[12px] font-bold">Tipo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="table-row-hover transition-colors border-b border-outline-variant/10">
+<td class="p-sm text-data-table font-data-table text-on-surface">1</td>
+<td class="p-sm text-body-sm font-body-sm text-on-surface">IVA 10%</td>
+<td class="p-sm text-data-table font-data-table text-on-surface text-right">10%</td>
+<td class="p-sm text-body-sm font-body-sm text-on-surface">Gravado</td>
+</tr>
+<tr class="table-row-hover transition-colors border-b border-outline-variant/10">
+<td class="p-sm text-data-table font-data-table text-on-surface">2</td>
+<td class="p-sm text-body-sm font-body-sm text-on-surface">IVA 5%</td>
+<td class="p-sm text-data-table font-data-table text-on-surface text-right">5%</td>
+<td class="p-sm text-body-sm font-body-sm text-on-surface">Gravado</td>
+</tr>
+<tr class="table-row-hover transition-colors">
+<td class="p-sm text-data-table font-data-table text-on-surface">3</td>
+<td class="p-sm text-body-sm font-body-sm text-on-surface">Exento</td>
+<td class="p-sm text-data-table font-data-table text-on-surface text-right text-outline">0%</td>
+<td class="p-sm text-body-sm font-body-sm text-on-surface-variant">Exento</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Empty State / Info card for SIFEN -->
+<div class="mt-auto pt-lg">
+<div class="bg-surface p-md rounded-lg border border-outline-variant/20 flex gap-sm items-start">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-xs">info</span>
+<div>
+<h3 class="text-body-sm font-title-md text-on-surface font-bold">Sincronización SIFEN</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-xs">Las tasas configuradas aquí se mapearán automáticamente a los códigos de la SET al generar Documentos Electrónicos.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) - Adjusted for context, suppressed if deep in task, but shown here for destination structure -->
+<nav class="md:hidden flex justify-around items-center w-full px-sm py-sm bg-surface-container-lowest shadow-[0_-4px_20px_rgba(0,0,0,0.05)] sticky bottom-0 z-50">
+<a class="flex flex-col items-center p-sm text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-[10px] font-label-caps mt-1">Inventario</span>
+</a>
+<a class="flex flex-col items-center p-sm text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-[10px] font-label-caps mt-1">Ventas</span>
+</a>
+<a class="flex flex-col items-center p-sm text-primary font-bold transition-colors" href="#">
+<span class="material-symbols-outlined icon-fill">settings</span>
+<span class="text-[10px] font-label-caps mt-1">Configuración</span>
+</a>
+</nav>
+</body></html>

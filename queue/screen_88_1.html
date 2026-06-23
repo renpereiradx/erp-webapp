@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Matriz de Variantes de Producto - ERP</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed": "#001b3c",
+                    "on-surface": "#181c22",
+                    "on-tertiary-fixed-variant": "#753400",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-bright": "#f9f9ff",
+                    "surface": "#f9f9ff",
+                    "inverse-on-surface": "#eef0fa",
+                    "background": "#f9f9ff",
+                    "on-tertiary": "#ffffff",
+                    "surface-variant": "#e0e2ec",
+                    "outline-variant": "#c1c6d5",
+                    "secondary": "#455f89",
+                    "tertiary-fixed-dim": "#ffb68c",
+                    "on-tertiary-container": "#fffbff",
+                    "on-surface-variant": "#414753",
+                    "error": "#ba1a1a",
+                    "secondary-fixed": "#d6e3ff",
+                    "on-secondary-fixed": "#001b3c",
+                    "primary-fixed": "#d5e3ff",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#fefcff",
+                    "tertiary-container": "#bc5700",
+                    "surface-container": "#ebedf7",
+                    "surface-container-highest": "#e0e2ec",
+                    "primary": "#005baf",
+                    "primary-container": "#0074db",
+                    "inverse-surface": "#2d3038",
+                    "tertiary": "#964400",
+                    "primary-fixed-dim": "#a8c8ff",
+                    "on-secondary-container": "#3c5780",
+                    "on-error-container": "#93000a",
+                    "surface-container-low": "#f1f3fd",
+                    "on-background": "#181c22",
+                    "surface-tint": "#005eb4",
+                    "inverse-primary": "#a8c8ff",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed-variant": "#004689",
+                    "secondary-container": "#b3cdfd",
+                    "secondary-fixed-dim": "#adc7f7",
+                    "outline": "#717785",
+                    "on-tertiary-fixed": "#321200",
+                    "on-secondary-fixed-variant": "#2c4770",
+                    "tertiary-fixed": "#ffdbc9",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e6e8f1",
+                    "on-primary": "#ffffff",
+                    "surface-dim": "#d7dae3"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "sm": "8px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "margin": "40px",
+                    "xl": "32px",
+                    "lg": "24px",
+                    "base": "4px",
+                    "gutter": "20px"
+            },
+            "fontFamily": {
+                    "data-tabular": [
+                            "JetBrains Mono"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "body-sm": [
+                            "Inter"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "display-lg": [
+                            "Inter"
+                    ],
+                    "label-md": [
+                            "Inter"
+                    ],
+                    "title-md": [
+                            "Inter"
+                    ],
+                    "headline-md": [
+                            "Inter"
+                    ],
+                    "headline-lg": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "data-tabular": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-sm": [
+                            "13px",
+                            {
+                                    "lineHeight": "18px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "900"
+                            }
+                    ],
+                    "label-md": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "title-md": [
+                            "18px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "800"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "800"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        
+        /* Subtle "whisper" shadow for cards */
+        .shadow-whisper {
+            box-shadow: 0px 4px 20px rgba(19, 127, 236, 0.05);
+        }
+        
+        /* Table row hover accent */
+        .table-row-hover:hover {
+            background-color: theme('colors.surface-bright');
+            box-shadow: inset 2px 0 0 theme('colors.primary');
+        }
+
+        /* Inline edit cell styling */
+        .inline-edit-cell {
+            position: relative;
+            cursor: text;
+            transition: all 0.2s;
+            border-bottom: 1px dashed theme('colors.outline-variant');
+        }
+        .inline-edit-cell:hover {
+            border-bottom-color: theme('colors.primary');
+            background-color: theme('colors.surface-container-low');
+        }
+        .inline-edit-icon {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .inline-edit-cell:hover .inline-edit-icon {
+            opacity: 1;
+        }
+
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: theme('colors.primary');
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: theme('colors.primary');
+        }
+        
+        /* Custom scrollbar for table container */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: theme('colors.surface-variant');
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden antialiased font-body-md">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex flex-col h-full border-r border-outline-variant bg-surface-container-lowest shadow-sm fixed left-0 top-0 w-64 z-20">
+<!-- Brand Header -->
+<div class="flex items-center gap-md p-lg border-b border-outline-variant/30">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container font-headline-md font-bold shrink-0">
+                E
+            </div>
+<div class="overflow-hidden">
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface truncate">Gestión ERP</h1>
+<p class="font-label-md text-label-md text-on-surface-variant truncate">Administrador</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 overflow-y-auto py-md px-sm flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container transition-all duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="font-body-md text-body-md font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm bg-secondary-container text-on-secondary-container rounded-lg transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="font-body-md text-body-md font-medium">Productos</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container transition-all duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">warehouse</span>
+<span class="font-body-md text-body-md font-medium">Almacenes</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container transition-all duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="font-body-md text-body-md font-medium">Proveedores</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container transition-all duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-body-md text-body-md font-medium">Configuración</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full ml-0 md:ml-64 bg-surface w-full relative">
+<!-- TopNavBar (Shared Component) -->
+<header class="flex justify-between items-center w-full px-lg py-md max-w-full bg-surface shadow-sm docked full-width top-0 z-10">
+<!-- Mobile Menu Button & Brand (Visible only on mobile) -->
+<div class="flex md:hidden items-center gap-md">
+<button class="p-xs text-on-surface-variant hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-headline-md text-headline-md font-extrabold text-primary">ERP Core</span>
+</div>
+<!-- Top Nav Links (Desktop) -->
+<div class="hidden md:flex items-center gap-lg">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-md text-title-md cursor-pointer active:opacity-80 transition-all" href="#">Inventario</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-md text-title-md cursor-pointer active:opacity-80 transition-all" href="#">Ventas</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-md text-title-md cursor-pointer active:opacity-80 transition-all" href="#">Reportes</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-title-md text-title-md cursor-pointer active:opacity-80 transition-all" href="#">Ajustes</a>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-md">
+<button class="p-sm text-on-surface-variant hover:bg-surface-container rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-sm text-on-surface-variant hover:bg-surface-container rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Page Canvas -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-lg">
+<div class="max-w-[1400px] mx-auto flex flex-col gap-lg">
+<!-- Top Context Header Card -->
+<div class="bg-surface-container-lowest rounded-xl p-lg shadow-whisper flex flex-col md:flex-row md:items-center justify-between gap-md border border-surface-variant/30">
+<div>
+<div class="flex items-center gap-sm text-on-surface-variant mb-xs">
+<button class="text-primary hover:bg-surface-container-low p-xs rounded-md transition-colors flex items-center justify-center" title="Volver al catálogo">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+</button>
+<span class="font-label-md text-label-md uppercase tracking-wider">Matriz de Variantes</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-sm">Producto: Camisa Polo</h2>
+<div class="flex flex-wrap gap-md font-body-sm text-body-sm text-on-surface-variant">
+<span class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px] text-primary">inventory_2</span>
+                                Categoría: Ropa
+                            </span>
+<span class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px] text-primary">warehouse</span>
+                                Stock Total: 150
+                            </span>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-md">
+<div class="relative bg-surface-container-low rounded-lg p-[1px]">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline-variant text-[20px]">search</span>
+<input class="w-full sm:w-64 bg-surface-container-lowest border border-outline-variant/30 rounded-lg py-sm pl-xl pr-md font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all shadow-sm" placeholder="Buscar variante o SKU..." type="text"/>
+</div>
+<button class="bg-gradient-to-r from-primary to-primary-container text-on-primary font-label-md text-label-md px-lg py-sm rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-xs whitespace-nowrap">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                            Nueva Variante
+                        </button>
+</div>
+</div>
+<!-- Data Grid Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-whisper border border-surface-variant/30 overflow-hidden flex flex-col">
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse min-w-[900px]">
+<thead>
+<tr class="bg-surface-container-low border-b border-surface-variant">
+<th class="py-md px-md font-label-md text-label-md text-on-surface-variant font-semibold rounded-tl-xl w-[120px]">SKU</th>
+<th class="py-md px-md font-label-md text-label-md text-on-surface-variant font-semibold w-[200px]">Nombre de Variante</th>
+<th class="py-md px-md font-label-md text-label-md text-on-surface-variant font-semibold w-[150px]">Código de Barras</th>
+<th class="py-md px-md font-label-md text-label-md text-on-surface-variant font-semibold w-[200px]">Atributos</th>
+<th class="py-md px-md font-label-md text-label-md text-on-surface-variant font-semibold text-right w-[100px]">Stock</th>
+<th class="py-md px-md font-label-md text-label-md text-on-surface-variant font-semibold text-right w-[120px]">Precio (USD)</th>
+<th class="py-md px-md font-label-md text-label-md text-on-surface-variant font-semibold text-center rounded-tr-xl w-[100px]">Estado</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface divide-y divide-surface-variant/50">
+<!-- Row 1: Active, Good Stock -->
+<tr class="table-row-hover transition-colors group">
+<td class="py-sm px-md font-data-tabular text-data-tabular text-on-surface-variant">POLO-R-M</td>
+<td class="py-sm px-md font-medium">Camisa Polo - Rojo M</td>
+<td class="py-sm px-md font-data-tabular text-data-tabular text-outline">7501234567890</td>
+<td class="py-sm px-md">
+<div class="flex gap-xs flex-wrap">
+<span class="inline-flex items-center px-xs py-[2px] rounded-md bg-secondary-container/50 text-on-secondary-container font-label-md text-[11px] border border-secondary-container">Color: Rojo</span>
+<span class="inline-flex items-center px-xs py-[2px] rounded-md bg-surface-container text-on-surface-variant font-label-md text-[11px] border border-outline-variant/30">Talla: M</span>
+</div>
+</td>
+<td class="py-sm px-md text-right">
+<div class="inline-edit-cell inline-block px-xs py-1 rounded">
+<span class="font-data-tabular text-data-tabular">45</span>
+<span class="material-symbols-outlined text-[14px] text-primary inline-edit-icon absolute -right-4 top-1.5">edit</span>
+</div>
+</td>
+<td class="py-sm px-md text-right">
+<div class="inline-edit-cell inline-block px-xs py-1 rounded">
+<span class="font-data-tabular text-data-tabular">$29.99</span>
+<span class="material-symbols-outlined text-[14px] text-primary inline-edit-icon absolute -right-4 top-1.5">edit</span>
+</div>
+</td>
+<td class="py-sm px-md text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-primary translate-x-[100%] transition-transform duration-200 ease-in-out" id="toggle1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-primary cursor-pointer transition-colors duration-200 ease-in-out" for="toggle1"></label>
+</div>
+</td>
+</tr>
+<!-- Row 2: Active, Low Stock Warning -->
+<tr class="table-row-hover transition-colors group bg-amber-50/30">
+<td class="py-sm px-md font-data-tabular text-data-tabular text-on-surface-variant">POLO-R-L</td>
+<td class="py-sm px-md font-medium">Camisa Polo - Rojo L</td>
+<td class="py-sm px-md font-data-tabular text-data-tabular text-outline">7501234567891</td>
+<td class="py-sm px-md">
+<div class="flex gap-xs flex-wrap">
+<span class="inline-flex items-center px-xs py-[2px] rounded-md bg-secondary-container/50 text-on-secondary-container font-label-md text-[11px] border border-secondary-container">Color: Rojo</span>
+<span class="inline-flex items-center px-xs py-[2px] rounded-md bg-surface-container text-on-surface-variant font-label-md text-[11px] border border-outline-variant/30">Talla: L</span>
+</div>
+</td>
+<td class="py-sm px-md text-right">
+<div class="inline-edit-cell inline-block px-xs py-1 rounded bg-amber-100/50 border-amber-300">
+<span class="font-data-tabular text-data-tabular text-[#d97706] font-bold">5</span>
+<span class="material-symbols-outlined text-[14px] text-[#d97706] inline-edit-icon absolute -right-4 top-1.5">edit</span>
+</div>
+</td>
+<td class="py-sm px-md text-right">
+<div class="inline-edit-cell inline-block px-xs py-1 rounded">
+<span class="font-data-tabular text-data-tabular">$29.99</span>
+<span class="material-symbols-outlined text-[14px] text-primary inline-edit-icon absolute -right-4 top-1.5">edit</span>
+</div>
+</td>
+<td class="py-sm px-md text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-primary translate-x-[100%] transition-transform duration-200 ease-in-out" id="toggle2" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-primary cursor-pointer transition-colors duration-200 ease-in-out" for="toggle2"></label>
+</div>
+</td>
+</tr>
+<!-- Row 3: Active, Good Stock -->
+<tr class="table-row-hover transition-colors group">
+<td class="py-sm px-md font-data-tabular text-data-tabular text-on-surface-variant">POLO-A-M</td>
+<td class="py-sm px-md font-medium">Camisa Polo - Azul M</td>
+<td class="py-sm px-md font-data-tabular text-data-tabular text-outline">7501234567892</td>
+<td class="py-sm px-md">
+<div class="flex gap-xs flex-wrap">
+<span class="inline-flex items-center px-xs py-[2px] rounded-md bg-[#e0f2fe] text-[#0369a1] font-label-md text-[11px] border border-[#bae6fd]">Color: Azul</span>
+<span class="inline-flex items-center px-xs py-[2px] rounded-md bg-surface-container text-on-surface-variant font-label-md text-[11px] border border-outline-variant/30">Talla: M</span>
+</div>
+</td>
+<td class="py-sm px-md text-right">
+<div class="inline-edit-cell inline-block px-xs py-1 rounded">
+<span class="font-data-tabular text-data-tabular">60</span>
+<span class="material-symbols-outlined text-[14px] text-primary inline-edit-icon absolute -right-4 top-1.5">edit</span>
+</div>
+</td>
+<td class="py-sm px-md text-right">
+<div class="inline-edit-cell inline-block px-xs py-1 rounded">
+<span class="font-data-tabular text-data-tabular">$29.99</span>
+<span class="material-symbols-outlined text-[14px] text-primary inline-edit-icon absolute -right-4 top-1.5">edit</span>
+</div>
+</td>
+<td class="py-sm px-md text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-primary translate-x-[100%] transition-transform duration-200 ease-in-out" id="toggle3" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-primary cursor-pointer transition-colors duration-200 ease-in-out" for="toggle3"></label>
+</div>
+</td>
+</tr>
+<!-- Row 4: Disabled Variant (Grayed out) -->
+<tr class="bg-surface-container-low opacity-60 grayscale-[50%]">
+<td class="py-sm px-md font-data-tabular text-data-tabular text-outline">POLO-N-XL</td>
+<td class="py-sm px-md font-medium text-outline">Camisa Polo - Negro XL</td>
+<td class="py-sm px-md font-data-tabular text-data-tabular text-outline/70">7501234567893</td>
+<td class="py-sm px-md">
+<div class="flex gap-xs flex-wrap">
+<span class="inline-flex items-center px-xs py-[2px] rounded-md bg-surface-variant text-outline font-label-md text-[11px]">Color: Negro</span>
+<span class="inline-flex items-center px-xs py-[2px] rounded-md bg-surface-variant text-outline font-label-md text-[11px]">Talla: XL</span>
+</div>
+</td>
+<td class="py-sm px-md text-right">
+<div class="inline-block px-xs py-1 rounded text-outline">
+<span class="font-data-tabular text-data-tabular">0</span>
+</div>
+</td>
+<td class="py-sm px-md text-right">
+<div class="inline-block px-xs py-1 rounded text-outline">
+<span class="font-data-tabular text-data-tabular">$29.99</span>
+</div>
+</td>
+<td class="py-sm px-md text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none">
+<input class="absolute block w-5 h-5 rounded-full bg-surface-container border-4 border-outline-variant appearance-none translate-x-0" disabled="" id="toggle4" name="toggle" type="checkbox"/>
+<label class="block overflow-hidden h-5 rounded-full bg-surface-variant" for="toggle4"></label>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer / Pagination simple -->
+<div class="bg-surface-container-lowest border-t border-surface-variant/50 p-sm px-md flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span>Mostrando 4 variantes</span>
+<div class="flex items-center gap-xs">
+<button class="p-xs hover:bg-surface-container rounded transition-colors text-outline-variant cursor-not-allowed">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<span class="px-sm font-data-tabular">1 / 1</span>
+<button class="p-xs hover:bg-surface-container rounded transition-colors text-outline-variant cursor-not-allowed">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple script to handle generic interactions
+        document.addEventListener('DOMContentLoaded', () => {
+            // Setup inline editing visual cues (no real logic needed for static demo)
+            const editableCells = document.querySelectorAll('.inline-edit-cell');
+            editableCells.forEach(cell => {
+                cell.addEventListener('click', function() {
+                    // In a real app, this would swap the span for an input
+                    // For demo, just flash it to show interaction
+                    this.style.backgroundColor = 'var(--surface-container)';
+                    setTimeout(() => {
+                        this.style.backgroundColor = '';
+                    }, 200);
+                });
+            });
+        });
+    </script>
+</body></html>

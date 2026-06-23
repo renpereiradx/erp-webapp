@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ERP Core - Nueva Variante Modal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#001b3c",
+                        "on-surface": "#181c22",
+                        "on-tertiary-fixed-variant": "#753400",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f9f9ff",
+                        "surface": "#f9f9ff",
+                        "inverse-on-surface": "#eef0fa",
+                        "background": "#f9f9ff",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e0e2ec",
+                        "outline-variant": "#c1c6d5",
+                        "secondary": "#455f89",
+                        "tertiary-fixed-dim": "#ffb68c",
+                        "on-tertiary-container": "#fffbff",
+                        "on-surface-variant": "#414753",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#d6e3ff",
+                        "on-secondary-fixed": "#001b3c",
+                        "primary-fixed": "#d5e3ff",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#fefcff",
+                        "tertiary-container": "#bc5700",
+                        "surface-container": "#ebedf7",
+                        "surface-container-highest": "#e0e2ec",
+                        "primary": "#005baf",
+                        "primary-container": "#0074db",
+                        "inverse-surface": "#2d3038",
+                        "tertiary": "#964400",
+                        "primary-fixed-dim": "#a8c8ff",
+                        "on-secondary-container": "#3c5780",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#f1f3fd",
+                        "on-background": "#181c22",
+                        "surface-tint": "#005eb4",
+                        "inverse-primary": "#a8c8ff",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#004689",
+                        "secondary-container": "#b3cdfd",
+                        "secondary-fixed-dim": "#adc7f7",
+                        "outline": "#717785",
+                        "on-tertiary-fixed": "#321200",
+                        "on-secondary-fixed-variant": "#2c4770",
+                        "tertiary-fixed": "#ffdbc9",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e6e8f1",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d7dae3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "margin": "40px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "base": "4px",
+                        "gutter": "20px"
+                    },
+                    "fontFamily": {
+                        "data-tabular": ["JetBrains Mono"],
+                        "body-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "title-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "data-tabular": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "900" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "title-md": ["18px", { "lineHeight": "24px", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "800" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "800" }]
+                    },
+                    "boxShadow": {
+                        'level-1': '0px 4px 20px rgba(19, 127, 236, 0.05)',
+                        'level-2': '0px 12px 40px rgba(0, 0, 0, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom input styles */
+        .erp-input {
+            @apply w-full bg-surface-container-lowest border border-surface-container-low rounded-lg px-md py-sm font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all;
+        }
+        .erp-label {
+            @apply block font-label-md text-secondary mb-sm uppercase tracking-wider;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased">
+<!-- TopNavBar Placeholder (Behind Modal) -->
+<header class="bg-surface dark:bg-surface-dim shadow-sm flex justify-between items-center w-full px-lg py-md max-w-full docked full-width top-0 z-10">
+<div class="flex items-center gap-lg">
+<span class="font-headline-md text-headline-md font-extrabold text-primary dark:text-primary-fixed">ERP Core</span>
+<nav class="hidden md:flex gap-md ml-lg">
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer active:opacity-80 transition-all font-title-md text-title-md" href="#">Inventario</a>
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary dark:border-primary-fixed pb-1 hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer active:opacity-80 transition-all font-title-md text-title-md" href="#">Ventas</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer active:opacity-80 transition-all font-title-md text-title-md" href="#">Reportes</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer active:opacity-80 transition-all font-title-md text-title-md" href="#">Ajustes</a>
+</nav>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- SideNavBar Placeholder (Behind Modal) -->
+<aside class="hidden md:flex bg-surface-container-lowest dark:bg-surface-container-high shadow-sm flex flex-col h-full border-r border-outline-variant dark:border-outline fixed left-0 top-0 h-full w-64 z-20 pt-24">
+<!-- Content hidden for brevity in this mock, focus is the modal -->
+<div class="p-lg">
+<p class="font-label-md text-label-md font-bold text-on-surface dark:text-on-surface-variant uppercase tracking-widest text-outline">Gestión ERP</p>
+</div>
+<nav class="flex flex-col gap-sm px-md mt-md">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-outline-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all duration-200 ease-in-out font-label-md text-label-md rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+<a class="flex items-center gap-md px-md py-sm bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-lg hover:bg-surface-container dark:hover:bg-surface-variant transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+                    Productos
+                </a>
+</nav>
+</aside>
+<!-- Main Content Area (Behind Modal) -->
+<main class="flex-1 md:ml-64 p-lg overflow-y-auto relative bg-background">
+<div class="max-w-7xl mx-auto space-y-lg">
+<div class="flex justify-between items-end mb-lg">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Matriz de Variantes de Producto</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-sm">Gestiona el inventario detallado por SKU, color y talla.</p>
+</div>
+</div>
+<!-- Blurred Background Table -->
+<div class="bg-surface-container-lowest rounded-xl shadow-level-1 overflow-hidden p-lg opacity-40 blur-[2px]">
+<table class="w-full text-left border-separate border-spacing-0">
+<thead>
+<tr>
+<th class="bg-surface-container-low px-md py-sm font-label-md text-label-md text-secondary rounded-tl-xl border-b border-surface-variant">SKU</th>
+<th class="bg-surface-container-low px-md py-sm font-label-md text-label-md text-secondary border-b border-surface-variant">Atributos</th>
+<th class="bg-surface-container-low px-md py-sm font-label-md text-label-md text-secondary border-b border-surface-variant text-right">Stock</th>
+<th class="bg-surface-container-low px-md py-sm font-label-md text-label-md text-secondary rounded-tr-xl border-b border-surface-variant text-right">Precio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="hover:bg-surface-bright transition-colors border-l-2 border-transparent hover:border-primary">
+<td class="px-md py-sm font-data-tabular text-data-tabular text-on-surface border-b border-surface-variant">VAR-001-BLU-S</td>
+<td class="px-md py-sm font-body-sm text-body-sm text-on-surface-variant border-b border-surface-variant">Azul, Small</td>
+<td class="px-md py-sm font-data-tabular text-data-tabular text-on-surface text-right border-b border-surface-variant">142</td>
+<td class="px-md py-sm font-data-tabular text-data-tabular text-on-surface text-right border-b border-surface-variant">$45.00</td>
+</tr>
+<tr class="hover:bg-surface-bright transition-colors border-l-2 border-transparent hover:border-primary">
+<td class="px-md py-sm font-data-tabular text-data-tabular text-on-surface border-b border-surface-variant">VAR-001-BLU-M</td>
+<td class="px-md py-sm font-body-sm text-body-sm text-on-surface-variant border-b border-surface-variant">Azul, Medium</td>
+<td class="px-md py-sm font-data-tabular text-data-tabular text-on-surface text-right border-b border-surface-variant">89</td>
+<td class="px-md py-sm font-data-tabular text-data-tabular text-on-surface text-right border-b border-surface-variant">$45.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+<!-- MODAL OVERLAY -->
+<div class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm z-50 flex items-center justify-center p-lg overflow-y-auto">
+<!-- Modal Card -->
+<div class="bg-surface-container-lowest w-full max-w-2xl rounded-xl shadow-level-2 overflow-hidden flex flex-col relative my-auto">
+<!-- Modal Header -->
+<div class="px-xl py-lg border-b border-surface-variant flex justify-between items-center bg-surface-container-lowest">
+<h2 class="font-headline-md text-headline-md text-on-surface">Nueva Variante</h2>
+<button class="text-on-surface-variant hover:text-error transition-colors p-sm rounded-full hover:bg-error-container/20">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<div class="p-xl space-y-lg">
+<!-- Section 1: Identifiers -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div>
+<label class="erp-label" for="sku">SKU</label>
+<input class="erp-input font-data-tabular bg-surface-container-low text-on-surface-variant" disabled="" id="sku" placeholder="Auto-generado" type="text"/>
+</div>
+<div>
+<label class="erp-label" for="barcode">Código de Barras</label>
+<div class="relative">
+<input class="erp-input font-data-tabular pr-10" id="barcode" placeholder="Escanear o ingresar" type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant pointer-events-none">barcode_scanner</span>
+</div>
+</div>
+</div>
+<div class="h-px w-full bg-surface-variant my-sm"></div>
+<!-- Section 2: Attributes -->
+<div>
+<h3 class="font-title-md text-title-md text-on-surface mb-md">Atributos Dinámicos</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div>
+<label class="erp-label" for="color">Color</label>
+<select class="erp-input appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23717785%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-right-md bg-[length:20px]" id="color">
+<option disabled="" selected="" value="">Seleccionar Color</option>
+<option value="negro">Negro</option>
+<option value="blanco">Blanco</option>
+<option value="azul">Azul Marino</option>
+</select>
+</div>
+<div>
+<label class="erp-label" for="talla">Talla</label>
+<select class="erp-input appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23717785%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-right-md bg-[length:20px]" id="talla">
+<option disabled="" selected="" value="">Seleccionar Talla</option>
+<option value="s">S (Small)</option>
+<option value="m">M (Medium)</option>
+<option value="l">L (Large)</option>
+</select>
+</div>
+</div>
+</div>
+<div class="h-px w-full bg-surface-variant my-sm"></div>
+<!-- Section 3: Inventory & Pricing -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<div class="col-span-1 md:col-span-3">
+<label class="erp-label" for="sucursal">Sucursal de Origen</label>
+<select class="erp-input appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23717785%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-right-md bg-[length:20px]" id="sucursal">
+<option selected="" value="central">Sucursal Central</option>
+<option value="norte">Almacén Norte</option>
+</select>
+</div>
+<div>
+<label class="erp-label" for="stock">Stock Inicial</label>
+<input class="erp-input font-data-tabular text-right" id="stock" min="0" type="number" value="0"/>
+</div>
+<div class="col-span-1 md:col-span-2">
+<label class="erp-label" for="precio">Precio Inicial</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 font-data-tabular text-outline-variant">$</span>
+<input class="erp-input font-data-tabular pl-8" id="precio" placeholder="0.00" step="0.01" type="number"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Modal Footer (Actions) -->
+<div class="px-xl py-lg bg-surface-container-low border-t border-surface-variant flex justify-end gap-md">
+<button class="px-xl py-sm font-label-md text-label-md text-secondary hover:text-primary hover:bg-secondary-fixed/50 rounded-xl transition-colors border border-transparent" type="button">
+                    Cancelar
+                </button>
+<button class="px-xl py-sm font-label-md text-label-md text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-xl shadow-sm hover:shadow-md hover:opacity-95 transition-all" type="button">
+                    Crear Variante
+                </button>
+</div>
+</div>
+</div>
+</body></html>

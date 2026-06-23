@@ -1,0 +1,130 @@
+import { Brand } from '../types/brand';
+
+export const mockBrands: Brand[] = [
+  {
+    id: 'BND-8492',
+    name: 'Global Tech',
+    slug: 'global-tech',
+    description: 'Empresa matriz de tecnología global con operaciones en Norteamérica, Europa y Asia Pacífico. Enfoque en IA y computación en la nube.',
+    logoUrl: 'https://assets.brandcentral.io/global-tech-logo.png',
+    isActive: true,
+    icon: 'public',
+  },
+  {
+    id: 'BND-8493',
+    name: 'EcoLife Solutions',
+    slug: 'ecolife-sol',
+    description: 'Productos sostenibles y de bajo impacto',
+    logoUrl: '',
+    isActive: true,
+    icon: 'eco',
+  },
+  {
+    id: 'BND-8494',
+    name: 'AeroSpace Dynamics',
+    slug: 'aerospace-dyn',
+    description: 'Investigación aerospacial avanzada',
+    logoUrl: '',
+    isActive: false,
+    icon: 'rocket_launch',
+  },
+  {
+    id: 'BND-8495',
+    name: 'FinTech Trust',
+    slug: 'fintech-trust',
+    description: 'Servicios financieros seguros',
+    logoUrl: '',
+    isActive: true,
+    icon: 'payments',
+  },
+];
+
+import { Attribute } from '../types/attribute';
+import { Tag } from '../types/tag';
+
+export const mockAttributes: Attribute[] = [
+  {
+    id: '1',
+    name: 'Color del Producto',
+    code: 'ATTR_COLOR',
+    type: 'LIST',
+    category: 'Apariencia',
+    isRequired: true,
+    isFilterable: true,
+    isVisible: true,
+    isVariant: true,
+    options: ['Rojo', 'Azul', 'Verde'],
+  },
+  {
+    id: '2',
+    name: 'Peso (kg)',
+    code: 'ATTR_WEIGHT',
+    type: 'NUMBER',
+    category: 'Especificaciones',
+    isRequired: false,
+    isFilterable: true,
+    isVisible: true,
+    isVariant: false,
+  },
+  {
+    id: '3',
+    name: 'Material Principal',
+    code: 'ATTR_MATERIAL',
+    type: 'STRING',
+    category: 'Especificaciones',
+    isRequired: false,
+    isFilterable: false,
+    isVisible: true,
+    isVariant: false,
+  },
+  {
+    id: '4',
+    name: 'Garantía Extendida',
+    code: 'ATTR_WARRANTY',
+    type: 'BOOLEAN',
+    category: 'General',
+    isRequired: false,
+    isFilterable: true,
+    isVisible: true,
+    isVariant: false,
+  },
+];
+
+export const mockTags: Tag[] = [
+  {
+    id: '1',
+    name: 'Descuento Verano',
+    slug: 'desc-verano',
+    color: '#f59e0b',
+    icon: 'local_offer',
+    type: 'PROMOTION',
+    category: 'Campañas',
+  },
+  {
+    id: '2',
+    name: 'Envío Gratis',
+    slug: 'envio-gratis',
+    color: '#10b981',
+    icon: 'local_shipping',
+    type: 'GENERAL',
+    category: 'Logística',
+  },
+  {
+    id: '3',
+    name: 'Agotado Temporalmente',
+    slug: 'agotado-temp',
+    color: '#ef4444',
+    icon: 'block',
+    type: 'STATUS',
+    category: 'Inventario',
+  },
+  {
+    id: '4',
+    name: 'Producto Nuevo',
+    slug: 'nuevo-prod',
+    color: '#3b82f6',
+    icon: 'new_releases',
+    type: 'GENERAL',
+    category: 'Catálogo',
+  },
+];

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gestión de Marcas - BrandCentral</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#b3cdfd",
+                        "on-tertiary-container": "#fffbff",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#d7dae3",
+                        "primary-fixed-dim": "#a8c8ff",
+                        "primary-container": "#0074db",
+                        "surface-container-highest": "#e0e2ec",
+                        "surface-container-low": "#f1f3fd",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#001b3c",
+                        "on-tertiary-fixed": "#321200",
+                        "tertiary-fixed-dim": "#ffb68c",
+                        "on-background": "#181c22",
+                        "on-primary-fixed": "#001b3c",
+                        "on-surface": "#181c22",
+                        "outline-variant": "#c1c6d5",
+                        "tertiary-fixed": "#ffdbc9",
+                        "tertiary-container": "#bc5700",
+                        "secondary": "#455f89",
+                        "primary-fixed": "#d5e3ff",
+                        "inverse-surface": "#2d3038",
+                        "surface-bright": "#f9f9ff",
+                        "inverse-primary": "#a8c8ff",
+                        "on-secondary-container": "#3c5780",
+                        "on-error": "#ffffff",
+                        "background": "#f9f9ff",
+                        "on-surface-variant": "#414753",
+                        "on-primary-fixed-variant": "#004689",
+                        "secondary-fixed": "#d6e3ff",
+                        "surface": "#f9f9ff",
+                        "surface-tint": "#005eb4",
+                        "surface-container": "#ebedf7",
+                        "tertiary": "#964400",
+                        "outline": "#717785",
+                        "secondary-fixed-dim": "#adc7f7",
+                        "surface-variant": "#e0e2ec",
+                        "on-tertiary-fixed-variant": "#753400",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "primary": "#005baf",
+                        "on-secondary-fixed-variant": "#2c4770",
+                        "surface-container-high": "#e6e8f1",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#fefcff",
+                        "inverse-on-surface": "#eef0fa",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "unit": "4px",
+                        "margin-page": "40px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "data-mono": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "title-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-md-bold": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "title-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "900"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "900"}],
+                        "body-md-bold": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "900"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "800"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #d7dae3;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #c1c6d5;
+        }
+        .animate-in-slide {
+            animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .gradient-primary {
+            background: linear-gradient(135deg, #005baf 0%, #0074db 100%);
+        }
+        .gradient-primary:hover {
+            background: linear-gradient(135deg, #0265c0 0%, #0c82eb 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex antialiased">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-full border-r border-outline-variant w-64 fixed left-0 top-0 overflow-y-auto bg-surface-container-low z-40 custom-scrollbar pb-lg">
+<div class="px-md py-lg mb-4 flex flex-col gap-xs">
+<h1 class="font-headline-md text-headline-md font-black text-primary">BrandCentral</h1>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Enterprise Edition</span>
+</div>
+<ul class="flex flex-col flex-1 px-sm gap-xs">
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">dashboard</span>
+<span class="font-body-md-bold text-body-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-primary font-bold border-r-4 border-primary bg-primary-fixed/20 transition-all translate-x-1" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">branding_watermark</span>
+<span class="font-body-md-bold text-body-md">Marcas</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">inventory_2</span>
+<span class="font-body-md-bold text-body-md">Activos</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">analytics</span>
+<span class="font-body-md-bold text-body-md">Analíticas</span>
+</a>
+</li>
+<li class="mt-auto">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-high transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
+<span class="font-body-md-bold text-body-md">Configuración</span>
+</a>
+</li>
+</ul>
+<div class="px-md mt-lg pt-lg border-t border-outline-variant mx-sm flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-body-md-bold text-body-md-bold">
+                UE
+            </div>
+<div class="flex flex-col">
+<span class="font-body-md-bold text-body-md-bold text-on-surface">Usuario ERP</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Admin</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen relative">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-margin-page h-16 sticky top-0 z-30 bg-surface shadow-[0px_4px_20px_rgba(24,28,34,0.04)]">
+<div class="flex items-center gap-lg flex-1">
+<h2 class="font-headline-md text-headline-md font-black text-on-surface hidden lg:block">Gestión de Marcas</h2>
+<div class="relative w-full max-w-md ml-0 lg:ml-lg">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-[0px_2px_8px_rgba(24,28,34,0.02)]" placeholder="Buscar marcas..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="gradient-primary text-on-primary font-body-md-bold text-body-md-bold px-lg py-2 rounded-xl flex items-center gap-sm shadow-[0px_4px_12px_rgba(0,91,175,0.2)] transition-all">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                    Nueva Marca
+                </button>
+</div>
+</header>
+<!-- Main Workspace (Split View) -->
+<main class="flex-1 p-md md:p-gutter flex flex-col lg:flex-row gap-gutter items-start">
+<!-- Left Panel: Data Table Container -->
+<section class="w-full lg:w-[65%] flex flex-col gap-md">
+<div class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(24,28,34,0.04)] p-lg flex flex-col h-[calc(100vh-140px)]">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-title-md text-title-md text-on-surface">Directorio de Marcas</h3>
+<div class="flex gap-sm">
+<button class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+<button class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">view_column</span>
+</button>
+</div>
+</div>
+<div class="flex-1 overflow-auto custom-scrollbar">
+<table class="w-full text-left border-separate border-spacing-y-2">
+<thead class="sticky top-0 bg-surface-container-lowest z-10">
+<tr>
+<th class="font-label-caps text-label-caps text-on-surface-variant pb-sm pl-sm w-16">Logo</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant pb-sm">Nombre</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant pb-sm">Slug</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant pb-sm hidden sm:table-cell">Descripción</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant pb-sm text-right pr-sm">Estado</th>
+</tr>
+</thead>
+<tbody>
+<!-- Row 1 -->
+<tr class="bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-colors group cursor-pointer border border-transparent hover:border-primary/20">
+<td class="py-sm pl-sm rounded-l-xl">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">public</span>
+</div>
+</td>
+<td class="py-sm font-body-md-bold text-body-md-bold text-on-surface">Global Tech</td>
+<td class="py-sm font-data-mono text-data-mono text-on-surface-variant">global-tech</td>
+<td class="py-sm font-body-md text-body-md text-on-surface-variant truncate max-w-[150px] hidden sm:table-cell">Empresa matriz de tecnología global</td>
+<td class="py-sm pr-sm rounded-r-xl text-right">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-[#10B981]/10 text-[#10B981] font-label-caps text-label-caps gap-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
+                                            Activo
+                                        </span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-colors group cursor-pointer border border-transparent hover:border-primary/20">
+<td class="py-sm pl-sm rounded-l-xl">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">eco</span>
+</div>
+</td>
+<td class="py-sm font-body-md-bold text-body-md-bold text-on-surface">EcoLife Solutions</td>
+<td class="py-sm font-data-mono text-data-mono text-on-surface-variant">ecolife-sol</td>
+<td class="py-sm font-body-md text-body-md text-on-surface-variant truncate max-w-[150px] hidden sm:table-cell">Productos sostenibles y de bajo impacto</td>
+<td class="py-sm pr-sm rounded-r-xl text-right">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-[#10B981]/10 text-[#10B981] font-label-caps text-label-caps gap-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
+                                            Activo
+                                        </span>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-colors group cursor-pointer border border-transparent hover:border-primary/20">
+<td class="py-sm pl-sm rounded-l-xl">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">rocket_launch</span>
+</div>
+</td>
+<td class="py-sm font-body-md-bold text-body-md-bold text-on-surface">AeroSpace Dynamics</td>
+<td class="py-sm font-data-mono text-data-mono text-on-surface-variant">aerospace-dyn</td>
+<td class="py-sm font-body-md text-body-md text-on-surface-variant truncate max-w-[150px] hidden sm:table-cell">Investigación aerospacial avanzada</td>
+<td class="py-sm pr-sm rounded-r-xl text-right">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-[#ba1a1a]/10 text-[#ba1a1a] font-label-caps text-label-caps gap-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-[#ba1a1a]"></span>
+                                            Inactivo
+                                        </span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-colors group cursor-pointer border border-transparent hover:border-primary/20">
+<td class="py-sm pl-sm rounded-l-xl">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">payments</span>
+</div>
+</td>
+<td class="py-sm font-body-md-bold text-body-md-bold text-on-surface">FinTech Trust</td>
+<td class="py-sm font-data-mono text-data-mono text-on-surface-variant">fintech-trust</td>
+<td class="py-sm font-body-md text-body-md text-on-surface-variant truncate max-w-[150px] hidden sm:table-cell">Servicios financieros seguros</td>
+<td class="py-sm pr-sm rounded-r-xl text-right">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-[#10B981]/10 text-[#10B981] font-label-caps text-label-caps gap-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
+                                            Activo
+                                        </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-md pt-sm border-t border-outline-variant flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Mostrando 1-4 de 42 marcas</span>
+<div class="flex gap-xs">
+<button class="p-1 rounded text-outline hover:bg-surface-container-low transition-colors" disabled=""><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="p-1 rounded text-on-surface hover:bg-surface-container-low transition-colors"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Panel: Ficha de Marca (Detail Form) -->
+<section class="w-full lg:w-[35%] bg-surface-container-lowest rounded-xl shadow-[0px_12px_32px_rgba(24,28,34,0.08)] flex flex-col h-[calc(100vh-140px)] sticky top-[88px] animate-in-slide border border-outline-variant/30">
+<div class="p-lg border-b border-outline-variant flex justify-between items-center bg-surface-container-low rounded-t-xl">
+<h3 class="font-title-md text-title-md font-bold text-on-surface">Ficha de Marca</h3>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="p-lg flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-lg">
+<!-- Cover / Logo Area -->
+<div class="flex flex-col items-center mb-sm">
+<div class="w-20 h-20 rounded-xl bg-surface-container-high border border-outline-variant flex items-center justify-center mb-sm shadow-sm relative group overflow-hidden cursor-pointer">
+<span class="material-symbols-outlined text-[32px] text-on-surface-variant group-hover:opacity-0 transition-opacity">public</span>
+<div class="absolute inset-0 bg-surface-container-highest/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-primary text-[20px]">upload</span>
+<span class="font-label-caps text-[10px] text-primary mt-1">Subir</span>
+</div>
+</div>
+<span class="font-body-md-bold text-body-md-bold text-on-surface">Global Tech</span>
+<span class="font-data-mono text-[12px] text-on-surface-variant">ID: BND-8492</span>
+</div>
+<!-- Form Fields -->
+<form class="flex flex-col gap-md">
+<div class="flex flex-col gap-xs">
+<label class="font-body-md-bold text-body-md-bold text-on-surface">Nombre de la Marca <span class="text-error">*</span></label>
+<input class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Ej. Global Tech" type="text" value="Global Tech"/>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-body-md-bold text-body-md-bold text-on-surface">Slug <span class="material-symbols-outlined text-[14px] text-on-surface-variant ml-1 cursor-help" title="Identificador único para URLs">info</span></label>
+<input class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-xl font-data-mono text-data-mono text-on-surface-variant cursor-not-allowed" disabled="" type="text" value="global-tech"/>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-body-md-bold text-body-md-bold text-on-surface">Logo URL</label>
+<div class="relative">
+<input class="w-full pl-3 pr-10 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl font-data-mono text-data-mono text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" type="text" value="https://assets.brandcentral.io/global-tech-logo.png"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-on-surface-variant hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">upload_file</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-body-md-bold text-body-md-bold text-on-surface">Descripción</label>
+<textarea class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none custom-scrollbar" rows="3">Empresa matriz de tecnología global con operaciones en Norteamérica, Europa y Asia Pacífico. Enfoque en IA y computación en la nube.</textarea>
+</div>
+<div class="flex items-center justify-between mt-sm p-md bg-surface-container-low rounded-xl border border-outline-variant/50">
+<div class="flex flex-col">
+<span class="font-body-md-bold text-body-md-bold text-on-surface">Estado de la Marca</span>
+<span class="font-body-md text-[12px] text-on-surface-variant">Determina si la marca es visible en los sistemas públicos.</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</form>
+</div>
+<div class="p-lg border-t border-outline-variant flex items-center justify-between bg-surface-container-low rounded-b-xl">
+<button class="px-md py-2 border border-error text-error rounded-xl font-body-md-bold text-body-md-bold hover:bg-error/5 transition-colors">
+                        Eliminar
+                    </button>
+<div class="flex gap-sm">
+<button class="px-md py-2 bg-surface-container-low text-on-surface font-body-md-bold text-body-md-bold rounded-xl hover:bg-surface-container-high border border-outline-variant transition-colors">
+                            Cancelar
+                        </button>
+<button class="gradient-primary text-on-primary font-body-md-bold text-body-md-bold px-md py-2 rounded-xl shadow-[0px_4px_12px_rgba(0,91,175,0.2)] transition-all">
+                            Guardar
+                        </button>
+</div>
+</div>
+</section>
+</main>
+</div>
+</body></html>

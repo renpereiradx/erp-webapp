@@ -8,20 +8,13 @@
 }
 
 @font-face {
-    font-family: 'Source Code Pro';
-    src: url('../../public/fonts/source-code-pro-regular.ttf') format('truetype');
-    font-weight: 400;
+    font-family: 'JetBrains Mono';
+    src: url('../../public/fonts/jetbrains-mono.ttf') format('truetype');
+    font-weight: 100 800;
     font-display: swap;
 }
 
-@font-face {
-    font-family: 'Source Code Pro';
-    src: url('../../public/fonts/source-code-pro-bold.ttf') format('truetype');
-    font-weight: 700;
-    font-display: swap;
-}
-
-/* Base Material Icons (Local fallback) */
+/* Base Texture for Background (Optional Premium Touch) */
 @font-face {
     font-family: 'Material Icons Round';
     src: url('../../public/fonts/MaterialIconsRound-Regular.otf') format('opentype');
@@ -31,16 +24,16 @@
 }
 
 :root {
-    --primary-color: #0f6cbd;
-    --primary-hover: #115ea3;
+    --primary-color: #137fec;
+    --primary-hover: #0c69c7;
     
     /* Background Layers - Hierarchy */
-    --bg-base: #faf9f8;        /* Layer 0: Page background */
-    --bg-subtle: #f3f2f1;      /* Layer 0.5: Grouping background */
+    --bg-base: #f9f9ff;        /* Layer 0: Page background */
+    --bg-subtle: #f1f3fd;      /* Layer 0.5: Grouping background */
     --surface: #ffffff;        /* Layer 1: Cards and Surfaces */
     
-    --text-main: #242424;
-    --text-secondary: #616161;
+    --text-main: #181c22;
+    --text-secondary: #455f89;
     --border-subtle: #edebe9;
     --border-base: #d1d1d1;
     
@@ -76,13 +69,13 @@ body {
 }
 
 .glass-mica {
-    background-color: rgba(250, 249, 248, 0.8) !important;
+    background-color: rgba(249, 249, 255, 0.8) !important;
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
 }
 
 .font-mono {
-    font-family: 'Source Code Pro', monospace;
+    font-family: 'JetBrains Mono', monospace;
 }
 
 /* Global Transitions */

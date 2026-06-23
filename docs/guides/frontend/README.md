@@ -31,6 +31,8 @@ Este directorio contiene todas las guías de integración API para desarrollador
 | [**USER_API_GUIDE.md**](./USER_API_GUIDE.md) | CRUD de usuarios `/api/v1/users` (crear, listar, actualizar, eliminar, cambiar estado, roles, contraseña) | ✅ Completado | 2026-05-08 |
 | [**USER_SESSION_FRONTEND_INTEGRATION_GUIDE.md**](./USER_SESSION_FRONTEND_INTEGRATION_GUIDE.md) | Login, JWT, claims `allowed_branches`/`active_branch`, refresh tokens | ✅ Completado | 2026-04-22 |
 | [**SECURITY_FRONTEND_INTEGRATION_GUIDE.md**](./SECURITY_FRONTEND_INTEGRATION_GUIDE.md) | RBAC por módulo: 6 roles, 35 permisos `resource:action`, matriz rol×permiso, 403/405, rutas públicas | ✅ Completado | 2026-05-19 |
+| [**ROLES_PERMISSIONS_API_GUIDE.md**](./ROLES_PERMISSIONS_API_GUIDE.md) | CRUD de roles `/api/v1/roles`, asignación de permisos, listado de permisos disponibles | ✅ Completado | 2026-06-19 |
+| [**SESSION_MANAGEMENT_API_GUIDE.md**](./SESSION_MANAGEMENT_API_GUIDE.md) | Gestión de sesiones: activas, historial, revocación, `/sessions/*`, `/admin/sessions/*` | ✅ Completado | 2026-06-19 |
 
 ### Clientes y Proveedores (Party Model) — API Unificada
 
@@ -66,25 +68,50 @@ Este directorio contiene todas las guías de integración API para desarrollador
 | Guía | Descripción | Estado | Última Actualización |
 |------|-------------|--------|---------------------|
 | [**PRODUCT_API_GUIDE.md**](./PRODUCT_API_GUIDE.md) | Gestión de productos, lectura enriquecida, branch context, productos de medida variable | ✅ Actualizado | 2026-06-16 |
-| [**VARIANT_API_GUIDE.md**](./VARIANT_API_GUIDE.md) | FASE 3: Variantes de producto (SKUs), stock/precio independiente, integración ventas/compras | ✅ Completado | 2026-06-16 |
+| [**VARIANT_API_GUIDE.md**](./VARIANT_API_GUIDE.md) | FASE 3: Variantes de producto (SKUs), stock/precio independiente, integración ventas/compras | ✅ Completado | 2026-06-20 |
+| [**VARIANT_TAG_USAGE_GUIDE.md**](./VARIANT_TAG_USAGE_GUIDE.md) | Guía práctica: flujos completos de variantes, tags y atributos para frontend (creación, UI selectores, barcode, búsqueda) | ✅ Completado | 2026-06-20 |
 | [**UNIT_CONVERSIONS_API_GUIDE.md**](./UNIT_CONVERSIONS_API_GUIDE.md) | CRUD de conversiones de unidad `/unit-conversions`, factores de conversión, unidades soportadas | ✅ Completado | 2026-05-26 |
 | [**CATEGORY_IVA_API_GUIDE.md**](./CATEGORY_IVA_API_GUIDE.md) | Categorías e IVA, rutas verificadas | ✅ Completado | 2026-04-22 |
 | [**PRODUCT_DISCOUNTS_GUIDE.md**](./PRODUCT_DISCOUNTS_GUIDE.md) | Descuentos por producto, configuración y aplicación en transacciones | ✅ Completado | 2026-05-19 |
 | [**BRAND_ATTRIBUTE_TAG_API_GUIDE.md**](./BRAND_ATTRIBUTE_TAG_API_GUIDE.md) | FASE 1/2/4/5: Marcas normalizadas, atributos dinámicos (EAV), etiquetas, búsqueda avanzada, herencia | ✅ Completado | 2026-06-16 |
+| [**BARCODE_API_GUIDE.md**](./BARCODE_API_GUIDE.md) | Sistema de códigos de barra EAN-13, decodificación, generación de barcodes variables | ✅ Completado | 2026-05-27 |
+| [**PRODUCT_UNIT_FLOWS_GUIDE.md**](./PRODUCT_UNIT_FLOWS_GUIDE.md) | Flujos operativos end-to-end: productos con múltiples unidades de medida (creación → precio → compra → venta) | ✅ Completado | 2026-06-09 |
+| [**WEIGHABLE_PRODUCTS_GUIDE.md**](./WEIGHABLE_PRODUCTS_GUIDE.md) | Guía end-to-end de productos pesables: registro, balanza, etiqueta EAN-13, escaneo en POS | ✅ Completado | 2026-06-05 |
+
+### Manufactura
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**MANUFACTURING_API_GUIDE.md**](./MANUFACTURING_API_GUIDE.md) | Manufactura e insumos: supplies, recetas, lotes de producción, reportes | ✅ Completado | 2026-06-19 |
+
+### Auditoría
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**AUDIT_API_GUIDE.md**](./AUDIT_API_GUIDE.md) | Sistema de auditoría `/api/v1/audit/*`: logs, resumen, tendencias, historial por entidad, exportación | ✅ Completado | 2026-06-19 |
+
+### Básculas y Pesaje
+
+| Guía | Descripción | Estado | Última Actualización |
+|------|-------------|--------|---------------------|
+| [**SCALES_DEVICES_API_GUIDE.md**](./SCALES_DEVICES_API_GUIDE.md) | CRUD de dispositivos de balanza `/scales/*` y formatos de etiqueta `/label-formats/*` | ✅ Completado | 2026-06-19 |
+| [**SCALE_API_GUIDE.md**](./SCALE_API_GUIDE.md) | Pesaje e integración con balanzas: `/scale/weigh-item`, `/scale/generate-label`, `/scale/catalog` | ✅ Completado | 2026-05-27 |
 
 ### Inventario y Ajustes
 
 | Guía | Descripción | Estado | Última Actualización |
 |------|-------------|--------|---------------------|
-| [**INVENTORY_ADJUSTMENTS_PRICE_API_GUIDE.md**](./INVENTORY_ADJUSTMENTS_PRICE_API_GUIDE.md) | Ajustes de inventario, branch context (falta sección) | 🔄 En verificación | 2026-04-22 |
+| [**INVENTORY_ADJUSTMENTS_PRICE_API_GUIDE.md**](./INVENTORY_ADJUSTMENTS_PRICE_API_GUIDE.md) | Ajustes de inventario y stock, branch context (falta sección) | 🔄 En verificación | 2026-04-22 |
+| [**STOCK_TRANSACTIONS_API_GUIDE.md**](./STOCK_TRANSACTIONS_API_GUIDE.md) | Transacciones de stock `/stock-transactions/*`: historial, validación de consistencia, reportes | ✅ Completado | 2026-06-19 |
 
 ### Costos y Precios
 
 | Guía | Descripción | Estado | Última Actualización |
 |------|-------------|--------|---------------------|
-| [**COST_PRICING_API_GUIDE.md**](./COST_PRICING_API_GUIDE.md) | Costos y precios, `unit_costs` estado actual (1 fila/producto+unidad), historial en `price_transactions`, cost-transactions, BI branch context | ✅ Actualizado | 2026-05-25 |
+| [**COST_PRICING_API_GUIDE.md**](./COST_PRICING_API_GUIDE.md) | Costos y precios, `unit_costs` estado actual (1 fila/producto+unidad), historial en `price_transactions`, BI branch context | ✅ Actualizado | 2026-05-25 |
 | [**MANUAL_PRICE_ADJUSTMENTS_API_GUIDE.md**](./MANUAL_PRICE_ADJUSTMENTS_API_GUIDE.md) | Ajustes manuales de precio, falta branch context | 🔄 En verificación | 2026-04-22 |
-| [**PRICE_TRANSACTIONS_API_GUIDE.md**](./PRICE_TRANSACTIONS_API_GUIDE.md) | Transacciones de precio y costo, `price_type=cost_price`, cost-transactions | ✅ Actualizado | 2026-05-23 |
+| [**PRICE_TRANSACTIONS_API_GUIDE.md**](./PRICE_TRANSACTIONS_API_GUIDE.md) | Transacciones de precio, tipos, reportes de variación | ✅ Actualizado | 2026-05-23 |
+| [**COST_TRANSACTIONS_API_GUIDE.md**](./COST_TRANSACTIONS_API_GUIDE.md) | Transacciones de costo `/cost-transactions/*`: historial de costos, ajustes manuales, auditoría | ✅ Completado | 2026-06-19 |
 
 ### Reservas y Horarios
 
@@ -122,6 +149,7 @@ Este directorio contiene todas las guías de integración API para desarrollador
 | Guía | Descripción | Estado | Última Actualización |
 |------|-------------|--------|---------------------|
 | [**BI_API_GUIDE.md**](./BI_API_GUIDE.md) | Dashboard, cobranzas, pagos, reportes financieros, analytics, reglas BI branch context, RBAC | ✅ Completado | 2026-04-22 |
+| [**FORECAST_API_GUIDE.md**](./FORECAST_API_GUIDE.md) | Pronósticos `/api/v1/forecast/*`: ventas, inventario, demanda, ingresos, dashboard | ✅ Completado | 2026-06-19 |
 
 ---
 
@@ -193,13 +221,13 @@ Al crear o actualizar un documento en este directorio, verificar:
 
 1. **Prioridad 1:** Completar correcciones de guías en verificación (PRODUCT, INVENTORY, COST_PRICING, MANUAL_PRICE_ADJUSTMENTS, PRICE_TRANSACTIONS, RESERVATION)
 2. ~~**Prioridad 2:** Agregar sección "Permisos Requeridos" en cada guía por módulo~~ ✅ Completado — Ver `FRONTEND_RBAC_GUIDE.md` para referencia de roles y `RBAC_MODULE_PERMISSIONS_SUMMARY.md` para resumen de permisos
-3. **Prioridad 2 (nueva):** Actualizar `BARCODE_API_GUIDE.md` y `SCALE_API_GUIDE.md` con el formato completo de permisos si corresponde
-4. **Prioridad 3:** Verificar guías restantes no listadas en este índice
-5. **Prioridad 4:** Actualizar ejemplos de respuesta 403 en guías que usan endpoints protegidos por módulo
+3. ~~**Prioridad 2 (nueva):** Actualizar `BARCODE_API_GUIDE.md` y `SCALE_API_GUIDE.md` con el formato completo de permisos~~ ✅ Completado — Ver `RBAC_MODULE_PERMISSIONS_SUMMARY.md`
+4. ~~**Prioridad 3:** Verificar guías restantes no listadas en este índice~~ ✅ Completado
+5. **Prioridad 3:** Actualizar ejemplos de respuesta 403 en guías que usan endpoints protegidos por módulo
 
 ---
 
-**Última actualización del índice**: 2026-06-16
-**Total de guías documentadas**: 34
-**Guías completadas**: 25
+**Última actualización del índice**: 2026-06-20
+**Total de guías documentadas**: 47
+**Guías completadas**: 37
 **Guías deprecadas**: 2

@@ -67,7 +67,7 @@ La fidelidad visual depende de que las clases utilizadas coincidan con la defini
 Para destacar KPIs estratégicos o secciones de alta prioridad, se debe evitar el uso de bloques negros puros que rompan la estética ligera. En su lugar, utilizamos el patrón **Deep Brand Blue**.
 
 ### Características del Patrón
-- **Fondo:** `bg-gradient-to-br from-[#003966] via-[#004578] to-[#0f6cbd]`
+- **Fondo:** `bg-gradient-to-br from-[#003966] via-[#005baf] to-[#137fec]`
 - **Sombra:** `shadow-2xl shadow-blue-900/20`
 - **Contraste:** Texto blanco (`text-white`) con acentos esmeralda (`text-emerald-300`) para valores positivos.
 

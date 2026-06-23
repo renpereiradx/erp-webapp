@@ -445,7 +445,16 @@ const MainLayout = ({ children }) => {
         permission: 'inventory:read',
         children: [
           { name: t('products.title', 'Productos'), href: '/productos', icon: Package, permission: 'products:read' },
-          { name: t('categories.title', 'Categorías'), href: '/configuracion/categorias', icon: Tags, permission: 'products:read' },
+          {
+            name: 'Clasificación y Catálogos',
+            icon: Tags,
+            permission: 'products:read',
+            children: [
+              { name: 'Categorías e Impuestos', href: '/configuracion/categorias' },
+              { name: 'Marcas', href: '/configuracion/marcas' },
+              { name: 'Atributos y Etiquetas', href: '/configuracion/atributos' },
+            ]
+          },
           { name: 'Requisiciones', href: '/logistica/requisiciones', icon: ClipboardList },
           {
             name: t('productAdjustments.title', 'Ajustes de Stock'),

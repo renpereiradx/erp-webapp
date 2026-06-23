@@ -54,6 +54,8 @@ import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
 import Currencies from '@/pages/Currencies'
 import ExchangeRates from '@/pages/ExchangeRates'
 import CategoriesPage from '@/pages/CategoriesPage'
+import { BrandsPage } from '@/pages/BrandsPage'
+import { AttributesPage } from '@/pages/AttributesPage'
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import Settings from '@/pages/Settings'
@@ -438,6 +440,22 @@ function AppContent() {
                         element={
                           <PermissionGuard permission="products:read">
                             <CategoriesPage />
+                          </PermissionGuard>
+                        }
+                      />
+                      <Route
+                        path='/configuracion/marcas'
+                        element={
+                          <PermissionGuard permission="products:read">
+                            <BrandsPage />
+                          </PermissionGuard>
+                        }
+                      />
+                      <Route
+                        path='/configuracion/atributos'
+                        element={
+                          <PermissionGuard permission="products:read">
+                            <AttributesPage />
                           </PermissionGuard>
                         }
                       />
