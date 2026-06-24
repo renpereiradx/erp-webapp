@@ -19,6 +19,7 @@ export function CategoryAttributesManager({ categoryId }: CategoryAttributesMana
   const [code, setCode] = useState('');
   const [dataType, setDataType] = useState('STRING');
   const [optionsStr, setOptionsStr] = useState('');
+  const [isVariant, setIsVariant] = useState(false);
 
   const loadAttributes = async (ignore = false) => {
     try {
@@ -64,12 +65,14 @@ export function CategoryAttributesManager({ categoryId }: CategoryAttributesMana
         options,
         is_filterable: true,
         is_visible: true,
+        is_variant: isVariant,
       });
       toast.success('Atributo creado exitosamente');
       setName('');
       setCode('');
       setOptionsStr('');
       setDataType('STRING');
+      setIsVariant(false);
       await loadAttributes();
     } catch (error: any) {
       toast.error(error?.message || 'Error al crear atributo');
@@ -114,6 +117,9 @@ export function CategoryAttributesManager({ categoryId }: CategoryAttributesMana
                   <div>
                     <span className="text-xs font-black text-text-main uppercase tracking-wider">{attr.name}</span>
                     <span className="ml-2 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded uppercase">{attr.data_type}</span>
+                    {(attr.is_variant || attr.isVariant) && (
+                      <span className="ml-2 text-[10px] font-bold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded uppercase">Variante</span>
+                    )}
                   </div>
                   <button 
                     type="button" 
@@ -183,6 +189,18 @@ export function CategoryAttributesManager({ categoryId }: CategoryAttributesMana
               className="w-full h-9 px-3 bg-white border border-border-subtle rounded-lg text-xs font-bold outline-none focus:border-primary"
             />
           )}
+        </div>
+        <div className="flex items-center gap-2 py-1">
+          <input 
+            type="checkbox" 
+            id="isVariant" 
+            checked={isVariant} 
+            onChange={e => setIsVariant(e.target.checked)} 
+            className="w-4 h-4 text-primary border-border-subtle rounded focus:ring-primary"
+          />
+          <label htmlFor="isVariant" className="text-xs font-bold text-text-secondary select-none cursor-pointer">
+            Usar para generar variantes (ej. Talla, Color)
+          </label>
         </div>
         <Button 
           type="button" 

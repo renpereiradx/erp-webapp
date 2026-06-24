@@ -1605,10 +1605,29 @@ const useProductStore = create<ProductState>()(
             }
           })
 
+          // Actualizar en pageCache
+          const updatedPageCache = {}
+          Object.keys(state.pageCache).forEach(key => {
+            const pageNum = Number(key)
+            const cached = state.pageCache[pageNum]
+            if (cached && cached.products) {
+              const updatedCachedProducts = cached.products.map(p =>
+                (p.product_id || p.id) === productId ? { ...p, ...product } : p
+              )
+              updatedPageCache[pageNum] = {
+                ...cached,
+                products: updatedCachedProducts,
+              }
+            } else {
+              updatedPageCache[pageNum] = cached
+            }
+          })
+
           set({
             products: updatedProducts,
             productsById: updatedProductsById,
             searchCache: updatedSearchCache,
+            pageCache: updatedPageCache,
           })
 
           telemetry.record('products.refresh.success', { productId })

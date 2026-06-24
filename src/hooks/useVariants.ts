@@ -3,6 +3,7 @@ import { variantService } from '../services/variantService';
 import { toast } from 'sonner';
 import { useBranch } from '../contexts/BranchContext';
 import { apiClient } from '../services/api';
+import useProductStore from '../store/useProductStore';
 
 export interface VariantAttributeUI {
   name: string;
@@ -100,6 +101,13 @@ export const useVariants = () => {
       await variantService.updateVariant(id, { is_active: !currentStatus });
       toast.success("Estado actualizado");
       setVariants((prev) => prev.map((v) => v.id === id ? { ...v, isActive: !currentStatus } : v));
+      if (activeProductId) {
+        try {
+          await useProductStore.getState().refreshProductData(activeProductId.toString());
+        } catch (e) {
+          console.error("Error refreshing product details after status change:", e);
+        }
+      }
     } catch (error: any) {
       toast.error(error.message || "Error al actualizar estado");
     }
@@ -111,6 +119,11 @@ export const useVariants = () => {
       await variantService.createVariant(activeProductId.toString(), data);
       toast.success("Variante creada con éxito");
       await fetchVariants();
+      try {
+        await useProductStore.getState().refreshProductData(activeProductId.toString());
+      } catch (e) {
+        console.error("Error refreshing product details after creation:", e);
+      }
     } catch (error: any) {
       toast.error(error.message || "Error al crear variante");
       throw error;
@@ -122,6 +135,13 @@ export const useVariants = () => {
       await variantService.updateVariant(id, data);
       toast.success("Variante actualizada con éxito");
       await fetchVariants();
+      if (activeProductId) {
+        try {
+          await useProductStore.getState().refreshProductData(activeProductId.toString());
+        } catch (e) {
+          console.error("Error refreshing product details after edit:", e);
+        }
+      }
     } catch (error: any) {
       toast.error(error.message || "Error al actualizar variante");
       throw error;

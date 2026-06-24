@@ -20,7 +20,8 @@ export const variantService = {
       let units: any[] = [];
       try {
         const unitsRes = await apiClient.get(`/products/${productId}/units`);
-        units = unitsRes?.data?.data || unitsRes?.data || unitsRes || [];
+        const rawUnits = unitsRes?.data?.data || unitsRes?.data || unitsRes;
+        units = Array.isArray(rawUnits) ? rawUnits : [];
       } catch (err) {
         console.warn('Could not fetch units for variants', err);
       }

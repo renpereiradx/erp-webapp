@@ -35,7 +35,10 @@ export const VariantsManagerModal: React.FC<VariantsManagerModalProps> = ({ isOp
               </div>
             </div>
 
-            <ProductVariantsManager productId={product?.id} />
+            <ProductVariantsManager 
+              productId={product?.id} 
+              categoryId={product?.categoryId || product?.category_id || product?.category?.id || product?.category} 
+            />
           </div>
         </main>
       </div>

@@ -143,7 +143,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 font-display">
       <div 
-        className="bg-white rounded-2xl shadow-fluent-16 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 font-display"
+        className="bg-white rounded-2xl shadow-fluent-16 w-full max-w-4xl h-[84vh] max-h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 font-display"
         onClick={e => e.stopPropagation()}
       >
         {/* Header con gradiente */}
@@ -599,7 +599,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                     <h3 className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Variantes (SKUs)</h3>
                   </div>
                   <div className="pt-4">
-                    <ProductVariantsManager productId={product?.id || product?.product_id} categoryId={formData.category} />
+                    <ProductVariantsManager productId={product?.id || product?.product_id} categoryId={formData.category} compact={true} />
                   </div>
                 </div>
               </div>
