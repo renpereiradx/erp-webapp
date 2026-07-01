@@ -61,7 +61,7 @@ export default function CategoriesPage() {
               isOpen={isDrawerOpen}
             />
             
-            <TaxRatesPanel />
+            <TaxRatesPanel selectedCategory={selectedCategory} />
           </div>
         </div>
       </main>

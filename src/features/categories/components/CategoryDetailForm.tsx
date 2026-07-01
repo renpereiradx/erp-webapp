@@ -175,26 +175,7 @@ export function CategoryDetailForm({
           </div>
         </div>
         
-        {/* Classification Chips Example */}
-        <div className="mt-sm">
-          <span className="text-label-caps font-label-caps text-on-surface-variant block mb-sm">
-            Etiquetas SIFEN Relacionadas
-          </span>
-          <div className="flex flex-wrap gap-xs">
-            <span className="bg-primary/10 text-primary px-sm py-xs rounded-[12px] text-body-sm font-body-sm">
-              Bienes de Consumo
-            </span>
-            <span className="bg-primary/10 text-primary px-sm py-xs rounded-[12px] text-body-sm font-body-sm">
-              Indumentaria
-            </span>
-            <button
-              type="button"
-              className="border border-dashed border-outline-variant text-on-surface-variant px-sm py-xs rounded-[12px] text-body-sm font-body-sm hover:border-primary hover:text-primary transition-colors flex items-center gap-xs"
-            >
-              <span className="material-symbols-outlined text-[16px]">add</span> Añadir
-            </button>
-          </div>
-        </div>
+        {/* La clasificación SIFEN e IVA se configuran y aplican dinámicamente en el panel de Tasas de IVA de abajo */}
         
         <div className="mt-auto pt-lg flex justify-end gap-md items-center">
           {selectedCategory && (

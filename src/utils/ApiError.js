@@ -20,7 +20,7 @@ export const toApiError = (err, fallbackMessage = 'Error desconocido', correlati
     ? err.detail.map(d => d?.msg || d?.message || JSON.stringify(d)).join('; ')
     : err?.detail;
   const message =
-    backendError.message ||
+    (typeof err?.error === 'string' ? err.error : backendError.message) ||
     err?.message ||
     detailMessage ||
     fallbackMessage;

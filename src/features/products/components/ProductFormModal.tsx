@@ -17,7 +17,6 @@ import {
   Barcode,
   Percent,
   Tags,
-  Layers,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,9 +28,6 @@ import {
 } from '@/components/ui/select'
 import { CategoryManagementModal } from '@/features/categories'
 import { useProductForm } from '../hooks/useProductForm';
-import { ProductVariantsManager } from './ProductVariantsManager';
-import { ProductAttributesManager } from './ProductAttributesManager';
-import { ProductTagsManager } from './ProductTagsManager';
 
 /**
  * ProductFormModal Component
@@ -45,7 +41,7 @@ interface ProductFormModalProps {
 
 export default function ProductFormModal({ isOpen, onClose, product = null }: ProductFormModalProps) {
   const { t } = useI18n()
-  const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'measure' | 'variants' | 'attributes'>('basic')
+  const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'measure'>('basic')
   
   const {
     formData,
@@ -216,31 +212,6 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
             )}
           </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('attributes')}
-            className={`py-3 px-1 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-200 flex items-center gap-2 relative ${
-              activeTab === 'attributes'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-text-secondary hover:text-text-main'
-            }`}
-          >
-            <Layers size={14} />
-            <span>Ficha Técnica</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('variants')}
-            className={`py-3 px-1 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-200 flex items-center gap-2 relative ${
-              activeTab === 'variants'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-text-secondary hover:text-text-main'
-            }`}
-          >
-            <Package size={14} />
-            <span>Variantes (SKUs)</span>
-          </button>
         </div>
 
         {/* Form Body con Scroll */}
@@ -454,21 +425,6 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                       </div>
                     )}
                   </div>
-                  
-                  {/* Etiquetas (Tags) */}
-                  <div className="mt-8 pt-6 border-t border-slate-100">
-                    <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-50 text-slate-800">
-                      <Tags size={16} className="text-primary" />
-                      <h3 className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Etiquetas (Tags)</h3>
-                    </div>
-                    <ProductTagsManager 
-                      productId={product?.id || product?.product_id} 
-                      disabled={!isEditMode} 
-                    />
-                    <p className="text-[9px] text-text-secondary font-bold uppercase tracking-wider mt-2 ml-1">
-                      Agregue etiquetas como "Nuevo", "Oferta" o "Destacado" para filtros y catálogos.
-                    </p>
-                  </div>
                 </div>
               </div>
             )}
@@ -590,35 +546,6 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
               </div>
             )}
 
-            {/* CONTENIDO PESTAÑA: VARIANTES */}
-            {activeTab === 'variants' && (
-              <div className="space-y-6 animate-in fade-in duration-200 slide-in-from-left-3">
-                <div className="bg-white p-6 rounded-2xl border border-border-subtle shadow-sm space-y-6">
-                  <div className="flex items-center gap-2 pb-3 border-b border-slate-100 text-slate-800">
-                    <Package size={16} className="text-primary" />
-                    <h3 className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Variantes (SKUs)</h3>
-                  </div>
-                  <div className="pt-4">
-                    <ProductVariantsManager productId={product?.id || product?.product_id} categoryId={formData.category} compact={true} />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* CONTENIDO PESTAÑA: ATRIBUTOS DE PRODUCTO */}
-            {activeTab === 'attributes' && (
-              <div className="space-y-6 animate-in fade-in duration-200 slide-in-from-left-3">
-                <div className="bg-white p-6 rounded-2xl border border-border-subtle shadow-sm space-y-6">
-                  <div className="flex items-center gap-2 pb-3 border-b border-slate-100 text-slate-800">
-                    <Layers size={16} className="text-primary" />
-                    <h3 className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Ficha Técnica (Atributos descriptivos)</h3>
-                  </div>
-                  <div className="pt-2">
-                    <ProductAttributesManager productId={product?.id || product?.product_id} categoryId={formData.category} />
-                  </div>
-                </div>
-              </div>
-            )}
           </form>
         </div>
 

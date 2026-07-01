@@ -7,7 +7,7 @@ export const tagService = {
     });
   },
 
-  create: async (data: { name: string; color?: string; icon?: string; tag_type?: string }) => {
+  create: async (data: { name: string; color?: string; icon?: string; tag_type?: string; category_id?: number | null }) => {
     return apiClient.makeRequest('/api/v1/tags', {
       method: 'POST',
       body: JSON.stringify(data),

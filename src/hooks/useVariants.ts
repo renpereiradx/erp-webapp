@@ -22,7 +22,6 @@ export interface VariantUI {
   stock: number | string;
   price: number | string;
   isActive: boolean;
-  isActive: boolean;
   lowStock?: boolean;
   raw_attributes: Record<string, string>;
 }
@@ -97,28 +96,67 @@ export const useVariants = () => {
   }, [variants, searchTerm]);
 
   const toggleVariantStatus = async (id: string, currentStatus: boolean) => {
+    // Actualización optimista de la interfaz para una UX instantánea y fluida
+    setVariants((prev) =>
+      prev.map((v) => (v.id === id ? { ...v, isActive: !currentStatus } : v))
+    );
+
     try {
       await variantService.updateVariant(id, { is_active: !currentStatus });
-      toast.success("Estado actualizado");
-      setVariants((prev) => prev.map((v) => v.id === id ? { ...v, isActive: !currentStatus } : v));
+      toast.success("Estado de la variante actualizado");
+      
       if (activeProductId) {
         try {
           await useProductStore.getState().refreshProductData(activeProductId.toString());
         } catch (e) {
-          console.error("Error refreshing product details after status change:", e);
+          console.error("Error al refrescar detalles del producto tras cambio de estado:", e);
         }
       }
     } catch (error: any) {
-      toast.error(error.message || "Error al actualizar estado");
+      // Reversión del estado optimista en caso de error en el backend
+      setVariants((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, isActive: currentStatus } : v))
+      );
+      toast.error(error.message || "Error al actualizar el estado de la variante");
     }
   };
 
   const createVariant = async (data: any) => {
     if (!activeProductId) return;
     try {
-      await variantService.createVariant(activeProductId.toString(), data);
+      const created = await variantService.createVariant(activeProductId.toString(), data);
       toast.success("Variante creada con éxito");
-      await fetchVariants();
+      
+      // Actualización optimista instantánea
+      if (created) {
+        const optAttrs = Object.entries(created.variant_attributes || {}).map(([key, value]) => ({
+          name: key.charAt(0).toUpperCase() + key.slice(1),
+          value: String(value),
+          bgColor: key.toLowerCase() === 'color' ? 'bg-secondary-container/50' : 'bg-surface-container',
+          color: key.toLowerCase() === 'color' ? 'text-on-secondary-container' : 'text-on-surface-variant',
+          borderColor: key.toLowerCase() === 'color' ? 'border-secondary-container' : 'border-outline-variant/30'
+        }));
+        
+        const optVariant: VariantUI = {
+          id: created.id,
+          sku: created.sku || '-',
+          name: created.variant_name || Object.values(created.variant_attributes || {}).join(' / ') || 'Variante',
+          barcode: created.barcode || '-',
+          attributes: optAttrs,
+          stock: data.initial_stock || 0,
+          price: data.initial_price || 0,
+          isActive: created.is_active !== undefined ? created.is_active : true,
+          lowStock: (data.initial_stock || 0) <= 5,
+          raw_attributes: created.variant_attributes || {}
+        };
+        setVariants(prev => [...prev, optVariant]);
+      }
+
+      // Sincronización posterior con delay
+      setTimeout(() => {
+        fetchVariants();
+      }, 1500);
+
       try {
         await useProductStore.getState().refreshProductData(activeProductId.toString());
       } catch (e) {
@@ -132,9 +170,41 @@ export const useVariants = () => {
 
   const editVariant = async (id: string, data: any) => {
     try {
+      // Actualización optimista local
+      setVariants((prev) =>
+        prev.map((v) => {
+          if (v.id === id) {
+            const updatedAttrs = data.variant_attributes 
+              ? Object.entries(data.variant_attributes).map(([key, value]) => ({
+                  name: key.charAt(0).toUpperCase() + key.slice(1),
+                  value: String(value),
+                  bgColor: key.toLowerCase() === 'color' ? 'bg-secondary-container/50' : 'bg-surface-container',
+                  color: key.toLowerCase() === 'color' ? 'text-on-secondary-container' : 'text-on-surface-variant',
+                  borderColor: key.toLowerCase() === 'color' ? 'border-secondary-container' : 'border-outline-variant/30'
+                }))
+              : v.attributes;
+
+            return {
+              ...v,
+              barcode: data.barcode !== undefined ? (data.barcode || '-') : v.barcode,
+              stock: data.initial_stock !== undefined ? data.initial_stock : v.stock,
+              price: data.initial_price !== undefined ? data.initial_price : v.price,
+              attributes: updatedAttrs,
+              raw_attributes: data.variant_attributes || v.raw_attributes
+            };
+          }
+          return v;
+        })
+      );
+
       await variantService.updateVariant(id, data);
       toast.success("Variante actualizada con éxito");
-      await fetchVariants();
+
+      // Sincronización posterior con delay
+      setTimeout(() => {
+        fetchVariants();
+      }, 1500);
+
       if (activeProductId) {
         try {
           await useProductStore.getState().refreshProductData(activeProductId.toString());
@@ -144,6 +214,7 @@ export const useVariants = () => {
       }
     } catch (error: any) {
       toast.error(error.message || "Error al actualizar variante");
+      fetchVariants();
       throw error;
     }
   };

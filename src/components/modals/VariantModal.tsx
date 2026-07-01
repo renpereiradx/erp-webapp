@@ -52,7 +52,7 @@ export const VariantModal: React.FC<VariantModalProps> = ({ isOpen, onClose, onC
 
   useEffect(() => {
     if (isOpen && variantToEdit) {
-      setBarcode(variantToEdit.barcode || '');
+      setBarcode(variantToEdit.barcode && variantToEdit.barcode !== '-' ? variantToEdit.barcode : '');
       setStock(variantToEdit.stock_quantity || variantToEdit.stock || '');
       setPrecio(variantToEdit.current_price || variantToEdit.price || '');
       
@@ -202,7 +202,7 @@ export const VariantModal: React.FC<VariantModalProps> = ({ isOpen, onClose, onC
               
               <div className="border-t border-surface-variant/30 pt-1"></div>
               
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={erpLabel} htmlFor="sucursal">Sucursal</label>
                   <select 
@@ -228,21 +228,22 @@ export const VariantModal: React.FC<VariantModalProps> = ({ isOpen, onClose, onC
                     disabled={submitting}
                   />
                 </div>
-                <div>
-                  <label className={erpLabel} htmlFor="precio">Precio Inicial</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 font-data-tabular text-outline-variant text-xs">$</span>
-                    <input 
-                      className={`${erpInput} font-data-tabular pl-7`} 
-                      id="precio" 
-                      placeholder="Padre" 
-                      step="0.01" 
-                      type="number" 
-                      value={precio}
-                      onChange={(e) => setPrecio(e.target.value)}
-                      disabled={submitting}
-                    />
-                  </div>
+              </div>
+              
+              <div className="mt-3">
+                <label className={erpLabel} htmlFor="precio">Precio Inicial</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-data-tabular text-outline-variant text-xs">$</span>
+                  <input 
+                    className={`${erpInput} font-data-tabular pl-7`} 
+                    id="precio" 
+                    placeholder="Padre" 
+                    step="0.01" 
+                    type="number" 
+                    value={precio}
+                    onChange={(e) => setPrecio(e.target.value)}
+                    disabled={submitting}
+                  />
                 </div>
               </div>
             </div>

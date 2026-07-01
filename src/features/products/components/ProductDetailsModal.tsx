@@ -323,25 +323,28 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                 </section>
               )}
 
-              {/* Variants Section */}
-              {(product?.has_variants || variants.length > 0) && (
-                <section>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 text-[#106ebe]">
-                      <Package size={18} />
-                      <h3 className="font-semibold text-xs uppercase tracking-widest">Variantes Registradas</h3>
-                    </div>
-                    {canWrite && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsVariantsManagerOpen(true)}
-                        className="text-xs border-primary text-primary hover:bg-primary/5"
-                      >
-                        Administrar Variantes
-                      </Button>
-                    )}
+              {/* Variants & Attributes Section */}
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2 text-[#106ebe]">
+                    <Package size={18} />
+                    <h3 className="font-semibold text-xs uppercase tracking-widest">
+                      {(product?.has_variants || variants.length > 0) ? 'Variantes Registradas' : 'Atributos, Etiquetas y Variantes'}
+                    </h3>
                   </div>
+                  {canWrite && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsVariantsManagerOpen(true)}
+                      className="text-xs border-primary text-primary hover:bg-primary/5"
+                    >
+                      Administrar variantes, atributos y etiquetas
+                    </Button>
+                  )}
+                </div>
+                
+                {(product?.has_variants || variants.length > 0) ? (
                   <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
                     {loadingVariants ? (
                       <div className="p-8 text-center text-sm text-gray-400">Cargando variantes...</div>
@@ -380,8 +383,13 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                       <div className="p-8 text-center text-sm text-gray-400">Este producto no tiene variantes configuradas.</div>
                     )}
                   </div>
-                </section>
-              )}
+                ) : (
+                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-6 text-center shadow-sm">
+                    <p className="text-sm text-gray-500 font-medium mb-1">Este producto no tiene variantes configuradas.</p>
+                    <p className="text-xs text-gray-400">Puedes administrar etiquetas y atributos de este producto, o crear su primera variante.</p>
+                  </div>
+                )}
+              </section>
             </div>
 
             {/* Sidebar Stats Area (4/12) */}

@@ -2,8 +2,8 @@
 
 > **Disclaimer:** Esta guía contiene ejemplos JSON para ilustración de respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
-**Versión:** 2.3.0
-**Fecha:** 22 de Junio de 2026
+**Versión:** 2.4.0
+**Fecha:** 01 de Julio de 2026
 **Endpoint Base:** `http://localhost:5050`
 
 ---
@@ -125,6 +125,8 @@ Authorization: Bearer <jwt_token>
 | `category_id` | number \| null | Categoría a la que pertenece el tag. `null` = tag global (aplica a cualquier producto). Si tiene valor, solo puede asignarse a productos de esa categoría. |
 | `is_active` | boolean | Estado de la etiqueta |
 | `created_at` | string | Fecha de creación (ISO 8601) |
+
+> **Importante:** Los campos `tag_type` y `category_id` son **independientes**. `tag_type` describe el tipo de etiqueta (general, promoción, etc.) mientras que `category_id` define el alcance (global vs exclusivo de una categoría). Un tag puede ser de tipo "GENERAL" y a la vez estar restringido a una categoría específica.
 
 ---
 
@@ -537,16 +539,35 @@ Para atributos de tipo DATE:
 
 **`POST /products/{id}/tags/{tagId}`**
 
-**Validación de categoría:** Si el tag tiene `category_id` definido (no es global), el sistema valida que la categoría del producto coincida. En caso contrario retorna:
+**Validación de categoría:** Si el tag tiene `category_id` definido (no es global), el sistema valida que la categoría del producto coincida. En caso contrario retorna HTTP 400 con código `VALIDATION_ERROR`:
 
+**Caso 1: Producto sin categoría asignada**
 ```json
 {
-  "error": "tag 9 belongs to category 18 but product A-7oarkDR is in a different category",
-  "code": "INTERNAL_ERROR"
+  "error": "tag 9 'Oferta' pertenece a la categoría 18 pero el producto A-7oarkDR no tiene categoría asignada",
+  "code": "VALIDATION_ERROR",
+  "field": "tag_id",
+  "details": {
+    "tag_id": 9,
+    "product_id": "A-7oarkDR"
+  }
 }
 ```
 
-HTTP 400. Los tags globales (`category_id = null`) pueden asignarse a cualquier producto.
+**Caso 2: Producto en categoría diferente**
+```json
+{
+  "error": "tag 9 'Oferta' pertenece a la categoría 18 pero el producto A-7oarkDR pertenece a la categoría 5 'Electrónica'",
+  "code": "VALIDATION_ERROR",
+  "field": "tag_id",
+  "details": {
+    "tag_id": 9,
+    "product_id": "A-7oarkDR"
+  }
+}
+```
+
+> **Nota:** Los tags globales (`category_id = null`) pueden asignarse a cualquier producto sin restricción de categoría. El campo `tag_type` (GENERAL, PROMOTION, STATUS, SEASON) es independiente de `category_id` — un tag puede ser de tipo "GENERAL" y a la vez estar restringido a una categoría específica.
 
 **Response (200 OK):**
 ```json
@@ -825,6 +846,7 @@ La búsqueda avanzada filtra por tags usando `tag_slugs: ["oferta", "nuevo"]` �
 | HTTP Status | Descripción | Solución |
 |-------------|-------------|----------|
 | 400 | Datos inválidos o validación fallida | Verificar el body y los campos requeridos |
+| 400 | Tag no pertenece a la categoría del producto (`VALIDATION_ERROR`) | Verificar que el tag y el producto pertenezcan a la misma categoría, o usar un tag global (`category_id = null`) |
 | 401 | Token JWT inválido o ausente | Verificar que se envía el header Authorization |
 | 403 | Sin permisos | Verificar rol del usuario |
 | 404 | Recurso no encontrado | Verificar el ID |
@@ -834,6 +856,13 @@ La búsqueda avanzada filtra por tags usando `tag_slugs: ["oferta", "nuevo"]` �
 ---
 
 ## Historial de Cambios
+
+### v2.4.0 - 01 de Julio de 2026
+
+- **MEJORA**: Errores de categoría de tag ahora retornan `VALIDATION_ERROR` en lugar de `INTERNAL_ERROR`
+- **MEJORA**: Mensajes de error incluyen nombres de tag y categoría para mejor debugging
+- **MEJORA**: Respuestas de error incluyen campos `field` y `details` con IDs relevantes
+- **ACLARACIÓN**: Documentación sobre independencia entre `tag_type` y `category_id`
 
 ### v2.3.0 - 22 de Junio de 2026
 
@@ -877,6 +906,6 @@ La búsqueda avanzada filtra por tags usando `tag_slugs: ["oferta", "nuevo"]` �
 
 ---
 
-**Última actualización:** 22 de Junio de 2026
-**Versión:** 2.3.0
+**Última actualización:** 01 de Julio de 2026
+**Versión:** 2.4.0
 **Estado:** ✅ Production Ready

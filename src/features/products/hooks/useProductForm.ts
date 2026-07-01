@@ -137,7 +137,7 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
       if (product) {
         setFormData({
           name: product.product_name || product.name || '',
-          category: product.category?.id?.toString() || product.category_id?.toString() || product.id_category?.toString() || '',
+          category: product.category?.id?.toString() || product.categoryId?.toString() || product.category_id?.toString() || product.id_category?.toString() || '',
           productType: product.product_type || 'PHYSICAL',
           description: product.description || '',
           barcode: product.barcode || '',

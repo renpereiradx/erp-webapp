@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, RefreshCw, Layers, Plus, X } from 'lucide-react';
 import { attributeService } from '@/services/attributeService';
+import { categoryService } from '@/services/categoryService';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
 
@@ -14,7 +15,29 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
   const [isCreatingDef, setIsCreatingDef] = useState(false);
   const [newDefName, setNewDefName] = useState('');
   const [newDefType, setNewDefType] = useState('STRING');
+  const [newDefCategory, setNewDefCategory] = useState('General');
+  const [newDefValue, setNewDefValue] = useState('');
+  const [newDefOptions, setNewDefOptions] = useState<string[]>([]);
   const [creatingDefLoader, setCreatingDefLoader] = useState(false);
+  const [apiCategories, setApiCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (categoryId) {
+      setNewDefCategory(String(categoryId));
+    } else {
+      setNewDefCategory('General');
+    }
+  }, [categoryId, isCreatingDef]);
+
+  useEffect(() => {
+    categoryService.getAll()
+      .then((cats: any) => {
+        setApiCategories(Array.isArray(cats) ? cats : (cats?.data || []));
+      })
+      .catch(err => {
+        console.error("Error al cargar categorías de la API en la ficha técnica:", err);
+      });
+  }, []);
 
   const toast = useToast();
 
@@ -101,28 +124,46 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
   };
 
   const handleCreateDefinition = async () => {
-    if (!categoryId) {
-      toast.error('Debe asignar el producto a una categoría antes de crear atributos');
-      return;
-    }
     if (!newDefName.trim()) return;
 
     setCreatingDefLoader(true);
     try {
       const code = newDefName.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
-      await attributeService.createDefinition({
-        category_id: Number(categoryId),
+      
+      const isSystemCategory = ['General', 'Apariencia', 'Especificaciones'].includes(newDefCategory);
+      const catIdPayload = isSystemCategory ? null : Number(newDefCategory);
+      
+      const res: any = await attributeService.createDefinition({
+        category_id: catIdPayload,
+        category: isSystemCategory ? newDefCategory : undefined,
         name: newDefName.trim(),
         code: code,
         data_type: newDefType,
         is_visible: true,
         is_filterable: true,
-        is_variant: false
+        is_variant: false,
+        options: newDefType === 'LIST' ? newDefOptions.filter(o => o.trim() !== '') : undefined
       });
-      toast.success('Atributo de categoría creado');
+      
+      const createdAttr = res.data || res;
+      const createdAttrId = createdAttr?.id || createdAttr?.attribute_id;
+      
+      if (productId && createdAttrId && newDefValue.trim() !== '') {
+        const payload: any = {};
+        if (newDefType === 'STRING' || newDefType === 'LIST') payload.value_text = newDefValue.trim();
+        else if (newDefType === 'NUMBER') payload.value_number = Number(newDefValue);
+        else if (newDefType === 'BOOLEAN') payload.value_boolean = newDefValue === 'true';
+        else if (newDefType === 'DATE') payload.value_date = newDefValue;
+
+        await attributeService.assignProductAttribute(productId, createdAttrId, payload);
+      }
+      
+      toast.success('Atributo creado y guardado exitosamente');
       setIsCreatingDef(false);
       setNewDefName('');
       setNewDefType('STRING');
+      setNewDefValue('');
+      setNewDefOptions([]);
       await loadData();
     } catch (err: any) {
       toast.error(err.message || 'Error al crear la definición del atributo');
@@ -185,40 +226,169 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
       </div>
 
       {isCreatingDef && (
-        <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl mb-4 animate-in slide-in-from-top-2 flex flex-col md:flex-row gap-3 items-end">
-          <div className="flex-1 w-full">
-            <label className="text-[10px] font-bold text-primary/80 uppercase tracking-wider mb-1 block">Nombre del atributo</label>
-            <input 
-              className="w-full h-9 px-3 bg-white border border-primary/20 rounded-lg text-sm outline-none focus:border-primary"
-              placeholder="Ej. Material, RAM, Garantía"
-              value={newDefName}
-              onChange={e => setNewDefName(e.target.value)}
-            />
+        <div className="p-5 bg-slate-50 border border-primary/20 rounded-2xl mb-6 space-y-4 animate-in slide-in-from-top-3 duration-200">
+          <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-slate-100">
+            <Plus size={14} /> Nuevo Atributo Descriptivo
+          </h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Nombre del atributo</label>
+              <input 
+                className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                placeholder="Ej. Material, RAM, Garantía"
+                value={newDefName}
+                onChange={e => setNewDefName(e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Tipo de Dato</label>
+              <select 
+                className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                value={newDefType}
+                onChange={e => {
+                  setNewDefType(e.target.value);
+                  setNewDefValue('');
+                }}
+              >
+                <option value="STRING">Texto (STRING)</option>
+                <option value="NUMBER">Número (NUMBER)</option>
+                <option value="BOOLEAN">Sí / No (BOOLEAN)</option>
+                <option value="DATE">Fecha (DATE)</option>
+                <option value="LIST">Lista de opciones (LIST)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Grupo / Categoría</label>
+              <select 
+                className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                value={newDefCategory}
+                onChange={e => setNewDefCategory(e.target.value)}
+              >
+                <optgroup label="Grupos de Sistema">
+                  <option value="General">General (Sin categoría)</option>
+                  <option value="Apariencia">Apariencia</option>
+                  <option value="Especificaciones">Especificaciones</option>
+                </optgroup>
+                {apiCategories.length > 0 && (
+                  <optgroup label="Categorías de Producto">
+                    {apiCategories.map((c: any) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} {Number(c.id) === Number(categoryId) ? '(Actual del Producto)' : ''}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </div>
           </div>
-          <div className="w-full md:w-48">
-            <label className="text-[10px] font-bold text-primary/80 uppercase tracking-wider mb-1 block">Tipo de Dato</label>
-            <select 
-              className="w-full h-9 px-3 bg-white border border-primary/20 rounded-lg text-sm outline-none focus:border-primary"
-              value={newDefType}
-              onChange={e => setNewDefType(e.target.value)}
+
+          {newDefType === 'LIST' && (
+            <div className="bg-white p-3.5 rounded-xl border border-slate-100 space-y-2.5">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex justify-between items-center">
+                Opciones de la lista
+                <button 
+                  type="button" 
+                  onClick={() => setNewDefOptions([...newDefOptions, ''])} 
+                  className="text-primary hover:underline flex items-center text-[10px]"
+                >
+                  <Plus size={12} className="mr-0.5" /> Añadir opción
+                </button>
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {newDefOptions.map((opt, i) => (
+                  <div key={i} className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
+                    <input 
+                      className="flex-1 bg-transparent text-xs outline-none w-full" 
+                      placeholder={`Opción ${i + 1}`} 
+                      value={opt} 
+                      onChange={(e) => {
+                        const nextOpts = [...newDefOptions];
+                        nextOpts[i] = e.target.value;
+                        setNewDefOptions(nextOpts);
+                      }}
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setNewDefOptions(newDefOptions.filter((_, idx) => idx !== i))} 
+                      className="text-slate-400 hover:text-error shrink-0"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+                {newDefOptions.length === 0 && (
+                  <p className="text-[11px] text-slate-400 italic col-span-3">Añade al menos una opción para tu lista.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Valor para este producto (Opcional)</label>
+            {newDefType === 'LIST' ? (
+              <select
+                className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                value={newDefValue}
+                onChange={e => setNewDefValue(e.target.value)}
+              >
+                <option value="">Seleccionar...</option>
+                {newDefOptions.filter(o => o.trim() !== '').map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            ) : newDefType === 'BOOLEAN' ? (
+              <select
+                className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                value={newDefValue}
+                onChange={e => setNewDefValue(e.target.value)}
+              >
+                <option value="">No especificado</option>
+                <option value="true">Sí</option>
+                <option value="false">No</option>
+              </select>
+            ) : (
+              <input
+                type={newDefType === 'NUMBER' ? 'number' : newDefType === 'DATE' ? 'date' : 'text'}
+                className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                placeholder={newDefType === 'NUMBER' ? 'Ej. 120' : newDefType === 'DATE' ? 'Seleccionar fecha' : 'Ej. Importado, 55 pulgadas, etc.'}
+                value={newDefValue}
+                onChange={e => setNewDefValue(e.target.value)}
+              />
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
+            <Button 
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-[10px] uppercase font-bold px-4 h-8 rounded-lg"
+              onClick={() => {
+                setIsCreatingDef(false);
+                setNewDefName('');
+                setNewDefType('STRING');
+                setNewDefValue('');
+                setNewDefOptions([]);
+              }}
             >
-              <option value="STRING">Texto</option>
-              <option value="NUMBER">Número</option>
-              <option value="BOOLEAN">Sí / No</option>
-              <option value="DATE">Fecha</option>
-            </select>
+              Cancelar
+            </Button>
+            <Button 
+              type="button"
+              size="sm"
+              className="bg-primary hover:bg-primary/95 text-white text-[10px] uppercase font-bold px-5 h-8 rounded-lg flex items-center gap-1.5 shadow-sm"
+              disabled={!newDefName.trim() || creatingDefLoader || (newDefType === 'LIST' && newDefOptions.filter(o => o.trim() !== '').length === 0)}
+              onClick={(e) => {
+                e.preventDefault();
+                handleCreateDefinition();
+              }}
+            >
+              {creatingDefLoader ? <RefreshCw size={12} className="animate-spin" /> : 'Crear y Guardar'}
+            </Button>
           </div>
-          <Button 
-            type="button"
-            className="w-full md:w-auto h-9 bg-primary hover:bg-primary/90 text-white font-bold"
-            disabled={!newDefName.trim() || creatingDefLoader}
-            onClick={(e) => {
-              e.preventDefault();
-              handleCreateDefinition();
-            }}
-          >
-            {creatingDefLoader ? <RefreshCw size={14} className="animate-spin" /> : 'Guardar'}
-          </Button>
         </div>
       )}
 
@@ -238,18 +408,33 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
             const attrId = attr.id || attr.attribute_id;
             const val = productValues[attrId] || '';
             const isSaving = savingId === attrId;
+            const hasValue = val !== '' && val !== null && val !== undefined;
 
           return (
-            <div key={attrId} className="flex flex-col gap-1.5 p-3 bg-slate-50 border border-slate-100 rounded-xl hover:border-slate-200 transition-colors">
-              <label className="text-[10px] font-black uppercase tracking-wider text-slate-600">
-                {attr.name} {attr.is_required && <span className="text-error">*</span>}
-              </label>
+            <div 
+              key={attrId} 
+              className={`flex flex-col gap-1.5 p-3 rounded-xl transition-all duration-200 ${
+                hasValue 
+                  ? 'bg-primary/[0.04] border border-primary/30 shadow-sm ring-1 ring-primary/10' 
+                  : 'bg-slate-50 border border-slate-100 hover:border-slate-200 opacity-80 hover:opacity-100'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <label className={`text-[10px] font-black uppercase tracking-wider ${hasValue ? 'text-primary' : 'text-slate-500'}`}>
+                  {attr.name} {attr.is_required && <span className="text-error">*</span>}
+                </label>
+                {hasValue && (
+                  <span className="text-[8px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-sm uppercase tracking-widest">
+                    Activo
+                  </span>
+                )}
+              </div>
               
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-2 items-center mt-1">
                 <div className="flex-1">
                   {attr.data_type === 'LIST' && attr.options ? (
                     <select
-                      className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      className={`w-full h-9 px-3 bg-white border rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors ${hasValue ? 'border-primary/30' : 'border-slate-200'}`}
                       value={val}
                       onChange={e => handleChange(attrId, e.target.value)}
                     >
@@ -258,7 +443,7 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
                     </select>
                   ) : attr.data_type === 'BOOLEAN' ? (
                     <select
-                      className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      className={`w-full h-9 px-3 bg-white border rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors ${hasValue ? 'border-primary/30' : 'border-slate-200'}`}
                       value={String(val)}
                       onChange={e => handleChange(attrId, e.target.value)}
                     >
@@ -269,7 +454,7 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
                   ) : (
                     <input
                       type={attr.data_type === 'NUMBER' ? 'number' : attr.data_type === 'DATE' ? 'date' : 'text'}
-                      className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      className={`w-full h-9 px-3 bg-white border rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors ${hasValue ? 'border-primary/30' : 'border-slate-200'}`}
                       placeholder={`Valor para ${attr.name}`}
                       value={val}
                       onChange={e => handleChange(attrId, e.target.value)}
@@ -284,7 +469,11 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
                     handleSave(attr);
                   }} 
                   disabled={isSaving}
-                  className="h-9 w-9 p-0 bg-primary/10 hover:bg-primary/20 text-primary border-none shadow-none"
+                  className={`h-9 w-9 p-0 border-none shadow-none transition-all duration-200 ${
+                    hasValue 
+                      ? 'bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20' 
+                      : 'bg-slate-200 hover:bg-slate-300 text-slate-500'
+                  }`}
                   title="Guardar atributo individual"
                 >
                   {isSaving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}

@@ -3,7 +3,7 @@ import { tagService } from '@/services/tagService';
 import { useToast } from '@/hooks/useToast';
 import { X, Check, Plus, Loader2, Tags } from 'lucide-react';
 
-export function ProductTagsManager({ productId, disabled = false }: { productId: string | number | undefined; disabled?: boolean }) {
+export function ProductTagsManager({ productId, categoryId, disabled = false }: { productId: string | number | undefined; categoryId?: number; disabled?: boolean }) {
   const toast = useToast();
   const [allTags, setAllTags] = useState<any[]>([]);
   const [productTags, setProductTags] = useState<any[]>([]);
@@ -23,8 +23,17 @@ export function ProductTagsManager({ productId, disabled = false }: { productId:
           tagService.getProductTags(productId.toString())
         ]);
         if (!ignore) {
-          setAllTags(Array.isArray(tagsRes) ? tagsRes : (tagsRes?.data || []));
-          setProductTags(Array.isArray(prodTagsRes) ? prodTagsRes : (prodTagsRes?.data || []));
+          const allT = Array.isArray(tagsRes) ? tagsRes : (tagsRes?.data || []);
+          setAllTags(allT);
+          
+          const rawProdTags = Array.isArray(prodTagsRes) ? prodTagsRes : (prodTagsRes?.data || []);
+          const normalizedProductTags = rawProdTags.map((pt: any) => {
+            const tagId = pt.tag_id || pt.id;
+            const fullTag = allT.find((t: any) => t.id === tagId);
+            return fullTag || pt;
+          });
+          
+          setProductTags(normalizedProductTags);
         }
       } catch (error) {
         console.error(error);
@@ -55,8 +64,17 @@ export function ProductTagsManager({ productId, disabled = false }: { productId:
       setProductTags(prev => [...prev, tag]);
       setSearchTerm('');
       setIsDropdownOpen(false);
-    } catch (error) {
-      toast.error('Error al asignar etiqueta');
+    } catch (error: any) {
+      if (error?.code === 'VALIDATION_ERROR' && error.message) {
+        // Mejorar la UX del mensaje limpiando IDs técnicos del backend
+        let msg = error.message;
+        msg = msg.replace(/tag \d+ /g, 'La etiqueta ');
+        msg = msg.replace(/la categoría \d+ pero/g, 'otra categoría, pero');
+        msg = msg.replace(/el producto \S+ /g, 'este producto ');
+        msg = msg.replace(/categoría \d+ '(.+?)'/g, "categoría '$1'");
+        error.message = msg;
+      }
+      toast.errorFrom(error, { fallback: 'Error al asignar etiqueta' });
     }
   };
 
@@ -82,12 +100,13 @@ export function ProductTagsManager({ productId, disabled = false }: { productId:
       const newTag = await tagService.create({ 
         name: searchTerm.trim(), 
         color: randomColor, 
-        tag_type: 'GENERAL' 
+        tag_type: 'GENERAL',
+        category_id: null
       });
       setAllTags(prev => [...prev, newTag]);
       await handleAssign(newTag);
     } catch (error) {
-      toast.error('Error al crear etiqueta');
+      toast.errorFrom(error, { fallback: 'Error al crear etiqueta' });
     } finally {
       setIsCreating(false);
     }
@@ -106,8 +125,16 @@ export function ProductTagsManager({ productId, disabled = false }: { productId:
     return <div className="animate-pulse h-[44px] bg-slate-100 rounded-xl"></div>;
   }
 
-  const filteredTags = allTags.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  const exactMatch = allTags.find(t => t.name.toLowerCase() === searchTerm.toLowerCase().trim());
+  // Mostrar solo tags globales (null o 0) o que pertenezcan a la misma categoría del producto
+  const applicableTags = allTags.filter(t => 
+    t.category_id === null || 
+    t.category_id === undefined || 
+    t.category_id === 0 ||
+    t.category_id === Number(categoryId)
+  );
+
+  const filteredTags = applicableTags.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const exactMatch = applicableTags.find(t => t.name.toLowerCase() === searchTerm.toLowerCase().trim());
 
   return (
     <div className="relative font-display" ref={wrapperRef}>
