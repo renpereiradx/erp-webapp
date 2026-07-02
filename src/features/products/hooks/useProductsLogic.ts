@@ -140,7 +140,18 @@ export const useProductsLogic = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
       if (viewMode === 'search') {
-        searchProducts(currentPage - 1, 10, searchTerm);
+        if (Object.keys(advancedSearchPayload).length > 0 || localFilters.category !== 'all' || localFilters.status !== 'all') {
+          const payload = { ...advancedSearchPayload, search: searchTerm, page: currentPage - 1, page_size: 10 };
+          if (localFilters.category !== 'all' && !payload.category_id) payload.category_id = parseInt(localFilters.category);
+          
+          setIsSearching(true);
+          productService.searchAdvanced(payload)
+            .then(res => { setAdvancedProducts(res.products || []); setAdvancedTotal(res.total_count || 0); })
+            .catch(console.error)
+            .finally(() => setIsSearching(false));
+        } else {
+          searchProducts(currentPage - 1, 10, searchTerm);
+        }
       } else {
         fetchProductsPaginated(currentPage - 1, 10);
       }
@@ -151,7 +162,18 @@ export const useProductsLogic = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
       if (viewMode === 'search') {
-        searchProducts(currentPage + 1, 10, searchTerm);
+        if (Object.keys(advancedSearchPayload).length > 0 || localFilters.category !== 'all' || localFilters.status !== 'all') {
+          const payload = { ...advancedSearchPayload, search: searchTerm, page: currentPage + 1, page_size: 10 };
+          if (localFilters.category !== 'all' && !payload.category_id) payload.category_id = parseInt(localFilters.category);
+          
+          setIsSearching(true);
+          productService.searchAdvanced(payload)
+            .then(res => { setAdvancedProducts(res.products || []); setAdvancedTotal(res.total_count || 0); })
+            .catch(console.error)
+            .finally(() => setIsSearching(false));
+        } else {
+          searchProducts(currentPage + 1, 10, searchTerm);
+        }
       } else {
         fetchProductsPaginated(currentPage + 1, 10);
       }
@@ -163,13 +185,22 @@ export const useProductsLogic = () => {
     setShowFilters(false);
     
     // Si se aplicaron filtros avanzados (usando la nueva API)
-    if (Object.keys(advancedSearchPayload).length > 0) {
+    // Inclusive si solo seleccionaron categoría, usamos la búsqueda avanzada porque es más potente
+    if (Object.keys(advancedSearchPayload).length > 0 || localFilters.category !== 'all' || localFilters.status !== 'all') {
       setViewMode('search');
       setIsSearching(true);
-      productService.searchAdvanced({ ...advancedSearchPayload, search: searchTerm, page: 1, page_size: 10 })
+      
+      const payload: AdvancedProductSearchPayload = { ...advancedSearchPayload, search: searchTerm, page: 1, page_size: 10 };
+      
+      // Si la categoría está en localFilters pero no en advancedSearchPayload, agregarla
+      if (localFilters.category !== 'all' && !payload.category_id) {
+        payload.category_id = parseInt(localFilters.category);
+      }
+      
+      productService.searchAdvanced(payload)
         .then(res => {
-          setAdvancedProducts(res.data || []);
-          setAdvancedTotal(res.total || 0);
+          setAdvancedProducts(res.products || []);
+          setAdvancedTotal(res.total_count || 0);
         })
         .catch(console.error)
         .finally(() => setIsSearching(false));
@@ -183,10 +214,11 @@ export const useProductsLogic = () => {
     setLocalFilters(clearedFilters);
     setFilters(clearedFilters);
     setAdvancedSearchPayload({});
-    if (viewMode === 'paginated') {
-      fetchProductsPaginated(1, 10);
-    } else if (viewMode === 'search') {
+    if (searchTerm) {
       performSearch(searchTerm); // fallback a la búsqueda simple
+    } else {
+      setViewMode('paginated');
+      fetchProductsPaginated(1, 10);
     }
   };
 

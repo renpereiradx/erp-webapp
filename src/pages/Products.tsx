@@ -64,8 +64,14 @@ const Products = () => {
     advancedTotal,
   } = useProductsLogic();
 
-  const displayProducts = viewMode === 'search' && Object.keys(advancedSearchPayload).length > 0 ? advancedProducts : products;
-  const displayTotal = viewMode === 'search' && Object.keys(advancedSearchPayload).length > 0 ? advancedTotal : totalProducts;
+  const isAdvancedSearchActive = viewMode === 'search' && (
+    Object.keys(advancedSearchPayload).length > 0 || 
+    localFilters.category !== 'all' || 
+    localFilters.status !== 'all'
+  );
+  
+  const displayProducts = isAdvancedSearchActive ? advancedProducts : products;
+  const displayTotal = isAdvancedSearchActive ? advancedTotal : totalProducts;
 
   const startIndex = (currentPage - 1) * 10 + 1;
   const endIndex = Math.min(currentPage * 10, displayTotal);

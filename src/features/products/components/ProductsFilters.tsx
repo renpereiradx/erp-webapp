@@ -1,9 +1,10 @@
 import React from 'react';
-import { Search, Filter, RefreshCw } from 'lucide-react';
+import { Search, Filter, RefreshCw, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -52,6 +53,19 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
 }) => {
   const { t } = useI18n();
 
+  const handleAttributeChange = (code: string, value: string) => {
+    if (!setAdvancedSearchPayload) return;
+    setAdvancedSearchPayload((prev) => {
+      const attrs = { ...prev.attributes };
+      if (value === 'all') {
+        delete attrs[code];
+      } else {
+        attrs[code] = [value];
+      }
+      return { ...prev, attributes: Object.keys(attrs).length > 0 ? attrs : undefined };
+    });
+  };
+
   return (
     <Card className="bg-white border-border-subtle rounded-xl shadow-fluent-2 p-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -95,126 +109,233 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
             )}
           >
             <Filter className="size-4 mr-2" />
-            {t('products.action.filter')}
+            Filtros Avanzados
           </Button>
         </div>
       </div>
 
       {/* Advanced Filters Panel */}
       {showFilters && (
-        <div className="mt-6 pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-2">
-          {/* Category Filter */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
-              {t('products.filter.category', 'Categoría')}
-            </label>
-            <Select
-              value={localFilters.category}
-              onValueChange={(value) =>
-                setLocalFilters((prev) => ({ ...prev, category: value }))
-              }
-            >
-              <SelectTrigger className="w-full border-border-subtle bg-white h-11 font-bold text-sm rounded-xl shadow-sm">
-                <SelectValue placeholder={t('products.filter.all_categories')} />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-border-subtle shadow-fluent-16">
-                <SelectItem value="all" className="font-bold text-xs uppercase">
-                  {t('products.filter.all_categories')}
-                </SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem
-                    key={cat.id}
-                    value={cat.id.toString()}
-                    className="font-bold text-xs uppercase"
-                  >
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Status Filter */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
-              {t('products.filter.status', 'Estado')}
-            </label>
-            <Select
-              value={localFilters.status}
-              onValueChange={(value) =>
-                setLocalFilters((prev) => ({ ...prev, status: value }))
-              }
-            >
-              <SelectTrigger className="w-full border-border-subtle bg-white h-11 font-bold text-sm rounded-xl shadow-sm">
-                <SelectValue placeholder={t('products.filter.all_statuses')} />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-border-subtle shadow-fluent-16">
-                <SelectItem value="all" className="font-bold text-xs uppercase">
-                  {t('products.filter.all_statuses')}
-                </SelectItem>
-                <SelectItem value="active" className="font-bold text-xs uppercase">
-                  {t('products.state.active')}
-                </SelectItem>
-                <SelectItem value="inactive" className="font-bold text-xs uppercase">
-                  {t('products.state.inactive')}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Dynamic Facets (Brands, etc) */}
-          {facets.filter(f => f.code === 'brand' || f.code === 'brand_id').map((facet) => (
-            <div key={facet.code} className="space-y-2">
+        <div className="mt-6 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-2">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            {/* Category Filter */}
+            <div className="space-y-2">
               <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
-                {facet.name}
+                {t('products.filter.category', 'Categoría')}
               </label>
               <Select
-                value={advancedSearchPayload?.brand_ids?.[0]?.toString() || 'all'}
+                value={localFilters.category}
                 onValueChange={(value) => {
+                  setLocalFilters((prev) => ({ ...prev, category: value }));
                   if (setAdvancedSearchPayload) {
-                    setAdvancedSearchPayload(prev => ({
+                    setAdvancedSearchPayload((prev) => ({
                       ...prev,
-                      brand_ids: value === 'all' ? undefined : [parseInt(value)]
+                      category_id: value === 'all' ? undefined : parseInt(value)
                     }));
                   }
                 }}
               >
                 <SelectTrigger className="w-full border-border-subtle bg-white h-11 font-bold text-sm rounded-xl shadow-sm">
-                  <SelectValue placeholder={`Seleccionar ${facet.name}`} />
+                  <SelectValue placeholder={t('products.filter.all_categories')} />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-border-subtle shadow-fluent-16">
                   <SelectItem value="all" className="font-bold text-xs uppercase">
-                    Todas
+                    {t('products.filter.all_categories')}
                   </SelectItem>
-                  {facet.options.map((opt) => (
+                  {categories.map((cat) => (
                     <SelectItem
-                      key={opt.value}
-                      value={opt.value.toString()}
-                      className="font-bold text-xs uppercase flex justify-between"
+                      key={cat.id}
+                      value={cat.id.toString()}
+                      className="font-bold text-xs uppercase"
                     >
-                      <span>{opt.label}</span>
-                      {opt.count && <span className="text-slate-400 ml-2">({opt.count})</span>}
+                      {cat.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          ))}
+
+            {/* Status Filter */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
+                {t('products.filter.status', 'Estado')}
+              </label>
+              <Select
+                value={localFilters.status}
+                onValueChange={(value) =>
+                  setLocalFilters((prev) => ({ ...prev, status: value }))
+                }
+              >
+                <SelectTrigger className="w-full border-border-subtle bg-white h-11 font-bold text-sm rounded-xl shadow-sm">
+                  <SelectValue placeholder={t('products.filter.all_statuses')} />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border-subtle shadow-fluent-16">
+                  <SelectItem value="all" className="font-bold text-xs uppercase">
+                    {t('products.filter.all_statuses')}
+                  </SelectItem>
+                  <SelectItem value="active" className="font-bold text-xs uppercase">
+                    {t('products.state.active')}
+                  </SelectItem>
+                  <SelectItem value="inactive" className="font-bold text-xs uppercase">
+                    {t('products.state.inactive')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sort By */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
+                Ordenar Por
+              </label>
+              <Select
+                value={advancedSearchPayload?.sort_by || 'newest'}
+                onValueChange={(value: any) => {
+                  if (setAdvancedSearchPayload) {
+                    setAdvancedSearchPayload(prev => ({
+                      ...prev,
+                      sort_by: value
+                    }));
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full border-border-subtle bg-white h-11 font-bold text-sm rounded-xl shadow-sm">
+                  <SelectValue placeholder="Ordenar por..." />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border-subtle shadow-fluent-16">
+                  <SelectItem value="newest" className="font-bold text-xs uppercase">Más recientes</SelectItem>
+                  <SelectItem value="name_asc" className="font-bold text-xs uppercase">Nombre (A-Z)</SelectItem>
+                  <SelectItem value="name_desc" className="font-bold text-xs uppercase">Nombre (Z-A)</SelectItem>
+                  <SelectItem value="price_asc" className="font-bold text-xs uppercase">Menor Precio</SelectItem>
+                  <SelectItem value="price_desc" className="font-bold text-xs uppercase">Mayor Precio</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Stock Toggle */}
+            <div className="space-y-2 flex flex-col justify-center pt-5">
+              <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-border-subtle">
+                <Switch 
+                  checked={advancedSearchPayload?.in_stock_only || false}
+                  onCheckedChange={(checked) => {
+                    if (setAdvancedSearchPayload) {
+                      setAdvancedSearchPayload(prev => ({ ...prev, in_stock_only: checked }));
+                    }
+                  }}
+                />
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Solo con stock disponible
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Dynamic Facets (Brands, Tags, Attributes) */}
+            {facets.map((facet) => {
+              if (facet.code === 'price') {
+                return (
+                  <div key={facet.code} className="space-y-2 col-span-1 md:col-span-2">
+                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
+                      {facet.name}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Input 
+                        type="number" 
+                        placeholder="Mínimo" 
+                        className="h-11 border-border-subtle bg-white rounded-xl font-bold text-sm"
+                        value={advancedSearchPayload?.price_min || ''}
+                        onChange={(e) => {
+                          if (setAdvancedSearchPayload) {
+                            setAdvancedSearchPayload(prev => ({ ...prev, price_min: e.target.value ? Number(e.target.value) : undefined }));
+                          }
+                        }}
+                      />
+                      <span className="text-slate-400 font-bold">-</span>
+                      <Input 
+                        type="number" 
+                        placeholder="Máximo" 
+                        className="h-11 border-border-subtle bg-white rounded-xl font-bold text-sm"
+                        value={advancedSearchPayload?.price_max || ''}
+                        onChange={(e) => {
+                          if (setAdvancedSearchPayload) {
+                            setAdvancedSearchPayload(prev => ({ ...prev, price_max: e.target.value ? Number(e.target.value) : undefined }));
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              }
+
+              let currentValue = 'all';
+              if (facet.code === 'brand' || facet.code === 'brand_id') {
+                currentValue = advancedSearchPayload?.brand_ids?.[0]?.toString() || 'all';
+              } else if (facet.code === 'tag') {
+                currentValue = advancedSearchPayload?.tag_slugs?.[0] || 'all';
+              } else {
+                currentValue = advancedSearchPayload?.attributes?.[facet.code]?.[0] || 'all';
+              }
+
+              return (
+                <div key={facet.code} className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
+                    {facet.name}
+                  </label>
+                  <Select
+                    value={currentValue}
+                    onValueChange={(value) => {
+                      if (!setAdvancedSearchPayload) return;
+                      if (facet.code === 'brand' || facet.code === 'brand_id') {
+                        setAdvancedSearchPayload(prev => ({ ...prev, brand_ids: value === 'all' ? undefined : [parseInt(value)] }));
+                      } else if (facet.code === 'tag') {
+                        setAdvancedSearchPayload(prev => ({ ...prev, tag_slugs: value === 'all' ? undefined : [value] }));
+                      } else {
+                        handleAttributeChange(facet.code, value);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full border-border-subtle bg-white h-11 font-bold text-sm rounded-xl shadow-sm">
+                      <SelectValue placeholder={`Cualquier ${facet.name.toLowerCase()}`} />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-border-subtle shadow-fluent-16 max-h-64">
+                      <SelectItem value="all" className="font-bold text-xs uppercase">
+                        Todos
+                      </SelectItem>
+                      {facet.options.map((opt) => (
+                        <SelectItem
+                          key={opt.value}
+                          value={opt.value.toString()}
+                          className="font-bold text-xs uppercase flex justify-between"
+                        >
+                          <span>{opt.label}</span>
+                          {opt.count && <span className="text-slate-400 ml-2">({opt.count})</span>}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              );
+            })}
+          </div>
 
           {/* Action Buttons */}
-          <div className="flex items-end gap-3">
-            <Button
-              className="flex-1 bg-primary hover:bg-primary-hover text-white h-11 font-black uppercase text-[10px] tracking-widest rounded-xl shadow-fluent-2"
-              onClick={onApplyFilters}
-            >
-              {t('products.filter.apply', 'Aplicar')}
-            </Button>
+          <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
             <Button
               variant="outline"
-              className="flex-1 border-border-subtle text-text-secondary h-11 hover:bg-slate-50 font-black uppercase text-[10px] tracking-widest rounded-xl"
+              className="px-6 border-border-subtle text-text-secondary h-11 hover:bg-slate-50 font-black uppercase text-[10px] tracking-widest rounded-xl"
               onClick={onClearFilters}
             >
+              <X className="size-4 mr-2" />
               {t('products.filter.clear', 'Limpiar')}
+            </Button>
+            <Button
+              className="px-8 bg-primary hover:bg-primary-hover text-white h-11 font-black uppercase text-[10px] tracking-widest rounded-xl shadow-fluent-2"
+              onClick={onApplyFilters}
+            >
+              <Search className="size-4 mr-2" />
+              {t('products.filter.apply', 'Aplicar Filtros')}
             </Button>
           </div>
         </div>
@@ -222,3 +343,4 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
     </Card>
   );
 };
+
