@@ -297,7 +297,7 @@ PurchaseWithFullDetails {
     metadata
   },
   details: [ PurchaseItemFullRiched {
-    id, purchase_order_id, product_id, product_name,
+    id, purchase_order_id, product_id, variant_id, product_name,
     quantity, unit_price, subtotal,
     sale_price, profit_pct,
     unit_price_with_tax, unit_price_without_tax,
@@ -462,4 +462,4 @@ Obtiene estadísticas agregadas de pagos de compras.
 
 ---
 
-_Última actualización: 2026-06-05_
+_Última actualización: 2026-07-02 — FASE 3: `variant_id` agregado a la respuesta de `details[]` en endpoints GET de compras (FullEnriched y Enriched)._

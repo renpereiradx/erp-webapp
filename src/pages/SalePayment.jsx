@@ -115,8 +115,8 @@ const normalizeSaleStatus = sale => {
 
   if (normalizedFromRaw) return normalizedFromRaw
 
-  const balanceDue = Number(sale?.balance_due) || 0
-  const totalPaid = Number(sale?.total_paid) || 0
+  const balanceDue = Number(sale?.remaining_amount ?? sale?.balance_due) || 0
+  const totalPaid = Number(sale?.paid_amount ?? sale?.total_paid) || 0
 
   if (balanceDue <= 0) return 'PAID'
   if (totalPaid > 0) return 'PARTIAL'
@@ -480,9 +480,9 @@ const SalePayment = () => {
       const normalizedData = (result?.data || [])
         .map(item => {
           const sale = item.sale || item
-          const totalPaid = Number(sale.total_paid) || Number(sale.amount_paid) || 0
+          const totalPaid = Number(sale.paid_amount ?? sale.total_paid ?? sale.amount_paid) || 0
           const rawTotal = Number(sale.total_amount) || Number(sale.total) || 0
-          const rawBalance = (sale.balance_due !== undefined && sale.balance_due !== null) ? Number(sale.balance_due) : null
+          const rawBalance = (sale.remaining_amount !== undefined && sale.remaining_amount !== null) ? Number(sale.remaining_amount) : (sale.balance_due !== undefined && sale.balance_due !== null) ? Number(sale.balance_due) : null
           
           let finalTotal = rawTotal
           let finalBalance = rawBalance !== null ? rawBalance : Math.max(0, rawTotal - totalPaid)
@@ -618,8 +618,20 @@ const SalePayment = () => {
     };
   }, [rawSales, searchTerm, selectedStatus, localPage, localPageSize])
 
-  const handlePaymentSubmit = async paymentData => {
-    await salePaymentService.processSalePaymentWithCashRegister(paymentData)
+    const handlePaymentSubmit = async paymentData => {
+    // Mapear para PUT /sale/{id}/confirm-payment
+    const confirmPayload = {
+      payment_methods: [
+        {
+          method: paymentData.payment_method_name || 'CASH', // Obtenido del modal ahora
+          amount: paymentData.amount_to_apply
+        }
+      ],
+      caja_id: paymentData.cash_register_id || undefined
+      // branch_id is inherited if omitted
+    }
+    
+    await salePaymentService.confirmSalePayment(paymentData.sales_order_id, confirmPayload)
     showSuccess('Cobro registrado exitosamente')
     pagesCache.current.clear()
     handleLoadSales(pagination.page, true)

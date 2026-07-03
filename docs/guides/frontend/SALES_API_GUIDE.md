@@ -216,6 +216,12 @@ Igual estructura que `POST /sale/`.
 | currency | string | Nombre de la moneda |
 | metadata | object | Metadatos adicionales |
 | details | array | Lista de `SaleDetailRiched` |
+| items | int | Cantidad de líneas en `details` (equivale a `details.length`) |
+| subtotal_amount | float | Suma de `subtotal` de cada línea (sin IVA) |
+| tax_amount | float | Suma de `tax_amount` de cada línea |
+| discount_amount | float | Suma de `discount_amount` de cada línea |
+| has_discounts | bool | `true` si al menos una línea tiene `discount_amount > 0` |
+| has_price_changes | bool | `true` si al menos una línea tiene `price_modified = true` |
 
 **SaleDetailRiched:**
 | Campo | Tipo | Descripción |
@@ -243,6 +249,8 @@ Igual estructura que `POST /sale/`.
 | tax_rate | float | Alias de `applied_tax_rate` |
 
 > **Nota técnica (v1.3):** El cálculo del `base_price` y totales de la venta ahora respeta el campo `unit` de cada detalle. Esto significa que para productos de medida variable (ej: `unit: "kg"`), el sistema busca el precio correspondiente a esa unidad específica en lugar de usar siempre la unidad por defecto.
+>
+> **Nota técnica (v1.4):** Para productos con variantes activas, el `base_price` se resuelve con match exacto por `(product_id, unit, variant_id)`. Esto garantiza que el `discount_amount` mostrado corresponda al precio real de la variante vendida. Una venta sin `variant_id` (o con `variant_id = null`) matchea con el precio del producto padre (`variant_id = null` en `unit_prices`). Como resultado, `details[]` siempre contiene una sola entrada por línea y los totales agregados (`items`, `subtotal_amount`, `tax_amount`, `discount_amount`) son consistentes con `total_amount`.
 
 #### Errores
 | Código | Condición |

@@ -245,12 +245,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
     setSubmitting(true)
     try {
       const selectedCurrency = currencySelectorData.find(c => c.code === String(currencyCode).toUpperCase())
+      const selectedMethod = paymentMethods.find(m => String(m.id || m.payment_method_id) === String(paymentMethodId))
       
       await onSubmit({
         sales_order_id: sale.id || sale.sale_id,
         amount_received: Number(numericAmountReceived.toFixed(2)),
         amount_to_apply: Number(numericAmountToApply.toFixed(2)),
         payment_method_id: Number(paymentMethodId),
+        payment_method_name: selectedMethod ? (selectedMethod.name || selectedMethod.description || 'CASH').toUpperCase() : 'CASH',
         currency_id: selectedCurrency ? selectedCurrency.currency_id : undefined,
         exchange_rate: exchangeRate ? Number(exchangeRate) : undefined,
         original_amount: originalAmount ? Number(originalAmount) : undefined,

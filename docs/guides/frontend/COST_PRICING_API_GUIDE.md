@@ -484,6 +484,25 @@ Globales:
 | best_supplier | string | supplier_id con menor avg_cost |
 | best_avg_cost | decimal | Costo promedio del mejor proveedor |
 
+### GET /margin-alerts
+
+**Descripcion:** Alertas globales de margen para todos los productos.
+
+#### Query Parameters
+
+| Parametro | Tipo | Requerido | Descripcion |
+|-----------|------|-----------|-------------|
+| branch_id | int | No | ID de sucursal explicita |
+| min_margin | decimal | No | Filtrar productos con margen menor a este valor |
+
+#### Response 200
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| alerts | array | Lista de alertas de margen |
+
+---
+
 ### GET /cost-trends
 
 **Descripcion:** Tendencias globales de costos.

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Package, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Package, CheckCircle2, AlertCircle, Check } from 'lucide-react';
 import { ProductVariant } from '@/types';
 import { variantService } from '@/services/variantService';
 import { useToast } from '@/hooks/useToast';
@@ -15,11 +15,16 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
     let ignore = false;
 
     if (product) {
+      if (Array.isArray(product.variants) && product.variants.length > 0) {
+        setVariants(product.variants);
+        return;
+      }
+
       setLoading(true);
       // Retrieve activeBranch from local storage for accurate stock/price resolution
       const activeBranch = localStorage.getItem('activeBranch') ? parseInt(localStorage.getItem('activeBranch') as string) : undefined;
       
-      variantService.getEnrichedVariants(product.id, activeBranch, false)
+      variantService.getEnrichedVariants(product.id || product.product_id, activeBranch, false)
         .then(data => {
           if (!ignore) setVariants(data);
         })
@@ -34,8 +39,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
     return () => {
       ignore = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product]);
+  }, [product, toast]);
 
   // Determine all unique attribute keys across all variants
   const attributeKeys = useMemo(() => {
@@ -48,23 +52,16 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
     return Array.from(keys);
   }, [variants]);
 
-  // Compute available options for a given attribute, filtering by other selections
-  const getAvailableOptions = (key: string) => {
-    const filteredVariants = variants.filter(v => {
-      // Must match all OTHER selected attributes
-      for (const [selKey, selVal] of Object.entries(selectedAttributes)) {
-        if (selKey === key) continue; // Skip self
-        if (selVal && String(v.variant_attributes?.[selKey]) !== selVal) return false;
+  const handleAttributeSelect = (key: string, value: string) => {
+    setSelectedAttributes(prev => {
+      const newSelected = { ...prev };
+      if (newSelected[key] === value) {
+        delete newSelected[key]; // Toggle: unselect
+      } else {
+        newSelected[key] = value;
       }
-      return true;
+      return newSelected;
     });
-
-    const options = new Set<string>();
-    filteredVariants.forEach(v => {
-      const val = v.variant_attributes?.[key];
-      if (val) options.add(String(val));
-    });
-    return Array.from(options);
   };
 
   // Find exact matching variant based on selections
@@ -78,38 +75,37 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
     });
   }, [attributeKeys, selectedAttributes, variants]);
 
-  const handleAttributeSelect = (key: string, value: string) => {
-    setSelectedAttributes(prev => ({ ...prev, [key]: value }));
-  };
-
   if (!product) return null;
 
   return (
     <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-fluent-16 w-full max-w-lg overflow-hidden animate-in zoom-in-95">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+      <div className="bg-white rounded-[var(--fluent-corner-radius-xlarge,8px)] shadow-[var(--fluent-shadow-64)] w-full max-w-lg overflow-hidden animate-in zoom-in-95 border border-[var(--fluent-border-neutral,#E1DFDD)]">
+        <div className="px-6 py-4 border-b border-[var(--fluent-border-neutral,#E1DFDD)] flex items-center justify-between bg-[var(--fluent-surface-secondary,#FAF9F8)]">
           <div>
-            <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight">Seleccionar Variante</h2>
-            <p className="text-xs text-slate-500">{product.name}</p>
+            <h2 className="text-base font-semibold text-[var(--fluent-text-primary,#212121)]">Seleccionar Variante</h2>
+            <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)] mt-0.5">{product.name || product.product_name}</p>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200/50 transition-colors">
-            <X size={20} />
+          <button onClick={onClose} className="p-1.5 text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-neutral-hover,#F3F2F1)] rounded-md transition-colors">
+            <X size={18} />
           </button>
         </div>
 
         <div className="p-6">
           {loading ? (
-            <div className="text-center py-8 text-slate-400">Cargando variantes...</div>
+            <div className="flex items-center justify-center gap-2 py-8 text-[var(--fluent-text-tertiary,#8A8886)] text-sm">
+              <div className='w-4 h-4 border-2 border-[var(--fluent-brand-primary,#0078D4)] border-t-transparent rounded-full animate-spin' />
+              Cargando variantes...
+            </div>
           ) : variants.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">Este producto no tiene variantes registradas.</div>
+            <div className="text-center py-8 text-[var(--fluent-text-tertiary,#8A8886)] text-sm">Este producto no tiene variantes registradas.</div>
           ) : attributeKeys.length === 0 ? (
-            // Fallback for variants without attributes (should not happen normally)
+            // Fallback for variants without attributes
             <div className="space-y-3 max-h-[60vh] overflow-y-auto">
               {variants.map(v => {
                 const stock = v.stock_quantity || 0;
                 const isOutOfStock = stock <= 0;
                 return (
-                  <div key={v.id} className={`flex items-center justify-between p-4 rounded-xl border ${isOutOfStock ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-white border-slate-200 hover:border-primary/50 hover:shadow-sm'} transition-all`}>
+                  <div key={v.id} className={`flex items-center justify-between p-3 rounded-md border ${isOutOfStock ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-white border-slate-200 hover:border-primary/50'} transition-all`}>
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
                         <Package size={18} />
@@ -121,8 +117,8 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className="text-sm font-black text-slate-800">{v.current_price ? `$${v.current_price.toLocaleString()}` : 'N/A'}</p>
-                        <p className={`text-[10px] font-bold ${isOutOfStock ? 'text-error' : 'text-success'} uppercase`}>Stock: {stock}</p>
+                        <p className="text-sm font-black text-slate-800">{v.current_price ? `Gs. ${v.current_price.toLocaleString()}` : 'N/A'}</p>
+                        <p className={`text-[10px] font-bold ${isOutOfStock ? 'text-[var(--fluent-semantic-danger,#D13438)]' : 'text-[var(--fluent-semantic-success,#107C10)]'} uppercase`}>Stock: {stock}</p>
                       </div>
                       <Button size="sm" disabled={isOutOfStock} onClick={() => onSelect(v, 1)} className="text-xs px-4">
                         Añadir
@@ -133,74 +129,128 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
               })}
             </div>
           ) : (
-            // Patrón A: Selectores independientes
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                {attributeKeys.map(key => {
-                  const options = getAvailableOptions(key);
-                  return (
-                    <div key={key}>
-                      <label className="block text-xs font-bold text-slate-600 mb-1 capitalize">{key}</label>
-                      <select
-                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                        value={selectedAttributes[key] || ''}
-                        onChange={e => handleAttributeSelect(key, e.target.value)}
-                      >
-                        <option value="">Seleccionar {key}...</option>
-                        {options.map(opt => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="space-y-5">
+              {attributeKeys.map(attrKey => {
+                const otherSelectedAttrs = Object.fromEntries(
+                  Object.entries(selectedAttributes).filter(([k]) => k !== attrKey)
+                );
+                const availableForThisAttr = Array.from(
+                  new Set(
+                    variants
+                      .filter(v =>
+                        Object.entries(otherSelectedAttrs).every(
+                          ([k, val]) => String(v.variant_attributes?.[k]) === String(val)
+                        )
+                      )
+                      .map(v => String(v.variant_attributes?.[attrKey]))
+                      .filter(Boolean)
+                  )
+                );
 
-              {attributeKeys.every(k => selectedAttributes[k]) ? (
-                selectedVariant ? (
-                  <div className={`p-5 rounded-xl border ${selectedVariant.stock_quantity && selectedVariant.stock_quantity > 0 ? 'bg-success/5 border-success/20' : 'bg-error/5 border-error/20'}`}>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                          {selectedVariant.stock_quantity && selectedVariant.stock_quantity > 0 ? <CheckCircle2 size={18} className="text-success" /> : <AlertCircle size={18} className="text-error" />}
-                          {selectedVariant.variant_name}
-                        </h4>
-                        <p className="text-xs text-slate-500 font-mono mt-1">SKU: {selectedVariant.sku}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-black text-slate-800">
-                          {selectedVariant.current_price ? `$${selectedVariant.current_price.toLocaleString()}` : 'N/A'}
-                        </p>
-                        <p className={`text-xs font-bold mt-1 ${selectedVariant.stock_quantity && selectedVariant.stock_quantity > 0 ? 'text-success' : 'text-error'}`}>
-                          Stock disponible: {selectedVariant.stock_quantity || 0}
-                        </p>
-                      </div>
+                const selectedValue = selectedAttributes[attrKey];
+
+                return (
+                  <div key={attrKey} className='space-y-1.5'>
+                    <span className='text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)] uppercase tracking-wide'>
+                      {attrKey}
+                    </span>
+                    <div className='flex flex-wrap gap-2'>
+                      {availableForThisAttr.map(val => {
+                        const isSelected = selectedValue === val;
+                        // For sales: we enforce stock! We must check if ANY variant matching these attributes has stock
+                        const candidateVariants = variants.filter(v =>
+                          String(v.variant_attributes?.[attrKey]) === val &&
+                          Object.entries(otherSelectedAttrs).every(
+                            ([k, sv]) => String(v.variant_attributes?.[k]) === String(sv)
+                          )
+                        );
+                        const hasStock = candidateVariants.some(v => (v.stock_quantity ?? 0) > 0);
+
+                        return (
+                          <button
+                            key={val}
+                            type='button'
+                            onClick={() => handleAttributeSelect(attrKey, val)}
+                            className={`
+                              px-3 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-medium,4px)]
+                              border transition-all duration-150 relative
+                              ${isSelected
+                                ? 'bg-[var(--fluent-brand-primary,#0078D4)] text-white border-[var(--fluent-brand-primary,#0078D4)] shadow-[var(--fluent-shadow-4)]'
+                                : hasStock
+                                  ? 'bg-[var(--fluent-surface-secondary,#FAF9F8)] text-[var(--fluent-text-primary,#212121)] border-[var(--fluent-border-neutral,#E1DFDD)] hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-[var(--fluent-brand-primary,#0078D4)]'
+                                  : 'bg-[var(--fluent-surface-tertiary,#F3F2F1)] text-[var(--fluent-text-tertiary,#8A8886)] border-[var(--fluent-border-neutral,#E1DFDD)] line-through cursor-not-allowed opacity-50'
+                              }
+                            `}
+                            disabled={!hasStock && !isSelected}
+                            title={!hasStock ? 'Sin stock disponible' : undefined}
+                          >
+                            {val}
+                            {isSelected && (
+                              <Check size={10} className='inline ml-1 -mt-0.5' />
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
-                    
-                    <Button 
-                      className="w-full mt-4 h-12 text-sm font-bold shadow-fluent-2"
-                      disabled={!selectedVariant.stock_quantity || selectedVariant.stock_quantity <= 0}
-                      onClick={() => onSelect(selectedVariant, 1)}
-                    >
-                      Añadir al carrito
-                    </Button>
                   </div>
+                );
+              })}
+
+              <div className="pt-2 mt-2">
+                {attributeKeys.every(k => selectedAttributes[k]) ? (
+                  selectedVariant ? (
+                    <div className={`p-4 rounded-[var(--fluent-corner-radius-medium,4px)] border ${selectedVariant.stock_quantity && selectedVariant.stock_quantity > 0 ? 'bg-[rgba(16,124,16,0.06)] border-[rgba(16,124,16,0.2)]' : 'bg-[rgba(209,52,56,0.06)] border-[rgba(209,52,56,0.2)]'}`}>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-bold text-[var(--fluent-text-primary,#212121)] text-sm flex items-center gap-1.5">
+                            {selectedVariant.stock_quantity && selectedVariant.stock_quantity > 0 ? <CheckCircle2 size={16} className="text-[var(--fluent-semantic-success,#107C10)]" /> : <AlertCircle size={16} className="text-[var(--fluent-semantic-danger,#D13438)]" />}
+                            {selectedVariant.variant_name}
+                          </h4>
+                          <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)] font-mono mt-1 opacity-80">SKU: {selectedVariant.sku}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-base font-black text-[var(--fluent-text-primary,#212121)]">
+                            {selectedVariant.current_price ? `Gs. ${selectedVariant.current_price.toLocaleString()}` : 'N/A'}
+                          </p>
+                          <p className={`text-[10px] font-bold mt-1 ${selectedVariant.stock_quantity && selectedVariant.stock_quantity > 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'} uppercase`}>
+                            Stock disponible: {selectedVariant.stock_quantity || 0}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <button 
+                        className="w-full mt-4 px-4 py-2.5 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white text-sm font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                        disabled={!selectedVariant.stock_quantity || selectedVariant.stock_quantity <= 0}
+                        onClick={() => onSelect(selectedVariant, 1)}
+                      >
+                        Añadir al carrito
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-[var(--fluent-surface-secondary,#FAF9F8)] border border-[var(--fluent-border-neutral,#E1DFDD)] rounded-[var(--fluent-corner-radius-medium,4px)] text-center">
+                      <AlertCircle size={20} className="text-[var(--fluent-text-tertiary,#8A8886)] mx-auto mb-2" />
+                      <p className="text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]">Esta combinación no está disponible.</p>
+                    </div>
+                  )
                 ) : (
-                  <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl text-center">
-                    <AlertCircle size={24} className="text-slate-400 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-slate-600">Esta combinación no está disponible.</p>
-                    <Button variant="outline" size="sm" className="mt-3" onClick={() => setSelectedAttributes({})}>
-                      Limpiar selección
-                    </Button>
+                  <div className="p-4 border border-dashed border-[var(--fluent-border-neutral,#E1DFDD)] rounded-[var(--fluent-corner-radius-medium,4px)] text-center bg-[var(--fluent-surface-secondary,#FAF9F8)] opacity-70">
+                    <p className="text-sm text-[var(--fluent-text-secondary,#605E5C)]">Seleccione todas las opciones para ver disponibilidad y precio.</p>
                   </div>
-                )
-              ) : (
-                <div className="p-6 border border-dashed border-slate-200 rounded-xl text-center bg-slate-50/50">
-                  <p className="text-sm text-slate-500">Seleccione todas las opciones para ver disponibilidad y precio.</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
+
+          {/* Opción para agregar producto base (principal) */}
+          <div className="mt-6 pt-4 border-t border-[var(--fluent-border-neutral,#E1DFDD)]">
+            <button
+              onClick={() => onSelect({ id: null, variant_name: 'Producto Principal' }, 1)}
+              className="w-full px-4 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] hover:bg-[var(--fluent-surface-neutral-hover,#F3F2F1)] text-[var(--fluent-text-primary,#212121)] text-sm font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] border border-[var(--fluent-border-neutral,#E1DFDD)] transition-all flex items-center justify-center gap-2"
+            >
+              <Package size={16} className="text-[var(--fluent-text-secondary,#605E5C)]" />
+              Añadir producto principal sin variante
+            </button>
+          </div>
         </div>
       </div>
     </div>

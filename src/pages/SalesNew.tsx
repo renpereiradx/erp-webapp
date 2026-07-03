@@ -199,7 +199,7 @@ const getProductDisplay = (product: Record<string, unknown>): ProductDisplay => 
     base_unit: String(product.base_unit || product.unit || 'unit'),
     taxRate: normalizedTaxRate,
     has_valid_price: product.has_valid_price !== undefined ? Boolean(product.has_valid_price) : Number(price) > 0,
-    has_variants: Boolean(product.has_variants),
+    has_variants: Boolean(product.has_variant || product.has_variants),
   };
 };
 
@@ -270,6 +270,7 @@ const SalesNew: React.FC = () => {
 
   const [items, setItems] = useState<CartItem[]>([]);
   const [variantSelectorProduct, setVariantSelectorProduct] = useState<ProductDisplay | null>(null);
+  const [variantSelectorQuantity, setVariantSelectorQuantity] = useState<number>(1);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   useSalesShortcuts({
@@ -647,9 +648,12 @@ const SalesNew: React.FC = () => {
     }
   };
 
-  const addProductToCart = useCallback((product: ProductDisplay, quantity: number = 1, variantId?: string, variantName?: string) => {
-    if (product.has_variants && !variantId) {
+  const addProductToCart = useCallback((product: ProductDisplay, quantity: number = 1, variantId?: string | null, variantName?: string) => {
+    // Si tiene variantes y el variantId es undefined (no se pasó), abre el selector.
+    // Si variantId es null, significa que el usuario explícitamente eligió el producto padre sin variante.
+    if (product.has_variants && variantId === undefined) {
       setVariantSelectorProduct(product);
+      setVariantSelectorQuantity(quantity);
       return;
     }
 
@@ -658,12 +662,15 @@ const SalesNew: React.FC = () => {
       return;
     }
 
+    const finalVariantId = variantId === null ? undefined : variantId;
+    const finalVariantName = variantId === null ? undefined : variantName;
+
     const newItem: CartItem = {
-      id: variantId ? `${product.id}-${variantId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` : `${product.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: finalVariantId ? `${product.id}-${finalVariantId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` : `${product.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       productId: product.id,
-      name: variantName ? `${product.name} - ${variantName}` : product.name,
-      variantId,
-      variantName,
+      name: finalVariantName ? `${product.name} - ${finalVariantName}` : product.name,
+      variantId: finalVariantId,
+      variantName: finalVariantName,
       quantity,
       price: product.price,
       originalPrice: product.price,
@@ -677,7 +684,7 @@ const SalesNew: React.FC = () => {
     };
 
     setItems(prev => {
-      const existingItem = prev.find(item => item.productId === product.id);
+      const existingItem = prev.find(item => item.productId === product.id && item.variantId === finalVariantId);
       
       if (existingItem) {
         if (existingItem.reserve_id) {
@@ -685,10 +692,8 @@ const SalesNew: React.FC = () => {
           return prev;
         }
         
-        if (window.confirm(`El producto "${product.name}" ya está en el carrito.\n¿Deseas sumar las cantidades?`)) {
-          return prev.map(item => item.id === existingItem.id ? { ...item, quantity: item.quantity + quantity } : item);
-        }
-        return prev;
+        // Agrupar automáticamente (como en compras)
+        return prev.map(item => item.id === existingItem.id ? { ...item, quantity: item.quantity + quantity } : item);
       }
       return [...prev, newItem];
     });
@@ -785,8 +790,10 @@ const SalesNew: React.FC = () => {
       )
 
       return {
-        id: `SALE-${saleId}-${detail.product_id}-${Date.now()}-${index}`,
+        id: `SALE-${saleId}-${detail.product_id}-${detail.variant_id || 'base'}-${Date.now()}-${index}`,
         productId: detail.product_id,
+        variantId: detail.variant_id || undefined,
+        variantName: detail.variant_name || undefined,
         name: detail.product_name || 'Producto existente',
         quantity,
         price: finalUnitPrice,
@@ -806,8 +813,8 @@ const SalesNew: React.FC = () => {
     });
 
     setItems(prev => {
-      const existingProductIds = new Set(prev.map(item => item.productId));
-      const newItems = loadedItems.filter(item => !existingProductIds.has(item.productId));
+      const existingProductVariantKeys = new Set(prev.map(item => `${item.productId}_${item.variantId || 'base'}`));
+      const newItems = loadedItems.filter(item => !existingProductVariantKeys.has(`${item.productId}_${item.variantId || 'base'}`));
       
       if (newItems.length === 0) {
         toast.info('Todos los productos de esta venta ya están en el carrito');
@@ -870,6 +877,8 @@ const SalesNew: React.FC = () => {
     const loadedItems: CartItem[] = selectedReservations.map((res: any, index: number) => ({
       id: `RES-${res.reserve_id || res.id}-${Date.now()}-${index}`,
       productId: res.product_id || '',
+      variantId: res.variant_id || undefined,
+      variantName: res.variant_name || undefined,
       name: res.product_name || 'Servicio de reserva',
       quantity: 1,
       price: res.total_amount || 0,
@@ -885,7 +894,7 @@ const SalesNew: React.FC = () => {
     }));
 
     setItems(prev => {
-      const existingProductIds = new Set(prev.map(item => item.productId));
+      const existingProductVariantKeys = new Set(prev.map(item => `${item.productId}_${item.variantId || 'base'}`));
       const existingReserveIds = new Set(
         prev
           .map(item => item.reserve_id)
@@ -897,11 +906,13 @@ const SalesNew: React.FC = () => {
         // 1. Evitar duplicar reserva exacta
         if (item.reserve_id && existingReserveIds.has(item.reserve_id)) return false;
         
-        // 2. Evitar múltiples reservas para el mismo producto
-        if (existingProductIds.has(item.productId)) return false;
-        if (seenProductIdsInNew.has(item.productId)) return false;
+        // 2. Evitar múltiples reservas para el mismo producto exacto (con variante)
+        const productKey = `${item.productId}_${item.variantId || 'base'}`;
+        if (existingProductVariantKeys.has(productKey) || seenProductIdsInNew.has(productKey)) {
+          return false;
+        }
+        seenProductIdsInNew.add(productKey);
         
-        seenProductIdsInNew.add(item.productId);
         return true;
       });
       
@@ -1119,6 +1130,7 @@ const SalesNew: React.FC = () => {
             
             return {
               product_id: item.productId,
+              ...(item.variantId && { variant_id: item.variantId }),
               quantity: Number(item.quantity) || 1,
               unit: item.unit || 'unit',
               ...(item.reserve_id && { reserve_id: item.reserve_id }),
@@ -1152,7 +1164,7 @@ const SalesNew: React.FC = () => {
       } else {
         // 1. Validar unicidad de reserve_id y productId para reservas (Instrucción: permitir solo uno por producto)
         const seenReserves = new Set<number>();
-        const seenProductIdsForReserves = new Set<string>();
+        const seenProductVariantForReserves = new Set<string>();
         const uniqueItems: CartItem[] = [];
         const duplicatesRemoved: string[] = [];
 
@@ -1164,14 +1176,15 @@ const SalesNew: React.FC = () => {
               continue;
             }
             
-            // Regla: No permitir dos reservas distintas para el MISMO producto (Tu instrucción)
-            if (seenProductIdsForReserves.has(item.productId)) {
+            // Regla: No permitir dos reservas distintas para el MISMO producto exacto
+            const productKey = `${item.productId}_${item.variantId || 'base'}`;
+            if (seenProductVariantForReserves.has(productKey)) {
               duplicatesRemoved.push(`${item.name} (Mismo Producto)`);
               continue;
             }
 
             seenReserves.add(item.reserve_id);
-            seenProductIdsForReserves.add(item.productId);
+            seenProductVariantForReserves.add(productKey);
           }
           uniqueItems.push(item);
         }
@@ -1209,6 +1222,7 @@ const SalesNew: React.FC = () => {
 
             const detail: any = {
               product_id: item.productId,
+              ...(item.variantId && { variant_id: item.variantId }),
               quantity: Number(item.quantity) || 1,
             };
 
@@ -1344,7 +1358,7 @@ const SalesNew: React.FC = () => {
       <main className="w-full">
         {activeTab === 'new-sale' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-8 space-y-4">
+            <div className="lg:col-span-9 space-y-4">
               <article className="bg-white rounded-lg shadow-sm border overflow-hidden">
                 <header className="flex items-center justify-between px-4 py-3 border-b">
                   <div className="flex items-center gap-2">
@@ -1672,7 +1686,7 @@ const SalesNew: React.FC = () => {
               </article>
             </div>
 
-            <aside className="lg:col-span-4 space-y-4">
+            <aside className="lg:col-span-3 space-y-4">
               <article className="bg-white rounded-lg shadow-sm border p-4 space-y-4">
                 <div className="flex items-center gap-2 border-b pb-2 mb-2">
                   <User size={18} className="text-primary" />
@@ -2319,8 +2333,8 @@ const SalesNew: React.FC = () => {
         <VariantSelectorModal 
           product={variantSelectorProduct} 
           onClose={() => setVariantSelectorProduct(null)} 
-          onSelect={(variant: any, qty: number) => {
-            addProductToCart(variantSelectorProduct, qty, variant.id, variant.variant_name);
+          onSelect={(variant: any, _qty: number) => {
+            addProductToCart(variantSelectorProduct, variantSelectorQuantity, variant.id, variant.variant_name);
             setVariantSelectorProduct(null);
           }} 
         />

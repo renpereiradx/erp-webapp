@@ -1,3 +1,7 @@
+export interface VariantAttribute {
+  [key: string]: string | number | boolean;
+}
+
 export interface PurchaseItem {
   id: string;
   product_id: string;
@@ -13,6 +17,15 @@ export interface PurchaseItem {
   tax_rate_id: number | null;
   tax_rate: number;
   price_includes_tax: boolean;
+  // Variant fields
+  variant_id?: string;
+  variant_name?: string;
+  variant_sku?: string;
+  variant_attributes?: VariantAttribute;
+  // Product enrichment
+  brand_id?: number | null;
+  brand_name?: string | null;
+  tags?: Array<{ id: number; name: string; slug: string; color?: string | null }>;
 }
 
 export interface PurchaseSupplier {

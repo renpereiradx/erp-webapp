@@ -358,6 +358,9 @@ const SalesOrderDetail = () => {
                               <TableCell className="py-5 px-8">
                                 <div className="flex flex-col">
                                     <span className="font-bold text-text-main text-sm">{item.product_name || item.name}</span>
+                                    {item.variant_name && (
+                                      <span className="text-xs text-text-secondary mt-0.5">{item.variant_name}</span>
+                                    )}
                                     {item.applied_tax_rate !== undefined && (
                                     <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">IVA Aplicado: {item.applied_tax_rate}%</span>
                                     )}
@@ -382,9 +385,14 @@ const SalesOrderDetail = () => {
                       return (
                         <div key={idx} className="p-6 space-y-4">
                           <div className="flex justify-between items-start gap-4">
-                            <span className="font-black text-text-main text-sm uppercase tracking-tight leading-tight">
-                              {item.product_name || item.name}
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="font-black text-text-main text-sm uppercase tracking-tight leading-tight">
+                                {item.product_name || item.name}
+                              </span>
+                              {item.variant_name && (
+                                <span className="text-[10px] text-text-secondary mt-1 leading-tight uppercase tracking-tight">{item.variant_name}</span>
+                              )}
+                            </div>
                             <span className="bg-slate-100 px-2 py-0.5 rounded text-[9px] font-black text-text-secondary whitespace-nowrap uppercase tracking-widest">x{item.quantity || 1} {item.unit || ''}</span>
                           </div>
                           <div className="grid grid-cols-2 gap-3 p-4 bg-slate-50 rounded-xl border border-border-subtle">

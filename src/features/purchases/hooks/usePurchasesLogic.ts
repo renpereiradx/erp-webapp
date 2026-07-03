@@ -70,8 +70,9 @@ export const usePurchasesLogic = () => {
   const [modalTaxRateId, setModalTaxRateId] = useState<number | null>(null)
   const [modalTaxRatePercent, setModalTaxRatePercent] = useState<number>(0)
   const [modalPriceIncludesTax, setModalPriceIncludesTax] = useState<boolean>(true)
-  const [modalVariantId, setModalVariantId] = useState<string | undefined>()
+  const [modalVariantId, setModalVariantId] = useState<string | null | undefined>()
   const [modalVariantName, setModalVariantName] = useState<string | undefined>()
+  const [modalSelectedVariant, setModalSelectedVariant] = useState<any | undefined>()
   const [taxRates, setTaxRates] = useState<any[]>([])
   const [purchaseItems, setPurchaseItems] = useState<any[]>([])
   const [purchaseNotes, setPurchaseNotes] = useState<string>('')
@@ -161,14 +162,17 @@ export const usePurchasesLogic = () => {
       supplier?.first_name || supplier?.name || supplier?.Name || 'Proveedor sin nombre'
     )
 
-  // Filtering Logic
+  // Filtering Logic — un mismo producto puede estar múltiples veces con variantes distintas
   const filteredModalProducts = useMemo(() => {
     if (!modalProductResults) return []
-    const existingProductIds = new Set(
-      purchaseItems.map(item => item.product_id),
+    // Solo excluimos si el producto ya está SIN variantes
+    const existingWithoutVariant = new Set(
+      purchaseItems
+        .filter(item => !item.variant_id)
+        .map(item => item.product_id),
     )
     return modalProductResults.filter(
-      product => !existingProductIds.has(product.id || product.product_id),
+      product => !existingWithoutVariant.has(product.id || product.product_id),
     )
   }, [modalProductResults, purchaseItems])
 
@@ -555,11 +559,12 @@ export const usePurchasesLogic = () => {
           (Array.isArray(fullProduct.unit_prices) && (fullProduct.unit_prices[0]?.price_per_unit || fullProduct.unit_prices[0]?.price || fullProduct.unit_prices[0]?.selling_price)) ||
           0
         ),
-        has_variants: Boolean(fullProduct.has_variants),
+        has_variants: Boolean(fullProduct.has_variant || fullProduct.has_variants),
       };
 
       setModalVariantId(undefined);
       setModalVariantName(undefined);
+      setModalSelectedVariant(undefined);
       setModalSelectedProduct(normalizedProduct);
       setModalProductSearch(normalizedProduct.name || '');
       setShowProductDropdown(false);
@@ -670,18 +675,35 @@ export const usePurchasesLogic = () => {
       tax_rate_id: modalTaxRateId,
       tax_rate: modalTaxRatePercent,
       price_includes_tax: modalPriceIncludesTax, // API v2.6
-      variant_id: modalVariantId,
-      variant_name: modalVariantName,
+      variant_id: modalVariantId === null ? undefined : modalVariantId,
+      variant_name: modalVariantId === null ? undefined : modalVariantName,
+      // Datos enriquecidos de variante seleccionada
+      variant_sku: modalSelectedVariant?.sku,
+      variant_attributes: modalSelectedVariant?.variant_attributes,
+      // Datos enriquecidos del producto
+      brand_id: modalSelectedProduct.brand_id,
+      brand_name: modalSelectedProduct.brand_name,
+      tags: modalSelectedProduct.tags,
     }
-    if (editingItemId)
+    if (editingItemId) {
       setPurchaseItems(prev =>
         prev.map(i => (i.id === editingItemId ? { ...itemData, id: i.id } : i)),
       )
-    else
-      setPurchaseItems(prev => [
-        ...prev,
-        { ...itemData, id: `item-${Date.now()}` },
-      ])
+    } else {
+      setPurchaseItems(prev => {
+        const existingItemIndex = prev.findIndex(i => i.product_id === itemData.product_id && i.variant_id === itemData.variant_id);
+        if (existingItemIndex >= 0) {
+          const newItems = [...prev];
+          newItems[existingItemIndex] = {
+            ...itemData,
+            id: newItems[existingItemIndex].id,
+            quantity: newItems[existingItemIndex].quantity + itemData.quantity
+          };
+          return newItems;
+        }
+        return [...prev, { ...itemData, id: `item-${Date.now()}` }];
+      })
+    }
     setIsModalOpen(false)
     setEditingItemId(null)
     setModalQuantity('')
@@ -689,6 +711,7 @@ export const usePurchasesLogic = () => {
     setModalUnitPrice('')
     setModalVariantId(undefined)
     setModalVariantName(undefined)
+    setModalSelectedVariant(undefined)
     setModalTaxRateId(null)
     setModalSelectedProduct(null)
     setModalProductSearch('')
@@ -710,6 +733,7 @@ export const usePurchasesLogic = () => {
         currency_id: selectedCurrency?.id || undefined,
         order_details: purchaseItems.map(i => ({
           product_id: i.product_id,
+          variant_id: i.variant_id || undefined, // Integración de variantes (PURCHASE_ORDERS_API_GUIDE.md)
           quantity: Number(i.quantity),
           unit_price: Number(i.unit_price),
           unit: (i.unit || 'unit').toLowerCase(),
@@ -1056,6 +1080,8 @@ export const usePurchasesLogic = () => {
     setModalVariantId,
     modalVariantName,
     setModalVariantName,
+    modalSelectedVariant,
+    setModalSelectedVariant,
     openActionMenu,
     orderToCancel,
     paymentCurrency,

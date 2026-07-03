@@ -2,8 +2,8 @@
 
 > **Disclaimer:** Esta guía contiene ejemplos JSON para ilustración de respuestas. Para el modelado de datos en el frontend, utilice las **tablas de definición de campos** como fuente de verdad.
 
-**Versión:** 3.7.0
-**Fecha:** 16 de Junio de 2026
+**Versión:** 3.8.0
+**Fecha:** 2 de Julio de 2026
 **Endpoint Base:** `http://localhost:5050`
 
 ## Permisos del Módulo
@@ -20,6 +20,12 @@
 - Intentar escritura en módulo de solo lectura → `405 Method Not Allowed`
 
 ## Historial de Cambios
+
+### v3.8.0 - 2 de Julio de 2026
+- **NUEVO**: Campos `has_variant` (boolean) y `variant_count` (integer) en todas las respuestas de búsqueda de productos.
+- **NUEVO**: Los endpoints `GET /products/{id}/purchase` y `GET /products/{id}/sale` ahora incluyen `has_variant`, `variant_count` y el array `variants[]` con las variantes activas del producto.
+- **NUEVO**: La vista materializada `mv_product_catalog` ahora incluye `has_variant` y `variant_count` para detección inmediata de variantes en búsquedas.
+- **MEJORA**: El frontend ya no necesita hacer una segunda llamada a `GET /products/{id}/variants` para determinar si un producto tiene variantes. La información está disponible directamente en los resultados de búsqueda.
 
 ### v3.7.0 - 16 de Junio de 2026
 - **NUEVO**: HTTP caching con ETags en todos los endpoints GET de productos. El servidor retorna `ETag` y `Cache-Control: private, max-age=60`. Si el frontend envía `If-None-Match` con el ETag anterior y el contenido no cambió, el servidor responde `304 Not Modified` sin body.
@@ -165,6 +171,8 @@ Respuesta estandar para todos los endpoints de productos.
 | `has_unit_pricing` | boolean | Si tiene precios por unidad |
 | `unit_prices` | array | Lista de precios por unidad |
 | `description` | string \| null | Descripcion del producto |
+| `has_variant` | boolean | TRUE si el producto tiene al menos una variante activa |
+| `variant_count` | number | Cantidad de variantes activas del producto |
 
 ### Category
 

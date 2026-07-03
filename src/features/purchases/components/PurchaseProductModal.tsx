@@ -52,13 +52,20 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
     modalVariantId,
     setModalVariantId,
     setModalVariantName,
+    setModalSelectedVariant,
   } = props
 
   const [variants, setVariants] = useState<ProductVariant[]>([])
   const [loadingVariants, setLoadingVariants] = useState(false)
+  const [partialSelectedAttrs, setPartialSelectedAttrs] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    if (modalSelectedProduct?.has_variants) {
+    if (modalSelectedProduct?.id || modalSelectedProduct?.product_id) {
+      if (Array.isArray(modalSelectedProduct.variants) && modalSelectedProduct.variants.length > 0) {
+        setVariants(modalSelectedProduct.variants)
+        return
+      }
+
       setLoadingVariants(true)
       const productId = modalSelectedProduct.id || modalSelectedProduct.product_id;
       const activeBranch = localStorage.getItem('activeBranch') ? parseInt(localStorage.getItem('activeBranch') as string) : undefined;
@@ -68,10 +75,12 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
         .finally(() => setLoadingVariants(false))
     } else {
       setVariants([])
+      setPartialSelectedAttrs({})
       setModalVariantId(undefined)
       setModalVariantName(undefined)
+      setModalSelectedVariant(undefined)
     }
-  }, [modalSelectedProduct])
+  }, [modalSelectedProduct?.id, modalSelectedProduct?.product_id])
 
   if (!isModalOpen) return null
 
@@ -174,20 +183,35 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                                 >
                                   {getProductName(p)}
                                 </div>
-                                <div className='flex gap-2 mt-0.5'>
+                                <div className='flex flex-wrap gap-1.5 mt-0.5 items-center'>
                                   <span className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
                                     ID: {p.id || p.product_id || '-'}
                                   </span>
+                                  {/* Indicador de variantes */}
+                                  {((p.has_variant || p.has_variants) || (Array.isArray(p.variants) && p.variants.length > 0)) && (
+                                    <span className='text-[9px] px-1 py-0.5 rounded bg-[rgba(0,120,212,0.1)] border border-[rgba(0,120,212,0.25)] text-[var(--fluent-brand-primary,#0078D4)] font-semibold'>
+                                      variantes
+                                    </span>
+                                  )}
+                                  {/* Marca */}
+                                  {p.brand_name && (
+                                    <span className='text-[9px] px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 border border-slate-200 dark:border-slate-600 font-medium'>
+                                      {p.brand_name}
+                                    </span>
+                                  )}
+                                  {/* Tags (máx 2) */}
+                                  {Array.isArray(p.tags) && p.tags.slice(0, 2).map((tag: any) => (
+                                    <span
+                                      key={tag.id}
+                                      className='text-[9px] px-1 py-0.5 rounded text-white font-semibold'
+                                      style={{ backgroundColor: tag.color || '#8b5cf6' }}
+                                    >
+                                      {tag.name}
+                                    </span>
+                                  ))}
                                 </div>
                               </div>
                               <div className='text-right flex-shrink-0 ml-3'>
-                                {isActive && (
-                                  <div className='mb-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[var(--fluent-corner-radius-small,2px)] border border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)] text-[10px] font-semibold'>
-                                    <Check size={10} />
-                                    Activo
-                                  </div>
-                                )}
-
                                 <div
                                   className={`text-[10px] font-medium ${(p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0) > 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}
                                 >
@@ -216,11 +240,46 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                       )?.charAt(0)}
                     </div>
                     <div className='min-w-0 flex-1'>
-                      <h4 className='font-semibold text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white truncate'>
-                        {modalSelectedProduct.name ||
-                          modalSelectedProduct.product_name ||
-                          '-'}
-                      </h4>
+                      <div className='flex items-start justify-between gap-2 flex-wrap'>
+                        <h4 className='font-semibold text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white'>
+                          {modalSelectedProduct.name ||
+                            modalSelectedProduct.product_name ||
+                            '-'}
+                        </h4>
+                        <div className='flex items-center gap-1.5 flex-shrink-0 flex-wrap'>
+                          {/* Badge: Con Variantes */}
+                          {(modalSelectedProduct.has_variant || modalSelectedProduct.has_variants || variants.length > 0) && (
+                            <span className='inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[var(--fluent-corner-radius-small,2px)] bg-[rgba(0,120,212,0.1)] border border-[rgba(0,120,212,0.25)] text-[var(--fluent-brand-primary,#0078D4)] text-[9px] font-semibold uppercase tracking-wide'>
+                              <Package size={9} /> Variantes
+                            </span>
+                          )}
+                          {/* Badge: Marca */}
+                          {modalSelectedProduct.brand_name && (
+                            <span className='inline-flex items-center px-1.5 py-0.5 rounded-[var(--fluent-corner-radius-small,2px)] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 text-[9px] font-medium'>
+                              {modalSelectedProduct.brand_name}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {/* Tags row */}
+                      {modalSelectedProduct.tags && modalSelectedProduct.tags.length > 0 && (
+                        <div className='flex flex-wrap gap-1 mt-1.5'>
+                          {modalSelectedProduct.tags.slice(0, 5).map((tag: any) => (
+                            <span
+                              key={tag.id}
+                              className='inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold text-white'
+                              style={{ backgroundColor: tag.color || '#8b5cf6' }}
+                            >
+                              {tag.name}
+                            </span>
+                          ))}
+                          {modalSelectedProduct.tags.length > 5 && (
+                            <span className='text-[9px] text-[var(--fluent-text-tertiary,#8A8886)]'>
+                              +{modalSelectedProduct.tags.length - 5}
+                            </span>
+                          )}
+                        </div>
+                      )}
                       <div className='grid grid-cols-4 gap-2 mt-2'>
                         <div>
                           <p className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
@@ -268,31 +327,201 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     </div>
                   </div>
                 </div>
+
                 
-                {modalSelectedProduct?.has_variants && (
-                  <div className='mt-4'>
-                    <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
-                      Seleccionar Variante <span className='text-[var(--fluent-semantic-danger,#D13438)]'>*</span>
-                    </label>
-                    <div className='relative mt-1.5'>
-                      <select
-                        className='w-full px-3 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all disabled:opacity-50'
-                        value={modalVariantId || ''}
-                        disabled={loadingVariants}
-                        onChange={e => {
-                          const selected = variants.find(v => v.id === e.target.value);
-                          setModalVariantId(selected?.id);
-                          setModalVariantName(selected?.variant_name);
+                {(modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && (
+                  <div className='mt-4 space-y-3'>
+                    <div className='flex items-center justify-between'>
+                      <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
+                        Seleccionar Variante <span className='text-[var(--fluent-semantic-danger,#D13438)]'>*</span>
+                      </label>
+                      {modalVariantId && (
+                        <button
+                          type='button'
+                          onClick={() => {
+                            setModalVariantId(undefined);
+                            setModalVariantName(undefined);
+                            setModalSelectedVariant(undefined);
+                          }}
+                          className='text-xs text-[var(--fluent-text-tertiary,#8A8886)] hover:text-[var(--fluent-semantic-danger,#D13438)] transition-colors flex items-center gap-1'
+                        >
+                          <X size={12} /> Limpiar
+                        </button>
+                      )}
+                    </div>
+
+                    {loadingVariants ? (
+                      <div className='flex items-center gap-2 py-3 text-[var(--fluent-text-tertiary,#8A8886)] text-sm'>
+                        <div className='w-4 h-4 border-2 border-[var(--fluent-brand-primary,#0078D4)] border-t-transparent rounded-full animate-spin' />
+                        Cargando variantes...
+                      </div>
+                    ) : variants.length === 0 ? (
+                      <div className='py-3 text-sm text-[var(--fluent-semantic-warning,#F7630C)] flex items-center gap-2'>
+                        <Package size={16} />
+                        Este producto no tiene variantes activas
+                      </div>
+                    ) : (() => {
+                      // Extraer atributos únicos de todas las variantes activas
+                      const allAttrKeys = Array.from(
+                        new Set(variants.flatMap(v => Object.keys(v.variant_attributes || {})))
+                      );
+
+                      // Estado de selección por atributo
+                      const selectedAttrs: Record<string, string> = { ...partialSelectedAttrs };
+                      // Asegurar que si modalVariantId existe pero partialSelectedAttrs no tiene los attrs, se sincronicen (útil al editar)
+                      if (modalVariantId && Object.keys(partialSelectedAttrs).length === 0) {
+                        const sv = variants.find(v => v.id === modalVariantId);
+                        if (sv?.variant_attributes) {
+                          Object.assign(selectedAttrs, sv.variant_attributes);
+                          // Sincronizamos en el ciclo siguiente para que la UI ya tenga este estado
+                          setTimeout(() => setPartialSelectedAttrs(sv.variant_attributes || {}), 0);
+                        }
+                      }
+
+                      // Función para seleccionar un valor de atributo
+                      const handleAttrSelect = (attrKey: string, attrValue: string) => {
+                        const newSelected = { ...selectedAttrs };
+                        if (newSelected[attrKey] === attrValue) {
+                          delete newSelected[attrKey]; // Deseleccionar
+                        } else {
+                          newSelected[attrKey] = attrValue;
+                        }
+                        
+                        setPartialSelectedAttrs(newSelected);
+                        
+                        // Buscar la variante que coincida con los atributos seleccionados hasta ahora
+                        const matched = variants.find(v =>
+                          Object.entries(newSelected).every(
+                            ([k, val]) => String(v.variant_attributes?.[k]) === String(val)
+                          )
+                        );
+                        if (matched && Object.keys(newSelected).length === allAttrKeys.length) {
+                          setModalVariantId(matched.id);
+                          setModalVariantName(matched.variant_name);
+                          setModalSelectedVariant(matched);
+                        } else {
+                          // Parcialmente seleccionado: limpiar variante
+                          setModalVariantId(undefined);
+                          setModalVariantName(undefined);
+                          setModalSelectedVariant(undefined);
+                          // Si hay solo 1 atributo y se seleccionó, también auto-seleccionar
+                          if (allAttrKeys.length === 1 && matched) {
+                            setModalVariantId(matched.id);
+                            setModalVariantName(matched.variant_name);
+                            setModalSelectedVariant(matched);
+                          }
+                        }
+                      };
+
+                      return (
+                        <div className='space-y-3'>
+                          {allAttrKeys.map(attrKey => {
+                            // Opciones disponibles para este atributo dado lo ya seleccionado en OTROS atributos
+                            const otherSelectedAttrs = Object.fromEntries(
+                              Object.entries(selectedAttrs).filter(([k]) => k !== attrKey)
+                            );
+                            const availableForThisAttr = Array.from(
+                              new Set(
+                                variants
+                                  .filter(v =>
+                                    Object.entries(otherSelectedAttrs).every(
+                                      ([k, val]) => String(v.variant_attributes?.[k]) === String(val)
+                                    )
+                                  )
+                                  .map(v => String(v.variant_attributes?.[attrKey]))
+                                  .filter(Boolean)
+                              )
+                            );
+
+                            const selectedValue = selectedAttrs[attrKey];
+
+                            return (
+                              <div key={attrKey} className='space-y-1.5'>
+                                <span className='text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)] uppercase tracking-wide'>
+                                  {attrKey}
+                                </span>
+                                <div className='flex flex-wrap gap-2'>
+                                  {availableForThisAttr.map(val => {
+                                    const isSelected = selectedValue === val;
+
+                                    return (
+                                      <button
+                                        key={val}
+                                        type='button'
+                                        onClick={() => handleAttrSelect(attrKey, val)}
+                                        className={`
+                                          px-3 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-medium,4px)]
+                                          border transition-all duration-150 relative
+                                          ${isSelected
+                                            ? 'bg-[var(--fluent-brand-primary,#0078D4)] text-white border-[var(--fluent-brand-primary,#0078D4)] shadow-[var(--fluent-shadow-4)]'
+                                            : 'bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] text-[var(--fluent-text-primary,#212121)] dark:text-white border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-[var(--fluent-brand-primary,#0078D4)]'
+                                          }
+                                        `}
+                                        disabled={false}
+                                      >
+                                        {val}
+                                        {isSelected && (
+                                          <Check size={10} className='inline ml-1 -mt-0.5' />
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {/* Resumen de variante seleccionada */}
+                          {modalVariantId && (() => {
+                            const sv = variants.find(v => v.id === modalVariantId);
+                            if (!sv) return null;
+                            const stock = sv.stock_quantity ?? 0;
+                            return (
+                              <div className={`flex items-center justify-between px-3 py-2 rounded-[var(--fluent-corner-radius-medium,4px)] border text-xs font-medium transition-colors ${
+                                stock > 0
+                                  ? 'bg-[rgba(16,124,16,0.06)] border-[rgba(16,124,16,0.2)] text-[var(--fluent-semantic-success,#107C10)]'
+                                  : 'bg-[rgba(209,52,56,0.06)] border-[rgba(209,52,56,0.2)] text-[var(--fluent-semantic-danger,#D13438)]'
+                              }`}>
+                                <span className='flex items-center gap-1.5'>
+                                  <Check size={12} />
+                                  {sv.variant_name || sv.sku}
+                                  {sv.sku && sv.sku !== sv.variant_name && (
+                                    <span className='opacity-70 font-mono'>· {sv.sku}</span>
+                                  )}
+                                </span>
+                                <span>
+                                  Stock: <strong>{stock}</strong>
+                                </span>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Opción para agregar producto base (principal) */}
+                    <div className="mt-4 pt-3 border-t border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setModalVariantId(null);
+                          setModalVariantName(undefined);
+                          setModalSelectedVariant(undefined);
                         }}
+                        className={`w-full px-3 py-2 text-xs font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] border transition-all flex items-center justify-center gap-2 ${
+                          modalVariantId === null
+                            ? 'bg-[var(--fluent-brand-primary,#0078D4)] text-white border-[var(--fluent-brand-primary,#0078D4)] shadow-[var(--fluent-shadow-4)]'
+                            : 'bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] text-[var(--fluent-text-primary,#212121)] dark:text-white border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-[var(--fluent-brand-primary,#0078D4)]'
+                        }`}
                       >
-                        <option value="">{loadingVariants ? 'Cargando...' : 'Seleccione una variante...'}</option>
-                        {variants.map(v => (
-                          <option key={v.id} value={v.id}>{v.variant_name} (Stock: {v.stock_quantity || 0})</option>
-                        ))}
-                      </select>
+                        <Package size={14} />
+                        Añadir producto principal sin variante
+                        {modalVariantId === null && <Check size={14} />}
+                      </button>
                     </div>
                   </div>
                 )}
+
                 </>
               ) : (
                 <div className='h-24 border-2 border-dashed border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-large,6px)] flex flex-col items-center justify-center'>
@@ -649,10 +878,16 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
             Cancelar
           </button>
           <button
+            className='px-5 py-2 text-sm font-medium text-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-tint,#EFF6FC)] rounded-[var(--fluent-corner-radius-medium,4px)]'
+            onClick={() => setModalVariantId(null)}
+          >
+            Seleccionar Producto Genérico
+          </button>
+          <button
             className='px-5 py-2 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none text-sm'
             onClick={handleConfirmAddProduct}
             disabled={
-              !modalSelectedProduct || !modalQuantity || !modalUnitPrice || (modalSelectedProduct?.has_variants && !modalVariantId)
+              !modalSelectedProduct || !modalQuantity || !modalUnitPrice || ((modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && modalVariantId === undefined)
             }
           >
             {editingItemId ? 'Guardar Cambios' : 'Agregar a la Orden'}

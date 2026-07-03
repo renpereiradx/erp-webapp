@@ -562,6 +562,76 @@ Cuando el barcode es del producto padre y `has_variants === true`, el backend no
 2. El usuario elige color/talla
 3. Enviar `variant_id` en `product_details` del POST de venta
 
+### 3.3 Detección de Variantes en Búsqueda de Productos
+
+> **Actualizado (2026-07-02):** Los endpoints de búsqueda ahora retornan `has_variant` y `variant_count` directamente. Ya no es necesario hacer una segunda llamada para determinar si un producto tiene variantes.
+
+Los siguientes endpoints de búsqueda incluyen los campos `has_variant` (boolean) y `variant_count` (integer):
+
+| Endpoint | Retorna | Incluye variantes |
+|----------|---------|-------------------|
+| `GET /products/search/{name}` | `[]ProductEnriched` | `has_variant`, `variant_count` |
+| `POST /products/search/advanced` | `[]SearchResultProduct` | `has_variant`, `variant_count` |
+| `GET /products/{id}/purchase` | `ProductOperationInfoResponse` | `has_variant`, `variant_count`, `variants[]` |
+| `GET /products/{id}/sale` | `ProductOperationInfoResponse` | `has_variant`, `variant_count`, `variants[]` |
+
+#### Ejemplo de respuesta de búsqueda
+
+```json
+{
+  "id": "PROD_001",
+  "name": "Camisa Polo",
+  "has_variant": true,
+  "variant_count": 6,
+  "stock_quantity": 45,
+  "current_price": 150000
+}
+```
+
+#### Flujo recomendado para el frontend
+
+```javascript
+// 1. Buscar productos
+const products = await api.get('/products/search/camisa');
+
+// 2. Al seleccionar un producto, verificar has_variant
+const selected = products.find(p => p.id === 'PROD_001');
+
+if (selected.has_variant) {
+  // 3a. Si tiene variantes, fetch-ear las variantes
+  const { variants } = await api.get(`/products/${selected.id}/variants`);
+  // Mostrar selector de variantes
+} else {
+  // 3b. Producto simple, agregar directo al carrito
+}
+```
+
+#### Endpoints de operación (compra/venta)
+
+Los endpoints `GET /products/{id}/purchase` y `GET /products/{id}/sale` ahora incluyen las variantes activas directamente en la respuesta:
+
+```json
+{
+  "product_id": "PROD_001",
+  "product_name": "Camisa Polo",
+  "has_variant": true,
+  "variant_count": 6,
+  "variants": [
+    {
+      "id": "VAR_001",
+      "sku": "POL-ROJ-M",
+      "variant_name": "Camisa Polo - color: rojo / talla: M",
+      "variant_attributes": {"color": "rojo", "talla": "M"},
+      "is_active": true
+    }
+  ],
+  "unit_prices": [...],
+  "stock_quantity": 45
+}
+```
+
+Esto permite al frontend mostrar las variantes sin una llamada adicional al seleccionar un producto para compra o venta.
+
 ---
 
 ## Flujo 4: Búsqueda con Categorías, Tags y Atributos

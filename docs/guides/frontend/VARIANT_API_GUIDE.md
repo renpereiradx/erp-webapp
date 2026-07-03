@@ -96,6 +96,53 @@ Authorization: Bearer <jwt_token>
 
 ---
 
+## Detección de Variantes en Búsqueda
+
+> **Nuevo (2026-07-02):** Los endpoints de búsqueda de productos ahora incluyen `has_variant` y `variant_count` en cada resultado. Esto permite al frontend saber si un producto tiene variantes sin hacer una segunda llamada.
+
+### Campos en Respuestas de Búsqueda
+
+Los siguientes endpoints incluyen los campos `has_variant` (boolean) y `variant_count` (integer):
+
+| Endpoint | Uso | Campos de variante |
+|----------|-----|-------------------|
+| `GET /products/search/{name}` | Búsqueda simple por nombre | `has_variant`, `variant_count` |
+| `POST /products/search/advanced` | Búsqueda avanzada con filtros | `has_variant`, `variant_count` |
+| `GET /products/{id}/purchase` | Info de producto para compra | `has_variant`, `variant_count`, `variants[]` |
+| `GET /products/{id}/sale` | Info de producto para venta | `has_variant`, `variant_count`, `variants[]` |
+
+### Ejemplo de Uso
+
+```javascript
+// Buscar productos
+const products = await api.get('/products/search/camisa');
+
+// Cada producto incluye has_variant y variant_count
+products.forEach(p => {
+  console.log(`${p.name}: ${p.has_variant ? 'Tiene variantes' : 'Simple'}`);
+  if (p.has_variant) {
+    console.log(`  Variantes: ${p.variant_count}`);
+  }
+});
+
+// Al seleccionar un producto para compra/venta
+const productInfo = await api.get(`/products/${productId}/purchase`);
+if (productInfo.has_variant) {
+  // Las variantes ya vienen incluidas en la respuesta
+  showVariantSelector(productInfo.variants);
+}
+```
+
+### Flujo Recomendado
+
+1. **Búsqueda:** Usar `GET /products/search/{name}` o `POST /products/search/advanced`
+2. **Verificar:** Chequear `has_variant` en el resultado
+3. **Si tiene variantes:** Las variantes ya están disponibles en los endpoints de operación (`/purchase` y `/sale`), o se pueden fetch-ear con `GET /products/{id}/variants`
+4. **Seleccionar:** El usuario elige la variante específica
+5. **Transacción:** Enviar `variant_id` en los detalles de la orden
+
+---
+
 ## Endpoints de Variantes
 
 ### 1. Crear Variante

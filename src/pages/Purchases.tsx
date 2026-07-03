@@ -211,15 +211,13 @@ const Purchases = () => {
 
         {activeTab === 'nueva-compra' && (
           <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6'>
-                        {/* Left Column: Items & Summary */}
-            <div className='lg:col-span-8 space-y-4 md:space-y-6'>
+            <div className='lg:col-span-9 space-y-4 md:space-y-6'>
               <PurchaseCartTable {...logic} />
               <PurchaseTotalsCard {...logic} />
             </div>
 
             {/* Right Column: Configuration & Supplier - Fluent 2 */}
-                        {/* Right Column: Configuration & Supplier - Fluent 2 */}
-            <aside className='lg:col-span-4 space-y-4 md:space-y-6'>
+            <aside className='lg:col-span-3 space-y-4 md:space-y-6'>
               <SupplierSelectionCard {...logic} />
               <PaymentConfigCard {...logic} />
             </aside>

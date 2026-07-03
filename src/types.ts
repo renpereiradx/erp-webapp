@@ -331,6 +331,9 @@ export interface ProductOperationInfoResponse {
   best_margin_unit: string | null;
   best_margin_percent: number | null;
   match_score?: number; // Only present in search results
+  has_variant?: boolean;
+  variant_count?: number;
+  variants?: ProductVariant[];
 }
 
 export interface CreateProductRequest {
@@ -1685,6 +1688,9 @@ export interface ProductEnriched extends Product {
   has_valid_price: boolean;
   has_unit_pricing: boolean;
   unit_prices?: UnitPrice[] | null;
+  has_variant?: boolean;
+  variant_count?: number;
+  variants?: ProductVariant[];
 }
 
 // La interfaz ProductOperationInfoResponse ya se encuentra declarada arriba (líneas 193-227).
