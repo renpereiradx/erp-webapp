@@ -569,24 +569,45 @@ class BusinessManagementAPI {
   }
 
   async post(endpoint: string, data: any = null, options: RequestOptions = {}): Promise<any> {
+    let finalOptions = { ...options };
+    if (data && typeof data === 'object' && !(data instanceof FormData) && data.branch_id) {
+      finalOptions.headers = {
+        ...finalOptions.headers,
+        'X-Branch-ID': data.branch_id.toString(),
+      };
+    }
     return this.makeRequest(endpoint, {
-      ...options,
+      ...finalOptions,
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     })
   }
 
   async put(endpoint: string, data: any = null, options: RequestOptions = {}): Promise<any> {
+    let finalOptions = { ...options };
+    if (data && typeof data === 'object' && !(data instanceof FormData) && data.branch_id) {
+      finalOptions.headers = {
+        ...finalOptions.headers,
+        'X-Branch-ID': data.branch_id.toString(),
+      };
+    }
     return this.makeRequest(endpoint, {
-      ...options,
+      ...finalOptions,
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
     })
   }
 
   async patch(endpoint: string, data: any = null, options: RequestOptions = {}): Promise<any> {
+    let finalOptions = { ...options };
+    if (data && typeof data === 'object' && !(data instanceof FormData) && data.branch_id) {
+      finalOptions.headers = {
+        ...finalOptions.headers,
+        'X-Branch-ID': data.branch_id.toString(),
+      };
+    }
     return this.makeRequest(endpoint, {
-      ...options,
+      ...finalOptions,
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
     })

@@ -32,17 +32,9 @@ export const apiService: any = {
 
   // Métodos HTTP genéricos para compatibilidad
   get: (endpoint: string, options = {}) => apiClient.get(endpoint, options),
-  post: (endpoint: string, data: any) =>
-    apiClient.makeRequest(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-  put: (endpoint: string, data: any) =>
-    apiClient.makeRequest(endpoint, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
-  delete: (endpoint: string) => apiClient.makeRequest(endpoint, { method: 'DELETE' }),
+  post: (endpoint: string, data: any, options = {}) => apiClient.post(endpoint, data, options),
+  put: (endpoint: string, data: any, options = {}) => apiClient.put(endpoint, data, options),
+  delete: (endpoint: string, options = {}) => apiClient.delete(endpoint, options),
 
   // Métodos específicos de productos (delegando al apiClient)
   getProducts: (page: number, pageSize: number) => (apiClient as any).getProducts(page, pageSize),
