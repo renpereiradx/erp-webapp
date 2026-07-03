@@ -55,9 +55,14 @@ Authorization: Bearer <jwt_token>
 
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| token | string | Access token JWT (válido 15 minutos) |
+| access_token | string | JWT de acceso (válido 15 minutos) |
+| refresh_token | string | JWT refresh (válido 7 días) |
+| token_type | string | `"Bearer"` |
+| expires_in | int64 | Duración del access token en segundos (default: 900) |
 | role_id | string | ID del rol del usuario |
 | role_name | string | Nombre del rol |
+| session_id | int64 | ID de la sesión activa |
+| user_id | string | ID del usuario autenticado |
 | allowed_branches | int[] | Sucursales permitidas |
 | active_branch | int \| null | Sucursal default del usuario |
 

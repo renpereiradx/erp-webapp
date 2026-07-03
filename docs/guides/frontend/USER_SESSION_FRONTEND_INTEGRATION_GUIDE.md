@@ -31,9 +31,14 @@ Los endpoints de autenticación (`/login`, `/auth/*`) no requieren `branch_id`. 
 #### Response 200
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| token | string | JWT de acceso |
+| access_token | string | JWT de acceso (válido 15 minutos) |
+| refresh_token | string | JWT refresh (válido 7 días) para renovar el access token |
+| token_type | string | `"Bearer"` |
+| expires_in | int64 | Duración del access token en segundos (default: 900) |
 | role_id | string | ID del rol principal del usuario |
 | role_name | string | Nombre legible del rol (ej: `ADMIN`, `Vendedor`) |
+| session_id | int64 | ID de la sesión activa creada |
+| user_id | string | ID del usuario autenticado |
 | allowed_branches | int[] | IDs de sucursales a las que el usuario tiene acceso |
 | active_branch | int \| null | Sucursal activa/default del usuario |
 
@@ -45,9 +50,10 @@ Los endpoints de autenticación (`/login`, `/auth/*`) no requieren `branch_id`. 
 | 500 | Error interno de autenticación |
 
 #### Notas
-- `allowed_branches` y `active_branch` se resuelen desde `users.user_branch_access` en el momento del login.
+- `access_token` tiene expiración corta (15 min). Usar `refresh_token` para obtener un nuevo par via `POST /auth/refresh`.
+- `allowed_branches` y `active_branch` se resuelven desde `users.user_branch_access` en el momento del login y se cachean en Redis (5 min TTL).
 - `active_branch` apunta a la sucursal marcada como `is_default_branch = true`; si no hay default, es la primera de `allowed_branches` ordenada ascendentemente.
-- Si el usuario no tiene accesos configurados, ambos campos pueden ser `null` o ausentes (legacy).
+- Si el usuario no tiene accesos configurados, ambos campos pueden ser `null` o ausentes.
 
 ---
 
@@ -456,8 +462,14 @@ Base path: `/sessions`
 
 ---
 
-### POST /sessions/cleanup
-**Descripción:** Limpia sesiones expiradas (requiere permiso `sessions:admin`).
+---
+
+## Administración de Sesiones (Admin)
+
+Base path: `/admin/sessions`
+
+### POST /admin/sessions/cleanup
+**Descripción:** Limpia sesiones expiradas del sistema (requiere permiso `sessions:admin`). También se ejecuta automáticamente cada 30 minutos en segundo plano.
 
 #### Response 200
 | Campo | Tipo | Descripción |
@@ -467,10 +479,6 @@ Base path: `/sessions`
 | cleaned_count | int | Cantidad de sesiones limpiadas |
 
 ---
-
-## Administración de Sesiones (Admin)
-
-Base path: `/admin/sessions`
 
 ### GET /admin/sessions/all
 **Descripción:** Obtiene todas las sesiones activas de todos los usuarios (solo admin, requiere permiso `sessions:admin`). Devuelve sesiones enriquecidas con datos del usuario.
