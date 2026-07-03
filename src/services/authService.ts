@@ -65,7 +65,7 @@ const authService = {
       });
 
       // Normalizar la respuesta del backend según USER-SESION.md
-      const token = result.token || result.data?.token;
+      const token = result.access_token || result.token || result.data?.access_token || result.data?.token;
       const refreshToken = result.refresh_token || result.data?.refresh_token;
       const session_id = result.session_id || result.data?.session_id;
       const user = result.user || result.data?.user || result.data;
