@@ -16,6 +16,57 @@ class BusinessManagementAPI {
   timeout: number;
   defaultHeaders: Record<string, string>;
 
+  private isRefreshing = false;
+  private refreshPromise: Promise<boolean> | null = null;
+
+  private async performTokenRefresh(refreshToken: string): Promise<boolean> {
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.isRefreshing = true;
+    this.refreshPromise = new Promise(async (resolve) => {
+      try {
+        const refreshResponse = await fetch(`${this.baseUrl}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: refreshToken })
+        });
+        
+        if (refreshResponse.ok) {
+          const data = await refreshResponse.json();
+          if (data.success && data.access_token) {
+            localStorage.setItem('authToken', data.access_token);
+            if (data.refresh_token) {
+              localStorage.setItem('refreshToken', data.refresh_token);
+            }
+            if (data.allowed_branches) {
+              localStorage.setItem('allowedBranches', JSON.stringify(data.allowed_branches));
+            }
+            if (data.active_branch !== undefined && data.active_branch !== null) {
+              localStorage.setItem('activeBranch', data.active_branch.toString());
+            }
+            
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('auth:token_refreshed', { detail: data }));
+            }
+            resolve(true);
+            return;
+          }
+        }
+        resolve(false);
+      } catch (refreshError) {
+        console.error('Error auto-refreshing token:', refreshError);
+        resolve(false);
+      } finally {
+        this.isRefreshing = false;
+        this.refreshPromise = null;
+      }
+    });
+
+    return this.refreshPromise;
+  }
+
   constructor(config: { baseUrl?: string; timeout?: number; defaultHeaders?: Record<string, string> } = {}) {
     // Usar configuración centralizada con posibilidad de override
     this.baseUrl = config.baseUrl || API_CONFIG.baseUrl
@@ -126,29 +177,10 @@ class BusinessManagementAPI {
           const refreshToken = localStorage.getItem('refreshToken');
           
           if (refreshToken && refreshToken !== 'null' && refreshToken !== 'undefined') {
-            try {
-              // Llamada directa usando fetch para evitar dependencias circulares con authService
-              const refreshResponse = await fetch(`${this.baseUrl}/auth/refresh`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ refresh_token: refreshToken })
-              });
-              
-              if (refreshResponse.ok) {
-                const data = await refreshResponse.json();
-                if (data.success && data.access_token) {
-                  // Guardar los nuevos tokens
-                  localStorage.setItem('authToken', data.access_token);
-                  if (data.refresh_token) {
-                    localStorage.setItem('refreshToken', data.refresh_token);
-                  }
-                  
-                  // Reintentar la petición original con el nuevo token
-                  return await this.makeRequest(endpoint, options);
-                }
-              }
-            } catch (refreshError) {
-              console.error('Error auto-refreshing token:', refreshError);
+            const refreshed = await this.performTokenRefresh(refreshToken);
+            if (refreshed) {
+              // Reintentar la petición original con el nuevo token
+              return await this.makeRequest(endpoint, options);
             }
           }
         }
@@ -174,36 +206,9 @@ class BusinessManagementAPI {
             const refreshToken = localStorage.getItem('refreshToken');
             
             if (refreshToken && refreshToken !== 'null' && refreshToken !== 'undefined') {
-              try {
-                const refreshResponse = await fetch(`${this.baseUrl}/auth/refresh`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ refresh_token: refreshToken })
-                });
-                
-                if (refreshResponse.ok) {
-                  const data = await refreshResponse.json();
-                  if (data.success && data.access_token) {
-                    localStorage.setItem('authToken', data.access_token);
-                    if (data.refresh_token) {
-                      localStorage.setItem('refreshToken', data.refresh_token);
-                    }
-                    if (data.allowed_branches) {
-                      localStorage.setItem('allowedBranches', JSON.stringify(data.allowed_branches));
-                    }
-                    if (data.active_branch) {
-                      localStorage.setItem('activeBranch', data.active_branch.toString());
-                    }
-                    
-                    if (typeof window !== 'undefined') {
-                      window.dispatchEvent(new CustomEvent('auth:token_refreshed', { detail: data }));
-                    }
-                    
-                    return await this.makeRequest(endpoint, options);
-                  }
-                }
-              } catch (refreshError) {
-                console.error('Error auto-refreshing token on forbidden branch_id:', refreshError);
+              const refreshed = await this.performTokenRefresh(refreshToken);
+              if (refreshed) {
+                return await this.makeRequest(endpoint, options);
               }
             }
           }
@@ -475,6 +480,10 @@ class BusinessManagementAPI {
 
   async processSalePaymentCashRegister(data: any, options: RequestOptions = {}): Promise<any> {
     return this.post('/cash-registers/payments/sale', data, options)
+  }
+
+  async confirmPayment(saleId: string | number, data: any, options: RequestOptions = {}): Promise<any> {
+    return this.put(`/sale/${saleId}/confirm-payment`, data, options)
   }
 
   async getSalePaymentStatus(id: string | number, options: RequestOptions = {}): Promise<any> {

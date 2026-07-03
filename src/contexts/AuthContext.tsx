@@ -13,6 +13,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   token: string | null;
+  sessionId: string | null;
   loading: boolean;
   error: string | null;
   authLoading: boolean;
@@ -29,6 +30,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -46,6 +48,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const savedToken = apiService.getToken();
       if (savedToken) {
         setToken(savedToken);
+        setSessionId(localStorage.getItem('sessionId'));
         setIsAuthenticated(true);
 
         // Fetch current user data to ensure we have real data
@@ -102,6 +105,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         // Actualizar estado de autenticación básico
         setToken(result.token);
+        if (result.session_id) setSessionId(result.session_id);
         setIsAuthenticated(true);
         
         // Cargar datos completos del usuario desde /me
@@ -184,6 +188,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsAuthenticated(false);
     setUser(null);
     setToken(null);
+    setSessionId(null);
     setError(null);
   };
 
@@ -200,6 +205,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsAuthenticated(false);
       setUser(null);
       setToken(null);
+      setSessionId(null);
       setError('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
     };
 
@@ -240,6 +246,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       isAuthenticated,
       user,
       token,
+      sessionId,
       loading,
       error,
       authLoading,

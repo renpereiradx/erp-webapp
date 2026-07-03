@@ -67,6 +67,7 @@ const authService = {
       // Normalizar la respuesta del backend según USER-SESION.md
       const token = result.token || result.data?.token;
       const refreshToken = result.refresh_token || result.data?.refresh_token;
+      const session_id = result.session_id || result.data?.session_id;
       const user = result.user || result.data?.user || result.data;
       if (user && user.avatar_url && user.avatar_url.includes('example.com')) {
         user.avatar_url = '';
@@ -78,6 +79,7 @@ const authService = {
       // Guardar tokens y contexto
       if (token) apiService.setToken(token);
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+      if (session_id) localStorage.setItem('sessionId', session_id);
       if (role_id) localStorage.setItem('roleId', role_id);
       if (active_branch) localStorage.setItem('activeBranch', active_branch.toString());
       if (allowed_branches) localStorage.setItem('allowedBranches', JSON.stringify(allowed_branches));
@@ -86,6 +88,7 @@ const authService = {
         success: true,
         token,
         refreshToken,
+        session_id,
         user,
         role_id,
         allowed_branches,

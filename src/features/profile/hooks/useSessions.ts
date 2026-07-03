@@ -2,11 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import sessionService from '@/services/sessionService';
 import { UserSession } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 import { getCurrentSessionId } from '@/utils/jwtUtils';
 
 export function useSessions() {
   const [loading, setLoading] = useState<boolean>(false);
   const [activeSessions, setActiveSessions] = useState<UserSession[]>([]);
+  const { sessionId: contextSessionId } = useAuth();
 
   const fetchActiveSessions = useCallback(async () => {
     try {
@@ -15,12 +17,16 @@ export function useSessions() {
       
       const data = response.data || response;
       if (Array.isArray(data)) {
-        // Detectar sesión actual comparando con el session_id del JWT activo
-        const currentSessionId = getCurrentSessionId();
+        // Detectar sesión actual comparando con el session_id del context, fallback al JWT y al localStorage
+        const jwtSessionId = getCurrentSessionId();
+        const fallbackSessionId = localStorage.getItem('sessionId');
+        
+        const currentSessionIdStr = contextSessionId || jwtSessionId?.toString() || fallbackSessionId;
+        
         const enrichedSessions = data.map(session => ({
           ...session,
-          is_current: currentSessionId !== null
-            ? Number(session.id) === currentSessionId
+          is_current: currentSessionIdStr != null
+            ? String(session.id) === String(currentSessionIdStr)
             : session.is_current ?? false
         }));
         setActiveSessions(enrichedSessions);
@@ -31,7 +37,7 @@ export function useSessions() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [contextSessionId]);
 
   useEffect(() => {
     fetchActiveSessions();
