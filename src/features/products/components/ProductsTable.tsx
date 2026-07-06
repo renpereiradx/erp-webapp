@@ -54,44 +54,44 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
   };
 
   return (
-    <Table>
-      <TableHeader className="bg-slate-50/80 border-b border-border-subtle">
+    <Table className="border-separate border-spacing-0">
+      <TableHeader className="bg-surface-container-low">
         <TableRow className="hover:bg-transparent border-none">
-          <TableHead className="w-[60px] text-center px-6">
+          <TableHead className="w-[60px] text-center px-6 rounded-tl-xl">
             <Checkbox
               checked={selectedIds.length === products.length && products.length > 0}
               onCheckedChange={onToggleSelectAll}
               className="border-slate-300"
             />
           </TableHead>
-          <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">
+          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
             {t('products.table.product_name')}
           </TableHead>
-          <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">
+          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
             {t('products.table.category')}
           </TableHead>
-          <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">
+          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
             IVA
           </TableHead>
-          <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">
+          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
             {t('products.table.stock')}
           </TableHead>
-          <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">
+          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
             <div className="flex flex-col">
               <span>{t('products.modal.field.purchase_price', 'Costo de Compra')}</span>
               <span className="text-[9px] font-semibold text-slate-400 normal-case tracking-normal mt-0.5 font-sans">Costo Neto Adq.</span>
             </div>
           </TableHead>
-          <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">
+          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
             <div className="flex flex-col">
               <span>{t('products.details.table.price', 'Precio de Venta')}</span>
               <span className="text-[9px] font-semibold text-slate-400 normal-case tracking-normal mt-0.5 font-sans">P.V.P. (Con IVA)</span>
             </div>
           </TableHead>
-          <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-4">
+          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
             {t('common.status', 'Estado')}
           </TableHead>
-          <TableHead className="text-right py-4 px-6"></TableHead>
+          <TableHead className="text-right py-4 px-6 rounded-tr-xl"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -112,7 +112,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
             <TableRow
               key={productId}
               data-state={isSelected ? "selected" : undefined}
-              className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group"
+              className="hover:bg-surface-container-low transition-colors duration-150 group border-none"
             >
               <TableCell className="px-6 text-center">
                 <Checkbox
@@ -163,7 +163,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
               <TableCell className="px-4">
                 <span
                   className={cn(
-                    'font-black font-mono',
+                    'font-black font-data-mono',
                     stockInfo.isLow ? 'text-error' : 'text-text-main'
                   )}
                 >
@@ -172,7 +172,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
               </TableCell>
               <TableCell className="px-4">
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-text-secondary tabular-nums">
+                  <span className="text-sm font-bold font-data-mono text-text-secondary">
                     {formatCurrency(purchaseCost)}
                   </span>
                   <span className="text-[9px] text-slate-400 font-mono">Neto</span>
@@ -181,7 +181,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
               <TableCell className="px-4">
                 <div className="flex items-center gap-2">
                   <div className="flex flex-col">
-                    <span className="text-sm font-black text-primary tabular-nums">
+                    <span className="text-sm font-black font-data-mono text-primary">
                       {formatCurrency(salesPrice)}
                     </span>
                     <span className="text-[9px] text-slate-400 font-mono">Con IVA</span>
@@ -200,10 +200,10 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
               </TableCell>
               <TableCell className="px-4">
                 <span className={cn(
-                  "text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-widest", 
+                  "text-[10px] font-bold px-2 py-1 rounded-sm uppercase tracking-widest", 
                   product.state === false || product.status === false || product.is_active === false 
-                    ? "bg-red-50 text-red-600 border border-red-100" 
-                    : "bg-green-50 text-green-600 border border-green-100"
+                    ? "bg-error/10 text-error" 
+                    : "bg-success/10 text-success"
                 )}>
                   {product.state === false || product.status === false || product.is_active === false ? "No Disponible" : "Disponible"}
                 </span>

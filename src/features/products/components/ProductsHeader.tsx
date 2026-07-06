@@ -21,7 +21,7 @@ export const ProductsHeader: React.FC<ProductsHeaderProps> = ({
   return (
     <>
       {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400">
+      <nav className="flex items-center gap-2 font-label-caps text-on-surface-variant uppercase">
         <span
           onClick={() => navigate('/dashboard')}
           className="flex items-center gap-1 hover:text-primary cursor-pointer transition-colors"
@@ -40,19 +40,19 @@ export const ProductsHeader: React.FC<ProductsHeaderProps> = ({
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2">
         <div>
-          <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">
+          <h1 className="font-headline-lg text-on-surface">
             {t('products.page.title')}
           </h1>
-          <p className="text-text-secondary text-sm font-medium mt-1">
+          <p className="text-on-surface-variant font-body-md mt-1">
             {t('products.page.subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={onRefresh}
             disabled={loading}
-            className="h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest hover:bg-slate-50"
+            className="h-10 px-4 bg-surface-container-low border-none text-on-surface hover:bg-surface-container font-body-sm-bold rounded-button"
           >
             <RefreshCw className={`size-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">
@@ -60,14 +60,14 @@ export const ProductsHeader: React.FC<ProductsHeaderProps> = ({
             </span>
           </Button>
           <Button
-            variant="outline"
-            className="h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest hover:bg-slate-50"
+            variant="ghost"
+            className="h-10 px-4 bg-surface-container-low border-none text-on-surface hover:bg-surface-container font-body-sm-bold rounded-button"
           >
             <Share className="size-4 mr-2" />
             <span className="hidden sm:inline">{t('products.action.export')}</span>
           </Button>
           <Button
-            className="bg-primary hover:bg-primary-hover text-white font-black uppercase text-[10px] tracking-widest px-6 h-10 rounded shadow-fluent-2"
+            className="bg-gradient-to-br from-primary to-primary-container text-white px-6 h-10 font-body-sm-bold rounded-button shadow-whisper"
             onClick={onOpenCreateModal}
           >
             <Plus className="size-4 mr-2" />

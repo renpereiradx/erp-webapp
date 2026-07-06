@@ -102,7 +102,7 @@ const Products = () => {
         setAdvancedSearchPayload={setAdvancedSearchPayload}
       />
 
-      <div className="bg-white border border-border-subtle rounded-xl shadow-fluent-2 overflow-hidden">
+      <div className="bg-surface-container-lowest rounded-xl shadow-whisper overflow-hidden">
         <ProductsTable
           products={displayProducts}
           selectedIds={selectedIds}

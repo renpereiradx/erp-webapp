@@ -100,22 +100,22 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
 
   return (
     <div 
-      className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 glass-mica animate-in fade-in duration-200 font-display"
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/40 animate-in fade-in duration-200 font-display"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white/90 backdrop-blur-md border border-white/20 rounded-2xl shadow-fluent-16 w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="bg-surface-container-lowest/80 backdrop-blur-[20px] border border-white/20 rounded-xl shadow-whisper w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* Header Section */}
-        <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
+        <div className="px-8 py-6 border-b border-border-subtle flex items-center justify-between bg-transparent sticky top-0 z-10">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center border border-gray-100 text-[#106ebe]">
+            <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center border-none text-primary">
               <Package size={28} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-[#242424] leading-tight">{productName}</h2>
+              <h2 className="font-headline-lg-mobile text-on-surface">{productName}</h2>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('products.details.product_id')}:</span>
-                <span className="text-sm font-medium text-gray-600 tabular-nums">{productId || 'N/A'}</span>
+                <span className="font-label-caps text-on-surface-variant uppercase">{t('products.details.product_id')}:</span>
+                <span className="font-data-mono text-on-surface">{productId || 'N/A'}</span>
               </div>
             </div>
           </div>
@@ -133,9 +133,9 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
               
               {/* General Info Grid */}
               <section>
-                <div className="flex items-center gap-2 mb-6 text-[#106ebe]">
+                <div className="flex items-center gap-2 mb-6 text-primary">
                   <Info size={18} />
-                  <h3 className="font-semibold text-xs uppercase tracking-widest">{t('products.details.section.general_info')}</h3>
+                  <h3 className="font-label-caps text-on-surface-variant uppercase">{t('products.details.section.general_info')}</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6">
                   <div className="space-y-1">
@@ -181,7 +181,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                   </div>
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Impuesto (IVA)</label>
-                    <p className="text-sm font-semibold text-[#106ebe]">
+                    <p className="text-sm font-semibold text-primary">
                       {product.tax?.rate?.tax_name || product.applicable_tax_rate?.tax_name || 'No especificado'}
                       {product.tax?.rate?.rate != null ? ` (${product.tax.rate.rate}%)` : ''}
                     </p>
@@ -212,9 +212,9 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
               {/* Unit Prices Table */}
               {unitPrices.length > 0 && (
                 <section>
-                  <div className="flex items-center gap-2 mb-4 text-[#106ebe]">
+                  <div className="flex items-center gap-2 mb-4 text-primary">
                     <Layout size={18} />
-                    <h3 className="font-semibold text-xs uppercase tracking-widest">{t('products.details.section.unit_prices')}</h3>
+                    <h3 className="font-label-caps text-on-surface-variant uppercase">{t('products.details.section.unit_prices')}</h3>
                   </div>
                   <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
                     <table className="w-full text-left">
@@ -230,7 +230,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                         {unitPrices.map((up: any) => (
                           <tr key={up.id} className="hover:bg-gray-50/50 transition-colors">
                             <td className="py-3 px-4 text-sm font-semibold text-gray-700">{up.unit || '-'}</td>
-                            <td className="py-3 px-4 text-sm font-bold text-[#106ebe] tabular-nums">{formatCurrency(up.price_per_unit)}</td>
+                            <td className="py-3 px-4 text-sm font-bold text-primary tabular-nums">{formatCurrency(up.price_per_unit)}</td>
                             <td className="py-3 px-4 text-xs text-gray-400">
                               {up.updated_at || up.effective_date ? new Date(up.updated_at || up.effective_date).toLocaleDateString('es') : '-'}
                             </td>
@@ -252,7 +252,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                                     setSelectedValue(up.price_per_unit || 0);
                                     setIsPriceAdjustmentOpen(true);
                                   }}
-                                  className="p-1 hover:bg-gray-100 rounded text-[#106ebe] hover:text-[#005a9e] inline-flex items-center"
+                                  className="p-1 hover:bg-gray-100 rounded text-primary hover:text-[#005a9e] inline-flex items-center"
                                   title="Ajustar Precio"
                                 >
                                   <Edit size={14} />
@@ -270,9 +270,9 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
               {/* Costs Table */}
               {unitCostsSummary.length > 0 && (
                 <section>
-                  <div className="flex items-center gap-2 mb-4 text-[#106ebe]">
+                  <div className="flex items-center gap-2 mb-4 text-primary">
                     <Activity size={18} />
-                    <h3 className="font-semibold text-xs uppercase tracking-widest">Resumen de Costos</h3>
+                    <h3 className="font-label-caps text-on-surface-variant uppercase">Resumen de Costos</h3>
                   </div>
                   <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
                     <table className="w-full text-left">
@@ -312,7 +312,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                                     setSelectedValue(cs.last_cost || 0);
                                     setIsCostAdjustmentOpen(true);
                                   }}
-                                  className="p-1 hover:bg-gray-100 rounded text-[#106ebe] hover:text-[#005a9e] inline-flex items-center"
+                                  className="p-1 hover:bg-gray-100 rounded text-primary hover:text-[#005a9e] inline-flex items-center"
                                   title="Ajustar Costo"
                                 >
                                   <Edit size={14} />
@@ -330,9 +330,9 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
               {/* Variants & Attributes Section */}
               <section>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 text-[#106ebe]">
+                  <div className="flex items-center gap-2 text-primary">
                     <Package size={18} />
-                    <h3 className="font-semibold text-xs uppercase tracking-widest">
+                    <h3 className="font-label-caps text-on-surface-variant uppercase">
                       {(product?.has_variants || variants.length > 0) ? 'Variantes Registradas' : 'Atributos, Etiquetas y Variantes'}
                     </h3>
                   </div>
@@ -370,7 +370,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                                   <div className="text-sm font-semibold text-gray-800">{v.variant_name}</div>
                                   <div className="text-[10px] text-gray-400 font-mono mt-0.5">{v.sku}</div>
                                 </td>
-                                <td className="py-3 px-4 text-sm font-bold text-[#106ebe]">
+                                <td className="py-3 px-4 text-sm font-bold text-primary">
                                   {v.current_price ? formatCurrency(v.current_price) : '-'}
                                 </td>
                                 <td className="py-3 px-4">
@@ -404,7 +404,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                 <h3 className="font-bold text-xs uppercase tracking-widest text-gray-500">{t('products.details.section.inventory')}</h3>
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="size-10 bg-blue-50 rounded-lg flex items-center justify-center text-[#106ebe]">
+                    <div className="size-10 bg-blue-50 rounded-lg flex items-center justify-center text-primary">
                       <Package size={20} />
                     </div>
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
@@ -426,7 +426,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                       </div>
                       <div className="mt-auto pt-3 border-t border-gray-100 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-2xl flex justify-between items-center">
                         <span className="text-xs font-bold text-gray-500 uppercase">Total Consolidado</span>
-                        <span className="text-lg font-black text-[#106ebe] tabular-nums">{totalConsolidatedStock}</span>
+                        <span className="text-lg font-black text-primary tabular-nums">{totalConsolidatedStock}</span>
                       </div>
                     </div>
                   ) : (
@@ -495,14 +495,14 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
         </div>
 
         {/* Footer Actions */}
-        <div className="px-8 py-6 border-t border-gray-100 flex items-center justify-end gap-3 bg-white sticky bottom-0">
-          <Button variant="outline" onClick={onClose} className="border-gray-200 text-gray-700 px-6">
+        <div className="px-8 py-6 border-t border-border-subtle flex items-center justify-end gap-3 bg-transparent sticky bottom-0">
+          <Button variant="ghost" onClick={onClose} className="bg-surface-container-low border-none text-on-surface hover:bg-surface-container px-6 font-body-sm-bold rounded-button">
             {t('products.modal.action.cancel')}
           </Button>
           {onEdit && (
             <Button 
               onClick={() => { onClose(); onEdit(product); }}
-              className="bg-[#106ebe] hover:bg-[#005a9e] text-white px-8 font-bold shadow-md"
+              className="bg-gradient-to-br from-primary to-primary-container text-white px-8 font-body-sm-bold rounded-button shadow-whisper"
             >
               <Edit size={18} className="mr-2" />
               {t('products.details.action.edit')}
