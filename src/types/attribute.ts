@@ -1,5 +1,5 @@
 export type AttributeType = 'STRING' | 'NUMBER' | 'BOOLEAN' | 'LIST';
-export type AttributeCategory = 'General' | 'Apariencia' | 'Especificaciones' | string;
+export type AttributeCategory = 'General' | string;
 
 export interface Attribute {
   id: string;

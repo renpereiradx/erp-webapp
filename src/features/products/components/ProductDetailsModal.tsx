@@ -94,6 +94,10 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
   const bestMarginUnit = product.best_margin_unit;
   const bestMarginPercent = product.best_margin_percent;
 
+  const hasVariants = product?.has_variants || variants.length > 0;
+  const variantsTotalStock = variants.reduce((acc, v) => acc + (v.stock_quantity || 0), 0);
+  const totalConsolidatedStock = stockQuantity + variantsTotalStock;
+
   return (
     <div 
       className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 glass-mica animate-in fade-in duration-200 font-display"
@@ -398,7 +402,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
               {/* Inventory Card */}
               <div className="space-y-4">
                 <h3 className="font-bold text-xs uppercase tracking-widest text-gray-500">{t('products.details.section.inventory')}</h3>
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
                   <div className="flex justify-between items-start mb-4">
                     <div className="size-10 bg-blue-50 rounded-lg flex items-center justify-center text-[#106ebe]">
                       <Package size={20} />
@@ -409,8 +413,28 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                       {stockStatus === 'in_stock' ? 'Disponible' : 'Stock Bajo'}
                     </span>
                   </div>
-                  <div className="text-3xl font-black text-gray-800 tabular-nums">{stockQuantity}</div>
-                  <p className="text-xs text-gray-400 mt-1 font-medium">Unidades totales en stock</p>
+                  
+                  {hasVariants ? (
+                    <div className="space-y-4 flex-1 flex flex-col">
+                      <div>
+                        <div className="text-3xl font-black text-gray-800 tabular-nums leading-none">{stockQuantity}</div>
+                        <p className="text-xs text-gray-400 mt-1 font-medium">Stock Producto Base</p>
+                      </div>
+                      <div className="pt-3 border-t border-gray-100">
+                        <div className="text-xl font-bold text-gray-700 tabular-nums leading-none">{variantsTotalStock}</div>
+                        <p className="text-xs text-gray-400 mt-1 font-medium">Stock en Variantes</p>
+                      </div>
+                      <div className="mt-auto pt-3 border-t border-gray-100 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-2xl flex justify-between items-center">
+                        <span className="text-xs font-bold text-gray-500 uppercase">Total Consolidado</span>
+                        <span className="text-lg font-black text-[#106ebe] tabular-nums">{totalConsolidatedStock}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-3xl font-black text-gray-800 tabular-nums">{stockQuantity}</div>
+                      <p className="text-xs text-gray-400 mt-1 font-medium">Stock del producto base</p>
+                    </div>
+                  )}
                 </div>
               </div>
 

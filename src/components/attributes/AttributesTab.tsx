@@ -218,8 +218,6 @@ export const AttributesTab: React.FC<AttributesTabProps> = ({
                     onChange={(e) => handleChange('category', e.target.value)}
                   >
                     <option value="General">General (Sin categoría)</option>
-                    <option value="Apariencia">Apariencia</option>
-                    <option value="Especificaciones">Especificaciones</option>
                     {categories.length > 0 && <optgroup label="Categorías de Producto">
                       {categories.map((c: any) => (
                         <option key={c.id} value={c.id}>{c.name}</option>

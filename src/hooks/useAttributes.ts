@@ -125,7 +125,7 @@ export const useAttributes = () => {
         name: attr.name,
         code: attr.code,
         data_type: attr.type,
-        category_id: attr.category !== 'General' && attr.category !== 'Apariencia' && attr.category !== 'Especificaciones' ? Number(attr.category) : null,
+        category_id: attr.category !== 'General' ? Number(attr.category) : null,
         category: attr.category, // Mantenemos category por retrocompatibilidad
         is_required: attr.isRequired,
         is_filterable: attr.isFilterable,

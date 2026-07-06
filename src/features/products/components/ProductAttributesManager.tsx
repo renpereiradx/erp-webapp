@@ -44,28 +44,25 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
   const loadData = async (ignore: boolean = false) => {
     setLoading(true);
     try {
-      let defs;
       let currentVals;
-      
-      if (categoryId) {
-        defs = await attributeService.getCategoryAttributes(categoryId);
-      } else if (productId) {
-        defs = await attributeService.getApplicableAttributes(productId);
-      } else {
-        return; // Nothing to load
-      }
-
       if (productId) {
         currentVals = await attributeService.getProductAttributes(productId);
       } else {
         currentVals = { data: [] }; // No product values yet
       }
 
+      // Traer TODAS las definiciones para poder filtrar localmente los globales y los de la categoría
+      const allDefs = await attributeService.getAllDefinitions();
+      const allDefsArray = Array.isArray(allDefs) ? allDefs : (allDefs?.data || []);
+      
+      // Filtramos los globales (category_id es null) y los de la categoría actual
+      const applicableDefs = allDefsArray.filter((d: any) => d.category_id == null || d.category_id == categoryId);
+
+
       if (!ignore) {
-        const defsArray = Array.isArray(defs) ? defs : (defs?.data || []);
         const valsArray = Array.isArray(currentVals) ? currentVals : (currentVals?.data || []);
         
-        setAttributesDef(defsArray.filter((d: any) => !d.is_variant && !d.isVariant));
+        setAttributesDef(applicableDefs.filter((d: any) => !d.is_variant && !d.isVariant));
 
         const valMap: Record<string, any> = {};
         valsArray.forEach(v => {
@@ -130,7 +127,7 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
     try {
       const code = newDefName.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
       
-      const isSystemCategory = ['General', 'Apariencia', 'Especificaciones'].includes(newDefCategory);
+      const isSystemCategory = newDefCategory === 'General';
       const catIdPayload = isSystemCategory ? null : Number(newDefCategory);
       
       const res: any = await attributeService.createDefinition({
@@ -269,8 +266,6 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
               >
                 <optgroup label="Grupos de Sistema">
                   <option value="General">General (Sin categoría)</option>
-                  <option value="Apariencia">Apariencia</option>
-                  <option value="Especificaciones">Especificaciones</option>
                 </optgroup>
                 {apiCategories.length > 0 && (
                   <optgroup label="Categorías de Producto">
