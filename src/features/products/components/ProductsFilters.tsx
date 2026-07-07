@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, RefreshCw, X } from 'lucide-react';
+import { Search, Filter, RefreshCw, X, Plus } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +32,9 @@ interface ProductsFiltersProps {
   facets?: ProductSearchFacet[];
   advancedSearchPayload?: AdvancedProductSearchPayload;
   setAdvancedSearchPayload?: React.Dispatch<React.SetStateAction<AdvancedProductSearchPayload>>;
+  onRefresh: () => void;
+  loading: boolean;
+  onOpenCreateModal: () => void;
 }
 
 export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
@@ -50,6 +53,9 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
   facets = [],
   advancedSearchPayload = {},
   setAdvancedSearchPayload,
+  onRefresh,
+  loading,
+  onOpenCreateModal,
 }) => {
   const { t } = useI18n();
 
@@ -110,6 +116,24 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
           >
             <Filter className="size-4 mr-2" />
             Filtros Avanzados
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={onRefresh}
+            disabled={loading}
+            className="h-11 px-4 bg-surface-container-low border-none text-on-surface hover:bg-surface-container font-body-sm-bold rounded-button"
+          >
+            <RefreshCw className={`size-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">
+              {t('products.action.refresh', 'Refrescar')}
+            </span>
+          </Button>
+          <Button
+            className="bg-gradient-to-br from-primary to-primary-container text-white px-6 h-11 font-body-sm-bold rounded-button shadow-whisper"
+            onClick={onOpenCreateModal}
+          >
+            <Plus className="size-4 mr-2" />
+            <span>{t('products.action.new_product', 'Nuevo Producto')}</span>
           </Button>
         </div>
       </div>

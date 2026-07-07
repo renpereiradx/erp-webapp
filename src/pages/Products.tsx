@@ -78,11 +78,7 @@ const Products = () => {
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-display">
-      <ProductsHeader
-        onRefresh={handleRefresh}
-        loading={loading}
-        onOpenCreateModal={handleOpenCreateModal}
-      />
+      <ProductsHeader />
 
       <ProductsFilters
         isSearching={isSearching}
@@ -100,14 +96,14 @@ const Products = () => {
         facets={facets}
         advancedSearchPayload={advancedSearchPayload}
         setAdvancedSearchPayload={setAdvancedSearchPayload}
+        onRefresh={handleRefresh}
+        loading={loading}
+        onOpenCreateModal={handleOpenCreateModal}
       />
 
-      <div className="bg-surface-container-lowest rounded-xl shadow-whisper overflow-hidden">
+      <div className="bg-surface-container-lowest rounded-xl shadow-whisper border border-slate-200/60 overflow-hidden">
         <ProductsTable
           products={displayProducts}
-          selectedIds={selectedIds}
-          onToggleSelectAll={toggleSelectAll}
-          onToggleSelectProduct={toggleSelectProduct}
           onOpenDetailsModal={handleOpenDetailsModal}
           onOpenEditModal={handleOpenEditModal}
         >

@@ -16,9 +16,6 @@ import { ProductEnriched } from '@/domain/products/models';
 
 interface ProductsTableProps {
   products: ProductEnriched[];
-  selectedIds: string[];
-  onToggleSelectAll: () => void;
-  onToggleSelectProduct: (id: string) => void;
   onOpenDetailsModal: (product: ProductEnriched) => void;
   onOpenEditModal: (product: ProductEnriched) => void;
   children?: React.ReactNode;
@@ -26,9 +23,6 @@ interface ProductsTableProps {
 
 export const ProductsTable: React.FC<ProductsTableProps> = ({
   products,
-  selectedIds,
-  onToggleSelectAll,
-  onToggleSelectProduct,
   onOpenDetailsModal,
   onOpenEditModal,
   children,
@@ -57,14 +51,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
     <Table className="border-separate border-spacing-0">
       <TableHeader className="bg-surface-container-low">
         <TableRow className="hover:bg-transparent border-none">
-          <TableHead className="w-[60px] text-center px-6 rounded-tl-xl">
-            <Checkbox
-              checked={selectedIds.length === products.length && products.length > 0}
-              onCheckedChange={onToggleSelectAll}
-              className="border-slate-300"
-            />
-          </TableHead>
-          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
+          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase rounded-tl-xl">
             {t('products.table.product_name')}
           </TableHead>
           <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
@@ -100,7 +87,6 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
           const productId = String(product.id || product.product_id);
           const productName = product.name || product.product_name || t('field.no_name');
           const categoryName = product.category?.name || product.category_name || '-';
-          const isSelected = selectedIds.includes(productId);
           const stockInfo = getStockDisplay(product);
 
           // Extraer costo y precio con fallbacks
@@ -111,16 +97,8 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
           return (
             <TableRow
               key={productId}
-              data-state={isSelected ? "selected" : undefined}
               className="hover:bg-surface-container-low transition-colors duration-150 group border-none"
             >
-              <TableCell className="px-6 text-center">
-                <Checkbox
-                  checked={isSelected}
-                  onCheckedChange={() => onToggleSelectProduct(productId)}
-                  className="border-slate-300"
-                />
-              </TableCell>
               <TableCell className="py-5 px-4">
                 <div className="flex items-center gap-4">
                   <div className="size-10 bg-slate-100 rounded-lg flex items-center justify-center border border-border-subtle overflow-hidden text-slate-400 shadow-sm shrink-0">

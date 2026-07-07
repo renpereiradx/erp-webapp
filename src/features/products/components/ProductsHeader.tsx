@@ -4,17 +4,9 @@ import { Share, Plus, RefreshCw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 
-interface ProductsHeaderProps {
-  onRefresh: () => void;
-  loading: boolean;
-  onOpenCreateModal: () => void;
-}
+interface ProductsHeaderProps {}
 
-export const ProductsHeader: React.FC<ProductsHeaderProps> = ({
-  onRefresh,
-  loading,
-  onOpenCreateModal,
-}) => {
+export const ProductsHeader: React.FC<ProductsHeaderProps> = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
 
@@ -46,33 +38,6 @@ export const ProductsHeader: React.FC<ProductsHeaderProps> = ({
           <p className="text-on-surface-variant font-body-md mt-1">
             {t('products.page.subtitle')}
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            onClick={onRefresh}
-            disabled={loading}
-            className="h-10 px-4 bg-surface-container-low border-none text-on-surface hover:bg-surface-container font-body-sm-bold rounded-button"
-          >
-            <RefreshCw className={`size-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">
-              {t('products.action.refresh', 'Refrescar')}
-            </span>
-          </Button>
-          <Button
-            variant="ghost"
-            className="h-10 px-4 bg-surface-container-low border-none text-on-surface hover:bg-surface-container font-body-sm-bold rounded-button"
-          >
-            <Share className="size-4 mr-2" />
-            <span className="hidden sm:inline">{t('products.action.export')}</span>
-          </Button>
-          <Button
-            className="bg-gradient-to-br from-primary to-primary-container text-white px-6 h-10 font-body-sm-bold rounded-button shadow-whisper"
-            onClick={onOpenCreateModal}
-          >
-            <Plus className="size-4 mr-2" />
-            <span>{t('products.action.new_product')}</span>
-          </Button>
         </div>
       </div>
     </>

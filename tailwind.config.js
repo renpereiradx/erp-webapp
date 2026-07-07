@@ -57,7 +57,7 @@ export default {
         success: "#107c10",
         error: "#c50f1f",
         warning: "#d83b01",
-        "background-light": "#f0f2f5",
+        "background-light": "#f8f9ff",
         "background-dark": "#101922",
         "surface-light": "#ffffff",
         "surface-dark": "#1a2633",
