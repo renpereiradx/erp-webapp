@@ -250,8 +250,8 @@ const SalesOrderDetail = () => {
             <Receipt size={28} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">Detalle de Venta</h1>
-            <p className="text-text-secondary text-sm font-medium mt-1">
+            <h1 className="text-headline-lg text-on-surface leading-none mb-1">Detalle de Venta</h1>
+            <p className="text-body-md text-on-surface-variant">
               Orden #{sale?.id || '—'} • {sale?.date ? new Date(sale.date).toLocaleDateString() : 'Fecha no disponible'}
             </p>
           </div>

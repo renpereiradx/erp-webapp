@@ -31,16 +31,16 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
         className='absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity'
         onClick={() => setShowConfirmationModal(false)}
       ></div>
-      <div className='relative bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] w-full max-w-lg rounded-[var(--fluent-corner-radius-xlarge,8px)] shadow-[var(--fluent-shadow-64)] p-6 border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] flex flex-col max-h-[90vh] animate-in fade-in slide-in-from-bottom-4 duration-300'>
+      <div className='relative bg-surface-container-lowest w-full max-w-lg rounded-md shadow-whisper p-6 border border-surface-variant flex flex-col max-h-[90vh] animate-in fade-in slide-in-from-bottom-4 duration-300'>
         <div className='flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 pb-3 shrink-0'>
-          <div className='w-10 h-10 bg-[rgba(16,124,16,0.1)] text-[var(--fluent-semantic-success,#107C10)] rounded-full flex items-center justify-center'>
+          <div className='w-10 h-10 bg-[rgba(16,124,16,0.1)] text-success rounded-full flex items-center justify-center'>
             <CheckCircle size={22} />
           </div>
           <div>
-            <h3 className='text-lg font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
+            <h3 className='text-lg font-semibold text-on-surface'>
               Compra Registrada
             </h3>
-            <p className='text-xs text-[var(--fluent-text-secondary,#605E5C)]'>
+            <p className='text-xs text-on-surface-variant'>
               Orden de compra #{latestPurchaseResult.id} guardada con éxito.
             </p>
           </div>
@@ -109,7 +109,7 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
 
         <div className='flex gap-3 pt-3 border-t border-gray-100 dark:border-gray-800 shrink-0'>
           <button
-            className='flex-1 py-2.5 font-medium text-[var(--fluent-text-secondary,#605E5C)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] transition-colors text-sm'
+            className='flex-1 py-2.5 font-medium text-on-surface-variant hover:bg-surface-container-low rounded-md border border-surface-variant transition-colors text-sm'
             onClick={() => {
               setShowConfirmationModal(false)
               setActiveTab('historial')
@@ -119,7 +119,7 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
             Ver en Historial
           </button>
           <button
-            className='flex-1 py-2.5 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all text-sm'
+            className='flex-1 py-2.5 bg-primary hover:bg-primary/90 text-white font-semibold rounded-md shadow-whisper active:scale-[0.98] transition-all text-sm'
             onClick={() => {
               setShowConfirmationModal(false)
               setShowInstantPayment(true)

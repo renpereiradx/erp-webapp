@@ -67,7 +67,7 @@ const UserDetailedProfile = () => {
           </div>
           <div className="space-y-2 pb-1 text-center md:text-left">
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">{fullName}</h1>
+              <h1 className="text-headline-lg text-on-surface leading-none mb-1">{fullName}</h1>
               <Badge className={`border-none text-[9px] font-black uppercase tracking-wider h-5 ${user.status === 'active' ? 'bg-success/10 text-success' : 'bg-error/10 text-error'}`}>{t(`users.status.${user.status}`)}</Badge>
             </div>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">

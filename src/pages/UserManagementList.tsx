@@ -122,10 +122,10 @@ export default function UserManagementList() {
       <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex flex-col gap-1 border-l-4 border-primary pl-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">{t('users.title')}</h1>
+            <h1 className="text-headline-lg text-on-surface leading-none mb-1">{t('users.title')}</h1>
             <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-wider h-5 px-2">{pagination.total_items} {t('users.total')}</Badge>
           </div>
-          <p className="text-text-secondary text-sm font-medium mt-1">Administra accesos, roles y seguridad de la plataforma.</p>
+          <p className="text-body-md text-on-surface-variant">Administra accesos, roles y seguridad de la plataforma.</p>
         </div>
         
         <div className="flex items-center gap-3">

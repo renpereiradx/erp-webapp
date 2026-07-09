@@ -28,22 +28,22 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
   setSupplierSearch,
 }) => {
   return (
-    <section className='bg-[var(--fluent-surface-card,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-xlarge,8px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] shadow-[var(--fluent-shadow-4)] p-5 animate-in slide-in-from-bottom-2 duration-500 delay-75'>
+    <section className='bg-surface-container-lowest rounded-md border border-surface-variant shadow-whisper p-5 animate-in slide-in-from-bottom-2 duration-500 delay-75'>
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         <div className='space-y-3'>
           <div className='flex justify-between items-center text-sm'>
-            <span className='text-[var(--fluent-text-secondary,#605E5C)]'>
+            <span className='text-on-surface-variant'>
               Artículos Totales
             </span>
-            <span className='font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] px-2.5 py-0.5 rounded-[var(--fluent-corner-radius-medium,4px)]'>
+            <span className='font-semibold text-on-surface bg-surface-container px-2.5 py-0.5 rounded-md'>
               {purchaseItems.reduce((s, i) => s + i.quantity, 0)}
             </span>
           </div>
           <div className='flex justify-between items-center text-sm'>
-            <span className='text-[var(--fluent-text-secondary,#605E5C)]'>
+            <span className='text-on-surface-variant'>
               Total Compra
             </span>
-            <span className='text-[var(--fluent-text-primary,#212121)] dark:text-white font-bold'>
+            <span className='text-on-surface font-bold'>
               {formatCurrency(purchaseTotals.subtotal)}
             </span>
           </div>
@@ -72,10 +72,10 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
           </div>
 
           <div className='flex justify-between items-center text-sm'>
-            <span className='text-[var(--fluent-text-secondary,#605E5C)]'>
+            <span className='text-on-surface-variant'>
               Venta Esperada
             </span>
-            <span className='font-medium text-[var(--fluent-brand-primary,#0078D4)]'>
+            <span className='font-medium text-primary'>
               {formatCurrency(
                 purchaseItems.reduce(
                   (s, i) => s + i.quantity * i.sale_price,
@@ -86,12 +86,12 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
           </div>
           <div className='h-px bg-[var(--fluent-border-neutral,#E1DFDD)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] my-2'></div>
           <div className='flex justify-between items-center text-sm'>
-            <span className='font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
+            <span className='font-semibold text-on-surface'>
               Ganancia Proyectada
             </span>
             <div className='text-right'>
               <span
-                className={`text-lg font-bold ${purchaseItems.reduce((s, i) => s + i.quantity * i.sale_price, 0) - purchaseItems.reduce((s, i) => s + i.quantity * i.unit_price, 0) >= 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}
+                className={`text-lg font-bold ${purchaseItems.reduce((s, i) => s + i.quantity * i.sale_price, 0) - purchaseItems.reduce((s, i) => s + i.quantity * i.unit_price, 0) >= 0 ? 'text-success' : 'text-error'}`}
               >
                 {formatCurrency(
                   purchaseItems.reduce(
@@ -109,7 +109,7 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
                   (s, i) => s + i.quantity * i.unit_price,
                   0,
                 ) > 0 && (
-                  <span className='ml-1.5 text-xs font-medium text-[var(--fluent-semantic-success,#107C10)]'>
+                  <span className='ml-1.5 text-xs font-medium text-success'>
                     (+
                     {(
                       (purchaseItems.reduce(
@@ -131,7 +131,7 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
         </div>
         <div className='flex flex-col gap-3 justify-end'>
           <button
-            className='w-full py-3 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] disabled:opacity-50 disabled:pointer-events-none text-sm'
+            className='w-full py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-md shadow-whisper active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none text-sm'
             onClick={handleSavePurchase}
             disabled={
               !selectedSupplier ||
@@ -143,7 +143,7 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
             {loading ? 'Procesando...' : 'Confirmar y Guardar Compra'}
           </button>
           <button
-            className='w-full py-3 border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] text-[var(--fluent-text-secondary,#605E5C)] font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] text-sm'
+            className='w-full py-3 border border-surface-variant hover:bg-surface-container-low text-on-surface-variant font-semibold rounded-md transition-all duration-150 text-sm'
             onClick={() => {
               if (confirm('¿Borrar toda la orden?')) {
                 setPurchaseItems([]);

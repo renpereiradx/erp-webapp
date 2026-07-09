@@ -170,10 +170,10 @@ const Purchases = () => {
             <ShoppingCart size={28} />
           </div>
           <div>
-            <h1 className='text-3xl font-black text-text-main tracking-tighter uppercase leading-none'>
+            <h1 className='text-headline-lg text-on-surface leading-none mb-1'>
               {t('purchases.management.title', 'Gestión de Compras')}
             </h1>
-            <p className='text-text-secondary text-sm font-medium mt-1'>
+            <p className='text-body-md text-on-surface-variant'>
               {t('purchases.management.subtitle', 'Abastecimiento y órdenes de compra a proveedores')}
             </p>
           </div>

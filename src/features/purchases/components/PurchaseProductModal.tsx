@@ -90,23 +90,23 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
         className='absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity'
         onClick={() => setIsModalOpen(false)}
       ></div>
-      <div className='relative bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] w-full max-w-4xl max-h-[98vh] rounded-[var(--fluent-corner-radius-xlarge,8px)] shadow-[var(--fluent-shadow-64)] overflow-hidden flex flex-col border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)]'>
+      <div className='relative bg-surface-container-lowest w-full max-w-4xl max-h-[98vh] rounded-md shadow-whisper overflow-hidden flex flex-col border border-surface-variant'>
         {/* Header */}
-        <header className='px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] flex justify-between items-center bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] shrink-0'>
+        <header className='px-5 py-3 border-b border-surface-variant flex justify-between items-center bg-surface-container-low shrink-0'>
           <div>
-            <h3 className='text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
+            <h3 className='text-base font-semibold text-on-surface'>
               {editingItemId
                 ? 'Editar Artículo'
                 : 'Agregar Artículo de Compra'}
             </h3>
-            <p className='text-xs text-[var(--fluent-text-secondary,#605E5C)] mt-0.5'>
+            <p className='text-xs text-on-surface-variant mt-0.5'>
               Seleccione un producto, configure cantidad, costo y estrategia
               de precio
             </p>
           </div>
           <button
             onClick={() => setIsModalOpen(false)}
-            className='w-8 h-8 flex items-center justify-center text-[var(--fluent-text-tertiary,#8A8886)] hover:text-[var(--fluent-semantic-danger,#D13438)] hover:bg-red-50 dark:hover:bg-red-900/20 rounded-[var(--fluent-corner-radius-medium,4px)] transition-all'
+            className='w-8 h-8 flex items-center justify-center text-outline hover:text-error hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all'
           >
             <X size={18} />
           </button>
@@ -119,19 +119,19 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
             <div className='space-y-4'>
               {/* Product Search */}
               <div className='space-y-1.5'>
-                <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
+                <label className='text-sm font-medium text-on-surface-variant'>
                   Buscar Producto
                 </label>
                 <div className='relative'>
                   <Search
-                    className='absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fluent-text-tertiary,#8A8886)]'
+                    className='absolute left-3 top-1/2 -translate-y-1/2 text-outline'
                     size={16}
                   />
                   <input
                     ref={modalProductSearchRef}
                     autoFocus
                     type='text'
-                    className='w-full pl-9 pr-9 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all'
+                    className='w-full pl-9 pr-9 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
                     placeholder='Buscar por SKU, EAN o Nombre...'
                     value={modalProductSearch}
                     onChange={e => setModalProductSearch(e.target.value)}
@@ -146,7 +146,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     filteredModalProducts.length > 0 && (
                       <div
                         ref={productDropdownRef}
-                        className='absolute top-full left-0 right-0 mt-1 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] overflow-hidden z-50 max-h-[220px] overflow-y-auto'
+                        className='absolute top-full left-0 right-0 mt-1 bg-surface-container-lowest rounded-md shadow-md border border-surface-variant overflow-hidden z-50 max-h-[220px] overflow-y-auto'
                       >
                         {filteredModalProducts.map((p, index) => {
                           const isActive = activeProductIndex === index
@@ -157,10 +157,10 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                               data-product-index={index}
                               role='option'
                               aria-selected={isActive}
-                              className={`relative px-4 py-2.5 cursor-pointer border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] last:border-none flex justify-between items-center transition-colors ${
+                              className={`relative px-4 py-2.5 cursor-pointer border-b border-surface-variant last:border-none flex justify-between items-center transition-colors ${
                                 isActive
                                   ? 'bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-130,#605E5C)] ring-1 ring-inset ring-[var(--fluent-brand-primary,#0078D4)]'
-                                  : 'hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)]'
+                                  : 'hover:bg-surface-container-highest'
                               }`}
                               onMouseEnter={() =>
                                 setActiveProductIndex(index)
@@ -177,19 +177,19 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                                 <div
                                   className={`font-medium text-sm truncate ${
                                     isActive
-                                      ? 'text-[var(--fluent-brand-primary,#0078D4)]'
-                                      : 'text-[var(--fluent-text-primary,#212121)] dark:text-white'
+                                      ? 'text-primary'
+                                      : 'text-on-surface'
                                   }`}
                                 >
                                   {getProductName(p)}
                                 </div>
                                 <div className='flex flex-wrap gap-1.5 mt-0.5 items-center'>
-                                  <span className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
+                                  <span className='text-[10px] text-outline'>
                                     ID: {p.id || p.product_id || '-'}
                                   </span>
                                   {/* Indicador de variantes */}
                                   {((p.has_variant || p.has_variants) || (Array.isArray(p.variants) && p.variants.length > 0)) && (
-                                    <span className='text-[9px] px-1 py-0.5 rounded bg-[rgba(0,120,212,0.1)] border border-[rgba(0,120,212,0.25)] text-[var(--fluent-brand-primary,#0078D4)] font-semibold'>
+                                    <span className='text-[9px] px-1 py-0.5 rounded bg-[rgba(0,120,212,0.1)] border border-[rgba(0,120,212,0.25)] text-primary font-semibold'>
                                       variantes
                                     </span>
                                   )}
@@ -213,7 +213,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                               </div>
                               <div className='text-right flex-shrink-0 ml-3'>
                                 <div
-                                  className={`text-[10px] font-medium ${(p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0) > 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}
+                                  className={`text-[10px] font-medium ${(p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0) > 0 ? 'text-success' : 'text-error'}`}
                                 >
                                   Stock:{' '}
                                   {p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0}
@@ -232,7 +232,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                 <>
                   <div className='p-4 bg-[rgba(0,120,212,0.06)] dark:bg-[rgba(0,120,212,0.12)] border border-[rgba(0,120,212,0.15)] rounded-[var(--fluent-corner-radius-large,6px)]'>
                   <div className='flex items-start gap-3'>
-                    <div className='w-10 h-10 bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] flex items-center justify-center text-white font-semibold text-lg shrink-0'>
+                    <div className='w-10 h-10 bg-[var(--fluent-brand-primary,#0078D4)] rounded-md flex items-center justify-center text-white font-semibold text-lg shrink-0'>
                       {(
                         modalSelectedProduct.name ||
                         modalSelectedProduct.product_name ||
@@ -241,7 +241,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     </div>
                     <div className='min-w-0 flex-1'>
                       <div className='flex items-start justify-between gap-2 flex-wrap'>
-                        <h4 className='font-semibold text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white'>
+                        <h4 className='font-semibold text-sm text-on-surface'>
                           {modalSelectedProduct.name ||
                             modalSelectedProduct.product_name ||
                             '-'}
@@ -249,7 +249,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                         <div className='flex items-center gap-1.5 flex-shrink-0 flex-wrap'>
                           {/* Badge: Con Variantes */}
                           {(modalSelectedProduct.has_variant || modalSelectedProduct.has_variants || variants.length > 0) && (
-                            <span className='inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[var(--fluent-corner-radius-small,2px)] bg-[rgba(0,120,212,0.1)] border border-[rgba(0,120,212,0.25)] text-[var(--fluent-brand-primary,#0078D4)] text-[9px] font-semibold uppercase tracking-wide'>
+                            <span className='inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[var(--fluent-corner-radius-small,2px)] bg-[rgba(0,120,212,0.1)] border border-[rgba(0,120,212,0.25)] text-primary text-[9px] font-semibold uppercase tracking-wide'>
                               <Package size={9} /> Variantes
                             </span>
                           )}
@@ -274,7 +274,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                             </span>
                           ))}
                           {modalSelectedProduct.tags.length > 5 && (
-                            <span className='text-[9px] text-[var(--fluent-text-tertiary,#8A8886)]'>
+                            <span className='text-[9px] text-outline'>
                               +{modalSelectedProduct.tags.length - 5}
                             </span>
                           )}
@@ -282,20 +282,20 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                       )}
                       <div className='grid grid-cols-4 gap-2 mt-2'>
                         <div>
-                          <p className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
+                          <p className='text-[10px] text-outline'>
                             ID
                           </p>
-                          <p className='text-xs text-[var(--fluent-text-secondary,#605E5C)]'>
+                          <p className='text-xs text-on-surface-variant'>
                             {modalSelectedProduct.id ||
                               modalSelectedProduct.product_id ||
                               '-'}
                           </p>
                         </div>
                         <div>
-                          <p className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
+                          <p className='text-[10px] text-outline'>
                             Últ. Costo
                           </p>
-                          <p className='text-xs text-[var(--fluent-text-secondary,#605E5C)] font-semibold'>
+                          <p className='text-xs text-on-surface-variant font-semibold'>
                             {formatCurrency(
                               modalSelectedProduct.last_purchase_cost ||
                                 modalSelectedProduct.cost_price ||
@@ -304,20 +304,20 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                           </p>
                         </div>
                         <div>
-                          <p className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
+                          <p className='text-[10px] text-outline'>
                             Precio Venta
                           </p>
-                          <p className='text-xs text-[var(--fluent-text-secondary,#605E5C)] font-semibold text-[var(--fluent-brand-primary,#0078D4)]'>
+                          <p className='text-xs text-on-surface-variant font-semibold text-primary'>
                             {formatCurrency(
                               modalSelectedProduct.sale_price || modalSelectedProduct.unit_price || modalSelectedProduct.price || 0
                             )}
                           </p>
                         </div>
                         <div>
-                          <p className='text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]'>
+                          <p className='text-[10px] text-outline'>
                             Unidad
                           </p>
-                          <p className='text-xs text-[var(--fluent-text-secondary,#605E5C)]'>
+                          <p className='text-xs text-on-surface-variant'>
                             {modalSelectedProduct.unit ||
                               modalSelectedProduct.unit_name ||
                               'unit'}
@@ -332,8 +332,8 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                 {(modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && (
                   <div className='mt-4 space-y-3'>
                     <div className='flex items-center justify-between'>
-                      <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
-                        Seleccionar Variante <span className='text-[var(--fluent-semantic-danger,#D13438)]'>*</span>
+                      <label className='text-sm font-medium text-on-surface-variant'>
+                        Seleccionar Variante <span className='text-error'>*</span>
                       </label>
                       {modalVariantId && (
                         <button
@@ -343,7 +343,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                             setModalVariantName(undefined);
                             setModalSelectedVariant(undefined);
                           }}
-                          className='text-xs text-[var(--fluent-text-tertiary,#8A8886)] hover:text-[var(--fluent-semantic-danger,#D13438)] transition-colors flex items-center gap-1'
+                          className='text-xs text-outline hover:text-error transition-colors flex items-center gap-1'
                         >
                           <X size={12} /> Limpiar
                         </button>
@@ -351,7 +351,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     </div>
 
                     {loadingVariants ? (
-                      <div className='flex items-center gap-2 py-3 text-[var(--fluent-text-tertiary,#8A8886)] text-sm'>
+                      <div className='flex items-center gap-2 py-3 text-outline text-sm'>
                         <div className='w-4 h-4 border-2 border-[var(--fluent-brand-primary,#0078D4)] border-t-transparent rounded-full animate-spin' />
                         Cargando variantes...
                       </div>
@@ -437,7 +437,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
                             return (
                               <div key={attrKey} className='space-y-1.5'>
-                                <span className='text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)] uppercase tracking-wide'>
+                                <span className='text-xs font-semibold text-on-surface-variant uppercase tracking-wide'>
                                   {attrKey}
                                 </span>
                                 <div className='flex flex-wrap gap-2'>
@@ -450,11 +450,11 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                                         type='button'
                                         onClick={() => handleAttrSelect(attrKey, val)}
                                         className={`
-                                          px-3 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-medium,4px)]
+                                          px-3 py-1.5 text-xs font-semibold rounded-md
                                           border transition-all duration-150 relative
                                           ${isSelected
-                                            ? 'bg-[var(--fluent-brand-primary,#0078D4)] text-white border-[var(--fluent-brand-primary,#0078D4)] shadow-[var(--fluent-shadow-4)]'
-                                            : 'bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] text-[var(--fluent-text-primary,#212121)] dark:text-white border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-[var(--fluent-brand-primary,#0078D4)]'
+                                            ? 'bg-[var(--fluent-brand-primary,#0078D4)] text-white border-[var(--fluent-brand-primary,#0078D4)] shadow-whisper'
+                                            : 'bg-surface-container-low text-on-surface border-surface-variant hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-primary'
                                           }
                                         `}
                                         disabled={false}
@@ -477,10 +477,10 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                             if (!sv) return null;
                             const stock = sv.stock_quantity ?? 0;
                             return (
-                              <div className={`flex items-center justify-between px-3 py-2 rounded-[var(--fluent-corner-radius-medium,4px)] border text-xs font-medium transition-colors ${
+                              <div className={`flex items-center justify-between px-3 py-2 rounded-md border text-xs font-medium transition-colors ${
                                 stock > 0
-                                  ? 'bg-[rgba(16,124,16,0.06)] border-[rgba(16,124,16,0.2)] text-[var(--fluent-semantic-success,#107C10)]'
-                                  : 'bg-[rgba(209,52,56,0.06)] border-[rgba(209,52,56,0.2)] text-[var(--fluent-semantic-danger,#D13438)]'
+                                  ? 'bg-[rgba(16,124,16,0.06)] border-[rgba(16,124,16,0.2)] text-success'
+                                  : 'bg-[rgba(209,52,56,0.06)] border-[rgba(209,52,56,0.2)] text-error'
                               }`}>
                                 <span className='flex items-center gap-1.5'>
                                   <Check size={12} />
@@ -500,7 +500,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     })()}
 
                     {/* Opción para agregar producto base (principal) */}
-                    <div className="mt-4 pt-3 border-t border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
+                    <div className="mt-4 pt-3 border-t border-surface-variant">
                       <button
                         type="button"
                         onClick={() => {
@@ -508,10 +508,10 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                           setModalVariantName(undefined);
                           setModalSelectedVariant(undefined);
                         }}
-                        className={`w-full px-3 py-2 text-xs font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] border transition-all flex items-center justify-center gap-2 ${
+                        className={`w-full px-3 py-2 text-xs font-semibold rounded-md border transition-all flex items-center justify-center gap-2 ${
                           modalVariantId === null
-                            ? 'bg-[var(--fluent-brand-primary,#0078D4)] text-white border-[var(--fluent-brand-primary,#0078D4)] shadow-[var(--fluent-shadow-4)]'
-                            : 'bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] text-[var(--fluent-text-primary,#212121)] dark:text-white border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-[var(--fluent-brand-primary,#0078D4)]'
+                            ? 'bg-[var(--fluent-brand-primary,#0078D4)] text-white border-[var(--fluent-brand-primary,#0078D4)] shadow-whisper'
+                            : 'bg-surface-container-low text-on-surface border-surface-variant hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-primary'
                         }`}
                       >
                         <Package size={14} />
@@ -524,12 +524,12 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
                 </>
               ) : (
-                <div className='h-24 border-2 border-dashed border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-large,6px)] flex flex-col items-center justify-center'>
+                <div className='h-24 border-2 border-dashed border-surface-variant rounded-[var(--fluent-corner-radius-large,6px)] flex flex-col items-center justify-center'>
                   <Package
                     size={24}
-                    className='text-[var(--fluent-text-tertiary,#8A8886)]'
+                    className='text-outline'
                   />
-                  <p className='text-xs text-[var(--fluent-text-tertiary,#8A8886)] mt-1'>
+                  <p className='text-xs text-outline mt-1'>
                     Selecciona un producto
                   </p>
                 </div>
@@ -538,29 +538,29 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               {/* Quantity, Unit & Cost */}
               <div className='grid grid-cols-3 gap-3'>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
+                  <label className='text-sm font-medium text-on-surface-variant'>
                     Cantidad
                   </label>
                   <input
                     ref={modalQuantityRef}
                     type='number'
-                    className='w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all'
+                    className='w-full px-3 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-base font-semibold text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
                     value={modalQuantity}
                     onChange={e => setModalQuantity(e.target.value)}
                     placeholder='0'
                   />
-                  <p className='text-xs text-[var(--fluent-text-tertiary,#8A8886)]'>
+                  <p className='text-xs text-outline'>
                     Unidades a comprar
                   </p>
                 </div>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
+                  <label className='text-sm font-medium text-on-surface-variant'>
                     Unidad
                   </label>
                   <input
                     type='text'
                     list='allowed-units'
-                    className='w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all'
+                    className='w-full px-3 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-base font-semibold text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
                     value={modalUnit}
                     onChange={e => setModalUnit(e.target.value)}
                     placeholder='Ej. kg, box, unit'
@@ -574,22 +574,22 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     <option value='pack' />
                     <option value='dozen' />
                   </datalist>
-                  <p className='text-xs text-[var(--fluent-text-tertiary,#8A8886)]'>
+                  <p className='text-xs text-outline'>
                     Medida de compra
                   </p>
                 </div>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
+                  <label className='text-sm font-medium text-on-surface-variant'>
                     Costo Unit.
                   </label>
                   <input
                     type='number'
-                    className='w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all'
+                    className='w-full px-3 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-base font-semibold text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
                     value={modalUnitPrice}
                     onChange={e => setModalUnitPrice(e.target.value)}
                     placeholder='0.00'
                   />
-                  <p className='text-xs text-[var(--fluent-text-tertiary,#8A8886)] truncate' title='Precio de compra por unidad'>
+                  <p className='text-xs text-outline truncate' title='Precio de compra por unidad'>
                     Precio por unidad
                   </p>
                 </div>
@@ -597,11 +597,11 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
               {/* Tax Rate */}
               <div className='space-y-1.5'>
-                <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
+                <label className='text-sm font-medium text-on-surface-variant'>
                   {t('purchases.modal.tax_rate', 'Tasa de Impuesto')}
                 </label>
                 <select
-                  className='w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all cursor-pointer'
+                  className='w-full px-3 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all cursor-pointer'
                   value={modalTaxRateId || ''}
                   onChange={e =>
                     setModalTaxRateId(
@@ -658,17 +658,17 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               </div>
 
               {/* Price Includes Tax Toggle */}
-              <div className='flex items-center gap-3 p-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)]'>
+              <div className='flex items-center gap-3 p-2.5 bg-surface-container-low border border-surface-variant rounded-md'>
                 <input
                   type='checkbox'
                   id='priceIncludesTax'
-                  className='w-4 h-4 text-[var(--fluent-brand-primary,#0078D4)] border-[var(--fluent-border-neutral,#E1DFDD)] rounded focus:ring-[var(--fluent-brand-primary,#0078D4)] cursor-pointer'
+                  className='w-4 h-4 text-primary border-surface-variant rounded focus:ring-primary cursor-pointer'
                   checked={modalPriceIncludesTax}
                   onChange={e => setModalPriceIncludesTax(e.target.checked)}
                 />
                 <label
                   htmlFor='priceIncludesTax'
-                  className='text-sm font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white cursor-pointer select-none'
+                  className='text-sm font-medium text-on-surface cursor-pointer select-none'
                 >
                   {t(
                     'purchases.modal.price_includes_tax',
@@ -682,25 +682,25 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
             <div className='space-y-4'>
               {/* Pricing Mode Toggle */}
               <div className='space-y-1.5'>
-                <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
+                <label className='text-sm font-medium text-on-surface-variant'>
                   Estrategia de Precio de Venta
                 </label>
-                <div className='flex p-0.5 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)]'>
+                <div className='flex p-0.5 bg-surface-container rounded-md'>
                   <button
-                    className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] ${
+                    className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-150 ${
                       pricingMode === 'margin'
-                        ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]'
-                        : 'text-[var(--fluent-text-secondary,#605E5C)]'
+                        ? 'bg-surface-container-lowest shadow-sm text-primary'
+                        : 'text-on-surface-variant'
                     }`}
                     onClick={() => setPricingMode('margin')}
                   >
                     Por Margen %
                   </button>
                   <button
-                    className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] ${
+                    className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-150 ${
                       pricingMode === 'sale_price'
-                        ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]'
-                        : 'text-[var(--fluent-text-secondary,#605E5C)]'
+                        ? 'bg-surface-container-lowest shadow-sm text-primary'
+                        : 'text-on-surface-variant'
                     }`}
                     onClick={() => setPricingMode('sale_price')}
                   >
@@ -712,7 +712,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               {/* Margin & Price Fields */}
               <div className='grid grid-cols-2 gap-3'>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
+                  <label className='text-sm font-medium text-on-surface-variant'>
                     {pricingMode === 'margin'
                       ? 'Margen de Ganancia'
                       : 'Margen Calculado'}
@@ -720,10 +720,10 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   <div className='relative'>
                     <input
                       type='number'
-                      className={`w-full pl-3 pr-8 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-base font-semibold transition-all ${
+                      className={`w-full pl-3 pr-8 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-base font-semibold transition-all ${
                         pricingMode !== 'margin'
-                          ? 'opacity-60 cursor-not-allowed text-[var(--fluent-text-tertiary,#8A8886)]'
-                          : 'text-[var(--fluent-semantic-success,#107C10)] focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]'
+                          ? 'opacity-60 cursor-not-allowed text-outline'
+                          : 'text-success focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
                       }`}
                       value={
                         pricingMode === 'margin'
@@ -736,28 +736,28 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                       }
                       readOnly={pricingMode !== 'margin'}
                     />
-                    <span className='absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--fluent-text-tertiary,#8A8886)]'>
+                    <span className='absolute right-3 top-1/2 -translate-y-1/2 text-sm text-outline'>
                       %
                     </span>
                   </div>
-                  <p className='text-xs text-[var(--fluent-text-tertiary,#8A8886)]'>
+                  <p className='text-xs text-outline'>
                     {pricingMode === 'margin'
                       ? 'Define el % de ganancia deseado'
                       : 'Porcentaje resultante del precio fijo'}
                   </p>
                 </div>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]'>
+                  <label className='text-sm font-medium text-on-surface-variant'>
                     {pricingMode === 'sale_price'
                       ? 'Precio de Venta'
                       : 'Precio Sugerido'}
                   </label>
                   <input
                     type='number'
-                    className={`w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-base font-semibold transition-all ${
+                    className={`w-full px-3 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-base font-semibold transition-all ${
                       pricingMode !== 'sale_price'
-                        ? 'opacity-60 cursor-not-allowed text-[var(--fluent-text-tertiary,#8A8886)]'
-                        : 'text-[var(--fluent-brand-primary,#0078D4)] focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]'
+                        ? 'opacity-60 cursor-not-allowed text-outline'
+                        : 'text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
                     }`}
                     value={
                       pricingMode === 'sale_price'
@@ -770,7 +770,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     }
                     readOnly={pricingMode !== 'sale_price'}
                   />
-                  <p className='text-xs text-[var(--fluent-text-tertiary,#8A8886)]'>
+                  <p className='text-xs text-outline'>
                     {pricingMode === 'sale_price'
                       ? 'Precio final al público'
                       : 'Calculado según margen'}
@@ -779,21 +779,21 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               </div>
 
               {/* Pricing Summary */}
-              <div className='p-4 bg-[rgba(0,120,212,0.06)] dark:bg-[rgba(0,120,212,0.12)] rounded-[var(--fluent-corner-radius-medium,4px)] border border-[rgba(0,120,212,0.15)]'>
+              <div className='p-4 bg-[rgba(0,120,212,0.06)] dark:bg-[rgba(0,120,212,0.12)] rounded-md border border-[rgba(0,120,212,0.15)]'>
                 <div className='grid grid-cols-2 gap-3'>
                   <div>
-                    <span className='block text-xs text-[var(--fluent-text-tertiary,#8A8886)]'>
+                    <span className='block text-xs text-outline'>
                       Costo Unitario
                     </span>
-                    <span className='text-sm font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white'>
+                    <span className='text-sm font-medium text-on-surface'>
                       {formatCurrency(modalUnitPrice || 0)}
                     </span>
                   </div>
                   <div>
-                    <span className='block text-xs text-[var(--fluent-text-tertiary,#8A8886)]'>
+                    <span className='block text-xs text-outline'>
                       Precio Venta Unitario
                     </span>
-                    <span className='text-sm font-semibold text-[var(--fluent-semantic-success,#107C10)]'>
+                    <span className='text-sm font-semibold text-success'>
                       {formatCurrency(effectiveSalePrice)}
                     </span>
                   </div>
@@ -801,28 +801,28 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               </div>
 
               {/* Financial Projection Panel */}
-              <div className='p-4 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-large,6px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]'>
-                <div className='text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)] uppercase tracking-wide mb-3'>
+              <div className='p-4 bg-surface-container rounded-[var(--fluent-corner-radius-large,6px)] border border-surface-variant'>
+                <div className='text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-3'>
                   Proyección Financiera
                 </div>
                 <div className='space-y-2'>
                   {/* Resumen de Línea */}
-                  <div className='flex justify-between items-center py-2 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]'>
-                    <span className='text-xs text-[var(--fluent-text-secondary,#605E5C)]'>
+                  <div className='flex justify-between items-center py-2 border-b border-surface-variant'>
+                    <span className='text-xs text-on-surface-variant'>
                       Subtotal Línea
                     </span>
-                    <span className='text-xs text-[var(--fluent-text-tertiary,#8A8886)]'>
+                    <span className='text-xs text-outline'>
                       {modalQuantity || 0} ×{' '}
                       {formatCurrency(modalUnitPrice || 0)}
                     </span>
                   </div>
 
                   {/* Total Compra */}
-                  <div className='flex justify-between items-center py-2 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]'>
-                    <span className='text-sm text-[var(--fluent-text-secondary,#605E5C)]'>
+                  <div className='flex justify-between items-center py-2 border-b border-surface-variant'>
+                    <span className='text-sm text-on-surface-variant'>
                       Total Compra
                     </span>
-                    <span className='text-sm font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
+                    <span className='text-sm font-semibold text-on-surface'>
                       {formatCurrency(
                         (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0),
                       )}
@@ -830,11 +830,11 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   </div>
 
                   {/* Total Venta Esperado */}
-                  <div className='flex justify-between items-center py-2 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]'>
-                    <span className='text-sm text-[var(--fluent-text-secondary,#605E5C)]'>
+                  <div className='flex justify-between items-center py-2 border-b border-surface-variant'>
+                    <span className='text-sm text-on-surface-variant'>
                       Venta Esperada
                     </span>
-                    <span className='text-sm font-semibold text-[var(--fluent-brand-primary,#0078D4)]'>
+                    <span className='text-sm font-semibold text-primary'>
                       {formatCurrency(
                         (Number(modalQuantity) || 0) * effectiveSalePrice,
                       )}
@@ -843,12 +843,12 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
                   {/* Ganancia Esperada */}
                   <div className='flex justify-between items-center pt-2'>
-                    <span className='text-sm font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white'>
+                    <span className='text-sm font-medium text-on-surface'>
                       Ganancia Esperada
                     </span>
                     <div className='text-right'>
                       <span
-                        className={`text-lg font-bold ${(Number(modalQuantity) || 0) * effectiveSalePrice - (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0) >= 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}
+                        className={`text-lg font-bold ${(Number(modalQuantity) || 0) * effectiveSalePrice - (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0) >= 0 ? 'text-success' : 'text-error'}`}
                       >
                         {formatCurrency(
                           (Number(modalQuantity) || 0) * effectiveSalePrice -
@@ -857,7 +857,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                       </span>
                       {(Number(modalQuantity) || 0) > 0 &&
                         (Number(modalUnitPrice) || 0) > 0 && (
-                          <span className='ml-1.5 text-xs font-medium text-[var(--fluent-semantic-success,#107C10)]'>
+                          <span className='ml-1.5 text-xs font-medium text-success'>
                             (+{effectiveProfitPct.toFixed(1)}%)
                           </span>
                         )}
@@ -870,21 +870,21 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
         </div>
 
         {/* Footer */}
-        <footer className='px-5 py-3 border-t border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] flex justify-end items-center gap-3 shrink-0'>
+        <footer className='px-5 py-3 border-t border-surface-variant bg-surface-container-low flex justify-end items-center gap-3 shrink-0'>
           <button
-            className='px-5 py-2 font-medium text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:hover:bg-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] transition-all text-sm border border-[var(--fluent-border-neutral,#E1DFDD)]'
+            className='px-5 py-2 font-medium text-on-surface-variant hover:text-on-surface hover:bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:hover:bg-[var(--fluent-neutral-grey-130,#605E5C)] rounded-md transition-all text-sm border border-surface-variant'
             onClick={() => setIsModalOpen(false)}
           >
             Cancelar
           </button>
           <button
-            className='px-5 py-2 text-sm font-medium text-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-tint,#EFF6FC)] rounded-[var(--fluent-corner-radius-medium,4px)]'
+            className='px-5 py-2 text-sm font-medium text-primary hover:bg-[var(--fluent-brand-primary-tint,#EFF6FC)] rounded-md'
             onClick={() => setModalVariantId(null)}
           >
             Seleccionar Producto Genérico
           </button>
           <button
-            className='px-5 py-2 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none text-sm'
+            className='px-5 py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-md shadow-whisper active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none text-sm'
             onClick={handleConfirmAddProduct}
             disabled={
               !modalSelectedProduct || !modalQuantity || !modalUnitPrice || ((modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && modalVariantId === undefined)

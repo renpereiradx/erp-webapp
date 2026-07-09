@@ -46,25 +46,25 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
   return (
     <div className='space-y-4 md:space-y-6 animate-in slide-in-from-bottom-4 duration-500'>
       {/* History Filter Toolbar - Fluent 2 CommandBar style */}
-      <section className='bg-[var(--fluent-surface-card,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-xlarge,8px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] shadow-[var(--fluent-shadow-4)] overflow-hidden'>
-        <div className='p-4 md:p-5 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] flex flex-col xl:flex-row justify-between items-center bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] gap-4'>
+      <section className='bg-surface-container-lowest rounded-md border border-surface-variant shadow-whisper overflow-hidden'>
+        <div className='p-4 md:p-5 border-b border-surface-variant flex flex-col xl:flex-row justify-between items-center bg-surface-container-low gap-4'>
           <div className='flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto'>
             <div className='relative w-full sm:w-80'>
               <Search
-                className='absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fluent-text-tertiary,#8A8886)]'
+                className='absolute left-3 top-1/2 -translate-y-1/2 text-outline'
                 size={16}
               />
               <input
                 type='text'
                 placeholder='Buscar por ID o Proveedor...'
-                className='w-full pl-9 pr-3 py-2 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all'
+                className='w-full pl-9 pr-3 py-2 bg-surface-container-lowest border border-surface-variant rounded-md text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleFilter()}
               />
             </div>
             <button
-              className='w-full sm:w-auto px-5 py-2 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-2)] active:scale-[0.98] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] text-sm'
+              className='w-full sm:w-auto px-5 py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-md shadow-sm active:scale-[0.98] transition-all duration-150 text-sm'
               onClick={handleFilter}
             >
               Buscar
@@ -72,22 +72,22 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
           </div>
 
           <div className='flex flex-wrap items-center gap-3 w-full xl:w-auto justify-end'>
-            <div className='flex p-0.5 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)]'>
+            <div className='flex p-0.5 bg-surface-container rounded-md'>
               <button
-                className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] ${
+                className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-150 ${
                   searchType === 'date'
-                    ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]'
-                    : 'text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)]'
+                    ? 'bg-surface-container-lowest shadow-sm text-primary'
+                    : 'text-on-surface-variant hover:text-on-surface'
                 }`}
                 onClick={() => setSearchType('date')}
               >
                 Fecha
               </button>
               <button
-                className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] ${
+                className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-150 ${
                   searchType === 'supplier'
-                    ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]'
-                    : 'text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)]'
+                    ? 'bg-surface-container-lowest shadow-sm text-primary'
+                    : 'text-on-surface-variant hover:text-on-surface'
                 }`}
                 onClick={() => setSearchType('supplier')}
               >
@@ -96,19 +96,19 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
             </div>
 
             {searchType === 'date' && (
-              <div className='flex items-center gap-2 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] px-3 py-1.5 rounded-[var(--fluent-corner-radius-medium,4px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]'>
+              <div className='flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-md border border-surface-variant'>
                 <input
                   type='date'
-                  className='bg-transparent border-none text-xs text-[var(--fluent-text-primary,#212121)] dark:text-white outline-none'
+                  className='bg-transparent border-none text-xs text-on-surface outline-none'
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
                 />
-                <span className='text-[var(--fluent-text-tertiary,#8A8886)]'>
+                <span className='text-outline'>
                   →
                 </span>
                 <input
                   type='date'
-                  className='bg-transparent border-none text-xs text-[var(--fluent-text-primary,#212121)] dark:text-white outline-none'
+                  className='bg-transparent border-none text-xs text-on-surface outline-none'
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
                 />
@@ -120,24 +120,24 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
         {/* History Table - Fluent 2 DataGrid */}
         <div className='overflow-x-auto min-h-[400px]'>
           <table className='w-full text-left border-collapse min-w-[900px]'>
-            <thead className='bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)]'>
+            <thead className='bg-surface-container text-xs font-semibold text-on-surface-variant'>
               <tr>
-                <th className='px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]'>
+                <th className='px-5 py-3 border-b border-surface-variant'>
                   Orden ID
                 </th>
-                <th className='px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]'>
+                <th className='px-5 py-3 border-b border-surface-variant'>
                   Fecha Pedido
                 </th>
-                <th className='px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]'>
+                <th className='px-5 py-3 border-b border-surface-variant'>
                   Proveedor
                 </th>
-                <th className='px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] text-right'>
+                <th className='px-5 py-3 border-b border-surface-variant text-right'>
                   Monto Total
                 </th>
-                <th className='px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] text-center'>
+                <th className='px-5 py-3 border-b border-surface-variant text-center'>
                   Estado
                 </th>
-                <th className='px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] text-right w-20'>
+                <th className='px-5 py-3 border-b border-surface-variant text-right w-20'>
                   Acciones
                 </th>
               </tr>
@@ -147,7 +147,7 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                 <tr>
                   <td
                     colSpan={6}
-                    className='py-20 text-center text-[var(--fluent-text-tertiary,#8A8886)] text-sm'
+                    className='py-20 text-center text-outline text-sm'
                   >
                     <div className='flex flex-col items-center justify-center gap-2'>
                       <Search size={32} className="opacity-20" />
@@ -177,9 +177,9 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                   return (
                     <tr
                       key={order.id}
-                      className='hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] transition-colors duration-[duration:var(--fluent-duration-faster,100ms)]'
+                      className='hover:bg-surface-container-highest transition-colors duration-100'
                     >
-                      <td className='px-5 py-3.5 font-semibold text-[var(--fluent-brand-primary,#0078D4)] text-sm'>
+                      <td className='px-5 py-3.5 font-semibold text-primary text-sm'>
                         <div>#{order.id}</div>
                         {order.branch_id && (
                           <div className='text-[10px] text-gray-400 dark:text-gray-500 font-normal flex items-center gap-1 mt-0.5'>
@@ -188,10 +188,10 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                           </div>
                         )}
                       </td>
-                      <td className='px-5 py-3.5 text-[var(--fluent-text-secondary,#605E5C)] text-sm'>
+                      <td className='px-5 py-3.5 text-on-surface-variant text-sm'>
                         {formatDate(order.order_date)}
                       </td>
-                      <td className='px-5 py-3.5 font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white text-sm'>
+                      <td className='px-5 py-3.5 font-medium text-on-surface text-sm'>
                         <div>{order.supplier_name || '-'}</div>
                         {order.payment_method && (
                           <div className='text-[10px] text-gray-400 dark:text-gray-500 font-normal mt-0.5'>
@@ -199,7 +199,7 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                           </div>
                         )}
                       </td>
-                      <td className='px-5 py-3.5 text-right font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white'>
+                      <td className='px-5 py-3.5 text-right font-semibold text-on-surface'>
                         {formatCurrency(
                           order.total_amount,
                           order.currency,
@@ -208,11 +208,11 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                       <td className='px-5 py-3.5 text-center'>
                         <div className='flex flex-col items-center gap-1'>
                           <span
-                            className={`inline-flex px-2.5 py-1 rounded-[var(--fluent-corner-radius-medium,4px)] text-xs font-semibold ${
+                            className={`inline-flex px-2.5 py-1 rounded-md text-xs font-semibold ${
                               isCompleted
-                                ? 'bg-[rgba(16,124,16,0.1)] text-[var(--fluent-semantic-success,#107C10)]'
+                                ? 'bg-[rgba(16,124,16,0.1)] text-success'
                                 : isCancelled
-                                  ? 'bg-[rgba(209,52,56,0.1)] text-[var(--fluent-semantic-danger,#D13438)]'
+                                  ? 'bg-[rgba(209,52,56,0.1)] text-error'
                                   : 'bg-[rgba(255,185,0,0.15)] text-[#B87900]'
                             }`}
                           >
@@ -240,19 +240,19 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                                   : order.id,
                               )
                             }
-                            className='p-1.5 text-[var(--fluent-text-tertiary,#8A8886)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)] transition-all'
+                            className='p-1.5 text-outline hover:text-on-surface hover:bg-surface-container-low rounded-md transition-all'
                           >
                             <MoreVertical size={18} />
                           </button>
                           {openActionMenu === order.id && (
-                            <div className='absolute right-0 mt-1 w-48 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] z-40 py-1 overflow-hidden'>
+                            <div className='absolute right-0 mt-1 w-48 bg-surface-container-lowest rounded-md shadow-md border border-surface-variant z-40 py-1 overflow-hidden'>
                               <button
                                 onClick={() => handleViewPurchase(order)}
-                                className='w-full px-4 py-2.5 text-left text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] flex items-center gap-3 transition-colors'
+                                className='w-full px-4 py-2.5 text-left text-sm text-on-surface hover:bg-surface-container-highest flex items-center gap-3 transition-colors'
                               >
                                 <Eye
                                   size={16}
-                                  className='text-[var(--fluent-brand-primary,#0078D4)]'
+                                  className='text-primary'
                                 />{' '}
                                 Ver Detalle
                               </button>
@@ -261,7 +261,7 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                                   onClick={() =>
                                     handleCancelPurchase(order)
                                   }
-                                  className='w-full px-4 py-2.5 text-left text-sm text-[var(--fluent-semantic-danger,#D13438)] hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors'
+                                  className='w-full px-4 py-2.5 text-left text-sm text-error hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors'
                                 >
                                   <Ban size={16} /> Anular Orden
                                 </button>

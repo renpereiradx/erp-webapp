@@ -198,8 +198,8 @@ const RegisterCashMovement: React.FC = () => {
               {config.icon}
             </div>
             <div>
-              <h1 className='text-3xl font-black text-text-main tracking-tighter uppercase leading-none'>{config.title}</h1>
-              <p className='text-text-secondary text-sm font-medium mt-1.5'>{config.description}</p>
+              <h1 className='text-headline-lg text-on-surface leading-none mb-1'>{config.title}</h1>
+              <p className='text-body-md text-on-surface-variant.5'>{config.description}</p>
             </div>
           </div>
         </div>
