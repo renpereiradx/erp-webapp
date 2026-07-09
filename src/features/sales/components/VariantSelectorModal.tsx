@@ -90,43 +90,43 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
   };
 
   return (
-    <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-fluent-64 w-full max-w-3xl overflow-hidden animate-in zoom-in-95 border border-slate-100 flex flex-col md:flex-row md:min-h-[450px]">
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-surface-container-lowest rounded-md shadow-whisper w-full max-w-3xl overflow-hidden animate-in zoom-in-95 flex flex-col md:flex-row md:min-h-[450px]">
         
-        {/* Left Panel: Product Identity & Details (Dark Tech Aesthetic) */}
-        <div className="w-full md:w-2/5 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-700/50">
+        {/* Left Panel: Product Identity & Details */}
+        <div className="w-full md:w-2/5 bg-surface p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-surface-variant">
           <div>
-            <div className="flex items-center gap-2 text-primary-light text-xs font-semibold tracking-wider uppercase mb-4">
-              <span className="px-2 py-0.5 bg-primary/20 text-primary border border-primary/30 rounded-full flex items-center gap-1">
-                <Layers size={10} />
+            <div className="flex items-center gap-2 mb-4">
+              <span className="px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-[4px] flex items-center gap-1 text-label-caps">
+                <Layers size={12} />
                 Con Variantes
               </span>
             </div>
             
-            <h2 className="text-xl font-black tracking-tight leading-tight line-clamp-3">
+            <h2 className="text-headline-lg-mobile text-on-surface leading-tight line-clamp-3">
               {product.name || product.product_name}
             </h2>
-            <p className="text-xs text-slate-400 font-mono mt-1.5 uppercase tracking-wider">
+            <p className="text-body-sm text-outline font-data-mono mt-1.5 uppercase tracking-wider">
               ID: {product.id}
             </p>
 
             <div className="mt-6 space-y-4">
               {/* Product Info Badges */}
-              <div className="bg-slate-800/40 border border-slate-750/30 rounded-xl p-3.5 space-y-2">
-                <div className="flex justify-between items-center text-xs text-slate-400">
-                  <span className="flex items-center gap-1.5"><Tag size={12} /> Precio Base:</span>
-                  <span className="font-bold text-white">{formatPrice(product.price)}</span>
+              <div className="bg-surface-container-low border border-surface-variant rounded-md p-4 space-y-3">
+                <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
+                  <span className="flex items-center gap-1.5"><Tag size={14} /> Precio Base:</span>
+                  <span className="font-data-mono text-on-surface font-bold">{formatPrice(product.price)}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs text-slate-400">
-                  <span className="flex items-center gap-1.5"><Package size={12} /> Stock Total:</span>
-                  <span className={cn("font-bold", (product.stock || 0) > 0 ? "text-emerald-450" : "text-rose-450")}>
+                <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
+                  <span className="flex items-center gap-1.5"><Package size={14} /> Stock Total:</span>
+                  <span className={cn("font-data-mono font-bold", (product.stock || 0) > 0 ? "text-success" : "text-error")}>
                     {product.stock || 0} {product.base_unit || 'unid'}
                   </span>
                 </div>
                 {product.taxRate !== undefined && (
-                  <div className="flex justify-between items-center text-xs text-slate-400">
-                    <span className="flex items-center gap-1.5"><Info size={12} /> IVA:</span>
-                    <span className="font-bold text-white">{product.taxRate}%</span>
+                  <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
+                    <span className="flex items-center gap-1.5"><Info size={14} /> IVA:</span>
+                    <span className="font-data-mono text-on-surface font-bold">{product.taxRate}%</span>
                   </div>
                 )}
               </div>
@@ -134,20 +134,20 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
           </div>
 
           <div className="hidden md:block mt-6">
-            <p className="text-[10px] text-slate-550 leading-relaxed">
+            <p className="text-body-sm text-outline leading-relaxed">
               Selecciona las opciones a la derecha para configurar la variante del producto y añadirla al carrito de ventas.
             </p>
           </div>
         </div>
 
         {/* Right Panel: Variant Selector and Options */}
-        <div className="w-full md:w-3/5 flex flex-col justify-between bg-slate-50/50">
+        <div className="w-full md:w-3/5 flex flex-col justify-between bg-surface-container-lowest">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
-            <h3 className="text-sm font-bold text-slate-800">Atributos del Producto</h3>
+          <div className="px-6 py-4 border-b border-surface-variant flex items-center justify-between">
+            <h3 className="text-title-md text-on-surface">Atributos del Producto</h3>
             <button 
               onClick={onClose} 
-              className="p-1.5 text-slate-400 hover:text-slate-655 hover:bg-slate-100 rounded-lg transition-all"
+              className="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container rounded-button transition-all"
             >
               <X size={18} />
             </button>
@@ -282,7 +282,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
           </div>
 
           {/* Footer Action Area */}
-          <div className="p-6 border-t border-slate-100 bg-white space-y-4">
+          <div className="p-6 border-t border-surface-variant bg-surface-container-lowest space-y-4">
             {attributeKeys.length > 0 && (
               <div>
                 {attributeKeys.every(k => selectedAttributes[k]) ? (
@@ -333,16 +333,16 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
               <button
                 type="button"
                 onClick={() => onSelect({ id: null, variant_name: 'Producto Principal' }, 1)}
-                className="flex-1 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 bg-surface-container hover:bg-surface-container-low text-on-surface text-body-sm-bold rounded-button transition-all flex items-center justify-center gap-2"
               >
-                <Package size={14} className="text-slate-500" />
+                <Package size={14} className="text-on-surface-variant" />
                 Producto principal sin variante
               </button>
 
               {/* Botón Añadir Variante */}
               {attributeKeys.length > 0 && (
                 <Button
-                  className="flex-1 h-10 text-xs font-bold rounded-xl"
+                  className="flex-1 h-10 text-body-sm-bold rounded-button"
                   disabled={!selectedVariant || !selectedVariant.stock_quantity || selectedVariant.stock_quantity <= 0}
                   onClick={() => selectedVariant && onSelect(selectedVariant, 1)}
                 >

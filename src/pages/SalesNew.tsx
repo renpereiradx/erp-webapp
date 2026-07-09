@@ -1339,10 +1339,10 @@ const SalesNew: React.FC = () => {
             <ShoppingCart size={28} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">
+            <h1 className="text-headline-lg text-on-surface leading-none mb-1">
               {t('sales.title', 'Punto de Venta')}
             </h1>
-            <p className="text-text-secondary text-sm font-medium mt-1">
+            <p className="text-body-md text-on-surface-variant">
               {t('sales.subtitle', 'Facturación y registro de operaciones')}
             </p>
           </div>
@@ -1366,11 +1366,11 @@ const SalesNew: React.FC = () => {
         {activeTab === 'new-sale' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-9 space-y-4">
-              <article className="bg-white rounded-lg shadow-sm border relative">
-                <header className="flex items-center justify-between px-4 py-3 border-b">
+              <article className="bg-surface-container-lowest rounded-md shadow-whisper relative">
+                <header className="flex items-center justify-between px-6 py-4 border-b border-surface-variant">
                   <div className="flex items-center gap-2">
                     <ShoppingCart size={18} className="text-primary" />
-                    <h3 className="font-semibold">Productos Seleccionados</h3>
+                    <h3 className="text-title-md text-on-surface">Productos Seleccionados</h3>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-slate-400">
                     <span className="hidden sm:inline">Ctrl+Shift+P para buscar</span>
@@ -1574,12 +1574,12 @@ const SalesNew: React.FC = () => {
                 </div>
               </article>
 
-              <article className="bg-white rounded-lg shadow-sm border">
-                <header className="flex items-center gap-2 px-4 py-3 border-b">
+              <article className="bg-surface-container-lowest rounded-md shadow-whisper mt-4">
+                <header className="flex items-center gap-2 px-6 py-4 border-b border-surface-variant">
                   <DollarSign size={18} className="text-primary" />
-                  <h3 className="font-semibold">Resumen</h3>
+                  <h3 className="text-title-md text-on-surface">Resumen</h3>
                 </header>
-                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     {pendingItems.length > 0 ? (
                       <div className="space-y-1.5 mb-3 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
@@ -1713,11 +1713,11 @@ const SalesNew: React.FC = () => {
               </article>
             </div>
 
-            <aside className="lg:col-span-3 space-y-4">
-              <article className="bg-white rounded-lg shadow-sm border p-4 space-y-4">
-                <div className="flex items-center gap-2 border-b pb-2 mb-2">
+            <aside className="lg:col-span-3 space-y-6">
+              <article className="bg-surface-container-lowest rounded-md shadow-whisper p-6 space-y-4">
+                <div className="flex items-center gap-2 border-b border-surface-variant pb-3 mb-3">
                   <User size={18} className="text-primary" />
-                  <h3 className="font-semibold">Cliente</h3>
+                  <h3 className="text-title-md text-on-surface">Cliente</h3>
                 </div>
                 <SearchableDropdown<Client>
                   inputRef={clientSearchInputRef}
@@ -1759,10 +1759,10 @@ const SalesNew: React.FC = () => {
                 )}
               </article>
 
-              <article className="bg-white rounded-lg shadow-sm border p-4 space-y-3">
-                <div className="flex items-center gap-2 border-b pb-2">
+              <article className="bg-surface-container-lowest rounded-md shadow-whisper p-6 space-y-3">
+                <div className="flex items-center gap-2 border-b border-surface-variant pb-3">
                   <CreditCard size={18} className="text-primary" />
-                  <h3 className="font-semibold">Método de Pago</h3>
+                  <h3 className="text-title-md text-on-surface">Método de Pago</h3>
                 </div>
                 <Select value={String(paymentMethodId)} onValueChange={(v) => setPaymentMethodId(Number(v))}>
                   <SelectTrigger className="w-full h-11">
@@ -1778,10 +1778,10 @@ const SalesNew: React.FC = () => {
                 </Select>
               </article>
 
-              <article className="bg-white rounded-lg shadow-sm border p-4 space-y-3">
-                <div className="flex items-center gap-2 border-b pb-2">
+              <article className="bg-surface-container-lowest rounded-md shadow-whisper p-6 space-y-3">
+                <div className="flex items-center gap-2 border-b border-surface-variant pb-3">
                   <DollarSign size={18} className="text-primary" />
-                  <h3 className="font-semibold">Moneda</h3>
+                  <h3 className="text-title-md text-on-surface">Moneda</h3>
                 </div>
                 <Select value={String(currencyId)} onValueChange={(v) => setCurrencyId(Number(v))}>
                   <SelectTrigger className="w-full h-11">
@@ -1932,34 +1932,34 @@ const SalesNew: React.FC = () => {
 
       {isModalOpen && selectedModalProduct && (
         <div 
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm animate-in fade-in duration-300" 
           onClick={() => setIsModalOpen(false)}
         >
           <div 
-            className="relative w-full max-w-lg shadow-2xl rounded-xl bg-white overflow-hidden flex flex-col max-h-[95vh]" 
+            className="relative w-full max-w-lg shadow-whisper rounded-md bg-surface-container-lowest overflow-hidden flex flex-col max-h-[95vh]" 
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex flex-row items-start justify-between border-b border-slate-200 bg-white px-6 py-5 shrink-0">
+            <div className="flex flex-row items-start justify-between border-b border-surface-variant bg-surface-container-lowest px-6 py-5 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="size-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-700 shrink-0">
+                <div className="size-10 bg-surface-container-low rounded-lg flex items-center justify-center text-on-surface-variant shrink-0">
                   <ShoppingCart size={20} strokeWidth={2} />
                 </div>
                 <div className="flex flex-col">
-                  <h2 className="text-lg font-semibold text-slate-900 leading-tight">
+                  <h2 className="text-title-md text-on-surface leading-tight">
                     {editingItemId ? 'Editar Detalles' : 'Configurar Producto'}
                   </h2>
                   {modalDisplay && (
-                    <p className="text-sm text-slate-500 font-medium mt-0.5">{modalDisplay.name}</p>
+                    <p className="text-body-sm text-on-surface-variant font-medium mt-0.5">{modalDisplay.name}</p>
                   )}
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md shrink-0 -mr-2">
+              <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-outline hover:text-on-surface hover:bg-surface-container rounded-button shrink-0 -mr-2">
                 <X size={20} />
               </Button>
             </div>
             
-            <div className="overflow-y-auto overflow-x-hidden p-6 space-y-6 flex-1 bg-slate-50/50">
+            <div className="overflow-y-auto overflow-x-hidden p-6 space-y-6 flex-1 bg-surface-container-lowest">
               {modalDisplay && (
                 <div className="flex flex-col space-y-6">
                   {/* Grid de Inputs Principales */}

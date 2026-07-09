@@ -30,15 +30,15 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md transition-all">
-      <Card className="w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-200 glass-mica border border-white/20 overflow-hidden">
+    <div className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-md transition-all">
+      <Card className="w-full max-w-xl shadow-whisper bg-surface-container-lowest animate-in zoom-in-95 duration-200 border border-surface-variant overflow-hidden">
         <CardHeader className="border-b border-white/10 bg-emerald-50/80 backdrop-blur-md px-6 py-5">
           <div className="flex items-center gap-3">
-            <div className="size-10 bg-emerald-100/80 rounded-lg flex items-center justify-center text-emerald-700 shadow-sm backdrop-blur-sm">
+            <div className="size-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary shadow-sm backdrop-blur-sm">
               <ShoppingCart size={22} />
             </div>
             <div>
-              <CardTitle className="text-lg font-black tracking-tighter uppercase text-emerald-800">
+              <CardTitle className="text-title-md text-on-surface">
                 Reservas Pendientes de Cobro
               </CardTitle>
               <p className="text-xs text-emerald-600 font-medium uppercase tracking-wider">
@@ -71,12 +71,12 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                       onToggleSelection(resId);
                     }}
                     className={cn(
-                      "group relative flex flex-col p-4 border rounded-xl transition-all cursor-pointer bg-white/70 backdrop-blur-sm",
+                      "group relative flex flex-col p-4 border rounded-xl transition-all cursor-pointer bg-surface",
                       isSelected 
-                        ? "border-emerald-500 bg-emerald-50/80 ring-2 ring-emerald-500/20 shadow-md" 
+                        ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm" 
                         : isProductAlreadySelected
-                          ? "border-slate-100 bg-slate-50/50 opacity-50 grayscale cursor-not-allowed"
-                          : "border-slate-200/60 hover:border-emerald-300 hover:bg-white shadow-sm"
+                          ? "border-surface-variant bg-surface-container-low opacity-50 grayscale cursor-not-allowed"
+                          : "border-surface-variant hover:border-primary/40 hover:bg-surface-container-lowest shadow-sm"
                     )}
                   >
                     <div className="flex justify-between items-start mb-2">
