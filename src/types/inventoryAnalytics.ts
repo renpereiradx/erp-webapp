@@ -1,6 +1,8 @@
 /**
  * Tipos para el sistema de analítica de inventario
  */
+import { BIScope } from './bi';
+
 
 export type StockStatus = 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' | 'OVERSTOCK';
 export type PerformanceClass = 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'POOR';
@@ -10,6 +12,7 @@ export type ReorderPriority = 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW';
 
 export interface InventoryOverview {
   generated_at: string;
+  metadata?: { scope: BIScope };
   total_products: number;
   total_units: number;
   total_value: number;
@@ -57,10 +60,14 @@ export interface StockLevelProduct {
   stock_value: number;
   last_movement: string;
   last_sale: string;
+  brand_id?: number;
+  brand_name?: string;
+  tags?: string[];
 }
 
 export interface StockLevelsData {
   generated_at: string;
+  metadata?: { scope: BIScope };
   summary: {
     total_products: number;
     total_units: number;
@@ -92,6 +99,7 @@ export interface ReorderProduct {
 
 export interface ReorderAnalysis {
   generated_at: string;
+  metadata?: { scope: BIScope };
   summary: {
     total_needing_reorder: number;
     urgent_count: number;
@@ -118,6 +126,7 @@ export interface DeadStockProduct {
 
 export interface DeadStockAnalysis {
   generated_at: string;
+  metadata?: { scope: BIScope };
   summary: {
     total_products: number;
     total_units: number;
@@ -145,6 +154,7 @@ export interface StockForecastProduct {
 
 export interface StockForecast {
   generated_at: string;
+  metadata?: { scope: BIScope };
   forecast_days: number;
   summary: {
     products_at_risk: number;
@@ -158,6 +168,7 @@ export interface StockForecast {
 
 export interface InventoryDashboardData {
   generated_at: string;
+  metadata?: { scope: BIScope };
   kpis: {
     total_value: number;
     potential_profit: number; // Nuevo campo

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { X, Package, CheckCircle2, AlertCircle, Check } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { X, Package, CheckCircle2, AlertCircle, Check, Layers, Tag, Info } from 'lucide-react';
 import { ProductVariant } from '@/types';
 import { variantService } from '@/services/variantService';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export function VariantSelectorModal({ product, onClose, onSelect }: any) {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -21,7 +22,6 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
       }
 
       setLoading(true);
-      // Retrieve activeBranch from local storage for accurate stock/price resolution
       const activeBranch = localStorage.getItem('activeBranch') ? parseInt(localStorage.getItem('activeBranch') as string) : undefined;
       
       variantService.getEnrichedVariants(product.id || product.product_id, activeBranch, false)
@@ -77,181 +77,283 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
 
   if (!product) return null;
 
+  // Format currency helper
+  const formatPrice = (val: number | string | null | undefined) => {
+    if (val === undefined || val === null) return 'N/A';
+    const num = typeof val === 'number' ? val : parseFloat(val);
+    if (isNaN(num)) return val;
+    return num.toLocaleString('es-PY', {
+      style: 'currency',
+      currency: 'PYG',
+      minimumFractionDigits: 0,
+    });
+  };
+
   return (
-    <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-[var(--fluent-corner-radius-xlarge,8px)] shadow-[var(--fluent-shadow-64)] w-full max-w-lg overflow-hidden animate-in zoom-in-95 border border-[var(--fluent-border-neutral,#E1DFDD)]">
-        <div className="px-6 py-4 border-b border-[var(--fluent-border-neutral,#E1DFDD)] flex items-center justify-between bg-[var(--fluent-surface-secondary,#FAF9F8)]">
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-fluent-64 w-full max-w-3xl overflow-hidden animate-in zoom-in-95 border border-slate-100 flex flex-col md:flex-row md:min-h-[450px]">
+        
+        {/* Left Panel: Product Identity & Details (Dark Tech Aesthetic) */}
+        <div className="w-full md:w-2/5 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-700/50">
           <div>
-            <h2 className="text-base font-semibold text-[var(--fluent-text-primary,#212121)]">Seleccionar Variante</h2>
-            <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)] mt-0.5">{product.name || product.product_name}</p>
-          </div>
-          <button onClick={onClose} className="p-1.5 text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-neutral-hover,#F3F2F1)] rounded-md transition-colors">
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="p-6">
-          {loading ? (
-            <div className="flex items-center justify-center gap-2 py-8 text-[var(--fluent-text-tertiary,#8A8886)] text-sm">
-              <div className='w-4 h-4 border-2 border-[var(--fluent-brand-primary,#0078D4)] border-t-transparent rounded-full animate-spin' />
-              Cargando variantes...
+            <div className="flex items-center gap-2 text-primary-light text-xs font-semibold tracking-wider uppercase mb-4">
+              <span className="px-2 py-0.5 bg-primary/20 text-primary border border-primary/30 rounded-full flex items-center gap-1">
+                <Layers size={10} />
+                Con Variantes
+              </span>
             </div>
-          ) : variants.length === 0 ? (
-            <div className="text-center py-8 text-[var(--fluent-text-tertiary,#8A8886)] text-sm">Este producto no tiene variantes registradas.</div>
-          ) : attributeKeys.length === 0 ? (
-            // Fallback for variants without attributes
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
-              {variants.map(v => {
-                const stock = v.stock_quantity || 0;
-                const isOutOfStock = stock <= 0;
-                return (
-                  <div key={v.id} className={`flex items-center justify-between p-3 rounded-md border ${isOutOfStock ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-white border-slate-200 hover:border-primary/50'} transition-all`}>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
-                        <Package size={18} />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-slate-800">{v.variant_name}</h4>
-                        <p className="text-[10px] text-slate-500 font-mono uppercase mt-0.5">{v.sku}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-sm font-black text-slate-800">{v.current_price ? `Gs. ${v.current_price.toLocaleString()}` : 'N/A'}</p>
-                        <p className={`text-[10px] font-bold ${isOutOfStock ? 'text-[var(--fluent-semantic-danger,#D13438)]' : 'text-[var(--fluent-semantic-success,#107C10)]'} uppercase`}>Stock: {stock}</p>
-                      </div>
-                      <Button size="sm" disabled={isOutOfStock} onClick={() => onSelect(v, 1)} className="text-xs px-4">
-                        Añadir
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="space-y-5">
-              {attributeKeys.map(attrKey => {
-                const otherSelectedAttrs = Object.fromEntries(
-                  Object.entries(selectedAttributes).filter(([k]) => k !== attrKey)
-                );
-                const availableForThisAttr = Array.from(
-                  new Set(
-                    variants
-                      .filter(v =>
-                        Object.entries(otherSelectedAttrs).every(
-                          ([k, val]) => String(v.variant_attributes?.[k]) === String(val)
-                        )
-                      )
-                      .map(v => String(v.variant_attributes?.[attrKey]))
-                      .filter(Boolean)
-                  )
-                );
+            
+            <h2 className="text-xl font-black tracking-tight leading-tight line-clamp-3">
+              {product.name || product.product_name}
+            </h2>
+            <p className="text-xs text-slate-400 font-mono mt-1.5 uppercase tracking-wider">
+              ID: {product.id}
+            </p>
 
-                const selectedValue = selectedAttributes[attrKey];
-
-                return (
-                  <div key={attrKey} className='space-y-1.5'>
-                    <span className='text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)] uppercase tracking-wide'>
-                      {attrKey}
-                    </span>
-                    <div className='flex flex-wrap gap-2'>
-                      {availableForThisAttr.map(val => {
-                        const isSelected = selectedValue === val;
-                        // For sales: we enforce stock! We must check if ANY variant matching these attributes has stock
-                        const candidateVariants = variants.filter(v =>
-                          String(v.variant_attributes?.[attrKey]) === val &&
-                          Object.entries(otherSelectedAttrs).every(
-                            ([k, sv]) => String(v.variant_attributes?.[k]) === String(sv)
-                          )
-                        );
-                        const hasStock = candidateVariants.some(v => (v.stock_quantity ?? 0) > 0);
-
-                        return (
-                          <button
-                            key={val}
-                            type='button'
-                            onClick={() => handleAttributeSelect(attrKey, val)}
-                            className={`
-                              px-3 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-medium,4px)]
-                              border transition-all duration-150 relative
-                              ${isSelected
-                                ? 'bg-[var(--fluent-brand-primary,#0078D4)] text-white border-[var(--fluent-brand-primary,#0078D4)] shadow-[var(--fluent-shadow-4)]'
-                                : hasStock
-                                  ? 'bg-[var(--fluent-surface-secondary,#FAF9F8)] text-[var(--fluent-text-primary,#212121)] border-[var(--fluent-border-neutral,#E1DFDD)] hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-[var(--fluent-brand-primary,#0078D4)]'
-                                  : 'bg-[var(--fluent-surface-tertiary,#F3F2F1)] text-[var(--fluent-text-tertiary,#8A8886)] border-[var(--fluent-border-neutral,#E1DFDD)] line-through cursor-not-allowed opacity-50'
-                              }
-                            `}
-                            disabled={!hasStock && !isSelected}
-                            title={!hasStock ? 'Sin stock disponible' : undefined}
-                          >
-                            {val}
-                            {isSelected && (
-                              <Check size={10} className='inline ml-1 -mt-0.5' />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-
-              <div className="pt-2 mt-2">
-                {attributeKeys.every(k => selectedAttributes[k]) ? (
-                  selectedVariant ? (
-                    <div className={`p-4 rounded-[var(--fluent-corner-radius-medium,4px)] border ${selectedVariant.stock_quantity && selectedVariant.stock_quantity > 0 ? 'bg-[rgba(16,124,16,0.06)] border-[rgba(16,124,16,0.2)]' : 'bg-[rgba(209,52,56,0.06)] border-[rgba(209,52,56,0.2)]'}`}>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-bold text-[var(--fluent-text-primary,#212121)] text-sm flex items-center gap-1.5">
-                            {selectedVariant.stock_quantity && selectedVariant.stock_quantity > 0 ? <CheckCircle2 size={16} className="text-[var(--fluent-semantic-success,#107C10)]" /> : <AlertCircle size={16} className="text-[var(--fluent-semantic-danger,#D13438)]" />}
-                            {selectedVariant.variant_name}
-                          </h4>
-                          <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)] font-mono mt-1 opacity-80">SKU: {selectedVariant.sku}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-base font-black text-[var(--fluent-text-primary,#212121)]">
-                            {selectedVariant.current_price ? `Gs. ${selectedVariant.current_price.toLocaleString()}` : 'N/A'}
-                          </p>
-                          <p className={`text-[10px] font-bold mt-1 ${selectedVariant.stock_quantity && selectedVariant.stock_quantity > 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'} uppercase`}>
-                            Stock disponible: {selectedVariant.stock_quantity || 0}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <button 
-                        className="w-full mt-4 px-4 py-2.5 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white text-sm font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] transition-all disabled:opacity-50 disabled:pointer-events-none"
-                        disabled={!selectedVariant.stock_quantity || selectedVariant.stock_quantity <= 0}
-                        onClick={() => onSelect(selectedVariant, 1)}
-                      >
-                        Añadir al carrito
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="p-4 bg-[var(--fluent-surface-secondary,#FAF9F8)] border border-[var(--fluent-border-neutral,#E1DFDD)] rounded-[var(--fluent-corner-radius-medium,4px)] text-center">
-                      <AlertCircle size={20} className="text-[var(--fluent-text-tertiary,#8A8886)] mx-auto mb-2" />
-                      <p className="text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]">Esta combinación no está disponible.</p>
-                    </div>
-                  )
-                ) : (
-                  <div className="p-4 border border-dashed border-[var(--fluent-border-neutral,#E1DFDD)] rounded-[var(--fluent-corner-radius-medium,4px)] text-center bg-[var(--fluent-surface-secondary,#FAF9F8)] opacity-70">
-                    <p className="text-sm text-[var(--fluent-text-secondary,#605E5C)]">Seleccione todas las opciones para ver disponibilidad y precio.</p>
+            <div className="mt-6 space-y-4">
+              {/* Product Info Badges */}
+              <div className="bg-slate-800/40 border border-slate-750/30 rounded-xl p-3.5 space-y-2">
+                <div className="flex justify-between items-center text-xs text-slate-400">
+                  <span className="flex items-center gap-1.5"><Tag size={12} /> Precio Base:</span>
+                  <span className="font-bold text-white">{formatPrice(product.price)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs text-slate-400">
+                  <span className="flex items-center gap-1.5"><Package size={12} /> Stock Total:</span>
+                  <span className={cn("font-bold", (product.stock || 0) > 0 ? "text-emerald-450" : "text-rose-450")}>
+                    {product.stock || 0} {product.base_unit || 'unid'}
+                  </span>
+                </div>
+                {product.taxRate !== undefined && (
+                  <div className="flex justify-between items-center text-xs text-slate-400">
+                    <span className="flex items-center gap-1.5"><Info size={12} /> IVA:</span>
+                    <span className="font-bold text-white">{product.taxRate}%</span>
                   </div>
                 )}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Opción para agregar producto base (principal) */}
-          <div className="mt-6 pt-4 border-t border-[var(--fluent-border-neutral,#E1DFDD)]">
-            <button
-              onClick={() => onSelect({ id: null, variant_name: 'Producto Principal' }, 1)}
-              className="w-full px-4 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] hover:bg-[var(--fluent-surface-neutral-hover,#F3F2F1)] text-[var(--fluent-text-primary,#212121)] text-sm font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] border border-[var(--fluent-border-neutral,#E1DFDD)] transition-all flex items-center justify-center gap-2"
-            >
-              <Package size={16} className="text-[var(--fluent-text-secondary,#605E5C)]" />
-              Añadir producto principal sin variante
-            </button>
+          <div className="hidden md:block mt-6">
+            <p className="text-[10px] text-slate-550 leading-relaxed">
+              Selecciona las opciones a la derecha para configurar la variante del producto y añadirla al carrito de ventas.
+            </p>
           </div>
         </div>
+
+        {/* Right Panel: Variant Selector and Options */}
+        <div className="w-full md:w-3/5 flex flex-col justify-between bg-slate-50/50">
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
+            <h3 className="text-sm font-bold text-slate-800">Atributos del Producto</h3>
+            <button 
+              onClick={onClose} 
+              className="p-1.5 text-slate-400 hover:text-slate-655 hover:bg-slate-100 rounded-lg transition-all"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Selector Area */}
+          <div className="p-6 flex-1 overflow-y-auto max-h-[350px] md:max-h-[380px] space-y-5">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-400 text-sm">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <span>Cargando variantes del catálogo...</span>
+              </div>
+            ) : variants.length === 0 ? (
+              <div className="text-center py-16 text-slate-400 text-sm">
+                Este producto no tiene variantes registradas.
+              </div>
+            ) : attributeKeys.length === 0 ? (
+              /* Fallback list for variants without structured attributes */
+              <div className="space-y-3">
+                {variants.map(v => {
+                  const stock = v.stock_quantity || 0;
+                  const isOutOfStock = stock <= 0;
+                  return (
+                    <div 
+                      key={v.id} 
+                      className={cn(
+                        "flex items-center justify-between p-3.5 rounded-xl border transition-all",
+                        isOutOfStock 
+                          ? "bg-slate-100/70 border-slate-200/60 opacity-60" 
+                          : "bg-white border-slate-150 hover:border-primary/40 hover:shadow-sm"
+                      )}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2.5 bg-slate-100 rounded-lg text-slate-500 flex-shrink-0">
+                          <Package size={16} />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-bold text-slate-800 truncate">{v.variant_name}</h4>
+                          <p className="text-[10px] text-slate-400 font-mono uppercase mt-0.5 truncate">{v.sku}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 flex-shrink-0">
+                        <div className="text-right">
+                          <p className="text-sm font-black text-slate-800">{formatPrice(v.current_price)}</p>
+                          <p className={cn(
+                            "text-[10px] font-bold mt-0.5 uppercase",
+                            isOutOfStock ? "text-rose-600" : "text-emerald-600"
+                          )}>
+                            Stock: {stock}
+                          </p>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          disabled={isOutOfStock} 
+                          onClick={() => onSelect(v, 1)} 
+                          className="text-xs font-bold shadow-sm"
+                        >
+                          Añadir
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              /* Configurable Product Attributes */
+              <div className="space-y-5">
+                {attributeKeys.map(attrKey => {
+                  const otherSelectedAttrs = Object.fromEntries(
+                    Object.entries(selectedAttributes).filter(([k]) => k !== attrKey)
+                  );
+                  const availableForThisAttr = Array.from(
+                    new Set(
+                      variants
+                        .filter(v =>
+                          Object.entries(otherSelectedAttrs).every(
+                            ([k, val]) => String(v.variant_attributes?.[k]) === String(val)
+                          )
+                        )
+                        .map(v => String(v.variant_attributes?.[attrKey]))
+                        .filter(Boolean)
+                    )
+                  );
+
+                  const selectedValue = selectedAttributes[attrKey];
+
+                  return (
+                    <div key={attrKey} className="space-y-2">
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Seleccionar {attrKey}
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {availableForThisAttr.map(val => {
+                          const isSelected = selectedValue === val;
+                          const candidateVariants = variants.filter(v =>
+                            String(v.variant_attributes?.[attrKey]) === val &&
+                            Object.entries(otherSelectedAttrs).every(
+                              ([k, sv]) => String(v.variant_attributes?.[k]) === String(sv)
+                            )
+                          );
+                          const hasStock = candidateVariants.some(v => (v.stock_quantity ?? 0) > 0);
+
+                          return (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => handleAttributeSelect(attrKey, val)}
+                              className={cn(
+                                "px-4 py-2 text-xs font-semibold rounded-lg border transition-all duration-150 relative flex items-center gap-1.5",
+                                isSelected
+                                  ? "bg-primary text-white border-primary shadow-sm shadow-primary/25"
+                                  : hasStock
+                                    ? "bg-white text-slate-700 border-slate-200 hover:border-primary/50 hover:bg-slate-50/50"
+                                    : "bg-slate-100 text-slate-400 border-slate-200/70 line-through cursor-not-allowed opacity-50"
+                              )}
+                              disabled={!hasStock && !isSelected}
+                              title={!hasStock ? 'Sin stock disponible' : undefined}
+                            >
+                              {val}
+                              {isSelected && (
+                                <Check size={12} className="text-white flex-shrink-0" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Footer Action Area */}
+          <div className="p-6 border-t border-slate-100 bg-white space-y-4">
+            {attributeKeys.length > 0 && (
+              <div>
+                {attributeKeys.every(k => selectedAttributes[k]) ? (
+                  selectedVariant ? (
+                    <div className={cn(
+                      "p-4 rounded-xl border flex items-center justify-between transition-all",
+                      (selectedVariant.stock_quantity || 0) > 0
+                        ? "bg-emerald-50/40 border-emerald-100 text-emerald-800"
+                        : "bg-rose-50/40 border-rose-100 text-rose-800"
+                    )}>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-sm flex items-center gap-1.5">
+                          {(selectedVariant.stock_quantity || 0) > 0 
+                            ? <CheckCircle2 size={16} className="text-emerald-500" /> 
+                            : <AlertCircle size={16} className="text-rose-500" />}
+                          {selectedVariant.variant_name}
+                        </h4>
+                        <p className="text-[10px] text-slate-500 font-mono mt-1">SKU: {selectedVariant.sku}</p>
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-4">
+                        <p className="text-base font-black text-slate-850">
+                          {formatPrice(selectedVariant.current_price)}
+                        </p>
+                        <p className={cn(
+                          "text-[10px] font-bold mt-0.5 uppercase",
+                          (selectedVariant.stock_quantity || 0) > 0 ? "text-emerald-600" : "text-rose-600"
+                        )}>
+                          Stock: {selectedVariant.stock_quantity || 0}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center flex items-center justify-center gap-2">
+                      <AlertCircle size={18} className="text-slate-400" />
+                      <p className="text-xs font-semibold text-slate-600">Esta combinación no está disponible en catálogo.</p>
+                    </div>
+                  )
+                ) : (
+                  <div className="p-3.5 border border-dashed border-slate-200 rounded-xl text-center bg-slate-50/70 text-slate-500 text-xs">
+                    Completa la selección de los atributos para ver disponibilidad.
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Botón Añadir Producto Principal */}
+              <button
+                type="button"
+                onClick={() => onSelect({ id: null, variant_name: 'Producto Principal' }, 1)}
+                className="flex-1 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-2"
+              >
+                <Package size={14} className="text-slate-500" />
+                Producto principal sin variante
+              </button>
+
+              {/* Botón Añadir Variante */}
+              {attributeKeys.length > 0 && (
+                <Button
+                  className="flex-1 h-10 text-xs font-bold rounded-xl"
+                  disabled={!selectedVariant || !selectedVariant.stock_quantity || selectedVariant.stock_quantity <= 0}
+                  onClick={() => selectedVariant && onSelect(selectedVariant, 1)}
+                >
+                  Añadir variante seleccionada
+                </Button>
+              )}
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </div>
   );

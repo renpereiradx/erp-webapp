@@ -226,7 +226,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
       {isOpen && items.length > 0 && (
         <div
           className={cn(
-            'absolute z-50 w-full mt-1 bg-white border border-border-subtle rounded-xl shadow-fluent-16 overflow-hidden',
+            'absolute z-50 w-full mt-1 bg-white border border-border-subtle rounded-xl shadow-fluent-16 overflow-x-hidden',
             'max-h-80 overflow-y-auto',
             dropdownClassName
           )}

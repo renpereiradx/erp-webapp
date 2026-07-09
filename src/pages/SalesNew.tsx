@@ -430,6 +430,11 @@ const SalesNew: React.FC = () => {
     }
   };
 
+  const pendingItems = useMemo(() => items.filter(i => i.isFromPendingSale), [items]);
+  const newItems = useMemo(() => items.filter(i => !i.isFromPendingSale), [items]);
+  const pendingTotals = useMemo(() => saleService.calculateLocalTotals(pendingItems), [pendingItems]);
+  const newTotals = useMemo(() => saleService.calculateLocalTotals(newItems), [newItems]);
+
   const saleTotals = useMemo(() => saleService.calculateLocalTotals(items), [items]);
   const subtotal = saleTotals.subtotal;
   const lineDiscounts = saleTotals.discount_total;
@@ -684,7 +689,7 @@ const SalesNew: React.FC = () => {
     };
 
     setItems(prev => {
-      const existingItem = prev.find(item => item.productId === product.id && item.variantId === finalVariantId);
+      const existingItem = prev.find(item => item.productId === product.id && item.variantId === finalVariantId && !item.isFromPendingSale);
       
       if (existingItem) {
         if (existingItem.reserve_id) {
@@ -813,11 +818,13 @@ const SalesNew: React.FC = () => {
     });
 
     setItems(prev => {
-      const existingProductVariantKeys = new Set(prev.map(item => `${item.productId}_${item.variantId || 'base'}`));
-      const newItems = loadedItems.filter(item => !existingProductVariantKeys.has(`${item.productId}_${item.variantId || 'base'}`));
+      const existingPendingDetailIds = new Set(
+        prev.filter(item => item.isFromPendingSale && item.detailId).map(item => item.detailId)
+      );
+      const newItems = loadedItems.filter(item => !existingPendingDetailIds.has(item.detailId));
       
-      if (newItems.length === 0) {
-        toast.info('Todos los productos de esta venta ya están en el carrito');
+      if (newItems.length === 0 && loadedItems.length > 0) {
+        toast.info('Los productos de esta venta ya están cargados en el carrito');
       }
       return [...prev, ...newItems];
     });
@@ -1359,7 +1366,7 @@ const SalesNew: React.FC = () => {
         {activeTab === 'new-sale' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-9 space-y-4">
-              <article className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              <article className="bg-white rounded-lg shadow-sm border relative">
                 <header className="flex items-center justify-between px-4 py-3 border-b">
                   <div className="flex items-center gap-2">
                     <ShoppingCart size={18} className="text-primary" />
@@ -1388,7 +1395,7 @@ const SalesNew: React.FC = () => {
                     </div>
 
                     {showProductDropdown && productSearchResults.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-border-subtle rounded-xl shadow-fluent-16 overflow-hidden max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-border-subtle rounded-xl shadow-fluent-16 overflow-x-hidden max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="p-1">
                           {productSearchResults.map((product, index) => {
                             const isHighlighted = index === productHighlightedIndex;
@@ -1567,17 +1574,35 @@ const SalesNew: React.FC = () => {
                 </div>
               </article>
 
-              <article className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              <article className="bg-white rounded-lg shadow-sm border">
                 <header className="flex items-center gap-2 px-4 py-3 border-b">
                   <DollarSign size={18} className="text-primary" />
                   <h3 className="font-semibold">Resumen</h3>
                 </header>
                 <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-500">Subtotal</span>
-                      <span className="font-medium text-slate-700">{formatCurrency(subtotal)}</span>
-                    </div>
+                    {pendingItems.length > 0 ? (
+                      <div className="space-y-1.5 mb-3 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
+                        <div className="flex justify-between text-sm font-medium text-slate-500">
+                          <span>Venta Procesada (Anterior)</span>
+                          <span>{formatCurrency(pendingTotals.total)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm font-bold text-slate-700">
+                          <span>Nuevos Ítems</span>
+                          <span>{formatCurrency(newTotals.total)}</span>
+                        </div>
+                        <div className="border-t border-slate-200/60 my-1"></div>
+                        <div className="flex justify-between text-sm pt-1">
+                          <span className="text-slate-500 font-semibold">Subtotal Combinado</span>
+                          <span className="font-bold text-slate-800">{formatCurrency(subtotal)}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-slate-500">Subtotal</span>
+                        <span className="font-medium text-slate-700">{formatCurrency(subtotal)}</span>
+                      </div>
+                    )}
                     
                     {/* Desglose de IVA */}
                     <div className="space-y-1 py-2 border-y border-slate-100 border-dashed">
@@ -1606,44 +1631,46 @@ const SalesNew: React.FC = () => {
                       <span>-{formatCurrency(lineDiscounts + generalDiscount)}</span>
                     </div>
 
-                    <div className="p-3 bg-slate-50 rounded-xl border-2 border-slate-100 space-y-2 my-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                        <DollarSign size={10} /> Precio Final de Venta
-                      </label>
-                      <div className="relative group">
-                        <Input
-                          type="number"
-                          value={total}
-                          onChange={(e) => {
-                            const targetTotal = Math.max(0, Number(e.target.value));
-                            if (targetTotal === total || items.length === 0) return;
-                            
-                            // Proportional adjustment logic
-                            const currentTotal = total;
-                            if (currentTotal === 0) return;
-                            const ratio = targetTotal / currentTotal;
-                            
-                            setItems(prev => prev.map(item => {
-                              const newPrice = Number((item.price * ratio).toFixed(2));
-                              const newDiscount = Number(((item.originalPrice - newPrice) * item.quantity).toFixed(2));
-                              return {
-                                ...item,
-                                price: newPrice,
-                                discount: newDiscount,
-                                discountType: 'amount',
-                                discountInput: Number((item.originalPrice - newPrice).toFixed(2)),
-                                discountReason: 'Ajuste global de venta'
-                              };
-                            }));
-                          }}
-                          className="h-11 pl-4 text-xl font-black tracking-tighter text-primary border-transparent bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all rounded-lg"
-                        />
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase tracking-widest pointer-events-none">
-                          EDITABLE
+                    {pendingItems.length === 0 && (
+                      <div className="p-3 bg-slate-50 rounded-xl border-2 border-slate-100 space-y-2 my-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                          <DollarSign size={10} /> Precio Final de Venta
+                        </label>
+                        <div className="relative group">
+                          <Input
+                            type="number"
+                            value={total}
+                            onChange={(e) => {
+                              const targetTotal = Math.max(0, Number(e.target.value));
+                              if (targetTotal === total || items.length === 0) return;
+                              
+                              // Proportional adjustment logic
+                              const currentTotal = total;
+                              if (currentTotal === 0) return;
+                              const ratio = targetTotal / currentTotal;
+                              
+                              setItems(prev => prev.map(item => {
+                                const newPrice = Number((item.price * ratio).toFixed(2));
+                                const newDiscount = Number(((item.originalPrice - newPrice) * item.quantity).toFixed(2));
+                                return {
+                                  ...item,
+                                  price: newPrice,
+                                  discount: newDiscount,
+                                  discountType: 'amount',
+                                  discountInput: Number((item.originalPrice - newPrice).toFixed(2)),
+                                  discountReason: 'Ajuste global de venta'
+                                };
+                              }));
+                            }}
+                            className="h-11 pl-4 text-xl font-black tracking-tighter text-primary border-transparent bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all rounded-lg"
+                          />
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase tracking-widest pointer-events-none">
+                            EDITABLE
+                          </div>
                         </div>
+                        <p className="text-[9px] text-slate-400 font-medium px-1 leading-tight">Este monto ajustará proporcionalmente todos los precios en el carrito.</p>
                       </div>
-                      <p className="text-[9px] text-slate-400 font-medium px-1 leading-tight">Este monto ajustará proporcionalmente todos los precios en el carrito.</p>
-                    </div>
+                    )}
                     
                     <div className="pt-2 border-t flex justify-between items-end">
                       <div className="flex flex-col">

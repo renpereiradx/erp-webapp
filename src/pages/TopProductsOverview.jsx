@@ -13,7 +13,8 @@ const TopProductsOverview = () => {
         alerts, 
         fetchTopProducts, 
         fetchDashboardData, 
-        loading 
+        loading,
+        summary
     } = useDashboardStore();
 
     const [period, setPeriod] = useState('month');
@@ -21,8 +22,16 @@ const TopProductsOverview = () => {
 
     useEffect(() => {
         fetchTopProducts(period);
-        if (!alerts || alerts.length === 0) fetchDashboardData();
-    }, [fetchTopProducts, fetchDashboardData, alerts, period]);
+    }, [fetchTopProducts, period]);
+
+    useEffect(() => {
+        // Carga la data del dashboard global solo si no existe en el store
+        // Esto evita hacer 8 requests a la API cada vez que se abre esta pestaña.
+        if (!summary) {
+            fetchDashboardData();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fetchDashboardData]);
 
     const formatCurrency = (value) => formatPYG(value);
 
@@ -49,21 +58,13 @@ const TopProductsOverview = () => {
         );
     }, [topProducts, searchQuery]);
 
-    // Mapping stock status to Stitch styles
-    const getStatusStyle = (status) => {
-        switch(status?.toLowerCase()) {
-            case 'in_stock':
-            case 'in stock':
-                return { color: 'text-[#111418] dark:text-white', dot: 'bg-green-500', text: t('dashboard.dashboard.topProductsPanel.status.inStock', 'En Stock') };
-            case 'low_stock':
-            case 'low stock':
-                return { color: 'text-orange-600 dark:text-orange-400 font-medium', dot: 'bg-orange-500 animate-pulse', text: t('dashboard.dashboard.topProductsPanel.status.lowStock', 'Stock Bajo') };
-            case 'out_of_stock':
-            case 'out of stock':
-                return { color: 'text-red-600 dark:text-red-400 font-medium', dot: 'bg-red-500', text: t('dashboard.dashboard.topProductsPanel.status.outOfStock', 'Sin Stock') };
-            default:
-                return { color: 'text-[#111418] dark:text-white', dot: 'bg-gray-400', text: status || t('common.unknown', 'Desconocido') };
-        }
+    // Mapping stock status to Stitch styles (deprecated for this view, using profitability instead)
+    const getProfitabilityStyle = (margin) => {
+        if (margin == null) return { color: 'text-[#111418] dark:text-white', dot: 'bg-gray-400', text: '-' };
+        if (margin >= 40) return { color: 'text-emerald-600 dark:text-emerald-400 font-medium', dot: 'bg-emerald-500', text: 'Alto Margen' };
+        if (margin >= 20) return { color: 'text-blue-600 dark:text-blue-400 font-medium', dot: 'bg-blue-500', text: 'Buen Margen' };
+        if (margin > 0) return { color: 'text-orange-600 dark:text-orange-400 font-medium', dot: 'bg-orange-500', text: 'Margen Bajo' };
+        return { color: 'text-red-600 dark:text-red-400 font-medium', dot: 'bg-red-500', text: 'Pérdida' };
     };
 
     const getPeriodLabel = (p) => {
@@ -206,8 +207,8 @@ const TopProductsOverview = () => {
                 <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em]">{t('common.category', 'Categoría')}</th>
                 <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-right">{t('dashboard.dashboard.topProductsPanel.table.avgPrice', 'Precio Prom.')}</th>
                 <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-right">{t('dashboard.dashboard.topProductsPanel.table.unitsSold', 'Und. Vendidas')}</th>
-                <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-right">{t('dashboard.dashboard.revenue', 'Ingresos')}</th>
-                <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em]">{t('common.status', 'Estado')}</th>
+                <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em]">{t('dashboard.dashboard.revenue', 'Ingresos')}</th>
+                <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em]">{t('dashboard.dashboard.topProductsPanel.table.profitability', 'Rentabilidad')}</th>
                 <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-center">{t('dashboard.dashboard.topProductsPanel.table.trend7d', 'Tendencia')}</th>
                 <th className="p-4 w-12"></th>
               </tr>
@@ -225,7 +226,7 @@ const TopProductsOverview = () => {
                       </td>
                   </tr>
               ) : filteredProducts && filteredProducts.map((product) => {
-                const statusInfo = getStatusStyle(product.stock_status);
+                const profitInfo = getProfitabilityStyle(product.margin_percentage);
                 const avgPrice = product.quantity_sold > 0 ? product.revenue / product.quantity_sold : 0;
                 
                 return (
@@ -241,6 +242,22 @@ const TopProductsOverview = () => {
                         <div className="flex flex-col gap-0.5">
                           <span className="text-sm font-black text-[#111418] dark:text-white group-hover:text-[#137fec] transition-colors tracking-tight">{product.name}</span>
                           <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono font-bold uppercase">ID: {product.id}</span>
+                          
+                          {/* Nuevos campos de marca y tags */}
+                          {product.brand_name && (
+                            <span className="text-[9px] text-slate-600 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-0.5">
+                              {product.brand_name}
+                            </span>
+                          )}
+                          {product.tags && product.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-0.5">
+                              {product.tags.map(tag => (
+                                <span key={tag} className="text-[8px] text-[#137fec] bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800/50">
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -259,9 +276,16 @@ const TopProductsOverview = () => {
                         {formatCurrency(product.revenue)}
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className={`h-2 w-2 rounded-full shadow-sm ${statusInfo.dot}`}></div>
-                        <span className={`text-[11px] font-black uppercase tracking-wider ${statusInfo.color}`}>{statusInfo.text}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`h-2 w-2 rounded-full shadow-sm ${profitInfo.dot}`}></div>
+                          <span className={`text-[11px] font-black uppercase tracking-wider ${profitInfo.color}`}>{profitInfo.text}</span>
+                        </div>
+                        {product.margin_percentage != null && (
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono font-bold ml-4">
+                                Mgn: {product.margin_percentage.toFixed(1)}% | Utilidad: {formatCurrency(product.profit || 0)}
+                            </span>
+                        )}
                       </div>
                     </td>
                     <td className="p-4 text-center">

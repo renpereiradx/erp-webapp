@@ -68,8 +68,7 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, to
 
               const status = resolveStatus();
               const daysStock = product.days_of_stock ?? (product as any).days_until_stockout ?? 0;
-              const unitCost = product.unit_cost ?? 
-                              (product.current_stock > 0 ? product.stock_value / product.current_stock : (product as any).estimated_cost / ((product as any).reorder_quantity || 1));
+              const unitCost = product.unit_cost ?? 0;
               const totalValue = product.stock_value ?? (product as any).estimated_cost ?? 0;
 
               return (
@@ -83,9 +82,27 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, to
                     </div>
                   </td>
                   <td className="py-4 px-4">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-mono text-slate-500">{product.sku}</span>
-                      <span className="text-xs text-slate-400">{product.category_name}</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-mono text-slate-500">{product.sku}</span>
+                        <span className="text-xs text-slate-400">{product.category_name}</span>
+                      </div>
+                      
+                      {product.brand_name && (
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-0.5">
+                          {product.brand_name}
+                        </span>
+                      )}
+                      
+                      {product.tags && product.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {product.tags.map(tag => (
+                            <span key={tag} className="text-[9px] text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded-full border border-primary-200 dark:border-primary-800/50">
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="py-4 px-4 text-center font-mono">

@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, X } from 'lucide-react';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
+import { cn } from '@/lib/utils';
 
 interface SalesCartGridProps {
   items: any[];
@@ -41,10 +42,10 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
             <tr><td colSpan={7} className="text-center py-12 text-slate-400 font-medium">Carrito vacío - Busca un producto arriba</td></tr>
           ) : (
             items.map(item => (
-              <tr key={item.id} className="border-b hover:bg-slate-50/80 transition-colors">
+              <tr key={item.id} className={cn("border-b transition-colors", item.isFromPendingSale ? "bg-slate-50/50 opacity-60 hover:opacity-100 grayscale-[0.2]" : "hover:bg-slate-50/80")}>
                 <td className="py-3 px-4 text-slate-500 font-mono text-xs">{item.productId || '-'}</td>
                 <td className="py-3 px-4 font-medium text-slate-700">
-                  {item.isFromPendingSale && <Badge className="mr-2 bg-amber-100 text-amber-700 hover:bg-amber-100 border-none text-[9px] uppercase">Persistido</Badge>}
+                  {item.isFromPendingSale && <Badge className="mr-2 bg-slate-200 text-slate-600 hover:bg-slate-200 border-none text-[9px] uppercase">Procesado</Badge>}
                   {item.name}
                   <div className='text-[10px] font-normal text-[var(--fluent-text-tertiary,#8A8886)]'>
                     Unidad: {item.unit}
@@ -62,6 +63,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                       variant="ghost"
                       size="icon"
                       onClick={() => onEditItem(item)}
+                      disabled={item.isFromPendingSale}
                       className="size-8 text-slate-400 hover:text-primary hover:bg-primary/10"
                     >
                       <MoreVertical size={14} />
@@ -70,6 +72,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                       variant="ghost"
                       size="icon"
                       onClick={() => onRemoveItem(item.id)}
+                      disabled={item.isFromPendingSale}
                       className="size-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
                     >
                       <X size={14} />
@@ -88,12 +91,12 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
           <div className="text-center py-10 text-slate-400 font-medium text-sm">Carrito vacío</div>
         ) : (
           items.map(item => (
-            <div key={item.id} className="py-4 space-y-3 px-2">
+            <div key={item.id} className={cn("py-4 space-y-3 px-2 transition-all", item.isFromPendingSale && "opacity-60 grayscale-[0.2] bg-slate-50/50")}>
               <div className="flex justify-between items-start gap-4">
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">#{item.productId || '-'}</p>
                   <h4 className="font-bold text-slate-800 leading-tight">
-                    {item.isFromPendingSale && <Badge className="mr-1.5 bg-amber-100 text-amber-700 border-none text-[8px] uppercase align-middle">P</Badge>}
+                    {item.isFromPendingSale && <Badge className="mr-1.5 bg-slate-200 text-slate-600 border-none text-[8px] uppercase align-middle">P</Badge>}
                     {item.name}
                   </h4>
                 </div>
@@ -102,6 +105,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                     variant="outline"
                     size="icon"
                     onClick={() => onEditItem(item)}
+                    disabled={item.isFromPendingSale}
                     className="size-8 rounded-full border-slate-200 text-slate-500"
                   >
                     <MoreVertical size={14} />
@@ -110,6 +114,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                     variant="outline"
                     size="icon"
                     onClick={() => onRemoveItem(item.id)}
+                    disabled={item.isFromPendingSale}
                     className="size-8 rounded-full border-slate-200 text-red-500 hover:bg-red-50 hover:border-red-100"
                   >
                     <X size={14} />

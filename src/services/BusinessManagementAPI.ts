@@ -145,12 +145,12 @@ class BusinessManagementAPI {
 
     const config: RequestInit = {
       signal: controller.signal,
+      ...fetchOptions,
       headers: {
         ...this.defaultHeaders,
         ...authHeaders,
         ...fetchOptions.headers as Record<string, string>,
       },
-      ...fetchOptions,
     }
 
     let response: Response
@@ -254,6 +254,25 @@ class BusinessManagementAPI {
     } catch (jsonParseError) {
       // Si no es JSON válido pero la respuesta fue OK (200), retornar éxito genérico
       return { success: true }
+    }
+
+    // Interceptar tokens inválidos retornados como 200 OK
+    if (parsedResponse && parsedResponse.success === false) {
+      const errorMsg = String(parsedResponse.error || parsedResponse.message || '').toLowerCase();
+      if (errorMsg.includes('token') || errorMsg.includes('unauthorized') || errorMsg.includes('sesión') || errorMsg.includes('session')) {
+        if (!options._retry && !endpoint.includes('/auth/refresh')) {
+          options._retry = true;
+          const refreshToken = localStorage.getItem('refreshToken');
+          if (refreshToken && refreshToken !== 'null' && refreshToken !== 'undefined') {
+            const refreshed = await this.performTokenRefresh(refreshToken);
+            if (refreshed) {
+              return await this.makeRequest(endpoint, options);
+            }
+          }
+        }
+        this.handleUnauthorized();
+        throw new ApiError('UNAUTHORIZED', 'Sesión expirada o token inválido. Por favor, inicie sesión nuevamente.');
+      }
     }
 
     return parsedResponse

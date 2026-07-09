@@ -8,7 +8,20 @@ export interface BIParams {
   end_date?: string;   // YYYY-MM-DD
   page?: number;
   page_size?: number;
+  brand_id?: number;
+  tag?: string[];
 }
+
+export interface BIScope {
+  consolidated: boolean;
+  branch_id?: number;
+}
+
+export interface BIMetadata {
+  generated_at: string;
+  scope: BIScope;
+}
+
 
 // --- Dashboard ---
 export interface DashboardSummary {

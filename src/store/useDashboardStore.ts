@@ -275,7 +275,7 @@ const useDashboardStore = create<DashboardState>()(
       fetchTopProducts: async (period = 'week', limit = 10, sortBy = 'revenue') => {
         set({ loading: true, error: null });
         try {
-            const response = await dashboardService.getTopProducts(period, limit, sortBy);
+            const response = await dashboardService.getTopProducts({ period, limit, sort_by: sortBy });
             set({ 
                 topProducts: response.data.products, 
                 topProductsMetrics: {
