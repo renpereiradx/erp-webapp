@@ -76,6 +76,13 @@ export interface DashboardKPIs {
   };
   inventory_kpis: {
     turnover_rate: number;
+    days_of_inventory: number;
+    stockout_rate: number;
+  };
+  budget_kpis: {
+    budget_to_sale_conversion: number;
+    average_budget_value: number;
+    expired_budgets: number;
   };
 }
 
@@ -109,6 +116,10 @@ export interface TopProduct {
   margin_percentage: number;
   trend: string;
   stock_status: string;
+  trend_percentage?: number;
+  brand_id?: number;
+  brand_name?: string;
+  tags?: string[];
 }
 
 export interface DashboardState {
@@ -141,7 +152,7 @@ export interface DashboardState {
   fetchKPIData: (period?: string) => Promise<void>;
   fetchSalesHeatmap: (weeks?: number) => Promise<void>;
   fetchTopProducts: (period?: string, limit?: number, sortBy?: string) => Promise<void>;
-  fetchDashboardData: () => Promise<void>;
+  fetchDashboardData: (period?: string) => Promise<void>;
 }
 
 const useDashboardStore = create<DashboardState>()(
@@ -167,7 +178,7 @@ const useDashboardStore = create<DashboardState>()(
       fetchKPIData: async (period = 'month') => {
         set({ loading: true, error: null });
         try {
-          const response = await dashboardService.getKPIs(period);
+          const response = await dashboardService.getKPIs({ period });
           set({ kpis: response.data, loading: false });
         } catch (error: any) {
           if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
@@ -196,7 +207,14 @@ const useDashboardStore = create<DashboardState>()(
                           average_purchase_frequency: 2.3
                       },
                       inventory_kpis: {
-                          turnover_rate: 4.2
+                          turnover_rate: 4.2,
+                          days_of_inventory: 28,
+                          stockout_rate: 2.1
+                      },
+                      budget_kpis: {
+                          budget_to_sale_conversion: 68.5,
+                          average_budget_value: 450000,
+                          expired_budgets: 5
                       }
                   };
                   
@@ -215,7 +233,7 @@ const useDashboardStore = create<DashboardState>()(
       fetchSalesHeatmap: async (weeks = 4) => {
         set({ loading: true, error: null });
         try {
-            const response = await dashboardService.getSalesHeatmap(weeks);
+            const response = await dashboardService.getSalesHeatmap({ weeks });
             set({ salesHeatmap: response.data, loading: false });
         } catch(error: any) {
             if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
@@ -300,7 +318,10 @@ const useDashboardStore = create<DashboardState>()(
                         profit: p.profit || (p.revenue * 0.3),
                         margin_percentage: p.margin_percentage || 30.0,
                         trend: p.trend || 'stable',
-                        stock_status: p.stock_status || 'in_stock'
+                        stock_status: p.stock_status || 'in_stock',
+                        trend_percentage: p.trend_percentage || 15.2,
+                        brand_name: p.brand_name || 'Marca Demo',
+                        tags: p.tags || ['destacado']
                     }));
                     
                     set({ 
@@ -323,19 +344,19 @@ const useDashboardStore = create<DashboardState>()(
         }
       },
 
-      fetchDashboardData: async () => {
+      fetchDashboardData: async (period = 'month') => {
         set({ loading: true, error: null });
         
         try {
           const results = await Promise.allSettled([
-             dashboardService.getSummary(),
+             dashboardService.getSummary({ period }),
              dashboardService.getAlerts(),
              dashboardService.getRecentActivity(),
-             dashboardService.getTrends({ period: 'month' }),
-             profitabilityService.getTrends({ period: 'month' }),
-             receivablesService.getSummary('month'),
-             payablesService.getOverview(),
-             salesAnalyticsService.getPerformance({ period: 'month', compare: true })
+             dashboardService.getTrends({ period }),
+             profitabilityService.getTrends({ period }),
+             receivablesService.getSummary(period),
+             payablesService.getOverview({ period }),
+             salesAnalyticsService.getPerformance({ period, compare: true })
           ]);
 
           const [

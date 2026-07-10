@@ -55,14 +55,15 @@ const Dashboard = () => {
   } = useDashboardStore();
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isMounted, setIsMounted] = useState(false);
+  const [period, setPeriod] = useState('month');
 
   useEffect(() => {
     setIsMounted(true);
-    fetchDashboardData().then(() => setLastUpdated(new Date()));
-  }, [fetchDashboardData]);
+    fetchDashboardData(period).then(() => setLastUpdated(new Date()));
+  }, [fetchDashboardData, period]);
 
   const handleRefresh = async () => {
-    await fetchDashboardData();
+    await fetchDashboardData(period);
     setLastUpdated(new Date());
   };
 
@@ -146,11 +147,17 @@ const Dashboard = () => {
            <p className="text-sm text-text-secondary font-medium">{t('dashboard.executive.subtitle', 'Visión general en tiempo real de los indicadores clave')} • {formatTimeInParaguayTimezone(lastUpdated)}</p>
         </div>
          <div className="flex items-center gap-3">
-            <Button variant="secondary" size="md" className="shadow-sm border-border-subtle" onClick={() => navigate('/configuracion')}>
-                <Calendar size={18} className="mr-2" />
-                <span>{t('dashboard.actions.dateRange', 'Últimos 30 Días')}</span>
-                <ArrowRight size={16} className="ml-2 opacity-50 rotate-90" />
-            </Button>
+            <div className="flex items-center gap-1 bg-surface p-1 rounded-xl border border-border-subtle shadow-sm">
+                {['today', 'week', 'month', 'year'].map((p) => (
+                    <button
+                        key={p}
+                        onClick={() => setPeriod(p)}
+                        className={`px-3 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${period === p ? 'bg-primary text-white shadow-md' : 'text-text-secondary hover:bg-slate-50'}`}
+                    >
+                        {p === 'today' ? 'Hoy' : p === 'week' ? '7D' : p === 'month' ? '30D' : '1A'}
+                    </button>
+                ))}
+            </div>
              <Button variant="primary" size="md" className="shadow-md">
                 <Download size={18} className="mr-2" />
                 <span>{t('dashboard.actions.export', 'Exportar Informe')}</span>

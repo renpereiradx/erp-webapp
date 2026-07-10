@@ -19,10 +19,11 @@ const TopProductsOverview = () => {
 
     const [period, setPeriod] = useState('month');
     const [searchQuery, setSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState('revenue');
 
     useEffect(() => {
-        fetchTopProducts(period);
-    }, [fetchTopProducts, period]);
+        fetchTopProducts(period, 10, sortBy);
+    }, [fetchTopProducts, period, sortBy]);
 
     useEffect(() => {
         // Carga la data del dashboard global solo si no existe en el store
@@ -72,6 +73,7 @@ const TopProductsOverview = () => {
             case 'today': return t('dashboard.dashboard.actions.today', 'Hoy');
             case 'week': return t('dashboard.dashboard.actions.thisWeek', 'Última Semana');
             case 'month': return t('dashboard.dashboard.actions.thisMonth', 'Últimos 30 Días');
+            case 'year': return t('dashboard.dashboard.actions.thisYear', 'Último Año');
             default: return p;
         }
     };
@@ -90,13 +92,13 @@ const TopProductsOverview = () => {
           </p>
         </div>
         <div className="flex items-center gap-2 bg-white dark:bg-[#1e2832] p-1 rounded-xl border border-[#dbe0e6] dark:border-[#2a3642] shadow-sm">
-            {['today', 'week', 'month'].map((p) => (
+            {['today', 'week', 'month', 'year'].map((p) => (
                 <button
                     key={p}
                     onClick={() => setPeriod(p)}
                     className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${period === p ? 'bg-[#137fec] text-white shadow-md' : 'text-[#617589] hover:bg-gray-50 dark:hover:bg-white/5'}`}
                 >
-                    {p === 'today' ? 'Hoy' : p === 'week' ? '7D' : '30D'}
+                    {p === 'today' ? 'Hoy' : p === 'week' ? '7D' : p === 'month' ? '30D' : '1A'}
                 </button>
             ))}
         </div>
@@ -206,9 +208,15 @@ const TopProductsOverview = () => {
                 <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em]">{t('dashboard.dashboard.topProductsPanel.table.productName', 'Nombre del Producto')}</th>
                 <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em]">{t('common.category', 'Categoría')}</th>
                 <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-right">{t('dashboard.dashboard.topProductsPanel.table.avgPrice', 'Precio Prom.')}</th>
-                <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-right">{t('dashboard.dashboard.topProductsPanel.table.unitsSold', 'Und. Vendidas')}</th>
-                <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em]">{t('dashboard.dashboard.revenue', 'Ingresos')}</th>
-                <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em]">{t('dashboard.dashboard.topProductsPanel.table.profitability', 'Rentabilidad')}</th>
+                <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-right cursor-pointer hover:text-[#137fec] transition-colors select-none" onClick={() => setSortBy('quantity')}>
+                  {t('dashboard.dashboard.topProductsPanel.table.unitsSold', 'Und. Vendidas')} {sortBy === 'quantity' && '↓'}
+                </th>
+                <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-right cursor-pointer hover:text-[#137fec] transition-colors select-none" onClick={() => setSortBy('revenue')}>
+                  {t('dashboard.dashboard.revenue', 'Ingresos')} {sortBy === 'revenue' && '↓'}
+                </th>
+                <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] cursor-pointer hover:text-[#137fec] transition-colors select-none" onClick={() => setSortBy('profit')}>
+                  {t('dashboard.dashboard.topProductsPanel.table.profitability', 'Rentabilidad')} {sortBy === 'profit' && '↓'}
+                </th>
                 <th className="p-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-center">{t('dashboard.dashboard.topProductsPanel.table.trend7d', 'Tendencia')}</th>
                 <th className="p-4 w-12"></th>
               </tr>
@@ -291,15 +299,17 @@ const TopProductsOverview = () => {
                     <td className="p-4 text-center">
                       <div className="flex justify-center items-center h-8">
                         {product.trend === 'up' ? (
-                            <div className="text-emerald-500 flex items-center gap-1 font-black">
+                            <div className="text-emerald-500 flex items-center justify-center gap-1 font-black">
                                 <span className="material-symbols-outlined text-[20px]">trending_up</span>
+                                {product.trend_percentage != null && <span className="text-xs">{product.trend_percentage}%</span>}
                             </div>
                         ) : product.trend === 'down' ? (
-                            <div className="text-red-500 flex items-center gap-1 font-black">
+                            <div className="text-red-500 flex items-center justify-center gap-1 font-black">
                                 <span className="material-symbols-outlined text-[20px]">trending_down</span>
+                                {product.trend_percentage != null && <span className="text-xs">{product.trend_percentage}%</span>}
                             </div>
                         ) : (
-                            <div className="text-gray-400 flex items-center gap-1 font-black">
+                            <div className="text-gray-400 flex items-center justify-center gap-1 font-black">
                                 <span className="material-symbols-outlined text-[20px]">trending_flat</span>
                             </div>
                         )}

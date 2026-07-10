@@ -60,7 +60,7 @@ export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         localStorage.setItem('activeBranch', bid.toString());
       } else if (savedBranch) {
         setCurrentBranchId(parseInt(savedBranch));
-      } else if (jwtBranchId !== null) {
+      } else if (jwtBranchId !== null && jwtBranchId !== undefined) {
         setCurrentBranchId(jwtBranchId);
         localStorage.setItem('activeBranch', jwtBranchId.toString());
       } else if (finalAllowedBranches.length === 1) {
