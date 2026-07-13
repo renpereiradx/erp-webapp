@@ -118,9 +118,9 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                   <span className="font-data-mono text-on-surface font-bold">{formatPrice(product.price)}</span>
                 </div>
                 <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
-                  <span className="flex items-center gap-1.5"><Package size={14} /> Stock Total:</span>
-                  <span className={cn("font-data-mono font-bold", (product.stock || 0) > 0 ? "text-success" : "text-error")}>
-                    {product.stock || 0} {product.base_unit || 'unid'}
+                  <span className="flex items-center gap-1.5"><Package size={14} /> {variants.length > 0 ? 'Stock (Variantes):' : 'Stock Total:'}</span>
+                  <span className={cn("font-data-mono font-bold", (variants.length > 0 ? variants.reduce((acc, v) => acc + (v.stock_quantity || 0), 0) : (product.stock || 0)) > 0 ? "text-success" : "text-error")}>
+                    {variants.length > 0 ? variants.reduce((acc, v) => acc + (v.stock_quantity || 0), 0) : (product.stock || 0)} {product.base_unit || 'unid'}
                   </span>
                 </div>
                 {product.taxRate !== undefined && (
@@ -174,14 +174,14 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                     <div 
                       key={v.id} 
                       className={cn(
-                        "flex items-center justify-between p-3.5 rounded-xl border transition-all",
+                        "flex items-center justify-between p-3.5 rounded-md border transition-all",
                         isOutOfStock 
-                          ? "bg-slate-100/70 border-slate-200/60 opacity-60" 
-                          : "bg-white border-slate-150 hover:border-primary/40 hover:shadow-sm"
+                          ? "bg-surface-container opacity-60 border-surface-variant grayscale-[0.2]" 
+                          : "bg-surface-container-lowest border-surface-variant hover:border-primary/40 hover:shadow-sm"
                       )}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2.5 bg-slate-100 rounded-lg text-slate-500 flex-shrink-0">
+                        <div className="p-2.5 bg-surface-container-low rounded-md text-outline flex-shrink-0">
                           <Package size={16} />
                         </div>
                         <div className="min-w-0">
@@ -256,12 +256,12 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                               type="button"
                               onClick={() => handleAttributeSelect(attrKey, val)}
                               className={cn(
-                                "px-4 py-2 text-xs font-semibold rounded-lg border transition-all duration-150 relative flex items-center gap-1.5",
+                                "px-4 py-2 text-body-sm-bold rounded-sm border transition-all duration-150 relative flex items-center gap-1.5",
                                 isSelected
-                                  ? "bg-primary text-white border-primary shadow-sm shadow-primary/25"
+                                  ? "bg-primary text-on-primary border-primary shadow-sm shadow-primary/25"
                                   : hasStock
-                                    ? "bg-white text-slate-700 border-slate-200 hover:border-primary/50 hover:bg-slate-50/50"
-                                    : "bg-slate-100 text-slate-400 border-slate-200/70 line-through cursor-not-allowed opacity-50"
+                                    ? "bg-surface-container-lowest text-on-surface border-surface-variant hover:border-primary/50 hover:bg-surface-container-low"
+                                    : "bg-surface-container text-on-surface-variant border-surface-variant line-through cursor-not-allowed opacity-50"
                               )}
                               disabled={!hasStock && !isSelected}
                               title={!hasStock ? 'Sin stock disponible' : undefined}
@@ -288,7 +288,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                 {attributeKeys.every(k => selectedAttributes[k]) ? (
                   selectedVariant ? (
                     <div className={cn(
-                      "p-4 rounded-xl border flex items-center justify-between transition-all",
+                      "p-4 rounded-md border flex items-center justify-between transition-all",
                       (selectedVariant.stock_quantity || 0) > 0
                         ? "bg-emerald-50/40 border-emerald-100 text-emerald-800"
                         : "bg-rose-50/40 border-rose-100 text-rose-800"
@@ -315,13 +315,13 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                       </div>
                     </div>
                   ) : (
-                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center flex items-center justify-center gap-2">
-                      <AlertCircle size={18} className="text-slate-400" />
-                      <p className="text-xs font-semibold text-slate-600">Esta combinación no está disponible en catálogo.</p>
+                    <div className="p-4 bg-surface-container border border-surface-variant rounded-md text-center flex items-center justify-center gap-2">
+                      <AlertCircle size={18} className="text-on-surface-variant" />
+                      <p className="text-body-sm-bold text-on-surface-variant">Esta combinación no está disponible en catálogo.</p>
                     </div>
                   )
                 ) : (
-                  <div className="p-3.5 border border-dashed border-slate-200 rounded-xl text-center bg-slate-50/70 text-slate-500 text-xs">
+                  <div className="p-3.5 border border-dashed border-surface-variant rounded-md text-center bg-surface-container-low text-on-surface-variant text-body-sm">
                     Completa la selección de los atributos para ver disponibilidad.
                   </div>
                 )}

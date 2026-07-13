@@ -25,16 +25,16 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
   return (
     <div className="overflow-x-auto">
       {/* Desktop Table View */}
-      <table className="w-full text-sm hidden md:table">
+      <table className="w-full text-sm hidden md:table border-separate border-spacing-0">
         <thead>
-          <tr className="border-b bg-surface-container-low">
-            <th className="text-left py-3 px-4 text-label-caps text-on-surface-variant rounded-tl-md">ID</th>
-            <th className="text-left py-3 px-4 text-label-caps text-on-surface-variant">Producto</th>
-            <th className="text-right py-3 px-4 text-label-caps text-on-surface-variant">Cant.</th>
-            <th className="text-right py-3 px-4 text-label-caps text-on-surface-variant">Precio</th>
-            <th className="text-right py-3 px-4 text-label-caps text-on-surface-variant">Desc.</th>
-            <th className="text-right py-3 px-4 text-label-caps text-on-surface-variant">Total</th>
-            <th className="w-12 rounded-tr-md"></th>
+          <tr className="bg-surface-container-low">
+            <th className="text-left py-3 px-4 border-b border-surface-variant text-label-caps text-on-surface-variant rounded-tl-md">ID</th>
+            <th className="text-left py-3 px-4 border-b border-surface-variant text-label-caps text-on-surface-variant">Producto</th>
+            <th className="text-right py-3 px-4 border-b border-surface-variant text-label-caps text-on-surface-variant">Cant.</th>
+            <th className="text-right py-3 px-4 border-b border-surface-variant text-label-caps text-on-surface-variant">Precio</th>
+            <th className="text-right py-3 px-4 border-b border-surface-variant text-label-caps text-on-surface-variant">Desc.</th>
+            <th className="text-right py-3 px-4 border-b border-surface-variant text-label-caps text-on-surface-variant">Total</th>
+            <th className="w-12 border-b border-surface-variant rounded-tr-md"></th>
           </tr>
         </thead>
         <tbody>
@@ -42,22 +42,22 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
             <tr><td colSpan={7} className="text-center py-12 text-slate-400 font-medium">Carrito vacío - Busca un producto arriba</td></tr>
           ) : (
             items.map(item => (
-              <tr key={item.id} className={cn("border-b transition-colors", item.isFromPendingSale ? "bg-surface-container opacity-60 hover:opacity-100 grayscale-[0.2]" : "hover:bg-surface-container-low")}>
-                <td className="py-3 px-4 text-outline font-data-mono">{item.productId || '-'}</td>
-                <td className="py-3 px-4 text-body-md-bold text-on-surface">
+              <tr key={item.id} className={cn("transition-colors duration-150", item.isFromPendingSale ? "bg-surface-container opacity-60 hover:opacity-100 grayscale-[0.2]" : "hover:bg-surface-container-low")}>
+                <td className="py-3 px-4 border-b border-surface-variant text-outline font-data-mono">{item.productId || '-'}</td>
+                <td className="py-3 px-4 border-b border-surface-variant text-body-md-bold text-on-surface">
                   {item.isFromPendingSale && <Badge className="mr-2 bg-surface-variant text-on-surface-variant hover:bg-surface-variant border-none text-[9px] uppercase rounded-[4px]">Procesado</Badge>}
                   {item.name}
                   <div className='text-[10px] font-normal text-outline mt-0.5'>
                     Unidad: {item.unit}
                   </div>
                 </td>
-                <td className="py-3 px-4 text-right font-data-mono">
+                <td className="py-3 px-4 border-b border-surface-variant text-right font-data-mono">
                   {formatNumber(item.quantity)} <span className='text-[10px] font-normal text-outline ml-1'>{item.unit}</span>
                 </td>
-                <td className="py-3 px-4 text-right text-on-surface-variant font-data-mono">{formatCurrency(getItemBaseUnitPrice(item))}</td>
-                <td className="py-3 px-4 text-right text-error font-data-mono">-{formatCurrency(getItemLineDiscount(item))}</td>
-                <td className="py-3 px-4 text-right font-data-mono font-bold text-on-surface">{formatCurrency(getItemLineTotal(item))}</td>
-                <td className="py-3 px-4 text-right">
+                <td className="py-3 px-4 border-b border-surface-variant text-right text-on-surface-variant font-data-mono">{formatCurrency(getItemBaseUnitPrice(item))}</td>
+                <td className="py-3 px-4 border-b border-surface-variant text-right text-error font-data-mono">-{formatCurrency(getItemLineDiscount(item))}</td>
+                <td className="py-3 px-4 border-b border-surface-variant text-right font-data-mono font-bold text-on-surface">{formatCurrency(getItemLineTotal(item))}</td>
+                <td className="py-3 px-4 border-b border-surface-variant text-right">
                   <div className="flex items-center gap-1 justify-end">
                     <Button
                       variant="ghost"

@@ -13,6 +13,7 @@ import {
   MoreVertical,
   Plus,
   Search,
+  Layers,
   ShoppingCart,
   User,
   X,
@@ -576,7 +577,7 @@ const SalesNew: React.FC = () => {
             event.preventDefault();
             const selectedProduct = productSearchResults[productHighlightedIndex];
             if (selectedProduct) {
-              if (document.activeElement !== dropdownQuantityInputRef.current) {
+              if (document.activeElement !== dropdownQuantityInputRef.current && !selectedProduct.has_variants) {
                 dropdownQuantityInputRef.current?.focus();
                 dropdownQuantityInputRef.current?.select();
               } else {
@@ -1347,14 +1348,14 @@ const SalesNew: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit">
+        <div className="flex items-center gap-1.5 p-1 bg-surface-container-low rounded-md w-fit">
           {[
             { id: 'new-sale' as const, label: t('sales.tab.new', 'Nueva Venta'), icon: <Plus size={16} /> },
             { id: 'history' as const, label: t('sales.tab.history', 'Historial'), icon: <History size={16} /> },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn(
-              'flex items-center gap-2 px-6 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all',
-              activeTab === tab.id ? 'bg-white dark:bg-surface-dark text-primary shadow-fluent-2' : 'text-text-secondary hover:text-text-main'
+              'flex flex-1 items-center justify-center gap-2 px-6 py-2.5 rounded-md text-sm font-bold transition-all duration-300 relative z-10',
+              activeTab === tab.id ? 'bg-surface-container-lowest text-primary shadow-whisper' : 'text-on-surface-variant hover:text-on-surface'
             )}>
               {tab.icon} <span>{tab.label}</span>
             </button>
@@ -1384,18 +1385,18 @@ const SalesNew: React.FC = () => {
                       <Input
                         ref={productSearchInputRef}
                         type="text"
-                        placeholder="Buscar producto por nombre, SKU o código... (F2)"
+                        placeholder="Buscar producto por código, nombre o código de barras... (F2)"
                         value={productSearchTerm}
                         onChange={(e) => {
                           setProductSearchTerm(e.target.value);
                           setSelectedProductQuantity(1);
                         }}
-                        className="pl-10 h-12 text-base"
+                        className="pl-9 h-11 text-body-md shadow-sm border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm"
                       />
                     </div>
 
-                    {showProductDropdown && productSearchResults.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-border-subtle rounded-xl shadow-fluent-16 overflow-x-hidden max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                    {showProductDropdown && (
+                      <div className="absolute z-50 w-full mt-1 bg-surface-container-lowest rounded-md shadow-whisper overflow-x-hidden max-h-[400px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="p-1">
                           {productSearchResults.map((product, index) => {
                             const isHighlighted = index === productHighlightedIndex;
@@ -1408,6 +1409,7 @@ const SalesNew: React.FC = () => {
                             
                             // 2. Calcular stock virtual (disponible)
                             const availableStock = Math.max(0, product.stock - quantityInCart);
+                            const isOutOfStock = availableStock <= 0 && !product.has_variants;
 
                             return (
                               <div key={itemKey} className="w-full mb-0.5 last:mb-0">
@@ -1420,7 +1422,7 @@ const SalesNew: React.FC = () => {
                                   <button
                                     type="button"
                                     onClick={() => {
-                                      if (availableStock <= 0) {
+                                      if (isOutOfStock) {
                                         toast.error(`Sin stock disponible para ${product.name}`);
                                         return;
                                       }
@@ -1435,7 +1437,7 @@ const SalesNew: React.FC = () => {
                                     onMouseEnter={() => setProductHighlightedIndex(index)}
                                     className={cn(
                                       "flex-1 flex items-center gap-2 px-3 py-2.5 text-left transition-colors min-w-0",
-                                      availableStock <= 0 && "opacity-60 grayscale-[0.5]"
+                                      isOutOfStock && "opacity-60 grayscale-[0.5]"
                                     )}
                                   >
                                     <div className="flex-1 min-w-0 flex flex-col gap-1.5">
@@ -1457,10 +1459,11 @@ const SalesNew: React.FC = () => {
                                         <div className="flex flex-wrap items-center gap-1.5 min-w-0">
                                           <div className={cn(
                                             'px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide flex items-center gap-1 shrink-0',
+                                            product.has_variants ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' :
                                             availableStock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'
                                           )}>
-                                            <span className={cn("w-1.5 h-1.5 rounded-full", availableStock > 0 ? "bg-emerald-500" : "bg-red-500")} />
-                                            Stock: {formatNumber(availableStock)} {product.base_unit}
+                                            <span className={cn("w-1.5 h-1.5 rounded-full", product.has_variants ? "bg-indigo-500" : availableStock > 0 ? "bg-emerald-500" : "bg-red-500")} />
+                                            {product.has_variants ? 'Múltiples Variantes' : `Stock: ${formatNumber(availableStock)} ${product.base_unit}`}
                                           </div>
                                           {quantityInCart > 0 && (
                                             <div className="px-1.5 py-0.5 rounded-md text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 flex items-center gap-1 shrink-0">
@@ -1473,71 +1476,78 @@ const SalesNew: React.FC = () => {
                                     </div>
                                   </button>
 
-                                  {isHighlighted && availableStock > 0 && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 mr-1 bg-white rounded-md border border-slate-200 shadow-sm shrink-0 ml-1 animate-in slide-in-from-right-2 duration-200">
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="text-[9px] font-black uppercase text-slate-400 whitespace-nowrap">
-                                          Cant:
-                                        </span>
-                                        <input
-                                          ref={dropdownQuantityInputRef}
-                                          type="number"
-                                          min={isDecimalUnit(product.base_unit) ? "0.01" : "1"}
-                                          step={isDecimalUnit(product.base_unit) ? "0.01" : "1"}
-                                          max={availableStock}
-                                          value={selectedProductQuantity}
-                                          onChange={(e) => {
-                                            setSelectedProductQuantity(e.target.value);
-                                          }}
-                                          onBlur={() => {
-                                            const allowDecimal = isDecimalUnit(product.base_unit);
-                                            const minQty = allowDecimal ? 0.01 : 1;
-                                            let val = parseFloat(String(selectedProductQuantity));
-                                            if (isNaN(val)) val = minQty;
-                                            val = Math.max(minQty, val);
-                                            if (!allowDecimal) val = Math.floor(val);
-                                            val = Math.min(val, availableStock);
-                                            setSelectedProductQuantity(val);
-                                          }}
-                                          onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                              e.preventDefault();
+                                  {isHighlighted && !isOutOfStock && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 mr-1 bg-surface-container-lowest rounded-md shadow-sm shrink-0 ml-1 animate-in slide-in-from-right-2 duration-200">
+                                      {product.has_variants ? (
+                                        <div className="text-[11px] font-bold text-indigo-600 flex items-center gap-1 whitespace-nowrap">
+                                          <Layers size={14} />
+                                          Seleccionar Variante
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="text-[9px] font-black uppercase text-slate-400 whitespace-nowrap">
+                                            Cant:
+                                          </span>
+                                          <input
+                                            ref={dropdownQuantityInputRef}
+                                            type="number"
+                                            min={isDecimalUnit(product.base_unit) ? "0.01" : "1"}
+                                            step={isDecimalUnit(product.base_unit) ? "0.01" : "1"}
+                                            max={availableStock}
+                                            value={selectedProductQuantity}
+                                            onChange={(e) => {
+                                              setSelectedProductQuantity(e.target.value);
+                                            }}
+                                            onBlur={() => {
                                               const allowDecimal = isDecimalUnit(product.base_unit);
                                               const minQty = allowDecimal ? 0.01 : 1;
-                                              let qty = parseFloat(String(selectedProductQuantity));
-                                              if (isNaN(qty)) qty = minQty;
-                                              qty = Math.max(minQty, qty);
-                                              if (!allowDecimal) qty = Math.floor(qty);
-                                              qty = Math.min(qty, availableStock);
-                                              
-                                              if (qty > availableStock || qty <= 0) {
-                                                toast.error('Cantidad inválida');
-                                                return;
+                                              let val = parseFloat(String(selectedProductQuantity));
+                                              if (isNaN(val)) val = minQty;
+                                              val = Math.max(minQty, val);
+                                              if (!allowDecimal) val = Math.floor(val);
+                                              val = Math.min(val, availableStock);
+                                              setSelectedProductQuantity(val);
+                                            }}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                const allowDecimal = isDecimalUnit(product.base_unit);
+                                                const minQty = allowDecimal ? 0.01 : 1;
+                                                let qty = parseFloat(String(selectedProductQuantity));
+                                                if (isNaN(qty)) qty = minQty;
+                                                qty = Math.max(minQty, qty);
+                                                if (!allowDecimal) qty = Math.floor(qty);
+                                                qty = Math.min(qty, availableStock);
+                                                
+                                                if (qty > availableStock || qty <= 0) {
+                                                  toast.error('Cantidad inválida');
+                                                  return;
+                                                }
+                                                addProductToCart(product, qty);
+                                                setProductSearchTerm('');
+                                                setShowProductDropdown(false);
+                                                setProductHighlightedIndex(-1);
+                                                setSelectedProductQuantity(1);
+                                                productSearchInputRef.current?.focus();
+                                              } else if (e.key === 'Escape') {
+                                                setShowProductDropdown(false);
+                                                setProductHighlightedIndex(-1);
+                                              } else if (e.key === 'ArrowUp') {
+                                                e.preventDefault();
+                                                setProductHighlightedIndex(prev => Math.max(0, prev - 1));
+                                              } else if (e.key === 'ArrowDown') {
+                                                e.preventDefault();
+                                                setProductHighlightedIndex(prev =>
+                                                  Math.min(productSearchResults.length - 1, prev + 1)
+                                                );
                                               }
-                                              addProductToCart(product, qty);
-                                              setProductSearchTerm('');
-                                              setShowProductDropdown(false);
-                                              setProductHighlightedIndex(-1);
-                                              setSelectedProductQuantity(1);
-                                              productSearchInputRef.current?.focus();
-                                            } else if (e.key === 'Escape') {
-                                              setShowProductDropdown(false);
-                                              setProductHighlightedIndex(-1);
-                                            } else if (e.key === 'ArrowUp') {
-                                              e.preventDefault();
-                                              setProductHighlightedIndex(prev => Math.max(0, prev - 1));
-                                            } else if (e.key === 'ArrowDown') {
-                                              e.preventDefault();
-                                              setProductHighlightedIndex(prev =>
-                                                Math.min(productSearchResults.length - 1, prev + 1)
-                                              );
-                                            }
-                                            e.stopPropagation();
-                                          }}
-                                          className="w-14 h-8 text-[13px] font-black text-center border-2 border-primary/20 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                                          onClick={(e) => e.stopPropagation()}
-                                        />
-                                      </div>
+                                              e.stopPropagation();
+                                            }}
+                                            className="w-14 h-8 font-data-mono text-center border border-outline-variant rounded-sm bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                            onClick={(e) => e.stopPropagation()}
+                                          />
+                                        </div>
+                                      )}
                                       <div className="flex flex-col border-l border-slate-100 pl-1.5">
                                         <div className="flex items-center gap-0.5 text-[7px] font-black text-primary leading-none">
                                           <span className="opacity-60">⏎</span> OK
@@ -1549,7 +1559,7 @@ const SalesNew: React.FC = () => {
                                     </div>
                                   )}
                                   
-                                  {isHighlighted && availableStock <= 0 && (
+                                  {isHighlighted && isOutOfStock && (
                                     <div className="px-3 py-1 mr-2 bg-red-50 rounded border border-red-100 text-[8px] font-black text-red-500 uppercase animate-in fade-in duration-200">
                                       Agotado
                                     </div>
@@ -1662,7 +1672,7 @@ const SalesNew: React.FC = () => {
                                 };
                               }));
                             }}
-                            className="h-11 pl-4 text-xl font-black tracking-tighter text-primary border-transparent bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all rounded-lg"
+                            className="h-11 pl-4 text-xl font-data-mono font-black text-primary border border-outline-variant bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm"
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase tracking-widest pointer-events-none">
                             EDITABLE
@@ -1696,8 +1706,8 @@ const SalesNew: React.FC = () => {
                       onClick={handleSaveSale}
                       disabled={isProcessingSale || items.length === 0 || !canWrite || !selectedClient}
                       className={cn(
-                        "w-full h-12 text-base font-black uppercase tracking-widest transition-all",
-                        currentSaleId ? "bg-amber-600 hover:bg-amber-700 shadow-amber-200" : "shadow-primary/20"
+                        "w-full h-12 text-body-sm-bold rounded-button uppercase tracking-widest transition-all",
+                        currentSaleId ? "bg-amber-600 hover:bg-amber-700 shadow-amber-200" : "bg-primary text-on-primary hover:bg-primary/90 shadow-primary/20"
                       )}
                     >
                       {isProcessingSale 
@@ -1802,7 +1812,7 @@ const SalesNew: React.FC = () => {
 
         {activeTab === 'history' && (
           <div className="space-y-4">
-            <article className="bg-white rounded-lg shadow-sm border p-4 space-y-4">
+            <article className="bg-surface-container-lowest rounded-md shadow-whisper p-6 space-y-4">
               <div className="flex flex-wrap gap-4 items-end">
                 <div className="flex-1 min-w-[260px] space-y-1.5">
                   <label className="text-xs font-bold uppercase text-slate-500">Búsqueda rápida</label>
@@ -1974,7 +1984,7 @@ const SalesNew: React.FC = () => {
                         onChange={(e) => setModalQuantity(e.target.value)}
                         min={isDecimalUnit(modalUnit || 'unit') ? "0.01" : "1"}
                         step={isDecimalUnit(modalUnit || 'unit') ? "0.01" : "1"}
-                        className="h-10 text-base font-mono font-medium text-slate-900 bg-white border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-md shadow-sm"
+                        className="h-10 text-base font-data-mono font-medium text-on-surface bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm shadow-sm"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -1984,7 +1994,7 @@ const SalesNew: React.FC = () => {
                         list="allowed-units"
                         value={modalUnit}
                         onChange={(e) => setModalUnit(e.target.value)}
-                        className="h-10 text-base text-slate-900 bg-white border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-md shadow-sm"
+                        className="h-10 text-base text-on-surface bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm shadow-sm"
                       />
                     </div>
 
@@ -2013,7 +2023,7 @@ const SalesNew: React.FC = () => {
                             setModalDiscount(diff);
                           }
                         }}
-                        className="h-10 text-base font-mono font-semibold text-primary bg-white border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-md shadow-sm"
+                        className="h-10 text-base font-data-mono font-semibold text-primary bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm shadow-sm"
                       />
                     </div>
                   </div>
@@ -2031,10 +2041,10 @@ const SalesNew: React.FC = () => {
                             setModalDiscountType('amount');
                             setModalDiscount(modalDisplay.price - modalPrice);
                           }}
-                          className={`flex-1 px-3 py-1 text-xs font-semibold rounded transition-all ${
+                          className={`flex-1 px-3 py-1 text-xs font-semibold rounded-sm transition-all ${
                             modalDiscountType === 'amount' 
-                              ? 'bg-white text-slate-900 shadow-sm' 
-                              : 'text-slate-600 hover:text-slate-800'
+                              ? 'bg-surface-container-lowest text-on-surface shadow-sm' 
+                              : 'text-on-surface-variant hover:text-on-surface'
                           }`}
                         >
                           Monto Fijo
@@ -2045,10 +2055,10 @@ const SalesNew: React.FC = () => {
                             setModalDiscountType('percent');
                             setModalDiscount(Number((((modalDisplay.price - modalPrice) / modalDisplay.price) * 100).toFixed(2)));
                           }}
-                          className={`flex-1 px-3 py-1 text-xs font-semibold rounded transition-all ${
+                          className={`flex-1 px-3 py-1 text-xs font-semibold rounded-sm transition-all ${
                             modalDiscountType === 'percent' 
-                              ? 'bg-white text-slate-900 shadow-sm' 
-                              : 'text-slate-600 hover:text-slate-800'
+                              ? 'bg-surface-container-lowest text-on-surface shadow-sm' 
+                              : 'text-on-surface-variant hover:text-on-surface'
                           }`}
                         >
                           Porcentaje
@@ -2099,7 +2109,7 @@ const SalesNew: React.FC = () => {
                           value={modalCustomReasonText}
                           onChange={(e) => setModalCustomReasonText(e.target.value)}
                           placeholder="Especificar motivo detallado del ajuste..."
-                          className="h-10 border border-slate-300 rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-white"
+                          className="h-10 border border-outline-variant rounded-sm text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface-container-lowest"
                         />
                       </div>
                     )}
@@ -2128,17 +2138,17 @@ const SalesNew: React.FC = () => {
               )}
             </div>
             
-            <div className="flex gap-3 p-6 bg-slate-50 border-t border-slate-200 shrink-0">
+            <div className="flex gap-3 p-6 bg-surface border-t border-surface-variant shrink-0">
               <Button 
                 variant="outline" 
                 onClick={() => setIsModalOpen(false)} 
-                className="flex-1 h-10 text-sm font-semibold bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-md transition-all"
+                className="flex-1 h-10 text-body-sm-bold bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-on-surface rounded-button transition-all"
               >
                 Cancelar
               </Button>
               <Button 
                 onClick={handleConfirmAdd} 
-                className="flex-1 h-10 text-sm font-semibold bg-primary hover:bg-primary/90 text-white shadow-sm rounded-md transition-all"
+                className="flex-1 h-10 text-body-sm-bold bg-primary hover:bg-primary/90 text-on-primary shadow-sm rounded-button transition-all"
               >
                 {editingItemId ? 'Guardar Cambios' : 'Confirmar Adición'}
               </Button>
@@ -2176,8 +2186,8 @@ const SalesNew: React.FC = () => {
       )}
 
       {showActiveSaleModal && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 bg-white">
+        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm">
+          <Card className="w-full max-w-lg shadow-whisper animate-in zoom-in-95 duration-200 bg-surface-container-lowest rounded-md border-none">
             <CardHeader className="border-b bg-amber-50 px-6 py-4">
               <CardTitle className="text-amber-700 flex items-center gap-2">
                 <History size={20} /> Ventas Pendientes Detectadas

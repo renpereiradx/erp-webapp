@@ -31,8 +31,8 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-md transition-all">
-      <Card className="w-full max-w-xl shadow-whisper bg-surface-container-lowest animate-in zoom-in-95 duration-200 border border-surface-variant overflow-hidden">
-        <CardHeader className="border-b border-white/10 bg-emerald-50/80 backdrop-blur-md px-6 py-5">
+      <Card className="w-full max-w-xl shadow-whisper bg-surface-container-lowest animate-in zoom-in-95 duration-200 border-none rounded-md overflow-hidden">
+        <CardHeader className="border-b border-surface-variant bg-surface-container-low px-6 py-5">
           <div className="flex items-center gap-3">
             <div className="size-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary shadow-sm backdrop-blur-sm">
               <ShoppingCart size={22} />
@@ -41,7 +41,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
               <CardTitle className="text-title-md text-on-surface">
                 Reservas Pendientes de Cobro
               </CardTitle>
-              <p className="text-xs text-emerald-600 font-medium uppercase tracking-wider">
+              <p className="text-body-sm-bold text-on-surface-variant uppercase tracking-wider">
                 {selectedClientName} • {pendingReservations.length} encontradas
               </p>
             </div>
@@ -71,7 +71,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                       onToggleSelection(resId);
                     }}
                     className={cn(
-                      "group relative flex flex-col p-4 border rounded-xl transition-all cursor-pointer bg-surface",
+                      "group relative flex flex-col p-4 border rounded-md transition-all cursor-pointer bg-surface",
                       isSelected 
                         ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm" 
                         : isProductAlreadySelected
@@ -142,14 +142,14 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
             <Button 
               variant="ghost" 
               onClick={onClose} 
-              className="flex-1 h-12 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-200/50"
+              className="flex-1 h-12 text-body-sm-bold uppercase tracking-widest text-on-surface-variant hover:bg-surface-container rounded-button"
             >
               Omitir Reservas
             </Button>
             <Button 
               onClick={onAddReservations} 
               disabled={selectedResIds.size === 0}
-              className="flex-[2] h-12 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
+              className="flex-[2] h-12 text-body-sm-bold uppercase tracking-widest bg-primary hover:bg-primary/90 text-on-primary shadow-sm rounded-button transition-all"
             >
               <Plus className="mr-2 size-4" /> 
               Añadir {selectedResIds.size} {selectedResIds.size === 1 ? 'Reserva' : 'Reservas'} al Carrito
