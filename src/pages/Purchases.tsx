@@ -43,9 +43,8 @@ import { PurchaseProductModal } from '@/features/purchases/components/PurchasePr
 
 import { PurchaseCartTable } from '@/features/purchases/components/PurchaseCartTable'
 import { PurchaseTotalsCard } from '@/features/purchases/components/PurchaseTotalsCard'
-import { SupplierSelectionCard } from '@/features/purchases/components/SupplierSelectionCard'
-import { PaymentConfigCard } from '@/features/purchases/components/PaymentConfigCard'
 import { PurchaseHistoryTab } from '@/features/purchases/components/PurchaseHistoryTab'
+import { PurchaseCheckoutModal } from '@/features/purchases/components/PurchaseCheckoutModal'
 
 import { PurchaseCancelModal } from '@/features/purchases/components/PurchaseCancelModal'
 import { PurchaseConfirmationModal } from '@/features/purchases/components/PurchaseConfirmationModal'
@@ -56,7 +55,19 @@ import { PurchaseConfirmationModal } from '@/features/purchases/components/Purch
  * Modal optimized for low-height desktop screens (720p+).
  */
 const Purchases = () => {
-  const logic = usePurchasesLogic()
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const logic = usePurchasesLogic();
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (logic.activeTab === 'nueva-compra' && event.key === 'F12' && logic.purchaseItems.length > 0) {
+        event.preventDefault();
+        setShowCheckoutModal(true);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [logic.activeTab, logic.purchaseItems]);
   const {
     activeProductIndex,
     activeSupplierIndex,
@@ -211,16 +222,10 @@ const Purchases = () => {
 
         {activeTab === 'nueva-compra' && (
           <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6'>
-            <div className='lg:col-span-9 space-y-4 md:space-y-6'>
+            <div className='lg:col-span-12 space-y-4 md:space-y-6'>
               <PurchaseCartTable {...logic} />
-              <PurchaseTotalsCard {...logic} />
+              <PurchaseTotalsCard {...logic} onCheckout={() => setShowCheckoutModal(true)} />
             </div>
-
-            {/* Right Column: Configuration & Supplier - Fluent 2 */}
-            <aside className='lg:col-span-3 space-y-4 md:space-y-6'>
-              <SupplierSelectionCard {...logic} />
-              <PaymentConfigCard {...logic} />
-            </aside>
           </div>
         )}
 
@@ -237,6 +242,12 @@ const Purchases = () => {
 
       {/* CONFIRMATION MODAL - Extracted to component */}
       <PurchaseConfirmationModal {...logic} />
+
+      <PurchaseCheckoutModal 
+        isOpen={showCheckoutModal} 
+        onClose={() => setShowCheckoutModal(false)} 
+        logic={logic} 
+      />
 
       {showInstantPayment && createdOrderData && (
         <InstantPaymentDialog

@@ -60,6 +60,7 @@ import { CurrencyService } from '@/services/currencyService';
 import { productService } from '@/services/productService';
 import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog';
 import { VariantSelectorModal } from '@/features/sales/components/VariantSelectorModal';
+import { CheckoutModal } from '@/features/sales/components/CheckoutModal';
 import { salePaymentService } from '@/services/salePaymentService';
 import { useI18n } from '@/lib/i18n';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
@@ -326,6 +327,7 @@ const SalesNew: React.FC = () => {
   const [activeSale, setActiveSale] = useState<any | null>(null);
   const [activeSaleIndex, setActiveSaleIndex] = useState(0);
   const [showActiveSaleModal, setShowActiveSaleModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   const [pendingReservations, setPendingReservations] = useState<any[]>([]);
   const [selectedResIds, setSelectedResIds] = useState<Set<number>>(new Set());
@@ -598,6 +600,10 @@ const SalesNew: React.FC = () => {
         }
       }
 
+      if (event.key === 'F12' && items.length > 0) {
+        event.preventDefault();
+        setShowCheckoutModal(true);
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
@@ -717,7 +723,7 @@ const SalesNew: React.FC = () => {
         setActiveSales(response.data);
         setActiveSale(response.data[0]);
         setActiveSaleIndex(0);
-        setShowActiveSaleModal(true);
+        // setShowActiveSaleModal(true); // Manejado en CheckoutModal
         hasPendingSales = true;
       }
     } catch (error) {
@@ -739,7 +745,7 @@ const SalesNew: React.FC = () => {
         // Si no hay ventas pendientes, mostrar reservas directamente
         // Si hay ventas pendientes, el modal de reservas se mostrará después de cerrar el de ventas
         if (!hasPendingSales) {
-          setShowReservationModal(true);
+          // setShowReservationModal(true); // Manejado en CheckoutModal
         }
       }
     } catch (error) {
@@ -1366,7 +1372,7 @@ const SalesNew: React.FC = () => {
       <main className="w-full">
         {activeTab === 'new-sale' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-9 space-y-4">
+            <div className="lg:col-span-12 space-y-4">
               <article className="bg-surface-container-lowest rounded-md shadow-whisper relative">
                 <header className="flex items-center justify-between px-6 py-4 border-b border-surface-variant">
                   <div className="flex items-center gap-2">
@@ -1695,16 +1701,12 @@ const SalesNew: React.FC = () => {
                     <MessageBar intent="info" className="mb-2">
                       Agrega productos al carrito para continuar.
                     </MessageBar>
-                  ) : !selectedClient ? (
-                    <MessageBar intent="warning" className="mb-2">
-                      Selecciona un cliente para poder confirmar la venta.
-                    </MessageBar>
                   ) : null}
 
                   <div className="flex flex-col justify-end gap-2">
                     <Button
-                      onClick={handleSaveSale}
-                      disabled={isProcessingSale || items.length === 0 || !canWrite || !selectedClient}
+                      onClick={() => setShowCheckoutModal(true)}
+                      disabled={isProcessingSale || items.length === 0 || !canWrite}
                       className={cn(
                         "w-full h-12 text-body-sm-bold rounded-button uppercase tracking-widest transition-all",
                         currentSaleId ? "bg-amber-600 hover:bg-amber-700 shadow-amber-200" : "bg-primary text-on-primary hover:bg-primary/90 shadow-primary/20"
@@ -1713,8 +1715,8 @@ const SalesNew: React.FC = () => {
                       {isProcessingSale 
                         ? 'Procesando...' 
                         : currentSaleId 
-                          ? `Actualizar Venta #${currentSaleId}` 
-                          : 'Confirmar Venta'
+                          ? `Actualizar Venta #${currentSaleId} (F12)` 
+                          : 'Cobrar (F12)'
                       }
                     </Button>
                     <Button variant="outline" onClick={() => setItems([])} className="w-full">Limpiar Carrito</Button>
@@ -1722,91 +1724,6 @@ const SalesNew: React.FC = () => {
                 </div>
               </article>
             </div>
-
-            <aside className="lg:col-span-3 space-y-6">
-              <article className="bg-surface-container-lowest rounded-md shadow-whisper p-6 space-y-4">
-                <div className="flex items-center gap-2 border-b border-surface-variant pb-3 mb-3">
-                  <User size={18} className="text-primary" />
-                  <h3 className="text-title-md text-on-surface">Cliente</h3>
-                </div>
-                <SearchableDropdown<Client>
-                  inputRef={clientSearchInputRef}
-                  onSelect={handleSelectClient}
-                  onSearch={async (term: string): Promise<Client[]> => {
-                    if (term.trim().length < 3) return [];
-                    await searchClients(term);
-                    return useClientStore.getState().searchResults as Client[];
-                  }}
-                  placeholder="Buscar cliente... (F3)"
-                  autoFocus={false}
-                  renderItem={(item, _index, _isHighlighted) => (
-                    <div className="flex items-center gap-3">
-                      <div className="size-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <User size={14} className="text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm truncate">{item.displayName || item.name}</p>
-                        {item.document_id && (
-                          <p className="text-xs text-slate-500">CI: {item.document_id}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  emptyMessage="No se encontraron clientes"
-                  className="w-full"
-                />
-                {selectedClient && (
-                  <div className="p-3 bg-primary/5 rounded border border-primary/10 flex items-center justify-between">
-                    <div>
-                      <p className="font-black text-primary uppercase text-xs">Cliente Seleccionado</p>
-                      <p className="font-bold text-sm">{selectedClient.displayName || selectedClient.name}</p>
-                      <p className="text-xs text-slate-500">{selectedClient.document_id}</p>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={handleClearClient} className="size-8 text-slate-400 hover:text-red-500">
-                      <X size={14} />
-                    </Button>
-                  </div>
-                )}
-              </article>
-
-              <article className="bg-surface-container-lowest rounded-md shadow-whisper p-6 space-y-3">
-                <div className="flex items-center gap-2 border-b border-surface-variant pb-3">
-                  <CreditCard size={18} className="text-primary" />
-                  <h3 className="text-title-md text-on-surface">Método de Pago</h3>
-                </div>
-                <Select value={String(paymentMethodId)} onValueChange={(v) => setPaymentMethodId(Number(v))}>
-                  <SelectTrigger className="w-full h-11">
-                    <SelectValue placeholder="Seleccionar método" />
-                  </SelectTrigger>
-                  <SelectContent className="z-[150]">
-                    {paymentMethods.map(method => (
-                      <SelectItem key={method.id} value={String(method.id)}>
-                        {(method as any).name || (method as any).description || `Método #${method.id}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </article>
-
-              <article className="bg-surface-container-lowest rounded-md shadow-whisper p-6 space-y-3">
-                <div className="flex items-center gap-2 border-b border-surface-variant pb-3">
-                  <DollarSign size={18} className="text-primary" />
-                  <h3 className="text-title-md text-on-surface">Moneda</h3>
-                </div>
-                <Select value={String(currencyId)} onValueChange={(v) => setCurrencyId(Number(v))}>
-                  <SelectTrigger className="w-full h-11">
-                    <SelectValue placeholder="Seleccionar moneda" />
-                  </SelectTrigger>
-                  <SelectContent className="z-[150]">
-                    {currencies.map(currency => (
-                      <SelectItem key={currency.id} value={String(currency.id)}>
-                        {(currency as any).code || (currency as any).name || `Moneda #${currency.id}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </article>
-            </aside>
           </div>
         )}
 
@@ -2376,6 +2293,30 @@ const SalesNew: React.FC = () => {
           }} 
         />
       )}
+
+      <CheckoutModal
+        isOpen={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        onConfirm={() => {
+          setShowCheckoutModal(false);
+          handleSaveSale();
+        }}
+        totalAmount={total}
+        client={selectedClient}
+        onClientSelect={handleSelectClient}
+        onClearClient={handleClearClient}
+        paymentMethods={paymentMethods}
+        paymentMethodId={paymentMethodId}
+        setPaymentMethodId={setPaymentMethodId}
+        currencies={currencies}
+        currencyId={currencyId}
+        setCurrencyId={setCurrencyId}
+        activeSales={activeSales}
+        pendingReservations={pendingReservations}
+        canWrite={canWrite}
+        isProcessingSale={isProcessingSale}
+        currentSaleId={currentSaleId}
+      />
 
       <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
     </div>

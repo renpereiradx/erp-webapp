@@ -167,6 +167,22 @@ const InstantPaymentDialog = ({
     return () => clearTimeout(timer)
   }, [open])
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!open || processing) return;
+      if (e.key === 'F12' || (e.key === 'Enter' && e.ctrlKey)) {
+        e.preventDefault();
+        handleConfirm();
+      }
+      if (e.key === 'Enter' && !e.ctrlKey) {
+        // Prevent default submit if they just press Enter in the amount input unless they press Ctrl+Enter or F12. Actually standard keyboard flow could use Enter to submit.
+        // Let's use Enter to submit if they are on the amount input.
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, processing, amount, selectedMethodId, cashRegisterId, notes]);
+
   const handleConfirm = async () => {
     const normalizedAmount = toPositiveAmount(amount)
 
@@ -304,6 +320,12 @@ const InstantPaymentDialog = ({
                   const next = e.target.value
                   setAmount(next === '' ? '' : toPositiveAmount(next))
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleConfirm();
+                  }
+                }}
                 disabled={processing}
                 className='flex h-12 w-full rounded-sm border border-outline-variant bg-surface-container-lowest px-4 py-2 pr-16 text-lg font-data-mono font-black text-on-surface transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50'
               />
@@ -425,7 +447,7 @@ const InstantPaymentDialog = ({
               t(
                 isSale ? `${prefix}.collectNow` : `${prefix}.payNow`,
                 isSale ? 'Confirmar Cobro' : 'Confirmar Pago',
-              )
+              ) + ' (Enter / F12)'
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

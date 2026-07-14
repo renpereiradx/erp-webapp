@@ -659,7 +659,7 @@ export const usePurchasesLogic = () => {
   }
 
   const handleConfirmAddProduct = () => {
-    if (!modalSelectedProduct || !modalQuantity || !modalUnitPrice) return
+    if (!modalSelectedProduct || modalQuantity === '' || Number(modalQuantity) <= 0 || modalUnitPrice === '') return
     const productId = modalSelectedProduct.id || modalSelectedProduct.product_id
     const itemData = {
       product_id: productId,

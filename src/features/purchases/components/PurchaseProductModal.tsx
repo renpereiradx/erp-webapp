@@ -82,6 +82,40 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
     }
   }, [modalSelectedProduct?.id, modalSelectedProduct?.product_id])
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isModalOpen) return;
+      
+      const isConfirmValid = !(
+        !modalSelectedProduct || 
+        modalQuantity === '' || Number(modalQuantity) <= 0 || 
+        modalUnitPrice === '' || 
+        ((modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && modalVariantId === undefined)
+      );
+
+      if (e.key === 'F12' || (e.key === 'Enter' && e.ctrlKey)) {
+        e.preventDefault();
+        if (isConfirmValid) {
+          handleConfirmAddProduct();
+        }
+      }
+      if (e.key === 'F3') {
+        e.preventDefault();
+        modalProductSearchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    isModalOpen,
+    modalSelectedProduct,
+    modalQuantity,
+    modalUnitPrice,
+    modalVariantId,
+    variants,
+    handleConfirmAddProduct
+  ]);
+
   if (!isModalOpen) return null
 
   return (
@@ -887,7 +921,10 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
             className='px-5 py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-md shadow-whisper active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none text-sm'
             onClick={handleConfirmAddProduct}
             disabled={
-              !modalSelectedProduct || !modalQuantity || !modalUnitPrice || ((modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && modalVariantId === undefined)
+              !modalSelectedProduct || 
+              modalQuantity === '' || Number(modalQuantity) <= 0 || 
+              modalUnitPrice === '' || 
+              ((modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && modalVariantId === undefined)
             }
           >
             {editingItemId ? 'Guardar Cambios' : 'Agregar a la Orden'}

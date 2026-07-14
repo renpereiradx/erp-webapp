@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CheckCircle, Building, AlertCircle } from 'lucide-react';
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
@@ -23,6 +23,19 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
   handleFilter,
   setShowInstantPayment,
 }) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!showConfirmationModal || !latestPurchaseResult) return;
+      if (e.key === 'Enter' || e.key === 'F12') {
+        e.preventDefault();
+        setShowConfirmationModal(false);
+        setShowInstantPayment(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showConfirmationModal, latestPurchaseResult, setShowConfirmationModal, setShowInstantPayment]);
+
   if (!showConfirmationModal || !latestPurchaseResult) return null;
 
   return (
@@ -125,7 +138,7 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
               setShowInstantPayment(true)
             }}
           >
-            Registrar Pago
+            Registrar Pago (Enter / F12)
           </button>
         </div>
       </div>

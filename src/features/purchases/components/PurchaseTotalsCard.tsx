@@ -13,7 +13,9 @@ export type PurchaseTotalsCardProps = Pick<
   | 'setPurchaseItems'
   | 'setSelectedSupplier'
   | 'setSupplierSearch'
->;
+> & {
+  onCheckout: () => void;
+};
 
 export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
   purchaseItems,
@@ -26,6 +28,7 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
   setPurchaseItems,
   setSelectedSupplier,
   setSupplierSearch,
+  onCheckout,
 }) => {
   return (
     <section className='bg-surface-container-lowest rounded-md border border-surface-variant shadow-whisper p-5 animate-in slide-in-from-bottom-2 duration-500 delay-75'>
@@ -132,15 +135,14 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
         <div className='flex flex-col gap-3 justify-end'>
           <button
             className='w-full py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-md shadow-whisper active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none text-sm'
-            onClick={handleSavePurchase}
+            onClick={onCheckout}
             disabled={
-              !selectedSupplier ||
               purchaseItems.length === 0 ||
               loading ||
               !canWrite
             }
           >
-            {loading ? 'Procesando...' : 'Confirmar y Guardar Compra'}
+            {loading ? 'Procesando...' : 'COMPRAR (F12)'}
           </button>
           <button
             className='w-full py-3 border border-surface-variant hover:bg-surface-container-low text-on-surface-variant font-semibold rounded-md transition-all duration-150 text-sm'
