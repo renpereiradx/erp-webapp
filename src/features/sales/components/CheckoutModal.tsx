@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown';
 import { Badge } from '@/components/ui/badge';
+import { useBranch } from '@/contexts/BranchContext';
 import { formatCurrency } from '@/utils/currencyUtils';
 import useClientStore from '@/store/useClientStore';
 import { cn } from '@/lib/utils';
@@ -56,6 +57,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   isProcessingSale,
   currentSaleId,
 }) => {
+  const { currentBranchId } = useBranch();
+  
+  const activeSaleObj = currentSaleId ? activeSales.find(s => String(s.id) === String(currentSaleId)) : null;
+  const isFromOtherBranch = activeSaleObj && activeSaleObj.branch_id && activeSaleObj.branch_id !== currentBranchId;
   const { searchClients } = useClientStore();
   const [cashTendered, setCashTendered] = useState<string>('');
   const clientSearchInputRef = useRef<HTMLInputElement>(null);
@@ -170,6 +175,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <div>
                         <p className="text-[11px] font-black uppercase text-amber-800 tracking-wider">Atención</p>
                         <p className="text-xs font-medium text-amber-700">Este cliente tiene {activeSales.length > 0 ? `${activeSales.length} ventas pendientes` : ''} {activeSales.length > 0 && pendingReservations.length > 0 ? 'y' : ''} {pendingReservations.length > 0 ? `${pendingReservations.length} reservas pendientes` : ''}. Verifica si deseas sumarlas al total antes de cobrar.</p>
+                      </div>
+                    </div>
+                  )}
+                  {isFromOtherBranch && (
+                    <div className="mt-3 p-3 bg-orange-50 rounded-md border border-orange-200 flex items-start gap-2">
+                      <AlertTriangle size={16} className="text-orange-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-[11px] font-black uppercase text-orange-800 tracking-wider">Cobro Multi-Sucursal</p>
+                        <p className="text-xs font-medium text-orange-700">Estás cobrando una venta iniciada en otra sucursal. Confirma que esto es correcto.</p>
                       </div>
                     </div>
                   )}

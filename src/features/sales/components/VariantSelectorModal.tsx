@@ -89,6 +89,10 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
     });
   };
 
+  const variantsTotalStock = variants.reduce((acc, v) => acc + (v.stock_quantity || 0), 0);
+  const totalConsolidatedStock = product.stock || 0;
+  const baseStock = Math.max(0, totalConsolidatedStock - variantsTotalStock);
+
   return (
     <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-md animate-in fade-in duration-200">
       <div className="bg-surface-container-lowest rounded-md shadow-whisper w-full max-w-3xl overflow-hidden animate-in zoom-in-95 flex flex-col md:flex-row md:min-h-[450px]">
@@ -118,11 +122,27 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                   <span className="font-data-mono text-on-surface font-bold">{formatPrice(product.price)}</span>
                 </div>
                 <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
-                  <span className="flex items-center gap-1.5"><Package size={14} /> {variants.length > 0 ? 'Stock (Variantes):' : 'Stock Total:'}</span>
-                  <span className={cn("font-data-mono font-bold", (variants.length > 0 ? variants.reduce((acc, v) => acc + (v.stock_quantity || 0), 0) : (product.stock || 0)) > 0 ? "text-success" : "text-error")}>
-                    {variants.length > 0 ? variants.reduce((acc, v) => acc + (v.stock_quantity || 0), 0) : (product.stock || 0)} {product.base_unit || 'unid'}
+                  <span className="flex items-center gap-1.5"><Package size={14} /> Stock Total:</span>
+                  <span className={cn("font-data-mono font-bold", totalConsolidatedStock > 0 ? "text-success" : "text-error")}>
+                    {totalConsolidatedStock} {product.base_unit || 'unid'}
                   </span>
                 </div>
+                {variants.length > 0 && (
+                  <>
+                    <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
+                      <span className="flex items-center gap-1.5 pl-4 opacity-80"><Package size={12} /> Base (Sin var.):</span>
+                      <span className={cn("font-data-mono font-bold text-sm", baseStock > 0 ? "text-success" : "text-error")}>
+                        {baseStock} {product.base_unit || 'unid'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
+                      <span className="flex items-center gap-1.5 pl-4 opacity-80"><Layers size={12} /> Variantes:</span>
+                      <span className={cn("font-data-mono font-bold text-sm", variantsTotalStock > 0 ? "text-success" : "text-error")}>
+                        {variantsTotalStock} {product.base_unit || 'unid'}
+                      </span>
+                    </div>
+                  </>
+                )}
                 {product.taxRate !== undefined && (
                   <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
                     <span className="flex items-center gap-1.5"><Info size={14} /> IVA:</span>
@@ -333,10 +353,13 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
               <button
                 type="button"
                 onClick={() => onSelect({ id: null, variant_name: 'Producto Principal' }, 1)}
-                className="flex-1 px-4 py-2.5 bg-surface-container hover:bg-surface-container-low text-on-surface text-body-sm-bold rounded-button transition-all flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 bg-surface-container hover:bg-surface-container-low text-on-surface text-body-sm-bold rounded-button transition-all flex flex-col items-center justify-center gap-0.5"
               >
-                <Package size={14} className="text-on-surface-variant" />
-                Producto principal sin variante
+                <div className="flex items-center gap-2">
+                  <Package size={14} className="text-on-surface-variant" />
+                  Producto principal
+                </div>
+                <span className={cn("text-[10px] font-bold uppercase", baseStock > 0 ? "text-emerald-600" : "text-rose-600")}>Stock: {baseStock}</span>
               </button>
 
               {/* Botón Añadir Variante */}

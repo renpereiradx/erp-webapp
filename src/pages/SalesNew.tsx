@@ -723,7 +723,7 @@ const SalesNew: React.FC = () => {
         setActiveSales(response.data);
         setActiveSale(response.data[0]);
         setActiveSaleIndex(0);
-        // setShowActiveSaleModal(true); // Manejado en CheckoutModal
+        setShowActiveSaleModal(true);
         hasPendingSales = true;
       }
     } catch (error) {
@@ -1158,7 +1158,7 @@ const SalesNew: React.FC = () => {
           }),
         };
 
-        const response = await saleService.addProductsToSale(currentSaleId, payload);
+        const response = await saleService.addProductsToSale(currentSaleId, payload, activeSale?.branch_id);
         
         if (response?.success) {
           toast.success(`Venta #${currentSaleId} actualizada exitosamente.`);
@@ -1171,6 +1171,8 @@ const SalesNew: React.FC = () => {
           const errMsg = response?.error || response?.message || 'No se pudieron agregar los productos a la venta';
           if (errMsg.toLowerCase().includes('no existe conversion') || errMsg.toLowerCase().includes('conversión')) {
             toast.error(`No existe conversión de unidad: ${errMsg}. Registre la conversión primero.`);
+          } else if (errMsg.toLowerCase().includes('variant_id is required')) {
+            toast.error('Este producto requiere seleccionar una variante. Por favor, seleccione la variante correspondiente.');
           } else {
             toast.error(errMsg);
           }
@@ -1305,6 +1307,8 @@ const SalesNew: React.FC = () => {
           const errMsg = response?.error || response?.message || 'No se pudo registrar la venta';
           if (errMsg.toLowerCase().includes('no existe conversion') || errMsg.toLowerCase().includes('conversión')) {
             toast.error(`No existe conversión de unidad: ${errMsg}. Registre la conversión primero.`);
+          } else if (errMsg.toLowerCase().includes('variant_id is required')) {
+            toast.error('Este producto requiere seleccionar una variante. Por favor, seleccione la variante correspondiente.');
           } else {
             toast.error(errMsg);
           }
@@ -1314,8 +1318,10 @@ const SalesNew: React.FC = () => {
       const errMsg = error?.message || error?.error || 'Error inesperado al procesar la venta';
       if (errMsg.toLowerCase().includes('no existe conversion') || errMsg.toLowerCase().includes('conversión')) {
         toast.error(`No existe conversión de unidad: ${errMsg}. Registre la conversión primero.`);
+      } else if (errMsg.toLowerCase().includes('variant_id is required')) {
+        toast.error('Este producto requiere seleccionar una variante. Por favor, seleccione la variante correspondiente.');
       } else {
-        toast.error('Ocurrió un error al procesar la venta');
+        toast.error(errMsg);
       }
     } finally {
       setIsProcessingSale(false);
@@ -1649,6 +1655,12 @@ const SalesNew: React.FC = () => {
 
                     {pendingItems.length === 0 && (
                       <div className="p-3 bg-slate-50 rounded-xl border-2 border-slate-100 space-y-2 my-2">
+                        {currentSaleId && activeSale?.branch_id && activeSale.branch_id !== currentBranchId && (
+                          <MessageBar
+                            type="warning"
+                            message={`Estás modificando una venta pendiente originada en otra sucursal. Los productos que añadas descontarán inventario de la sucursal origen.`}
+                          />
+                        )}
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
                           <DollarSign size={10} /> Precio Final de Venta
                         </label>
@@ -2148,6 +2160,11 @@ const SalesNew: React.FC = () => {
                         <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none text-[9px] uppercase font-black">
                           Pendiente
                         </Badge>
+                        {sale.branch_id && sale.branch_id !== currentBranchId && (
+                          <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-none text-[9px] uppercase font-black ml-2">
+                            Origen: Otra Sucursal
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex justify-between items-end ml-6">
                         <span className="text-xs text-slate-500">{formatDateTime(sale.sale_date || sale.created_at)}</span>

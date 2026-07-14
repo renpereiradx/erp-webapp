@@ -806,6 +806,8 @@ export const usePurchasesLogic = () => {
           toast.error(
             `No existe conversión de unidad: ${errMsg}. Registre la conversión antes de comprar en esta unidad.`,
           )
+        } else if (errMsg.toLowerCase().includes('variant_id is required') || errMsg.toLowerCase().includes('variante es requerida')) {
+          toast.error('Este producto requiere seleccionar una variante. Por favor, seleccione la variante correspondiente.');
         } else {
           toast.error(errMsg)
         }

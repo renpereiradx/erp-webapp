@@ -96,7 +96,8 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
 
   const hasVariants = product?.has_variants || variants.length > 0;
   const variantsTotalStock = variants.reduce((acc, v) => acc + (v.stock_quantity || 0), 0);
-  const totalConsolidatedStock = stockQuantity + variantsTotalStock;
+  const totalConsolidatedStock = stockQuantity; // stockQuantity is already consolidated
+  const baseStock = Math.max(0, stockQuantity - variantsTotalStock);
 
   return (
     <div 
@@ -417,16 +418,16 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                   {hasVariants ? (
                     <div className="space-y-4 flex-1 flex flex-col">
                       <div>
-                        <div className="text-3xl font-black text-gray-800 tabular-nums leading-none">{stockQuantity}</div>
-                        <p className="text-xs text-gray-400 mt-1 font-medium">Stock Producto Base</p>
+                        <div className="text-3xl font-black text-gray-800 tabular-nums leading-none">{totalConsolidatedStock}</div>
+                        <p className="text-xs text-gray-400 mt-1 font-medium">Stock Total (Base + Variantes)</p>
                       </div>
                       <div className="pt-3 border-t border-gray-100">
-                        <div className="text-xl font-bold text-gray-700 tabular-nums leading-none">{variantsTotalStock}</div>
-                        <p className="text-xs text-gray-400 mt-1 font-medium">Stock en Variantes</p>
+                        <div className="text-xl font-bold text-gray-700 tabular-nums leading-none">{baseStock}</div>
+                        <p className="text-xs text-gray-400 mt-1 font-medium">Stock Base (Sin Variantes)</p>
                       </div>
                       <div className="mt-auto pt-3 border-t border-gray-100 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-2xl flex justify-between items-center">
-                        <span className="text-xs font-bold text-gray-500 uppercase">Total Consolidado</span>
-                        <span className="text-lg font-black text-primary tabular-nums">{totalConsolidatedStock}</span>
+                        <span className="text-xs font-bold text-gray-500 uppercase">Stock en Variantes</span>
+                        <span className="text-lg font-black text-primary tabular-nums">{variantsTotalStock}</span>
                       </div>
                     </div>
                   ) : (

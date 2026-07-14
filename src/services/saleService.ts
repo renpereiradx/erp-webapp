@@ -511,9 +511,13 @@ export const saleService = {
     }
   },
 
-  async addProductsToSale(saleId: string, payload: AddProductsToSaleRequest) {
+  async addProductsToSale(saleId: string, payload: AddProductsToSaleRequest, branchId?: number | string) {
     try {
-      const response = await apiClient.addProductsToSale(saleId, payload)
+      const headers: Record<string, string> = {}
+      if (branchId) {
+        headers['X-Branch-ID'] = String(branchId)
+      }
+      const response = await apiClient.addProductsToSale(saleId, payload, { headers })
       return { success: true, data: response }
     } catch (error: any) {
       console.error(`Error adding products to sale ${saleId}:`, error)
