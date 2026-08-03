@@ -214,11 +214,11 @@ const CurrencyConverter = ({
                 Resultado de Conversión
               </div>
               <div className="text-2xl font-bold text-green-900">
-                {formatAmount(amount)} {fromCurrency.currency_code} = {formatAmount(convertedAmount)} {toCurrency.currency_code}
+                {formatAmount(amount)} {fromCurrency.code || fromCurrency.currency_code} = {formatAmount(convertedAmount)} {toCurrency.code || toCurrency.currency_code}
               </div>
               {calculateRate() && (
                 <div className="text-sm text-green-700 mt-2">
-                  Tasa: 1 {fromCurrency.currency_code} = {calculateRate()} {toCurrency.currency_code}
+                  Tasa: 1 {fromCurrency.code || fromCurrency.currency_code} = {calculateRate()} {toCurrency.code || toCurrency.currency_code}
                 </div>
               )}
             </div>

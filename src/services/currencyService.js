@@ -45,11 +45,18 @@ class CurrencyService {
       return null
     }
 
-    const currencyCode = payload.currency_code || payload.code || ''
+    const currencyCode = payload.code || payload.currency_code || ''
     const currencyName = payload.currency_name || payload.name || ''
 
     return {
       id: payload.id,
+      // Campo canónico del contrato (F7.2): el BE emite `code`; el alias
+      // `currency_code` se eliminará del BE cuando el FE migre por completo.
+      code:
+        typeof currencyCode === 'string'
+          ? currencyCode.toUpperCase()
+          : currencyCode,
+      // Alias legacy: se mantiene hasta el pase final de F7.2 (FE+BE juntos)
       currency_code:
         typeof currencyCode === 'string'
           ? currencyCode.toUpperCase()
@@ -282,7 +289,7 @@ class CurrencyService {
       return currencies.filter(
         currency =>
           (currency.name || '').toLowerCase().includes(term) ||
-          currency.currency_code.toLowerCase().includes(term)
+          (currency.code || currency.currency_code || '').toLowerCase().includes(term)
       )
     } catch (error) {
       console.error('Error searching currencies:', error)
@@ -328,10 +335,11 @@ class CurrencyService {
    * @returns {string}
    */
   static formatCurrencyCode(currency) {
-    if (!currency || !currency.currency_code) {
+    const code = currency?.code || currency?.currency_code
+    if (!code) {
       return ''
     }
-    return currency.currency_code.toUpperCase()
+    return String(code).toUpperCase()
   }
 
   /**
@@ -435,11 +443,11 @@ class CurrencyService {
 
   /**
    * Prepara y valida la carga útil para crear/actualizar monedas
-   * @param {{ currency_code: string, currency_name?: string, symbol?: string, is_base_currency?: boolean }} data
-   * @returns {{ currency_code: string, currency_name?: string, symbol?: string, is_base_currency?: boolean }}
+   * @param {{ code?: string, currency_code?: string, currency_name?: string, symbol?: string, is_base_currency?: boolean }} data
+   * @returns {{ code: string, name: string, symbol?: string, decimal_places: number, is_base?: boolean }}
    */
   static preparePayload(data = {}) {
-    const trimmedCode = (data.currency_code || '').trim().toUpperCase()
+    const trimmedCode = ((data.code || data.currency_code) || '').trim().toUpperCase()
 
     if (!trimmedCode) {
       throw new Error('El código de moneda es requerido')
@@ -452,9 +460,10 @@ class CurrencyService {
     const rawName = data.currency_name ?? data.name ?? data.description ?? ''
     const normalizedName = typeof rawName === 'string' ? rawName.trim() : ''
 
-    // Payload según PAYMENT_CONFIG_API.md
+    // Payload según PAYMENT_CONFIG_API.md — el backend espera `code` (F7.2);
+    // antes se enviaba `currency_code`, que el CreateRequest ignoraba.
     const payload = {
-      currency_code: trimmedCode,
+      code: trimmedCode,
       name: normalizedName,
       symbol: (data.symbol || '').trim(),
       decimal_places: typeof data.decimal_places === 'number' ? data.decimal_places : 2,

@@ -125,7 +125,7 @@ const useExchangeRateStore = create()(
             const term = filters.searchTerm.toLowerCase()
             rates = rates.filter(
               rate =>
-                rate.currency_code?.toLowerCase().includes(term) ||
+                (rate.code || rate.currency_code)?.toLowerCase().includes(term) ||
                 rate.currency_name?.toLowerCase().includes(term)
             )
           }
@@ -279,7 +279,7 @@ const useExchangeRateStore = create()(
           const term = filters.searchTerm.toLowerCase()
           filtered = filtered.filter(
             rate =>
-              rate.currency_code?.toLowerCase().includes(term) ||
+              (rate.code || rate.currency_code)?.toLowerCase().includes(term) ||
               rate.currency_name?.toLowerCase().includes(term)
           )
         }

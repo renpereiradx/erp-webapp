@@ -38,7 +38,7 @@ const useCurrencyStore = create()(
           const term = searchTerm.toLowerCase().trim()
           filtered = filtered.filter(
             c =>
-              c.currency_code?.toLowerCase().includes(term) ||
+              (c.code || c.currency_code)?.toLowerCase().includes(term) ||
               c.currency_name?.toLowerCase().includes(term) ||
               c.name?.toLowerCase().includes(term)
           )
@@ -83,7 +83,7 @@ const useCurrencyStore = create()(
 
             if (Array.isArray(rates) && rates.length > 0) {
               enrichedCurrencies = data.map(currency => {
-                const rate = rates.find(r => r.currency_id === currency.id || r.currency_code === currency.currency_code)
+                const rate = rates.find(r => r.currency_id === currency.id || (r.code || r.currency_code) === (currency.code || currency.currency_code))
                 return {
                   ...currency,
                   exchange_rate: rate?.rate_to_base || currency.exchange_rate || null,

@@ -250,7 +250,7 @@ const ExchangeRateDisplay = ({
           <span
             className={`inline-block ${sizes.code} font-mono font-bold text-white bg-blue-500 rounded mr-2`}
           >
-            {currency.currency_code}
+            {currency.code || currency.currency_code}
           </span>
           {showRefresh && (
             <button

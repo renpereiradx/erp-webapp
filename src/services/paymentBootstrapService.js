@@ -170,6 +170,7 @@ class PaymentBootstrapService {
     const rates = Array.isArray(exchangeRates.rates)
       ? exchangeRates.rates.map(r => ({
           currency_id: r.currency_id,
+          code: r.code || r.currency_code || '',
           currency_code: r.currency_code || '',
           rate_to_base:
             typeof r.rate_to_base === 'number'
@@ -234,7 +235,7 @@ class PaymentBootstrapService {
 
     return (
       bootstrapData.exchange_rates.rates.find(
-        r => r.currency_code === currencyCode
+        r => (r.code || r.currency_code) === currencyCode
       ) || null
     )
   }

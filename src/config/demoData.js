@@ -1957,6 +1957,7 @@ export const DEMO_CONFIG_CURRENCIES = {
 export const DEMO_CURRENCIES_DATA = [
   {
     id: 1,
+    code: 'PYG',
     currency_code: 'PYG',
     currency_name: 'Guaraní Paraguayo',
     name: 'Guaraní Paraguayo',
@@ -1970,6 +1971,7 @@ export const DEMO_CURRENCIES_DATA = [
   },
   {
     id: 2,
+    code: 'USD',
     currency_code: 'USD',
     currency_name: 'Dólar Estadounidense',
     name: 'Dólar Estadounidense',
@@ -1984,6 +1986,7 @@ export const DEMO_CURRENCIES_DATA = [
   },
   {
     id: 3,
+    code: 'EUR',
     currency_code: 'EUR',
     currency_name: 'Euro',
     name: 'Euro',
@@ -1998,6 +2001,7 @@ export const DEMO_CURRENCIES_DATA = [
   },
   {
     id: 4,
+    code: 'BRL',
     currency_code: 'BRL',
     currency_name: 'Real Brasileño',
     name: 'Real Brasileño',
@@ -2012,6 +2016,7 @@ export const DEMO_CURRENCIES_DATA = [
   },
   {
     id: 5,
+    code: 'ARS',
     currency_code: 'ARS',
     currency_name: 'Peso Argentino',
     name: 'Peso Argentino',
@@ -2026,6 +2031,7 @@ export const DEMO_CURRENCIES_DATA = [
   },
   {
     id: 6,
+    code: 'GBP',
     currency_code: 'GBP',
     currency_name: 'Libra Esterlina',
     name: 'Libra Esterlina',
@@ -2040,6 +2046,7 @@ export const DEMO_CURRENCIES_DATA = [
   },
   {
     id: 7,
+    code: 'JPY',
     currency_code: 'JPY',
     currency_name: 'Yen Japonés',
     name: 'Yen Japonés',
@@ -2054,6 +2061,7 @@ export const DEMO_CURRENCIES_DATA = [
   },
   {
     id: 8,
+    code: 'MXN',
     currency_code: 'MXN',
     currency_name: 'Peso Mexicano',
     name: 'Peso Mexicano',
@@ -2088,6 +2096,7 @@ export const getDemoCurrencies = () => {
 export const createDemoCurrency = currencyData => {
   const newCurrency = {
     id: demoCurrencyIdCounter++,
+    code: currencyData.code?.toUpperCase() || currencyData.currency_code?.toUpperCase() || '',
     currency_code: currencyData.currency_code?.toUpperCase() || '',
     currency_name: currencyData.currency_name || currencyData.name || '',
     name: currencyData.currency_name || currencyData.name || '',
@@ -2119,6 +2128,11 @@ export const updateDemoCurrency = (id, currencyData) => {
   const updated = {
     ...demoCurrenciesStore[index],
     ...currencyData,
+    code:
+      currencyData.code?.toUpperCase() ||
+      currencyData.currency_code?.toUpperCase() ||
+      demoCurrenciesStore[index].code ||
+      demoCurrenciesStore[index].currency_code,
     currency_code:
       currencyData.currency_code?.toUpperCase() ||
       demoCurrenciesStore[index].currency_code,

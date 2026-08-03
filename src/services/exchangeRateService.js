@@ -130,6 +130,7 @@ class ExchangeRateService {
     return {
       id: payload.id ?? null,
       currency_id: currencyId,
+      code: currencyCode,
       currency_code: currencyCode,
       currency_name: currencyName,
       rate_to_base: Number.isFinite(rateValueRaw) ? rateValueRaw : null,

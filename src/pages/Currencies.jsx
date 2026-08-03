@@ -600,7 +600,7 @@ const CurrenciesPage = () => {
 
   const formatCurrencyValue = (value, currency) => {
     if (value === null || value === undefined) return '-'
-    let decimals = baseCurrency?.currency_code === 'PYG' ? 0 : (currency?.decimal_places ?? 4)
+    let decimals = (baseCurrency?.code || baseCurrency?.currency_code) === 'PYG' ? 0 : (currency?.decimal_places ?? 4)
     return Number(value).toLocaleString('es-PY', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
   }
 
@@ -710,7 +710,7 @@ const CurrenciesPage = () => {
                             <div className="size-8 rounded-full bg-white dark:bg-slate-800 shadow-fluent-2 border border-border-subtle flex items-center justify-center overflow-hidden">
                               {flagUrl ? <img src={flagUrl} className="w-full h-full object-cover" /> : <span className="text-sm">{currency.flag_emoji || '🏳️'}</span>}
                             </div>
-                            <span className="font-black text-primary uppercase font-mono">{currency.currency_code}</span>
+                            <span className="font-black text-primary uppercase font-mono">{currency.code || currency.currency_code}</span>
                             {currency.is_base_currency && <span className="text-[9px] font-black bg-primary text-white px-1.5 py-0.5 rounded-sm uppercase leading-none ml-1">BASE</span>}
                           </div>
                         </TableCell>

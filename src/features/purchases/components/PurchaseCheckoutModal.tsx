@@ -200,8 +200,8 @@ export const PurchaseCheckoutModal: React.FC<PurchaseCheckoutModalProps> = ({
                   </SelectTrigger>
                   <SelectContent>
                     {currencies.map((currency: any) => (
-                      <SelectItem key={currency.id} value={currency.currency_code}>
-                        {currency.currency_code} - {logic.getCurrencyLabel ? logic.getCurrencyLabel(currency) : (currency.name || currency.description)}
+                      <SelectItem key={currency.id} value={currency.code || currency.currency_code}>
+                        {currency.code || currency.currency_code} - {logic.getCurrencyLabel ? logic.getCurrencyLabel(currency) : (currency.name || currency.description)}
                       </SelectItem>
                     ))}
                   </SelectContent>

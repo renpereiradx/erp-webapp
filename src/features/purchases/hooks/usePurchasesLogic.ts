@@ -153,6 +153,7 @@ export const usePurchasesLogic = () => {
       currency?.currency_name ||
         currency?.name ||
         currency?.description ||
+        currency?.code ||
         currency?.currency_code ||
         '',
     )
@@ -339,7 +340,7 @@ export const usePurchasesLogic = () => {
         )
         if (cash) setPaymentMethod(String(cash.id))
         const base = (currs || []).find(c => c.is_base_currency)
-        if (base) setPaymentCurrency(base.currency_code)
+        if (base) setPaymentCurrency(base.code || base.currency_code)
 
         // Cargar órdenes
         try {
@@ -723,7 +724,7 @@ export const usePurchasesLogic = () => {
     setLoading(true)
     try {
       // Resolver moneda seleccionada para enviar ID
-      const selectedCurrency = (currencies || []).find(c => c.currency_code === paymentCurrency);
+      const selectedCurrency = (currencies || []).find(c => (c.code || c.currency_code) === paymentCurrency);
       
       const orderData = {
         supplier_id: selectedSupplier.id,

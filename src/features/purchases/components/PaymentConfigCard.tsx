@@ -61,8 +61,8 @@ export const PaymentConfigCard: React.FC<PaymentConfigCardProps> = ({
             onChange={e => setPaymentCurrency(e.target.value)}
           >
             {currencies.map(c => (
-              <option key={c.id} value={c.currency_code}>
-                {c.currency_code} - {getCurrencyLabel(c)}
+              <option key={c.id} value={c.code || c.currency_code}>
+                {c.code || c.currency_code} - {getCurrencyLabel(c)}
               </option>
             ))}
           </select>

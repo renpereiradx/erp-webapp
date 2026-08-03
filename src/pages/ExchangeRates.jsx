@@ -113,7 +113,7 @@ const ExchangeRateFormModal = ({ isOpen, onClose, rate, currencies, onSave }) =>
                   required
                 >
                   <option value="">{t('exchangeRates.filter.fromCurrency')}</option>
-                  {currencies.map(c => <option key={c.id} value={c.id}>{c.currency_code} - {c.currency_name || c.name}</option>)}
+                  {currencies.map(c => <option key={c.id} value={c.id}>{c.code || c.currency_code} - {c.currency_name || c.name}</option>)}
                 </select>
                 <span className="material-icons-round absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">expand_more</span>
               </div>
@@ -174,7 +174,7 @@ const ExchangeRates = () => {
   const endItem = Math.min(pagination.page * pagination.pageSize, totalItems)
   const totalPages = Math.ceil(totalItems / pagination.pageSize)
   const paginatedRates = exchangeRates.slice((pagination.page - 1) * pagination.pageSize, pagination.page * pagination.pageSize)
-  const filteredRates = filters.searchTerm ? paginatedRates.filter(r => r.currency_code?.toLowerCase().includes(filters.searchTerm.toLowerCase()) || r.currency_name?.toLowerCase().includes(filters.searchTerm.toLowerCase())) : paginatedRates
+  const filteredRates = filters.searchTerm ? paginatedRates.filter(r => (r.code || r.currency_code)?.toLowerCase().includes(filters.searchTerm.toLowerCase()) || r.currency_name?.toLowerCase().includes(filters.searchTerm.toLowerCase())) : paginatedRates
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-sans">
@@ -211,7 +211,7 @@ const ExchangeRates = () => {
           <div className="relative">
             <select className="h-10 w-44 rounded-md border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-4 pr-10 text-xs font-semibold uppercase tracking-widest outline-none appearance-none cursor-pointer" value={filters.currencyCode} onChange={e => setFilter('currencyCode', e.target.value)}>
               <option value="">{t('exchangeRates.filter.fromCurrency')}</option>
-              {currencies.map(c => <option key={c.id} value={c.currency_code}>{c.currency_code}</option>)}
+              {currencies.map(c => <option key={c.id} value={c.code || c.currency_code}>{c.code || c.currency_code}</option>)}
             </select>
             <span className="material-icons-round absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">expand_more</span>
           </div>

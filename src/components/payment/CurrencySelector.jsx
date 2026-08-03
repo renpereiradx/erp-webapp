@@ -71,7 +71,7 @@ const CurrencySelector = ({
     const searchLower = searchTerm.toLowerCase()
     return (
       currency.name?.toLowerCase().includes(searchLower) ||
-      currency.currency_code?.toLowerCase().includes(searchLower)
+      (currency.code || currency.currency_code)?.toLowerCase().includes(searchLower)
     )
   })
 
@@ -79,9 +79,9 @@ const CurrencySelector = ({
   const selectedCurrency = resolvedCurrencies.find(
     c =>
       (c.id != null && value != null && String(c.id) === String(value)) ||
-      (c.currency_code &&
+      ((c.code || c.currency_code) &&
         value &&
-        c.currency_code.toUpperCase() === String(value).toUpperCase())
+        (c.code || c.currency_code).toUpperCase() === String(value).toUpperCase())
   )
 
   const handleCurrencySelect = currency => {
@@ -144,7 +144,7 @@ const CurrencySelector = ({
           {selectedCurrency ? (
             <>
               <span className='inline-block w-8 h-5 mr-2 text-xs font-mono font-bold text-center text-white bg-blue-500 rounded'>
-                {selectedCurrency.currency_code}
+                {selectedCurrency.code || selectedCurrency.currency_code}
               </span>
               <span className='text-sm'>{selectedCurrency.name}</span>
             </>
@@ -203,7 +203,7 @@ const CurrencySelector = ({
                   `}
                 >
                   <span className='inline-block w-8 h-5 mr-3 text-xs font-mono font-bold text-center text-white bg-blue-500 rounded'>
-                    {currency.currency_code}
+                    {currency.code || currency.currency_code}
                   </span>
                   <span className='text-sm'>{currency.name}</span>
                 </button>

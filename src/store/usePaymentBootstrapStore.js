@@ -142,13 +142,14 @@ const usePaymentBootstrapStore = create()(
               date: new Date().toISOString().split('T')[0],
               rates: exchangeRates.map(r => ({
                 currency_id: r.currency_id,
+                code: r.code || r.currency_code,
                 currency_code: r.currency_code,
                 rate_to_base: r.rate_to_base,
               })),
             },
             config: {
               base_currency_id: baseCurrency?.id || 1,
-              base_currency_code: baseCurrency?.currency_code || 'PYG',
+              base_currency_code: baseCurrency?.code || baseCurrency?.currency_code || 'PYG',
               default_decimals: baseCurrency?.decimal_places || 0,
             },
             loading: false,
@@ -216,7 +217,7 @@ const usePaymentBootstrapStore = create()(
       getExchangeRate: currencyCode => {
         const { exchangeRates } = get()
         return (
-          exchangeRates.rates.find(r => r.currency_code === currencyCode) ||
+          exchangeRates.rates.find(r => (r.code || r.currency_code) === currencyCode) ||
           null
         )
       },
