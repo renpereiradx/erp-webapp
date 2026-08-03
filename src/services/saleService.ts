@@ -12,143 +12,21 @@ import {
 } from '@/types'
 import { validateSaleOrder } from '@/domain/sale/validators/saleValidator'
 import { calculateSaleTotals } from '@/domain/sale/calculations/saleCalculator'
+import { extractListResponse } from '@/utils/extractListResponse'
 
 export const saleService = {
   extractSalesAndPagination(response: any, fallback: any = {}) {
-    const arrayCandidates = [
+    return extractListResponse(
       response,
-      response?.data,
-      response?.data?.data,
-      response?.sales,
-      response?.data?.sales,
-      response?.results,
-      response?.data?.results,
-      response?.items,
-      response?.data?.items,
-      response?.rows,
-      response?.data?.rows,
-    ]
-
-    let data: any[] = []
-    for (const candidate of arrayCandidates) {
-      if (Array.isArray(candidate)) {
-        data = candidate
-        break
-      }
-    }
-
-    if (
-      data.length === 0 &&
-      response &&
-      typeof response === 'object' &&
-      (response.sale_id || response.id)
-    ) {
-      data = [response]
-    }
-
-    const paginationSource =
-      (response?.pagination && typeof response.pagination === 'object'
-        ? response.pagination
-        : null) ||
-      (response?.data?.pagination &&
-      typeof response.data.pagination === 'object'
-        ? response.data.pagination
-        : null) ||
-      (response?.meta?.pagination &&
-      typeof response.meta.pagination === 'object'
-        ? response.meta.pagination
-        : null) ||
-      (response?.data?.meta?.pagination &&
-      typeof response.data.meta.pagination === 'object'
-        ? response.data.meta.pagination
-        : null)
-
-    const page = Number(
-      paginationSource?.page ??
-        paginationSource?.current_page ??
-        response?.page ??
-        response?.data?.page ??
-        fallback.page ??
-        1,
-    )
-    const normalizedPage = Number.isFinite(page) && page > 0 ? page : 1
-
-    const pageSize = Number(
-      paginationSource?.page_size ??
-        paginationSource?.pageSize ??
-        paginationSource?.per_page ??
-        response?.page_size ??
-        response?.data?.page_size ??
-        fallback.page_size ??
-        fallback.pageSize ??
-        50,
-    )
-    const normalizedPageSize =
-      Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 50
-
-    const totalPages = Number(
-      paginationSource?.total_pages ??
-        paginationSource?.totalPages ??
-        response?.total_pages ??
-        response?.data?.total_pages ??
-        0,
-    )
-    const normalizedTotalPages =
-      Number.isFinite(totalPages) && totalPages > 0 ? totalPages : null
-
-    const totalRecords = Number(
-      paginationSource?.total_records ??
-        paginationSource?.totalRecords ??
-        paginationSource?.total_items ??
-        paginationSource?.totalItems ??
-        response?.total_records ??
-        response?.data?.total_records ??
-        response?.total_items ??
-        response?.data?.total_items ??
-        response?.total_count ??
-        response?.data?.total_count ??
-        0,
-    )
-    const normalizedTotalRecords =
-      Number.isFinite(totalRecords) && totalRecords >= 0 ? totalRecords : null
-
-    const hasNextFromSource =
-      paginationSource?.has_next ??
-      paginationSource?.hasNext ??
-      paginationSource?.has_more ??
-      paginationSource?.hasMore
-
-    const hasPreviousFromSource =
-      paginationSource?.has_previous ?? paginationSource?.hasPrevious
-
-    const hasNext =
-      typeof hasNextFromSource === 'boolean'
-        ? hasNextFromSource
-        : normalizedTotalPages
-          ? normalizedPage < normalizedTotalPages
-          : data.length >= normalizedPageSize
-
-    const hasPrevious =
-      typeof hasPreviousFromSource === 'boolean'
-        ? hasPreviousFromSource
-        : normalizedPage > 1
-
-    return {
-      data,
-      pagination: {
-        page: normalizedPage,
-        page_size: normalizedPageSize,
-        pageSize: normalizedPageSize,
-        total_pages: normalizedTotalPages,
-        totalPages: normalizedTotalPages,
-        total_records: normalizedTotalRecords,
-        totalRecords: normalizedTotalRecords,
-        has_next: hasNext,
-        hasNext,
-        has_previous: hasPrevious,
-        hasPrevious,
+      {
+        itemKeys: ['sales'],
+        isSingleItem: r => r.sale_id || r.id,
+        pageSizeFallbackKeys: ['page_size', 'pageSize'],
+        extraTotalKeys: ['total_count'],
+        includeLegacyPaginationKeys: true,
       },
-    }
+      fallback,
+    )
   },
 
   // ============ PROCESAMIENTO DE PAGOS ============

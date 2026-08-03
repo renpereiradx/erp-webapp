@@ -12,140 +12,22 @@ import {
   PurchaseOrderRequest, 
 } from '@/types'
 import { telemetryService } from './telemetryService'
+import { extractListResponse } from '@/utils/extractListResponse'
 
 // Servicio de compras
 export const purchaseService = {
   extractPurchasesAndPagination: (response: any, fallback: any = {}) => {
-    const arrayCandidates = [
+    return extractListResponse(
       response,
-      response?.data,
-      response?.data?.data,
-      response?.purchases,
-      response?.data?.purchases,
-      response?.results,
-      response?.data?.results,
-      response?.items,
-      response?.data?.items,
-      response?.rows,
-      response?.data?.rows,
-    ]
-
-    let data: any[] = []
-    for (const candidate of arrayCandidates) {
-      if (Array.isArray(candidate)) {
-        data = candidate
-        break
-      }
-    }
-
-    if (
-      data.length === 0 &&
-      response &&
-      typeof response === 'object' &&
-      (response.purchase || response.id)
-    ) {
-      data = [response]
-    }
-
-    const paginationSource =
-      (response?.pagination && typeof response.pagination === 'object'
-        ? response.pagination
-        : null) ||
-      (response?.data?.pagination &&
-      typeof response.data.pagination === 'object'
-        ? response.data.pagination
-        : null) ||
-      (response?.meta?.pagination &&
-      typeof response.meta.pagination === 'object'
-        ? response.meta.pagination
-        : null) ||
-      (response?.data?.meta?.pagination &&
-      typeof response.data.meta.pagination === 'object'
-        ? response.data.meta.pagination
-        : null)
-
-    const page = Number(
-      paginationSource?.page ??
-        paginationSource?.current_page ??
-        response?.page ??
-        response?.data?.page ??
-        fallback.page ??
-        1,
-    )
-
-    const normalizedPage = Number.isFinite(page) && page > 0 ? page : 1
-
-    const pageSize = Number(
-      paginationSource?.page_size ??
-        paginationSource?.pageSize ??
-        paginationSource?.per_page ??
-        response?.page_size ??
-        response?.data?.page_size ??
-        fallback.pageSize ??
-        50,
-    )
-
-    const normalizedPageSize =
-      Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 50
-
-    const totalPages = Number(
-      paginationSource?.total_pages ??
-        paginationSource?.totalPages ??
-        response?.total_pages ??
-        response?.data?.total_pages ??
-        0,
-    )
-
-    const normalizedTotalPages =
-      Number.isFinite(totalPages) && totalPages > 0 ? totalPages : null
-
-    const totalRecords = Number(
-      paginationSource?.total_records ??
-        paginationSource?.totalRecords ??
-        paginationSource?.total_items ??
-        paginationSource?.totalItems ??
-        response?.total_records ??
-        response?.data?.total_records ??
-        response?.total_items ??
-        response?.data?.total_items ??
-        0,
-    )
-
-    const normalizedTotalRecords =
-      Number.isFinite(totalRecords) && totalRecords >= 0 ? totalRecords : null
-
-    const hasNextFromSource =
-      paginationSource?.has_next ??
-      paginationSource?.hasNext ??
-      paginationSource?.has_more ??
-      paginationSource?.hasMore
-
-    const hasPreviousFromSource =
-      paginationSource?.has_previous ?? paginationSource?.hasPrevious
-
-    const hasNext =
-      typeof hasNextFromSource === 'boolean'
-        ? hasNextFromSource
-        : normalizedTotalPages
-          ? normalizedPage < normalizedTotalPages
-          : data.length >= normalizedPageSize
-
-    const hasPrevious =
-      typeof hasPreviousFromSource === 'boolean'
-        ? hasPreviousFromSource
-        : normalizedPage > 1
-
-    return {
-      data,
-      pagination: {
-        page: normalizedPage,
-        pageSize: normalizedPageSize,
-        totalPages: normalizedTotalPages,
-        totalRecords: normalizedTotalRecords,
-        hasNext,
-        hasPrevious,
+      {
+        itemKeys: ['purchases'],
+        isSingleItem: r => r.purchase || r.id,
+        pageSizeFallbackKeys: ['pageSize'],
+        extraTotalKeys: [],
+        includeLegacyPaginationKeys: false,
       },
-    }
+      fallback,
+    )
   },
 
   // ============ ENHANCED PURCHASE ORDER OPERATIONS ============
