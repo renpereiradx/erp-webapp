@@ -37,12 +37,12 @@ export const apiService: any = {
   delete: (endpoint: string, options = {}) => apiClient.delete(endpoint, options),
 
   // Métodos específicos de productos (delegando al apiClient)
-  getProducts: (page: number, pageSize: number) => (apiClient as any).getProducts(page, pageSize),
+  getProducts: (page: number, pageSize: number) => (apiClient as any).getProductsPaginated(page, pageSize),
   getProductById: (id: string | number) => (apiClient as any).getProductById(id),
   getProductByBarcode: (barcode: string) => (apiClient as any).getProductByBarcode(barcode),
-  getBeachTennisCourts: () => (apiClient as any).getBeachTennisCourts(),
+  getBeachTennisCourts: () => (apiClient as any).getServiceProducts(),
   searchProducts: (term: string) => (apiClient as any).searchProducts(term),
-  searchProductsByName: (name: string) => (apiClient as any).searchProductsByName(name),
+  searchProductsByName: (name: string) => (apiClient as any).searchProducts(name),
   createProduct: (data: any) => (apiClient as any).createProduct(data),
   updateProduct: (id: string | number, data: any) => (apiClient as any).updateProduct(id, data),
   deleteProduct: (id: string | number) => (apiClient as any).deleteProduct(id),

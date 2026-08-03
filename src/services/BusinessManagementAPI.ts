@@ -494,7 +494,7 @@ class BusinessManagementAPI {
   }
 
   async processSalePayment(data: any, options: RequestOptions = {}): Promise<any> {
-    return this.post('/sale/payment', data, options)
+    return this.post('/payment/process', data, options)
   }
 
   async processSalePaymentCashRegister(data: any, options: RequestOptions = {}): Promise<any> {
@@ -565,6 +565,10 @@ class BusinessManagementAPI {
 
   async getPurchaseById(id: string | number, options: RequestOptions = {}): Promise<any> {
     return this.get(`/purchase/${id}`, options)
+  }
+
+  async getPurchaseByIdAndSupplier(id: string | number, supplierName: string, options: RequestOptions = {}): Promise<any> {
+    return this.get(`/purchase/${id}/supplier/${encodeURIComponent(supplierName)}`, options)
   }
 
   async processPurchasePayment(data: any, options: RequestOptions = {}): Promise<any> {
