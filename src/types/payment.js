@@ -4,7 +4,8 @@
 /**
  * @typedef {Object} Currency
  * @property {number} id - Currency ID
- * @property {string} currency_code - Currency code (e.g., "USD", "PYG")
+ * @property {string} code - Currency code (e.g., "USD", "PYG") — campo canónico (F7.2)
+ * @property {string} [currency_code] - Legacy alias de code (se elimina del BE en el pase final F7.2)
  * @property {string} currency_name - Currency display name
  * @property {string} [name] - Legacy alias for currency_name
  * @property {string} [symbol] - Currency symbol (e.g., "$", "₲")
@@ -16,7 +17,8 @@
 /**
  * @typedef {Object} CurrencyEnriched
  * @property {number} id - Currency ID
- * @property {string} currency_code - Currency code (e.g., "USD", "PYG")
+ * @property {string} code - Currency code (e.g., "USD", "PYG") — campo canónico (F7.2)
+ * @property {string} [currency_code] - Legacy alias de code
  * @property {string} name - Currency display name
  * @property {string} symbol - Currency symbol (e.g., "$", "₲")
  * @property {number} decimal_places - Number of decimal places (0-2)

@@ -626,6 +626,10 @@ export interface CreatePaymentMethodRequest {
 export interface Currency {
   id: number;
   code: string;
+  // Alias legacy (F7.2): el BE aún emite ambos; se eliminan en el pase final FE+BE
+  currency_code?: string;
+  currency_name?: string;
+  is_base_currency?: boolean;
   iso_number?: number;
   name: string;
   symbol?: string;

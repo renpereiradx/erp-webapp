@@ -37,21 +37,10 @@ export interface PurchaseSupplier {
   tax_id?: string;
 }
 
-export interface PaymentMethod {
-  id: number;
-  method_code: string;
-  name: string;
-  description?: string;
-}
-
-export interface Currency {
-  id: number;
-  currency_code: string;
-  currency_name?: string;
-  name?: string;
-  description?: string;
-  is_base_currency: boolean;
-}
+// Tipos canónicos del contrato (F7.1): viven en @/types — el feature re-exporta
+// en vez de definir su propia verdad. `name` de PaymentMethod se eliminó porque
+// el backend no lo emite (solo description + method_code).
+export type { Currency, PaymentMethod } from '@/types'
 
 export interface PurchaseWithFullDetails {
   id: number;
