@@ -68,8 +68,6 @@ interface SaleState {
   };
 
   // Actions
-  startSaleSession: (userId: string, posTerminalId?: string) => Promise<any>;
-  endSaleSession: (summary?: any) => Promise<any>;
   processPayment: (saleId: string, paymentData: any) => Promise<any>;
   calculateChange: (totalAmount: number, amountPaid: number) => Promise<any>;
   fetchSales: (params?: any) => Promise<any>;
@@ -84,13 +82,9 @@ interface SaleState {
   fetchSalePaymentStatus: (id: string) => Promise<any>;
   addProductsToSale: (saleId: string, payload: any) => Promise<any>;
   createSale: (saleData?: any) => Promise<any>;
-  updateSale: (id: string, saleData: any) => Promise<any>;
   cancelSale: (id: string, reason?: string) => Promise<any>;
   completeSale: (id: string, paymentData?: any) => Promise<any>;
-  refundSale: (id: string, refundData: any) => Promise<any>;
   fetchTodaySales: () => Promise<any>;
-  fetchSalesStats: (params?: any) => Promise<any>;
-  fetchTopSellingProducts: (params?: any) => Promise<any>;
   calculateTotal: (items: any[], clientId?: string | null) => Promise<any>;
   setCurrentSaleClient: (clientId: string | null) => void;
   setPaymentMethod: (method: string) => void;
@@ -182,10 +176,6 @@ const useSaleStore = create<SaleState>()(
       loading: false,
       error: null,
 
-      // ============ Gestión de sesiones ============
-      currentSession: null,
-      sessionActive: false,
-
       // ============ Procesamiento de pagos ============
       paymentInProgress: false,
       paymentResult: null,
@@ -234,72 +224,6 @@ const useSaleStore = create<SaleState>()(
         amountPaid: 0,
         changeAmount: 0,
         posTerminalId: 'POS_001',
-      },
-
-      // ============ GESTIÓN DE SESIONES ============
-
-      startSaleSession: async (userId, posTerminalId = 'POS_001') => {
-        set({ loading: true, error: null })
-        try {
-          const response = await saleService.startSaleSession({
-            userId,
-            posTerminalId,
-          })
-
-          if (response.success) {
-            set({
-              currentSession: response.data,
-              sessionActive: true,
-              currentSaleData: {
-                ...get().currentSaleData,
-                sessionId: response.data.session_id,
-                posTerminalId: posTerminalId,
-              },
-              loading: false,
-            })
-
-            telemetryService.recordEvent('sale_session_started', {
-              session_id: response.data.session_id,
-              user_id: userId,
-            })
-          }
-
-          return response
-        } catch (error: any) {
-          set({ error: error.message, loading: false })
-          throw error
-        }
-      },
-
-      endSaleSession: async (summary = {}) => {
-        const session = get().currentSession
-        if (!session) return
-
-        set({ loading: true, error: null })
-        try {
-          const response = await saleService.endSaleSession(
-            session.session_id,
-            summary,
-          )
-
-          if (response.success) {
-            set({
-              currentSession: null,
-              sessionActive: false,
-              loading: false,
-            })
-
-            telemetryService.recordEvent('sale_session_ended', {
-              session_id: session.session_id,
-              duration: Date.now() - new Date(session.started_at).getTime(),
-            })
-          }
-
-          return response
-        } catch (error: any) {
-          set({ error: error.message, loading: false })
-          throw error
-        }
       },
 
       // ============ PROCESAMIENTO DE PAGOS ============
@@ -562,21 +486,6 @@ const useSaleStore = create<SaleState>()(
         }
       },
 
-      updateSale: async (id, saleData) => {
-        set({ loading: true, error: null })
-        try {
-          const response = await saleService.updateSale(id, saleData)
-          const sales = get().sales.map(sale =>
-            getSaleIdentifier(sale) === id ? response.data : sale,
-          )
-          set({ sales, currentSale: response.data, loading: false })
-          return response
-        } catch (error: any) {
-          set({ error: error.message, loading: false })
-          throw error
-        }
-      },
-
       cancelSale: async (id, reason = '') => {
         set({ loading: true, error: null })
         try {
@@ -609,22 +518,6 @@ const useSaleStore = create<SaleState>()(
         }
       },
 
-      refundSale: async (id, refundData) => {
-        set({ loading: true, error: null })
-        try {
-          const response = await saleService.refundSale(id, refundData)
-          const sales = get().sales.map(sale =>
-            getSaleIdentifier(sale) === id ? { ...sale, status: 'REFUNDED' } : sale,
-          )
-          set({ sales, loading: false })
-          get().updateStats()
-          return response
-        } catch (error: any) {
-          set({ error: error.message, loading: false })
-          throw error
-        }
-      },
-
       fetchTodaySales: async () => {
         set({ loading: true, error: null })
         try {
@@ -633,33 +526,6 @@ const useSaleStore = create<SaleState>()(
           return response
         } catch (error: any) {
           set({ error: error.message, loading: false })
-          throw error
-        }
-      },
-
-      fetchSalesStats: async (params = {}) => {
-        try {
-          const response = await saleService.getSalesStats(params)
-          set({ stats: { ...get().stats, ...response.data } })
-          return response
-        } catch (error: any) {
-          console.error('Error fetching sales stats:', error)
-          throw error
-        }
-      },
-
-      fetchTopSellingProducts: async (params = {}) => {
-        try {
-          const response = await saleService.getTopSellingProducts(params)
-          set({
-            stats: {
-              ...get().stats,
-              topSellingProducts: response.data || [],
-            },
-          })
-          return response
-        } catch (error: any) {
-          console.error('Error fetching top selling products:', error)
           throw error
         }
       },
@@ -821,7 +687,7 @@ const useSaleStore = create<SaleState>()(
         set({
           currentSaleData: {
             clientId: null,
-            sessionId: get().currentSession?.session_id || null,
+            sessionId: null,
             items: [],
             totalAmount: 0,
             subtotalAmount: 0,

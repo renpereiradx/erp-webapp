@@ -151,37 +151,6 @@ export const saleService = {
     }
   },
 
-  // ============ GESTIÓN DE SESIONES ============
-
-  async startSaleSession(data: any) {
-    try {
-      const response = await apiClient.makeRequest('/sale/session/start', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      })
-      return { success: true, data: response }
-    } catch (error: any) {
-      console.error('Error starting sale session:', error)
-      return { success: false, error: error.message }
-    }
-  },
-
-  async endSaleSession(sessionId: string, summary: any) {
-    try {
-      const response = await apiClient.makeRequest(
-        `/sale/session/${sessionId}/end`,
-        {
-          method: 'POST',
-          body: JSON.stringify(summary),
-        },
-      )
-      return { success: true, data: response }
-    } catch (error: any) {
-      console.error('Error ending sale session:', error)
-      return { success: false, error: error.message }
-    }
-  },
-
   // ============ PROCESAMIENTO DE PAGOS ============
 
   async processPayment(saleId: string, paymentData: any) {
@@ -535,34 +504,8 @@ export const saleService = {
     }
   },
 
-  async updateSale(id: string | number, saleData: any) {
-    try {
-      const response = await apiClient.makeRequest(`/sale/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(saleData)
-      })
-      return { success: true, data: response }
-    } catch (error: any) {
-      console.error(`Error updating sale ${id}:`, error)
-      return { success: false, error: error.message }
-    }
-  },
-
   async completeSale(id: string, paymentData: any) {
     return this.processPayment(id, paymentData)
-  },
-
-  async refundSale(id: string | number, refundData: any) {
-    try {
-      const response = await apiClient.makeRequest(`/sale/${id}/refund`, {
-        method: 'POST',
-        body: JSON.stringify(refundData)
-      })
-      return { success: true, data: response }
-    } catch (error: any) {
-      console.error(`Error refunding sale ${id}:`, error)
-      return { success: false, error: error.message }
-    }
   },
 
   async calculateTotal(items: any[], clientId: string | null = null) {
@@ -615,32 +558,6 @@ export const saleService = {
   async getTodaySales() {
     const today = new Date().toISOString().split('T')[0]
     return this.getSalesByDateRange({ start_date: today, end_date: today })
-  },
-
-  async getSalesStats(params: any = {}) {
-    try {
-      const response = await apiClient.makeRequest('/sale/stats', {
-        method: 'GET',
-        params,
-      })
-      return { success: true, data: response }
-    } catch (error: any) {
-      console.error('Error fetching sales stats:', error)
-      return { success: false, error: error.message }
-    }
-  },
-
-  async getTopSellingProducts(params: any = {}) {
-    try {
-      const response = await apiClient.makeRequest('/sale/top-products', {
-        method: 'GET',
-        params,
-      })
-      return { success: true, data: response }
-    } catch (error: any) {
-      console.error('Error fetching top products:', error)
-      return { success: false, error: error.message }
-    }
   },
 
   async salesScan(barcode: string, branchId?: number) {

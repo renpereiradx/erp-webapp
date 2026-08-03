@@ -1001,16 +1001,8 @@ export const usePurchasesLogic = () => {
         },
       )
 
-      // [INTEGRACION] El endpoint /purchase/{id}/status no existe actualmente en el backend (404).
-      // Se comenta la llamada para evitar que el flujo de pago falle. 
-      // El estado debería ser gestionado por el backend tras el registro del pago.
-      /*
-      try {
-        await purchaseService.updatePurchaseOrderStatus(orderId, 'COMPLETED', 'Pago inicial registrado tras creación')
-      } catch (statusError) {
-        console.warn('Could not update order status to COMPLETED:', statusError)
-      }
-      */
+      // [INTEGRACION] El endpoint /purchase/{id}/status no existe en el backend (404).
+      // El estado de la orden es gestionado por el backend tras el registro del pago.
 
       toast.success('Pago registrado correctamente')
       setShowInstantPayment(false)

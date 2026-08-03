@@ -490,63 +490,6 @@ export const purchaseService = {
     return processedData
   },
 
-  // Get detailed analysis of purchase order
-  getPurchaseOrderAnalysis: async (purchaseOrderId: number | string) => {
-    if (DEMO_CONFIG.enabled) {
-      return { success: true, data: { status: 'Analyzed (DEMO)' } };
-    }
-    try {
-      const response = await apiClient.makeRequest(`/purchase-orders/${purchaseOrderId}/detailed-analysis`);
-      return {
-        success: true,
-        data: response,
-      };
-    } catch (error: any) {
-      console.error('Error fetching purchase order analysis:', error);
-      return {
-        success: false,
-        error: error.message || 'Error al obtener análisis de la orden',
-      };
-    }
-  },
-
-  // Validate purchase order integrity
-  validatePurchaseOrderIntegrity: async (purchaseOrderId: number | string) => {
-    if (DEMO_CONFIG.enabled) {
-      return { success: true, data: { status: 'Valid (DEMO)' } };
-    }
-    try {
-      const response = await apiClient.makeRequest(`/purchase-orders/${purchaseOrderId}/integrity-validation`);
-      return {
-        success: true,
-        data: response,
-      };
-    } catch (error: any) {
-      console.error('Error validating purchase order integrity:', error);
-      return {
-        success: false,
-        error: error.message || 'Error al validar integridad',
-      };
-    }
-  },
-
-  // Actualizar estado de orden
-  updatePurchaseOrderStatus: async (id: number | string, newStatus: string, notes: string = '') => {
-    if (DEMO_CONFIG.enabled) {
-      return { success: true, data: { id, status: newStatus } };
-    }
-    try {
-      const response = await apiClient.makeRequest(`/purchase/${id}/status`, {
-        method: 'PUT',
-        body: JSON.stringify({ status: newStatus, notes }),
-      });
-      return { success: true, data: response };
-    } catch (error: any) {
-      console.error(`Error updating purchase order ${id} status:`, error);
-      return { success: false, error: error.message };
-    }
-  },
-
   // Procesar metadata de detalles de compra según la nueva especificación
   processDetailsMetadata: (details: any[]) => {
     if (!Array.isArray(details)) {
