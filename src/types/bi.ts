@@ -4,6 +4,7 @@
 
 export interface BIParams {
   branch_id?: number;
+  period?: string; // 'day' | 'week' | 'month' | 'year'
   start_date?: string; // YYYY-MM-DD
   end_date?: string;   // YYYY-MM-DD
   page?: number;

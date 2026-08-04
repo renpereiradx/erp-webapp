@@ -186,11 +186,11 @@ const BranchManagement: React.FC = () => {
         </div>
 
         {isLoading ? (
-          <div className="p-20 flex justify-center"><DataState type="loading" /></div>
+          <div className="p-20 flex justify-center"><DataState variant="loading" /></div>
         ) : isError ? (
-          <div className="p-20 flex justify-center"><DataState type="error" /></div>
+          <div className="p-20 flex justify-center"><DataState variant="error" /></div>
         ) : filteredBranches.length === 0 ? (
-          <div className="p-20 flex justify-center"><DataState type="empty" /></div>
+          <div className="p-20 flex justify-center"><DataState variant="empty" /></div>
         ) : (
           <Table>
             <TableHeader className="bg-slate-50/80">
@@ -284,7 +284,7 @@ const BranchManagement: React.FC = () => {
           isOpen={isBranchModalOpen} 
           onClose={() => setIsBranchModalOpen(false)} 
           branch={selectedBranch}
-          initialTab={activeTab}
+          initialTab={activeTab === 'general' ? 'info' : activeTab}
         />
       )}
 

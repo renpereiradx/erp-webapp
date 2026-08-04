@@ -11,7 +11,6 @@ import branchService from '@/features/branches/services/branchService'
 import branchTransferService from './branchTransferService'
 import budgetService from './budgetService'
 import purchaseRequisitionService from './purchaseRequisitionService'
-import costPricingService from './costPricingService'
 
 // Instancia única del cliente API usando configuración centralizada
 const businessAPI = new BusinessManagementAPI({
@@ -86,11 +85,6 @@ export const apiService = {
   getPurchaseRequisitionById: (id: string) => purchaseRequisitionService.getRequisitionById(id),
   createPurchaseRequisition: (data: any) => purchaseRequisitionService.createRequisition(data),
   updatePurchaseRequisitionStatus: (id: string, data: any) => purchaseRequisitionService.updateStatus(id, data),
-
-  // Métodos de Costos y Precios
-  getProductPricingHistory: (productId: string, params: any) => costPricingService.getPricingHistory(productId, params),
-  getProfitabilityAnalysis: (productId: string) => costPricingService.getProfitabilityAnalysis(productId),
-  updateProductPrice: (productId: string, data: any) => costPricingService.setUnitPrice(productId, data),
 
   // Métodos de categorías
   getAllCategories: () => apiClient.getAllCategories(),

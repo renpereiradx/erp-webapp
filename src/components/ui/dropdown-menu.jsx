@@ -37,6 +37,7 @@ function DropdownMenuGroup({ ...props }) {
   return <DropdownMenuPrimitive.Group {...props} />
 }
 
+/** @param {{ className?: string; inset?: boolean; variant?: string; [key: string]: any }} props */
 function DropdownMenuItem({ className, inset, variant = 'default', ...props }) {
   return (
     <DropdownMenuPrimitive.Item
@@ -94,6 +95,7 @@ function DropdownMenuRadioItem({ className, children, ...props }) {
   )
 }
 
+/** @param {{ className?: string; inset?: boolean; [key: string]: any }} props */
 function DropdownMenuLabel({ className, inset, ...props }) {
   return (
     <DropdownMenuPrimitive.Label
@@ -129,6 +131,7 @@ function DropdownMenuSub({ ...props }) {
   return <DropdownMenuPrimitive.Sub {...props} />
 }
 
+/** @param {{ className?: string; inset?: boolean; children?: React.ReactNode; [key: string]: any }} props */
 function DropdownMenuSubTrigger({ className, inset, children, ...props }) {
   return (
     <DropdownMenuPrimitive.SubTrigger

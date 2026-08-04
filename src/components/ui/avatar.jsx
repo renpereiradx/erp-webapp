@@ -44,6 +44,7 @@ function Avatar({
   );
 }
 
+/** @param {{ className?: string; src?: string; [key: string]: any }} props */
 function AvatarImage({
   className,
   src,

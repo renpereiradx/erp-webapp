@@ -81,7 +81,7 @@ export const productService = {
         return await apiClient.getProductsPaginated(page, pageSize, options);
       });
       return deduplicateProducts(results);
-    } catch (error) {
+    } catch (error: any) {
       if (error?.name === 'AbortError') throw error;
       throw toApiError(error, 'Error al obtener productos paginados');
     }
@@ -94,7 +94,7 @@ export const productService = {
     try {
       const results = await apiClient.get('/products/all');
       return deduplicateProducts(results);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al obtener catálogo de productos');
     }
   },
@@ -107,7 +107,7 @@ export const productService = {
       return await retryWithBackoff(async () => {
         return await apiClient.getProductById(id);
       });
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, `Error al obtener producto ${id}`);
     }
   },
@@ -121,7 +121,7 @@ export const productService = {
         return await apiClient.searchProducts(term, options);
       });
       return deduplicateProducts(results);
-    } catch (error) {
+    } catch (error: any) {
       if (error?.name === 'AbortError') throw error;
       throw toApiError(error, 'Error en la búsqueda de productos');
     }
@@ -135,7 +135,7 @@ export const productService = {
       return await retryWithBackoff(async () => {
         return await apiClient.searchProductsAdvanced(payload, options);
       });
-    } catch (error) {
+    } catch (error: any) {
       if (error?.name === 'AbortError') throw error;
       throw toApiError(error, 'Error en la búsqueda avanzada de productos');
     }
@@ -149,7 +149,7 @@ export const productService = {
       return await retryWithBackoff(async () => {
         return await apiClient.getProductSearchFacets(params, options);
       });
-    } catch (error) {
+    } catch (error: any) {
       if (error?.name === 'AbortError') throw error;
       throw toApiError(error, 'Error al obtener facetas de búsqueda');
     }
@@ -166,7 +166,7 @@ export const productService = {
         const data = await apiClient.getProductInfoById(id);
         return mapProductOperationInfoResponse(data);
       });
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al obtener información operativa del producto');
     }
   },
@@ -180,7 +180,7 @@ export const productService = {
         const data = await apiClient.getProductInfoByBarcode(barcode);
         return mapProductOperationInfoResponse(data);
       });
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al buscar producto por código de barras');
     }
   },
@@ -194,7 +194,7 @@ export const productService = {
         return await apiClient.searchProductsInfoByName(name, options);
       });
       return deduplicateProducts(results).map(mapProductOperationInfoResponse);
-    } catch (error) {
+    } catch (error: any) {
       if (error?.name === 'AbortError') throw error;
       throw toApiError(error, 'Error en búsqueda operativa');
     }
@@ -207,7 +207,7 @@ export const productService = {
     try {
       const data = await apiClient.getProductForSale(id);
       return mapProductOperationInfoResponse(data);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al cargar producto para venta');
     }
   },
@@ -219,7 +219,7 @@ export const productService = {
     try {
       const data = await apiClient.getProductForPurchase(id);
       return mapProductOperationInfoResponse(data);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al cargar producto para compra');
     }
   },
@@ -229,7 +229,7 @@ export const productService = {
   async getFinancial(id: string): Promise<any> {
     try {
       return await apiClient.getProductFinancial(id);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al obtener información financiera del producto');
     }
   },
@@ -237,7 +237,7 @@ export const productService = {
   async getFinancialByBarcode(barcode: string): Promise<any> {
     try {
       return await apiClient.getProductFinancialByBarcode(barcode);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al buscar información financiera por código de barras');
     }
   },
@@ -245,7 +245,7 @@ export const productService = {
   async searchFinancial(name: string, options: any = {}): Promise<any> {
     try {
       return await apiClient.searchProductsFinancialByName(name, options);
-    } catch (error) {
+    } catch (error: any) {
       if (error?.name === 'AbortError') throw error;
       throw toApiError(error, 'Error en búsqueda de información financiera');
     }
@@ -254,7 +254,7 @@ export const productService = {
   async getMarginAlert(id: string): Promise<any> {
     try {
       return await apiClient.getProductMarginAlert(id);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al obtener alertas de margen del producto');
     }
   },
@@ -262,7 +262,7 @@ export const productService = {
   async getMarginReport(id: string): Promise<any> {
     try {
       return await apiClient.getProductMarginReport(id);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al obtener reporte de margen del producto');
     }
   },
@@ -270,7 +270,7 @@ export const productService = {
   async getSupplierComparison(id: string): Promise<any> {
     try {
       return await apiClient.getProductSupplierComparison(id);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al obtener comparativa de proveedores del producto');
     }
   },
@@ -278,7 +278,7 @@ export const productService = {
   async getWeightedAverage(id: string): Promise<any> {
     try {
       return await apiClient.getProductWeightedAverage(id);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al obtener costo promedio ponderado del producto');
     }
   },
@@ -288,7 +288,7 @@ export const productService = {
   async create(data: Partial<Product>): Promise<ProductEnriched> {
     try {
       return await apiClient.createProduct(data);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al crear producto');
     }
   },
@@ -296,7 +296,7 @@ export const productService = {
   async update(id: string, data: Partial<Product>): Promise<ProductEnriched> {
     try {
       return await apiClient.updateProduct(id, data);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al actualizar producto');
     }
   },
@@ -304,7 +304,7 @@ export const productService = {
   async delete(id: string): Promise<{ message: string }> {
     try {
       return await apiClient.deleteProduct(id);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al eliminar producto');
     }
   },
@@ -326,7 +326,7 @@ export const productService = {
   async createStock(productId: string, data: CreateStockRequest): Promise<{ message: string }> {
     try {
       return await apiClient.createStock(productId, data);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al crear stock para el producto');
     }
   },
@@ -334,7 +334,7 @@ export const productService = {
   async getStockById(id: number): Promise<{ data: Stock }> {
     try {
       return await apiClient.getStockById(id);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al obtener stock por ID');
     }
   },
@@ -342,7 +342,7 @@ export const productService = {
   async getStockByProductId(productId: string): Promise<{ data: Stock }> {
     try {
       return await apiClient.getStockByProductId(productId);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al obtener stock por producto');
     }
   },
@@ -350,7 +350,7 @@ export const productService = {
   async updateStockById(id: number, data: Partial<Stock>): Promise<{ message: string }> {
     try {
       return await apiClient.updateStockById(id, data);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al actualizar stock por ID');
     }
   },
@@ -358,7 +358,7 @@ export const productService = {
   async updateStockByProductId(productId: string, data: Partial<Stock>): Promise<{ message: string }> {
     try {
       return await apiClient.updateStockByProductId(productId, data);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al actualizar stock por producto');
     }
   },
@@ -369,7 +369,7 @@ export const productService = {
     try {
       const response = await apiClient.get('/categories');
       return Array.isArray(response) ? response : (response.data || []);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al obtener categorías');
     }
   },
@@ -410,7 +410,7 @@ export const productService = {
       return await retryWithBackoff(async () => {
         return await apiClient.getProductByBarcode(barcode);
       });
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, `Error al obtener producto por código de barras ${barcode}`);
     }
   },
@@ -422,7 +422,7 @@ export const productService = {
     try {
       const response = await apiClient.getUnitConversions();
       return response.data || [];
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al obtener conversiones de unidad');
     }
   },
@@ -430,7 +430,7 @@ export const productService = {
   async createUnitConversion(data: Omit<UnitConversion, 'created_at' | 'updated_at'>): Promise<UnitConversion> {
     try {
       return await apiClient.createUnitConversion(data);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al crear/actualizar conversión de unidad');
     }
   },
@@ -438,7 +438,7 @@ export const productService = {
   async deleteUnitConversion(fromUnit: string, toUnit: string): Promise<{ message: string }> {
     try {
       return await apiClient.deleteUnitConversion(fromUnit, toUnit);
-    } catch (error) {
+    } catch (error: any) {
       throw toApiError(error, 'Error al eliminar conversión de unidad');
     }
   }

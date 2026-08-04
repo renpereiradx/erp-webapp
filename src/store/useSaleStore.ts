@@ -199,7 +199,8 @@ const useSaleStore = create<SaleState>()(
         try {
           const response = await saleService.processPayment(saleId, paymentData)
 
-          if (response.success) {
+          // response is a loose union (demo/real paths); success flag only on some members
+          if ((response as any).success) {
             set({
               paymentResult: response.data,
               paymentInProgress: false,
@@ -226,7 +227,8 @@ const useSaleStore = create<SaleState>()(
             amountPaid,
           )
 
-          if (response.success) {
+          // response is a loose union (demo/real paths); success flag only on some members
+          if ((response as any).success) {
             set({ changeCalculation: response.data })
 
             // Actualizar datos de venta actual
@@ -254,7 +256,8 @@ const useSaleStore = create<SaleState>()(
           const filters = { ...get().filters, ...params }
           const response = await saleService.getSales(filters)
 
-          if (response.success) {
+          // response is a loose union (demo/real paths); success flag only on some members
+          if ((response as any).success) {
             set({
               sales: response.data || [],
               pagination: normalizeStorePagination(response.pagination, response.data?.length || 0),
@@ -280,7 +283,8 @@ const useSaleStore = create<SaleState>()(
         try {
           const response = await saleService.getSalesByDateRange(params)
 
-          if (response.success) {
+          // response is a loose union (demo/real paths); success flag only on some members
+          if ((response as any).success) {
             set({
               sales: response.data || [],
               pagination: normalizeStorePagination(response.pagination, response.data?.length || 0),
@@ -305,7 +309,8 @@ const useSaleStore = create<SaleState>()(
         try {
           const response = await saleService.getSalesByClientName(clientName, params)
 
-          if (response.success) {
+          // response is a loose union (demo/real paths); success flag only on some members
+          if ((response as any).success) {
             set({
               sales: response.data || [],
               pagination: normalizeStorePagination(response.pagination, response.data?.length || 0),
@@ -371,7 +376,8 @@ const useSaleStore = create<SaleState>()(
         try {
           const response = await saleService.getSaleById(id)
 
-          if (response.success) {
+          // response is a loose union (demo/real paths); success flag only on some members
+          if ((response as any).success) {
             set({
               currentSale: response.data,
               loading: false,
@@ -390,7 +396,8 @@ const useSaleStore = create<SaleState>()(
         try {
           const response = await saleService.getSaleMetadata(id)
 
-          if (response.success) {
+          // response is a loose union (demo/real paths); success flag only on some members
+          if ((response as any).success) {
             set({
               currentSaleMetadata: response.data?.metadata || response.data,
               loading: false,
@@ -434,7 +441,8 @@ const useSaleStore = create<SaleState>()(
           const dataToSend = saleData || get().currentSaleData
           const response = await saleService.createSale(dataToSend)
 
-          if (response.success) {
+          // response is a loose union (demo/real paths); success flag only on some members
+          if ((response as any).success) {
             set({
               sales: [response.data, ...get().sales],
               loading: false,

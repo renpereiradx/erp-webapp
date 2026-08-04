@@ -47,7 +47,7 @@ export const dashboardService = {
   /**
    * Obtiene los productos más vendidos (Top Products)
    */
-  async getTopProducts(params: BIParams & { limit?: number; sort_by?: string } = {}): Promise<{ data: any[] }> {
+  async getTopProducts(params: BIParams & { limit?: number; sort_by?: string } = {}): Promise<{ data: { products: any[]; total_revenue: number; total_profit: number } }> {
     try {
       return await apiClient.get('/dashboard/top-products', { params });
     } catch (error: any) {
