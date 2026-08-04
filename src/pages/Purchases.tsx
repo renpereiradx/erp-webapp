@@ -1,42 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {
-  Search,
-  X,
-  Plus,
-  Calendar,
-  MoreVertical,
-  Eye,
-  Ban,
-  Package,
-  AlertCircle,
-  ShoppingCart,
-  Check,
-  History,
-  CheckCircle,
-  Building,
-} from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { AlertCircle, History, Plus, ShoppingCart } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useI18n } from '@/lib/i18n'
-import useDashboardStore from '@/store/useDashboardStore'
-import useAuthStore from '@/store/useAuthStore'
-import { useAuth } from '@/contexts/AuthContext'
-import supplierService from '@/services/supplierService'
-import { PaymentMethodService } from '@/services/paymentMethodService'
-import { CurrencyService } from '@/services/currencyService'
-import { productService } from '@/services/productService'
-import purchaseService from '@/services/purchaseService'
-import {
-  fetchPurchasesBySupplierTerm,
-  purchasePaymentsMvpService,
-} from '@/services/purchasePaymentsMvpService'
 import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog'
-import { formatCurrency, formatNumber } from '@/utils/currencyUtils'
-import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
-import { calculatePurchaseSalePriceGs, calculateProfitMargin } from '@/domain/purchase/pricing/purchasePricingPolicy'
-import { PurchaseWithFullDetails } from '@/types'
-import { useBranch } from '@/contexts/BranchContext'
 
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic'
 import { PurchaseProductModal } from '@/features/purchases/components/PurchaseProductModal'
@@ -69,107 +35,16 @@ const Purchases = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [logic.activeTab, logic.purchaseItems]);
   const {
-    activeProductIndex,
-    activeSupplierIndex,
     activeTab,
-    canWrite,
-    cancelPreviewData,
     createdOrderData,
-    currencies,
-    editingItemId,
-    effectiveProfitPct,
-    effectiveSalePrice,
-    endDate,
     error,
-    filteredModalProducts,
-    formatDate,
-    getCurrencyLabel,
-    getPaymentMethodLabel,
-    getProductName,
-    getStatusText,
-    getSupplierName,
-    handleCancelPurchase,
-    handleConfirmAddProduct,
-    handleConfirmCancellation,
-    handleEditItem,
-    handleFilter,
     handleInstantPaymentConfirm,
     handleLeavePurchasePending,
-    handleModalProductSearchKeyDown,
-    handleProductSelect,
-    handleSavePurchase,
-    handleSupplierSearchKeyDown,
-    handleSupplierSelect,
-    handleViewPurchase,
-    isModalOpen,
-    latestPurchaseResult,
-    loading,
-    modalPriceIncludesTax,
-    modalProductSearch,
-    modalProductSearchRef,
-    modalProfitPct,
-    modalQuantity,
-    modalQuantityRef,
-    modalSalePrice,
-    modalSelectedProduct,
-    modalTaxRateId,
-    modalUnitPrice,
-    openActionMenu,
-    orderToCancel,
-    paymentCurrency,
-    paymentMethod,
     paymentMethods,
-    pricingMode,
-    productDropdownRef,
-    purchaseItems,
-    purchaseNotes,
-    purchaseOrders,
-    purchaseTotals,
-    searchTerm,
-    searchType,
-    searchingProducts,
-    searchingSuppliers,
-    selectedSupplier,
-    setActiveProductIndex,
-    setActiveSupplierIndex,
     setActiveTab,
-    setEndDate,
-    setIsModalOpen,
-    setModalPriceIncludesTax,
-    setModalProductSearch,
-    setModalProfitPct,
-    setModalQuantity,
-    setModalSalePrice,
-    setModalTaxRateId,
-    setModalUnitPrice,
-    setOpenActionMenu,
-    setPaymentCurrency,
-    setPaymentMethod,
-    setPricingMode,
-    setPurchaseItems,
-    setPurchaseNotes,
-    setSearchTerm,
-    setSearchType,
-    setSelectedSupplier,
-    setShowCancelPreview,
-    setShowConfirmationModal,
-    setShowInstantPayment,
-    setShowProductDropdown,
-    setShowSupplierDropdown,
-    setStartDate,
-    setSupplierSearch,
-    showCancelPreview,
-    showConfirmationModal,
     showInstantPayment,
-    showProductDropdown,
-    showSupplierDropdown,
-    startDate,
-    supplierResults,
-    supplierSearch,
-    supplierSearchRef,
     t,
-    taxRates,
-    toast
+    toast,
   } = logic
 
   return (
