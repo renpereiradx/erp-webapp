@@ -33,7 +33,7 @@ export const cashAuditService = {
         difference: result.difference || 0
       })
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_audit.service.error', {
         operation: 'createAudit',
         error: error.message
@@ -54,7 +54,7 @@ export const cashAuditService = {
     try {
       const result = await apiClient.get(API_ENDPOINTS.denominations)
       return result
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching denominations:', error)
       // Fallback básico para PYG si falla
       return {
@@ -78,7 +78,7 @@ export const cashAuditService = {
     }
     try {
       return await apiClient.post(API_ENDPOINTS.resolve(auditId), resolutionData)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error resolving discrepancy:', error)
       throw error
     }

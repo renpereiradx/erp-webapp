@@ -51,7 +51,7 @@ const formatPeriod = (period) => {
   return startLabel === endLabel ? startLabel : `${startLabel} - ${endLabel}`;
 }
 
-const normalizeDashboard = (payload, params) => {
+const normalizeDashboard = (payload, _params) => {
   if (payload?.kpis && payload?.insights && payload?.recomendaciones) {
     return {
       ...payload,
@@ -147,7 +147,7 @@ const normalizeDashboard = (payload, params) => {
   }
 }
 
-const normalizeInventory = (payload, params) => {
+const normalizeInventory = (payload, _params) => {
   if (payload?.kpis && payload?.productos && payload?.ui_labels) {
     return {
       ...payload,
@@ -222,7 +222,7 @@ const normalizeInventory = (payload, params) => {
   }
 }
 
-const normalizeSales = (payload, params) => {
+const normalizeSales = (payload, _params) => {
   if (payload?.kpis && payload?.historial && payload?.proyeccion) {
     return {
       ...payload,
@@ -342,7 +342,7 @@ const normalizeSales = (payload, params) => {
   }
 }
 
-const normalizeDemand = (payload, params) => {
+const normalizeDemand = (payload, _params) => {
   // Intentar deducir el periodo si no viene explícito
   const periodo = formatPeriod(payload?.forecast_period) || payload?.periodo_proyectado || payload?.metadata?.period;
 
@@ -425,7 +425,7 @@ const normalizeDemand = (payload, params) => {
   }
 }
 
-const normalizeRevenue = (payload, params) => {
+const normalizeRevenue = (payload, _params) => {
   if (payload?.escenarios && payload?.proyeccion_mensual) {
     return {
       ...payload,

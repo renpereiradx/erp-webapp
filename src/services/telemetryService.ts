@@ -5,6 +5,10 @@
 
 // Mock telemetry service for MVP (can be enhanced later)
 class TelemetryService {
+  private enabled: boolean;
+  private metrics: Map<string, any>;
+  private events: any[];
+
   constructor() {
     this.enabled = process.env.NODE_ENV === 'development';
     this.metrics = new Map();
