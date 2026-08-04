@@ -36,7 +36,7 @@ const fromApiResponseList = (data: any): any[] => {
 export const brandService = {
   getAll: async () => {
     try {
-      const response = await (apiClient as any).get('/api/v1/brands');
+      const response = await apiClient.get('/api/v1/brands');
       const data = response?.data?.data || response?.data || response?.brands || response || [];
       return fromApiResponseList(data);
     } catch (error) {
@@ -46,7 +46,7 @@ export const brandService = {
   },
   getById: async (id: string | number) => {
     try {
-      const response = await (apiClient as any).get(`/api/v1/brands/${id}`);
+      const response = await apiClient.get(`/api/v1/brands/${id}`);
       const data = response?.data?.data || response?.data || response;
       return fromApiResponseList(data);
     } catch (error) {
@@ -56,7 +56,7 @@ export const brandService = {
   },
   create: async (data: any) => {
     try {
-      const response = await (apiClient as any).post('/api/v1/brands', toApiPayload(data));
+      const response = await apiClient.post('/api/v1/brands', toApiPayload(data));
       const result = response?.data?.data || response?.data || response;
       return fromApiResponseList(result);
     } catch (error) {
@@ -66,7 +66,7 @@ export const brandService = {
   },
   update: async (id: string | number, data: any) => {
     try {
-      const response = await (apiClient as any).put(`/api/v1/brands/${id}`, toApiPayload(data));
+      const response = await apiClient.put(`/api/v1/brands/${id}`, toApiPayload(data));
       const result = response?.data?.data || response?.data || response;
       return fromApiResponseList(result);
     } catch (error) {
@@ -76,7 +76,7 @@ export const brandService = {
   },
   delete: async (id: string | number) => {
     try {
-      const response = await (apiClient as any).delete(`/api/v1/brands/${id}`);
+      const response = await apiClient.delete(`/api/v1/brands/${id}`);
       return response?.data?.data || response?.data || response;
     } catch (error) {
       console.error(`Error deleting brand ${id}:`, error);

@@ -24,10 +24,10 @@ const businessAPI = new BusinessManagementAPI({
 export const apiClient = businessAPI
 
 // Servicio API legacy manteniendo compatibilidad
-export const apiService: any = {
+export const apiService = {
   // Métodos de autenticación
-  login: (username: string, password: string) => (apiClient as any).login(username, password),
-  signup: (email: string, password: string) => (apiClient as any).signup(email, password),
+  login: (username: string, password: string) => apiClient.login(username, password),
+  signup: (email: string, password: string) => apiClient.signup(email, password),
   logout: () => apiClient.logout(),
 
   // Métodos HTTP genéricos para compatibilidad
@@ -37,15 +37,15 @@ export const apiService: any = {
   delete: (endpoint: string, options = {}) => apiClient.delete(endpoint, options),
 
   // Métodos específicos de productos (delegando al apiClient)
-  getProducts: (page: number, pageSize: number) => (apiClient as any).getProductsPaginated(page, pageSize),
-  getProductById: (id: string | number) => (apiClient as any).getProductById(id),
-  getProductByBarcode: (barcode: string) => (apiClient as any).getProductByBarcode(barcode),
-  getBeachTennisCourts: () => (apiClient as any).getServiceProducts(),
-  searchProducts: (term: string) => (apiClient as any).searchProducts(term),
-  searchProductsByName: (name: string) => (apiClient as any).searchProducts(name),
-  createProduct: (data: any) => (apiClient as any).createProduct(data),
-  updateProduct: (id: string | number, data: any) => (apiClient as any).updateProduct(id, data),
-  deleteProduct: (id: string | number) => (apiClient as any).deleteProduct(id),
+  getProducts: (page: number, pageSize: number) => apiClient.getProductsPaginated(page, pageSize),
+  getProductById: (id: string | number) => apiClient.getProductById(id),
+  getProductByBarcode: (barcode: string) => apiClient.getProductByBarcode(barcode),
+  getBeachTennisCourts: () => apiClient.getServiceProducts(),
+  searchProducts: (term: string) => apiClient.searchProducts(term),
+  searchProductsByName: (name: string) => apiClient.searchProducts(name),
+  createProduct: (data: any) => apiClient.createProduct(data),
+  updateProduct: (id: string | number, data: any) => apiClient.updateProduct(id, data),
+  deleteProduct: (id: string | number) => apiClient.deleteProduct(id),
 
   // Métodos de clientes (redirigiendo al nuevo clientService para consistencia)
   getClients: (params: any) => clientService.getAll(params?.page, params?.pageSize),
@@ -94,23 +94,23 @@ export const apiService: any = {
   updateProductPrice: (productId: string, data: any) => costPricingService.setUnitPrice(productId, data),
 
   // Métodos de categorías
-  getAllCategories: () => (apiClient as any).getAllCategories(),
+  getAllCategories: () => apiClient.getAllCategories(),
 
   // Métodos de ventas
-  getSalesByClientId: (id: string | number) => (apiClient as any).getSalesByClientId(id),
-  getSalesByClientName: (name: string) => (apiClient as any).getSalesByClientName(name),
-  getSaleById: (id: string | number) => (apiClient as any).getSaleById(id),
-  processSalePaymentCashRegister: (data: any) => (apiClient as any).processSalePaymentCashRegister(data),
-  getSalePaymentDetails: (saleId: string | number) => (apiClient as any).getSalePaymentDetails(saleId),
-  getChangeStatistics: (filters: any) => (apiClient as any).getChangeStatistics({ params: filters }),
+  getSalesByClientId: (id: string | number) => apiClient.getSalesByClientId(String(id)),
+  getSalesByClientName: (name: string) => apiClient.getSalesByClientName(name),
+  getSaleById: (id: string | number) => apiClient.getSaleById(id),
+  processSalePaymentCashRegister: (data: any) => apiClient.processSalePaymentCashRegister(data),
+  getSalePaymentDetails: (saleId: string | number) => apiClient.getSalePaymentDetails(saleId),
+  getChangeStatistics: (filters: any) => apiClient.getChangeStatistics({ params: filters }),
 
   // Métodos de compras
   getPurchasesByDateRange: (startDate: string, endDate: string, page = 1, pageSize = 50) => 
-    (apiClient as any).getPurchasesByDateRange(startDate, endDate, page, pageSize),
-  getPurchaseById: (id: string | number) => (apiClient as any).getPurchaseById(id),
-  processPurchasePayment: (data: any) => (apiClient as any).processPurchasePayment(data),
-  processPurchasePaymentCashRegister: (data: any) => (apiClient as any).processPurchasePaymentCashRegister(data),
-  getPurchasePaymentStatistics: (filters: any) => (apiClient as any).getPurchasePaymentStatistics({ params: filters }),
+    apiClient.getPurchasesByDateRange(startDate, endDate, page, pageSize),
+  getPurchaseById: (id: string | number) => apiClient.getPurchaseById(id),
+  processPurchasePayment: (data: any) => apiClient.processPurchasePayment(data),
+  processPurchasePaymentCashRegister: (data: any) => apiClient.processPurchasePaymentCashRegister(data),
+  getPurchasePaymentStatistics: (filters: any) => apiClient.getPurchasePaymentStatistics({ params: filters }),
 
   // Métodos de reservas con fallback robusto
   getReservationReport: async (params: any = {}) => {

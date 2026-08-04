@@ -136,7 +136,7 @@ export const productService = {
   async searchAdvanced(payload: any, options: any = {}): Promise<any> {
     try {
       return await retryWithBackoff(async () => {
-        return await (apiClient as any).searchProductsAdvanced(payload, options);
+        return await apiClient.searchProductsAdvanced(payload, options);
       });
     } catch (error) {
       if (error?.name === 'AbortError') throw error;
@@ -150,7 +150,7 @@ export const productService = {
   async getSearchFacets(params: any = {}, options: any = {}): Promise<any> {
     try {
       return await retryWithBackoff(async () => {
-        return await (apiClient as any).getProductSearchFacets(params, options);
+        return await apiClient.getProductSearchFacets(params, options);
       });
     } catch (error) {
       if (error?.name === 'AbortError') throw error;

@@ -454,7 +454,7 @@ export const purchaseService = {
       };
     }
     try {
-      const response = await (apiClient as any).previewPurchaseCancellation(purchaseOrderId as number)
+      const response = await apiClient.previewPurchaseCancellation(purchaseOrderId as number)
       return {
         success: true,
         data: response,
