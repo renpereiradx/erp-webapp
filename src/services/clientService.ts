@@ -23,7 +23,7 @@ const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await requestFn();
-    } catch (error) {
+    } catch (error: any) {
       lastError = error;
       
       if (attempt < maxRetries) {
@@ -56,7 +56,7 @@ export const clientService = {
       
       telemetry.record('client.service.search', { duration: Date.now() - startTime, name });
       return result.data?.items || result.items || result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'searchByName' });
       throw error;
     }
@@ -74,7 +74,7 @@ export const clientService = {
       
       telemetry.record('client.service.getById', { duration: Date.now() - startTime });
       return result.data || result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getById' });
       throw error;
     }
@@ -94,7 +94,7 @@ export const clientService = {
       
       telemetry.record('client.service.getAll', { duration: Date.now() - startTime, page, pageSize });
       return result.data || result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getAll' });
       throw error;
     }
@@ -128,7 +128,7 @@ export const clientService = {
       });
       
       return result.data || result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('client.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -168,7 +168,7 @@ export const clientService = {
       });
       
       return result.data || result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('client.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -184,7 +184,7 @@ export const clientService = {
       const result = await _fetchWithRetry(async () => apiClient.delete(`${API_PREFIX}/${id}`, CLIENT_OPTIONS));
       telemetry.record('client.service.delete', { duration: Date.now() - startTime });
       return result.data || result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'delete' });
       throw error;
     }

@@ -12,7 +12,7 @@ const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await requestFn();
-    } catch (error) {
+    } catch (error: any) {
       lastError = error;
       if (attempt < maxRetries) {
         const backoffMs = 500 * (attempt + 1);
@@ -24,7 +24,7 @@ const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
 };
 
 const supplierService = {
-  getAll: async (params = {}) => {
+  getAll: async (params: { page?: number; pageSize?: number } = {}) => {
     const startTime = Date.now();
     try {
       let endpoint;
@@ -37,7 +37,7 @@ const supplierService = {
       const result = await _fetchWithRetry(() => apiClient.get(endpoint, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.load', { duration: Date.now() - startTime });
       return result.data?.items || result.items || result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getAll' });
       throw error;
     }
@@ -50,7 +50,7 @@ const supplierService = {
       const result = await _fetchWithRetry(() => apiClient.get(endpoint, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.getById', { duration: Date.now() - startTime });
       return result.data || result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getById' });
       throw error;
     }
@@ -63,7 +63,7 @@ const supplierService = {
       const result = await _fetchWithRetry(() => apiClient.get(endpoint, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.search', { duration: Date.now() - startTime, name });
       return result.data?.items || result.items || result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'searchByName' });
       throw error;
     }
@@ -82,7 +82,7 @@ const supplierService = {
       const result = await _fetchWithRetry(() => apiClient.post(endpoint, payload, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.create', { duration: Date.now() - startTime });
       return result.data || result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'create' });
       throw error;
     }
@@ -103,7 +103,7 @@ const supplierService = {
       const result = await _fetchWithRetry(() => apiClient.put(`${API_PREFIX}/${id}`, payload, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.update', { duration: Date.now() - startTime });
       return result.data || result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'update' });
       throw error;
     }
@@ -115,7 +115,7 @@ const supplierService = {
       const result = await _fetchWithRetry(() => apiClient.delete(`${API_PREFIX}/${id}`, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.delete', { duration: Date.now() - startTime });
       return result.data || result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'delete' });
       throw error;
     }

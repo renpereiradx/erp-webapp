@@ -19,6 +19,10 @@ const FALLBACK_CATEGORIES = [
 ];
 
 class CategoryCacheService {
+  private cacheKey: string;
+  private timestampKey: string;
+  private cacheExpiry: number;
+
   constructor() {
     this.cacheKey = 'erp_categories_cache';
     this.timestampKey = 'erp_categories_timestamp';
@@ -45,7 +49,7 @@ class CategoryCacheService {
 
       const categories = JSON.parse(cached);
       return categories;
-    } catch (error) {
+    } catch (error: any) {
       console.warn('Error al leer caché de categorías:', error);
       return null;
     }
@@ -62,7 +66,7 @@ class CategoryCacheService {
       if (localStorage.getItem('debug-mode') === 'true') {
         console.log('📦 Categorías guardadas en caché:', categories.length);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.warn('Error al guardar caché de categorías:', error);
     }
   }
@@ -127,7 +131,7 @@ class CategoryCacheService {
         }
         return categories;
       }
-    } catch (error) {
+    } catch (error: any) {
       // Silencioso - solo log en modo debug
       if (localStorage.getItem('debug-mode') === 'true') {
         console.warn('📦 API de categorías falló:', error.message);
