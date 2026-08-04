@@ -1,9 +1,9 @@
 export interface Brand {
-  id: string;
+  id: string | number;
   name: string;
   slug: string;
   description: string;
-  logoUrl: string;
+  logoUrl?: string;
   isActive: boolean;
-  icon: string;
+  icon?: string;
 }

@@ -1,4 +1,4 @@
-import { Brand } from '../types/brand';
+import { Brand } from '../features/brands/types/brand';
 
 export const mockBrands: Brand[] = [
   {

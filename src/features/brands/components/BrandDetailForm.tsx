@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Brand } from '../../types/brand';
+import { Brand } from '../types/brand';
 
 interface BrandDetailFormProps {
   brand: Brand | { id: 'new' } | null;
@@ -141,7 +141,7 @@ export const BrandDetailForm: React.FC<BrandDetailFormProps> = ({
             type="button"
             onClick={() => {
               if (window.confirm('¿Está seguro de que desea eliminar esta marca?')) {
-                onDelete(brand.id);
+                onDelete(String(brand.id));
               }
             }}
             className="text-error hover:bg-error/10 p-2 rounded-lg transition-colors flex items-center justify-center"

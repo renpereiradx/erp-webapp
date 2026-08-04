@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Brand } from '../../types/brand';
+import { Brand } from '../types/brand';
 
 interface BrandListProps {
   brands: Brand[];
@@ -62,7 +62,7 @@ export const BrandList: React.FC<BrandListProps> = ({
             {paginatedBrands.map((brand) => (
               <tr
                 key={brand.id}
-                onClick={() => onSelectBrand(brand.id)}
+                onClick={() => onSelectBrand(String(brand.id))}
                 className={`rounded-xl transition-colors group cursor-pointer border ${
                   selectedBrandId === brand.id
                     ? 'bg-surface-container-low border-primary/40'

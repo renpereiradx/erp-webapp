@@ -2,17 +2,9 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { brandService } from '@/services/brandService';
 
-export interface Brand {
-  id: number | string;
-  name: string;
-  slug: string;
-  description: string;
-  logoUrl?: string;
-  isActive: boolean;
-  icon?: string;
-  // If the backend has other fields
-  [key: string]: any;
-}
+// Canonical Brand type lives in the feature (feature-sliced); the store re-exports it (D-F7.1)
+import type { Brand } from '@/features/brands/types/brand';
+export type { Brand } from '@/features/brands/types/brand';
 
 interface BrandState {
   brands: Brand[];
