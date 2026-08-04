@@ -65,7 +65,7 @@ class PaymentBootstrapService {
     try {
       const response = await apiClient.makeRequest('/payments/bootstrap')
       return this.normalizeBootstrapResponse(response)
-    } catch (error) {
+    } catch (error: any) {
       console.error(
         '[PaymentBootstrapService] Error fetching bootstrap:',
         error
@@ -80,7 +80,7 @@ class PaymentBootstrapService {
           error,
           note: 'Bootstrap inicial de pagos para frontend',
         })
-      } catch (logError) {
+      } catch (logError: any) {
         console.warn(
           '[PaymentBootstrapService] No se pudo registrar el diagnóstico:',
           logError

@@ -34,7 +34,7 @@ const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await requestFn()
-    } catch (error) {
+    } catch (error: any) {
       lastError = error
 
       if (attempt < maxRetries) {
@@ -75,7 +75,7 @@ export const cashRegisterService = {
       }
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       // 204 No Content o 404 significa no hay caja activa - no es un error real
       if (error.status === 204 || error.status === 404) {
         telemetry.record('cash_register.service.no_active', {
@@ -115,7 +115,7 @@ export const cashRegisterService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -158,7 +158,7 @@ export const cashRegisterService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -192,7 +192,7 @@ export const cashRegisterService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -231,7 +231,7 @@ export const cashRegisterService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -277,7 +277,7 @@ export const cashRegisterService = {
       })
 
       return safeResult
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -299,7 +299,16 @@ export const cashRegisterService = {
    * @param {Object} filters - Filtros opcionales
    * @returns {Promise<Array>}
    */
-  async getFilteredMovements(cashRegisterId, filters = {}) {
+  async getFilteredMovements(
+    cashRegisterId: number,
+    filters: {
+      type?: string
+      date_from?: string
+      date_to?: string
+      limit?: string | number
+      offset?: string | number
+    } = {}
+  ) {
     const startTime = Date.now()
 
     try {
@@ -308,8 +317,8 @@ export const cashRegisterService = {
       if (filters.type) params.append('type', filters.type)
       if (filters.date_from) params.append('date_from', filters.date_from)
       if (filters.date_to) params.append('date_to', filters.date_to)
-      if (filters.limit) params.append('limit', filters.limit)
-      if (filters.offset) params.append('offset', filters.offset)
+      if (filters.limit) params.append('limit', String(filters.limit))
+      if (filters.offset) params.append('offset', String(filters.offset))
 
       const url = params.toString()
         ? `${API_ENDPOINTS.cashRegisterMovementsFilter(
@@ -331,7 +340,7 @@ export const cashRegisterService = {
       })
 
       return safeResult
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -371,7 +380,7 @@ export const cashRegisterService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -404,7 +413,7 @@ export const cashRegisterService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -435,7 +444,7 @@ export const cashRegisterService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -473,7 +482,7 @@ export const cashRegisterService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -503,7 +512,7 @@ export const cashRegisterService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -534,7 +543,7 @@ export const cashRegisterService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -563,7 +572,7 @@ export const cashRegisterService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -578,8 +587,8 @@ export const cashRegisterService = {
   /**
    * Valida datos de apertura de caja
    */
-  validateOpenCashRegisterData(data) {
-    const errors = []
+  validateOpenCashRegisterData(data: { name?: string; initial_balance?: number }) {
+    const errors: string[] = []
     if (!data.name || data.name.trim() === '') {
       errors.push('Nombre es requerido')
     }
@@ -592,8 +601,12 @@ export const cashRegisterService = {
   /**
    * Valida datos de movimiento
    */
-  validateMovementData(data) {
-    const errors = []
+  validateMovementData(data: {
+    movement_type?: string
+    amount?: number
+    concept?: string
+  }) {
+    const errors: string[] = []
     const validTypes = ['INCOME', 'EXPENSE', 'ADJUSTMENT']
     if (!data.movement_type || !validTypes.includes(data.movement_type)) {
       errors.push(`Tipo de movimiento inválido. Tipos válidos: ${validTypes.join(', ')}`)

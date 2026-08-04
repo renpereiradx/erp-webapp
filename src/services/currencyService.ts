@@ -6,10 +6,20 @@ import { DEMO_CURRENCIES_DATA } from '../config/demoData'
 const SERVICE_NAME = 'CurrencyService'
 
 const logPaymentFailure = (
-  operation,
-  endpoint,
-  error,
-  { method = 'GET', note, payload, extra } = {}
+  operation: string,
+  endpoint: string,
+  error: any,
+  {
+    method = 'GET',
+    note,
+    payload,
+    extra,
+  }: {
+    method?: string
+    note?: string
+    payload?: any
+    extra?: any
+  } = {}
 ) => {
   try {
     paymentApiDebug.record({
@@ -22,7 +32,7 @@ const logPaymentFailure = (
       requestBody: payload,
       extra,
     })
-  } catch (logError) {
+  } catch (logError: any) {
     console.warn(
       '[CurrencyService] No se pudo registrar el diagnóstico:',
       logError
@@ -115,7 +125,7 @@ class CurrencyService {
     try {
       const response = await apiClient.makeRequest('/currencies')
       return this.normalizeCurrencyList(response)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching currencies:', error)
       logPaymentFailure('getAll', '/currencies', error, {
         note: 'Listado de monedas para paneles de pago',
@@ -152,7 +162,7 @@ class CurrencyService {
       }
 
       return this.normalizeCurrency(payload)
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching currency ${id}:`, error)
       logPaymentFailure('getById', `/currencies/${id}`, error)
       throw new Error('Error al obtener la moneda')
@@ -182,7 +192,7 @@ class CurrencyService {
       }
 
       return this.normalizeCurrency(payload)
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching currency ${code}:`, error)
       logPaymentFailure(
         'getByCode',
@@ -212,7 +222,7 @@ class CurrencyService {
         `/currencies/convert?${params.toString()}`
       )
       return response.data || response
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error converting currency:', error)
       throw new Error('Error al convertir moneda')
     }
@@ -242,7 +252,7 @@ class CurrencyService {
       // Nueva API: GET /currencies?enriched=true
       const response = await apiClient.makeRequest('/currencies?enriched=true')
       return this.normalizeCurrencyList(response)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching enriched currencies:', error)
       logPaymentFailure('getAllEnriched', '/currencies?enriched=true', error, {
         note: 'Listado de monedas con datos enriquecidos',
@@ -263,7 +273,7 @@ class CurrencyService {
       return currencies.filter(
         currency => !currency.is_base && !currency.is_base_currency
       )
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching non-base currencies:', error)
       logPaymentFailure('getAllExceptBase', '/currencies', error, {
         note: 'Filtrado para excluir moneda base',
@@ -291,7 +301,7 @@ class CurrencyService {
           (currency.name || '').toLowerCase().includes(term) ||
           (currency.code || currency.currency_code || '').toLowerCase().includes(term)
       )
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error searching currencies:', error)
       throw error
     }
@@ -320,7 +330,7 @@ class CurrencyService {
       }
 
       throw new Error('No se encontró moneda base configurada')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching base currency:', error)
       logPaymentFailure('getBaseCurrency', '/currencies', error, {
         note: 'Determinando moneda base',
@@ -378,7 +388,7 @@ class CurrencyService {
       })
 
       return this.normalizeCurrency(response)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating currency:', error)
       logPaymentFailure('create', '/currencies', error, {
         method: 'POST',
@@ -408,7 +418,7 @@ class CurrencyService {
       })
 
       return this.normalizeCurrency(response)
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error updating currency ${id}:`, error)
       logPaymentFailure('update', `/currencies/${id}`, error, {
         method: 'PUT',
@@ -432,7 +442,7 @@ class CurrencyService {
       await apiClient.makeRequest(`/currencies/${id}`, {
         method: 'DELETE',
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error deleting currency ${id}:`, error)
       logPaymentFailure('delete', `/currencies/${id}`, error, {
         method: 'DELETE',
@@ -446,7 +456,19 @@ class CurrencyService {
    * @param {{ code?: string, currency_code?: string, currency_name?: string, symbol?: string, is_base_currency?: boolean }} data
    * @returns {{ code: string, name: string, symbol?: string, decimal_places: number, is_base?: boolean }}
    */
-  static preparePayload(data = {}) {
+  static preparePayload(
+    data: {
+      code?: string
+      currency_code?: string
+      currency_name?: string
+      name?: string
+      description?: string
+      symbol?: string
+      decimal_places?: number
+      is_base?: boolean
+      is_base_currency?: boolean
+    } = {}
+  ) {
     const trimmedCode = ((data.code || data.currency_code) || '').trim().toUpperCase()
 
     if (!trimmedCode) {
@@ -462,7 +484,13 @@ class CurrencyService {
 
     // Payload según PAYMENT_CONFIG_API.md — el backend espera `code` (F7.2);
     // antes se enviaba `currency_code`, que el CreateRequest ignoraba.
-    const payload = {
+    const payload: {
+      code: string
+      name: string
+      symbol: string
+      decimal_places: number
+      is_base?: boolean
+    } = {
       code: trimmedCode,
       name: normalizedName,
       symbol: (data.symbol || '').trim(),

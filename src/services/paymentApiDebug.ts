@@ -53,6 +53,19 @@ const toConsoleGroupLabel = ({ service, operation, status, corsSuspected }) => {
   return `%c[PaymentAPI][${service}] ${operation} -> ${statusLabel} ${corsLabel}`
 }
 
+export interface PaymentApiDebugOptions {
+  service: string
+  operation: string
+  endpoint: string
+  method?: string
+  // Logger de diagnóstico (no contrato BE): any es intencional para aceptar
+  // cualquier error en runtime (unknown de catch, errores de red, etc.).
+  error?: any
+  requestBody?: any
+  note?: string
+  extra?: Record<string, any>
+}
+
 export const paymentApiDebug = {
   record({
     service,
@@ -63,7 +76,7 @@ export const paymentApiDebug = {
     requestBody,
     note,
     extra = {},
-  }) {
+  }: PaymentApiDebugOptions) {
     const timestamp = new Date().toISOString()
     const store = ensureStore()
 
@@ -97,7 +110,7 @@ export const paymentApiDebug = {
         userAgent: window.navigator?.userAgent,
       }
       store.events.push({ ...event, client })
-      window.paymentApiDebugReport = this // acceso rápido desde consola
+      ;(window as any).paymentApiDebugReport = this // acceso rápido desde consola
     } else {
       store.events.push(event)
     }
@@ -181,5 +194,5 @@ export const paymentApiDebug = {
 }
 
 if (typeof window !== 'undefined') {
-  window.paymentApiDebug = paymentApiDebug
+  ;(window as any).paymentApiDebug = paymentApiDebug
 }

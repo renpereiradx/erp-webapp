@@ -4,20 +4,23 @@ import { DEMO_CONFIG } from '../config/demoAuth'
 
 const SERVICE_NAME = 'PaymentMethodService'
 
-// Datos de métodos de pago para modo demo
-const DEMO_PAYMENT_METHODS = [
-  { id: 1, method_code: 'CASH', description: 'Efectivo', is_active: true },
-  { id: 2, method_code: 'CARD', description: 'Tarjeta de Crédito/Débito', is_active: true },
-  { id: 3, method_code: 'TRANSFER', description: 'Transferencia Bancaria', is_active: true },
-  { id: 4, method_code: 'CHECK', description: 'Cheque', is_active: true },
-]
 const PAYMENT_METHOD_WRITE_ENABLED = true
 
 const logPaymentFailure = (
-  operation,
-  endpoint,
-  error,
-  { method = 'GET', note, payload, extra } = {}
+  operation: string,
+  endpoint: string,
+  error: any,
+  {
+    method = 'GET',
+    note,
+    payload,
+    extra,
+  }: {
+    method?: string
+    note?: string
+    payload?: any
+    extra?: any
+  } = {}
 ) => {
   try {
     paymentApiDebug.record({
@@ -30,7 +33,7 @@ const logPaymentFailure = (
       requestBody: payload,
       extra,
     })
-  } catch (logError) {
+  } catch (logError: any) {
     console.warn(
       '[PaymentMethodService] No se pudo registrar el diagnóstico:',
       logError
@@ -56,7 +59,7 @@ class PaymentMethodService {
       const response = await apiClient.makeRequest('/payment-methods')
       const data = response.data || response
       return Array.isArray(data) ? data : []
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching payment methods:', error)
       logPaymentFailure('getAll', '/payment-methods', error, {
         note: 'Listado de métodos de pago para paneles de pago',
@@ -86,7 +89,7 @@ class PaymentMethodService {
 
       const response = await apiClient.makeRequest(`/payment-methods/${id}`)
       return response.data || response
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching payment method ${id}:`, error)
       logPaymentFailure('getById', `/payment-methods/${id}`, error)
       throw new Error('Error al obtener el método de pago')
@@ -108,7 +111,7 @@ class PaymentMethodService {
         `/payment-methods/code/${code.trim().toUpperCase()}`
       )
       return response.data || response
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching payment method ${code}:`, error)
       logPaymentFailure(
         'getByCode',
@@ -152,7 +155,7 @@ class PaymentMethodService {
           method.description.toLowerCase().includes(term) ||
           method.method_code.toLowerCase().includes(term)
       )
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error searching payment methods:', error)
       logPaymentFailure('searchByDescription', '/payment-methods', error, {
         note: 'Búsqueda local de métodos de pago',
@@ -185,7 +188,7 @@ class PaymentMethodService {
           `${method.method_code} ${method.description}`.toLowerCase()
         return searchTerms.some(term => methodText.includes(term.toLowerCase()))
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error filtering payment methods by type:', error)
       logPaymentFailure('getByType', '/payment-methods', error, {
         note: 'Filtrado local de métodos de pago',
@@ -209,7 +212,7 @@ class PaymentMethodService {
         const cashMethods = await this.getByType('cash')
         return cashMethods.length > 0 ? cashMethods[0] : null
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting default payment method:', error)
       logPaymentFailure('getDefaultPaymentMethod', '/payment-methods', error, {
         note: 'Determinando método de pago por defecto',
@@ -317,7 +320,7 @@ class PaymentMethodService {
       })
 
       return response.data || response
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating payment method:', error)
       logPaymentFailure('create', '/payment-methods', error, {
         method: 'POST',
@@ -365,7 +368,7 @@ class PaymentMethodService {
       })
 
       return response.data || response
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error updating payment method ${id}:`, error)
       logPaymentFailure('update', `/payment-methods/${id}`, error, {
         method: 'PUT',
@@ -408,7 +411,7 @@ class PaymentMethodService {
       await apiClient.makeRequest(`/payment-methods/${id}`, {
         method: 'DELETE',
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error deleting payment method ${id}:`, error)
       logPaymentFailure('delete', `/payment-methods/${id}`, error, {
         method: 'DELETE',
@@ -422,7 +425,17 @@ class PaymentMethodService {
    * @param {{ method_code?: string, code?: string, description?: string, method_description?: string, is_active?: boolean, requires_additional_info?: boolean, metadata?: any }} data
    * @returns {{ method_code: string, description: string, is_active?: boolean, requires_additional_info?: boolean, metadata?: any }}
    */
-  static preparePayload(data = {}) {
+  static preparePayload(
+    data: {
+      method_code?: string
+      code?: string
+      description?: string
+      method_description?: string
+      is_active?: boolean
+      requires_additional_info?: boolean
+      metadata?: any
+    } = {}
+  ) {
     const rawCode = data.method_code || data.code || ''
     const methodCode = rawCode.trim().toUpperCase()
 
@@ -443,7 +456,13 @@ class PaymentMethodService {
       throw new Error('La descripción del método de pago es requerida')
     }
 
-    const payload = {
+    const payload: {
+      method_code: string
+      description: string
+      is_active?: boolean
+      requires_additional_info?: boolean
+      metadata?: any
+    } = {
       method_code: methodCode,
       description,
     }
