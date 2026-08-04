@@ -14,17 +14,12 @@ import {
   isConnectionError,
   getConnectionErrorMessage,
 } from '@/utils/connectionUtils'
-import { 
-  DEMO_CONFIG_PRODUCTS, 
-  DEMO_PRODUCT_DATA, 
-  simulateDelay 
+import {
+  DEMO_CONFIG_PRODUCTS,
+  DEMO_PRODUCT_DATA,
+  simulateDelay
 } from '../config/demoData'
-
-// Jitter helper
-const _jitter = base => {
-  const rand = Math.random()
-  return base + rand * 0.3 * base // +-30%
-}
+import type { ProductEnriched } from '@/types'
 
 interface ProductState {
   products: any[];
@@ -205,7 +200,10 @@ const useProductStore = create<ProductState>()(
       },
 
       // Helper para ejecutar una función con reintentos (backoff + jitter)
-      _withRetry: async (fn, opts = {}) => {
+      _withRetry: async (
+        fn,
+        opts: { attempts?: number; baseDelay?: number; telemetryKey?: string } = {}
+      ) => {
         let attempts = opts.attempts ?? 3
         let baseDelay = opts.baseDelay ?? 300
         const telemetryKey = opts.telemetryKey
@@ -229,7 +227,7 @@ const useProductStore = create<ProductState>()(
             // registro de éxito y reseteo de circuito
             get()._recordSuccess?.()
             return res
-          } catch (err) {
+          } catch (err: any) {
             lastErr = err
             // record failure for circuit
             try {
@@ -297,7 +295,7 @@ const useProductStore = create<ProductState>()(
           } catch (e) { /* noop */ }
           
           return categories
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error fetching categories:', error)
           const fallbackCategories = [
             { id: 1, name: 'Alimentos', description: 'Productos alimenticios' },
@@ -323,7 +321,7 @@ const useProductStore = create<ProductState>()(
 
           set({ categories: categories, loading: false, error: null })
           return categories
-        } catch (error) {
+        } catch (error: any) {
           const currentState = get()
           if (currentState.categories.length > 0) {
             set({
@@ -363,7 +361,7 @@ const useProductStore = create<ProductState>()(
        * @param {Object} options - Opciones adicionales
        * @returns {Promise} Resultado con datos y total
        */
-      fetchProductsPaginated: async (page = 1, pageSize = 10, options = {}) => {
+      fetchProductsPaginated: async (page = 1, pageSize = 10, options: { signal?: AbortSignal } = {}) => {
         const correlationId = `fetch_paginated_${Date.now()}_${Math.random()
           .toString(36)
           .slice(2, 8)}`
@@ -375,7 +373,7 @@ const useProductStore = create<ProductState>()(
         // Abort previous request
         try {
           if (get().fetchAbortController) {
-            get().fetchAbortController.abort()
+            get().fetchAbortController?.abort()
           }
           if (!options.signal && typeof AbortController !== 'undefined') {
             const ac = new AbortController()
@@ -518,7 +516,7 @@ const useProductStore = create<ProductState>()(
 
           get()._recordSuccess()
           return { data: filteredProducts, total: totalCount }
-        } catch (error) {
+        } catch (error: any) {
           // Lógica de Fallback para Modo Demo
           if (DEMO_CONFIG_PRODUCTS.enabled) {
             console.log('🔄 Products Store: Cargando fallback de modo demo...');
@@ -606,7 +604,7 @@ const useProductStore = create<ProductState>()(
         page = null,
         pageSize = null,
         searchTerm = '',
-        options = {}
+        options: { signal?: AbortSignal } = {}
       ) => {
         const correlationId = `fetch_${Date.now()}_${Math.random()
           .toString(36)
@@ -625,7 +623,7 @@ const useProductStore = create<ProductState>()(
         // Abort previous
         try {
           if (get().fetchAbortController) {
-            get().fetchAbortController.abort()
+            get().fetchAbortController?.abort()
           }
           if (!options.signal && typeof AbortController !== 'undefined') {
             const ac = new AbortController()
@@ -653,7 +651,7 @@ const useProductStore = create<ProductState>()(
             }
           }
           let response
-          let products = []
+          let products: any[] = []
           let totalCount = 0
 
           if (searchTerm && searchTerm.trim()) {
@@ -774,7 +772,7 @@ const useProductStore = create<ProductState>()(
               message: 'Realiza una búsqueda para ver productos',
             }
           }
-        } catch (apiError) {
+        } catch (apiError: any) {
           get()._recordFailure()
           const norm = toApiError(
             apiError,
@@ -816,7 +814,7 @@ const useProductStore = create<ProductState>()(
       },
 
       // Nueva función para búsqueda específica (con caché y cancelación)
-      searchProducts: async (searchTerm, options = {}) => {
+      searchProducts: async (searchTerm, options: { force?: boolean; revalidate?: boolean; signal?: AbortSignal } = {}) => {
         const correlationId = `search_${Date.now()}_${Math.random()
           .toString(36)
           .slice(2, 8)}`
@@ -1047,7 +1045,7 @@ const useProductStore = create<ProductState>()(
           telemetry.record('products.search.success', { ms, total: totalCount })
           get()._recordSuccess()
           return { data: paginated, total: totalCount }
-        } catch (error) {
+        } catch (error: any) {
           // count failure for circuit behavior only if not abort
           if (!(error?.name === 'AbortError')) {
             try {
@@ -1192,7 +1190,7 @@ const useProductStore = create<ProductState>()(
           })
 
           return product
-        } catch (error) {
+        } catch (error: any) {
           const errorMsg =
             error.message || 'Error al cargar producto financiero'
           set({
@@ -1235,7 +1233,7 @@ const useProductStore = create<ProductState>()(
           })
 
           return product
-        } catch (error) {
+        } catch (error: any) {
           const errorMsg =
             error.message || 'Error al buscar producto por código de barras'
           set({
@@ -1253,7 +1251,7 @@ const useProductStore = create<ProductState>()(
       },
 
       // Buscar productos financieramente enriquecidos por nombre
-      searchProductsInfo: async (searchTerm, options = {}) => {
+      searchProductsInfo: async (searchTerm, options: { limit?: number; signal?: AbortSignal } = {}) => {
         const { limit = 10, signal } = options
         const correlationId = `search_financial_${Date.now()}_${Math.random()
           .toString(36)
@@ -1320,7 +1318,7 @@ const useProductStore = create<ProductState>()(
 
           get()._recordSuccess()
           return { data: paginated, total: totalCount }
-        } catch (error) {
+        } catch (error: any) {
           if (!(error?.name === 'AbortError')) {
             try {
               get()._recordFailure()
@@ -1379,7 +1377,7 @@ const useProductStore = create<ProductState>()(
         try {
           const { DEMO_CONFIG } = await import('@/config/demoAuth')
           
-          let services = []
+          let services: any[] = []
           
           if (DEMO_CONFIG.enabled) {
             const { DEMO_PRODUCT_DATA } = await import('../config/demoData')
@@ -1398,7 +1396,7 @@ const useProductStore = create<ProductState>()(
               } else if (result?.data && Array.isArray(result.data)) {
                 services = result.data.filter(p => p.product_type === 'SERVICE')
               }
-            } catch (enrichedError) {
+            } catch (enrichedError: any) {
               console.warn('⚠️ Endpoint /products/enriched no disponible, usando fallback al listado normal:', enrichedError.message)
               
               // FALLBACK: Usar listado de productos normal si el enriquecido falla
@@ -1467,7 +1465,7 @@ const useProductStore = create<ProductState>()(
           })
 
           return enrichedServices
-        } catch (error) {
+        } catch (error: any) {
           const errorMsg =
             error.message || 'Error al cargar servicios de canchas'
           set({
@@ -1570,7 +1568,7 @@ const useProductStore = create<ProductState>()(
           const updatedProduct = await productService.getProductByIdInfo(
             productId
           )
-          const product = updatedProduct.data || updatedProduct
+          const product = updatedProduct
 
           const state = get()
 
@@ -1632,7 +1630,7 @@ const useProductStore = create<ProductState>()(
 
           telemetry.record('products.refresh.success', { productId })
           return product
-        } catch (error) {
+        } catch (error: any) {
           telemetry.record('products.refresh.error', {
             productId,
             error: error.message,
@@ -1648,7 +1646,7 @@ const useProductStore = create<ProductState>()(
 
         try {
           const response = await productService.getProductById(productId)
-          const product = response.data || response
+          const product = response
 
           set({
             selectedProduct: product,
@@ -1656,7 +1654,7 @@ const useProductStore = create<ProductState>()(
           })
 
           return product
-        } catch (error) {
+        } catch (error: any) {
           set({
             error: error.message || 'Error al cargar producto',
             loading: false,
@@ -1671,8 +1669,8 @@ const useProductStore = create<ProductState>()(
         try {
           productService.validateProductData(productData)
           const response = await productService.createProduct(productData)
-          const newProduct = response?.data || response
-          let createdProduct = newProduct
+          const newProduct = response
+          let createdProduct: ProductEnriched | null = newProduct
           if (!newProduct || !newProduct.id) {
             // La API retorna solo mensaje; refrescar búsqueda actual
             try {
@@ -1682,7 +1680,7 @@ const useProductStore = create<ProductState>()(
               }
             } catch {}
             createdProduct = null
-            set(s => ({ loading: false }))
+            set({ loading: false })
           } else {
             set(state => {
               const productsById = {
@@ -1700,7 +1698,7 @@ const useProductStore = create<ProductState>()(
           telemetry.endTimer(t, { ok: true, messageOnly: !createdProduct })
           telemetry.record('products.create.success')
           return createdProduct
-        } catch (error) {
+        } catch (error: any) {
           telemetry.record('products.create.error', { message: error?.message })
           set({
             error: error.message || 'Error al crear producto',
@@ -1719,8 +1717,8 @@ const useProductStore = create<ProductState>()(
             productId,
             productData
           )
-          const updatedProduct = response?.data || response
-          let finalProduct = updatedProduct
+          const updatedProduct = response
+          let finalProduct: ProductEnriched | null = updatedProduct
           if (!updatedProduct || !updatedProduct.id) {
             // Mensaje sin datos => refrescar búsqueda actual
             try {
@@ -1730,7 +1728,7 @@ const useProductStore = create<ProductState>()(
               }
             } catch {}
             finalProduct = null
-            set(s => ({ loading: false }))
+            set({ loading: false })
           } else {
             set(state => {
               const products = state.products.map(product =>
@@ -1759,7 +1757,7 @@ const useProductStore = create<ProductState>()(
           telemetry.endTimer(t, { ok: true, messageOnly: !finalProduct })
           telemetry.record('products.update.success')
           return finalProduct
-        } catch (error) {
+        } catch (error: any) {
           telemetry.record('products.update.error', { message: error?.message })
           set({
             error: error.message || 'Error al actualizar producto',
@@ -1799,7 +1797,7 @@ const useProductStore = create<ProductState>()(
           telemetry.endTimer(t, { ok: true })
           telemetry.record('products.delete.success')
           return true
-        } catch (error) {
+        } catch (error: any) {
           telemetry.record('products.delete.error', { message: error?.message })
           set({
             error: error.message || 'Error al eliminar producto',
@@ -1838,7 +1836,7 @@ const useProductStore = create<ProductState>()(
           telemetry.endTimer(t, { ok: true })
           telemetry.record('products.reactivate.success')
           return true
-        } catch (error) {
+        } catch (error: any) {
           telemetry.record('products.reactivate.error', {
             message: error?.message,
           })
@@ -1968,7 +1966,6 @@ const useProductStore = create<ProductState>()(
         const correlationId = `bulkAct_${Date.now()}_${ids.length}`
         const prevSnapshot = get().productsById // snapshot for rollback event
         // Optimista
-        const prev = get().productsById
         set(state => {
           const products = state.products.map(p =>
             ids.includes(p.id) ? { ...p, is_active: true } : p
@@ -2012,7 +2009,6 @@ const useProductStore = create<ProductState>()(
         const correlationId = `bulkDeact_${Date.now()}_${ids.length}`
         const prevSnapshot = get().productsById
         // Optimista
-        const prev = get().productsById
         set(state => {
           const products = state.products.map(p =>
             ids.includes(p.id) ? { ...p, is_active: false } : p
@@ -2155,7 +2151,7 @@ if (typeof window !== 'undefined') {
 
   // Expose store for debugging and test helpers
   try {
-    window.useProductStore = useProductStore
+    ;(window as any).useProductStore = useProductStore
   } catch (e) {
     // ignore in restricted environments
   }
