@@ -30,7 +30,7 @@ const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await requestFn();
-    } catch (error) {
+    } catch (error: any) {
       lastError = error;
       
       if (attempt < maxRetries) {
@@ -97,7 +97,7 @@ export const priceAdjustmentService = {
       });
 
       return { success: true, data: result };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in createPriceAdjustment:', error);
       telemetry.record('priceAdjustment.service.error', {
         duration: Date.now() - startTime,
@@ -138,7 +138,7 @@ export const priceAdjustmentService = {
       });
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('priceAdjustment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -153,7 +153,7 @@ export const priceAdjustmentService = {
    * Obtener ajustes recientes (para dashboard)
    * Nota: Este endpoint no existe en la API actual, usando demo data
    */
-  async getRecentAdjustments(limit = 20, days = 7) {
+  async getRecentAdjustments(limit = 20, _days = 7) {
     const startTime = Date.now();
     
     try {
@@ -172,7 +172,7 @@ export const priceAdjustmentService = {
 
       // Transform the data to match expected frontend structure
       return { data: transformAdjustmentData(result?.adjustments) };
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('priceAdjustment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -199,7 +199,7 @@ export const priceAdjustmentService = {
       });
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('priceAdjustment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -213,7 +213,7 @@ export const priceAdjustmentService = {
    * Validar datos de ajuste de precio
    */
   validatePriceAdjustmentData(data) {
-    const errors = [];
+    const errors: string[] = [];
     
     if (!data.product_id || data.product_id.trim() === '') {
       errors.push('Product ID is required');
@@ -275,7 +275,7 @@ export const priceAdjustmentService = {
 
       // Transform the data to match expected frontend structure
       return { data: transformAdjustmentData(result?.adjustments) };
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('priceAdjustment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,

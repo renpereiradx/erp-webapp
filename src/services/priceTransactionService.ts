@@ -6,9 +6,6 @@
 import { apiService as apiClient } from '@/services/api';
 import { telemetry } from '@/utils/telemetry';
 
-// Configuración base
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-
 // Helper para hacer peticiones con reintentos
 const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
   let lastError;
@@ -16,7 +13,7 @@ const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await requestFn();
-    } catch (error) {
+    } catch (error: any) {
       lastError = error;
       
       if (attempt < maxRetries) {
@@ -102,7 +99,7 @@ export const priceTransactionService = {
       console.log('✅ PriceTransaction: Transaction registered successfully');
       return { success: true, data: result };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ PriceTransaction API error:', error.message);
       
       // Fallback demo para desarrollo
@@ -155,7 +152,7 @@ export const priceTransactionService = {
       console.log('✅ PriceTransaction: Transaction types loaded');
       return { success: true, data: result };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ PriceTransaction types error:', error.message);
       
       // Fallback con tipos predefinidos
@@ -174,6 +171,7 @@ export const priceTransactionService = {
    */
   async getProductHistory(productId, page = 0, limit = 20) {
     const startTime = Date.now();
+    const offset = page * limit;
     
     try {
       if (!productId) {
@@ -182,7 +180,6 @@ export const priceTransactionService = {
 
       console.log('🌐 PriceTransaction: Loading product history...');
       
-      const offset = page * limit;
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(
           `/price-transactions/product/${productId}/history?limit=${limit}&offset=${offset}`
@@ -199,7 +196,7 @@ export const priceTransactionService = {
       console.log('✅ PriceTransaction: Product history loaded');
       return { success: true, data: result };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ PriceTransaction history error:', error.message);
       
       // Fallback demo data
@@ -266,7 +263,7 @@ export const priceTransactionService = {
       console.log('✅ PriceTransaction: Consistency validation completed');
       return { success: true, data: result };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ PriceTransaction validation error:', error.message);
       
       // Demo fallback
@@ -327,7 +324,7 @@ export const priceTransactionService = {
       console.log('✅ PriceTransaction: Variance report loaded');
       return { success: true, data: result };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ PriceTransaction variance report error:', error.message);
       
       // Demo fallback
@@ -396,7 +393,7 @@ export const priceTransactionService = {
       console.log('✅ PriceTransaction: Transactions by date loaded');
       return { success: true, data: result };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ PriceTransaction by date error:', error.message);
       return { success: false, error: error.message };
     }
@@ -424,7 +421,7 @@ export const priceTransactionService = {
       console.log('✅ PriceTransaction: Transaction loaded by ID');
       return { success: true, data: result };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ PriceTransaction by ID error:', error.message);
       return { success: false, error: error.message };
     }
@@ -435,7 +432,7 @@ export const priceTransactionService = {
    * @param {Object} data - Datos a validar
    */
   validateTransactionData(data) {
-    const errors = [];
+    const errors: string[] = [];
     
     if (!data.product_id || data.product_id.trim() === '') {
       errors.push('Product ID es requerido');
@@ -481,7 +478,6 @@ export const priceTransactionService = {
    * @param {number} limit - Límite de resultados
    */
   async getRecentTransactions(limit = 20) {
-    const startTime = Date.now();
     
     try {
       console.log('🌐 PriceTransaction: Loading recent transactions...');
@@ -498,7 +494,7 @@ export const priceTransactionService = {
         throw new Error(result.error || 'Error loading recent transactions');
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ PriceTransaction recent transactions error:', error.message);
       
       // Fallback demo data para desarrollo/testing

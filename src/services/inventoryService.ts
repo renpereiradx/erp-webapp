@@ -79,14 +79,14 @@ const _createMockData = {
 };
 
 // Helper con retry simple y fallback a mock data
-const _fetchWithRetry = async (requestFn, maxRetries = 2, mockFallback = null) => {
+const _fetchWithRetry = async (requestFn, maxRetries = 2, mockFallback: any = null) => {
   let lastError;
   let is404Error = false;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await requestFn();
-    } catch (error) {
+    } catch (error: any) {
       lastError = error;
 
       // Si es un 404, marcar para usar mock data al final
@@ -134,7 +134,7 @@ export const inventoryService = {
    * @returns {object} Request estructurado
    */
   createStructuredAdjustmentRequest(productId, newQuantity, reasonType = 'INVENTORY_COUNT', customReason = null, customMetadata = {}) {
-    return createAdjustmentRequest(productId, newQuantity, reasonType, customReason, reasonType, customMetadata);
+    return createAdjustmentRequest(productId, newQuantity, reasonType, customReason ?? undefined, reasonType, customMetadata);
   },
 
   /**
@@ -177,7 +177,7 @@ export const inventoryService = {
       }
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'getInventories',
         error: error.message,
@@ -291,7 +291,7 @@ export const inventoryService = {
         data: finalData,
         pagination: finalPagination
       };
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'getInventoryHistory',
         error: error.message,
@@ -332,7 +332,7 @@ export const inventoryService = {
       }
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'getInventoryDetails',
         error: error.message,
@@ -411,7 +411,7 @@ export const inventoryService = {
       };
 
       return response;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in createInventory:', error);
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'createInventory',
@@ -445,7 +445,7 @@ export const inventoryService = {
       });
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'invalidateInventory',
         error: error.message,
@@ -480,7 +480,7 @@ export const inventoryService = {
       });
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'getProductTransactionHistory',
         error: error.message,
@@ -526,7 +526,7 @@ export const inventoryService = {
       });
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'createStockTransaction',
         error: error.message,
@@ -553,7 +553,7 @@ export const inventoryService = {
       });
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'getTransactionTypes',
         error: error.message,
@@ -595,7 +595,7 @@ export const inventoryService = {
       });
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'getStockTransactionsByDate',
         error: error.message,
@@ -624,7 +624,7 @@ export const inventoryService = {
       });
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'getStockTransactionById',
         error: error.message,
@@ -657,7 +657,7 @@ export const inventoryService = {
       });
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'validateStockConsistency',
         error: error.message,
@@ -692,7 +692,7 @@ export const inventoryService = {
       });
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'getManualAdjustmentHistory',
         error: error.message,
@@ -743,7 +743,7 @@ export const inventoryService = {
       });
 
       return { success: true, data: result };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in createManualAdjustment:', error);
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'createManualAdjustment',
@@ -771,7 +771,7 @@ export const inventoryService = {
     
     try {
       let url = API_ENDPOINTS.inventoryDiscrepancies;
-      const params = [];
+      const params: string[] = [];
       
       if (dateFrom) params.push(`date_from=${dateFrom}`);
       if (dateTo) params.push(`date_to=${dateTo}`);
@@ -791,7 +791,7 @@ export const inventoryService = {
       });
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'getInventoryDiscrepancies',
         error: error.message,
@@ -818,7 +818,7 @@ export const inventoryService = {
       });
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'checkSystemIntegrity',
         error: error.message,
@@ -836,7 +836,7 @@ export const inventoryService = {
    * @returns {Array<string>} - Array de errores (vacío si válido)
    */
   validateInventoryData(inventoryData) {
-    const errors = [];
+    const errors: string[] = [];
     
     if (!inventoryData.details || !Array.isArray(inventoryData.details) || inventoryData.details.length === 0) {
       errors.push('Al menos un producto es requerido');
@@ -871,7 +871,7 @@ export const inventoryService = {
    * @returns {Array<string>} - Array de errores (vacío si válido)
    */
   validateTransactionData(transactionData) {
-    const errors = [];
+    const errors: string[] = [];
     
     if (!transactionData.product_id) {
       errors.push('product_id es requerido');
@@ -899,7 +899,7 @@ export const inventoryService = {
    * @returns {Array<string>} - Array de errores (vacío si válido)
    */
   validateAdjustmentData(adjustmentData) {
-    const errors = [];
+    const errors: string[] = [];
     
     if (!adjustmentData.product_id) {
       errors.push('product_id es requerido');
