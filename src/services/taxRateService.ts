@@ -34,7 +34,7 @@ export const taxRateService = {
     try {
       const response = await apiClient.get(API_ENDPOINTS.paginated(page, pageSize))
       return response.data || response || []
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching tax rates:', error)
       throw error
     }
@@ -48,7 +48,7 @@ export const taxRateService = {
   async getById(id) {
     try {
       return await apiClient.get(API_ENDPOINTS.byId(id))
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching tax rate ${id}:`, error)
       throw error
     }
@@ -62,7 +62,7 @@ export const taxRateService = {
   async getByCode(code) {
     try {
       return await apiClient.get(API_ENDPOINTS.byCode(code))
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching tax rate by code ${code}:`, error)
       throw error
     }
@@ -76,7 +76,7 @@ export const taxRateService = {
   async getByName(name) {
     try {
       return await apiClient.get(API_ENDPOINTS.byName(name))
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching tax rate by name ${name}:`, error)
       throw error
     }
@@ -92,7 +92,7 @@ export const taxRateService = {
     }
     try {
       return await apiClient.get(API_ENDPOINTS.default)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching default tax rate:', error)
       // Fallback razonable
       return { id: 1, code: 'IVA10', rate: 10.0 }
@@ -107,7 +107,7 @@ export const taxRateService = {
   async create(data) {
     try {
       return await apiClient.post(API_ENDPOINTS.base, data)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating tax rate:', error)
       throw error
     }
@@ -122,7 +122,7 @@ export const taxRateService = {
   async update(id, data) {
     try {
       return await apiClient.put(API_ENDPOINTS.byId(id), data)
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error updating tax rate ${id}:`, error)
       throw error
     }
@@ -136,7 +136,7 @@ export const taxRateService = {
   async delete(id) {
     try {
       return await apiClient.delete(API_ENDPOINTS.byId(id))
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error deleting tax rate ${id}:`, error)
       throw error
     }

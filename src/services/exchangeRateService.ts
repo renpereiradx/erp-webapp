@@ -5,6 +5,20 @@ import { paymentApiDebug } from './paymentApiDebug'
 const unavailableCurrencyEndpoints = new Set()
 const loggedExchangeRateFailures = new Set()
 
+// Query params aceptados por GET /exchange-rates (y variantes enriched/history).
+// Campos opcionales: el backend los combina con AND según estén presentes.
+interface ExchangeRateQuery {
+  currency_id?: number
+  code?: string
+  date?: string
+  from?: string
+  to?: string
+  start_date?: string
+  end_date?: string
+  page?: number
+  page_size?: number
+}
+
 const logExchangeRateFetchFailure = ({ currencyId, date, endpoint, error }) => {
   const logKey = `${currencyId || 'unknown'}|${date || 'latest'}`
   if (loggedExchangeRateFailures.has(logKey)) {
@@ -13,7 +27,7 @@ const logExchangeRateFetchFailure = ({ currencyId, date, endpoint, error }) => {
   loggedExchangeRateFailures.add(logKey)
 
   const timestamp = new Date().toISOString()
-  const clientInfo = {}
+  const clientInfo: { location?: string; userAgent?: string } = {}
 
   if (typeof window !== 'undefined') {
     clientInfo.location = window.location?.href
@@ -32,7 +46,7 @@ const logExchangeRateFetchFailure = ({ currencyId, date, endpoint, error }) => {
         date,
       },
     })
-  } catch (logError) {
+  } catch (logError: any) {
     console.warn(
       '[ExchangeRateService] No se pudo registrar el diagnóstico:',
       logError
@@ -174,7 +188,10 @@ class ExchangeRateService {
    * @param {{ page?: number, page_size?: number }} fallback
    * @returns {import('../types/payment').ExchangeRateEnrichedPaginatedResponse}
    */
-  static normalizePaginatedResponse(payload, fallback = {}) {
+  static normalizePaginatedResponse(
+    payload: any,
+    fallback: { page?: number; page_size?: number } = {}
+  ) {
     const normalizedData = this.normalizeExchangeRateList(payload)
 
     const totalRecords =
@@ -213,7 +230,7 @@ class ExchangeRateService {
       const response = await apiClient.makeRequest('/exchange-rates?latest=true')
       const payload = response.data || response
       return this.normalizeExchangeRateList(payload)
-    } catch (error) {
+    } catch (error: any) {
       console.warn('Fallback: Error al obtener con ?latest=true, intentando /exchange-rates/latest', error)
       try {
         const fallbackResponse = await apiClient.makeRequest('/exchange-rates/latest')
@@ -231,7 +248,7 @@ class ExchangeRateService {
    * @param {{ currency_id?: number, code?: string, date?: string, from?: string, to?: string, page?: number, page_size?: number }} [query]
    * @returns {Promise<import('../types/payment').ExchangeRateEnriched[]>}
    */
-  static async getAll(query = {}) {
+  static async getAll(query: ExchangeRateQuery = {}) {
     try {
       const params = new URLSearchParams()
 
@@ -281,7 +298,7 @@ class ExchangeRateService {
       const payload = response.data || response
 
       return this.normalizeExchangeRateList(payload)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching exchange rates:', error)
 
       if (error.message && error.message.includes('no está disponible')) {
@@ -299,7 +316,7 @@ class ExchangeRateService {
    * @param {{ date?: string, page?: number, page_size?: number }} [query]
    * @returns {Promise<import('../types/payment').ExchangeRateEnrichedPaginatedResponse>}
    */
-  static async getEnriched(query = {}) {
+  static async getEnriched(query: ExchangeRateQuery = {}) {
     try {
       const params = new URLSearchParams()
 
@@ -337,7 +354,7 @@ class ExchangeRateService {
         page: query.page,
         page_size: query.page_size,
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching enriched exchange rates:', error)
       throw new Error('Error al obtener los tipos de cambio enriquecidos')
     }
@@ -368,7 +385,7 @@ class ExchangeRateService {
       }
 
       return normalized
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching exchange rate ${id}:`, error)
       throw new Error('Error al obtener el tipo de cambio')
     }
@@ -380,7 +397,7 @@ class ExchangeRateService {
    * @param {import('../types/payment').ExchangeRateQuery} query - Query parameters
    * @returns {Promise<import('../types/payment').ExchangeRate>}
    */
-  static async getByDate(query) {
+  static async getByDate(query: ExchangeRateQuery) {
     let requestEndpoint = ''
 
     try {
@@ -406,6 +423,9 @@ class ExchangeRateService {
       }
 
       // Nueva API unificada: /exchange-rates?currency_id=X&date=Y
+      // FIX (migración TS): `url` no estaba definido en JS -> ReferenceError
+      // en runtime cada vez que se llamaba getByDate. Se construye desde params.
+      const url = `/exchange-rates?${params.toString()}`
       requestEndpoint = url
 
       const response = await apiClient.makeRequest(url)
@@ -443,7 +463,7 @@ class ExchangeRateService {
       }
 
       return normalized
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching exchange rate:', error)
       const endpoint = `/exchange-rates?currency_id=${query?.currency_id}`
       logExchangeRateFetchFailure({
@@ -524,7 +544,7 @@ class ExchangeRateService {
       }
 
       return this.normalizeExchangeRateList(data)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching exchange rate range:', error)
       throw new Error('Error al obtener los tipos de cambio')
     }
@@ -552,7 +572,7 @@ class ExchangeRateService {
       }
 
       return normalized
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating exchange rate:', error)
       try {
         paymentApiDebug.record({
@@ -567,7 +587,7 @@ class ExchangeRateService {
             normalizedDate: payload?.date,
           },
         })
-      } catch (logError) {
+      } catch (logError: any) {
         console.warn(
           '[ExchangeRateService] No se pudo registrar el diagnóstico de creación:',
           logError
@@ -604,7 +624,7 @@ class ExchangeRateService {
       }
 
       return normalized
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error updating exchange rate ${id}:`, error)
       try {
         paymentApiDebug.record({
@@ -619,7 +639,7 @@ class ExchangeRateService {
             normalizedDate: payload?.date,
           },
         })
-      } catch (logError) {
+      } catch (logError: any) {
         console.warn(
           '[ExchangeRateService] No se pudo registrar el diagnóstico de actualización:',
           logError
@@ -645,7 +665,7 @@ class ExchangeRateService {
       await apiClient.makeRequest(`/exchange-rates/${id}`, {
         method: 'DELETE',
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error deleting exchange rate ${id}:`, error)
       throw new Error(error?.message || 'Error al eliminar el tipo de cambio')
     }
@@ -656,16 +676,22 @@ class ExchangeRateService {
    * @param {{ currency_id: number, rate_to_base: number|string, date: string, source?: string }} data
    * @returns {{ currency_id: number, rate_to_base: number, date: string, source?: string }}
    */
-  static preparePayload(data = {}) {
+  static preparePayload(
+    data: {
+      currency_id?: number | string
+      rate_to_base?: number | string
+      date?: string
+      source?: string
+    } = {}
+  ) {
     const currencyId = Number(data.currency_id)
     if (!currencyId || currencyId <= 0) {
       throw new Error('Debes seleccionar una moneda válida')
     }
 
+    const rawRate = data.rate_to_base
     const rateValue = Number.parseFloat(
-      typeof data.rate_to_base === 'string'
-        ? data.rate_to_base.replace(',', '.')
-        : data.rate_to_base
+      String(typeof rawRate === 'string' ? rawRate.replace(',', '.') : rawRate)
     )
 
     if (!Number.isFinite(rateValue) || rateValue <= 0) {
@@ -709,7 +735,7 @@ class ExchangeRateService {
     try {
       const isoCandidate = new Date(`${trimmed}T00:00:00Z`).toISOString()
       return isoCandidate
-    } catch (error) {
+    } catch (error: any) {
       console.warn(
         '[ExchangeRateService] No se pudo convertir la fecha a ISO, se envía formato plano.',
         { dateValue, error }
@@ -780,7 +806,7 @@ class ExchangeRateService {
       const convertedAmount = amountInBase / toRate.rate_to_base
 
       return parseFloat(convertedAmount.toFixed(2))
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error converting currency:', error)
       throw new Error('Error al convertir moneda')
     }
@@ -821,7 +847,7 @@ class ExchangeRateService {
         toRate,
         conversionDate: date || new Date().toISOString().split('T')[0],
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in detailed currency conversion:', error)
       throw error
     }
@@ -852,7 +878,7 @@ class ExchangeRateService {
       const rateDate = exchangeRate.date ? new Date(exchangeRate.date) : null
       const now = new Date()
       const diffHours = rateDate
-        ? Math.abs(now - rateDate) / (1000 * 60 * 60)
+        ? Math.abs(now.getTime() - rateDate.getTime()) / (1000 * 60 * 60)
         : Number.POSITIVE_INFINITY
       const isRecent = Number.isFinite(diffHours) && diffHours <= 24
 
@@ -896,7 +922,7 @@ class ExchangeRateService {
             end_date: endDate,
           })
           results[currencyId] = rates
-        } catch (error) {
+        } catch (error: any) {
           console.error(
             `Error fetching rates for currency ${currencyId}:`,
             error
@@ -907,7 +933,7 @@ class ExchangeRateService {
 
       await Promise.all(promises)
       return results
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching multiple currency rates:', error)
       throw error
     }
