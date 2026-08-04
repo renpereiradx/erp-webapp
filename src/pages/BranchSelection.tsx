@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBranch } from '@/contexts/BranchContext';
 import { branchService } from '@/features/branches/services/branchService';
 import { Branch } from '@/types';
-import { Building2, Globe, ArrowRight, Loader2, LogOut } from 'lucide-react';
+import { Building2, ArrowRight, Loader2, LogOut } from 'lucide-react';
 
 const BranchSelection = () => {
   const navigate = useNavigate();

@@ -20,11 +20,9 @@ export type PurchaseTotalsCardProps = Pick<
 export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
   purchaseItems,
   purchaseTotals,
-  handleSavePurchase,
   loading,
   canWrite,
 
-  selectedSupplier,
   setPurchaseItems,
   setSelectedSupplier,
   setSupplierSearch,

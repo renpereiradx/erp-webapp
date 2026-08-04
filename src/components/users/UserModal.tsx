@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import useUserStore from '@/store/useUserStore';
 import { useI18n } from '@/lib/i18n';
@@ -28,7 +28,6 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { User } from '@/types';
 import { Eye, EyeOff, Shield, Lock, User as UserIcon, Mail, Phone } from 'lucide-react';
 

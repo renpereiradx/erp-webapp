@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   Calculator, History, Plus, X, Wallet, 
-  ArrowRight, Search, Clock, FileText, CheckCircle2, AlertCircle
+  Clock, FileText, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { useCashRegisterSession } from '@/features/cash-register/hooks/useCashRegisterSession';
 import { OpenCashRegisterModal } from '@/features/cash-register/components/OpenCashRegisterModal';
@@ -20,7 +19,6 @@ const CashRegister = () => {
     movements,
     audits,
     isActiveCashRegisterLoading,
-    isCashRegistersLoading,
     isOpeningCashRegister,
     isClosingCashRegister,
     isRegisteringMovement,
@@ -37,14 +35,6 @@ const CashRegister = () => {
   const [movementDialog, setMovementDialog] = useState(false);
   const [auditModalOpen, setAuditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'movements' | 'audits'>('movements');
-
-  const handleLoadSummary = async () => {
-    try {
-      if (activeCashRegister?.id) {
-        await getCashRegisterReport(activeCashRegister.id);
-      }
-    } catch (error) {}
-  };
 
   const netDifference = activeCashRegister 
     ? calculateNetDifference(activeCashRegister.current_balance || 0, activeCashRegister.initial_balance || 0)

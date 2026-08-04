@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/useToast';
 import { unitConversionsService, UnitConversion, UnitConversionTemplate } from '../services/unitConversionsService';
-import { ArrowRightLeft, Plus, Trash2, HelpCircle, PackageOpen, ChevronLeft } from 'lucide-react';
+import { Plus, Trash2, HelpCircle, PackageOpen, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const UnitConversionsPage = () => {
-  const { t } = useI18n();
   const toast = useToast();
   const navigate = useNavigate();
 

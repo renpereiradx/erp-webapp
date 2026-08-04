@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
-import { useBranch } from '@/contexts/BranchContext';
 import { useCashRegisterSession } from '@/features/cash-register/hooks/useCashRegisterSession';
 import useDashboardStore from '@/store/useDashboardStore';
 import { Input } from '@/components/ui/input';
@@ -21,7 +20,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { validateOpenForm, validateCloseForm } from '@/domain/cash-register/validators';
-import { formatCurrency, calculateNetDifference } from '@/domain/cash-register/calculations';
+import { formatCurrency } from '@/domain/cash-register/calculations';
 
 interface OpenForm {
   name: string;
@@ -41,7 +40,6 @@ const NewCashRegister: React.FC = () => {
   const { t } = useI18n();
   const { fetchDashboardData } = useDashboardStore();
   const { addToast, toasts, removeToast } = useToast();
-  const { currentBranchId } = useBranch();
 
   const {
     activeCashRegister,

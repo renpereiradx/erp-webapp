@@ -1,21 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
   User, 
   Calendar, 
   Package, 
-  AlertTriangle,
-  MoreVertical,
   Printer,
   History,
   FileText,
   BadgeAlert
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/useToast';
 import { purchaseRequisitionService } from '@/services/purchaseRequisitionService';
 import { PurchaseRequisition, PurchaseRequisitionDetail } from '@/types';
@@ -26,7 +20,6 @@ import DataState from '@/components/ui/DataState';
 import ToastContainer from '@/components/ui/ToastContainer';
 
 const PurchaseRequisitionDetailView: React.FC = () => {
-  const { t } = useI18n();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { addToast } = useToast();

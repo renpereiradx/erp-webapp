@@ -9,7 +9,6 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ProductEnriched } from '@/domain/products/models';

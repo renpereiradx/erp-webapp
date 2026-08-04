@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useUserStore from '@/store/useUserStore';
 import { useI18n } from '@/lib/i18n';
@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { UserModal } from '@/components/users/UserModal';
 import { ManageRolesPanel } from '@/components/users/ManageRolesPanel';
-import { User } from '@/types';
 
 const UserDetailedProfile = () => {
   const { id } = useParams<{ id: string }>();

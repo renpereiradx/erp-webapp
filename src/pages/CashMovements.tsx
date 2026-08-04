@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/useToast';
 import ToastContainer from '@/components/ui/ToastContainer';
 import { cashRegisterService } from '@/services/cashRegisterService';
 import { CashRegister, Movement } from '@/store/useCashRegisterStore';
-import { History, Filter, Plus, Wallet, Search, RefreshCw, X } from 'lucide-react';
+import { Filter, Plus, Wallet, Search, RefreshCw, X } from 'lucide-react';
 
 interface Filters {
   type: string;

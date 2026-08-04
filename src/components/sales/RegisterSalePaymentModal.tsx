@@ -1,4 +1,4 @@
-import React, {
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -72,8 +72,8 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
 
   const userEditedAmountToApply = useRef<boolean>(false)
 
-  const [amountReceivedError, setAmountReceivedError] = useState<string | null>(null)
-  const [amountToApplyError, setAmountToApplyError] = useState<string | null>(null)
+  const [, setAmountReceivedError] = useState<string | null>(null)
+  const [, setAmountToApplyError] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setSubmitting] = useState<boolean>(false)
 

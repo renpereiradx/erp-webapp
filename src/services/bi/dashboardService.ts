@@ -11,7 +11,6 @@ export const dashboardService = {
    * Obtiene el resumen ejecutivo del dashboard
    */
   async getSummary(params: BIParams = {}): Promise<DashboardSummary> {
-    const startTime = Date.now();
     try {
       const response = await apiClient.get('/dashboard/summary', { params });
       return response;

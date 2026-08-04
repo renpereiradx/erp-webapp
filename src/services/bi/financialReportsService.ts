@@ -1,5 +1,4 @@
 import { apiClient } from '../api';
-import { telemetry } from '../../utils/telemetry';
 import { BIParams } from '../../types/bi';
 
 /**

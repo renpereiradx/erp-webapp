@@ -6,7 +6,7 @@
 
 import { apiClient } from '@/services/api';
 import { telemetry } from '@/utils/telemetry';
-import { DEMO_SALES_RESPONSE, DEMO_SALES_PAYMENTS, IS_DEMO_MODE } from '@/config/demoSalePayments';
+import { DEMO_SALES_PAYMENTS, IS_DEMO_MODE } from '@/config/demoSalePayments';
 import { 
   ProcessPaymentRequest, 
   ProcessPaymentResponse, 

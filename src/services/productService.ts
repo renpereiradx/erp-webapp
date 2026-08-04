@@ -4,17 +4,14 @@
  */
 
 import { apiClient } from './api';
-import { ApiError, toApiError } from '@/utils/ApiError';
-import { telemetryService } from './telemetryService';
-import { 
-  Product, 
-  ProductEnriched, 
+import { toApiError } from '@/utils/ApiError';
+import {
+  Product,
+  ProductEnriched,
   ProductOperationInfoResponse, 
   Category, 
   Stock,
   CreateStockRequest,
-  API_ENDPOINTS, 
-  PaginatedResponse,
   UnitConversion
 } from '@/types';
 

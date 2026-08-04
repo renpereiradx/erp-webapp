@@ -1,19 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { 
   ArrowLeft, 
   Save, 
-  Plus, 
   Trash2, 
   Search, 
   Package, 
-  AlertCircle,
   Truck,
   X,
   PlusCircle,
   Tags
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/useToast';
 import { useBranch } from '@/contexts/BranchContext';
 import { purchaseRequisitionService } from '@/services/purchaseRequisitionService';
@@ -34,7 +31,6 @@ import {
 import ToastContainer from '@/components/ui/ToastContainer';
 
 const PurchaseRequisitionCreate: React.FC = () => {
-  const { t } = useI18n();
   const navigate = useNavigate();
   const { addToast } = useToast();
   const { currentBranchId } = useBranch();

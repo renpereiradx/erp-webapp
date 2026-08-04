@@ -13,7 +13,6 @@ import {
   X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/useToast';
 import { budgetService } from '@/services/budgetService';
 import { productService } from '@/services/productService';
@@ -25,7 +24,6 @@ import { formatPYG } from '@/utils/currencyUtils';
 import ToastContainer from '@/components/ui/ToastContainer';
 
 const BudgetCreate: React.FC = () => {
-  const { t } = useI18n();
   const navigate = useNavigate();
   const { addToast } = useToast();
 

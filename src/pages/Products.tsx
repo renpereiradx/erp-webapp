@@ -3,7 +3,6 @@
 // Patrón: Feature-Sliced Design + Tailwind + Fluent 2
 // ===========================================================================
 
-import React from 'react';
 import {
   useProductsLogic,
   ProductsHeader,
@@ -27,7 +26,6 @@ const Products = () => {
     totalPages,
     categories,
     searchTerm,
-    selectedIds,
     isSearching,
     viewMode,
     showFilters,
@@ -48,8 +46,6 @@ const Products = () => {
     handleApplyFilters,
     handleClearFilters,
     handleRefresh,
-    toggleSelectAll,
-    toggleSelectProduct,
     handleOpenCreateModal,
     handleOpenEditModal,
     handleCloseFormModal,

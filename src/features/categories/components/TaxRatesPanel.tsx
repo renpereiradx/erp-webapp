@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import useTaxRateStore from '@/store/useTaxRateStore';
 import { taxClassificationService } from '@/services/taxClassificationService';
 import { productService } from '@/services/productService';

@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import { mockLogs, mockSummary, mockUserActivity } from './mocks/auditMocks';
+import { mockLogs, mockSummary } from './mocks/auditMocks';
 
 const isDemoMode = import.meta.env.VITE_USE_DEMO === 'true';
 

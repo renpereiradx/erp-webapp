@@ -3,7 +3,7 @@
  * Página de acceso al sistema ERP
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
 import { useAuth } from '../contexts/AuthContext.tsx';

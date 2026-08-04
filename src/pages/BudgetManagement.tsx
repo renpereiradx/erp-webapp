@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  FileText, 
   Plus, 
   Search, 
-  MoreVertical, 
   Calendar, 
   User, 
   ArrowRightLeft, 
@@ -11,20 +9,16 @@ import {
   XCircle, 
   Clock, 
   AlertCircle,
-  FileSearch,
-  Printer,
-  Download,
-  Filter
+  Printer
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/useToast';
 import { budgetService } from '@/services/budgetService';
 import { useBranch } from '@/contexts/BranchContext';
-import { Budget, PaginatedResponse } from '@/types';
+import { Budget } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,

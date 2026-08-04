@@ -1,8 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Share, Plus, RefreshCw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { Button } from '@/components/ui/button';
 
 interface ProductsHeaderProps {}
 

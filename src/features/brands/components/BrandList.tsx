@@ -12,7 +12,6 @@ interface BrandListProps {
 
 export const BrandList: React.FC<BrandListProps> = ({
   brands,
-  totalBrands,
   selectedBrandId,
   onSelectBrand,
   searchQuery = '',

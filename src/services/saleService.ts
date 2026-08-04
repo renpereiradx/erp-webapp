@@ -386,7 +386,7 @@ export const saleService = {
     return this.processPayment(id, paymentData)
   },
 
-  async calculateTotal(items: any[], clientId: string | null = null) {
+  async calculateTotal(items: any[], _clientId: string | null = null) {
     try {
       const totals = this.calculateLocalTotals(items)
       return { success: true, data: totals }

@@ -1,18 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  ClipboardList, 
   Plus, 
   Search, 
-  MoreVertical, 
   Calendar, 
   User, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  AlertTriangle,
-  ArrowRight,
-  Filter,
-  FileText
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
@@ -56,7 +47,7 @@ const PurchaseRequisitionList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
 
   const fetchRequisitions = async () => {
     setIsLoading(true);

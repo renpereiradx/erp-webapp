@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { variantService } from '../services/variantService';
 import { toast } from 'sonner';
 import { useBranch } from '../contexts/BranchContext';
-import { apiClient } from '../services/api';
 import useProductStore from '../store/useProductStore';
 
 export interface VariantAttributeUI {
@@ -31,7 +30,7 @@ export const useVariants = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeProductId, setActiveProductId] = useState<string | number | null>(null);
-  const [productData, setProductData] = useState<any>(null);
+  const [productData] = useState<any>(null);
   const { currentBranch } = useBranch();
 
   const fetchVariants = useCallback(async () => {

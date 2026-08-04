@@ -3,7 +3,6 @@
  * Sin providers problemáticos, usando Zustand theme store
  */
 
-import { StrictMode } from 'react'
 console.log('🚀 main.tsx loaded - TS Version');
 import { createRoot } from 'react-dom/client'
 import './index.css'

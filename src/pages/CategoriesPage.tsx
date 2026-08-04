@@ -1,6 +1,4 @@
-import React from 'react';
 import { useCategoryManagement, CategoryTree, CategoryDetailForm, TaxRatesPanel } from '@/features/categories';
-import { Category } from '@/features/categories/types';
 
 export default function CategoriesPage() {
   const {

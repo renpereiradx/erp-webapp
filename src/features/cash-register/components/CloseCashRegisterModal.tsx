@@ -14,7 +14,7 @@ interface CloseCashRegisterModalProps {
   cashRegisterId: number;
 }
 
-export const CloseCashRegisterModal: React.FC<CloseCashRegisterModalProps> = ({ isOpen, onClose, onCloseRegister, isLoading, cashRegisterId }) => {
+export const CloseCashRegisterModal: React.FC<CloseCashRegisterModalProps> = ({ isOpen, onClose, onCloseRegister, isLoading }) => {
   const [form, setForm] = useState({ final_balance: '', notes: '' });
   const [error, setError] = useState<string | null>(null);
 

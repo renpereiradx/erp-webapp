@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useVariants } from '@/hooks/useVariants';
 import { VariantModal } from '@/components/modals/VariantModal';
 import { Package, Search, LayoutGrid, List } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export function ProductVariantsManager({ productId, categoryId, compact = false }: { productId: string; categoryId?: string | number; compact?: boolean }) {
   const { variants, searchTerm, setSearchTerm, toggleVariantStatus, createVariant, editVariant, setActiveProductId, loading } = useVariants();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, User, CreditCard, DollarSign, X, CheckCircle2, AlertTriangle, Search, Calculator } from 'lucide-react';
+import { ShoppingCart, User, CreditCard, DollarSign, X, CheckCircle2, AlertTriangle, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {

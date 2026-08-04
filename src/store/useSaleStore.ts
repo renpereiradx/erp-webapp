@@ -2,14 +2,11 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import saleService from '@/services/saleService'
 import { telemetryService } from '@/services/telemetryService'
-import { DEMO_CONFIG_SALES } from '@/config/demoData'
 import { normalizeSalePriceGs } from '@/domain/sale/pricing/salesPricingPolicy'
 import { calculateSaleTotals } from '@/domain/sale/calculations/saleCalculator'
 import { 
-  SaleRequest, 
   SaleEnhancedResponse, 
   SaleMetadata,
-  SalePaymentStatusResponse,
   PaginationState 
 } from '@/types'
 
@@ -106,33 +103,6 @@ interface SaleState {
 const getSaleIdentifier = (sale: any) =>
   sale?.sale_id || sale?.id || sale?.saleId || null
 
-const mergeSalesByIdentifier = (baseSales: any[] = [], incomingSales: any[] = []) => {
-  const merged = [...baseSales]
-  const knownIds = new Set(
-    baseSales
-      .map(item => getSaleIdentifier(item))
-      .filter(Boolean)
-      .map(id => String(id)),
-  )
-
-  incomingSales.forEach(item => {
-    const itemId = getSaleIdentifier(item)
-
-    if (!itemId) {
-      merged.push(item)
-      return
-    }
-
-    const normalizedId = String(itemId)
-    if (!knownIds.has(normalizedId)) {
-      merged.push(item)
-      knownIds.add(normalizedId)
-    }
-  })
-
-  return merged
-}
-
 const normalizeStorePagination = (rawPagination: any, fallbackCount = 0): PaginationState => {
   const totalRecords = Number(
     rawPagination?.total_records ??
@@ -148,10 +118,6 @@ const normalizeStorePagination = (rawPagination: any, fallbackCount = 0): Pagina
   const currentPage = Number(
     rawPagination?.page ?? rawPagination?.current_page ?? 1,
   )
-
-  const hasNext = rawPagination?.has_next ?? rawPagination?.hasNext ?? false
-  const hasPrevious =
-    rawPagination?.has_previous ?? rawPagination?.hasPrevious ?? currentPage > 1
 
   return {
     totalItems:

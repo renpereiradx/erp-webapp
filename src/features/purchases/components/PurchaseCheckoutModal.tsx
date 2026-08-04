@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, Building, CreditCard, DollarSign, X, CheckCircle2, Search, PackageOpen } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { Building, CreditCard, DollarSign, X, CheckCircle2, Search, PackageOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -9,10 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { SearchableDropdown } from '@/components/ui/SearchableDropdown';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/utils/currencyUtils';
-import { cn } from '@/lib/utils';
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic';
 
 interface PurchaseCheckoutModalProps {

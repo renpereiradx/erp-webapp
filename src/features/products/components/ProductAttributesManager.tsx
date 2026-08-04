@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, RefreshCw, Layers, Plus, X } from 'lucide-react';
 import { attributeService } from '@/services/attributeService';
 import { categoryService } from '@/services/categoryService';

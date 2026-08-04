@@ -3,10 +3,8 @@ import {
   ArrowLeft, 
   Printer, 
   Download, 
-  CheckCircle2, 
   XCircle, 
   ArrowRightLeft,
-  Calendar,
   User,
   Clock,
   FileText,
@@ -15,25 +13,17 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/useToast';
 import { budgetService } from '@/services/budgetService';
 import { Budget, BudgetItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { formatPYG } from '@/utils/currencyUtils';
 import DataState from '@/components/ui/DataState';
 import ToastContainer from '@/components/ui/ToastContainer';
 
 const BudgetDetail: React.FC = () => {
-  const { t } = useI18n();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { addToast } = useToast();
