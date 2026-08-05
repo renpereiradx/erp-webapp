@@ -109,6 +109,7 @@ function DropdownMenuLabel({ className, inset, ...props }) {
   )
 }
 
+/** @param {{ className?: string; [key: string]: any }} props */
 function DropdownMenuSeparator({ className, ...props }) {
   return (
     <DropdownMenuPrimitive.Separator

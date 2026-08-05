@@ -27,6 +27,7 @@ const avatarColorClasses = {
   "colorful-6": "avatar--colorful-6",
 }
 
+/** @param {{ className?: string; size?: number; color?: string; [key: string]: any }} props */
 function Avatar({
   className,
   size = 32,

@@ -17,6 +17,7 @@ function PopoverTrigger({
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
+/** @param {{ className?: string; align?: string; sideOffset?: number; [key: string]: any }} props */
 function PopoverContent({
   className,
   align = "center",

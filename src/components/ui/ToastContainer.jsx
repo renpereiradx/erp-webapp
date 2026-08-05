@@ -6,6 +6,7 @@
 import React from 'react'
 import Toast from './Toast'
 
+/** @param {{ toasts?: any[]; onRemoveToast?: (id: string) => void; position?: string }} props */
 const ToastContainer = ({ toasts, onRemoveToast, position = 'top-right' }) => {
   if (!toasts || toasts.length === 0) return null
 

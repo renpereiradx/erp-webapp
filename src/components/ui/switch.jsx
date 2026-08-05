@@ -5,6 +5,7 @@ import * as SwitchPrimitive from "@radix-ui/react-switch"
 
 import { cn } from "@/lib/utils"
 
+/** @param {{ className?: string; [key: string]: any }} props */
 function Switch({
   className,
   ...props

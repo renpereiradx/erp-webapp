@@ -48,6 +48,7 @@ function SelectTrigger({ className, size = 'default', children, ...props }) {
   )
 }
 
+/** @param {{ className?: string; children?: React.ReactNode; position?: string; [key: string]: any }} props */
 function SelectContent({ className, children, position = 'popper', ...props }) {
   return (
     <SelectPrimitive.Portal>
@@ -91,6 +92,7 @@ function SelectLabel({ className, ...props }) {
   )
 }
 
+/** @param {{ className?: string; children?: React.ReactNode; [key: string]: any }} props */
 function SelectItem({ className, children, ...props }) {
   return (
     <SelectPrimitive.Item

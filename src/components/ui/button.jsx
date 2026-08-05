@@ -30,6 +30,7 @@ const sizeClasses = {
   icon: "h-8 w-8 p-0 flex items-center justify-center",
 }
 
+/** @param {{ className?: string; variant?: string; size?: string; loading?: boolean; block?: boolean; circular?: boolean; pill?: boolean; asChild?: boolean; [key: string]: any }} props */
 function Button({
   className,
   variant = "default",
