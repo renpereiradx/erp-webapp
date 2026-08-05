@@ -73,16 +73,11 @@ export default defineConfig({
       'Last-Modified': 'false',
       'X-Content-Type-Options': 'nosniff',
       'Vary': 'Accept-Encoding, User-Agent'
-    },
-    // Proxy API requests to avoid CORS issues
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5050',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      }
     }
+    // F7.7: proxy /api eliminado — el frontend ahora usa URL directa al backend
+    // (VITE_API_URL=http://localhost:5050 en dev). El backend tiene CORS configurado
+    // para localhost:5173 (server/broker.go). Si se necesita reactivar el proxy,
+    // restaurar este bloque y volver a VITE_API_URL=/api.
   },
   build: {
     rollupOptions: {
