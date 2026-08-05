@@ -187,9 +187,17 @@ X-Branch-ID: 3
 
 ### `X-Branch-ID` en este flujo
 
-**Usa la sucursal de la venta.** Si el usuario cambió de sucursal activa, el frontend debe
-enviar el `branch_id` de la venta (el que viene en `GET /sale/{id}` → `branch_id`), no la
-sucursal actualmente seleccionada en la UI.
+**El backend ahora ancla el branch al de la venta.** Desde el fix de consistencia (2026-07-14),
+`AddProductsToSale` lee el `branch_id` de `transactions.sales_orders` y lo usa tanto para la
+validación de stock como para la función SQL, **ignorando** el `X-Branch-ID` del header.
+
+Esto significa que aunque un ADMIN tenga activa la sucursal 1 y opere una venta de la sucursal 3,
+el stock se valida y descuenta de la sucursal 3 (la de la venta). Ya no es posible corromper
+inventario descuentando de la sucursal equivocada.
+
+> Recomendación de buenas prácticas: aunque el backend ya protege, el frontend igual debe enviar
+> en `X-Branch-ID` la sucursal de la venta (la que viene en `GET /sale/{id}` → `branch_id`) para
+> mantener consistencia y evitar confusión en los logs.
 
 Ver `SALES_ADD_PRODUCTS_EXISTING_SALE_CONTRACT.md` para el contrato completo.
 
@@ -415,3 +423,18 @@ variant_id is required for product {id} ({name}): it has {N} active variant(s).
 ```
 
 Aplica a `/sale/with-units`, `/sale/process`, y `/sale/{id}/products`.
+
+### 2026-07-14 — Anclaje de branch al de la venta en operaciones sobre venta existente
+
+`AddProductsToSale` ahora resuelve el `branch_id` desde la venta
+(`transactions.sales_orders.branch_id`) antes de validar stock y llamar a la función SQL,
+**ignorando** el `X-Branch-ID` del header del request.
+
+**Antes:** un ADMIN con sucursal activa 1 operando una venta de sucursal 3 validaba y
+descontaba stock de la sucursal 1 → corrupción silenciosa de inventario.
+
+**Ahora:** el stock siempre se valida y descuenta de la sucursal de la venta, sin importar
+qué header envíe el frontend. La cancelación (`revert_sale`) ya tenía esta protección; ahora
+agregar productos también.
+
+Aplica a `POST /sale/{id}/products`.
