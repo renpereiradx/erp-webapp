@@ -15,7 +15,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/useToast';
 import { budgetService } from '@/services/budgetService';
-import { Budget, BudgetItem } from '@/types';
+import { Budget, BudgetItem, UpdateBudgetStatusRequest } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -48,7 +48,7 @@ const BudgetDetail: React.FC = () => {
     fetchDetail();
   }, [id]);
 
-  const handleStatusChange = async (newStatus: Budget['status']) => {
+  const handleStatusChange = async (newStatus: UpdateBudgetStatusRequest['status']) => {
     if (!id) return;
     try {
       await budgetService.updateBudgetStatus(id, { status: newStatus });
@@ -165,11 +165,11 @@ const BudgetDetail: React.FC = () => {
              <div className="p-8 bg-slate-50/30 flex flex-col items-end gap-3 border-t border-border-subtle">
                 <div className="flex justify-between w-64 text-sm font-bold text-slate-500">
                     <span>Subtotal Neto:</span>
-                    <span className="font-mono">{formatPYG(budget.total_amount - budget.tax_amount)}</span>
+                    <span className="font-mono">{formatPYG(budget.total_amount - (budget.tax_amount ?? 0))}</span>
                 </div>
                 <div className="flex justify-between w-64 text-sm font-bold text-slate-500">
                     <span>IVA (10%):</span>
-                    <span className="font-mono">{formatPYG(budget.tax_amount)}</span>
+                    <span className="font-mono">{formatPYG(budget.tax_amount ?? 0)}</span>
                 </div>
                 <div className="flex justify-between w-64 text-xl font-black text-primary pt-2 border-t border-slate-200">
                     <span>Total Final:</span>
@@ -215,7 +215,7 @@ const BudgetDetail: React.FC = () => {
                           <Clock size={18} />
                        </div>
                        <div>
-                          <p className="font-black text-sm text-text-main">Válido hasta el {new Date(budget.valid_until).toLocaleDateString()}</p>
+                          <p className="font-black text-sm text-text-main">Válido hasta el {budget.valid_until ? new Date(budget.valid_until).toLocaleDateString() : '—'}</p>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Pasada esta fecha la oferta caduca</p>
                        </div>
                     </div>

@@ -106,7 +106,7 @@ export const InventoryRisk: React.FC = () => {
                 <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-black rounded-full uppercase tracking-widest animate-pulse">Acción Recomendada</span>
               </div>
               <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium text-base">
-                Su inventario presenta un <span className="font-black font-mono text-rose-600 text-lg">{formatNumber(deadStockData?.summary.percentage_of_stock)}% de stock sin movimiento</span>. 
+                Su inventario presenta un <span className="font-black font-mono text-rose-600 text-lg">{formatNumber(deadStockData?.summary.percentage_of_stock ?? 0)}% de stock sin movimiento</span>. 
                 La ejecución inmediata de las liquidaciones sugeridas liberaría un flujo de caja de <span className="font-black font-mono text-primary text-xl underline decoration-primary/30 underline-offset-4">{formatPYG(deadStockData?.summary.potential_loss || 0)}</span>, 
                 capital crítico para cubrir el reabastecimiento de los <span className="font-bold text-slate-900 dark:text-white">{forecastData?.summary.products_at_risk} productos en riesgo</span> de agotamiento detectados.
               </p>

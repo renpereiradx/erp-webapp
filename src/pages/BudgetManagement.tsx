@@ -84,7 +84,7 @@ const BudgetManagement: React.FC = () => {
     if (!searchTerm) return budgets;
     const lowerTerm = searchTerm.toLowerCase();
     return budgets.filter(b => 
-      b.budget_number.toLowerCase().includes(lowerTerm) || 
+      String(b.id).toLowerCase().includes(lowerTerm) || 
       (b.client_name || '').toLowerCase().includes(lowerTerm)
     );
   }, [budgets, searchTerm]);
@@ -207,7 +207,7 @@ const BudgetManagement: React.FC = () => {
                   onClick={() => navigate(`/comercial/presupuestos/${budget.id}`)}
                 >
                   <TableCell className="py-5 pl-8">
-                    <span className="font-mono font-black text-primary text-sm">#{budget.budget_number}</span>
+                    <span className="font-mono font-black text-primary text-sm">#{budget.id}</span>
                   </TableCell>
                   <TableCell className="py-5">
                     <div className="flex items-center gap-4">
@@ -226,7 +226,7 @@ const BudgetManagement: React.FC = () => {
                   <TableCell className="py-5">
                     <div className="flex items-center gap-2 text-xs text-text-secondary font-medium">
                       <Calendar size={14} className="text-slate-400" />
-                      {new Date(budget.valid_until).toLocaleDateString()}
+                      {budget.valid_until ? new Date(budget.valid_until).toLocaleDateString() : '—'}
                     </div>
                   </TableCell>
                   <TableCell className="py-5 pr-8 text-right" onClick={(e) => e.stopPropagation()}>

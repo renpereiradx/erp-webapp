@@ -318,6 +318,7 @@ export interface ProductOperationInfoResponse {
   description_updated_at?: string | null;
   category_name?: string;
   category?: Category;
+  price?: number; // Legacy fallback (spread del crudo; usado en búsquedas)
   tax?: TaxInfo;
   context?: {
     operation: 'sale' | 'purchase' | string;

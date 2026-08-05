@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/useToast';
 import { budgetService } from '@/services/budgetService';
 import { productService } from '@/services/productService';
 import { clientService } from '@/services/clientService';
-import { Product, Client, CreateBudgetRequest } from '@/types';
+import { Client, CreateBudgetRequest, ProductOperationInfoResponse } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatPYG } from '@/utils/currencyUtils';
@@ -37,7 +37,7 @@ const BudgetCreate: React.FC = () => {
 
   // --- Búsqueda de Productos ---
   const [productSearch, setProductSearch] = useState('');
-  const [foundProducts, setFoundProducts] = useState<Product[]>([]);
+  const [foundProducts, setFoundProducts] = useState<ProductOperationInfoResponse[]>([]);
   const [isSearchingProduct, setIsSearchingProduct] = useState(false);
 
   // --- Búsqueda de Clientes ---
@@ -86,7 +86,7 @@ const BudgetCreate: React.FC = () => {
     }
   };
 
-  const addItem = (product: Product) => {
+  const addItem = (product: ProductOperationInfoResponse) => {
     const existing = items.find(i => i.product_id === product.id);
     if (existing) {
       setItems(items.map(i => i.product_id === product.id ? { ...i, quantity: i.quantity + 1 } : i));
