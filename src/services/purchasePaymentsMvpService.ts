@@ -376,7 +376,7 @@ const normalizeHistoryEntry = (entry, index = 0) => {
   }
 }
 
-const normalizeHistory = (raw, base, normalizedPayments = []) => {
+const normalizeHistory = (raw, base, normalizedPayments: any[] = []) => {
   const candidates = [
     raw?.history,
     raw?.timeline,
@@ -506,7 +506,12 @@ const normalizeOrder = raw => {
       return null
     }
 
-    return payments.reduce((latest, payment) => {
+    return payments.reduce<string | null>((latest, payment) => {
+      // normalizePayments filtra con Boolean pero TS no lo narrows:
+      // los elementos pueden ser null en el tipo.
+      if (!payment) {
+        return latest
+      }
       if (!payment.registered_at) {
         return latest
       }
@@ -750,10 +755,11 @@ export const fetchPurchasesBySupplierTerm = async (term, options = {}) => {
   const classification = classifySupplierSearchTerm(term)
 
   if (classification.type === 'supplier-id') {
-    const supplierId = Number.parseInt(classification.value, 10)
+    // Misma invariante que supplier-name: value presente para este type.
+    const supplierId = Number.parseInt(classification.value as string, 10)
     if (!Number.isFinite(supplierId) || supplierId <= 0) {
       const error = new Error('ID de proveedor inválido')
-      error.code = 'INVALID_SUPPLIER_ID'
+      ;(error as Error & { code?: string }).code = 'INVALID_SUPPLIER_ID'
       throw error
     }
 
@@ -761,15 +767,17 @@ export const fetchPurchasesBySupplierTerm = async (term, options = {}) => {
   }
 
   if (classification.type === 'supplier-name') {
+    // Invariante de classifySupplierSearchTerm: type === 'supplier-name'
+    // garantiza que value existe (se construye en este mismo archivo).
     return purchaseService.getPurchasesBySupplierName(
-      classification.value,
+      classification.value as string,
       options
     )
   }
 
   const error = new Error(
     classification.message || 'Término de búsqueda inválido'
-  )
+  ) as Error & { code?: string; details?: unknown }
   error.code = 'INVALID_SUPPLIER_TERM'
   error.details = classification
   throw error
@@ -841,7 +849,7 @@ const fetchOrdersFromApi = async filters => {
     thirtyDaysAgo.setDate(now.getDate() - 30)
     const startDateStr = getLocalDateStr(thirtyDaysAgo)
 
-    let aggregatedOrders = []
+    let aggregatedOrders: any[] = []
     let currentPage = 1
     const maxPages = 20
     const pageSize = 200
@@ -871,7 +879,7 @@ const fetchOrdersFromApi = async filters => {
     }
 
     return aggregatedOrders
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(error?.message || 'Unable to load purchase orders')
   }
 }
@@ -880,7 +888,17 @@ const normalizeOrders = rawOrders =>
   rawOrders.map(item => normalizeOrder(item)).filter(order => Boolean(order))
 
 export const purchasePaymentsMvpService = {
-  async fetchOrders(params = {}) {
+  async fetchOrders(
+    params: {
+      page?: number | string
+      pageSize?: number | string
+      search?: string
+      orderId?: string
+      status?: string
+      dateFrom?: string
+      dateTo?: string
+    } = {}
+  ) {
     const page = Number(params.page) || 1
     const pageSize = Number(params.pageSize) || DEFAULT_PAGE_SIZE
     const filters = {
@@ -924,7 +942,27 @@ export const purchasePaymentsMvpService = {
     }
   },
 
-  async registerPayment(orderId, payload = {}) {
+  async registerPayment(
+    orderId: number | string,
+    payload: {
+      amount?: number | string
+      amountPaid?: number | string
+      amount_paid?: number | string
+      paymentMethodId?: number | string
+      payment_method_id?: number | string
+      methodId?: number | string
+      method_id?: number | string
+      currencyCode?: string
+      currency_code?: string
+      currency?: string
+      cashRegisterId?: number | string
+      cash_register_id?: number | string
+      reference?: string
+      reference_number?: string
+      check_number?: string
+      notes?: string
+    } = {}
+  ) {
     if (IS_DEMO_MODE) {
       console.log('[DEMO MODE] Registering payment for order:', orderId, payload)
       return {
@@ -968,7 +1006,7 @@ export const purchasePaymentsMvpService = {
 
     const rawCashRegisterId =
       payload.cashRegisterId ?? payload.cash_register_id ?? null
-    let cashRegisterId = null
+    let cashRegisterId: number | null = null
     
     // Solo validar si el valor no es nulo, no es indefinido y no es NaN
     if (rawCashRegisterId !== null && rawCashRegisterId !== undefined && !Number.isNaN(rawCashRegisterId)) {
@@ -986,7 +1024,15 @@ export const purchasePaymentsMvpService = {
       }
     }
 
-    const apiPayload = {
+    const apiPayload: {
+      amount_paid: number
+      reference_number: string | null
+      check_number: string | null
+      notes: string | null
+      payment_method_id: number
+      currency_code: string
+      cash_register_id?: number
+    } = {
       amount_paid: Math.round(amount),
       reference_number:
         payload.reference ??

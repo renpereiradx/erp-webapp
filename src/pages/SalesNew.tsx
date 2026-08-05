@@ -6,7 +6,6 @@ import { SalesCartGrid } from '@/features/sales/components/SalesCartGrid';
 import { ReservationModal } from '@/features/sales/components/ReservationModal';
 import { MessageBar } from '@/components/ui/MessageBar';
 import {
-  CreditCard,
   DollarSign,
   Eye,
   Filter,
@@ -15,7 +14,6 @@ import {
   Search,
   Layers,
   ShoppingCart,
-  User,
   X,
   History,
   Ban,
@@ -44,9 +42,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { SearchableDropdown, SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
-import SegmentedControl from '@/components/ui/SegmentedControl';
-import useClientStore from '@/store/useClientStore';
+import { SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
 import useSaleStore from '@/store/useSaleStore';
 import useDashboardStore from '@/store/useDashboardStore';
 import { useToast } from '@/hooks/useToast';
@@ -84,7 +80,7 @@ interface CartItem {
   isFromPendingSale?: boolean;
   detailId?: string;
   reserve_id?: number;  // ID numerico de la reserva si aplica
-  variantId?: string;
+  variantId?: string | null;
   variantName?: string;
 }
 
@@ -108,6 +104,7 @@ interface ProductDisplay {
   taxRate: number;
   has_valid_price: boolean;
   has_variants?: boolean;
+  product_type?: string;
 }
 
 interface SaleMetadata {
@@ -200,8 +197,9 @@ const getProductDisplay = (product: Record<string, unknown>): ProductDisplay => 
     stock: Number(product.stock_quantity || product.stock || product.quantity || 0),
     base_unit: String(product.base_unit || product.unit || 'unit'),
     taxRate: normalizedTaxRate,
-    has_valid_price: product.has_valid_price !== undefined ? Boolean(product.has_valid_price) : Number(price) > 0,
-    has_variants: Boolean(product.has_variant || product.has_variants),
+    has_valid_price: Number(price) > 0,
+    has_variants: Boolean(product.has_variant || product.has_variants || (Array.isArray(product.variants) && product.variants.length > 0)),
+    product_type: String(product.product_type || 'PHYSICAL'),
   };
 };
 
@@ -257,7 +255,6 @@ const SalesNew: React.FC = () => {
   const clientSearchInputRef = useRef<HTMLInputElement>(null);
   const dropdownQuantityInputRef = useRef<HTMLInputElement>(null);
 
-  const { searchClients } = useClientStore();
   const {
     createSale,
     sales,
@@ -334,13 +331,12 @@ const SalesNew: React.FC = () => {
   const [showReservationModal, setShowReservationModal] = useState(false);
 
   const [productSearchResults, setProductSearchResults] = useState<ProductDisplay[]>([]);
-  const [isSearchingProducts, setIsSearchingProducts] = useState(false);
   const [showProductDropdown, setShowProductDropdown] = useState(false);
   const [productHighlightedIndex, setProductHighlightedIndex] = useState(-1);
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [selectedProductQuantity, setSelectedProductQuantity] = useState<number | string>(1);
 
-  const { isScanningBarcode, handleBarcodeScan } = useBarcodeScanner({
+  const { handleBarcodeScan } = useBarcodeScanner({
     currentBranchId,
     toast,
     setItems,
@@ -457,15 +453,17 @@ const SalesNew: React.FC = () => {
         const s = (entry as Record<string, unknown>).sale || entry;
         const saleId = (s as Record<string, unknown>).sale_id || (s as Record<string, unknown>).id || (entry as Record<string, unknown>).saleId || (entry as Record<string, unknown>).id;
         
+        const sRec = s as Record<string, unknown>;
+
         return {
-          ...(s as Record<string, unknown>),
+          ...sRec,
           internalKey: saleId ? `sale-${saleId}-${idx}` : `sale-index-${idx}`,
-          id: saleId,
-          displayId: saleId || 'N/A',
-          client_name: (s as Record<string, unknown>).client_name || ((s as Record<string, unknown>).client as Record<string, unknown>)?.name || 'Cliente Ocasional',
-          total_amount: (s as Record<string, unknown>).total_amount || (s as Record<string, unknown>).total || 0,
-          date: (s as Record<string, unknown>).sale_date || (s as Record<string, unknown>).order_date || (s as Record<string, unknown>).date,
-          status: String(((s as Record<string, unknown>).status || (entry as Record<string, unknown>).status || 'PENDING')).toUpperCase(),
+          id: saleId ? String(saleId) : undefined,
+          displayId: saleId ? String(saleId) : 'N/A',
+          client_name: String(sRec.client_name || ((sRec.client as Record<string, unknown>)?.name) || 'Cliente Ocasional'),
+          total_amount: Number(sRec.total_amount || sRec.total || 0),
+          date: (sRec.sale_date || sRec.order_date || sRec.date) as string | Date | null | undefined,
+          status: String((sRec.status || (entry as Record<string, unknown>).status || 'PENDING')).toUpperCase(),
         };
       })
       .filter(entry => {
@@ -492,9 +490,9 @@ const SalesNew: React.FC = () => {
     const loadPaymentData = async () => {
       try {
         const response = await PaymentMethodService.getAll();
-        const rawArray = Array.isArray(response) ? response : (response as any)?.data || [];
+        const rawArray: any[] = Array.isArray(response) ? response : (response as any)?.data || [];
         // Filter duplicates by ID to avoid React key errors
-        const uniqueMethods = Array.from(new Map(rawArray.map((m: any) => [m.id, m])).values());
+        const uniqueMethods = Array.from(new Map(rawArray.map((m: any) => [m.id, m])).values()) as any[];
         setPaymentMethods(uniqueMethods);
         if (uniqueMethods.length > 0) setPaymentMethodId(uniqueMethods[0].id);
       } catch (error) {
@@ -503,9 +501,9 @@ const SalesNew: React.FC = () => {
 
       try {
         const response = await CurrencyService.getAll();
-        const rawList = Array.isArray(response) ? response : (response as any)?.data || [];
+        const rawList: any[] = Array.isArray(response) ? response : (response as any)?.data || [];
         // Filter duplicates by ID to avoid React key errors
-        const uniqueCurrencies = Array.from(new Map(rawList.map((c: any) => [c.id, c])).values());
+        const uniqueCurrencies = Array.from(new Map(rawList.map((c: any) => [c.id, c])).values()) as any[];
         setCurrencies(uniqueCurrencies);
         if (uniqueCurrencies.length > 0) setCurrencyId(uniqueCurrencies[0].id);
       } catch (error) {
@@ -519,11 +517,10 @@ const SalesNew: React.FC = () => {
     const searchTimeout = setTimeout(async () => {
       const term = productSearchTerm.trim();
       if (term.length >= 3) {
-        setIsSearchingProducts(true);
         try {
           const results = await productService.search(term);
           const allResults = Array.isArray(results) ? results : results ? [results] : [];
-          const activeResults = (allResults as Record<string, unknown>[]).filter(p => {
+          const activeResults = (allResults as unknown as Record<string, unknown>[]).filter(p => {
             if (typeof p.status === 'boolean') return p.status;
             return p.state !== false && p.is_active !== false;
           });
@@ -534,8 +531,6 @@ const SalesNew: React.FC = () => {
         } catch (error) {
           console.error('Error searching products:', error);
           setProductSearchResults([]);
-        } finally {
-          setIsSearchingProducts(false);
         }
       } else {
         setProductSearchResults([]);
@@ -674,7 +669,14 @@ const SalesNew: React.FC = () => {
       return;
     }
 
-    const finalVariantId = variantId === null ? undefined : variantId;
+    if (product.product_type !== 'SERVICE' && !product.has_variants && variantId === undefined) {
+      if (product.stock <= 0) {
+        toast.error(`El producto "${product.name}" no tiene stock disponible en esta sucursal.`);
+        return;
+      }
+    }
+
+    const finalVariantId = variantId === null ? null : variantId;
     const finalVariantName = variantId === null ? undefined : variantName;
 
     const newItem: CartItem = {
@@ -1144,7 +1146,7 @@ const SalesNew: React.FC = () => {
             
             return {
               product_id: item.productId,
-              ...(item.variantId && { variant_id: item.variantId }),
+              ...(item.variantId !== undefined ? { variant_id: item.variantId } : {}),
               quantity: Number(item.quantity) || 1,
               unit: item.unit || 'unit',
               ...(item.reserve_id && { reserve_id: item.reserve_id }),
@@ -1168,7 +1170,7 @@ const SalesNew: React.FC = () => {
           fetchDashboardData();
           handleHistoryFilter();
         } else {
-          const errMsg = response?.error || response?.message || 'No se pudieron agregar los productos a la venta';
+          const errMsg = response?.error || 'No se pudieron agregar los productos a la venta';
           if (errMsg.toLowerCase().includes('no existe conversion') || errMsg.toLowerCase().includes('conversión')) {
             toast.error(`No existe conversión de unidad: ${errMsg}. Registre la conversión primero.`);
           } else if (errMsg.toLowerCase().includes('variant_id is required')) {
@@ -1238,7 +1240,7 @@ const SalesNew: React.FC = () => {
 
             const detail: any = {
               product_id: item.productId,
-              ...(item.variantId && { variant_id: item.variantId }),
+              ...(item.variantId !== undefined ? { variant_id: item.variantId } : {}),
               quantity: Number(item.quantity) || 1,
             };
 
@@ -1345,29 +1347,29 @@ const SalesNew: React.FC = () => {
   const modalLineTotal = Math.max(0, modalSubtotal - modalDiscountValue);
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-display">
-      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2">
-        <div className="flex items-center gap-4">
-          <div className="size-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-fluent-8">
-            <ShoppingCart size={28} />
+    <div className="flex flex-col gap-4 animate-in fade-in duration-500 font-display">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-l-4 border-primary pl-4 py-1">
+        <div className="flex items-center gap-3">
+          <div className="size-10 bg-primary rounded-lg flex items-center justify-center text-white shadow-sm">
+            <ShoppingCart size={20} />
           </div>
           <div>
-            <h1 className="text-headline-lg text-on-surface leading-none mb-1">
+            <h1 className="text-headline-sm text-on-surface leading-none mb-0.5">
               {t('sales.title', 'Punto de Venta')}
             </h1>
-            <p className="text-body-md text-on-surface-variant">
+            <p className="text-body-sm text-on-surface-variant hidden sm:block">
               {t('sales.subtitle', 'Facturación y registro de operaciones')}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 p-1 bg-surface-container-low rounded-md w-fit">
+        <div className="flex items-center gap-1 p-1 bg-surface-container-low rounded-md w-fit">
           {[
-            { id: 'new-sale' as const, label: t('sales.tab.new', 'Nueva Venta'), icon: <Plus size={16} /> },
-            { id: 'history' as const, label: t('sales.tab.history', 'Historial'), icon: <History size={16} /> },
+            { id: 'new-sale' as const, label: t('sales.tab.new', 'Nueva Venta'), icon: <Plus size={14} /> },
+            { id: 'history' as const, label: t('sales.tab.history', 'Historial'), icon: <History size={14} /> },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn(
-              'flex flex-1 items-center justify-center gap-2 px-6 py-2.5 rounded-md text-sm font-bold transition-all duration-300 relative z-10',
-              activeTab === tab.id ? 'bg-surface-container-lowest text-primary shadow-whisper' : 'text-on-surface-variant hover:text-on-surface'
+              'flex flex-1 items-center justify-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-bold transition-all duration-300 relative z-10',
+              activeTab === tab.id ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'
             )}>
               {tab.icon} <span>{tab.label}</span>
             </button>
@@ -1377,21 +1379,21 @@ const SalesNew: React.FC = () => {
 
       <main className="w-full">
         {activeTab === 'new-sale' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div className="lg:col-span-12 space-y-4">
-              <article className="bg-surface-container-lowest rounded-md shadow-whisper relative">
-                <header className="flex items-center justify-between px-6 py-4 border-b border-surface-variant">
+              <article className="bg-surface-container-lowest rounded-md shadow-sm relative">
+                <header className="flex items-center justify-between px-4 py-3 border-b border-surface-variant">
                   <div className="flex items-center gap-2">
-                    <ShoppingCart size={18} className="text-primary" />
-                    <h3 className="text-title-md text-on-surface">Productos Seleccionados</h3>
+                    <ShoppingCart size={16} className="text-primary" />
+                    <h3 className="text-title-sm text-on-surface font-bold">Productos Seleccionados</h3>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-slate-400">
                     <span className="hidden sm:inline">Ctrl+Shift+P para buscar</span>
                   </div>
                 </header>
 
-                <div className="p-4">
-                  <div className="mb-4 relative">
+                <div className="p-3">
+                  <div className="mb-3 relative">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
                       <Input
@@ -1656,10 +1658,9 @@ const SalesNew: React.FC = () => {
                     {pendingItems.length === 0 && (
                       <div className="p-3 bg-slate-50 rounded-xl border-2 border-slate-100 space-y-2 my-2">
                         {currentSaleId && activeSale?.branch_id && activeSale.branch_id !== currentBranchId && (
-                          <MessageBar
-                            type="warning"
-                            message={`Estás modificando una venta pendiente originada en otra sucursal. Los productos que añadas descontarán inventario de la sucursal origen.`}
-                          />
+                          <MessageBar intent="warning">
+                            Estás modificando una venta pendiente originada en otra sucursal. Los productos que añadas descontarán inventario de la sucursal origen.
+                          </MessageBar>
                         )}
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
                           <DollarSign size={10} /> Precio Final de Venta
@@ -2090,7 +2091,7 @@ const SalesNew: React.FC = () => {
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <Card className="w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
             <CardHeader className="border-b bg-red-50">
-              <CardTitle className="text-red-600 flex items-center gap-2"><Ban size={20} /> Anular Venta #{(selectedHistorySale as Record<string, unknown>).sale_id || selectedHistorySale.id}</CardTitle>
+              <CardTitle className="text-red-600 flex items-center gap-2"><Ban size={20} /> Anular Venta #{String((selectedHistorySale as Record<string, unknown>).sale_id || selectedHistorySale.id || '')}</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <p className="text-sm text-slate-600">¿Estás seguro de anular esta venta? Esta acción revertirá el stock y los cobros realizados.</p>

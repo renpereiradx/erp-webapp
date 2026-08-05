@@ -19,7 +19,7 @@ const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await requestFn()
-    } catch (error) {
+    } catch (error: any) {
       lastError = error
 
       if (attempt < maxRetries) {
@@ -68,7 +68,7 @@ export const purchasePaymentService = {
       }
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('purchase_payment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -90,7 +90,19 @@ export const purchasePaymentService = {
     const startTime = Date.now()
 
     try {
-      const apiData = {
+      const apiData: {
+        purchase_order_id: any
+        amount_paid: any
+        payment_reference: any
+        payment_notes: any
+        payment_method_id?: any
+        currency_id?: any
+        exchange_rate?: number
+        original_amount?: number
+        currency_code?: any
+        cash_register_id?: any
+        branch_id?: number
+      } = {
         purchase_order_id: purchaseOrderId,
         amount_paid: paymentData.amount_paid,
         payment_reference:
@@ -171,7 +183,7 @@ export const purchasePaymentService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('purchase_payment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -204,7 +216,7 @@ export const purchasePaymentService = {
       })
 
       return result
-    } catch (error) {
+    } catch (error: any) {
       telemetry.record('purchase_payment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,

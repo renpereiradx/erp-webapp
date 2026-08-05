@@ -2,8 +2,8 @@ import { useEffect, RefObject } from 'react';
 
 interface UseSalesShortcutsProps {
   activeTab: string;
-  productSearchInputRef: RefObject<HTMLElement>;
-  clientSearchInputRef: RefObject<HTMLElement>;
+  productSearchInputRef: RefObject<HTMLElement | null>;
+  clientSearchInputRef: RefObject<HTMLElement | null>;
 }
 
 export const useSalesShortcuts = ({
