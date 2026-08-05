@@ -30,7 +30,7 @@ export const apiService = {
 
   // Métodos HTTP genéricos para compatibilidad
   get: (endpoint: string, options = {}) => apiClient.get(endpoint, options),
-  post: (endpoint: string, data: any, options = {}) => apiClient.post(endpoint, data, options),
+  post: (endpoint: string, data: any = null, options = {}) => apiClient.post(endpoint, data, options),
   put: (endpoint: string, data: any, options = {}) => apiClient.put(endpoint, data, options),
   delete: (endpoint: string, options = {}) => apiClient.delete(endpoint, options),
 

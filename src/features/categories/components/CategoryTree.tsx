@@ -28,7 +28,9 @@ export function CategoryTree({
 
   // Build a tree structure from flat categories list
   const isRoot = (c: Category) => {
-    if (!c.parent_id || c.parent_id === 0 || c.parent_id === '0' || c.parent_id === 'none' || c.parent_id === 'null') return true;
+    // parent_id can arrive as number or legacy string ('0', 'none', 'null')
+    const pid = String(c.parent_id ?? '');
+    if (!pid || pid === '0' || pid === 'none' || pid === 'null') return true;
     // Treat as root if parent doesn't exist in the list (orphan)
     return !categories.some(parent => Number(parent.id) === Number(c.parent_id));
   };

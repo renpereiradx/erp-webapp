@@ -97,7 +97,7 @@ const BranchManagement: React.FC = () => {
     queryFn: () => branchService.getBranches({ page_size: 100 }), // Aumentamos el límite para asegurar visibilidad
   });
 
-  const branches = (response as any)?.branches || response?.data || [];
+  const branches = response?.branches || [];
 
   useEffect(() => {
     if (isError) {

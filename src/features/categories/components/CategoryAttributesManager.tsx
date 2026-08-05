@@ -46,7 +46,7 @@ export function CategoryAttributesManager({ categoryId }: CategoryAttributesMana
       return;
     }
 
-    let options = [];
+    let options: string[] = [];
     if (dataType === 'LIST' || dataType === 'MULTI_SELECT') {
       options = optionsStr.split(',').map(s => s.trim()).filter(Boolean);
       if (options.length === 0) {

@@ -27,11 +27,10 @@ const BranchSelection = () => {
         // Obtener todas las sucursales para tener los nombres
         const response = await branchService.getBranches({ is_active: true, page_size: 100 });
         
-        // Manejar diferentes formatos de respuesta (paginado o array directo)
-        // La guía indica que la clave es 'branches'
+        // La API devuelve { branches: [...], total, page, page_size }
         const allBranches = Array.isArray(response) 
           ? response 
-          : (response && response.branches ? response.branches : (response && response.data ? response.data : []));
+          : (response?.branches || []);
         
         console.log('Sucursales cargadas:', allBranches);
         console.log('Sucursales permitidas (IDs):', allowedBranches);

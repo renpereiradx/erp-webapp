@@ -97,7 +97,6 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
         phone: '',
         email: '',
         is_warehouse: false,
-        is_active: true,
       });
     }
     setShowAddFiscal(false);

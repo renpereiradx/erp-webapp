@@ -37,6 +37,7 @@ export interface ScheduleSlot {
     id: number;
     client_name: string;
     client_id: string;
+    status?: ReserveStatus | string;
   };
   branch_id?: number;
 }

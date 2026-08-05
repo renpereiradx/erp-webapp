@@ -16,7 +16,7 @@ const BranchSwitcher = () => {
     staleTime: 1000 * 60 * 5, // 5 minutos de caché
   });
 
-  const branches = (branchesResponse as any)?.branches || branchesResponse?.data || [];
+  const branches = branchesResponse?.branches || [];
   
   const getBranchName = (id: number | null) => {
     if (!id) return 'Todas las Sucursales';

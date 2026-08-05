@@ -1695,6 +1695,7 @@ export interface ProductEnriched extends Product {
   has_variant?: boolean;
   variant_count?: number;
   variants?: ProductVariant[];
+  category_name?: string | null; // Legacy fallback (backend enriched responses)
 }
 
 // La interfaz ProductOperationInfoResponse ya se encuentra declarada arriba (líneas 193-227).

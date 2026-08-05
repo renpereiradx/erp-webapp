@@ -3,6 +3,7 @@ import { Package, X } from 'lucide-react';
 import { Button } from './button';
 import { SearchableDropdown, SearchableDropdownItem } from './SearchableDropdown';
 import { productService } from '@/services/productService';
+import type { ProductEnriched } from '@/types';
 
 interface ProductSearchResult extends SearchableDropdownItem {
   id: string;
@@ -25,7 +26,7 @@ interface ProductSearchInputProps {
   autoFocus?: boolean;
 }
 
-const getProductDisplay = (product: Record<string, unknown>): ProductSearchResult => {
+const getProductDisplay = (product: any): ProductSearchResult => {
   const rawTaxRateCandidates = [
     product.tax_rate,
     product.tax_rate_value,
@@ -94,12 +95,9 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
       const productsArray = Array.isArray(results) ? results : results ? [results] : [];
       
       const filteredProducts = productsArray
-        .filter((p: Record<string, unknown>) => {
-          if (typeof p.status === 'boolean') return p.status;
-          return p.state !== false && p.is_active !== false;
-        })
+        .filter((p: ProductEnriched) => p.state !== false)
         .slice(0, 50)
-        .map((p: Record<string, unknown>) => getProductDisplay(p));
+        .map((p: ProductEnriched) => getProductDisplay(p));
 
       return filteredProducts as SearchableDropdownItem[];
     } catch {

@@ -173,8 +173,7 @@ export const useAttributes = () => {
       setLoading(true);
       
       const payload = {
-        name: tag.name,
-        slug: tag.slug,
+        name: tag.name ?? '',
         color: tag.color,
         icon: tag.icon,
         tag_type: tag.type,

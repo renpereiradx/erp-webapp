@@ -58,7 +58,7 @@ export const brandService = {
     try {
       const response = await apiClient.post('/api/v1/brands', toApiPayload(data));
       const result = response?.data?.data || response?.data || response;
-      return fromApiResponseList(result);
+      return fromApiResponse(result);
     } catch (error) {
       console.error('Error creating brand:', error);
       throw error;
@@ -68,7 +68,7 @@ export const brandService = {
     try {
       const response = await apiClient.put(`/api/v1/brands/${id}`, toApiPayload(data));
       const result = response?.data?.data || response?.data || response;
-      return fromApiResponseList(result);
+      return fromApiResponse(result);
     } catch (error) {
       console.error(`Error updating brand ${id}:`, error);
       throw error;

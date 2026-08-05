@@ -17,9 +17,10 @@ import { purchaseRequisitionService } from '@/services/purchaseRequisitionServic
 import { productService } from '@/services/productService';
 import { isDecimalUnit } from '@/constants/units';
 import supplierService from '@/services/supplierService';
-import { Product, CreatePurchaseRequisitionRequest } from '@/types';
+import { Product, CreatePurchaseRequisitionRequest, ProductEnriched } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -42,7 +43,7 @@ const PurchaseRequisitionCreate: React.FC = () => {
 
   // --- Búsqueda de Productos ---
   const [productSearch, setProductSearch] = useState('');
-  const [foundProducts, setFoundProducts] = useState<Product[]>([]);
+  const [foundProducts, setFoundProducts] = useState<ProductEnriched[]>([]);
   
   // --- Búsqueda de Proveedores ---
   const [supplierSearch, setSupplierSearch] = useState('');

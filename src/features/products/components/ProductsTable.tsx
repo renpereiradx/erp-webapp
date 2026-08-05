@@ -178,11 +178,11 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
               <TableCell className="px-4">
                 <span className={cn(
                   "text-[10px] font-bold px-2 py-1 rounded-sm uppercase tracking-widest", 
-                  product.state === false || product.status === false || product.is_active === false 
+                  product.state === false
                     ? "bg-error/10 text-error" 
                     : "bg-success/10 text-success"
                 )}>
-                  {product.state === false || product.status === false || product.is_active === false ? "No Disponible" : "Disponible"}
+                  {product.state === false ? "No Disponible" : "Disponible"}
                 </span>
               </TableCell>
               <TableCell className="text-right px-6">

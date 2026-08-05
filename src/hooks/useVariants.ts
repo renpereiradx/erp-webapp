@@ -31,7 +31,7 @@ export const useVariants = () => {
   const [loading, setLoading] = useState(false);
   const [activeProductId, setActiveProductId] = useState<string | number | null>(null);
   const [productData] = useState<any>(null);
-  const { currentBranch } = useBranch();
+  const { currentBranchId } = useBranch();
 
   const fetchVariants = useCallback(async () => {
     try {
@@ -45,7 +45,7 @@ export const useVariants = () => {
       }
 
       // 1. Fetch Variantes Enriquecidas (con stock y precio)
-      const enrichedVariants = await variantService.getEnrichedVariants(productId!.toString(), currentBranch?.id, true);
+      const enrichedVariants = await variantService.getEnrichedVariants(productId!.toString(), currentBranchId ?? undefined, true);
 
       // 3. Transform
       const transformed: VariantUI[] = enrichedVariants.map((v: any) => {
@@ -80,7 +80,7 @@ export const useVariants = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeProductId, currentBranch]);
+  }, [activeProductId, currentBranchId]);
 
   useEffect(() => {
     fetchVariants();

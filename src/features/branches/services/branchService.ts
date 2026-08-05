@@ -10,7 +10,6 @@ import {
   GrantBranchAccessRequest,
   UpdateBranchAccessRequest,
   API_ENDPOINTS,
-  PaginatedResponse
 } from '@/types';
 
 /**
@@ -18,13 +17,20 @@ import {
  * Estos endpoints NO requieren contexto de sucursal activa ya que son administrativos.
  * La exclusión del header X-Branch-ID está manejada automáticamente en BusinessManagementAPI.ts.
  */
+export interface BranchListResponse {
+  branches: Branch[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export const branchService = {
   // =================== GESTIÓN DE SUCURSALES ===================
 
   /**
    * Lista todas las sucursales con filtros opcionales
    */
-  async getBranches(filters: { is_active?: boolean; page?: number; page_size?: number } = {}): Promise<PaginatedResponse<Branch>> {
+  async getBranches(filters: { is_active?: boolean; page?: number; page_size?: number } = {}): Promise<BranchListResponse> {
     const startTime = Date.now();
     try {
       const response = await apiClient.get(API_ENDPOINTS.BRANCHES, { params: filters });

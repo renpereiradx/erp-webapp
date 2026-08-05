@@ -57,9 +57,10 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, to
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {products.map((product) => {
-              // Soporte para variaciones de nombres de campo entre endpoints
+              // Soporte para variaciones de nombres de campo entre endpoints:
+              // stock-levels usa status canónico; reorder expone priority legacy
               const resolveStatus = () => {
-                const raw = product.status || (product as any).priority || '';
+                const raw = String(product.status || (product as any).priority || '');
                 if (raw === 'URGENT' || raw === 'OUT_OF_STOCK') return 'OUT_OF_STOCK';
                 if (raw === 'HIGH' || raw === 'LOW_STOCK' || raw === 'MEDIUM') return 'LOW_STOCK';
                 if (raw === 'OVERSTOCK') return 'OVERSTOCK';

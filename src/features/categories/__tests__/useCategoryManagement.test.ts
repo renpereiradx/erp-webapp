@@ -171,7 +171,6 @@ describe('useCategoryManagement', () => {
     act(() => result.current.openCreate());
     await act(async () => {
       await result.current.handleSave({
-        id: 0,
         name: 'Sin Activo',
         description: '',
         default_tax_rate_id: 1,

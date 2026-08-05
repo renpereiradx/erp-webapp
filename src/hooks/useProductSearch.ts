@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { productService } from '@/services/productService';
+import type { ProductEnriched } from '@/types';
 
 export interface ProductSearchResult {
   id: string;
@@ -112,12 +113,9 @@ export function useProductSearch(options: UseProductSearchOptions = {}): UseProd
       const productsArray = Array.isArray(results) ? results : results ? [results] : [];
       
       const filteredProducts = productsArray
-        .filter((p: Record<string, unknown>) => {
-          if (typeof p.status === 'boolean') return p.status;
-          return p.state !== false && p.is_active !== false;
-        })
+        .filter((p: ProductEnriched) => p.state !== false)
         .slice(0, maxResults)
-        .map((p: Record<string, unknown>) => getProductDisplay(p));
+        .map((p: ProductEnriched) => getProductDisplay(p));
 
       setItems(filteredProducts);
     } catch (err) {

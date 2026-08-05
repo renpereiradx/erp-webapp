@@ -1,8 +1,24 @@
 import api from '@/services/api';
 import { DEMO_CONFIG, DEMO_USERS } from '../config/demoAuth';
-import { User, SuccessResponse, PaginatedResponse } from '@/types';
+import { User, SuccessResponse } from '@/types';
 
 const BASE_URL = '/api/v1/users';
+
+// Contrato real del backend GET /users: { data, pagination } (no PaginatedResponse)
+export interface UserListPagination {
+  page: number;
+  page_size: number;
+  total_items: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+export interface UserListResponse {
+  success?: boolean;
+  data: User[];
+  pagination: UserListPagination;
+}
 
 // 🧪 Datos de usuarios para modo demo
 const DEMO_USERS_LIST: User[] = Object.values(DEMO_USERS).map(u => ({
@@ -26,7 +42,7 @@ export const userService = {
   /**
    * Listar usuarios con filtros
    */
-  getUsers: async (params: Record<string, any> = {}): Promise<PaginatedResponse<User>> => {
+  getUsers: async (params: Record<string, any> = {}): Promise<UserListResponse> => {
     if (DEMO_CONFIG.enabled) {
       return {
         success: true,

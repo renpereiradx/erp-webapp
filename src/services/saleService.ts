@@ -5,7 +5,7 @@
  */
 
 import { apiClient } from './api'
-import { DEMO_SALES_RESPONSE, IS_DEMO_MODE } from '@/config/demoSalePayments'
+import { DEMO_SALES_RESPONSE, DEMO_SALES_PAYMENTS, IS_DEMO_MODE } from '@/config/demoSalePayments'
 import { 
   SaleRequest, 
   AddProductsToSaleRequest
