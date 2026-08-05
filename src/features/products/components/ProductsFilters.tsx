@@ -21,7 +21,7 @@ interface ProductsFiltersProps {
   searchTerm: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSearchKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  searchInputRef: React.RefObject<HTMLInputElement>;
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
   showFilters: boolean;
   onToggleFilters: () => void;
   localFilters: { category: string; status: string };

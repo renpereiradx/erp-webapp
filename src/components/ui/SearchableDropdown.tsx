@@ -17,7 +17,7 @@ export interface SearchableDropdownProps<T extends SearchableDropdownItem> {
   onSearch: (term: string) => Promise<T[]>;
   placeholder?: string;
   autoFocus?: boolean;
-  inputRef?: React.RefObject<HTMLInputElement>;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
   renderItem?: (item: T, index: number, isHighlighted: boolean) => React.ReactNode;
   disabled?: boolean;
   className?: string;

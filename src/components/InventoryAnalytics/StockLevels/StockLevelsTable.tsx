@@ -1,9 +1,19 @@
 import React from 'react';
-import { StockLevelProduct } from '../../../types/inventoryAnalytics';
+import { StockLevelProduct, ReorderProduct, StockStatus } from '../../../types/inventoryAnalytics';
 import { formatNumber, formatPYG } from '../../../utils/currencyUtils';
 
+// La tabla unifica filas de stock-levels (status canónico) y reorder
+// (priority legacy); los campos exclusivos de cada fuente son opcionales.
+export type StockLevelsTableRow = Partial<StockLevelProduct> & Partial<ReorderProduct> & {
+  product_id: string;
+  product_name: string;
+  sku: string;
+  category_name: string;
+  status?: StockStatus | string;
+};
+
 export interface StockLevelsTableProps {
-  products: StockLevelProduct[];
+  products: StockLevelsTableRow[];
   totalItems?: number;
 }
 

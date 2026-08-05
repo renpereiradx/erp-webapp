@@ -25,7 +25,7 @@ export const useReservationHistory = () => {
         reservationUnifiedService.checkConsistency()
       ]);
       
-      setHistory(Array.isArray(histData) ? histData : histData?.reservations || []);
+      setHistory(Array.isArray(histData) ? histData : []);
       
       if (reportData) {
         setReport({
@@ -36,7 +36,7 @@ export const useReservationHistory = () => {
         });
       }
       
-      setConsistency(Array.isArray(consistencyData) ? consistencyData : consistencyData?.issues || []);
+      setConsistency(Array.isArray(consistencyData) ? consistencyData : []);
       setError(null);
     } catch (e: any) {
       console.error(e);

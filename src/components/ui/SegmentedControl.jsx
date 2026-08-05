@@ -16,6 +16,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 
+/** @param {{ options?: { value: string; label: string }[]; value?: string; onChange?: (value: string) => void; className?: string; size?: string; [key: string]: any }} props */
 const SegmentedControl = ({
   options = [],
   value,

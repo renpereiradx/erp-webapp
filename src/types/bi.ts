@@ -11,6 +11,7 @@ export interface BIParams {
   page_size?: number;
   brand_id?: number;
   tag?: string[];
+  compare?: boolean; // sales-analytics: incluye comparación con periodo anterior
 }
 
 export interface BIScope {

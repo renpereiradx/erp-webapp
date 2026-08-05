@@ -22,7 +22,11 @@ window.addEventListener('error', (event) => {
   }
 })
 
-createRoot(document.getElementById('root')).render(
+const root = document.getElementById('root');
+if (!root) {
+  throw new Error('Root element #root not found');
+}
+createRoot(root).render(
   // StrictMode temporarily disabled due to React 19 hooks compatibility issues
   <App />
 )

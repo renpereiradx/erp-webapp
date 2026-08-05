@@ -6,7 +6,6 @@ import {
   AssignTaxClassificationRequest,
   BulkAssignTaxClassificationRequest,
   AutoClassifyRequest,
-  API_ENDPOINTS 
 } from '../types';
 
 /**
@@ -21,7 +20,7 @@ export const taxClassificationService = {
   async getInfo(): Promise<{ data: SifenCodeInfo[] }> {
     const startTime = Date.now();
     try {
-      const response = await apiClient.get(API_ENDPOINTS.TAX_CLASSIFICATION_INFO || '/tax-classification/info');
+      const response = await apiClient.get('/tax-classification/info');
       return response;
     } catch (error: any) {
       telemetry.record('tax_classification.service.error', { 

@@ -107,7 +107,7 @@ const Products = () => {
             loading={loading}
             error={error}
             productsLength={displayProducts.length}
-            isSearching={isSearching}
+            viewMode={isSearching ? 'search' : 'paginated'}
             searchTerm={searchTerm}
             onRetry={() => {
               clearError();

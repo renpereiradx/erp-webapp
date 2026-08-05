@@ -100,11 +100,6 @@ interface CashRegisterState {
   isProcessingPurchasePayment: boolean;
   purchasePaymentError: any | null;
 
-  // Estado de verificación
-  integrationStatus: any | null;
-  isVerifyingIntegration: boolean;
-  verificationError: any | null;
-
   // Acciones
   getActiveCashRegister: () => Promise<CashRegister | null>;
   openCashRegister: (cashRegisterData: any) => Promise<CashRegister>;
@@ -117,7 +112,6 @@ interface CashRegisterState {
   createAudit: (auditData: any) => Promise<any>;
   processSalePaymentWithCashRegister: (paymentData: any) => Promise<any>;
   processPurchasePaymentWithCashRegister: (paymentData: any) => Promise<any>;
-  verifyIntegration: () => Promise<any>;
   clearError: (errorType: string) => void;
   clearAllErrors: () => void;
   reset: () => void;
@@ -151,9 +145,6 @@ const initialState = {
   salePaymentError: null,
   isProcessingPurchasePayment: false,
   purchasePaymentError: null,
-  integrationStatus: null,
-  isVerifyingIntegration: false,
-  verificationError: null,
 }
 
 export const useCashRegisterStore = create<CashRegisterState>()(
@@ -494,27 +485,6 @@ export const useCashRegisterStore = create<CashRegisterState>()(
         }
       },
 
-      verifyIntegration: async () => {
-        set({ isVerifyingIntegration: true, verificationError: null })
-
-        try {
-          const integrationStatus =
-            await cashRegisterService.verifyIntegration()
-          set({
-            integrationStatus,
-            isVerifyingIntegration: false,
-          })
-          return integrationStatus
-        } catch (error) {
-          console.warn('Error verifying integration:', error)
-          set({
-            verificationError: error,
-            isVerifyingIntegration: false,
-          })
-          throw error
-        }
-      },
-
       clearError: (errorType) => {
         set({ [`${errorType}Error`]: null } as any)
       },
@@ -530,7 +500,6 @@ export const useCashRegisterStore = create<CashRegisterState>()(
           registerMovementError: null,
           salePaymentError: null,
           purchasePaymentError: null,
-          verificationError: null,
         })
       },
 

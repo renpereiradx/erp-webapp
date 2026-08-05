@@ -78,6 +78,18 @@ export const inventoryAnalyticsService = {
   },
 
   /**
+   * Análisis de reabastecimiento (productos a reponer)
+   */
+  async getReorderAnalysis(params: BIParams = {}): Promise<any> {
+    try {
+      return await apiClient.get('/inventory-analytics/reorder', { params });
+    } catch (error: any) {
+      console.error('Error fetching reorder analysis:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Dashboard consolidado de inventario
    */
   async getDashboard(params: BIParams = {}): Promise<any> {

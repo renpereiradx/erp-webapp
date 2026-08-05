@@ -154,7 +154,7 @@ const usePurchaseStore = create<PurchaseState>()(
       fetchPurchaseOrderById: async id => {
         set({ loading: true, error: null })
         try {
-          const response = await purchaseService.getPurchaseOrderById(id)
+          const response = await purchaseService.getPurchaseById(id)
 
           if (response.success) {
             set({

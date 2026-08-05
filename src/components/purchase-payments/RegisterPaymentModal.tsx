@@ -136,7 +136,7 @@ const RegisterPaymentModal: React.FC<RegisterPaymentModalProps> = ({ open, onOpe
         ])
       ])
 
-      const validMethods = Array.isArray(methods) ? methods : (methods?.data || [])
+      const validMethods = Array.isArray(methods) ? methods : []
       setPaymentMethods(validMethods)
       if (validMethods.length > 0) {
         const def = validMethods.find((m: any) => m.is_default) || validMethods[0]
