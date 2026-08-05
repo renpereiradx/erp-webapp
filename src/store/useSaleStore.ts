@@ -17,8 +17,6 @@ interface SaleState {
   saleItems: any[];
   loading: boolean;
   error: string | null;
-  currentSession: any | null;
-  sessionActive: boolean;
   paymentInProgress: boolean;
   paymentResult: any | null;
   changeCalculation: any | null;
