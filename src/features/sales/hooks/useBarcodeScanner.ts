@@ -1,6 +1,5 @@
 import { useState, useCallback, RefObject } from 'react';
 import { saleService } from '@/services/saleService';
-import { CartItem } from '@/types/cart'; // Assuming CartItem is exported or defined somewhere. If not, we will need to create/import it.
 // We will type the callback parameters
 
 interface UseBarcodeScannerProps {
@@ -35,6 +34,15 @@ export const useBarcodeScanner = ({
         const isVariable = !!scanResult.is_variable_measure;
         const quantity = isVariable ? Number(decoded.quantity || 1) : 1;
         const price = Number(scanResult.price_per_unit || 0);
+        const productType = scanResult.product_type || 'PHYSICAL';
+        const stock = Number(scanResult.stock_quantity || 0);
+
+        if (productType !== 'SERVICE' && stock <= 0) {
+          toast.dismiss(scanToast);
+          toast.error(`El producto "${scanResult.product_name || 'escaneado'}" no tiene stock disponible en esta sucursal.`);
+          setIsScanningBarcode(false);
+          return;
+        }
         
         const cartItem = {
           id: isVariable 
@@ -45,7 +53,7 @@ export const useBarcodeScanner = ({
           quantity,
           price: price,
           originalPrice: price,
-          stock: Number(scanResult.stock_quantity || 0),
+          stock: stock,
           discount: 0,
           discountType: 'amount',
           discountInput: 0,

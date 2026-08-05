@@ -353,13 +353,23 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
               <button
                 type="button"
                 onClick={() => onSelect({ id: null, variant_name: 'Producto Principal' }, 1)}
-                className="flex-1 px-4 py-2.5 bg-surface-container hover:bg-surface-container-low text-on-surface text-body-sm-bold rounded-button transition-all flex flex-col items-center justify-center gap-0.5"
+                disabled={product.product_type !== 'SERVICE' && baseStock <= 0}
+                className={cn(
+                  "flex-1 px-4 py-2.5 rounded-button transition-all flex flex-col items-center justify-center gap-0.5 border",
+                  product.product_type !== 'SERVICE' && baseStock <= 0
+                    ? "bg-surface-container text-on-surface-variant border-surface-variant opacity-60 cursor-not-allowed"
+                    : "bg-surface-container hover:bg-surface-container-low text-on-surface text-body-sm-bold border-transparent"
+                )}
               >
                 <div className="flex items-center gap-2">
-                  <Package size={14} className="text-on-surface-variant" />
+                  <Package size={14} className={product.product_type !== 'SERVICE' && baseStock <= 0 ? "text-on-surface-variant" : "text-primary"} />
                   Producto principal
                 </div>
-                <span className={cn("text-[10px] font-bold uppercase", baseStock > 0 ? "text-emerald-600" : "text-rose-600")}>Stock: {baseStock}</span>
+                {product.product_type !== 'SERVICE' && (
+                  <span className={cn("text-[10px] font-bold uppercase", baseStock > 0 ? "text-emerald-600" : "text-rose-600")}>
+                    Stock: {baseStock}
+                  </span>
+                )}
               </button>
 
               {/* Botón Añadir Variante */}
