@@ -240,7 +240,7 @@ class BusinessManagementAPI {
       if (response.status >= 500 && typeof console !== 'undefined') {
         console.error(`[API ${response.status}] ${endpoint} →`, errorData)
       }
-      throw toApiError(errorData)
+      throw toApiError(errorData, 'Error en la petición', undefined, response.status)
     }
 
     // 🔧 FIX: Manejar casos donde la respuesta está vacía (204 No Content)
@@ -474,6 +474,16 @@ class BusinessManagementAPI {
 
   async createSale(data: any, options: RequestOptions = {}): Promise<any> {
     return this.post('/sale/', data, options)
+  }
+
+  /**
+   * Atomic POS checkout: creates a sale and processes its payment in a single
+   * transaction (POST /sale/pos-checkout). If the payment fails, the sale is
+   * rolled back entirely — stock restored, no phantom sale. Requires an open
+   * cash register (409 Conflict otherwise).
+   */
+  async posCheckout(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/sale/pos-checkout', data, options)
   }
 
   async createSaleWithUnits(data: any, options: RequestOptions = {}): Promise<any> {

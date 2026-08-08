@@ -6,6 +6,6 @@ export const ERROR_CODES = {
   NETWORK: { severity: 'error', hint: 'Verifica tu conexión a internet.' },
   VALIDATION: { severity: 'warn', hint: 'Revisa los datos ingresados.' },
   RATE_LIMIT: { severity: 'warn', hint: 'Demasiadas solicitudes, espera e intenta de nuevo.' },
-  CONFLICT: { severity: 'warn', hint: 'Conflicto de estado, refresca los datos.' },
+  CONFLICT: { severity: 'warn', hint: 'Conflicto de estado. Si estás cobrando o pagando, abrí una caja antes de continuar.' },
   UNKNOWN: { severity: 'error', hint: 'Ocurrió un error inesperado.' }
 };

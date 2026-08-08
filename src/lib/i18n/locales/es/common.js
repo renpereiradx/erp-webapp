@@ -83,6 +83,7 @@ export const common = {
   'common.error': 'Error',
   'common.success': 'Éxito',
   'common.warning': 'Advertencia',
+  'common.cashRegisterRequired': 'Necesitás una caja abierta para continuar. Abrí una caja e intentá de nuevo.',
   'common.info': 'Información',
   'common.all': 'Todos',
   'common.not_implemented': 'Función no implementada todavía',

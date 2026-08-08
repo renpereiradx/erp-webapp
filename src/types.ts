@@ -990,6 +990,40 @@ export interface ProcessSaleEnhancedResponse {
 }
 
 /**
+ * Payment leg of an atomic POS checkout. Maps to the backend's POSPayment
+ * (internal/sale/pos_service.go). Uses the Required cash-register policy: the
+ * operator must have an open register (409 otherwise).
+ */
+export interface POSPayment {
+  amount_received: number;
+  payment_method_id: number;
+  payment_reference?: string | null;
+  payment_notes?: string | null;
+}
+
+/**
+ * Request for the atomic POS checkout endpoint (POST /sale/pos-checkout).
+ * Creates a sale and processes its payment in a single transaction; if the
+ * payment fails the sale is rolled back entirely (no phantom sale).
+ * `sale` has the same shape as POST /sale/ (SaleRequest).
+ */
+export interface POSCheckoutRequest {
+  sale: SaleRequest;
+  payment: POSPayment;
+}
+
+/**
+ * Response of POST /sale/pos-checkout. `payment` is the backend's legacy
+ * map[string]interface{} (untyped) — treat as opaque.
+ */
+export interface POSCheckoutResponse {
+  success: boolean;
+  sale: ProcessSaleEnhancedResponse;
+  payment?: Record<string, unknown>;
+  payment_error?: string;
+}
+
+/**
  * Enriched sale data for single sale view
  */
 export interface SaleEnhancedResponse {
@@ -2033,6 +2067,7 @@ export const API_ENDPOINTS = {
 
   // Sale and Purchase Operations (v2.7+)
   SALE_CREATE: '/sale/',
+  SALE_POS_CHECKOUT: '/sale/pos-checkout',
   SALE_BY_ID: (id: string) => `/sale/${id}`,
   SALE_BY_CLIENT_ID: (clientId: string) => `/sale/client_id/${clientId}`,
   SALE_BY_CLIENT_NAME: (name: string) => `/sale/client_name/${name}`,

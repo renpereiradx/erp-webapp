@@ -17,6 +17,7 @@ import {
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog'
 import { useI18n } from '@/lib/i18n'
+import { toApiError } from '@/utils/ApiError'
 import { cashRegisterService } from '@/services/cashRegisterService'
 
 type Variant = 'purchase' | 'sale'
@@ -228,14 +229,28 @@ const InstantPaymentDialog = ({
       }
     } catch (err) {
       console.error('Error processing instant payment:', err)
-      setError(
-        t(
-          `${prefix}.paymentError`,
-          isSale
-            ? 'Error al registrar cobro. La venta fue creada correctamente.'
-            : 'Error al registrar pago. La orden fue creada correctamente.',
-        ),
-      )
+      // 409 sin caja abierta → mensaje accionable. El code llega como CONFLICT
+      // gracias a la corrección de ApiError (lectura de error_code + status).
+      const norm = toApiError(err)
+      if (norm.code === 'CONFLICT') {
+        setError(
+          t(
+            'common.cashRegisterRequired',
+            isSale
+              ? 'Necesitás una caja abierta para cobrar. Abrí una caja e intentá de nuevo.'
+              : 'Necesitás una caja abierta para pagar. Abrí una caja e intentá de nuevo.',
+          ),
+        )
+      } else {
+        setError(
+          t(
+            `${prefix}.paymentError`,
+            isSale
+              ? 'Error al registrar cobro. La venta fue creada correctamente.'
+              : 'Error al registrar pago. La orden fue creada correctamente.',
+          ),
+        )
+      }
       setProcessing(false)
     }
   }

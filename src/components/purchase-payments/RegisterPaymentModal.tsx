@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 
 import { useI18n } from '@/lib/i18n'
+import { toApiError } from '@/utils/ApiError'
 import { useToast } from '@/hooks/useToast'
 import {
   Dialog,
@@ -60,7 +61,7 @@ interface RegisterPaymentModalProps {
 }
 
 const RegisterPaymentModal: React.FC<RegisterPaymentModalProps> = ({ open, onOpenChange, order, onSubmit }) => {
-  const { lang } = useI18n()
+  const { lang, t } = useI18n()
   const { error: showError } = useToast()
 
   const [amount, setAmount] = useState('')
@@ -207,7 +208,14 @@ const RegisterPaymentModal: React.FC<RegisterPaymentModalProps> = ({ open, onOpe
         notes: notes.trim() || null,
       })
       resetForm(); handleDialogChange(false)
-    } catch (e: any) { setFormError(e?.message || 'Error al registrar') } finally { setSubmitting(false) }
+    } catch (e: any) {
+      const norm = toApiError(e)
+      if (norm.code === 'CONFLICT') {
+        setFormError(t('purchases.errors.cashRegisterRequired', 'Necesitás una caja abierta para pagar. Abrí una caja e intentá de nuevo.'))
+      } else {
+        setFormError(e?.message || 'Error al registrar')
+      }
+    } finally { setSubmitting(false) }
   }
 
   const paymentPercentage = useMemo(() => !order || !order.pendingAmount ? 0 : Math.min(100, Math.round((numericAmount / Number(order.pendingAmount)) * 100)), [order, numericAmount])

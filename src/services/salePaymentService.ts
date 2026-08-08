@@ -7,11 +7,13 @@
 import { apiClient } from '@/services/api';
 import { telemetry } from '@/utils/telemetry';
 import { DEMO_SALES_PAYMENTS, IS_DEMO_MODE } from '@/config/demoSalePayments';
-import { 
-  ProcessPaymentRequest, 
-  ProcessPaymentResponse, 
+import {
+  ProcessPaymentRequest,
+  ProcessPaymentResponse,
   SalePaymentStatusResponse,
-  CancelSaleRequest
+  CancelSaleRequest,
+  POSCheckoutRequest,
+  POSCheckoutResponse,
 } from '@/types';
 
 // Helper con retry simple (máx 2 reintentos)
@@ -163,6 +165,64 @@ export const salePaymentService = {
         duration: Date.now() - startTime,
         error: error.message,
         operation: 'processSalePaymentWithCashRegister'
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Checkout POS atómico: crea la venta y procesa su pago en una sola
+   * transacción (POST /sale/pos-checkout). Si el pago falla, la venta se
+   * revierte completa (stock restaurado, sin venta fantasma). Requiere una
+   * caja abierta (409 Conflict en caso contrario).
+   *
+   * Reemplaza la secuencia de dos llamadas (createSale + processSalePayment
+   * WithCashRegister) en el flujo de mostrador/POS. Los flujos de venta a
+   * crédito o asíncronos siguen usando createSale por separado.
+   */
+  async posCheckout(request: POSCheckoutRequest): Promise<POSCheckoutResponse> {
+    if (IS_DEMO_MODE) {
+      console.log('[DEMO MODE] POS checkout:', request);
+      return {
+        success: true,
+        sale: {
+          success: true,
+          sale_id: `DEMO-${Date.now()}`,
+          total_amount: Number(request.payment?.amount_received) || 0,
+          items_processed: request.sale?.product_details?.length || 0,
+          message: 'Demo checkout',
+        } as any,
+      };
+    }
+    const startTime = Date.now();
+
+    // Normalizar tipos numéricos para el backend (Go).
+    const normalized: POSCheckoutRequest = {
+      sale: request.sale,
+      payment: {
+        ...request.payment,
+        amount_received: Number(request.payment.amount_received) || 0,
+        payment_method_id: Number(request.payment.payment_method_id) || 0,
+      },
+    };
+
+    try {
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.posCheckout(normalized);
+      });
+
+      telemetry.record('sale_payment.service.pos_checkout', {
+        duration: Date.now() - startTime,
+        saleId: result?.sale?.sale_id,
+        amountReceived: normalized.payment.amount_received,
+      });
+
+      return result;
+    } catch (error: any) {
+      telemetry.record('sale_payment.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'posCheckout'
       });
       throw error;
     }

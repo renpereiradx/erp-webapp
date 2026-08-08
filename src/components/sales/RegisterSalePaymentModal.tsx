@@ -18,6 +18,7 @@ import {
 import { cn } from '@/lib/utils'
 
 import { useI18n } from '@/lib/i18n'
+import { toApiError } from '@/utils/ApiError'
 import {
   Dialog,
   DialogContent,
@@ -59,7 +60,7 @@ interface RegisterSalePaymentModalProps {
 }
 
 const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: RegisterSalePaymentModalProps) => {
-  const { lang } = useI18n()
+  const { lang, t } = useI18n()
 
   const [amountReceived, setAmountReceived] = useState<string | number>('')
   const [amountToApply, setAmountToApply] = useState<string | number>('')
@@ -262,7 +263,12 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
       resetForm()
       handleDialogChange(false)
     } catch (error: any) {
-      setFormError(error?.message || 'Error al registrar')
+      const norm = toApiError(error)
+      if (norm.code === 'CONFLICT') {
+        setFormError(t('sales.errors.cashRegisterRequired', 'Necesitás una caja abierta para cobrar. Abrí una caja e intentá de nuevo.'))
+      } else {
+        setFormError(error?.message || 'Error al registrar')
+      }
     } finally {
       setSubmitting(false)
     }

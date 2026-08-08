@@ -71,6 +71,7 @@ export const common = {
   'common.error': 'Error',
   'common.success': 'Success',
   'common.warning': 'Warning',
+  'common.cashRegisterRequired': 'You need an open cash register to continue. Open a register and try again.',
   'common.info': 'Information',
   'common.all': 'All',
   'common.none': 'None',

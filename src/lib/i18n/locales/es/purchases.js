@@ -206,4 +206,5 @@ export const purchases = {
   'purchases.paymentDecision.processing': 'Procesando...',
   'purchases.paymentDecision.paymentSuccess': 'Pago registrado para orden #{orderId}',
   'purchases.paymentDecision.paymentError': 'Error al registrar pago. La orden fue creada correctamente.',
+  'purchases.errors.cashRegisterRequired': 'Necesitás una caja abierta para pagar. Abrí una caja e intentá de nuevo.',
 }
