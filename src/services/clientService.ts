@@ -53,9 +53,12 @@ export const clientService = {
       }
       const endpoint = `${API_PREFIX}?party_type=CLIENT&search=${encodeURIComponent(name)}`;
       const result = await _fetchWithRetry(async () => apiClient.get(endpoint, CLIENT_OPTIONS));
-      
+
       telemetry.record('client.service.search', { duration: Date.now() - startTime, name });
-      return result.data?.items || result.items || result;
+      // El backend devuelve {"items": null, "total": 0} cuando no hay
+      // coincidencias (slice nil → JSON null). El fallback `|| result` se
+      // tragaba el wrapper y fabricaba un ítem fantasma "Cliente" sin id.
+      return Array.isArray(result) ? result : (result.data?.items ?? result.items ?? []);
     } catch (error: any) {
       telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'searchByName' });
       throw error;

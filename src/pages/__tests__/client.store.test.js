@@ -69,4 +69,43 @@ describe('Client Store', () => {
 
     expect(fetchSpy).toHaveBeenCalled();
   });
+
+  describe('searchClients phantom-item protection', () => {
+    it('returns [] when the search yields no results', async () => {
+      // El servicio ya convierte el wrapper {items: null} del backend en [].
+      // El store debe propagar el array vacío sin fabricar ítems fantasma.
+      clientService.searchByName.mockResolvedValue([]);
+
+      await useClientStore.getState().searchClients('zzz');
+
+      expect(useClientStore.getState().searchResults).toEqual([]);
+    });
+
+    it('normalizes real matches returned by the service', async () => {
+      clientService.searchByName.mockResolvedValue([
+        { id: 'ABC123', first_name: 'Carlos', last_name: 'Gimenez' },
+      ]);
+
+      await useClientStore.getState().searchClients('carlos');
+
+      const results = useClientStore.getState().searchResults;
+      expect(results).toHaveLength(1);
+      expect(results[0].id).toBe('ABC123');
+      expect(results[0].displayName).toBe('Carlos Gimenez');
+    });
+  });
+
+  describe('normalizeClient guard', () => {
+    it('filters out items without an id (phantom wrapper leak)', async () => {
+      clientService.getAll.mockResolvedValue({
+        clients: [{ id: 1, name: 'Real' }, { name: 'Fantasma' }],
+      });
+
+      await useClientStore.getState().fetchClients();
+
+      const clients = useClientStore.getState().clients;
+      expect(clients).toHaveLength(1);
+      expect(clients[0].id).toBe(1);
+    });
+  });
 });

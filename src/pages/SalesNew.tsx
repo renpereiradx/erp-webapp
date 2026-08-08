@@ -712,6 +712,9 @@ const SalesNew: React.FC = () => {
   }, []);
 
   const handleSelectClient = async (client: Client) => {
+    // Defensa: ignorar ítems fantasma sin id real (un cliente sin id produce
+    // payload sin client_id → 500 "Cliente con ID  no encontrado").
+    if (!client?.id) return;
     setSelectedClient(client);
 
     // Si el wizard ya está abierto (paso Cliente), el payload validado se

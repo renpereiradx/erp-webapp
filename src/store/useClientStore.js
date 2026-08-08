@@ -9,6 +9,10 @@ const normalizeClient = c => {
   if (!c || typeof c !== 'object') return null
   
   const id = c.id || c.ID || c.client_id || c._id
+  // Ítem fantasma: un objeto sin id real (ej. el wrapper {items: null} de una
+  // búsqueda vacía) no es un cliente seleccionable. Sin esto, el wizard de
+  // checkout lo dejaba pasar y el payload salía sin client_id → 500 backend.
+  if (!id) return null
   const name = c.first_name || c.name || c.client_name || 'Cliente'
   const lastName = c.last_name || c.lastName || ''
   const documentId = c.document_id || c.documentId || c.tax_id || ''
