@@ -3,13 +3,11 @@ import { useEffect, RefObject } from 'react';
 interface UseSalesShortcutsProps {
   activeTab: string;
   productSearchInputRef: RefObject<HTMLElement | null>;
-  clientSearchInputRef: RefObject<HTMLElement | null>;
 }
 
 export const useSalesShortcuts = ({
   activeTab,
-  productSearchInputRef,
-  clientSearchInputRef
+  productSearchInputRef
 }: UseSalesShortcutsProps) => {
   useEffect(() => {
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
@@ -20,15 +18,9 @@ export const useSalesShortcuts = ({
         productSearchInputRef.current?.focus();
         return;
       }
-
-      if (event.key === 'F3') {
-        event.preventDefault();
-        clientSearchInputRef.current?.focus();
-        return;
-      }
     };
 
     document.addEventListener('keydown', handleGlobalKeyDown);
     return () => document.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [activeTab, productSearchInputRef, clientSearchInputRef]);
+  }, [activeTab, productSearchInputRef]);
 };

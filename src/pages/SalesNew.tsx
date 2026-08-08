@@ -243,8 +243,10 @@ const SalesNew: React.FC = () => {
   const { currentBranchId } = useBranch();
   const canWrite = hasPermission('sales:write');
   const productSearchInputRef = useRef<HTMLInputElement>(null);
-  const clientSearchInputRef = useRef<HTMLInputElement>(null);
   const dropdownQuantityInputRef = useRef<HTMLInputElement>(null);
+  // Última versión de handleSaveSale para el listener global de F12 (evita
+  // stale-closures: items/selectedClient cambian sin que el effect re-corra).
+  const handleSaveSaleRef = useRef<() => void>(() => {});
 
   const {
     createSale,
@@ -265,8 +267,7 @@ const SalesNew: React.FC = () => {
 
   useSalesShortcuts({
     activeTab,
-    productSearchInputRef,
-    clientSearchInputRef
+    productSearchInputRef
   });
   const { fetchDashboardData } = useDashboardStore();
 
@@ -589,9 +590,12 @@ const SalesNew: React.FC = () => {
         }
       }
 
-      if (event.key === 'F12' && items.length > 0) {
+      if (event.key === 'F12') {
         event.preventDefault();
-        handleSaveSale();
+        // Usar el ref: el effect no re-corre al cambiar items/selectedClient,
+        // y el closure capturado tendría estado viejo (carrito vacío o sin
+        // cliente) que rompería el cobro.
+        handleSaveSaleRef.current();
       }
     };
 
@@ -709,6 +713,10 @@ const SalesNew: React.FC = () => {
 
   const handleSelectClient = async (client: Client) => {
     setSelectedClient(client);
+
+    // Si el wizard ya está abierto (paso Cliente), el payload validado se
+    // armó sin client_id — parchearlo con el cliente recién elegido.
+    setPendingSaleData(prev => (prev ? { ...prev, client_id: client.id } : prev));
 
     // Buscar ventas pendientes del cliente (el wizard las muestra como paso).
     try {
@@ -914,6 +922,12 @@ const SalesNew: React.FC = () => {
     setSelectedClient(null);
     setCurrentSaleId(null);
     setPendingReservations([]);
+    // Quitar el client_id del payload validado si el operador deselecciona.
+    setPendingSaleData(prev => {
+      if (!prev) return prev;
+      const { client_id, ...rest } = prev;
+      return rest;
+    });
   };
 
   const handleOpenEditModal = (item: CartItem) => {
@@ -1069,10 +1083,9 @@ const SalesNew: React.FC = () => {
   };
 
   const handleSaveSale = async () => {
-    if (!selectedClient) {
-      clientSearchInputRef.current?.focus();
-      return;
-    }
+    // El cliente se selecciona dentro del SaleCheckoutWizard (ClientStep,
+    // paso 1). No gatear acá: si no hay cliente, el wizard abre igual y
+    // handleSelectClient parchea pendingSaleData.client_id al elegirlo.
     if (items.length === 0) {
       productSearchInputRef.current?.focus();
       return;
@@ -1192,7 +1205,9 @@ const SalesNew: React.FC = () => {
         );
 
         const saleData = {
-          client_id: selectedClient.id,
+          // Si el cliente aún no está elegido (se elige en ClientStep del
+          // wizard), el campo se agrega después vía handleSelectClient.
+          ...(selectedClient ? { client_id: selectedClient.id } : {}),
           ...(saleReserveId && { reserve_id: saleReserveId }),
           allow_price_modifications: payloadPriceMod,
           currency_id: Number(currencyId) || 1,
@@ -1256,6 +1271,11 @@ const SalesNew: React.FC = () => {
       setIsProcessingSale(false);
     }
   };
+
+  // Mantener el ref de F12 apuntando a la última versión de handleSaveSale.
+  useEffect(() => {
+    handleSaveSaleRef.current = handleSaveSale;
+  });
 
   // ─── Callbacks del SaleCheckoutWizard ────────────────────────────────────
   // onConfirmWizard: confirma el cobro. Si hay currentSaleId (modo merge),
