@@ -279,7 +279,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-5xl bg-surface-container-lowest shadow-fluent-16 rounded-md flex flex-col md:flex-row overflow-hidden max-h-[92vh] animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-5xl bg-surface-container-lowest shadow-fluent-16 rounded-md flex flex-col md:flex-row overflow-hidden min-h-[70vh] max-h-[92vh] animate-in zoom-in-95 duration-200">
         {/* ─── Panel izquierdo: Stepper ─────────────────────────────── */}
         <div className="flex-1 flex flex-col bg-surface-container-low min-h-0">
           {/* Header con indicador de pasos */}
