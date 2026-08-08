@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useBarcodeScanner } from '@/features/sales/hooks/useBarcodeScanner';
 import { useSalesShortcuts } from '@/features/sales/hooks/useSalesShortcuts';
 import { SalesCartGrid } from '@/features/sales/components/SalesCartGrid';
-import { ReservationModal } from '@/features/sales/components/ReservationModal';
+import { SaleCheckoutWizard } from '@/features/sales/components/SaleCheckoutWizard';
+import type { CollectionData } from '@/features/sales/components/steps/CollectionStep';
 import { MessageBar } from '@/components/ui/MessageBar';
 import {
   DollarSign,
@@ -54,11 +55,10 @@ import apiService from '@/services/api.ts';
 import { PaymentMethodService } from '@/services/paymentMethodService';
 import { CurrencyService } from '@/services/currencyService';
 import { productService } from '@/services/productService';
-import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog';
 import { VariantSelectorModal } from '@/features/sales/components/VariantSelectorModal';
-import { CheckoutModal } from '@/features/sales/components/CheckoutModal';
 import { salePaymentService } from '@/services/salePaymentService';
 import { useI18n } from '@/lib/i18n';
+import { toApiError } from '@/utils/ApiError';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
 import { isDecimalUnit } from '@/constants/units';
 import ToastContainer from '@/components/ui/ToastContainer';
@@ -105,15 +105,6 @@ interface ProductDisplay {
   has_valid_price: boolean;
   has_variants?: boolean;
   product_type?: string;
-}
-
-interface SaleMetadata {
-  id: string;
-  total: number;
-  status: string;
-  paymentMethodId?: number;
-  paymentMethodLabel?: string;
-  currencyCode?: string;
 }
 
 const STATUS_STYLES: Record<string, { label: string; badge: string }> = {
@@ -315,20 +306,23 @@ const SalesNew: React.FC = () => {
   const [modalCustomReasonText, setModalCustomReasonText] = useState('');
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
-  const [showInstantCollection, setShowInstantCollection] = useState(false);
-  const [createdSaleData, setCreatedSaleData] = useState<SaleMetadata | null>(null);
   const [isProcessingSale, setIsProcessingSale] = useState(false);
+  // POS checkout atómico: payload de venta listo para enviar junto con el pago
+  // en una sola transacción (POST /sale/pos-checkout). Se popula al "Cobrar" y
+  // se consume al confirmar el diálogo. Si el operador elige "Dejar pendiente",
+  // se envía como createSale por separado (venta a crédito/asíncrono).
+  const [pendingSaleData, setPendingSaleData] = useState<any | null>(null);
 
   const [currentSaleId, setCurrentSaleId] = useState<string | null>(null);
   const [activeSales, setActiveSales] = useState<any[]>([]);
   const [activeSale, setActiveSale] = useState<any | null>(null);
-  const [activeSaleIndex, setActiveSaleIndex] = useState(0);
-  const [showActiveSaleModal, setShowActiveSaleModal] = useState(false);
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  // Wizard de concreción unificado (reemplaza CheckoutModal + InstantPaymentDialog
+  // + modales de pendientes/reservas). Un solo Stepper: Cliente → Pendientes →
+  // Reservas → Pago → Cobro, con carrito siempre visible.
+  const [showCheckoutWizard, setShowCheckoutWizard] = useState(false);
 
   const [pendingReservations, setPendingReservations] = useState<any[]>([]);
   const [selectedResIds, setSelectedResIds] = useState<Set<number>>(new Set());
-  const [showReservationModal, setShowReservationModal] = useState(false);
 
   const [productSearchResults, setProductSearchResults] = useState<ProductDisplay[]>([]);
   const [showProductDropdown, setShowProductDropdown] = useState(false);
@@ -597,7 +591,7 @@ const SalesNew: React.FC = () => {
 
       if (event.key === 'F12' && items.length > 0) {
         event.preventDefault();
-        setShowCheckoutModal(true);
+        handleSaveSale();
       }
     };
 
@@ -716,17 +710,15 @@ const SalesNew: React.FC = () => {
   const handleSelectClient = async (client: Client) => {
     setSelectedClient(client);
 
-    let hasPendingSales = false;
-
-    // Buscar ventas pendientes del cliente
+    // Buscar ventas pendientes del cliente (el wizard las muestra como paso).
     try {
       const response = await saleService.getPendingSalesByClient(client.id, client.name);
       if (response?.success && Array.isArray(response.data) && response.data.length > 0) {
         setActiveSales(response.data);
         setActiveSale(response.data[0]);
-        setActiveSaleIndex(0);
-        setShowActiveSaleModal(true);
-        hasPendingSales = true;
+      } else {
+        setActiveSales([]);
+        setActiveSale(null);
       }
     } catch (error) {
       console.error('Error buscando ventas pendientes:', error);
@@ -740,26 +732,22 @@ const SalesNew: React.FC = () => {
       });
       if (reservations && reservations.length > 0) {
         setPendingReservations(reservations);
-        // Pre-seleccionar todas las reservas por defecto (Set de IDs numéricos)
+        // Pre-seleccionar todas las reservas por defecto (Set de IDs numéricos).
+        // El wizard las muestra como un paso condicional.
         const allIds = new Set(reservations.map((r: any) => Number(r.reserve_id || r.id)).filter(Boolean));
         setSelectedResIds(allIds);
-        
-        // Si no hay ventas pendientes, mostrar reservas directamente
-        // Si hay ventas pendientes, el modal de reservas se mostrará después de cerrar el de ventas
-        if (!hasPendingSales) {
-          // setShowReservationModal(true); // Manejado en CheckoutModal
-        }
       }
     } catch (error) {
       console.error('Error buscando reservas del cliente:', error);
     }
   };
 
-  const handleContinueSale = useCallback(async () => {
-    if (!activeSale) return;
-    
-    let saleDetails = activeSale.details || [];
-    const saleId = activeSale.sale_id || activeSale.id;
+  const handleContinueSale = useCallback(async (saleOverride?: any) => {
+    const sale = saleOverride || activeSale;
+    if (!sale) return;
+
+    let saleDetails = sale.details || [];
+    const saleId = sale.sale_id || sale.id;
 
     if (saleDetails.length === 0 && saleId) {
       try {
@@ -839,48 +827,24 @@ const SalesNew: React.FC = () => {
     });
 
     setCurrentSaleId(saleId);
-    setShowActiveSaleModal(false);
     toast.success(`Cargada venta #${saleId} para continuar`);
-    
-    // Cola secuencial: Mostrar reservas solo tras manejar ventas pendientes
-    if (pendingReservations.length > 0) {
-      setTimeout(() => setShowReservationModal(true), 300);
-    }
-  }, [activeSale, saleService, setItems, toast, pendingReservations]);
 
-  useEffect(() => {
-    if (!showActiveSaleModal) return;
+    // Las reservas ahora se gestionan como un paso del wizard de checkout,
+    // no con un modal separado disparado por setTimeout.
+  }, [activeSale, saleService, setItems, toast]);
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setActiveSaleIndex(prev => {
-          const next = prev < activeSales.length - 1 ? prev + 1 : prev;
-          setActiveSale(activeSales[next]);
-          return next;
-        });
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setActiveSaleIndex(prev => {
-          const next = prev > 0 ? prev - 1 : prev;
-          setActiveSale(activeSales[next]);
-          return next;
-        });
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        handleContinueSale();
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        setShowActiveSaleModal(false);
-        if (pendingReservations.length > 0) {
-          setTimeout(() => setShowReservationModal(true), 300);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showActiveSaleModal, activeSales, handleContinueSale, pendingReservations]);
+  // Wrapper para el wizard: continúa la venta pendiente en el índice dado.
+  // Pasa el sale explícitamente a handleContinueSale para evitar el stale-closure
+  // del useCallback (que leería un activeSale desactualizado).
+  const handleContinueSaleByIndex = useCallback(
+    async (index: number) => {
+      if (index < 0 || index >= activeSales.length) return;
+      const sale = activeSales[index];
+      setActiveSale(sale);
+      await handleContinueSale(sale);
+    },
+    [activeSales, handleContinueSale],
+  );
 
   const handleAddReservations = () => {
     if (pendingReservations.length === 0 || selectedResIds.size === 0) return;
@@ -940,7 +904,7 @@ const SalesNew: React.FC = () => {
       return [...prev, ...newItems];
     });
 
-    setShowReservationModal(false);
+    // El wizard gestiona el cierre; aquí solo limpiamos las reservas ya cargadas.
     setPendingReservations([]);
     setSelectedResIds(new Set());
     toast.success('Reservas añadidas al carrito');
@@ -1270,51 +1234,14 @@ const SalesNew: React.FC = () => {
           }),
         };
 
-        const response = await createSale(saleData);
-
-        if (response?.sale_id) {
-          const selectedMethod = paymentMethods.find(m => m.id === paymentMethodId);
-          const selectedCurrency = currencies.find(c => c.id === currencyId);
-          
-          const responseTotal =
-            Number((response as any)?.data?.total_amount) ||
-            Number((response as any)?.total_amount) ||
-            Number(total) ||
-            0;
-
-          setCreatedSaleData({ 
-            id: response.sale_id, 
-            total: responseTotal,
-            status: 'pending',
-            paymentMethodId: paymentMethodId,
-            paymentMethodLabel: (selectedMethod as any)?.name || (selectedMethod as any)?.description || 'Efectivo',
-            currencyCode: (selectedCurrency as any)?.code || 'PYG'
-          });
-
-          // Trazabilidad y advertencias (PRICE_DERIVATION_SKIPPED, etc)
-          const warnings = response.validation_summary?.warnings || response.warnings || [];
-          if (warnings.length > 0) {
-            warnings.forEach((w: any) => {
-              if (w.type === 'PRICE_DERIVATION_SKIPPED') {
-                toast.warning(`${w.product_name || 'Producto'}: ${w.reason || 'No se pudo derivar precio.'}`);
-              } else {
-                toast.warning(w.message || 'Advertencia de validación al crear la venta.');
-              }
-            });
-          }
-
-          setShowInstantCollection(true);
-          fetchDashboardData();
-        } else {
-          const errMsg = response?.error || response?.message || 'No se pudo registrar la venta';
-          if (errMsg.toLowerCase().includes('no existe conversion') || errMsg.toLowerCase().includes('conversión')) {
-            toast.error(`No existe conversión de unidad: ${errMsg}. Registre la conversión primero.`);
-          } else if (errMsg.toLowerCase().includes('variant_id is required')) {
-            toast.error('Este producto requiere seleccionar una variante. Por favor, seleccione la variante correspondiente.');
-          } else {
-            toast.error(errMsg);
-          }
-        }
+        // POS checkout atómico: guardamos el payload validado y abrimos el
+        // wizard de concreción. Al confirmar el cobro (onConfirmWizard), se
+        // envía venta + pago juntos en una sola transacción
+        // (POST /sale/pos-checkout): si el pago falla, la venta se revierte
+        // entera (sin venta fantasma). "Dejar pendiente" cae al path de
+        // createSale por separado (venta a crédito/asíncrono).
+        setPendingSaleData(saleData);
+        setShowCheckoutWizard(true);
       }
     } catch (error: any) {
       const errMsg = error?.message || error?.error || 'Error inesperado al procesar la venta';
@@ -1328,6 +1255,128 @@ const SalesNew: React.FC = () => {
     } finally {
       setIsProcessingSale(false);
     }
+  };
+
+  // ─── Callbacks del SaleCheckoutWizard ────────────────────────────────────
+  // onConfirmWizard: confirma el cobro. Si hay currentSaleId (modo merge),
+  // agrega los productos nuevos (addProductsToSale) y procesa el pago. Si no,
+  // usa el checkout POS atómico (venta + pago en una transacción).
+  const onConfirmWizard = useCallback(
+    async (collection: CollectionData) => {
+      setIsProcessingSale(true);
+      try {
+        if (currentSaleId) {
+          // Modo merge: agregar productos nuevos a la venta existente.
+          const newItems = items.filter((item) => !item.isFromPendingSale);
+          if (newItems.length === 0) {
+            toast.info('No hay productos nuevos para agregar a esta venta');
+            return;
+          }
+          const payload = {
+            allow_price_modifications: newItems.some(
+              (item) => Math.abs((Number(item.price) || 0) - (Number(item.originalPrice) || 0)) > 0.01,
+            ),
+            product_details: newItems.map((item) => {
+              const currentPrice = Number(item.price) || 0;
+              const originalPrice = Number(item.originalPrice) || 0;
+              const hasModification = Math.abs(currentPrice - originalPrice) > 0.01;
+              const discountInputVal = Number(item.discountInput) || 0;
+              return {
+                product_id: item.productId,
+                ...(item.variantId !== undefined ? { variant_id: item.variantId } : {}),
+                quantity: Number(item.quantity) || 1,
+                unit: item.unit || 'unit',
+                ...(item.reserve_id && { reserve_id: item.reserve_id }),
+                ...(hasModification && {
+                  sale_price: currentPrice,
+                  price_change_reason: (item.discountReason || 'Ajuste de precio').trim(),
+                  [item.discountType === 'percent' ? 'discount_percent' : 'discount_amount']: discountInputVal,
+                  discount_reason: (item.discountReason || 'Ajuste de precio').trim(),
+                }),
+              };
+            }),
+          };
+          const response = await saleService.addProductsToSale(currentSaleId, payload, activeSale?.branch_id);
+          if (!response?.success) {
+            throw new Error(response?.error || 'No se pudo actualizar la venta');
+          }
+          toast.success(
+            `Venta #${currentSaleId} actualizada (${response?.data?.items_added ?? newItems.length} ítem${newItems.length > 1 ? 's' : ''}).`,
+          );
+        } else if (pendingSaleData) {
+          // Modo venta nueva: checkout POS atómico (venta + pago).
+          // Refleja la moneda seleccionada en el wizard (puede haber cambiado).
+          const salePayload = { ...pendingSaleData, currency_id: Number(currencyId) || 1 };
+          const result = await salePaymentService.posCheckout({
+            sale: salePayload,
+            payment: {
+              amount_received: collection.amountReceived,
+              payment_method_id: collection.paymentMethodId || Number(paymentMethodId) || 0,
+              payment_notes: collection.notes,
+            },
+          });
+          const saleId = result?.sale?.sale_id || '';
+          toast.success(saleId ? `Venta #${saleId} cobrada exitosamente` : 'Cobro registrado exitosamente');
+        } else {
+          toast.error('No hay datos de venta para procesar');
+          return;
+        }
+        resetSaleState();
+      } catch (e: any) {
+        const norm = toApiError(e);
+        if (norm.code === 'SALE_ALREADY_PAID' || norm.code === 'ALREADY_CANCELLED') {
+          toast.error(t('sales.errors.saleAlreadyPaid', 'No se pueden agregar items a una venta ya pagada. Creá una venta nueva.') + ` (${norm.code})`);
+        } else if (norm.code === 'CONFLICT') {
+          toast.error(t('sales.errors.cashRegisterRequired', 'Necesitás una caja abierta para cobrar. Abrí una caja e intentá de nuevo.') + ' (CONFLICT)');
+        } else {
+          toast.error(
+            t('sales.collectionDecision.atomicError', 'No se pudo completar la venta y el cobro. La operación se canceló.') +
+              (norm.code && norm.code !== 'UNKNOWN' ? ` (${norm.code})` : ''),
+          );
+        }
+        throw e;
+      } finally {
+        setIsProcessingSale(false);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentSaleId, items, activeSale, pendingSaleData, paymentMethodId],
+  );
+
+  // onLeavePendingWizard: persiste la venta sin cobrar (venta a crédito/asíncrono).
+  const onLeavePendingWizard = useCallback(async () => {
+    setIsProcessingSale(true);
+    try {
+      if (currentSaleId) {
+        // En modo merge, dejar pendiente = no agregar nada (la venta ya existe).
+        toast.info(`Venta #${currentSaleId} queda pendiente`);
+      } else if (pendingSaleData) {
+        const response = await createSale(pendingSaleData);
+        if (!response?.sale_id) {
+          throw new Error(response?.error || response?.message || 'No se pudo registrar la venta');
+        }
+        toast.success('Venta guardada como pendiente');
+      }
+      resetSaleState();
+    } catch (e: any) {
+      toast.error(e?.message || 'No se pudo registrar la venta como pendiente');
+    } finally {
+      setIsProcessingSale(false);
+    }
+  }, [currentSaleId, pendingSaleData, createSale]);
+
+  // Resetea el estado del carrito tras concretar o dejar pendiente.
+  const resetSaleState = () => {
+    setShowCheckoutWizard(false);
+    setPendingSaleData(null);
+    setItems([]);
+    setSelectedClient(null);
+    setCurrentSaleId(null);
+    setActiveSales([]);
+    setActiveSale(null);
+    setPendingReservations([]);
+    setSelectedResIds(new Set());
+    fetchDashboardData();
   };
 
   const modalDisplay = selectedModalProduct ? getProductDisplay(selectedModalProduct) : null;
@@ -1718,7 +1767,7 @@ const SalesNew: React.FC = () => {
 
                   <div className="flex flex-col justify-end gap-2">
                     <Button
-                      onClick={() => setShowCheckoutModal(true)}
+                      onClick={handleSaveSale}
                       disabled={isProcessingSale || items.length === 0 || !canWrite}
                       className={cn(
                         "w-full h-12 text-body-sm-bold rounded-button uppercase tracking-widest transition-all",
@@ -2115,113 +2164,32 @@ const SalesNew: React.FC = () => {
         </div>
       )}
 
-      {showActiveSaleModal && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm">
-          <Card className="w-full max-w-lg shadow-whisper animate-in zoom-in-95 duration-200 bg-surface-container-lowest rounded-md border-none">
-            <CardHeader className="border-b bg-amber-50 px-6 py-4">
-              <CardTitle className="text-amber-700 flex items-center gap-2">
-                <History size={20} /> Ventas Pendientes Detectadas
-              </CardTitle>
-              <p className="text-xs text-amber-600 font-medium">El cliente "{selectedClient?.name}" tiene ventas sin completar.</p>
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                {activeSales.map((sale, index) => {
-                  const saleId = sale.id || sale.sale_id;
-                  const itemKey = saleId ? `pending-sale-${saleId}` : `pending-sale-index-${index}`;
-                  
-                  return (
-                    <label
-                      key={itemKey}
-                      className={cn(
-                        "flex flex-col p-3 border rounded-lg cursor-pointer transition-all",
-                        activeSale?.id === sale.id || activeSaleIndex === index 
-                          ? "border-primary bg-primary/5 ring-1 ring-primary shadow-sm" 
-                          : "hover:bg-slate-50 border-slate-200"
-                      )}
-                      onMouseEnter={() => {
-                        setActiveSale(sale);
-                        setActiveSaleIndex(index);
-                      }}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name="activeSale"
-                            checked={activeSale?.id === sale.id || activeSaleIndex === index}
-                            onChange={() => {
-                              setActiveSale(sale);
-                              setActiveSaleIndex(index);
-                            }}
-                            className="size-4 text-primary"
-                          />
-                          <span className="font-bold text-sm text-slate-700">Venta #{saleId}</span>
-                        </div>
-                        <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none text-[9px] uppercase font-black">
-                          Pendiente
-                        </Badge>
-                        {sale.branch_id && sale.branch_id !== currentBranchId && (
-                          <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-none text-[9px] uppercase font-black ml-2">
-                            Origen: Otra Sucursal
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex justify-between items-end ml-6">
-                        <span className="text-xs text-slate-500">{formatDateTime(sale.sale_date || sale.created_at)}</span>
-                        <span className="text-sm font-black text-primary">{formatCurrency(sale.total_amount)}</span>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
-              
-              <div className="flex gap-3 pt-4 border-t">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setShowActiveSaleModal(false);
-                    setCurrentSaleId(null);
-                    // Si hay reservas pendientes, mostrar el modal de reservas
-                    if (pendingReservations.length > 0) {
-                      setTimeout(() => setShowReservationModal(true), 300);
-                    }
-                  }} 
-                  className="flex-1 h-11 text-xs font-black uppercase tracking-widest"
-                >
-                  Nueva Venta
-                </Button>
-                <Button 
-                  onClick={handleContinueSale} 
-                  className="flex-1 h-11 text-xs font-black uppercase tracking-widest"
-                >
-                  Continuar Seleccionada
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      <ReservationModal
-        isOpen={showReservationModal}
-        onClose={() => {
-          setShowReservationModal(false);
-          setPendingReservations([]);
-          setSelectedResIds(new Set());
+      <SaleCheckoutWizard
+        isOpen={showCheckoutWizard}
+        onClose={() => setShowCheckoutWizard(false)}
+        items={items}
+        getItemLineTotal={getItemLineTotal}
+        client={selectedClient}
+        onClientSelect={handleSelectClient}
+        onClearClient={handleClearClient}
+        activeSales={activeSales}
+        onContinueSale={handleContinueSaleByIndex}
+        onNewSale={() => {
+          setCurrentSaleId(null);
+          setActiveSale(null);
         }}
         pendingReservations={pendingReservations}
         selectedResIds={selectedResIds}
-        onToggleSelection={(resId) => {
-          const isProductAlreadySelected = Array.from(selectedResIds).some(sid => {
+        onToggleReservation={(resId) => {
+          const isProductAlreadySelected = Array.from(selectedResIds).some((sid) => {
             if (sid === resId) return false;
-            const otherRes = pendingReservations.find(r => Number(r.reserve_id || r.id) === sid);
-            const thisRes = pendingReservations.find(r => Number(r.reserve_id || r.id) === resId);
+            const otherRes = pendingReservations.find((r) => Number(r.reserve_id || r.id) === sid);
+            const thisRes = pendingReservations.find((r) => Number(r.reserve_id || r.id) === resId);
             return otherRes?.product_id === thisRes?.product_id;
           });
           const isSelected = selectedResIds.has(resId);
           if (isProductAlreadySelected && !isSelected) {
-            const res = pendingReservations.find(r => Number(r.reserve_id || r.id) === resId);
+            const res = pendingReservations.find((r) => Number(r.reserve_id || r.id) === resId);
             toast.warning(`Solo se permite una reserva por cada producto (${res?.product_name})`);
             return;
           }
@@ -2231,110 +2199,28 @@ const SalesNew: React.FC = () => {
           setSelectedResIds(newSelection);
         }}
         onAddReservations={handleAddReservations}
-        selectedClientName={selectedClient?.name}
         formatDateTime={formatDateTime}
-      />
-
-      {showInstantCollection && createdSaleData && (
-        <InstantPaymentDialog
-          open={showInstantCollection}
-          onConfirmPayment={async (data) => {
-            try {
-              const paymentStatus = await saleService.getSalePaymentStatus(createdSaleData.id);
-              const alreadyPaid = Boolean((paymentStatus as any)?.data?.is_fully_paid);
-              if (alreadyPaid) {
-                setShowInstantCollection(false);
-                setCreatedSaleData(null);
-                setItems([]);
-                setSelectedClient(null);
-                setCurrentSaleId(null);
-                toast.info('La venta ya estaba pagada. Se guardo correctamente.');
-                fetchDashboardData();
-                return;
-              }
-
-              await salePaymentService.processSalePaymentWithCashRegister({
-                sales_order_id: createdSaleData.id,
-                amount_received: data.amount_received || data.amount,
-                payment_method_id: data.paymentMethodId || createdSaleData.paymentMethodId,
-                payment_notes: data.payment_notes || null,
-                cash_register_id: data.cash_register_id,
-              });
-              setShowInstantCollection(false);
-              setCreatedSaleData(null);
-              setItems([]);
-              setSelectedClient(null);
-              setCurrentSaleId(null);
-              toast.success('Cobro registrado exitosamente');
-              fetchDashboardData();
-            } catch (e: any) {
-              const errorText = String(e?.message || '').toLowerCase();
-              if (errorText.includes('already fully paid') || errorText.includes('ya esta pagada')) {
-                setShowInstantCollection(false);
-                setCreatedSaleData(null);
-                setItems([]);
-                setSelectedClient(null);
-                setCurrentSaleId(null);
-                toast.info('La venta ya estaba pagada. No se registro un cobro duplicado.');
-                fetchDashboardData();
-                return;
-              }
-              toast.error('Error al registrar cobro');
-              throw e;
-            }
-          }}
-          onLeavePending={() => {
-            setShowInstantCollection(false);
-            setCreatedSaleData(null);
-            setItems([]);
-            setSelectedClient(null);
-            setCurrentSaleId(null);
-            toast.success('Venta guardada como pendiente');
-          }}
-          variant="sale"
-          orderId={createdSaleData.id}
-          totalAmount={createdSaleData.total}
-          currencyCode={createdSaleData.currencyCode || 'PYG'}
-          paymentMethodId={createdSaleData.paymentMethodId}
-          paymentMethodLabel={createdSaleData.paymentMethodLabel}
-          paymentMethods={paymentMethods}
-        />
-      )}
-
-      {variantSelectorProduct && (
-        <VariantSelectorModal 
-          product={variantSelectorProduct} 
-          onClose={() => setVariantSelectorProduct(null)} 
-          onSelect={(variant: any, _qty: number) => {
-            addProductToCart(variantSelectorProduct, variantSelectorQuantity, variant.id, variant.variant_name);
-            setVariantSelectorProduct(null);
-          }} 
-        />
-      )}
-
-      <CheckoutModal
-        isOpen={showCheckoutModal}
-        onClose={() => setShowCheckoutModal(false)}
-        onConfirm={() => {
-          setShowCheckoutModal(false);
-          handleSaveSale();
-        }}
-        totalAmount={total}
-        client={selectedClient}
-        onClientSelect={handleSelectClient}
-        onClearClient={handleClearClient}
         paymentMethods={paymentMethods}
         paymentMethodId={paymentMethodId}
         setPaymentMethodId={setPaymentMethodId}
         currencies={currencies}
         currencyId={currencyId}
         setCurrencyId={setCurrencyId}
-        activeSales={activeSales}
-        pendingReservations={pendingReservations}
-        canWrite={canWrite}
+        onConfirm={onConfirmWizard}
+        onLeavePending={onLeavePendingWizard}
         isProcessingSale={isProcessingSale}
-        currentSaleId={currentSaleId}
       />
+
+      {variantSelectorProduct && (
+        <VariantSelectorModal
+          product={variantSelectorProduct}
+          onClose={() => setVariantSelectorProduct(null)}
+          onSelect={(variant: any, _qty: number) => {
+            addProductToCart(variantSelectorProduct, variantSelectorQuantity, variant.id, variant.variant_name);
+            setVariantSelectorProduct(null);
+          }}
+        />
+      )}
 
       <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
     </div>
