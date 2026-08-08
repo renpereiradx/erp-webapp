@@ -463,14 +463,14 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                   )}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-on-surface truncate">
+                    <div className="text-sm font-bold text-on-surface truncate">
                       {item.isFromPendingSale && (
                         <Badge className="mr-1 bg-surface-variant text-on-surface-variant border-none text-[8px] uppercase align-middle">
                           P
                         </Badge>
                       )}
                       {item.name}
-                    </p>
+                    </div>
                     <p className="text-xs text-on-surface-variant font-data-mono">
                       {item.quantity} {item.unit} × {formatCurrency(Number(item.price) || 0, currencyCode)}
                     </p>

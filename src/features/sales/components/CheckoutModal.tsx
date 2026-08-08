@@ -161,7 +161,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="font-black text-primary text-lg leading-tight mb-1">{client.displayName || client.name}</p>
-                      {client.document_id && <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5"><Badge variant="outline" className="text-[10px]">CI/RUC</Badge> {client.document_id}</p>}
+                      {client.document_id && <div className="text-sm font-medium text-slate-500 flex items-center gap-1.5"><Badge variant="outline" className="text-[10px]">CI/RUC</Badge> {client.document_id}</div>}
                     </div>
                     <Button variant="ghost" size="icon" onClick={onClearClient} className="text-slate-400 hover:text-red-500 hover:bg-red-50">
                       <X size={18} />

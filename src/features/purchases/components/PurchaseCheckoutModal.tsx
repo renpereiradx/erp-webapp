@@ -155,7 +155,7 @@ export const PurchaseCheckoutModal: React.FC<PurchaseCheckoutModalProps> = ({
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="font-black text-primary text-lg leading-tight mb-1">{logic.getSupplierName(selectedSupplier)}</p>
-                      {selectedSupplier.tax_id && <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5"><Badge variant="outline" className="text-[10px]">RUC</Badge> {selectedSupplier.tax_id}</p>}
+                      {selectedSupplier.tax_id && <div className="text-sm font-medium text-slate-500 flex items-center gap-1.5"><Badge variant="outline" className="text-[10px]">RUC</Badge> {selectedSupplier.tax_id}</div>}
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => setSelectedSupplier(null)} className="text-slate-400 hover:text-red-500 hover:bg-red-50">
                       <X size={18} />

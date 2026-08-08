@@ -84,10 +84,10 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
                   {client.displayName || client.name}
                 </p>
                 {client.document_id && (
-                  <p className="text-sm font-medium text-on-surface-variant flex items-center gap-1.5">
+                  <div className="text-sm font-medium text-on-surface-variant flex items-center gap-1.5">
                     <Badge variant="outline" className="text-[10px]">CI/RUC</Badge>
                     {client.document_id}
-                  </p>
+                  </div>
                 )}
               </div>
               <Button
