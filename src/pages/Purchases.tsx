@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { AlertCircle, History, Plus, ShoppingCart } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog'
 import ToastContainer from '@/components/ui/ToastContainer'
 
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic'
@@ -10,7 +9,8 @@ import { PurchaseProductModal } from '@/features/purchases/components/PurchasePr
 import { PurchaseCartTable } from '@/features/purchases/components/PurchaseCartTable'
 import { PurchaseTotalsCard } from '@/features/purchases/components/PurchaseTotalsCard'
 import { PurchaseHistoryTab } from '@/features/purchases/components/PurchaseHistoryTab'
-import { PurchaseCheckoutModal } from '@/features/purchases/components/PurchaseCheckoutModal'
+import { PurchaseCheckoutWizard } from '@/features/purchases/components/PurchaseCheckoutWizard'
+import type { PurchaseCollectionData } from '@/features/purchases/components/steps/PurchaseCollectionStep'
 
 import { PurchaseCancelModal } from '@/features/purchases/components/PurchaseCancelModal'
 import { PurchaseConfirmationModal } from '@/features/purchases/components/PurchaseConfirmationModal'
@@ -21,31 +21,62 @@ import { PurchaseConfirmationModal } from '@/features/purchases/components/Purch
  * Modal optimized for low-height desktop screens (720p+).
  */
 const Purchases = () => {
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [showCheckoutWizard, setShowCheckoutWizard] = useState(false);
   const logic = usePurchasesLogic();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (logic.activeTab === 'nueva-compra' && event.key === 'F12' && logic.purchaseItems.length > 0) {
         event.preventDefault();
-        setShowCheckoutModal(true);
+        setShowCheckoutWizard(true);
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [logic.activeTab, logic.purchaseItems]);
+
   const {
     activeTab,
-    createdOrderData,
     error,
-    handleInstantPaymentConfirm,
-    handleLeavePurchasePending,
     paymentMethods,
     setActiveTab,
-    showInstantPayment,
     t,
     toast,
   } = logic
+
+  // onConfirmWizard: crea la orden de compra y luego procesa el pago.
+  // Flujo de 2 llamadas (create → pay); si el pago falla, la orden queda creada.
+  const onConfirmWizard = useCallback(
+    async (collection: PurchaseCollectionData) => {
+      // 1. Crear la orden de compra.
+      await logic.handleSavePurchase()
+      // Si la creación falló, handleSavePurchase ya mostró el toast y no populó
+      // createdOrderData; abortamos el pago.
+      if (!logic.createdOrderData?.id) return
+      // 2. Procesar el pago al proveedor.
+      await logic.handleInstantPaymentConfirm({
+        orderId: logic.createdOrderData.id,
+        amount: collection.amountPaid,
+        paymentMethodId: logic.paymentMethod ? Number(logic.paymentMethod) : null,
+        currencyCode: logic.paymentCurrency,
+        notes: collection.notes,
+        cash_register_id: collection.cashRegisterId,
+      })
+      setShowCheckoutWizard(false)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+
+  // onLeavePendingWizard: guarda la orden sin pagar (queda pendiente de pago).
+  const onLeavePendingWizard = useCallback(async () => {
+    await logic.handleSavePurchase()
+    if (logic.createdOrderData?.id) {
+      logic.handleLeavePurchasePending()
+    }
+    setShowCheckoutWizard(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-display'>
@@ -99,7 +130,7 @@ const Purchases = () => {
           <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6'>
             <div className='lg:col-span-12 space-y-4 md:space-y-6'>
               <PurchaseCartTable {...logic} />
-              <PurchaseTotalsCard {...logic} onCheckout={() => setShowCheckoutModal(true)} />
+              <PurchaseTotalsCard {...logic} onCheckout={() => setShowCheckoutWizard(true)} />
             </div>
           </div>
         )}
@@ -118,25 +149,40 @@ const Purchases = () => {
       {/* CONFIRMATION MODAL - Extracted to component */}
       <PurchaseConfirmationModal {...logic} />
 
-      <PurchaseCheckoutModal 
-        isOpen={showCheckoutModal} 
-        onClose={() => setShowCheckoutModal(false)} 
-        logic={logic} 
+      <PurchaseCheckoutWizard
+        isOpen={showCheckoutWizard}
+        onClose={() => setShowCheckoutWizard(false)}
+        purchaseItems={logic.purchaseItems}
+        purchaseTotals={logic.purchaseTotals}
+        selectedSupplier={logic.selectedSupplier}
+        supplierSearch={logic.supplierSearch}
+        setSupplierSearch={logic.setSupplierSearch}
+        supplierResults={logic.supplierResults}
+        searchingSuppliers={logic.searchingSuppliers}
+        showSupplierDropdown={logic.showSupplierDropdown}
+        setShowSupplierDropdown={logic.setShowSupplierDropdown}
+        activeSupplierIndex={logic.activeSupplierIndex}
+        setActiveSupplierIndex={logic.setActiveSupplierIndex}
+        onSupplierSelect={logic.handleSupplierSelect}
+        onClearSupplier={() => logic.setSelectedSupplier(null)}
+        onSearchKeyDown={logic.handleSupplierSearchKeyDown}
+        searchRef={logic.supplierSearchRef}
+        getSupplierName={logic.getSupplierName}
+        paymentMethods={paymentMethods}
+        paymentMethod={logic.paymentMethod}
+        setPaymentMethod={logic.setPaymentMethod}
+        currencies={logic.currencies}
+        paymentCurrency={logic.paymentCurrency}
+        setPaymentCurrency={logic.setPaymentCurrency}
+        purchaseNotes={logic.purchaseNotes}
+        setPurchaseNotes={logic.setPurchaseNotes}
+        getPaymentMethodLabel={logic.getPaymentMethodLabel}
+        getCurrencyLabel={logic.getCurrencyLabel}
+        onConfirm={onConfirmWizard}
+        onLeavePending={onLeavePendingWizard}
+        loading={logic.loading}
+        error={error}
       />
-
-      {showInstantPayment && createdOrderData && (
-        <InstantPaymentDialog
-          open={showInstantPayment}
-          onConfirmPayment={handleInstantPaymentConfirm}
-          onLeavePending={handleLeavePurchasePending}
-          orderId={createdOrderData.id}
-          totalAmount={createdOrderData.totalAmount}
-          currencyCode={createdOrderData.currencyCode}
-          paymentMethodId={createdOrderData.paymentMethodId}
-          paymentMethodLabel={createdOrderData.paymentMethodLabel}
-          paymentMethods={paymentMethods}
-        />
-      )}
 
       <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
     </div>

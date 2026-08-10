@@ -35,11 +35,19 @@ export interface CheckoutShortcutHandlers {
  * Registra los atajos del wizard mientras `active` sea true.
  * Devuelve la representación legible del atajo principal (p.ej. "Ctrl + G")
  * para mostrarla en los labels de los botones.
+ *
+ * `shortcutId` selecciona el atajo configurable del store global:
+ * 'sales.processSale' (default) para ventas, 'purchases.processPurchase'
+ * para compras.
  */
-export function useCheckoutShortcuts(active: boolean, handlers: CheckoutShortcutHandlers) {
+export function useCheckoutShortcuts(
+  active: boolean,
+  handlers: CheckoutShortcutHandlers,
+  shortcutId: string = 'sales.processSale',
+) {
   const matchesShortcut = useKeyboardShortcutsStore((s) => s.matchesShortcut)
   const formatShortcut = useKeyboardShortcutsStore((s) => s.formatShortcut)
-  const primaryLabel = formatShortcut('sales.processSale')
+  const primaryLabel = formatShortcut(shortcutId)
 
   useEffect(() => {
     if (!active) return
@@ -53,7 +61,7 @@ export function useCheckoutShortcuts(active: boolean, handlers: CheckoutShortcut
           target.isContentEditable)
 
       // Atajo principal configurable (Ctrl+G por defecto).
-      if (matchesShortcut('sales.processSale', e)) {
+      if (matchesShortcut(shortcutId, e)) {
         e.preventDefault()
         if (handlers.enabled !== false) handlers.onPrimary()
         return
@@ -101,7 +109,7 @@ export function useCheckoutShortcuts(active: boolean, handlers: CheckoutShortcut
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [active, handlers, matchesShortcut])
+  }, [active, handlers, matchesShortcut, shortcutId])
 
   return primaryLabel
 }
