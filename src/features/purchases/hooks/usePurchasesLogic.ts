@@ -18,6 +18,43 @@ import { calculatePurchaseSalePriceGs, calculateProfitMargin } from '@/domain/pu
 import { PurchaseWithFullDetails } from '@/types'
 import { useBranch } from '@/contexts/BranchContext'
 
+/**
+ * Resuelve el id del usuario operador de forma robusta: primero el store
+ * (login fresco) y como fallback el claim `user_id` del JWT persistido
+ * (cubre recargas, donde useAuthStore.user queda sin id).
+ */
+const getCurrentUserId = (): string | undefined => {
+  const storeUser = useAuthStore.getState().user as any
+  if (storeUser?.id) return String(storeUser.id)
+  if (storeUser?.user_id) return String(storeUser.user_id)
+  try {
+    const token = localStorage.getItem('authToken')
+    if (!token) return undefined
+    const part = token.split('.')[1]
+    if (!part) return undefined
+    const padded = part + '='.repeat((4 - (part.length % 4)) % 4)
+    const payload = JSON.parse(atob(padded.replace(/-/g, '+').replace(/_/g, '/')))
+    return payload.user_id
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Resultado de handleSavePurchase: devuelve los datos de la orden creada para
+ * que el wizard de compras encadene el pago sin leer estado post-await
+ * (evita stale closures).
+ */
+export interface SavePurchaseResult {
+  success: boolean
+  id?: string
+  totalAmount?: number
+  currencyCode?: string
+  paymentMethodId?: number | null
+  paymentMethodLabel?: string | null
+  error?: string
+}
+
 export const usePurchasesLogic = () => {
   const navigate = useNavigate()
   const { t } = useI18n()
@@ -719,8 +756,8 @@ export const usePurchasesLogic = () => {
     setModalPriceIncludesTax(true)
   }
 
-  const handleSavePurchase = async () => {
-    if (!selectedSupplier || purchaseItems.length === 0) return
+  const handleSavePurchase = async (): Promise<SavePurchaseResult> => {
+    if (!selectedSupplier || purchaseItems.length === 0) return { success: false }
     setLoading(true)
     try {
       // Resolver moneda seleccionada para enviar ID
@@ -730,6 +767,8 @@ export const usePurchasesLogic = () => {
         supplier_id: selectedSupplier.id,
         status: 'COMPLETED',
         branch_id: currentBranchId || undefined, // Contexto Multi-sucursal (v1.0)
+        // El backend (ProcessCompleteRequest) valida user_id en la raíz.
+        user_id: getCurrentUserId(),
         payment_method_id: paymentMethod ? Number(paymentMethod) : undefined,
         currency_id: selectedCurrency?.id || undefined,
         order_details: purchaseItems.map(i => ({
@@ -757,7 +796,7 @@ export const usePurchasesLogic = () => {
       }
       const result =
         await purchaseService.createEnhancedPurchaseOrder(orderData)
-      if (result.success) {
+      if (result.success && result.purchase_order_id) {
         let dbDetails: any[] = []
         let dbPurchase: any = null
         try {
@@ -772,12 +811,16 @@ export const usePurchasesLogic = () => {
 
         setPurchaseItems([])
         setPurchaseNotes('')
+        // Limpieza de proveedor: deja la UI pristina para registrar otra compra
+        // sin arrastrar el proveedor de la orden recién confirmada.
+        setSelectedSupplier(null)
+        setSupplierSearch('')
 
         const selectedPaymentMethod = paymentMethods.find(
           method => String(method.id) === String(paymentMethod),
         )
 
-        setCreatedOrderData({
+        const orderDataPayload = {
           id: result.purchase_order_id,
           totalAmount: result.total_amount || dbPurchase?.total_amount || purchaseItems.reduce(
             (s, i) => s + i.quantity * i.unit_price,
@@ -788,7 +831,9 @@ export const usePurchasesLogic = () => {
           paymentMethodLabel: selectedPaymentMethod
             ? getPaymentMethodLabel(selectedPaymentMethod)
             : null,
-        })
+        }
+
+        setCreatedOrderData(orderDataPayload)
 
         setLatestPurchaseResult({
           id: result.purchase_order_id,
@@ -798,8 +843,13 @@ export const usePurchasesLogic = () => {
           details: dbDetails
         })
 
-        setShowConfirmationModal(true)
+        // No abrimos PurchaseConfirmationModal aquí: el PurchaseCheckoutWizard
+        // orquesta la creación + pago en su paso final, y disparar el modal
+        // legacy (con su acción de pago) generaba un segundo modal redundante y
+        // estado residual (showConfirmationModal pegado) entre compras. La
+        // decisión de qué mostrar post-creación la toma el llamador.
         fetchDashboardData()
+        return { success: true, ...orderDataPayload }
       } else {
         // Manejar errores de validación (API v2.7) y NO_CONVERSION
         const errMsg = result.message || result.error || 'Error al guardar la compra';
@@ -812,10 +862,12 @@ export const usePurchasesLogic = () => {
         } else {
           toast.error(errMsg)
         }
+        return { success: false, error: errMsg }
       }
     } catch (err) {
       console.error('Error in handleSavePurchase:', err)
       toast.error('Error inesperado al procesar la compra')
+      return { success: false, error: 'Error inesperado al procesar la compra' }
     } finally {
       setLoading(false)
     }
@@ -1006,9 +1058,17 @@ export const usePurchasesLogic = () => {
       // El estado de la orden es gestionado por el backend tras el registro del pago.
 
       toast.success('Pago registrado correctamente')
+      // Reset defensivo del estado de checkout: el PurchaseCheckoutWizard ya
+      // orquestó crear+pago, así que limpiamos cualquier bandera residual para
+      // que la próxima compra arranque pristina (sin modales latentes) y nos
+      // quedamos en 'nueva-compra' para permitir registrar otra orden de inmediato.
       setShowInstantPayment(false)
-      setActiveTab('historial')
-      await handleFilter()
+      setShowConfirmationModal(false)
+      setLatestPurchaseResult(null)
+      setCreatedOrderData(null)
+      // Refrescamos el historial en background (datos frescos al cambiar de tab),
+      // sin forzar la navegación fuera de Nueva Orden.
+      handleFilter()
     } catch (paymentError) {
       const message = (paymentError as any)?.message || 'No se pudo registrar el pago'
       setError(message)

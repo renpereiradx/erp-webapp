@@ -11,7 +11,6 @@ export type PurchaseConfirmationModalProps = Pick<
   | 'paymentCurrency'
   | 'setActiveTab'
   | 'handleFilter'
-  | 'setShowInstantPayment'
 >;
 
 export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps> = ({
@@ -21,20 +20,21 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
   paymentCurrency,
   setActiveTab,
   handleFilter,
-  setShowInstantPayment,
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!showConfirmationModal || !latestPurchaseResult) return;
-      if (e.key === 'Enter' || e.key === 'F12') {
+      // Esc = cerrar resumen. (Antes Enter/F12 disparaban el pago legacy, pero
+      // el PurchaseCheckoutWizard ya integra crear+pago, así que esa acción era
+      // muerta y confusa: quedaba solo como resumen post-compra.)
+      if (e.key === 'Escape') {
         e.preventDefault();
         setShowConfirmationModal(false);
-        setShowInstantPayment(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showConfirmationModal, latestPurchaseResult, setShowConfirmationModal, setShowInstantPayment]);
+  }, [showConfirmationModal, latestPurchaseResult, setShowConfirmationModal]);
 
   if (!showConfirmationModal || !latestPurchaseResult) return null;
 
@@ -133,12 +133,9 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
           </button>
           <button
             className='flex-1 py-2.5 bg-primary hover:bg-primary/90 text-white font-semibold rounded-md shadow-whisper active:scale-[0.98] transition-all text-sm'
-            onClick={() => {
-              setShowConfirmationModal(false)
-              setShowInstantPayment(true)
-            }}
+            onClick={() => setShowConfirmationModal(false)}
           >
-            Registrar Pago (Enter / F12)
+            Cerrar
           </button>
         </div>
       </div>

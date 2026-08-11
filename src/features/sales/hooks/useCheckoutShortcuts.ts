@@ -11,6 +11,14 @@
  *      decide el paso vía `onFocusClient`).
  * Esc → volver (si hay paso previo) o cerrar el wizard (si es el primero).
  * Flechas ↑↓ → delegadas al paso (onArrowUp/Down) para navegar listados.
+ *
+ * Enter → acción principal cuando el foco está en un <input> de una sola línea
+ *         (ej. monto a pagar en CollectionStep). Se excluyen <textarea> (notas,
+ *         multiline), <select> y contentEditable para no romper la edición.
+ *
+ * Cualquier tecla ya consumida por un paso (e.preventDefault()) se respeta: el
+ * wizard no reacciona, para que los pasos puedan capturar atajos propios (p.ej.
+ * seleccionar un ítem de un dropdown con Enter) sin doble disparo.
  */
 import { useEffect } from 'react'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
@@ -52,6 +60,10 @@ export function useCheckoutShortcuts(
   useEffect(() => {
     if (!active) return
     const onKeyDown = (e: KeyboardEvent) => {
+      // Un paso ya consumió la tecla (preventDefault): respetarlo para evitar
+      // doble acción (ej. Enter seleccionando un ítem de dropdown del SupplierStep).
+      if (e.defaultPrevented) return
+
       const target = e.target as HTMLElement | null
       const isTyping =
         target &&
@@ -69,6 +81,15 @@ export function useCheckoutShortcuts(
 
       // Alias de compatibilidad: F12 = acción principal.
       if (e.key === 'F12') {
+        e.preventDefault()
+        if (handlers.enabled !== false) handlers.onPrimary()
+        return
+      }
+
+      // Enter = acción principal cuando el foco está en un <input> de una sola
+      // línea (ej. monto a pagar). Excluye textarea (notas), select y
+      // contentEditable para no interferir con la edición normal.
+      if (e.key === 'Enter' && target?.tagName === 'INPUT') {
         e.preventDefault()
         if (handlers.enabled !== false) handlers.onPrimary()
         return

@@ -6,7 +6,7 @@
  * en compras el monto es lo que se le paga al proveedor.
  */
 import { forwardRef, useImperativeHandle, useEffect, useRef, useState } from 'react'
-import { Calculator } from 'lucide-react'
+import { Calculator, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cashRegisterService } from '@/services/cashRegisterService'
@@ -40,6 +40,7 @@ export const PurchaseCollectionStep = forwardRef<
   const [cashRegisters, setCashRegisters] = useState<any[]>([])
   const [cashRegisterId, setCashRegisterId] = useState<string | number | null>(null)
   const [isLoadingRegisters, setIsLoadingRegisters] = useState(false)
+  const [registersFailed, setRegistersFailed] = useState(false)
   const [amountPaid, setAmountPaid] = useState<string>(String(totalAmount || ''))
   const [notes, setNotes] = useState('')
   const [showNotes, setShowNotes] = useState(false)
@@ -51,14 +52,33 @@ export const PurchaseCollectionStep = forwardRef<
     },
   }))
 
+  // Atajo F4 = monto exacto (mismo efecto que el botón "Exacto"). El listener
+  // solo vive mientras este paso está montado, así que no interfiere con otros.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented) return
+      if (e.key === 'F4') {
+        e.preventDefault()
+        setAmountPaid(String(totalAmount))
+        amountRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [totalAmount])
+
   // Carga cajas abiertas + caja activa.
   useEffect(() => {
     let cancelled = false
     const load = async () => {
       setIsLoadingRegisters(true)
+      setRegistersFailed(false)
       try {
         const [allRegisters, activeRegister] = await Promise.all([
-          cashRegisterService.getCashRegisters().catch(() => []),
+          cashRegisterService.getCashRegisters().catch(() => {
+            if (!cancelled) setRegistersFailed(true)
+            return []
+          }),
           cashRegisterService.getActiveCashRegister().catch(() => null),
         ])
         if (cancelled) return
@@ -122,6 +142,12 @@ export const PurchaseCollectionStep = forwardRef<
             </option>
           ))}
         </select>
+        {registersFailed && !isLoadingRegisters && (
+          <p className="mt-1.5 text-xs text-error flex items-center gap-1.5">
+            <AlertCircle size={12} className="shrink-0" />
+            {t('purchases.checkoutWizard.collection.registersError', 'No se pudieron cargar las cajas. Verificá tu sesión e intentá de nuevo.')}
+          </p>
+        )}
       </div>
 
       {/* Monto a pagar */}

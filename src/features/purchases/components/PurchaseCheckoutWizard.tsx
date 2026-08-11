@@ -211,6 +211,29 @@ export const PurchaseCheckoutWizard = ({
     'purchases.processPurchase',
   )
 
+  // Atajos visibles en el footer (discoverability). Variables según el paso.
+  const hints = useMemo<Array<{ kbd: string; label: string }>>(() => {
+    const base: Array<{ kbd: string; label: string }> = [
+      {
+        kbd: primaryLabel,
+        label: isLastStep
+          ? t('purchases.checkoutWizard.hints.confirm', 'Confirmar')
+          : t('purchases.checkoutWizard.hints.next', 'Avanzar'),
+      },
+      { kbd: t('purchases.checkoutWizard.hints.enterKey', 'Enter'), label: t('purchases.checkoutWizard.hints.advance', 'Avanzar') },
+      { kbd: 'Esc', label: t('purchases.checkoutWizard.hints.back', 'Volver') },
+      { kbd: 'F2', label: t('purchases.checkoutWizard.hints.focus', 'Foco') },
+    ]
+    if (currentStep === 'supplier') {
+      base.push({ kbd: 'F3', label: t('purchases.checkoutWizard.hints.searchSupplier', 'Buscar proveedor') })
+      base.push({ kbd: '↑↓', label: t('purchases.checkoutWizard.hints.navigate', 'Navegar') })
+    }
+    if (currentStep === 'collection') {
+      base.push({ kbd: 'F4', label: t('purchases.checkoutWizard.hints.exactAmount', 'Monto exacto') })
+    }
+    return base
+  }, [primaryLabel, isLastStep, currentStep, t])
+
   const totalAmount =
     purchaseTotals.total ?? purchaseTotals.subtotal + (purchaseTotals.iva10 || 0) + (purchaseTotals.iva5 || 0)
   const itemCount = purchaseItems.reduce((s, i) => s + (Number(i.quantity) || 0), 0)
@@ -231,7 +254,7 @@ export const PurchaseCheckoutWizard = ({
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-5xl bg-surface-container-lowest shadow-fluent-16 rounded-md flex flex-col md:flex-row overflow-hidden max-h-[92vh] animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-5xl bg-surface-container-lowest shadow-fluent-16 rounded-md flex flex-col md:flex-row overflow-hidden min-h-[70vh] max-h-[92vh] animate-in zoom-in-95 duration-200">
         {/* ─── Panel izquierdo: Stepper ─────────────────────────────── */}
         <div className="flex-1 flex flex-col bg-surface-container-low min-h-0">
           {/* Header con indicador de pasos */}
@@ -331,39 +354,52 @@ export const PurchaseCheckoutWizard = ({
           </div>
 
           {/* Footer con acciones */}
-          <div className="px-6 py-4 border-t border-surface-variant bg-surface-container-low flex items-center gap-2">
-            <Button
-              variant="ghost"
-              onClick={handleBack}
-              disabled={loading}
-              className="h-12 px-4 text-on-surface-variant hover:bg-surface-container"
-            >
-              <ChevronLeft size={16} className="mr-1" />
-              {t('purchases.checkoutWizard.action.back', 'Volver')}
-            </Button>
-            <div className="flex-1" />
-            {isLastStep && (
-              <Button variant="outline" onClick={onLeavePending} disabled={loading} className="h-12 px-4">
-                {t('purchases.checkoutWizard.action.leavePending', 'Solo guardar orden')}
+          <div className="px-6 py-4 border-t border-surface-variant bg-surface-container-low space-y-3">
+            {/* Hints de teclado */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-on-surface-variant">
+              {hints.map((h, i) => (
+                <span key={i} className="inline-flex items-center gap-1">
+                  <kbd className="font-data-mono px-1.5 py-0.5 rounded border border-outline-variant bg-surface-container-lowest text-on-surface text-[10px] font-semibold leading-none">
+                    {h.kbd}
+                  </kbd>
+                  <span>{h.label}</span>
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={handleBack}
+                disabled={loading}
+                className="h-12 px-4 text-on-surface-variant hover:bg-surface-container"
+              >
+                <ChevronLeft size={16} className="mr-1" />
+                {t('purchases.checkoutWizard.action.back', 'Volver')}
               </Button>
-            )}
-            <Button
-              onClick={handlePrimary}
-              disabled={loading || !isStepValid()}
-              className="h-12 px-6 bg-primary text-on-primary hover:bg-primary/90 shadow-sm"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('purchases.checkoutWizard.action.processing', 'Procesando...')}
-                </>
-              ) : (
-                <>
-                  {primaryActionLabel}
-                  <span className="ml-2 text-xs opacity-80 font-data-mono">({primaryLabel})</span>
-                </>
+              <div className="flex-1" />
+              {isLastStep && (
+                <Button variant="outline" onClick={onLeavePending} disabled={loading} className="h-12 px-4">
+                  {t('purchases.checkoutWizard.action.leavePending', 'Solo guardar orden')}
+                </Button>
               )}
-            </Button>
+              <Button
+                onClick={handlePrimary}
+                disabled={loading || !isStepValid()}
+                className="h-12 px-6 bg-primary text-on-primary hover:bg-primary/90 shadow-sm"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('purchases.checkoutWizard.action.processing', 'Procesando...')}
+                  </>
+                ) : (
+                  <>
+                    {primaryActionLabel}
+                    <span className="ml-2 text-xs opacity-80 font-data-mono">({primaryLabel})</span>
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
 
