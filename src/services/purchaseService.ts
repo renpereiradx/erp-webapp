@@ -47,6 +47,17 @@ export const purchaseService = {
     try {
       const response = await apiClient.createCompletePurchase(orderData)
 
+      // El backend responde { success: false, purchase_order_id: 0, message,
+      // error_code } para fallos de validación — NO convertirlos en éxito.
+      if (response && typeof response === 'object' && response.success === false) {
+        const errorMsg =
+          response.message ||
+          response.error?.message ||
+          response.error ||
+          'Error al crear orden de compra'
+        return { success: false, error: errorMsg, message: errorMsg }
+      }
+
       // Manejar diferentes formatos de respuesta del servidor
       let responseData, purchaseOrderId, message, warnings
 
@@ -63,8 +74,17 @@ export const purchaseService = {
       } else {
         responseData = response
         purchaseOrderId = null
-        message = 'Orden de compra creada exitosamente'
+        message = response?.message || 'Orden de compra creada exitosamente'
         warnings = []
+      }
+
+      // Sin ID de orden creada no hay éxito posible (p.ej. id 0 o ausente).
+      if (!purchaseOrderId) {
+        return {
+          success: false,
+          error: message || 'No se pudo crear la orden de compra',
+          message,
+        }
       }
 
       telemetryService.recordEvent('enhanced_purchase_order_created', {
