@@ -33,11 +33,18 @@ const useAuthStore = create()(
           const response = await authService.login(credentials);
           if (response && response.token) {
             apiService.setToken(response.token);
-            set({ 
-              isAuthenticated: true, 
-              user: response.user || { role_id: response.role_id }, 
-              token: response.token, 
-              loading: false 
+            set({
+              isAuthenticated: true,
+              // El login no devuelve `user` anidado: construir el user con el
+              // user_id/role_id del response para que user?.id funcione.
+              user: response.user || {
+                id: response.user_id,
+                user_id: response.user_id,
+                role_id: response.role_id,
+                role_name: response.role_name,
+              },
+              token: response.token,
+              loading: false
             });
           } else {
             throw new Error(response.message || 'Respuesta de login inválida');
