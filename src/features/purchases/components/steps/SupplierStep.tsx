@@ -129,10 +129,10 @@ export const SupplierStep = forwardRef<SupplierStepRef, SupplierStepProps>(
                   {getSupplierName(selectedSupplier)}
                 </p>
                 {selectedSupplier.tax_id && (
-                  <p className="text-sm font-medium text-on-surface-variant flex items-center gap-1.5">
+                  <div className="text-sm font-medium text-on-surface-variant flex items-center gap-1.5">
                     <Badge variant="outline" className="text-[10px]">RUC</Badge>
                     {selectedSupplier.tax_id}
-                  </p>
+                  </div>
                 )}
               </div>
               <Button

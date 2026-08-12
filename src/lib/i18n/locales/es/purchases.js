@@ -235,6 +235,7 @@ export const purchases = {
   'purchases.checkoutWizard.collection.cashRegister': 'Caja de pago',
   'purchases.checkoutWizard.collection.noCashRegister': 'Sin caja asignada',
   'purchases.checkoutWizard.collection.loadingRegisters': 'Cargando cajas...',
+  'purchases.checkoutWizard.collection.registersError': 'No se pudieron cargar las cajas. Verificá tu sesión e intentá de nuevo.',
   'purchases.checkoutWizard.collection.amountPaid': 'Monto a pagar',
   'purchases.checkoutWizard.collection.exact': 'Exacto',
   'purchases.checkoutWizard.collection.notes': 'Notas del pago (opcional)',
