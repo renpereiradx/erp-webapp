@@ -53,6 +53,7 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
       'F2VLso': 'Administrador',
       'VENDEDOR': 'Vendedor',
       'GESTOR': 'Gestor',
+      'ENCR01': 'Encargado',
       // Add more common mappings if needed
     };
 

@@ -4,6 +4,7 @@ import { DEMO_CONFIG } from '../config/demoAuth';
 // 🧪 Datos de roles para modo demo
 const DEMO_ROLES = [
     { id: 'F2VLso', name: 'Administrador', description: 'Acceso total al sistema' },
+    { id: 'ENCR01', name: 'Encargado', description: 'Supervisión de operaciones, inventario y reportes' },
     { id: 'manager', name: 'Gerente', description: 'Gestión de operaciones y reportes' },
     { id: 'user', name: 'Usuario', description: 'Acceso limitado a funciones básicas' }
 ];
