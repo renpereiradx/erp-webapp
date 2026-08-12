@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { AlertCircle, History, Plus, ShoppingCart } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import ToastContainer from '@/components/ui/ToastContainer'
@@ -46,37 +46,36 @@ const Purchases = () => {
 
   // onConfirmWizard: crea la orden de compra y luego procesa el pago.
   // Flujo de 2 llamadas (create → pay); si el pago falla, la orden queda creada.
-  const onConfirmWizard = useCallback(
-    async (collection: PurchaseCollectionData) => {
-      // 1. Crear la orden de compra.
-      await logic.handleSavePurchase()
-      // Si la creación falló, handleSavePurchase ya mostró el toast y no populó
-      // createdOrderData; abortamos el pago.
-      if (!logic.createdOrderData?.id) return
-      // 2. Procesar el pago al proveedor.
+  // Sin useCallback: handleSavePurchase devuelve el resultado creado, así no se
+  // depende de leer estado post-await (evita stale closures del primer render).
+  const onConfirmWizard = async (collection: PurchaseCollectionData) => {
+    // 1. Crear la orden de compra.
+    const saved = await logic.handleSavePurchase()
+    // Si la creación falló, handleSavePurchase ya mostró el toast; abortamos.
+    if (!saved?.success || !saved?.id) return
+    // 2. Procesar el pago al proveedor.
+    try {
       await logic.handleInstantPaymentConfirm({
-        orderId: logic.createdOrderData.id,
+        orderId: saved.id,
         amount: collection.amountPaid,
         paymentMethodId: logic.paymentMethod ? Number(logic.paymentMethod) : null,
         currencyCode: logic.paymentCurrency,
         notes: collection.notes,
         cash_register_id: collection.cashRegisterId,
       })
+    } finally {
       setShowCheckoutWizard(false)
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  )
+    }
+  }
 
   // onLeavePendingWizard: guarda la orden sin pagar (queda pendiente de pago).
-  const onLeavePendingWizard = useCallback(async () => {
-    await logic.handleSavePurchase()
-    if (logic.createdOrderData?.id) {
+  const onLeavePendingWizard = async () => {
+    const saved = await logic.handleSavePurchase()
+    if (saved?.success && saved?.id) {
       logic.handleLeavePurchasePending()
     }
     setShowCheckoutWizard(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }
 
   return (
     <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-display'>
