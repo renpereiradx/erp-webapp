@@ -350,29 +350,6 @@ const useProductStore = create()(
         }
       },
 
-      // Actualizar stock por Product ID
-      updateStock: async (productId, stockData) => {
-        set({ loading: true, error: null })
-
-        try {
-          productService.validateStockData(stockData)
-          const response = await productService.updateStockByProductId(
-            productId,
-            stockData,
-          )
-
-          set({ loading: false })
-          return response.data || response
-        } catch (error) {
-          console.error('Error updating stock:', error)
-          set({
-            error: error.message || 'Error al actualizar stock',
-            loading: false,
-          })
-          throw error
-        }
-      },
-
       // =================== UTILIDADES ===================
 
       // Limpiar productos

@@ -347,22 +347,6 @@ export const productService = {
     }
   },
 
-  async updateStockById(id: number, data: Partial<Stock>): Promise<{ message: string }> {
-    try {
-      return await apiClient.updateStockById(id, data);
-    } catch (error: any) {
-      throw toApiError(error, 'Error al actualizar stock por ID');
-    }
-  },
-
-  async updateStockByProductId(productId: string, data: Partial<Stock>): Promise<{ message: string }> {
-    try {
-      return await apiClient.updateStockByProductId(productId, data);
-    } catch (error: any) {
-      throw toApiError(error, 'Error al actualizar stock por producto');
-    }
-  },
-
   // =================== CATEGORÍAS ===================
 
   async getCategories(): Promise<Category[]> {

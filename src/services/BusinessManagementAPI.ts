@@ -402,14 +402,6 @@ class BusinessManagementAPI {
     return this.get(`/stock/product/${productId}`, options)
   }
 
-  async updateStockById(id: string | number, data: any, options: RequestOptions = {}): Promise<any> {
-    return this.put(`/stock/${id}`, data, options)
-  }
-
-  async updateStockByProductId(productId: string, data: any, options: RequestOptions = {}): Promise<any> {
-    return this.put(`/stock/product/${productId}`, data, options)
-  }
-
   // ============================================================================
   // UNIT CONVERSIONS METHODS (v1.0.0)
   // ============================================================================

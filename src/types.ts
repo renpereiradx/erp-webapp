@@ -2047,8 +2047,6 @@ export const API_ENDPOINTS = {
   STOCK_CREATE: (productId: string) => `/stock/${productId}`,
   STOCK_BY_ID: (id: number) => `/stock/${id}`,
   STOCK_BY_PRODUCT_ID: (productId: string) => `/stock/product/${productId}`,
-  STOCK_UPDATE: (id: number) => `/stock/${id}`,
-  STOCK_UPDATE_BY_PRODUCT: (productId: string) => `/stock/product/${productId}`,
   CLIENT_CREATE: '/client/',
   CLIENT_BY_ID: (id: string) => `/client/${id}`,
   CLIENT_BY_NAME: (name: string) => `/client/name/${name}`,
