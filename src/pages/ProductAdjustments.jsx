@@ -49,7 +49,7 @@ const ProductAdjustmentsPage = () => {
         {/* Stock Adjustment Card */}
         <div
           className='bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden flex flex-col gap-4 cursor-pointer hover:shadow-fluent-8 transition-shadow group'
-          onClick={() => navigate('/ajustes-inventario')}
+          onClick={() => navigate('/movimientos-stock')}
         >
           <div className='flex items-start gap-4'>
             <div className='flex-shrink-0 size-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors'>
@@ -68,7 +68,7 @@ const ProductAdjustmentsPage = () => {
             className='px-5 py-2.5 bg-primary text-white text-xs font-black uppercase rounded shadow-sm hover:bg-primary-hover active:scale-[0.98] transition-all mt-auto'
             onClick={e => {
               e.stopPropagation()
-              navigate('/ajustes-inventario')
+              navigate('/movimientos-stock')
             }}
           >
             Gestionar Stock

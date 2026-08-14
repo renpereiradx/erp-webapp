@@ -322,7 +322,7 @@ const Dashboard = () => {
            {/* Operations Stack */}
            <div className="flex flex-col gap-6">
                {/* Inventory Valuation */}
-               <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle relative overflow-hidden group cursor-pointer hover:shadow-fluent-8 transition-all" onClick={() => navigate('/ajuste-inventario-masivo')}>
+               <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle relative overflow-hidden group cursor-pointer hover:shadow-fluent-8 transition-all" onClick={() => navigate('/movimientos-stock')}>
                     <div className="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
                     <div className="space-y-4">
                         <div className="flex items-center gap-3">

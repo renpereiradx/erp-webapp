@@ -9,8 +9,7 @@ import { categories } from './categories'
 import { purchases } from './purchases'
 import { priceAdjustments } from './priceAdjustments'
 import { productAdjustments } from './productAdjustments'
-import { inventoryAdjustments } from './inventoryAdjustments'
-import { inventoryManagement } from './inventoryManagement'
+import { stockMovements } from './stockMovements'
 import { purchasePaymentsMvp } from './purchasePaymentsMvp'
 import { clients } from './clients'
 import { suppliers } from './suppliers'
@@ -38,8 +37,7 @@ export const es = {
   ...purchases,
   ...priceAdjustments,
   ...productAdjustments,
-  ...inventoryAdjustments,
-  ...inventoryManagement,
+  ...stockMovements,
   ...purchasePaymentsMvp,
   ...clients,
   ...suppliers,

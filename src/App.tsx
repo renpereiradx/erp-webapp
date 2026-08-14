@@ -36,9 +36,7 @@ import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
 import PriceAdjustmentHistoryDetail from '@/pages/PriceAdjustmentHistoryDetail'
 import ProductAdjustments from '@/pages/ProductAdjustments'
 import BookingUnifiedDashboard from '@/pages/BookingUnifiedDashboard'
-import InventoryAdjustments from '@/pages/InventoryAdjustments'
-import InventoryAdjustmentManual from '@/pages/InventoryAdjustmentManual'
-import InventoryManagement from '@/pages/InventoryManagement'
+import { StockMovementsPage } from '@/features/stock-movements/components/StockMovementsPage'
 // ISOLATED IMPORTS - Pages temporarily disabled for refactoring
 // import BookingSales from '@/pages/BookingSales';
 import Purchases from '@/pages/Purchases'
@@ -318,14 +316,13 @@ function AppContent() {
                         element={<ProductAdjustments />}
                       />
                       <Route
-                        path='/ajustes-inventario'
-                        element={<InventoryAdjustments />}
+                        path='/movimientos-stock'
+                        element={<StockMovementsPage />}
                       />
-                      <Route
-                        path='/ajuste-inventario-unitario'
-                        element={<InventoryAdjustmentManual />}
-                      />
-                      <Route path='/ajuste-inventario-masivo' element={<InventoryManagement />} />
+                      {/* Redirects de rutas legacy de ajuste de stock → unificación /stock-transactions/ */}
+                      <Route path='/ajustes-inventario' element={<Navigate to='/movimientos-stock' replace />} />
+                      <Route path='/ajuste-inventario-unitario' element={<Navigate to='/movimientos-stock' replace />} />
+                      <Route path='/ajuste-inventario-masivo' element={<Navigate to='/movimientos-stock' replace />} />
 
                       {/* Rutas de Requisiciones de Compra */}
                       <Route path='/logistica/requisiciones' element={<PurchaseRequisitionList />} />

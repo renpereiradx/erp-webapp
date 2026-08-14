@@ -1348,106 +1348,14 @@ export interface PriceVarianceReport {
 }
 
 // ============================================================================
-// MANUAL ADJUSTMENT TYPES
+// STOCK MOVEMENTS TYPES — reubicados
+// ============================================================================
+// Los tipos de movimientos/ajustes de stock (antes ManualAdjustment, StockTransaction,
+// StockConsistencyReport, InventoryDiscrepancyReport) viven ahora en Feature-Sliced:
+//   src/features/stock-movements/types/index.ts
+// El frontend registra stock exclusivamente vía POST /stock-transactions/ (ledger).
 // ============================================================================
 
-export interface ManualAdjustment {
-  id: number;                    // ID único del ajuste (int)
-  product_id: string;            // ID del producto ajustado (varchar(27))
-  old_quantity: number;          // Cantidad anterior (numeric(10,2))
-  new_quantity: number;          // Cantidad nueva (numeric(10,2))
-  adjustment_date: string;       // Fecha del ajuste (ISO 8601)
-  reason: string;                // Motivo del ajuste
-  metadata: object | null;      // Metadatos adicionales (JSON)
-  user_id: string;               // ID del usuario que realizó el ajuste
-}
-
-export interface ManualAdjustmentRequest {
-  product_id: string;            // ID del producto (requerido)
-  new_quantity: number;          // Nueva cantidad (requerido)
-  reason: string;                // Motivo del ajuste (requerido)
-  metadata?: object;             // Metadatos opcionales
-}
-
-export interface ProductAdjustmentHistory {
-  adjustment_id: number;         // ID del ajuste
-  adjustment_type: string;       // Tipo de ajuste
-  old_value: number;             // Valor anterior
-  new_value: number;             // Valor nuevo
-  value_change: number;          // Cambio en valor
-  user_id: string;               // ID del usuario
-  adjustment_date: string;       // Fecha del ajuste
-  reason: string;                // Motivo
-  metadata: object;              // Metadatos
-  related_transaction_id: number; // ID de transacción relacionada
-}
-
-// ============================================================================
-// STOCK TRANSACTION TYPES
-// ============================================================================
-
-export interface StockTransaction {
-  id: number;                    // ID único de la transacción (int)
-  product_id: string;            // ID del producto (varchar(27))
-  transaction_type: string;      // Tipo: "PURCHASE", "SALE", "ADJUSTMENT", "INVENTORY", etc.
-  quantity_change: number;       // Cambio en cantidad (+/-)
-  quantity_before: number;       // Cantidad antes del movimiento
-  quantity_after: number;        // Cantidad después del movimiento
-  unit_price?: number;           // Precio unitario (opcional)
-  total_value?: number;          // Valor total (opcional)
-  reference_type?: string;       // Tipo de referencia ("ADJUSTMENT", "SALE", etc.)
-  reference_id?: string;         // ID de referencia
-  user_id: string;               // ID del usuario
-  transaction_date: string;      // Fecha de la transacción (ISO 8601)
-  reason?: string;               // Motivo del movimiento
-  metadata?: object;             // Metadatos adicionales (JSON)
-}
-
-export interface StockTransactionHistory extends StockTransaction {
-  product_name: string;          // Nombre del producto (JOIN)
-  user_name: string;             // Nombre del usuario (JOIN)
-}
-
-export interface StockTransactionRequest {
-  product_id: string;            // ID del producto (requerido)
-  transaction_type: string;      // Tipo de transacción (requerido)
-  quantity_change: number;       // Cambio en cantidad (requerido)
-  unit_price?: number;           // Precio unitario (opcional)
-  reference_type?: string;       // Tipo de referencia (opcional)
-  reference_id?: string;         // ID de referencia (opcional)
-  reason?: string;               // Motivo (opcional)
-  metadata?: object;             // Metadatos (opcional)
-}
-
-// ============================================================================
-// STOCK CONSISTENCY TYPES
-// ============================================================================
-
-export interface StockConsistencyReport {
-  product_id: string;            // ID del producto
-  product_name: string;          // Nombre del producto
-  current_stock: number;         // Stock actual registrado
-  calculated_stock: number;      // Stock calculado por transacciones
-  difference: number;            // Diferencia entre actual y calculado
-  is_consistent: boolean;        // Si hay consistencia
-  total_purchases: number;       // Total de compras
-  total_sales: number;           // Total de ventas
-  total_adjustments: number;     // Total de ajustes
-  total_inventories: number;     // Total de inventarios
-  recommendation: string;        // Recomendación de acción
-}
-
-export interface InventoryDiscrepancyReport {
-  product_id: string;            // ID del producto
-  product_name: string;          // Nombre del producto
-  category_name: string;         // Nombre de la categoría
-  discrepancies_count: number;   // Número de discrepancias
-  total_variance: number;        // Varianza total
-  avg_variance: number;          // Varianza promedio
-  max_variance: number;          // Varianza máxima
-  last_inventory_date: string;   // Fecha del último inventario
-  needs_attention: boolean;      // Si necesita atención
-}
 
 export interface SystemIntegrityReport {
   integration_status: string;
@@ -2141,21 +2049,9 @@ export const API_ENDPOINTS = {
   CASH_AUDITS_RESOLVE: (id: number) => `/cash-audits/${id}/resolve`,
   
   // Payments Bootstrap (v1.1)
-  // Inventory Management
-  INVENTORY_CREATE: '/inventory/',
-  INVENTORY_BY_ID: (id: string) => `/inventory/${id}`,
-  INVENTORY_PAGINATED: (page: number, pageSize: number) => `/inventory/${page}/${pageSize}`,
-  INVENTORY_INVALIDATE: '/inventory/invalidate',
-  INVENTORY_DISCREPANCIES: '/inventory/discrepancies',
-  // Manual Adjustments
-  MANUAL_ADJUSTMENT_CREATE: '/manual-adjustment',
-  MANUAL_ADJUSTMENT_HISTORY: (productId: string) => `/manual-adjustment/history/${productId}`,
-  // Stock Transactions
-  STOCK_TRANSACTION_CREATE: '/stock-transaction',
-  STOCK_TRANSACTION_HISTORY: (productId: string) => `/stock-transaction/history/${productId}`,
-  STOCK_TRANSACTION_BY_ID: (id: number) => `/stock-transaction/${id}`,
-  STOCK_TRANSACTION_BY_DATE: '/stock-transaction/by-date',
-  STOCK_TRANSACTION_VALIDATE_CONSISTENCY: '/stock-transaction/validate-consistency',
+  // NOTE: las rutas de inventory/manual_adjustment/stock-transaction (kebab singular)
+  // eran stale y se eliminaron. El frontend usa /stock-transactions/ (snake, plural)
+  // vía src/services/stockMovementsService.ts. No agregar constants de endpoints aquí.
   // System Integrity
   SYSTEM_INTEGRITY_CHECK: '/system/integrity-check',
 

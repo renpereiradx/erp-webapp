@@ -109,20 +109,8 @@ export const distinctSearchableRoutes = [
     category: 'Inventario'
   },
   {
-    name: 'Ajustes de Inventario',
-    href: '/ajustes-inventario',
-    icon: ClipboardList,
-    category: 'Inventario'
-  },
-  {
-    name: 'Ajuste Manual Unitario',
-    href: '/ajuste-inventario-unitario',
-    icon: PackagePlus,
-    category: 'Inventario'
-  },
-  {
-    name: 'Ajuste Masivo de Inventario',
-    href: '/ajuste-inventario-masivo',
+    name: 'Movimientos de Stock',
+    href: '/movimientos-stock',
     icon: ClipboardList,
     category: 'Inventario'
   },

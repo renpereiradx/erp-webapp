@@ -467,18 +467,8 @@ const MainLayout = ({ children }) => {
                 icon: SlidersHorizontal,
               },
               {
-                name: 'Ajustes de Inventario',
-                href: '/ajustes-inventario',
-                icon: Package,
-              },
-              {
-                name: 'Ajuste Unitario',
-                href: '/ajuste-inventario-unitario',
-                icon: SlidersHorizontal,
-              },
-              {
-                name: 'Ajuste Masivo',
-                href: '/ajuste-inventario-masivo',
+                name: t('stockMovements.menu', 'Movimientos de Stock'),
+                href: '/movimientos-stock',
                 icon: List,
               },
             ],
