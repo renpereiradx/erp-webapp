@@ -210,7 +210,7 @@ export function MovementForm() {
               )}
             </div>
             <div className='flex-1 min-w-0'>
-              <p className='text-xs font-mono text-primary font-bold truncate'>{selectedProduct.id}</p>
+              <p className='text-xs font-data-mono text-primary font-bold truncate'>{selectedProduct.id}</p>
               <h3 className='text-lg font-bold text-text-main leading-tight truncate'>{selectedProduct.name}</h3>
               <p className='text-sm text-text-secondary mt-1'>
                 {t('stockMovements.form.currentStock', 'Stock Actual')}:{' '}

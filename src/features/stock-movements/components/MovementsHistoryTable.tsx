@@ -145,14 +145,14 @@ export function MovementsHistoryTable() {
                     </span>
                   </td>
                   <td
-                    className={`py-2 pr-3 text-right font-mono font-bold ${
+                    className={`py-2 pr-3 text-right font-data-mono font-bold ${
                       row.quantity_change > 0 ? 'text-success' : 'text-error'
                     }`}
                   >
                     {row.quantity_change > 0 ? '+' : ''}
                     {formatNumber(row.quantity_change)}
                   </td>
-                  <td className='py-2 pr-3 text-right font-mono'>
+                  <td className='py-2 pr-3 text-right font-data-mono'>
                     {row.balance_after !== undefined ? formatNumber(row.balance_after) : '—'}
                   </td>
                   <td className='py-2 pr-3 text-xs text-text-main max-w-[220px] truncate' title={row.reason ?? ''}>

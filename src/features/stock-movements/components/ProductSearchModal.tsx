@@ -177,7 +177,7 @@ export function ProductSearchModal({ open, onClose, onSelect }: Props) {
                   <div className='flex-1 min-w-0'>
                     <div className='flex justify-between items-start'>
                       <p
-                        className={`text-[10px] font-mono font-bold uppercase ${
+                        className={`text-[10px] font-data-mono font-bold uppercase ${
                           highlight === index ? 'text-white/80' : 'text-primary'
                         }`}
                       >

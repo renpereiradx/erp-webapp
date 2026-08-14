@@ -986,10 +986,32 @@ Ver §7.
 | Tests rojos del repo | ⚠️ pre-existentes, no relacionados (theme, sales, priceAdjustment, clients, cashRegister, products UI, `.opencode/node_modules/zod/*`); fallan también en aislamiento |
 
 ### Nota sobre los tests rojos pre-existentes
-La suite `pnpm test` muestra ~51 tests rojos en ~21 archivos **ajenos** a este cambio. Se confirmó que
+La suite `pnpm test` muestra ~49 tests rojos en ~17 archivos **ajenos** a este cambio. Se confirmó que
 fallan también corriendo cada uno en aislamiento (ej. `theme.system`, `saleService.dateRange`,
-`priceAdjustment.store`), por lo que **no son regresiones introducidas aquí**. Además vitest escanea
-`.opencode/node_modules/zod/*` (config pre-existente) y hay un "Worker exited unexpectedly" (inestabilidad
-de jsdom bajo carga) que produce cascadas. Escalar por separado al equipo de tooling/frontend.
+`priceAdjustment.store`; los de `products/__tests__` importan componentes que ya no existen:
+`ProductCard`, `ProductGrid`), por lo que **no son regresiones introducidas aquí**. Escalar por
+separado al equipo de frontend.
+
+### Fix de vitest (post-commit 2d07e8b)
+1. **Escaneo de `node_modules` anidados — RESUELTO.** El `exclude` usaba `node_modules/**`
+   (sólo raíz) en vez del default `**/node_modules/**`, por lo que vitest corría los tests propios
+   de `.opencode/node_modules/zod` (~145 archivos, ~1.400 tests). Ahora parte de
+   `configDefaults.exclude` + `.opencode/` + `.zcode/`. Efecto: 189 → 44 archivos; setup 34.8s →
+   8.2s; environment 91.8s → 20.4s.
+2. **"Worker exited unexpectedly" — CAUSA RAÍZ IDENTIFICADA (pre-existente, NO resuelta).**
+   Es un OOM del heap V8 en un fork: `FATAL ERROR: Reached heap limit`. Evidencia:
+   - Crece a ~8GB de memoria **viva** ("Ineffective mark-compacts near heap limit", mu≈0.05).
+   - Ocurre con pools `forks`/`threads`, secuencial, con heap 8GB y con GC forzado entre archivos.
+   - No reproduce por archivo en aislamiento; la zona del crash es el cluster de tests de páginas
+     de products (última actividad: `accessibility.live-region.test.jsx` con churn de
+     `AbortError`/`fetchCategories` de `useProductStore`) → sospecha de bucle de render/refetch
+     runaway bajo cierta temporización.
+   - Confirmado pre-existente: reproduce en el estado committed `2d07e8b` sin mis cambios.
+   - `vmThreads` no es opción (recursión del runner de vitest 2.1.9).
+   **Mitigaciones aplicadas** (reducen probabilidad, no eliminan): pool `forks` explícito,
+   `maxForks: 8`, `--max-old-space-size=8192 --expose-gc`, y GC forzado en `vitest.setup.ts`
+   (corre una vez por archivo).
+   **Fix proper (deuda):** arreglar el runaway en los tests/páginas de products, o subir a
+   vitest 3.x y usar `poolOptions.forks.memoryLimit` (recicla el fork entre archivos).
 
 ```

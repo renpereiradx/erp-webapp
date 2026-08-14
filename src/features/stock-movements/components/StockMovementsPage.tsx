@@ -39,7 +39,7 @@ export function StockMovementsPage() {
   ];
 
   return (
-    <div className='p-4 md:p-6 max-w-[1600px] mx-auto animate-in fade-in duration-200'>
+    <div className='p-4 md:p-6 max-w-[1280px] mx-auto w-full animate-in fade-in duration-200'>
       {/* Header */}
       <header className='flex items-center gap-4 mb-6'>
         <button

@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { fileURLToPath, URL } from 'node:url'
+import { configDefaults } from 'vitest/config'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -103,11 +104,32 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
-    // Exclude Playwright E2E tests so vitest does not attempt to execute them
-    // also exclude node_modules and build outputs to avoid running dependency tests
-    exclude: ['node_modules/**', 'dist/**', 'tests/e2e/**', '**/e2e/**', '**/*.e2e.*'],
+    // Exclude Playwright E2E tests so vitest does not attempt to execute them.
+    // Start from vitest defaults (configDefaults.exclude already covers **/node_modules/**
+    // for NESTED node_modules like .opencode/node_modules, plus dist and config files)
+    // and add tooling dirs that must never be scanned.
+    exclude: [
+      ...configDefaults.exclude,
+      'tests/e2e/**',
+      '**/e2e/**',
+      '**/*.e2e.*',
+      '**/.opencode/**',
+      '**/.zcode/**',
+    ],
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-    }
+    },
+    // Worker stability: one fork accumulates several jsdom environments per run and
+    // the default V8 heap (~4GB) OOMs ("Worker exited unexpectedly" / tinypool crash).
+    // Raise per-fork heap, cap parallelism so each fork handles fewer files, and expose
+    // GC so vitest.setup.ts can force a collection between test files.
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        maxForks: 8,
+        minForks: 1,
+        execArgv: ['--max-old-space-size=8192', '--expose-gc'],
+      },
+    },
   }
 })

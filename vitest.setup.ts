@@ -1,5 +1,14 @@
 import '@testing-library/jest-dom';
 
+// Worker stability: force a full GC between test files (setup runs once per file).
+// Without this, one fork accumulates several jsdom environments and OOMs on long runs
+// ("Worker exited unexpectedly"). Requires --expose-gc in poolOptions.forks.execArgv.
+try {
+  (globalThis as any).gc?.();
+} catch {
+  // gc not exposed (e.g. singleFile or custom pool) — no-op
+}
+
 // MSW setup (optional per test)
 // We keep handlers per test file to avoid global intercepts unless needed.
 

@@ -36,7 +36,7 @@ import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
 import PriceAdjustmentHistoryDetail from '@/pages/PriceAdjustmentHistoryDetail'
 import ProductAdjustments from '@/pages/ProductAdjustments'
 import BookingUnifiedDashboard from '@/pages/BookingUnifiedDashboard'
-import { StockMovementsPage } from '@/features/stock-movements/components/StockMovementsPage'
+import StockMovements from '@/pages/StockMovements'
 // ISOLATED IMPORTS - Pages temporarily disabled for refactoring
 // import BookingSales from '@/pages/BookingSales';
 import Purchases from '@/pages/Purchases'
@@ -317,7 +317,7 @@ function AppContent() {
                       />
                       <Route
                         path='/movimientos-stock'
-                        element={<StockMovementsPage />}
+                        element={<StockMovements />}
                       />
                       {/* Redirects de rutas legacy de ajuste de stock → unificación /stock-transactions/ */}
                       <Route path='/ajustes-inventario' element={<Navigate to='/movimientos-stock' replace />} />

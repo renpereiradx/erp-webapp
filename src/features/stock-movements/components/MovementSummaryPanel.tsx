@@ -119,21 +119,21 @@ export function MovementSummaryPanel() {
                 summary.map((s) => (
                   <tr key={s.product_id} className='border-b border-slate-50'>
                     <td className='py-2 pr-3 text-xs'>
-                      <span className='font-mono text-primary font-bold'>{s.product_id}</span>
+                      <span className='font-data-mono text-primary font-bold'>{s.product_id}</span>
                       {s.product_name ? <span className='block text-text-secondary truncate'>{s.product_name}</span> : null}
                     </td>
-                    <td className='py-2 pr-3 text-right font-mono'>{formatNumber(s.initial_stock)}</td>
-                    <td className='py-2 pr-3 text-right font-mono text-success'>+{formatNumber(s.total_in)}</td>
-                    <td className='py-2 pr-3 text-right font-mono text-error'>-{formatNumber(s.total_out)}</td>
+                    <td className='py-2 pr-3 text-right font-data-mono'>{formatNumber(s.initial_stock)}</td>
+                    <td className='py-2 pr-3 text-right font-data-mono text-success'>+{formatNumber(s.total_in)}</td>
+                    <td className='py-2 pr-3 text-right font-data-mono text-error'>-{formatNumber(s.total_out)}</td>
                     <td
-                      className={`py-2 pr-3 text-right font-mono font-bold ${
+                      className={`py-2 pr-3 text-right font-data-mono font-bold ${
                         s.net_change >= 0 ? 'text-success' : 'text-error'
                       }`}
                     >
                       {s.net_change >= 0 ? '+' : ''}
                       {formatNumber(s.net_change)}
                     </td>
-                    <td className='py-2 text-right font-mono font-bold'>{formatNumber(s.final_stock)}</td>
+                    <td className='py-2 text-right font-data-mono font-bold'>{formatNumber(s.final_stock)}</td>
                   </tr>
                 ))
               )}
@@ -168,10 +168,10 @@ export function MovementSummaryPanel() {
               ) : (
                 consistency.map((c) => (
                   <tr key={c.product_id} className='border-b border-slate-50'>
-                    <td className='py-2 pr-3 text-xs font-mono text-primary font-bold'>{c.product_id}</td>
-                    <td className='py-2 pr-3 text-right font-mono'>{formatNumber(c.snapshot_stock)}</td>
-                    <td className='py-2 pr-3 text-right font-mono'>{formatNumber(c.ledger_stock)}</td>
-                    <td className='py-2 pr-3 text-right font-mono'>{formatNumber(c.discrepancy)}</td>
+                    <td className='py-2 pr-3 text-xs font-data-mono text-primary font-bold'>{c.product_id}</td>
+                    <td className='py-2 pr-3 text-right font-data-mono'>{formatNumber(c.snapshot_stock)}</td>
+                    <td className='py-2 pr-3 text-right font-data-mono'>{formatNumber(c.ledger_stock)}</td>
+                    <td className='py-2 pr-3 text-right font-data-mono'>{formatNumber(c.discrepancy)}</td>
                     <td className='py-2'>
                       <span
                         className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
@@ -206,7 +206,7 @@ export function MovementSummaryPanel() {
           <ul className='text-sm space-y-1'>
             {discrepancies.map((d, i) => (
               <li key={`${d.product_id ?? i}-${i}`} className='py-1 border-b border-slate-50'>
-                <span className='font-mono text-primary font-bold text-xs'>{d.product_id}</span>
+                <span className='font-data-mono text-primary font-bold text-xs'>{d.product_id}</span>
                 {d.product_name ? <span className='text-text-secondary'> — {String(d.product_name)}</span> : null}
               </li>
             ))}
