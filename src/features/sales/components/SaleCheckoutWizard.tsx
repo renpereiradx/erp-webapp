@@ -28,6 +28,7 @@ import { PendingSalesStep, PendingSalesStepRef } from './steps/PendingSalesStep'
 import { ReservationsStep, ReservationsStepRef } from './steps/ReservationsStep'
 import { PaymentStep, PaymentStepRef } from './steps/PaymentStep'
 import { CollectionStep, CollectionStepRef, CollectionData } from './steps/CollectionStep'
+import type { WalkInSpec } from './steps/WalkInReservationForm'
 import { computeCheckoutSteps, type CheckoutStepId } from '../checkoutSteps'
 
 interface SaleCheckoutWizardProps {
@@ -48,12 +49,14 @@ interface SaleCheckoutWizardProps {
   onContinueSale: (index: number) => void | Promise<void>
   onNewSale: () => void
 
-  // Reservas (paso condicional)
+  // Reservas (paso condicional) + walk-in (registro de uso sin reserva previa)
   pendingReservations: any[]
   selectedResIds: Set<number>
   onToggleReservation: (id: number) => void
   onAddReservations: () => void
   formatDateTime: (date: any) => string
+  blockedProductIds: Set<string>
+  onRegisterWalkIn: (spec: WalkInSpec) => Promise<boolean>
 
   // Pago
   paymentMethods: any[]
@@ -87,6 +90,8 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
   onToggleReservation,
   onAddReservations,
   formatDateTime,
+  blockedProductIds,
+  onRegisterWalkIn,
   paymentMethods,
   paymentMethodId,
   setPaymentMethodId,
@@ -199,7 +204,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
       case 'client':
         return !!client
       case 'pending':
-        return pendingIndex >= 0 && pendingIndex < activeSales.length
+        return true // sin selección es válido: Avanzar continúa como venta nueva
       case 'reservations':
         return true // omitir es válido
       case 'payment':
@@ -211,12 +216,26 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     }
   }
 
+  // ─── Avance por ID de paso ───────────────────────────────────────────────
+  // Los pasos condicionales pueden encoger sincrónicamente (p. ej. al aplicar
+  // una reserva el paso 'reservations' desaparece); avanzar por ID evita
+  // saltearse el paso 'payment'.
+  const goToNextStep = () => {
+    const nextStepId = steps[currentStepIdx + 1]
+    setCurrentStepIdx(() => {
+      const latest = stepsRef.current
+      const target = nextStepId ? latest.indexOf(nextStepId) : -1
+      return target >= 0 ? target : Math.min(latest.length - 1, currentStepIdx + 1)
+    })
+  }
+
   // ─── Acción principal: avanzar / confirmar ──────────────────────────────
   const handlePrimary = async () => {
     if (isProcessingSale) return
 
     // En el paso de pendientes, "continuar" ejecuta el merge antes de avanzar.
-    if (currentStep === 'pending') {
+    // Sin selección (pendingIndex = -1) se omite: la venta sigue siendo nueva.
+    if (currentStep === 'pending' && pendingIndex >= 0) {
       try {
         await onContinueSale(pendingIndex)
       } catch {
@@ -234,16 +253,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
       return
     }
 
-    // Avanzar por ID de paso, no por índice crudo: al confirmar selecciones
-    // de reservas, onAddReservations encoge `steps` sincrónicamente (un ítem
-    // con reserve_id suprime el paso 'reservations') y un incremento fijo de
-    // índice saltaría el paso 'payment'. El ID se busca en la lista vigente.
-    const nextStepId = steps[currentStepIdx + 1]
-    setCurrentStepIdx(() => {
-      const latest = stepsRef.current
-      const target = nextStepId ? latest.indexOf(nextStepId) : -1
-      return target >= 0 ? target : Math.min(latest.length - 1, currentStepIdx + 1)
-    })
+    goToNextStep()
   }
 
   const handleBack = () => {
@@ -379,6 +389,9 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                 selectedResIds={selectedResIds}
                 onToggleSelection={onToggleReservation}
                 formatDateTime={formatDateTime}
+                clientId={client?.id ?? null}
+                blockedProductIds={blockedProductIds}
+                onRegisterWalkIn={onRegisterWalkIn}
               />
             )}
             {currentStep === 'payment' && (
@@ -411,7 +424,17 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
             {/* Acción especial: nueva venta en paso de pendientes */}
             {currentStep === 'pending' && (
               <div className="mt-4">
-                <Button variant="outline" onClick={onNewSale} className="w-full h-11">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Limpia el estado de merge y avanza: la venta queda como
+                    // nueva (sin continuar la pendiente seleccionada).
+                    onNewSale()
+                    setPendingIndex(-1)
+                    goToNextStep()
+                  }}
+                  className="w-full h-11"
+                >
                   {t('sales.checkoutWizard.action.newSale', 'Nueva venta')}
                 </Button>
               </div>

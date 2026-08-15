@@ -66,14 +66,14 @@ export const PendingSalesStep = forwardRef<PendingSalesStepRef, PendingSalesStep
                 type="button"
                 data-idx={index}
                 tabIndex={isSelected ? 0 : -1}
-                onClick={() => onSelectIndex(index)}
+                onClick={() => onSelectIndex(isSelected ? -1 : index)}
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowDown') {
                     e.preventDefault()
                     onSelectIndex(Math.min(index + 1, activeSales.length - 1))
                   } else if (e.key === 'ArrowUp') {
                     e.preventDefault()
-                    onSelectIndex(Math.max(index - 1, 0))
+                    onSelectIndex(Math.max(index - 1, -1))
                   }
                 }}
                 className={cn(
@@ -99,7 +99,7 @@ export const PendingSalesStep = forwardRef<PendingSalesStepRef, PendingSalesStep
                         <History size={12} />
                         <span>{sale.sale_date ? new Date(sale.sale_date).toLocaleDateString('es-PY') : '—'}</span>
                         <span>•</span>
-                        <span>{sale.items_count ?? sale.item_count ?? '?'} ítems</span>
+                        <span>{t('sales.checkoutWizard.itemCount', '{count} ítem(s)', { count: sale.items_count ?? sale.item_count ?? 0 })}</span>
                       </div>
                     </div>
                   </div>
@@ -123,6 +123,9 @@ export const PendingSalesStep = forwardRef<PendingSalesStepRef, PendingSalesStep
           })}
         </div>
 
+        <p className="text-xs text-on-surface-variant">
+          {t('sales.checkoutWizard.pendingSales.skipHint', 'Sin selección, Avanzar continúa como venta nueva. Tocá una venta para continuarla, o tocá la seleccionada para desmarcarla.')}
+        </p>
         <p className="text-xs text-on-surface-variant">
           {t('sales.checkoutWizard.action.continueSelected', 'Continuar seleccionada')} ·{' '}
           {t('sales.checkoutWizard.action.newSale', 'Nueva venta')} (↑↓ para navegar)

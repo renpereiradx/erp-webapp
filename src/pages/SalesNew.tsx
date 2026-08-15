@@ -57,6 +57,8 @@ import { CurrencyService } from '@/services/currencyService';
 import { productService } from '@/services/productService';
 import { VariantSelectorModal } from '@/features/sales/components/VariantSelectorModal';
 import { salePaymentService } from '@/services/salePaymentService';
+import { reservationService } from '@/services/reservationService';
+import type { WalkInSpec } from '@/features/sales/components/steps/WalkInReservationForm';
 import { useI18n } from '@/lib/i18n';
 import { toApiError } from '@/utils/ApiError';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
@@ -1160,104 +1162,19 @@ const SalesNew: React.FC = () => {
           }
         }
       } else {
-        // 1. Validar unicidad de reserve_id y productId para reservas (Instrucción: permitir solo uno por producto)
-        const seenReserves = new Set<number>();
-        const seenProductVariantForReserves = new Set<string>();
-        const uniqueItems: CartItem[] = [];
-        const duplicatesRemoved: string[] = [];
-
-        for (const item of items) {
-          if (item.reserve_id) {
-            // Regla: No duplicar reserve_id exacto
-            if (seenReserves.has(item.reserve_id)) {
-              duplicatesRemoved.push(`${item.name} (Reserva Duplicada)`);
-              continue;
-            }
-            
-            // Regla: No permitir dos reservas distintas para el MISMO producto exacto
-            const productKey = `${item.productId}_${item.variantId || 'base'}`;
-            if (seenProductVariantForReserves.has(productKey)) {
-              duplicatesRemoved.push(`${item.name} (Mismo Producto)`);
-              continue;
-            }
-
-            seenReserves.add(item.reserve_id);
-            seenProductVariantForReserves.add(productKey);
-          }
-          uniqueItems.push(item);
-        }
-
-        if (duplicatesRemoved.length > 0) {
-          toast.warning(`Se filtraron ítems para cumplir con la regla de una reserva por producto: ${duplicatesRemoved.join(', ')}`);
-        }
-
-        // 2. Validar que exista maximo 1 reserve_id distinto en el carrito (Regla de negocio actual)
-        const distinctReserveIds = Array.from(seenReserves);
-        
-        if (distinctReserveIds.length > 1) {
-          toast.error('Solo se permite una reserva por venta. Remueve ítems de otras reservas.');
+        const saleData = buildNewSaleData();
+        if (!saleData) {
           setIsProcessingSale(false);
           return;
         }
 
-        // Tomar el reserve_id único si existe
-        const saleReserveId = distinctReserveIds.length === 1 ? distinctReserveIds[0] : undefined;
-
-        const payloadPriceMod = uniqueItems.some(
-          item => Math.abs((Number(item.price) || 0) - (Number(item.originalPrice) || 0)) > 0.01
-        );
-
-        const saleData = {
-          // Si el cliente aún no está elegido (se elige en ClientStep del
-          // wizard), el campo se agrega después vía handleSelectClient.
-          ...(selectedClient ? { client_id: selectedClient.id } : {}),
-          ...(saleReserveId && { reserve_id: saleReserveId }),
-          allow_price_modifications: payloadPriceMod,
-          currency_id: Number(currencyId) || 1,
-          product_details: uniqueItems.map(item => {
-            const currentPrice = Number(item.price) || 0;
-            const originalPrice = Number(item.originalPrice) || 0;
-            const hasModification = Math.abs(currentPrice - originalPrice) > 0.01;
-            const discountInputVal = Number(item.discountInput) || 0;
-
-            const detail: any = {
-              product_id: item.productId,
-              ...(item.variantId !== undefined ? { variant_id: item.variantId } : {}),
-              quantity: Number(item.quantity) || 1,
-            };
-
-            // Validar unit: no enviar "service" (no existe en DB), usar "hour" para reservas o el valor real
-            const validUnit = item.unit && item.unit !== 'service' ? item.unit : 'hour';
-            detail.unit = validUnit;
-
-            // Incluir reserve_id cuando existe (sin condicionar por unit)
-            if (item.reserve_id) {
-              detail.reserve_id = item.reserve_id;
-            }
-
-            // Si hay modificacion: sale_price = precio FINAL (sin discount_amount/discount_percent)
-            if (hasModification) {
-              detail.sale_price = currentPrice;
-              detail.price_change_reason = (item.discountReason || 'Ajuste de precio').trim();
-              
-              if (item.discountType === 'percent') {
-                detail.discount_percent = discountInputVal;
-              } else {
-                detail.discount_amount = discountInputVal;
-              }
-              detail.discount_reason = (item.discountReason || 'Ajuste de precio').trim();
-            }
-
-            return detail;
-          }),
-        };
-
         // POS checkout atómico: guardamos el payload validado y abrimos el
         // wizard de concreción. Al confirmar el cobro (onConfirmWizard), se
-        // envía venta + pago juntos en una sola transacción
-        // (POST /sale/pos-checkout): si el pago falla, la venta se revierte
-        // entera (sin venta fantasma). "Dejar pendiente" cae al path de
-        // createSale por separado (venta a crédito/asíncrono).
+        // reconstruye desde el carrito vigente (el operador puede agregar
+        // reservas dentro del wizard) y se envía venta + pago juntos en una
+        // sola transacción (POST /sale/pos-checkout): si el pago falla, la
+        // venta se revierte entera (sin venta fantasma). "Dejar pendiente"
+        // cae al path de createSale por separado (venta a crédito/asíncrono).
         setPendingSaleData(saleData);
         setShowCheckoutWizard(true);
       }
@@ -1274,6 +1191,105 @@ const SalesNew: React.FC = () => {
       setIsProcessingSale(false);
     }
   };
+
+  // Arma el payload de venta nueva desde el carrito vigente: valida unicidad
+  // de reserve_id (máx. una reserva por venta), la regla de una reserva por
+  // producto y mapea los ítems a product_details. Se usa al abrir el wizard
+  // (handleSaveSale) y AL CONFIRMAR (onConfirmWizard/onLeavePendingWizard):
+  // reconstruir al confirmar garantiza que las reservas agregadas dentro del
+  // wizard (walk-in o existentes) lleguen al backend.
+  const buildNewSaleData = useCallback((): any | null => {
+    // 1. Validar unicidad de reserve_id y productId para reservas (Instrucción: permitir solo uno por producto)
+    const seenReserves = new Set<number>();
+    const seenProductVariantForReserves = new Set<string>();
+    const uniqueItems: CartItem[] = [];
+    const duplicatesRemoved: string[] = [];
+
+    for (const item of items) {
+      if (item.reserve_id) {
+        // Regla: No duplicar reserve_id exacto
+        if (seenReserves.has(item.reserve_id)) {
+          duplicatesRemoved.push(`${item.name} (Reserva Duplicada)`);
+          continue;
+        }
+
+        // Regla: No permitir dos reservas distintas para el MISMO producto exacto
+        const productKey = `${item.productId}_${item.variantId || 'base'}`;
+        if (seenProductVariantForReserves.has(productKey)) {
+          duplicatesRemoved.push(`${item.name} (Mismo Producto)`);
+          continue;
+        }
+
+        seenReserves.add(item.reserve_id);
+        seenProductVariantForReserves.add(productKey);
+      }
+      uniqueItems.push(item);
+    }
+
+    if (duplicatesRemoved.length > 0) {
+      toast.warning(`Se filtraron ítems para cumplir con la regla de una reserva por producto: ${duplicatesRemoved.join(', ')}`);
+    }
+
+    // 2. Validar que exista maximo 1 reserve_id distinto en el carrito (Regla de negocio actual)
+    const distinctReserveIds = Array.from(seenReserves);
+
+    if (distinctReserveIds.length > 1) {
+      toast.error('Solo se permite una reserva por venta. Remueve ítems de otras reservas.');
+      return null;
+    }
+
+    // Tomar el reserve_id único si existe
+    const saleReserveId = distinctReserveIds.length === 1 ? distinctReserveIds[0] : undefined;
+
+    const payloadPriceMod = uniqueItems.some(
+      item => Math.abs((Number(item.price) || 0) - (Number(item.originalPrice) || 0)) > 0.01
+    );
+
+    return {
+      // El cliente puede haberse elegido en ClientStep del wizard (después
+      // de abrirlo); se lee del estado vigente.
+      ...(selectedClient ? { client_id: selectedClient.id } : {}),
+      ...(saleReserveId && { reserve_id: saleReserveId }),
+      allow_price_modifications: payloadPriceMod,
+      currency_id: Number(currencyId) || 1,
+      product_details: uniqueItems.map(item => {
+        const currentPrice = Number(item.price) || 0;
+        const originalPrice = Number(item.originalPrice) || 0;
+        const hasModification = Math.abs(currentPrice - originalPrice) > 0.01;
+        const discountInputVal = Number(item.discountInput) || 0;
+
+        const detail: any = {
+          product_id: item.productId,
+          ...(item.variantId !== undefined ? { variant_id: item.variantId } : {}),
+          quantity: Number(item.quantity) || 1,
+        };
+
+        // Validar unit: no enviar "service" (no existe en DB), usar "hour" para reservas o el valor real
+        const validUnit = item.unit && item.unit !== 'service' ? item.unit : 'hour';
+        detail.unit = validUnit;
+
+        // Incluir reserve_id cuando existe (sin condicionar por unit)
+        if (item.reserve_id) {
+          detail.reserve_id = item.reserve_id;
+        }
+
+        // Si hay modificacion: sale_price = precio FINAL (sin discount_amount/discount_percent)
+        if (hasModification) {
+          detail.sale_price = currentPrice;
+          detail.price_change_reason = (item.discountReason || 'Ajuste de precio').trim();
+
+          if (item.discountType === 'percent') {
+            detail.discount_percent = discountInputVal;
+          } else {
+            detail.discount_amount = discountInputVal;
+          }
+          detail.discount_reason = (item.discountReason || 'Ajuste de precio').trim();
+        }
+
+        return detail;
+      }),
+    };
+  }, [items, selectedClient, currencyId, toast]);
 
   // Mantener el ref de F12 apuntando a la última versión de handleSaveSale.
   useEffect(() => {
@@ -1332,7 +1348,7 @@ const SalesNew: React.FC = () => {
           // puede haber agregado reservas dentro del wizard (walk-in o
           // existentes) DESPUÉS de que handleSaveSale armó pendingSaleData.
           // Refleja la moneda seleccionada en el wizard (puede haber cambiado).
-          const salePayload = { ...pendingSaleData, currency_id: Number(currencyId) || 1 };
+          const salePayload = buildNewSaleData() ?? pendingSaleData;
           const result = await salePaymentService.posCheckout({
             sale: { ...salePayload, currency_id: Number(currencyId) || 1 },
             payment: {
@@ -1408,7 +1424,7 @@ const SalesNew: React.FC = () => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentSaleId, items, activeSale, pendingSaleData, paymentMethodId, currencyId, t],
+    [currentSaleId, items, activeSale, pendingSaleData, paymentMethodId, currencyId, t, buildNewSaleData],
   );
 
   // onLeavePendingWizard: persiste la venta sin cobrar (venta a crédito/asíncrono).
@@ -1419,7 +1435,8 @@ const SalesNew: React.FC = () => {
         // En modo merge, dejar pendiente = no agregar nada (la venta ya existe).
         toast.info(`Venta #${currentSaleId} queda pendiente`);
       } else if (pendingSaleData) {
-        const response = await createSale(pendingSaleData);
+        const salePayload = buildNewSaleData() ?? pendingSaleData;
+        const response = await createSale(salePayload);
         if (!response?.sale_id) {
           throw new Error(response?.error || response?.message || 'No se pudo registrar la venta');
         }
@@ -1431,7 +1448,93 @@ const SalesNew: React.FC = () => {
     } finally {
       setIsProcessingSale(false);
     }
-  }, [currentSaleId, pendingSaleData, createSale]);
+  }, [currentSaleId, pendingSaleData, createSale, buildNewSaleData]);
+
+  // ─── Walk-in: registrar uso de cancha desde el wizard ──────────────────────
+  // Flujo: cliente usó la cancha sin reserva previa y quiere pagar. Crea la
+  // reserva (CREATE), la confirma (CONFIRM) y suma el ítem al carrito con el
+  // total autoritativo del backend (tarifa vigente × horas). Si el cobro
+  // luego falla o se deja pendiente, la reserva queda CONFIRMED y aparece
+  // como cobrable en el próximo checkout (refleja que la cancha se usó).
+  const handleRegisterWalkIn = useCallback(async (spec: WalkInSpec): Promise<boolean> => {
+    if (!selectedClient?.id) {
+      toast.error(t('sales.checkoutWizard.walkIn.needsClient', 'Seleccioná un cliente antes de registrar el uso de la cancha'));
+      return false;
+    }
+    // Regla de negocio: máximo una reserva por venta (process_sale_with_reserve).
+    if (items.some(i => i.reserve_id)) {
+      toast.error(t('sales.checkoutWizard.walkIn.oneReservationPerSale', 'Solo se permite una reserva por venta. Remové el ítem de reserva del carrito para registrar otra.'));
+      return false;
+    }
+
+    const branchIdStr = localStorage.getItem('activeBranch');
+    const branchId = branchIdStr ? parseInt(branchIdStr, 10) : undefined;
+
+    try {
+      // 1. CREATE — el backend calcula el total con la tarifa vigente.
+      const createRes = await reservationService.manageReserve({
+        action: 'CREATE',
+        product_id: spec.productId,
+        client_id: selectedClient.id,
+        start_time: spec.startTime,
+        duration: spec.duration,
+        ...(branchId ? { branch_id: branchId } : {}),
+      } as any);
+      const created = createRes?.data || createRes || {};
+      if (created.success === false || !created.reserve_id) {
+        throw new Error(created.error || t('sales.checkoutWizard.walkIn.createFailed', 'No se pudo registrar el uso de la cancha'));
+      }
+      const reserveId = Number(created.reserve_id);
+      const totalAmount = Number(created.total_amount) || 0;
+
+      // 2. CONFIRM — la venta con reserva exige estado CONFIRMED (también
+      // cubre el path "Dejar pendiente": createSale sin cobro).
+      const confirmRes = await reservationService.manageReserve({
+        action: 'CONFIRM',
+        reserve_id: reserveId,
+        product_id: spec.productId,
+        ...(branchId ? { branch_id: branchId } : {}),
+      } as any);
+      const confirmed = confirmRes?.data || confirmRes || {};
+      if (confirmed.success === false) {
+        throw new Error(confirmed.error || t('sales.checkoutWizard.walkIn.confirmFailed', 'La reserva se creó pero no se pudo confirmar'));
+      }
+
+      // 3. Ítem al carrito (misma convención que las reservas confirmadas:
+      // quantity 1 × total de la reserva, unit "hour").
+      const item: CartItem = {
+        id: `RES-${reserveId}-${Date.now()}`,
+        productId: spec.productId,
+        name: `${spec.productName} — ${spec.duration}h`,
+        quantity: 1,
+        price: totalAmount,
+        originalPrice: totalAmount,
+        discount: 0,
+        discountType: 'amount',
+        discountInput: 0,
+        discountReason: '',
+        taxRate: 0,
+        unit: 'hour',
+        reserve_id: reserveId,
+      };
+      setItems(prev => [...prev, item]);
+      toast.success(
+        t('sales.checkoutWizard.walkIn.registered', 'Uso de cancha registrado (reserva #{id})', { id: reserveId }),
+      );
+      return true;
+    } catch (e: any) {
+      toast.error(e?.message || t('sales.checkoutWizard.walkIn.createFailed', 'No se pudo registrar el uso de la cancha'));
+      return false;
+    }
+  }, [selectedClient, items, setItems, toast, t]);
+
+  // Productos ya presentes en el carrito VÍA RESERVA: el walk-in los bloquea
+  // (una reserva por producto). Los ítems de ventas pendientes continuadas
+  // (sin reserve_id) NO bloquean el registro walk-in.
+  const blockedProductIds = useMemo(
+    () => new Set(items.filter((i) => i.reserve_id).map((i) => String(i.productId))),
+    [items],
+  );
 
   // Resetea el estado del carrito tras concretar o dejar pendiente.
   const resetSaleState = () => {
@@ -2245,20 +2348,23 @@ const SalesNew: React.FC = () => {
         onNewSale={() => {
           setCurrentSaleId(null);
           setActiveSale(null);
+          // "Nueva venta" no arrastra los ítems de la pendiente continuada
+          // (isFromPendingSale) ni las reservas marcadas: la venta arranca
+          // limpia y el monto del cobro vuelve a ser coherente.
+          setItems((prev) => prev.filter((item) => !item.isFromPendingSale));
+          setSelectedResIds(new Set());
         }}
         pendingReservations={pendingReservations}
         selectedResIds={selectedResIds}
         onToggleReservation={(resId) => {
-          const isProductAlreadySelected = Array.from(selectedResIds).some((sid) => {
-            if (sid === resId) return false;
-            const otherRes = pendingReservations.find((r) => Number(r.reserve_id || r.id) === sid);
-            const thisRes = pendingReservations.find((r) => Number(r.reserve_id || r.id) === resId);
-            return otherRes?.product_id === thisRes?.product_id;
-          });
           const isSelected = selectedResIds.has(resId);
-          if (isProductAlreadySelected && !isSelected) {
-            const res = pendingReservations.find((r) => Number(r.reserve_id || r.id) === resId);
-            toast.warning(`Solo se permite una reserva por cada producto (${res?.product_name})`);
+          // Regla de negocio: UNA reserva por venta (el backend recibe un
+          // único p_reserve_id). Comportamiento tipo radio: marcar otra
+          // cuando ya hay una marcada se rechaza con guía.
+          if (!isSelected && selectedResIds.size > 0) {
+            toast.warning(
+              t('sales.checkoutWizard.reservations.oneReservationPerSale', 'Solo se permite una reserva por venta'),
+            );
             return;
           }
           const newSelection = new Set(selectedResIds);
@@ -2268,6 +2374,8 @@ const SalesNew: React.FC = () => {
         }}
         onAddReservations={handleAddReservations}
         formatDateTime={formatDateTime}
+        blockedProductIds={blockedProductIds}
+        onRegisterWalkIn={handleRegisterWalkIn}
         paymentMethods={paymentMethods}
         paymentMethodId={paymentMethodId}
         setPaymentMethodId={setPaymentMethodId}
