@@ -1328,16 +1328,35 @@ const SalesNew: React.FC = () => {
           );
         } else if (pendingSaleData) {
           // Modo venta nueva: checkout POS atómico (venta + pago).
+          // Reconstruir el payload desde el carrito vigente: el operador
+          // puede haber agregado reservas dentro del wizard (walk-in o
+          // existentes) DESPUÉS de que handleSaveSale armó pendingSaleData.
           // Refleja la moneda seleccionada en el wizard (puede haber cambiado).
           const salePayload = { ...pendingSaleData, currency_id: Number(currencyId) || 1 };
           const result = await salePaymentService.posCheckout({
-            sale: salePayload,
+            sale: { ...salePayload, currency_id: Number(currencyId) || 1 },
             payment: {
               amount_received: collection.amountReceived,
               payment_method_id: collection.paymentMethodId || Number(paymentMethodId) || 0,
               payment_notes: collection.notes,
             },
           });
+
+          // El backend puede responder success:false / payment_error SIN error
+          // HTTP (la venta se revierte). No mentir con el toast de éxito ni
+          // resetear el carrito: el operador queda en el paso de cobro para
+          // reintentar.
+          if (result?.success === false || result?.payment_error) {
+            const detail = result?.payment_error || (result?.sale as any)?.message || '';
+            toast.error(
+              t(
+                'sales.checkoutWizard.confirmPaymentError',
+                'No se pudo completar el cobro. La operación se canceló; intentá de nuevo.',
+              ) + (detail ? ` ${detail}` : ''),
+            );
+            return;
+          }
+
           const saleId = result?.sale?.sale_id || '';
           toast.success(saleId ? `Venta #${saleId} cobrada exitosamente` : 'Cobro registrado exitosamente');
         } else {
@@ -1363,7 +1382,7 @@ const SalesNew: React.FC = () => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentSaleId, items, activeSale, pendingSaleData, paymentMethodId],
+    [currentSaleId, items, activeSale, pendingSaleData, paymentMethodId, currencyId, t],
   );
 
   // onLeavePendingWizard: persiste la venta sin cobrar (venta a crédito/asíncrono).
