@@ -1338,6 +1338,10 @@ const SalesNew: React.FC = () => {
             payment: {
               amount_received: collection.amountReceived,
               payment_method_id: collection.paymentMethodId || Number(paymentMethodId) || 0,
+              // Caja opcional: si el operador la eligió en el paso de cobro se
+              // envía; sin caja, el backend procesa el pago sin caja (nunca
+              // adivina una caja activa de otra sucursal).
+              cash_register_id: collection.cashRegisterId ?? undefined,
               payment_notes: collection.notes,
             },
           });
@@ -1366,10 +1370,32 @@ const SalesNew: React.FC = () => {
         resetSaleState();
       } catch (e: any) {
         const norm = toApiError(e);
+        const rawMsg = String(e?.message || norm.message || '').toLowerCase();
         if (norm.code === 'SALE_ALREADY_PAID' || norm.code === 'ALREADY_CANCELLED') {
           toast.error(t('sales.errors.saleAlreadyPaid', 'No se pueden agregar items a una venta ya pagada. Creá una venta nueva.') + ` (${norm.code})`);
+        } else if (rawMsg.includes('branch mismatch')) {
+          // La caja seleccionada pertenece a otra sucursal y el SQL de pago la
+          // rechazó. Guiar al operador en vez de mostrar un error genérico.
+          toast.error(
+            t(
+              'sales.errors.cashRegisterBranchMismatch',
+              'La caja seleccionada pertenece a otra sucursal. Seleccioná una caja de esta sucursal o cobrá sin caja.',
+            ) + ' (BRANCH_MISMATCH)',
+          );
+        } else if (rawMsg.includes('cash register is not open')) {
+          toast.error(
+            t(
+              'sales.errors.cashRegisterNotOpen',
+              'La caja seleccionada no está abierta. Abrí una caja de esta sucursal o cobrá sin caja.',
+            ) + ' (CASH_REGISTER_NOT_OPEN)',
+          );
         } else if (norm.code === 'CONFLICT') {
-          toast.error(t('sales.errors.cashRegisterRequired', 'Necesitás una caja abierta para cobrar. Abrí una caja e intentá de nuevo.') + ' (CONFLICT)');
+          toast.error(
+            t(
+              'sales.errors.paymentConflict',
+              'El cobro fue rechazado por el backend. Revisá el monto y la caja e intentá de nuevo.',
+            ) + ' (CONFLICT)',
+          );
         } else {
           toast.error(
             t('sales.collectionDecision.atomicError', 'No se pudo completar la venta y el cobro. La operación se canceló.') +

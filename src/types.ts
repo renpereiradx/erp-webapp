@@ -990,13 +990,14 @@ export interface ProcessSaleEnhancedResponse {
 }
 
 /**
- * Payment leg of an atomic POS checkout. Maps to the backend's POSPayment
- * (internal/sale/pos_service.go). Uses the Required cash-register policy: the
- * operator must have an open register (409 otherwise).
+ * Payment leg of the atomic POS checkout. The cash register is OPTIONAL:
+ * when cash_register_id is omitted the payment proceeds without a register
+ * (the backend never resolves the operator's active register).
  */
 export interface POSPayment {
   amount_received: number;
   payment_method_id: number;
+  cash_register_id?: number | null;
   payment_reference?: string | null;
   payment_notes?: string | null;
 }

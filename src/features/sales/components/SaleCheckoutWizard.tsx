@@ -403,6 +403,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                 currencyCode={currencyCode}
                 paymentMethodId={paymentMethodId}
                 isCash={!!isCashMethod}
+                currentBranchId={currentBranchId}
                 onDataChange={setCollectionData}
               />
             )}

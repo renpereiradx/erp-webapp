@@ -299,6 +299,12 @@ export const sales = {
   'sales.errors.cashRegisterRequired': 'Necesitás una caja abierta para cobrar. Abrí una caja e intentá de nuevo.',
   'sales.errors.saleAlreadyPaid': 'No se pueden agregar items a una venta ya pagada. Creá una venta nueva.',
   'sales.errors.mergeFailed': 'No se pudo actualizar la venta pendiente. Intentá de nuevo o creá una venta nueva.',
+  'sales.errors.cashRegisterBranchMismatch':
+    'La caja seleccionada pertenece a otra sucursal. Seleccioná una caja de esta sucursal o cobrá sin caja.',
+  'sales.errors.cashRegisterNotOpen':
+    'La caja seleccionada no está abierta. Abrí una caja de esta sucursal o cobrá sin caja.',
+  'sales.errors.paymentConflict':
+    'El cobro fue rechazado por el backend. Revisá el monto y la caja e intentá de nuevo.',
 
   // ─── SaleCheckoutWizard (stepper de concreción) ───────────────────────────
   'sales.checkoutWizard.title': 'Concretar Venta',
@@ -346,6 +352,12 @@ export const sales = {
   'sales.checkoutWizard.collection.cashRegister': 'Caja de cobro',
   'sales.checkoutWizard.collection.noCashRegister': 'Sin caja asignada',
   'sales.checkoutWizard.collection.loadingRegisters': 'Cargando cajas...',
+  'sales.checkoutWizard.collection.registerName': 'Caja #{id}',
+  'sales.checkoutWizard.collection.otherBranchGroup': 'Otras sucursales (no disponibles acá)',
+  'sales.checkoutWizard.collection.noCashRegisterHint':
+    'Vas a cobrar sin caja: el pago no quedará vinculado a una caja registradora.',
+  'sales.checkoutWizard.collection.noOpenRegisterInBranch':
+    'No tenés cajas abiertas en esta sucursal. Podés cobrar sin caja o abrir una desde el módulo Cajas.',
   'sales.checkoutWizard.collection.amountReceived': 'Monto recibido',
   'sales.checkoutWizard.collection.exact': 'Exacto',
   'sales.checkoutWizard.collection.notes': 'Notas (opcional)',

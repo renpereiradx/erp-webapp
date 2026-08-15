@@ -6,13 +6,18 @@
  * confirmar (pos-checkout atómico o dejar pendiente); este paso solo recoge
  * los datos del cobro y reporta el estado de validez.
  */
-import { forwardRef, useImperativeHandle, useEffect, useRef, useState } from 'react'
-import { Calculator } from 'lucide-react'
+import { forwardRef, useImperativeHandle, useEffect, useMemo, useRef, useState } from 'react'
+import { Calculator, AlertTriangle, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cashRegisterService } from '@/services/cashRegisterService'
 import { formatCurrency } from '@/utils/currencyUtils'
 import { useI18n } from '@/lib/i18n'
+import {
+  partitionOpenRegisters,
+  resolveDefaultRegisterId,
+  type RegisterOption,
+} from '../../registerSelection'
 
 export interface CollectionStepRef {
   focus: () => void
@@ -30,16 +35,18 @@ interface CollectionStepProps {
   currencyCode?: string
   paymentMethodId: number
   isCash: boolean
+  /** Sucursal activa: las cajas de otras sucursales no son seleccionables. */
+  currentBranchId?: number | null
   /** Notifica al orquestador los datos actuales del cobro. */
   onDataChange: (data: CollectionData) => void
 }
 
 export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>(
-  ({ totalAmount, currencyCode = 'PYG', paymentMethodId, isCash, onDataChange }, ref) => {
+  ({ totalAmount, currencyCode = 'PYG', paymentMethodId, isCash, currentBranchId, onDataChange }, ref) => {
     const { t } = useI18n()
     const amountRef = useRef<HTMLInputElement>(null)
 
-    const [cashRegisters, setCashRegisters] = useState<any[]>([])
+    const [openRegisters, setOpenRegisters] = useState<RegisterOption[]>([])
     const [cashRegisterId, setCashRegisterId] = useState<string | number | null>(null)
     const [isLoadingRegisters, setIsLoadingRegisters] = useState(false)
     const [amountReceived, setAmountReceived] = useState<string>(String(totalAmount || ''))
@@ -53,7 +60,16 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
       },
     }))
 
-    // Carga cajas abiertas + caja activa (patrón de InstantPaymentDialog).
+    // Cajas abiertas agrupadas por sucursal: solo las de la sucursal activa son
+    // seleccionables; las de otras sucursales se muestran deshabilitadas.
+    const { inBranch, otherBranches } = useMemo(
+      () => partitionOpenRegisters(openRegisters, currentBranchId),
+      [openRegisters, currentBranchId],
+    )
+
+    // Carga cajas abiertas + caja activa. La activa se preselecciona SOLO si
+    // pertenece a la sucursal actual; si no (o si no hay caja activa), queda
+    // "Sin caja" y el backend no adivina ninguna caja.
     useEffect(() => {
       let cancelled = false
       const load = async () => {
@@ -65,17 +81,19 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
           ])
           if (cancelled) return
           const raw = Array.isArray(allRegisters) ? allRegisters : (allRegisters as any)?.data || []
-          const openRegisters = raw.filter((r: any) => (r.status || r.state || '').toUpperCase() === 'OPEN')
-          setCashRegisters(openRegisters)
-          if (activeRegister) {
-            const activeId = activeRegister.id || activeRegister.cash_register_id
-            const isActiveInBranch = openRegisters.some(
-              (r: any) => (r.id || r.cash_register_id) === activeId,
-            )
-            setCashRegisterId(isActiveInBranch ? activeId : null)
-          } else {
-            setCashRegisterId(null)
-          }
+          const open: RegisterOption[] = raw
+            .filter((r: any) => (r.status || r.state || '').toUpperCase() === 'OPEN')
+            .map((r: any) => ({
+              id: Number(r.id ?? r.cash_register_id),
+              branchId: r.branch_id ?? null,
+            }))
+            .filter((r) => Number.isFinite(r.id))
+          setOpenRegisters(open)
+          const activeId = activeRegister
+            ? Number(activeRegister.id ?? activeRegister.cash_register_id)
+            : null
+          const partition = partitionOpenRegisters(open, currentBranchId)
+          setCashRegisterId(resolveDefaultRegisterId(partition.inBranch, activeId))
         } finally {
           if (!cancelled) setIsLoadingRegisters(false)
         }
@@ -84,7 +102,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
       return () => {
         cancelled = true
       }
-    }, [])
+    }, [currentBranchId])
 
     // Reporta los datos al orquestador cada vez que cambian.
     useEffect(() => {
@@ -120,13 +138,48 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
                   {t('sales.checkoutWizard.collection.loadingRegisters', 'Cargando cajas...')}
                 </option>
               )}
-              {cashRegisters.map((reg: any) => (
-                <option key={reg.id || reg.cash_register_id} value={reg.id || reg.cash_register_id}>
-                  {reg.name || reg.description || `Caja #${reg.id || reg.cash_register_id}`}
+              {inBranch.map((reg) => (
+                <option key={reg.id} value={reg.id}>
+                  {t('sales.checkoutWizard.collection.registerName', `Caja #${reg.id}`, { id: reg.id })}
                 </option>
               ))}
+              {otherBranches.length > 0 && (
+                <optgroup
+                  label={t('sales.checkoutWizard.collection.otherBranchGroup', 'Otras sucursales (no disponibles acá)')}
+                >
+                  {otherBranches.map((reg) => (
+                    <option key={reg.id} value={reg.id} disabled>
+                      {t('sales.checkoutWizard.collection.registerName', `Caja #${reg.id}`, { id: reg.id })}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </div>
+
+          {/* Guía: la caja es opcional, pero el operador debe saber qué está pasando. */}
+          {!isLoadingRegisters && cashRegisterId == null && (
+            <p className="flex items-start gap-2 text-xs text-on-surface-variant">
+              <Info size={14} className="mt-0.5 shrink-0" />
+              <span>
+                {t(
+                  'sales.checkoutWizard.collection.noCashRegisterHint',
+                  'Vas a cobrar sin caja: el pago no quedará vinculado a una caja registradora.',
+                )}
+              </span>
+            </p>
+          )}
+          {!isLoadingRegisters && inBranch.length === 0 && otherBranches.length > 0 && (
+            <p className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded-sm px-3 py-2">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+              <span>
+                {t(
+                  'sales.checkoutWizard.collection.noOpenRegisterInBranch',
+                  'No tenés cajas abiertas en esta sucursal. Podés cobrar sin caja o abrir una desde el módulo Cajas.',
+                )}
+              </span>
+            </p>
+          )}
         </div>
 
         {/* Monto recibido (solo efectivo) */}
