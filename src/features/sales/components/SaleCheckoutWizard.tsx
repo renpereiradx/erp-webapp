@@ -28,8 +28,7 @@ import { PendingSalesStep, PendingSalesStepRef } from './steps/PendingSalesStep'
 import { ReservationsStep, ReservationsStepRef } from './steps/ReservationsStep'
 import { PaymentStep, PaymentStepRef } from './steps/PaymentStep'
 import { CollectionStep, CollectionStepRef, CollectionData } from './steps/CollectionStep'
-
-type StepId = 'client' | 'pending' | 'reservations' | 'payment' | 'collection'
+import { computeCheckoutSteps, type CheckoutStepId } from '../checkoutSteps'
 
 interface SaleCheckoutWizardProps {
   isOpen: boolean
@@ -118,15 +117,34 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
   })
 
   // ─── Pasos visibles (condicionales) ─────────────────────────────────────
-  const steps: StepId[] = useMemo(() => {
-    const list: StepId[] = ['client']
-    if (activeSales.length > 0) list.push('pending')
-    if (pendingReservations.length > 0) list.push('reservations')
-    list.push('payment', 'collection')
-    return list
-  }, [activeSales.length, pendingReservations.length])
+  // Reglas en checkoutSteps.computeCheckoutSteps: 'reservations' aparece con
+  // reservas confirmadas pendientes o con cliente seleccionado (walk-in),
+  // PERO se suprime cuando el carrito ya tiene un ítem con reserve_id (el
+  // backend admite una sola reserva por venta y el paso ya no aporta nada).
+  const steps = useMemo<CheckoutStepId[]>(
+    () =>
+      computeCheckoutSteps({
+        activeSalesCount: activeSales.length,
+        pendingReservationsCount: pendingReservations.length,
+        hasClient: !!client,
+        hasReserveInCart: items.some((i) => !!i?.reserve_id),
+      }),
+    [activeSales.length, pendingReservations.length, client, items],
+  )
+
+  // Última versión de steps para los state updaters (el array puede encoger
+  // sincrónicamente cuando una reserva entra al carrito).
+  const stepsRef = useRef<CheckoutStepId[]>(steps)
+  stepsRef.current = steps
 
   const [currentStepIdx, setCurrentStepIdx] = useState(0)
+
+  // Defensivo: con pasos dinámicos nunca apuntar fuera de rango.
+  useEffect(() => {
+    if (currentStepIdx >= steps.length) {
+      setCurrentStepIdx(Math.max(0, steps.length - 1))
+    }
+  }, [currentStepIdx, steps.length])
 
   // Reset al abrir / cambiar de cliente.
   useEffect(() => {
@@ -216,7 +234,16 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
       return
     }
 
-    setCurrentStepIdx((idx) => Math.min(idx + 1, steps.length - 1))
+    // Avanzar por ID de paso, no por índice crudo: al confirmar selecciones
+    // de reservas, onAddReservations encoge `steps` sincrónicamente (un ítem
+    // con reserve_id suprime el paso 'reservations') y un incremento fijo de
+    // índice saltaría el paso 'payment'. El ID se busca en la lista vigente.
+    const nextStepId = steps[currentStepIdx + 1]
+    setCurrentStepIdx(() => {
+      const latest = stepsRef.current
+      const target = nextStepId ? latest.indexOf(nextStepId) : -1
+      return target >= 0 ? target : Math.min(latest.length - 1, currentStepIdx + 1)
+    })
   }
 
   const handleBack = () => {
@@ -261,7 +288,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     ?.toLowerCase()
     .includes('efectivo')
 
-  const stepLabels: Record<StepId, string> = {
+  const stepLabels: Record<CheckoutStepId, string> = {
     client: t('sales.checkoutWizard.step.client', 'Cliente'),
     pending: t('sales.checkoutWizard.step.pendingSales', 'Venta pendiente'),
     reservations: t('sales.checkoutWizard.step.reservations', 'Reservas'),
