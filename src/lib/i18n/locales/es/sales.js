@@ -336,6 +336,8 @@ export const sales = {
   'sales.checkoutWizard.reservations.title': 'Reservas confirmadas',
   'sales.checkoutWizard.reservations.subtitle': 'Seleccioná las reservas para sumarlas al carrito',
   'sales.checkoutWizard.reservations.productAlreadySelected': 'Producto ya seleccionado',
+  'sales.checkoutWizard.confirmPaymentError':
+    'No se pudo completar el cobro. La operación se canceló; intentá de nuevo.',
   'sales.checkoutWizard.payment.method': 'Método de pago',
   'sales.checkoutWizard.payment.currency': 'Moneda',
   'sales.checkoutWizard.payment.exchangeRate': 'Tasa de cambio',
@@ -348,4 +350,8 @@ export const sales = {
   'sales.checkoutWizard.collection.exact': 'Exacto',
   'sales.checkoutWizard.collection.notes': 'Notas (opcional)',
   'sales.checkoutWizard.collection.notesPlaceholder': 'Notas del cobro...',
+
+  // ─── Cobros de ventas (página SalePayment) ───────────────────────────────
+  'sales.payments.confirmSuccess': 'Cobro registrado exitosamente',
+  'sales.payments.confirmFailed': 'No se pudo confirmar el cobro',
 }

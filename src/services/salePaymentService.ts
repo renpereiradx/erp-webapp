@@ -16,6 +16,33 @@ import {
   POSCheckoutResponse,
 } from '@/types';
 
+/**
+ * Payload de confirmación de cobro de una venta existente
+ * (PUT /sale/{id}/confirm-payment). Lo arma SalePayment.jsx con
+ * `payment_methods` + `caja_id`; el backend hoy solo persiste
+ * `payment_reference`/`payment_notes` (contrato en definición por un
+ * agente backend en paralelo — el wrapper no lo reinterpreta).
+ */
+export interface ConfirmSalePaymentPayload {
+  payment_methods?: Array<{ method?: string; amount?: number }>;
+  caja_id?: number;
+  payment_reference?: string | null;
+  payment_notes?: string | null;
+}
+
+/**
+ * Respuesta de PUT /sale/{id}/confirm-payment. El backend actual responde
+ * HTTP 200 `{message: "Pago confirmado"}` y los errores llegan como HTTP
+ * 5xx. `success === false` se contempla por si el contrato final agrega la
+ * bandera (mismo patrón que pos-checkout: fallo sin error HTTP).
+ */
+export interface ConfirmSalePaymentResponse {
+  success?: boolean;
+  message?: string;
+  error?: string;
+  code?: string;
+}
+
 // Helper con retry simple (máx 2 reintentos)
 const _fetchWithRetry = async (requestFn: () => Promise<any>, maxRetries = 2) => {
   let lastError;
@@ -165,6 +192,45 @@ export const salePaymentService = {
         duration: Date.now() - startTime,
         error: error.message,
         operation: 'processSalePaymentWithCashRegister'
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Confirma el cobro de una venta existente (PUT /sale/{id}/confirm-payment).
+   *
+   * Wrapper delgado sobre apiClient.confirmPayment: el payload viaja tal cual
+   * lo arma la página de Cobros de ventas (payment_methods + caja_id). El
+   * backend hoy solo persiste payment_reference/notes; el resto del contrato
+   * lo define un agente backend en paralelo, por lo que este método no
+   * reinterpreta el payload.
+   *
+   * Devuelve la respuesta del backend tal cual (HTTP 200 → {message}; los
+   * errores se propagan como excepción, igual que el resto del servicio).
+   */
+  async confirmSalePayment(
+    saleOrderId: string | number,
+    payload: ConfirmSalePaymentPayload,
+  ): Promise<ConfirmSalePaymentResponse> {
+    const startTime = Date.now();
+
+    try {
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.confirmPayment(saleOrderId, payload);
+      });
+
+      telemetry.record('sale_payment.service.confirm_payment', {
+        duration: Date.now() - startTime,
+        saleId: saleOrderId,
+      });
+
+      return result;
+    } catch (error: any) {
+      telemetry.record('sale_payment.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'confirmSalePayment',
       });
       throw error;
     }

@@ -366,7 +366,7 @@ const SaleCard = React.memo(({
 });
 
 const SalePayment = () => {
-  const { lang } = useI18n()
+  const { lang, t } = useI18n()
   const navigate = useNavigate()
   const { currentBranchId } = useBranch()
   const {
@@ -618,7 +618,7 @@ const SalePayment = () => {
     };
   }, [rawSales, searchTerm, selectedStatus, localPage, localPageSize])
 
-    const handlePaymentSubmit = async paymentData => {
+  const handlePaymentSubmit = async paymentData => {
     // Mapear para PUT /sale/{id}/confirm-payment
     const confirmPayload = {
       payment_methods: [
@@ -630,11 +630,22 @@ const SalePayment = () => {
       caja_id: paymentData.cash_register_id || undefined
       // branch_id is inherited if omitted
     }
-    
-    await salePaymentService.confirmSalePayment(paymentData.sales_order_id, confirmPayload)
-    showSuccess('Cobro registrado exitosamente')
-    pagesCache.current.clear()
-    handleLoadSales(pagination.page, true)
+
+    try {
+      const result = await salePaymentService.confirmSalePayment(paymentData.sales_order_id, confirmPayload)
+      // El backend puede responder success:false sin error HTTP: no festejar
+      // ni recargar la lista en ese caso.
+      if (result && result.success === false) {
+        throw new Error(result.message || result.error || t('sales.payments.confirmFailed', 'No se pudo confirmar el cobro'))
+      }
+      showSuccess(t('sales.payments.confirmSuccess', 'Cobro registrado exitosamente'))
+      pagesCache.current.clear()
+      handleLoadSales(pagination.page, true)
+    } catch (err) {
+      showError(err?.message || t('sales.payments.confirmFailed', 'No se pudo confirmar el cobro'))
+      // Re-lanzar: el modal mantiene su estado de error y no se cierra.
+      throw err
+    }
   }
 
   const handleCancelSale = async sale => {
