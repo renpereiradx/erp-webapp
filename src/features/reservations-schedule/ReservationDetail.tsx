@@ -69,9 +69,19 @@ export const ReservationDetail: React.FC<ReservationDetailProps> = ({
     }
   };
 
-  const handleInvoice = () => {
-    if (slot.reserve?.id && onInvoice) {
+  const handleInvoice = async () => {
+    if (!slot.reserve?.id || !onInvoice) return;
+    setIsProcessing(true);
+    try {
+      // El pos-checkout exige reserva CONFIRMED (el backend NO auto-confirma):
+      // si está RESERVED, se confirma acá primero para que la venta no falle
+      // con RESERVE_NOT_AVAILABLE al facturar.
+      if (isReserved) {
+        await onConfirm(slot.reserve.id);
+      }
       onInvoice(slot.reserve.id, slot.reserve.client_id || '');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -136,13 +146,17 @@ export const ReservationDetail: React.FC<ReservationDetailProps> = ({
       )}
 
       <div className="pt-4 space-y-3">
-        {(isConfirmed || isCompleted) && onInvoice && (
+        {/* Cobrable desde CONFIRMED y también desde RESERVED: en este último
+            caso handleInvoice confirma la reserva primero (el backend exige
+            CONFIRMED en el pos-checkout y no auto-confirma). */}
+        {(isReserved || isConfirmed || isCompleted) && onInvoice && (
           <button
             onClick={handleInvoice}
-            className="w-full bg-slate-900 py-4 rounded-2xl text-white font-black shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-xs"
+            disabled={isProcessing}
+            className="w-full bg-slate-900 py-4 rounded-2xl text-white font-black shadow-xl shadow-slate-900/20 hover:bg-slate-800 disabled:bg-slate-400 disabled:shadow-none transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-xs"
           >
             <span className="material-icons-round text-sm">receipt_long</span>
-            Facturar Servicio
+            {isProcessing ? 'Procesando...' : isReserved ? 'Cobrar ahora' : 'Facturar Servicio'}
           </button>
         )}
 
