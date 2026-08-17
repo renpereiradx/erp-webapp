@@ -23,7 +23,7 @@ export const budgetService = {
       const response = await apiClient.post(API_ENDPOINTS.BUDGETS, data);
       telemetry.record('budget.service.create', { 
         duration: Date.now() - startTime,
-        itemsCount: data.items?.length 
+        itemsCount: data.details?.length 
       });
       return response;
     } catch (error: any) {
@@ -49,7 +49,17 @@ export const budgetService = {
     try {
       const response = await apiClient.get(API_ENDPOINTS.BUDGETS, { params: filters });
       telemetry.record('budget.service.list', { duration: Date.now() - startTime });
-      return response;
+      // El backend responde { data: [...], pagination: { page, page_size,
+      // total_records, total_pages, has_next, has_previous } }. Se normaliza al
+      // contrato FE (PaginatedResponse) para los consumidores existentes.
+      const pagination = response?.pagination || {};
+      return {
+        data: response?.data || [],
+        page: pagination.page || 1,
+        pageSize: pagination.page_size || filters.page_size || 15,
+        total: pagination.total_records || 0,
+        totalPages: pagination.total_pages || 1,
+      };
     } catch (error: any) {
       telemetry.record('budget.service.error', { 
         duration: Date.now() - startTime, 
@@ -67,7 +77,12 @@ export const budgetService = {
     const startTime = Date.now();
     try {
       const response = await apiClient.get(API_ENDPOINTS.BUDGET_BY_ID(id));
-      return response;
+      // El backend responde { budget: BudgetOrderRiched, details: [...] }.
+      // Se mapea details -> items para el contrato interno del componente.
+      return {
+        budget: response?.budget || response,
+        items: response?.details || response?.items || [],
+      };
     } catch (error: any) {
       telemetry.record('budget.service.error', { 
         duration: Date.now() - startTime, 

@@ -133,15 +133,22 @@ const BudgetCreate: React.FC = () => {
     }
 
     try {
+      // Contrato canónico POST /budgets (BUDGET_API_GUIDE.md 2026-08-17):
+      // { budget: {...}, details: [...] }. valid_until en ISO 8601 (el
+      // backend deserializa time.Time RFC3339). Los precios incluyen IVA y el
+      // backend resuelve tax_rate_id por jerarquía si no se envía.
       const request: CreateBudgetRequest = {
-        client_id: selectedClient.id,
-        valid_until: validUntil,
-        notes,
-        items: items.map(i => ({
+        budget: {
+          client_id: selectedClient.id,
+          valid_until: validUntil ? `${validUntil}T00:00:00Z` : undefined,
+          notes,
+        },
+        details: items.map(i => ({
           product_id: i.product_id,
           quantity: i.quantity,
-          unit_price: i.unit_price
-        }))
+          unit: 'unit',
+          unit_price: i.unit_price,
+        })),
       };
       await budgetService.createBudget(request);
       addToast('Presupuesto creado con éxito', 'success');

@@ -1753,27 +1753,41 @@ export interface Budget {
 
 export interface BudgetItem {
   id: number;
-  budget_id: string;
+  budget_id?: string; // Legacy alias; el backend expone budget_order_id
+  budget_order_id?: string;
   product_id: string;
   quantity: number;
   unit_price: number;
-  tax_rate_id: number;
+  tax_rate_id?: number | null; // Resuelto por jerarquía si la línea no lo trae
   discount_percent?: number;
   notes?: string;
   product_name?: string; // JOIN
 }
 
+/**
+ * Request canónico de POST /budgets (BUDGET_API_GUIDE.md, 2026-08-17):
+ * `budget` lleva el encabezado (los precios incluyen IVA; valid_until ISO 8601)
+ * y `details` las líneas. `tax_rate_id` por línea es opcional: si no se envía,
+ * el backend lo resuelve por la jerarquía de IVA (override producto >
+ * clasificación SIFEN > categoría > default).
+ */
 export interface CreateBudgetRequest {
-  client_id: string;
-  valid_until?: string;
-  notes?: string;
-  currency_id?: number;
-  items: Array<{
+  budget: {
+    client_id: string;
+    valid_until?: string; // ISO 8601 (p.ej. 2026-09-30T00:00:00Z)
+    payment_method_id?: number | null;
+    currency_id?: number | null;
+    notes?: string;
+  };
+  details: Array<{
     product_id: string;
     quantity: number;
+    unit?: string | null;
     unit_price?: number;
-    tax_rate_id?: number;
+    discount_amount?: number;
     discount_percent?: number;
+    tax_rate_id?: number | null;
+    notes?: string | null;
   }>;
 }
 
@@ -2074,12 +2088,12 @@ export const API_ENDPOINTS = {
   BRANCH_TRANSFER_BY_ID: (id: number) => `/branch-transfers/${id}`,
   BRANCH_TRANSFER_STATUS: (id: number) => `/branch-transfers/${id}/status`,
 
-  // Budgets (v2.0)
-  BUDGETS: '/budget',
-  BUDGET_BY_ID: (id: string) => `/budget/${id}`,
-  BUDGET_STATUS: (id: string) => `/budget/${id}/status`,
-  BUDGET_BY_CLIENT: (clientId: string) => `/budget/client/${clientId}`,
-  BUDGET_CONVERT_TO_SALE: (id: string) => `/budget/${id}/convert-to-sale`,
+  // Budgets (v2.0 — contrato canónico /budgets, ver BUDGET_API_GUIDE.md 2026-08-17)
+  BUDGETS: '/budgets',
+  BUDGET_BY_ID: (id: string) => `/budgets/${id}`,
+  BUDGET_STATUS: (id: string) => `/budgets/${id}/status`,
+  BUDGET_BY_CLIENT: (clientId: string) => `/budgets/client/${clientId}`,
+  BUDGET_CONVERT_TO_SALE: (id: string) => `/budgets/${id}/convert`,
 
   // Purchase Requisitions (v2.0)
   PURCHASE_REQUISITIONS: '/purchase-requisitions',
