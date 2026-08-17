@@ -1053,10 +1053,14 @@ export interface SaleEnhancedResponse {
     unit?: string | null;
     base_price: number;
     unit_price: number;
+    unit_price_with_tax?: number;
+    unit_price_without_tax?: number;
     discount_amount: number;
     subtotal: number;
     tax_amount: number;
     total_with_tax: number;
+    total_line_with_tax?: number;
+    applied_tax_rate?: number;
     price_modified: boolean;
     reserve_id: number;
     tax_rate_id: number;

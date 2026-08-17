@@ -237,6 +237,13 @@ const SalesOrderDetail = () => {
   const paidAmount = sale?.paid_amount ?? sale?.total_paid ?? sale?.amount_paid ?? 0
   const balanceDue = sale?.balance_due ?? Math.max(totalAmount - paidAmount, 0)
   const paymentProgress = totalAmount > 0 ? Math.min(100, Math.round((paidAmount / totalAmount) * 100)) : 0
+  // IVA liquidado por el backend (snapshots por línea, feat/iva-consistency).
+  // El header no trae tax_amount: se suma el de las líneas; fallback al campo
+  // legacy de nivel venta si existiera.
+  const totalTax =
+    items.reduce((acc: number, it: any) => acc + (Number(it.tax_amount) || 0), 0) ||
+    Number(sale?.tax_amount) ||
+    0
 
   if (loading) return <div className="flex flex-col items-center justify-center h-[70vh] gap-4"><RefreshCw className="w-10 h-10 animate-spin text-primary opacity-20" /><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cargando Detalle...</p></div>
   if (error || !sale) return <div className="h-[70vh] flex items-center justify-center"><DataState variant="error" title="Error" message={error || 'Venta no encontrada'} onRetry={loadSale} /></div>
@@ -431,11 +438,11 @@ const SalesOrderDetail = () => {
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Subtotal Neto</p>
-                  <p className="text-lg font-bold tabular-nums font-mono">{formatCurrency(sale.total_amount - (sale.tax_amount || 0))}</p>
+                  <p className="text-lg font-bold tabular-nums font-mono">{formatCurrency(totalAmount - totalTax)}</p>
                 </div>
                 <div className="flex justify-between items-center">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Total Impuestos</p>
-                  <p className="text-lg font-bold tabular-nums font-mono">+{formatCurrency(sale.tax_amount || 0)}</p>
+                  <p className="text-lg font-bold tabular-nums font-mono">+{formatCurrency(totalTax)}</p>
                 </div>
                 <div className="pt-6 border-t border-white/20 flex justify-between items-end">
                   <div>
