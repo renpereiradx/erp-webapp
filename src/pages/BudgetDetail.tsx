@@ -167,10 +167,12 @@ const BudgetDetail: React.FC = () => {
                     <span>Subtotal Neto:</span>
                     <span className="font-mono">{formatPYG(budget.total_amount - (budget.tax_amount ?? 0))}</span>
                 </div>
+                {Number(budget.tax_amount) > 0 && (
                 <div className="flex justify-between w-64 text-sm font-bold text-slate-500">
-                    <span>IVA (10%):</span>
+                    <span>IVA:</span>
                     <span className="font-mono">{formatPYG(budget.tax_amount ?? 0)}</span>
                 </div>
+                )}
                 <div className="flex justify-between w-64 text-xl font-black text-primary pt-2 border-t border-slate-200">
                     <span>Total Final:</span>
                     <span className="font-mono">{formatPYG(budget.total_amount)}</span>

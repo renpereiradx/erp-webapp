@@ -18,6 +18,7 @@ import { budgetService } from '@/services/budgetService';
 import { productService } from '@/services/productService';
 import { clientService } from '@/services/clientService';
 import { Client, CreateBudgetRequest, ProductOperationInfoResponse } from '@/types';
+import { calculateSaleTotals } from '@/domain/sale/calculations/saleCalculator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatPYG } from '@/utils/currencyUtils';
@@ -45,11 +46,18 @@ const BudgetCreate: React.FC = () => {
   const [foundClients, setFoundClients] = useState<Client[]>([]);
   const [isSearchingClient, setIsSearchingClient] = useState(false);
 
-  // Totales calculados
+  // Totales calculados. Convención Paraguay (backend create_budget_order):
+  // el precio de línea YA incluye IVA, el total es la suma de líneas sin IVA
+  // aditivo. El IVA se muestra desglosado por extracción (informativo).
   const totals = useMemo(() => {
-    const subtotal = items.reduce((acc, item) => acc + (item.unit_price * item.quantity), 0);
-    const tax = subtotal * 0.10; // Simplificado IVA 10%
-    return { subtotal, tax, total: subtotal + tax };
+    const domainItems = items.map(item => ({
+      quantity: Number(item.quantity || 0),
+      unit_price: Number(item.unit_price || 0),
+      tax_rate: item.tax_rate !== undefined ? Number(item.tax_rate) : undefined,
+      price_includes_tax: true,
+    }));
+    const result = calculateSaleTotals(domainItems);
+    return { subtotal: result.subtotal, tax: result.tax_amount, total: result.total };
   }, [items]);
 
   const handleSearchClient = async (term: string) => {
@@ -96,7 +104,9 @@ const BudgetCreate: React.FC = () => {
         name: product.name,
         quantity: 1,
         unit_price: product.price || 0,
-        tax_rate_id: 1 // Default IVA 10%
+        // Tasa real del producto (si el backend la expone) para desglosar el
+        // IVA incluido en el precio; el backend resuelve por jerarquía igual.
+        tax_rate: product.tax?.rate?.rate !== undefined ? Number(product.tax.rate.rate) / 100 : undefined
       }]);
     }
     setProductSearch('');
@@ -365,11 +375,11 @@ const BudgetCreate: React.FC = () => {
             <div className="absolute -bottom-10 -left-10 size-32 bg-primary/20 rounded-full blur-xl"></div>
             <div className="p-8 relative z-10 space-y-5">
               <div className="flex justify-between items-center text-blue-200/80 font-bold text-xs uppercase tracking-widest">
-                <span>Subtotal Neto</span>
+                <span>Subtotal</span>
                 <span className="font-mono">{formatPYG(totals.subtotal)}</span>
               </div>
               <div className="flex justify-between items-center text-blue-200/80 font-bold text-xs uppercase tracking-widest">
-                <span>IVA Estimado (10%)</span>
+                <span>IVA Incluido</span>
                 <span className="font-mono">{formatPYG(totals.tax)}</span>
               </div>
               <div className="h-px bg-white/10 my-1" />
