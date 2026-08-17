@@ -1,6 +1,7 @@
 import { X, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
+import { countryDisplayName } from '@/domain/party/identity';
 
 /**
  * ClientDetailsModal Component
@@ -14,7 +15,7 @@ import { useI18n } from '@/lib/i18n';
  * @param {Object} props.client - Client data to display
  */
 export default function ClientDetailsModal({ isOpen, onClose, client }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const navigate = useNavigate();
 
   if (!isOpen || !client) return null;
@@ -115,6 +116,28 @@ export default function ClientDetailsModal({ isOpen, onClose, client }) {
               <span className="text-sm font-mono font-bold text-[#323130]">{client.document_id || '-'}</span>
             </div>
 
+            {/* Document Type */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-[#616161] uppercase tracking-[0.15em] block">
+                {t('party.field.document_type', 'Tipo de documento')}
+              </span>
+              <span className="text-sm font-medium text-[#323130]">
+                {client.document_type
+                  ? t(`party.document_type.${client.document_type}`, client.document_type)
+                  : '-'}
+              </span>
+            </div>
+
+            {/* Nationality */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-[#616161] uppercase tracking-[0.15em] block">
+                {t('party.field.nationality', 'Nacionalidad')}
+              </span>
+              <span className="text-sm font-medium text-[#323130]">
+                {client.nationality ? countryDisplayName(client.nationality, lang) : '-'}
+              </span>
+            </div>
+
             {/* Contact */}
             <div className="space-y-1">
               <span className="text-[10px] font-black text-[#616161] uppercase tracking-[0.15em] block">
@@ -122,6 +145,22 @@ export default function ClientDetailsModal({ isOpen, onClose, client }) {
               </span>
               <span className="text-sm font-medium text-[#323130]">
                 {client.contact?.email || client.contact?.phone || client.contact?.raw || '-'}
+              </span>
+            </div>
+
+            {/* Address */}
+            <div className="md:col-span-2 space-y-1">
+              <span className="text-[10px] font-black text-[#616161] uppercase tracking-[0.15em] block">
+                {t('party.field.address_section', 'Dirección')}
+              </span>
+              <span className="text-sm font-medium text-[#323130]">
+                {[
+                  client.address_street,
+                  client.address_city,
+                  client.address_state,
+                  client.address_zip_code,
+                  client.address_country ? countryDisplayName(client.address_country, lang) : '',
+                ].filter(Boolean).join(', ') || '-'}
               </span>
             </div>
 

@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
+import { countryDisplayName } from '@/domain/party/identity'
 
 const formatDateTime = (value, locale = 'es-MX') => {
   if (!value) return '-'
@@ -20,13 +21,28 @@ const formatDateTime = (value, locale = 'es-MX') => {
 }
 
 const SupplierDirectoryDetailsModal = ({ isOpen, onClose, supplier }) => {
-  const { t, locale } = useI18n()
+  const { t, lang } = useI18n()
 
   if (!isOpen || !supplier) return null
 
   const contact = supplier.contact || {}
+  // Dirección estructurada (columnas address_*) con fallback al texto
+  // legacy guardado en contact_info.address.
+  const structuredAddress = [
+    supplier.address_street,
+    supplier.address_city,
+    supplier.address_state,
+    supplier.address_zip_code,
+    supplier.address_country
+      ? countryDisplayName(supplier.address_country, lang)
+      : '',
+  ].filter(Boolean).join(', ')
   const addressLine =
-    contact.address || supplier.address || supplier.contactAddress || '-'
+    structuredAddress ||
+    contact.address ||
+    supplier.address ||
+    supplier.contactAddress ||
+    '-'
 
   return (
     <div 
@@ -139,7 +155,7 @@ const SupplierDirectoryDetailsModal = ({ isOpen, onClose, supplier }) => {
               <span className='text-sm font-bold text-[#323130]'>
                 {formatDateTime(
                   supplier.created_at || supplier.createdAt,
-                  locale
+                  lang
                 )}
               </span>
             </div>
@@ -152,7 +168,7 @@ const SupplierDirectoryDetailsModal = ({ isOpen, onClose, supplier }) => {
               <span className='text-sm font-bold text-[#323130]'>
                 {formatDateTime(
                   supplier.updated_at || supplier.updatedAt,
-                  locale
+                  lang
                 )}
               </span>
             </div>

@@ -4,20 +4,32 @@ import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
 import useSupplierDirectoryStore from '@/store/useSupplierDirectoryStore'
 import { Button } from '@/components/ui/button'
+import AddressFieldsGrid from '@/features/party/components/AddressFieldsGrid'
 
 const EMPTY_FORM = {
   name: '',
   taxId: '',
   contactEmail: '',
   contactPhone: '',
-  contactAddress: '',
+  addressStreet: '',
+  addressCity: '',
+  addressState: '',
+  addressZipCode: '',
+  addressCountry: '',
 }
 
-const sanitizeContact = ({ email, phone, address }) => {
+const EMPTY_ADDRESS = {
+  street: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  country: '',
+}
+
+const sanitizeContact = ({ email, phone }) => {
   const contact = {}
   if (email) contact.email = email
   if (phone) contact.phone = phone
-  if (address) contact.address = address
   return Object.keys(contact).length > 0 ? contact : undefined
 }
 
@@ -42,15 +54,37 @@ const parseAddressFromSupplier = supplier => {
   return ''
 }
 
+// Dirección estructurada desde las columnas address_* del party; si el
+// proveedor legacy solo tiene texto en contact_info.address, va a la calle.
+const resolveAddressFromSupplier = supplier => {
+  if (!supplier) return { ...EMPTY_ADDRESS }
+  const address = {
+    street: supplier.address_street || '',
+    city: supplier.address_city || '',
+    state: supplier.address_state || '',
+    zipCode: supplier.address_zip_code || '',
+    country: supplier.address_country || '',
+  }
+  if (!address.street) {
+    address.street = parseAddressFromSupplier(supplier)
+  }
+  return address
+}
+
 const normalizeSupplierForForm = supplier => {
   if (!supplier) return { ...EMPTY_FORM }
   const contact = supplier.contact || supplier.contact_info || {}
+  const address = resolveAddressFromSupplier(supplier)
   return {
     name: supplier.name || '',
     taxId: supplier.taxId || supplier.tax_id || '',
     contactEmail: contact.email || '',
     contactPhone: contact.phone || contact.phone_number || '',
-    contactAddress: parseAddressFromSupplier(supplier),
+    addressStreet: address.street,
+    addressCity: address.city,
+    addressState: address.state,
+    addressZipCode: address.zipCode,
+    addressCountry: address.country,
   }
 }
 
@@ -78,6 +112,11 @@ const SupplierDirectoryFormModal = ({ isOpen, onClose, supplier = null }) => {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }))
     }
+  }
+
+  const handleAddressChange = (field, value) => {
+    const formKey = `address${field.charAt(0).toUpperCase()}${field.slice(1)}`
+    setFormData(prev => ({ ...prev, [formKey]: value }))
   }
 
   const validate = () => {
@@ -116,11 +155,23 @@ const SupplierDirectoryFormModal = ({ isOpen, onClose, supplier = null }) => {
     const contactInfo = sanitizeContact({
       email: formData.contactEmail.trim(),
       phone: formData.contactPhone.trim(),
-      address: formData.contactAddress.trim(),
     })
 
     if (contactInfo) {
       payload.contact_info = contactInfo
+    }
+
+    // Dirección estructurada: solo claves con valor (vacío = no enviar,
+    // y en update nil = dejar sin cambiar).
+    const address = {
+      address_street: formData.addressStreet.trim(),
+      address_city: formData.addressCity.trim(),
+      address_state: formData.addressState.trim(),
+      address_zip_code: formData.addressZipCode.trim(),
+      address_country: formData.addressCountry,
+    }
+    for (const [key, value] of Object.entries(address)) {
+      if (value) payload[key] = value
     }
 
     if (isEditMode && typeof supplier.status !== 'undefined') {
@@ -302,24 +353,17 @@ const SupplierDirectoryFormModal = ({ isOpen, onClose, supplier = null }) => {
             </div>
           </div>
 
-          <div className='space-y-2'>
-            <label htmlFor='contactAddress' className='text-[10px] font-black text-[#616161] uppercase tracking-widest block'>
-              {t('supplier.form.field.address', 'Dirección')}
-            </label>
-            <textarea
-              id='contactAddress'
-              name='contactAddress'
-              className='w-full p-3 bg-white border border-[#d1d1d1] rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none resize-none'
-              value={formData.contactAddress}
-              onChange={handleChange}
-              disabled={isSubmitting}
-              placeholder={t(
-                'supplier.form.placeholder.address',
-                'Calle, ciudad, país'
-              )}
-              rows={3}
-            />
-          </div>
+          <AddressFieldsGrid
+            values={{
+              street: formData.addressStreet,
+              city: formData.addressCity,
+              state: formData.addressState,
+              zipCode: formData.addressZipCode,
+              country: formData.addressCountry,
+            }}
+            onChange={handleAddressChange}
+            disabled={isSubmitting}
+          />
 
           {errors.submit && (
             <div className='p-3 bg-[#a4262c]/10 border-l-4 border-[#a4262c] rounded text-[#a4262c] text-xs font-bold uppercase'>

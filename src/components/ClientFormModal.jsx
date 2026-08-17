@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import useClientStore from '@/store/useClientStore';
+import DocumentTypeSelect from '@/features/party/components/DocumentTypeSelect';
+import CountrySelect from '@/features/party/components/CountrySelect';
+import AddressFieldsGrid from '@/features/party/components/AddressFieldsGrid';
+import { normalizeDocumentType } from '@/domain/party/identity';
 
 /**
  * ClientFormModal Component
@@ -14,6 +18,20 @@ import useClientStore from '@/store/useClientStore';
  * @param {Function} props.onClose - Callback when modal closes (shouldRefresh)
  * @param {Object} props.client - Client to edit (null for create mode)
  */
+const EMPTY_FORM = {
+  name: '',
+  last_name: '',
+  document_type: '',
+  document_id: '',
+  contact: '',
+  nationality: '',
+  address_street: '',
+  address_city: '',
+  address_state: '',
+  address_zip_code: '',
+  address_country: '',
+};
+
 export default function ClientFormModal({ isOpen, onClose, client = null }) {
   const { t } = useI18n();
   const { createClient, updateClient } = useClientStore();
@@ -21,12 +39,7 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
   const isEditMode = client !== null;
 
   // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    last_name: '',
-    document_id: '',
-    contact: '',
-  });
+  const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,19 +62,21 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
         const newFormData = {
           name: firstName,
           last_name: lastName,
+          document_type: normalizeDocumentType(client.document_type) || '',
           document_id: client.document_id || client.tax_id || '',
           contact: client.contact?.phone || client.contact?.email || client.contact?.raw || '',
+          nationality: client.nationality || '',
+          address_street: client.address_street || '',
+          address_city: client.address_city || '',
+          address_state: client.address_state || '',
+          address_zip_code: client.address_zip_code || '',
+          address_country: client.address_country || '',
         };
 
         setFormData(newFormData);
       } else {
         // Reset form for create mode
-        setFormData({
-          name: '',
-          last_name: '',
-          document_id: '',
-          contact: '',
-        });
+        setFormData({ ...EMPTY_FORM });
       }
       setErrors({});
     }
@@ -76,6 +91,14 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }));
     }
+  };
+
+  const handleSelectChange = (name, value) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddressChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [`address_${field === 'zipCode' ? 'zip_code' : field}`]: value }));
   };
 
   // Validate form
@@ -109,13 +132,32 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
     setIsSubmitting(true);
 
     try {
-      // Preparar datos para la API
+      // Preparar datos para la API. Los campos extendidos (document_type,
+      // nationality, address_*) solo se envían con valor: en create el
+      // backend los valida, y en update nil = dejar sin cambiar.
       const clientData = {
         name: formData.name.trim(),
         last_name: formData.last_name.trim(),
         document_id: formData.document_id.trim(),
         contact: formData.contact.trim() || undefined,
       };
+
+      if (formData.document_type) {
+        clientData.document_type = formData.document_type;
+      }
+      if (formData.nationality) {
+        clientData.nationality = formData.nationality;
+      }
+      const address = {
+        address_street: formData.address_street.trim(),
+        address_city: formData.address_city.trim(),
+        address_state: formData.address_state.trim(),
+        address_zip_code: formData.address_zip_code.trim(),
+        address_country: formData.address_country,
+      };
+      for (const [key, value] of Object.entries(address)) {
+        if (value) clientData[key] = value;
+      }
 
       let result;
       if (isEditMode) {
@@ -225,42 +267,76 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
             </div>
           </div>
 
-          {/* Documento */}
-          <div className="space-y-2">
-            <label htmlFor="document_id" className="text-[10px] font-black text-[#616161] uppercase tracking-widest block">
-              {t('clients.modal.field.document', 'Documento de Identidad')} <span className="text-[#a4262c]">*</span>
-            </label>
-            <input
-              id="document_id"
-              name="document_id"
-              type="text"
-              className={`w-full h-10 px-3 bg-white border ${errors.document_id ? 'border-[#a4262c] ring-1 ring-[#a4262c]' : 'border-[#d1d1d1]'} rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none`}
-              value={formData.document_id}
-              onChange={handleChange}
-              disabled={isSubmitting}
-              placeholder={t('clients.modal.placeholder.document', 'CI, RUC, etc.')}
-            />
-            {errors.document_id && (
-              <span className="text-[10px] font-bold text-[#a4262c] uppercase">{errors.document_id}</span>
-            )}
+          {/* Documento: tipo + número */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <DocumentTypeSelect
+                id="document_type"
+                value={formData.document_type}
+                onChange={value => handleSelectChange('document_type', value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="document_id" className="text-[10px] font-black text-[#616161] uppercase tracking-widest block">
+                {t('clients.modal.field.document', 'Documento de Identidad')} <span className="text-[#a4262c]">*</span>
+              </label>
+              <input
+                id="document_id"
+                name="document_id"
+                type="text"
+                className={`w-full h-10 px-3 bg-white border ${errors.document_id ? 'border-[#a4262c] ring-1 ring-[#a4262c]' : 'border-[#d1d1d1]'} rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none`}
+                value={formData.document_id}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                placeholder={t('clients.modal.placeholder.document', 'CI, RUC, etc.')}
+              />
+              {errors.document_id && (
+                <span className="text-[10px] font-bold text-[#a4262c] uppercase">{errors.document_id}</span>
+              )}
+            </div>
           </div>
 
-          {/* Contacto */}
-          <div className="space-y-2">
-            <label htmlFor="contact" className="text-[10px] font-black text-[#616161] uppercase tracking-widest block">
-              {t('clients.modal.field.contact', 'Contacto')}
-            </label>
-            <input
-              id="contact"
-              name="contact"
-              type="text"
-              className="w-full h-10 px-3 bg-white border border-[#d1d1d1] rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none"
-              value={formData.contact}
-              onChange={handleChange}
-              disabled={isSubmitting}
-              placeholder={t('clients.modal.placeholder.contact', 'Teléfono, email, etc.')}
-            />
+          {/* Contacto y nacionalidad */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label htmlFor="contact" className="text-[10px] font-black text-[#616161] uppercase tracking-widest block">
+                {t('clients.modal.field.contact', 'Contacto')}
+              </label>
+              <input
+                id="contact"
+                name="contact"
+                type="text"
+                className="w-full h-10 px-3 bg-white border border-[#d1d1d1] rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none"
+                value={formData.contact}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                placeholder={t('clients.modal.placeholder.contact', 'Teléfono, email, etc.')}
+              />
+            </div>
+            <div className="space-y-2">
+              <CountrySelect
+                id="nationality"
+                value={formData.nationality}
+                onChange={value => handleSelectChange('nationality', value)}
+                disabled={isSubmitting}
+                label={t('party.field.nationality')}
+              />
+            </div>
           </div>
+
+          {/* Dirección estructurada */}
+          <AddressFieldsGrid
+            values={{
+              street: formData.address_street,
+              city: formData.address_city,
+              state: formData.address_state,
+              zipCode: formData.address_zip_code,
+              country: formData.address_country,
+            }}
+            onChange={handleAddressChange}
+            disabled={isSubmitting}
+          />
 
           {/* Error general */}
           {errors.submit && (

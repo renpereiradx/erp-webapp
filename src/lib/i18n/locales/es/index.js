@@ -13,6 +13,7 @@ import { stockMovements } from './stockMovements'
 import { purchasePaymentsMvp } from './purchasePaymentsMvp'
 import { clients } from './clients'
 import { suppliers } from './suppliers'
+import { party } from './party'
 import { sales } from './sales'
 import { inventory } from './inventory'
 import { other } from './other'
@@ -41,6 +42,7 @@ export const es = {
   ...purchasePaymentsMvp,
   ...clients,
   ...suppliers,
+  ...party,
   ...sales,
   ...inventory,
   ...cashRegister,
