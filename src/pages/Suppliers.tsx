@@ -10,6 +10,8 @@ import {
 import { useSuppliersView } from './useSuppliersView';
 import SupplierDirectoryFormModal from '@/components/suppliers-directory/SupplierDirectoryFormModal';
 import SupplierDirectoryDetailsModal from '@/components/suppliers-directory/SupplierDirectoryDetailsModal';
+import WithPermission from '@/components/auth/WithPermission';
+import { useAuth } from '@/contexts/AuthContext';
 import { ConfirmationModal } from '@/components/ui/EnhancedModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +42,7 @@ const SupplierActionsMenu = ({
   t,
 }: any) => {
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const { hasAnyPermission } = useAuth();
 
   React.useEffect(() => {
     if (!context) return undefined;
@@ -103,14 +106,16 @@ const SupplierActionsMenu = ({
         <TrendingUp size={16} className="text-[#616161]" />
         {t('supplier.action.analyze', 'Análisis de Deuda')}
       </button>
-      <button 
-        className='flex items-center gap-3 w-full px-4 py-2 text-sm text-[#242424] hover:bg-[#f3f2f1] transition-colors text-left' 
-        type='button' 
-        onClick={onEdit}
-      >
-        <Pencil size={16} className="text-[#616161]" />
-        {t('supplier.action.edit', 'Editar')}
-      </button>
+      {hasAnyPermission('parties:write', 'suppliers:write') && (
+        <button 
+          className='flex items-center gap-3 w-full px-4 py-2 text-sm text-[#242424] hover:bg-[#f3f2f1] transition-colors text-left' 
+          type='button' 
+          onClick={onEdit}
+        >
+          <Pencil size={16} className="text-[#616161]" />
+          {t('supplier.action.edit', 'Editar')}
+        </button>
+      )}
       <button 
         className='flex items-center gap-3 w-full px-4 py-2 text-sm text-[#242424] hover:bg-[#f3f2f1] transition-colors text-left' 
         type='button' 
@@ -177,13 +182,15 @@ const SuppliersPage = () => {
           <Share className='size-4 mr-2' />
           <span className='hidden sm:inline'>{t('action.export', 'Exportar')}</span>
         </Button>
-        <Button 
-          className='bg-[#0f6cbd] hover:bg-[#115ea3] text-white px-5 shadow-sm border-none font-bold'
-          onClick={openCreateModal}
-        >
-          <Plus className='size-4 mr-2' />
-          <span>{t('supplier.action.create', 'Nuevo proveedor')}</span>
-        </Button>
+        <WithPermission anyOf={['parties:write', 'suppliers:write']}>
+          <Button 
+            className='bg-[#0f6cbd] hover:bg-[#115ea3] text-white px-5 shadow-sm border-none font-bold'
+            onClick={openCreateModal}
+          >
+            <Plus className='size-4 mr-2' />
+            <span>{t('supplier.action.create', 'Nuevo proveedor')}</span>
+          </Button>
+        </WithPermission>
       </div>
 
       {/* Toolbar Card */}

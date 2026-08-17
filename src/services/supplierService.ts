@@ -1,8 +1,9 @@
 import { apiClient } from './api';
 import { telemetry } from '../utils/telemetry';
 
-// Según docs/guides/multibranch-implementation/PARTY_API_GUIDE.md usamos la API unificada
-const API_PREFIX = '/api/v1/parties';
+// Alias tipado del backend: /api/v1/suppliers fuerza party_type=SUPPLIER y el
+// permiso suppliers:read/write (plan RBAC parties). Ver PARTY_API_GUIDE.md.
+const API_PREFIX = '/api/v1/suppliers';
 
 // Opciones comunes para proveedores: no requieren contexto de sucursal
 const SUPPLIER_OPTIONS = { skipBranchContext: true };
@@ -29,9 +30,9 @@ const supplierService = {
     try {
       let endpoint;
       if (params.page && params.pageSize) {
-        endpoint = `${API_PREFIX}?party_type=SUPPLIER&page=${params.page}&page_size=${params.pageSize}`;
+        endpoint = `${API_PREFIX}?page=${params.page}&page_size=${params.pageSize}`;
       } else {
-        endpoint = `${API_PREFIX}?party_type=SUPPLIER&page=1&page_size=50`;
+        endpoint = `${API_PREFIX}?page=1&page_size=50`;
       }
       
       const result = await _fetchWithRetry(() => apiClient.get(endpoint, SUPPLIER_OPTIONS));
@@ -59,7 +60,7 @@ const supplierService = {
   searchByName: async (name) => {
     const startTime = Date.now();
     try {
-      const endpoint = `${API_PREFIX}?party_type=SUPPLIER&search=${encodeURIComponent(name)}`;
+      const endpoint = `${API_PREFIX}?search=${encodeURIComponent(name)}`;
       const result = await _fetchWithRetry(() => apiClient.get(endpoint, SUPPLIER_OPTIONS));
       telemetry.record('supplier.service.search', { duration: Date.now() - startTime, name });
       return result.data?.items || result.items || result;
@@ -75,7 +76,6 @@ const supplierService = {
       const endpoint = `${API_PREFIX}`;
       const payload = {
         ...data,
-        party_type: 'SUPPLIER',
         first_name: data.first_name || data.name || '',
       };
       

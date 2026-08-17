@@ -13,6 +13,27 @@ export interface DemoUser {
   permissions: string[];
 }
 
+// Permisos del admin demo: lista completa de módulos (los guard del frontend
+// tienen bypass admin vía role F2VLso, pero se listan para reflejar el demo)
+const ADMIN_PERMISSIONS = [
+  'dashboard:read', 'analytics:read', 'reports:read', 'audit:read',
+  'sales:read', 'sales:write',
+  'products:read', 'products:write',
+  'inventory:read', 'inventory:write',
+  'parties:read', 'parties:write',
+  'clients:read', 'clients:write',
+  'suppliers:read', 'suppliers:write',
+  'reserves:read', 'reserves:write',
+  'purchases:read', 'purchases:write',
+  'payments:read', 'payments:write',
+  'cash:read', 'cash:write',
+  'receivables:read', 'payables:read',
+  'budgets:read', 'budgets:write',
+  'branches:read', 'branches:write',
+  'tax:read', 'users:read', 'users:write',
+  'read', 'write', 'delete', 'F2VLso',
+];
+
 // Demo users with different roles
 export const DEMO_USERS: Record<string, DemoUser> = {
   admin: {
@@ -22,7 +43,7 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     name: 'Admin Demo',
     role: 'F2VLso',
     role_id: 1,
-    permissions: ['read', 'write', 'delete', 'F2VLso']
+    permissions: ADMIN_PERMISSIONS
   },
   manager: {
     id: 2,
@@ -31,7 +52,7 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     name: 'Manager Demo',
     role: 'manager',
     role_id: 2,
-    permissions: ['read', 'write']
+    permissions: ADMIN_PERMISSIONS
   },
   user: {
     id: 3,
@@ -50,7 +71,18 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     name: 'Demo User',
     role: 'F2VLso',
     role_id: 1,
-    permissions: ['read', 'write', 'delete', 'F2VLso']
+    permissions: ADMIN_PERMISSIONS
+  },
+  // Vendedor demo: refleja el gating del plan RBAC parties — directorio de
+  // clientes (lectura+escritura) y ventas, sin proveedores ni admin
+  vendedor: {
+    id: 5,
+    email: 'vendedor@demo.com',
+    password: 'vendedor123',
+    name: 'Vendedor Demo',
+    role: 'vendedor',
+    role_id: 5,
+    permissions: ['clients:read', 'clients:write', 'sales:read', 'sales:write']
   }
 };
 
@@ -136,6 +168,7 @@ export const getDemoCredentialsList = () => [
   { label: 'Admin Demo', email: 'admin@demo.com', password: 'admin123', role: 'admin' },
   { label: 'Manager Demo', email: 'manager@demo.com', password: 'manager123', role: 'manager' },
   { label: 'User Demo', email: 'user@demo.com', password: 'user123', role: 'user' },
+  { label: 'Vendedor Demo', email: 'vendedor@demo.com', password: 'vendedor123', role: 'vendedor' },
   { label: 'Quick Demo', email: 'demo', password: 'demo', role: 'admin' }
 ];
 

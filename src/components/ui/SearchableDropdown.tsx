@@ -26,6 +26,8 @@ export interface SearchableDropdownProps<T extends SearchableDropdownItem> {
   minSearchLength?: number;
   debounceMs?: number;
   emptyMessage?: string;
+  /** Reemplaza el mensaje vacío por contenido propio (ej. CTA de registro). */
+  renderEmpty?: () => React.ReactNode;
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -55,6 +57,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
   minSearchLength = 3,
   debounceMs = 300,
   emptyMessage = 'No se encontraron resultados',
+  renderEmpty,
 }: SearchableDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -266,7 +269,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
 
       {isOpen && searchTerm.length >= minSearchLength && items.length === 0 && !isSearching && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-border-subtle rounded-xl shadow-fluent-16 p-4 text-center text-slate-500">
-          <p className="text-sm">{emptyMessage}</p>
+          {renderEmpty ? renderEmpty() : <p className="text-sm">{emptyMessage}</p>}
         </div>
       )}
     </div>

@@ -3,8 +3,9 @@ import { apiClient } from './api';
 import { telemetry } from '../utils/telemetry';
 import { clientListData } from './mocks/clientMock';
 
-// Según docs/guides/multibranch-implementation/PARTY_API_GUIDE.md usamos la API unificada
-const API_PREFIX = '/api/v1/parties';
+// Alias tipado del backend: /api/v1/clients fuerza party_type=CLIENT y el
+// permiso clients:read/write (plan RBAC parties). Ver PARTY_API_GUIDE.md.
+const API_PREFIX = '/api/v1/clients';
 const USE_MOCK = import.meta.env.VITE_USE_DEMO === 'true';
 
 // Opciones comunes para clientes: no requieren contexto de sucursal
@@ -51,7 +52,7 @@ export const clientService = {
         );
         return _mockRes(filtered);
       }
-      const endpoint = `${API_PREFIX}?party_type=CLIENT&search=${encodeURIComponent(name)}`;
+      const endpoint = `${API_PREFIX}?search=${encodeURIComponent(name)}`;
       const result = await _fetchWithRetry(async () => apiClient.get(endpoint, CLIENT_OPTIONS));
 
       telemetry.record('client.service.search', { duration: Date.now() - startTime, name });
@@ -92,7 +93,7 @@ export const clientService = {
           total: clientListData.length
         });
       }
-      const endpoint = `${API_PREFIX}?party_type=CLIENT&page=${page}&page_size=${pageSize}`;
+      const endpoint = `${API_PREFIX}?page=${page}&page_size=${pageSize}`;
       const result = await _fetchWithRetry(async () => apiClient.get(endpoint, CLIENT_OPTIONS));
       
       telemetry.record('client.service.getAll', { duration: Date.now() - startTime, page, pageSize });
@@ -111,7 +112,6 @@ export const clientService = {
       // Formatear payload a Party Model si es necesario, o pasar data que enviaría el componente
       const payload = {
         ...data,
-        party_type: 'CLIENT',
         first_name: data.first_name || data.name || '',
       };
       // Evitamos sobrescribir last_name si ya existe en data

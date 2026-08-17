@@ -6,12 +6,14 @@
  * cliente notifica al orquestador, que cargará ventas pendientes / reservas
  * y recalculará los pasos condicionales.
  */
-import { forwardRef, useImperativeHandle, useRef } from 'react'
-import { User, X, AlertTriangle } from 'lucide-react'
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
+import { User, UserPlus, X, AlertTriangle } from 'lucide-react'
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import WithPermission from '@/components/auth/WithPermission'
 import useClientStore from '@/store/useClientStore'
+import QuickClientModal from '@/features/party/components/QuickClientModal'
 import { useI18n } from '@/lib/i18n'
 
 export interface ClientStepRef {
@@ -32,6 +34,7 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
     const { t } = useI18n()
     const { searchClients } = useClientStore()
     const searchInputRef = useRef<HTMLInputElement>(null)
+    const [isQuickModalOpen, setIsQuickModalOpen] = useState(false)
 
     useImperativeHandle(ref, () => ({
       focus: () => searchInputRef.current?.focus(),
@@ -51,31 +54,61 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
         </div>
 
         {!client ? (
-          <SearchableDropdown
-            inputRef={searchInputRef}
-            onSelect={onClientSelect}
-            onSearch={async (term: string) => {
-              if (term.trim().length < 3) return []
-              await searchClients(term)
-              return useClientStore.getState().searchResults as any[]
-            }}
-            placeholder={t('sales.checkoutWizard.client.placeholder', 'Buscar cliente por nombre o CI... (F3)')}
-            renderItem={(item) => (
-              <div className="flex items-center gap-3 py-1">
-                <div className="size-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User size={14} className="text-primary" />
+          <div className="space-y-3">
+            <SearchableDropdown
+              inputRef={searchInputRef}
+              onSelect={onClientSelect}
+              onSearch={async (term: string) => {
+                if (term.trim().length < 3) return []
+                await searchClients(term)
+                return useClientStore.getState().searchResults as any[]
+              }}
+              placeholder={t('sales.checkoutWizard.client.placeholder', 'Buscar cliente por nombre o CI... (F3)')}
+              renderItem={(item) => (
+                <div className="flex items-center gap-3 py-1">
+                  <div className="size-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User size={14} className="text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm truncate">{item.displayName || item.name}</p>
+                    {item.document_id && (
+                      <p className="text-xs text-on-surface-variant">{item.document_id}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm truncate">{item.displayName || item.name}</p>
-                  {item.document_id && (
-                    <p className="text-xs text-on-surface-variant">{item.document_id}</p>
-                  )}
+              )}
+              emptyMessage={t('sales.checkoutWizard.client.empty', 'No se encontraron clientes')}
+              renderEmpty={() => (
+                <div className="space-y-3">
+                  <p className="text-sm text-on-surface-variant">
+                    {t('party.quick_client.empty_cta', '¿No lo encontrás? Registralo como nuevo cliente')}
+                  </p>
+                  <WithPermission anyOf={['clients:write', 'parties:write']}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsQuickModalOpen(true)}
+                      className="w-full"
+                    >
+                      <UserPlus size={14} className="mr-2" />
+                      {t('party.quick_client.action', 'Nuevo cliente')}
+                    </Button>
+                  </WithPermission>
                 </div>
-              </div>
-            )}
-            emptyMessage={t('sales.checkoutWizard.client.empty', 'No se encontraron clientes')}
-            className="w-full bg-surface-container-lowest shadow-sm"
-          />
+              )}
+              className="w-full bg-surface-container-lowest shadow-sm"
+            />
+            <WithPermission anyOf={['clients:write', 'parties:write']}>
+              <Button
+                variant="outline"
+                onClick={() => setIsQuickModalOpen(true)}
+                className="w-full h-11 text-on-surface-variant"
+              >
+                <UserPlus size={16} className="mr-2" />
+                {t('party.quick_client.action', 'Nuevo cliente')}
+              </Button>
+            </WithPermission>
+          </div>
         ) : (
           <div className="p-4 bg-surface-container-lowest rounded-md border-2 border-primary/20 shadow-sm">
             <div className="flex items-start justify-between">
@@ -125,6 +158,16 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
             )}
           </div>
         )}
+
+        {/* Registro rápido: autoselecciona al cliente y continúa el checkout */}
+        <QuickClientModal
+          isOpen={isQuickModalOpen}
+          onClose={() => setIsQuickModalOpen(false)}
+          onCreated={(created) => {
+            setIsQuickModalOpen(false)
+            onClientSelect(created)
+          }}
+        />
       </div>
     )
   },

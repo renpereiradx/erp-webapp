@@ -1,7 +1,7 @@
 # PLAN_RBAC_PARTIES_SCOPE_FRONTEND — Gating por permisos en parties + registro rápido de cliente en el POS
 
 Fecha: 2026-08-17
-Estado: ⏳ Planificado (NO implementado — pendiente de ejecución)
+Estado: ✅ Frontend implementado en `feat/rbac-parties-scope-frontend` (F1–F5). Pendiente: backend del plan maestro (B1/B2/B4) para que el gating tenga datos reales.
 Repo: erp-webapp
 Companion backend (plan maestro): `business_management/conductor/PLAN_RBAC_PARTIES_SCOPE.md`
 Origen: un vendedor que recepciona un cliente no registrado entra a `/parties`

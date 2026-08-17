@@ -191,10 +191,13 @@ export const userService = {
   getMe: async (): Promise<SuccessResponse & { data: User }> => {
     // 🔧 Bypass en modo demo para evitar errores de red
     if (DEMO_CONFIG.enabled) {
-      // Simular delay y retornar admin por defecto en demo
+      // Devolver el usuario demo que inició sesión (persistido en el login);
+      // así el vendedor demo refleja su gating de permisos
+      const demoEmail = localStorage.getItem('demoUserEmail');
+      const demoUser = demoEmail ? DEMO_USERS_LIST.find(u => u.email === demoEmail) : undefined;
       return {
         success: true,
-        data: DEMO_USERS_LIST[0] // Usar el perfil demo configurado
+        data: demoUser || DEMO_USERS_LIST[0] // Usar el perfil demo configurado
       };
     }
 

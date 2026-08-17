@@ -15,6 +15,27 @@ export const party = {
   'party.field.address_country': 'País',
   'party.select.placeholder': 'Sin especificar',
 
+  // Registro rápido de cliente (POS)
+  'party.quick_client.title': 'Registro rápido de cliente',
+  'party.quick_client.subtitle': 'Datos mínimos para continuar la venta',
+  'party.quick_client.action': 'Nuevo cliente',
+  'party.quick_client.empty_cta': '¿No lo encontrás? Registralo como nuevo cliente',
+  'party.quick_client.field.first_name': 'Nombre',
+  'party.quick_client.field.last_name': 'Apellido',
+  'party.quick_client.field.document_id': 'Número de documento',
+  'party.quick_client.field.phone': 'Teléfono (opcional)',
+  'party.quick_client.placeholder.first_name': 'Ingrese el nombre',
+  'party.quick_client.placeholder.last_name': 'Ingrese el apellido',
+  'party.quick_client.placeholder.document_id': 'Ej: 1234567',
+  'party.quick_client.placeholder.phone': 'Ej: 0981 123 456',
+  'party.quick_client.submit': 'Registrar cliente',
+  'party.quick_client.processing': 'Registrando...',
+  'party.quick_client.error.first_name': 'El nombre es requerido',
+  'party.quick_client.error.last_name': 'El apellido es requerido',
+  'party.quick_client.error.document_type': 'El tipo de documento es requerido',
+  'party.quick_client.error.document_id': 'El número de documento es requerido',
+  'party.quick_client.error.generic': 'Error al registrar el cliente',
+
   // Tipos de documento (whitelist del backend, en mayúsculas)
   'party.document_type.CI': 'Cédula de Identidad',
   'party.document_type.RUC': 'RUC',

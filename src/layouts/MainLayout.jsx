@@ -78,7 +78,7 @@ const MainLayout = ({ children }) => {
 
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, logout, hasPermission } = useAuth()
+  const { user, logout, hasPermission, hasAnyPermission } = useAuth()
   const { t } = useI18n()
   const { matchesShortcut } = useKeyboardShortcutsStore()
 
@@ -479,7 +479,8 @@ const MainLayout = ({ children }) => {
         name: t('common.directory', 'Directorio de Contactos'),
         href: '/parties',
         icon: Users,
-        permission: 'parties:read'
+        // anyOf: vendedores con clients:read ven el directorio sin parties:read
+        permissions: ['parties:read', 'clients:read', 'suppliers:read']
       },
       {
         name: t('common.services_planning', 'Planificación y Reservas'),
@@ -555,7 +556,11 @@ const MainLayout = ({ children }) => {
     // Recursively filter navigation items based on permissions
     const filterNavItems = (items) => {
       return items.filter(item => {
-        if (item.permission && !hasPermission(item.permission)) {
+        if (item.permissions && Array.isArray(item.permissions)) {
+          if (!hasAnyPermission(...item.permissions)) {
+            return false;
+          }
+        } else if (item.permission && !hasPermission(item.permission)) {
           return false;
         }
         if (item.children) {
@@ -569,7 +574,7 @@ const MainLayout = ({ children }) => {
 
     return filterNavItems(navItems);
     },
-    [t, hasPermission]
+    [t, hasPermission, hasAnyPermission]
   )
 
   const isActive = useCallback((href) => {

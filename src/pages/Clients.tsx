@@ -12,6 +12,7 @@ import {
 import { useClientsView } from './useClientsView';
 import ClientFormModal from '@/components/ClientFormModal';
 import ClientDetailsModal from '@/components/ClientDetailsModal';
+import WithPermission from '@/components/auth/WithPermission';
 import ToastContainer from '@/components/ui/ToastContainer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,13 +57,15 @@ const ClientsPage = () => {
           <Share className="size-4 mr-2" />
           <span className="hidden sm:inline">{t('action.export', 'Exportar')}</span>
         </Button>
-        <Button 
-          className="bg-[#0f6cbd] hover:bg-[#115ea3] text-white px-5 shadow-sm border-none font-bold"
-          onClick={handleCreate}
-        >
-          <Plus className="size-4 mr-2" />
-          <span>{t('clients.action.create', 'Nuevo Cliente')}</span>
-        </Button>
+        <WithPermission anyOf={['parties:write', 'clients:write']}>
+          <Button 
+            className="bg-[#0f6cbd] hover:bg-[#115ea3] text-white px-5 shadow-sm border-none font-bold"
+            onClick={handleCreate}
+          >
+            <Plus className="size-4 mr-2" />
+            <span>{t('clients.action.create', 'Nuevo Cliente')}</span>
+          </Button>
+        </WithPermission>
       </div>
 
       {/* Toolbar Card */}
@@ -209,14 +212,16 @@ const ClientsPage = () => {
                     </TableCell>
 
                     <TableCell className="py-5 px-8 text-right" onClick={(e) => e.stopPropagation()}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-slate-400 hover:text-[#0f6cbd] hover:bg-transparent rounded-full opacity-0 group-hover:opacity-100 transition-all"
-                        onClick={() => handleEdit(client)}
-                      >
-                        <MoreVertical className="size-5" />
-                      </Button>
+                      <WithPermission anyOf={['parties:write', 'clients:write']}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-slate-400 hover:text-[#0f6cbd] hover:bg-transparent rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                          onClick={() => handleEdit(client)}
+                        >
+                          <MoreVertical className="size-5" />
+                        </Button>
+                      </WithPermission>
                     </TableCell>
                   </TableRow>
                 );

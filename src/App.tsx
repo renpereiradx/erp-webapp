@@ -270,7 +270,7 @@ function AppContent() {
                       <Route path='/receivables/client-profile/:clientId' element={<ClientCreditProfile />} />
                       <Route path='/receivables/aging-report' element={<AgingReport />} />
                       <Route path='/productos' element={<PermissionGuard permission="products:read"><Products /></PermissionGuard>} />
-                      <Route path='/parties' element={<PermissionGuard permission="parties:read"><PartiesPage /></PermissionGuard>} />
+                      <Route path='/parties' element={<PermissionGuard anyOf={['parties:read', 'clients:read', 'suppliers:read']}><PartiesPage /></PermissionGuard>} />
                       <Route path='/payables/suppliers/:id/analysis' element={<SupplierAnalysis />} />
                       <Route path='/ventas' element={<PermissionGuard permission="sales:read"><SalesNew /></PermissionGuard>} />
                       

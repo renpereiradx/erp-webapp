@@ -1,29 +1,39 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
+import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { visiblePartyTabs, resolvePartyTab, type PartyTab } from '@/domain/party/partiesTabs';
 import ClientsPage from './Clients';
 import SuppliersPage from './Suppliers';
 
 const PartiesPage = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const { hasAnyPermission } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  
-  const initialTab = searchParams.get('tab') === 'proveedores' ? 'proveedores' : 'clientes';
-  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Gating por permisos: vendedor solo ve Clientes (D1 del plan);
+  // `parties:read` sigue habilitando ambos tabs por retrocompatibilidad.
+  const canSeeClients = hasAnyPermission('parties:read', 'clients:read');
+  const canSeeSuppliers = hasAnyPermission('parties:read', 'suppliers:read');
+  const visibleTabs = visiblePartyTabs(canSeeClients, canSeeSuppliers);
+
+  const [activeTab, setActiveTab] = useState(() =>
+    resolvePartyTab(searchParams.get('tab'), visibleTabs),
+  );
 
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
+    if (!visibleTabs.includes(value as PartyTab)) return;
+    setActiveTab(value as PartyTab);
     setSearchParams({ tab: value });
   };
 
   useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'proveedores' || tab === 'clientes') {
-      setActiveTab(tab);
-    }
-  }, [searchParams]);
+    // Si la tab pedida por URL no es visible (ej. ?tab=proveedores sin
+    // permiso), caer a la primera visible.
+    setActiveTab(resolvePartyTab(searchParams.get('tab'), visibleTabs));
+  }, [searchParams, canSeeClients, canSeeSuppliers]);
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 min-h-screen bg-[#faf9f8] p-6 md:p-8">
@@ -55,26 +65,34 @@ const PartiesPage = () => {
         {/* Fluent 2 Tabs */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
           <TabsList className="bg-[#f3f2f1] text-[#616161] border border-[#d1d1d1] shadow-fluent-2 p-1 rounded-lg h-12 gap-1 w-full max-w-md">
-            <TabsTrigger 
-              value="clientes" 
-              className="flex-1 data-[state=active]:bg-white data-[state=active]:text-[#0f6cbd] data-[state=active]:shadow-sm rounded-md font-bold transition-all text-sm h-10"
-            >
-              {t('parties.tab.clients', 'Directorio de Clientes')}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="proveedores" 
-              className="flex-1 data-[state=active]:bg-white data-[state=active]:text-[#0f6cbd] data-[state=active]:shadow-sm rounded-md font-bold transition-all text-sm h-10"
-            >
-              {t('parties.tab.suppliers', 'Directorio de Proveedores')}
-            </TabsTrigger>
+            {canSeeClients && (
+              <TabsTrigger 
+                value="clientes" 
+                className="flex-1 data-[state=active]:bg-white data-[state=active]:text-[#0f6cbd] data-[state=active]:shadow-sm rounded-md font-bold transition-all text-sm h-10"
+              >
+                {t('parties.tab.clients', 'Directorio de Clientes')}
+              </TabsTrigger>
+            )}
+            {canSeeSuppliers && (
+              <TabsTrigger 
+                value="proveedores" 
+                className="flex-1 data-[state=active]:bg-white data-[state=active]:text-[#0f6cbd] data-[state=active]:shadow-sm rounded-md font-bold transition-all text-sm h-10"
+              >
+                {t('parties.tab.suppliers', 'Directorio de Proveedores')}
+              </TabsTrigger>
+            )}
           </TabsList>
 
-          <TabsContent value="clientes" className="mt-0 outline-none">
-            <ClientsPage />
-          </TabsContent>
-          <TabsContent value="proveedores" className="mt-0 outline-none">
-            <SuppliersPage />
-          </TabsContent>
+          {canSeeClients && (
+            <TabsContent value="clientes" className="mt-0 outline-none">
+              <ClientsPage />
+            </TabsContent>
+          )}
+          {canSeeSuppliers && (
+            <TabsContent value="proveedores" className="mt-0 outline-none">
+              <SuppliersPage />
+            </TabsContent>
+          )}
         </Tabs>
 
       </div>

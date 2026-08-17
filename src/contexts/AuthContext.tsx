@@ -22,9 +22,10 @@ interface AuthContextType {
   clearError: () => void;
   initializeAuth: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
+  hasAnyPermission: (...permissions: string[]) => boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -41,6 +42,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (user.role_id === 'admin' || user.role_id === 'F2VLso') return true;
     if (!user.permissions) return false;
     return user.permissions.includes(permission);
+  }, [user]);
+
+  // Semántica OR: pasa si el usuario tiene al menos uno de los permisos.
+  const hasAnyPermission = useCallback((...permissions: string[]): boolean => {
+    if (!user) return false;
+    if (user.role_id === 'admin' || user.role_id === 'F2VLso') return true;
+    if (!user.permissions || permissions.length === 0) return false;
+    return permissions.some(p => user.permissions!.includes(p));
   }, [user]);
 
   const initializeAuth = useCallback(async () => {
@@ -119,7 +128,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               role_id: result.role_id || meResponse.data.role_id,
               role_name: result.role_name || meResponse.data.role_name,
               active_branch: result.active_branch || meResponse.data.active_branch,
-              allowed_branches: result.allowed_branches || meResponse.data.allowed_branches
+              allowed_branches: result.allowed_branches || meResponse.data.allowed_branches,
+              // /me es la fuente canónica de permisos; si aún no los devuelve,
+              // caer a los del login (dependencia B4 del plan maestro)
+              permissions: meResponse.data.permissions || result.user?.permissions
             });
           } else {
             // Fallback al usuario de la respuesta de login si /me falla
@@ -254,7 +266,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       logout,
       clearError,
       initializeAuth,
-      hasPermission
+      hasPermission,
+      hasAnyPermission
     }}>
       {children}
     </AuthContext.Provider>

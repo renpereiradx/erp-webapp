@@ -267,7 +267,7 @@ export default function UserManagementList() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-fluent-16">
-                      <DropdownMenuItem className="text-xs font-bold uppercase tracking-wider" onClick={() => navigate(`/usuarios/${user.id}`)}><Eye size={14} className="mr-2" />{t('users.actions.view')}</DropdownMenuItem>
+                      <DropdownMenuItem className="text-xs font-bold uppercase tracking-wider" onClick={() => navigate(`/configuracion/usuarios/${user.id}`)}><Eye size={14} className="mr-2" />{t('users.actions.view')}</DropdownMenuItem>
                       <DropdownMenuItem className="text-xs font-bold uppercase tracking-wider" onClick={() => handleEditClick(user)}><Edit size={14} className="mr-2" />{t('users.actions.edit')}</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-xs font-bold uppercase tracking-wider text-error focus:text-error focus:bg-error/5" onClick={() => handleDeleteClick(user)}><Trash2 size={14} className="mr-2" />{t('users.actions.delete')}</DropdownMenuItem>

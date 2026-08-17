@@ -41,6 +41,10 @@ const authService = {
         await new Promise(resolve => setTimeout(resolve, 500));
         
         const response = generateDemoLoginResponse(demoUser);
+
+        // Recordar qué usuario demo entró: /me (userService.getMe) lo usa
+        // para devolver el perfil correcto en demo mode
+        localStorage.setItem('demoUserEmail', demoUser.email);
         
         // Simular almacenamiento del token demo
         apiService.setToken(response.token);
@@ -147,6 +151,7 @@ const authService = {
     // Solo intentar notificar al servidor del logout
     const currentToken = apiService.getToken();
     if (currentToken === 'demo-jwt-token-12345') {
+      localStorage.removeItem('demoUserEmail');
       return { success: true, message: 'Demo logout successful' } as SuccessResponse;
     }
 

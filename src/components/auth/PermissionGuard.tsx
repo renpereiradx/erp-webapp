@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/button';
 
 interface PermissionGuardProps {
   children: React.ReactNode;
-  permission: string;
+  /** Permiso único (semántica AND implícita con `anyOf` si ambos se pasan: se exigen los dos). */
+  permission?: string;
+  /** Semántica OR: pasa si el usuario tiene al menos uno de estos permisos. */
+  anyOf?: string[];
   redirectTo?: string;
   showError?: boolean;
 }
@@ -14,14 +17,16 @@ interface PermissionGuardProps {
 /**
  * PermissionGuard protege rutas o secciones basándose en los permisos (recurso:acción) del usuario.
  * Evita errores 403 Forbidden interceptándolos en el Frontend antes de montar componentes complejos.
+ * Soporta un permiso único (`permission`, retrocompat) o una lista OR (`anyOf`).
  */
 const PermissionGuard: React.FC<PermissionGuardProps> = ({
   children,
   permission,
+  anyOf,
   redirectTo,
   showError = true
 }) => {
-  const { isAuthenticated, loading, authLoading, hasPermission } = useAuth();
+  const { isAuthenticated, loading, authLoading, hasPermission, hasAnyPermission } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -37,7 +42,12 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const allowed = hasPermission(permission);
+  const allowed = anyOf && anyOf.length > 0
+    ? hasAnyPermission(...anyOf)
+    : permission
+      ? hasPermission(permission)
+      : false;
+  const requiredLabel = anyOf && anyOf.length > 0 ? anyOf.join(' / ') : (permission ?? '');
 
   if (!allowed) {
     if (redirectTo) {
@@ -54,7 +64,7 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
             Acceso Restringido
           </h2>
           <p className="text-text-secondary max-w-md mb-8">
-            Lo sentimos, no cuentas con el permiso requerido (<span className="font-mono font-bold">{permission}</span>) para acceder a esta sección.
+            Lo sentimos, no cuentas con el permiso requerido (<span className="font-mono font-bold">{requiredLabel}</span>) para acceder a esta sección.
           </p>
           <div className="flex gap-4">
             <Button variant="outline" onClick={() => navigate(-1)}>

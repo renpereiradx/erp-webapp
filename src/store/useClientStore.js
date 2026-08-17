@@ -5,7 +5,7 @@ import { telemetry } from '../utils/telemetry'
 // Demo deshabilitado: se retira soporte condicional
 
 // Helper function to normalize client data
-const normalizeClient = c => {
+export const normalizeClient = c => {
   if (!c || typeof c !== 'object') return null
   
   const id = c.id || c.ID || c.client_id || c._id
