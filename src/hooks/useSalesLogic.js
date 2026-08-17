@@ -403,10 +403,13 @@ export const useSalesLogic = () => {
           productDetail.reserve_id = item.reservation_id;
         }
 
-        // Solo agregar campos opcionales si tienen valores válidos
-        if (item.tax_rate_id) {
-          productDetail.tax_rate_id = item.tax_rate_id;
-        }
+        // NOTA (feat/iva-consistency): NO se envía tax_rate_id por línea. El
+        // backend resuelve la tasa con la jerarquía de 6 niveles (override de
+        // producto > clasificación SIFEN > categoría > default) y liquida el
+        // IVA server-side. tax_rate_id solo se enviaría para un override
+        // explícito de transacción; el carrito no expone esa opción, y mandar
+        // la tasa heredada del producto como override dispararía warnings de
+        // discrepancia si el producto cambió de clasificación/categoría.
 
         // MODIFICACIÓN DE PRECIOS (requiere allow_price_modifications = true)
         // Soporta tanto AUMENTOS como DESCUENTOS
