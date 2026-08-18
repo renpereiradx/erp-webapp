@@ -24,13 +24,51 @@ export interface SaleTotals {
 export interface SaleItem {
   quantity: number;
   unit_price: number;
-  discount_amount?: number;
-  discount_percent?: number;
+  discount_amount?: number;   // Descuento por unidad
+  discount_percent?: number;  // Descuento porcentual sobre el bruto de la línea
+  discount_total?: number;    // Descuento absoluto de la línea (más preciso)
   tax_rate?: number; // Ej: 0.10 para 10%
   price_includes_tax?: boolean; // Default true (Paraguay)
 }
 
 const normalizeRateKey = (rate: number): number => Math.round(rate * 10000) / 10000;
+
+/**
+ * Prorratea un descuento general de venta entre las líneas, ANTES de
+ * liquidar el IVA (semántica del backend: descuentos primero, IVA después).
+ * El descuento de cada línea queda en `discount_total` (monto absoluto),
+ * combinado con cualquier descuento por línea existente.
+ */
+export const applyGeneralDiscount = (
+  items: SaleItem[],
+  discountAmount: number,
+): SaleItem[] => {
+  if (!discountAmount || discountAmount <= 0) return items;
+
+  const grossSum = items.reduce(
+    (sum, item) => sum + (item.quantity || 0) * (item.unit_price || 0),
+    0,
+  );
+  if (grossSum <= 0) return items;
+
+  const ratio = Math.min(1, discountAmount / grossSum);
+
+  return items.map(item => {
+    const qty = item.quantity || 0;
+    const lineGross = qty * (item.unit_price || 0);
+    if (lineGross <= 0) return item;
+
+    const existing = item.discount_total
+      ?? (qty * (item.discount_amount || 0)
+        + lineGross * ((item.discount_percent || 0) / 100));
+    const prorated = lineGross * ratio;
+
+    return {
+      ...item,
+      discount_total: Number((existing + prorated).toFixed(2)),
+    };
+  });
+};
 
 /**
  * Calcula los totales de una venta basándose en sus items con liquidación de IVA.
@@ -59,7 +97,9 @@ export const calculateSaleTotals = (items: SaleItem[]): SaleTotals => {
     
     // 2. Calcular Descuento de línea
     let line_discount = 0;
-    if (item.discount_amount) {
+    if (item.discount_total !== undefined && item.discount_total > 0) {
+      line_discount = item.discount_total;
+    } else if (item.discount_amount) {
       line_discount = qty * item.discount_amount;
     } else if (item.discount_percent) {
       line_discount = line_gross * (item.discount_percent / 100);

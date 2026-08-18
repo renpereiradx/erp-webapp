@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateSaleTotals, SaleItem } from './saleCalculator';
+import { calculateSaleTotals, applyGeneralDiscount, SaleItem } from './saleCalculator';
 
 describe('calculateSaleTotals', () => {
   it('extrae IVA 10% de precios con IVA incluido', () => {
@@ -83,5 +83,72 @@ describe('calculateSaleTotals', () => {
     expect(totals.discount_total).toBe(2000);
     expect(totals.tax_amount).toBeCloseTo(20000 - 20000 / 1.1, 2);
     expect(totals.total).toBeCloseTo(20000, 2);
+  });
+});
+
+describe('applyGeneralDiscount', () => {
+  it('prorratea el descuento antes del IVA: el IVA baja proporcionalmente', () => {
+    const items: SaleItem[] = [
+      { quantity: 1, unit_price: 110000, tax_rate: 0.1 },
+    ];
+    const discounted = applyGeneralDiscount(items, 11000); // 10%
+
+    expect(discounted[0].discount_total).toBe(11000);
+
+    const totals = calculateSaleTotals(discounted);
+    // Línea neta 99000 → IVA = 99000 - 99000/1.1 = 9000 (antes: 10000)
+    expect(totals.tax_amount).toBeCloseTo(9000, 2);
+    expect(totals.total).toBeCloseTo(99000, 2);
+    expect(totals.discount_total).toBeCloseTo(11000, 2);
+  });
+
+  it('prorratea entre líneas en proporción al bruto de cada una', () => {
+    const items: SaleItem[] = [
+      { quantity: 1, unit_price: 66000, tax_rate: 0.1 },  // 60% del bruto
+      { quantity: 1, unit_price: 44000, tax_rate: 0.1 },  // 40% del bruto
+    ];
+    const discounted = applyGeneralDiscount(items, 10000);
+
+    expect(discounted[0].discount_total).toBe(6000);
+    expect(discounted[1].discount_total).toBe(4000);
+
+    const totals = calculateSaleTotals(discounted);
+    expect(totals.discount_total).toBeCloseTo(10000, 2);
+    expect(totals.total).toBeCloseTo(100000, 2);
+  });
+
+  it('combina con descuentos por línea existentes', () => {
+    const items: SaleItem[] = [
+      { quantity: 2, unit_price: 11000, tax_rate: 0.1, discount_amount: 500 },
+    ];
+    // Bruto 22000, descuento por línea existente = 2×500 = 1000,
+    // prorrateo de 1100 (5% de 22000) → discount_total 2100
+    const discounted = applyGeneralDiscount(items, 1100);
+
+    expect(discounted[0].discount_total).toBeCloseTo(2100, 2);
+
+    const totals = calculateSaleTotals(discounted);
+    expect(totals.discount_total).toBeCloseTo(2100, 2);
+    expect(totals.total).toBeCloseTo(19900, 2);
+  });
+
+  it('no descuenta más que el bruto total (descuento excesivo se satura)', () => {
+    const items: SaleItem[] = [
+      { quantity: 1, unit_price: 50000, tax_rate: 0.1 },
+    ];
+    const discounted = applyGeneralDiscount(items, 999999);
+
+    expect(discounted[0].discount_total).toBe(50000);
+    const totals = calculateSaleTotals(discounted);
+    expect(totals.total).toBeCloseTo(0, 2);
+    expect(totals.tax_amount).toBeCloseTo(0, 2);
+  });
+
+  it('ignora descuentos nulos o negativos', () => {
+    const items: SaleItem[] = [
+      { quantity: 1, unit_price: 11000, tax_rate: 0.1 },
+    ];
+    expect(applyGeneralDiscount(items, 0)).toEqual(items);
+    expect(applyGeneralDiscount(items, -100)).toEqual(items);
   });
 });

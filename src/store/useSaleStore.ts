@@ -3,7 +3,10 @@ import { devtools } from 'zustand/middleware'
 import saleService from '@/services/saleService'
 import { telemetryService } from '@/services/telemetryService'
 import { normalizeSalePriceGs } from '@/domain/sale/pricing/salesPricingPolicy'
-import { calculateSaleTotals } from '@/domain/sale/calculations/saleCalculator'
+import {
+  calculateSaleTotals,
+  applyGeneralDiscount,
+} from '@/domain/sale/calculations/saleCalculator'
 import { resolveApplicableRateFraction } from '@/domain/tax/resolveApplicableRate'
 import { getDefaultVatPercent } from '@/store/useTaxRateStore'
 import { 
@@ -634,15 +637,43 @@ const useSaleStore = create<SaleState>()(
 
       applyDiscount: discountAmount => {
         const currentSaleData = get().currentSaleData
-        // Recalcular con lógica de dominio para asegurar consistencia
-        const totals = calculateSaleTotals(currentSaleData.items);
-        const newTotal = totals.total - discountAmount
+
+        if (!discountAmount || discountAmount <= 0) {
+          // Sin descuento general: recalcular sin prorrateo
+          const totals = calculateSaleTotals(currentSaleData.items)
+          set({
+            currentSaleData: {
+              ...currentSaleData,
+              discountAmount: 0,
+              subtotalAmount: totals.subtotal,
+              taxAmount: totals.tax_amount,
+              iva10: totals.iva10,
+              iva5: totals.iva5,
+              exento: totals.exento,
+              totalAmount: totals.total,
+            },
+          })
+          return
+        }
+
+        // Prorratear el descuento general por línea ANTES de extraer el IVA
+        // (semántica del backend: descuentos primero, IVA después).
+        const discountedItems = applyGeneralDiscount(
+          currentSaleData.items,
+          discountAmount,
+        )
+        const totals = calculateSaleTotals(discountedItems)
 
         set({
           currentSaleData: {
             ...currentSaleData,
             discountAmount: discountAmount,
-            totalAmount: Math.max(0, newTotal),
+            subtotalAmount: totals.subtotal,
+            taxAmount: totals.tax_amount,
+            iva10: totals.iva10,
+            iva5: totals.iva5,
+            exento: totals.exento,
+            totalAmount: totals.total,
           },
         })
       },
