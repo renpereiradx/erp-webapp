@@ -235,7 +235,7 @@ export const PurchaseCheckoutModal: React.FC<PurchaseCheckoutModalProps> = ({
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-500 font-medium">Liquidación IVA</span>
-                <span className="font-bold text-slate-700">{formatCurrency(purchaseTotals.iva10 + purchaseTotals.iva5)}</span>
+                <span className="font-bold text-slate-700">{formatCurrency(purchaseTotals.tax)}</span>
               </div>
             </div>
 

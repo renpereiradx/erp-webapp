@@ -421,8 +421,6 @@ const SalesNew: React.FC = () => {
   const saleTotals = useMemo(() => saleService.calculateLocalTotals(items), [items]);
   const subtotal = saleTotals.subtotal;
   const lineDiscounts = saleTotals.discount_total;
-  const iva10 = saleTotals.iva10;
-  const iva5 = saleTotals.iva5;
   const exento = saleTotals.exento;
   const total = useMemo(() => Math.max(0, saleTotals.total - generalDiscount), [saleTotals.total, generalDiscount]);
 
@@ -1835,23 +1833,17 @@ const SalesNew: React.FC = () => {
                       </div>
                     )}
                     
-                    {/* Desglose de IVA */}
+                    {/* Desglose de IVA por tasa (dinámico) */}
                     <div className="space-y-1 py-2 border-y border-slate-100 border-dashed">
-                      {iva10 > 0 && (
-                        <div className="flex justify-between text-[11px] font-bold text-slate-500 uppercase">
-                          <span>Liquidación IVA 10%</span>
-                          <span>{formatCurrency(iva10)}</span>
+                      {saleTotals.tax_buckets.map(bucket => (
+                        <div key={bucket.percent} className="flex justify-between text-[11px] font-bold text-slate-500 uppercase">
+                          <span>{t('sales.summary.vatLine', 'Liquidación IVA {pct}%', { pct: bucket.percent })}</span>
+                          <span>{formatCurrency(bucket.amount)}</span>
                         </div>
-                      )}
-                      {iva5 > 0 && (
-                        <div className="flex justify-between text-[11px] font-bold text-slate-500 uppercase">
-                          <span>Liquidación IVA 5%</span>
-                          <span>{formatCurrency(iva5)}</span>
-                        </div>
-                      )}
+                      ))}
                       {exento > 0 && (
                         <div className="flex justify-between text-[11px] font-bold text-slate-500 uppercase">
-                          <span>Monto Exento</span>
+                          <span>{t('sales.summary.exempt', 'Monto Exento')}</span>
                           <span>{formatCurrency(exento)}</span>
                         </div>
                       )}

@@ -22,7 +22,8 @@ import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
-import { useCheckoutShortcuts } from '@/features/sales/hooks/useCheckoutShortcuts'
+import { useCheckoutShortcuts } from '@/features/sales/hooks/useCheckoutShortcuts';
+import { PurchaseTotals } from '@/domain/purchase/calculations/purchaseCalculator';
 import { SupplierStep, SupplierStepRef } from './steps/SupplierStep'
 import { PurchasePaymentStep, PurchasePaymentStepRef } from './steps/PurchasePaymentStep'
 import {
@@ -39,13 +40,7 @@ interface PurchaseCheckoutWizardProps {
 
   // Carrito (panel derecho, solo lectura)
   purchaseItems: any[]
-  purchaseTotals: {
-    subtotal: number
-    iva10: number
-    iva5: number
-    exento?: number
-    total?: number
-  }
+  purchaseTotals: Partial<PurchaseTotals>
 
   // Proveedor
   selectedSupplier: any | null
@@ -234,8 +229,7 @@ export const PurchaseCheckoutWizard = ({
     return base
   }, [primaryLabel, isLastStep, currentStep, t])
 
-  const totalAmount =
-    purchaseTotals.total ?? purchaseTotals.subtotal + (purchaseTotals.iva10 || 0) + (purchaseTotals.iva5 || 0)
+  const totalAmount = purchaseTotals.total ?? purchaseTotals.subtotal ?? 0
   const itemCount = purchaseItems.reduce((s, i) => s + (Number(i.quantity) || 0), 0)
 
   const stepLabels: Record<StepId, string> = {
@@ -443,13 +437,13 @@ export const PurchaseCheckoutWizard = ({
           <div className="px-5 py-4 border-t border-surface-variant space-y-1.5 bg-surface-container-low">
             <div className="flex justify-between text-xs text-on-surface-variant">
               <span>{t('purchases.checkoutWizard.subtotal', 'Subtotal')}</span>
-              <span className="font-data-mono">{formatCurrency(purchaseTotals.subtotal, paymentCurrency)}</span>
+              <span className="font-data-mono">{formatCurrency(purchaseTotals.subtotal ?? 0, paymentCurrency)}</span>
             </div>
-            {(purchaseTotals.iva10 > 0 || purchaseTotals.iva5 > 0) && (
+            {(purchaseTotals.tax ?? 0) > 0 && (
               <div className="flex justify-between text-xs text-on-surface-variant">
                 <span>{t('purchases.checkoutWizard.taxSummary', 'Liquidación IVA')}</span>
                 <span className="font-data-mono">
-                  {formatCurrency((purchaseTotals.iva10 || 0) + (purchaseTotals.iva5 || 0), paymentCurrency)}
+                  {formatCurrency(purchaseTotals.tax ?? 0, paymentCurrency)}
                 </span>
               </div>
             )}

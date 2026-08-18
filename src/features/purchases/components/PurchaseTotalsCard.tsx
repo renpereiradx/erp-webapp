@@ -1,6 +1,7 @@
 import React from 'react';
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic';
 import { formatCurrency } from '@/utils/currencyUtils';
+import { useI18n } from '@/lib/i18n';
 
 export type PurchaseTotalsCardProps = Pick<
   ReturnType<typeof usePurchasesLogic>,
@@ -28,6 +29,8 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
   setSupplierSearch,
   onCheckout,
 }) => {
+  const { t } = useI18n();
+
   return (
     <section className='bg-surface-container-lowest rounded-md border border-surface-variant shadow-whisper p-5 animate-in slide-in-from-bottom-2 duration-500 delay-75'>
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
@@ -49,24 +52,18 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
             </span>
           </div>
 
-          {/* Liquidación IVA Breakdown */}
+          {/* Liquidación IVA Breakdown (por tasa, dinámico) */}
           <div className='pt-1.5 space-y-1 border-t border-[var(--fluent-border-subtle,#F0F0F0)] dark:border-[var(--fluent-neutral-grey-140,#484644)]'>
             <p className='text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tight mb-1'>Liquidación IVA (Incluido)</p>
-            {purchaseTotals.iva10 > 0 && (
-              <div className='flex justify-between items-center'>
-                <span className='text-[11px] text-gray-500 dark:text-gray-400'>IVA 10%</span>
-                <span className='text-[11px] font-medium text-gray-700 dark:text-gray-300'>{formatCurrency(purchaseTotals.iva10)}</span>
+            {purchaseTotals.tax_buckets.map(bucket => (
+              <div key={bucket.percent} className='flex justify-between items-center'>
+                <span className='text-[11px] text-gray-500 dark:text-gray-400'>{t('purchases.totals.vatRate', 'IVA {pct}%', { pct: bucket.percent })}</span>
+                <span className='text-[11px] font-medium text-gray-700 dark:text-gray-300'>{formatCurrency(bucket.amount)}</span>
               </div>
-            )}
-            {purchaseTotals.iva5 > 0 && (
-              <div className='flex justify-between items-center'>
-                <span className='text-[11px] text-gray-500 dark:text-gray-400'>IVA 5%</span>
-                <span className='text-[11px] font-medium text-gray-700 dark:text-gray-300'>{formatCurrency(purchaseTotals.iva5)}</span>
-              </div>
-            )}
+            ))}
             {purchaseTotals.exento > 0 && (
               <div className='flex justify-between items-center'>
-                <span className='text-[11px] text-gray-500 dark:text-gray-400'>Exento</span>
+                <span className='text-[11px] text-gray-500 dark:text-gray-400'>{t('purchases.totals.exempt', 'Exento')}</span>
                 <span className='text-[11px] font-medium text-gray-700 dark:text-gray-300'>{formatCurrency(purchaseTotals.exento)}</span>
               </div>
             )}

@@ -1,0 +1,87 @@
+import { describe, it, expect } from 'vitest';
+import { calculateSaleTotals, SaleItem } from './saleCalculator';
+
+describe('calculateSaleTotals', () => {
+  it('extrae IVA 10% de precios con IVA incluido', () => {
+    const items: SaleItem[] = [
+      { quantity: 1, unit_price: 11000, tax_rate: 0.1 },
+    ];
+    const totals = calculateSaleTotals(items);
+
+    expect(totals.subtotal).toBe(11000);
+    expect(totals.total).toBe(11000); // precio con IVA, no se suma nada
+    expect(totals.iva10).toBeCloseTo(1000, 2);
+    expect(totals.iva5).toBe(0);
+    expect(totals.tax_amount).toBeCloseTo(1000, 2);
+    expect(totals.tax_buckets).toEqual([{ percent: 10, amount: 1000 }]);
+    expect(totals.exento).toBe(0);
+  });
+
+  it('trata la tasa 0 (EXENTO) como válida y no liquida IVA', () => {
+    const items: SaleItem[] = [
+      { quantity: 2, unit_price: 5000, tax_rate: 0 },
+    ];
+    const totals = calculateSaleTotals(items);
+
+    expect(totals.exento).toBe(10000);
+    expect(totals.tax_amount).toBe(0);
+    expect(totals.iva10).toBe(0);
+    expect(totals.tax_buckets).toEqual([]);
+    expect(totals.total).toBe(10000);
+  });
+
+  it('incluye tasas no estándar (13%) en tax_amount y tax_buckets', () => {
+    const items: SaleItem[] = [
+      { quantity: 1, unit_price: 11300, tax_rate: 0.13 },
+    ];
+    const totals = calculateSaleTotals(items);
+
+    // 11300 / 1.13 = 10000 → IVA 1300
+    expect(totals.tax_buckets).toEqual([{ percent: 13, amount: 1300 }]);
+    expect(totals.tax_amount).toBeCloseTo(1300, 2);
+    expect(totals.iva10).toBe(0);
+    expect(totals.iva5).toBe(0);
+    expect(totals.total).toBe(11300);
+  });
+
+  it('agrupa múltiples tasas y mantiene iva10/iva5 derivados', () => {
+    const items: SaleItem[] = [
+      { quantity: 1, unit_price: 11000, tax_rate: 0.1 },
+      { quantity: 1, unit_price: 10500, tax_rate: 0.05 },
+      { quantity: 1, unit_price: 3000, tax_rate: 0 },
+    ];
+    const totals = calculateSaleTotals(items);
+
+    expect(totals.iva10).toBeCloseTo(1000, 2);
+    expect(totals.iva5).toBeCloseTo(500, 2);
+    expect(totals.exento).toBe(3000);
+    expect(totals.tax_amount).toBeCloseTo(1500, 2);
+    expect(totals.tax_buckets).toEqual([
+      { percent: 10, amount: 1000 },
+      { percent: 5, amount: 500 },
+    ]);
+    expect(totals.total).toBe(24500);
+  });
+
+  it('suma IVA aditivo cuando price_includes_tax es false', () => {
+    const items: SaleItem[] = [
+      { quantity: 1, unit_price: 10000, tax_rate: 0.1, price_includes_tax: false },
+    ];
+    const totals = calculateSaleTotals(items);
+
+    expect(totals.tax_amount).toBeCloseTo(1000, 2);
+    expect(totals.total).toBeCloseTo(11000, 2);
+  });
+
+  it('aplica descuento por línea antes de liquidar IVA', () => {
+    const items: SaleItem[] = [
+      { quantity: 2, unit_price: 11000, tax_rate: 0.1, discount_amount: 1000 },
+    ];
+    const totals = calculateSaleTotals(items);
+
+    // Línea neta: 2 × (11000 - 1000) = 20000 → IVA extraído = 20000 - 20000/1.1
+    expect(totals.discount_total).toBe(2000);
+    expect(totals.tax_amount).toBeCloseTo(20000 - 20000 / 1.1, 2);
+    expect(totals.total).toBeCloseTo(20000, 2);
+  });
+});

@@ -394,4 +394,8 @@ export const sales = {
   // ─── Cobros de ventas (página SalePayment) ───────────────────────────────
   'sales.payments.confirmSuccess': 'Cobro registrado exitosamente',
   'sales.payments.confirmFailed': 'No se pudo confirmar el cobro',
+
+  // Desglose de IVA en el sumario (tasa dinámica)
+  'sales.summary.vatLine': 'Liquidación IVA {pct}%',
+  'sales.summary.exempt': 'Monto Exento',
 }

@@ -240,4 +240,8 @@ export const purchases = {
   'purchases.checkoutWizard.collection.exact': 'Exacto',
   'purchases.checkoutWizard.collection.notes': 'Notas del pago (opcional)',
   'purchases.checkoutWizard.collection.notesPlaceholder': 'Notas del pago...',
+
+  // Desglose de IVA en totales
+  'purchases.totals.vatRate': 'IVA {pct}%',
+  'purchases.totals.exempt': 'Exento',
 }
