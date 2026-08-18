@@ -19,6 +19,7 @@ import { productService } from '@/services/productService';
 import { clientService } from '@/services/clientService';
 import { Client, CreateBudgetRequest, ProductOperationInfoResponse } from '@/types';
 import { calculateSaleTotals } from '@/domain/sale/calculations/saleCalculator';
+import { resolveApplicableRateFraction } from '@/domain/tax/resolveApplicableRate';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatPYG } from '@/utils/currencyUtils';
@@ -104,9 +105,10 @@ const BudgetCreate: React.FC = () => {
         name: product.name,
         quantity: 1,
         unit_price: product.price || 0,
-        // Tasa real del producto (si el backend la expone) para desglosar el
-        // IVA incluido en el precio; el backend resuelve por jerarquía igual.
-        tax_rate: product.tax?.rate?.rate !== undefined ? Number(product.tax.rate.rate) / 100 : undefined
+        // Tasa real del producto (resuelta por el backend en
+        // applicable_tax_rate) para desglosar el IVA incluido en el precio;
+        // el backend resuelve por jerarquía igual al crear el presupuesto.
+        tax_rate: resolveApplicableRateFraction(product)
       }]);
     }
     setProductSearch('');

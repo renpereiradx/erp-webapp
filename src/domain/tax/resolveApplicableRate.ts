@@ -62,20 +62,22 @@ export function resolveApplicableRateFraction(
 
 /**
  * Resolves the tax rate ID of a product (for forms that send `tax_rate_id`).
- * Returns null when no rate is known.
+ * Returns null when no rate is known; string ids are coerced to number.
  */
 export function resolveApplicableRateId(
   product: Record<string, any> | null | undefined,
-): number | string | null {
+): number | null {
   if (!product) return null;
-  return (
+  const raw =
     product.applicable_tax_rate?.id ??
     product.tax?.rate?.id ??
     product.tax_rate_id ??
     product.category?.default_tax_rate?.id ??
     product.category?.default_tax_rate_id ??
-    null
-  );
+    null;
+  if (raw === null || raw === undefined || raw === '') return null;
+  const num = Number(raw);
+  return Number.isFinite(num) ? num : null;
 }
 
 /**

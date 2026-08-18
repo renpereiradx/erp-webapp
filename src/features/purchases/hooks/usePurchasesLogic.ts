@@ -7,6 +7,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import supplierService from '@/services/supplierService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
 import { CurrencyService } from '@/services/currencyService'
+import {
+  resolveApplicableRateId,
+  resolveApplicableRatePercent,
+  normalizeTaxRatePercent,
+} from '@/domain/tax/resolveApplicableRate'
 import { productService } from '@/services/productService'
 import purchaseService from '@/services/purchaseService'
 import {
@@ -614,31 +619,22 @@ export const usePurchasesLogic = () => {
       // Default pricing: cost * (1 + 0.3)
       setModalSalePrice(Math.ceil((cost * 1.3) / 50) * 50);
 
-      // Jerarquía de impuesto: Impuesto del producto > Impuesto de la categoría
-      let taxId = fullProduct.tax?.rate?.id || fullProduct.applicable_tax_rate?.id || fullProduct.tax_rate_id;
-      let taxRateValue = fullProduct.tax?.rate?.rate || fullProduct.applicable_tax_rate?.rate || fullProduct.tax_rate;
+      // Tasa resuelta por el backend (applicable_tax_rate) — helper único de
+      // dominio con normalización percent ↔ fracción en un solo punto.
+      const taxId = resolveApplicableRateId(fullProduct);
+      let taxRatePercent = resolveApplicableRatePercent(fullProduct, 0);
 
-      if (!taxId && fullProduct.category) {
-        const categoryTax = fullProduct.category.default_tax_rate;
-        if (categoryTax) {
-          taxId = categoryTax.id;
-          taxRateValue = categoryTax.rate;
-        } else if (fullProduct.category.default_tax_rate_id) {
-          taxId = fullProduct.category.default_tax_rate_id;
-          const foundTax = taxRates.find(t => t.id === taxId);
-          if (foundTax) {
-            taxRateValue = foundTax.rate;
-          }
+      if (taxRatePercent === 0 && taxId) {
+        // La categoría solo expone default_tax_rate_id: buscar el rate local
+        const foundTax = taxRates.find(t => t.id === taxId);
+        if (foundTax) {
+          taxRatePercent = normalizeTaxRatePercent(foundTax.rate) ?? 0;
         }
       }
 
       if (taxId) {
         setModalTaxRateId(taxId);
-        let finalPercent = Number(taxRateValue) || 0;
-        if (finalPercent > 0 && finalPercent < 1) {
-          finalPercent = finalPercent * 100;
-        }
-        setModalTaxRatePercent(finalPercent);
+        setModalTaxRatePercent(taxRatePercent);
       } else {
         setModalTaxRateId(null);
         setModalTaxRatePercent(0);
