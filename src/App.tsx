@@ -11,6 +11,7 @@ import {
 } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
+import useTaxRateStore from '@/store/useTaxRateStore'
 import MainLayout from '@/layouts/MainLayout'
 import PriceAdjustmentLayout from '@/layouts/PriceAdjustmentLayout'
 import Dashboard from '@/pages/Dashboard'
@@ -158,6 +159,14 @@ function AppContent() {
   const { isAuthenticated, loading } = useAuth()
 
   useEffect(() => {
+    // Bootstrap: cache the backend default VAT rate for cart calculators
+    // (GET /tax_rate/default). Fire-and-forget; calculators fall back to
+    // the offline default (10%) until it resolves.
+    const taxStore = useTaxRateStore.getState()
+    if (!taxStore.defaultTaxRate) {
+      taxStore.fetchDefaultTaxRate().catch(() => {})
+    }
+
     const handleForbidden = (e: any) => {
       import('sonner').then(({ toast }) => {
         toast.error(e.detail || 'Acceso denegado: No cuentas con los permisos necesarios.');

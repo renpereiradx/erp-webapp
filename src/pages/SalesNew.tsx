@@ -46,6 +46,11 @@ import { cn } from '@/lib/utils';
 import { SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
 import useSaleStore from '@/store/useSaleStore';
 import useDashboardStore from '@/store/useDashboardStore';
+import {
+  resolveApplicableRateFraction,
+  coerceTaxRateFraction,
+} from '@/domain/tax/resolveApplicableRate';
+import { getDefaultVatPercent } from '@/store/useTaxRateStore';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBranch } from '@/contexts/BranchContext';
@@ -147,30 +152,12 @@ const toDateInputValue = (date: Date): string => {
 };
 
 const getProductDisplay = (product: Record<string, unknown>): ProductDisplay => {
-  // Jerarquía según API v3.1.0: applicable_tax_rate > category.default_tax_rate > fallback
-  const applicableTaxRate = (product.applicable_tax_rate as any)?.rate;
-  const categoryTaxRate = (product.category as any)?.default_tax_rate?.rate;
-  
-  const rawTaxRateCandidates = [
-    applicableTaxRate,
-    categoryTaxRate,
-    product.tax_rate,
-    product.tax_rate_value,
-    product.tax_percentage,
-    product.vat_rate,
-    product.iva,
-  ];
-
-  let normalizedTaxRate = 0.10; // Fallback sistema (IVA 10% según doc)
-  const rawTaxRate = rawTaxRateCandidates.find(candidate => candidate !== undefined && candidate !== null);
-  
-  if (rawTaxRate !== undefined) {
-    const parsedRate = Number(rawTaxRate);
-    if (Number.isFinite(parsedRate)) {
-      // Si viene como 10.0 -> 0.10, si viene como 0.10 -> 0.10
-      normalizedTaxRate = parsedRate >= 1 ? parsedRate / 100 : parsedRate;
-    }
-  }
+  // Tasa resuelta por el backend (applicable_tax_rate) con normalización
+  // percent ↔ fracción en un único helper de dominio; 0 (EXENTO) es válido.
+  const normalizedTaxRate = resolveApplicableRateFraction(
+    product as Record<string, any>,
+    getDefaultVatPercent(),
+  );
 
   // Búsqueda exhaustiva de precio en el objeto de la API
   const unitPrices = product.unit_prices as any[];
@@ -407,7 +394,7 @@ const SalesNew: React.FC = () => {
           discountType: 'amount',
           discountInput: 0,
           discountReason: '',
-          taxRate: reservation.tax_rate || 0.10,
+          taxRate: coerceTaxRateFraction(reservation.tax_rate, getDefaultVatPercent() / 100),
           unit: reservation.unit || 'hour',
           reserve_id: reserveId,
         };

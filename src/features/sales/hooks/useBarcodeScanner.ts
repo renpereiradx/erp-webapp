@@ -1,5 +1,6 @@
 import { useState, useCallback, RefObject } from 'react';
 import { saleService } from '@/services/saleService';
+import { getDefaultVatPercent } from '@/store/useTaxRateStore';
 // We will type the callback parameters
 
 interface UseBarcodeScannerProps {
@@ -60,7 +61,7 @@ export const useBarcodeScanner = ({
           discountReason: '',
           taxRate: Number(scanResult.subtotal) > 0 
             ? Number((Number(scanResult.tax_amount) / Number(scanResult.subtotal)).toFixed(2)) 
-            : 0.10,
+            : getDefaultVatPercent() / 100,
           unit: decoded.unit || 'unit',
         };
         

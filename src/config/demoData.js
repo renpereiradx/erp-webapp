@@ -1747,10 +1747,10 @@ export const DEMO_PURCHASE_ITEMS_DATA = [
   },
 ]
 
-// Tax rates data
+// Tax rates data (Paraguay: IVA general 10%, reducido 5%, exento 0%)
 export const DEMO_TAX_RATES_DATA = [
-  { id: 1, rate: 0.16, name: 'IVA 16%' },
-  { id: 2, rate: 0.08, name: 'IVA Reducido 8%' },
+  { id: 1, rate: 10.0, name: 'IVA 10%' },
+  { id: 2, rate: 5.0, name: 'IVA Reducido 5%' },
   { id: 3, rate: 0.0, name: 'Exento' },
 ]
 

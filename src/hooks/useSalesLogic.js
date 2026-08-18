@@ -6,8 +6,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
-const TAX_RATE = 0.16; // IVA 16%
-
 // Plantillas base para justificaciones de cambio de precio
 export const PRICE_CHANGE_REASONS = [
   // ========== DESCUENTOS ==========
@@ -486,10 +484,7 @@ export const useSalesLogic = () => {
 
     // Utilidades
     validations,
-    prepareSaleData,
-
-    // Constantes
-    TAX_RATE
+    prepareSaleData
   };
 };
 

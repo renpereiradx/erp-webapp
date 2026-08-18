@@ -4,6 +4,8 @@ import saleService from '@/services/saleService'
 import { telemetryService } from '@/services/telemetryService'
 import { normalizeSalePriceGs } from '@/domain/sale/pricing/salesPricingPolicy'
 import { calculateSaleTotals } from '@/domain/sale/calculations/saleCalculator'
+import { resolveApplicableRateFraction } from '@/domain/tax/resolveApplicableRate'
+import { getDefaultVatPercent } from '@/store/useTaxRateStore'
 import { 
   SaleEnhancedResponse, 
   SaleMetadata,
@@ -558,7 +560,7 @@ const useSaleStore = create<SaleState>()(
               quantity: quantity,
               unit_price: unitPriceGs,
               unit: product.unit || product.unit_name || 'unit',
-              tax_rate: product.applicable_tax_rate?.rate / 100 || 0.10 // Fallback 10%
+              tax_rate: resolveApplicableRateFraction(product, getDefaultVatPercent()) // Backend-resolved rate; 0 (EXENTO) is valid
             },
           ]
         }

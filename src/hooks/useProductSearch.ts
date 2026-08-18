@@ -1,5 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { productService } from '@/services/productService';
+import { resolveApplicableRateFraction } from '@/domain/tax/resolveApplicableRate';
+import { getDefaultVatPercent } from '@/store/useTaxRateStore';
 import type { ProductEnriched } from '@/types';
 
 export interface ProductSearchResult {
@@ -30,29 +32,12 @@ interface UseProductSearchReturn {
 }
 
 const getProductDisplay = (product: any): ProductSearchResult => {
-  const rawTaxRateCandidates = [
-    product.tax_rate,
-    product.tax_rate_value,
-    product.tax_percentage,
-    product.vat_rate,
-    product.iva,
-    product.tax?.rate,
-    product.tax?.percentage,
-    product.metadata?.tax_rate,
-  ];
-
-  const taxInfo = product.applicable_tax_rate || product.tax?.rate;
-  const rawTaxRate = (
-    typeof taxInfo === 'object' ? (taxInfo as Record<string, unknown>)?.rate : taxInfo
-  ) ?? rawTaxRateCandidates.find(candidate => candidate !== undefined && candidate !== null);
-
-  let normalizedTaxRate = 0;
-  if (rawTaxRate !== undefined) {
-    const parsedRate = Number(rawTaxRate);
-    if (Number.isFinite(parsedRate) && parsedRate > 0) {
-      normalizedTaxRate = parsedRate >= 1 ? parsedRate / 100 : parsedRate;
-    }
-  }
+  // Tasa resuelta por el backend (applicable_tax_rate) — fallback a la tasa
+  // default del sistema solo si el producto no expone ninguna (0 = EXENTO).
+  const normalizedTaxRate = resolveApplicableRateFraction(
+    product,
+    getDefaultVatPercent(),
+  );
 
   const price = 
     product.sale_price ||

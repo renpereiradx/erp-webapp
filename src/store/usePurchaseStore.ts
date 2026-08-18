@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import purchaseService from '@/services/purchaseService'
 import { calculatePurchaseTotals } from '@/domain/purchase/calculations/purchaseCalculator'
+import { resolveApplicableRateFraction } from '@/domain/tax/resolveApplicableRate'
+import { getDefaultVatPercent } from '@/store/useTaxRateStore'
 import { 
   PurchaseOrderRequest, 
   PurchaseWithFullDetails, 
@@ -336,7 +338,7 @@ const usePurchaseStore = create<PurchaseState>()(
               totalPrice: unitPriceValue * quantity,
               unit: options.unit || product.unit || 'unit',
               profit_pct: options.profit_pct || 30,
-              tax_rate: options.tax_rate || 0.10,
+              tax_rate: options.tax_rate ?? resolveApplicableRateFraction(product, getDefaultVatPercent()),
               price_includes_tax: options.price_includes_tax !== false,
             },
           ]

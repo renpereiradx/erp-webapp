@@ -1,6 +1,21 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { taxRateService } from '@/services/taxRateService'
+import {
+  DEFAULT_VAT_PERCENT,
+  normalizeTaxRatePercent,
+} from '@/domain/tax/resolveApplicableRate'
+
+/**
+ * System default VAT rate (percent), backed by the cached backend default
+ * (`GET /tax_rate/default`) with a sane offline fallback (IVA 10%, Paraguay).
+ * Shared by cart calculators to keep displayed totals aligned with the
+ * server-side liquidation.
+ */
+export const getDefaultVatPercent = () => {
+  const stored = useTaxRateStore.getState().defaultTaxRate
+  return normalizeTaxRatePercent(stored?.rate) ?? DEFAULT_VAT_PERCENT
+}
 
 const useTaxRateStore = create()(
   devtools(
