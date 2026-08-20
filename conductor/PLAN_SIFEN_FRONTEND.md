@@ -4,8 +4,9 @@
 **Alcance:** UI fiscal para SIFEN en `erp-webapp` — espejo del
 [PLAN_SIFEN_FACTURACION_ELECTRONICA.md](../../business_management/conductor/PLAN_SIFEN_FACTURACION_ELECTRONICA.md)
 (backend, fases S0–S7).
-**Estado:** 🔄 En ejecución — FE1 ✅ (`e18b12b`), FE2 ✅ (`07af0b1`) y FE3 ✅
-(`9857ee0` + backend `9ee383b`) completadas; siguiente FE4 (cancelación e inutilización).
+**Estado:** 🔄 En ejecución — FE1 ✅ (`e18b12b`), FE2 ✅ (`07af0b1`), FE3 ✅
+(`9857ee0` + backend `9ee383b`) y FE4 ✅ (`79cf698`, `a3558e3`, `b0a8a87`,
+`e0a0adc`, `9c29444` — 2026-08-20) completadas; siguiente FE5 (libros y reportes).
 **Reglas de base:** AGENTS.md global (i18n siempre, Feature-Sliced para features nuevos,
 DESIGN.md para UI, pnpm exclusivo, `tsc --noEmit` en 0 errores, tests = baseline sin nuevos fallidos).
 
@@ -69,13 +70,34 @@ DESIGN.md para UI, pnpm exclusivo, `tsc --noEmit` en 0 errores, tests = baseline
    - Email: `POST /documents/sales/{id}/comprobante/email` (tolera body vacío).
 4. Estados de carga/errores con feedback inmediato; skeleton acorde a DESIGN.md.
 
-### FE4 — Cancelación e inutilización (acompaña FASE S4 backend)
+### FE4 — Cancelación e inutilización (acompaña FASE S4 backend) ✅ (2026-08-20, commits `79cf698` + `a3558e3` + `b0a8a87` + `e0a0adc` + `9c29444`)
 1. Modal de cancelación con motivo obligatorio (justificativa SIFEN) y advertencia de plazos
    (48 h FE / 168 h otros) calculada con la fecha de aprobación.
+   - **Fix de contrato** (`a3558e3`): `cancelSale` enviaba el motivo como query param;
+     el backend lo lee del body JSON (`{"reason": ...}`) → la justificativa se perdía y el
+     evento de cancelación SIFEN quedaba sin motivo. Ahora viaja en el body.
+   - `CancelSaleModal` (`b0a8a87`): motivo obligatorio (≤ 500 chars), preview de impacto
+     del backend, aviso legal con deadline (domain `fiscal/cancellation.ts`: 48 h FE /
+     168 h NCE-NDE desde `fecha_proceso`, parse local anti-off-by-one −03:00) y badge
+     dentro/fuera de plazo. El 409 del backend (fuera de plazo) se muestra tal cual
+     (guía a NCE o trámite administrativo). Reemplaza el modal inline legacy de
+     `SalesOrderDetail` (que tenía strings hardcoded).
 2. Vista "Saltos de numeración": rangos detectados por el backend con acción de inutilización
    (rango ≤ 1000, justificativa obligatoria).
+   - `SkippedNumbersPage` en `/finance/sifen-inutilizacion` (menú Reportes Financieros,
+     gate `sifen:read`): selector branch/tipo/timbrado → `GET /sifen/inutilize/skipped`
+     → agrupación en rangos consecutivos (domain `fiscal/ranges.ts`) → `InutilizeRangeModal`
+     con justificativa obligatoria → `POST /sifen/inutilize`. Historial de eventos
+     (`GET /sifen/inutilize`) con badges PENDIENTE/REGISTRADA/RECHAZADA + reintento
+     de pendientes (`POST /sifen/inutilize/retry`).
 3. Flujo guiado de NCE/NDE para devoluciones parciales (selección de líneas del snapshot original,
    montos con tope del DE referenciado).
+   - `EmitNoteModal` desde el panel fiscal (botón "NCE / NDE" solo con FE aprobada,
+     MT §11.1.3): tipo NCE/NDE, motivo E401 (1-8, domain `fiscal/notes.ts`), monto
+     opcional con tope visible = total de la venta (el backend valida el disponible real:
+     total original − notas vivas). `POST /sale/{id}/credit-note|debit-note`.
+   - **Nota de alcance:** el backend expone monto total (no líneas del snapshot); la
+     selección línea a línea queda documentada como refinable (mismo caso que E701 en S5).
 
 ### FE5 — Libros y reportes (acompaña FASE S7 backend)
 1. `LegalBooks` (libro IVA ventas/compras): columna estado SIFEN + filtros por CDC/timbrado/estado.
