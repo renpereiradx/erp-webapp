@@ -6,7 +6,7 @@
  */
 import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Loader2, Mail, Printer, Download, RefreshCw, Receipt, QrCode } from 'lucide-react';
+import { Loader2, Mail, Printer, Download, RefreshCw, Receipt, QrCode, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,12 @@ import { fiscalStateMeta, fiscalDocTypeFromCode } from '@/domain/fiscal/states';
 import { formatCDC } from '@/domain/fiscal/cdc';
 import { formatInvoiceNumber } from '@/domain/fiscal/validity';
 import { fiscalService } from '@/features/fiscal/services/fiscalService';
+import EmitNoteModal from '@/features/fiscal/components/EmitNoteModal';
 
 interface SaleFiscalPanelProps {
   saleId: string;
+  /** Total de la venta (detalle) — tope visible del monto de la nota. */
+  saleTotal?: number;
 }
 
 const Field = ({ label, value, mono = false }: { label: string; value: React.ReactNode; mono?: boolean }) => (
@@ -29,8 +32,9 @@ const Field = ({ label, value, mono = false }: { label: string; value: React.Rea
   </div>
 );
 
-const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId }) => {
+const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) => {
   const { t } = useI18n();
+  const [noteModalOpen, setNoteModalOpen] = React.useState(false);
   const {
     status, isLoading, isNotFiscal, error,
     retrying, emailing, reprinting, reprintCount,
@@ -72,6 +76,8 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId }) => {
   const stateMeta = fiscalStateMeta(status.estado);
   const docType = fiscalDocTypeFromCode(status.doc_type);
   const isRetryable = status.estado === 'EMITIDO' || status.estado === 'RECHAZADO';
+  // FE4.3: NCE/NDE solo sobre FE aprobada (MT §11.1.3).
+  const canEmitNote = status.doc_type === 1 && (status.estado === 'APROBADO' || status.estado === 'APROBADO_OBS');
 
   return (
     <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden">
@@ -142,6 +148,15 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId }) => {
           </div>
 
           <div className="flex flex-wrap gap-2">
+            {canEmitNote && (
+              <Button
+                size="sm"
+                className="h-9 text-xs font-bold gap-1.5 bg-primary/90 hover:bg-primary text-white shadow-sm"
+                onClick={() => setNoteModalOpen(true)}
+              >
+                <FileText size={14} /> {t('fiscal.notes.open', 'NCE / NDE')}
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -184,6 +199,14 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId }) => {
           </div>
         </div>
       </CardContent>
+
+      {/* FE4.3: emisión de NCE/NDE sobre la FE aprobada */}
+      <EmitNoteModal
+        open={noteModalOpen}
+        onClose={() => setNoteModalOpen(false)}
+        saleId={saleId}
+        saleTotal={saleTotal}
+      />
     </Card>
   );
 };
