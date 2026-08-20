@@ -182,7 +182,7 @@ export const useFinancialReports = () => {
   )
 
   const fetchSalesLedgerDateRange = useCallback(
-    async (startDate, endDate, page = 1, pageSize = 50) => {
+    async (startDate, endDate, page = 1, pageSize = 50, filters = {}) => {
       setLoading(true)
       setError(null)
       try {
@@ -191,6 +191,7 @@ export const useFinancialReports = () => {
           endDate,
           page,
           pageSize,
+          filters,
         )
         const hasExplicitSuccess = typeof response?.success === 'boolean'
         const isSuccess = hasExplicitSuccess ? response.success : true
