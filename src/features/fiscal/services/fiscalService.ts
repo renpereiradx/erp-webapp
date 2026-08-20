@@ -10,7 +10,15 @@
  * Secretos (CSC, p12) jamás pasan por aquí (regla 4 del plan).
  */
 import { apiClient } from '@/services/api';
-import type { SaleFiscalStatus } from '@/features/fiscal/types';
+import { API_ENDPOINTS } from '@/types';
+import type {
+  SaleFiscalStatus,
+  InutilizeRequest,
+  InutilizacionPublic,
+  SkippedNumbersResponse,
+  NoteEmitRequest,
+  NotaEmitida,
+} from '@/features/fiscal/types';
 
 const FISCAL = {
   saleFiscal: (saleId: string) => `/sale/${encodeURIComponent(saleId)}/fiscal`,
@@ -61,6 +69,52 @@ export const fiscalService = {
    */
   async renderTicket(saleId: string): Promise<TicketRenderResult> {
     return apiClient.post(FISCAL.ticketRender(saleId));
+  },
+
+  // ============ FE4 — inutilización de rangos (S4.2) ============
+
+  /**
+   * Números saltados sin evento de inutilización (S4.2). Requiere
+   * branch_id + document_type + timbrado_num (400 si faltan).
+   */
+  async getSkippedNumbers(params: {
+    branch_id: number;
+    document_type: string;
+    timbrado_num: string;
+  }): Promise<SkippedNumbersResponse> {
+    return apiClient.get(API_ENDPOINTS.SIFEN_INUTILIZE_SKIPPED, { params });
+  },
+
+  /** Historial de inutilizaciones (paginado, limit ≤ 200). */
+  async listInutilizaciones(params: {
+    branch_id?: number;
+    doc_type?: number;
+    limit?: number;
+    offset?: number;
+  } = {}): Promise<{ inutilizaciones: InutilizacionPublic[] }> {
+    return apiClient.get(API_ENDPOINTS.SIFEN_INUTILIZE, { params });
+  },
+
+  /** Inutiliza un rango de numeración (≤ 1000, motivo obligatorio). */
+  async inutilizeRange(req: InutilizeRequest): Promise<{ ok: boolean; inutilizacion: InutilizacionPublic }> {
+    return apiClient.post(API_ENDPOINTS.SIFEN_INUTILIZE, req);
+  },
+
+  /** POST /sifen/inutilize/retry — reintenta eventos PENDIENTES (S4.2). */
+  async retryInutilizaciones(): Promise<{ ok: boolean }> {
+    return apiClient.post(`${API_ENDPOINTS.SIFEN_INUTILIZE}/retry`);
+  },
+
+  // ============ FE4 — notas de crédito/débito (S4.3) ============
+
+  /** Emite una NCE (credit-note) o NDE (debit-note) sobre el DE original. */
+  async emitNote(
+    saleId: string,
+    noteType: 'NCE' | 'NDE',
+    req: NoteEmitRequest,
+  ): Promise<NotaEmitida> {
+    const endpoint = noteType === 'NCE' ? API_ENDPOINTS.SALE_CREDIT_NOTE(saleId) : API_ENDPOINTS.SALE_DEBIT_NOTE(saleId);
+    return apiClient.post(endpoint, req);
   },
 };
 

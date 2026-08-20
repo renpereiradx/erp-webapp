@@ -2085,6 +2085,11 @@ export const API_ENDPOINTS = {
   BRANCH_FISCAL_CONFIG: (branchId: number) => `/branches/${branchId}/fiscal-config`,
   BRANCH_FISCAL_CONFIG_UPDATE: (id: number) => `/branches/fiscal-config/${id}`,
   SIFEN_BRANCH_FISCAL_ENABLED: (branchId: number) => `/sifen/branch/${branchId}/fiscal-enabled`,
+  // SIFEN — inutilización de rangos y notas (S4.2/S4.3, FE4)
+  SIFEN_INUTILIZE: '/sifen/inutilize',
+  SIFEN_INUTILIZE_SKIPPED: '/sifen/inutilize/skipped',
+  SALE_CREDIT_NOTE: (saleId: string | number) => `/sale/${saleId}/credit-note`,
+  SALE_DEBIT_NOTE: (saleId: string | number) => `/sale/${saleId}/debit-note`,
   BRANCH_ACCESS: (branchId: number) => `/branches/${branchId}/access`,
   BRANCH_ACCESS_UPDATE: (branchId: number, userId: string) => `/branches/${branchId}/access/${userId}`,
   USER_BRANCHES: (userId: string) => `/users/${userId}/branches`,

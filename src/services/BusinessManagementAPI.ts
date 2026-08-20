@@ -493,9 +493,38 @@ class BusinessManagementAPI {
     return this.get(`/sale/${id}/preview-cancellation`, options)
   }
 
+  /**
+   * Cancela/revierte una venta (PUT /sale/{id}). FE4.1: la justificativa
+   * (motivo SIFEN) viaja en el BODY JSON — el backend la lee de
+   * `{"reason": ...}` (MakeCancelSaleHandler); un query param se pierde y
+   * el evento de cancelación SIFEN quedaría sin motivo.
+   */
   async cancelSale(id: string | number, reason: string, options: RequestOptions = {}): Promise<any> {
-    const updatedOptions = { ...options, params: { ...options.params, reason } }
-    return this.put(`/sale/${id}`, {}, updatedOptions)
+    return this.put(`/sale/${id}`, { reason }, options)
+  }
+
+  // ============ SIFEN (FE4 — inutilización y notas) ============
+  // Endpoints /sifen/* excluidos del header X-Branch-ID por isSifenAdmin.
+
+  /** GET /sifen/inutilize — historial de inutilizaciones (paginado). */
+  async getSifenInutilizaciones(params: Record<string, string | number>, options: RequestOptions = {}): Promise<any> {
+    return this.get('/sifen/inutilize', { ...options, params: { ...options.params, ...params } })
+  }
+
+  /** GET /sifen/inutilize/skipped — números saltados sin evento (S4.2). */
+  async getSifenSkipped(params: Record<string, string | number>, options: RequestOptions = {}): Promise<any> {
+    return this.get('/sifen/inutilize/skipped', { ...options, params: { ...options.params, ...params } })
+  }
+
+  /** POST /sifen/inutilize — inutiliza un rango (≤ 1000, motivo obligatorio). */
+  async postSifenInutilize(data: any, options: RequestOptions = {}): Promise<any> {
+    return this.post('/sifen/inutilize', data, options)
+  }
+
+  /** POST /sale/{id}/credit-note|debit-note — emite NCE/NDE sobre el DE original (S4.3). */
+  async emitSaleNote(saleId: string | number, noteType: 'NCE' | 'NDE', data: any, options: RequestOptions = {}): Promise<any> {
+    const endpoint = noteType === 'NCE' ? 'credit-note' : 'debit-note'
+    return this.post(`/sale/${saleId}/${endpoint}`, data, options)
   }
 
   async processSalePayment(data: any, options: RequestOptions = {}): Promise<any> {
