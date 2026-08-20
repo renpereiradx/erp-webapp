@@ -13,6 +13,7 @@ import { dashboard } from './dashboard'
 import { receivables } from './receivables'
 import { purchasePaymentsMvp } from './purchasePaymentsMvp'
 import { party } from './party'
+import { fiscal } from './fiscal'
 import { es } from '../es/index'
 
 /**
@@ -38,6 +39,7 @@ export const en = {
   ...receivables,
   ...purchasePaymentsMvp,
   ...party,
+  ...fiscal,
   // TODO: Add English translations for new modules:
   // - clients
   // - suppliers

@@ -26,6 +26,7 @@ import { users } from './users'
 import { myProfile } from './my-profile'
 import { receivables } from './receivables'
 import payables from './payables'
+import { fiscal } from './fiscal'
 
 /**
  * Diccionario completo de traducciones en español
@@ -54,5 +55,6 @@ export const es = {
   ...myProfile,
   ...receivables,
   payables,
+  ...fiscal,
   ...other,
 }
