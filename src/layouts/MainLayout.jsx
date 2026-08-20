@@ -342,6 +342,12 @@ const MainLayout = ({ children }) => {
                 icon: FileText,
               },
               {
+                name: 'Saltos de numeración SIFEN',
+                href: '/finance/sifen-inutilizacion',
+                icon: List,
+                permission: 'sifen:read',
+              },
+              {
                 name: 'Libros Legales (Ventas y Compras)',
                 href: '/finance/legal-books',
                 icon: BookOpen,

@@ -78,6 +78,7 @@ import InvoiceDetail from '@/pages/InvoiceDetail'
 import CashFlowProjection from '@/pages/CashFlowProjection'
 import CashFlowAnalysisDashboard from '@/pages/CashFlowAnalysisDashboard'
 import TaxManagementDashboard from '@/pages/TaxManagementDashboard'
+import SkippedNumbersPage from '@/features/fiscal/pages/SkippedNumbersPage'
 import SupplierAnalysis from '@/pages/SupplierAnalysis'
 import ReceivableDetail from '@/pages/ReceivableDetail'
 import OverdueAccounts from '@/pages/OverdueAccounts'
@@ -249,6 +250,7 @@ function AppContent() {
                       <Route path='/payables/aging-report' element={<PayablesAgingReport />} />
                       <Route path='/finance/analytical-cash-flow' element={<CashFlowAnalysisDashboard />} />
                       <Route path='/finance/tax-management' element={<TaxManagementDashboard />} />
+                      <Route path='/finance/sifen-inutilizacion' element={<SkippedNumbersPage />} />
                       <Route path='/finance/profit-and-loss' element={<ProfitAndLoss />} />
                       <Route path='/finance/legal-books' element={<LegalBooks />} />
                       <Route path='/finance/profitability' element={<ProfitabilityAnalysis />} />
