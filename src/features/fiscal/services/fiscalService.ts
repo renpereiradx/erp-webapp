@@ -18,6 +18,7 @@ import type {
   SkippedNumbersResponse,
   NoteEmitRequest,
   NotaEmitida,
+  FiscalMetricsOverview,
 } from '@/features/fiscal/types';
 
 const FISCAL = {
@@ -115,6 +116,17 @@ export const fiscalService = {
   ): Promise<NotaEmitida> {
     const endpoint = noteType === 'NCE' ? API_ENDPOINTS.SALE_CREDIT_NOTE(saleId) : API_ENDPOINTS.SALE_DEBIT_NOTE(saleId);
     return apiClient.post(endpoint, req);
+  },
+
+  // ============ FE5.2 — dashboard de ops fiscal (S7.2) ============
+
+  /**
+   * Métricas de operación fiscal: rechazos por código, pendientes de envío
+   * (ventana 72 h), extemporáneos y caducidad de timbrados.
+   * GET /sifen/metrics/overview?dias=N (1–365, default 30).
+   */
+  async getMetricsOverview(dias = 30): Promise<FiscalMetricsOverview> {
+    return apiClient.get('/sifen/metrics/overview', { params: { dias } });
   },
 };
 

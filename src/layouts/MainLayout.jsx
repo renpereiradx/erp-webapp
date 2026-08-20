@@ -50,6 +50,7 @@ import {
   PieChart,
   UserCheck,
   Tags,
+  Gauge,
 } from 'lucide-react'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 import { distinctSearchableRoutes } from '@/config/searchableRoutes'
@@ -345,6 +346,12 @@ const MainLayout = ({ children }) => {
                 name: 'Saltos de numeración SIFEN',
                 href: '/finance/sifen-inutilizacion',
                 icon: List,
+                permission: 'sifen:read',
+              },
+              {
+                name: 'Dashboard Fiscal SIFEN',
+                href: '/finance/sifen-ops',
+                icon: Gauge,
                 permission: 'sifen:read',
               },
               {

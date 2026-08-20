@@ -142,3 +142,38 @@ export interface NotaEmitida {
   codigo_respuesta?: string;
   mensaje?: string;
 }
+
+/**
+ * GET /sifen/metrics/overview (S7.2, FE5.2) — dashboard de ops fiscal.
+ * El FE nunca calcula nada: el backend clasifica pendientes/extemporáneos
+ * contra la ventana de 72 h (MT §6.2) con su propio reloj.
+ */
+
+/** Grupo de rechazos por d_cod_res en el período consultado. */
+export interface RechazoPorCodigo {
+  codigo: string;
+  mensaje: string;
+  cantidad: number;
+  ultima_ocurrencia: string;
+}
+
+/** Timbrado activo próximo a vencer (≤ 30 días) o vencido. */
+export interface TimbradoVencimiento {
+  branch_id: number;
+  branch_name: string;
+  document_type: string;
+  timbrado: string;
+  valid_to: string;
+  /** Negativo = vencido. */
+  dias_restantes: number;
+}
+
+export interface FiscalMetricsOverview {
+  generado_en: string;
+  ventana_horas: number;
+  pendientes_envio: number;
+  extemporaneos: number;
+  rechazos_por_codigo: RechazoPorCodigo[];
+  timbrados_por_vencer: TimbradoVencimiento[];
+  timbrados_vencidos: number;
+}
