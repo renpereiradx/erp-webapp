@@ -4,7 +4,8 @@
 **Alcance:** UI fiscal para SIFEN en `erp-webapp` — espejo del
 [PLAN_SIFEN_FACTURACION_ELECTRONICA.md](../../business_management/conductor/PLAN_SIFEN_FACTURACION_ELECTRONICA.md)
 (backend, fases S0–S7).
-**Estado:** 📋 Propuesto — pendiente de aprobación
+**Estado:** 🔄 En ejecución — FE1 ✅ (domain + tipos, commit `e18b12b`) y FE2 ✅
+(gestión de timbrados extendida, commit `07af0b1`) completadas; siguiente FE3 (panel fiscal de la venta).
 **Reglas de base:** AGENTS.md global (i18n siempre, Feature-Sliced para features nuevos,
 DESIGN.md para UI, pnpm exclusivo, `tsc --noEmit` en 0 errores, tests = baseline sin nuevos fallidos).
 
@@ -23,19 +24,31 @@ DESIGN.md para UI, pnpm exclusivo, `tsc --noEmit` en 0 errores, tests = baseline
 
 ## 2. Fases
 
-### FE1 — Domain + tipos (acompaña FASE S1 backend)
+### FE1 — Domain + tipos (acompaña FASE S1 backend) ✅ (2026-08-19, commit `e18b12b`)
 1. `src/domain/fiscal/cdc.ts`: formateo de CDC en grupos de 4 (según KuDE), validación de longitud.
 2. `src/domain/fiscal/states.ts`: mapeo de estados SIFEN → label i18n + color/severity
    (EMITIDO, APROBADO, APROBADO_OBS, RECHAZADO, CANCELADO, INUTILIZADO).
 3. `src/features/fiscal/types/`: tipos TS del contrato `GET /sale/{id}/fiscal`.
 4. Tests unitarios (Vitest) del dominio; `tsc --noEmit` 0 errores.
 
-### FE2 — Gestión de timbrados extendida (acompaña FASE S3 backend)
+### FE2 — Gestión de timbrados extendida (acompaña FASE S3 backend) ✅ (2026-08-20, commit `07af0b1`)
 1. Extender la gestión de config fiscal por branch existente (hoy en `features/branches`):
    columna serie (AA…ZZ), estado de activación fiscal por branch, vigencia del timbrado con
    warning de vencimiento (< 30 días), próximo número (read-only: lo asigna el backend).
+   - Backend necesario (gap): `serie` + `fiscal_enabled` expuestos en el CRUD
+     `GET|POST /branches/{id}/fiscal-config` / `PUT /branches/fiscal-config/{id}`
+     (commit `12645ea` en business_management) — la migración S1.1 ya tenía la columna
+     `serie`, pero el dominio/DTOs/repo de identity no la leían.
+   - UI (BranchModal tab fiscal): input de serie normalizado (`AA..ZZ`), select de tipo
+     FACTURA/NCE/NDE, vigencia desde/hasta, `next_invoice_number` read-only con formato
+     de 7 dígitos (C007), badge de validez (`fiscal/validity.ts`: indefinite/ok/warning
+     ≤ 30 días/expired, parse local para evitar el off-by-one UTC en zonas −03:00) y
+     switch "Emisión SIFEN" → `PUT /sifen/branch/{id}/fiscal-enabled` (D3).
+   - `BusinessManagementAPI.ts`: los endpoints `/sifen/*` se excluyen del header
+     `X-Branch-ID` (administración global, igual que `/branches/`).
 2. No exponer campos de `sifen_config` sensibles (CSC); solo lecturas de estado (ambiente,
-   conectividad opcional en el dashboard de ops).
+   conectividad opcional en el dashboard de ops). → Cubierto: el FE nunca llama
+   `PUT /sifen/config`; la lectura de estado del ambiente se consume en FE5.2.
 
 ### FE3 — Panel fiscal de la venta (acompaña FASE S3/S5 backend)
 1. Panel en el detalle de venta: CDC (grupos de 4), timbrado, número, estado SIFEN con color,
