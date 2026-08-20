@@ -4,8 +4,8 @@
 **Alcance:** UI fiscal para SIFEN en `erp-webapp` — espejo del
 [PLAN_SIFEN_FACTURACION_ELECTRONICA.md](../../business_management/conductor/PLAN_SIFEN_FACTURACION_ELECTRONICA.md)
 (backend, fases S0–S7).
-**Estado:** 🔄 En ejecución — FE1 ✅ (domain + tipos, commit `e18b12b`) y FE2 ✅
-(gestión de timbrados extendida, commit `07af0b1`) completadas; siguiente FE3 (panel fiscal de la venta).
+**Estado:** 🔄 En ejecución — FE1 ✅ (`e18b12b`), FE2 ✅ (`07af0b1`) y FE3 ✅
+(`9857ee0` + backend `9ee383b`) completadas; siguiente FE4 (cancelación e inutilización).
 **Reglas de base:** AGENTS.md global (i18n siempre, Feature-Sliced para features nuevos,
 DESIGN.md para UI, pnpm exclusivo, `tsc --noEmit` en 0 errores, tests = baseline sin nuevos fallidos).
 
@@ -50,12 +50,23 @@ DESIGN.md para UI, pnpm exclusivo, `tsc --noEmit` en 0 errores, tests = baseline
    conectividad opcional en el dashboard de ops). → Cubierto: el FE nunca llama
    `PUT /sifen/config`; la lectura de estado del ambiente se consume en FE5.2.
 
-### FE3 — Panel fiscal de la venta (acompaña FASE S3/S5 backend)
+### FE3 — Panel fiscal de la venta (acompaña FASE S3/S5 backend) ✅ (2026-08-20, commits `9ee383b` BE + `9857ee0` FE)
 1. Panel en el detalle de venta: CDC (grupos de 4), timbrado, número, estado SIFEN con color,
    código/mensaje de rechazo legible, protocolo, fechas de firma/proceso.
+   - `SaleFiscalPanel` anclado en `pages/SalesOrderDetail.tsx` (Card complementaria, sin
+     reescribir el flujo); 404 de `GET /sale/{id}/fiscal` = estado "branch no fiscal" (D3).
 2. QR renderizado desde la URL generada por el backend (el FE no calcula el hash).
+   - Gap backend: `qr_url` (dCarQR J002) agregado a `SaleFiscalStatus`, extraído del
+     `xml_de` firmado vía `sifen.QRURLFromDE`; el FE lo codifica con `qrcode.react`
+     (dependencia nueva, peer warning soft con React 19 — componente compatible).
 3. Acciones: reenviar (solo si RECHAZADO y dentro de ventana), reimprimir KuDE PDF,
    enviar por email (con contador de reimpresiones visible).
+   - Gap backend: `POST /sale/{id}/fiscal/retry` (`EmissionService.RetryEmission`):
+     solo EMITIDO/RECHAZADO, ventana 72 h (MT §6.2), mismo CDC (D2); tests unitarios
+     con fake store (`retry_emission_test.go`). El botón solo se muestra en esos estados.
+   - Reimprimir: `POST /documents/sales/{id}/ticket/render` (devuelve `reprint_count`,
+     visible en el panel) + `GET /documents/sales/{id}/comprobante.pdf` (nueva pestaña).
+   - Email: `POST /documents/sales/{id}/comprobante/email` (tolera body vacío).
 4. Estados de carga/errores con feedback inmediato; skeleton acorde a DESIGN.md.
 
 ### FE4 — Cancelación e inutilización (acompaña FASE S4 backend)
