@@ -27,6 +27,12 @@ export interface SaleFiscalStatus {
   fecha_proceso?: string | null;
   intentos: number;
   last_error?: string;
+  /**
+   * URL del KuDE (dCarQR J002) extraída del DE firmado por el backend.
+   * El FE la codifica en QR con qrcode.react pero NUNCA calcula el hash
+   * (regla 4: el CSC no viaja). Ausente si el DE aún no está firmado.
+   */
+  qr_url?: string;
 }
 
 /**

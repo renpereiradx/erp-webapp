@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/table'
 import DataState from '@/components/ui/DataState'
 import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModal'
+import SaleFiscalPanel from '@/features/fiscal/components/SaleFiscalPanel'
 import { useI18n } from '@/lib/i18n'
 import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
@@ -533,6 +534,9 @@ const SalesOrderDetail = () => {
           </Card>
         </div>
       </div>
+
+      {/* Panel fiscal SIFEN (FE3) — complementa el detalle; 404 = branch no fiscal */}
+      {saleId && <SaleFiscalPanel saleId={saleId} />}
 
       <RegisterSalePaymentModal open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen} sale={{ ...sale, balance_due: balanceDue, currency: sale?.currency || 'PYG' }} onSubmit={handlePaymentSubmit} />
 
