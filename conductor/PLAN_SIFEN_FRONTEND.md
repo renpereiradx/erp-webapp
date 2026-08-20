@@ -5,8 +5,10 @@
 [PLAN_SIFEN_FACTURACION_ELECTRONICA.md](../../business_management/conductor/PLAN_SIFEN_FACTURACION_ELECTRONICA.md)
 (backend, fases S0–S7).
 **Estado:** 🔄 En ejecución — FE1 ✅ (`e18b12b`), FE2 ✅ (`07af0b1`), FE3 ✅
-(`9857ee0` + backend `9ee383b`) y FE4 ✅ (`79cf698`, `a3558e3`, `b0a8a87`,
-`e0a0adc`, `9c29444` — 2026-08-20) completadas; siguiente FE5 (libros y reportes).
+(`9857ee0` + backend `9ee383b`), FE4 ✅ (`79cf698`, `a3558e3`, `b0a8a87`,
+`e0a0adc`, `9c29444` — 2026-08-20) y FE5 ✅ (2026-08-20, `b73a5fc` +
+`9bc18a4` + `571be5c`, backend `e125f1c`/`8685e9b`/`3256751`/`d3a82bb`)
+completadas; S6 cerrada.
 **Reglas de base:** AGENTS.md global (i18n siempre, Feature-Sliced para features nuevos,
 DESIGN.md para UI, pnpm exclusivo, `tsc --noEmit` en 0 errores, tests = baseline sin nuevos fallidos).
 
@@ -99,11 +101,51 @@ DESIGN.md para UI, pnpm exclusivo, `tsc --noEmit` en 0 errores, tests = baseline
    - **Nota de alcance:** el backend expone monto total (no líneas del snapshot); la
      selección línea a línea queda documentada como refinable (mismo caso que E701 en S5).
 
-### FE5 — Libros y reportes (acompaña FASE S7 backend)
+### FE5 — Libros y reportes (acompaña FASE S7 backend) ✅ (2026-08-20, commits FE `b73a5fc` + `9bc18a4` + `571be5c`; BE `e125f1c` + `8685e9b` + `3256751` + `d3a82bb`)
 1. `LegalBooks` (libro IVA ventas/compras): columna estado SIFEN + filtros por CDC/timbrado/estado.
+   - **Backend (`8685e9b`)**: `GET /financial-reports/sales-ledger[/date-range]` enriquecido con
+     `LEFT JOIN LATERAL` a `fiscal.fiscal_documents` (doc_type=1, la FE de la venta) → columnas
+     reales `invoice_number` (`est-punto-numero` con LPAD 7), `timbrado`, `cdc`, `fiscal_estado`
+     (el query previo devolvía `''` — el libro nunca mostró número/timbrado reales). Filtros
+     opcionales `estado` (exacto), `cdc` (ILIKE parcial), `timbrado` (exacto) aplicados también al
+     summary (paginación coherente); backward-compatible (sin params = respuesta idéntica).
+     Compras: sin estado SIFEN (D-F5.3: no emiten DE; NRE opcional D12) — firma uniforme, filtros
+     ignorados.
+   - **FE (`b73a5fc`)**: `FiscalStateBadge` nuevo (`features/fiscal/components/`, mapea
+     `FISCAL_STATE_META` → Badge con label i18n; fallback UNKNOWN y empty "No fiscal"), columna
+     Estado SIFEN + CDC (formateado en grupos de 4 vía `domain/fiscal/cdc.ts`) solo en el tab
+     Ventas, filtros con Aplicar/Limpiar (deshabilitados en Compras con nota i18n), migración de
+     las strings hardcoded del `LegalBooks.jsx` legacy a `t()` (FE5.3) y `th scope`/`htmlFor` (a11y).
+   - **Fix de contrato FE (`b73a5fc`)**: `financialReportsService.getSalesLedgerDateRange` /
+     `getPurchaseLedgerDateRange` NO EXISTÍAN — el hook `useFinancialReports` los llamaba →
+     TypeError en runtime (el libro por rango estaba roto desde siempre). Se añadieron al service
+     con el contrato real del backend (`start_date/end_date/page/page_size` + filtros).
+   - **Fix runtime (`d3a82bb`)**: requests al ledger sin `page_size` → `integer divide by zero` en
+     `totalPages` (panic 500). `ledgerPagination` sanea (page≥1, pageSize≥50) en los 4 handlers de
+     ledger + guard en el repo. Detectado en el smoke real contra :5050.
 2. Dashboard de ops fiscal (admin): rechazos por código, pendientes de envío (ventana 72 h),
    extemporáneos, caducidad de timbrados — consumiendo endpoints de métricas del backend.
+   - **Backend (`e125f1c`)**: `GET /sifen/metrics/overview?dias=N` (S7.2 adelantado) — puerto nuevo
+     `FiscalMetricsReader` en `internal/sifen/port.go` (sin tocar god-interface), `MetricsService`
+     con Clock inyectado (clasifica pendiente/extemporáneo contra la ventana de 72 h, MT §6.2;
+     APROBADO_OBS = extemporáneo; timbrados por_vencer ≤ 30 días / vencidos), handler + ruta con
+     permiso `sifen:read`, wiring en container. Tests unitarios con fake reader
+     (`metrics_test.go`). Smoke real contra :5050 OK (shape del contrato verificado).
+   - **FE (`9bc18a4`)**: `FiscalOpsDashboard` en `/finance/sifen-ops` (menú Reportes Financieros,
+     `permission: 'sifen:read'`, patrón SkippedNumbersPage) — 4 KPI cards + tabla de rechazos por
+     código + lista de timbrados por vencer/vencidos; `useFiscalMetrics` (React Query) +
+     `fiscalService.getMetricsOverview` + types; estados loading/error/vacío; i18n es/en completo.
 3. i18n completo (es/en) y revisión de accesibilidad (patrón existente con axe-core).
+   - Keys nuevas: `fiscal.legalBooks.*` (FE5.1) y `fiscal.ops.*` (FE5.2) en `locales/es|en/fiscal.js`
+     — sin sintaxis ICU (motor regex `{var}`).
+   - A11y: `th scope="col"`, `label htmlFor` en filtros, aria-label en breadcrumb; el resto del
+     patrón axe-core corre en el pipeline e2e (`pnpm test:e2e`, requiere servidor).
+   - Test nuevo: `FiscalStateBadge.test.tsx` (5 casos: label i18n, UNKNOWN, empty, default).
+
+**Verificación FE5:** `tsc --noEmit` 0 errores · `pnpm test` baseline intacto (17 files / 49
+fallidos; total 404 con el test nuevo) · `pnpm build` OK · Go `go test ./internal/analytics/
+./internal/sifen/...` OK + `golangci-lint` verde · smoke real contra :5050 (metrics + ledger +
+filtros, panic de paginación detectado y corregido).
 
 ## 3. Checklist para retomar
 
