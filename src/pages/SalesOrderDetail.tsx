@@ -17,7 +17,7 @@ import {
   Calculator,
   CheckCircle,
   DollarSign,
-  Ban
+  Ban,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -34,6 +34,7 @@ import {
 import DataState from '@/components/ui/DataState'
 import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModal'
 import SaleFiscalPanel from '@/features/fiscal/components/SaleFiscalPanel'
+import CancelSaleModal from '@/features/fiscal/components/CancelSaleModal'
 import { useI18n } from '@/lib/i18n'
 import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
@@ -46,7 +47,7 @@ import ToastContainer from '@/components/ui/ToastContainer'
 const SalesOrderDetail = () => {
   const { saleId } = useParams<{ saleId: string }>()
   const navigate = useNavigate()
-  const { lang } = useI18n()
+  const { lang, t } = useI18n()
   const { error: showError, success: showSuccess, toasts, removeToast } = useToast()
 
   const [sale, setSale] = useState<any>(null)
@@ -185,21 +186,31 @@ const SalesOrderDetail = () => {
     }
   }
 
-  const handleConfirmCancellation = async () => {
+  /**
+   * Confirmación de anulación (FE4.1): el motivo es la justificativa del
+   * evento de cancelación SIFEN (viaja en el body de PUT /sale/{id}).
+   * Si el backend responde 409 (DE aprobado fuera de plazo legal 48 h/168 h),
+   * el mensaje del servidor se muestra tal cual (guía a NCE/trámite).
+   */
+  const handleConfirmCancellation = async (motivo: string) => {
     if (!sale) return
     setIsCancelling(true)
     setShowCancelPreview(false)
     try {
       const result = await saleService.revertSale(
         sale.id,
-        'ANULADO_DESDE_DETALLE_COBROS_VENTAS'
+        motivo.trim() || 'ANULADO_DESDE_DETALLE_COBROS_VENTAS'
       )
       if (result.success) {
-        showSuccess('Venta anulada exitosamente.')
+        showSuccess(t('fiscal.cancel.cancelled', 'Venta anulada exitosamente'))
         loadSale()
+      } else {
+        showError(result.error || t('fiscal.cancel.error', 'No se pudo anular la venta'))
+        setShowCancelPreview(true)
       }
-    } catch (err) {
-      showError('No se pudo anular la venta')
+    } catch (err: any) {
+      showError(err?.response?.data?.message || err?.message || t('fiscal.cancel.error', 'No se pudo anular la venta'))
+      setShowCancelPreview(true)
     } finally {
       setIsCancelling(false)
     }
@@ -536,65 +547,20 @@ const SalesOrderDetail = () => {
       </div>
 
       {/* Panel fiscal SIFEN (FE3) — complementa el detalle; 404 = branch no fiscal */}
-      {saleId && <SaleFiscalPanel saleId={saleId} />}
+      {saleId && <SaleFiscalPanel saleId={saleId} saleTotal={Number(totalAmount) || undefined} />}
 
       <RegisterSalePaymentModal open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen} sale={{ ...sale, balance_due: balanceDue, currency: sale?.currency || 'PYG' }} onSubmit={handlePaymentSubmit} />
 
-      {/* CANCEL SALE MODAL - Fluent 2 Dialog */}
-      {showCancelPreview && cancelPreviewData && (
-        <div className='fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4'>
-          <div
-            className='absolute inset-0 bg-black/50 backdrop-blur-sm'
-            onClick={() => setShowCancelPreview(false)}
-          ></div>
-          <div className='relative bg-white dark:bg-surface-dark w-full max-w-sm rounded-xl shadow-fluent-64 p-6 border border-border-subtle text-center space-y-5 animate-in zoom-in-95 duration-200'>
-            <div className='w-14 h-14 bg-red-100 text-error rounded-full flex items-center justify-center mx-auto'>
-              <Ban size={28} />
-            </div>
-            <div>
-              <h3 className='text-lg font-semibold text-text-main'>
-                ¿Anular esta venta?
-              </h3>
-              <p className='text-sm text-text-secondary mt-2'>
-                Esta acción revertirá los cobros y devolverá el stock. Cliente:{' '}
-                <span className='font-semibold text-error'>
-                  {sale.client_name}
-                </span>.
-              </p>
-              {cancelPreviewData.impact_analysis && (
-                <div className='mt-4 p-3 bg-red-50 text-red-700 text-xs rounded text-left'>
-                  <p className='font-semibold mb-1'>Impacto de la anulación:</p>
-                  <ul className='list-disc pl-4 space-y-1'>
-                    {cancelPreviewData.impact_analysis.requires_payment_reversal && (
-                      <li>Se reversarán {cancelPreviewData.impact_analysis.payments_to_cancel || 0} cobros.</li>
-                    )}
-                    {cancelPreviewData.impact_analysis.requires_stock_adjustment && (
-                      <li>Se devolverá al stock {cancelPreviewData.impact_analysis.stock_adjustments_required || 0} items.</li>
-                    )}
-                    <li>Total a devolver: {formatCurrency(cancelPreviewData.impact_analysis.total_to_reverse || 0)}</li>
-                  </ul>
-                </div>
-              )}
-            </div>
-            <div className='flex gap-3 pt-2'>
-              <Button
-                variant='outline'
-                className='flex-1 font-bold uppercase text-[10px] tracking-widest'
-                onClick={() => setShowCancelPreview(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                className='flex-1 bg-error hover:bg-error/90 text-white font-bold uppercase text-[10px] tracking-widest shadow-fluent-4'
-                onClick={handleConfirmCancellation}
-                disabled={isCancelling}
-              >
-                {isCancelling ? 'Anulando...' : 'Sí, Anular'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* CANCEL SALE MODAL (FE4.1) — motivo obligatorio + aviso de plazos SIFEN */}
+      <CancelSaleModal
+        open={showCancelPreview && !!cancelPreviewData}
+        onClose={() => setShowCancelPreview(false)}
+        sale={sale}
+        cancelPreviewData={cancelPreviewData}
+        isSubmitting={isCancelling}
+        onSubmit={handleConfirmCancellation}
+        formatTotal={formatCurrency}
+      />
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   )
