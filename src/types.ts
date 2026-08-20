@@ -1450,6 +1450,10 @@ export interface BranchFiscalConfig {
   invoice_prefix?: string;
   next_invoice_number: number;
   is_active: boolean;
+  /** Serie del DE (C010 dSerieNum): 2 letras, default "AA". */
+  serie: string;
+  /** Activación de emisión SIFEN del branch (D3) — toggle vía PUT /sifen/branch/{id}/fiscal-enabled. */
+  fiscal_enabled: boolean;
   created_at: string;
 }
 
@@ -1463,6 +1467,7 @@ export interface CreateBranchFiscalConfigRequest {
   invoice_prefix?: string;
   next_invoice_number?: number;
   is_active?: boolean;
+  serie?: string;
 }
 
 export interface UserBranchAccess {
@@ -2079,6 +2084,7 @@ export const API_ENDPOINTS = {
   BRANCH_BY_ID: (id: number) => `/branches/${id}`,
   BRANCH_FISCAL_CONFIG: (branchId: number) => `/branches/${branchId}/fiscal-config`,
   BRANCH_FISCAL_CONFIG_UPDATE: (id: number) => `/branches/fiscal-config/${id}`,
+  SIFEN_BRANCH_FISCAL_ENABLED: (branchId: number) => `/sifen/branch/${branchId}/fiscal-enabled`,
   BRANCH_ACCESS: (branchId: number) => `/branches/${branchId}/access`,
   BRANCH_ACCESS_UPDATE: (branchId: number, userId: string) => `/branches/${branchId}/access/${userId}`,
   USER_BRANCHES: (userId: string) => `/users/${userId}/branches`,

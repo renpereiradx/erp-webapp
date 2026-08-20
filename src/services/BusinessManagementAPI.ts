@@ -102,12 +102,15 @@ class BusinessManagementAPI {
     // 3. No se ha solicitado explícitamente saltar el contexto de sucursal
     // 4. NO es un endpoint de administración global (sucursales, clientes, usuarios, auth)
     const isBranchManagement = endpoint.includes('/branches/') || endpoint.startsWith('/branches');
+    // SIFEN es administración global (RBAC por permiso de módulo sifen:*), no
+    // contexto de sucursal activa — igual que branches/users.
+    const isSifenAdmin = endpoint.includes('/sifen/');
     const isClientApi = endpoint.startsWith('/client/') || endpoint === '/client';
     const isAuthEndpoint = endpoint.includes('/auth/') || endpoint.startsWith('/auth') || endpoint === '/login';
     const isUserAdmin = endpoint.includes('/users/') || endpoint.startsWith('/api/v1/users');
     
     if (activeBranch && !options.params?.branch_id && !options.skipBranchContext && 
-        !isBranchManagement && !isClientApi && !isAuthEndpoint && !isUserAdmin) {
+        !isBranchManagement && !isSifenAdmin && !isClientApi && !isAuthEndpoint && !isUserAdmin) {
       headers['X-Branch-ID'] = activeBranch
     }
 

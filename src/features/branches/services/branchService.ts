@@ -176,6 +176,26 @@ export const branchService = {
     }
   },
 
+  /**
+   * Activa/desactiva la emisión SIFEN de un branch (S3.6, D3 — arranque gradual).
+   * PUT /sifen/branch/{branchID}/fiscal-enabled — admin, requiere permiso sifen:write.
+   */
+  async setFiscalEnabled(branchId: number, documentType: string, enabled: boolean): Promise<{ ok: boolean; fiscal_enabled: boolean }> {
+    const startTime = Date.now();
+    try {
+      const response = await apiClient.put(API_ENDPOINTS.SIFEN_BRANCH_FISCAL_ENABLED(branchId), { document_type: documentType, enabled });
+      telemetry.record('branch.service.setFiscalEnabled', { duration: Date.now() - startTime });
+      return response;
+    } catch (error: any) {
+      telemetry.record('branch.service.error', { 
+        duration: Date.now() - startTime, 
+        operation: 'setFiscalEnabled', 
+        error: error.message 
+      });
+      throw error;
+    }
+  },
+
   // =================== GESTIÓN DE ACCESOS ===================
 
   /**

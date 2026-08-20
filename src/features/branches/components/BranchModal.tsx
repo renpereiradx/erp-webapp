@@ -12,6 +12,18 @@ import {
 import { branchService } from '@/features/branches/services/branchService';
 import { userService } from '@/services/userService';
 import { useToast } from '@/hooks/useToast';
+import { useI18n } from '@/lib/i18n';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import {
+  timbradoValiditySeverity,
+  daysUntilValidTo,
+  normalizeSerie,
+  isValidSerie,
+  formatInvoiceNumber,
+  TIMBRADO_VALIDITY_I18N,
+  TIMBRADO_VALIDITY_BADGE,
+} from '@/domain/fiscal/validity';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +53,7 @@ interface BranchModalProps {
 }
 
 const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, initialTab = 'info' }) => {
+  const { t } = useI18n();
   const { addToast } = useToast();
   const queryClient = useQueryClient();
   const isEditing = !!branch;
@@ -72,12 +85,16 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
   });
 
   // Formulario Nueva Config Fiscal
+  // Nota FE2: next_invoice_number es read-only (lo asigna el backend con
+  // SELECT ... FOR UPDATE dentro de la tx de la venta); serie default AA.
   const [fiscalForm, setFiscalForm] = useState<CreateBranchFiscalConfigRequest>({
     establishment_code: '',
     expedition_point: '',
     document_type: 'FACTURA',
     timbrado: '',
-    next_invoice_number: 1,
+    serie: 'AA',
+    valid_from: '',
+    valid_to: '',
     is_active: true
   });
 
@@ -146,14 +163,36 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
   });
 
   const addFiscalMutation = useMutation({
-    mutationFn: (data: CreateBranchFiscalConfigRequest) => branchService.createFiscalConfig(branch!.id, data),
+    mutationFn: (data: CreateBranchFiscalConfigRequest) => {
+      // Normalizar: serie a 2 letras mayúsculas; fechas a ISO (el backend
+      // parsea *time.Time con RFC3339 — "YYYY-MM-DD" solo no es válido).
+      const payload: CreateBranchFiscalConfigRequest = {
+        ...data,
+        serie: normalizeSerie(data.serie || 'AA'),
+        valid_from: data.valid_from ? new Date(`${data.valid_from}T00:00:00`).toISOString() : undefined,
+        valid_to: data.valid_to ? new Date(`${data.valid_to}T00:00:00`).toISOString() : undefined,
+      };
+      return branchService.createFiscalConfig(branch!.id, payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branch-fiscal', branch?.id] });
-      addToast('Configuración fiscal agregada', 'success');
+      addToast(t('fiscal.branch.added', 'Configuración fiscal agregada'), 'success');
       setShowAddFiscal(false);
-      setFiscalForm({ establishment_code: '', expedition_point: '', document_type: 'FACTURA', timbrado: '', next_invoice_number: 1, is_active: true });
+      setFiscalForm({ establishment_code: '', expedition_point: '', document_type: 'FACTURA', timbrado: '', serie: 'AA', valid_from: '', valid_to: '', is_active: true });
     },
-    onError: (error: any) => addToast(error.message || 'Error al guardar configuración', 'error')
+    onError: (error: any) => addToast(error.message || t('fiscal.branch.saveError', 'Error al guardar configuración'), 'error')
+  });
+
+  // FE2: activación SIFEN por branch (D3 — arranque gradual). El flag
+  // fiscal_enabled vive en branch_fiscal_config; el toggle lo conmuta.
+  const setFiscalEnabledMutation = useMutation({
+    mutationFn: ({ documentType, enabled }: { documentType: string; enabled: boolean }) =>
+      branchService.setFiscalEnabled(branch!.id, documentType, enabled),
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['branch-fiscal', branch?.id] });
+      addToast(vars.enabled ? t('fiscal.branch.enabled', 'Emisión SIFEN activada') : t('fiscal.branch.disabled', 'Emisión SIFEN desactivada'), 'success');
+    },
+    onError: (error: any) => addToast(error.message || 'Error al cambiar emisión SIFEN', 'error')
   });
 
   const revokeAccessMutation = useMutation({
@@ -326,14 +365,14 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
           <TabsContent value="fiscal" className="pt-6 animate-in fade-in duration-300 space-y-6">
             <div className="flex justify-between items-center">
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <Receipt size={18} className="text-primary" /> Timbrados y Puntos de Expedición
+                <Receipt size={18} className="text-primary" /> {t('fiscal.branch.title', 'Timbrados y Puntos de Expedición')}
               </h3>
               <Button 
                 size="sm" 
                 className="h-9 px-4 text-xs font-bold uppercase bg-primary hover:bg-primary-hover shadow-sm"
                 onClick={() => setShowAddFiscal(!showAddFiscal)}
               >
-                {showAddFiscal ? 'Cancelar' : <><Plus size={16} className="mr-1.5" /> Nuevo Timbrado</>}
+                {showAddFiscal ? t('fiscal.branch.cancel', 'Cancelar') : <><Plus size={16} className="mr-1.5" /> {t('fiscal.branch.new', 'Nuevo Timbrado')}</>}
               </Button>
             </div>
 
@@ -341,7 +380,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
               <div className="p-5 bg-slate-50 border border-slate-200 rounded-xl animate-in slide-in-from-top-2 duration-300 shadow-sm">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Establecimiento</label>
+                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.establishment', 'Establecimiento')}</label>
                     <Input 
                       placeholder="001" 
                       className="text-sm h-11 font-mono" 
@@ -350,7 +389,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Punto de Expedición</label>
+                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.expeditionPoint', 'Punto de Expedición')}</label>
                     <Input 
                       placeholder="001" 
                       className="text-sm h-11 font-mono"
@@ -359,7 +398,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Número de Timbrado</label>
+                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.timbrado', 'Número de Timbrado')}</label>
                     <Input 
                       placeholder="12345678" 
                       className="text-sm h-11 font-mono"
@@ -367,17 +406,69 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                       onChange={(e) => setFiscalForm({...fiscalForm, timbrado: e.target.value})}
                     />
                   </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.documentType', 'Tipo de Documento')}</label>
+                    <select 
+                      className="w-full h-11 px-3 border border-slate-200 rounded-md bg-white text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none hover:bg-slate-50 transition-colors"
+                      value={fiscalForm.document_type}
+                      onChange={(e) => setFiscalForm({...fiscalForm, document_type: e.target.value})}
+                    >
+                      <option value="FACTURA">{t('fiscal.docTypes.FACTURA', 'Factura Electrónica')}</option>
+                      <option value="NCE">{t('fiscal.docTypes.NCE', 'Nota de Crédito Electrónica')}</option>
+                      <option value="NDE">{t('fiscal.docTypes.NDE', 'Nota de Débito Electrónica')}</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.serie', 'Serie')}</label>
+                    <Input 
+                      placeholder="AA" 
+                      maxLength={2}
+                      className="text-sm h-11 font-mono uppercase"
+                      value={fiscalForm.serie}
+                      onChange={(e) => setFiscalForm({...fiscalForm, serie: normalizeSerie(e.target.value)})}
+                    />
+                    <p className="text-[10px] text-slate-400 font-medium">{t('fiscal.branch.serieHint', '2 letras, p. ej. AA')}</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.validFrom', 'Vigencia desde')}</label>
+                    <Input 
+                      type="date" 
+                      className="text-sm h-11"
+                      value={fiscalForm.valid_from || ''}
+                      onChange={(e) => setFiscalForm({...fiscalForm, valid_from: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.validTo', 'Vigencia hasta')}</label>
+                    <Input 
+                      type="date" 
+                      className="text-sm h-11"
+                      value={fiscalForm.valid_to || ''}
+                      onChange={(e) => setFiscalForm({...fiscalForm, valid_to: e.target.value})}
+                    />
+                  </div>
                 </div>
-                <div className="mt-4 flex justify-end gap-3">
-                   <Button size="sm" variant="ghost" className="h-10 text-xs font-bold" onClick={() => setShowAddFiscal(false)}>Descartar</Button>
-                   <Button 
-                    size="sm" 
-                    className="h-10 text-xs font-bold px-6 bg-primary text-white shadow-sm" 
-                    onClick={() => addFiscalMutation.mutate(fiscalForm)}
-                    disabled={addFiscalMutation.isPending}
-                   >
-                     {addFiscalMutation.isPending ? 'Guardando...' : 'Guardar Configuración'}
-                   </Button>
+                <div className="mt-4 flex justify-between items-center">
+                  <p className="text-[11px] text-slate-400 italic font-medium">
+                    {t('fiscal.branch.nextNumberHint', 'Lo asigna el backend automáticamente')}
+                  </p>
+                  <div className="flex gap-3">
+                    <Button size="sm" variant="ghost" className="h-10 text-xs font-bold" onClick={() => setShowAddFiscal(false)}>{t('fiscal.branch.discard', 'Descartar')}</Button>
+                    <Button 
+                      size="sm" 
+                      className="h-10 text-xs font-bold px-6 bg-primary text-white shadow-sm" 
+                      onClick={() => {
+                        if (!isValidSerie(normalizeSerie(fiscalForm.serie || 'AA'))) {
+                          addToast(t('fiscal.branch.serieHint', '2 letras, p. ej. AA'), 'warning');
+                          return;
+                        }
+                        addFiscalMutation.mutate(fiscalForm);
+                      }}
+                      disabled={addFiscalMutation.isPending}
+                    >
+                      {addFiscalMutation.isPending ? t('fiscal.branch.saving', 'Guardando...') : t('fiscal.branch.save', 'Guardar Configuración')}
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -389,35 +480,62 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                 <div className="mx-auto size-12 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                   <Receipt className="text-slate-400 size-6" />
                 </div>
-                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Sin configuraciones fiscales</p>
-                <p className="text-sm text-slate-400 max-w-sm mx-auto">Define los puntos de expedición para habilitar la facturación electrónica en esta sucursal.</p>
+                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">{t('fiscal.branch.empty.title', 'Sin configuraciones fiscales')}</p>
+                <p className="text-sm text-slate-400 max-w-sm mx-auto">{t('fiscal.branch.empty.description', 'Define los puntos de expedición para habilitar la facturación electrónica en esta sucursal.')}</p>
               </div>
             ) : (
-              <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+              <div className="border border-slate-200 rounded-xl overflow-x-auto shadow-sm">
                 <Table>
                   <TableHeader className="bg-slate-50 border-b border-slate-200">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Establ. / Punto</TableHead>
-                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Tipo</TableHead>
-                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Timbrado</TableHead>
-                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Validez</TableHead>
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">{t('fiscal.branch.col.establPunto', 'Establ. / Punto')}</TableHead>
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">{t('fiscal.branch.col.type', 'Tipo')}</TableHead>
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">{t('fiscal.branch.col.serie', 'Serie')}</TableHead>
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">{t('fiscal.branch.col.timbrado', 'Timbrado')}</TableHead>
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">{t('fiscal.branch.col.validity', 'Validez')}</TableHead>
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">{t('fiscal.branch.col.next', 'Próximo N°')}</TableHead>
+                      <TableHead className="py-3 px-4 text-xs font-bold uppercase text-slate-500">{t('fiscal.branch.col.sifen', 'Emisión SIFEN')}</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody className="divide-y divide-slate-100">
-                    {((fiscalConfigs as any)?.configs || fiscalConfigs?.data || []).map((cfg: BranchFiscalConfig) => (
+                    {((fiscalConfigs as any)?.configs || fiscalConfigs?.data || []).map((cfg: BranchFiscalConfig) => {
+                      const validity = timbradoValiditySeverity(cfg.valid_to);
+                      const days = daysUntilValidTo(cfg.valid_to);
+                      const validityLabel = validity === 'warning'
+                        ? t('fiscal.validity.warning', 'Vence en {days} día(s)', { days: String(days) })
+                        : t(TIMBRADO_VALIDITY_I18N[validity]);
+                      return (
                       <TableRow key={cfg.id} className="text-sm hover:bg-slate-50/50 transition-colors">
-                        <TableCell className="py-4 px-4 font-bold text-slate-700">{cfg.establishment_code}-{cfg.expedition_point}</TableCell>
-                        <TableCell className="py-4 px-4 text-slate-600 font-medium">{cfg.document_type}</TableCell>
+                        <TableCell className="py-4 px-4 font-bold text-slate-700 font-mono">{cfg.establishment_code}-{cfg.expedition_point}</TableCell>
+                        <TableCell className="py-4 px-4 text-slate-600 font-medium">{t(`fiscal.docTypes.${cfg.document_type}`, cfg.document_type)}</TableCell>
+                        <TableCell className="py-4 px-4">
+                          <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">{cfg.serie || 'AA'}</span>
+                        </TableCell>
                         <TableCell className="py-4 px-4 font-mono font-medium text-slate-600">{cfg.timbrado}</TableCell>
-                        <TableCell className="py-4 px-4 text-slate-500">{cfg.valid_to ? new Date(cfg.valid_to).toLocaleDateString() : 'Indefinido'}</TableCell>
+                        <TableCell className="py-4 px-4">
+                          <Badge variant={TIMBRADO_VALIDITY_BADGE[validity]} dot>
+                            {validityLabel}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-4 px-4 font-mono text-slate-500">{formatInvoiceNumber(cfg.next_invoice_number)}</TableCell>
+                        <TableCell className="py-4 px-4">
+                          <Switch
+                            checked={!!cfg.fiscal_enabled}
+                            disabled={setFiscalEnabledMutation.isPending}
+                            onCheckedChange={(checked: boolean) =>
+                              setFiscalEnabledMutation.mutate({ documentType: cfg.document_type, enabled: checked })
+                            }
+                            aria-label={cfg.fiscal_enabled ? t('fiscal.branch.deactivate', 'Desactivar') : t('fiscal.branch.activate', 'Activar')}
+                          />
+                        </TableCell>
                         <TableCell className="py-4 px-4 text-right">
                           <Button 
                             variant="ghost" 
                             size="sm" 
                             className="size-8 p-0 text-slate-400 hover:text-error hover:bg-error/10"
                             onClick={() => {
-                              if (window.confirm('¿Estás seguro de eliminar esta configuración fiscal?')) {
+                              if (window.confirm(t('fiscal.branch.deleteConfirm', '¿Estás seguro de eliminar esta configuración fiscal?'))) {
                                 deleteFiscalMutation.mutate(cfg.id);
                               }
                             }}
@@ -427,7 +545,8 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
