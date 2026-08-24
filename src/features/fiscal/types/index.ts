@@ -38,12 +38,11 @@ export interface SaleFiscalStatus {
 /**
  * GET /sifen/config/{ambiente} (S2.5) — vista pública enmascarada.
  * Los secretos (CSC, contraseña del p12) nunca salen: solo flags csc_set /
- * has_cert. Nota: `actividades` llega con las claves del struct Go
- * (sin tags json en el dominio) → Codigo/Descripcion en PascalCase.
+ * has_cert. `actividades` llega en snake_case (DTO del backend, S2-H2).
  */
 export interface SifenActividadEconomica {
-  Codigo: string;
-  Descripcion: string;
+  codigo: string;
+  descripcion: string;
 }
 
 export interface SifenConfigPublic {
