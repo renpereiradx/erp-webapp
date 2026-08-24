@@ -25,16 +25,19 @@ import { useFiscalMetrics } from '@/features/fiscal/hooks/useFiscalMetrics';
 import { fiscalDocTypeFromCode } from '@/domain/fiscal/states';
 import type { RechazoPorCodigo, TimbradoVencimiento } from '@/features/fiscal/types';
 
-const formatDateTime = (iso: string): string => {
+// S6-H6: el locale sigue el idioma activo de la UI (es → es-PY, en → en-US).
+const localeFromLang = (lang: string): string => (lang === 'en' ? 'en-US' : 'es-PY');
+
+const formatDateTime = (iso: string, locale: string): string => {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso || '-';
-  return date.toLocaleString('es-PY');
+  return date.toLocaleString(locale);
 };
 
-const formatDate = (iso: string): string => {
+const formatDate = (iso: string, locale: string): string => {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso || '-';
-  return date.toLocaleDateString('es-PY');
+  return date.toLocaleDateString(locale);
 };
 
 interface KpiCardProps {
@@ -76,7 +79,7 @@ const KpiCard: React.FC<KpiCardProps> = ({ icon, label, value, hint, tone = 'neu
   );
 };
 
-const RechazoRow: React.FC<{ item: RechazoPorCodigo }> = ({ item }) => (
+const RechazoRow: React.FC<{ item: RechazoPorCodigo; locale: string }> = ({ item, locale }) => (
   <tr className="border-t border-border-subtle hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
     <td className="px-4 py-3">
       <Badge variant="destructive" size="sm">{item.codigo}</Badge>
@@ -84,15 +87,16 @@ const RechazoRow: React.FC<{ item: RechazoPorCodigo }> = ({ item }) => (
     <td className="px-4 py-3 text-sm text-text-secondary">{item.mensaje || '—'}</td>
     <td className="px-4 py-3 text-sm font-bold text-right">{item.cantidad}</td>
     <td className="px-4 py-3 text-xs text-text-secondary text-right whitespace-nowrap">
-      {formatDateTime(item.ultima_ocurrencia)}
+      {formatDateTime(item.ultima_ocurrencia, locale)}
     </td>
   </tr>
 );
 
-const TimbradoRow: React.FC<{ item: TimbradoVencimiento }> = ({ item }) => {
+// El backend solo lista los timbrados por vencer (0–30 días): dias_restantes
+// es siempre ≥ 0 aquí (S6-H8) — los vencidos viven en el KPI timbrados_vencidos.
+const TimbradoRow: React.FC<{ item: TimbradoVencimiento; locale: string }> = ({ item, locale }) => {
   const { t } = useI18n();
   const docType = fiscalDocTypeFromCode(item.document_type === 'FACTURA' ? 1 : item.document_type === 'NCE' ? 5 : 6);
-  const expired = item.dias_restantes < 0;
 
   return (
     <div className="flex items-center justify-between gap-4 py-3 border-t border-border-subtle first:border-t-0">
@@ -100,20 +104,19 @@ const TimbradoRow: React.FC<{ item: TimbradoVencimiento }> = ({ item }) => {
         <div className="text-sm font-bold text-text-main truncate">{item.branch_name}</div>
         <div className="text-xs text-text-secondary">
           {docType ? t(docType.i18nKey, docType.docType) : item.document_type} · {t('fiscal.ops.timbrados.timbrado', 'Timbrado')}{' '}
-          {item.timbrado} · {t('fiscal.ops.timbrados.validTo', 'Vence')} {formatDate(item.valid_to)}
+          {item.timbrado} · {t('fiscal.ops.timbrados.validTo', 'Vence')} {formatDate(item.valid_to, locale)}
         </div>
       </div>
-      <Badge variant={expired ? 'destructive' : 'warning'} size="sm">
-        {expired
-          ? t('fiscal.ops.timbrados.expiredDays', 'Vencido hace {days} día(s)', { days: String(Math.abs(item.dias_restantes)) })
-          : t('fiscal.ops.timbrados.daysLeft', '{days} día(s)', { days: String(item.dias_restantes) })}
+      <Badge variant="warning" size="sm">
+        {t('fiscal.ops.timbrados.daysLeft', '{days} día(s)', { days: String(item.dias_restantes) })}
       </Badge>
     </div>
   );
 };
 
 const FiscalOpsDashboard: React.FC = () => {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const locale = localeFromLang(lang);
   const { data, loading, isFetching, error, refresh } = useFiscalMetrics(30);
 
   const hasRechazos = (data?.rechazos_por_codigo?.length ?? 0) > 0;
@@ -141,7 +144,7 @@ const FiscalOpsDashboard: React.FC = () => {
           </Button>
           {data?.generado_en && (
             <span className="text-xs text-text-secondary">
-              {t('fiscal.ops.generatedAt', 'Generado: {time}', { time: formatDateTime(data.generado_en) })}
+              {t('fiscal.ops.generatedAt', 'Generado: {time}', { time: formatDateTime(data.generado_en, locale) })}
             </span>
           )}
         </div>
@@ -224,7 +227,7 @@ const FiscalOpsDashboard: React.FC = () => {
                     </thead>
                     <tbody>
                       {data?.rechazos_por_codigo.map(r => (
-                        <RechazoRow key={r.codigo} item={r} />
+                        <RechazoRow key={r.codigo} item={r} locale={locale} />
                       ))}
                     </tbody>
                   </table>
@@ -244,14 +247,18 @@ const FiscalOpsDashboard: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0 px-5 pb-4">
-                {!hasTimbrados && (data?.timbrados_vencidos ?? 0) === 0 ? (
+                {/* S6-H8: el vacío se decide por la lista — con vencidos > 0 y
+                    lista vacía se explica en vez de renderizar un div mudo. */}
+                {!hasTimbrados ? (
                   <p className="py-8 text-sm text-text-secondary text-center">
-                    {t('fiscal.ops.timbrados.empty', 'Sin timbrados próximos a vencer ni vencidos')}
+                    {(data?.timbrados_vencidos ?? 0) > 0
+                      ? t('fiscal.ops.timbrados.onlyExpired', 'Sin timbrados por vencer — {count} vencido(s) (ver KPI)', { count: String(data?.timbrados_vencidos ?? 0) })
+                      : t('fiscal.ops.timbrados.empty', 'Sin timbrados próximos a vencer ni vencidos')}
                   </p>
                 ) : (
                   <div>
                     {data?.timbrados_por_vencer?.map(tb => (
-                      <TimbradoRow key={`${tb.branch_id}-${tb.timbrado}`} item={tb} />
+                      <TimbradoRow key={`${tb.branch_id}-${tb.timbrado}`} item={tb} locale={locale} />
                     ))}
                   </div>
                 )}

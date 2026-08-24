@@ -281,6 +281,55 @@ class BusinessManagementAPI {
     return parsedResponse
   }
 
+  /**
+   * GET binario (blob) con autenticación — para descargar archivos de
+   * endpoints protegidos (PDFs): `window.open` no puede enviar el header
+   * Authorization y el backend exige JWT en todas las rutas de datos.
+   * Devuelve el blob y el filename del Content-Disposition cuando el
+   * backend lo expone (null si el header no viaja o CORS no lo expone).
+   */
+  async getBlob(endpoint: string, options: RequestOptions = {}): Promise<{ blob: Blob; filename: string | null }> {
+    const url = `${this.baseUrl}${endpoint}`
+    const authHeaders = options.skipAuth ? {} : this.getAuthHeaders(endpoint, options)
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+    const { skipAuth, params, ...fetchOptions } = options
+
+    let response: Response
+    try {
+      response = await fetch(url, {
+        signal: controller.signal,
+        ...fetchOptions,
+        headers: {
+          ...this.defaultHeaders,
+          ...authHeaders,
+          ...fetchOptions.headers as Record<string, string>,
+        },
+      })
+      clearTimeout(timeoutId)
+    } catch (err: any) {
+      throw toApiError(err, 'Error de red')
+    }
+
+    if (!response.ok) {
+      let errorData
+      try {
+        errorData = await response.json()
+      } catch (e) {
+        errorData = { message: `HTTP Error ${response.status}` }
+      }
+      throw toApiError(errorData, 'Error en la descarga', undefined, response.status)
+    }
+
+    const disposition = response.headers.get('Content-Disposition') || ''
+    const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition)
+    return {
+      blob: await response.blob(),
+      filename: match ? decodeURIComponent(match[1].trim()) : null,
+    }
+  }
+
   handleUnauthorized(): void {
     // Limpiar tokens locales
     localStorage.removeItem('authToken')

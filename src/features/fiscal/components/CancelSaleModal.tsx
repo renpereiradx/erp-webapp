@@ -61,7 +61,8 @@ const CancelSaleModal: React.FC<CancelSaleModalProps> = ({
 
   const handleConfirm = () => {
     const trimmed = motivo.trim();
-    if (!trimmed) return; // botón deshabilitado igualmente (guard doble)
+    // Backend validarMotivo: 5-500 chars (S6-H5) — mismo mínimo en el FE.
+    if (trimmed.length < 5) return;
     onSubmit(trimmed);
   };
 
@@ -114,10 +115,16 @@ const CancelSaleModal: React.FC<CancelSaleModalProps> = ({
               onChange={(e) => setMotivo(e.target.value)}
               placeholder={t('fiscal.cancel.reasonPlaceholder', 'Justificativa para el evento de cancelación SIFEN')}
               rows={3}
+              minLength={5}
               maxLength={500}
               className="text-sm"
               autoFocus
             />
+            {motivo.trim().length > 0 && motivo.trim().length < 5 && (
+              <p className="text-[11px] font-semibold text-error">
+                {t('fiscal.cancel.reasonTooShort', 'El motivo debe tener al menos 5 caracteres')}
+              </p>
+            )}
           </div>
 
           {/* Aviso de plazos fiscales (solo venta fiscal) */}
@@ -163,7 +170,7 @@ const CancelSaleModal: React.FC<CancelSaleModalProps> = ({
           <Button
             className="flex-1 bg-error hover:bg-error/90 text-white font-bold uppercase text-[10px] tracking-widest shadow-fluent-4"
             onClick={handleConfirm}
-            disabled={isSubmitting || !motivo.trim()}
+            disabled={isSubmitting || motivo.trim().length < 5}
           >
             {isSubmitting
               ? t('fiscal.cancel.cancelling', 'Anulando...')

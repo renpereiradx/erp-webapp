@@ -33,6 +33,12 @@ export interface SaleFiscalStatus {
    * (regla 4: el CSC no viaja). Ausente si el DE aún no está firmado.
    */
   qr_url?: string;
+  /**
+   * Reimpresiones del ticket registradas hasta ahora (documents.sale_documents,
+   * S6-H7). Presente desde la primera carga — antes el contador solo aparecía
+   * tras re-imprimir en la sesión. 0 = ticket impreso sin reimpresiones.
+   */
+  reprint_count?: number;
 }
 
 /**

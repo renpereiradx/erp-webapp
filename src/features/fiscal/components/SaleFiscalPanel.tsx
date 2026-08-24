@@ -2,7 +2,14 @@
  * SaleFiscalPanel — panel fiscal SIFEN del detalle de venta (FE3).
  * Complementa SalesOrderDetail: estado del DE, CDC, timbrado, QR del KuDE
  * (renderizado desde la URL que arma el backend — el FE nunca calcula el
- * hash, regla 4) y acciones (reenviar / reimprimir / email).
+ * hash, regla 4) y acciones (reenviar / reimprimir / email / KuDE PDF).
+ *
+ * Gates de acción (S6-H3/S6-H4, espejo de las defensas del backend):
+ * - Reenvío: solo EMITIDO/RECHAZADO, nunca rechazo definitivo (1050–1053),
+ *   deshabilitado fuera de la ventana de 72 h (preview con fecha_firma).
+ * - Reprima (ticket/email/PDF): deshabilitada para CANCELADO/INUTILIZADO;
+ *   confirmación explícita para RECHAZADO (el backend imprime banda de
+ *   invalidez y suprime el QR, S5-H2).
  */
 import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -16,7 +23,7 @@ import { useSaleFiscalPanel } from '@/features/fiscal/hooks/useSaleFiscalPanel';
 import { fiscalStateMeta, fiscalDocTypeFromCode } from '@/domain/fiscal/states';
 import { formatCDC } from '@/domain/fiscal/cdc';
 import { formatInvoiceNumber } from '@/domain/fiscal/validity';
-import { fiscalService } from '@/features/fiscal/services/fiscalService';
+import { retryWindow } from '@/domain/fiscal/emission';
 import EmitNoteModal from '@/features/fiscal/components/EmitNoteModal';
 
 interface SaleFiscalPanelProps {
@@ -36,9 +43,9 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
   const { t } = useI18n();
   const [noteModalOpen, setNoteModalOpen] = React.useState(false);
   const {
-    status, isLoading, isNotFiscal, error,
-    retrying, emailing, reprinting, reprintCount,
-    retry, emailComprobante, reprintTicket,
+    status, isLoading, isNotFiscal, error, refetch,
+    retrying, downloading, emailing, reprinting, reprintCount,
+    retryEmission, downloadPdf, emailComprobante, reprintTicket,
   } = useSaleFiscalPanel(saleId);
 
   if (isLoading) {
@@ -68,14 +75,31 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
   if (error || !status) {
     return (
       <Card className="rounded-xl border-border-subtle shadow-fluent-2">
-        <CardContent className="p-10"><DataState variant="error" title={t('fiscal.panel.error', 'No se pudo cargar el estado fiscal')} onRetry={retry} /></CardContent>
+        {/* S6-H2: "Reintentar" recarga el estado; NUNCA reenvía el DE a SIFEN. */}
+        <CardContent className="p-10"><DataState variant="error" title={t('fiscal.panel.error', 'No se pudo cargar el estado fiscal')} onRetry={() => { void refetch(); }} /></CardContent>
       </Card>
     );
   }
 
   const stateMeta = fiscalStateMeta(status.estado);
   const docType = fiscalDocTypeFromCode(status.doc_type);
-  const isRetryable = status.estado === 'EMITIDO' || status.estado === 'RECHAZADO';
+  // S6-H4: preview de la ventana de 72 h (backend defiende con 409).
+  const retryInfo = retryWindow(status);
+  const showRetry = (status.estado === 'EMITIDO' || status.estado === 'RECHAZADO') && !retryInfo.finalRejection;
+  const retryDisabled = retrying || (retryInfo.computable && !retryInfo.withinWindow);
+  const retryTitle = retryInfo.computable && !retryInfo.withinWindow
+    ? t('fiscal.panel.retryWindowExpired', 'Fuera de la ventana de 72 h: el reenvío requiere trámite administrativo o nota de crédito')
+    : undefined;
+  // S6-H3: sin reprima de un DE anulado; confirmación para el rechazado.
+  const canReprint = status.estado !== 'CANCELADO' && status.estado !== 'INUTILIZADO';
+  const reprintBlockedTitle = t('fiscal.panel.reprintBlocked', 'No disponible: el DE está cancelado o inutilizado');
+  const confirmRejectedReprint = (): boolean =>
+    status.estado !== 'RECHAZADO' ||
+    window.confirm(t('fiscal.panel.rejectedConfirm', 'El DE fue rechazado por SIFEN: el comprobante se entrega sin QR y con banda de invalidez. ¿Continuar?'));
+  const guardedReprintAction = (action: () => Promise<void>) => {
+    if (!confirmRejectedReprint()) return;
+    void action();
+  };
   // FE4.3: NCE/NDE solo sobre FE aprobada (MT §11.1.3).
   const canEmitNote = status.doc_type === 1 && (status.estado === 'APROBADO' || status.estado === 'APROBADO_OBS');
 
@@ -157,20 +181,26 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
                 <FileText size={14} /> {t('fiscal.notes.open', 'NCE / NDE')}
               </Button>
             )}
+            {/* S6-H1: descarga por apiClient como blob con Authorization —
+                window.open no puede enviar el header y el endpoint exige JWT. */}
             <Button
               variant="outline"
               size="sm"
               className="h-9 text-xs font-bold gap-1.5"
-              onClick={() => { window.open(fiscalService.comprobanteUrl(saleId), '_blank', 'noopener'); }}
+              onClick={() => guardedReprintAction(downloadPdf)}
+              disabled={downloading || !canReprint}
+              title={canReprint ? undefined : reprintBlockedTitle}
             >
-              <Download size={14} /> {t('fiscal.panel.downloadPdf', 'KuDE PDF')}
+              {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+              {t('fiscal.panel.downloadPdf', 'KuDE PDF')}
             </Button>
             <Button
               variant="outline"
               size="sm"
               className="h-9 text-xs font-bold gap-1.5"
-              onClick={reprintTicket}
-              disabled={reprinting}
+              onClick={() => guardedReprintAction(reprintTicket)}
+              disabled={reprinting || !canReprint}
+              title={canReprint ? undefined : reprintBlockedTitle}
             >
               {reprinting ? <Loader2 size={14} className="animate-spin" /> : <Printer size={14} />}
               {t('fiscal.panel.reprint', 'Reimprimir ticket')}
@@ -179,18 +209,20 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
               variant="outline"
               size="sm"
               className="h-9 text-xs font-bold gap-1.5"
-              onClick={emailComprobante}
-              disabled={emailing}
+              onClick={() => guardedReprintAction(emailComprobante)}
+              disabled={emailing || !canReprint}
+              title={canReprint ? undefined : reprintBlockedTitle}
             >
               {emailing ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
               {t('fiscal.panel.email', 'Enviar por email')}
             </Button>
-            {isRetryable && (
+            {showRetry && (
               <Button
                 size="sm"
                 className="h-9 text-xs font-bold gap-1.5 bg-primary hover:bg-primary-hover text-white shadow-sm"
-                onClick={retry}
-                disabled={retrying}
+                onClick={() => { void retryEmission(); }}
+                disabled={retryDisabled}
+                title={retryTitle}
               >
                 {retrying ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                 {t('fiscal.panel.retry', 'Reenviar a SIFEN')}

@@ -3,9 +3,14 @@
  * Consume los endpoints del backend business_management:
  *   GET  /sale/{id}/fiscal            (S3.5) estado fiscal de la venta
  *   POST /sale/{id}/fiscal/retry      (FE3.3) reenvío manual del DE (D2)
- *   GET  /documents/sales/{id}/comprobante.pdf   (S5.1) KuDE PDF
- *   POST /documents/sales/{id}/comprobante/email (S5.3) email del comprobante
- *   POST /documents/sales/{id}/ticket/render     (S5.2) ticket 80 mm + reprint_count
+ *   GET  /api/v1/documents/sales/{id}/comprobante.pdf   (S5.1) KuDE PDF (blob con auth)
+ *   POST /api/v1/documents/sales/{id}/comprobante/email (S5.3) email del comprobante
+ *   POST /api/v1/documents/sales/{id}/ticket/render     (S5.2) ticket 80 mm + reprint_count
+ *
+ * Ojo: el contexto documents del backend registra sus rutas bajo el prefijo
+ * /api/v1 (único contexto que lo hace — el resto vive en la raíz), por lo que
+ * estos tres paths lo incluyen (S6-H1: sin el prefijo el panel golpeaba
+ * 404 en las tres acciones de comprobante).
  *
  * Secretos (CSC, p12) jamás pasan por aquí (regla 4 del plan).
  */
@@ -24,9 +29,9 @@ import type {
 const FISCAL = {
   saleFiscal: (saleId: string) => `/sale/${encodeURIComponent(saleId)}/fiscal`,
   saleFiscalRetry: (saleId: string) => `/sale/${encodeURIComponent(saleId)}/fiscal/retry`,
-  comprobantePdf: (saleId: string) => `/documents/sales/${encodeURIComponent(saleId)}/comprobante.pdf`,
-  comprobanteEmail: (saleId: string) => `/documents/sales/${encodeURIComponent(saleId)}/comprobante/email`,
-  ticketRender: (saleId: string) => `/documents/sales/${encodeURIComponent(saleId)}/ticket/render`,
+  comprobantePdf: (saleId: string) => `/api/v1/documents/sales/${encodeURIComponent(saleId)}/comprobante.pdf`,
+  comprobanteEmail: (saleId: string) => `/api/v1/documents/sales/${encodeURIComponent(saleId)}/comprobante/email`,
+  ticketRender: (saleId: string) => `/api/v1/documents/sales/${encodeURIComponent(saleId)}/ticket/render`,
 };
 
 export interface TicketRenderResult {
@@ -54,9 +59,15 @@ export const fiscalService = {
     return apiClient.post(FISCAL.saleFiscalRetry(saleId));
   },
 
-  /** URL del KuDE PDF (S5.1) — para abrir en pestaña nueva / descargar. */
-  comprobanteUrl(saleId: string): string {
-    return FISCAL.comprobantePdf(saleId);
+  /**
+   * Descarga el KuDE PDF (S5.1) como blob vía apiClient — el endpoint exige
+   * JWT (middleware global) y `window.open` no puede enviar el header de
+   * Authorization (S6-H1). El filename viene del Content-Disposition del
+   * backend (número fiscal, S5-H7) con fallback al saleId.
+   */
+  async downloadComprobantePdf(saleId: string): Promise<{ blob: Blob; filename: string }> {
+    const { blob, filename } = await apiClient.getBlob(FISCAL.comprobantePdf(saleId));
+    return { blob, filename: filename || `kude_${saleId}.pdf` };
   },
 
   /** Envía el comprobante por email (S5.3, flujo documents.email_log). */

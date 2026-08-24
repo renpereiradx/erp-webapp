@@ -47,11 +47,13 @@ const InutilizeRangeModal: React.FC<InutilizeRangeModalProps> = ({
 
   const handleConfirm = () => {
     const trimmed = motivo.trim();
-    if (!trimmed) return;
+    // Backend validarMotivo: 5-500 chars (S6-H5) — mismo mínimo en el FE.
+    if (trimmed.length < 5) return;
     onSubmit(trimmed);
   };
 
   const valid = range !== null && isRangeWithinLimit(range);
+  const motivoTooShort = motivo.trim().length > 0 && motivo.trim().length < 5;
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && !isSubmitting) reset(); }}>
@@ -102,10 +104,16 @@ const InutilizeRangeModal: React.FC<InutilizeRangeModalProps> = ({
               onChange={(e) => setMotivo(e.target.value)}
               placeholder={t('fiscal.inutilize.reasonPlaceholder', 'Motivo del evento de inutilización (5-500 caracteres)')}
               rows={3}
+              minLength={5}
               maxLength={500}
               className="text-sm"
               autoFocus
             />
+            {motivoTooShort && (
+              <p className="text-[11px] font-semibold text-error">
+                {t('fiscal.inutilize.reasonTooShort', 'La justificativa debe tener al menos 5 caracteres')}
+              </p>
+            )}
           </div>
         </div>
 
@@ -121,7 +129,7 @@ const InutilizeRangeModal: React.FC<InutilizeRangeModalProps> = ({
           <Button
             className="flex-1 bg-error hover:bg-error/90 text-white font-bold uppercase text-[10px] tracking-widest shadow-fluent-4"
             onClick={handleConfirm}
-            disabled={isSubmitting || !motivo.trim() || !valid}
+            disabled={isSubmitting || motivo.trim().length < 5 || !valid}
           >
             {isSubmitting ? <><Loader2 size={14} className="animate-spin mr-1.5" />{t('fiscal.inutilize.submitting', 'Inutilizando...')}</> : t('fiscal.inutilize.confirm', 'Inutilizar')}
           </Button>

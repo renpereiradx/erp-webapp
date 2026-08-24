@@ -8,7 +8,8 @@
 (`9857ee0` + backend `9ee383b`), FE4 ✅ (`79cf698`, `a3558e3`, `b0a8a87`,
 `e0a0adc`, `9c29444` — 2026-08-20) y FE5 ✅ (2026-08-20, `b73a5fc` +
 `9bc18a4` + `571be5c`, backend `e125f1c`/`8685e9b`/`3256751`/`d3a82bb`)
-completadas; S6 cerrada.
+completadas; S6 cerrada. **Remediación auditoría S6 (2026-08-24) aplicada —
+ver sección abajo.**
 **Reglas de base:** AGENTS.md global (i18n siempre, Feature-Sliced para features nuevos,
 DESIGN.md para UI, pnpm exclusivo, `tsc --noEmit` en 0 errores, tests = baseline sin nuevos fallidos).
 
@@ -146,6 +147,37 @@ DESIGN.md para UI, pnpm exclusivo, `tsc --noEmit` en 0 errores, tests = baseline
 fallidos; total 404 con el test nuevo) · `pnpm build` OK · Go `go test ./internal/analytics/
 ./internal/sifen/...` OK + `golangci-lint` verde · smoke real contra :5050 (metrics + ledger +
 filtros, panic de paginación detectado y corregido).
+
+## Remediación auditoría S6 (2026-08-24) ✅
+
+Corrección de los hallazgos de `conductor/sifen-audit/S6.md` (veredicto "conforme
+con reserva"). El backend acompañó con `reprint_count` en el estado fiscal y la
+exposición CORS de `Content-Disposition` (H7 — commits en business_management).
+
+| Hallazgo | Corrección |
+|:--|:--|
+| **H1** 🔴 botón "KuDE PDF" roto por construcción | Descarga por `apiClient.getBlob` (método nuevo del cliente: fetch con `Authorization` + timeout + parseo de `Content-Disposition`) → `URL.createObjectURL` + `a[download]` en `useSaleFiscalPanel.downloadPdf`. **Además: las tres rutas de documents del service incluían el prefijo `/api/v1` que faltaba** (el contexto documents es el único del backend que lo usa) — email y ticket también golpeaban 404; corregido en `FISCAL.*`. Smoke real contra :5050: ruta vieja `/documents/…` → 404, corregida `/api/v1/documents/…` → 401 (existe, exige JWT) |
+| **H2** 🟡 "Reintentar" del error = reenvío del DE | El hook expone `refetch` (React Query) y el estado de error del panel usa `onRetry={() => refetch()}`; la mutación se renombró `retry` → `retryEmission` para que la colisión de nombres no vuelva |
+| **H3** 🟡 reprima/email/PDF sin gate por estado | Los tres botones se deshabilitan para `CANCELADO`/`INUTILIZADO` (title i18n con el motivo) y piden confirmación explícita para `RECHAZADO` (avisa que se entrega sin QR y con banda de invalidez — complementa la remedición backend S5-H2) |
+| **H4** 🟢 reenvío sin preview de ventana 72 h | Dominio nuevo `domain/fiscal/emission.ts` (patrón `cancellationWindow`): `retryWindow` con `fecha_firma` + 72 h (MT §6.2) y `isFinalRejection` espejo del backend (1050–1053, S3.4). El botón se oculta para rechazo definitivo y se deshabilita fuera de ventana con título explicativo. 9 tests (borde 72 h, parse local anti-UTC) |
+| **H5** 🟢 validaciones más laxas que el backend | `minLength={5}` + guard `trim().length < 5` (botón deshabilitado y submit bloqueado) + hint de error en `CancelSaleModal` e `InutilizeRangeModal` (backend `validarMotivo`: 5-500) |
+| **H6** 🟢 locale hardcodeado `es-PY` | `FiscalOpsDashboard` toma el locale del `lang` de `useI18n` (`es-PY`/`en-US`) en las tres formatters |
+| **H7** ℹ️ `reprint_count` solo tras re-imprimir en la sesión | Backend: `GET /sale/{id}/fiscal` incluye `reprint_count` (puerto `TicketReprintReader` + bridge en wiring sobre `documents.sale_documents`; omitempty, 0 = sin reimpresiones; test de handler con reader nil/error/count). FE: el hook prefiere la respuesta del render y cae al estado fiscal; re-imprimir refresca la query |
+| **H8** ℹ️ rama muerta + vacío silencioso en timbrados | `TimbradoRow` sin rama `expired` (el backend solo lista por-vencer: `dias_restantes ≥ 0` siempre); el empty-state se decide por la lista y explica cuando solo hay vencidos (key nueva `onlyExpired`); key muerta `expiredDays` eliminada de es/en |
+
+**H9** (ℹ️ tipos/endpoint sin consumir) queda anotado para el cierre S7 como
+pedía la propia auditoría: `SifenConfigPublic` como documentación del contrato
+y la capa de alertas `GET /sifen/metrics/alerts` es el hogar natural del
+dashboard de ops.
+
+**Verificación:** `tsc --noEmit` 0 errores · `vitest src/domain/fiscal
+src/features/fiscal` 8 archivos / **75 tests** verdes (66 + 9 nuevos del
+dominio de ventana) · suite completa = baseline exacto (17 files / 49 fallidos
+preexistentes, 0 nuevos; total 413) · `vite build` exit 0 · cruce mecánico
+i18n: 220 keys `fiscal.*` usadas, 0 faltantes en es/en, placeholders
+consistentes, sin ICU · smoke real de rutas contra :5050 (401 en corregidas /
+404 en la vieja) · Go: `go build`/`go test`/`golangci-lint` verdes
+(sifen/wiring/server/routes).
 
 ## 3. Checklist para retomar
 
