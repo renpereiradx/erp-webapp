@@ -251,4 +251,22 @@ export const fiscal = {
   'fiscal.ops.timbrados.timbrado': 'Timbrado',
   'fiscal.ops.timbrados.validTo': 'Vence',
   'fiscal.ops.timbrados.daysLeft': '{days} día(s)',
+
+  // FE5.2 — panel de alertas (S7.2, remedación S7-H9-b)
+  'fiscal.ops.alerts.title': 'Alertas de operación',
+  'fiscal.ops.alerts.subtitle': 'Ordenadas por severidad (crit → warn → info)',
+  'fiscal.ops.alerts.count': '{count} activa(s)',
+  'fiscal.ops.alerts.more': '+ {count} alerta(s) más',
+  'fiscal.ops.alerts.nivel.crit': 'Crítica',
+  'fiscal.ops.alerts.nivel.warn': 'Advertencia',
+  'fiscal.ops.alerts.nivel.info': 'Info',
+  'fiscal.ops.alerts.tipo.ventana_72h': 'Ventana de 72 h',
+  'fiscal.ops.alerts.tipo.extemporaneo': 'Extemporáneo',
+  'fiscal.ops.alerts.tipo.extemporaneo_administrativo': 'Extemporáneo administrativo',
+  'fiscal.ops.alerts.tipo.drift_reloj': 'Drift de reloj (NTP)',
+  'fiscal.ops.alerts.tipo.cancelacion_pendiente': 'Cancelación pendiente',
+  'fiscal.ops.alerts.tipo.cancelacion_vencida': 'Cancelación vencida',
+  'fiscal.ops.alerts.tipo.inutilizacion_pendiente': 'Inutilización pendiente',
+  'fiscal.ops.alerts.tipo.timbrado_por_vencer': 'Timbrado por vencer',
+  'fiscal.ops.alerts.tipo.timbrado_vencido': 'Timbrado vencido',
 }

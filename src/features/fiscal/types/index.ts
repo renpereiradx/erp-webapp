@@ -178,7 +178,36 @@ export interface FiscalMetricsOverview {
   ventana_horas: number;
   pendientes_envio: number;
   extemporaneos: number;
+  /** Opcionales: llegan desde la remediación S4-H10 (backend las agregó después). */
+  cancelaciones_pendientes?: number;
+  cancelaciones_vencidas?: number;
+  inutilizaciones_pendientes?: number;
   rechazos_por_codigo: RechazoPorCodigo[];
   timbrados_por_vencer: TimbradoVencimiento[];
   timbrados_vencidos: number;
+}
+
+/**
+ * GET /sifen/metrics/alerts (S7.2) — capa de alertas accionables. La lista
+ * llega ordenada por severidad (crit → warn → info) desde el backend
+ * (S7-H4); el FE re-ordena defensivamente en domain/fiscal/alerts.
+ */
+export type FiscalAlertNivel = 'crit' | 'warn' | 'info';
+
+export interface FiscalAlert {
+  nivel: FiscalAlertNivel;
+  tipo: string;
+  codigo?: string;
+  cdc?: string;
+  branch?: string;
+  timbrado?: string;
+  documento?: string;
+  mensaje: string;
+}
+
+export interface FiscalOpsAlerts {
+  generado_en: string;
+  nivel_max: FiscalAlertNivel;
+  total: number;
+  alertas: FiscalAlert[];
 }

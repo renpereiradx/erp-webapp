@@ -1,15 +1,18 @@
 /**
  * FiscalOpsDashboard — dashboard de operación fiscal SIFEN (FE5.2, S7.2).
  * KPIs: pendientes de envío (ventana 72 h, MT §6.2), extemporáneos,
- * caducidad de timbrados; tabla de rechazos por código (d_cod_res).
+ * caducidad de timbrados; panel de alertas accionables (S7-H9-b) y tabla de
+ * rechazos por código (d_cod_res).
  *
- * Consume GET /sifen/metrics/overview (permiso sifen:read). El backend
- * clasifica contra su propio reloj; el FE solo renderiza.
+ * Consume GET /sifen/metrics/overview + GET /sifen/metrics/alerts (permiso
+ * sifen:read). El backend clasifica contra su propio reloj; el FE solo
+ * renderiza (re-ordena las alertas por severidad en domain/fiscal/alerts).
  */
 import React from 'react';
 import {
   Activity,
   AlertTriangle,
+  BellRing,
   Clock,
   FileWarning,
   Hourglass,
@@ -23,7 +26,8 @@ import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { useFiscalMetrics } from '@/features/fiscal/hooks/useFiscalMetrics';
 import { fiscalDocTypeFromCode } from '@/domain/fiscal/states';
-import type { RechazoPorCodigo, TimbradoVencimiento } from '@/features/fiscal/types';
+import { sortAlertsBySeverity } from '@/domain/fiscal/alerts';
+import type { FiscalAlert, FiscalAlertNivel, RechazoPorCodigo, TimbradoVencimiento } from '@/features/fiscal/types';
 
 // S6-H6: el locale sigue el idioma activo de la UI (es → es-PY, en → en-US).
 const localeFromLang = (lang: string): string => (lang === 'en' ? 'en-US' : 'es-PY');
@@ -92,6 +96,26 @@ const RechazoRow: React.FC<{ item: RechazoPorCodigo; locale: string }> = ({ item
   </tr>
 );
 
+// S7-H9-b: panel de alertas accionables. La severidad mapea a la variante del
+// Badge (crit=destructive, warn=warning, info=info) y el orden lo decide el
+// dominio (crit primero), no la respuesta HTTP.
+const alertTone = (nivel: FiscalAlertNivel): 'destructive' | 'warning' | 'info' =>
+  nivel === 'crit' ? 'destructive' : nivel === 'warn' ? 'warning' : 'info';
+
+const AlertaRow: React.FC<{ item: FiscalAlert; t: ReturnType<typeof useI18n>['t'] }> = ({ item, t }) => (
+  <div className="flex items-start gap-3 py-2.5 border-t border-border-subtle first:border-t-0">
+    <Badge variant={alertTone(item.nivel)} size="sm" className="mt-0.5 shrink-0">
+      {t(`fiscal.ops.alerts.nivel.${item.nivel}`, item.nivel)}
+    </Badge>
+    <div className="min-w-0">
+      <div className="text-xs font-bold uppercase tracking-wide text-text-secondary">
+        {t(`fiscal.ops.alerts.tipo.${item.tipo}`, item.tipo)}
+      </div>
+      <div className="text-sm text-text-main break-words">{item.mensaje}</div>
+    </div>
+  </div>
+);
+
 // El backend solo lista los timbrados por vencer (0–30 días): dias_restantes
 // es siempre ≥ 0 aquí (S6-H8) — los vencidos viven en el KPI timbrados_vencidos.
 const TimbradoRow: React.FC<{ item: TimbradoVencimiento; locale: string }> = ({ item, locale }) => {
@@ -117,10 +141,11 @@ const TimbradoRow: React.FC<{ item: TimbradoVencimiento; locale: string }> = ({ 
 const FiscalOpsDashboard: React.FC = () => {
   const { t, lang } = useI18n();
   const locale = localeFromLang(lang);
-  const { data, loading, isFetching, error, refresh } = useFiscalMetrics(30);
+  const { data, alerts, loading, isFetching, error, refresh } = useFiscalMetrics(30);
 
   const hasRechazos = (data?.rechazos_por_codigo?.length ?? 0) > 0;
   const hasTimbrados = (data?.timbrados_por_vencer?.length ?? 0) > 0;
+  const alertasOrdenadas = alerts ? sortAlertsBySeverity(alerts.alertas ?? []) : [];
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
@@ -197,6 +222,34 @@ const FiscalOpsDashboard: React.FC = () => {
               tone={(data?.timbrados_vencidos ?? 0) > 0 ? 'destructive' : 'neutral'}
             />
           </div>
+
+          {/* Alertas de operación (S7-H9-b): lo primero que ops debe ver */}
+          {alertasOrdenadas.length > 0 && (
+            <Card className="rounded-xl border-border-subtle shadow-fluent-2 animate-in fade-in">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-black uppercase tracking-wide text-text-main flex items-center gap-2">
+                  <BellRing size={16} className="text-primary" />
+                  {t('fiscal.ops.alerts.title', 'Alertas de operación')}
+                  <Badge variant={alertTone(alerts?.nivel_max ?? 'info')} size="sm">
+                    {t('fiscal.ops.alerts.count', '{count} activa(s)', { count: String(alerts?.total ?? alertasOrdenadas.length) })}
+                  </Badge>
+                </CardTitle>
+                <CardDescription className="text-xs text-text-secondary">
+                  {t('fiscal.ops.alerts.subtitle', 'Ordenadas por severidad (crit → warn → info)')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0 px-5 pb-3">
+                {alertasOrdenadas.slice(0, 10).map((a, i) => (
+                  <AlertaRow key={`${a.tipo}-${a.cdc ?? a.timbrado ?? i}-${i}`} item={a} t={t} />
+                ))}
+                {alertasOrdenadas.length > 10 && (
+                  <p className="pt-2 text-xs text-text-secondary">
+                    {t('fiscal.ops.alerts.more', '+ {count} alerta(s) más', { count: String(alertasOrdenadas.length - 10) })}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Rechazos por código */}

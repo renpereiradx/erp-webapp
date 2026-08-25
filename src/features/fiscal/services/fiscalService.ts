@@ -24,6 +24,7 @@ import type {
   NoteEmitRequest,
   NotaEmitida,
   FiscalMetricsOverview,
+  FiscalOpsAlerts,
 } from '@/features/fiscal/types';
 
 const FISCAL = {
@@ -138,6 +139,17 @@ export const fiscalService = {
    */
   async getMetricsOverview(dias = 30): Promise<FiscalMetricsOverview> {
     return apiClient.get('/sifen/metrics/overview', { params: { dias } });
+  },
+
+  /**
+   * Capa de alertas accionables (S7.2, remedación S7-H9-b: el entregable
+   * central de S7.2 existía solo backend-side — nadie veía las alertas salvo
+   * por curl). La lista viene ordenada por severidad; el FE la re-ordena en
+   * domain/fiscal/alerts por defensa.
+   * GET /sifen/metrics/alerts?dias=N (1–365, default 30).
+   */
+  async getMetricsAlerts(dias = 30): Promise<FiscalOpsAlerts> {
+    return apiClient.get('/sifen/metrics/alerts', { params: { dias } });
   },
 };
 

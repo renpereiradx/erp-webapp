@@ -251,4 +251,22 @@ export const fiscal = {
   'fiscal.ops.timbrados.timbrado': 'Timbrado',
   'fiscal.ops.timbrados.validTo': 'Expires',
   'fiscal.ops.timbrados.daysLeft': '{days} day(s)',
+
+  // FE5.2 — alerts panel (S7.2, S7-H9-b remediation)
+  'fiscal.ops.alerts.title': 'Operation alerts',
+  'fiscal.ops.alerts.subtitle': 'Sorted by severity (crit → warn → info)',
+  'fiscal.ops.alerts.count': '{count} active',
+  'fiscal.ops.alerts.more': '+ {count} more alert(s)',
+  'fiscal.ops.alerts.nivel.crit': 'Critical',
+  'fiscal.ops.alerts.nivel.warn': 'Warning',
+  'fiscal.ops.alerts.nivel.info': 'Info',
+  'fiscal.ops.alerts.tipo.ventana_72h': '72 h window',
+  'fiscal.ops.alerts.tipo.extemporaneo': 'Extemporaneous',
+  'fiscal.ops.alerts.tipo.extemporaneo_administrativo': 'Administrative extemporaneous',
+  'fiscal.ops.alerts.tipo.drift_reloj': 'Clock drift (NTP)',
+  'fiscal.ops.alerts.tipo.cancelacion_pendiente': 'Pending cancellation',
+  'fiscal.ops.alerts.tipo.cancelacion_vencida': 'Expired cancellation',
+  'fiscal.ops.alerts.tipo.inutilizacion_pendiente': 'Pending inutilization',
+  'fiscal.ops.alerts.tipo.timbrado_por_vencer': 'Timbrado expiring',
+  'fiscal.ops.alerts.tipo.timbrado_vencido': 'Timbrado expired',
 }

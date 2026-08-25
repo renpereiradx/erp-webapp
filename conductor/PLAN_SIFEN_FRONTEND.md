@@ -9,7 +9,8 @@
 `e0a0adc`, `9c29444` — 2026-08-20) y FE5 ✅ (2026-08-20, `b73a5fc` +
 `9bc18a4` + `571be5c`, backend `e125f1c`/`8685e9b`/`3256751`/`d3a82bb`)
 completadas; S6 cerrada. **Remediación auditoría S6 (2026-08-24) aplicada —
-ver sección abajo.**
+ver sección abajo. Remediación auditoría S7 (2026-08-25, parte FE del H9-b)
+aplicada — ver sección abajo.**
 **Reglas de base:** AGENTS.md global (i18n siempre, Feature-Sliced para features nuevos,
 DESIGN.md para UI, pnpm exclusivo, `tsc --noEmit` en 0 errores, tests = baseline sin nuevos fallidos).
 
@@ -178,6 +179,27 @@ i18n: 220 keys `fiscal.*` usadas, 0 faltantes en es/en, placeholders
 consistentes, sin ICU · smoke real de rutas contra :5050 (401 en corregidas /
 404 en la vieja) · Go: `go build`/`go test`/`golangci-lint` verdes
 (sifen/wiring/server/routes).
+
+## Remediación auditoría S7 (2026-08-25) ✅ — parte FE del H9-b
+
+El H9-b de `conductor/sifen-audit/S7.md` (recomendación (b) de S6): la capa
+de alertas — el entregable central de S7.2 — existía solo backend-side y
+nadie la veía salvo por curl. Cierra también el H9 anotado arriba de la
+remediación S6.
+
+| Cambio | Detalle |
+|:--|:--|
+| Service + tipos | `fiscalService.getMetricsAlerts(dias)` → `GET /sifen/metrics/alerts`; tipos `FiscalAlert`/`FiscalOpsAlerts`/`FiscalAlertNivel`; el overview tipa como opcionales los contadores nuevos (`cancelaciones_*`, `inutilizaciones_pendientes` — llegaron con S4-H10/S7-H10) |
+| Dominio puro | `domain/fiscal/alerts.ts`: `sortAlertsBySeverity` (crit → warn → info, estable) y `maxAlertLevel` — el backend ya ordena (remediación S7-H4), el FE re-ordena por defensa porque el contrato HTTP no lo garantiza. 9 tests (orden, estabilidad, no-mutación, vacío → info) |
+| Hook | `useFiscalMetrics` suma la query `['sifen-alerts', dias]` (mismo staleTime 60 s); `refresh` invalida ambas; `loading`/`error` combinados |
+| Dashboard FE5.2 | Panel "Alertas de operación" arriba de los KPIs (lo primero que ops debe ver): badge del `nivel_max` + total, filas con badge de severidad (`crit`=destructive, `warn`=warning, `info`=info), etiqueta i18n del tipo y mensaje accionable del backend (ya trae CDC/timbrado); tope de 10 filas con "+N más"; `animate-in fade-in`, `shadow-fluent-2`, sin strings hardcodeados |
+| i18n | 22 claves nuevas `fiscal.ops.alerts.*` (título, niveles, 9 tipos, contador) en es/en — cruce fiscal.js 244/244, 0 faltantes |
+
+**Verificación:** `tsc --noEmit` 0 errores · vitest fiscal 8 archivos /
+75 tests verdes (66 + 9 nuevos) · suite completa = baseline exacto (49
+fallidos preexistentes, 0 nuevos) · `pnpm build` exit 0. El resto de la
+remediación S7 (H1 wire de consulta, H2–H8, H10) vive en
+`business_management/conductor/PLAN_SIFEN_FACTURACION_ELECTRONICA_STATUS.md`.
 
 ## 3. Checklist para retomar
 
