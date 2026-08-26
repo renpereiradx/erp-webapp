@@ -70,7 +70,13 @@ export const InventoryDashboard: React.FC = () => {
     message: a.message,
     severity: a.severity,
     actionLabel: getActionLabel(a.type, a.severity),
-    onAction: () => console.log(`Acción para alerta ${a.type}: ${a.message}`)
+    // Placeholder: la acción real del botón aún no está implementada; solo
+    // loguear en dev (el build de producción elimina este console.log).
+    onAction: () => {
+      if (import.meta.env.DEV) {
+        console.log(`Acción para alerta ${a.type}: ${a.message}`)
+      }
+    }
   }));
 
   const totalValueForABC = overview?.total_value || data.kpis.total_value;

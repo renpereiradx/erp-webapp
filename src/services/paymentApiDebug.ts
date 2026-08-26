@@ -101,7 +101,9 @@ export const paymentApiDebug = {
             stack: sanitizeStack(error.stack),
           }
         : undefined,
-      requestBody,
+      // No retener payloads de request en producción (datos sensibles); el
+      // diagnóstico en prod conserva endpoint/status/error sin el cuerpo.
+      requestBody: import.meta.env?.DEV ? requestBody : undefined,
     }
 
     if (typeof window !== 'undefined') {

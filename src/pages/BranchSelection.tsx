@@ -50,7 +50,6 @@ const BranchSelection = () => {
           userBranches = allBranches.filter(b => allowedIds.includes(b.id));
         }
         
-        console.log('Sucursales finales a mostrar:', userBranches);
         setBranches(userBranches);
       } catch (err) {
         console.error('Error fetching branches:', err);

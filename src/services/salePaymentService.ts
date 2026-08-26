@@ -248,7 +248,7 @@ export const salePaymentService = {
    */
   async posCheckout(request: POSCheckoutRequest): Promise<POSCheckoutResponse> {
     if (IS_DEMO_MODE) {
-      console.log('[DEMO MODE] POS checkout:', request);
+      console.log('[DEMO MODE] POS checkout');
       return {
         success: true,
         sale: {

@@ -964,7 +964,7 @@ export const purchasePaymentsMvpService = {
     } = {}
   ) {
     if (IS_DEMO_MODE) {
-      console.log('[DEMO MODE] Registering payment for order:', orderId, payload)
+      console.log('[DEMO MODE] Registering payment for order:', orderId)
       return {
         success: true,
         order: normalizeOrder(DEMO_PURCHASE_ORDERS[0]),
