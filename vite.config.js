@@ -5,7 +5,12 @@ import { fileURLToPath, URL } from 'node:url'
 import { configDefaults } from 'vitest/config'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // Elimina logs de desarrollo del bundle de producción: console.log/debug/info
+  // y los groupCollapsed/groupEnd de los bloques de diagnóstico se descartan
+  // solo en build (modo 'production'); console.error/warn se conservan.
+  const isProduction = mode === 'production';
+  return {
   // Add cache busting with timestamp + random
   define: {
     __CACHE_BUST__: JSON.stringify(`${Date.now()}-${Math.random().toString(36)}`)
@@ -131,5 +136,11 @@ export default defineConfig({
         execArgv: ['--max-old-space-size=8192', '--expose-gc'],
       },
     },
-  }
+  },
+  esbuild: {
+    pure: isProduction
+      ? ['console.log', 'console.debug', 'console.info', 'console.groupCollapsed', 'console.groupEnd']
+      : [],
+  },
+  };
 })
