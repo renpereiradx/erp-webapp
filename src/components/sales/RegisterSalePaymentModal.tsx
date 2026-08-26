@@ -235,11 +235,28 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
     meta: cr.location || cr.branch_name || null
   })), [cashRegisters, formatLocalizedCurrency])
 
-  const isSubmitDisabled = !sale || isSubmitting || isCashRegistersLoading || validationErrors.hasErrors || !amountReceived || !amountToApply || !paymentMethodId
+  const isSubmitDisabled = !sale || isSubmitting || isCashRegistersLoading || validationErrors.hasErrors || !amountReceived || !amountToApply || !paymentMethodId || !cashRegisterId
+
+  // Caja REQUERIDA para cobrar (decisión de producto): el backend responde 409
+  // "no hay una caja registradora abierta" (CashRegisterRequired). El modal no
+  // debe dejar enviar sin caja: se bloquea el submit y se muestra guía.
+  const cashRegisterHint = useMemo(() => {
+    if (isCashRegistersLoading) return ''
+    if (cashRegisters.length === 0) {
+      return t('sales.registerPaymentModal.cashRegister.empty', 'No hay cajas registradoras abiertas disponibles. Abrí una caja antes de cobrar.')
+    }
+    if (!cashRegisterId) {
+      return t('sales.registerPaymentModal.cashRegister.errorRequired', 'Debe seleccionar una caja registradora')
+    }
+    return ''
+  }, [isCashRegistersLoading, cashRegisters.length, cashRegisterId, t])
 
   const handleSubmit = async event => {
     event.preventDefault()
     if (!sale) return
+    // Caja requerida: el submit se bloquea sin caja seleccionada (defensa extra
+    // ante submit vía Enter; el botón ya está disabled).
+    if (!cashRegisterId) return
     const numericAmountReceived = Number.parseFloat(parseNumberWithDots(amountReceived))
     const numericAmountToApply = Number.parseFloat(parseNumberWithDots(amountToApply)) || numericAmountReceived
     
@@ -480,10 +497,9 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                     <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Caja Operativa</label>
                     <Select value={cashRegisterId || CASH_REGISTER_NONE_VALUE} onValueChange={v => setCashRegisterId(v === CASH_REGISTER_NONE_VALUE ? '' : v)}>
                       <SelectTrigger className='h-12 rounded-lg bg-slate-50/50 border-slate-200 font-bold text-sm'>
-                        <SelectValue placeholder='Seleccionar caja...' />
+                        <SelectValue placeholder={t('sales.registerPaymentModal.cashRegister.placeholder', 'Seleccionar caja...')} />
                       </SelectTrigger>
                       <SelectContent className='rounded-xl border-slate-200 shadow-fluent-16 min-w-[300px]'>
-                        <SelectItem value={CASH_REGISTER_NONE_VALUE} className='font-black text-[10px] uppercase text-slate-400 py-4'>Sin Caja</SelectItem>
                         {cashRegisterOptions.map(opt => (
                           <SelectItem key={opt.value} value={opt.value} className='py-4 border-b border-slate-50 last:border-none'>
                             <div className='flex flex-col gap-1'>
@@ -494,6 +510,12 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                         ))}
                       </SelectContent>
                     </Select>
+                    {cashRegisterHint && (
+                      <p className='flex items-start gap-1.5 text-[10px] font-black uppercase text-warning tracking-wide mt-1'>
+                        <AlertCircle size={13} className='mt-[1px] shrink-0' />
+                        <span>{cashRegisterHint}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
