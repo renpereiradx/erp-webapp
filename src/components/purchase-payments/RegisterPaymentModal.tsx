@@ -179,11 +179,22 @@ const RegisterPaymentModal: React.FC<RegisterPaymentModalProps> = ({ open, onOpe
     balanceLabel: typeof cr.current_balance === 'number' ? formatLocalizedCurrency(cr.current_balance, cr.currency) : null
   })), [cashRegisters, formatLocalizedCurrency])
 
-  const isSubmitDisabled = !order || isSubmitting || !paymentMethodId || !currencyCode || !!amountError || !amount
+  const cashRegisterRequired = !cashRegister || cashRegister === CASH_REGISTER_NONE_VALUE
+  const isSubmitDisabled = !order || isSubmitting || !paymentMethodId || !currencyCode || !!amountError || !amount || cashRegisterRequired
+
+  // Caja REQUERIDA para pagar (el backend ProcessPaymentWithCashRegister
+  // devuelve 409 sin caja). Se bloquea el submit y se muestra guía.
+  const cashRegisterHint = useMemo(() => {
+    if (cashRegisterRequired) {
+      return t('purchases.errors.cashRegisterRequired', 'Necesitás una caja abierta para pagar. Abrí una caja e intentá de nuevo.')
+    }
+    return ''
+  }, [cashRegisterRequired, t])
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     if (!order) return
+    if (cashRegisterRequired) return
     const num = Number.parseFloat(parseNumberWithDots(amount))
     if (!Number.isFinite(num) || num <= 0) { 
       setAmountError('Monto requerido')
@@ -317,10 +328,15 @@ const RegisterPaymentModal: React.FC<RegisterPaymentModalProps> = ({ open, onOpe
                       <Select value={cashRegister} onValueChange={setCashRegister}>
                         <SelectTrigger className='h-11 rounded-xl bg-white dark:bg-slate-800 border-border-subtle font-bold text-sm'><SelectValue placeholder='Seleccionar...' /></SelectTrigger>
                         <SelectContent className='rounded-xl border-border-subtle shadow-fluent-16 min-w-[300px]'>
-                          <SelectItem value={CASH_REGISTER_NONE_VALUE} className='font-black text-[10px] uppercase tracking-widest text-slate-400 py-3'>Sin Caja Asignada</SelectItem>
                           {cashRegisterOptions.map(opt => (<SelectItem key={opt.value} value={opt.value} className='py-4 border-b border-slate-50 last:border-none'><div className='flex flex-col gap-1'><span className='font-black text-[11px] uppercase tracking-tight'>{opt.label}</span><div className='flex items-center gap-2 text-[10px] font-bold text-text-secondary font-mono'>{opt.balanceLabel}</div></div></SelectItem>))}
                         </SelectContent>
                       </Select>
+                      {cashRegisterHint && (
+                        <p className='flex items-start gap-1.5 text-[10px] font-black uppercase tracking-widest text-warning ml-1'>
+                          <AlertCircle size={13} className='mt-[1px] shrink-0' />
+                          <span>{cashRegisterHint}</span>
+                        </p>
+                      )}
                     </div>
                   </div>
 
