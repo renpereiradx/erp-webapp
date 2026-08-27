@@ -129,9 +129,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               role_name: result.role_name || meResponse.data.role_name,
               active_branch: result.active_branch || meResponse.data.active_branch,
               allowed_branches: result.allowed_branches || meResponse.data.allowed_branches,
-              // /me es la fuente canónica de permisos; si aún no los devuelve,
-              // caer a los del login (dependencia B4 del plan maestro)
-              permissions: meResponse.data.permissions || result.user?.permissions
+              // /me es la fuente canónica de permisos (B4). Fallbacks del login:
+              // backend real → permissions al nivel superior; demo → user.permissions
+              permissions: meResponse.data.permissions || result.permissions || result.user?.permissions
             });
           } else {
             // Fallback al usuario de la respuesta de login si /me falla

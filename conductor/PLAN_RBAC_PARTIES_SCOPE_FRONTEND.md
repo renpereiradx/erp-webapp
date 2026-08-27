@@ -1,7 +1,10 @@
 # PLAN_RBAC_PARTIES_SCOPE_FRONTEND — Gating por permisos en parties + registro rápido de cliente en el POS
 
 Fecha: 2026-08-17
-Estado: ✅ Frontend implementado en `feat/rbac-parties-scope-frontend` (F1–F5). Pendiente: backend del plan maestro (B1/B2/B4) para que el gating tenga datos reales.
+Estado: ✅ Completo (F1–F5). Mergeado a `main` en `c5d95a5` (la rama
+`feat/rbac-parties-scope-frontend` ya no existe). El backend (B1–B6) también
+está implementado y verificado — ver plan maestro —, así que el gating tiene
+datos reales de login y `/me`.
 Repo: erp-webapp
 Companion backend (plan maestro): `business_management/conductor/PLAN_RBAC_PARTIES_SCOPE.md`
 Origen: un vendedor que recepciona un cliente no registrado entra a `/parties`
@@ -13,6 +16,21 @@ y ve/gestiona todo (tabs Clientes+Proveedores, crear/editar sin gating).
 > `/api/v1/clients` acepte al vendedor. Ver plan maestro. Referencias
 > archivo:línea verificadas al 2026-08-17; pueden derivar ±unas líneas.
 > Respetar DESIGN.md para cualquier UI nueva (EnhancedModal, tokens, i18n).
+
+> **Registro de implementación (2026-08-17, merge `c5d95a5`):** F1–F5
+> completos — `hasAnyPermission` + `anyOf` en guards, ruta/tabs/botones
+> gated, services sobre alias tipados, `QuickClientModal` en el POS con
+> i18n `party.quick_client.*`, demo mode con permisos, y tests
+> `src/__tests__/quick-client.domain.test.ts` (11 PASS:
+> `validateQuickClient` + `visiblePartyTabs`/`resolvePartyTab`).
+>
+> **Follow-up (2026-08-26):** fix del fallback de F1 — el login real del
+> backend manda `permissions` al nivel superior del response (B4,
+> `LoginResponse`), no anidado en `user`; `AuthContext` ahora hace
+> `meResponse.data.permissions || result.permissions || result.user?.permissions`
+> (el último término cubre el login demo). Verificación: `pnpm build` OK,
+> `pnpm test` idéntico al baseline (17 archivos / 49 tests preexistentes
+> + 1 OOM, sin fallos nuevos), ESLint 0 errores en los js/jsx tocados.
 
 ---
 
