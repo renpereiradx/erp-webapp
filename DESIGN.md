@@ -1,7 +1,8 @@
 ---
 name: Precision Air
 # ─────────────────────────────────────────────────────────────────────────────
-# FUENTE DE VERDAD DE TOKENS: tailwind.config.js
+# FUENTE DE VERDAD DE TOKENS: design/tokens.json
+# tailwind.config.js se GENERA desde design/tokens.json (`pnpm tokens:generate`).
 # Este frontmatter es SOLO documentación. En el código NUNCA se escriben estos
 # hex: se usan las clases Tailwind ya generadas (ver tablas en el cuerpo).
 # ─────────────────────────────────────────────────────────────────────────────
@@ -147,11 +148,18 @@ cada regla apunta a una clase Tailwind o a un componente que YA EXISTE.
 
 | Qué | Dónde |
 |:----|:------|
-| Tokens (colores, radios, sombras, spacing, tipografía) | `tailwind.config.js` |
+| Tokens (colores, radios, sombras, spacing, tipografía) | `design/tokens.json` (genera `tailwind.config.js` con `pnpm tokens:generate`) |
 | Componentes base | `src/components/ui/` |
 | Reglas de uso (cuándo usar qué) | Este archivo |
 
-Si este archivo contradice al config o a un componente, **ganan el config y el componente**. Corrige este archivo.
+Si este archivo contradice a `tokens.json`, al config o a un componente, **ganan
+`tokens.json`, el config y el componente**. Corrige este archivo.
+
+**Tooling del contrato:**
+
+- `pnpm tokens:generate` — regenera las secciones de tokens de `tailwind.config.js` desde `design/tokens.json`.
+- `pnpm tokens:check` — falla si `tailwind.config.js` se desincronizó de `tokens.json` (para CI).
+- `pnpm lint:design` — valida el código contra estas reglas (hex/rgba literales, clases de color genéricas, espaciados arbitrarios). Falla en código nuevo/cambiado; reporta el legacy.
 
 **Marca en 3 líneas:** ERP profesional de alta densidad de datos. Sensación de "aire"
 mediante espaciado generoso y fondos claros, NUNCA mediante decoración. La jerarquía se
