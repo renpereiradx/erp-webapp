@@ -156,12 +156,14 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
     // Reporta los datos al orquestador cada vez que cambian. amountReceived
     // (base) se deriva de lo tipeado con la tasa; los metadatos de divisa
     // acompañan al pago para que el backend valide y audite la conversión.
+    // Con el input vacío se reporta 0: el wizard bloquea Confirmar (nunca se
+    // "adivina" el total como monto recibido).
     useEffect(() => {
       const typedAmount = Number(amountInput) || 0
       const isCashForeign = isForeign && isCash
       const foreignReceived = isCashForeign ? typedAmount : isForeign ? foreignDue : null
       const baseReceived = isCashForeign
-        ? computeBaseFromForeign(typedAmount, rate) || totalAmount
+        ? computeBaseFromForeign(typedAmount, rate)
         : isForeign
           ? totalAmount
           : typedAmount

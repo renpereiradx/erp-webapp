@@ -156,11 +156,14 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     }
   }, [currentStepIdx, steps.length])
 
-  // Reset al abrir / cambiar de cliente.
+  // Reset al abrir / cambiar de cliente. La tasa también se limpia para que
+  // PaymentStep la precargue fresca (de lo contrario una tasa de una divisa o
+  // de una cobranza anterior sobrevive al cambiar de moneda o reabrir).
   useEffect(() => {
     if (isOpen) {
       setCurrentStepIdx(0)
       setPendingIndex(0)
+      setExchangeRate('')
     }
   }, [isOpen])
 
@@ -203,6 +206,38 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     }
   }
 
+  // ─── Cálculos del carrito (panel derecho) ───────────────────────────────
+  const totals = useMemo(() => {
+    const saleItems = items.map((item) => ({
+      quantity: Number(item.quantity) || 0,
+      unit_price: Number(item.price) || 0,
+      discount_amount: item.discountType === 'amount' ? Number(item.discountInput) || 0 : 0,
+      discount_percent: item.discountType === 'percent' ? Number(item.discountInput) || 0 : 0,
+      tax_rate: Number(item.taxRate) || 0,
+    }))
+    return saleService.calculateLocalTotals(saleItems)
+  }, [items])
+
+  const baseCurrency = currencies.find((c) => c.is_base || c.is_base_currency)
+  const baseCurrencyCode = baseCurrency?.code || 'PYG'
+  const selectedCurrency = currencies.find((c) => String(c.id) === String(currencyId))
+  const currencyCode = baseCurrencyCode
+  const isCashMethod = paymentMethods.find((m) => String(m.id) === String(paymentMethodId))?.name
+    ?.toLowerCase()
+    .includes('efectivo')
+
+  // Cobro en divisa: solo cuando la moneda elegida difiere de la base Y hay
+  // tasa (>0) para convertir. La tasa la completa PaymentStep (precarga) y el
+  // backend re-valida al cobrar.
+  const foreignRate = Number(exchangeRate) || 0
+  const isForeignCollection =
+    !!selectedCurrency && !!baseCurrency && String(selectedCurrency.id) !== String(baseCurrency.id)
+  const foreignCurrency =
+    isForeignCollection && foreignRate > 0
+      ? { id: selectedCurrency!.id, code: selectedCurrency!.code || selectedCurrency!.name, rate: foreignRate }
+      : null
+  const foreignDue = foreignCurrency ? computeForeignDue(totals.total, foreignRate) : 0
+
   // ─── Validación del paso actual (para habilitar Avanzar) ────────────────
   const isStepValid = (): boolean => {
     switch (currentStep) {
@@ -213,9 +248,14 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
       case 'reservations':
         return true // omitir es válido
       case 'payment':
-        return !!paymentMethodId
+        // Con divisa de cobro elegida, la tasa es obligatoria: sin ella el
+        // cobro caería silenciosamente a moneda base y el pago llegaría al
+        // backend sin currency_id (registrando guaraníes que eran dólares).
+        return !!paymentMethodId && (!isForeignCollection || foreignRate > 0)
       case 'collection':
-        return true
+        // Efectivo: sin monto recibido no hay cobro. (En no-efectivo el paso
+        // siempre reporta el total del documento como monto recibido.)
+        return !isCashMethod || collectionData.amountReceived > 0
       default:
         return false
     }
@@ -284,36 +324,6 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     },
     enabled: isStepValid(),
   })
-
-  // ─── Cálculos del carrito (panel derecho) ───────────────────────────────
-  const totals = useMemo(() => {
-    const saleItems = items.map((item) => ({
-      quantity: Number(item.quantity) || 0,
-      unit_price: Number(item.price) || 0,
-      discount_amount: item.discountType === 'amount' ? Number(item.discountInput) || 0 : 0,
-      discount_percent: item.discountType === 'percent' ? Number(item.discountInput) || 0 : 0,
-      tax_rate: Number(item.taxRate) || 0,
-    }))
-    return saleService.calculateLocalTotals(saleItems)
-  }, [items])
-
-  const baseCurrency = currencies.find((c) => c.is_base || c.is_base_currency)
-  const baseCurrencyCode = baseCurrency?.code || 'PYG'
-  const selectedCurrency = currencies.find((c) => String(c.id) === String(currencyId))
-  const currencyCode = baseCurrencyCode
-  const isCashMethod = paymentMethods.find((m) => String(m.id) === String(paymentMethodId))?.name
-    ?.toLowerCase()
-    .includes('efectivo')
-
-  // Cobro en divisa: solo cuando la moneda elegida difiere de la base Y hay
-  // tasa (>0) para convertir. La tasa la completa PaymentStep (precarga) y el
-  // backend re-valida al cobrar.
-  const foreignRate = Number(exchangeRate) || 0
-  const foreignCurrency =
-    selectedCurrency && baseCurrency && String(selectedCurrency.id) !== String(baseCurrency.id) && foreignRate > 0
-      ? { id: selectedCurrency.id, code: selectedCurrency.code || selectedCurrency.name, rate: foreignRate }
-      : null
-  const foreignDue = foreignCurrency ? computeForeignDue(totals.total, foreignRate) : 0
 
   const stepLabels: Record<CheckoutStepId, string> = {
     client: t('sales.checkoutWizard.step.client', 'Cliente'),

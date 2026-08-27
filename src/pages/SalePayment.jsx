@@ -619,12 +619,18 @@ const SalePayment = () => {
   }, [rawSales, searchTerm, selectedStatus, localPage, localPageSize])
 
   const handlePaymentSubmit = async paymentData => {
-    // Mapear para PUT /sale/{id}/confirm-payment
+    // Mapear para PUT /sale/{id}/confirm-payment. El cobro en divisa viaja
+    // como metadatos de la pata (currency_id/exchange_rate/original_amount +
+    // amount_received ya convertido a la moneda del documento por el modal).
     const confirmPayload = {
       payment_methods: [
         {
           method: paymentData.payment_method_name || 'CASH', // Obtenido del modal ahora
-          amount: paymentData.amount_to_apply
+          amount: paymentData.amount_to_apply,
+          amount_received: paymentData.amount_received,
+          currency_id: paymentData.currency_id || undefined,
+          exchange_rate: paymentData.exchange_rate || undefined,
+          original_amount: paymentData.original_amount || undefined
         }
       ],
       caja_id: paymentData.cash_register_id || undefined

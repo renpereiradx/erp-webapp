@@ -84,8 +84,9 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
           if (value) setExchangeRate(String(value))
         })
         .catch(() => {
-          /* sin tasa cargada: el backend la resuelve al cobrar o rechaza con
-             un mensaje claro; el operador también puede tipearla acá. */
+          /* sin tasa cargada el operador debe tipearla acá: sin tasa no se
+             puede avanzar al cobro (el wizard bloquea Avanzar), porque un
+             cobro en divisa sin tasa nunca llega al backend como divisa. */
         })
       return () => {
         cancelled = true
@@ -124,7 +125,16 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
                 {t('sales.checkoutWizard.payment.currency', 'Moneda de cobro')}
               </label>
             </div>
-            <Select value={String(currencyId)} onValueChange={(v) => setCurrencyId(Number(v))}>
+            <Select
+              value={String(currencyId)}
+              onValueChange={(v) => {
+                // Al cambiar la divisa la tasa previa queda obsoleta (era de
+                // la otra moneda): se limpia para que el efecto de precarga
+                // traiga la que corresponde.
+                setExchangeRate('')
+                setCurrencyId(Number(v))
+              }}
+            >
               <SelectTrigger id="wizard-currency" className="w-full h-11 bg-surface-container-lowest border-outline-variant focus:ring-primary focus:border-primary">
                 <SelectValue placeholder={t('sales.checkoutWizard.payment.currency', 'Moneda de cobro')} />
               </SelectTrigger>

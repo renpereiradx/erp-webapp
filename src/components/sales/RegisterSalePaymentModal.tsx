@@ -5,12 +5,12 @@ import {
   useRef,
   useState,
 } from 'react'
-import { 
-  AlertCircle, 
-  CheckCircle2, 
-  Loader2, 
-  Receipt, 
-  Coins, 
+import {
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  Receipt,
+  Coins,
   ArrowUpRight,
   User,
   Building,
@@ -37,8 +37,10 @@ import {
 } from '@/components/ui/select'
 import { cashRegisterService } from '@/services/cashRegisterService'
 import { CurrencyService } from '@/services/currencyService'
+import { ExchangeRateService } from '@/services/exchangeRateService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
 import { normalizeCurrencyCode, formatPYG } from '@/utils/currencyUtils'
+import { round2, computeForeignDue } from '@/domain/sale/calculations/foreignPayment'
 
 const DEFAULT_CURRENCY_CODE = 'PYG'
 const CASH_REGISTER_NONE_VALUE = '__none__'
@@ -59,16 +61,25 @@ interface RegisterSalePaymentModalProps {
   onSubmit: (data: any) => Promise<void>;
 }
 
+/**
+ * Registro de cobro para ventas pendientes, alineado con la política de
+ * "cobro en divisa" del SaleCheckoutWizard: el saldo de la venta se salda
+ * SIEMPRE en la moneda del documento (base), y la divisa elegida describe
+ * qué se recibió físicamente. Con divisa ≠ documento: la tasa se precarga y
+ * es editable, el "Importe Entregado" se tipea en ESA divisa y su
+ * equivalente en base se CALCULA (no se tipea). El vuelto se entrega en la
+ * moneda del documento.
+ */
 const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: RegisterSalePaymentModalProps) => {
   const { lang, t } = useI18n()
 
   const [amountReceived, setAmountReceived] = useState<string | number>('')
   const [amountToApply, setAmountToApply] = useState<string | number>('')
   const [exchangeRate, setExchangeRate] = useState<string | number>('')
-  const [originalAmount, setOriginalAmount] = useState<string | number>('')
   const [notes, setNotes] = useState<string>('')
   const [paymentMethodId, setPaymentMethodId] = useState<string>('')
-  const [currencyCode, setCurrencyCode] = useState<string>((sale?.currency || DEFAULT_CURRENCY_CODE).toUpperCase())
+  // Id (numérico como string) de la moneda de COBRO; default: la del documento.
+  const [currencyId, setCurrencyId] = useState<string>('')
   const [cashRegisterId, setCashRegisterId] = useState<string>('')
 
   const userEditedAmountToApply = useRef<boolean>(false)
@@ -83,41 +94,56 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
   const [paymentMethods, setPaymentMethods] = useState<any[]>([])
   const [currencies, setCurrencies] = useState<any[]>([])
 
+  // Moneda del documento (en la que está el saldo). Bajo la política actual
+  // es la base, pero el cobro en divisa se compara contra la del documento.
+  const docCurrencyCode = useMemo(
+    () => normalizeCurrencyCode(sale?.currency || DEFAULT_CURRENCY_CODE),
+    [sale?.currency],
+  )
+
+  const resolveDefaultCurrencyId = useCallback((list: any[]) => {
+    const byCode = list.find(c => normalizeCurrencyCode(c.code || c.currency_code) === docCurrencyCode)
+    return byCode ? String(byCode.id) : ''
+  }, [docCurrencyCode])
+
   const resetForm = useCallback(() => {
     setAmountReceived('')
     setAmountToApply('')
     setExchangeRate('')
-    setOriginalAmount('')
     setNotes('')
     setPaymentMethodId('')
-    setCurrencyCode((sale?.currency || DEFAULT_CURRENCY_CODE).toUpperCase())
+    setCurrencyId(resolveDefaultCurrencyId(currencies))
     setCashRegisterId('')
     setAmountReceivedError(null)
     setAmountToApplyError(null)
     setFormError(null)
     setSubmitting(false)
     userEditedAmountToApply.current = false
-  }, [sale?.currency])
+  }, [currencies, resolveDefaultCurrencyId])
 
-  useEffect(() => { if (open) resetForm() }, [open, resetForm])
+  // Reset al abrir. Vía ref: resetForm cambia de identidad cuando cargan las
+  // monedas y el efecto NO debe re-dispararse entonces (borraría lo tipeado).
+  const resetFormRef = useRef(resetForm)
+  resetFormRef.current = resetForm
+  useEffect(() => { if (open) resetFormRef.current() }, [open])
 
   const handleDialogChange = nextOpen => {
     if (!nextOpen) resetForm()
     if (onOpenChange) onOpenChange(nextOpen)
   }
 
-  const formatLocalizedCurrency = useCallback((value, currencyCode = 'PYG') => {
-    const code = normalizeCurrencyCode(currencyCode || sale?.currency)
-    if (code === 'PYG') {
+  const formatLocalizedCurrency = useCallback((value, code = 'PYG') => {
+    const normalized = normalizeCurrencyCode(code)
+    if (normalized === 'PYG') {
       return formatPYG(Number(value || 0));
     }
     const formatter = new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
-      style: 'currency', currency: code,
+      style: 'currency', currency: normalized,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })
     return formatter.format(Number(value || 0))
-  }, [lang, sale?.currency])
+  }, [lang])
 
   const formatNumberWithDots = useCallback(value => {
     if (!value) return ''
@@ -150,15 +176,17 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
         setPaymentMethodId(curr => curr || String(def.id || def.payment_method_id))
       }
 
-      setCurrencies(Array.isArray(currencyList) ? currencyList : [])
-      
+      const normalized = Array.isArray(currencyList) ? currencyList : []
+      setCurrencies(normalized)
+      setCurrencyId(curr => curr || resolveDefaultCurrencyId(normalized))
+
       const [allRegs, activeReg] = registersData
       const openRegs = Array.isArray(allRegs) ? allRegs.filter(cr => {
         const s = (cr?.status || cr?.state || '').toUpperCase()
         return s === 'OPEN' || s === 'ACTIVE'
       }) : []
       setCashRegisters(openRegs)
-      
+
       if (activeReg?.id) {
         const isActiveInBranch = openRegs.some(cr => String(cr.id) === String(activeReg.id));
         if (isActiveInBranch) {
@@ -167,15 +195,67 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
       }
     } catch (e) { console.error('Error loading modal data:', e) }
     finally { setCashRegistersLoading(false) }
-  }, [])
+  }, [docCurrencyCode])
 
   useEffect(() => { if (open) loadData() }, [loadData, open])
 
+  // ─── Cobro en divisa: derivaciones ────────────────────────────────────────
+  const selectedCurrency = useMemo(
+    () => currencies.find(c => String(c.id) === String(currencyId)),
+    [currencies, currencyId],
+  )
+  const selectedCurrencyCode = normalizeCurrencyCode(selectedCurrency?.code || selectedCurrency?.currency_code)
+  // Cobro en divisa activo cuando la moneda elegida difiere de la del documento.
+  const isForeign = !!selectedCurrency && selectedCurrencyCode !== docCurrencyCode
+  const rate = useMemo(() => Number(exchangeRate) || 0, [exchangeRate])
+  // En divisa el input admite decimales (number); en base mantiene el formato
+  // con puntos de miles del input legado.
+  const foreignReceived = useMemo(() => Number(amountReceived) || 0, [amountReceived])
+  const baseNumericReceived = useMemo(() => (
+    isForeign && rate > 0
+      ? round2(foreignReceived * rate)
+      : Number.parseFloat(parseNumberWithDots(amountReceived)) || 0
+  ), [isForeign, rate, foreignReceived, amountReceived, parseNumberWithDots])
+  const calculatedForeignDue = useMemo(
+    () => (isForeign && rate > 0 ? computeForeignDue(getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 0, rate) : 0),
+    [isForeign, rate, sale?.balance_due, sale?.currency],
+  )
+
+  // Precarga de la tasa al elegir una divisa distinta de la del documento.
+  useEffect(() => {
+    if (!isForeign || !selectedCurrency || exchangeRate) return
+    let cancelled = false
+    ExchangeRateService.getLatest(selectedCurrency.id)
+      .then((r: any) => {
+        if (cancelled || !r) return
+        const value = r.rate_to_base ?? r.rate
+        if (value) setExchangeRate(String(value))
+      })
+      .catch(() => { /* sin tasa cargada: el operador la tipea; sin tasa no se puede registrar */ })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isForeign, selectedCurrency?.id])
+
+  const handleCurrencyChange = (code: string) => {
+    // Al cambiar la divisa los montos tipeados cambian de unidad: se limpian
+    // para no enviar guaraníes como si fueran dólares (y viceversa).
+    setExchangeRate('')
+    setAmountReceived('')
+    setAmountToApply('')
+    userEditedAmountToApply.current = false
+    setCurrencyId(code)
+  }
+
   const currencySelectorData = useMemo(() => {
-    if (currencies.length) return currencies.map(c => ({ id: c.currency_code, code: c.currency_code, name: c.currency_name, currency_id: c.id }))
-    const fb = (sale?.currency || DEFAULT_CURRENCY_CODE).toUpperCase()
-    return [{ id: fb, code: fb, name: fb, currency_id: null }]
-  }, [currencies, sale?.currency])
+    if (currencies.length) {
+      return currencies.map(c => ({
+        id: String(c.id),
+        code: normalizeCurrencyCode(c.code || c.currency_code),
+        name: c.currency_name || c.name,
+      }))
+    }
+    return [{ id: '', code: docCurrencyCode, name: docCurrencyCode }]
+  }, [currencies, docCurrencyCode])
 
   const paymentMethodOptions = useMemo(() => paymentMethods.map(m => {
     const id = String(m.id || m.payment_method_id)
@@ -185,11 +265,18 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
   }).filter(o => o.id !== 'undefined'), [paymentMethods])
 
   const validationErrors = useMemo(() => {
-    const errors: { amountReceived: string | null, amountToApply: string | null, hasErrors: boolean } = { amountReceived: null, amountToApply: null, hasErrors: false }
+    const errors: { amountReceived: string | null, exchangeRate: string | null, amountToApply: string | null, hasErrors: boolean } = { amountReceived: null, exchangeRate: null, amountToApply: null, hasErrors: false }
     if (!sale) return errors
 
-    if (amountReceived) {
-      const numericReceived = Number.parseFloat(parseNumberWithDots(amountReceived))
+    // Cobro en divisa sin tasa: se bloquea el submit (el backend nunca debe
+    // recibir un monto en divisa convertido con una tasa inexistente).
+    if (isForeign && rate <= 0) {
+      errors.exchangeRate = t('sales.registerPaymentModal.rateRequired', 'Cargá la tasa de cambio para cobrar en {currency}', { currency: selectedCurrencyCode })
+      errors.hasErrors = true
+    }
+
+    const numericReceived = isForeign ? foreignReceived : Number.parseFloat(parseNumberWithDots(amountReceived))
+    if (amountReceived !== '' && amountReceived !== undefined && amountReceived !== null) {
       if (!Number.isFinite(numericReceived) || numericReceived <= 0) {
         errors.amountReceived = 'Monto inválido'
         errors.hasErrors = true
@@ -197,14 +284,13 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
     }
 
     if (amountToApply && amountReceived) {
-      const numericReceived = Number.parseFloat(parseNumberWithDots(amountReceived))
       const numericToApply = Number.parseFloat(parseNumberWithDots(amountToApply))
       const balanceDue = getNormalizedBalanceDue(sale.balance_due, sale.currency)
 
       if (!Number.isFinite(numericToApply) || numericToApply <= 0) {
         errors.amountToApply = 'Monto inválido'
         errors.hasErrors = true
-      } else if (numericToApply > numericReceived) {
+      } else if (numericToApply > baseNumericReceived) {
         errors.amountToApply = 'Excede el recibido'
         errors.hasErrors = true
       } else if (balanceDue !== null && numericToApply > balanceDue) {
@@ -213,13 +299,13 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
       }
     }
     return errors
-  }, [amountReceived, amountToApply, sale, parseNumberWithDots])
+  }, [sale, amountReceived, amountToApply, isForeign, rate, foreignReceived, baseNumericReceived, selectedCurrencyCode, parseNumberWithDots, t])
 
-  const change = useMemo(() => {
-    const received = Number.parseFloat(parseNumberWithDots(amountReceived)) || 0
-    const toApply = Number.parseFloat(parseNumberWithDots(amountToApply)) || 0
-    return Math.max(0, received - toApply)
-  }, [amountReceived, amountToApply, parseNumberWithDots])
+  // Vuelto: SIEMPRE en la moneda del documento (recibido convertido a base
+  // menos lo aplicado).
+  const change = useMemo(() => (
+    Math.max(0, baseNumericReceived - (Number.parseFloat(parseNumberWithDots(amountToApply)) || 0))
+  ), [baseNumericReceived, amountToApply, parseNumberWithDots])
 
   const projectedBalance = useMemo(() => {
     if (!sale) return 0
@@ -257,23 +343,27 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
     // Caja requerida: el submit se bloquea sin caja seleccionada (defensa extra
     // ante submit vía Enter; el botón ya está disabled).
     if (!cashRegisterId) return
-    const numericAmountReceived = Number.parseFloat(parseNumberWithDots(amountReceived))
-    const numericAmountToApply = Number.parseFloat(parseNumberWithDots(amountToApply)) || numericAmountReceived
-    
+    // Defensa extra ante submit con divisa sin tasa (el botón ya está disabled).
+    if (isForeign && rate <= 0) return
+    const numericAmountToApply = Number.parseFloat(parseNumberWithDots(amountToApply)) || baseNumericReceived
+
     setSubmitting(true)
     try {
-      const selectedCurrency = currencySelectorData.find(c => c.code === String(currencyCode).toUpperCase())
       const selectedMethod = paymentMethods.find(m => String(m.id || m.payment_method_id) === String(paymentMethodId))
-      
+
       await onSubmit({
         sales_order_id: sale.id || sale.sale_id,
-        amount_received: Number(numericAmountReceived.toFixed(2)),
+        // amount_received SIEMPRE en la moneda del documento: con cobro en
+        // divisa es foreignReceived × tasa (convertido acá y re-validado por
+        // el backend).
+        amount_received: Number(baseNumericReceived.toFixed(2)),
         amount_to_apply: Number(numericAmountToApply.toFixed(2)),
         payment_method_id: Number(paymentMethodId),
         payment_method_name: selectedMethod ? (selectedMethod.name || selectedMethod.description || 'CASH').toUpperCase() : 'CASH',
-        currency_id: selectedCurrency ? selectedCurrency.currency_id : undefined,
-        exchange_rate: exchangeRate ? Number(exchangeRate) : undefined,
-        original_amount: originalAmount ? Number(originalAmount) : undefined,
+        // Metadatos del cobro en divisa (auditoría; el saldo se salda en base).
+        currency_id: isForeign && selectedCurrency ? Number(selectedCurrency.id) : undefined,
+        exchange_rate: isForeign ? rate : undefined,
+        original_amount: isForeign ? Number(foreignReceived.toFixed(2)) : undefined,
         cash_register_id: cashRegisterId ? Number(cashRegisterId) : undefined,
         payment_notes: notes.trim() || null,
       })
@@ -304,7 +394,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
             {/* Elementos decorativos Fluent */}
             <div className='absolute -top-24 -right-24 size-64 bg-primary/10 rounded-full blur-3xl opacity-50' />
             <div className='absolute -bottom-24 -left-24 size-64 bg-primary/5 rounded-full blur-3xl opacity-30' />
-            
+
             <div className='relative z-10 flex flex-col h-full'>
               <header className='mb-12'>
                 <div className='size-12 bg-primary rounded-xl flex items-center justify-center text-white mb-6 shadow-lg shadow-primary/30'>
@@ -337,8 +427,8 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                     </span>
                   </div>
                   <div className='h-2 bg-white/5 rounded-full overflow-hidden mb-4'>
-                    <div 
-                      className='h-full bg-primary shadow-[0_0_12px_rgba(19,127,236,0.5)] transition-all duration-1000' 
+                    <div
+                      className='h-full bg-primary shadow-[0_0_12px_rgba(19,127,236,0.5)] transition-all duration-1000'
                       style={{ width: `${Math.min(100, Math.round((Number.parseFloat(parseNumberWithDots(amountToApply)) || 0) / (getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 1) * 100))}%` }}
                     />
                   </div>
@@ -377,7 +467,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
           {/* PANEL DERECHO: FORMULARIO ESTRUCTURADO */}
           <div className='w-full md:w-[68%] bg-[#f8fafc] p-6 md:p-10 flex flex-col'>
             <div className='flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6'>
-              
+
               {/* SECCIÓN 1: ORIGEN Y MONEDA (CARD) */}
               <div className='bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden'>
                 <div className='px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3'>
@@ -388,19 +478,29 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                 </div>
                 <div className='p-6 space-y-6'>
                   <div className='grid grid-cols-1 md:grid-cols-12 gap-6'>
-                    {/* Monto Recibido - Principal */}
+                    {/* Monto Recibido - Principal (en la divisa de cobro) */}
                     <div className='md:col-span-7 space-y-2'>
                       <div className='flex justify-between items-center'>
-                        <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Importe Entregado</label>
-                        <button 
-                          type='button' 
+                        <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>
+                          {isForeign
+                            ? t('sales.registerPaymentModal.amountReceivedForeign', 'Importe Entregado ({currency})', { currency: selectedCurrencyCode })
+                            : 'Importe Entregado'}
+                        </label>
+                        <button
+                          type='button'
                           onClick={() => {
                             const balanceDue = getNormalizedBalanceDue(sale.balance_due, sale.currency)
-                            if (balanceDue !== null) {
+                            if (balanceDue === null) return
+                            if (isForeign && rate > 0) {
+                              // En divisa: recibido = equivalente del saldo en la
+                              // divisa; lo aplicado sigue siendo el saldo en base.
+                              setAmountReceived(String(computeForeignDue(balanceDue, rate)))
+                              setAmountToApply(formatNumberWithDots(String(balanceDue)))
+                            } else {
                               setAmountReceived(formatNumberWithDots(String(balanceDue)))
                               setAmountToApply(formatNumberWithDots(String(balanceDue)))
-                              userEditedAmountToApply.current = false
                             }
+                            userEditedAmountToApply.current = false
                           }}
                           className='text-[9px] font-black uppercase text-primary hover:underline'
                         >
@@ -408,12 +508,26 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                         </button>
                       </div>
                       <div className='relative group'>
-                        <div className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xl font-mono'>₲</div>
+                        <div className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xl font-mono'>
+                          {isForeign ? selectedCurrencyCode : '₲'}
+                        </div>
                         <Input
-                          type='text'
-                          inputMode='numeric'
+                          type={isForeign ? 'number' : 'text'}
+                          inputMode={isForeign ? 'decimal' : 'numeric'}
+                          step={isForeign ? '0.01' : undefined}
+                          min='0'
                           value={amountReceived}
                           onChange={e => {
+                            if (isForeign) {
+                              const numeric = Number(e.target.value) || 0
+                              setAmountReceived(e.target.value)
+                              if (!userEditedAmountToApply.current) {
+                                const balanceDue = getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 0
+                                const converted = rate > 0 ? round2(numeric * rate) : 0
+                                setAmountToApply(formatNumberWithDots(String(Math.round(Math.min(converted, balanceDue)))))
+                              }
+                              return
+                            }
                             const val = formatNumberWithDots(parseNumberWithDots(e.target.value))
                             setAmountReceived(val)
                             if (!userEditedAmountToApply.current) {
@@ -425,46 +539,73 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                           className='h-14 pl-12 rounded-lg bg-slate-50/50 border-slate-200 font-black font-mono text-2xl focus:ring-primary focus:bg-white transition-all shadow-inner'
                         />
                       </div>
+                      {isForeign && (
+                        <p className='text-[10px] font-bold text-slate-400 font-mono'>
+                          {t('sales.registerPaymentModal.baseEquivalent', 'Equivale a {amount} (el saldo se salda en {base})', {
+                            amount: formatLocalizedCurrency(baseNumericReceived, docCurrencyCode),
+                            base: docCurrencyCode,
+                          })}
+                        </p>
+                      )}
                     </div>
 
-                    {/* Divisa */}
+                    {/* Divisa de cobro */}
                     <div className='md:col-span-5 space-y-2'>
-                      <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Divisa</label>
-                      <Select value={currencyCode} onValueChange={setCurrencyCode}>
+                      <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>
+                        {t('sales.registerPaymentModal.currencyLabel', 'Divisa de cobro')}
+                      </label>
+                      <Select value={currencyId} onValueChange={handleCurrencyChange}>
                         <SelectTrigger className='h-14 rounded-lg bg-slate-50/50 border-slate-200 font-bold text-sm'>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className='rounded-xl border-slate-200 shadow-fluent-16'>
                           {currencySelectorData.map(c => (
-                            <SelectItem key={c.id} value={c.code} className='font-bold text-xs uppercase py-3'>{c.code} - {c.name}</SelectItem>
+                            <SelectItem key={c.id || c.code} value={c.id || c.code} className='font-bold text-xs uppercase py-3'>{c.code} - {c.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
-                  {/* Configuración de Cambio (Solo si divisa != base) */}
-                  {normalizeCurrencyCode(currencyCode) !== normalizeCurrencyCode(sale?.currency || DEFAULT_CURRENCY_CODE) && (
+                  {/* Tasa de cambio (solo divisa ≠ documento): precargada, editable; equivalente calculado */}
+                  {isForeign && (
                     <div className='grid grid-cols-2 gap-6 p-5 bg-primary/5 rounded-lg border border-primary/10 animate-in fade-in zoom-in-95 duration-300'>
                       <div className='space-y-1.5'>
-                        <label className='text-[9px] font-black uppercase text-primary/60 tracking-widest'>Tasa de Cambio</label>
-                        <Input 
-                          type='number' 
-                          step='any' 
-                          value={exchangeRate} 
-                          onChange={e => setExchangeRate(e.target.value)} 
-                          className='h-10 rounded-md bg-white border-primary/20 font-mono font-black text-primary' 
+                        <label className='text-[9px] font-black uppercase text-primary/60 tracking-widest'>
+                          {t('sales.registerPaymentModal.exchangeRate', 'Tasa de Cambio')}
+                        </label>
+                        <Input
+                          type='number'
+                          step='any'
+                          min='0'
+                          value={exchangeRate}
+                          onChange={e => setExchangeRate(e.target.value)}
+                          className='h-10 rounded-md bg-white border-primary/20 font-mono font-black text-primary'
                         />
+                        <p className='text-[9px] font-bold text-slate-400'>
+                          {t('sales.registerPaymentModal.exchangeRateHint', '1 {currency} = ? {base}. Precargada del día; ajustala si tu cotización es otra.', {
+                            currency: selectedCurrencyCode, base: docCurrencyCode,
+                          })}
+                        </p>
+                        {validationErrors.exchangeRate && (
+                          <p className='flex items-center gap-1.5 text-[10px] font-black uppercase text-error tracking-wide'>
+                            <AlertCircle size={13} className='shrink-0' />
+                            <span>{validationErrors.exchangeRate}</span>
+                          </p>
+                        )}
                       </div>
                       <div className='space-y-1.5'>
-                        <label className='text-[9px] font-black uppercase text-primary/60 tracking-widest'>Equivalente ({currencyCode})</label>
-                        <Input 
-                          type='number' 
-                          step='any' 
-                          value={originalAmount} 
-                          onChange={e => setOriginalAmount(e.target.value)} 
-                          className='h-10 rounded-md bg-white border-primary/20 font-mono font-black text-primary' 
-                        />
+                        <label className='text-[9px] font-black uppercase text-primary/60 tracking-widest'>
+                          {t('sales.registerPaymentModal.foreignDueLabel', 'A cobrar ({currency})', { currency: selectedCurrencyCode })}
+                        </label>
+                        <div className='h-10 flex items-center px-3 rounded-md bg-white border border-primary/20 font-mono font-black text-primary text-sm'>
+                          {calculatedForeignDue > 0
+                            ? formatLocalizedCurrency(calculatedForeignDue, selectedCurrencyCode)
+                            : t('sales.registerPaymentModal.ratePending', 'Cargá la tasa para ver el equivalente')}
+                        </div>
+                        <p className='text-[9px] font-bold text-slate-400'>
+                          {t('sales.registerPaymentModal.foreignDueHint', 'Equivalente del saldo calculado con la tasa. El vuelto se entrega en {base}.', { base: docCurrencyCode })}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -532,7 +673,9 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                 </div>
                 <div className='p-6 grid grid-cols-1 md:grid-cols-2 gap-8'>
                   <div className='space-y-2'>
-                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Monto a Aplicar a la Venta</label>
+                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>
+                      {t('sales.registerPaymentModal.amountToApplyLabel', 'Monto a Aplicar a la Venta ({currency})', { currency: docCurrencyCode })}
+                    </label>
                     <Input
                       type='text'
                       inputMode='numeric'
@@ -545,7 +688,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                     />
                   </div>
                   <div className='space-y-2'>
-                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>Vuelto a Entregar</label>
+                    <label className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>
+                      {t('sales.registerPaymentModal.changeLabel', 'Vuelto a Entregar')}
+                      {isForeign && (
+                        <span className='ml-1 normal-case font-bold text-slate-300'>
+                          {t('sales.registerPaymentModal.changeInDoc', '(en {base})', { base: docCurrencyCode })}
+                        </span>
+                      )}
+                    </label>
                     <div className='h-12 flex items-center px-5 bg-green-50 text-success font-black rounded-lg border border-green-100 text-xl tabular-nums font-mono shadow-inner'>
                       {formatLocalizedCurrency(change, sale?.currency)}
                     </div>

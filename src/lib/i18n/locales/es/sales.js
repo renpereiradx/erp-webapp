@@ -266,6 +266,25 @@ export const sales = {
     'Debe seleccionar una caja registradora',
   'sales.registerPaymentModal.cashRegister.loadError':
     'Error al cargar cajas registradoras',
+  // Cobro en divisa (política: el saldo se salda en la moneda del documento)
+  'sales.registerPaymentModal.currencyLabel': 'Divisa de cobro',
+  'sales.registerPaymentModal.amountReceivedForeign':
+    'Importe Entregado ({{currency}})',
+  'sales.registerPaymentModal.baseEquivalent':
+    'Equivale a {{amount}} (el saldo se salda en {{base}})',
+  'sales.registerPaymentModal.exchangeRate': 'Tasa de Cambio',
+  'sales.registerPaymentModal.exchangeRateHint':
+    '1 {{currency}} = ? {{base}}. Precargada del día; ajustala si tu cotización es otra.',
+  'sales.registerPaymentModal.rateRequired':
+    'Cargá la tasa de cambio para cobrar en {{currency}}',
+  'sales.registerPaymentModal.foreignDueLabel': 'A cobrar ({{currency}})',
+  'sales.registerPaymentModal.ratePending':
+    'Cargá la tasa para ver el equivalente',
+  'sales.registerPaymentModal.foreignDueHint':
+    'Equivalente del saldo calculado con la tasa. El vuelto se entrega en {{base}}.',
+  'sales.registerPaymentModal.amountToApplyLabel':
+    'Monto a Aplicar a la Venta ({{currency}})',
+  'sales.registerPaymentModal.changeInDoc': '(en {{base}})',
   'sales.registerPaymentModal.notes.label': 'Notas del Pago (Opcional)',
   'sales.registerPaymentModal.notes.placeholder':
     'Añadir comentarios sobre el pago...',
@@ -375,7 +394,6 @@ export const sales = {
   'sales.checkoutWizard.payment.method': 'Método de pago',
   'sales.checkoutWizard.payment.currency': 'Moneda de cobro',
   'sales.checkoutWizard.payment.exchangeRate': 'Tasa de cambio',
-  'sales.checkoutWizard.payment.originalAmount': 'Monto original',
   'sales.checkoutWizard.payment.multiCurrency': 'Cobro en otra moneda',
   'sales.checkoutWizard.payment.exchangeRateHint':
     '1 {currency} = ? {base}. Se precarga del día; ajustala si tu cotización es otra.',
