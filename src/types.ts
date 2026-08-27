@@ -1000,6 +1000,15 @@ export interface POSPayment {
   cash_register_id?: number | null;
   payment_reference?: string | null;
   payment_notes?: string | null;
+  /**
+   * Cobro en divisa: la venta se emite en moneda base; estos campos describen
+   * la divisa de cobro. `amount_received` sigue viajando en moneda base
+   * (original_amount × exchange_rate); el backend valida la tasa y completa
+   * original_amount si falta.
+   */
+  currency_id?: number | null;
+  exchange_rate?: number | null;
+  original_amount?: number | null;
 }
 
 /**

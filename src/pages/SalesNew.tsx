@@ -487,7 +487,10 @@ const SalesNew: React.FC = () => {
         // Filter duplicates by ID to avoid React key errors
         const uniqueCurrencies = Array.from(new Map(rawList.map((c: any) => [c.id, c])).values()) as any[];
         setCurrencies(uniqueCurrencies);
-        if (uniqueCurrencies.length > 0) setCurrencyId(uniqueCurrencies[0].id);
+        // Política: el documento se emite en moneda base; el selector del
+        // wizard elige la MONEDA DE COBRO y arranca en la base.
+        const baseCurrency = uniqueCurrencies.find((c: any) => c.is_base || c.is_base_currency);
+        setCurrencyId(baseCurrency?.id ?? uniqueCurrencies[0]?.id ?? 1);
       } catch (error) {
         console.error('Error loading currencies:', error);
       }
@@ -1236,7 +1239,8 @@ const SalesNew: React.FC = () => {
       ...(selectedClient ? { client_id: selectedClient.id } : {}),
       ...(saleReserveId && { reserve_id: saleReserveId }),
       allow_price_modifications: payloadPriceMod,
-      currency_id: Number(currencyId) || 1,
+      // El documento SIEMPRE en moneda base; la divisa elegida viaja en el pago.
+      currency_id: baseCurrencyId,
       product_details: uniqueItems.map(item => {
         const currentPrice = Number(item.price) || 0;
         const originalPrice = Number(item.originalPrice) || 0;
@@ -1282,6 +1286,11 @@ const SalesNew: React.FC = () => {
   });
 
   // ─── Callbacks del SaleCheckoutWizard ────────────────────────────────────
+  // Moneda base del sistema (fallback id 1 = PYG sembrada): identifica la
+  // moneda del documento de venta.
+  const baseCurrencyId =
+    currencies.find((c: any) => c.is_base || c.is_base_currency)?.id ?? 1;
+
   // onConfirmWizard: confirma el cobro. Si hay currentSaleId (modo merge),
   // agrega los productos nuevos (addProductsToSale) y procesa el pago. Si no,
   // usa el checkout POS atómico (venta + pago en una transacción).
@@ -1335,8 +1344,12 @@ const SalesNew: React.FC = () => {
           // Refleja la moneda seleccionada en el wizard (puede haber cambiado).
           const salePayload = buildNewSaleData() ?? pendingSaleData;
           const result = await salePaymentService.posCheckout({
-            sale: { ...salePayload, currency_id: Number(currencyId) || 1 },
+            // Documento SIEMPRE en moneda base (política cobro en divisa).
+            sale: { ...salePayload, currency_id: Number(baseCurrencyId) || 1 },
             payment: {
+              // amount_received viaja en moneda base; si el cobro fue en otra
+              // divisa, los metadatos describen qué entregó el cliente y a qué
+              // tasa. El backend valida la tasa y completa original_amount.
               amount_received: collection.amountReceived,
               payment_method_id: collection.paymentMethodId || Number(paymentMethodId) || 0,
               // Caja opcional: si el operador la eligió en el paso de cobro se
@@ -1344,6 +1357,11 @@ const SalesNew: React.FC = () => {
               // adivina una caja activa de otra sucursal).
               cash_register_id: collection.cashRegisterId ?? undefined,
               payment_notes: collection.notes,
+              ...(collection.currencyId != null && {
+                currency_id: collection.currencyId,
+                exchange_rate: collection.exchangeRate,
+                original_amount: collection.foreignAmountReceived ?? undefined,
+              }),
             },
           });
 
@@ -1409,7 +1427,7 @@ const SalesNew: React.FC = () => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentSaleId, items, activeSale, pendingSaleData, paymentMethodId, currencyId, t, buildNewSaleData],
+    [currentSaleId, items, activeSale, pendingSaleData, paymentMethodId, currencyId, currencies, t, buildNewSaleData],
   );
 
   // onLeavePendingWizard: persiste la venta sin cobrar (venta a crédito/asíncrono).

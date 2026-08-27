@@ -22,6 +22,7 @@ import { saleService } from '@/services/saleService'
 import { formatCurrency } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
+import { computeForeignDue } from '@/domain/sale/calculations/foreignPayment'
 import { useCheckoutShortcuts } from '@/features/sales/hooks/useCheckoutShortcuts'
 import { ClientStep, ClientStepRef } from './steps/ClientStep'
 import { PendingSalesStep, PendingSalesStepRef } from './steps/PendingSalesStep'
@@ -65,7 +66,6 @@ interface SaleCheckoutWizardProps {
   currencies: any[]
   currencyId: number
   setCurrencyId: (id: number) => void
-
   // Cobro (paso final)
   onConfirm: (collection: CollectionData) => Promise<void>
   onLeavePending: () => Promise<void>
@@ -107,8 +107,10 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
   const { currentBranchId } = useBranch()
 
   // ─── Estado de multi-moneda (pago) ──────────────────────────────────────
+  // La venta se emite en moneda base; la divisa elegida es la de COBRO y la
+  // tasa (precargada, editable) convierte el total para lo que el cliente
+  // entrega físicamente. El equivalente se calcula, ya no se tipea.
   const [exchangeRate, setExchangeRate] = useState('')
-  const [originalAmount, setOriginalAmount] = useState('')
 
   // ─── Estado de ventas pendientes (selección local) ──────────────────────
   const [pendingIndex, setPendingIndex] = useState(0)
@@ -119,6 +121,9 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     paymentMethodId: Number(paymentMethodId) || 0,
     cashRegisterId: null,
     notes: null,
+    currencyId: null,
+    exchangeRate: null,
+    foreignAmountReceived: null,
   })
 
   // ─── Pasos visibles (condicionales) ─────────────────────────────────────
@@ -292,11 +297,23 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     return saleService.calculateLocalTotals(saleItems)
   }, [items])
 
+  const baseCurrency = currencies.find((c) => c.is_base || c.is_base_currency)
+  const baseCurrencyCode = baseCurrency?.code || 'PYG'
   const selectedCurrency = currencies.find((c) => String(c.id) === String(currencyId))
-  const currencyCode = selectedCurrency?.code || 'PYG'
+  const currencyCode = baseCurrencyCode
   const isCashMethod = paymentMethods.find((m) => String(m.id) === String(paymentMethodId))?.name
     ?.toLowerCase()
     .includes('efectivo')
+
+  // Cobro en divisa: solo cuando la moneda elegida difiere de la base Y hay
+  // tasa (>0) para convertir. La tasa la completa PaymentStep (precarga) y el
+  // backend re-valida al cobrar.
+  const foreignRate = Number(exchangeRate) || 0
+  const foreignCurrency =
+    selectedCurrency && baseCurrency && String(selectedCurrency.id) !== String(baseCurrency.id) && foreignRate > 0
+      ? { id: selectedCurrency.id, code: selectedCurrency.code || selectedCurrency.name, rate: foreignRate }
+      : null
+  const foreignDue = foreignCurrency ? computeForeignDue(totals.total, foreignRate) : 0
 
   const stepLabels: Record<CheckoutStepId, string> = {
     client: t('sales.checkoutWizard.step.client', 'Cliente'),
@@ -405,8 +422,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                 setCurrencyId={setCurrencyId}
                 exchangeRate={exchangeRate}
                 setExchangeRate={setExchangeRate}
-                originalAmount={originalAmount}
-                setOriginalAmount={setOriginalAmount}
+                totalAmount={totals.total}
               />
             )}
             {currentStep === 'collection' && (
@@ -416,6 +432,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                 currencyCode={currencyCode}
                 paymentMethodId={paymentMethodId}
                 isCash={!!isCashMethod}
+                foreignCurrency={foreignCurrency}
                 currentBranchId={currentBranchId}
                 onDataChange={setCollectionData}
               />
@@ -560,6 +577,11 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                 {formatCurrency(totals.total, currencyCode)}
               </span>
             </div>
+            {foreignCurrency && foreignDue > 0 && (
+              <p className="text-xs text-on-surface-variant text-right font-data-mono">
+                ≈ {formatCurrency(foreignDue, foreignCurrency.code)}
+              </p>
+            )}
           </div>
         </div>
       </div>

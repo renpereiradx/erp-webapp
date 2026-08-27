@@ -373,10 +373,16 @@ export const sales = {
   'sales.checkoutWizard.confirmPaymentError':
     'No se pudo completar el cobro. La operación se canceló; intentá de nuevo.',
   'sales.checkoutWizard.payment.method': 'Método de pago',
-  'sales.checkoutWizard.payment.currency': 'Moneda',
+  'sales.checkoutWizard.payment.currency': 'Moneda de cobro',
   'sales.checkoutWizard.payment.exchangeRate': 'Tasa de cambio',
   'sales.checkoutWizard.payment.originalAmount': 'Monto original',
   'sales.checkoutWizard.payment.multiCurrency': 'Cobro en otra moneda',
+  'sales.checkoutWizard.payment.exchangeRateHint':
+    '1 {currency} = ? {base}. Se precarga del día; ajustala si tu cotización es otra.',
+  'sales.checkoutWizard.payment.foreignDue': 'Total en {currency}',
+  'sales.checkoutWizard.payment.foreignDueHint':
+    'Equivalente calculado con la tasa de arriba. El documento se emite en {base}.',
+  'sales.checkoutWizard.payment.ratePending': 'Cargá la tasa para ver el equivalente',
   'sales.checkoutWizard.collection.cashRegister': 'Caja de cobro',
   'sales.checkoutWizard.collection.noCashRegister': 'Sin caja asignada',
   'sales.checkoutWizard.collection.loadingRegisters': 'Cargando cajas...',
@@ -387,6 +393,12 @@ export const sales = {
   'sales.checkoutWizard.collection.noOpenRegisterInBranch':
     'No tenés cajas abiertas en esta sucursal. Podés cobrar sin caja o abrir una desde el módulo Cajas.',
   'sales.checkoutWizard.collection.amountReceived': 'Monto recibido',
+  'sales.checkoutWizard.collection.amountReceivedForeign': 'Monto recibido ({currency})',
+  'sales.checkoutWizard.collection.foreignDueLabel': 'A cobrar: {amount}',
+  'sales.checkoutWizard.collection.baseEquivalent': 'Equivale a {amount}',
+  'sales.checkoutWizard.collection.changeInBase': 'se entrega en {base}',
+  'sales.checkoutWizard.collection.foreignNonCashHint':
+    'Se cobrará el equivalente a {amount} con la tasa cargada (1 {currency} = {rate} {base}).',
   'sales.checkoutWizard.collection.exact': 'Exacto',
   'sales.checkoutWizard.collection.notes': 'Notas (opcional)',
   'sales.checkoutWizard.collection.notesPlaceholder': 'Notas del cobro...',

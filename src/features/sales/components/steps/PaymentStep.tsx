@@ -1,12 +1,13 @@
 /**
  * PaymentStep — paso del SaleCheckoutWizard.
  *
- * Selección de método de pago y moneda. Si la moneda difiere de la moneda
- * base, muestra inputs para tasa de cambio y monto original (campos que el
- * backend ahora respeta en el cobro con caja). Opcionalmente precarga la
- * tasa desde el servicio de tipos de cambio.
+ * Selección de método de pago y moneda de cobro. Política: la venta se emite
+ * en moneda base (PYG); si el operador elige cobrar en otra divisa, muestra el
+ * input de tasa de cambio (precargada desde Tipos de Cambio y editable) y el
+ * equivalente CALCULADO del total en esa divisa — el monto ya no se tipea a
+ * mano. El monto recibido en divisa se carga en el paso de Cobro.
  */
-import { forwardRef, useImperativeHandle, useEffect, useRef } from 'react'
+import { forwardRef, useImperativeHandle, useEffect, useMemo, useRef } from 'react'
 import { CreditCard, DollarSign } from 'lucide-react'
 import {
   Select,
@@ -17,6 +18,8 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { ExchangeRateService } from '@/services/exchangeRateService'
+import { computeForeignDue } from '@/domain/sale/calculations/foreignPayment'
+import { formatCurrency } from '@/utils/currencyUtils'
 import { useI18n } from '@/lib/i18n'
 
 export interface PaymentStepRef {
@@ -33,8 +36,8 @@ interface PaymentStepProps {
   /** Callbacks para que el orquestador conserve el estado de tipo de cambio. */
   exchangeRate: string
   setExchangeRate: (v: string) => void
-  originalAmount: string
-  setOriginalAmount: (v: string) => void
+  /** Total del carrito en moneda base: se usa para el equivalente en divisa. */
+  totalAmount: number
 }
 
 export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
@@ -48,8 +51,7 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
       setCurrencyId,
       exchangeRate,
       setExchangeRate,
-      originalAmount,
-      setOriginalAmount,
+      totalAmount,
     },
     ref,
   ) => {
@@ -61,11 +63,17 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
     const isMultiCurrency =
       selectedCurrency && baseCurrency && String(selectedCurrency.id) !== String(baseCurrency.id)
 
+    const rate = Number(exchangeRate) || 0
+    const foreignDue = useMemo(
+      () => (isMultiCurrency ? computeForeignDue(totalAmount, rate) : 0),
+      [isMultiCurrency, totalAmount, rate],
+    )
+
     useImperativeHandle(ref, () => ({
       focus: () => firstInputRef.current?.focus(),
     }))
 
-    // Precarga del tipo de cambio cuando se selecciona una moneda distinta.
+    // Precarga del tipo de cambio cuando se selecciona una divisa distinta.
     useEffect(() => {
       if (!isMultiCurrency || !selectedCurrency || exchangeRate) return
       let cancelled = false
@@ -76,7 +84,8 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
           if (value) setExchangeRate(String(value))
         })
         .catch(() => {
-          /* el operador ingresa la tasa manualmente */
+          /* sin tasa cargada: el backend la resuelve al cobrar o rechaza con
+             un mensaje claro; el operador también puede tipearla acá. */
         })
       return () => {
         cancelled = true
@@ -112,12 +121,12 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
             <div className="flex items-center gap-2">
               <DollarSign size={18} className="text-primary" />
               <label className="text-label-caps text-on-surface-variant" htmlFor="wizard-currency">
-                {t('sales.checkoutWizard.payment.currency', 'Moneda')}
+                {t('sales.checkoutWizard.payment.currency', 'Moneda de cobro')}
               </label>
             </div>
             <Select value={String(currencyId)} onValueChange={(v) => setCurrencyId(Number(v))}>
               <SelectTrigger id="wizard-currency" className="w-full h-11 bg-surface-container-lowest border-outline-variant focus:ring-primary focus:border-primary">
-                <SelectValue placeholder={t('sales.checkoutWizard.payment.currency', 'Moneda')} />
+                <SelectValue placeholder={t('sales.checkoutWizard.payment.currency', 'Moneda de cobro')} />
               </SelectTrigger>
               <SelectContent>
                 {currencies.map((currency) => (
@@ -150,21 +159,35 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
                   className="h-10 font-data-mono"
                   placeholder="0.00"
                 />
+                <p className="text-xs text-on-surface-variant">
+                  {t(
+                    'sales.checkoutWizard.payment.exchangeRateHint',
+                    '1 {currency} = ? {base}. Se precarga del día; ajustala si tu cotización es otra.',
+                    { currency: selectedCurrency?.code || '', base: baseCurrency?.code || 'PYG' },
+                  )}
+                </p>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-on-surface-variant" htmlFor="wizard-original-amount">
-                  {t('sales.checkoutWizard.payment.originalAmount', 'Monto original')}
+                <label className="text-xs font-bold text-on-surface-variant" htmlFor="wizard-foreign-due">
+                  {t('sales.checkoutWizard.payment.foreignDue', 'Total en {currency}', {
+                    currency: selectedCurrency?.code || '',
+                  })}
                 </label>
-                <Input
-                  id="wizard-original-amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={originalAmount}
-                  onChange={(e) => setOriginalAmount(e.target.value)}
-                  className="h-10 font-data-mono"
-                  placeholder="0.00"
-                />
+                <div
+                  id="wizard-foreign-due"
+                  className="h-10 flex items-center px-3 rounded-sm bg-surface-container border border-outline-variant font-data-mono text-sm font-bold"
+                >
+                  {foreignDue > 0
+                    ? formatCurrency(foreignDue, selectedCurrency?.code || '')
+                    : t('sales.checkoutWizard.payment.ratePending', 'Cargá la tasa para ver el equivalente')}
+                </div>
+                <p className="text-xs text-on-surface-variant">
+                  {t(
+                    'sales.checkoutWizard.payment.foreignDueHint',
+                    'Equivalente calculado con la tasa de arriba. El documento se emite en {base}.',
+                    { base: baseCurrency?.code || 'PYG' },
+                  )}
+                </p>
               </div>
             </div>
           </div>

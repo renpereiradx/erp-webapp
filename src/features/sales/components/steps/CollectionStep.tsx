@@ -5,6 +5,11 @@
  * recibido + cálculo de vuelto en vivo. El orquestador decide qué hacer al
  * confirmar (pos-checkout atómico o dejar pendiente); este paso solo recoge
  * los datos del cobro y reporta el estado de validez.
+ *
+ * Cobro en divisa: con foreignCurrency activo, el monto recibido se carga en
+ * ESA divisa (lo que el cliente entrega físicamente) y el VUELTO se da en
+ * guaraníes —moneda base—, con el equivalente en divisa como referencia. El
+ * monto aplicado al saldo viaja siempre en moneda base.
  */
 import { forwardRef, useImperativeHandle, useEffect, useMemo, useRef, useState } from 'react'
 import { Calculator, AlertTriangle, Info } from 'lucide-react'
@@ -13,6 +18,12 @@ import { Input } from '@/components/ui/input'
 import { cashRegisterService } from '@/services/cashRegisterService'
 import { formatCurrency } from '@/utils/currencyUtils'
 import { useI18n } from '@/lib/i18n'
+import {
+  computeForeignDue,
+  computeBaseFromForeign,
+  computeForeignChange,
+  computeBaseChange,
+} from '@/domain/sale/calculations/foreignPayment'
 import {
   partitionOpenRegisters,
   resolveDefaultRegisterId,
@@ -24,10 +35,23 @@ export interface CollectionStepRef {
 }
 
 export interface CollectionData {
+  /** Monto aplicado al saldo, SIEMPRE en la moneda del documento (base). */
   amountReceived: number
   paymentMethodId: number
   cashRegisterId: number | null
   notes: string | null
+  /** Cobro en divisa: nulls cuando se cobra en moneda base. */
+  currencyId: number | null
+  exchangeRate: number | null
+  /** Lo que el cliente entregó físicamente, en la divisa de cobro. */
+  foreignAmountReceived: number | null
+}
+
+export interface ForeignCurrencySpec {
+  id: number
+  code: string
+  /** Tasa confirmada por el operador (multiplicador divisa → moneda base). */
+  rate: number
 }
 
 interface CollectionStepProps {
@@ -35,6 +59,8 @@ interface CollectionStepProps {
   currencyCode?: string
   paymentMethodId: number
   isCash: boolean
+  /** Divisa de cobro distinta de la base; null/undefined = cobro en base. */
+  foreignCurrency?: ForeignCurrencySpec | null
   /** Sucursal activa: las cajas de otras sucursales no son seleccionables. */
   currentBranchId?: number | null
   /** Notifica al orquestador los datos actuales del cobro. */
@@ -42,14 +68,37 @@ interface CollectionStepProps {
 }
 
 export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>(
-  ({ totalAmount, currencyCode = 'PYG', paymentMethodId, isCash, currentBranchId, onDataChange }, ref) => {
+  (
+    {
+      totalAmount,
+      currencyCode = 'PYG',
+      paymentMethodId,
+      isCash,
+      foreignCurrency,
+      currentBranchId,
+      onDataChange,
+    },
+    ref,
+  ) => {
     const { t } = useI18n()
     const amountRef = useRef<HTMLInputElement>(null)
+
+    const foreignCode = foreignCurrency?.code || ''
+    const rate = foreignCurrency?.rate || 0
+    const isForeign = !!foreignCurrency && rate > 0
+    const foreignDue = useMemo(
+      () => (isForeign ? computeForeignDue(totalAmount, rate) : 0),
+      [isForeign, totalAmount, rate],
+    )
 
     const [openRegisters, setOpenRegisters] = useState<RegisterOption[]>([])
     const [cashRegisterId, setCashRegisterId] = useState<string | number | null>(null)
     const [isLoadingRegisters, setIsLoadingRegisters] = useState(false)
-    const [amountReceived, setAmountReceived] = useState<string>(String(totalAmount || ''))
+    // En modo divisa, lo que tipea el operador es lo que entrega el cliente
+    // (en ESA divisa); en modo base, el monto en guaraníes como siempre.
+    const [amountInput, setAmountInput] = useState<string>(() =>
+      isForeign && foreignDue > 0 ? String(foreignDue) : String(totalAmount || ''),
+    )
     const [notes, setNotes] = useState('')
     const [showNotes, setShowNotes] = useState(false)
 
@@ -104,18 +153,36 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
       }
     }, [currentBranchId])
 
-    // Reporta los datos al orquestador cada vez que cambian.
+    // Reporta los datos al orquestador cada vez que cambian. amountReceived
+    // (base) se deriva de lo tipeado con la tasa; los metadatos de divisa
+    // acompañan al pago para que el backend valide y audite la conversión.
     useEffect(() => {
+      const typedAmount = Number(amountInput) || 0
+      const isCashForeign = isForeign && isCash
+      const foreignReceived = isCashForeign ? typedAmount : isForeign ? foreignDue : null
+      const baseReceived = isCashForeign
+        ? computeBaseFromForeign(typedAmount, rate) || totalAmount
+        : isForeign
+          ? totalAmount
+          : typedAmount
       onDataChange({
-        amountReceived: Number(amountReceived) || 0,
+        amountReceived: baseReceived,
         paymentMethodId: Number(paymentMethodId) || 0,
         cashRegisterId: cashRegisterId ? Number(cashRegisterId) : null,
         notes: notes.trim() || null,
+        currencyId: isForeign ? foreignCurrency!.id : null,
+        exchangeRate: isForeign ? rate : null,
+        foreignAmountReceived: foreignReceived,
       })
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [amountReceived, cashRegisterId, notes, paymentMethodId])
+    }, [amountInput, cashRegisterId, notes, paymentMethodId, isForeign, foreignDue, rate])
 
-    const change = Math.max(0, (Number(amountReceived) || 0) - totalAmount)
+    // Vuelto: se entrega en guaraníes (base). La cifra en divisa es solo
+    // referencia para el operador.
+    const foreignChange = computeForeignChange(Number(amountInput) || 0, foreignDue)
+    const baseChange = isForeign
+      ? computeBaseChange(Number(amountInput) || 0, rate, totalAmount)
+      : Math.max(0, (Number(amountInput) || 0) - totalAmount)
 
     return (
       <div className="space-y-5">
@@ -188,51 +255,116 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
             <div>
               <label className="text-xs font-bold uppercase text-on-surface-variant flex items-center gap-2 mb-2">
                 <Calculator size={14} />
-                {t('sales.checkoutWizard.collection.amountReceived', 'Monto recibido')}
+                {isForeign
+                  ? t('sales.checkoutWizard.collection.amountReceivedForeign', 'Monto recibido ({currency})', {
+                      currency: foreignCode,
+                    })
+                  : t('sales.checkoutWizard.collection.amountReceived', 'Monto recibido')}
               </label>
               <Input
                 ref={amountRef}
                 type="number"
                 min="0"
-                step="1"
-                value={amountReceived}
-                onChange={(e) => setAmountReceived(e.target.value)}
+                step={isForeign ? '0.01' : '1'}
+                value={amountInput}
+                onChange={(e) => setAmountInput(e.target.value)}
                 className="h-14 text-2xl font-bold font-data-mono px-4"
                 placeholder="0"
               />
+              {isForeign && (
+                <p className="mt-1.5 text-xs text-on-surface-variant font-data-mono">
+                  {t('sales.checkoutWizard.collection.foreignDueLabel', 'A cobrar: {amount}', {
+                    amount: formatCurrency(foreignDue, foreignCode),
+                  })}
+                  {' · '}
+                  {t('sales.checkoutWizard.collection.baseEquivalent', 'Equivale a {amount}', {
+                    amount: formatCurrency(computeBaseFromForeign(Number(amountInput) || 0, rate), currencyCode),
+                  })}
+                </p>
+              )}
             </div>
 
-            <div className="flex gap-2">
-              {[50000, 100000, 150000].map((amt) => (
+            {isForeign ? (
+              // En divisa los billetes rápidos en guaraníes no aplican; queda
+              // "Exacto" (y el monto tipeado a mano).
+              <div className="flex gap-2">
                 <Button
-                  key={amt}
                   variant="outline"
                   size="sm"
-                  className="flex-1 text-xs font-bold font-data-mono"
-                  onClick={() => setAmountReceived(String(amt))}
+                  className="flex-1 text-xs font-bold"
+                  onClick={() => setAmountInput(String(foreignDue))}
                 >
-                  {formatCurrency(amt, currencyCode)}
+                  {t('sales.checkoutWizard.collection.exact', 'Exacto')}
                 </Button>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 text-xs font-bold"
-                onClick={() => setAmountReceived(String(totalAmount))}
-              >
-                {t('sales.checkoutWizard.collection.exact', 'Exacto')}
-              </Button>
-            </div>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                {[50000, 100000, 150000].map((amt) => (
+                  <Button
+                    key={amt}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-xs font-bold font-data-mono"
+                    onClick={() => setAmountInput(String(amt))}
+                  >
+                    {formatCurrency(amt, currencyCode)}
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs font-bold"
+                  onClick={() => setAmountInput(String(totalAmount))}
+                >
+                  {t('sales.checkoutWizard.collection.exact', 'Exacto')}
+                </Button>
+              </div>
+            )}
 
             <div className="p-4 bg-on-surface rounded-md flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
-                {t('sales.checkoutWizard.change', 'Vuelto')}
-              </span>
-              <span className="text-2xl font-black font-data-mono text-emerald-400">
-                {formatCurrency(change, currencyCode)}
-              </span>
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                  {t('sales.checkoutWizard.change', 'Vuelto')}
+                </span>
+                {isForeign && (
+                  <p className="text-[10px] text-on-surface-variant/70 uppercase tracking-wide">
+                    {t('sales.checkoutWizard.collection.changeInBase', 'se entrega en {base}', {
+                      base: currencyCode,
+                    })}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col items-end">
+                <span className="text-2xl font-black font-data-mono text-emerald-400">
+                  {formatCurrency(baseChange, currencyCode)}
+                </span>
+                {isForeign && foreignChange > 0 && (
+                  <span className="text-xs text-on-surface-variant font-data-mono">
+                    ≈ {formatCurrency(foreignChange, foreignCode)}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+        )}
+
+        {/* Cobro en divisa sin efectivo: no hay input, solo la aclaración */}
+        {!isCash && isForeign && (
+          <p className="flex items-start gap-2 text-xs text-on-surface-variant">
+            <Info size={14} className="mt-0.5 shrink-0" />
+            <span>
+              {t(
+                'sales.checkoutWizard.collection.foreignNonCashHint',
+                'Se cobrará el equivalente a {amount} con la tasa cargada (1 {currency} = {rate} {base}).',
+                {
+                  amount: formatCurrency(foreignDue, foreignCode),
+                  currency: foreignCode,
+                  rate,
+                  base: currencyCode,
+                },
+              )}
+            </span>
+          </p>
         )}
 
         {/* Notas */}
