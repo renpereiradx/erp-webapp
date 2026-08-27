@@ -199,7 +199,7 @@
 }
 .table-row-hover:hover {
   background-color: theme('colors.surface-bright');
-  box-shadow: inset 2px 0 0 theme('colors.primary');
+  box-shadow: inset 2px 0 0 theme('colors.primary.DEFAULT');
 }
 .inline-edit-cell {
   position: relative;
@@ -208,7 +208,7 @@
   border-bottom: 1px dashed theme('colors.outline-variant');
 }
 .inline-edit-cell:hover {
-  border-bottom-color: theme('colors.primary');
+  border-bottom-color: theme('colors.primary.DEFAULT');
   background-color: theme('colors.surface-container-low');
 }
 .inline-edit-icon {
@@ -220,10 +220,10 @@
 }
 .toggle-checkbox:checked {
   right: 0;
-  border-color: theme('colors.primary');
+  border-color: theme('colors.primary.DEFAULT');
 }
 .toggle-checkbox:checked + .toggle-label {
-  background-color: theme('colors.primary');
+  background-color: theme('colors.primary.DEFAULT');
 }
 
 
