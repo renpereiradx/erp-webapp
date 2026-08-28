@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, User, AlertCircle, IdCard } from 'lucide-react';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +15,6 @@ import useClientStore from '@/store/useClientStore';
 */
 
 const ClientModal = ({ isOpen, onClose, client, onSuccess, container = null }) => {
-  const { styles, isNeoBrutalism } = useThemeStyles();
   const { t } = useI18n();
   const { createClient, updateClient } = useClientStore();
 
@@ -104,9 +102,9 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess, container = null }) =
 
   if (!isOpen) return null;
 
-  // Usar fondo sólido según el tema
+  // Overlay con fondo sólido + blur (antes branch isNeoBrutalism siempre false)
   const overlayStyle = {
-    backgroundColor: isNeoBrutalism ? '#000000' : '#1a1a1a', // Fondo completamente sólido
+    backgroundColor: '#1a1a1a', // Fondo completamente sólido
     backdropFilter: 'blur(4px)'
   };
 
@@ -115,11 +113,11 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess, container = null }) =
       className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
       style={overlayStyle}
     >
-      <div className={`w-full max-w-2xl max-h-[85vh] flex flex-col ${styles.card()} shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}>
+      <div className="w-full max-w-2xl max-h-[85vh] flex flex-col bg-card text-card-foreground border rounded-lg shadow-sm shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-3">
-            <h2 className={`${styles.header('h2')} text-lg font-bold`}>
+            <h2 className="text-lg font-bold text-foreground">
               {isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
             </h2>
             {isEditing && (
@@ -144,26 +142,26 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess, container = null }) =
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={`${styles.label()} block text-sm font-medium mb-1`}>Nombre *</label>
-                  <Input name="name" value={formData.name} onChange={handleChange} required placeholder="Nombre" className={styles.input()} />
+                  <label className="text-sm font-medium text-foreground block text-sm font-medium mb-1">Nombre *</label>
+                  <Input name="name" value={formData.name} onChange={handleChange} required placeholder="Nombre" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 </div>
                 <div>
-                  <label className={`${styles.label()} block text-sm font-medium mb-1`}>Apellido *</label>
-                  <Input name="last_name" value={formData.last_name} onChange={handleChange} required placeholder="Apellido" className={styles.input()} />
+                  <label className="text-sm font-medium text-foreground block text-sm font-medium mb-1">Apellido *</label>
+                  <Input name="last_name" value={formData.last_name} onChange={handleChange} required placeholder="Apellido" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 </div>
               </div>
               <div>
-                <label className={`${styles.label()} block text-sm font-medium mb-1`}>Documento (CI) *</label>
-                <Input name="document_id" value={formData.document_id} onChange={handleChange} required placeholder="Ej: 1234567" className={styles.input()} />
+                <label className="text-sm font-medium text-foreground block text-sm font-medium mb-1">Documento (CI) *</label>
+                <Input name="document_id" value={formData.document_id} onChange={handleChange} required placeholder="Ej: 1234567" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={`${styles.label()} block text-sm font-medium mb-1`}>Email</label>
-                  <Input name="email" value={formData.email} onChange={handleChange} type="email" placeholder="email@dominio.com" className={styles.input()} />
+                  <label className="text-sm font-medium text-foreground block text-sm font-medium mb-1">Email</label>
+                  <Input name="email" value={formData.email} onChange={handleChange} type="email" placeholder="email@dominio.com" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 </div>
                 <div>
-                  <label className={`${styles.label()} block text-sm font-medium mb-1`}>Teléfono</label>
-                  <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="Ej: +595..." className={styles.input()} />
+                  <label className="text-sm font-medium text-foreground block text-sm font-medium mb-1">Teléfono</label>
+                  <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="Ej: +595..." className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 </div>
               </div>
               {isEditing && (

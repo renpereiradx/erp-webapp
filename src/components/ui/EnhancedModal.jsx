@@ -7,7 +7,6 @@
 import React, { useEffect, useRef } from 'react';
 import { X, AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react';
 import { Button } from './button';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useI18n } from '@/lib/i18n';
 
 const MODAL_VARIANTS = {
@@ -67,7 +66,6 @@ const EnhancedModal = ({
   testId = 'enhanced-modal'
 }) => {
   const { t } = useI18n();
-  const { styles, isNeoBrutalism } = useThemeStyles();
   const modalRef = useRef(null);
   const previousFocus = useRef(null);
 
@@ -102,7 +100,7 @@ const EnhancedModal = ({
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
-      
+
       // Restore focus
       if (previousFocus.current) {
         previousFocus.current.focus();
@@ -118,44 +116,19 @@ const EnhancedModal = ({
     }
   };
 
-  const getModalStyles = () => {
-    const baseStyles = `
-      transform transition-all duration-300 ease-out
-      ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}
-    `;
+  const getModalStyles = () => `
+    transform transition-all duration-300 ease-out
+    ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}
+    bg-card text-card-foreground border rounded-lg shadow-sm
+    ${variantConfig.borderColor}
+    shadow-2xl backdrop-blur-sm
+  `;
 
-    if (isNeoBrutalism) {
-      return `
-        ${baseStyles}
-        bg-background border-4 border-black 
-        shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]
-        ${variantConfig.borderColor}
-      `;
-    }
-
-    return `
-      ${baseStyles}
-      ${styles.card()}
-      ${variantConfig.borderColor}
-      shadow-2xl backdrop-blur-sm
-    `;
-  };
-
-  const getOverlayStyles = () => {
-    if (isNeoBrutalism) {
-      return `
-        fixed inset-0 z-50 flex items-center justify-center p-4
-        bg-black/70 backdrop-blur-sm
-        animate-in fade-in duration-200
-      `;
-    }
-
-    return `
-      fixed inset-0 z-50 flex items-center justify-center p-4
-      bg-black/50 backdrop-blur-sm
-      animate-in fade-in duration-200
-    `;
-  };
+  const getOverlayStyles = () => `
+    fixed inset-0 z-50 flex items-center justify-center p-4
+    bg-black/50 backdrop-blur-sm
+    animate-in fade-in duration-200
+  `;
 
   return (
     <div
@@ -185,29 +158,22 @@ const EnhancedModal = ({
         `}>
           <div className="flex items-center gap-3 flex-1 min-w-0">
             {IconComponent && (
-              <div className={`
-                flex items-center justify-center w-10 h-10 rounded-full
-                ${isNeoBrutalism ? 'bg-yellow-200 border-2 border-black' : 'bg-muted'}
-              `}>
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted">
                 <IconComponent className={`w-5 h-5 ${variantConfig.iconColor}`} />
               </div>
             )}
-            
+
             <div className="flex-1 min-w-0">
               {title && (
                 <h2
                   id={`${testId}-title`}
-                  className={`
-                    ${styles.header('h3')} 
-                    ${isNeoBrutalism ? 'font-black text-lg' : 'font-semibold text-lg'}
-                    truncate
-                  `}
+                  className="text-lg font-semibold text-foreground truncate"
                 >
                   {title}
                 </h2>
               )}
               {subtitle && (
-                <p className={`text-sm ${styles.body('muted')} mt-1 truncate`}>
+                <p className="text-sm text-muted-foreground mt-1 truncate">
                   {subtitle}
                 </p>
               )}
@@ -219,10 +185,7 @@ const EnhancedModal = ({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className={`
-                ml-4 shrink-0
-                ${isNeoBrutalism ? 'border-2 border-black hover:bg-red-100' : ''}
-              `}
+              className="ml-4 shrink-0"
               data-testid={`${testId}-close-button`}
               aria-label={t('modal.close', 'Cerrar modal')}
             >
@@ -238,13 +201,7 @@ const EnhancedModal = ({
         `}>
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className={`
-                animate-spin w-8 h-8 border-4 rounded-full
-                ${isNeoBrutalism 
-                  ? 'border-black border-t-transparent' 
-                  : 'border-primary border-t-transparent'
-                }
-              `} />
+              <div className="animate-spin w-8 h-8 border-4 rounded-full border-primary border-t-transparent" />
               <span className="ml-3 text-sm text-muted-foreground">
                 {t('modal.loading', 'Cargando...')}
               </span>
@@ -257,8 +214,7 @@ const EnhancedModal = ({
         {/* Footer */}
         {footer && (
           <div className={`
-            px-6 py-4 mt-6 border-t
-            ${isNeoBrutalism ? 'border-black border-t-2' : 'border-border'}
+            px-6 py-4 mt-6 border-t border-border
             ${footerClassName}
           `}>
             {footer}
@@ -300,7 +256,6 @@ export const ConfirmationModal = ({
   ...props
 }) => {
   const { t } = useI18n();
-  const { styles } = useThemeStyles();
 
   const footer = (
     <div className="flex justify-end gap-3">
@@ -308,7 +263,6 @@ export const ConfirmationModal = ({
         variant="outline"
         onClick={onClose}
         disabled={loading}
-        className={styles.button('secondary')}
       >
         {cancelText || t('modal.cancel', 'Cancelar')}
       </Button>
@@ -316,7 +270,6 @@ export const ConfirmationModal = ({
         variant={variant === 'error' ? 'destructive' : 'primary'}
         onClick={onConfirm}
         disabled={loading}
-        className={styles.button(variant === 'error' ? 'destructive' : 'primary')}
       >
         {loading ? (
           <>

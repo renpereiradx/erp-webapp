@@ -5,7 +5,6 @@
  */
 
 import React from 'react';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
 import GenericSkeletonList from './GenericSkeletonList';
 
 interface SimpleSkeletonProps {
@@ -16,7 +15,6 @@ interface SimpleSkeletonProps {
 
 // Skeleton simple
 const SimpleSkeleton: React.FC<SimpleSkeletonProps> = ({ count = 3, list = false, testId }) => {
-  const { styles } = useThemeStyles();
   const items = Array.from({ length: count });
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => list ? (
     <div role="list" aria-label="loading" className="space-y-4" data-testid={testId ? `${testId}-list` : undefined}>{children}</div>
@@ -27,7 +25,7 @@ const SimpleSkeleton: React.FC<SimpleSkeletonProps> = ({ count = 3, list = false
     <Wrapper>
       {items.map((_, i) => (
         <div key={i} className="animate-pulse" role={list ? 'listitem' : undefined}>
-          <div className={`${styles.card('p-4')} space-y-3`} data-testid={`simple-skeleton-${i}`}>
+          <div className="bg-card text-card-foreground border rounded-lg shadow-sm p-4 space-y-3" data-testid={`simple-skeleton-${i}`}>
             <div className="h-4 bg-muted rounded w-3/4" />
             <div className="h-3 bg-muted rounded w-1/2" />
             <div className="h-3 bg-muted rounded w-5/6" />

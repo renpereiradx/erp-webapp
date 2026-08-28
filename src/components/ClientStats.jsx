@@ -1,23 +1,21 @@
 import React, { useEffect } from 'react';
 import useClientStore from '../store/useClientStore';
-import { useThemeStyles } from '../hooks/useThemeStyles';
 import { Users, UserPlus, UserCheck, UserX } from 'lucide-react';
 
 const StatCard = ({ title, value, icon, loading }) => {
-  const { styles } = useThemeStyles();
 
   return (
-    <div className={styles.card()}>
+    <div className="bg-card text-card-foreground border rounded-lg shadow-sm">
       <div className="flex items-center p-4">
         <div className="p-3 bg-primary/10 text-primary rounded-lg mr-4">
           {icon}
         </div>
         <div>
-          <p className={styles.label()}>{title}</p>
+          <p className="text-sm font-medium text-foreground">{title}</p>
           {loading ? (
             <div className="h-8 w-16 bg-muted animate-pulse mt-1 rounded-md"></div>
           ) : (
-            <p className={`text-3xl font-bold ${styles.header('h2')}`}>{value ?? '-'}</p>
+            <p className="text-2xl font-semibold text-foreground">{value ?? '-'}</p>
           )}
         </div>
       </div>

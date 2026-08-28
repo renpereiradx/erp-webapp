@@ -5,7 +5,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Server, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useI18n } from '@/lib/i18n';
 
 export const ApiStatusIndicator = ({ 
@@ -20,7 +19,6 @@ export const ApiStatusIndicator = ({
   ]
 }) => {
   const { t } = useI18n();
-  const { styles } = useThemeStyles();
   const [statuses, setStatuses] = useState({});
   const [isChecking, setIsChecking] = useState(false);
   const [lastCheck, setLastCheck] = useState(null);
@@ -140,7 +138,7 @@ export const ApiStatusIndicator = ({
 
   // Detailed indicator
   return (
-    <div className={`${styles.card('p-4')} ${className}`}>
+    <div className={`bg-card text-card-foreground border rounded-lg shadow-sm p-4 ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Server className="w-5 h-5" />

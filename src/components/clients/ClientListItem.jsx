@@ -1,19 +1,15 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Mail, Phone, FileText, MapPin, Building2, Eye, Star } from 'lucide-react';
-import { useThemeStyles } from '../../hooks/useThemeStyles';
 
 const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
-  const { styles, isNeoBrutalism } = useThemeStyles();
-  
-  // Obtener prioridad con color usando sistema de temas
+  // Prioridad con color (tokens semánticos + escala fija)
   const getPriorityColor = (priority) => {
-    const baseClasses = isNeoBrutalism ? 'border-2 border-black' : 'border';
     switch (priority) {
-      case 'high': return `bg-destructive/10 text-destructive ${baseClasses}`;
-      case 'medium': return `bg-yellow-500/10 text-yellow-700 ${baseClasses}`;
-      case 'low': return `bg-green-500/10 text-green-700 ${baseClasses}`;
-      default: return `bg-muted text-muted-foreground ${baseClasses}`;
+      case 'high': return 'bg-destructive/10 text-destructive border';
+      case 'medium': return 'bg-yellow-500/10 text-yellow-700 border';
+      case 'low': return 'bg-green-500/10 text-green-700 border';
+      default: return 'bg-muted text-muted-foreground border';
     }
   };
 
@@ -28,12 +24,12 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
   };
 
   return (
-    <div className={`${styles.card('p-6')} transition-all duration-200 hover:-translate-y-1 hover:shadow-fluent-8 active:translate-y-0 active:shadow-fluent-2 group cursor-pointer`}>
+    <div className="bg-card text-card-foreground border rounded-lg shadow-sm p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-fluent-8 active:translate-y-0 active:shadow-fluent-2 group cursor-pointer">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-start justify-between mb-3">
-            <h3 
-              className={`${styles.header('h3')} mb-1 group-hover:text-primary transition-colors cursor-pointer`}
+            <h3
+              className="text-xl font-semibold text-foreground mb-1 group-hover:text-primary transition-colors cursor-pointer"
               onClick={() => onView(client)}
               title="Ver detalles del cliente"
             >
@@ -45,25 +41,25 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
               </span>
             )}
           </div>
-          
+
           {/* Información de contacto */}
           <div className="space-y-2 mb-4">
             {client.contact?.email && (
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="w-4 h-4 text-muted-foreground" />
-                <span className={styles.body()}>{client.contact.email}</span>
+                <span className="text-base text-foreground">{client.contact.email}</span>
               </div>
             )}
             {client.contact?.phone && (
               <div className="flex items-center gap-2 text-sm">
                 <Phone className="w-4 h-4 text-muted-foreground" />
-                <span className={styles.body()}>{client.contact.phone}</span>
+                <span className="text-base text-foreground">{client.contact.phone}</span>
               </div>
             )}
             {client.address?.city && (
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
-                <span className={styles.body()}>{client.address.city}, {client.address.country || 'México'}</span>
+                <span className="text-base text-foreground">{client.address.city}, {client.address.country || 'México'}</span>
               </div>
             )}
           </div>
@@ -71,13 +67,13 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
           {/* Información adicional */}
           <div className="flex flex-wrap gap-2 items-center">
             {client.document_id && (
-              <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${styles.badge('secondary')}`}>
+              <div className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-muted text-muted-foreground border-border">
                 <FileText className="w-3 h-3" />
                 <span>CI: {client.document_id}</span>
               </div>
             )}
             {client.metadata?.type && (
-              <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold ${styles.badge('primary')}`}>
+              <div className="flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold bg-primary/10 text-primary border-primary/20">
                 {getClientTypeIcon(client.metadata.type)}
                 <span>{client.metadata.type}</span>
               </div>
@@ -86,36 +82,36 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
 
           {/* Notas si existen */}
           {client.metadata?.notes && (
-            <div className={`mt-3 p-2 rounded-md ${styles.cardNote()}`}>
-              <p className={`text-sm italic ${styles.body('muted')}`}>
+            <div className="mt-3 p-2 rounded-md bg-muted/30 rounded-md">
+              <p className="text-sm italic text-base text-muted-foreground">
                 "{client.metadata.notes}"
               </p>
             </div>
           )}
         </div>
-        
+
         {/* Botones de acción */}
         <div className="flex flex-col gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button 
-            variant="secondary" 
-            size="sm" 
-            onClick={(e) => { e.stopPropagation(); onView(client); }} 
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); onView(client); }}
             title="Ver detalles del cliente"
           >
             <Eye className="w-4 h-4" />
           </Button>
-          <Button 
-            variant="secondary" 
-            size="sm" 
-            onClick={(e) => { e.stopPropagation(); onEdit(client); }} 
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); onEdit(client); }}
             title="Editar Cliente"
           >
             <Edit className="w-4 h-4" />
           </Button>
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={(e) => { e.stopPropagation(); onDelete(client); }} 
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); onDelete(client); }}
             title="Eliminar Cliente"
           >
             <Trash2 className="w-4 h-4" />
@@ -124,7 +120,7 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
       </div>
 
       {/* Footer con fechas */}
-      <div className={`flex justify-between items-center pt-3 text-xs ${styles.cardFooter()} ${styles.body('muted')}`}>
+      <div className="flex justify-between items-center pt-3 text-xs border-t border-border text-base text-muted-foreground">
         <div>
           Creado: {new Date(client.created_at).toLocaleDateString('es-MX')}
         </div>

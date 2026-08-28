@@ -6,7 +6,6 @@
 
 import React, { useState, useMemo, useId, useEffect } from 'react';
 import { Search, User, Users } from 'lucide-react';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
 import useClientStore from '@/store/useClientStore';
 
 const ClientSelector = ({ 
@@ -70,29 +69,17 @@ const ClientSelector = ({
     return allClients.find(client => client.id === selectedClient);
   }, [selectedClient, clients, searchResults]);
 
-  const { styles: themeStyles, isMaterial, isFluent, isNeoBrutalism } = useThemeStyles();
+  // Estilos inline con tokens semánticos (antes via useThemeStyles + flags de
+  // multi-theme muertos: isMaterial/isNeoBrutalism siempre false → rama Fluent).
   const styles = {
     container: 'space-y-3',
-    label: themeStyles.label(),
+    label: 'text-sm font-medium text-foreground',
     selectContainer: 'relative',
     searchContainer: 'relative mb-2',
     searchIcon: 'absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground',
-    // Inputs adaptativos: outlined (Material), subtle (Fluent), fallback base (brutalism mantiene legacy)
-    searchInput: isMaterial
-      ? themeStyles.input('outlined', { density: 'compact', extra: 'pl-10 w-full' })
-      : isFluent
-        ? themeStyles.input('subtle', { density: 'compact', extra: 'pl-10 w-full' })
-        : 'w-full px-3 py-2 pl-10 border-2 border-black rounded-lg focus:border-blue-500 focus:outline-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
-    select: isMaterial
-      ? themeStyles.input('outlined', { density: 'compact', extra: 'w-full' })
-      : isFluent
-        ? themeStyles.input('subtle', { density: 'compact', extra: 'w-full' })
-        : 'w-full px-3 py-2 border-2 border-black rounded-lg focus:border-blue-500 focus:outline-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
-    clientInfo: isMaterial
-      ? themeStyles.card('tonal', { density: 'compact', extra: 'mt-2 p-3 rounded-lg' })
-      : isFluent
-        ? themeStyles.card('subdued', { density: 'compact', extra: 'mt-2 p-3 rounded-lg' })
-        : 'mt-2 p-3 rounded-lg border-2 border-black bg-yellow-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
+    searchInput: 'flex h-10 w-full pl-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+    select: 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+    clientInfo: 'bg-card text-card-foreground border rounded-lg shadow-sm mt-2 p-3 rounded-lg',
     clientName: 'font-medium',
     clientDetails: 'text-sm text-muted-foreground mt-1'
   };

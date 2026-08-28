@@ -5,7 +5,6 @@
 
 import React from 'react';
 import { useI18n } from '@/lib/i18n';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { Button } from '@/components/ui/button';
 
 const EmptyState = ({ 
@@ -19,7 +18,6 @@ const EmptyState = ({
   'data-testid': testId 
 }) => {
   const { t } = useI18n();
-  const { styles } = useThemeStyles();
 
   // Configuración de tamaños
   const sizeConfig = {

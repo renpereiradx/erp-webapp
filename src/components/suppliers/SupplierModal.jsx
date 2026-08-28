@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Building2, AlertCircle, FileText, Phone, Mail, MapPin, MessageSquare } from 'lucide-react';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +15,6 @@ import useSupplierStore from '@/store/useSupplierStore';
 */
 
 const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
-  const { styles } = useThemeStyles();
   const { t } = useI18n();
   const { createSupplier, updateSupplier } = useSupplierStore();
 
@@ -111,11 +109,11 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
 
   return (
     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className={`w-full max-w-lg max-h-[75vh] flex flex-col ${styles.card()} shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}>
+      <div className="w-full max-w-lg max-h-[75vh] flex flex-col bg-card text-card-foreground border rounded-lg shadow-sm shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-3">
-            <h2 className={`${styles.header('h2')} text-lg font-bold`}>
+            <h2 className="text-lg font-bold text-foreground">
               {isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor'}
             </h2>
             {isEditing && (
@@ -140,30 +138,30 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
             )}
             <div className="space-y-4">
               <div>
-                <label className={`${styles.label()} block text-sm font-medium mb-1`}>Nombre del Proveedor *</label>
-                <Input name="name" value={formData.name} onChange={handleChange} required placeholder="Ej: Tech Supplies Inc." className={styles.input()} />
+                <label className="text-sm font-medium text-foreground block text-sm font-medium mb-1">Nombre del Proveedor *</label>
+                <Input name="name" value={formData.name} onChange={handleChange} required placeholder="Ej: Tech Supplies Inc." className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
               </div>
               <div>
-                <label className={`${styles.label()} block text-sm font-medium mb-1`}>RUC/Tax ID</label>
-                <Input name="tax_id" value={formData.tax_id} onChange={handleChange} placeholder="Ej: 12345678-9" className={styles.input()} />
+                <label className="text-sm font-medium text-foreground block text-sm font-medium mb-1">RUC/Tax ID</label>
+                <Input name="tax_id" value={formData.tax_id} onChange={handleChange} placeholder="Ej: 12345678-9" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={`${styles.label()} block text-sm font-medium mb-1`}>Email</label>
-                  <Input name="email" value={formData.email} onChange={handleChange} type="email" placeholder="email@dominio.com" className={styles.input()} />
+                  <label className="text-sm font-medium text-foreground block text-sm font-medium mb-1">Email</label>
+                  <Input name="email" value={formData.email} onChange={handleChange} type="email" placeholder="email@dominio.com" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 </div>
                 <div>
-                  <label className={`${styles.label()} block text-sm font-medium mb-1`}>Teléfono</label>
-                  <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="Ej: +595..." className={styles.input()} />
+                  <label className="text-sm font-medium text-foreground block text-sm font-medium mb-1">Teléfono</label>
+                  <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="Ej: +595..." className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 </div>
               </div>
               <div>
-                <label className={`${styles.label()} block text-sm font-medium mb-1`}>Dirección</label>
-                <Input name="address" value={formData.address} onChange={handleChange} placeholder="Ej: Av. Mcal. López 1234, Asunción" className={styles.input()} />
+                <label className="text-sm font-medium text-foreground block text-sm font-medium mb-1">Dirección</label>
+                <Input name="address" value={formData.address} onChange={handleChange} placeholder="Ej: Av. Mcal. López 1234, Asunción" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
               </div>
               <div>
-                <label className={`${styles.label()} block text-sm font-medium mb-1`}>Fax</label>
-                <Input name="fax" value={formData.fax} onChange={handleChange} placeholder="Ej: FAX-PAR-6356" className={styles.input()} />
+                <label className="text-sm font-medium text-foreground block text-sm font-medium mb-1">Fax</label>
+                <Input name="fax" value={formData.fax} onChange={handleChange} placeholder="Ej: FAX-PAR-6356" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
               </div>
               {isEditing && (
                 <div className="pt-2 border-t text-xs text-muted-foreground">

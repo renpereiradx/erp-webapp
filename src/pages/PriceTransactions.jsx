@@ -20,14 +20,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProductSearchInput from '@/components/ui/ProductSearchInput';
 import DataState from '@/components/ui/DataState';
 import { useI18n } from '@/lib/i18n';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
+
 import { usePriceTransactions } from '@/hooks/usePriceTransactions';
 import { useCostTransactions } from '@/hooks/useCostTransactions';
 import { useAuth } from '@/contexts/AuthContext';
 
 const PriceTransactionsPage = () => {
   const { t } = useI18n();
-  const { styles, isNeoBrutalism } = useThemeStyles();
   const { hasPermission } = useAuth();
   const canWrite = hasPermission('products:write');
   const {
@@ -409,7 +408,7 @@ const PriceTransactionsPage = () => {
                     placeholder="Buscar producto por ID, nombre o código..."
                   />
                   {selectedProduct && (
-                    <div className={`${styles.card()} p-4 mt-2 bg-blue-50`}>
+                    <div className={`bg-card text-card-foreground border rounded-lg shadow-sm p-4 mt-2 bg-blue-50`}>
                       <h4 className="font-bold text-blue-900">
                         {selectedProduct.name || selectedProduct.product_name}
                       </h4>
@@ -919,7 +918,7 @@ const PriceTransactionsPage = () => {
                     const status = interpretConsistencyStatus(report.consistency_status);
                     
                     return (
-                      <div key={report.product_id} className={`${styles.card()} p-4`}>
+                      <div key={report.product_id} className={`bg-card text-card-foreground border rounded-lg shadow-sm p-4`}>
                         <div className="flex items-start justify-between">
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
@@ -977,7 +976,7 @@ const PriceTransactionsPage = () => {
       {/* Modal de Historial de Producto */}
       {showHistoryModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className={`${styles.card()} w-full max-w-4xl max-h-[90vh] overflow-y-auto`}>
+          <div className={`bg-card text-card-foreground border rounded-lg shadow-sm w-full max-w-4xl max-h-[90vh] overflow-y-auto`}>
             <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-lg font-semibold">{recentPriceType === 'COST_PRICE' ? 'Historial de Costos' : 'Historial de Precios'}</h2>
               <Button
@@ -997,7 +996,7 @@ const PriceTransactionsPage = () => {
               ) : (
                 <div className="space-y-4">
                   {productHistory.map(item => (
-                    <div key={item.transaction_id} className={`${styles.card()} p-4`}>
+                    <div key={item.transaction_id} className={`bg-card text-card-foreground border rounded-lg shadow-sm p-4`}>
                       <div className="flex justify-between items-start">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
@@ -1039,7 +1038,7 @@ const PriceTransactionsPage = () => {
       {/* Modal de Reporte de Variación */}
       {showVarianceModal && varianceReport && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className={`${styles.card()} w-full max-w-6xl max-h-[90vh] overflow-y-auto`}>
+          <div className={`bg-card text-card-foreground border rounded-lg shadow-sm w-full max-w-6xl max-h-[90vh] overflow-y-auto`}>
             <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-lg font-semibold">Reporte de Variación de Precios</h2>
               <Button
@@ -1082,7 +1081,7 @@ const PriceTransactionsPage = () => {
 
               <div className="space-y-4">
                 {varianceReport.reports.map(report => (
-                  <div key={report.product_id} className={`${styles.card()} p-4`}>
+                  <div key={report.product_id} className={`bg-card text-card-foreground border rounded-lg shadow-sm p-4`}>
                     <div className="grid grid-cols-1 md:grid-cols-6 gap-4 text-sm">
                       <div>
                         <p className="font-bold">{report.product_name}</p>

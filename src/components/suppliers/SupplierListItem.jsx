@@ -1,19 +1,15 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Mail, Phone, FileText, MapPin, Building2, Tag, Eye, RotateCcw } from 'lucide-react';
-import { useThemeStyles } from '../../hooks/useThemeStyles';
 
 const SupplierListItem = ({ supplier, onEdit, onDelete, onView, onReactivate }) => {
-  const { styles, isNeoBrutalism } = useThemeStyles();
-  
-  // Obtener prioridad con color usando sistema de temas
+  // Prioridad con color (tokens semánticos + escala fija)
   const getPriorityColor = (priority) => {
-    const baseClasses = isNeoBrutalism ? 'border-2 border-black' : 'border';
     switch (priority) {
-      case 'high': return `bg-destructive/10 text-destructive ${baseClasses}`;
-      case 'medium': return `bg-yellow-500/10 text-yellow-700 ${baseClasses}`;
-      case 'low': return `bg-green-500/10 text-green-700 ${baseClasses}`;
-      default: return `bg-muted text-muted-foreground ${baseClasses}`;
+      case 'high': return 'bg-destructive/10 text-destructive';
+      case 'medium': return 'bg-yellow-500/10 text-yellow-700';
+      case 'low': return 'bg-green-500/10 text-green-700';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -30,15 +26,15 @@ const SupplierListItem = ({ supplier, onEdit, onDelete, onView, onReactivate }) 
   };
 
   return (
-    <div className={`${styles.card('p-6')} transition-all duration-200 hover:-translate-y-1 hover:shadow-fluent-8 active:translate-y-0 active:shadow-fluent-2 group cursor-pointer ${supplier.status === false ? 'opacity-70 border-dashed border-2' : ''}`}>
+    <div className="bg-card text-card-foreground border rounded-lg shadow-sm p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-fluent-8 active:translate-y-0 active:shadow-fluent-2 group cursor-pointer ${supplier.status === false ? 'opacity-70 border-dashed border-2' : ''}">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-start justify-between mb-3">
-            <h3 className={`${styles.header('h3')} mb-1 group-hover:text-primary transition-colors`}>
+            <h3 className="text-xl font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
               {supplier.name}
             </h3>
             {supplier.metadata?.priority && (
-              <span className={`px-2 py-1 text-xs font-bold rounded-md border ${getPriorityColor(supplier.metadata.priority)} ${isNeoBrutalism ? 'border-2 border-black' : ''}`}>
+              <span className={`px-2 py-1 text-xs font-bold rounded-md border ${getPriorityColor(supplier.metadata.priority)}`}>
                 {supplier.metadata.priority.toUpperCase()}
               </span>
             )}
@@ -49,19 +45,19 @@ const SupplierListItem = ({ supplier, onEdit, onDelete, onView, onReactivate }) 
             {supplier.contact?.email && (
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="w-4 h-4 text-muted-foreground" />
-                <span className={styles.body()}>{supplier.contact.email}</span>
+                <span className="text-base text-foreground">{supplier.contact.email}</span>
               </div>
             )}
             {supplier.contact?.phone && (
               <div className="flex items-center gap-2 text-sm">
                 <Phone className="w-4 h-4 text-muted-foreground" />
-                <span className={styles.body()}>{supplier.contact.phone}</span>
+                <span className="text-base text-foreground">{supplier.contact.phone}</span>
               </div>
             )}
             {supplier.address?.city && (
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
-                <span className={styles.body()}>{supplier.address.city}, {supplier.address.country || 'México'}</span>
+                <span className="text-base text-foreground">{supplier.address.city}, {supplier.address.country || 'México'}</span>
               </div>
             )}
           </div>

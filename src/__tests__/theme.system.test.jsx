@@ -10,7 +10,6 @@ import React from 'react';
 
 // Import theme system components
 import { ThemeProvider, useTheme, useThemeHelpers, useCurrentTheme, useThemeActions } from '../contexts/ThemeContext';
-import { useThemeStyles, useButtonStyles, useTypographyStyles } from '../hooks/useThemeStyles';
 import { THEME_CONFIG, DEFAULT_THEME, isValidTheme, getAllThemeClasses } from '../config/themes';
 
 // Import test utilities
@@ -298,78 +297,9 @@ describe('Theme System', () => {
     });
   });
 
-  describe('useThemeStyles Hook', () => {
-    it('should return valid styles object', () => {
-      const { result } = renderHook(() => useThemeStyles(), {
-        wrapper: ThemeProvider,
-      });
-
-      expect(validateStylesObject(result.current.styles)).toBe(true);
-    });
-
-    it('should provide theme information', () => {
-      const { result } = renderHook(() => useThemeStyles(), {
-        wrapper: ThemeProvider,
-      });
-
-      expect(result.current).toHaveProperty('theme');
-      expect(result.current).toHaveProperty('type');
-      expect(result.current).toHaveProperty('mode');
-      expect(result.current).toHaveProperty('isNeoBrutalism');
-      expect(result.current).toHaveProperty('isMaterial');
-      expect(result.current).toHaveProperty('isFluent');
-      expect(result.current).toHaveProperty('isDark');
-      expect(result.current).toHaveProperty('isLight');
-    });
-
-    it('should generate different styles for different themes', () => {
-      const { result, rerender } = renderHook(() => useThemeStyles(), {
-        wrapper: ThemeProvider,
-      });
-
-      const brutalistButton = result.current.styles.button('primary');
-
-      // Change theme
-      act(() => {
-        result.current.setTheme('material-light');
-      });
-
-      rerender();
-
-      const materialButton = result.current.styles.button('primary');
-      
-      expect(brutalistButton).not.toBe(materialButton);
-    });
-  });
-
-  describe('Specialized Style Hooks', () => {
-    it('should provide button styles efficiently', () => {
-      const { result } = renderHook(() => useButtonStyles('primary'), {
-        wrapper: ThemeProvider,
-      });
-
-      expect(typeof result.current).toBe('string');
-      expect(result.current.length).toBeGreaterThan(0);
-    });
-
-    it('should provide typography styles efficiently', () => {
-      const { result } = renderHook(() => useTypographyStyles(), {
-        wrapper: ThemeProvider,
-      });
-
-      expect(result.current).toHaveProperty('h1');
-      expect(result.current).toHaveProperty('h2');
-      expect(result.current).toHaveProperty('h3');
-      expect(result.current).toHaveProperty('body');
-      expect(result.current).toHaveProperty('bodyMuted');
-      expect(result.current).toHaveProperty('label');
-
-      // All values should be strings
-      Object.values(result.current).forEach(style => {
-        expect(typeof style).toBe('string');
-      });
-    });
-  });
+  // NOTE: useThemeStyles/useButtonStyles/useTypographyStyles fueron eliminados
+  // (2026-08-28): 21 importadores migrados a clases Tailwind semánticas directas.
+  // Los estilos base viven en src/components/ui/* y DESIGN.md §6.
 
   describe('DOM Manipulation', () => {
     it('should apply theme classes to DOM', async () => {

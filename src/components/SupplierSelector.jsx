@@ -24,9 +24,6 @@ const SupplierSelector = ({
   error = null,
   'data-testid': dataTestId = 'supplier-selector'
 }) => {
-  // Para MVP - estilos fijos sin hooks problemáticos
-  const themeStyles = { styles: { input: () => 'input-class', card: (classes = '') => `card-class ${classes}`, label: () => 'label-class' } };
-  const styles = themeStyles.styles || themeStyles;
   const supplierLogic = useSupplierLogic();
   
   const [localSearch, setLocalSearch] = useState('');
@@ -95,8 +92,8 @@ const SupplierSelector = ({
 
   // Estilos dinámicos
   const containerClasses = `relative ${className}`;
-  const inputClasses = `${styles.input()} ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`;
-  const dropdownClasses = `absolute top-full left-0 right-0 z-50 mt-1 max-h-64 overflow-auto ${styles.card()} border`;
+  const inputClasses = `flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`;
+  const dropdownClasses = `absolute top-full left-0 right-0 z-50 mt-1 max-h-64 overflow-auto bg-card text-card-foreground border rounded-lg shadow-sm border`;
   const generatedId = useId();
   const searchInputId = `supplier-search-${generatedId}`;
   const fallbackSelectId = `supplier-select-${generatedId}`;
@@ -104,7 +101,7 @@ const SupplierSelector = ({
   return (
     <div className={containerClasses} data-testid={dataTestId}>
       {/* Label */}
-      <label className={styles.label()} htmlFor={fallbackSelectId} data-testid="supplier-label">
+      <label className="text-sm font-medium text-foreground" htmlFor={fallbackSelectId} data-testid="supplier-label">
         <Building className="inline w-4 h-4 mr-2" />
         Proveedor{required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -216,7 +213,7 @@ const SupplierSelector = ({
 
       {/* Información del proveedor seleccionado */}
       {showDetails && selectedSupplierInfo && (
-        <div className={`mt-3 ${styles.card('p-3')}`} data-testid="supplier-info">
+        <div className="mt-3 bg-card text-card-foreground border rounded-lg shadow-sm p-3" data-testid="supplier-info">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="font-medium text-gray-900 flex items-center">

@@ -1,6 +1,5 @@
 export default function EditableField({ value, label, type='text', name, onSave, validate, disabled, editing: editingProp, allowEnterSubmit = false }) {
   const { t } = useI18n();
-  const { styles } = useThemeStyles();
   const resolvedLabel = label || (name === 'price' ? (t('field.price') || 'Precio') : name === 'stock' ? (t('field.stock') || 'Stock') : (t(`field.${name}`) || label || name));
   const [editingState, setEditingState] = React.useState(false);
   const isControlled = typeof editingProp === 'boolean';
@@ -64,13 +63,13 @@ export default function EditableField({ value, label, type='text', name, onSave,
               onChange={(e) => setLocal(e.target.value)}
               onKeyDown={handleKeyDown}
               type={type}
-              className={`w-24 ${styles.input()}`}
+              className="w-24 flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={saving}
               autoFocus
               data-testid={`editable-${name}-input`}
             />
-            <button type="submit" disabled={saving} className={styles.button('primary')} data-testid={`editable-${name}-save`} style={{ fontSize: '0.85em', padding: '0.25em 0.5em' }}>{saving ? '...' : (t('products.inline.save') || 'OK')}</button>
-            <button type="button" onClick={cancel} disabled={saving} className={styles.button('secondary')} data-testid={`editable-${name}-cancel`} style={{ fontSize: '0.85em', padding: '0.25em 0.5em' }}>{t('products.inline.cancel') || 'X'}</button>
+            <button type="submit" disabled={saving} className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors" data-testid={`editable-${name}-save`} style={{ fontSize: '0.85em', padding: '0.25em 0.5em' }}>{saving ? '...' : (t('products.inline.save') || 'OK')}</button>
+            <button type="button" onClick={cancel} disabled={saving} className="bg-secondary text-secondary-foreground hover:bg-secondary/80 border px-4 py-2 rounded-md font-medium transition-colors" data-testid={`editable-${name}-cancel`} style={{ fontSize: '0.85em', padding: '0.25em 0.5em' }}>{t('products.inline.cancel') || 'X'}</button>
             {error && <span role="alert" className="text-red-500 ml-1" data-testid={`editable-${name}-error`}>{error}</span>}
           </form>
           <button type="button" onClick={handleEditButtonClick} className="underline text-primary focus:outline-none focus:ring-2 focus:ring-ring/50" data-testid={`editable-${name}-focus`}>{t('action.edit') || 'Editar'}</button>
