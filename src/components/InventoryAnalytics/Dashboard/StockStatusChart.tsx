@@ -31,7 +31,7 @@ export const StockStatusChart: React.FC<StockStatusChartProps> = ({
         </button>
       </div>
       <div className="flex flex-col md:flex-row items-center gap-8">
-        <div className="relative size-48 flex-shrink-0">
+        <div className="relative size-48 shrink-0">
           <svg className="size-full transform -rotate-90" viewBox="0 0 36 36">
             {items.map((item, index) => {
               const dashArray = `${item.percentage}, 100`;

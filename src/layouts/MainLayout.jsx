@@ -784,7 +784,7 @@ const MainLayout = ({ children }) => {
       {isClient && isLargeScreen && (
         <aside
           ref={sidebarRef}
-          className={`${isSidebarExpanded ? 'w-72' : 'w-20'} flex-shrink-0 border-r border-border-subtle bg-white flex flex-col sticky top-0 h-screen z-[60] transition-all duration-300 ease-in-out`}
+          className={`${isSidebarExpanded ? 'w-72' : 'w-20'} shrink-0 border-r border-border-subtle bg-white flex flex-col sticky top-0 h-screen z-[60] transition-all duration-300 ease-in-out`}
         >
           <div className={`p-6 flex items-center ${isSidebarExpanded ? 'justify-between' : 'justify-center'} gap-3`}>
             {isSidebarExpanded ? (

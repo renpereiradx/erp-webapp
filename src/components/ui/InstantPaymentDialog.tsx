@@ -257,8 +257,8 @@ const InstantPaymentDialog = ({
 
   return (
     <AlertDialog open={open}>
-      <AlertDialogContent className='sm:max-w-lg p-0 overflow-hidden radix-dialog__content bg-surface-container-lowest border-none shadow-whisper rounded-md'>
-        <AlertDialogHeader className='px-6 py-5 border-b border-surface-variant bg-surface-container-low'>
+      <AlertDialogContent className='sm:max-w-lg p-0 overflow-hidden radix-dialog__content bg-surface border-none shadow-whisper rounded-md'>
+        <AlertDialogHeader className='px-6 py-5 border-b border-surface-deep bg-surface-muted'>
           <div className='flex items-start gap-3'>
             <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100/80 dark:bg-green-900/30 backdrop-blur-sm'>
               <CheckCircle2 className='h-5 w-5 text-green-600 dark:text-green-400' />
@@ -342,7 +342,7 @@ const InstantPaymentDialog = ({
                   }
                 }}
                 disabled={processing}
-                className='flex h-12 w-full rounded-sm border border-outline-variant bg-surface-container-lowest px-4 py-2 pr-16 text-lg font-data-mono font-black text-on-surface transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50'
+                className='flex h-12 w-full rounded-sm border border-divider bg-surface px-4 py-2 pr-16 text-lg font-data-mono font-black text-foreground transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50'
               />
               <div className='absolute inset-y-1 right-1 flex items-center px-3 rounded-md bg-slate-50 border border-slate-100 pointer-events-none text-slate-500 text-xs font-bold tracking-widest uppercase'>
                 {resolvedCurrencyCode}
@@ -373,7 +373,7 @@ const InstantPaymentDialog = ({
                   value={selectedMethodId}
                   onChange={e => setSelectedMethodId(e.target.value)}
                   disabled={processing}
-                  className='flex h-10 w-full items-center justify-between rounded-sm border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20'
+                  className='flex h-10 w-full items-center justify-between rounded-sm border border-divider bg-surface px-3 py-2 text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20'
                 >
                   {paymentMethods.length === 0 && <option value=''>Cargando metodos...</option>}
                   {paymentMethods.map(method => (
@@ -394,7 +394,7 @@ const InstantPaymentDialog = ({
                 value={cashRegisterId || ''}
                 onChange={e => setCashRegisterId(e.target.value || null)}
                 disabled={processing || isCashRegistersLoading}
-                className='flex h-10 w-full items-center justify-between rounded-sm border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20'
+                className='flex h-10 w-full items-center justify-between rounded-sm border border-divider bg-surface px-3 py-2 text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20'
               >
                 <option value=''>{t('sales.registerPaymentModal.cashRegister.none', 'Sin caja asignada')}</option>
                 {isCashRegistersLoading && <option disabled>Cargando cajas...</option>}
@@ -440,7 +440,7 @@ const InstantPaymentDialog = ({
           )}
         </div>
 
-        <AlertDialogFooter className='px-6 py-4 border-t border-surface-variant bg-surface-container-low sm:grid sm:grid-cols-2 sm:gap-2 sm:space-x-0'>
+        <AlertDialogFooter className='px-6 py-4 border-t border-surface-deep bg-surface-muted sm:grid sm:grid-cols-2 sm:gap-2 sm:space-x-0'>
           <AlertDialogCancel onClick={onLeavePending} disabled={processing} className='sm:w-full mt-0 rounded-button'>
             {t(`${prefix}.leavePending`, 'Dejar Pendiente')}
           </AlertDialogCancel>

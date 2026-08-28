@@ -183,7 +183,7 @@ const BudgetDetail: React.FC = () => {
           {budget.notes && (
             <Card className="border-border-subtle bg-amber-50/30">
                <CardContent className="p-6 flex gap-4">
-                  <AlertCircle className="text-amber-600 flex-shrink-0" size={20} />
+                  <AlertCircle className="text-warning shrink-0" size={20} />
                   <div>
                      <p className="text-[10px] font-black uppercase text-amber-700 tracking-wider mb-2">Notas y Observaciones</p>
                      <p className="text-sm text-amber-900 font-medium leading-relaxed">{budget.notes}</p>

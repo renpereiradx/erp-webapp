@@ -94,11 +94,11 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
   const baseStock = Math.max(0, totalConsolidatedStock - variantsTotalStock);
 
   return (
-    <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-surface-container-lowest rounded-md shadow-whisper w-full max-w-3xl overflow-hidden animate-in zoom-in-95 flex flex-col md:flex-row md:min-h-[450px]">
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-surface rounded-md shadow-whisper w-full max-w-3xl overflow-hidden animate-in zoom-in-95 flex flex-col md:flex-row md:min-h-[450px]">
         
         {/* Left Panel: Product Identity & Details */}
-        <div className="w-full md:w-2/5 bg-surface p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-surface-variant">
+        <div className="w-full md:w-2/5 bg-background p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-surface-deep">
           <div>
             <div className="flex items-center gap-2 mb-4">
               <span className="px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-[4px] flex items-center gap-1 text-label-caps">
@@ -107,7 +107,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
               </span>
             </div>
             
-            <h2 className="text-headline-lg-mobile text-on-surface leading-tight line-clamp-3">
+            <h2 className="text-headline-lg-mobile text-foreground leading-tight line-clamp-3">
               {product.name || product.product_name}
             </h2>
             <p className="text-body-sm text-outline font-data-mono mt-1.5 uppercase tracking-wider">
@@ -116,12 +116,12 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
 
             <div className="mt-6 space-y-4">
               {/* Product Info Badges */}
-              <div className="bg-surface-container-low border border-surface-variant rounded-md p-4 space-y-3">
-                <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
+              <div className="bg-surface-muted border border-surface-deep rounded-md p-4 space-y-3">
+                <div className="flex justify-between items-center text-body-sm text-on-surface-deep">
                   <span className="flex items-center gap-1.5"><Tag size={14} /> Precio Base:</span>
-                  <span className="font-data-mono text-on-surface font-bold">{formatPrice(product.price)}</span>
+                  <span className="font-data-mono text-foreground font-bold">{formatPrice(product.price)}</span>
                 </div>
-                <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
+                <div className="flex justify-between items-center text-body-sm text-on-surface-deep">
                   <span className="flex items-center gap-1.5"><Package size={14} /> Stock Total:</span>
                   <span className={cn("font-data-mono font-bold", totalConsolidatedStock > 0 ? "text-success" : "text-error")}>
                     {totalConsolidatedStock} {product.base_unit || 'unid'}
@@ -129,13 +129,13 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                 </div>
                 {variants.length > 0 && (
                   <>
-                    <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
+                    <div className="flex justify-between items-center text-body-sm text-on-surface-deep">
                       <span className="flex items-center gap-1.5 pl-4 opacity-80"><Package size={12} /> Base (Sin var.):</span>
                       <span className={cn("font-data-mono font-bold text-sm", baseStock > 0 ? "text-success" : "text-error")}>
                         {baseStock} {product.base_unit || 'unid'}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
+                    <div className="flex justify-between items-center text-body-sm text-on-surface-deep">
                       <span className="flex items-center gap-1.5 pl-4 opacity-80"><Layers size={12} /> Variantes:</span>
                       <span className={cn("font-data-mono font-bold text-sm", variantsTotalStock > 0 ? "text-success" : "text-error")}>
                         {variantsTotalStock} {product.base_unit || 'unid'}
@@ -144,9 +144,9 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                   </>
                 )}
                 {product.taxRate !== undefined && (
-                  <div className="flex justify-between items-center text-body-sm text-on-surface-variant">
+                  <div className="flex justify-between items-center text-body-sm text-on-surface-deep">
                     <span className="flex items-center gap-1.5"><Info size={14} /> IVA:</span>
-                    <span className="font-data-mono text-on-surface font-bold">{product.taxRate}%</span>
+                    <span className="font-data-mono text-foreground font-bold">{product.taxRate}%</span>
                   </div>
                 )}
               </div>
@@ -161,13 +161,13 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
         </div>
 
         {/* Right Panel: Variant Selector and Options */}
-        <div className="w-full md:w-3/5 flex flex-col justify-between bg-surface-container-lowest">
+        <div className="w-full md:w-3/5 flex flex-col justify-between bg-surface">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-surface-variant flex items-center justify-between">
-            <h3 className="text-title-md text-on-surface">Atributos del Producto</h3>
+          <div className="px-6 py-4 border-b border-surface-deep flex items-center justify-between">
+            <h3 className="text-title-md text-foreground">Atributos del Producto</h3>
             <button 
               onClick={onClose} 
-              className="p-1.5 text-outline hover:text-on-surface hover:bg-surface-container rounded-button transition-all"
+              className="p-1.5 text-outline hover:text-foreground hover:bg-surface-subtle rounded-button transition-all"
             >
               <X size={18} />
             </button>
@@ -196,12 +196,12 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                       className={cn(
                         "flex items-center justify-between p-3.5 rounded-md border transition-all",
                         isOutOfStock 
-                          ? "bg-surface-container opacity-60 border-surface-variant grayscale-[0.2]" 
-                          : "bg-surface-container-lowest border-surface-variant hover:border-primary/40 hover:shadow-sm"
+                          ? "bg-surface-subtle opacity-60 border-surface-deep grayscale-[0.2]" 
+                          : "bg-surface border-surface-deep hover:border-primary/40 hover:shadow-sm"
                       )}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2.5 bg-surface-container-low rounded-md text-outline flex-shrink-0">
+                        <div className="p-2.5 bg-surface-muted rounded-md text-outline shrink-0">
                           <Package size={16} />
                         </div>
                         <div className="min-w-0">
@@ -209,7 +209,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                           <p className="text-[10px] text-slate-400 font-mono uppercase mt-0.5 truncate">{v.sku}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4 flex-shrink-0">
+                      <div className="flex items-center gap-4 shrink-0">
                         <div className="text-right">
                           <p className="text-sm font-black text-slate-800">{formatPrice(v.current_price)}</p>
                           <p className={cn(
@@ -280,15 +280,15 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                                 isSelected
                                   ? "bg-primary text-on-primary border-primary shadow-sm shadow-primary/25"
                                   : hasStock
-                                    ? "bg-surface-container-lowest text-on-surface border-surface-variant hover:border-primary/50 hover:bg-surface-container-low"
-                                    : "bg-surface-container text-on-surface-variant border-surface-variant line-through cursor-not-allowed opacity-50"
+                                    ? "bg-surface text-foreground border-surface-deep hover:border-primary/50 hover:bg-surface-muted"
+                                    : "bg-surface-subtle text-on-surface-deep border-surface-deep line-through cursor-not-allowed opacity-50"
                               )}
                               disabled={!hasStock && !isSelected}
                               title={!hasStock ? 'Sin stock disponible' : undefined}
                             >
                               {val}
                               {isSelected && (
-                                <Check size={12} className="text-white flex-shrink-0" />
+                                <Check size={12} className="text-white shrink-0" />
                               )}
                             </button>
                           );
@@ -302,7 +302,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
           </div>
 
           {/* Footer Action Area */}
-          <div className="p-6 border-t border-surface-variant bg-surface-container-lowest space-y-4">
+          <div className="p-6 border-t border-surface-deep bg-surface space-y-4">
             {attributeKeys.length > 0 && (
               <div>
                 {attributeKeys.every(k => selectedAttributes[k]) ? (
@@ -322,7 +322,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                         </h4>
                         <p className="text-[10px] text-slate-500 font-mono mt-1">SKU: {selectedVariant.sku}</p>
                       </div>
-                      <div className="text-right flex-shrink-0 ml-4">
+                      <div className="text-right shrink-0 ml-4">
                         <p className="text-base font-black text-slate-850">
                           {formatPrice(selectedVariant.current_price)}
                         </p>
@@ -335,13 +335,13 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                       </div>
                     </div>
                   ) : (
-                    <div className="p-4 bg-surface-container border border-surface-variant rounded-md text-center flex items-center justify-center gap-2">
-                      <AlertCircle size={18} className="text-on-surface-variant" />
-                      <p className="text-body-sm-bold text-on-surface-variant">Esta combinación no está disponible en catálogo.</p>
+                    <div className="p-4 bg-surface-subtle border border-surface-deep rounded-md text-center flex items-center justify-center gap-2">
+                      <AlertCircle size={18} className="text-on-surface-deep" />
+                      <p className="text-body-sm-bold text-on-surface-deep">Esta combinación no está disponible en catálogo.</p>
                     </div>
                   )
                 ) : (
-                  <div className="p-3.5 border border-dashed border-surface-variant rounded-md text-center bg-surface-container-low text-on-surface-variant text-body-sm">
+                  <div className="p-3.5 border border-dashed border-surface-deep rounded-md text-center bg-surface-muted text-on-surface-deep text-body-sm">
                     Completa la selección de los atributos para ver disponibilidad.
                   </div>
                 )}
@@ -357,12 +357,12 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                 className={cn(
                   "flex-1 px-4 py-2.5 rounded-button transition-all flex flex-col items-center justify-center gap-0.5 border",
                   product.product_type !== 'SERVICE' && baseStock <= 0
-                    ? "bg-surface-container text-on-surface-variant border-surface-variant opacity-60 cursor-not-allowed"
-                    : "bg-surface-container hover:bg-surface-container-low text-on-surface text-body-sm-bold border-transparent"
+                    ? "bg-surface-subtle text-on-surface-deep border-surface-deep opacity-60 cursor-not-allowed"
+                    : "bg-surface-subtle hover:bg-surface-muted text-foreground text-body-sm-bold border-transparent"
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <Package size={14} className={product.product_type !== 'SERVICE' && baseStock <= 0 ? "text-on-surface-variant" : "text-primary"} />
+                  <Package size={14} className={product.product_type !== 'SERVICE' && baseStock <= 0 ? "text-on-surface-deep" : "text-primary"} />
                   Producto principal
                 </div>
                 {product.product_type !== 'SERVICE' && (

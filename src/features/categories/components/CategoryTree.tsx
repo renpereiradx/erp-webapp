@@ -52,7 +52,7 @@ export function CategoryTree({
           className={`flex items-center justify-between p-sm rounded-lg cursor-pointer transition-colors group mt-xs ${
             isSelected
               ? 'bg-primary/10 text-primary font-bold'
-              : 'hover:bg-surface-container-low text-on-surface-variant'
+              : 'hover:bg-surface-muted text-on-surface-deep'
           }`}
           style={{ marginLeft: `${level * 1.5}rem` }}
         >
@@ -61,7 +61,7 @@ export function CategoryTree({
               onClick={(e) => hasChildren && toggleExpand(cat.id, e)}
               className={`material-symbols-outlined text-[18px] transition-colors ${
                 hasChildren ? 'cursor-pointer hover:text-primary' : 'opacity-0'
-              } ${isSelected ? 'text-primary' : 'text-on-surface-variant'}`}
+              } ${isSelected ? 'text-primary' : 'text-on-surface-deep'}`}
             >
               {hasChildren ? (isExpanded ? 'keyboard_arrow_down' : 'chevron_right') : 'remove'}
             </span>
@@ -81,9 +81,9 @@ export function CategoryTree({
   };
 
   return (
-    <div className="flex flex-col bg-surface rounded-[16px] shadow-sm border border-outline-variant/30 p-lg h-full min-h-[500px]">
-      <div className="flex justify-between items-center mb-md border-b border-outline-variant/20 pb-sm">
-        <h2 className="text-title-md font-title-md text-on-surface font-bold">Árbol de Categorías</h2>
+    <div className="flex flex-col bg-background rounded-[16px] shadow-sm border border-divider/30 p-lg h-full min-h-[500px]">
+      <div className="flex justify-between items-center mb-md border-b border-divider/20 pb-sm">
+        <h2 className="text-title-md font-title-md text-foreground font-bold">Árbol de Categorías</h2>
         <button
           onClick={onAddCategory}
           type="button"
@@ -94,7 +94,7 @@ export function CategoryTree({
       </div>
       <div className="flex-1 overflow-y-auto pr-xs custom-scrollbar">
         {categories.length === 0 ? (
-          <div className="p-sm text-on-surface-variant text-body-sm">No hay categorías.</div>
+          <div className="p-sm text-on-surface-deep text-body-sm">No hay categorías.</div>
         ) : (
           rootCategories.map((cat) => renderCategory(cat, 0))
         )}

@@ -190,7 +190,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
       <div className="space-y-5">
         {/* Caja de cobro */}
         <div className="space-y-2">
-          <label className="text-label-caps text-on-surface-variant" htmlFor="wizard-cash-register">
+          <label className="text-label-caps text-on-surface-deep" htmlFor="wizard-cash-register">
             {t('sales.checkoutWizard.collection.cashRegister', 'Caja de cobro')}
           </label>
           <div className="relative">
@@ -199,7 +199,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
               value={cashRegisterId || ''}
               onChange={(e) => setCashRegisterId(e.target.value || null)}
               disabled={isLoadingRegisters}
-              className="flex h-11 w-full rounded-sm border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+              className="flex h-11 w-full rounded-sm border border-divider bg-surface px-3 py-2 text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
             >
               <option value="">{t('sales.checkoutWizard.collection.noCashRegister', 'Sin caja asignada')}</option>
               {isLoadingRegisters && (
@@ -228,7 +228,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
 
           {/* Guía: la caja es opcional, pero el operador debe saber qué está pasando. */}
           {!isLoadingRegisters && cashRegisterId == null && (
-            <p className="flex items-start gap-2 text-xs text-on-surface-variant">
+            <p className="flex items-start gap-2 text-xs text-on-surface-deep">
               <Info size={14} className="mt-0.5 shrink-0" />
               <span>
                 {t(
@@ -255,7 +255,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
         {isCash && (
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-bold uppercase text-on-surface-variant flex items-center gap-2 mb-2">
+              <label className="text-xs font-bold uppercase text-on-surface-deep flex items-center gap-2 mb-2">
                 <Calculator size={14} />
                 {isForeign
                   ? t('sales.checkoutWizard.collection.amountReceivedForeign', 'Monto recibido ({currency})', {
@@ -274,7 +274,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
                 placeholder="0"
               />
               {isForeign && (
-                <p className="mt-1.5 text-xs text-on-surface-variant font-data-mono">
+                <p className="mt-1.5 text-xs text-on-surface-deep font-data-mono">
                   {t('sales.checkoutWizard.collection.foreignDueLabel', 'A cobrar: {amount}', {
                     amount: formatCurrency(foreignDue, foreignCode),
                   })}
@@ -323,13 +323,13 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
               </div>
             )}
 
-            <div className="p-4 bg-on-surface rounded-md flex items-center justify-between">
+            <div className="p-4 bg-foreground rounded-md flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                <span className="text-xs font-bold uppercase tracking-widest text-on-surface-deep">
                   {t('sales.checkoutWizard.change', 'Vuelto')}
                 </span>
                 {isForeign && (
-                  <p className="text-[10px] text-on-surface-variant/70 uppercase tracking-wide">
+                  <p className="text-[10px] text-on-surface-deep/70 uppercase tracking-wide">
                     {t('sales.checkoutWizard.collection.changeInBase', 'se entrega en {base}', {
                       base: currencyCode,
                     })}
@@ -341,7 +341,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
                   {formatCurrency(baseChange, currencyCode)}
                 </span>
                 {isForeign && foreignChange > 0 && (
-                  <span className="text-xs text-on-surface-variant font-data-mono">
+                  <span className="text-xs text-on-surface-deep font-data-mono">
                     ≈ {formatCurrency(foreignChange, foreignCode)}
                   </span>
                 )}
@@ -352,7 +352,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
 
         {/* Cobro en divisa sin efectivo: no hay input, solo la aclaración */}
         {!isCash && isForeign && (
-          <p className="flex items-start gap-2 text-xs text-on-surface-variant">
+          <p className="flex items-start gap-2 text-xs text-on-surface-deep">
             <Info size={14} className="mt-0.5 shrink-0" />
             <span>
               {t(
@@ -374,7 +374,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
           <button
             type="button"
             onClick={() => setShowNotes((v) => !v)}
-            className="text-sm text-on-surface-variant hover:text-on-surface transition-colors"
+            className="text-sm text-on-surface-deep hover:text-foreground transition-colors"
           >
             {t('sales.checkoutWizard.collection.notes', 'Notas (opcional)')}
           </button>
@@ -384,7 +384,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t('sales.checkoutWizard.collection.notesPlaceholder', 'Notas del cobro...')}
               rows={2}
-              className="mt-2 w-full rounded-md border border-input bg-surface-container-lowest px-3 py-2 text-sm resize-none"
+              className="mt-2 w-full rounded-md border border-input bg-surface px-3 py-2 text-sm resize-none"
             />
           )}
         </div>

@@ -44,16 +44,16 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
         className='absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity'
         onClick={() => setShowConfirmationModal(false)}
       ></div>
-      <div className='relative bg-surface-container-lowest w-full max-w-lg rounded-md shadow-whisper p-6 border border-surface-variant flex flex-col max-h-[90vh] animate-in fade-in slide-in-from-bottom-4 duration-300'>
+      <div className='relative bg-surface w-full max-w-lg rounded-md shadow-whisper p-6 border border-surface-deep flex flex-col max-h-[90vh] animate-in fade-in slide-in-from-bottom-4 duration-300'>
         <div className='flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 pb-3 shrink-0'>
           <div className='w-10 h-10 bg-[rgba(16,124,16,0.1)] text-success rounded-full flex items-center justify-center'>
             <CheckCircle size={22} />
           </div>
           <div>
-            <h3 className='text-lg font-semibold text-on-surface'>
+            <h3 className='text-lg font-semibold text-foreground'>
               Compra Registrada
             </h3>
-            <p className='text-xs text-on-surface-variant'>
+            <p className='text-xs text-on-surface-deep'>
               Orden de compra #{latestPurchaseResult.id} guardada con éxito.
             </p>
           </div>
@@ -122,7 +122,7 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
 
         <div className='flex gap-3 pt-3 border-t border-gray-100 dark:border-gray-800 shrink-0'>
           <button
-            className='flex-1 py-2.5 font-medium text-on-surface-variant hover:bg-surface-container-low rounded-md border border-surface-variant transition-colors text-sm'
+            className='flex-1 py-2.5 font-medium text-on-surface-deep hover:bg-surface-muted rounded-md border border-surface-deep transition-colors text-sm'
             onClick={() => {
               setShowConfirmationModal(false)
               setActiveTab('historial')

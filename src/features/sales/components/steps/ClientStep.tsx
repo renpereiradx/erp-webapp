@@ -48,7 +48,7 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
       <div className="space-y-5">
         <div className="flex items-center gap-2">
           <User size={18} className="text-primary" />
-          <h3 className="text-label-caps text-on-surface-variant">
+          <h3 className="text-label-caps text-on-surface-deep">
             {t('sales.checkoutWizard.step.client', 'Cliente')}
           </h3>
         </div>
@@ -66,13 +66,13 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
               placeholder={t('sales.checkoutWizard.client.placeholder', 'Buscar cliente por nombre o CI... (F3)')}
               renderItem={(item) => (
                 <div className="flex items-center gap-3 py-1">
-                  <div className="size-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="size-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
                     <User size={14} className="text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm truncate">{item.displayName || item.name}</p>
                     {item.document_id && (
-                      <p className="text-xs text-on-surface-variant">{item.document_id}</p>
+                      <p className="text-xs text-on-surface-deep">{item.document_id}</p>
                     )}
                   </div>
                 </div>
@@ -80,7 +80,7 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
               emptyMessage={t('sales.checkoutWizard.client.empty', 'No se encontraron clientes')}
               renderEmpty={() => (
                 <div className="space-y-3">
-                  <p className="text-sm text-on-surface-variant">
+                  <p className="text-sm text-on-surface-deep">
                     {t('party.quick_client.empty_cta', '¿No lo encontrás? Registralo como nuevo cliente')}
                   </p>
                   <WithPermission anyOf={['clients:write', 'parties:write']}>
@@ -96,13 +96,13 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
                   </WithPermission>
                 </div>
               )}
-              className="w-full bg-surface-container-lowest shadow-sm"
+              className="w-full bg-surface shadow-sm"
             />
             <WithPermission anyOf={['clients:write', 'parties:write']}>
               <Button
                 variant="outline"
                 onClick={() => setIsQuickModalOpen(true)}
-                className="w-full h-11 text-on-surface-variant"
+                className="w-full h-11 text-on-surface-deep"
               >
                 <UserPlus size={16} className="mr-2" />
                 {t('party.quick_client.action', 'Nuevo cliente')}
@@ -110,14 +110,14 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
             </WithPermission>
           </div>
         ) : (
-          <div className="p-4 bg-surface-container-lowest rounded-md border-2 border-primary/20 shadow-sm">
+          <div className="p-4 bg-surface rounded-md border-2 border-primary/20 shadow-sm">
             <div className="flex items-start justify-between">
               <div>
                 <p className="font-bold text-primary text-lg leading-tight mb-1">
                   {client.displayName || client.name}
                 </p>
                 {client.document_id && (
-                  <div className="text-sm font-medium text-on-surface-variant flex items-center gap-1.5">
+                  <div className="text-sm font-medium text-on-surface-deep flex items-center gap-1.5">
                     <Badge variant="outline" className="text-[10px]">CI/RUC</Badge>
                     {client.document_id}
                   </div>

@@ -179,7 +179,7 @@ const InvoicesMasterList = () => {
       <div className="bg-white dark:bg-slate-900 p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
           {/* Search Input */}
-          <div className="relative flex-grow group">
+          <div className="relative grow group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={16} />
             <input 
               className="w-full pl-11 pr-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/40 border-slate-100 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-slate-800 rounded-xl text-sm transition-all outline-none font-medium placeholder:text-slate-400 border" 
@@ -289,7 +289,7 @@ const InvoicesMasterList = () => {
 
         {/* Dynamic Content */}
         {loading && payables.length === 0 ? (
-          <div className="flex-grow flex items-center justify-center py-24">
+          <div className="grow flex items-center justify-center py-24">
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
                 <div className="w-12 h-12 border-4 border-primary/20 rounded-full"></div>
@@ -299,7 +299,7 @@ const InvoicesMasterList = () => {
             </div>
           </div>
         ) : error ? (
-          <div className="flex-grow flex items-center justify-center py-24">
+          <div className="grow flex items-center justify-center py-24">
             <div className="flex flex-col items-center gap-5 text-center px-6">
               <div className="size-20 rounded-3xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600 shadow-inner border border-red-100 dark:border-red-800/30">
                 <AlertTriangle size={40} strokeWidth={1.5} />

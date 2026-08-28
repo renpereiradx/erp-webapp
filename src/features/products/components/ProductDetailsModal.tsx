@@ -104,7 +104,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
       className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/40 animate-in fade-in duration-200 font-display"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-surface-container-lowest/80 backdrop-blur-[20px] border border-white/20 rounded-xl shadow-whisper w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="bg-surface/80 backdrop-blur-[20px] border border-white/20 rounded-xl shadow-whisper w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* Header Section */}
         <div className="px-8 py-6 border-b border-border-subtle flex items-center justify-between bg-transparent sticky top-0 z-10">
@@ -113,10 +113,10 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
               <Package size={28} />
             </div>
             <div>
-              <h2 className="font-headline-lg-mobile text-on-surface">{productName}</h2>
+              <h2 className="font-headline-lg-mobile text-foreground">{productName}</h2>
               <div className="flex items-center gap-2 mt-1">
-                <span className="font-label-caps text-on-surface-variant uppercase">{t('products.details.product_id')}:</span>
-                <span className="font-data-mono text-on-surface">{productId || 'N/A'}</span>
+                <span className="font-label-caps text-on-surface-deep uppercase">{t('products.details.product_id')}:</span>
+                <span className="font-data-mono text-foreground">{productId || 'N/A'}</span>
               </div>
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
               <section>
                 <div className="flex items-center gap-2 mb-6 text-primary">
                   <Info size={18} />
-                  <h3 className="font-label-caps text-on-surface-variant uppercase">{t('products.details.section.general_info')}</h3>
+                  <h3 className="font-label-caps text-on-surface-deep uppercase">{t('products.details.section.general_info')}</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6">
                   <div className="space-y-1">
@@ -215,7 +215,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                 <section>
                   <div className="flex items-center gap-2 mb-4 text-primary">
                     <Layout size={18} />
-                    <h3 className="font-label-caps text-on-surface-variant uppercase">{t('products.details.section.unit_prices')}</h3>
+                    <h3 className="font-label-caps text-on-surface-deep uppercase">{t('products.details.section.unit_prices')}</h3>
                   </div>
                   <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
                     <table className="w-full text-left">
@@ -273,7 +273,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                 <section>
                   <div className="flex items-center gap-2 mb-4 text-primary">
                     <Activity size={18} />
-                    <h3 className="font-label-caps text-on-surface-variant uppercase">Resumen de Costos</h3>
+                    <h3 className="font-label-caps text-on-surface-deep uppercase">Resumen de Costos</h3>
                   </div>
                   <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
                     <table className="w-full text-left">
@@ -333,7 +333,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2 text-primary">
                     <Package size={18} />
-                    <h3 className="font-label-caps text-on-surface-variant uppercase">
+                    <h3 className="font-label-caps text-on-surface-deep uppercase">
                       {(product?.has_variants || variants.length > 0) ? 'Variantes Registradas' : 'Atributos, Etiquetas y Variantes'}
                     </h3>
                   </div>
@@ -497,7 +497,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
 
         {/* Footer Actions */}
         <div className="px-8 py-6 border-t border-border-subtle flex items-center justify-end gap-3 bg-transparent sticky bottom-0">
-          <Button variant="ghost" onClick={onClose} className="bg-surface-container-low border-none text-on-surface hover:bg-surface-container px-6 font-body-sm-bold rounded-button">
+          <Button variant="ghost" onClick={onClose} className="bg-surface-muted border-none text-foreground hover:bg-surface-subtle px-6 font-body-sm-bold rounded-button">
             {t('products.modal.action.cancel')}
           </Button>
           {onEdit && (

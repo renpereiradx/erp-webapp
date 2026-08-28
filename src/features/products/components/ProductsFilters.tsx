@@ -73,7 +73,7 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
   };
 
   return (
-    <Card className="bg-surface-container-lowest border-none rounded-xl shadow-whisper p-6">
+    <Card className="bg-surface border-none rounded-xl shadow-whisper p-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {/* Search */}
         <div className="relative flex-1 max-w-xl">
@@ -87,7 +87,7 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
           <Input
             ref={searchInputRef}
             type="search"
-            className="block w-full pl-10 pr-3 py-2.5 border border-[#455f89]/20 rounded-input bg-surface focus:bg-white focus:ring focus:ring-primary/20 focus:border-primary transition-all h-11 font-body-md text-on-surface"
+            className="block w-full pl-10 pr-3 py-2.5 border border-[#455f89]/20 rounded-input bg-background focus:bg-white focus:ring focus:ring-primary/20 focus:border-primary transition-all h-11 font-body-md text-foreground"
             placeholder={t('products.search.by_name_sku') + ' (F2)'}
             value={searchTerm}
             onChange={onSearchChange}
@@ -111,7 +111,7 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
               'h-11 px-6 font-body-sm-bold rounded-button transition-all',
               showFilters
                 ? 'bg-gradient-to-br from-primary to-primary-container text-white border-none'
-                : 'bg-surface-container-low border-none text-on-surface hover:bg-surface-container'
+                : 'bg-surface-muted border-none text-foreground hover:bg-surface-subtle'
             )}
           >
             <Filter className="size-4 mr-2" />
@@ -121,7 +121,7 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
             variant="ghost"
             onClick={onRefresh}
             disabled={loading}
-            className="h-11 px-4 bg-surface-container-low border-none text-on-surface hover:bg-surface-container font-body-sm-bold rounded-button"
+            className="h-11 px-4 bg-surface-muted border-none text-foreground hover:bg-surface-subtle font-body-sm-bold rounded-button"
           >
             <RefreshCw className={`size-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">
@@ -160,7 +160,7 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
                   }
                 }}
               >
-                    <SelectTrigger className="w-full border border-[#455f89]/20 bg-surface h-11 font-body-md rounded-input focus:ring focus:ring-primary/20 focus:border-primary">
+                    <SelectTrigger className="w-full border border-[#455f89]/20 bg-background h-11 font-body-md rounded-input focus:ring focus:ring-primary/20 focus:border-primary">
                   <SelectValue placeholder={t('products.filter.all_categories')} />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-none shadow-whisper">
@@ -191,7 +191,7 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
                   setLocalFilters((prev) => ({ ...prev, status: value }))
                 }
               >
-                    <SelectTrigger className="w-full border border-[#455f89]/20 bg-surface h-11 font-body-md rounded-input focus:ring focus:ring-primary/20 focus:border-primary">
+                    <SelectTrigger className="w-full border border-[#455f89]/20 bg-background h-11 font-body-md rounded-input focus:ring focus:ring-primary/20 focus:border-primary">
                   <SelectValue placeholder={t('products.filter.all_statuses')} />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-none shadow-whisper">
@@ -224,7 +224,7 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
                   }
                 }}
               >
-                    <SelectTrigger className="w-full border border-[#455f89]/20 bg-surface h-11 font-body-md rounded-input focus:ring focus:ring-primary/20 focus:border-primary">
+                    <SelectTrigger className="w-full border border-[#455f89]/20 bg-background h-11 font-body-md rounded-input focus:ring focus:ring-primary/20 focus:border-primary">
                   <SelectValue placeholder="Ordenar por..." />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-none shadow-whisper">
@@ -268,7 +268,7 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
                       <Input 
                         type="number" 
                         placeholder="Mínimo" 
-                        className="h-11 border border-[#455f89]/20 bg-surface rounded-input font-body-md focus:ring focus:ring-primary/20 focus:border-primary"
+                        className="h-11 border border-[#455f89]/20 bg-background rounded-input font-body-md focus:ring focus:ring-primary/20 focus:border-primary"
                         value={advancedSearchPayload?.price_min || ''}
                         onChange={(e) => {
                           if (setAdvancedSearchPayload) {
@@ -280,7 +280,7 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
                       <Input 
                         type="number" 
                         placeholder="Máximo" 
-                        className="h-11 border border-[#455f89]/20 bg-surface rounded-input font-body-md focus:ring focus:ring-primary/20 focus:border-primary"
+                        className="h-11 border border-[#455f89]/20 bg-background rounded-input font-body-md focus:ring focus:ring-primary/20 focus:border-primary"
                         value={advancedSearchPayload?.price_max || ''}
                         onChange={(e) => {
                           if (setAdvancedSearchPayload) {
@@ -320,7 +320,7 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
                       }
                     }}
                   >
-                        <SelectTrigger className="w-full border border-[#455f89]/20 bg-surface h-11 font-body-md rounded-input focus:ring focus:ring-primary/20 focus:border-primary">
+                        <SelectTrigger className="w-full border border-[#455f89]/20 bg-background h-11 font-body-md rounded-input focus:ring focus:ring-primary/20 focus:border-primary">
                       <SelectValue placeholder={`Cualquier ${facet.name.toLowerCase()}`} />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-none shadow-whisper max-h-64">
@@ -348,7 +348,7 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
           <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
             <Button
               variant="ghost"
-              className="px-6 bg-surface-container-low border-none text-on-surface h-11 hover:bg-surface-container font-body-sm-bold rounded-button"
+              className="px-6 bg-surface-muted border-none text-foreground h-11 hover:bg-surface-subtle font-body-sm-bold rounded-button"
               onClick={onClearFilters}
             >
               <X className="size-4 mr-2" />

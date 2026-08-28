@@ -339,7 +339,7 @@ const SalesHeatmap = () => {
                                 
                                 return (
                                     <div key={uniqueKey} className="flex gap-3">
-                                        <div className={`size-8 rounded-full ${style.bg} ${style.text} flex items-center justify-center flex-shrink-0`}>
+                                        <div className={`size-8 rounded-full ${style.bg} ${style.text} flex items-center justify-center shrink-0`}>
                                             <span className="material-symbols-outlined text-sm">{style.icon}</span>
                                         </div>
                                         <div className="flex flex-col gap-1">

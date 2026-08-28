@@ -167,7 +167,7 @@ export function ProductSearchModal({ open, onClose, onSelect }: Props) {
                   onClick={() => onSelect(product)}
                   onMouseEnter={() => setHighlight(index)}
                 >
-                  <div className='size-12 bg-white rounded-lg flex items-center justify-center text-primary overflow-hidden flex-shrink-0 border border-border-subtle'>
+                  <div className='size-12 bg-white rounded-lg flex items-center justify-center text-primary overflow-hidden shrink-0 border border-border-subtle'>
                     {product.image_url ? (
                       <img src={product.image_url} alt={product.name} className='w-full h-full object-cover' />
                     ) : (

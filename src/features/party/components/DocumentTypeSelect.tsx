@@ -38,7 +38,7 @@ export function DocumentTypeSelect({
     <div className="space-y-xs">
       <Label
         htmlFor={id}
-        className="text-label-caps uppercase text-on-surface-variant"
+        className="text-label-caps uppercase text-on-surface-deep"
       >
         {t('party.field.document_type')}
       </Label>

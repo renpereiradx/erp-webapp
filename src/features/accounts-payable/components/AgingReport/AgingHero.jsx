@@ -61,7 +61,7 @@ const AgingHero = ({ summary }) => {
             className='flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800'
           >
             <div
-              className={`w-3 h-3 rounded-full flex-shrink-0 ${item.color}`}
+              className={`w-3 h-3 rounded-full shrink-0 ${item.color}`}
             ></div>
             <div className='min-w-0'>
               <p className='text-[10px] text-slate-500 uppercase font-bold tracking-tighter truncate'>

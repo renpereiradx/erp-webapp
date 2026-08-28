@@ -122,11 +122,11 @@ export function TaxRatesPanel({ selectedCategory }: TaxRatesPanelProps) {
   const loading = loadingRates || loadingCodes;
 
   return (
-    <div className="flex flex-col bg-surface rounded-[16px] shadow-sm border border-outline-variant/30 p-lg relative">
-      <div className="flex justify-between items-center mb-md border-b border-outline-variant/20 pb-sm">
+    <div className="flex flex-col bg-background rounded-[16px] shadow-sm border border-divider/30 p-lg relative">
+      <div className="flex justify-between items-center mb-md border-b border-divider/20 pb-sm">
         <div>
-          <h2 className="text-title-md font-title-md text-on-surface font-bold">Tasas de IVA y Clasificación SIFEN</h2>
-          <p className="text-body-sm text-on-surface-variant mt-1">Administra los impuestos y su relación con facturación electrónica.</p>
+          <h2 className="text-title-md font-title-md text-foreground font-bold">Tasas de IVA y Clasificación SIFEN</h2>
+          <p className="text-body-sm text-on-surface-deep mt-1">Administra los impuestos y su relación con facturación electrónica.</p>
         </div>
       </div>
 
@@ -227,7 +227,7 @@ export function TaxRatesPanel({ selectedCategory }: TaxRatesPanelProps) {
       
       <div className="overflow-x-auto relative min-h-[150px] mt-1 border border-slate-100 rounded-xl">
         {loading && (
-          <div className="absolute inset-0 bg-surface/50 flex items-center justify-center z-10 rounded-lg">
+          <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 rounded-lg">
             <span className="material-symbols-outlined animate-spin text-primary text-[32px]">autorenew</span>
           </div>
         )}

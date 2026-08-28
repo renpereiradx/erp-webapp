@@ -21,9 +21,9 @@ export const BrandsPage: React.FC = () => {
   const brandForForm = selectedBrandId === 'new' ? { id: 'new' as const } : selectedBrand;
 
   return (
-    <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative bg-surface-container-lowest dark:bg-[#121212]">
+    <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative bg-surface dark:bg-[#121212]">
       {/* TopNavBar Header equivalent */}
-      <header className="flex justify-between items-center w-full px-lg max-w-container-max mx-auto h-16 shrink-0 z-30 bg-surface shadow-[0px_4px_20px_rgba(24,28,34,0.04)] border-b border-outline-variant/10">
+      <header className="flex justify-between items-center w-full px-lg max-w-container-max mx-auto h-16 shrink-0 z-30 bg-background shadow-[0px_4px_20px_rgba(24,28,34,0.04)] border-b border-divider/10">
         <div className="flex items-center space-x-lg">
           <h2 className="font-headline-md text-headline-md font-black text-primary">Gestión de Marcas</h2>
         </div>

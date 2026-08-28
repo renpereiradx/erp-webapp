@@ -62,13 +62,13 @@ export const TagsTab: React.FC<TagsTabProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-lg items-start">
       {/* Left Card: Data Table */}
-      <div className="lg:col-span-8 bg-surface-container-lowest rounded-xl shadow-level-1 p-lg border border-outline-variant/30 h-[600px] flex flex-col">
+      <div className="lg:col-span-8 bg-surface rounded-xl shadow-level-1 p-lg border border-divider/30 h-[600px] flex flex-col">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="font-title-md text-title-md text-on-surface font-bold">Etiquetas Activas</h3>
+          <h3 className="font-title-md text-title-md text-foreground font-bold">Etiquetas Activas</h3>
           <div className="relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
             <input 
-              className="pl-9 pr-4 py-1.5 border border-outline-variant/50 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-container-lowest w-full max-w-[200px] transition-all" 
+              className="pl-9 pr-4 py-1.5 border border-divider/50 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface w-full max-w-[200px] transition-all" 
               placeholder="Buscar etiqueta..." 
               type="text"
               value={searchTerm}
@@ -79,8 +79,8 @@ export const TagsTab: React.FC<TagsTabProps> = ({
         
         <div className="flex-1 overflow-auto custom-scrollbar">
           <table className="w-full text-left border-separate border-spacing-0">
-            <thead className="sticky top-0 bg-surface-container-low z-10">
-              <tr className="text-on-surface-variant font-label-caps text-label-caps">
+            <thead className="sticky top-0 bg-surface-muted z-10">
+              <tr className="text-on-surface-deep font-label-caps text-label-caps">
                 <th className="px-4 py-3 rounded-tl-lg font-bold">Nombre</th>
                 <th className="px-4 py-3 font-bold">Slug</th>
                 <th className="px-4 py-3 font-bold">Color</th>
@@ -89,22 +89,22 @@ export const TagsTab: React.FC<TagsTabProps> = ({
                 <th className="px-4 py-3 rounded-tr-lg font-bold">Categoría</th>
               </tr>
             </thead>
-            <tbody className="font-body-md divide-y divide-outline-variant/10">
+            <tbody className="font-body-md divide-y divide-divider/10">
               {tags.map(tag => (
                 <tr 
                   key={tag.id} 
                   onClick={() => onSelectTag(tag)}
-                  className={`transition-colors duration-150 cursor-pointer group ${selectedTag?.id === tag.id ? 'bg-surface-container-low/50' : 'hover:bg-surface-container-low/50'}`}
+                  className={`transition-colors duration-150 cursor-pointer group ${selectedTag?.id === tag.id ? 'bg-surface-muted/50' : 'hover:bg-surface-muted/50'}`}
                 >
-                  <td className="px-4 py-3 text-on-surface font-medium">{tag.name}</td>
+                  <td className="px-4 py-3 text-foreground font-medium">{tag.name}</td>
                   <td className="px-4 py-3 font-data-mono text-data-mono text-secondary text-sm">{tag.slug}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full border border-outline-variant/30" style={{ backgroundColor: tag.color }}></div>
+                      <div className="w-4 h-4 rounded-full border border-divider/30" style={{ backgroundColor: tag.color }}></div>
                       <span className="font-data-mono text-[12px] text-outline">{tag.color}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-on-surface-variant">
+                  <td className="px-4 py-3 text-on-surface-deep">
                     <span className="material-symbols-outlined text-[18px]">{tag.icon}</span>
                   </td>
                   <td className="px-4 py-3">
@@ -112,7 +112,7 @@ export const TagsTab: React.FC<TagsTabProps> = ({
                       {tag.type}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-on-surface-variant">{tag.category}</td>
+                  <td className="px-4 py-3 text-on-surface-deep">{tag.category}</td>
                 </tr>
               ))}
             </tbody>
@@ -121,9 +121,9 @@ export const TagsTab: React.FC<TagsTabProps> = ({
       </div>
 
       {/* Right Card: Form */}
-      <div className="lg:col-span-4 bg-surface-container-lowest rounded-xl shadow-level-1 p-lg border border-outline-variant/30 flex flex-col h-[600px]">
-        <div className="flex justify-between items-center mb-6 border-b border-outline-variant/20 pb-sm">
-          <h3 className="font-title-md text-title-md text-on-surface font-bold">
+      <div className="lg:col-span-4 bg-surface rounded-xl shadow-level-1 p-lg border border-divider/30 flex flex-col h-[600px]">
+        <div className="flex justify-between items-center mb-6 border-b border-divider/20 pb-sm">
+          <h3 className="font-title-md text-title-md text-foreground font-bold">
             {selectedTag?.id === 'new' ? 'Nueva Etiqueta' : 'Editor de Etiqueta'}
           </h3>
           {selectedTag && selectedTag.id !== 'new' && (
@@ -131,7 +131,7 @@ export const TagsTab: React.FC<TagsTabProps> = ({
               <button 
                 type="button"
                 onClick={() => onDeleteTag && onDeleteTag(selectedTag.id)}
-                className="p-1 text-on-surface-variant hover:text-error transition-colors rounded disabled:opacity-50"
+                className="p-1 text-on-surface-deep hover:text-error transition-colors rounded disabled:opacity-50"
                 disabled={loading}
               >
                 <span className="material-symbols-outlined text-[20px]">delete</span>
@@ -143,9 +143,9 @@ export const TagsTab: React.FC<TagsTabProps> = ({
         {selectedTag ? (
           <form onSubmit={handleSave} className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-2">
             <div>
-              <label className="block font-body-sm-bold text-body-sm-bold text-on-surface mb-1">Nombre</label>
+              <label className="block font-body-sm-bold text-body-sm-bold text-foreground mb-1">Nombre</label>
               <input 
-                className="w-full rounded-lg bg-surface-container-lowest border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-3 py-2 outline-none transition-all" 
+                className="w-full rounded-lg bg-surface border border-divider/50 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-3 py-2 outline-none transition-all" 
                 placeholder="Ej. Black Friday" 
                 type="text"
                 value={formData.name || ''}
@@ -154,9 +154,9 @@ export const TagsTab: React.FC<TagsTabProps> = ({
               />
             </div>
           <div>
-            <label className="block font-body-sm-bold text-body-sm-bold text-on-surface mb-1">Slug</label>
+            <label className="block font-body-sm-bold text-body-sm-bold text-foreground mb-1">Slug</label>
             <input 
-              className="w-full rounded-lg bg-surface-container-low border border-transparent text-secondary font-data-mono px-3 py-2 outline-none text-sm" 
+              className="w-full rounded-lg bg-surface-muted border border-transparent text-secondary font-data-mono px-3 py-2 outline-none text-sm" 
               placeholder="black-friday" 
               type="text" 
               readOnly
@@ -165,16 +165,16 @@ export const TagsTab: React.FC<TagsTabProps> = ({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block font-body-sm-bold text-body-sm-bold text-on-surface mb-1">Color</label>
+              <label className="block font-body-sm-bold text-body-sm-bold text-foreground mb-1">Color</label>
               <div className="flex items-center gap-2">
                 <input 
-                  className="w-10 h-10 rounded border border-outline-variant/50 p-0 cursor-pointer shrink-0" 
+                  className="w-10 h-10 rounded border border-divider/50 p-0 cursor-pointer shrink-0" 
                   type="color" 
                   value={formData.color || '#137fec'}
                   onChange={(e) => handleChange('color', e.target.value)}
                 />
                 <input 
-                  className="w-full rounded-lg bg-surface-container-lowest border border-outline-variant/50 text-data-mono px-3 py-2 outline-none text-sm focus:border-primary" 
+                  className="w-full rounded-lg bg-surface border border-divider/50 text-data-mono px-3 py-2 outline-none text-sm focus:border-primary" 
                   value={formData.color || '#137fec'}
                   onChange={(e) => handleChange('color', e.target.value)}
                   type="text" 
@@ -182,12 +182,12 @@ export const TagsTab: React.FC<TagsTabProps> = ({
               </div>
             </div>
             <div>
-              <label className="block font-body-sm-bold text-body-sm-bold text-on-surface mb-1">Icono</label>
+              <label className="block font-body-sm-bold text-body-sm-bold text-foreground mb-1">Icono</label>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setIsIconPickerOpen(true)}
-                  className="w-10 h-10 shrink-0 rounded-lg bg-surface-container-low hover:bg-surface-container-high border border-outline-variant/50 flex items-center justify-center transition-colors text-on-surface-variant focus:border-primary"
+                  className="w-10 h-10 shrink-0 rounded-lg bg-surface-muted hover:bg-surface-subtle border border-divider/50 flex items-center justify-center transition-colors text-on-surface-deep focus:border-primary"
                   title="Seleccionar icono"
                 >
                   <span className="material-symbols-outlined text-[20px]">
@@ -195,7 +195,7 @@ export const TagsTab: React.FC<TagsTabProps> = ({
                   </span>
                 </button>
                 <input 
-                  className="w-full rounded-lg bg-surface-container-lowest border border-outline-variant/50 text-data-mono px-3 py-2 outline-none text-sm focus:border-primary cursor-pointer" 
+                  className="w-full rounded-lg bg-surface border border-divider/50 text-data-mono px-3 py-2 outline-none text-sm focus:border-primary cursor-pointer" 
                   value={formData.icon || 'local_offer'}
                   onClick={() => setIsIconPickerOpen(true)}
                   readOnly
@@ -207,10 +207,10 @@ export const TagsTab: React.FC<TagsTabProps> = ({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block font-body-sm-bold text-body-sm-bold text-on-surface mb-1">Tipo</label>
+              <label className="block font-body-sm-bold text-body-sm-bold text-foreground mb-1">Tipo</label>
               <div className="relative">
                 <select 
-                  className="w-full rounded-lg bg-surface-container-lowest border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-3 py-2 appearance-none outline-none transition-all"
+                  className="w-full rounded-lg bg-surface border border-divider/50 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-3 py-2 appearance-none outline-none transition-all"
                   value={formData.type || 'GENERAL'}
                   onChange={(e) => handleChange('type', e.target.value)}
                 >
@@ -219,14 +219,14 @@ export const TagsTab: React.FC<TagsTabProps> = ({
                   <option value="STATUS">STATUS</option>
                   <option value="SEASON">SEASON</option>
                 </select>
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">expand_more</span>
+                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-deep pointer-events-none text-[18px]">expand_more</span>
               </div>
             </div>
             <div>
-              <label className="block font-body-sm-bold text-body-sm-bold text-on-surface mb-1">Categoría</label>
+              <label className="block font-body-sm-bold text-body-sm-bold text-foreground mb-1">Categoría</label>
               <div className="relative">
                 <select 
-                  className="w-full rounded-lg bg-surface-container-lowest border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-3 py-2 appearance-none outline-none transition-all"
+                  className="w-full rounded-lg bg-surface border border-divider/50 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-3 py-2 appearance-none outline-none transition-all"
                   value={formData.category || 'General'}
                   onChange={(e) => handleChange('category', e.target.value)}
                 >
@@ -240,7 +240,7 @@ export const TagsTab: React.FC<TagsTabProps> = ({
                     ))}
                   </optgroup>}
                 </select>
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">expand_more</span>
+                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-deep pointer-events-none text-[18px]">expand_more</span>
               </div>
             </div>
           </div>
@@ -248,7 +248,7 @@ export const TagsTab: React.FC<TagsTabProps> = ({
             <button 
               type="button" 
               onClick={() => onSelectTag(null)}
-              className="px-4 py-2 rounded-lg text-on-surface-variant font-body-sm-bold hover:bg-surface-container-high transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg text-on-surface-deep font-body-sm-bold hover:bg-surface-subtle transition-colors disabled:opacity-50"
               disabled={loading}
             >
               Cancelar
@@ -263,7 +263,7 @@ export const TagsTab: React.FC<TagsTabProps> = ({
           </div>
         </form>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-on-surface-variant opacity-60">
+          <div className="flex-1 flex flex-col items-center justify-center text-on-surface-deep opacity-60">
             <span className="material-symbols-outlined text-[48px] mb-2">sell</span>
             <p className="text-body-md">Selecciona o crea una etiqueta</p>
           </div>

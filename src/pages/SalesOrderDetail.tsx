@@ -269,8 +269,8 @@ const SalesOrderDetail = () => {
             <Receipt size={28} />
           </div>
           <div>
-            <h1 className="text-headline-lg text-on-surface leading-none mb-1">Detalle de Venta</h1>
-            <p className="text-body-md text-on-surface-variant">
+            <h1 className="text-headline-lg text-foreground leading-none mb-1">Detalle de Venta</h1>
+            <p className="text-body-md text-on-surface-deep">
               Orden #{sale?.id || '—'} • {sale?.date ? new Date(sale.date).toLocaleDateString() : 'Fecha no disponible'}
             </p>
           </div>
@@ -480,7 +480,7 @@ const SalesOrderDetail = () => {
                         </h2>
                     </div>
                     <div className={cn(
-                        "flex-shrink-0 size-12 rounded-xl flex items-center justify-center shadow-fluent-2",
+                        "shrink-0 size-12 rounded-xl flex items-center justify-center shadow-fluent-2",
                         balanceDue > 0 ? "bg-error/10 text-error" : "bg-success/10 text-success"
                     )}>
                         <Wallet size={24} />

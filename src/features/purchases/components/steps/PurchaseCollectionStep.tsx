@@ -118,7 +118,7 @@ export const PurchaseCollectionStep = forwardRef<
     <div className="space-y-5">
       {/* Caja de pago */}
       <div className="space-y-2">
-        <label className="text-label-caps text-on-surface-variant" htmlFor="wizard-purchase-cash-register">
+        <label className="text-label-caps text-on-surface-deep" htmlFor="wizard-purchase-cash-register">
           {t('purchases.checkoutWizard.collection.cashRegister', 'Caja de pago')}
         </label>
         <select
@@ -126,7 +126,7 @@ export const PurchaseCollectionStep = forwardRef<
           value={cashRegisterId || ''}
           onChange={(e) => setCashRegisterId(e.target.value || null)}
           disabled={isLoadingRegisters}
-          className="flex h-11 w-full rounded-sm border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+          className="flex h-11 w-full rounded-sm border border-divider bg-surface px-3 py-2 text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
         >
           <option value="">
             {t('purchases.checkoutWizard.collection.noCashRegister', 'Sin caja asignada')}
@@ -153,7 +153,7 @@ export const PurchaseCollectionStep = forwardRef<
       {/* Monto a pagar */}
       <div className="space-y-3">
         <div>
-          <label className="text-xs font-bold uppercase text-on-surface-variant flex items-center gap-2 mb-2">
+          <label className="text-xs font-bold uppercase text-on-surface-deep flex items-center gap-2 mb-2">
             <Calculator size={14} />
             {t('purchases.checkoutWizard.collection.amountPaid', 'Monto a pagar')}
           </label>
@@ -184,7 +184,7 @@ export const PurchaseCollectionStep = forwardRef<
         <button
           type="button"
           onClick={() => setShowNotes((v) => !v)}
-          className="text-sm text-on-surface-variant hover:text-on-surface transition-colors"
+          className="text-sm text-on-surface-deep hover:text-foreground transition-colors"
         >
           {t('purchases.checkoutWizard.collection.notes', 'Notas del pago (opcional)')}
         </button>
@@ -194,7 +194,7 @@ export const PurchaseCollectionStep = forwardRef<
             onChange={(e) => setNotes(e.target.value)}
             placeholder={t('purchases.checkoutWizard.collection.notesPlaceholder', 'Notas del pago...')}
             rows={2}
-            className="mt-2 w-full rounded-md border border-input bg-surface-container-lowest px-3 py-2 text-sm resize-none"
+            className="mt-2 w-full rounded-md border border-input bg-surface px-3 py-2 text-sm resize-none"
           />
         )}
       </div>

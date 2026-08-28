@@ -335,7 +335,7 @@ const PriceAdjustmentDetail = () => {
                 PYG {currentPrice.toLocaleString('es-PY')}
               </h2>
             </div>
-            <div className='flex-shrink-0 size-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center'>
+            <div className='shrink-0 size-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center'>
               <TrendingUp size={24} />
             </div>
           </div>

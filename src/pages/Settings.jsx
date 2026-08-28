@@ -63,7 +63,7 @@ const SettingsPage = () => {
             <div className="grid grid-cols-1 gap-3">
               <button 
                 onClick={() => handleNavigate('/configuracion/perfil')}
-                className="w-full group bg-surface p-4 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all flex items-center gap-4 text-left"
+                className="w-full group bg-background p-4 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all flex items-center gap-4 text-left"
               >
                 <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-white">
                   <User size={20} />
@@ -77,7 +77,7 @@ const SettingsPage = () => {
 
               <button 
                 onClick={() => handleNavigate('/configuracion/usuarios')}
-                className="w-full group bg-surface p-4 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all flex items-center gap-4 text-left"
+                className="w-full group bg-background p-4 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all flex items-center gap-4 text-left"
               >
                 <div className="size-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center transition-colors group-hover:bg-indigo-600 group-hover:text-white">
                   <Users size={20} />
@@ -91,7 +91,7 @@ const SettingsPage = () => {
 
               <button 
                 onClick={() => handleNavigate('/configuracion/sesiones')}
-                className="w-full group bg-surface p-4 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all flex items-center gap-4 text-left"
+                className="w-full group bg-background p-4 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all flex items-center gap-4 text-left"
               >
                 <div className="size-10 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 flex items-center justify-center transition-colors group-hover:bg-amber-600 group-hover:text-white">
                   <Monitor size={20} />
@@ -114,7 +114,7 @@ const SettingsPage = () => {
               </h2>
             </div>
 
-            <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-6">
+            <div className="bg-background p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-6">
               <div>
                 <h4 className="text-sm font-bold text-text-main">{t('settings.theme.title', 'Tema Visual')}</h4>
                 <p className="text-[11px] text-text-secondary font-medium">{t('settings.theme.description', 'Selecciona el modo de apariencia preferido')}</p>
@@ -134,7 +134,7 @@ const SettingsPage = () => {
                 <button
                   onClick={() => !isDark && toggleTheme()}
                   className={`flex items-center justify-center gap-2 py-2.5 rounded-md text-xs font-bold transition-all ${
-                    isDark ? 'bg-surface shadow-sm text-white' : 'text-text-secondary hover:text-text-main'
+                    isDark ? 'bg-background shadow-sm text-white' : 'text-text-secondary hover:text-text-main'
                   }`}
                 >
                   <Moon size={16} />
@@ -153,7 +153,7 @@ const SettingsPage = () => {
               </h2>
             </div>
 
-            <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 divide-y divide-slate-50 dark:divide-slate-800">
+            <div className="bg-background p-6 rounded-xl border border-border-subtle shadow-fluent-2 divide-y divide-slate-50 dark:divide-slate-800">
               <div className="py-4 first:pt-0 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Globe className="text-blue-500" size={18} />
@@ -208,7 +208,7 @@ const SettingsPage = () => {
                 {t('settings.sections.shortcuts', 'Accesibilidad')}
               </h2>
             </div>
-            <div className="bg-surface rounded-xl border border-border-subtle shadow-fluent-2 overflow-hidden">
+            <div className="bg-background rounded-xl border border-border-subtle shadow-fluent-2 overflow-hidden">
               <KeyboardShortcuts />
             </div>
           </section>

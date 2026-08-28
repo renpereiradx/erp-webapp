@@ -113,7 +113,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="relative w-full max-w-4xl bg-surface-container-lowest shadow-2xl rounded-xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
+      <div className="relative w-full max-w-4xl bg-surface shadow-2xl rounded-xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
         
         {/* Left Side: Client & Payment Details */}
         <div className="flex-1 flex flex-col bg-slate-50 border-r border-slate-200">
@@ -144,7 +144,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   placeholder="Buscar cliente por nombre o CI... (F3)"
                   renderItem={(item) => (
                     <div className="flex items-center gap-3 py-1">
-                      <div className="size-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="size-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
                         <User size={14} className="text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">

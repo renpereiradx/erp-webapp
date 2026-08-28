@@ -28,15 +28,15 @@ export const PurchaseCancelModal: React.FC<PurchaseCancelModalProps> = ({
         className='absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity'
         onClick={() => setShowCancelPreview(false)}
       ></div>
-      <div className='relative bg-surface-container-lowest w-full max-w-sm rounded-md shadow-whisper p-6 border border-surface-variant text-center space-y-5 animate-in fade-in zoom-in-95 duration-200'>
+      <div className='relative bg-surface w-full max-w-sm rounded-md shadow-whisper p-6 border border-surface-deep text-center space-y-5 animate-in fade-in zoom-in-95 duration-200'>
         <div className='w-14 h-14 bg-[rgba(209,52,56,0.1)] text-error rounded-full flex items-center justify-center mx-auto'>
           <Ban size={28} />
         </div>
         <div>
-          <h3 className='text-lg font-semibold text-on-surface'>
+          <h3 className='text-lg font-semibold text-foreground'>
             ¿Anular esta orden?
           </h3>
-          <p className='text-sm text-on-surface-variant mt-2'>
+          <p className='text-sm text-on-surface-deep mt-2'>
             Esta acción afectará los saldos con{' '}
             <span className='font-semibold text-error'>
               {orderToCancel.supplier_name}
@@ -60,7 +60,7 @@ export const PurchaseCancelModal: React.FC<PurchaseCancelModalProps> = ({
         </div>
         <div className='flex gap-3 pt-2'>
           <button
-            className='flex-1 py-2.5 font-medium text-on-surface-variant hover:bg-surface-container-low rounded-md border border-surface-variant transition-colors text-sm'
+            className='flex-1 py-2.5 font-medium text-on-surface-deep hover:bg-surface-muted rounded-md border border-surface-deep transition-colors text-sm'
             onClick={() => setShowCancelPreview(false)}
           >
             Cancelar

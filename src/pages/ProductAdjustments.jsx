@@ -23,7 +23,7 @@ const ProductAdjustmentsPage = () => {
           onClick={() => navigate('/ajustes-precios')}
         >
           <div className='flex items-start gap-4'>
-            <div className='flex-shrink-0 size-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors'>
+            <div className='shrink-0 size-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors'>
               <Tag size={24} strokeWidth={2} />
             </div>
             <div className='flex-1 min-w-0'>
@@ -52,7 +52,7 @@ const ProductAdjustmentsPage = () => {
           onClick={() => navigate('/movimientos-stock')}
         >
           <div className='flex items-start gap-4'>
-            <div className='flex-shrink-0 size-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors'>
+            <div className='shrink-0 size-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors'>
               <Package size={24} strokeWidth={2} />
             </div>
             <div className='flex-1 min-w-0'>

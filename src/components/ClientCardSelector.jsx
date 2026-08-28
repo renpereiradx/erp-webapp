@@ -226,7 +226,7 @@ const ClientCardSelector = ({
                             ID: {client.id}
                           </p>
                         </div>
-                        <User className="h-4 w-4 text-muted-foreground flex-shrink-0 ml-2" />
+                        <User className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
                       </div>
 
                       {/* Información de contacto */}

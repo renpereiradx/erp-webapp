@@ -189,7 +189,7 @@ const RegisterCashMovement: React.FC = () => {
         <div className='flex flex-col gap-3'>
           <button 
             onClick={() => navigate('/movimientos-caja')}
-            className='flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors w-fit'
+            className='flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-on-surface-deep hover:text-primary transition-colors w-fit'
           >
             <ChevronLeft className='w-3.5 h-3.5' /> Volver a Movimientos
           </button>
@@ -198,8 +198,8 @@ const RegisterCashMovement: React.FC = () => {
               {config.icon}
             </div>
             <div>
-              <h1 className='text-headline-lg text-on-surface leading-none mb-1'>{config.title}</h1>
-              <p className='text-body-md text-on-surface-variant.5'>{config.description}</p>
+              <h1 className='text-headline-lg text-foreground leading-none mb-1'>{config.title}</h1>
+              <p className='text-body-md text-on-surface-deep.5'>{config.description}</p>
             </div>
           </div>
         </div>
@@ -224,7 +224,7 @@ const RegisterCashMovement: React.FC = () => {
           <Card className='border-none rounded-3xl shadow-fluent-2 bg-white dark:bg-slate-900 overflow-hidden'>
             <CardContent className='p-10 space-y-10'>
               <div className='space-y-4'>
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Clase de Transacción</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-deep ml-1">Clase de Transacción</Label>
                 <SegmentedControl
                   options={[
                     { value: 'INCOME', label: 'Ingreso (+)' },
@@ -239,7 +239,7 @@ const RegisterCashMovement: React.FC = () => {
 
               <div className='grid grid-cols-1 md:grid-cols-2 gap-10'>
                 <div className='space-y-4'>
-                  <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Concepto Operativo</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-deep ml-1">Concepto Operativo</Label>
                   <div className='relative group'>
                     <select
                       value={formData.concept}
@@ -252,14 +252,14 @@ const RegisterCashMovement: React.FC = () => {
                         <option key={concept} value={concept}>{concept}</option>
                       ))}
                     </select>
-                    <ChevronRight className='absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none group-hover:text-primary transition-colors w-5 h-5' />
+                    <ChevronRight className='absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-deep rotate-90 pointer-events-none group-hover:text-primary transition-colors w-5 h-5' />
                   </div>
                 </div>
 
                 <div className='space-y-4'>
-                  <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Monto de la Operación</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-deep ml-1">Monto de la Operación</Label>
                   <div className='relative'>
-                    <span className='absolute inset-y-0 left-0 pl-5 flex items-center text-slate-400 font-black text-xl'>₲</span>
+                    <span className='absolute inset-y-0 left-0 pl-5 flex items-center text-on-surface-deep font-black text-xl'>₲</span>
                     <Input
                       type='number'
                       value={formData.amount}
@@ -273,7 +273,7 @@ const RegisterCashMovement: React.FC = () => {
               </div>
 
               <div className='space-y-4'>
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Memoria / Observaciones (Opcional)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-deep ml-1">Memoria / Observaciones (Opcional)</Label>
                 <Textarea
                   value={formData.notes}
                   onChange={e => handleInputChange('notes', e.target.value)}
@@ -305,14 +305,14 @@ const RegisterCashMovement: React.FC = () => {
             </div>
             <CardContent className='p-8 space-y-6'>
               <div className='flex items-start gap-4'>
-                <div className='size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 flex-shrink-0'><CheckCircle2 className='w-4 h-4' /></div>
+                <div className='size-8 rounded-full bg-surface-muted flex items-center justify-center text-on-surface-deep shrink-0'><CheckCircle2 className='w-4 h-4' /></div>
                 <div>
                   <p className='text-xs font-black uppercase tracking-tight text-text-main'>Trazabilidad Total</p>
                   <p className='text-[11px] text-text-secondary mt-1 font-medium'>Cada movimiento queda registrado con usuario, fecha y hora exacta.</p>
                 </div>
               </div>
               <div className='flex items-start gap-4'>
-                <div className='size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 flex-shrink-0'><Settings className='w-4 h-4' /></div>
+                <div className='size-8 rounded-full bg-surface-muted flex items-center justify-center text-on-surface-deep shrink-0'><Settings className='w-4 h-4' /></div>
                 <div>
                   <p className='text-xs font-black uppercase tracking-tight text-text-main'>Impacto Inmediato</p>
                   <p className='text-[11px] text-text-secondary mt-1 font-medium'>El balance se actualiza en tiempo real al confirmar el registro.</p>

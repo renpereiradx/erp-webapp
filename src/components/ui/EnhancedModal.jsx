@@ -220,7 +220,7 @@ const EnhancedModal = ({
               size="sm"
               onClick={onClose}
               className={`
-                ml-4 flex-shrink-0
+                ml-4 shrink-0
                 ${isNeoBrutalism ? 'border-2 border-black hover:bg-red-100' : ''}
               `}
               data-testid={`${testId}-close-button`}

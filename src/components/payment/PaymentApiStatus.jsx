@@ -43,7 +43,7 @@ const PaymentApiStatus = ({
     <div className={`border rounded-lg p-6 ${styles.container} ${className}`}>
       <div className="flex items-start space-x-4">
         {showIcon && (
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <IconComponent className={`w-6 h-6 ${styles.icon}`} />
           </div>
         )}

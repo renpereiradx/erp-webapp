@@ -27,8 +27,8 @@ export const AttributesPage: React.FC = () => {
   } = useAttributes();
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen relative bg-surface">
-      <header className="flex justify-between items-center w-full px-lg max-w-container-max mx-auto h-16 sticky top-0 z-30 bg-surface shadow-sm">
+    <div className="flex-1 flex flex-col min-h-screen relative bg-background">
+      <header className="flex justify-between items-center w-full px-lg max-w-container-max mx-auto h-16 sticky top-0 z-30 bg-background shadow-sm">
         <div className="flex items-center space-x-lg">
           <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-black text-primary">Attribute Manager</h2>
         </div>
@@ -36,18 +36,18 @@ export const AttributesPage: React.FC = () => {
 
       <main className="flex-1 p-md md:p-gutter flex flex-col overflow-hidden">
         {/* Page Header */}
-        <div className="flex justify-between items-end border-b border-outline-variant/30 mb-lg">
+        <div className="flex justify-between items-end border-b border-divider/30 mb-lg">
           {/* Tabs */}
           <div className="flex">
             <button 
               onClick={() => setActiveTab('attributes')}
-              className={`font-body-sm-bold text-body-sm-bold pb-sm px-4 transition-colors ${activeTab === 'attributes' ? 'text-primary border-b-2 border-primary' : 'text-on-surface-variant hover:text-primary'}`}
+              className={`font-body-sm-bold text-body-sm-bold pb-sm px-4 transition-colors ${activeTab === 'attributes' ? 'text-primary border-b-2 border-primary' : 'text-on-surface-deep hover:text-primary'}`}
             >
               Definición de Atributos
             </button>
             <button 
               onClick={() => setActiveTab('tags')}
-              className={`font-body-sm-bold text-body-sm-bold pb-sm px-4 transition-colors ${activeTab === 'tags' ? 'text-primary border-b-2 border-primary' : 'text-on-surface-variant hover:text-primary'}`}
+              className={`font-body-sm-bold text-body-sm-bold pb-sm px-4 transition-colors ${activeTab === 'tags' ? 'text-primary border-b-2 border-primary' : 'text-on-surface-deep hover:text-primary'}`}
             >
               Etiquetas (Tags)
             </button>

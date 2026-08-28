@@ -46,8 +46,8 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
   return (
     <div className='space-y-4 md:space-y-6 animate-in slide-in-from-bottom-4 duration-500'>
       {/* History Filter Toolbar - Fluent 2 CommandBar style */}
-      <section className='bg-surface-container-lowest rounded-md border border-surface-variant shadow-whisper overflow-hidden'>
-        <div className='p-4 md:p-5 border-b border-surface-variant flex flex-col xl:flex-row justify-between items-center bg-surface-container-low gap-4'>
+      <section className='bg-surface rounded-md border border-surface-deep shadow-whisper overflow-hidden'>
+        <div className='p-4 md:p-5 border-b border-surface-deep flex flex-col xl:flex-row justify-between items-center bg-surface-muted gap-4'>
           <div className='flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto'>
             <div className='relative w-full sm:w-80'>
               <Search
@@ -57,7 +57,7 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
               <input
                 type='text'
                 placeholder='Buscar por ID o Proveedor...'
-                className='w-full pl-9 pr-3 py-2 bg-surface-container-lowest border border-surface-variant rounded-md text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
+                className='w-full pl-9 pr-3 py-2 bg-surface border border-surface-deep rounded-md text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleFilter()}
@@ -72,12 +72,12 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
           </div>
 
           <div className='flex flex-wrap items-center gap-3 w-full xl:w-auto justify-end'>
-            <div className='flex p-0.5 bg-surface-container rounded-md'>
+            <div className='flex p-0.5 bg-surface-subtle rounded-md'>
               <button
                 className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-150 ${
                   searchType === 'date'
-                    ? 'bg-surface-container-lowest shadow-sm text-primary'
-                    : 'text-on-surface-variant hover:text-on-surface'
+                    ? 'bg-surface shadow-sm text-primary'
+                    : 'text-on-surface-deep hover:text-foreground'
                 }`}
                 onClick={() => setSearchType('date')}
               >
@@ -86,8 +86,8 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
               <button
                 className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-150 ${
                   searchType === 'supplier'
-                    ? 'bg-surface-container-lowest shadow-sm text-primary'
-                    : 'text-on-surface-variant hover:text-on-surface'
+                    ? 'bg-surface shadow-sm text-primary'
+                    : 'text-on-surface-deep hover:text-foreground'
                 }`}
                 onClick={() => setSearchType('supplier')}
               >
@@ -96,10 +96,10 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
             </div>
 
             {searchType === 'date' && (
-              <div className='flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-md border border-surface-variant'>
+              <div className='flex items-center gap-2 bg-surface px-3 py-1.5 rounded-md border border-surface-deep'>
                 <input
                   type='date'
-                  className='bg-transparent border-none text-xs text-on-surface outline-none'
+                  className='bg-transparent border-none text-xs text-foreground outline-none'
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
                 />
@@ -108,7 +108,7 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                 </span>
                 <input
                   type='date'
-                  className='bg-transparent border-none text-xs text-on-surface outline-none'
+                  className='bg-transparent border-none text-xs text-foreground outline-none'
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
                 />
@@ -120,24 +120,24 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
         {/* History Table - Fluent 2 DataGrid */}
         <div className='overflow-x-auto min-h-[400px]'>
           <table className='w-full text-left border-collapse min-w-[900px]'>
-            <thead className='bg-surface-container text-xs font-semibold text-on-surface-variant'>
+            <thead className='bg-surface-subtle text-xs font-semibold text-on-surface-deep'>
               <tr>
-                <th className='px-5 py-3 border-b border-surface-variant'>
+                <th className='px-5 py-3 border-b border-surface-deep'>
                   Orden ID
                 </th>
-                <th className='px-5 py-3 border-b border-surface-variant'>
+                <th className='px-5 py-3 border-b border-surface-deep'>
                   Fecha Pedido
                 </th>
-                <th className='px-5 py-3 border-b border-surface-variant'>
+                <th className='px-5 py-3 border-b border-surface-deep'>
                   Proveedor
                 </th>
-                <th className='px-5 py-3 border-b border-surface-variant text-right'>
+                <th className='px-5 py-3 border-b border-surface-deep text-right'>
                   Monto Total
                 </th>
-                <th className='px-5 py-3 border-b border-surface-variant text-center'>
+                <th className='px-5 py-3 border-b border-surface-deep text-center'>
                   Estado
                 </th>
-                <th className='px-5 py-3 border-b border-surface-variant text-right w-20'>
+                <th className='px-5 py-3 border-b border-surface-deep text-right w-20'>
                   Acciones
                 </th>
               </tr>
@@ -177,7 +177,7 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                   return (
                     <tr
                       key={order.id}
-                      className='hover:bg-surface-container-highest transition-colors duration-100'
+                      className='hover:bg-surface-deep transition-colors duration-100'
                     >
                       <td className='px-5 py-3.5 font-semibold text-primary text-sm'>
                         <div>#{order.id}</div>
@@ -188,10 +188,10 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                           </div>
                         )}
                       </td>
-                      <td className='px-5 py-3.5 text-on-surface-variant text-sm'>
+                      <td className='px-5 py-3.5 text-on-surface-deep text-sm'>
                         {formatDate(order.order_date)}
                       </td>
-                      <td className='px-5 py-3.5 font-medium text-on-surface text-sm'>
+                      <td className='px-5 py-3.5 font-medium text-foreground text-sm'>
                         <div>{order.supplier_name || '-'}</div>
                         {order.payment_method && (
                           <div className='text-[10px] text-gray-400 dark:text-gray-500 font-normal mt-0.5'>
@@ -199,7 +199,7 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                           </div>
                         )}
                       </td>
-                      <td className='px-5 py-3.5 text-right font-semibold text-on-surface'>
+                      <td className='px-5 py-3.5 text-right font-semibold text-foreground'>
                         {formatCurrency(
                           order.total_amount,
                           order.currency,
@@ -240,15 +240,15 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                                   : order.id,
                               )
                             }
-                            className='p-1.5 text-outline hover:text-on-surface hover:bg-surface-container-low rounded-md transition-all'
+                            className='p-1.5 text-outline hover:text-foreground hover:bg-surface-muted rounded-md transition-all'
                           >
                             <MoreVertical size={18} />
                           </button>
                           {openActionMenu === order.id && (
-                            <div className='absolute right-0 mt-1 w-48 bg-surface-container-lowest rounded-md shadow-md border border-surface-variant z-40 py-1 overflow-hidden'>
+                            <div className='absolute right-0 mt-1 w-48 bg-surface rounded-md shadow-md border border-surface-deep z-40 py-1 overflow-hidden'>
                               <button
                                 onClick={() => handleViewPurchase(order)}
-                                className='w-full px-4 py-2.5 text-left text-sm text-on-surface hover:bg-surface-container-highest flex items-center gap-3 transition-colors'
+                                className='w-full px-4 py-2.5 text-left text-sm text-foreground hover:bg-surface-deep flex items-center gap-3 transition-colors'
                               >
                                 <Eye
                                   size={16}

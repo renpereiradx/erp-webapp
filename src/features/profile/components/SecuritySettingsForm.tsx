@@ -119,7 +119,7 @@ export function SecuritySettingsForm({ passwordForm, setPasswordForm, onSubmit, 
 
           {/* Toggle: cerrar otras sesiones */}
           <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-border-subtle hover:bg-primary/5 transition-colors group">
-            <div className="mt-0.5 flex-shrink-0">
+            <div className="mt-0.5 shrink-0">
               <input
                 type="checkbox"
                 checked={passwordForm.logout_other_sessions ?? false}

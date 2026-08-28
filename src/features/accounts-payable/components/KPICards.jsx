@@ -40,7 +40,7 @@ const KPICard = ({ title, value, currency, trend, trendType, icon: Icon, subtitl
             {formatValue(value)}
           </h2>
         </div>
-        <div className={`flex-shrink-0 p-2.5 rounded-xl ${iconBgClass} shadow-sm`}>
+        <div className={`shrink-0 p-2.5 rounded-xl ${iconBgClass} shadow-sm`}>
           <Icon className={`w-5 h-5 xl:w-6 xl:h-6 ${iconTextClass}`} />
         </div>
       </div>
@@ -52,7 +52,7 @@ const KPICard = ({ title, value, currency, trend, trendType, icon: Icon, subtitl
       ) : (
         <div className="mt-5 flex items-center text-[10px] xl:text-[11px] font-bold uppercase tracking-wider leading-tight">
           {trend && (
-            <span className={`flex items-center flex-shrink-0 mr-2 px-1.5 py-0.5 rounded-md font-mono ${isSuccess ? 'bg-fluent-success/10 text-fluent-success' : 'bg-fluent-danger/10 text-fluent-danger'}`}>
+            <span className={`flex items-center shrink-0 mr-2 px-1.5 py-0.5 rounded-md font-mono ${isSuccess ? 'bg-fluent-success/10 text-fluent-success' : 'bg-fluent-danger/10 text-fluent-danger'}`}>
               {isSuccess ? <TrendingUp className="w-3 h-3 mr-0.5" /> : <AlertCircle className="w-3 h-3 mr-0.5" />}
               {trend}
             </span>

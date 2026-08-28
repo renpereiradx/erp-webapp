@@ -44,7 +44,7 @@ export const CloseCashRegisterModal: React.FC<CloseCashRegisterModalProps> = ({ 
 
   return (
     <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-black/60 animate-in fade-in duration-300' onClick={onClose}>
-      <div className='bg-surface dark:bg-background-dark w-full max-w-lg rounded-2xl shadow-fluent-16 border border-border-subtle overflow-hidden animate-in zoom-in-95 duration-200' onClick={e => e.stopPropagation()}>
+      <div className='bg-background dark:bg-background-dark w-full max-w-lg rounded-2xl shadow-fluent-16 border border-border-subtle overflow-hidden animate-in zoom-in-95 duration-200' onClick={e => e.stopPropagation()}>
         <div className='flex items-center justify-between p-6 pb-4 border-b border-border-subtle bg-slate-50/50 dark:bg-slate-800/50'>
           <div className='flex items-center gap-3'>
             <div className='size-10 rounded-lg bg-error/10 flex items-center justify-center text-error'><XCircle size={20} /></div>

@@ -14,7 +14,7 @@ const UpcomingPayments = ({ payments = [] }) => {
         <button className="text-xs font-black text-primary hover:underline uppercase tracking-widest">Ver Todo</button>
       </div>
       
-      <div className="overflow-y-auto max-h-[440px] flex-grow custom-scrollbar">
+      <div className="overflow-y-auto max-h-[440px] grow custom-scrollbar">
         {payments.map(payment => {
           const isUrgent = payment.status === 'Urgente';
           
@@ -32,14 +32,14 @@ const UpcomingPayments = ({ payments = [] }) => {
                 <span className={`text-xl font-mono font-black ${isUrgent ? 'text-fluent-danger' : 'text-slate-900 dark:text-white'} leading-none mt-0.5`}>{payment.date.day}</span>
               </div>
               
-              <div className="flex-grow min-w-0">
+              <div className="grow min-w-0">
                 <p className="text-sm font-extrabold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{payment.vendor}</p>
                 <p className="text-[11px] font-semibold text-slate-500 flex items-center mt-0.5 uppercase tracking-wide">
                   <span className="opacity-50 mr-1">Factura:</span> <span className="font-mono font-bold">{payment.invoice}</span>
                 </p>
               </div>
               
-              <div className="text-right flex-shrink-0">
+              <div className="text-right shrink-0">
                 <p className="text-sm font-mono font-black text-slate-900 dark:text-white">
                   {formatPYG(payment.amount)}
                 </p>

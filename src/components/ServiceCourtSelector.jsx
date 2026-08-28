@@ -278,7 +278,7 @@ const ServiceCourtSelector = ({ onServiceSelect, onClose }) => {
                   
                   {/* Indicador de selección */}
                   {selectedService?.id === service.id && (
-                    <CheckCircle className="w-6 h-6 text-blue-600 ml-3 flex-shrink-0" />
+                    <CheckCircle className="w-6 h-6 text-primary ml-3 shrink-0" />
                   )}
                 </div>
               </CardContent>

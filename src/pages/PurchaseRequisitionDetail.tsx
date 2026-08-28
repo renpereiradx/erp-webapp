@@ -190,7 +190,7 @@ const PurchaseRequisitionDetailView: React.FC = () => {
            </Card>
 
            <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 flex gap-4 shadow-sm">
-              <BadgeAlert className="text-amber-600 flex-shrink-0" size={24} />
+              <BadgeAlert className="text-warning shrink-0" size={24} />
               <div>
                  <h4 className="text-xs font-black uppercase text-amber-700 tracking-wider mb-1">Revisión de Compras</h4>
                  <p className="text-[11px] text-amber-800 font-medium leading-relaxed">

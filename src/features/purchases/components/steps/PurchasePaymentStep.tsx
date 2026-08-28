@@ -62,7 +62,7 @@ export const PurchasePaymentStep = forwardRef<PurchasePaymentStepRef, PurchasePa
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <CreditCard size={18} className="text-primary" />
-              <label className="text-label-caps text-on-surface-variant" htmlFor="wizard-purchase-method">
+              <label className="text-label-caps text-on-surface-deep" htmlFor="wizard-purchase-method">
                 {t('purchases.checkoutWizard.payment.method', 'Método de pago')}
               </label>
             </div>
@@ -70,7 +70,7 @@ export const PurchasePaymentStep = forwardRef<PurchasePaymentStepRef, PurchasePa
               <SelectTrigger
                 id="wizard-purchase-method"
                 ref={methodRef}
-                className="w-full h-11 bg-surface-container-lowest border-outline-variant focus:ring-primary focus:border-primary"
+                className="w-full h-11 bg-surface border-divider focus:ring-primary focus:border-primary"
               >
                 <SelectValue placeholder={t('purchases.checkoutWizard.payment.method', 'Método de pago')} />
               </SelectTrigger>
@@ -87,14 +87,14 @@ export const PurchasePaymentStep = forwardRef<PurchasePaymentStepRef, PurchasePa
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <DollarSign size={18} className="text-primary" />
-              <label className="text-label-caps text-on-surface-variant" htmlFor="wizard-purchase-currency">
+              <label className="text-label-caps text-on-surface-deep" htmlFor="wizard-purchase-currency">
                 {t('purchases.checkoutWizard.payment.currency', 'Moneda')}
               </label>
             </div>
             <Select value={paymentCurrency} onValueChange={setPaymentCurrency}>
               <SelectTrigger
                 id="wizard-purchase-currency"
-                className="w-full h-11 bg-surface-container-lowest border-outline-variant focus:ring-primary focus:border-primary"
+                className="w-full h-11 bg-surface border-divider focus:ring-primary focus:border-primary"
               >
                 <SelectValue placeholder={t('purchases.checkoutWizard.payment.currency', 'Moneda')} />
               </SelectTrigger>
@@ -110,10 +110,10 @@ export const PurchasePaymentStep = forwardRef<PurchasePaymentStepRef, PurchasePa
         </div>
 
         {/* Notas de la compra */}
-        <div className="space-y-2 pt-2 border-t border-surface-variant">
+        <div className="space-y-2 pt-2 border-t border-surface-deep">
           <div className="flex items-center gap-2">
-            <StickyNote size={16} className="text-on-surface-variant" />
-            <label className="text-label-caps text-on-surface-variant" htmlFor="wizard-purchase-notes">
+            <StickyNote size={16} className="text-on-surface-deep" />
+            <label className="text-label-caps text-on-surface-deep" htmlFor="wizard-purchase-notes">
               {t('purchases.checkoutWizard.payment.notes', 'Notas de la compra')}
             </label>
           </div>
@@ -125,7 +125,7 @@ export const PurchasePaymentStep = forwardRef<PurchasePaymentStepRef, PurchasePa
               'purchases.checkoutWizard.payment.notesPlaceholder',
               'Ej: Pedido urgente de insumos...',
             )}
-            className="w-full h-20 p-3 rounded-md border border-outline-variant bg-surface-container-lowest text-sm resize-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+            className="w-full h-20 p-3 rounded-md border border-divider bg-surface text-sm resize-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
           />
         </div>
       </div>

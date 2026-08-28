@@ -52,7 +52,7 @@ const PageHeader = ({ title, subtitle, actions = null, compact = true, breadcrum
         </div>
 
         {actions && (
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <div className="flex items-center gap-3">
               {actions}
             </div>

@@ -375,13 +375,13 @@ const ScaleConfigPage: React.FC = () => {
                 <span className="text-sm font-medium">Cargando balanzas...</span>
               </div>
             ) : scales.length === 0 ? (
-              <div className="text-center p-16 bg-surface border rounded-2xl flex flex-col items-center gap-2">
+              <div className="text-center p-16 bg-background border rounded-2xl flex flex-col items-center gap-2">
                 <ScaleIcon size={40} className="text-slate-300" />
                 <h4 className="font-bold text-sm text-text-main">Sin balanzas registradas</h4>
                 <p className="text-xs text-text-secondary max-w-sm">No has configurado balanzas electrónicas para esta sucursal.</p>
               </div>
             ) : (
-              <div className="bg-surface rounded-2xl border overflow-hidden shadow-fluent-2">
+              <div className="bg-background rounded-2xl border overflow-hidden shadow-fluent-2">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800 border-b border-border-subtle text-[11px] font-black uppercase text-slate-400 tracking-wider">
@@ -466,7 +466,7 @@ const ScaleConfigPage: React.FC = () => {
                 <span className="text-sm font-medium">Cargando formatos...</span>
               </div>
             ) : formats.length === 0 ? (
-              <div className="text-center p-16 bg-surface border rounded-2xl flex flex-col items-center gap-2">
+              <div className="text-center p-16 bg-background border rounded-2xl flex flex-col items-center gap-2">
                 <Tag size={40} className="text-slate-300" />
                 <h4 className="font-bold text-sm text-text-main">Sin formatos</h4>
                 <p className="text-xs text-text-secondary">No hay formatos de etiquetas configurados en el sistema.</p>
@@ -474,7 +474,7 @@ const ScaleConfigPage: React.FC = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {formats.map((f) => (
-                  <div key={f.id} className="bg-surface rounded-2xl border p-5 flex flex-col justify-between gap-4 shadow-fluent-2">
+                  <div key={f.id} className="bg-background rounded-2xl border p-5 flex flex-col justify-between gap-4 shadow-fluent-2">
                     <div className="space-y-2">
                       <div className="flex items-start justify-between">
                         <h4 className="font-bold text-text-main text-sm">{f.name}</h4>
@@ -513,7 +513,7 @@ const ScaleConfigPage: React.FC = () => {
           <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Simulation controls */}
             <div className="lg:col-span-5 space-y-4">
-              <div className="bg-surface rounded-2xl border p-5 space-y-4 shadow-fluent-2">
+              <div className="bg-background rounded-2xl border p-5 space-y-4 shadow-fluent-2">
                 <header>
                   <h3 className="text-sm font-bold text-text-main">Simulación de Balanza Fisiológica</h3>
                   <p className="text-xs text-text-secondary">Simula el hardware del pesaje para generar etiquetas ZPL.</p>
@@ -565,7 +565,7 @@ const ScaleConfigPage: React.FC = () => {
             {/* Simulation output */}
             <div className="lg:col-span-7 space-y-4">
               {simResponse ? (
-                <div className="bg-surface rounded-2xl border p-5 space-y-6 shadow-fluent-8 animate-in fade-in duration-300">
+                <div className="bg-background rounded-2xl border p-5 space-y-6 shadow-fluent-8 animate-in fade-in duration-300">
                   <header className="flex justify-between items-center border-b pb-3">
                     <div>
                       <h4 className="font-bold text-text-main text-sm">{simResponse.product_name}</h4>
@@ -649,13 +649,13 @@ const ScaleConfigPage: React.FC = () => {
                 <span className="text-sm font-medium">Sincronizando catálogo...</span>
               </div>
             ) : catalog.length === 0 ? (
-              <div className="text-center p-16 bg-surface border rounded-2xl flex flex-col items-center gap-2">
+              <div className="text-center p-16 bg-background border rounded-2xl flex flex-col items-center gap-2">
                 <Database size={40} className="text-slate-300" />
                 <h4 className="font-bold text-sm text-text-main">Sin productos variables</h4>
                 <p className="text-xs text-text-secondary max-w-sm">No se encontraron productos marcados con medida variable para esta sucursal.</p>
               </div>
             ) : (
-              <div className="bg-surface rounded-2xl border overflow-hidden shadow-fluent-2">
+              <div className="bg-background rounded-2xl border overflow-hidden shadow-fluent-2">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800 border-b border-border-subtle text-[11px] font-black uppercase text-slate-400 tracking-wider">

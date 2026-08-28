@@ -9,7 +9,7 @@ const AnalysisCards = ({ rating, terms }) => {
     <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 animate-in fade-in">
       {/* Payment Rating */}
       <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center gap-6 md:gap-10">
-        <div className="flex-shrink-0 text-center">
+        <div className="shrink-0 text-center">
           <div className="text-4xl md:text-5xl font-bold text-[#137fec] mb-2">{rating.score}</div>
           <div className="flex gap-1 text-[#137fec] justify-center">
             <span className="material-icons-round text-sm md:text-base">star</span>

@@ -1,25 +1,26 @@
 ---
 name: Precision Air
 # ─────────────────────────────────────────────────────────────────────────────
-# FUENTE DE VERDAD DE TOKENS: tailwind.config.js
+# FUENTE DE VERDAD DE TOKENS: design/tokens.json
+# El bloque @theme de src/index.css se GENERA desde design/tokens.json (`pnpm tokens:generate`).
 # Este frontmatter es SOLO documentación. En el código NUNCA se escriben estos
 # hex: se usan las clases Tailwind ya generadas (ver tablas en el cuerpo).
 # ─────────────────────────────────────────────────────────────────────────────
 colors:
-  surface: '#f8f9ff'
+  background: '#f8f9ff'
   surface-dim: '#d7dae2'
-  surface-bright: '#f8f9ff'
-  surface-container-lowest: '#ffffff'
-  surface-container-low: '#f1f3fc'
-  surface-container: '#ebeef6'
-  surface-container-high: '#e5e8f1'
-  surface-container-highest: '#dfe2eb'
-  on-surface: '#181c22'
-  on-surface-variant: '#414753'
-  inverse-surface: '#2d3137'
-  inverse-on-surface: '#eef1f9'
+  background: '#f8f9ff'
+  surface: '#ffffff'
+  surface-muted: '#f1f3fc'
+  surface-subtle: '#ebeef6'
+  surface-subtle: '#e5e8f1'
+  surface-deep: '#dfe2eb'
+  foreground: '#181c22'
+  on-surface-deep: '#414753'
+  inverse-background: '#2d3137'
+  inverse-foreground: '#eef1f9'
   outline: '#717785'
-  outline-variant: '#c1c6d5'
+  divider: '#c1c6d5'
   surface-tint: '#005eb4'
   primary: '#005baf'
   on-primary: '#ffffff'
@@ -51,9 +52,9 @@ colors:
   on-tertiary-fixed: '#321200'
   on-tertiary-fixed-variant: '#753400'
   background: '#f8f9ff'
-  on-background: '#181c22'
-  surface-variant: '#dfe2eb'
-  # Estados semánticos (definidos en tailwind.config.js)
+  foreground: '#181c22'
+  surface-deep: '#dfe2eb'
+  # Estados semánticos (definidos en design/tokens.json)
   success: '#107c10'
   warning: '#d83b01'
   info: '#005baf'
@@ -111,7 +112,7 @@ typography:
     fontWeight: '700'
     lineHeight: 16px
     letterSpacing: 0.05em
-rounded:        # escala REAL en tailwind.config.js
+rounded:        # escala REAL en design/tokens.json
   xs: 4px       # rounded-xs  → chips pequeños
   sm: 8px       # rounded-sm  → componentes pequeños
   input: 8px    # rounded-input → inputs
@@ -147,11 +148,22 @@ cada regla apunta a una clase Tailwind o a un componente que YA EXISTE.
 
 | Qué | Dónde |
 |:----|:------|
-| Tokens (colores, radios, sombras, spacing, tipografía) | `tailwind.config.js` |
+| Tokens (colores, radios, sombras, spacing, tipografía) | `design/tokens.json` (genera el bloque `@theme` de `src/index.css` con `pnpm tokens:generate`) |
 | Componentes base | `src/components/ui/` |
 | Reglas de uso (cuándo usar qué) | Este archivo |
 
-Si este archivo contradice al config o a un componente, **ganan el config y el componente**. Corrige este archivo.
+Si este archivo contradice a `tokens.json`, al CSS o a un componente, **ganan
+`tokens.json`, el CSS y el componente**. Corrige este archivo.
+
+**Tooling del contrato:**
+
+- `pnpm tokens:generate` — regenera el bloque `@theme` (+ `.dark`) de `src/index.css` desde `design/tokens.json`.
+- `pnpm tokens:check` — falla si `src/index.css` se desincronizó de `tokens.json` (para CI).
+- `pnpm lint:design` — valida el código contra estas reglas (hex/rgba literales, clases de color genéricas, espaciados arbitrarios). Falla en código nuevo/cambiado; reporta el legacy.
+
+> **Stack:** Tailwind CSS 4 (config CSS-first: `@theme` + `@custom-variant dark`).
+> Modo oscuro = clase `.dark` en `<html>` (la aplica `ThemeContext`); los tokens con
+> valores `{light, dark}` flipean automáticamente.
 
 **Marca en 3 líneas:** ERP profesional de alta densidad de datos. Sensación de "aire"
 mediante espaciado generoso y fondos claros, NUNCA mediante decoración. La jerarquía se
@@ -186,27 +198,27 @@ construye con peso tipográfico y tono de superficie, no con bordes ni sombras f
 | Necesidad | Clase | Hex | Regla |
 |:----------|:------|:----|:------|
 | Fondo de página | `bg-background` | `#f8f9ff` | SIEMPRE el lienzo base. Nunca blanco puro ni grises de Tailwind. |
-| Card, modal, panel principal | `bg-surface-container-lowest` | `#ffffff` | El contenido "flota" sobre el fondo. |
-| Sidebar, zona secundaria, header de tabla | `bg-surface-container-low` | `#f1f3fc` | Separación sutil sin bordes. |
-| Hover de filas / estados sutiles | `bg-surface-container-low` | `#f1f3fc` | Mismo token, contexto hover. |
-| Fondo de badge neutro / disabled | `bg-surface-container` | `#ebeef6` | — |
-| Zona inerte muy marcada | `bg-surface-container-high` | `#e5e8f1` | Uso raro. Si dudas, no lo uses. |
+| Card, modal, panel principal | `bg-surface` | `#ffffff` | El contenido "flota" sobre el fondo. |
+| Sidebar, zona secundaria, header de tabla | `bg-surface-muted` | `#f1f3fc` | Separación sutil sin bordes. |
+| Hover de filas / estados sutiles | `bg-surface-muted` | `#f1f3fc` | Mismo token, contexto hover. |
+| Fondo de badge neutro / disabled | `bg-surface-subtle` | `#ebeef6` | — |
+| Zona inerte muy marcada | `bg-surface-subtle` | `#e5e8f1` | Uso raro. Si dudas, no lo uses. |
 
-> Jerarquía de capas: `background` (página) → `surface-container-low` (zonas) → `surface-container-lowest` (cards). Ese es todo el sistema de profundidad.
+> Jerarquía de capas: `background` (página) → `surface-muted` (zonas) → `surface` (cards). Ese es todo el sistema de profundidad.
 
 ### 2.2 Texto
 
 | Necesidad | Clase | Hex | Regla |
 |:----------|:------|:----|:------|
-| Texto principal | `text-on-surface` | `#181c22` | DEFAULT para todo texto. |
-| Texto secundario, metadata, captions | `text-on-surface-variant` | `#414753` | Máx. ~30% del texto en pantalla. |
+| Texto principal | `text-foreground` | `#181c22` | DEFAULT para todo texto. |
+| Texto secundario, metadata, captions | `text-on-surface-deep` | `#414753` | Máx. ~30% del texto en pantalla. |
 | Texto sobre botón/fondo primary | `text-on-primary` | `#ffffff` | Solo encima de `bg-primary`. |
 | Texto de error | `text-error` | `#ba1a1a` | Mensajes de validación. |
 | Texto sobre `error-container` | `text-on-error-container` | `#93000a` | — |
 | Texto de éxito | `text-success` | `#107c10` | Confirmaciones. |
 | Texto de advertencia | `text-warning` | `#d83b01` | Alertas no bloqueantes. |
 
-> NUNCA uses `text-gray-*` / `text-slate-*` en código nuevo. Usa `text-on-surface` o `text-on-surface-variant`.
+> NUNCA uses `text-gray-*` / `text-slate-*` en código nuevo. Usa `text-foreground` o `text-on-surface-deep`.
 
 ### 2.3 Acciones y estados semánticos
 
@@ -223,7 +235,7 @@ construye con peso tipográfico y tono de superficie, no con bordes ni sombras f
 | Necesidad | Clase | Regla |
 |:----------|:------|:------|
 | Borde sutil estándar | `border-border-subtle` | DEFAULT. Token del tema activo. |
-| Borde estructural visible | `border-outline-variant` (`#c1c6d5`) | Separadores de tabla, divisores. |
+| Borde estructural visible | `border-divider` (`#c1c6d5`) | Separadores de tabla, divisores. |
 | Borde de input | Ya incluido en `<Input>` | No lo redefinas. |
 
 > Los bordes NO elevan. Para separar una card del fondo usa sombra whisper (§5), no borde grueso.
@@ -373,10 +385,10 @@ Reglas:
 ```jsx
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 
-<Card className="bg-surface-container-lowest rounded-md shadow-whisper border-0 p-lg">
+<Card className="bg-surface rounded-md shadow-whisper border-0 p-lg">
   <CardHeader className="p-0 pb-md">
-    <CardTitle className="text-title-md text-on-surface">Resumen de venta</CardTitle>
-    <CardDescription className="text-body-md text-on-surface-variant">
+    <CardTitle className="text-title-md text-foreground">Resumen de venta</CardTitle>
+    <CardDescription className="text-body-md text-on-surface-deep">
       Últimos 30 días
     </CardDescription>
   </CardHeader>
@@ -395,19 +407,19 @@ Reglas:
 ```jsx
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 
-<div className="rounded-md bg-surface-container-lowest shadow-whisper overflow-hidden">
+<div className="rounded-md bg-surface shadow-whisper overflow-hidden">
   <Table>
     <TableHeader>
-      <TableRow className="bg-surface-container-low hover:bg-surface-container-low border-0">
-        <TableHead className="text-label-caps uppercase text-on-surface-variant">Producto</TableHead>
-        <TableHead className="text-label-caps uppercase text-on-surface-variant text-right">Precio</TableHead>
-        <TableHead className="text-label-caps uppercase text-on-surface-variant text-right">Stock</TableHead>
+      <TableRow className="bg-surface-muted hover:bg-surface-muted border-0">
+        <TableHead className="text-label-caps uppercase text-on-surface-deep">Producto</TableHead>
+        <TableHead className="text-label-caps uppercase text-on-surface-deep text-right">Precio</TableHead>
+        <TableHead className="text-label-caps uppercase text-on-surface-deep text-right">Stock</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
       {items.map((item) => (
-        <TableRow key={item.id} className="hover:bg-surface-container-low transition-colors duration-150">
-          <TableCell className="text-body-md text-on-surface">{item.name}</TableCell>
+        <TableRow key={item.id} className="hover:bg-surface-muted transition-colors duration-150">
+          <TableCell className="text-body-md text-foreground">{item.name}</TableCell>
           <TableCell className="text-data-mono font-data-mono text-right">{item.price}</TableCell>
           <TableCell className="text-data-mono font-data-mono text-right">{item.stock}</TableCell>
         </TableRow>
@@ -420,8 +432,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 Reglas:
 
 - Texto a la **izquierda**; números e importes a la **derecha** (`text-right` + `text-data-mono font-data-mono`); columna de acciones a la derecha.
-- Header: `text-label-caps uppercase` sobre `bg-surface-container-low`.
-- Hover de fila: `hover:bg-surface-container-low` con `duration-150`. NADA más (ni scale, ni sombra).
+- Header: `text-label-caps uppercase` sobre `bg-surface-muted`.
+- Hover de fila: `hover:bg-surface-muted` con `duration-150`. NADA más (ni scale, ni sombra).
 - La tabla vive dentro de un contenedor `rounded-md shadow-whisper`; la tabla en sí no lleva sombra.
 - Vacía: NO renderices una tabla sin filas; usa `EmptyState` (§6.7).
 
@@ -434,7 +446,7 @@ import { Button } from '@/components/ui/button'
 
 <form className="space-y-md" onSubmit={onSubmit}>
   <div className="space-y-xs">
-    <Label htmlFor="email" className="text-body-md-bold text-on-surface">
+    <Label htmlFor="email" className="text-body-md-bold text-foreground">
       {t('form.email')}
     </Label>
     <Input id="email" type="email" state={errors.email ? 'error' : ''} />
@@ -495,7 +507,7 @@ import { Button } from '@/components/ui/button'
     </div>
   }
 >
-  <p className="text-body-md text-on-surface-variant">{t('products.delete_confirm')}</p>
+  <p className="text-body-md text-on-surface-deep">{t('products.delete_confirm')}</p>
 </EnhancedModal>
 ```
 
@@ -610,13 +622,13 @@ export default function ProductsPage() {
 
 | ❌ NUNCA | ✅ HAZ ESTO |
 |:---------|:-----------|
-| `bg-[#005baf]`, `text-[#181c22]` | `bg-primary`, `text-on-surface` (tokens semánticos) |
+| `bg-[#005baf]`, `text-[#181c22]` | `bg-primary`, `text-foreground` (tokens semánticos) |
 | `<button className="...">` artesanal | `<Button>` de `ui/button` |
 | Modal con `fixed inset-0 bg-black/50` a mano | `<EnhancedModal>` |
-| `text-gray-500`, `bg-slate-100` | `text-on-surface-variant`, `bg-surface-container-low` |
+| `text-gray-500`, `bg-slate-100` | `text-on-surface-deep`, `bg-surface-muted` |
 | `text-xs` para labels | `text-body-sm-bold` o `text-label-caps` |
 | `shadow-xl`, `shadow-2xl`, sombras de color | `shadow-whisper` / `shadow-fluent-8` / `shadow-fluent-16` |
-| Bordes gruesos para "elevar" una card | `shadow-whisper` sobre `bg-surface-container-lowest` |
+| Bordes gruesos para "elevar" una card | `shadow-whisper` sobre `bg-surface` |
 | Gradientes (`bg-gradient-to-*`) | Fondo plano del sistema de capas §2.1 |
 | `p-[13px]`, `mt-[7px]` | Token más cercano (`p-md`, `mt-sm`); si dudas, el mayor |
 | Números en `font-sans` dentro de tablas | `text-data-mono font-data-mono` |
@@ -635,8 +647,8 @@ export default function ProductsPage() {
 
 | Pregunta | Respuesta |
 |:---------|:----------|
-| ¿Qué fondo uso? | Página → `bg-background`. Panel → `bg-surface-container-lowest`. Zona secundaria → `bg-surface-container-low`. |
-| ¿Qué color de texto? | `text-on-surface`. ¿Secundario/metadata? `text-on-surface-variant`. |
+| ¿Qué fondo uso? | Página → `bg-background`. Panel → `bg-surface`. Zona secundaria → `bg-surface-muted`. |
+| ¿Qué color de texto? | `text-foreground`. ¿Secundario/metadata? `text-on-surface-deep`. |
 | ¿Qué tamaño de texto? | `text-body-md`. ¿Título de página? `text-headline-lg`. ¿Título de card? `text-title-md`. |
 | ¿Es un número/fecha/ID? | `text-data-mono font-data-mono`. En tabla, además `text-right`. |
 | ¿Qué botón? | Acción principal → `primary`. Cancelar → `secondary`. Navegación → `ghost`/`link`. Borrar → `destructive`. |

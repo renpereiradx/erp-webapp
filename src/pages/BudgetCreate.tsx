@@ -399,7 +399,7 @@ const BudgetCreate: React.FC = () => {
                         {formatPYG(totals.total)}
                     </h2>
                 </div>
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <Calculator size={40} className="text-white/10" />
                 </div>
               </div>
@@ -407,8 +407,8 @@ const BudgetCreate: React.FC = () => {
           </div>
 
           <div className="p-5 bg-[#fff4ce] border border-[#fff4ce] rounded-xl flex gap-4 shadow-sm">
-            <AlertCircle className="text-[#794500] flex-shrink-0" size={20} />
-            <p className="text-xs text-[#794500] font-medium leading-relaxed">
+            <AlertCircle className="text-warning shrink-0" size={20} />
+            <p className="text-xs text-warning font-medium leading-relaxed">
               Los precios en el presupuesto se reservan según la vigencia seleccionada. Pasada la fecha, el sistema requerirá actualización de precios.
             </p>
           </div>

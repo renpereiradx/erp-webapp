@@ -45,10 +45,10 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
       <div className="space-y-5">
         {pendingReservations.length > 0 && (
           <div>
-            <h3 className="text-title-md text-on-surface">
+            <h3 className="text-title-md text-foreground">
               {t('sales.checkoutWizard.reservations.title', 'Reservas confirmadas')}
             </h3>
-            <p className="text-body-sm text-on-surface-variant">
+            <p className="text-body-sm text-on-surface-deep">
               {t(
                 'sales.checkoutWizard.reservations.subtitle',
                 'Seleccioná las reservas para sumarlas al carrito',
@@ -78,8 +78,8 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
                     isSelected
                       ? 'border-primary bg-primary/5 shadow-sm'
                       : blocked
-                        ? 'border-outline-variant bg-surface-container-low opacity-50 cursor-not-allowed'
-                        : 'border-outline-variant bg-surface-container-lowest hover:border-primary/40',
+                        ? 'border-divider bg-surface-muted opacity-50 cursor-not-allowed'
+                        : 'border-divider bg-surface hover:border-primary/40',
                   )}
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -87,33 +87,33 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
                       <div
                         className={cn(
                           'size-5 rounded-md border-2 flex items-center justify-center transition-all',
-                          isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-outline bg-surface-container-lowest',
+                          isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-outline bg-surface',
                         )}
                       >
                         {isSelected ? <Check size={12} strokeWidth={3} /> : <Plus size={12} strokeWidth={3} className="opacity-0" />}
                       </div>
-                      <span className="font-bold text-[13px] text-on-surface uppercase leading-tight">
+                      <span className="font-bold text-[13px] text-foreground uppercase leading-tight">
                         {res.product_name || 'Servicio de reserva'}
                       </span>
                     </div>
-                    <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container px-2 py-0.5 rounded uppercase">
+                    <span className="text-[10px] font-bold text-on-surface-deep bg-surface-subtle px-2 py-0.5 rounded uppercase">
                       #{resId}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mt-1 pl-7">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-1.5 text-on-surface-variant">
+                      <div className="flex items-center gap-1.5 text-on-surface-deep">
                         <History size={12} />
                         <span className="text-[10px] font-bold uppercase">Inicio:</span>
-                        <span className="text-[11px] font-medium text-on-surface">
+                        <span className="text-[11px] font-medium text-foreground">
                           {formatDateTime(res.start_time)}
                         </span>
                       </div>
                       {res.duration_hours && (
-                        <div className="flex items-center gap-1.5 text-on-surface-variant">
+                        <div className="flex items-center gap-1.5 text-on-surface-deep">
                           <span className="text-[10px] font-bold uppercase">Duración:</span>
-                          <span className="text-[11px] font-medium text-on-surface">
+                          <span className="text-[11px] font-medium text-foreground">
                             {res.duration_hours}h
                           </span>
                         </div>
@@ -126,7 +126,7 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
                       <span
                         className={cn(
                           'text-lg font-black font-data-mono tracking-tighter',
-                          isSelected ? 'text-emerald-600' : 'text-on-surface',
+                          isSelected ? 'text-emerald-600' : 'text-foreground',
                         )}
                       >
                         {formatCurrency(Number(res.total_amount) || 0)}
@@ -135,7 +135,7 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
                   </div>
 
                   {blocked && (
-                    <div className="mt-2 text-[10px] font-bold uppercase text-on-surface-variant bg-surface-container rounded px-2 py-1 inline-block">
+                    <div className="mt-2 text-[10px] font-bold uppercase text-on-surface-deep bg-surface-subtle rounded px-2 py-1 inline-block">
                       {t('sales.checkoutWizard.reservations.oneReservationPerSale', 'Solo se permite una reserva por venta')}
                     </div>
                   )}

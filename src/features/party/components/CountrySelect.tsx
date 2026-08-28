@@ -53,7 +53,7 @@ export function CountrySelect({
     <div className="space-y-xs">
       <Label
         htmlFor={id}
-        className="text-label-caps uppercase text-on-surface-variant"
+        className="text-label-caps uppercase text-on-surface-deep"
       >
         {label ?? t('party.field.address_country')}
       </Label>

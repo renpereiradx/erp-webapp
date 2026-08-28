@@ -40,15 +40,15 @@ export function ProductVariantsManager({ productId, categoryId, compact = false 
   const gapClass = compact ? "gap-4" : "gap-6";
   const headerGapClass = compact ? "gap-3" : "gap-4";
   const searchInputClass = compact 
-    ? "pl-8 pr-3 py-1 bg-surface-container-lowest border border-outline-variant/30 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-52 h-8"
-    : "pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant/30 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-64 h-10";
+    ? "pl-8 pr-3 py-1 bg-surface border border-divider/30 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-52 h-8"
+    : "pl-10 pr-4 py-2 bg-surface border border-divider/30 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-64 h-10";
   const searchIconSize = compact ? 14 : 18;
   const searchIconClass = compact 
-    ? "material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant text-[16px]"
-    : "material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant text-[20px]";
+    ? "material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-divider text-[16px]"
+    : "material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-divider text-[20px]";
   const gridButtonPadding = compact ? "p-1 rounded shadow-xs" : "p-1.5 rounded-md bg-secondary-container text-on-secondary-container shadow-sm";
   const gridButtonSize = compact ? 14 : 16;
-  const listButtonPadding = compact ? "p-1 rounded" : "p-1.5 rounded-md text-on-surface-variant hover:bg-surface-container";
+  const listButtonPadding = compact ? "p-1 rounded" : "p-1.5 rounded-md text-on-surface-deep hover:bg-surface-subtle";
   const listButtonSize = compact ? 14 : 16;
   const createButtonClass = compact
     ? "flex items-center gap-1.5 px-4 py-1.5 btn-primary text-white font-label-sm text-xs rounded-full hover:opacity-90 transition-opacity shadow-xs whitespace-nowrap h-8"
@@ -58,15 +58,15 @@ export function ProductVariantsManager({ productId, categoryId, compact = false 
   
   const emptyContainerPadding = compact ? "p-8 rounded-xl" : "p-12 rounded-2xl";
   const emptyIconSize = compact ? 24 : 32;
-  const emptyTitleClass = compact ? "text-sm font-bold text-on-surface mb-1" : "text-title-md font-bold text-on-surface mb-2";
-  const emptyTextClass = compact ? "text-xs text-on-surface-variant mb-4" : "text-body-sm text-on-surface-variant mb-6";
+  const emptyTitleClass = compact ? "text-sm font-bold text-foreground mb-1" : "text-title-md font-bold text-foreground mb-2";
+  const emptyTextClass = compact ? "text-xs text-on-surface-deep mb-4" : "text-body-sm text-on-surface-deep mb-6";
   const emptyButtonClass = compact
     ? "px-4 py-1.5 bg-secondary-container text-on-secondary-container text-xs font-semibold rounded-full hover:bg-secondary-container/80 transition-colors"
     : "px-6 py-2 bg-secondary-container text-on-secondary-container font-label-md rounded-full hover:bg-secondary-container/80 transition-colors";
 
   const tableShadowClass = compact 
-    ? "bg-surface-container-lowest border border-surface-variant/30 rounded-lg overflow-hidden shadow-[0_2px_10px_rgba(19,127,236,0.02)] flex flex-col"
-    : "bg-surface-container-lowest border border-surface-variant/30 rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(19,127,236,0.05)] flex flex-col";
+    ? "bg-surface border border-surface-deep/30 rounded-lg overflow-hidden shadow-[0_2px_10px_rgba(19,127,236,0.02)] flex flex-col"
+    : "bg-surface border border-surface-deep/30 rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(19,127,236,0.05)] flex flex-col";
   const tableTextSizeClass = compact ? "text-xs" : "text-sm";
   const tableMinWClass = compact ? "min-w-[700px]" : "min-w-[900px]";
   const thPaddingClass = compact ? "py-1.5 px-3" : "py-md px-md";
@@ -83,7 +83,7 @@ export function ProductVariantsManager({ productId, categoryId, compact = false 
     : "toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors duration-200 ease-in-out";
   const iconWrapperSizeClass = compact ? "w-7 h-7" : "w-10 h-10";
   const iconTextSizeClass = compact ? "text-[15px]" : "text-[20px]";
-  const variantNameClass = compact ? "font-bold text-xs text-on-surface" : "font-title-sm text-title-sm text-on-surface font-bold";
+  const variantNameClass = compact ? "font-bold text-xs text-foreground" : "font-title-sm text-title-sm text-foreground font-bold";
   const badgeTextSizeClass = compact ? "text-[9px] px-1 py-0.2" : "font-label-sm text-[11px] px-1.5 py-0.5";
   const attrBadgeClass = compact 
     ? "text-[9px] px-1.5 py-0.5 rounded-md"
@@ -91,7 +91,7 @@ export function ProductVariantsManager({ productId, categoryId, compact = false 
   const attrBadgeNameOpacity = compact ? "opacity-70 mr-0.5 font-normal" : "opacity-70 mr-1 font-normal";
   const numericTextClass = compact 
     ? "font-data-tabular font-bold text-xs"
-    : "font-data-tabular font-bold text-title-md text-on-surface";
+    : "font-data-tabular font-bold text-title-md text-foreground";
   const lowStockBadgeClass = compact
     ? "text-[8px] text-error flex items-center gap-0.5 font-semibold"
     : "font-label-sm text-[10px] text-error flex items-center gap-0.5";
@@ -100,7 +100,7 @@ export function ProductVariantsManager({ productId, categoryId, compact = false 
   const editIconSize = compact ? "text-[15px]" : "text-[18px]";
   const hoverRowStyle = compact 
     ? "hover:bg-slate-50/50 shadow-[inset_2px_0_0_transparent] hover:shadow-[inset_2px_0_0_#005baf] transition-all duration-150 group"
-    : "hover:bg-surface-bright shadow-[inset_2px_0_0_transparent] hover:shadow-[inset_2px_0_0_#005baf] transition-all duration-150 group";
+    : "hover:bg-background shadow-[inset_2px_0_0_transparent] hover:shadow-[inset_2px_0_0_#005baf] transition-all duration-150 group";
 
   return (
     <div className={`flex flex-col ${gapClass}`}>
@@ -119,7 +119,7 @@ export function ProductVariantsManager({ productId, categoryId, compact = false 
               className={searchInputClass}
             />
           </div>
-          <div className="flex items-center bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-0.5">
+          <div className="flex items-center bg-surface border border-divider/30 rounded-lg p-0.5">
             <button type="button" className={gridButtonPadding}>
               <LayoutGrid size={gridButtonSize} />
             </button>
@@ -142,14 +142,14 @@ export function ProductVariantsManager({ productId, categoryId, compact = false 
       {loading ? (
         <div className={`text-center text-slate-400 ${loadingPadding}`}>Cargando variantes...</div>
       ) : !productId ? (
-        <div className={`text-center border-2 border-dashed border-outline-variant/30 bg-surface-container-lowest ${emptyContainerPadding}`}>
-          <Package className="mx-auto text-outline-variant mb-2" size={emptyIconSize} />
+        <div className={`text-center border-2 border-dashed border-divider/30 bg-surface ${emptyContainerPadding}`}>
+          <Package className="mx-auto text-divider mb-2" size={emptyIconSize} />
           <h3 className={emptyTitleClass}>Guarde el producto primero</h3>
           <p className={emptyTextClass}>Debe guardar los datos básicos de este producto antes de poder agregarle variantes.</p>
         </div>
       ) : variants.length === 0 ? (
-        <div className={`text-center border-2 border-dashed border-outline-variant/30 bg-surface-container-lowest ${emptyContainerPadding}`}>
-          <Package className="mx-auto text-outline-variant mb-2" size={emptyIconSize} />
+        <div className={`text-center border-2 border-dashed border-divider/30 bg-surface ${emptyContainerPadding}`}>
+          <Package className="mx-auto text-divider mb-2" size={emptyIconSize} />
           <h3 className={emptyTitleClass}>Sin variantes configuradas</h3>
           <p className={emptyTextClass}>Comienza a agregar combinaciones de atributos (ej. Color y Talla) para este producto.</p>
           <button 
@@ -165,16 +165,16 @@ export function ProductVariantsManager({ productId, categoryId, compact = false 
           <div className="overflow-x-auto custom-scrollbar">
             <table className={`w-full ${tableMinWClass} text-left border-collapse ${tableTextSizeClass}`}>
               <thead>
-                <tr className="bg-surface-container-low border-b border-surface-variant">
-                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-variant ${thRadiusLeftClass} w-12`}>ESTADO</th>
-                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-variant`}>INFO VARIANTE</th>
-                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-variant`}>ATRIBUTOS</th>
-                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-variant text-right`}>STOCK</th>
-                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-variant text-right`}>PRECIO</th>
-                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-variant text-center ${thRadiusRightClass} w-16`}>ACCIONES</th>
+                <tr className="bg-surface-muted border-b border-surface-deep">
+                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-deep ${thRadiusLeftClass} w-12`}>ESTADO</th>
+                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-deep`}>INFO VARIANTE</th>
+                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-deep`}>ATRIBUTOS</th>
+                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-deep text-right`}>STOCK</th>
+                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-deep text-right`}>PRECIO</th>
+                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-deep text-center ${thRadiusRightClass} w-16`}>ACCIONES</th>
                 </tr>
               </thead>
-              <tbody className="text-on-surface divide-y divide-surface-variant/30">
+              <tbody className="text-foreground divide-y divide-surface-deep/30">
                 {variants.map((variant) => (
                   <tr key={variant.id} className={hoverRowStyle}>
                     <td className={`${tdPaddingClass} text-center`}>
@@ -182,19 +182,19 @@ export function ProductVariantsManager({ productId, categoryId, compact = false 
                         <input 
                           checked={variant.isActive} 
                           onChange={() => toggleVariantStatus(variant.id, variant.isActive)}
-                          className={`${toggleInputClass} ${variant.isActive ? 'border-primary translate-x-[100%]' : 'border-outline-variant translate-x-0'}`} 
+                          className={`${toggleInputClass} ${variant.isActive ? 'border-primary translate-x-[100%]' : 'border-divider translate-x-0'}`} 
                           id={`toggle-${variant.id}`} 
                           type="checkbox"
                         />
                         <label 
                           htmlFor={`toggle-${variant.id}`} 
-                          className={`${toggleLabelClass} ${variant.isActive ? 'bg-primary/20' : 'bg-surface-container-high'}`}
+                          className={`${toggleLabelClass} ${variant.isActive ? 'bg-primary/20' : 'bg-surface-subtle'}`}
                         ></label>
                       </div>
                     </td>
                     <td className={tdPaddingClass}>
                       <div className="flex items-center gap-2">
-                        <div className={`rounded bg-surface-container flex items-center justify-center text-primary shrink-0 ${iconWrapperSizeClass}`}>
+                        <div className={`rounded bg-surface-subtle flex items-center justify-center text-primary shrink-0 ${iconWrapperSizeClass}`}>
                           <span className={`material-symbols-outlined ${iconTextSizeClass}`}>style</span>
                         </div>
                         <div>

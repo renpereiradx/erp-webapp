@@ -84,7 +84,7 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
 
   return (
     <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200'>
-      <div className='bg-surface dark:bg-background-dark w-full max-w-2xl max-h-[90vh] flex flex-col rounded-xl shadow-fluent-16 border border-border-subtle overflow-hidden' onClick={e => e.stopPropagation()}>
+      <div className='bg-background dark:bg-background-dark w-full max-w-2xl max-h-[90vh] flex flex-col rounded-xl shadow-fluent-16 border border-border-subtle overflow-hidden' onClick={e => e.stopPropagation()}>
         <div className='flex items-center justify-between p-6 border-b border-border-subtle bg-slate-50/50 dark:bg-slate-800/50'>
           <div className='flex items-center gap-3'>
             <div className='size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary'>
@@ -161,7 +161,7 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
                   <p className='text-[10px] font-black uppercase text-text-secondary tracking-[0.2em] mb-2'>Total Contado Físicamente</p>
                   <p className='text-4xl font-black text-primary tabular-nums font-mono tracking-tighter truncate'>{totalCounted.toLocaleString()} ₲</p>
                 </div>
-                <div className='text-center md:text-right flex-shrink-0'>
+                <div className='text-center md:text-right shrink-0'>
                   <p className='text-[10px] font-black uppercase text-text-secondary tracking-[0.2em] mb-2'>Diferencia vs Sistema</p>
                   <div className='flex items-center justify-center md:justify-end gap-2'>
                     <p className={`text-3xl font-black tabular-nums font-mono ${difference === 0 ? 'text-success' : 'text-error'}`}>

@@ -342,21 +342,21 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     : t('sales.checkoutWizard.action.next', 'Avanzar')
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-5xl bg-surface-container-lowest shadow-fluent-16 rounded-md flex flex-col md:flex-row overflow-hidden min-h-[70vh] max-h-[92vh] animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-5xl bg-surface shadow-fluent-16 rounded-md flex flex-col md:flex-row overflow-hidden min-h-[70vh] max-h-[92vh] animate-in zoom-in-95 duration-200">
         {/* ─── Panel izquierdo: Stepper ─────────────────────────────── */}
-        <div className="flex-1 flex flex-col bg-surface-container-low min-h-0">
+        <div className="flex-1 flex flex-col bg-surface-muted min-h-0">
           {/* Header con indicador de pasos */}
-          <div className="px-6 py-5 border-b border-surface-variant bg-surface-container-low">
+          <div className="px-6 py-5 border-b border-surface-deep bg-surface-muted">
             <div className="flex items-center gap-2 mb-3">
               <div className="size-9 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
                 <ShoppingCart size={18} />
               </div>
               <div>
-                <h2 className="text-headline-lg-mobile text-on-surface leading-none">
+                <h2 className="text-headline-lg-mobile text-foreground leading-none">
                   {t('sales.checkoutWizard.title', 'Concretar Venta')}
                 </h2>
-                <p className="text-body-sm text-on-surface-variant">
+                <p className="text-body-sm text-on-surface-deep">
                   {t('sales.checkoutWizard.subtitle', 'Revisá y cobrá en una sola operación')}
                 </p>
               </div>
@@ -375,7 +375,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                           ? 'bg-primary text-on-primary shadow-sm'
                           : done
                             ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-surface-container text-on-surface-variant',
+                            : 'bg-surface-subtle text-on-surface-deep',
                       )}
                     >
                       {done && <CheckCircle2 size={12} />}
@@ -389,7 +389,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
           </div>
 
           {/* Contenido del paso */}
-          <div className="flex-1 overflow-y-auto px-6 py-5 bg-surface-container-lowest">
+          <div className="flex-1 overflow-y-auto px-6 py-5 bg-surface">
             {currentStep === 'client' && (
               <ClientStep
                 ref={clientRef}
@@ -477,12 +477,12 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
           </div>
 
           {/* Footer con acciones */}
-          <div className="px-6 py-4 border-t border-surface-variant bg-surface-container-low flex items-center gap-2">
+          <div className="px-6 py-4 border-t border-surface-deep bg-surface-muted flex items-center gap-2">
             <Button
               variant="ghost"
               onClick={handleBack}
               disabled={isProcessingSale}
-              className="h-12 px-4 text-on-surface-variant hover:bg-surface-container"
+              className="h-12 px-4 text-on-surface-deep hover:bg-surface-subtle"
             >
               <ChevronLeft size={16} className="mr-1" />
               {t('sales.checkoutWizard.action.back', 'Volver')}
@@ -519,16 +519,16 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
         </div>
 
         {/* ─── Panel derecho: Carrito fijo ──────────────────────────── */}
-        <div className="md:w-[360px] flex flex-col bg-surface-container-lowest border-t md:border-t-0 md:border-l border-surface-variant min-h-0">
-          <div className="px-5 py-4 border-b border-surface-variant">
-            <p className="text-label-caps text-on-surface-variant">
+        <div className="md:w-[360px] flex flex-col bg-surface border-t md:border-t-0 md:border-l border-surface-deep min-h-0">
+          <div className="px-5 py-4 border-b border-surface-deep">
+            <p className="text-label-caps text-on-surface-deep">
               {t('sales.checkoutWizard.cart', 'Carrito')} · {items.length}
             </p>
           </div>
 
           <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
             {items.length === 0 ? (
-              <p className="text-center py-8 text-sm text-on-surface-variant">
+              <p className="text-center py-8 text-sm text-on-surface-deep">
                 {t('sales.checkoutWizard.cartEmpty', 'El carrito está vacío')}
               </p>
             ) : (
@@ -536,24 +536,24 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                 <div
                   key={item.id}
                   className={cn(
-                    'flex items-start justify-between gap-2 py-2 border-b border-surface-variant/50 last:border-0',
+                    'flex items-start justify-between gap-2 py-2 border-b border-surface-deep/50 last:border-0',
                     item.isFromPendingSale && 'opacity-60',
                   )}
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-bold text-on-surface truncate">
+                    <div className="text-sm font-bold text-foreground truncate">
                       {item.isFromPendingSale && (
-                        <Badge className="mr-1 bg-surface-variant text-on-surface-variant border-none text-[8px] uppercase align-middle">
+                        <Badge className="mr-1 bg-surface-deep text-on-surface-deep border-none text-[8px] uppercase align-middle">
                           P
                         </Badge>
                       )}
                       {item.name}
                     </div>
-                    <p className="text-xs text-on-surface-variant font-data-mono">
+                    <p className="text-xs text-on-surface-deep font-data-mono">
                       {item.quantity} {item.unit} × {formatCurrency(Number(item.price) || 0, currencyCode)}
                     </p>
                   </div>
-                  <p className="text-sm font-bold font-data-mono text-on-surface shrink-0">
+                  <p className="text-sm font-bold font-data-mono text-foreground shrink-0">
                     {formatCurrency(getItemLineTotal(item), currencyCode)}
                   </p>
                 </div>
@@ -562,8 +562,8 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
           </div>
 
           {/* Totales */}
-          <div className="px-5 py-4 border-t border-surface-variant space-y-1.5 bg-surface-container-low">
-            <div className="flex justify-between text-xs text-on-surface-variant">
+          <div className="px-5 py-4 border-t border-surface-deep space-y-1.5 bg-surface-muted">
+            <div className="flex justify-between text-xs text-on-surface-deep">
               <span>{t('sales.checkoutWizard.subtotal', 'Subtotal')}</span>
               <span className="font-data-mono">{formatCurrency(totals.subtotal, currencyCode)}</span>
             </div>
@@ -574,13 +574,13 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
               </div>
             )}
             {totals.tax_amount > 0 && (
-              <div className="flex justify-between text-xs text-on-surface-variant">
+              <div className="flex justify-between text-xs text-on-surface-deep">
                 <span>{t('sales.checkoutWizard.tax', 'Impuestos')}</span>
                 <span className="font-data-mono">{formatCurrency(totals.tax_amount, currencyCode)}</span>
               </div>
             )}
-            <div className="flex justify-between items-end pt-2 border-t border-surface-variant">
-              <span className="text-label-caps text-on-surface-variant">
+            <div className="flex justify-between items-end pt-2 border-t border-surface-deep">
+              <span className="text-label-caps text-on-surface-deep">
                 {t('sales.checkoutWizard.total', 'Total')}
               </span>
               <span className="text-headline-lg-mobile text-primary font-data-mono tracking-tighter">
@@ -588,7 +588,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
               </span>
             </div>
             {foreignCurrency && foreignDue > 0 && (
-              <p className="text-xs text-on-surface-variant text-right font-data-mono">
+              <p className="text-xs text-on-surface-deep text-right font-data-mono">
                 ≈ {formatCurrency(foreignDue, foreignCurrency.code)}
               </p>
             )}
