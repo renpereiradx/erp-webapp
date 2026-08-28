@@ -245,7 +245,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                                   ))}
                                 </div>
                               </div>
-                              <div className='text-right flex-shrink-0 ml-3'>
+                              <div className='text-right shrink-0 ml-3'>
                                 <div
                                   className={`text-[10px] font-medium ${(p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0) > 0 ? 'text-success' : 'text-error'}`}
                                 >
@@ -280,7 +280,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                             modalSelectedProduct.product_name ||
                             '-'}
                         </h4>
-                        <div className='flex items-center gap-1.5 flex-shrink-0 flex-wrap'>
+                        <div className='flex items-center gap-1.5 shrink-0 flex-wrap'>
                           {/* Badge: Con Variantes */}
                           {(modalSelectedProduct.has_variant || modalSelectedProduct.has_variants || variants.length > 0) && (
                             <span className='inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[var(--fluent-corner-radius-small,2px)] bg-[rgba(0,120,212,0.1)] border border-[rgba(0,120,212,0.25)] text-primary text-[9px] font-semibold uppercase tracking-wide'>

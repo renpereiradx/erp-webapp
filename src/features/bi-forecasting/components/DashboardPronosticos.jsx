@@ -114,7 +114,7 @@ const DashboardPronosticos = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {insights.map((insight) => (
             <div key={insight.id} className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 flex gap-4 hover:border-primary/40 transition-colors cursor-pointer group">
-              <div className="w-32 h-32 flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-slate-100 dark:border-slate-800">
+              <div className="w-32 h-32 shrink-0 bg-surface-container-low rounded-lg overflow-hidden border border-border-subtle">
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
                   <span className="material-symbols-outlined text-4xl text-primary group-hover:scale-110 transition-transform">{insight.icono}</span>
                 </div>
@@ -152,7 +152,7 @@ const DashboardPronosticos = () => {
               </span>
               <h4 className="text-base font-bold text-slate-900 dark:text-white mb-2">{rec.titulo}</h4>
               <p className="text-sm text-slate-600 dark:text-slate-300 font-medium mb-4">Acción: <span className="text-primary">{rec.accion}</span></p>
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-3 border-t border-border-subtle">
                 <p className="text-[11px] text-slate-400 dark:text-slate-500 uppercase font-bold mb-1">Impacto Potencial</p>
                 <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{rec.impacto_potencial}</p>
               </div>

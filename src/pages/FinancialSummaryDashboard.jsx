@@ -69,7 +69,7 @@ const FinancialSummaryDashboard = () => {
       {/* Comparison Toggle */}
       <div className="flex items-center justify-between bg-blue-50/50 px-6 py-4 rounded-xl border border-blue-100 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="size-2 rounded-full bg-primary animate-pulse flex-shrink-0"></div>
+          <div className="size-2 rounded-full bg-primary animate-pulse shrink-0"></div>
           <p className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Comparar con el período anterior</p>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">

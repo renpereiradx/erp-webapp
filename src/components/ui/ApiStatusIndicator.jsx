@@ -189,7 +189,7 @@ export const ApiStatusIndicator = ({
       {overallStatus === 'partial' && (
         <div className="mt-3 p-3 rounded-md bg-amber-50 border border-amber-200 text-amber-800">
           <div className="flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <div className="text-sm">
               <p className="font-medium">Funcionalidad limitada</p>
               <p className="text-xs mt-1">
@@ -204,7 +204,7 @@ export const ApiStatusIndicator = ({
       {overallStatus === 'offline' && (
         <div className="mt-3 p-3 rounded-md bg-red-50 border border-red-200 text-red-800">
           <div className="flex items-start gap-2">
-            <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <XCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <div className="text-sm">
               <p className="font-medium">Sistema no disponible</p>
               <p className="text-xs mt-1">

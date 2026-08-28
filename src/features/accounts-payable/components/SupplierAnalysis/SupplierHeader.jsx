@@ -15,7 +15,7 @@ const SupplierHeader = ({ supplier }) => {
   return (
     <header className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-6 mb-2 animate-in fade-in slide-in-from-top-4 duration-500">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 w-full">
-        <div className="w-20 h-20 md:w-24 md:h-24 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex-shrink-0">
+        <div className="w-20 h-20 md:w-24 md:h-24 bg-surface-container-lowest rounded-xl flex items-center justify-center border border-border-subtle shadow-sm overflow-hidden shrink-0">
           <img 
             alt="Supplier Logo" 
             className="w-full h-full object-cover" 
@@ -36,7 +36,7 @@ const SupplierHeader = ({ supplier }) => {
       </div>
       
       <div className="flex items-center gap-3 w-full xl:w-auto">
-        <button className="flex-1 sm:flex-none px-4 md:px-6 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 text-sm">
+        <button className="flex-1 sm:flex-none px-4 md:px-6 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-lg border border-border-subtle hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 text-sm">
           <span className="material-icons-round text-lg">chat_bubble_outline</span>
           <span className="hidden xs:inline">Contactar</span>
         </button>

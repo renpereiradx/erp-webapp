@@ -202,7 +202,7 @@ export function MovementForm() {
         </p>
         {selectedProduct ? (
           <div className='flex items-center gap-4'>
-            <div className='size-16 bg-slate-50 border border-border-subtle rounded-lg flex items-center justify-center text-primary overflow-hidden flex-shrink-0'>
+            <div className='size-16 bg-surface-container-low border border-border-subtle rounded-lg flex items-center justify-center text-primary overflow-hidden shrink-0'>
               {selectedProduct.image_url ? (
                 <img src={selectedProduct.image_url} alt={selectedProduct.name} className='w-full h-full object-cover' />
               ) : (
@@ -219,7 +219,7 @@ export function MovementForm() {
             </div>
           </div>
         ) : (
-          <div className='flex flex-col items-center justify-center py-8 text-center bg-slate-50 rounded-lg border border-dashed border-slate-300'>
+          <div className='flex flex-col items-center justify-center py-8 text-center bg-surface-container-low rounded-lg border border-dashed border-slate-300'>
             <Package className='text-slate-300 mb-2' size={40} />
             <p className='text-sm text-text-secondary px-4'>
               {t('stockMovements.form.noProduct', 'No hay producto seleccionado.')}{' '}
@@ -274,7 +274,7 @@ export function MovementForm() {
                 className={`flex-1 h-10 text-xs font-black uppercase rounded-lg border transition-all ${
                   mode === m
                     ? 'bg-primary text-white border-primary'
-                    : 'bg-white text-text-secondary border-border-subtle hover:bg-slate-50'
+                    : 'bg-white text-text-secondary border-border-subtle hover:bg-surface-container-low'
                 }`}
               >
                 {t(`stockMovements.form.mode.${m}`)}
@@ -293,7 +293,7 @@ export function MovementForm() {
                 type='number'
                 step={step}
                 disabled={!selectedProduct}
-                className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all disabled:bg-slate-50'
+                className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all disabled:bg-surface-container-low'
                 placeholder={mode === 'target' ? `0 ${unitLabel}` : '+/−'}
                 value={mode === 'target' ? targetStock : delta}
                 onChange={(e) =>
@@ -306,7 +306,7 @@ export function MovementForm() {
               <label className='text-xs font-bold text-text-secondary uppercase tracking-wider'>
                 {t('stockMovements.form.resultingStock', 'Stock resultante')}
               </label>
-              <div className='h-11 px-3 flex items-center border border-border-subtle rounded-lg bg-slate-50 text-sm font-bold text-text-main'>
+              <div className='h-11 px-3 flex items-center border border-border-subtle rounded-lg bg-surface-container-low text-sm font-bold text-text-main'>
                 {resultingStock === null ? '—' : formatNumber(resultingStock)} {unitLabel}
               </div>
             </div>
@@ -383,7 +383,7 @@ export function MovementForm() {
             <button
               type='button'
               onClick={() => setShowSearch(true)}
-              className='h-11 px-4 flex items-center gap-2 border border-border-subtle rounded-lg text-xs font-black uppercase hover:bg-slate-50 transition-all'
+              className='h-11 px-4 flex items-center gap-2 border border-border-subtle rounded-lg text-xs font-black uppercase hover:bg-surface-container-low transition-all'
             >
               <Search size={16} strokeWidth={2} />
               {t('stockMovements.form.search', 'Buscar')}

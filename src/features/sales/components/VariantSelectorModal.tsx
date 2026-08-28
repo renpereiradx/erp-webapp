@@ -201,7 +201,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                       )}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2.5 bg-surface-container-low rounded-md text-outline flex-shrink-0">
+                        <div className="p-2.5 bg-surface-container-low rounded-md text-outline shrink-0">
                           <Package size={16} />
                         </div>
                         <div className="min-w-0">
@@ -209,7 +209,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                           <p className="text-[10px] text-slate-400 font-mono uppercase mt-0.5 truncate">{v.sku}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4 flex-shrink-0">
+                      <div className="flex items-center gap-4 shrink-0">
                         <div className="text-right">
                           <p className="text-sm font-black text-slate-800">{formatPrice(v.current_price)}</p>
                           <p className={cn(
@@ -288,7 +288,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                             >
                               {val}
                               {isSelected && (
-                                <Check size={12} className="text-white flex-shrink-0" />
+                                <Check size={12} className="text-white shrink-0" />
                               )}
                             </button>
                           );
@@ -322,7 +322,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                         </h4>
                         <p className="text-[10px] text-slate-500 font-mono mt-1">SKU: {selectedVariant.sku}</p>
                       </div>
-                      <div className="text-right flex-shrink-0 ml-4">
+                      <div className="text-right shrink-0 ml-4">
                         <p className="text-base font-black text-slate-850">
                           {formatPrice(selectedVariant.current_price)}
                         </p>

@@ -58,14 +58,14 @@ const AgingBreakdownTable = ({
               search
             </span>
             <input
-              className='pl-10 pr-4 py-2 text-xs md:text-sm border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded w-full sm:w-64 md:w-80 focus:ring-[#137fec] focus:border-[#137fec] outline-none'
+              className='pl-10 pr-4 py-2 text-xs md:text-sm border-border-subtle bg-white dark:bg-slate-800 rounded w-full sm:w-64 md:w-80 focus:ring-[#137fec] focus:border-[#137fec] outline-none'
               placeholder='Buscar...'
               type='text'
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className='hidden xs:flex border border-slate-200 dark:border-slate-700 rounded overflow-hidden flex-shrink-0'>
+          <div className='hidden xs:flex border border-border-subtle rounded overflow-hidden shrink-0'>
             <button className='px-2 md:px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'>
               <span className='material-icons-round text-sm'>view_list</span>
             </button>
@@ -81,28 +81,28 @@ const AgingBreakdownTable = ({
         <table className='w-full text-left border-collapse min-w-[1000px]'>
           <thead>
             <tr className='bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider'>
-              <th className='px-4 md:px-8 py-4 sticky left-0 bg-slate-50 dark:bg-slate-800 z-10 border-b border-slate-200 dark:border-slate-700'>
+              <th className='px-4 md:px-8 py-4 sticky left-0 bg-slate-50 dark:bg-slate-800 z-10 border-b border-border-subtle'>
                 Cliente
               </th>
-              <th className='px-4 py-4 border-b border-slate-200 dark:border-slate-700 text-right'>
+              <th className='px-4 py-4 border-b border-border-subtle text-right'>
                 Corriente
               </th>
-              <th className='px-4 py-4 border-b border-slate-200 dark:border-slate-700 text-right'>
+              <th className='px-4 py-4 border-b border-border-subtle text-right'>
                 31-60 D
               </th>
-              <th className='px-4 py-4 border-b border-slate-200 dark:border-slate-700 text-right'>
+              <th className='px-4 py-4 border-b border-border-subtle text-right'>
                 61-90 D
               </th>
-              <th className='px-4 py-4 border-b border-slate-200 dark:border-slate-700 text-right'>
+              <th className='px-4 py-4 border-b border-border-subtle text-right'>
                 +90 D
               </th>
-              <th className='px-4 py-4 border-b border-slate-200 dark:border-slate-700 text-right'>
+              <th className='px-4 py-4 border-b border-border-subtle text-right'>
                 Total
               </th>
-              <th className='px-4 py-4 border-b border-slate-200 dark:border-slate-700 text-center'>
+              <th className='px-4 py-4 border-b border-border-subtle text-center'>
                 Riesgo
               </th>
-              <th className='px-4 md:px-8 py-4 border-b border-slate-200 dark:border-slate-700 text-right'>
+              <th className='px-4 md:px-8 py-4 border-b border-border-subtle text-right'>
                 Acciones
               </th>
             </tr>
@@ -161,9 +161,9 @@ const AgingBreakdownTable = ({
               )
             })}
           </tbody>
-          <tfoot className='bg-slate-100 dark:bg-slate-800/80 font-bold border-t border-slate-200 dark:border-slate-700'>
+          <tfoot className='bg-slate-100 dark:bg-slate-800/80 font-bold border-t border-border-subtle'>
             <tr>
-              <td className='px-4 md:px-8 py-4 sticky left-0 bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 text-[10px] uppercase tracking-wider'>
+              <td className='px-4 md:px-8 py-4 sticky left-0 bg-slate-100 dark:bg-slate-800 border-r border-border-subtle text-[10px] uppercase tracking-wider'>
                 TOTALES
               </td>
               <td className='px-4 py-4 text-right text-xs whitespace-nowrap'>
@@ -195,7 +195,7 @@ const AgingBreakdownTable = ({
         </p>
         <div className='flex items-center gap-2'>
           <button
-            className='p-2 border border-slate-200 dark:border-slate-700 rounded-xl disabled:opacity-50 transition-opacity'
+            className='p-2 border border-border-subtle rounded-xl disabled:opacity-50 transition-opacity'
             disabled
           >
             <span className='material-icons-round text-sm'>chevron_left</span>
@@ -215,7 +215,7 @@ const AgingBreakdownTable = ({
               15
             </button>
           </div>
-          <button className='p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 transition-colors'>
+          <button className='p-2 border border-border-subtle rounded-xl hover:bg-slate-50 transition-colors'>
             <span className='material-icons-round text-sm'>chevron_right</span>
           </button>
         </div>

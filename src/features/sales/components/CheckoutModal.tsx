@@ -144,7 +144,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   placeholder="Buscar cliente por nombre o CI... (F3)"
                   renderItem={(item) => (
                     <div className="flex items-center gap-3 py-1">
-                      <div className="size-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="size-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
                         <User size={14} className="text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">

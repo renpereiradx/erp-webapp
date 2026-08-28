@@ -244,7 +244,7 @@ const TopProductsOverview = () => {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-slate-400 border border-gray-200 dark:border-gray-700 flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm">
+                        <div className="h-12 w-12 rounded-xl bg-surface-container-low flex items-center justify-center text-on-surface-variant border border-border-subtle shrink-0 group-hover:scale-110 transition-transform shadow-sm">
                           <span className="material-symbols-outlined text-[24px]">inventory_2</span>
                         </div>
                         <div className="flex flex-col gap-0.5">
@@ -253,7 +253,7 @@ const TopProductsOverview = () => {
                           
                           {/* Nuevos campos de marca y tags */}
                           {product.brand_name && (
-                            <span className="text-[9px] text-slate-600 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-0.5">
+                            <span className="text-[9px] text-slate-600 dark:text-on-surface-variant font-semibold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-0.5">
                               {product.brand_name}
                             </span>
                           )}

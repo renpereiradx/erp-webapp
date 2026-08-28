@@ -64,7 +64,7 @@ const OverdueAccounts = () => {
           {/* Title & Actions */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
             <div className="flex items-center gap-4">
-              <div className="bg-red-50 dark:bg-red-900/20 p-2.5 rounded-xl text-fluent-danger shadow-sm border border-red-100 dark:border-red-900/10 flex-shrink-0">
+              <div className="bg-error/10 p-2.5 rounded-xl text-fluent-danger shadow-sm border border-error/10 shrink-0">
                 <AlertCircle className="h-5 w-5" />
               </div>
               <div className="flex flex-col min-w-0">

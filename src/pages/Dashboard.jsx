@@ -447,7 +447,7 @@ const Dashboard = () => {
                          className="flex gap-4 p-6 cursor-pointer hover:bg-slate-50 transition-colors group"
                          onClick={() => alert.action_url ? navigate(alert.action_url) : navigate('/dashboard/alerts')}
                        >
-                           <div className={`size-10 rounded-lg flex-shrink-0 flex items-center justify-center transition-transform group-hover:scale-110 ${
+                           <div className={`size-10 rounded-lg shrink-0 flex items-center justify-center transition-transform group-hover:scale-110 ${
                                alert.severity === 'critical' ? 'bg-red-50 text-error' : 
                                alert.severity === 'warning' ? 'bg-amber-50 text-amber-600' : 
                                'bg-blue-50 text-primary'
@@ -479,7 +479,7 @@ const Dashboard = () => {
                           className="flex gap-4 p-6 cursor-pointer hover:bg-slate-50 transition-colors group"
                           onClick={() => navigate(getActivityRoute())}
                         >
-                            <div className={`size-10 rounded-lg flex-shrink-0 flex items-center justify-center transition-transform group-hover:scale-110 ${
+                            <div className={`size-10 rounded-lg shrink-0 flex items-center justify-center transition-transform group-hover:scale-110 ${
                                 activity.type === 'sale' ? 'bg-green-50 text-success' : 'bg-blue-50 text-primary'
                             }`}>
                                 {activity.type === 'sale' ? <CheckCircle2 size={18} /> : <Activity size={18} />}

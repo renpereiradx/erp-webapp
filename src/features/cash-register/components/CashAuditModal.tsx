@@ -161,7 +161,7 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
                   <p className='text-[10px] font-black uppercase text-text-secondary tracking-[0.2em] mb-2'>Total Contado Físicamente</p>
                   <p className='text-4xl font-black text-primary tabular-nums font-mono tracking-tighter truncate'>{totalCounted.toLocaleString()} ₲</p>
                 </div>
-                <div className='text-center md:text-right flex-shrink-0'>
+                <div className='text-center md:text-right shrink-0'>
                   <p className='text-[10px] font-black uppercase text-text-secondary tracking-[0.2em] mb-2'>Diferencia vs Sistema</p>
                   <div className='flex items-center justify-center md:justify-end gap-2'>
                     <p className={`text-3xl font-black tabular-nums font-mono ${difference === 0 ? 'text-success' : 'text-error'}`}>

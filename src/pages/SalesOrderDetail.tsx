@@ -480,7 +480,7 @@ const SalesOrderDetail = () => {
                         </h2>
                     </div>
                     <div className={cn(
-                        "flex-shrink-0 size-12 rounded-xl flex items-center justify-center shadow-fluent-2",
+                        "shrink-0 size-12 rounded-xl flex items-center justify-center shadow-fluent-2",
                         balanceDue > 0 ? "bg-error/10 text-error" : "bg-success/10 text-success"
                     )}>
                         <Wallet size={24} />

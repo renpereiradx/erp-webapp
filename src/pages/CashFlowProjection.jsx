@@ -68,7 +68,7 @@ const CashFlowProjection = () => {
         {/* Title & Actions - Refined Horizontal Layout */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="bg-primary/10 p-2.5 rounded-xl text-primary shadow-sm border border-primary/20 flex-shrink-0">
+            <div className="bg-primary/10 p-2.5 rounded-xl text-primary shadow-sm border border-primary/20 shrink-0">
               <Wallet className="h-5 w-5" />
             </div>
             <div className="flex flex-col min-w-0">

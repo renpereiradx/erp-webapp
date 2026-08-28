@@ -316,7 +316,7 @@ const PurchaseRequisitionCreate: React.FC = () => {
                    onChange={(e) => setNotes(e.target.value)}
                  />
                  <div className="bg-blue-50 p-4 rounded-xl flex gap-3 border border-blue-100">
-                    <Tags className="text-blue-600 flex-shrink-0" size={20} />
+                    <Tags className="text-primary shrink-0" size={20} />
                     <p className="text-[11px] text-blue-800 font-medium leading-relaxed">
                         Las requisiciones son revisadas por el departamento de compras. Una vez aprobadas, se consolidarán en órdenes de compra globales.
                     </p>

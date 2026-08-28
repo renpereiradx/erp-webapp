@@ -208,7 +208,7 @@ const PayablesAgingReport = () => {
         {/* Title & Actions */}
         <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm'>
           <div className='flex items-center gap-5'>
-            <div className='bg-primary/10 p-2.5 rounded-xl text-primary shadow-sm border border-primary/20 flex-shrink-0'>
+            <div className='bg-primary/10 p-2.5 rounded-xl text-primary shadow-sm border border-primary/20 shrink-0'>
               <Wallet className='h-5 w-5' />
             </div>
             <div className='flex flex-col min-w-0'>
@@ -395,7 +395,7 @@ const PayablesAgingReport = () => {
                 {agingKpis.dpo}
               </h3>
             </div>
-            <div className='bg-primary/10 p-3 rounded-xl flex-shrink-0 text-primary shadow-sm border border-primary/10'>
+            <div className='bg-primary/10 p-3 rounded-xl shrink-0 text-primary shadow-sm border border-primary/10'>
               <Clock size={20} />
             </div>
           </div>
@@ -410,14 +410,14 @@ const PayablesAgingReport = () => {
         <div className='bg-white dark:bg-[#1b2633] p-6 md:p-8 rounded-2xl border border-[#edebe9] dark:border-[#2d3d4f] shadow-[0_1.6px_3.6px_0_rgba(0,0,0,0.132),_0_0.3px_0.9px_0_rgba(0,0,0,0.108)] relative overflow-hidden group hover:shadow-md transition-all'>
           <div className='flex justify-between items-start'>
             <div className='flex-1 min-w-0'>
-              <p className='text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 group-hover:text-orange-500 transition-colors'>
+              <p className='text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 group-hover:text-warning transition-colors'>
                 % de Deuda Vencida
               </p>
               <h3 className='text-3xl font-black text-slate-900 dark:text-white tracking-tight'>
                 {agingKpis.overdue}
               </h3>
             </div>
-            <div className='bg-orange-500/10 p-3 rounded-xl flex-shrink-0 text-orange-500 shadow-sm border border-orange-500/10'>
+            <div className='bg-warning/10 p-3 rounded-xl shrink-0 text-warning shadow-sm border border-warning/10'>
               <AlertCircle size={20} />
             </div>
           </div>
@@ -426,7 +426,7 @@ const PayablesAgingReport = () => {
               className='absolute top-0 left-0 w-full h-full border-[6px] border-orange-500 rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(249,115,22,0.4)]'
               style={{ clipPath: 'polygon(0 0, 100% 0, 100% 45%, 0 45%)' }}
             ></div>
-            <span className='text-[9px] font-black text-orange-500 uppercase tracking-widest z-10'>
+            <span className='text-[9px] font-black text-warning uppercase tracking-widest z-10'>
               ALTO
             </span>
           </div>
@@ -443,7 +443,7 @@ const PayablesAgingReport = () => {
                 {agingKpis.critical}
               </h3>
             </div>
-            <div className='bg-fluent-danger/10 p-3 rounded-xl flex-shrink-0 text-fluent-danger shadow-sm border border-fluent-danger/10'>
+            <div className='bg-fluent-danger/10 p-3 rounded-xl shrink-0 text-fluent-danger shadow-sm border border-fluent-danger/10'>
               <AlertTriangle size={20} />
             </div>
           </div>
@@ -516,7 +516,7 @@ const PayablesAgingReport = () => {
                     {formatPYG(row.days30_60)}
                   </td>
                   <td
-                    className={`px-4 py-4 text-right font-mono font-bold ${row.days60_90 > 0 ? 'text-orange-500' : 'text-slate-500'}`}
+                    className={`px-4 py-4 text-right font-mono font-bold ${row.days60_90 > 0 ? 'text-warning' : 'text-slate-500'}`}
                   >
                     {formatPYG(row.days60_90)}
                   </td>

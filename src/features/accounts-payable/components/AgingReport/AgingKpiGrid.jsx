@@ -36,7 +36,7 @@ const AgingKpiGrid = ({ kpis }) => {
               </span>
             </div>
           </div>
-          <div className='bg-[#137fec1a] p-2 md:p-3 rounded-lg flex-shrink-0'>
+          <div className='bg-primary/10 p-2 md:p-3 rounded-lg shrink-0'>
             <span className='material-icons-round text-[#137fec] text-xl md:text-2xl'>
               schedule
             </span>
@@ -75,7 +75,7 @@ const AgingKpiGrid = ({ kpis }) => {
               </span>
             </div>
           </div>
-          <div className='bg-[#fd7e141a] p-2 md:p-3 rounded-lg flex-shrink-0'>
+          <div className='bg-warning/10 p-2 md:p-3 rounded-lg shrink-0'>
             <span className='material-icons-round text-[#fd7e14] text-xl md:text-2xl'>
               error_outline
             </span>
@@ -114,7 +114,7 @@ const AgingKpiGrid = ({ kpis }) => {
               </span>
             </div>
           </div>
-          <div className='bg-[#dc35451a] p-2 md:p-3 rounded-lg flex-shrink-0'>
+          <div className='bg-error/10 p-2 md:p-3 rounded-lg shrink-0'>
             <span className='material-icons-round text-[#dc3545] text-xl md:text-2xl'>
               report_problem
             </span>
