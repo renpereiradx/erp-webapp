@@ -87,6 +87,7 @@ function generateBlock(tokens) {
   }
   theme.push(
     ...emitSimple(tokens.spacing || {}, '--spacing-'),
+    ...emitSimple(tokens.container || {}, '--container-'),
     ...(tokens.spacing && tokens.spacing['container-max']
       ? [`  --container-container-max: ${tokens.spacing['container-max']};`]
       : []),
@@ -106,6 +107,17 @@ function generateBlock(tokens) {
     '',
     '.dark {',
     ...(dark.length ? dark : ['  /* sin overrides de color */']),
+    '}',
+    '',
+    '/* Fix Tailwind v4: el namespace --spacing-* (p-ej --spacing-md:16px) sombrea a',
+    '   la escala de container --container-* en max-w-*, porque el tema default resuelve',
+    '   maxWidth = {...container, ...spacing} con el spread de spacing al final.',
+    '   Aquí restauramos la precedencia de container para las claves que coinciden en',
+    '   ambas escalas, manteniendo p-md/gap-lg etc. en la escala de espaciado. */',
+    '@layer utilities {',
+    ...Object.keys(tokens.container || {})
+      .filter((k) => tokens.spacing && tokens.spacing[k] !== undefined)
+      .map((k) => `  .max-w-${k} { max-width: var(--container-${k}); }`),
     '}',
     '',
   ]
