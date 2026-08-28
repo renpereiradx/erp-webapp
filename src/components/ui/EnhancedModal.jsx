@@ -39,11 +39,11 @@ const MODAL_VARIANTS = {
 };
 
 const MODAL_SIZES = {
-  sm: 'max-w-md',
-  md: 'max-w-lg',
-  lg: 'max-w-2xl',
-  xl: 'max-w-4xl',
-  full: 'max-w-7xl'
+  sm: 'max-w-[28rem]',
+  md: 'max-w-[32rem]',
+  lg: 'max-w-[42rem]',
+  xl: 'max-w-[56rem]',
+  full: 'max-w-[80rem]'
 };
 
 const EnhancedModal = ({

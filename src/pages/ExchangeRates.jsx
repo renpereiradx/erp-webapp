@@ -91,7 +91,7 @@ const ExchangeRateFormModal = ({ isOpen, onClose, rate, currencies, onSave }) =>
 
   return createPortal(
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-surface-dark w-full max-w-lg rounded-xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
+      <div className="bg-white dark:bg-surface-dark w-full max-w-[32rem] rounded-xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <h2 className="text-xl font-semibold tracking-tight text-text-main uppercase">
             {rate ? t('exchangeRates.modal.edit_title') : t('exchangeRates.modal.create_title')}
