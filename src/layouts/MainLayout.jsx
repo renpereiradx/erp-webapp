@@ -531,6 +531,11 @@ const MainLayout = ({ children }) => {
                 icon: Coins,
               },
               {
+                name: t('nav.payment_methods', 'Métodos de Pago'),
+                href: '/configuracion/metodos-pago',
+                icon: CreditCard,
+              },
+              {
                 name: t('exchangeRates.title', 'Tipos de Cambio'),
                 href: '/configuracion/tipos-cambio',
                 icon: SlidersHorizontal,

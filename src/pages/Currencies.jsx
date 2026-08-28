@@ -44,7 +44,6 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
-import { PaymentMethodService } from '@/services/paymentMethodService'
 
 // --- Components ---
 
@@ -236,168 +235,6 @@ const TaxRateDrawer = ({ isOpen, onClose, taxRate, onSave }) => {
   )
 }
 
-// Payment Methods Tab Component
-const PaymentMethodsTab = ({ searchTerm, onEdit, onAdd }) => {
-  const { t } = useI18n()
-  const [methods, setMethods] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchMethods()
-  }, [])
-
-  const fetchMethods = async () => {
-    setLoading(true)
-    try {
-      const data = await PaymentMethodService.getAll()
-      setMethods(data)
-    } catch (error) {
-      console.error('Error fetching payment methods:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Expose fetchMethods to parent if needed, but for now we'll just handle it here
-  // Actually, we should probably lift state or use a store, but let's keep it consistent with the existing pattern.
-
-  const filteredMethods = methods.filter(method => {
-    if (!searchTerm) return true
-    const term = searchTerm.toLowerCase()
-    return (
-      (method.method_code || '').toLowerCase().includes(term) ||
-      (method.description || '').toLowerCase().includes(term)
-    )
-  })
-
-  return (
-    <div className="space-y-4">
-      <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-border-subtle shadow-fluent-2 flex justify-between items-center">
-        <h3 className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em]">{t('currencies.tabs.payment_methods')}</h3>
-        <Button onClick={onAdd} size="sm" className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] px-4 h-9 rounded shadow-fluent-2 flex items-center gap-2">
-          <span className="material-icons-round text-[16px]">add</span>
-          Nuevo Método
-        </Button>
-      </div>
-
-      <div className="overflow-hidden rounded-xl border border-border-subtle bg-white dark:bg-surface-dark shadow-fluent-2">
-        <Table>
-          <TableHeader className="bg-slate-50/80 dark:bg-slate-800/50">
-            <TableRow>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">{t('currencies.table.code')}</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">{t('currencies.table.name')}</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">{t('currencies.payment_methods.table.type')}</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3">{t('currencies.table.status')}</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-3 text-right">{t('currencies.table.actions')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow><TableCell colSpan={5} className="py-12 text-center text-slate-400 font-black uppercase tracking-widest text-xs">{t('common.loading')}</TableCell></TableRow>
-            ) : filteredMethods.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="py-12 text-center text-text-secondary font-bold italic">{t('currencies.empty.search')}</TableCell></TableRow>
-            ) : (
-              filteredMethods.map(method => (
-                <tr key={method.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-border-subtle">
-                  <TableCell className="py-4 px-3"><span className="font-mono font-black text-primary tabular-nums uppercase">{method.method_code}</span></TableCell>
-                  <TableCell className="py-4 px-3 font-bold text-text-main">{method.description}</TableCell>
-                  <TableCell className="py-4 px-3 text-xs font-bold text-text-secondary uppercase tracking-tighter">
-                    {PaymentMethodService.requiresAdditionalInfo(method) ? t('currencies.payment_methods.type.complex') : t('currencies.payment_methods.type.simple')}
-                  </TableCell>
-                  <TableCell className="py-4 px-3">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${method.is_active ? 'bg-green-50 border-green-200 text-success' : 'bg-slate-100 border-slate-200 text-text-secondary'}`}>
-                      <span className={`size-1.5 rounded-full ${method.is_active ? 'bg-success' : 'bg-slate-400'}`}></span>
-                      {method.is_active ? t('currencies.status.active') : t('currencies.status.inactive')}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-4 px-3 text-right">
-                    <Button variant="ghost" size="icon" className="size-8 text-text-secondary hover:text-primary transition-colors rounded" onClick={() => onEdit(method)}><span className="material-icons-round text-[18px]">edit</span></Button>
-                  </TableCell>
-                </tr>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  )
-}
-
-// Payment Method Drawer Component
-const PaymentMethodDrawer = ({ isOpen, onClose, method, onSave }) => {
-  const { t } = useI18n()
-  const [formData, setFormData] = useState({
-    method_code: '', description: '', is_active: true
-  })
-  const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    if (method) {
-      setFormData({
-        method_code: method.method_code || '',
-        description: method.description || '',
-        is_active: method.is_active !== false
-      })
-    } else {
-      setFormData({
-        method_code: '', description: '', is_active: true
-      })
-    }
-  }, [method, isOpen])
-
-  const handleSubmit = async e => {
-    e.preventDefault()
-    setSaving(true)
-    try { await onSave(formData); onClose(); } catch (error) { console.error('Failed to save payment method', error); } finally { setSaving(false); }
-  }
-
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-surface-dark shadow-fluent-16 z-[100] flex flex-col animate-in slide-in-from-right duration-300 border-l border-border-subtle">
-      <div className="p-6 border-b border-border-subtle flex items-center justify-between">
-        <h3 className="text-xl font-black tracking-tighter text-text-main uppercase">
-          {method ? 'Editar Método de Pago' : 'Nuevo Método de Pago'}
-        </h3>
-        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-text-secondary transition-colors">
-          <span className="material-icons-round text-[20px]">close</span>
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6 space-y-8">
-        <form id="payment-method-form" onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Código del Método</label>
-            <Input value={formData.method_code} onChange={e => setFormData({...formData, method_code: e.target.value.toUpperCase()})} placeholder="CASH, CARD, etc." disabled={!!method?.id} className="rounded border-border-subtle uppercase font-mono font-bold" required />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Descripción</label>
-            <Input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Ej: Pago en Efectivo" className="rounded border-border-subtle font-bold" required />
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-border-subtle">
-            <span className="text-xs font-black uppercase tracking-widest text-text-main">Método Activo</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.checked})} className="sr-only peer" />
-                <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
-            </label>
-          </div>
-        </form>
-      </div>
-
-      <div className="p-6 border-t border-border-subtle bg-slate-50/50 dark:bg-slate-900/20 flex gap-3">
-        <Button form="payment-method-form" type="submit" className="flex-1 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] h-11 rounded shadow-fluent-2" disabled={saving}>
-          {saving ? t('action.saving') : t('action.save')}
-        </Button>
-        <Button variant="outline" onClick={onClose} className="flex-1 border-border-subtle font-black uppercase tracking-widest text-[10px] h-11 rounded">
-          {t('action.cancel')}
-        </Button>
-      </div>
-    </div>
-  )
-}
-
 // Drawer (Slide-over) Component for Add/Edit
 const CurrencyDrawer = ({ isOpen, onClose, currency, onSave, baseCurrency }) => {
   const { t } = useI18n()
@@ -525,11 +362,9 @@ const CurrenciesPage = () => {
   } = useCategoryManagement()
 
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [methodDrawerOpen, setMethodDrawerOpen] = useState(false)
   const [taxRateDrawerOpen, setTaxRateDrawerOpen] = useState(false)
 
   const [selectedCurrency, setSelectedCurrency] = useState(null)
-  const [selectedMethod, setSelectedMethod] = useState(null)
   const [selectedTaxRate, setSelectedTaxRate] = useState(null)
 
   const [activeTab, setActiveTab] = useState('currencies')
@@ -561,36 +396,8 @@ const CurrenciesPage = () => {
     setSelectedCurrency(null)
   }
 
-  const handleOpenCreateMethod = () => {
-    setSelectedMethod(null)
-    setMethodDrawerOpen(true)
-  }
-
-  const handleOpenEditMethod = (method) => {
-    setSelectedMethod(method)
-    setMethodDrawerOpen(true)
-  }
-
-  const handleCloseMethodDrawer = () => {
-    setMethodDrawerOpen(false)
-    setSelectedMethod(null)
-  }
-
   const handleSave = async formData => {
     if (selectedCurrency) { await updateCurrency(selectedCurrency.id, formData); } else { await createCurrency(formData); }
-  }
-
-  const handleSaveMethod = async formData => {
-    try {
-      if (selectedMethod) {
-        await PaymentMethodService.update(selectedMethod.id, formData)
-      } else {
-        await PaymentMethodService.create(formData)
-      }
-      window.location.reload();
-    } catch (error) {
-      console.error('Error saving payment method', error)
-    }
   }
 
   const handleExport = () => {
@@ -635,7 +442,6 @@ const CurrenciesPage = () => {
       <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit">
         {[
           { id: 'currencies', label: t('currencies.tabs.currencies'), icon: 'payments' },
-          { id: 'payment-methods', label: t('currencies.tabs.payment_methods'), icon: 'credit_card' },
           { id: 'tax-rates', label: 'IVA / Tasas', icon: 'account_balance' },
           { id: 'categories', label: 'Categorías', icon: 'category' },
           { id: 'settings', label: t('currencies.tabs.settings'), icon: 'settings' }
@@ -742,7 +548,6 @@ const CurrenciesPage = () => {
           </div>
         )}
 
-        {activeTab === 'payment-methods' && <PaymentMethodsTab searchTerm={searchTerm} onEdit={handleOpenEditMethod} onAdd={handleOpenCreateMethod} />}
         {activeTab === 'categories' && (
           <div className="space-y-4">
             <div className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-border-subtle shadow-fluent-2 flex justify-between items-center">
@@ -787,9 +592,8 @@ const CurrenciesPage = () => {
       </div>
 
       {/* Drawer Overlays */}
-      {(drawerOpen || methodDrawerOpen || categoryDrawerOpen || taxRateDrawerOpen) && <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90] transition-all" onClick={() => { handleCloseDrawer(); handleCloseMethodDrawer(); handleCloseCategoryDrawer(); setTaxRateDrawerOpen(false); }} />}
+      {(drawerOpen || categoryDrawerOpen || taxRateDrawerOpen) && <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90] transition-all" onClick={() => { handleCloseDrawer(); handleCloseCategoryDrawer(); setTaxRateDrawerOpen(false); }} />}
       <CurrencyDrawer isOpen={drawerOpen} onClose={handleCloseDrawer} currency={selectedCurrency} onSave={handleSave} baseCurrency={baseCurrency} />
-      <PaymentMethodDrawer isOpen={methodDrawerOpen} onClose={handleCloseMethodDrawer} method={selectedMethod} onSave={handleSaveMethod} />
       <CategoryDrawer isOpen={categoryDrawerOpen} onClose={handleCloseCategoryDrawer} category={selectedCategory} onSave={handleSaveCategory} />
       <TaxRateDrawer isOpen={taxRateDrawerOpen} onClose={() => setTaxRateDrawerOpen(false)} taxRate={selectedTaxRate} onSave={handleSaveTaxRate} />
 

@@ -121,4 +121,21 @@ export const currencies = {
   'currencies.settings.hint.number_format': 'El formato visual de los montos en la aplicación.',
   'currencies.settings.field.show_symbols': 'Mostrar símbolos de moneda',
   'currencies.settings.field.auto_update': 'Actualización automática de tasas (Próximamente)',
+
+  // Página de Métodos de Pago
+  'paymentMethods.page.title': 'Métodos de Pago',
+  'paymentMethods.page.subtitle': 'Administra las formas de cobro y pago disponibles en el sistema.',
+  'paymentMethods.action.create': 'Nuevo Método',
+  'paymentMethods.action.edit': 'Editar Método',
+  'paymentMethods.search.placeholder': 'Buscar por código o descripción...',
+  'paymentMethods.empty.title': 'No hay métodos de pago',
+  'paymentMethods.empty.description': 'Crea tu primer método de pago para habilitar cobros y pagos en el sistema.',
+  'paymentMethods.error.load': 'Error al cargar los métodos de pago',
+  'paymentMethods.form.code': 'Código del Método',
+  'paymentMethods.form.code_placeholder': 'CASH, CARD, etc.',
+  'paymentMethods.form.description': 'Descripción',
+  'paymentMethods.form.description_placeholder': 'Ej: Pago en Efectivo',
+  'paymentMethods.form.active': 'Método Activo',
+  'paymentMethods.form.create_title': 'Nuevo Método de Pago',
+  'paymentMethods.form.edit_title': 'Editar Método de Pago',
 }

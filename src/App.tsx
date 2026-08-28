@@ -51,6 +51,7 @@ import SalePayment from '@/pages/SalePayment'
 import SalesOrderDetail from '@/pages/SalesOrderDetail'
 import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
 import Currencies from '@/pages/Currencies'
+import PaymentMethods from '@/pages/PaymentMethods'
 import ExchangeRates from '@/pages/ExchangeRates'
 import CategoriesPage from '@/pages/CategoriesPage'
 import { BrandsPage } from '@/pages/BrandsPage'
@@ -440,6 +441,10 @@ function AppContent() {
                       <Route
                         path='/configuracion/monedas'
                         element={<Currencies />}
+                      />
+                      <Route
+                        path='/configuracion/metodos-pago'
+                        element={<PaymentMethods />}
                       />
                       <Route
                         path='/configuracion/tipos-cambio'

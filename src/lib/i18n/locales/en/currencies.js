@@ -114,4 +114,21 @@ export const currencies = {
   'currencies.settings.hint.number_format': 'The visual format of amounts in the application.',
   'currencies.settings.field.show_symbols': 'Show currency symbols',
   'currencies.settings.field.auto_update': 'Automatic rate update (Coming Soon)',
+
+  // Payment Methods Page
+  'paymentMethods.page.title': 'Payment Methods',
+  'paymentMethods.page.subtitle': 'Manage the payment methods available in the system.',
+  'paymentMethods.action.create': 'New Method',
+  'paymentMethods.action.edit': 'Edit Method',
+  'paymentMethods.search.placeholder': 'Search by code or description...',
+  'paymentMethods.empty.title': 'No payment methods',
+  'paymentMethods.empty.description': 'Create your first payment method to enable collections and payments.',
+  'paymentMethods.error.load': 'Error loading payment methods',
+  'paymentMethods.form.code': 'Method Code',
+  'paymentMethods.form.code_placeholder': 'CASH, CARD, etc.',
+  'paymentMethods.form.description': 'Description',
+  'paymentMethods.form.description_placeholder': 'e.g. Cash Payment',
+  'paymentMethods.form.active': 'Active Method',
+  'paymentMethods.form.create_title': 'New Payment Method',
+  'paymentMethods.form.edit_title': 'Edit Payment Method',
 }
