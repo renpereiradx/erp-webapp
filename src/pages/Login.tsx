@@ -42,7 +42,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background-light flex items-center justify-center p-4 font-display">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 font-display">
       {DEMO_CONFIG.enabled && (
         <div className="fixed top-6 right-6 z-50 animate-pulse">
           <div className="bg-warning text-text-main px-4 py-2 rounded shadow-fluent-8 flex items-center gap-2 font-black uppercase tracking-tighter text-[10px] border border-border-subtle">

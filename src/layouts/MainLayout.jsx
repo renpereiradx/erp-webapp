@@ -779,7 +779,7 @@ const MainLayout = ({ children }) => {
   }
 
   return (
-    <div className='min-h-screen bg-background-light flex'>
+    <div className='min-h-screen bg-background flex'>
       {/* Sidebar Desktop */}
       {isClient && isLargeScreen && (
         <aside
@@ -1097,7 +1097,7 @@ const MainLayout = ({ children }) => {
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto bg-background-light p-6 md:p-10 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto bg-background p-6 md:p-10 custom-scrollbar">
           <div className="max-w-[1800px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
             {children}
           </div>

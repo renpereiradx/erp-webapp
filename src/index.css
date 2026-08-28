@@ -237,7 +237,9 @@
   }
 
   body {
-    @apply bg-background-light text-text-primary-light;
+    /* Tokens semánticos (flipean con .dark) — NO usar *-light/*-dark fijos aquí:
+       el body es la base del modo oscuro de toda la app. */
+    @apply bg-background text-foreground;
     font-family: var(--font-sans);
     font-variant-numeric: tabular-nums;
   }
