@@ -56,10 +56,10 @@ export const BrandDetailForm: React.FC<BrandDetailFormProps> = ({
   };
 
   return (
-    <section className="w-full h-full bg-surface rounded-[16px] shadow-sm border border-outline-variant/30 flex flex-col shrink-0 overflow-hidden">
-      <div className="p-lg border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-lowest rounded-t-[16px]">
-        <h3 className="font-title-md text-title-md font-bold text-on-surface">Ficha de Marca</h3>
-        <button type="button" onClick={onCancel} className="text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low p-1 rounded transition-colors">
+    <section className="w-full h-full bg-background rounded-[16px] shadow-sm border border-divider/30 flex flex-col shrink-0 overflow-hidden">
+      <div className="p-lg border-b border-divider/20 flex justify-between items-center bg-surface rounded-t-[16px]">
+        <h3 className="font-title-md text-title-md font-bold text-foreground">Ficha de Marca</h3>
+        <button type="button" onClick={onCancel} className="text-on-surface-deep hover:text-foreground hover:bg-surface-muted p-1 rounded transition-colors">
           <span className="material-symbols-outlined">close</span>
         </button>
       </div>
@@ -67,36 +67,36 @@ export const BrandDetailForm: React.FC<BrandDetailFormProps> = ({
       <div className="p-lg flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-lg">
         {/* Cover / Logo Area */}
         <div className="flex flex-col items-center mb-sm">
-          <div className="w-20 h-20 rounded-xl bg-surface-container-high border border-outline-variant flex items-center justify-center mb-sm shadow-sm relative group overflow-hidden cursor-pointer">
+          <div className="w-20 h-20 rounded-xl bg-surface-subtle border border-divider flex items-center justify-center mb-sm shadow-sm relative group overflow-hidden cursor-pointer">
             {formData.logoUrl ? (
                <img src={formData.logoUrl} alt="Logo" className="w-full h-full object-cover" />
             ) : (
-               <span className="material-symbols-outlined text-[32px] text-on-surface-variant group-hover:opacity-0 transition-opacity">
+               <span className="material-symbols-outlined text-[32px] text-on-surface-deep group-hover:opacity-0 transition-opacity">
                  {formData.icon || 'public'}
                </span>
             )}
-            <div className="absolute inset-0 bg-surface-container-highest/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 bg-surface-deep/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <span className="material-symbols-outlined text-primary text-[20px]">upload</span>
               <span className="font-label-caps text-[10px] text-primary mt-1">Subir</span>
             </div>
           </div>
-          <span className="font-body-md-bold text-body-md-bold text-on-surface">
+          <span className="font-body-md-bold text-body-md-bold text-foreground">
             {formData.name || 'Sin nombre'}
           </span>
           {!isNew && (
-            <span className="font-data-mono text-[12px] text-on-surface-variant">ID: {brand.id}</span>
+            <span className="font-data-mono text-[12px] text-on-surface-deep">ID: {brand.id}</span>
           )}
         </div>
 
         {/* Form Fields */}
         <form id="brand-form" className="flex flex-col gap-md" onSubmit={handleSave}>
           <div className="flex flex-col gap-xs">
-            <label className="font-body-md-bold text-body-md-bold text-on-surface">
+            <label className="font-body-md-bold text-body-md-bold text-foreground">
               Nombre de la Marca <span className="text-error">*</span>
             </label>
             <input
               required
-              className="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full px-3 py-2 bg-surface border border-divider rounded-xl font-body-md text-body-md text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               placeholder="Ej. Global Tech"
               type="text"
               value={formData.name || ''}
@@ -105,12 +105,12 @@ export const BrandDetailForm: React.FC<BrandDetailFormProps> = ({
           </div>
           
           <div className="flex flex-col gap-xs">
-            <label className="font-body-md-bold text-body-md-bold text-on-surface flex items-center">
+            <label className="font-body-md-bold text-body-md-bold text-foreground flex items-center">
               Slug 
-              <span className="material-symbols-outlined text-[14px] text-on-surface-variant ml-1 cursor-help" title="Identificador único para URLs">info</span>
+              <span className="material-symbols-outlined text-[14px] text-on-surface-deep ml-1 cursor-help" title="Identificador único para URLs">info</span>
             </label>
             <input
-              className={`w-full px-3 py-2 border border-outline-variant rounded-xl font-data-mono text-data-mono focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${!isNew ? 'bg-surface-container-low cursor-not-allowed text-on-surface-variant' : 'bg-surface-container-lowest text-on-surface'}`}
+              className={`w-full px-3 py-2 border border-divider rounded-xl font-data-mono text-data-mono focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${!isNew ? 'bg-surface-muted cursor-not-allowed text-on-surface-deep' : 'bg-surface text-foreground'}`}
               disabled={!isNew}
               type="text"
               value={formData.slug || ''}
@@ -119,23 +119,23 @@ export const BrandDetailForm: React.FC<BrandDetailFormProps> = ({
           </div>
           
           <div className="flex flex-col gap-xs">
-            <label className="font-body-md-bold text-body-md-bold text-on-surface">Logo URL</label>
+            <label className="font-body-md-bold text-body-md-bold text-foreground">Logo URL</label>
             <div className="relative">
               <input
-                className="w-full pl-3 pr-10 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl font-data-mono text-data-mono text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full pl-3 pr-10 py-2 bg-surface border border-divider rounded-xl font-data-mono text-data-mono text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 type="text"
                 placeholder="https://"
                 value={formData.logoUrl || ''}
                 onChange={(e) => handleChange('logoUrl', e.target.value)}
               />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-on-surface-variant hover:text-primary transition-colors" type="button">
+              <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-on-surface-deep hover:text-primary transition-colors" type="button">
                 <span className="material-symbols-outlined text-[18px]">upload_file</span>
               </button>
             </div>
           </div>
         </form>
       </div>
-      <div className="flex items-center justify-between p-4 sm:p-lg border-t border-outline-variant/30 mt-auto bg-surface rounded-b-[16px] shrink-0">
+      <div className="flex items-center justify-between p-4 sm:p-lg border-t border-divider/30 mt-auto bg-background rounded-b-[16px] shrink-0">
         {!isNew ? (
           <button
             type="button"

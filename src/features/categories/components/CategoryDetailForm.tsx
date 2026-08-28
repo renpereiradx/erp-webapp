@@ -78,7 +78,7 @@ export function CategoryDetailForm({
 
   if (!isOpen) {
     return (
-      <div className="flex flex-col bg-surface rounded-[16px] shadow-sm border border-outline-variant/30 p-lg min-h-[300px] items-center justify-center text-on-surface-variant opacity-60 shrink-0">
+      <div className="flex flex-col bg-background rounded-[16px] shadow-sm border border-divider/30 p-lg min-h-[300px] items-center justify-center text-on-surface-deep opacity-60 shrink-0">
         <span className="material-symbols-outlined text-[48px] mb-2">category</span>
         <p>Selecciona una categoría del árbol o crea una nueva</p>
       </div>
@@ -86,9 +86,9 @@ export function CategoryDetailForm({
   }
 
   return (
-    <div className="flex flex-col bg-surface rounded-[16px] shadow-sm border border-outline-variant/30 p-lg shrink-0">
-      <div className="flex justify-between items-center mb-md border-b border-outline-variant/20 pb-sm">
-        <h2 className="text-title-md font-title-md text-on-surface font-bold">
+    <div className="flex flex-col bg-background rounded-[16px] shadow-sm border border-divider/30 p-lg shrink-0">
+      <div className="flex justify-between items-center mb-md border-b border-divider/20 pb-sm">
+        <h2 className="text-title-md font-title-md text-foreground font-bold">
           {isOpen ? (selectedCategory ? 'Editando Categoría' : 'Nueva Categoría') : 'Detalle de Categoría'}
         </h2>
         {selectedCategory && (
@@ -100,13 +100,13 @@ export function CategoryDetailForm({
       
       <form onSubmit={onSubmit} className="flex flex-col gap-md flex-1">
         <div>
-          <label className="block text-label-caps font-label-caps text-on-surface-variant mb-xs" htmlFor="cat-name">
+          <label className="block text-label-caps font-label-caps text-on-surface-deep mb-xs" htmlFor="cat-name">
             Nombre de la Categoría
           </label>
           <input
             id="cat-name"
             type="text"
-            className="w-full form-input-custom px-md py-sm bg-surface text-body-md font-body-md text-on-surface"
+            className="w-full form-input-custom px-md py-sm bg-background text-body-md font-body-md text-foreground"
             value={formData.name}
             onChange={handleChange}
             placeholder="Ej. Deportivo"
@@ -115,13 +115,13 @@ export function CategoryDetailForm({
           />
         </div>
         <div>
-          <label className="block text-label-caps font-label-caps text-on-surface-variant mb-xs" htmlFor="cat-desc">
+          <label className="block text-label-caps font-label-caps text-on-surface-deep mb-xs" htmlFor="cat-desc">
             Descripción
           </label>
           <textarea
             id="cat-desc"
             rows={3}
-            className="w-full form-input-custom px-md py-sm bg-surface text-body-md font-body-md text-on-surface resize-none"
+            className="w-full form-input-custom px-md py-sm bg-background text-body-md font-body-md text-foreground resize-none"
             value={formData.description}
             onChange={handleChange}
             placeholder="Descripción de la categoría"
@@ -129,13 +129,13 @@ export function CategoryDetailForm({
           ></textarea>
         </div>
         <div>
-          <label className="block text-label-caps font-label-caps text-on-surface-variant mb-xs" htmlFor="cat-parent">
+          <label className="block text-label-caps font-label-caps text-on-surface-deep mb-xs" htmlFor="cat-parent">
             Categoría Padre
           </label>
           <div className="relative">
             <select
               id="cat-parent"
-              className="w-full form-input-custom px-md py-sm bg-surface text-body-md font-body-md text-on-surface appearance-none"
+              className="w-full form-input-custom px-md py-sm bg-background text-body-md font-body-md text-foreground appearance-none"
               value={formData.parent_id ?? 'none'}
               onChange={handleChange}
               disabled={isMutating}
@@ -145,19 +145,19 @@ export function CategoryDetailForm({
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">
+            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-deep pointer-events-none">
               expand_more
             </span>
           </div>
         </div>
         <div>
-          <label className="block text-label-caps font-label-caps text-on-surface-variant mb-xs" htmlFor="tax-rate">
+          <label className="block text-label-caps font-label-caps text-on-surface-deep mb-xs" htmlFor="tax-rate">
             Tasa de IVA por Defecto
           </label>
           <div className="relative">
             <select
               id="tax-rate"
-              className="w-full form-input-custom px-md py-sm bg-surface text-body-md font-body-md text-on-surface appearance-none"
+              className="w-full form-input-custom px-md py-sm bg-background text-body-md font-body-md text-foreground appearance-none"
               value={formData.default_tax_rate_id ?? 'none'}
               onChange={handleChange}
               disabled={isMutating}
@@ -169,7 +169,7 @@ export function CategoryDetailForm({
                 </option>
               ))}
             </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">
+            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-deep pointer-events-none">
               expand_more
             </span>
           </div>

@@ -148,15 +148,15 @@ export default function AdminSessionsDashboard() {
           <p className="text-text-secondary text-sm mt-1">Monitoreo y gestión en tiempo real de sesiones activas en todo el ecosistema ERP.</p>
         </div>
         <div className="flex flex-wrap gap-4">
-          <Card className="px-6 py-4 min-w-[160px] flex flex-col items-center border-l-4 border-l-blue-500 border-y-0 border-r-0 shadow-sm rounded-lg bg-surface">
+          <Card className="px-6 py-4 min-w-[160px] flex flex-col items-center border-l-4 border-l-blue-500 border-y-0 border-r-0 shadow-sm rounded-lg bg-background">
             <span className="text-text-secondary text-[10px] font-bold uppercase tracking-widest mb-1">Total Activas</span>
             <span className="text-2xl font-bold text-text-main">{metrics.active}</span>
           </Card>
-          <Card className="px-6 py-4 min-w-[160px] flex flex-col items-center border-l-4 border-l-orange-500 border-y-0 border-r-0 shadow-sm rounded-lg bg-surface">
+          <Card className="px-6 py-4 min-w-[160px] flex flex-col items-center border-l-4 border-l-orange-500 border-y-0 border-r-0 shadow-sm rounded-lg bg-background">
             <span className="text-text-secondary text-[10px] font-bold uppercase tracking-widest mb-1">Revocadas Hoy</span>
             <span className="text-2xl font-bold text-text-main">{metrics.revokedToday}</span>
           </Card>
-          <Card className="px-6 py-4 min-w-[160px] flex flex-col items-center border-l-4 border-l-red-500 border-y-0 border-r-0 shadow-sm rounded-lg bg-surface">
+          <Card className="px-6 py-4 min-w-[160px] flex flex-col items-center border-l-4 border-l-red-500 border-y-0 border-r-0 shadow-sm rounded-lg bg-background">
             <span className="text-text-secondary text-[10px] font-bold uppercase tracking-widest mb-1">Anomalías</span>
             <span className="text-2xl font-bold text-error">{metrics.anomalies}</span>
           </Card>
@@ -164,7 +164,7 @@ export default function AdminSessionsDashboard() {
       </div>
 
       {/* Filter Bar */}
-      <Card className="p-3 shadow-sm rounded-lg border-border-subtle bg-surface">
+      <Card className="p-3 shadow-sm rounded-lg border-border-subtle bg-background">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex-1 relative min-w-[280px]">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
@@ -178,7 +178,7 @@ export default function AdminSessionsDashboard() {
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-text-secondary">Estado:</span>
             <select 
-              className="text-sm py-2 px-4 border-border-subtle rounded-lg bg-surface text-text-main focus:ring-primary focus:border-primary border outline-none"
+              className="text-sm py-2 px-4 border-border-subtle rounded-lg bg-background text-text-main focus:ring-primary focus:border-primary border outline-none"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -201,7 +201,7 @@ export default function AdminSessionsDashboard() {
       </Card>
 
       {/* High Density Data Grid */}
-      <Card className="overflow-hidden shadow-sm rounded-lg border-border-subtle bg-surface">
+      <Card className="overflow-hidden shadow-sm rounded-lg border-border-subtle bg-background">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -331,7 +331,7 @@ export default function AdminSessionsDashboard() {
 
       {/* Dashboard Insights (Asymmetric Bento) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <Card className="md:col-span-2 p-6 rounded-lg shadow-sm border-border-subtle bg-surface">
+        <Card className="md:col-span-2 p-6 rounded-lg shadow-sm border-border-subtle bg-background">
           <h3 className="text-sm font-bold text-text-main mb-4 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary">analytics</span>
             Tendencias de Actividad de Sesiones
@@ -358,7 +358,7 @@ export default function AdminSessionsDashboard() {
             <span>23:59</span>
           </div>
         </Card>
-        <Card className="p-6 flex flex-col justify-between rounded-lg shadow-sm border-border-subtle bg-surface">
+        <Card className="p-6 flex flex-col justify-between rounded-lg shadow-sm border-border-subtle bg-background">
           <div>
             <h3 className="text-sm font-bold text-text-main mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-warning">public</span>

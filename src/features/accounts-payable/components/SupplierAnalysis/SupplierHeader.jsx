@@ -15,7 +15,7 @@ const SupplierHeader = ({ supplier }) => {
   return (
     <header className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-6 mb-2 animate-in fade-in slide-in-from-top-4 duration-500">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 w-full">
-        <div className="w-20 h-20 md:w-24 md:h-24 bg-surface-container-lowest rounded-xl flex items-center justify-center border border-border-subtle shadow-sm overflow-hidden shrink-0">
+        <div className="w-20 h-20 md:w-24 md:h-24 bg-surface rounded-xl flex items-center justify-center border border-border-subtle shadow-sm overflow-hidden shrink-0">
           <img 
             alt="Supplier Logo" 
             className="w-full h-full object-cover" 

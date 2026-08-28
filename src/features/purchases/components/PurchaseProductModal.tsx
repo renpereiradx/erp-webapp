@@ -124,16 +124,16 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
         className='absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity'
         onClick={() => setIsModalOpen(false)}
       ></div>
-      <div className='relative bg-surface-container-lowest w-full max-w-4xl max-h-[98vh] rounded-md shadow-whisper overflow-hidden flex flex-col border border-surface-variant'>
+      <div className='relative bg-surface w-full max-w-4xl max-h-[98vh] rounded-md shadow-whisper overflow-hidden flex flex-col border border-surface-deep'>
         {/* Header */}
-        <header className='px-5 py-3 border-b border-surface-variant flex justify-between items-center bg-surface-container-low shrink-0'>
+        <header className='px-5 py-3 border-b border-surface-deep flex justify-between items-center bg-surface-muted shrink-0'>
           <div>
-            <h3 className='text-base font-semibold text-on-surface'>
+            <h3 className='text-base font-semibold text-foreground'>
               {editingItemId
                 ? 'Editar Artículo'
                 : 'Agregar Artículo de Compra'}
             </h3>
-            <p className='text-xs text-on-surface-variant mt-0.5'>
+            <p className='text-xs text-on-surface-deep mt-0.5'>
               Seleccione un producto, configure cantidad, costo y estrategia
               de precio
             </p>
@@ -153,7 +153,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
             <div className='space-y-4'>
               {/* Product Search */}
               <div className='space-y-1.5'>
-                <label className='text-sm font-medium text-on-surface-variant'>
+                <label className='text-sm font-medium text-on-surface-deep'>
                   Buscar Producto
                 </label>
                 <div className='relative'>
@@ -165,7 +165,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     ref={modalProductSearchRef}
                     autoFocus
                     type='text'
-                    className='w-full pl-9 pr-9 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
+                    className='w-full pl-9 pr-9 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
                     placeholder='Buscar por SKU, EAN o Nombre...'
                     value={modalProductSearch}
                     onChange={e => setModalProductSearch(e.target.value)}
@@ -180,7 +180,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     filteredModalProducts.length > 0 && (
                       <div
                         ref={productDropdownRef}
-                        className='absolute top-full left-0 right-0 mt-1 bg-surface-container-lowest rounded-md shadow-md border border-surface-variant overflow-hidden z-50 max-h-[220px] overflow-y-auto'
+                        className='absolute top-full left-0 right-0 mt-1 bg-surface rounded-md shadow-md border border-surface-deep overflow-hidden z-50 max-h-[220px] overflow-y-auto'
                       >
                         {filteredModalProducts.map((p, index) => {
                           const isActive = activeProductIndex === index
@@ -191,10 +191,10 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                               data-product-index={index}
                               role='option'
                               aria-selected={isActive}
-                              className={`relative px-4 py-2.5 cursor-pointer border-b border-surface-variant last:border-none flex justify-between items-center transition-colors ${
+                              className={`relative px-4 py-2.5 cursor-pointer border-b border-surface-deep last:border-none flex justify-between items-center transition-colors ${
                                 isActive
                                   ? 'bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-130,#605E5C)] ring-1 ring-inset ring-[var(--fluent-brand-primary,#0078D4)]'
-                                  : 'hover:bg-surface-container-highest'
+                                  : 'hover:bg-surface-deep'
                               }`}
                               onMouseEnter={() =>
                                 setActiveProductIndex(index)
@@ -212,7 +212,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                                   className={`font-medium text-sm truncate ${
                                     isActive
                                       ? 'text-primary'
-                                      : 'text-on-surface'
+                                      : 'text-foreground'
                                   }`}
                                 >
                                   {getProductName(p)}
@@ -275,7 +275,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     </div>
                     <div className='min-w-0 flex-1'>
                       <div className='flex items-start justify-between gap-2 flex-wrap'>
-                        <h4 className='font-semibold text-sm text-on-surface'>
+                        <h4 className='font-semibold text-sm text-foreground'>
                           {modalSelectedProduct.name ||
                             modalSelectedProduct.product_name ||
                             '-'}
@@ -319,7 +319,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                           <p className='text-[10px] text-outline'>
                             ID
                           </p>
-                          <p className='text-xs text-on-surface-variant'>
+                          <p className='text-xs text-on-surface-deep'>
                             {modalSelectedProduct.id ||
                               modalSelectedProduct.product_id ||
                               '-'}
@@ -329,7 +329,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                           <p className='text-[10px] text-outline'>
                             Últ. Costo
                           </p>
-                          <p className='text-xs text-on-surface-variant font-semibold'>
+                          <p className='text-xs text-on-surface-deep font-semibold'>
                             {formatCurrency(
                               modalSelectedProduct.last_purchase_cost ||
                                 modalSelectedProduct.cost_price ||
@@ -341,7 +341,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                           <p className='text-[10px] text-outline'>
                             Precio Venta
                           </p>
-                          <p className='text-xs text-on-surface-variant font-semibold text-primary'>
+                          <p className='text-xs text-on-surface-deep font-semibold text-primary'>
                             {formatCurrency(
                               modalSelectedProduct.sale_price || modalSelectedProduct.unit_price || modalSelectedProduct.price || 0
                             )}
@@ -351,7 +351,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                           <p className='text-[10px] text-outline'>
                             Unidad
                           </p>
-                          <p className='text-xs text-on-surface-variant'>
+                          <p className='text-xs text-on-surface-deep'>
                             {modalSelectedProduct.unit ||
                               modalSelectedProduct.unit_name ||
                               'unit'}
@@ -366,7 +366,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                 {(modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && (
                   <div className='mt-4 space-y-3'>
                     <div className='flex items-center justify-between'>
-                      <label className='text-sm font-medium text-on-surface-variant'>
+                      <label className='text-sm font-medium text-on-surface-deep'>
                         Seleccionar Variante <span className='text-error'>*</span>
                       </label>
                       {modalVariantId && (
@@ -471,7 +471,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
                             return (
                               <div key={attrKey} className='space-y-1.5'>
-                                <span className='text-xs font-semibold text-on-surface-variant uppercase tracking-wide'>
+                                <span className='text-xs font-semibold text-on-surface-deep uppercase tracking-wide'>
                                   {attrKey}
                                 </span>
                                 <div className='flex flex-wrap gap-2'>
@@ -488,7 +488,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                                           border transition-all duration-150 relative
                                           ${isSelected
                                             ? 'bg-[var(--fluent-brand-primary,#0078D4)] text-white border-[var(--fluent-brand-primary,#0078D4)] shadow-whisper'
-                                            : 'bg-surface-container-low text-on-surface border-surface-variant hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-primary'
+                                            : 'bg-surface-muted text-foreground border-surface-deep hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-primary'
                                           }
                                         `}
                                         disabled={false}
@@ -534,7 +534,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     })()}
 
                     {/* Opción para agregar producto base (principal) */}
-                    <div className="mt-4 pt-3 border-t border-surface-variant">
+                    <div className="mt-4 pt-3 border-t border-surface-deep">
                       <button
                         type="button"
                         onClick={() => {
@@ -545,7 +545,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                         className={`w-full px-3 py-2 text-xs font-semibold rounded-md border transition-all flex items-center justify-center gap-2 ${
                           modalVariantId === null
                             ? 'bg-[var(--fluent-brand-primary,#0078D4)] text-white border-[var(--fluent-brand-primary,#0078D4)] shadow-whisper'
-                            : 'bg-surface-container-low text-on-surface border-surface-variant hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-primary'
+                            : 'bg-surface-muted text-foreground border-surface-deep hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-primary'
                         }`}
                       >
                         <Package size={14} />
@@ -558,7 +558,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
                 </>
               ) : (
-                <div className='h-24 border-2 border-dashed border-surface-variant rounded-[var(--fluent-corner-radius-large,6px)] flex flex-col items-center justify-center'>
+                <div className='h-24 border-2 border-dashed border-surface-deep rounded-[var(--fluent-corner-radius-large,6px)] flex flex-col items-center justify-center'>
                   <Package
                     size={24}
                     className='text-outline'
@@ -572,13 +572,13 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               {/* Quantity, Unit & Cost */}
               <div className='grid grid-cols-3 gap-3'>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-on-surface-variant'>
+                  <label className='text-sm font-medium text-on-surface-deep'>
                     Cantidad
                   </label>
                   <input
                     ref={modalQuantityRef}
                     type='number'
-                    className='w-full px-3 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-base font-semibold text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
+                    className='w-full px-3 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-base font-semibold text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
                     value={modalQuantity}
                     onChange={e => setModalQuantity(e.target.value)}
                     placeholder='0'
@@ -588,13 +588,13 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   </p>
                 </div>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-on-surface-variant'>
+                  <label className='text-sm font-medium text-on-surface-deep'>
                     Unidad
                   </label>
                   <input
                     type='text'
                     list='allowed-units'
-                    className='w-full px-3 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-base font-semibold text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
+                    className='w-full px-3 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-base font-semibold text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
                     value={modalUnit}
                     onChange={e => setModalUnit(e.target.value)}
                     placeholder='Ej. kg, box, unit'
@@ -613,12 +613,12 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   </p>
                 </div>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-on-surface-variant'>
+                  <label className='text-sm font-medium text-on-surface-deep'>
                     Costo Unit.
                   </label>
                   <input
                     type='number'
-                    className='w-full px-3 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-base font-semibold text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
+                    className='w-full px-3 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-base font-semibold text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
                     value={modalUnitPrice}
                     onChange={e => setModalUnitPrice(e.target.value)}
                     placeholder='0.00'
@@ -631,11 +631,11 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
               {/* Tax Rate */}
               <div className='space-y-1.5'>
-                <label className='text-sm font-medium text-on-surface-variant'>
+                <label className='text-sm font-medium text-on-surface-deep'>
                   {t('purchases.modal.tax_rate', 'Tasa de Impuesto')}
                 </label>
                 <select
-                  className='w-full px-3 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all cursor-pointer'
+                  className='w-full px-3 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all cursor-pointer'
                   value={modalTaxRateId || ''}
                   onChange={e =>
                     setModalTaxRateId(
@@ -692,17 +692,17 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               </div>
 
               {/* Price Includes Tax Toggle */}
-              <div className='flex items-center gap-3 p-2.5 bg-surface-container-low border border-surface-variant rounded-md'>
+              <div className='flex items-center gap-3 p-2.5 bg-surface-muted border border-surface-deep rounded-md'>
                 <input
                   type='checkbox'
                   id='priceIncludesTax'
-                  className='w-4 h-4 text-primary border-surface-variant rounded focus:ring-primary cursor-pointer'
+                  className='w-4 h-4 text-primary border-surface-deep rounded focus:ring-primary cursor-pointer'
                   checked={modalPriceIncludesTax}
                   onChange={e => setModalPriceIncludesTax(e.target.checked)}
                 />
                 <label
                   htmlFor='priceIncludesTax'
-                  className='text-sm font-medium text-on-surface cursor-pointer select-none'
+                  className='text-sm font-medium text-foreground cursor-pointer select-none'
                 >
                   {t(
                     'purchases.modal.price_includes_tax',
@@ -716,15 +716,15 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
             <div className='space-y-4'>
               {/* Pricing Mode Toggle */}
               <div className='space-y-1.5'>
-                <label className='text-sm font-medium text-on-surface-variant'>
+                <label className='text-sm font-medium text-on-surface-deep'>
                   Estrategia de Precio de Venta
                 </label>
-                <div className='flex p-0.5 bg-surface-container rounded-md'>
+                <div className='flex p-0.5 bg-surface-subtle rounded-md'>
                   <button
                     className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-150 ${
                       pricingMode === 'margin'
-                        ? 'bg-surface-container-lowest shadow-sm text-primary'
-                        : 'text-on-surface-variant'
+                        ? 'bg-surface shadow-sm text-primary'
+                        : 'text-on-surface-deep'
                     }`}
                     onClick={() => setPricingMode('margin')}
                   >
@@ -733,8 +733,8 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   <button
                     className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-150 ${
                       pricingMode === 'sale_price'
-                        ? 'bg-surface-container-lowest shadow-sm text-primary'
-                        : 'text-on-surface-variant'
+                        ? 'bg-surface shadow-sm text-primary'
+                        : 'text-on-surface-deep'
                     }`}
                     onClick={() => setPricingMode('sale_price')}
                   >
@@ -746,7 +746,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               {/* Margin & Price Fields */}
               <div className='grid grid-cols-2 gap-3'>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-on-surface-variant'>
+                  <label className='text-sm font-medium text-on-surface-deep'>
                     {pricingMode === 'margin'
                       ? 'Margen de Ganancia'
                       : 'Margen Calculado'}
@@ -754,7 +754,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   <div className='relative'>
                     <input
                       type='number'
-                      className={`w-full pl-3 pr-8 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-base font-semibold transition-all ${
+                      className={`w-full pl-3 pr-8 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-base font-semibold transition-all ${
                         pricingMode !== 'margin'
                           ? 'opacity-60 cursor-not-allowed text-outline'
                           : 'text-success focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
@@ -781,14 +781,14 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   </p>
                 </div>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-on-surface-variant'>
+                  <label className='text-sm font-medium text-on-surface-deep'>
                     {pricingMode === 'sale_price'
                       ? 'Precio de Venta'
                       : 'Precio Sugerido'}
                   </label>
                   <input
                     type='number'
-                    className={`w-full px-3 py-2.5 bg-surface-container-low border border-surface-variant rounded-md text-base font-semibold transition-all ${
+                    className={`w-full px-3 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-base font-semibold transition-all ${
                       pricingMode !== 'sale_price'
                         ? 'opacity-60 cursor-not-allowed text-outline'
                         : 'text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
@@ -819,7 +819,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     <span className='block text-xs text-outline'>
                       Costo Unitario
                     </span>
-                    <span className='text-sm font-medium text-on-surface'>
+                    <span className='text-sm font-medium text-foreground'>
                       {formatCurrency(modalUnitPrice || 0)}
                     </span>
                   </div>
@@ -835,14 +835,14 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               </div>
 
               {/* Financial Projection Panel */}
-              <div className='p-4 bg-surface-container rounded-[var(--fluent-corner-radius-large,6px)] border border-surface-variant'>
-                <div className='text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-3'>
+              <div className='p-4 bg-surface-subtle rounded-[var(--fluent-corner-radius-large,6px)] border border-surface-deep'>
+                <div className='text-xs font-semibold text-on-surface-deep uppercase tracking-wide mb-3'>
                   Proyección Financiera
                 </div>
                 <div className='space-y-2'>
                   {/* Resumen de Línea */}
-                  <div className='flex justify-between items-center py-2 border-b border-surface-variant'>
-                    <span className='text-xs text-on-surface-variant'>
+                  <div className='flex justify-between items-center py-2 border-b border-surface-deep'>
+                    <span className='text-xs text-on-surface-deep'>
                       Subtotal Línea
                     </span>
                     <span className='text-xs text-outline'>
@@ -852,11 +852,11 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   </div>
 
                   {/* Total Compra */}
-                  <div className='flex justify-between items-center py-2 border-b border-surface-variant'>
-                    <span className='text-sm text-on-surface-variant'>
+                  <div className='flex justify-between items-center py-2 border-b border-surface-deep'>
+                    <span className='text-sm text-on-surface-deep'>
                       Total Compra
                     </span>
-                    <span className='text-sm font-semibold text-on-surface'>
+                    <span className='text-sm font-semibold text-foreground'>
                       {formatCurrency(
                         (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0),
                       )}
@@ -864,8 +864,8 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   </div>
 
                   {/* Total Venta Esperado */}
-                  <div className='flex justify-between items-center py-2 border-b border-surface-variant'>
-                    <span className='text-sm text-on-surface-variant'>
+                  <div className='flex justify-between items-center py-2 border-b border-surface-deep'>
+                    <span className='text-sm text-on-surface-deep'>
                       Venta Esperada
                     </span>
                     <span className='text-sm font-semibold text-primary'>
@@ -877,7 +877,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
                   {/* Ganancia Esperada */}
                   <div className='flex justify-between items-center pt-2'>
-                    <span className='text-sm font-medium text-on-surface'>
+                    <span className='text-sm font-medium text-foreground'>
                       Ganancia Esperada
                     </span>
                     <div className='text-right'>
@@ -904,9 +904,9 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
         </div>
 
         {/* Footer */}
-        <footer className='px-5 py-3 border-t border-surface-variant bg-surface-container-low flex justify-end items-center gap-3 shrink-0'>
+        <footer className='px-5 py-3 border-t border-surface-deep bg-surface-muted flex justify-end items-center gap-3 shrink-0'>
           <button
-            className='px-5 py-2 font-medium text-on-surface-variant hover:text-on-surface hover:bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:hover:bg-[var(--fluent-neutral-grey-130,#605E5C)] rounded-md transition-all text-sm border border-surface-variant'
+            className='px-5 py-2 font-medium text-on-surface-deep hover:text-foreground hover:bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:hover:bg-[var(--fluent-neutral-grey-130,#605E5C)] rounded-md transition-all text-sm border border-surface-deep'
             onClick={() => setIsModalOpen(false)}
           >
             Cancelar

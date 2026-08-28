@@ -55,7 +55,7 @@ const MaterialDesignShowcase = () => {
             <div className="md-label-large">Secondary</div>
             <div className="md-body-medium opacity-80">Accent color</div>
           </div>
-          <div className="md-surface p-4 rounded-lg md-corner-md border border-outline">
+          <div className="md-background p-4 rounded-lg md-corner-md border border-outline">
             <div className="md-label-large">Surface</div>
             <div className="md-body-medium opacity-80">Container color</div>
           </div>
@@ -73,8 +73,8 @@ const MaterialDesignShowcase = () => {
           {[0, 1, 2, 3, 4, 5].map(level => (
             <div 
               key={level}
-              className={`md-surface p-4 rounded-lg md-corner-md md-elevation-${level}`}
-              style={{ backgroundColor: 'var(--md-surface-main)', color: 'var(--md-on-surface)' }}
+              className={`md-background p-4 rounded-lg md-corner-md md-elevation-${level}`}
+              style={{ backgroundColor: 'var(--md-surface-main)', color: 'var(--md-foreground)' }}
             >
               <div className="md-label-large">Level {level}</div>
               <div className="md-body-medium opacity-70">Elevation</div>
@@ -275,7 +275,7 @@ const MaterialTextField = ({
   return (
     <div className="space-y-1">
       {label && (
-        <label className="md-body-medium block" style={{ color: 'var(--md-on-surface)' }}>
+        <label className="md-body-medium block" style={{ color: 'var(--md-foreground)' }}>
           {label}
         </label>
       )}
@@ -295,7 +295,7 @@ const MaterialTextField = ({
         <div 
           className="md-body-medium"
           style={{ 
-            color: error ? 'var(--md-error-main)' : 'var(--md-on-surface-variant)' 
+            color: error ? 'var(--md-error-main)' : 'var(--md-on-surface-deep)' 
           }}
         >
           {helperText}

@@ -100,12 +100,12 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <CreditCard size={18} className="text-primary" />
-              <label className="text-label-caps text-on-surface-variant" htmlFor="wizard-payment-method">
+              <label className="text-label-caps text-on-surface-deep" htmlFor="wizard-payment-method">
                 {t('sales.checkoutWizard.payment.method', 'Método de pago')}
               </label>
             </div>
             <Select value={String(paymentMethodId)} onValueChange={(v) => setPaymentMethodId(Number(v))}>
-              <SelectTrigger id="wizard-payment-method" ref={firstInputRef} className="w-full h-11 bg-surface-container-lowest border-outline-variant focus:ring-primary focus:border-primary">
+              <SelectTrigger id="wizard-payment-method" ref={firstInputRef} className="w-full h-11 bg-surface border-divider focus:ring-primary focus:border-primary">
                 <SelectValue placeholder={t('sales.checkoutWizard.payment.method', 'Método de pago')} />
               </SelectTrigger>
               <SelectContent>
@@ -121,7 +121,7 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <DollarSign size={18} className="text-primary" />
-              <label className="text-label-caps text-on-surface-variant" htmlFor="wizard-currency">
+              <label className="text-label-caps text-on-surface-deep" htmlFor="wizard-currency">
                 {t('sales.checkoutWizard.payment.currency', 'Moneda de cobro')}
               </label>
             </div>
@@ -135,7 +135,7 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
                 setCurrencyId(Number(v))
               }}
             >
-              <SelectTrigger id="wizard-currency" className="w-full h-11 bg-surface-container-lowest border-outline-variant focus:ring-primary focus:border-primary">
+              <SelectTrigger id="wizard-currency" className="w-full h-11 bg-surface border-divider focus:ring-primary focus:border-primary">
                 <SelectValue placeholder={t('sales.checkoutWizard.payment.currency', 'Moneda de cobro')} />
               </SelectTrigger>
               <SelectContent>
@@ -150,13 +150,13 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
         </div>
 
         {isMultiCurrency && (
-          <div className="p-4 bg-surface-container-low rounded-md border border-outline-variant space-y-3 animate-in fade-in duration-200">
-            <p className="text-label-caps text-on-surface-variant">
+          <div className="p-4 bg-surface-muted rounded-md border border-divider space-y-3 animate-in fade-in duration-200">
+            <p className="text-label-caps text-on-surface-deep">
               {t('sales.checkoutWizard.payment.multiCurrency', 'Cobro en otra moneda')}
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-on-surface-variant" htmlFor="wizard-exchange-rate">
+                <label className="text-xs font-bold text-on-surface-deep" htmlFor="wizard-exchange-rate">
                   {t('sales.checkoutWizard.payment.exchangeRate', 'Tasa de cambio')}
                 </label>
                 <Input
@@ -169,7 +169,7 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
                   className="h-10 font-data-mono"
                   placeholder="0.00"
                 />
-                <p className="text-xs text-on-surface-variant">
+                <p className="text-xs text-on-surface-deep">
                   {t(
                     'sales.checkoutWizard.payment.exchangeRateHint',
                     '1 {currency} = ? {base}. Se precarga del día; ajustala si tu cotización es otra.',
@@ -178,20 +178,20 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
                 </p>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-on-surface-variant" htmlFor="wizard-foreign-due">
+                <label className="text-xs font-bold text-on-surface-deep" htmlFor="wizard-foreign-due">
                   {t('sales.checkoutWizard.payment.foreignDue', 'Total en {currency}', {
                     currency: selectedCurrency?.code || '',
                   })}
                 </label>
                 <div
                   id="wizard-foreign-due"
-                  className="h-10 flex items-center px-3 rounded-sm bg-surface-container border border-outline-variant font-data-mono text-sm font-bold"
+                  className="h-10 flex items-center px-3 rounded-sm bg-surface-subtle border border-divider font-data-mono text-sm font-bold"
                 >
                   {foreignDue > 0
                     ? formatCurrency(foreignDue, selectedCurrency?.code || '')
                     : t('sales.checkoutWizard.payment.ratePending', 'Cargá la tasa para ver el equivalente')}
                 </div>
-                <p className="text-xs text-on-surface-variant">
+                <p className="text-xs text-on-surface-deep">
                   {t(
                     'sales.checkoutWizard.payment.foreignDueHint',
                     'Equivalente calculado con la tasa de arriba. El documento se emite en {base}.',

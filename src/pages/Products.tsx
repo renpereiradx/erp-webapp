@@ -97,7 +97,7 @@ const Products = () => {
         onOpenCreateModal={handleOpenCreateModal}
       />
 
-      <div className="bg-surface-container-lowest rounded-xl shadow-whisper border border-slate-200/60 overflow-hidden">
+      <div className="bg-surface rounded-xl shadow-whisper border border-slate-200/60 overflow-hidden">
         <ProductsTable
           products={displayProducts}
           onOpenDetailsModal={handleOpenDetailsModal}

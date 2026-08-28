@@ -84,7 +84,7 @@ const FluentDesignShowcase = () => {
                 }}
               >
                 <div className="fluent-body-strong">Surface</div>
-                <div className="fluent-caption opacity-70">Content surface</div>
+                <div className="fluent-caption opacity-70">Content background</div>
               </div>
             </div>
           </div>

@@ -54,7 +54,7 @@ export const fluentColors = {
       onAccent: '#FFFFFF',
       onAccentSelected: '#FFFFFF'
     },
-    surface: {
+    background: {
       primary: '#FFFFFF',
       secondary: '#FAF9F8',
       tertiary: '#F3F2F1',
@@ -125,7 +125,7 @@ export const fluentColors = {
       onAccent: '#000000',
       onAccentSelected: '#000000'
     },
-    surface: {
+    background: {
       primary: '#201F1E',
       secondary: '#292827',
       tertiary: '#323130',
@@ -328,8 +328,8 @@ export const generateFluentCSSProperties = (theme = 'light') => {
     '--fluent-text-primary': colors.text.primary,
     '--fluent-text-secondary': colors.text.secondary,
     '--fluent-text-on-accent': colors.text.onAccent,
-    '--fluent-surface-primary': colors.surface.primary,
-    '--fluent-surface-card': colors.surface.card,
+    '--fluent-surface-primary': colors.background.primary,
+    '--fluent-surface-card': colors.background.card,
     '--fluent-background-canvas': colors.background.canvas,
     '--fluent-border-neutral': colors.border.neutral,
     '--fluent-semantic-success': colors.semantic.success,

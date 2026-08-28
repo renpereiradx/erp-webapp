@@ -84,7 +84,7 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
 
   return (
     <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200'>
-      <div className='bg-surface dark:bg-background-dark w-full max-w-2xl max-h-[90vh] flex flex-col rounded-xl shadow-fluent-16 border border-border-subtle overflow-hidden' onClick={e => e.stopPropagation()}>
+      <div className='bg-background dark:bg-background-dark w-full max-w-2xl max-h-[90vh] flex flex-col rounded-xl shadow-fluent-16 border border-border-subtle overflow-hidden' onClick={e => e.stopPropagation()}>
         <div className='flex items-center justify-between p-6 border-b border-border-subtle bg-slate-50/50 dark:bg-slate-800/50'>
           <div className='flex items-center gap-3'>
             <div className='size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary'>

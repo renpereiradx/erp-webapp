@@ -147,7 +147,7 @@ const Dashboard = () => {
            <p className="text-sm text-text-secondary font-medium">{t('dashboard.executive.subtitle', 'Visión general en tiempo real de los indicadores clave')} • {formatTimeInParaguayTimezone(lastUpdated)}</p>
         </div>
          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-surface p-1 rounded-xl border border-border-subtle shadow-sm">
+            <div className="flex items-center gap-1 bg-background p-1 rounded-xl border border-border-subtle shadow-sm">
                 {['today', 'week', 'month', 'year'].map((p) => (
                     <button
                         key={p}
@@ -170,7 +170,7 @@ const Dashboard = () => {
        {/* 2. Top KPI Cards */}
        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
            {/* Total Sales */}
-           <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all cursor-pointer group" onClick={() => navigate('/dashboard/kpis')}>
+           <div className="bg-background p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all cursor-pointer group" onClick={() => navigate('/dashboard/kpis')}>
                <div className="flex items-start justify-between mb-4">
                    <div className="size-12 rounded-lg bg-blue-50 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                        <DollarSign size={24} />
@@ -188,7 +188,7 @@ const Dashboard = () => {
            </div>
 
            {/* Purchases */}
-           <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all cursor-pointer group" onClick={() => navigate('/compras')}>
+           <div className="bg-background p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all cursor-pointer group" onClick={() => navigate('/compras')}>
                <div className="flex items-start justify-between mb-4">
                    <div className="size-12 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
                        <ShoppingCart size={24} />
@@ -206,7 +206,7 @@ const Dashboard = () => {
            </div>
 
            {/* Net Profit */}
-           <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all cursor-pointer group" onClick={() => navigate('/dashboard/kpis')}>
+           <div className="bg-background p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all cursor-pointer group" onClick={() => navigate('/dashboard/kpis')}>
                <div className="flex items-start justify-between mb-4">
                    <div className="size-12 rounded-lg bg-green-50 flex items-center justify-center text-success group-hover:scale-110 transition-transform">
                        <TrendingUp size={24} />
@@ -224,7 +224,7 @@ const Dashboard = () => {
            </div>
 
            {/* Daily Transactions */}
-           <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all cursor-pointer group" onClick={() => navigate('/ventas')}>
+           <div className="bg-background p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all cursor-pointer group" onClick={() => navigate('/ventas')}>
                <div className="flex items-start justify-between mb-4">
                    <div className="size-12 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
                        <Receipt size={24} />
@@ -245,7 +245,7 @@ const Dashboard = () => {
        {/* 3. Main Chart & Operations */}
        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
            {/* Revenue vs Expenses Chart (Area) */}
-           <div className="lg:col-span-2 bg-surface p-8 rounded-xl shadow-fluent-2 border border-border-subtle">
+           <div className="lg:col-span-2 bg-background p-8 rounded-xl shadow-fluent-2 border border-border-subtle">
                <div className="flex items-center justify-between mb-8">
                    <div className="space-y-1">
                        <h3 className="text-lg font-black text-text-main uppercase tracking-tight">{t('dashboard.charts.revVsExp', 'Ingresos vs Gastos')}</h3>
@@ -322,7 +322,7 @@ const Dashboard = () => {
            {/* Operations Stack */}
            <div className="flex flex-col gap-6">
                {/* Inventory Valuation */}
-               <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle relative overflow-hidden group cursor-pointer hover:shadow-fluent-8 transition-all" onClick={() => navigate('/movimientos-stock')}>
+               <div className="bg-background p-6 rounded-xl shadow-fluent-2 border border-border-subtle relative overflow-hidden group cursor-pointer hover:shadow-fluent-8 transition-all" onClick={() => navigate('/movimientos-stock')}>
                     <div className="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
                     <div className="space-y-4">
                         <div className="flex items-center gap-3">
@@ -344,7 +344,7 @@ const Dashboard = () => {
                </div>
 
                 {/* Cash Register */}
-               <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle relative overflow-hidden group cursor-pointer hover:shadow-fluent-8 transition-all" onClick={() => navigate('/caja-registradora')}>
+               <div className="bg-background p-6 rounded-xl shadow-fluent-2 border border-border-subtle relative overflow-hidden group cursor-pointer hover:shadow-fluent-8 transition-all" onClick={() => navigate('/caja-registradora')}>
                     <div className="absolute top-0 left-0 w-1.5 h-full bg-success"></div>
                      <div className="space-y-4">
                         <div className="flex items-center gap-3">
@@ -375,7 +375,7 @@ const Dashboard = () => {
        {/* 4. Bottom Row: Finance & Activity */}
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-10">
            {/* Finance Overview */}
-           <div className="bg-surface p-8 rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col">
+           <div className="bg-background p-8 rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col">
                <div className="flex items-center justify-between mb-8">
                    <h3 className="text-lg font-black text-text-main uppercase tracking-tight">{t('dashboard.finance.title', 'Resumen Financiero')}</h3>
                    <Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-blue-50" onClick={() => navigate('/receivables')}>{t('dashboard.actions.viewReport', 'Ver Reporte')}</Button>
@@ -431,7 +431,7 @@ const Dashboard = () => {
            </div>
 
            {/* Recent Alerts & Activity */}
-           <div className="bg-surface rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col overflow-hidden">
+           <div className="bg-background rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col overflow-hidden">
                <div className="px-8 py-5 border-b border-border-subtle flex items-center justify-between bg-slate-50/50">
                    <h3 className="text-lg font-black text-text-main uppercase tracking-tight">{t('dashboard.activity.title', 'Alertas y Actividad Reciente')}</h3>
                    <div className="flex items-center gap-2 px-2 py-1 rounded bg-white border border-border-subtle shadow-sm">

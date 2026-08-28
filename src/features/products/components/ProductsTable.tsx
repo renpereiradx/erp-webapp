@@ -48,33 +48,33 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
 
   return (
     <Table className="border-separate border-spacing-0">
-      <TableHeader className="bg-surface-container-low">
+      <TableHeader className="bg-surface-muted">
         <TableRow className="hover:bg-transparent border-none">
-          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase rounded-tl-xl">
+          <TableHead className="font-label-caps text-on-surface-deep py-4 px-4 uppercase rounded-tl-xl">
             {t('products.table.product_name')}
           </TableHead>
-          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
+          <TableHead className="font-label-caps text-on-surface-deep py-4 px-4 uppercase">
             {t('products.table.category')}
           </TableHead>
-          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
+          <TableHead className="font-label-caps text-on-surface-deep py-4 px-4 uppercase">
             IVA
           </TableHead>
-          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
+          <TableHead className="font-label-caps text-on-surface-deep py-4 px-4 uppercase">
             {t('products.table.stock')}
           </TableHead>
-          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
+          <TableHead className="font-label-caps text-on-surface-deep py-4 px-4 uppercase">
             <div className="flex flex-col">
               <span>{t('products.modal.field.purchase_price', 'Costo de Compra')}</span>
               <span className="text-[9px] font-semibold text-slate-400 normal-case tracking-normal mt-0.5 font-sans">Costo Neto Adq.</span>
             </div>
           </TableHead>
-          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
+          <TableHead className="font-label-caps text-on-surface-deep py-4 px-4 uppercase">
             <div className="flex flex-col">
               <span>{t('products.details.table.price', 'Precio de Venta')}</span>
               <span className="text-[9px] font-semibold text-slate-400 normal-case tracking-normal mt-0.5 font-sans">P.V.P. (Con IVA)</span>
             </div>
           </TableHead>
-          <TableHead className="font-label-caps text-on-surface-variant py-4 px-4 uppercase">
+          <TableHead className="font-label-caps text-on-surface-deep py-4 px-4 uppercase">
             {t('common.status', 'Estado')}
           </TableHead>
           <TableHead className="text-right py-4 px-6 rounded-tr-xl"></TableHead>
@@ -96,7 +96,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
           return (
             <TableRow
               key={productId}
-              className="hover:bg-surface-container-low transition-colors duration-150 group border-none"
+              className="hover:bg-surface-muted transition-colors duration-150 group border-none"
             >
               <TableCell className="py-5 px-4">
                 <div className="flex items-center gap-4">

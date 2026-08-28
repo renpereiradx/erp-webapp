@@ -18,7 +18,7 @@ export const mockVariants: Variant[] = [
     barcode: '7501234567890',
     attributes: [
       { name: 'Color', value: 'Rojo', bgColor: 'bg-secondary-container/50', color: 'text-on-secondary-container', borderColor: 'border-secondary-container' },
-      { name: 'Talla', value: 'M', bgColor: 'bg-surface-container', color: 'text-on-surface-variant', borderColor: 'border-outline-variant/30' },
+      { name: 'Talla', value: 'M', bgColor: 'bg-surface-subtle', color: 'text-on-surface-deep', borderColor: 'border-divider/30' },
     ],
     stock: 45,
     price: 29.99,
@@ -31,7 +31,7 @@ export const mockVariants: Variant[] = [
     barcode: '7501234567891',
     attributes: [
       { name: 'Color', value: 'Rojo', bgColor: 'bg-secondary-container/50', color: 'text-on-secondary-container', borderColor: 'border-secondary-container' },
-      { name: 'Talla', value: 'L', bgColor: 'bg-surface-container', color: 'text-on-surface-variant', borderColor: 'border-outline-variant/30' },
+      { name: 'Talla', value: 'L', bgColor: 'bg-surface-subtle', color: 'text-on-surface-deep', borderColor: 'border-divider/30' },
     ],
     stock: 5,
     price: 29.99,
@@ -45,7 +45,7 @@ export const mockVariants: Variant[] = [
     barcode: '7501234567892',
     attributes: [
       { name: 'Color', value: 'Azul', bgColor: 'bg-[#e0f2fe]', color: 'text-[#0369a1]', borderColor: 'border-[#bae6fd]' },
-      { name: 'Talla', value: 'M', bgColor: 'bg-surface-container', color: 'text-on-surface-variant', borderColor: 'border-outline-variant/30' },
+      { name: 'Talla', value: 'M', bgColor: 'bg-surface-subtle', color: 'text-on-surface-deep', borderColor: 'border-divider/30' },
     ],
     stock: 60,
     price: 29.99,
@@ -57,8 +57,8 @@ export const mockVariants: Variant[] = [
     name: 'Camisa Polo - Negro XL',
     barcode: '7501234567893',
     attributes: [
-      { name: 'Color', value: 'Negro', bgColor: 'bg-surface-container-high', color: 'text-on-surface-variant', borderColor: 'border-outline-variant/30' },
-      { name: 'Talla', value: 'XL', bgColor: 'bg-surface-container', color: 'text-on-surface-variant', borderColor: 'border-outline-variant/30' },
+      { name: 'Color', value: 'Negro', bgColor: 'bg-surface-subtle', color: 'text-on-surface-deep', borderColor: 'border-divider/30' },
+      { name: 'Talla', value: 'XL', bgColor: 'bg-surface-subtle', color: 'text-on-surface-deep', borderColor: 'border-divider/30' },
     ],
     stock: 0,
     price: 29.99,

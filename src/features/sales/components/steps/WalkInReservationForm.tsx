@@ -165,10 +165,10 @@ export const WalkInReservationForm = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <h3 className="text-title-md text-on-surface">
+        <h3 className="text-title-md text-foreground">
           {t('sales.checkoutWizard.walkIn.title', 'Registrar uso de cancha (sin reserva)')}
         </h3>
-        <p className="text-body-sm text-on-surface-variant">
+        <p className="text-body-sm text-on-surface-deep">
           {t(
             'sales.checkoutWizard.walkIn.subtitle',
             'El cliente ya usó la cancha: registrá el horario y sumalo al carrito para cobrar',
@@ -179,14 +179,14 @@ export const WalkInReservationForm = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Cancha */}
         <div>
-          <label className="text-label-caps text-on-surface-variant" htmlFor="walkin-product">
+          <label className="text-label-caps text-on-surface-deep" htmlFor="walkin-product">
             {t('sales.checkoutWizard.walkIn.court', 'Cancha')}
           </label>
           <select
             id="walkin-product"
             value={productId}
             onChange={(e) => setProductId(e.target.value)}
-            className="mt-1 w-full h-11 rounded-md border border-outline-variant bg-surface-container-lowest px-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/30 outline-none cursor-pointer"
+            className="mt-1 w-full h-11 rounded-md border border-divider bg-surface px-3 text-sm font-bold text-foreground focus:ring-2 focus:ring-primary/30 outline-none cursor-pointer"
           >
             <option value="">
               {t('sales.checkoutWizard.walkIn.selectCourt', 'Seleccionar cancha...')}
@@ -214,7 +214,7 @@ export const WalkInReservationForm = ({
 
         {/* Fecha */}
         <div>
-          <label className="text-label-caps text-on-surface-variant" htmlFor="walkin-date">
+          <label className="text-label-caps text-on-surface-deep" htmlFor="walkin-date">
             {t('sales.checkoutWizard.walkIn.date', 'Fecha')}
           </label>
           <input
@@ -222,24 +222,24 @@ export const WalkInReservationForm = ({
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="mt-1 w-full h-11 rounded-md border border-outline-variant bg-surface-container-lowest px-3 font-data-mono text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/30 outline-none cursor-pointer"
+            className="mt-1 w-full h-11 rounded-md border border-divider bg-surface px-3 font-data-mono text-sm font-bold text-foreground focus:ring-2 focus:ring-primary/30 outline-none cursor-pointer"
           />
         </div>
       </div>
 
       {/* Horarios */}
       <div>
-        <label className="text-label-caps text-on-surface-variant" htmlFor="walkin-start">
+        <label className="text-label-caps text-on-surface-deep" htmlFor="walkin-start">
           {t('sales.checkoutWizard.walkIn.startTime', 'Hora de inicio')}
         </label>
         {loadingSlots ? (
-          <div className="mt-1 flex items-center gap-2 h-11 px-3 rounded-md border border-outline-variant bg-surface-container-lowest text-sm text-on-surface-variant">
+          <div className="mt-1 flex items-center gap-2 h-11 px-3 rounded-md border border-divider bg-surface text-sm text-on-surface-deep">
             <Loader2 size={14} className="animate-spin" />
             {t('sales.checkoutWizard.walkIn.loadingSlots', 'Cargando horarios...')}
           </div>
         ) : slotsEmpty ? (
-          <div className="mt-1 rounded-md border border-outline-variant bg-surface-container-lowest p-3 space-y-2">
-            <p className="text-xs text-on-surface-variant flex items-center gap-1.5">
+          <div className="mt-1 rounded-md border border-divider bg-surface p-3 space-y-2">
+            <p className="text-xs text-on-surface-deep flex items-center gap-1.5">
               <CalendarClock size={13} />
               {t(
                 'sales.checkoutWizard.walkIn.noSlots',
@@ -265,7 +265,7 @@ export const WalkInReservationForm = ({
             id="walkin-start"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="mt-1 w-full h-11 rounded-md border border-outline-variant bg-surface-container-lowest px-3 font-data-mono text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/30 outline-none cursor-pointer"
+            className="mt-1 w-full h-11 rounded-md border border-divider bg-surface px-3 font-data-mono text-sm font-bold text-foreground focus:ring-2 focus:ring-primary/30 outline-none cursor-pointer"
           >
             <option value="">
               {t('sales.checkoutWizard.walkIn.selectSlot', 'Seleccionar horario...')}
@@ -280,15 +280,15 @@ export const WalkInReservationForm = ({
       </div>
 
       {/* Duración */}
-      <div className="rounded-md border border-outline-variant bg-surface-container-low p-4 space-y-2">
+      <div className="rounded-md border border-divider bg-surface-muted p-4 space-y-2">
         <div className="flex justify-between items-center">
-          <span className="text-label-caps text-on-surface-variant">
+          <span className="text-label-caps text-on-surface-deep">
             {t('sales.checkoutWizard.walkIn.duration', 'Duración')}
           </span>
           <span className="font-data-mono font-black text-sm text-primary">
             {duration} h
             {maxDuration < (selectedProduct?.max_duration || 4) && (
-              <span className="ml-1 text-[10px] font-bold text-on-surface-variant">
+              <span className="ml-1 text-[10px] font-bold text-on-surface-deep">
                 ({t('sales.checkoutWizard.walkIn.maxAvailable', 'máx {n}', { n: maxDuration })})
               </span>
             )}
@@ -308,14 +308,14 @@ export const WalkInReservationForm = ({
 
       {/* Preview de precio (estimado; el total final lo fija el backend) */}
       {hourlyRate > 0 && startTime && (
-        <div className="rounded-md bg-surface-container-low border border-outline-variant px-4 py-3 flex justify-between items-center">
-          <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
+        <div className="rounded-md bg-surface-muted border border-divider px-4 py-3 flex justify-between items-center">
+          <span className="text-xs font-bold text-on-surface-deep uppercase tracking-wider">
             {t('sales.checkoutWizard.walkIn.estimate', 'Estimado ({h} × {rate}/h)', {
               h: duration,
               rate: formatCurrency(hourlyRate),
             })}
           </span>
-          <span className="font-data-mono font-black text-lg text-on-surface tracking-tighter">
+          <span className="font-data-mono font-black text-lg text-foreground tracking-tighter">
             {formatCurrency(estimatedTotal)}
           </span>
         </div>
@@ -327,7 +327,7 @@ export const WalkInReservationForm = ({
         className={cn(
           'w-full h-12 rounded-md text-sm font-bold uppercase tracking-wider transition-all',
           'bg-primary text-on-primary shadow-sm hover:bg-primary/90',
-          'disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:shadow-none disabled:cursor-not-allowed',
+          'disabled:bg-surface-subtle disabled:text-on-surface-deep disabled:shadow-none disabled:cursor-not-allowed',
           'flex items-center justify-center gap-2',
         )}
       >

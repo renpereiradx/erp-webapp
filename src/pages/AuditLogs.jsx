@@ -39,7 +39,7 @@ export default function AuditLogs() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Registro de Auditoría</h1>
-          <p className="text-on-surface-variant text-sm">Monitoreo avanzado de actividades del sistema en tiempo real.</p>
+          <p className="text-on-surface-deep text-sm">Monitoreo avanzado de actividades del sistema en tiempo real.</p>
         </div>
         <button className="flex items-center gap-2 px-4 py-2.5 bg-[#137fec] text-white rounded-lg font-bold text-sm shadow-sm hover:bg-blue-600 transition-all active:scale-95">
           <span className="material-symbols-outlined text-lg font-bold">download</span>
@@ -51,14 +51,14 @@ export default function AuditLogs() {
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Rango de Fechas</label>
+            <label className="text-xs font-bold text-on-surface-deep uppercase tracking-wider">Rango de Fechas</label>
             <div className="relative">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">calendar_today</span>
               <input className="w-full pl-10 pr-4 py-2 bg-slate-50 border-slate-200 rounded-lg text-sm focus:ring-[#137fec] focus:border-[#137fec] transition-all outline-none" type="text" defaultValue="01/01/2026 - 07/01/2026"/>
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Usuario</label>
+            <label className="text-xs font-bold text-on-surface-deep uppercase tracking-wider">Usuario</label>
             <div className="relative">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl font-bold">person_search</span>
               <input 
@@ -72,7 +72,7 @@ export default function AuditLogs() {
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Categoría</label>
+            <label className="text-xs font-bold text-on-surface-deep uppercase tracking-wider">Categoría</label>
             <select 
               name="category"
               value={filters.category}
@@ -87,7 +87,7 @@ export default function AuditLogs() {
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Nivel</label>
+            <label className="text-xs font-bold text-on-surface-deep uppercase tracking-wider">Nivel</label>
             <select 
               name="level"
               value={filters.level}
@@ -101,7 +101,7 @@ export default function AuditLogs() {
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Resultado</label>
+            <label className="text-xs font-bold text-on-surface-deep uppercase tracking-wider">Resultado</label>
             <select className="w-full px-3 py-2 bg-slate-50 border-slate-200 rounded-lg text-sm focus:ring-[#137fec] focus:border-[#137fec] transition-all outline-none">
               <option>Todos</option>
               <option>Éxito</option>
@@ -117,12 +117,12 @@ export default function AuditLogs() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider w-48">Fecha y Hora</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider w-64">Usuario</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider w-32">Acción</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider w-48">Entidad</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider min-w-[300px]">Descripción</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider w-32">Nivel</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider w-48">Fecha y Hora</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider w-64">Usuario</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider w-32">Acción</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider w-48">Entidad</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider min-w-[300px]">Descripción</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider w-32">Nivel</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -138,7 +138,7 @@ export default function AuditLogs() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="size-8 rounded-full overflow-hidden shrink-0 bg-surface-container border border-border-subtle shadow-sm flex items-center justify-center font-black text-[10px] text-on-surface-variant">
+                        <div className="size-8 rounded-full overflow-hidden shrink-0 bg-surface-subtle border border-border-subtle shadow-sm flex items-center justify-center font-black text-[10px] text-on-surface-deep">
                           {log.username.charAt(0).toUpperCase()}
                         </div>
                         <span className="text-sm font-semibold text-slate-900 group-hover:text-[#137fec]">{log.username}</span>
@@ -172,13 +172,13 @@ export default function AuditLogs() {
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-slate-50 border-t border-slate-200">
           <div className="flex items-center gap-4">
-            <span className="text-sm text-on-surface-variant">Filas por página:</span>
+            <span className="text-sm text-on-surface-deep">Filas por página:</span>
             <select className="bg-transparent border-none text-sm font-bold text-slate-900 focus:ring-0 p-0 cursor-pointer">
               <option>20</option><option>50</option><option>100</option>
             </select>
           </div>
           <div className="flex items-center gap-6">
-            <p className="text-sm text-on-surface-variant font-medium">Página <span className="font-black text-slate-900">1</span> de <span className="font-black text-slate-900">30</span></p>
+            <p className="text-sm text-on-surface-deep font-medium">Página <span className="font-black text-slate-900">1</span> de <span className="font-black text-slate-900">30</span></p>
             <div className="flex items-center gap-1">
               <button className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-400 disabled:opacity-50" disabled>
                 <span className="material-symbols-outlined text-lg">chevron_left</span>
@@ -204,7 +204,7 @@ export default function AuditLogs() {
               <span className="material-symbols-outlined font-bold">{stat.icon}</span>
             </div>
             <div>
-              <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-wider">{stat.label}</p>
+              <p className="text-[10px] font-black text-on-surface-deep uppercase tracking-wider">{stat.label}</p>
               <p className="text-xl font-black text-slate-900">{stat.val}</p>
             </div>
           </div>

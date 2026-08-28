@@ -32,22 +32,22 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
   const { t } = useI18n();
 
   return (
-    <section className='bg-surface-container-lowest rounded-md border border-surface-variant shadow-whisper p-5 animate-in slide-in-from-bottom-2 duration-500 delay-75'>
+    <section className='bg-surface rounded-md border border-surface-deep shadow-whisper p-5 animate-in slide-in-from-bottom-2 duration-500 delay-75'>
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         <div className='space-y-3'>
           <div className='flex justify-between items-center text-sm'>
-            <span className='text-on-surface-variant'>
+            <span className='text-on-surface-deep'>
               Artículos Totales
             </span>
-            <span className='font-semibold text-on-surface bg-surface-container px-2.5 py-0.5 rounded-md'>
+            <span className='font-semibold text-foreground bg-surface-subtle px-2.5 py-0.5 rounded-md'>
               {purchaseItems.reduce((s, i) => s + i.quantity, 0)}
             </span>
           </div>
           <div className='flex justify-between items-center text-sm'>
-            <span className='text-on-surface-variant'>
+            <span className='text-on-surface-deep'>
               Total Compra
             </span>
-            <span className='text-on-surface font-bold'>
+            <span className='text-foreground font-bold'>
               {formatCurrency(purchaseTotals.subtotal)}
             </span>
           </div>
@@ -70,7 +70,7 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
           </div>
 
           <div className='flex justify-between items-center text-sm'>
-            <span className='text-on-surface-variant'>
+            <span className='text-on-surface-deep'>
               Venta Esperada
             </span>
             <span className='font-medium text-primary'>
@@ -84,7 +84,7 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
           </div>
           <div className='h-px bg-[var(--fluent-border-neutral,#E1DFDD)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] my-2'></div>
           <div className='flex justify-between items-center text-sm'>
-            <span className='font-semibold text-on-surface'>
+            <span className='font-semibold text-foreground'>
               Ganancia Proyectada
             </span>
             <div className='text-right'>
@@ -140,7 +140,7 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
             {loading ? 'Procesando...' : 'COMPRAR (F12)'}
           </button>
           <button
-            className='w-full py-3 border border-surface-variant hover:bg-surface-container-low text-on-surface-variant font-semibold rounded-md transition-all duration-150 text-sm'
+            className='w-full py-3 border border-surface-deep hover:bg-surface-muted text-on-surface-deep font-semibold rounded-md transition-all duration-150 text-sm'
             onClick={() => {
               if (confirm('¿Borrar toda la orden?')) {
                 setPurchaseItems([]);

@@ -385,7 +385,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className='register-sale-payment-modal w-[95vw] lg:!w-[1100px] lg:!max-w-[calc(95vw-288px)] p-0 overflow-hidden border border-border-subtle shadow-fluent-16 rounded-xl bg-surface'>
+      <DialogContent className='register-sale-payment-modal w-[95vw] lg:!w-[1100px] lg:!max-w-[calc(95vw-288px)] p-0 overflow-hidden border border-border-subtle shadow-fluent-16 rounded-xl bg-background'>
         <DialogTitle className='sr-only'>Registrar Cobro de Venta</DialogTitle>
         <DialogDescription className='sr-only'>Registre el cobro de la venta seleccionada.</DialogDescription>
         <form className='flex flex-col md:flex-row h-full max-h-[95vh] md:max-h-[90vh] overflow-hidden' onSubmit={handleSubmit}>

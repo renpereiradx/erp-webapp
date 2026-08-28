@@ -148,7 +148,7 @@ const DetailedKPIs = () => {
       {/* KPI Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Revenue Card */}
-        <div className="bg-surface rounded-xl p-5 shadow-sm border border-border-subtle flex flex-col justify-between h-40 relative overflow-hidden group">
+        <div className="bg-background rounded-xl p-5 shadow-sm border border-border-subtle flex flex-col justify-between h-40 relative overflow-hidden group">
           <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <span className="material-symbols-outlined text-6xl text-primary">attach_money</span>
           </div>
@@ -169,7 +169,7 @@ const DetailedKPIs = () => {
         </div>
 
         {/* Profit Card */}
-        <div className="bg-surface rounded-xl p-5 shadow-sm border border-border-subtle flex flex-col justify-between h-40 relative overflow-hidden group">
+        <div className="bg-background rounded-xl p-5 shadow-sm border border-border-subtle flex flex-col justify-between h-40 relative overflow-hidden group">
           <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <span className="material-symbols-outlined text-6xl text-purple-500">monitoring</span>
           </div>
@@ -188,7 +188,7 @@ const DetailedKPIs = () => {
         </div>
 
         {/* Customers Card */}
-        <div className="bg-surface rounded-xl p-5 shadow-sm border border-border-subtle flex flex-col justify-between h-40 relative overflow-hidden group">
+        <div className="bg-background rounded-xl p-5 shadow-sm border border-border-subtle flex flex-col justify-between h-40 relative overflow-hidden group">
           <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <span className="material-symbols-outlined text-6xl text-blue-400">groups</span>
           </div>
@@ -207,7 +207,7 @@ const DetailedKPIs = () => {
         </div>
 
         {/* Inventory Card */}
-        <div className="bg-surface rounded-xl p-5 shadow-sm border border-border-subtle flex flex-col justify-between h-40 relative overflow-hidden group">
+        <div className="bg-background rounded-xl p-5 shadow-sm border border-border-subtle flex flex-col justify-between h-40 relative overflow-hidden group">
           <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <span className="material-symbols-outlined text-6xl text-orange-400">inventory_2</span>
           </div>
@@ -245,7 +245,7 @@ const DetailedKPIs = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         {/* Sales & Efficiency */}
-        <div className="bg-surface rounded-xl shadow-sm border border-border-subtle flex flex-col overflow-hidden">
+        <div className="bg-background rounded-xl shadow-sm border border-border-subtle flex flex-col overflow-hidden">
           <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50 dark:bg-slate-800/50">
             <h3 className="text-lg font-bold text-text-main">{t('dashboard.dashboard.salesEfficiency', 'Eficiencia de Ventas')}</h3>
           </div>
@@ -275,7 +275,7 @@ const DetailedKPIs = () => {
         </div>
 
         {/* Financial Health */}
-        <div className="bg-surface rounded-xl shadow-sm border border-border-subtle flex flex-col overflow-hidden">
+        <div className="bg-background rounded-xl shadow-sm border border-border-subtle flex flex-col overflow-hidden">
           <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50 dark:bg-slate-800/50">
             <h3 className="text-lg font-bold text-text-main">{t('dashboard.dashboard.financialHealth', 'Salud Financiera')}</h3>
           </div>
@@ -302,7 +302,7 @@ const DetailedKPIs = () => {
         </div>
 
         {/* Inventory Performance */}
-        <div className="bg-surface rounded-xl shadow-sm border border-border-subtle flex flex-col overflow-hidden">
+        <div className="bg-background rounded-xl shadow-sm border border-border-subtle flex flex-col overflow-hidden">
           <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50 dark:bg-slate-800/50">
             <h3 className="text-lg font-bold text-text-main">{t('dashboard.dashboard.inventoryPerformance', 'Rendimiento de Inventario')}</h3>
           </div>
@@ -324,7 +324,7 @@ const DetailedKPIs = () => {
       </div>
 
       {/* Alerts View - using Stitch format */}
-      <div className="bg-surface rounded-xl p-6 shadow-sm border border-border-subtle">
+      <div className="bg-background rounded-xl p-6 shadow-sm border border-border-subtle">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold text-text-main">{t('dashboard.dashboard.activity.title', 'Alertas Recientes')}</h3>
           <button className="text-sm text-primary font-medium hover:underline cursor-pointer" onClick={() => navigate('/dashboard/alerts')}>Ver Todo</button>

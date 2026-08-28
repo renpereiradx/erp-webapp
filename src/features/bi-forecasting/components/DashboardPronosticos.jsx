@@ -114,7 +114,7 @@ const DashboardPronosticos = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {insights.map((insight) => (
             <div key={insight.id} className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 flex gap-4 hover:border-primary/40 transition-colors cursor-pointer group">
-              <div className="w-32 h-32 shrink-0 bg-surface-container-low rounded-lg overflow-hidden border border-border-subtle">
+              <div className="w-32 h-32 shrink-0 bg-surface-muted rounded-lg overflow-hidden border border-border-subtle">
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
                   <span className="material-symbols-outlined text-4xl text-primary group-hover:scale-110 transition-transform">{insight.icono}</span>
                 </div>

@@ -44,10 +44,10 @@ export const PendingSalesStep = forwardRef<PendingSalesStepRef, PendingSalesStep
     return (
       <div className="space-y-4">
         <div>
-          <h3 className="text-title-md text-on-surface">
+          <h3 className="text-title-md text-foreground">
             {t('sales.checkoutWizard.pendingSales.title', 'El cliente tiene ventas pendientes')}
           </h3>
-          <p className="text-body-sm text-on-surface-variant">
+          <p className="text-body-sm text-on-surface-deep">
             {t(
               'sales.checkoutWizard.pendingSales.subtitle',
               'Elegí si continuar una venta existente o crear una nueva',
@@ -80,7 +80,7 @@ export const PendingSalesStep = forwardRef<PendingSalesStepRef, PendingSalesStep
                   'w-full text-left p-4 rounded-md border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30',
                   isSelected
                     ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-outline-variant bg-surface-container-lowest hover:border-primary/40',
+                    : 'border-divider bg-surface hover:border-primary/40',
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -94,8 +94,8 @@ export const PendingSalesStep = forwardRef<PendingSalesStepRef, PendingSalesStep
                       {isSelected && <div className="size-1.5 rounded-full bg-on-primary" />}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-sm text-on-surface truncate font-data-mono">#{sale.id}</p>
-                      <div className="flex items-center gap-2 text-xs text-on-surface-variant mt-0.5">
+                      <p className="font-bold text-sm text-foreground truncate font-data-mono">#{sale.id}</p>
+                      <div className="flex items-center gap-2 text-xs text-on-surface-deep mt-0.5">
                         <History size={12} />
                         <span>{sale.sale_date ? new Date(sale.sale_date).toLocaleDateString('es-PY') : '—'}</span>
                         <span>•</span>
@@ -104,10 +104,10 @@ export const PendingSalesStep = forwardRef<PendingSalesStepRef, PendingSalesStep
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-xs uppercase font-bold text-on-surface-variant tracking-wider">
+                    <p className="text-xs uppercase font-bold text-on-surface-deep tracking-wider">
                       {t('sales.checkoutWizard.total', 'Total')}
                     </p>
-                    <p className="font-data-mono font-bold text-on-surface">
+                    <p className="font-data-mono font-bold text-foreground">
                       {formatCurrency(Number(sale.total_amount) || 0, sale.currency || 'PYG')}
                     </p>
                     {isFromOtherBranch && (
@@ -123,10 +123,10 @@ export const PendingSalesStep = forwardRef<PendingSalesStepRef, PendingSalesStep
           })}
         </div>
 
-        <p className="text-xs text-on-surface-variant">
+        <p className="text-xs text-on-surface-deep">
           {t('sales.checkoutWizard.pendingSales.skipHint', 'Sin selección, Avanzar continúa como venta nueva. Tocá una venta para continuarla, o tocá la seleccionada para desmarcarla.')}
         </p>
-        <p className="text-xs text-on-surface-variant">
+        <p className="text-xs text-on-surface-deep">
           {t('sales.checkoutWizard.action.continueSelected', 'Continuar seleccionada')} ·{' '}
           {t('sales.checkoutWizard.action.newSale', 'Nueva venta')} (↑↓ para navegar)
         </p>

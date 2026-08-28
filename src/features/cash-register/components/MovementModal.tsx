@@ -88,7 +88,7 @@ export const MovementModal: React.FC<MovementModalProps> = ({ isOpen, onClose, o
 
   return (
     <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-black/60 animate-in fade-in duration-300' onClick={onClose}>
-      <div className='bg-surface dark:bg-background-dark w-full max-w-xl rounded-3xl shadow-fluent-16 border-none overflow-hidden animate-in zoom-in-95 duration-200' onClick={e => e.stopPropagation()}>
+      <div className='bg-background dark:bg-background-dark w-full max-w-xl rounded-3xl shadow-fluent-16 border-none overflow-hidden animate-in zoom-in-95 duration-200' onClick={e => e.stopPropagation()}>
         <div className='p-8 pb-6 bg-slate-50/50 dark:bg-slate-800/50 border-b border-border-subtle text-left'>
           <div className="flex items-center gap-4 mb-2">
             <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/10 shadow-inner">

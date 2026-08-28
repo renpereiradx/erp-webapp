@@ -150,17 +150,17 @@ export const VariantModal: React.FC<VariantModalProps> = ({ isOpen, onClose, onC
   const erpLabel = "block text-[10px] font-bold text-secondary mb-1.5 uppercase tracking-wider disabled:opacity-50";
 
   return (
-    <div className="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-      <div className="bg-surface-container-lowest w-full max-w-2xl rounded-xl shadow-level-2 overflow-hidden flex flex-col max-h-[82vh] animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 bg-inverse-background/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+      <div className="bg-surface w-full max-w-2xl rounded-xl shadow-level-2 overflow-hidden flex flex-col max-h-[82vh] animate-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
-        <div className="px-6 py-3 border-b border-surface-variant flex justify-between items-center bg-surface-container-lowest">
-          <h2 className="font-bold text-base text-on-surface">
+        <div className="px-6 py-3 border-b border-surface-deep flex justify-between items-center bg-surface">
+          <h2 className="font-bold text-base text-foreground">
             {variantToEdit ? 'Editar Variante' : 'Nueva Variante'}
           </h2>
           <button 
             onClick={onClose}
-            className="text-on-surface-variant hover:text-error transition-colors p-1.5 rounded-full hover:bg-error-container/20"
+            className="text-on-surface-deep hover:text-error transition-colors p-1.5 rounded-full hover:bg-error-container/20"
           >
             <span className="material-symbols-outlined text-lg">close</span>
           </button>
@@ -176,7 +176,7 @@ export const VariantModal: React.FC<VariantModalProps> = ({ isOpen, onClose, onC
                 <div className="col-span-1">
                   <label className={erpLabel} htmlFor="sku">SKU</label>
                   <input 
-                    className={`${erpInput} font-data-tabular bg-surface-container-low text-on-surface-variant`} 
+                    className={`${erpInput} font-data-tabular bg-surface-muted text-on-surface-deep`} 
                     disabled 
                     id="sku" 
                     placeholder="Auto" 
@@ -195,12 +195,12 @@ export const VariantModal: React.FC<VariantModalProps> = ({ isOpen, onClose, onC
                       onChange={(e) => setBarcode(e.target.value)}
                       disabled={submitting}
                     />
-                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant pointer-events-none text-base">barcode_scanner</span>
+                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-divider pointer-events-none text-base">barcode_scanner</span>
                   </div>
                 </div>
               </div>
               
-              <div className="border-t border-surface-variant/30 pt-1"></div>
+              <div className="border-t border-surface-deep/30 pt-1"></div>
               
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -233,7 +233,7 @@ export const VariantModal: React.FC<VariantModalProps> = ({ isOpen, onClose, onC
               <div className="mt-3">
                 <label className={erpLabel} htmlFor="precio">Precio Inicial</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-data-tabular text-outline-variant text-xs">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-data-tabular text-divider text-xs">$</span>
                   <input 
                     className={`${erpInput} font-data-tabular pl-7`} 
                     id="precio" 
@@ -254,7 +254,7 @@ export const VariantModal: React.FC<VariantModalProps> = ({ isOpen, onClose, onC
                 <h3 className="font-bold text-xs text-secondary uppercase tracking-wider mb-2.5">Atributos de Variante</h3>
                 <div className="grid grid-cols-2 gap-3 max-h-[160px] overflow-y-auto pr-1.5 custom-scrollbar">
                   {dynamicAttributes.length === 0 ? (
-                    <div className="text-xs text-on-surface-variant italic col-span-2">
+                    <div className="text-xs text-on-surface-deep italic col-span-2">
                       No hay atributos de variante en la categoría.
                     </div>
                   ) : (
@@ -275,7 +275,7 @@ export const VariantModal: React.FC<VariantModalProps> = ({ isOpen, onClose, onC
                 </div>
               </div>
               
-              <div className="border-t border-surface-variant/30 pt-1"></div>
+              <div className="border-t border-surface-deep/30 pt-1"></div>
               
               <div>
                 <div className="flex items-center justify-between mb-2.5">
@@ -322,7 +322,7 @@ export const VariantModal: React.FC<VariantModalProps> = ({ isOpen, onClose, onC
                         </div>
                         <button 
                           type="button" 
-                          className="p-1.5 text-outline-variant hover:text-error transition-colors shrink-0"
+                          className="p-1.5 text-divider hover:text-error transition-colors shrink-0"
                           onClick={() => {
                             const newAttrs = customAttributes.filter((_, i) => i !== index);
                             setCustomAttributes(newAttrs);
@@ -341,7 +341,7 @@ export const VariantModal: React.FC<VariantModalProps> = ({ isOpen, onClose, onC
         </div>
 
         {/* Modal Footer (Actions) */}
-        <div className="px-6 py-3.5 bg-surface-container-low border-t border-surface-variant flex justify-end gap-3">
+        <div className="px-6 py-3.5 bg-surface-muted border-t border-surface-deep flex justify-end gap-3">
           <button 
             type="button"
             onClick={onClose}

@@ -181,17 +181,17 @@ export const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClos
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-scrim/40 backdrop-blur-sm">
-      <div className="bg-surface-container-lowest rounded-2xl shadow-level-3 w-full max-w-2xl flex flex-col max-h-[85vh] overflow-hidden border border-outline-variant/20">
+      <div className="bg-surface rounded-2xl shadow-level-3 w-full max-w-2xl flex flex-col max-h-[85vh] overflow-hidden border border-divider/20">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-lg border-b border-outline-variant/30">
+        <div className="flex items-center justify-between p-lg border-b border-divider/30">
           <div>
-            <h2 className="font-title-lg text-title-lg text-on-surface font-bold">Seleccionar Icono</h2>
-            <p className="text-body-sm text-on-surface-variant">Elige un ícono para tu etiqueta</p>
+            <h2 className="font-title-lg text-title-lg text-foreground font-bold">Seleccionar Icono</h2>
+            <p className="text-body-sm text-on-surface-deep">Elige un ícono para tu etiqueta</p>
           </div>
           <button 
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-subtle text-on-surface-deep transition-colors"
           >
             <span className="material-symbols-outlined">close</span>
           </button>
@@ -206,7 +206,7 @@ export const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClos
               placeholder="Buscar ícono (ej. estrella, carrito, local_offer)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-body-md"
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-muted border border-divider/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-body-md"
             />
           </div>
         </div>
@@ -214,7 +214,7 @@ export const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClos
         {/* Icons Grid */}
         <div className="flex-1 overflow-y-auto custom-scrollbar px-lg pb-lg">
           {currentIcons.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-on-surface-variant opacity-60">
+            <div className="flex flex-col items-center justify-center py-12 text-on-surface-deep opacity-60">
               <span className="material-symbols-outlined text-[48px] mb-2">search_off</span>
               <p>No se encontraron íconos</p>
             </div>
@@ -232,7 +232,7 @@ export const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClos
                     aspect-square rounded-xl flex flex-col items-center justify-center gap-1 transition-all
                     ${selectedIcon === icon 
                       ? 'bg-primary/10 text-primary border-2 border-primary shadow-sm' 
-                      : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border border-transparent'}
+                      : 'bg-surface-muted text-on-surface-deep hover:bg-surface-subtle hover:text-foreground border border-transparent'}
                   `}
                 >
                   <span className="material-symbols-outlined text-[28px]">{icon}</span>
@@ -244,25 +244,25 @@ export const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClos
 
         {/* Pagination Footer */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-outline-variant/30 flex items-center justify-between bg-surface-container-lowest">
-            <span className="text-body-sm text-on-surface-variant">
+          <div className="p-4 border-t border-divider/30 flex items-center justify-between bg-surface">
+            <span className="text-body-sm text-on-surface-deep">
               Mostrando {currentIcons.length} de {filteredIcons.length}
             </span>
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high disabled:opacity-30 disabled:hover:bg-transparent"
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-subtle disabled:opacity-30 disabled:hover:bg-transparent"
               >
                 <span className="material-symbols-outlined text-[20px]">chevron_left</span>
               </button>
-              <span className="text-body-sm font-bold text-on-surface min-w-[60px] text-center">
+              <span className="text-body-sm font-bold text-foreground min-w-[60px] text-center">
                 {currentPage} / {totalPages}
               </span>
               <button 
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high disabled:opacity-30 disabled:hover:bg-transparent"
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-subtle disabled:opacity-30 disabled:hover:bg-transparent"
               >
                 <span className="material-symbols-outlined text-[20px]">chevron_right</span>
               </button>

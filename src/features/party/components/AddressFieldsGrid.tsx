@@ -32,7 +32,7 @@ function fieldBlock(params: {
     <div className="space-y-xs">
       <Label
         htmlFor={id}
-        className="text-label-caps uppercase text-on-surface-variant"
+        className="text-label-caps uppercase text-on-surface-deep"
       >
         {label}
       </Label>
@@ -70,7 +70,7 @@ export function AddressFieldsGrid({
 
   return (
     <fieldset className="space-y-md" disabled={disabled}>
-      <legend className="text-body-sm-bold uppercase tracking-widest text-on-surface-variant">
+      <legend className="text-body-sm-bold uppercase tracking-widest text-on-surface-deep">
         {t('party.field.address_section')}
       </legend>
 

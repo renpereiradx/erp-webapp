@@ -115,7 +115,7 @@ export function QuickClientModal({ isOpen, onClose, onCreated }: QuickClientModa
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
           <div className="space-y-xs">
-            <Label htmlFor="qc-first-name" className="text-label-caps uppercase text-on-surface-variant">
+            <Label htmlFor="qc-first-name" className="text-label-caps uppercase text-on-surface-deep">
               {t('party.quick_client.field.first_name', 'Nombre')} *
             </Label>
             <Input
@@ -131,7 +131,7 @@ export function QuickClientModal({ isOpen, onClose, onCreated }: QuickClientModa
           </div>
 
           <div className="space-y-xs">
-            <Label htmlFor="qc-last-name" className="text-label-caps uppercase text-on-surface-variant">
+            <Label htmlFor="qc-last-name" className="text-label-caps uppercase text-on-surface-deep">
               {t('party.quick_client.field.last_name', 'Apellido')} *
             </Label>
             <Input
@@ -155,7 +155,7 @@ export function QuickClientModal({ isOpen, onClose, onCreated }: QuickClientModa
           />
 
           <div className="space-y-xs">
-            <Label htmlFor="qc-document-id" className="text-label-caps uppercase text-on-surface-variant">
+            <Label htmlFor="qc-document-id" className="text-label-caps uppercase text-on-surface-deep">
               {t('party.quick_client.field.document_id', 'Número de documento')} *
             </Label>
             <Input
@@ -171,7 +171,7 @@ export function QuickClientModal({ isOpen, onClose, onCreated }: QuickClientModa
         </div>
 
         <div className="space-y-xs">
-          <Label htmlFor="qc-phone" className="text-label-caps uppercase text-on-surface-variant">
+          <Label htmlFor="qc-phone" className="text-label-caps uppercase text-on-surface-deep">
             {t('party.quick_client.field.phone', 'Teléfono (opcional)')}
           </Label>
           <Input

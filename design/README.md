@@ -15,7 +15,7 @@
 
 | Categoría | Variable CSS emitida | Clases resultantes (ej.) |
 |:----------|:---------------------|:-------------------------|
-| `color` | `--color-<name>` | `bg-primary`, `text-on-surface`, `border-subtle` |
+| `color` | `--color-<name>` | `bg-primary`, `text-foreground`, `border-subtle` |
 | `spacing` | `--spacing-<name>` | `p-md`, `gap-lg`, `max-w-container-max` |
 | `borderRadius` | `--radius-<name>` | `rounded-button`, `rounded-input`, `rounded-xl` |
 | `fontSize` | `--text-<name>` (+ `--line-height`, `--font-weight`) | `text-headline-lg`, `text-body-md`, `text-data-mono` |
@@ -36,8 +36,8 @@ que sobreescribe las variables `--color-*` definidas en `@theme`.
 
 - Paleta **Fluent 2**: primary `#0078D4` (light) / `#2899F5` (dark), hover
   `#005A9E` / `#479EF5`. Es el único primary del sistema.
-- Los nombres de token son los históricos (Material-3: `surface-container-lowest`,
-  `on-surface`, …). Renombrarlos a nombres semánticos Fluent es una fase posterior
+- Los nombres de token son los históricos (Material-3: `surface`,
+  `foreground`, …). Renombrarlos a nombres semánticos Fluent es una fase posterior
   (migración mecánica de classNames).
 - `container-max` (1440px) se usa como `max-w-container-max`; el generador emite
   `--spacing-container-max` para ello.

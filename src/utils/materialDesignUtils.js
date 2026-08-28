@@ -21,7 +21,7 @@ export const materialColors = {
       dark: '#018786',
       on: '#000000'
     },
-    surface: {
+    background: {
       main: '#FFFFFF',
       variant: '#F5F5F5',
       on: '#000000',
@@ -63,7 +63,7 @@ export const materialColors = {
       dark: '#018786',
       on: '#000000'
     },
-    surface: {
+    background: {
       main: '#121212',
       variant: '#2C2C2C',
       on: '#FFFFFF',
@@ -289,19 +289,19 @@ export const generateMaterialCSSProperties = (theme = 'light') => {
     '--md-secondary-light': colors.secondary.light,
     '--md-secondary-dark': colors.secondary.dark,
     '--md-on-secondary': colors.secondary.on,
-    '--md-surface-main': colors.surface.main,
-    '--md-surface-variant': colors.surface.variant,
-    '--md-on-surface': colors.surface.on,
-    '--md-on-surface-variant': colors.surface.onVariant,
+    '--md-surface-main': colors.background.main,
+    '--md-surface-deep': colors.background.variant,
+    '--md-foreground': colors.background.on,
+    '--md-on-surface-deep': colors.background.onVariant,
     '--md-background-main': colors.background.main,
-    '--md-on-background': colors.background.on,
+    '--md-foreground': colors.background.on,
     '--md-error-main': colors.error.main,
     '--md-on-error': colors.error.on,
     '--md-text-primary': colors.text.primary,
     '--md-text-secondary': colors.text.secondary,
     '--md-text-disabled': colors.text.disabled,
     '--md-outline': colors.outline,
-    '--md-outline-variant': colors.outlineVariant
+    '--md-divider': colors.outlineVariant
   };
 };
 
@@ -367,7 +367,7 @@ export const createMaterialStyles = {
    */
   card: (elevation = 1) => ({
     backgroundColor: 'var(--md-surface-main)',
-    color: 'var(--md-on-surface)',
+    color: 'var(--md-foreground)',
     borderRadius: materialCorners.medium,
     boxShadow: materialElevation[elevation],
     padding: materialSpacing[2],
@@ -385,7 +385,7 @@ export const createMaterialStyles = {
     borderRadius: materialCorners.extraSmall,
     border: `1px solid var(--md-outline)`,
     backgroundColor: 'var(--md-surface-main)',
-    color: 'var(--md-on-surface)',
+    color: 'var(--md-foreground)',
     transition: 'border-color 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)',
     outline: 'none',
     '&:focus': {

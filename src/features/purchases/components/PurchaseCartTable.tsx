@@ -22,13 +22,13 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
   setPurchaseItems,
 }) => {
   return (
-    <section className='bg-surface-container-lowest rounded-md border border-surface-variant shadow-whisper overflow-hidden animate-in slide-in-from-bottom-2 duration-500'>
-      <div className='px-5 py-4 border-b border-surface-variant flex flex-col sm:flex-row justify-between items-center bg-surface-container-low gap-3'>
+    <section className='bg-surface rounded-md border border-surface-deep shadow-whisper overflow-hidden animate-in slide-in-from-bottom-2 duration-500'>
+      <div className='px-5 py-4 border-b border-surface-deep flex flex-col sm:flex-row justify-between items-center bg-surface-muted gap-3'>
         <div>
-          <h3 className='text-base font-semibold text-on-surface'>
+          <h3 className='text-base font-semibold text-foreground'>
             Productos en la Orden
           </h3>
-          <p className='text-xs text-on-surface-variant mt-0.5'>
+          <p className='text-xs text-on-surface-deep mt-0.5'>
             Artículos a ingresar al inventario
           </p>
         </div>
@@ -44,7 +44,7 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
 
       <div className='overflow-x-auto min-h-[300px]'>
         <table className='w-full text-left border-collapse min-w-[800px]'>
-          <thead className='bg-surface-container text-xs font-semibold text-on-surface-variant sticky top-0 z-10'>
+          <thead className='bg-surface-subtle text-xs font-semibold text-on-surface-deep sticky top-0 z-10'>
             <tr>
               <th className='px-4 py-3'>ID / SKU</th>
               <th className='px-4 py-3'>Producto</th>
@@ -75,11 +75,11 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
               purchaseItems.map(item => (
                 <tr
                   key={item.id}
-                  className='hover:bg-surface-container-highest transition-colors duration-100 group/row cursor-pointer'
+                  className='hover:bg-surface-deep transition-colors duration-100 group/row cursor-pointer'
                   onDoubleClick={() => handleEditItem(item)}
                 >
                   <td className='px-4 py-3'>
-                    <div className='text-xs font-mono text-on-surface-variant'>
+                    <div className='text-xs font-mono text-on-surface-deep'>
                       #{item.product_id}
                     </div>
                     {/* Si hay variante, mostrar su SKU; si no, el SKU del producto */}
@@ -90,7 +90,7 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
                     )}
                   </td>
                   <td className='px-4 py-3'>
-                    <div className='font-semibold text-sm text-on-surface group-hover/row:text-primary transition-colors'>
+                    <div className='font-semibold text-sm text-foreground group-hover/row:text-primary transition-colors'>
                       {item.name}
                     </div>
                     {/* Atributos de variante como badges */}
@@ -132,16 +132,16 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
                     </div>
                   </td>
 
-                  <td className='px-4 py-3 text-center font-semibold text-on-surface'>
+                  <td className='px-4 py-3 text-center font-semibold text-foreground'>
                     {formatNumber(item.quantity)} <span className='text-[10px] font-normal text-outline'>{item.unit}</span>
                   </td>
-                  <td className='px-4 py-3 text-right text-sm text-on-surface-variant'>
+                  <td className='px-4 py-3 text-right text-sm text-on-surface-deep'>
                     {formatCurrency(item.unit_price)}
                   </td>
                   <td className='px-4 py-3 text-right font-semibold text-success'>
                     {item.profit_pct.toFixed(1)}%
                   </td>
-                  <td className='px-4 py-3 text-right font-semibold text-on-surface'>
+                  <td className='px-4 py-3 text-right font-semibold text-foreground'>
                     {formatCurrency(item.unit_price * item.quantity)}
                   </td>
                   <td className='px-4 py-3 text-right'>

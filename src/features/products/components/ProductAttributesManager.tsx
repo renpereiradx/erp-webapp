@@ -180,10 +180,10 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
 
   if (!productId) {
     return (
-      <div className="p-12 text-center border-2 border-dashed border-outline-variant/30 rounded-2xl bg-surface-container-lowest">
-        <Layers className="mx-auto text-outline-variant mb-4" size={32} />
-        <h3 className="text-title-md font-bold text-on-surface mb-2">Guarde el producto primero</h3>
-        <p className="text-body-sm text-on-surface-variant">Debe guardar los datos básicos de este producto antes de asignar atributos descriptivos.</p>
+      <div className="p-12 text-center border-2 border-dashed border-divider/30 rounded-2xl bg-surface">
+        <Layers className="mx-auto text-divider mb-4" size={32} />
+        <h3 className="text-title-md font-bold text-foreground mb-2">Guarde el producto primero</h3>
+        <p className="text-body-sm text-on-surface-deep">Debe guardar los datos básicos de este producto antes de asignar atributos descriptivos.</p>
       </div>
     );
   }

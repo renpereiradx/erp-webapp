@@ -1577,22 +1577,22 @@ const SalesNew: React.FC = () => {
             <ShoppingCart size={20} />
           </div>
           <div>
-            <h1 className="text-headline-sm text-on-surface leading-none mb-0.5">
+            <h1 className="text-headline-sm text-foreground leading-none mb-0.5">
               {t('sales.title', 'Punto de Venta')}
             </h1>
-            <p className="text-body-sm text-on-surface-variant hidden sm:block">
+            <p className="text-body-sm text-on-surface-deep hidden sm:block">
               {t('sales.subtitle', 'Facturación y registro de operaciones')}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1 p-1 bg-surface-container-low rounded-md w-fit">
+        <div className="flex items-center gap-1 p-1 bg-surface-muted rounded-md w-fit">
           {[
             { id: 'new-sale' as const, label: t('sales.tab.new', 'Nueva Venta'), icon: <Plus size={14} /> },
             { id: 'history' as const, label: t('sales.tab.history', 'Historial'), icon: <History size={14} /> },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn(
               'flex flex-1 items-center justify-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-bold transition-all duration-300 relative z-10',
-              activeTab === tab.id ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'
+              activeTab === tab.id ? 'bg-surface text-primary shadow-sm' : 'text-on-surface-deep hover:text-foreground'
             )}>
               {tab.icon} <span>{tab.label}</span>
             </button>
@@ -1604,11 +1604,11 @@ const SalesNew: React.FC = () => {
         {activeTab === 'new-sale' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div className="lg:col-span-12 space-y-4">
-              <article className="bg-surface-container-lowest rounded-md shadow-sm relative">
-                <header className="flex items-center justify-between px-4 py-3 border-b border-surface-variant">
+              <article className="bg-surface rounded-md shadow-sm relative">
+                <header className="flex items-center justify-between px-4 py-3 border-b border-surface-deep">
                   <div className="flex items-center gap-2">
                     <ShoppingCart size={16} className="text-primary" />
-                    <h3 className="text-title-sm text-on-surface font-bold">Productos Seleccionados</h3>
+                    <h3 className="text-title-sm text-foreground font-bold">Productos Seleccionados</h3>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-slate-400">
                     <span className="hidden sm:inline">Ctrl+Shift+P para buscar</span>
@@ -1628,12 +1628,12 @@ const SalesNew: React.FC = () => {
                           setProductSearchTerm(e.target.value);
                           setSelectedProductQuantity(1);
                         }}
-                        className="pl-9 h-11 text-body-md shadow-sm border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm"
+                        className="pl-9 h-11 text-body-md shadow-sm border-divider focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm"
                       />
                     </div>
 
                     {showProductDropdown && (
-                      <div className="absolute z-50 w-full mt-1 bg-surface-container-lowest rounded-md shadow-whisper overflow-x-hidden max-h-[400px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="absolute z-50 w-full mt-1 bg-surface rounded-md shadow-whisper overflow-x-hidden max-h-[400px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="p-1">
                           {productSearchResults.map((product, index) => {
                             const isHighlighted = index === productHighlightedIndex;
@@ -1714,7 +1714,7 @@ const SalesNew: React.FC = () => {
                                   </button>
 
                                   {isHighlighted && !isOutOfStock && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 mr-1 bg-surface-container-lowest rounded-md shadow-sm shrink-0 ml-1 animate-in slide-in-from-right-2 duration-200">
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 mr-1 bg-surface rounded-md shadow-sm shrink-0 ml-1 animate-in slide-in-from-right-2 duration-200">
                                       {product.has_variants ? (
                                         <div className="text-[11px] font-bold text-indigo-600 flex items-center gap-1 whitespace-nowrap">
                                           <Layers size={14} />
@@ -1780,7 +1780,7 @@ const SalesNew: React.FC = () => {
                                               }
                                               e.stopPropagation();
                                             }}
-                                            className="w-14 h-8 font-data-mono text-center border border-outline-variant rounded-sm bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                            className="w-14 h-8 font-data-mono text-center border border-divider rounded-sm bg-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                             onClick={(e) => e.stopPropagation()}
                                           />
                                         </div>
@@ -1821,10 +1821,10 @@ const SalesNew: React.FC = () => {
                 </div>
               </article>
 
-              <article className="bg-surface-container-lowest rounded-md shadow-whisper mt-4">
-                <header className="flex items-center gap-2 px-6 py-4 border-b border-surface-variant">
+              <article className="bg-surface rounded-md shadow-whisper mt-4">
+                <header className="flex items-center gap-2 px-6 py-4 border-b border-surface-deep">
                   <DollarSign size={18} className="text-primary" />
-                  <h3 className="text-title-md text-on-surface">Resumen</h3>
+                  <h3 className="text-title-md text-foreground">Resumen</h3>
                 </header>
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
@@ -1908,7 +1908,7 @@ const SalesNew: React.FC = () => {
                                 };
                               }));
                             }}
-                            className="h-11 pl-4 text-xl font-data-mono font-black text-primary border border-outline-variant bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm"
+                            className="h-11 pl-4 text-xl font-data-mono font-black text-primary border border-divider bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm"
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase tracking-widest pointer-events-none">
                             EDITABLE
@@ -1959,7 +1959,7 @@ const SalesNew: React.FC = () => {
 
         {activeTab === 'history' && (
           <div className="space-y-4">
-            <article className="bg-surface-container-lowest rounded-md shadow-whisper p-6 space-y-4">
+            <article className="bg-surface rounded-md shadow-whisper p-6 space-y-4">
               <div className="flex flex-wrap gap-4 items-end">
                 <div className="flex-1 min-w-[260px] space-y-1.5">
                   <label className="text-xs font-bold uppercase text-slate-500">Búsqueda rápida</label>
@@ -2089,34 +2089,34 @@ const SalesNew: React.FC = () => {
 
       {isModalOpen && selectedModalProduct && (
         <div 
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm animate-in fade-in duration-300" 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm animate-in fade-in duration-300" 
           onClick={() => setIsModalOpen(false)}
         >
           <div 
-            className="relative w-full max-w-lg shadow-whisper rounded-md bg-surface-container-lowest overflow-hidden flex flex-col max-h-[95vh]" 
+            className="relative w-full max-w-lg shadow-whisper rounded-md bg-surface overflow-hidden flex flex-col max-h-[95vh]" 
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex flex-row items-start justify-between border-b border-surface-variant bg-surface-container-lowest px-6 py-5 shrink-0">
+            <div className="flex flex-row items-start justify-between border-b border-surface-deep bg-surface px-6 py-5 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="size-10 bg-surface-container-low rounded-lg flex items-center justify-center text-on-surface-variant shrink-0">
+                <div className="size-10 bg-surface-muted rounded-lg flex items-center justify-center text-on-surface-deep shrink-0">
                   <ShoppingCart size={20} strokeWidth={2} />
                 </div>
                 <div className="flex flex-col">
-                  <h2 className="text-title-md text-on-surface leading-tight">
+                  <h2 className="text-title-md text-foreground leading-tight">
                     {editingItemId ? 'Editar Detalles' : 'Configurar Producto'}
                   </h2>
                   {modalDisplay && (
-                    <p className="text-body-sm text-on-surface-variant font-medium mt-0.5">{modalDisplay.name}</p>
+                    <p className="text-body-sm text-on-surface-deep font-medium mt-0.5">{modalDisplay.name}</p>
                   )}
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-outline hover:text-on-surface hover:bg-surface-container rounded-button shrink-0 -mr-2">
+              <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-outline hover:text-foreground hover:bg-surface-subtle rounded-button shrink-0 -mr-2">
                 <X size={20} />
               </Button>
             </div>
             
-            <div className="overflow-y-auto overflow-x-hidden p-6 space-y-6 flex-1 bg-surface-container-lowest">
+            <div className="overflow-y-auto overflow-x-hidden p-6 space-y-6 flex-1 bg-surface">
               {modalDisplay && (
                 <div className="flex flex-col space-y-6">
                   {/* Grid de Inputs Principales */}
@@ -2131,7 +2131,7 @@ const SalesNew: React.FC = () => {
                         onChange={(e) => setModalQuantity(e.target.value)}
                         min={isDecimalUnit(modalUnit || 'unit') ? "0.01" : "1"}
                         step={isDecimalUnit(modalUnit || 'unit') ? "0.01" : "1"}
-                        className="h-10 text-base font-data-mono font-medium text-on-surface bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm shadow-sm"
+                        className="h-10 text-base font-data-mono font-medium text-foreground bg-surface border border-divider focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm shadow-sm"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -2141,7 +2141,7 @@ const SalesNew: React.FC = () => {
                         list="allowed-units"
                         value={modalUnit}
                         onChange={(e) => setModalUnit(e.target.value)}
-                        className="h-10 text-base text-on-surface bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm shadow-sm"
+                        className="h-10 text-base text-foreground bg-surface border border-divider focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm shadow-sm"
                       />
                     </div>
 
@@ -2170,7 +2170,7 @@ const SalesNew: React.FC = () => {
                             setModalDiscount(diff);
                           }
                         }}
-                        className="h-10 text-base font-data-mono font-semibold text-primary bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm shadow-sm"
+                        className="h-10 text-base font-data-mono font-semibold text-primary bg-surface border border-divider focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-sm shadow-sm"
                       />
                     </div>
                   </div>
@@ -2190,8 +2190,8 @@ const SalesNew: React.FC = () => {
                           }}
                           className={`flex-1 px-3 py-1 text-xs font-semibold rounded-sm transition-all ${
                             modalDiscountType === 'amount' 
-                              ? 'bg-surface-container-lowest text-on-surface shadow-sm' 
-                              : 'text-on-surface-variant hover:text-on-surface'
+                              ? 'bg-surface text-foreground shadow-sm' 
+                              : 'text-on-surface-deep hover:text-foreground'
                           }`}
                         >
                           Monto Fijo
@@ -2204,8 +2204,8 @@ const SalesNew: React.FC = () => {
                           }}
                           className={`flex-1 px-3 py-1 text-xs font-semibold rounded-sm transition-all ${
                             modalDiscountType === 'percent' 
-                              ? 'bg-surface-container-lowest text-on-surface shadow-sm' 
-                              : 'text-on-surface-variant hover:text-on-surface'
+                              ? 'bg-surface text-foreground shadow-sm' 
+                              : 'text-on-surface-deep hover:text-foreground'
                           }`}
                         >
                           Porcentaje
@@ -2256,7 +2256,7 @@ const SalesNew: React.FC = () => {
                           value={modalCustomReasonText}
                           onChange={(e) => setModalCustomReasonText(e.target.value)}
                           placeholder="Especificar motivo detallado del ajuste..."
-                          className="h-10 border border-outline-variant rounded-sm text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface-container-lowest"
+                          className="h-10 border border-divider rounded-sm text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-surface"
                         />
                       </div>
                     )}
@@ -2285,11 +2285,11 @@ const SalesNew: React.FC = () => {
               )}
             </div>
             
-            <div className="flex gap-3 p-6 bg-surface border-t border-surface-variant shrink-0">
+            <div className="flex gap-3 p-6 bg-background border-t border-surface-deep shrink-0">
               <Button 
                 variant="outline" 
                 onClick={() => setIsModalOpen(false)} 
-                className="flex-1 h-10 text-body-sm-bold bg-surface-container-lowest border border-outline-variant hover:bg-surface-container text-on-surface rounded-button transition-all"
+                className="flex-1 h-10 text-body-sm-bold bg-surface border border-divider hover:bg-surface-subtle text-foreground rounded-button transition-all"
               >
                 Cancelar
               </Button>

@@ -54,9 +54,9 @@ export const useVariants = () => {
           return {
             name: key.charAt(0).toUpperCase() + key.slice(1),
             value: String(value),
-            bgColor: key.toLowerCase() === 'color' ? 'bg-secondary-container/50' : 'bg-surface-container',
-            color: key.toLowerCase() === 'color' ? 'text-on-secondary-container' : 'text-on-surface-variant',
-            borderColor: key.toLowerCase() === 'color' ? 'border-secondary-container' : 'border-outline-variant/30'
+            bgColor: key.toLowerCase() === 'color' ? 'bg-secondary-container/50' : 'bg-surface-subtle',
+            color: key.toLowerCase() === 'color' ? 'text-on-secondary-container' : 'text-on-surface-deep',
+            borderColor: key.toLowerCase() === 'color' ? 'border-secondary-container' : 'border-divider/30'
           };
         });
 
@@ -131,9 +131,9 @@ export const useVariants = () => {
         const optAttrs = Object.entries(created.variant_attributes || {}).map(([key, value]) => ({
           name: key.charAt(0).toUpperCase() + key.slice(1),
           value: String(value),
-          bgColor: key.toLowerCase() === 'color' ? 'bg-secondary-container/50' : 'bg-surface-container',
-          color: key.toLowerCase() === 'color' ? 'text-on-secondary-container' : 'text-on-surface-variant',
-          borderColor: key.toLowerCase() === 'color' ? 'border-secondary-container' : 'border-outline-variant/30'
+          bgColor: key.toLowerCase() === 'color' ? 'bg-secondary-container/50' : 'bg-surface-subtle',
+          color: key.toLowerCase() === 'color' ? 'text-on-secondary-container' : 'text-on-surface-deep',
+          borderColor: key.toLowerCase() === 'color' ? 'border-secondary-container' : 'border-divider/30'
         }));
         
         const optVariant: VariantUI = {
@@ -177,9 +177,9 @@ export const useVariants = () => {
               ? Object.entries(data.variant_attributes).map(([key, value]) => ({
                   name: key.charAt(0).toUpperCase() + key.slice(1),
                   value: String(value),
-                  bgColor: key.toLowerCase() === 'color' ? 'bg-secondary-container/50' : 'bg-surface-container',
-                  color: key.toLowerCase() === 'color' ? 'text-on-secondary-container' : 'text-on-surface-variant',
-                  borderColor: key.toLowerCase() === 'color' ? 'border-secondary-container' : 'border-outline-variant/30'
+                  bgColor: key.toLowerCase() === 'color' ? 'bg-secondary-container/50' : 'bg-surface-subtle',
+                  color: key.toLowerCase() === 'color' ? 'text-on-secondary-container' : 'text-on-surface-deep',
+                  borderColor: key.toLowerCase() === 'color' ? 'border-secondary-container' : 'border-divider/30'
                 }))
               : v.attributes;
 

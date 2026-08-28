@@ -46,7 +46,7 @@ const InvoiceDetail = () => {
   if (loading) return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
       <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      <span className="text-xs font-black uppercase tracking-widest text-on-surface-variant">Recuperando Registro Maestro...</span>
+      <span className="text-xs font-black uppercase tracking-widest text-on-surface-deep">Recuperando Registro Maestro...</span>
     </div>
   );
 
@@ -76,7 +76,7 @@ const InvoiceDetail = () => {
       {/* Refined Header Area */}
       <div className="flex flex-col gap-4">
         {/* Breadcrumbs */}
-        <nav className="flex items-center text-xs font-bold text-on-surface-variant uppercase tracking-widest px-1">
+        <nav className="flex items-center text-xs font-bold text-on-surface-deep uppercase tracking-widest px-1">
           <Link to="/dashboard/payables" className="hover:text-primary transition-colors flex items-center gap-1">
             Finanzas
           </Link>
@@ -92,7 +92,7 @@ const InvoiceDetail = () => {
           <div className="flex items-start gap-5">
             <button 
               onClick={() => navigate(-1)}
-              className="p-3 bg-surface-container-low text-slate-500 hover:text-primary hover:bg-primary/5 rounded-xl border border-slate-100 dark:border-slate-700 transition-all active:scale-95 shadow-sm group"
+              className="p-3 bg-surface-muted text-slate-500 hover:text-primary hover:bg-primary/5 rounded-xl border border-slate-100 dark:border-slate-700 transition-all active:scale-95 shadow-sm group"
             >
               <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
             </button>
@@ -115,7 +115,7 @@ const InvoiceDetail = () => {
                   {invoice.status}
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant uppercase tracking-wider mt-0.5">
+              <div className="flex items-center gap-2 text-xs font-semibold text-on-surface-deep uppercase tracking-wider mt-0.5">
                 <FileBadge size={14} className="opacity-50" />
                 <span>ID Orden: <span className="text-slate-600 dark:text-slate-300 font-mono">{invoice.purchaseOrderId}</span></span>
                 <span className="mx-1 opacity-30">•</span>
@@ -129,7 +129,7 @@ const InvoiceDetail = () => {
 
           <div className="flex flex-wrap items-center gap-3 lg:mb-1">
             <button className="inline-flex items-center px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm active:scale-95 text-slate-600 dark:text-slate-300">
-              <Download className="w-4 h-4 mr-2 text-on-surface-variant" />
+              <Download className="w-4 h-4 mr-2 text-on-surface-deep" />
               PDF
             </button>
             <button className="inline-flex items-center px-6 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl bg-primary text-white hover:bg-blue-600 transition-all shadow-lg shadow-primary/20 active:scale-95">
@@ -144,7 +144,7 @@ const InvoiceDetail = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-1">
         <div className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-sm p-6 md:p-8 rounded-2xl flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all">
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-black text-on-surface-variant mb-2 uppercase tracking-[0.2em] group-hover:text-primary transition-colors">Monto Original</div>
+            <div className="text-[10px] font-black text-on-surface-deep mb-2 uppercase tracking-[0.2em] group-hover:text-primary transition-colors">Monto Original</div>
             <div className="text-2xl xl:text-3xl font-mono font-black text-slate-900 dark:text-white break-words tabular-nums">{formatAmount(invoice.totalAmount)}</div>
           </div>
           <div className="mt-5 h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
@@ -154,7 +154,7 @@ const InvoiceDetail = () => {
         
         <div className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-sm p-6 md:p-8 rounded-2xl border-l-4 border-l-emerald-500 flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all">
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-black text-on-surface-variant mb-2 uppercase tracking-[0.2em] group-hover:text-emerald-500 transition-colors">Monto Pagado</div>
+            <div className="text-[10px] font-black text-on-surface-deep mb-2 uppercase tracking-[0.2em] group-hover:text-emerald-500 transition-colors">Monto Pagado</div>
             <div className="text-2xl xl:text-3xl font-mono font-black text-emerald-600 dark:text-emerald-400 break-words tabular-nums">{formatAmount(invoice.paidAmount)}</div>
           </div>
           <div className="mt-5 h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
@@ -164,7 +164,7 @@ const InvoiceDetail = () => {
         
         <div className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-sm p-6 md:p-8 rounded-2xl border-l-4 border-l-primary flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all">
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-black text-on-surface-variant mb-2 uppercase tracking-[0.2em] group-hover:text-primary transition-colors">Saldo Pendiente</div>
+            <div className="text-[10px] font-black text-on-surface-deep mb-2 uppercase tracking-[0.2em] group-hover:text-primary transition-colors">Saldo Pendiente</div>
             <div className="text-2xl xl:text-3xl font-mono font-black text-primary break-words tabular-nums">{formatAmount(invoice.pendingAmount)}</div>
           </div>
           <div className="mt-5 h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
@@ -183,26 +183,26 @@ const InvoiceDetail = () => {
           <section className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-sm rounded-2xl overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
               <h2 className="text-lg font-extrabold flex items-center tracking-tight text-slate-900 dark:text-white">
-                <DescriptionIcon className="mr-2 text-on-surface-variant" size={18} />
+                <DescriptionIcon className="mr-2 text-on-surface-deep" size={18} />
                 Detalle de la Orden
               </h2>
-              <span className="text-xs text-slate-500 dark:text-on-surface-variant italic font-medium">Validado por Sistema</span>
+              <span className="text-xs text-slate-500 dark:text-on-surface-deep italic font-medium">Validado por Sistema</span>
             </div>
             <div className="p-6 md:p-8 grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
               <div>
-                <div className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1.5">Fecha de Emisión</div>
+                <div className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-1.5">Fecha de Emisión</div>
                 <div className="text-sm md:text-base font-mono font-bold text-slate-900 dark:text-white">{invoice.detalle.emision}</div>
               </div>
               <div>
-                <div className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1.5">Fecha de Vencimiento</div>
+                <div className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-1.5">Fecha de Vencimiento</div>
                 <div className={`text-sm md:text-base font-mono font-black ${invoice.status === 'VENCIDO' ? 'text-red-600' : 'text-slate-900 dark:text-white'}`}>{invoice.detalle.vencimiento}</div>
               </div>
               <div>
-                <div className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1.5">Términos de Crédito</div>
+                <div className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-1.5">Términos de Crédito</div>
                 <div className="text-sm md:text-base font-bold text-slate-900 dark:text-white">{invoice.detalle.terminos}</div>
               </div>
               <div>
-                <div className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1.5">Prioridad</div>
+                <div className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-1.5">Prioridad</div>
                 <div className="flex items-center text-sm md:text-base font-bold text-slate-900 dark:text-white">
                   <span className={`w-2 h-2 rounded-full mr-2 shadow-sm ${invoice.detalle.prioridad === 'Alta' ? 'bg-red-500' : 'bg-blue-500'}`}></span>
                   {invoice.detalle.prioridad}
@@ -215,13 +215,13 @@ const InvoiceDetail = () => {
           <section className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-sm rounded-2xl overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
               <h2 className="text-lg font-extrabold flex items-center tracking-tight text-slate-900 dark:text-white">
-                <HistoryIcon className="mr-2 text-on-surface-variant" size={18} />
+                <HistoryIcon className="mr-2 text-on-surface-deep" size={18} />
                 Historial de Pagos
               </h2>
             </div>
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left border-collapse min-w-[800px]">
-                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-on-surface-variant border-b border-slate-100 dark:border-slate-800">
+                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-on-surface-deep border-b border-slate-100 dark:border-slate-800">
                   <tr>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">ID de Pago</th>
                     <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest">Fecha</th>
@@ -252,7 +252,7 @@ const InvoiceDetail = () => {
                     </tr>
                   )) : (
                     <tr>
-                      <td colSpan="6" className="px-6 py-12 text-center text-xs font-black text-on-surface-variant uppercase tracking-[0.2em]">No se registran pagos para esta factura</td>
+                      <td colSpan="6" className="px-6 py-12 text-center text-xs font-black text-on-surface-deep uppercase tracking-[0.2em]">No se registran pagos para esta factura</td>
                     </tr>
                   )}
                 </tbody>
@@ -272,7 +272,7 @@ const InvoiceDetail = () => {
           <section className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-sm rounded-2xl overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
               <h2 className="text-lg font-extrabold flex items-center tracking-tight text-slate-900 dark:text-white">
-                <BusinessIcon className="mr-2 text-on-surface-variant" size={18} />
+                <BusinessIcon className="mr-2 text-on-surface-deep" size={18} />
                 Información del Proveedor
               </h2>
             </div>
@@ -283,35 +283,35 @@ const InvoiceDetail = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-black text-lg leading-tight text-slate-900 dark:text-white truncate">{invoice.proveedor.nombre}</h3>
-                  <p className="text-xs font-mono font-medium text-slate-500 dark:text-on-surface-variant mt-1">NIT/RUC: {invoice.proveedor.ruc}</p>
+                  <p className="text-xs font-mono font-medium text-slate-500 dark:text-on-surface-deep mt-1">NIT/RUC: {invoice.proveedor.ruc}</p>
                 </div>
               </div>
               
               <div className="space-y-5 px-1">
                 <div className="flex items-center gap-3.5 group cursor-pointer">
-                  <div className="p-2 bg-surface-container-low rounded-lg text-on-surface-variant group-hover:text-primary group-hover:bg-primary/5 transition-all shrink-0 border border-transparent group-hover:border-primary/10">
+                  <div className="p-2 bg-surface-muted rounded-lg text-on-surface-deep group-hover:text-primary group-hover:bg-primary/5 transition-all shrink-0 border border-transparent group-hover:border-primary/10">
                     <User size={16} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest block mb-0.5">Contacto Principal</span>
+                    <span className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest block mb-0.5">Contacto Principal</span>
                     <span className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate block">{invoice.proveedor.contacto}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3.5 group cursor-pointer">
-                  <div className="p-2 bg-surface-container-low rounded-lg text-on-surface-variant group-hover:text-primary group-hover:bg-primary/5 transition-all shrink-0 border border-transparent group-hover:border-primary/10">
+                  <div className="p-2 bg-surface-muted rounded-lg text-on-surface-deep group-hover:text-primary group-hover:bg-primary/5 transition-all shrink-0 border border-transparent group-hover:border-primary/10">
                     <AtSign size={16} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest block mb-0.5">Correo Electrónico</span>
+                    <span className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest block mb-0.5">Correo Electrónico</span>
                     <span className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate block">{invoice.proveedor.email}</span>
                   </div>
                 </div>
                 <div className="flex items-start gap-3.5 group cursor-pointer">
-                  <div className="p-2 bg-surface-container-low rounded-lg text-on-surface-variant group-hover:text-primary group-hover:bg-primary/5 transition-all shrink-0 mt-0.5 border border-transparent group-hover:border-primary/10">
+                  <div className="p-2 bg-surface-muted rounded-lg text-on-surface-deep group-hover:text-primary group-hover:bg-primary/5 transition-all shrink-0 mt-0.5 border border-transparent group-hover:border-primary/10">
                     <MapPin size={16} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest block mb-0.5">Dirección</span>
+                    <span className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest block mb-0.5">Dirección</span>
                     <span className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-snug block">{invoice.proveedor.direccion}</span>
                   </div>
                 </div>
@@ -330,7 +330,7 @@ const InvoiceDetail = () => {
           <section className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-sm rounded-2xl overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
               <h2 className="text-lg font-extrabold flex items-center tracking-tight text-slate-900 dark:text-white">
-                <BoltIcon className="mr-2 text-on-surface-variant" size={18} />
+                <BoltIcon className="mr-2 text-on-surface-deep" size={18} />
                 Línea de Tiempo
               </h2>
             </div>
@@ -350,13 +350,13 @@ const InvoiceDetail = () => {
                       </div>
                       <div className="flex-1 min-w-0 pt-0.5">
                         <div className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{act.titulo}</div>
-                        <div className="text-xs font-medium text-slate-500 dark:text-on-surface-variant mt-0.5">{act.desc}</div>
-                        <div className="text-[10px] font-mono font-black text-on-surface-variant uppercase tracking-widest mt-1.5">{act.date}</div>
+                        <div className="text-xs font-medium text-slate-500 dark:text-on-surface-deep mt-0.5">{act.desc}</div>
+                        <div className="text-[10px] font-mono font-black text-on-surface-deep uppercase tracking-widest mt-1.5">{act.date}</div>
                       </div>
                     </div>
                   );
                 }) : (
-                  <div className="text-center py-4 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Sin actividad registrada</div>
+                  <div className="text-center py-4 text-[10px] font-black text-on-surface-deep uppercase tracking-widest">Sin actividad registrada</div>
                 )}
               </div>
             </div>
