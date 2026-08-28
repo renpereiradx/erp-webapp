@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react';
 import { Button } from './button';
 import { useI18n } from '@/lib/i18n';
@@ -130,7 +131,7 @@ const EnhancedModal = ({
     animate-in fade-in duration-200
   `;
 
-  return (
+  return createPortal(
     <div
       className={`${getOverlayStyles()} ${overlayClassName}`}
       onClick={handleOverlayClick}
@@ -221,7 +222,8 @@ const EnhancedModal = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
