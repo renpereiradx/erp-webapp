@@ -5,9 +5,9 @@
 
 export const currencies = {
   // Titles and subtitles
-  'currencies.page.title': 'Currency & Payment Configuration',
+  'currencies.page.title': 'Currencies',
   'currencies.page.subtitle':
-    'Manage active currencies, configure exchange rates against your base currency, and control payment gateways.',
+    'Manage the system base currency and the currency catalog for transactions.',
 
   // Actions
   'currencies.action.create': 'Add New Currency',
@@ -45,8 +45,6 @@ export const currencies = {
 
   // Tabs
   'currencies.tabs.currencies': 'Currencies',
-  'currencies.tabs.payment_methods': 'Payment Methods',
-  'currencies.tabs.settings': 'Settings',
 
   // Form fields
   'currencies.field.code': 'ISO Code',
@@ -103,17 +101,6 @@ export const currencies = {
   'currencies.payment_methods.table.type': 'TYPE',
   'currencies.payment_methods.type.simple': 'Simple',
   'currencies.payment_methods.type.complex': 'Complex (Extra info)',
-  'currencies.payment_methods.action.edit_disabled': 'Editing disabled',
-
-  // Settings Tab
-  'currencies.settings.general.title': 'General Configuration',
-  'currencies.settings.general.description': 'General options for payment and currency management.',
-  'currencies.settings.field.number_format': 'Number format',
-  'currencies.settings.field.number_format.es_py': 'Spanish (Paraguay) - 1.234.567',
-  'currencies.settings.field.number_format.en_us': 'English (US) - 1,234,567.00',
-  'currencies.settings.hint.number_format': 'The visual format of amounts in the application.',
-  'currencies.settings.field.show_symbols': 'Show currency symbols',
-  'currencies.settings.field.auto_update': 'Automatic rate update (Coming Soon)',
 
   // Payment Methods Page
   'paymentMethods.page.title': 'Payment Methods',
