@@ -9,11 +9,9 @@ name: Precision Air
 colors:
   background: '#f8f9ff'
   surface-dim: '#d7dae2'
-  background: '#f8f9ff'
   surface: '#ffffff'
   surface-muted: '#f1f3fc'
   surface-subtle: '#ebeef6'
-  surface-subtle: '#e5e8f1'
   surface-deep: '#dfe2eb'
   foreground: '#181c22'
   on-surface-deep: '#414753'
@@ -22,7 +20,7 @@ colors:
   outline: '#717785'
   divider: '#c1c6d5'
   surface-tint: '#005eb4'
-  primary: '#005baf'
+  primary: '#0078D4'
   on-primary: '#ffffff'
   primary-container: '#0074db'
   on-primary-container: '#fefcff'
@@ -51,13 +49,9 @@ colors:
   tertiary-fixed-dim: '#ffb68c'
   on-tertiary-fixed: '#321200'
   on-tertiary-fixed-variant: '#753400'
-  background: '#f8f9ff'
-  foreground: '#181c22'
-  surface-deep: '#dfe2eb'
   # Estados semánticos (definidos en design/tokens.json)
   success: '#107c10'
   warning: '#d83b01'
-  info: '#005baf'
 typography:
   display-lg:
     fontFamily: Inter

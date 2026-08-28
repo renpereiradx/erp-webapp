@@ -36,8 +36,9 @@ que sobreescribe las variables `--color-*` definidas en `@theme`.
 
 - Paleta **Fluent 2**: primary `#0078D4` (light) / `#2899F5` (dark), hover
   `#005A9E` / `#479EF5`. Es el único primary del sistema.
-- Los nombres de token son los históricos (Material-3: `surface`,
-  `foreground`, …). Renombrarlos a nombres semánticos Fluent es una fase posterior
-  (migración mecánica de classNames).
+- Los nombres semánticos Fluent (`surface`, `surface-muted`, `surface-subtle`,
+  `surface-deep`, `foreground`, `divider`) ya están aplicados (Fase 3); los
+  alias Material-3 restantes (`on-surface-variant`, `outline`, contenedores
+  `-fixed`, etc.) se mantienen como tokens activos por compatibilidad legacy.
 - `container-max` (1440px) se usa como `max-w-container-max`; el generador emite
   `--spacing-container-max` para ello.
