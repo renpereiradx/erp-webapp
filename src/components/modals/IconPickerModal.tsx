@@ -200,7 +200,7 @@ export const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClos
         {/* Search */}
         <div className="p-lg pb-4">
           <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg">search</span>
             <input 
               type="text" 
               placeholder="Buscar ícono (ej. estrella, carrito, local_offer)..."

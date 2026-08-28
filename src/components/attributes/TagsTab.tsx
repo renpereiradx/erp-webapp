@@ -66,7 +66,7 @@ export const TagsTab: React.FC<TagsTabProps> = ({
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-title-md text-title-md text-foreground font-bold">Etiquetas Activas</h3>
           <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg text-[18px]">search</span>
             <input 
               className="pl-9 pr-4 py-1.5 border border-divider/50 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface w-full max-w-[200px] transition-all" 
               placeholder="Buscar etiqueta..." 
@@ -101,7 +101,7 @@ export const TagsTab: React.FC<TagsTabProps> = ({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded-full border border-divider/30" style={{ backgroundColor: tag.color }}></div>
-                      <span className="font-data-mono text-[12px] text-outline">{tag.color}</span>
+                      <span className="font-data-mono text-[12px] text-outline-fg">{tag.color}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-on-surface-deep">

@@ -51,7 +51,7 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
           <div className='flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto'>
             <div className='relative w-full sm:w-80'>
               <Search
-                className='absolute left-3 top-1/2 -translate-y-1/2 text-outline'
+                className='absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg'
                 size={16}
               />
               <input
@@ -103,7 +103,7 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
                 />
-                <span className='text-outline'>
+                <span className='text-outline-fg'>
                   →
                 </span>
                 <input
@@ -147,7 +147,7 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                 <tr>
                   <td
                     colSpan={6}
-                    className='py-20 text-center text-outline text-sm'
+                    className='py-20 text-center text-outline-fg text-sm'
                   >
                     <div className='flex flex-col items-center justify-center gap-2'>
                       <Search size={32} className="opacity-20" />
@@ -240,7 +240,7 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                                   : order.id,
                               )
                             }
-                            className='p-1.5 text-outline hover:text-foreground hover:bg-surface-muted rounded-md transition-all'
+                            className='p-1.5 text-outline-fg hover:text-foreground hover:bg-surface-muted rounded-md transition-all'
                           >
                             <MoreVertical size={18} />
                           </button>

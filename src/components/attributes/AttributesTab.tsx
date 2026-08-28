@@ -92,7 +92,7 @@ export const AttributesTab: React.FC<AttributesTabProps> = ({
         <div className="flex justify-between items-center mb-md">
           <h3 className="font-title-md text-title-md text-foreground">Atributos Registrados</h3>
           <div className="relative">
-            <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+            <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline-fg text-[18px]">search</span>
             <input 
               className="pl-[32px] pr-sm py-[6px] rounded bg-surface-muted border-none text-body-md w-64 focus:ring-1 focus:ring-primary outline-none transition-all" 
               placeholder="Buscar atributo..." 
@@ -173,7 +173,7 @@ export const AttributesTab: React.FC<AttributesTabProps> = ({
             <div>
               <label className="block font-body-sm-bold text-body-sm-bold text-on-surface-deep mb-xs">Nombre</label>
               <input 
-                className="w-full rounded bg-surface border border-outline/20 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-sm py-[8px] outline-none" 
+                className="w-full rounded bg-surface border border-outline-fg/20 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-sm py-[8px] outline-none" 
                 type="text" 
                 value={formData.name || ''} 
                 onChange={(e) => handleChange('name', e.target.value)}
@@ -182,7 +182,7 @@ export const AttributesTab: React.FC<AttributesTabProps> = ({
             </div>
             <div>
               <label className="block font-body-sm-bold text-body-sm-bold text-on-surface-deep mb-xs">
-                Código <span className="font-normal text-outline text-[11px]">(Autogenerado)</span>
+                Código <span className="font-normal text-outline-fg text-[11px]">(Autogenerado)</span>
               </label>
               <input 
                 className="w-full rounded bg-surface-muted border border-transparent text-data-mono font-data-mono px-sm py-[8px] text-secondary outline-none" 
@@ -197,7 +197,7 @@ export const AttributesTab: React.FC<AttributesTabProps> = ({
                 <label className="block font-body-sm-bold text-body-sm-bold text-on-surface-deep mb-xs">Tipo</label>
                 <div className="relative">
                   <select 
-                    className="w-full rounded bg-surface border border-outline/20 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-sm py-[8px] appearance-none outline-none"
+                    className="w-full rounded bg-surface border border-outline-fg/20 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-sm py-[8px] appearance-none outline-none"
                     value={formData.type || 'STRING'}
                     onChange={(e) => handleChange('type', e.target.value)}
                   >
@@ -213,7 +213,7 @@ export const AttributesTab: React.FC<AttributesTabProps> = ({
                 <label className="block font-body-sm-bold text-body-sm-bold text-on-surface-deep mb-xs">Categoría</label>
                 <div className="relative">
                   <select 
-                    className="w-full rounded bg-surface border border-outline/20 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-sm py-[8px] appearance-none outline-none"
+                    className="w-full rounded bg-surface border border-outline-fg/20 focus:border-primary focus:ring-1 focus:ring-primary text-body-md px-sm py-[8px] appearance-none outline-none"
                     value={formData.category || 'General'}
                     onChange={(e) => handleChange('category', e.target.value)}
                   >
@@ -240,18 +240,18 @@ export const AttributesTab: React.FC<AttributesTabProps> = ({
                 <div className="space-y-2">
                   {(formData.options || []).map((opt, i) => (
                     <div key={i} className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-outline cursor-grab text-[18px]">drag_indicator</span>
+                      <span className="material-symbols-outlined text-outline-fg cursor-grab text-[18px]">drag_indicator</span>
                       <input 
-                        className="flex-1 rounded bg-surface border border-outline/20 text-body-md px-2 py-1 text-sm outline-none" 
+                        className="flex-1 rounded bg-surface border border-outline-fg/20 text-body-md px-2 py-1 text-sm outline-none" 
                         type="text" 
                         value={opt} 
                         onChange={(e) => handleOptionChange(i, e.target.value)}
                       />
-                      <button onClick={() => handleRemoveOption(i)} type="button" className="text-outline hover:text-error"><span className="material-symbols-outlined text-[18px]">close</span></button>
+                      <button onClick={() => handleRemoveOption(i)} type="button" className="text-outline-fg hover:text-error"><span className="material-symbols-outlined text-[18px]">close</span></button>
                     </div>
                   ))}
                   {(!formData.options || formData.options.length === 0) && (
-                    <p className="text-sm text-outline italic">No hay opciones definidas</p>
+                    <p className="text-sm text-outline-fg italic">No hay opciones definidas</p>
                   )}
                 </div>
               </div>
@@ -293,7 +293,7 @@ export const AttributesTab: React.FC<AttributesTabProps> = ({
                   type="checkbox" 
                 />
                 <span className="font-body-md text-foreground flex items-center">
-                  Variante <span className="material-symbols-outlined text-outline ml-1 text-[14px]" title="Define un SKU">info</span>
+                  Variante <span className="material-symbols-outlined text-outline-fg ml-1 text-[14px]" title="Define un SKU">info</span>
                 </span>
               </label>
             </div>

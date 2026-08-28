@@ -127,7 +127,7 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
                 variant="ghost"
                 size="icon"
                 onClick={onClearClient}
-                className="text-outline hover:text-error hover:bg-error-container"
+                className="text-outline-fg hover:text-error hover:bg-error-container"
               >
                 <X size={18} />
               </Button>

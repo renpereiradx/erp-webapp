@@ -140,7 +140,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
           </div>
           <button
             onClick={() => setIsModalOpen(false)}
-            className='w-8 h-8 flex items-center justify-center text-outline hover:text-error hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all'
+            className='w-8 h-8 flex items-center justify-center text-outline-fg hover:text-error hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all'
           >
             <X size={18} />
           </button>
@@ -158,7 +158,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                 </label>
                 <div className='relative'>
                   <Search
-                    className='absolute left-3 top-1/2 -translate-y-1/2 text-outline'
+                    className='absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg'
                     size={16}
                   />
                   <input
@@ -218,7 +218,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                                   {getProductName(p)}
                                 </div>
                                 <div className='flex flex-wrap gap-1.5 mt-0.5 items-center'>
-                                  <span className='text-[10px] text-outline'>
+                                  <span className='text-[10px] text-outline-fg'>
                                     ID: {p.id || p.product_id || '-'}
                                   </span>
                                   {/* Indicador de variantes */}
@@ -308,7 +308,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                             </span>
                           ))}
                           {modalSelectedProduct.tags.length > 5 && (
-                            <span className='text-[9px] text-outline'>
+                            <span className='text-[9px] text-outline-fg'>
                               +{modalSelectedProduct.tags.length - 5}
                             </span>
                           )}
@@ -316,7 +316,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                       )}
                       <div className='grid grid-cols-4 gap-2 mt-2'>
                         <div>
-                          <p className='text-[10px] text-outline'>
+                          <p className='text-[10px] text-outline-fg'>
                             ID
                           </p>
                           <p className='text-xs text-on-surface-deep'>
@@ -326,7 +326,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                           </p>
                         </div>
                         <div>
-                          <p className='text-[10px] text-outline'>
+                          <p className='text-[10px] text-outline-fg'>
                             Últ. Costo
                           </p>
                           <p className='text-xs text-on-surface-deep font-semibold'>
@@ -338,7 +338,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                           </p>
                         </div>
                         <div>
-                          <p className='text-[10px] text-outline'>
+                          <p className='text-[10px] text-outline-fg'>
                             Precio Venta
                           </p>
                           <p className='text-xs text-on-surface-deep font-semibold text-primary'>
@@ -348,7 +348,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                           </p>
                         </div>
                         <div>
-                          <p className='text-[10px] text-outline'>
+                          <p className='text-[10px] text-outline-fg'>
                             Unidad
                           </p>
                           <p className='text-xs text-on-surface-deep'>
@@ -377,7 +377,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                             setModalVariantName(undefined);
                             setModalSelectedVariant(undefined);
                           }}
-                          className='text-xs text-outline hover:text-error transition-colors flex items-center gap-1'
+                          className='text-xs text-outline-fg hover:text-error transition-colors flex items-center gap-1'
                         >
                           <X size={12} /> Limpiar
                         </button>
@@ -385,7 +385,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     </div>
 
                     {loadingVariants ? (
-                      <div className='flex items-center gap-2 py-3 text-outline text-sm'>
+                      <div className='flex items-center gap-2 py-3 text-outline-fg text-sm'>
                         <div className='w-4 h-4 border-2 border-[var(--fluent-brand-primary,#0078D4)] border-t-transparent rounded-full animate-spin' />
                         Cargando variantes...
                       </div>
@@ -561,9 +561,9 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                 <div className='h-24 border-2 border-dashed border-surface-deep rounded-[var(--fluent-corner-radius-large,6px)] flex flex-col items-center justify-center'>
                   <Package
                     size={24}
-                    className='text-outline'
+                    className='text-outline-fg'
                   />
-                  <p className='text-xs text-outline mt-1'>
+                  <p className='text-xs text-outline-fg mt-1'>
                     Selecciona un producto
                   </p>
                 </div>
@@ -583,7 +583,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     onChange={e => setModalQuantity(e.target.value)}
                     placeholder='0'
                   />
-                  <p className='text-xs text-outline'>
+                  <p className='text-xs text-outline-fg'>
                     Unidades a comprar
                   </p>
                 </div>
@@ -608,7 +608,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     <option value='pack' />
                     <option value='dozen' />
                   </datalist>
-                  <p className='text-xs text-outline'>
+                  <p className='text-xs text-outline-fg'>
                     Medida de compra
                   </p>
                 </div>
@@ -623,7 +623,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     onChange={e => setModalUnitPrice(e.target.value)}
                     placeholder='0.00'
                   />
-                  <p className='text-xs text-outline truncate' title='Precio de compra por unidad'>
+                  <p className='text-xs text-outline-fg truncate' title='Precio de compra por unidad'>
                     Precio por unidad
                   </p>
                 </div>
@@ -756,7 +756,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                       type='number'
                       className={`w-full pl-3 pr-8 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-base font-semibold transition-all ${
                         pricingMode !== 'margin'
-                          ? 'opacity-60 cursor-not-allowed text-outline'
+                          ? 'opacity-60 cursor-not-allowed text-outline-fg'
                           : 'text-success focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
                       }`}
                       value={
@@ -770,11 +770,11 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                       }
                       readOnly={pricingMode !== 'margin'}
                     />
-                    <span className='absolute right-3 top-1/2 -translate-y-1/2 text-sm text-outline'>
+                    <span className='absolute right-3 top-1/2 -translate-y-1/2 text-sm text-outline-fg'>
                       %
                     </span>
                   </div>
-                  <p className='text-xs text-outline'>
+                  <p className='text-xs text-outline-fg'>
                     {pricingMode === 'margin'
                       ? 'Define el % de ganancia deseado'
                       : 'Porcentaje resultante del precio fijo'}
@@ -790,7 +790,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     type='number'
                     className={`w-full px-3 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-base font-semibold transition-all ${
                       pricingMode !== 'sale_price'
-                        ? 'opacity-60 cursor-not-allowed text-outline'
+                        ? 'opacity-60 cursor-not-allowed text-outline-fg'
                         : 'text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
                     }`}
                     value={
@@ -804,7 +804,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     }
                     readOnly={pricingMode !== 'sale_price'}
                   />
-                  <p className='text-xs text-outline'>
+                  <p className='text-xs text-outline-fg'>
                     {pricingMode === 'sale_price'
                       ? 'Precio final al público'
                       : 'Calculado según margen'}
@@ -816,7 +816,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               <div className='p-4 bg-[rgba(0,120,212,0.06)] dark:bg-[rgba(0,120,212,0.12)] rounded-md border border-[rgba(0,120,212,0.15)]'>
                 <div className='grid grid-cols-2 gap-3'>
                   <div>
-                    <span className='block text-xs text-outline'>
+                    <span className='block text-xs text-outline-fg'>
                       Costo Unitario
                     </span>
                     <span className='text-sm font-medium text-foreground'>
@@ -824,7 +824,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     </span>
                   </div>
                   <div>
-                    <span className='block text-xs text-outline'>
+                    <span className='block text-xs text-outline-fg'>
                       Precio Venta Unitario
                     </span>
                     <span className='text-sm font-semibold text-success'>
@@ -845,7 +845,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     <span className='text-xs text-on-surface-deep'>
                       Subtotal Línea
                     </span>
-                    <span className='text-xs text-outline'>
+                    <span className='text-xs text-outline-fg'>
                       {modalQuantity || 0} ×{' '}
                       {formatCurrency(modalUnitPrice || 0)}
                     </span>

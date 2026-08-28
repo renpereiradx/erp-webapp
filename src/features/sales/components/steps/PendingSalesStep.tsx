@@ -88,7 +88,7 @@ export const PendingSalesStep = forwardRef<PendingSalesStepRef, PendingSalesStep
                     <div
                       className={cn(
                         'size-4 rounded-full border-2 flex items-center justify-center shrink-0',
-                        isSelected ? 'border-primary bg-primary' : 'border-outline',
+                        isSelected ? 'border-primary bg-primary' : 'border-outline-fg',
                       )}
                     >
                       {isSelected && <div className="size-1.5 rounded-full bg-on-primary" />}

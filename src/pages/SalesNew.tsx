@@ -2111,7 +2111,7 @@ const SalesNew: React.FC = () => {
                   )}
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-outline hover:text-foreground hover:bg-surface-subtle rounded-button shrink-0 -mr-2">
+              <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-outline-fg hover:text-foreground hover:bg-surface-subtle rounded-button shrink-0 -mr-2">
                 <X size={20} />
               </Button>
             </div>

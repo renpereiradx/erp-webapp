@@ -60,7 +60,7 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
             {purchaseItems.length === 0 ? (
               <tr>
                 <td colSpan={8} className='py-20 text-center relative'>
-                  <div className='absolute inset-0 flex flex-col items-center justify-center gap-3 text-outline'>
+                  <div className='absolute inset-0 flex flex-col items-center justify-center gap-3 text-outline-fg'>
                     <div className='w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center'>
                       <Package size={32} strokeWidth={1.5} className="text-slate-300 dark:text-slate-600" />
                     </div>
@@ -84,7 +84,7 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
                     </div>
                     {/* Si hay variante, mostrar su SKU; si no, el SKU del producto */}
                     {(item.variant_sku || item.sku) && item.sku !== '-' && (
-                      <div className='text-[10px] text-outline font-mono mt-0.5'>
+                      <div className='text-[10px] text-outline-fg font-mono mt-0.5'>
                         {item.variant_sku || item.sku}
                       </div>
                     )}
@@ -123,17 +123,17 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
                     )}
                     {/* Fallback: variant_name si no hay atributos */}
                     {item.variant_name && (!item.variant_attributes || Object.keys(item.variant_attributes).length === 0) && (
-                      <div className='text-[10px] text-outline'>
+                      <div className='text-[10px] text-outline-fg'>
                         {item.variant_name}
                       </div>
                     )}
-                    <div className='text-[10px] text-outline mt-0.5'>
+                    <div className='text-[10px] text-outline-fg mt-0.5'>
                       Unidad: {item.unit}
                     </div>
                   </td>
 
                   <td className='px-4 py-3 text-center font-semibold text-foreground'>
-                    {formatNumber(item.quantity)} <span className='text-[10px] font-normal text-outline'>{item.unit}</span>
+                    {formatNumber(item.quantity)} <span className='text-[10px] font-normal text-outline-fg'>{item.unit}</span>
                   </td>
                   <td className='px-4 py-3 text-right text-sm text-on-surface-deep'>
                     {formatCurrency(item.unit_price)}
@@ -155,7 +155,7 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
                   <td className='px-4 py-3 text-right'>
                     <button
                       onClick={() => setPurchaseItems(prev => prev.filter(i => i.id !== item.id))}
-                      className='p-1.5 text-outline hover:text-error hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all'
+                      className='p-1.5 text-outline-fg hover:text-error hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all'
                     >
                       <X size={16} />
                     </button>

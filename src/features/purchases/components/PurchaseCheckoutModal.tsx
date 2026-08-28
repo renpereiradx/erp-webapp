@@ -105,7 +105,7 @@ export const PurchaseCheckoutModal: React.FC<PurchaseCheckoutModalProps> = ({
                 <div className='relative' ref={logic.supplierSearchRef}>
                   <div className='relative'>
                     <Search
-                      className='absolute left-3 top-1/2 -translate-y-1/2 text-outline'
+                      className='absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg'
                       size={16}
                     />
                     <input

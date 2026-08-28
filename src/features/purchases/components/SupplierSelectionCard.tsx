@@ -49,7 +49,7 @@ export const SupplierSelectionCard: React.FC<SupplierSelectionCardProps> = ({
           </label>
           <div className='relative'>
             <Search
-              className='absolute left-3 top-1/2 -translate-y-1/2 text-outline'
+              className='absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg'
               size={16}
             />
             <input
@@ -84,7 +84,7 @@ export const SupplierSelectionCard: React.FC<SupplierSelectionCardProps> = ({
                     <span className={`font-medium text-sm ${isActive ? 'text-primary' : 'text-foreground'}`}>
                       {getSupplierName(s)}
                     </span>
-                    <span className='text-xs text-outline'>
+                    <span className='text-xs text-outline-fg'>
                       ID: {s.id}
                     </span>
                   </button>
@@ -111,7 +111,7 @@ export const SupplierSelectionCard: React.FC<SupplierSelectionCardProps> = ({
                   <span className='font-semibold'>{selectedSupplier.tax_id}</span>
                 </div>
               )}
-              <div className='text-xs text-outline'>
+              <div className='text-xs text-outline-fg'>
                 ID: {selectedSupplier.id}
               </div>
             </div>

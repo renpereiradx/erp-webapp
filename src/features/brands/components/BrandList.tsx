@@ -37,7 +37,7 @@ export const BrandList: React.FC<BrandListProps> = ({
         <h3 className="font-title-md text-title-md text-foreground">Directorio de Marcas</h3>
         <div className="flex gap-sm items-center w-full max-w-[240px]">
           <div className="relative w-full">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg text-[18px]">search</span>
             <input 
               className="w-full pl-9 pr-3 py-1.5 bg-surface border border-divider rounded-lg font-body-md text-body-md text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all" 
               placeholder="Buscar marcas..." 

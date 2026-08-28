@@ -381,7 +381,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                       {done && <CheckCircle2 size={12} />}
                       <span>{stepLabels[stepId]}</span>
                     </div>
-                    {idx < steps.length - 1 && <ChevronRight size={12} className="text-outline" />}
+                    {idx < steps.length - 1 && <ChevronRight size={12} className="text-outline-fg" />}
                   </React.Fragment>
                 )
               })}

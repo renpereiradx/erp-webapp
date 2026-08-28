@@ -27,10 +27,9 @@
   --color-error: #ba1a1a;
   --color-warning: #d83b01;
   --color-background: #f8f9ff;
-  --color-on-surface-variant: #414753;
   --color-on-primary: #ffffff;
   --color-on-secondary: #ffffff;
-  --color-outline: #717785;
+  --color-outline-fg: #717785;
   --color-primary-container: #0074db;
   --color-on-primary-container: #fefcff;
   --color-secondary-container: #b3cdfd;
@@ -170,10 +169,9 @@
   --color-error: #f1707b;
   --color-warning: #fce100;
   --color-background: #201f1e;
-  --color-on-surface-variant: #c8c6c4;
   --color-on-primary: #0B0A0A;
   --color-on-secondary: #0B0A0A;
-  --color-outline: #8a8886;
+  --color-outline-fg: #8a8886;
   --color-primary-container: #004578;
   --color-on-primary-container: #d6e3ff;
   --color-secondary-container: #3c5780;

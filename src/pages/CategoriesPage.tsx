@@ -22,7 +22,7 @@ export default function CategoriesPage() {
         <div className="flex items-center gap-lg flex-1">
           <h2 className="font-headline-md text-headline-md font-black text-foreground hidden lg:block">Categorías e Impuestos</h2>
           <div className="relative w-full max-w-md ml-0 lg:ml-lg">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg">search</span>
             <input 
               className="w-full pl-10 pr-4 py-2 bg-surface-muted border border-transparent rounded-xl font-body-md text-body-md text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
               placeholder="Buscar categorías..." 

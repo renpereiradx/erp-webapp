@@ -110,7 +110,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
             <h2 className="text-headline-lg-mobile text-foreground leading-tight line-clamp-3">
               {product.name || product.product_name}
             </h2>
-            <p className="text-body-sm text-outline font-data-mono mt-1.5 uppercase tracking-wider">
+            <p className="text-body-sm text-outline-fg font-data-mono mt-1.5 uppercase tracking-wider">
               ID: {product.id}
             </p>
 
@@ -154,7 +154,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
           </div>
 
           <div className="hidden md:block mt-6">
-            <p className="text-body-sm text-outline leading-relaxed">
+            <p className="text-body-sm text-outline-fg leading-relaxed">
               Selecciona las opciones a la derecha para configurar la variante del producto y añadirla al carrito de ventas.
             </p>
           </div>
@@ -167,7 +167,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
             <h3 className="text-title-md text-foreground">Atributos del Producto</h3>
             <button 
               onClick={onClose} 
-              className="p-1.5 text-outline hover:text-foreground hover:bg-surface-subtle rounded-button transition-all"
+              className="p-1.5 text-outline-fg hover:text-foreground hover:bg-surface-subtle rounded-button transition-all"
             >
               <X size={18} />
             </button>
@@ -201,7 +201,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                       )}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2.5 bg-surface-muted rounded-md text-outline shrink-0">
+                        <div className="p-2.5 bg-surface-muted rounded-md text-outline-fg shrink-0">
                           <Package size={16} />
                         </div>
                         <div className="min-w-0">

@@ -43,16 +43,16 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
           ) : (
             items.map(item => (
               <tr key={item.id} className={cn("transition-colors duration-150", item.isFromPendingSale ? "bg-surface-subtle opacity-60 hover:opacity-100 grayscale-[0.2]" : "hover:bg-surface-muted")}>
-                <td className="py-3 px-4 border-b border-surface-deep text-outline font-data-mono">{item.productId || '-'}</td>
+                <td className="py-3 px-4 border-b border-surface-deep text-outline-fg font-data-mono">{item.productId || '-'}</td>
                 <td className="py-3 px-4 border-b border-surface-deep text-body-md-bold text-foreground">
                   {item.isFromPendingSale && <Badge className="mr-2 bg-surface-deep text-on-surface-deep hover:bg-surface-deep border-none text-[9px] uppercase rounded-[4px]">Procesado</Badge>}
                   {item.name}
-                  <div className='text-[10px] font-normal text-outline mt-0.5'>
+                  <div className='text-[10px] font-normal text-outline-fg mt-0.5'>
                     Unidad: {item.unit}
                   </div>
                 </td>
                 <td className="py-3 px-4 border-b border-surface-deep text-right font-data-mono">
-                  {formatNumber(item.quantity)} <span className='text-[10px] font-normal text-outline ml-1'>{item.unit}</span>
+                  {formatNumber(item.quantity)} <span className='text-[10px] font-normal text-outline-fg ml-1'>{item.unit}</span>
                 </td>
                 <td className="py-3 px-4 border-b border-surface-deep text-right text-on-surface-deep font-data-mono">{formatCurrency(getItemBaseUnitPrice(item))}</td>
                 <td className="py-3 px-4 border-b border-surface-deep text-right text-error font-data-mono">-{formatCurrency(getItemLineDiscount(item))}</td>
@@ -64,7 +64,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                       size="icon"
                       onClick={() => onEditItem(item)}
                       disabled={item.isFromPendingSale}
-                      className="size-8 text-outline hover:text-primary hover:bg-primary/10 rounded-button"
+                      className="size-8 text-outline-fg hover:text-primary hover:bg-primary/10 rounded-button"
                     >
                       <MoreVertical size={14} />
                     </Button>
@@ -73,7 +73,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                       size="icon"
                       onClick={() => onRemoveItem(item.id)}
                       disabled={item.isFromPendingSale}
-                      className="size-8 text-outline hover:text-error hover:bg-error-container rounded-button"
+                      className="size-8 text-outline-fg hover:text-error hover:bg-error-container rounded-button"
                     >
                       <X size={14} />
                     </Button>

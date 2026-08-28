@@ -78,7 +78,7 @@ export const SupplierStep = forwardRef<SupplierStepRef, SupplierStepProps>(
         {!selectedSupplier ? (
           <div className="relative" ref={searchRef}>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg" size={16} />
               <input
                 ref={inputRef}
                 type="text"
@@ -114,7 +114,7 @@ export const SupplierStep = forwardRef<SupplierStepRef, SupplierStepProps>(
                       <span className={cn('font-medium text-sm', isActive ? 'text-primary' : 'text-foreground')}>
                         {getSupplierName(s)}
                       </span>
-                      <span className="text-xs text-outline">ID: {s.id}</span>
+                      <span className="text-xs text-outline-fg">ID: {s.id}</span>
                     </button>
                   )
                 })}
@@ -139,7 +139,7 @@ export const SupplierStep = forwardRef<SupplierStepRef, SupplierStepProps>(
                 variant="ghost"
                 size="icon"
                 onClick={onClearSupplier}
-                className="text-outline hover:text-error hover:bg-error-container"
+                className="text-outline-fg hover:text-error hover:bg-error-container"
               >
                 <X size={18} />
               </Button>

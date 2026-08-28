@@ -87,7 +87,7 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
                       <div
                         className={cn(
                           'size-5 rounded-md border-2 flex items-center justify-center transition-all',
-                          isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-outline bg-surface',
+                          isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-outline-fg bg-surface',
                         )}
                       >
                         {isSelected ? <Check size={12} strokeWidth={3} /> : <Plus size={12} strokeWidth={3} className="opacity-0" />}
@@ -120,7 +120,7 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
                       )}
                     </div>
                     <div className="flex flex-col items-end justify-center">
-                      <span className="text-[9px] font-bold text-outline uppercase tracking-widest">
+                      <span className="text-[9px] font-bold text-outline-fg uppercase tracking-widest">
                         {t('sales.checkoutWizard.total', 'Total')}
                       </span>
                       <span

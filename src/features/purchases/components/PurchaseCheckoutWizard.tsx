@@ -286,7 +286,7 @@ export const PurchaseCheckoutWizard = ({
                       {done && <CheckCircle2 size={12} />}
                       <span>{stepLabels[stepId]}</span>
                     </div>
-                    {idx < steps.length - 1 && <ChevronRight size={12} className="text-outline mx-0.5" />}
+                    {idx < steps.length - 1 && <ChevronRight size={12} className="text-outline-fg mx-0.5" />}
                   </div>
                 )
               })}
