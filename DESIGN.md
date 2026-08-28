@@ -2,7 +2,7 @@
 name: Precision Air
 # ─────────────────────────────────────────────────────────────────────────────
 # FUENTE DE VERDAD DE TOKENS: design/tokens.json
-# tailwind.config.js se GENERA desde design/tokens.json (`pnpm tokens:generate`).
+# El bloque @theme de src/index.css se GENERA desde design/tokens.json (`pnpm tokens:generate`).
 # Este frontmatter es SOLO documentación. En el código NUNCA se escriben estos
 # hex: se usan las clases Tailwind ya generadas (ver tablas en el cuerpo).
 # ─────────────────────────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ colors:
   background: '#f8f9ff'
   on-background: '#181c22'
   surface-variant: '#dfe2eb'
-  # Estados semánticos (definidos en tailwind.config.js)
+  # Estados semánticos (definidos en design/tokens.json)
   success: '#107c10'
   warning: '#d83b01'
   info: '#005baf'
@@ -112,7 +112,7 @@ typography:
     fontWeight: '700'
     lineHeight: 16px
     letterSpacing: 0.05em
-rounded:        # escala REAL en tailwind.config.js
+rounded:        # escala REAL en design/tokens.json
   xs: 4px       # rounded-xs  → chips pequeños
   sm: 8px       # rounded-sm  → componentes pequeños
   input: 8px    # rounded-input → inputs
@@ -148,18 +148,22 @@ cada regla apunta a una clase Tailwind o a un componente que YA EXISTE.
 
 | Qué | Dónde |
 |:----|:------|
-| Tokens (colores, radios, sombras, spacing, tipografía) | `design/tokens.json` (genera `tailwind.config.js` con `pnpm tokens:generate`) |
+| Tokens (colores, radios, sombras, spacing, tipografía) | `design/tokens.json` (genera el bloque `@theme` de `src/index.css` con `pnpm tokens:generate`) |
 | Componentes base | `src/components/ui/` |
 | Reglas de uso (cuándo usar qué) | Este archivo |
 
-Si este archivo contradice a `tokens.json`, al config o a un componente, **ganan
-`tokens.json`, el config y el componente**. Corrige este archivo.
+Si este archivo contradice a `tokens.json`, al CSS o a un componente, **ganan
+`tokens.json`, el CSS y el componente**. Corrige este archivo.
 
 **Tooling del contrato:**
 
-- `pnpm tokens:generate` — regenera las secciones de tokens de `tailwind.config.js` desde `design/tokens.json`.
-- `pnpm tokens:check` — falla si `tailwind.config.js` se desincronizó de `tokens.json` (para CI).
+- `pnpm tokens:generate` — regenera el bloque `@theme` (+ `.dark`) de `src/index.css` desde `design/tokens.json`.
+- `pnpm tokens:check` — falla si `src/index.css` se desincronizó de `tokens.json` (para CI).
 - `pnpm lint:design` — valida el código contra estas reglas (hex/rgba literales, clases de color genéricas, espaciados arbitrarios). Falla en código nuevo/cambiado; reporta el legacy.
+
+> **Stack:** Tailwind CSS 4 (config CSS-first: `@theme` + `@custom-variant dark`).
+> Modo oscuro = clase `.dark` en `<html>` (la aplica `ThemeContext`); los tokens con
+> valores `{light, dark}` flipean automáticamente.
 
 **Marca en 3 líneas:** ERP profesional de alta densidad de datos. Sensación de "aire"
 mediante espaciado generoso y fondos claros, NUNCA mediante decoración. La jerarquía se

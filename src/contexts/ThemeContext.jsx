@@ -60,6 +60,9 @@ const applyThemeToDOM = themeId => {
       // Apply new theme markers
       el.classList.add(...themeConfig.cssClasses)
 
+      // Tailwind 4 dark mode: toggle la clase .dark que activa la variante dark
+      el.classList.toggle('dark', isDark(themeId))
+
       // Set data attributes (overwrite if they already exist)
       Object.entries(themeConfig.dataAttributes).forEach(([key, value]) => {
         el.setAttribute(`data-${key}`, value)
