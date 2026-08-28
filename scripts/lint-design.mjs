@@ -56,6 +56,7 @@ function listSrcFiles() {
   return git(['ls-files', '--cached', '--others', '--exclude-standard', 'src'])
     .split('\n')
     .filter((f) => f && SRC_EXT.test(f))
+    .filter((f) => existsSync(join(ROOT, f))) // ignora archivos borrados aún sin stagear
 }
 
 /** Archivos cambiados desde BASE (tracked diff + untracked). */
@@ -77,8 +78,11 @@ function changedFiles() {
   return [...set].filter((f) => f.startsWith('src/') && SRC_EXT.test(f))
 }
 
-/** Líneas añadidas (1-indexadas) de un archivo vs BASE. Untracked → todas nuevas. */
-function addedLines(file) {
+/** Líneas cambiadas (1-indexadas) de un archivo vs BASE: `{ line, content, oldContent }`.
+ *  `oldContent = null` → adición pura (todas las violaciones cuentan). Si hay
+ *  `oldContent`, es una modificación: solo cuentan las violaciones NUEVAS (que no
+ *  estaban en la línea vieja), para no reflaggear violaciones legacy ante renames. */
+function changedLines(file) {
   let diff
   try {
     diff = git(['diff', '--unified=0', BASE, '--', file])
@@ -89,26 +93,30 @@ function addedLines(file) {
     // Sin diff tracked: o es untracked (todas las líneas) o no cambió.
     if (!existsSync(join(ROOT, file))) return null
     const content = readFileSync(join(ROOT, file), 'utf8').split('\n')
-    return new Set(content.map((_, i) => i + 1))
+    return content.map((c, i) => ({ line: i + 1, content: c, oldContent: null }))
   }
-  const added = new Set()
+  const changes = []
   let newLine = 0
+  let pendingOld = []
   for (const line of diff.split('\n')) {
     const m = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/.exec(line)
     if (m) {
       newLine = parseInt(m[1], 10)
+      pendingOld = []
       continue
     }
     if (line.startsWith('+') && !line.startsWith('+++')) {
-      added.add(newLine)
+      const content = line.slice(1)
+      const oldContent = pendingOld.length ? pendingOld.shift() : null
+      changes.push({ line: newLine, content, oldContent })
       newLine++
     } else if (line.startsWith('-') && !line.startsWith('---')) {
-      // línea eliminada: no avanza el contador de líneas nuevas
+      pendingOld.push(line.slice(1))
     } else if (!line.startsWith('\\')) {
       newLine++
     }
   }
-  return added
+  return changes
 }
 
 function extractClassNames(line) {
@@ -126,8 +134,10 @@ function checkLine(line) {
   const found = []
   for (const cls of extractClassNames(line)) {
     for (const rule of RULES) {
-      if (rule.re.test(cls)) {
-        found.push({ rule: rule.id, label: rule.label, cls })
+      const re = new RegExp(rule.re.source, rule.re.flags.replace(/g/g, '') + 'g')
+      let m
+      while ((m = re.exec(cls)) !== null) {
+        found.push({ rule: rule.id, label: rule.label, cls, token: m[0] })
       }
     }
   }
@@ -138,14 +148,16 @@ function checkLine(line) {
 const changed = changedFiles()
 const newViolations = []
 for (const file of changed) {
-  const lines = addedLines(file)
-  if (!lines) continue
-  const content = readFileSync(join(ROOT, file), 'utf8').split('\n')
-  for (const ln of lines) {
-    const line = content[ln - 1]
-    if (line == null) continue
-    for (const v of checkLine(line)) {
-      newViolations.push({ file, line: ln, ...v })
+  const changes = changedLines(file)
+  if (!changes) continue
+  for (const { line, content, oldContent } of changes) {
+    const oldSigs = new Set(
+      (oldContent != null ? checkLine(oldContent) : []).map((v) => `${v.rule}|${v.token}`)
+    )
+    for (const v of checkLine(content)) {
+      if (!oldSigs.has(`${v.rule}|${v.token}`)) {
+        newViolations.push({ file, line, ...v })
+      }
     }
   }
 }
