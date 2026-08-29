@@ -99,14 +99,20 @@ class ExchangeRateService {
     }
 
     const currencyData = payload.currency || {}
+
+    // Current contract (internal/sale ExchangeRateEnriched): rate + rate_date +
+    // from_currency_*/to_currency_*. Legacy aliases (rate_to_base, currency_*,
+    // date) kept as fallbacks for older payloads.
+    const rateRaw = payload.rate ?? payload.rate_to_base
     const rateValueRaw =
-      typeof payload.rate_to_base === 'number'
-        ? payload.rate_to_base
-        : Number.parseFloat(payload.rate_to_base)
+      typeof rateRaw === 'number' ? rateRaw : Number.parseFloat(rateRaw)
 
     const normalizedDate = (() => {
       const dateCandidate =
-        payload.date || payload.effective_date || payload.created_at
+        payload.rate_date ||
+        payload.date ||
+        payload.effective_date ||
+        payload.created_at
 
       if (!dateCandidate) {
         return null
@@ -122,15 +128,21 @@ class ExchangeRateService {
     })()
 
     const currencyId =
-      payload.currency_id ?? currencyData.currency_id ?? currencyData.id ?? null
+      payload.from_currency_id ??
+      payload.currency_id ??
+      currencyData.currency_id ??
+      currencyData.id ??
+      null
 
     const currencyCode =
+      payload.from_currency_code ||
       payload.currency_code ||
       currencyData.currency_code ||
       currencyData.code ||
       ''
 
     const currencyName =
+      payload.from_currency_name ||
       payload.currency_name ||
       currencyData.currency_name ||
       currencyData.name ||
@@ -143,13 +155,22 @@ class ExchangeRateService {
 
     return {
       id: payload.id ?? null,
-      currency_id: currencyId,
-      code: currencyCode,
-      currency_code: currencyCode,
-      currency_name: currencyName,
-      rate_to_base: Number.isFinite(rateValueRaw) ? rateValueRaw : null,
-      date: normalizedDate,
+      from_currency_id: payload.from_currency_id ?? currencyId,
+      to_currency_id: payload.to_currency_id ?? null,
+      currency_id: currencyId, // legacy alias of from_currency_id
+      from_currency_code: currencyCode,
+      currency_code: currencyCode, // legacy alias
+      code: currencyCode, // legacy alias
+      from_currency_name: currencyName,
+      currency_name: currencyName, // legacy alias
+      to_currency_code: payload.to_currency_code || '',
+      to_currency_name: payload.to_currency_name || '',
+      rate: Number.isFinite(rateValueRaw) ? rateValueRaw : null,
+      rate_to_base: Number.isFinite(rateValueRaw) ? rateValueRaw : null, // legacy alias
+      rate_date: normalizedDate,
+      date: normalizedDate, // legacy alias
       source: payload.source || payload.rate_source || '',
+      is_current: Boolean(payload.is_current),
       created_at: createdAt,
       updated_at: payload.updated_at || payload.modified_at || null,
       // Guardamos la respuesta original para depuración si es necesario
@@ -553,7 +574,7 @@ class ExchangeRateService {
   /**
    * Crea un nuevo tipo de cambio
    * Nueva API: POST /exchange-rates
-   * @param {{ currency_id: number, rate_to_base: number, date: string, source?: string }} data
+   * @param {{ currency_id: number, rate_to_base: number, date: string, source?: string, currencies?: Array<object> }} data
    * @returns {Promise<import('../types/payment').ExchangeRateEnriched>}
    */
   static async create(data) {
@@ -584,7 +605,7 @@ class ExchangeRateService {
           requestBody: payload,
           extra: {
             originalDate: data?.date,
-            normalizedDate: payload?.date,
+            normalizedDate: payload?.rate_date,
           },
         })
       } catch (logError: any) {
@@ -601,7 +622,7 @@ class ExchangeRateService {
    * Actualiza un tipo de cambio existente
    * Nueva API: PUT /exchange-rates/{id}
    * @param {number} id - Exchange rate ID
-   * @param {{ currency_id: number, rate_to_base: number, date: string, source?: string }} data
+   * @param {{ currency_id: number, rate_to_base: number, date: string, source?: string, currencies?: Array<object> }} data
    * @returns {Promise<import('../types/payment').ExchangeRateEnriched>}
    */
   static async update(id, data) {
@@ -636,7 +657,7 @@ class ExchangeRateService {
           requestBody: payload,
           extra: {
             originalDate: data?.date,
-            normalizedDate: payload?.date,
+            normalizedDate: payload?.rate_date,
           },
         })
       } catch (logError: any) {
@@ -673,8 +694,8 @@ class ExchangeRateService {
 
   /**
    * Prepara y valida el payload para crear/actualizar tipos de cambio
-   * @param {{ currency_id: number, rate_to_base: number|string, date: string, source?: string }} data
-   * @returns {{ currency_id: number, rate_to_base: number, date: string, source?: string }}
+   * @param {{ currency_id: number, rate_to_base: number|string, date: string, source?: string, currencies?: Array<object> }} data
+   * @returns {{ from_currency_id: number, to_currency_id: number, rate: number, rate_date: string, source?: string }}
    */
   static preparePayload(
     data: {
@@ -682,11 +703,27 @@ class ExchangeRateService {
       rate_to_base?: number | string
       date?: string
       source?: string
+      currencies?: Array<{
+        id?: number | string
+        code?: string
+        currency_code?: string
+        is_base?: boolean
+      }>
     } = {}
   ) {
     const currencyId = Number(data.currency_id)
     if (!currencyId || currencyId <= 0) {
       throw new Error('Debes seleccionar una moneda válida')
+    }
+
+    // Resolve base currency (to_currency_id) from the currencies list.
+    const currencies = data.currencies || []
+    const baseCurrency = currencies.find(
+      c => c.is_base || (c.code || '').toUpperCase() === 'PYG'
+    )
+    const toCurrencyId = Number(baseCurrency?.id)
+    if (!toCurrencyId || toCurrencyId <= 0) {
+      throw new Error('No se pudo resolver la moneda base (PYG)')
     }
 
     const rawRate = data.rate_to_base
@@ -710,9 +747,10 @@ class ExchangeRateService {
     const isoDate = this.normalizeDateToIso(dateValue)
 
     return {
-      currency_id: currencyId,
-      rate_to_base: Number(rateValue.toFixed(6)),
-      date: isoDate,
+      from_currency_id: currencyId,
+      to_currency_id: toCurrencyId,
+      rate: Number(rateValue.toFixed(6)),
+      rate_date: isoDate,
       source: data.source?.trim() || undefined,
     }
   }
