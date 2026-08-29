@@ -1,5 +1,6 @@
 import { apiClient } from './api'
 import { paymentApiDebug } from './paymentApiDebug'
+import { CurrencyService } from './currencyService'
 
 // Track currencies whose exchange rate endpoints are unavailable to avoid redundant requests
 const unavailableCurrencyEndpoints = new Set()
@@ -580,7 +581,7 @@ class ExchangeRateService {
   static async create(data) {
     let payload
     try {
-      payload = this.preparePayload(data)
+      payload = await this.preparePayload(data)
       // Nueva API unificada: POST /exchange-rates
       const response = await apiClient.makeRequest('/exchange-rates', {
         method: 'POST',
@@ -632,7 +633,7 @@ class ExchangeRateService {
         throw new Error('ID de tipo de cambio inválido')
       }
 
-      payload = this.preparePayload(data)
+      payload = await this.preparePayload(data)
       // Nueva API unificada: PUT /exchange-rates/{id}
       const response = await apiClient.makeRequest(`/exchange-rates/${id}`, {
         method: 'PUT',
@@ -695,9 +696,9 @@ class ExchangeRateService {
   /**
    * Prepara y valida el payload para crear/actualizar tipos de cambio
    * @param {{ currency_id: number, rate_to_base: number|string, date: string, source?: string, currencies?: Array<object> }} data
-   * @returns {{ from_currency_id: number, to_currency_id: number, rate: number, rate_date: string, source?: string }}
+   * @returns {Promise<{ from_currency_id: number, to_currency_id: number, rate: number, rate_date: string, source?: string }>}
    */
-  static preparePayload(
+  static async preparePayload(
     data: {
       currency_id?: number | string
       rate_to_base?: number | string
@@ -708,6 +709,7 @@ class ExchangeRateService {
         code?: string
         currency_code?: string
         is_base?: boolean
+        is_base_currency?: boolean
       }>
     } = {}
   ) {
@@ -717,9 +719,21 @@ class ExchangeRateService {
     }
 
     // Resolve base currency (to_currency_id) from the currencies list.
-    const currencies = data.currencies || []
+    // Callers may not pass it (legacy page or future consumers) — fetch on demand.
+    let currencies = data.currencies || []
+    if (currencies.length === 0) {
+      try {
+        currencies = await CurrencyService.getAll()
+      } catch {
+        currencies = []
+      }
+    }
     const baseCurrency = currencies.find(
-      c => c.is_base || (c.code || '').toUpperCase() === 'PYG'
+      c =>
+        c.is_base ||
+        c.is_base_currency ||
+        (c.code || '').toUpperCase() === 'PYG' ||
+        (c.currency_code || '').toUpperCase() === 'PYG'
     )
     const toCurrencyId = Number(baseCurrency?.id)
     if (!toCurrencyId || toCurrencyId <= 0) {
