@@ -69,11 +69,20 @@ const EnhancedModal = ({
   const { t } = useI18n();
   const modalRef = useRef(null);
   const previousFocus = useRef(null);
+  // Guarda la última referencia de onClose. Los consumidores suelen pasar una arrow inline
+  // (nueva referencia por render); si se incluyera en las deps del efecto, éste se re-ejecutaría
+  // en cada tecla y robaría el foco del input (ver comentario del useEffect).
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   const variantConfig = MODAL_VARIANTS[variant] || MODAL_VARIANTS.default;
   const IconComponent = variantConfig.icon;
 
-  // Focus management y escape key
+  // Focus management y escape key.
+  // IMPORTANTE: NO depender de `onClose` (cambia de identidad en cada render si el padre lo pasa
+  // inline), ni de `title`/`footer`/`children` (cambian cuando se escribe en un input). El efecto
+  // debe correr SOLO al abrir/cerrar el modal; si se re-ejecuta por un re-render mientras el
+  // usuario escribe, modalRef.focus() le roba el foco al input. El escape handler usa onCloseRef.
   useEffect(() => {
     if (!isOpen) return;
 
@@ -89,7 +98,7 @@ const EnhancedModal = ({
     // Handle escape key
     const handleEscape = (e) => {
       if (closeOnEscape && e.key === 'Escape') {
-        onClose?.();
+        onCloseRef.current?.();
       }
     };
 
@@ -107,7 +116,7 @@ const EnhancedModal = ({
         previousFocus.current.focus();
       }
     };
-  }, [isOpen, closeOnEscape, onClose]);
+  }, [isOpen, closeOnEscape]);
 
   if (!isOpen) return null;
 
