@@ -470,10 +470,15 @@ const MainLayout = ({ children }) => {
           },
           { name: 'Requisiciones', href: '/logistica/requisiciones', icon: ClipboardList },
           {
-            name: t('productAdjustments.title', 'Ajustes de Stock'),
+            name: t('productAdjustments.title', 'Ajustes de Producto'),
             href: '#',
             icon: SlidersHorizontal,
             children: [
+              {
+                name: t('priceAdjustment.title', 'Ajustes de Precios'),
+                href: '/ajustes-precios',
+                icon: TrendingUp,
+              },
               {
                 name: t('stockMovements.menu', 'Movimientos de Stock'),
                 href: '/movimientos-stock',
