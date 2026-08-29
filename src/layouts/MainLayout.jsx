@@ -475,11 +475,6 @@ const MainLayout = ({ children }) => {
             icon: SlidersHorizontal,
             children: [
               {
-                name: 'Resumen de Ajustes',
-                href: '/ajustes-producto',
-                icon: SlidersHorizontal,
-              },
-              {
                 name: t('stockMovements.menu', 'Movimientos de Stock'),
                 href: '/movimientos-stock',
                 icon: List,

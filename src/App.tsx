@@ -35,7 +35,6 @@ import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
 import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
 import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
 import PriceAdjustmentHistoryDetail from '@/pages/PriceAdjustmentHistoryDetail'
-import ProductAdjustments from '@/pages/ProductAdjustments'
 import BookingUnifiedDashboard from '@/pages/BookingUnifiedDashboard'
 import StockMovements from '@/pages/StockMovements'
 // ISOLATED IMPORTS - Pages temporarily disabled for refactoring
@@ -324,10 +323,6 @@ function AppContent() {
                       <Route
                         path='/gestion-agenda'
                         element={<BookingUnifiedDashboard />}
-                      />
-                      <Route
-                        path='/ajustes-producto'
-                        element={<ProductAdjustments />}
                       />
                       <Route
                         path='/movimientos-stock'
