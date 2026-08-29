@@ -3,17 +3,29 @@
  * Usa EXCLUSIVAMENTE POST /stock-transactions/ (vía hook → store → service), que ahora
  * acepta un item o un array: este panel envía TODAS las filas en un único POST.
  *
- * Por fila el usuario elige un producto (con variantes si las tiene) + variante + modo
- * (establecer stock / ajustar por diferencia) + valor + motivo. El domain calcula el delta
- * con signo y el stock resultante. Al registrarse, cada fila dispara su propio
- * transaction_type derivado de la categoría de motivo.
+ * Flujo:
+ *  - "Agregar producto" abre el buscador; al elegir un producto se agrega una fila a la
+ *    TABLA de items y se abre el MODAL de edición para cargar variante/modo/valor/motivo.
+ *  - Cada fila se puede editar (modal) o quitar.
+ *  - "Registrar movimiento(s)" envía todas las filas en un solo POST.
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Package, Search, Trash2, Send, Plus } from 'lucide-react';
+import { Package, Search, Trash2, Send, Plus, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import EnhancedModal from '@/components/ui/EnhancedModal';
 import { formatNumber } from '@/utils/currencyUtils';
 import { getUnitLabel, isDecimalUnit } from '@/constants/units';
 import { variantService } from '@/services/variantService';
@@ -52,6 +64,10 @@ function rowCurrentStock(row: MovementRowUI): number {
   return variant ? (variant.stock_quantity ?? 0) : (row.product.stock_quantity ?? 0);
 }
 
+function rowSelectedVariant(row: MovementRowUI): ProductVariant | null {
+  return row.variants.find((v) => v.id === row.selectedVariantId) ?? null;
+}
+
 function rowIsDecimal(product?: CatalogProduct): boolean {
   const unit = product?.base_unit?.toLowerCase();
   return unit ? isDecimalUnit(unit) : false;
@@ -65,6 +81,10 @@ export function MovementForm() {
   const [rows, setRows] = useState<MovementRowUI[]>([]);
   const [showSearch, setShowSearch] = useState(false);
   const [approval, setApproval] = useState<string>('operator');
+
+  // Modal de edición
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [draft, setDraft] = useState<MovementRowUI | null>(null);
 
   // Atajo Ctrl+A para abrir el buscador
   useEffect(() => {
@@ -82,8 +102,8 @@ export function MovementForm() {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   }, []);
 
-  // Al agregar un producto, cargamos sus variantes
-  const handleAddProduct = useCallback(
+  // Al elegir un producto en el buscador: agrega la fila y abre el modal de edición.
+  const handleSelectProduct = useCallback(
     async (product: CatalogProduct) => {
       setShowSearch(false);
       let variants: ProductVariant[] = [];
@@ -94,24 +114,42 @@ export function MovementForm() {
         console.error('Error fetching variants', e);
         variants = [];
       }
-      setRows((prev) => [
-        ...prev,
-        {
-          product,
-          variants,
-          selectedVariantId: '',
-          mode: 'target',
-          value: '',
-          reasonCategory: 'INVENTORY_COUNT',
-          reason: '',
-        },
-      ]);
+      const row: MovementRowUI = {
+        product,
+        variants,
+        selectedVariantId: '',
+        mode: 'target',
+        value: '',
+        reasonCategory: 'INVENTORY_COUNT',
+        reason: '',
+      };
+      const index = rows.length;
+      setRows((prev) => [...prev, row]);
+      setEditingIndex(index);
+      setDraft(row);
     },
-    [activeBranch],
+    [activeBranch, rows.length],
   );
+
+  const openEdit = (index: number) => {
+    setEditingIndex(index);
+    setDraft({ ...rows[index] });
+  };
+
+  const closeEdit = () => {
+    setEditingIndex(null);
+    setDraft(null);
+  };
+
+  const saveEdit = () => {
+    if (editingIndex === null || !draft) return;
+    setRow(editingIndex, { ...draft });
+    closeEdit();
+  };
 
   const removeRow = (index: number) => {
     setRows((prev) => prev.filter((_, i) => i !== index));
+    if (editingIndex === index) closeEdit();
   };
 
   const resultingStockFor = useMemo(
@@ -137,9 +175,7 @@ export function MovementForm() {
       const current = rowCurrentStock(row);
       const value = parseFloat(row.value);
       if (!Number.isFinite(value)) {
-        toast.error(
-          t('stockMovements.errors.target_invalid', 'Ingresá un valor de stock válido'),
-        );
+        toast.error(t('stockMovements.errors.target_invalid', 'Ingresá un valor de stock válido'));
         return;
       }
       if (row.mode === 'delta' && value === 0) {
@@ -162,10 +198,9 @@ export function MovementForm() {
 
     try {
       const created = await registerBatch(entries);
-      toast.success(
-        t('stockMovements.success', 'Movimiento registrado'),
-        { description: t('stockMovements.batchCount', { count: created.length }) },
-      );
+      toast.success(t('stockMovements.success', 'Movimiento registrado'), {
+        description: t('stockMovements.batchCount', { count: created.length }),
+      });
       setRows([]);
     } catch (err: any) {
       toast.error(t('stockMovements.errors.register_failed', 'No se pudo registrar el movimiento'), {
@@ -174,10 +209,13 @@ export function MovementForm() {
     }
   };
 
+  const variantLabel = (v: ProductVariant) =>
+    `${v.variant_name}${v.sku ? ` (${v.sku})` : ''}`;
+
   return (
     <div className="flex flex-col gap-lg">
-      {/* Toolbar: agregar producto */}
-      <div className="flex items-center justify-between">
+      {/* Header + acción principal */}
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
           <h2 className="text-title-md text-foreground font-bold">
             {t('stockMovements.form.title', 'Nuevo Movimiento')}
@@ -186,192 +224,118 @@ export function MovementForm() {
             {t('stockMovements.form.batchHint', 'Registrá una o varias filas en un solo envío.')}
           </p>
         </div>
-        <Button variant="secondary" onClick={() => setShowSearch(true)}>
-          <Plus className="w-4 h-4 mr-1" />
+        <Button variant="primary" onClick={() => setShowSearch(true)}>
+          <Plus className="w-4 h-4 mr-1.5" />
           {t('stockMovements.form.search', 'Agregar producto')}
         </Button>
       </div>
 
-      {/* Lista de filas */}
-      {rows.length === 0 ? (
-        <div className="rounded-md bg-surface shadow-whisper border border-border-subtle p-lg flex flex-col items-center justify-center gap-3 text-center">
-          <Package className="w-10 h-10 text-muted-foreground/50" strokeWidth={1.5} />
-          <p className="text-body-md text-muted-foreground">
-            {t('stockMovements.form.noProduct', 'No hay productos en la cola.')}
-          </p>
-          <Button variant="ghost" onClick={() => setShowSearch(true)}>
-            {t('stockMovements.form.searchCta', 'Buscar uno')}
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-md">
-          {rows.map((row, index) => {
-            const current = rowCurrentStock(row);
-            const result = resultingStockFor(row);
-            const unit = row.product.base_unit ? getUnitLabel(row.product.base_unit) : '';
-            const isDecimal = rowIsDecimal(row.product);
-            const step = isDecimal ? '0.01' : '1';
-            return (
-              <div
-                key={`${row.product.id}-${index}`}
-                className="rounded-md bg-surface shadow-whisper border border-border-subtle p-lg space-y-md"
-              >
-                {/* Cabeza de fila: producto + quitar */}
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="size-10 bg-surface-muted border border-border-subtle rounded-input flex items-center justify-center text-primary overflow-hidden shrink-0">
-                      {row.product.image_url ? (
-                        <img
-                          src={row.product.image_url}
-                          alt={row.product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Package className="w-5 h-5" strokeWidth={1.5} />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-data-mono font-data-mono text-primary font-bold truncate">
-                        {row.product.id}
-                      </p>
-                      <h3 className="text-body-md-bold text-foreground truncate">
-                        {row.product.name}
-                      </h3>
-                    </div>
+      {/* Tabla de items */}
+      <div className="rounded-md bg-surface shadow-whisper border border-border-subtle overflow-hidden">
+        <Table>
+          <TableHeader className="bg-surface-muted">
+            <TableRow>
+              <TableHead className="text-label-caps uppercase text-muted-foreground">
+                {t('stockMovements.queue.product', 'Producto')}
+              </TableHead>
+              <TableHead className="text-label-caps uppercase text-muted-foreground text-right">
+                {t('stockMovements.form.currentStock', 'Stock Actual')}
+              </TableHead>
+              <TableHead className="text-label-caps uppercase text-muted-foreground text-right">
+                {t('stockMovements.queue.adjustment', 'Ajuste')}
+              </TableHead>
+              <TableHead className="text-label-caps uppercase text-muted-foreground text-right">
+                {t('stockMovements.form.resultingStock', 'Resultante')}
+              </TableHead>
+              <TableHead className="text-label-caps uppercase text-muted-foreground">
+                {t('stockMovements.queue.reason', 'Motivo')}
+              </TableHead>
+              <TableHead className="text-label-caps uppercase text-muted-foreground text-right">
+                {t('stockMovements.queue.actions', 'Acciones')}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-14 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <Package className="w-10 h-10 text-muted-foreground/40" strokeWidth={1.5} />
+                    <p className="text-body-md text-muted-foreground">
+                      {t('stockMovements.form.noProduct', 'No hay productos en la cola.')}
+                    </p>
+                    <Button variant="ghost" onClick={() => setShowSearch(true)}>
+                      {t('stockMovements.form.searchCta', 'Buscar uno')}
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={t('common.delete', 'Quitar')}
-                    onClick={() => removeRow(index)}
+                </TableCell>
+              </TableRow>
+            ) : (
+              rows.map((row, index) => {
+                const current = rowCurrentStock(row);
+                const result = resultingStockFor(row);
+                const unit = row.product.base_unit ? getUnitLabel(row.product.base_unit) : '';
+                const variant = rowSelectedVariant(row);
+                return (
+                  <TableRow
+                    key={`${row.product.id}-${index}`}
+                    className="hover:bg-surface-muted transition-colors duration-150"
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                {/* Variante (si existen) */}
-                {row.variants.length > 0 && (
-                  <div className="space-y-xs">
-                    <label className="text-body-sm-bold text-muted-foreground uppercase">
-                      {t('stockMovements.form.variant', 'Variante (opcional)')}
-                    </label>
-                    <select
-                      className="h-10 w-full px-3 rounded-input border border-border-subtle bg-surface text-body-md text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                      value={row.selectedVariantId}
-                      onChange={(e) => {
-                        setRow(index, { selectedVariantId: e.target.value, value: '' });
-                      }}
-                    >
-                      <option value="">
-                        {t('stockMovements.form.mainProduct', 'Producto Principal (General)')}
-                      </option>
-                      {row.variants.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.variant_name}
-                          {v.sku ? ` (${v.sku})` : ''} · {t('stockMovements.form.stock', 'Stock')}:{' '}
-                          {v.stock_quantity ?? 0}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* Modo + valor */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-                  <div className="space-y-xs">
-                    <label className="text-body-sm-bold text-muted-foreground uppercase">
-                      {t('stockMovements.form.mode.label', 'Modo de ajuste')}
-                    </label>
-                    <div className="flex gap-2">
-                      {(['target', 'delta'] as const).map((m) => (
-                        <button
-                          key={m}
-                          type="button"
-                          onClick={() => setRow(index, { mode: m, value: '' })}
-                          className={`flex-1 h-10 rounded-button border text-body-sm-bold uppercase transition-all ${
-                            row.mode === m
-                              ? 'bg-primary text-on-primary border-primary'
-                              : 'bg-surface text-muted-foreground border-border-subtle hover:bg-surface-muted'
-                          }`}
-                        >
-                          {t(`stockMovements.form.mode.${m}`)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-xs">
-                    <label className="text-body-sm-bold text-muted-foreground uppercase">
-                      {row.mode === 'target'
-                        ? t('stockMovements.form.targetStock', 'Stock objetivo')
-                        : t('stockMovements.form.delta', 'Diferencia (+/−)')}
-                    </label>
-                    <input
-                      type="number"
-                      step={step}
-                      className="h-10 w-full px-3 rounded-input border border-border-subtle bg-surface text-body-md text-foreground font-data-mono focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                      placeholder={row.mode === 'target' ? `0 ${unit}` : '+/−'}
-                      value={row.value}
-                      onChange={(e) => setRow(index, { value: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                {/* Stock actual / resultante */}
-                <div className="grid grid-cols-2 gap-md">
-                  <div className="space-y-xs">
-                    <p className="text-body-sm-bold text-muted-foreground uppercase">
-                      {t('stockMovements.form.currentStock', 'Stock Actual')}
-                    </p>
-                    <p className="text-data-mono font-data-mono text-foreground">
+                    <TableCell>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="size-9 bg-surface-muted border border-border-subtle rounded-input flex items-center justify-center text-primary overflow-hidden shrink-0">
+                          {row.product.image_url ? (
+                            <img
+                              src={row.product.image_url}
+                              alt={row.product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Package className="w-4 h-4" strokeWidth={1.5} />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="text-body-md-bold text-foreground truncate">
+                            {row.product.name}
+                          </h3>
+                          <p className="text-data-mono text-primary font-bold text-body-sm-bold truncate">
+                            {row.product.id}
+                            {variant ? ` · ${variantLabel(variant)}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right font-data-mono text-foreground">
                       {formatNumber(current)} {unit}
-                    </p>
-                  </div>
-                  <div className="space-y-xs">
-                    <p className="text-body-sm-bold text-muted-foreground uppercase">
-                      {t('stockMovements.form.resultingStock', 'Stock resultante')}
-                    </p>
-                    <p className="text-data-mono font-data-mono font-bold text-foreground">
-                      {result === null ? '—' : `${formatNumber(result)} ${unit}`}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Categoría de motivo + motivo */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-                  <div className="space-y-xs">
-                    <label className="text-body-sm-bold text-muted-foreground uppercase">
-                      {t('stockMovements.form.reasonCategory', 'Categoría de motivo')}
-                    </label>
-                    <select
-                      className="h-10 w-full px-3 rounded-input border border-border-subtle bg-surface text-body-md text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                      value={row.reasonCategory}
-                      onChange={(e) => setRow(index, { reasonCategory: e.target.value as ReasonCategory })}
-                    >
-                      {REASON_CATEGORIES.map((rc) => (
-                        <option key={rc} value={rc}>
-                          {t(`stockMovements.reasons.${rc}`, rc)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-xs">
-                    <label className="text-body-sm-bold text-muted-foreground uppercase">
-                      {t('stockMovements.form.reason', 'Motivo / Justificación')}
-                    </label>
-                    <input
-                      type="text"
-                      className="h-10 w-full px-3 rounded-input border border-border-subtle bg-surface text-body-md text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                      placeholder={t('stockMovements.form.reasonPlaceholder', 'Detalle del motivo...')}
-                      value={row.reason}
-                      onChange={(e) => setRow(index, { reason: e.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                    </TableCell>
+                    <TableCell className="text-right font-data-mono text-foreground">
+                      {row.mode === 'target' ? '→ ' : 'Δ '}
+                      {formatNumber(Number(row.value) || 0)}
+                    </TableCell>
+                    <TableCell className={`text-right font-data-mono font-bold ${(result ?? 0) >= current ? 'text-success' : 'text-error'}`}>
+                      {result === null ? '—' : formatNumber(result)}
+                    </TableCell>
+                    <TableCell className="text-body-sm-bold text-muted-foreground max-w-[220px] truncate">
+                      {t(`stockMovements.reasons.${row.reasonCategory}`, row.reasonCategory)}
+                      {row.reason ? ` · ${row.reason}` : ''}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" aria-label={t('stockMovements.queue.edit', 'Editar')} onClick={() => openEdit(index)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" aria-label={t('common.delete', 'Quitar')} onClick={() => removeRow(index)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Errores */}
       {error && (
@@ -383,10 +347,11 @@ export function MovementForm() {
       {/* Footer: envío */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex items-center gap-sm">
-          <label className="text-body-sm-bold text-muted-foreground uppercase">
+          <Label htmlFor="approval" className="text-body-sm-bold text-muted-foreground uppercase">
             {t('stockMovements.form.approvalLevel', 'Nivel de aprobación')}
-          </label>
+          </Label>
           <select
+            id="approval"
             className="h-10 px-3 rounded-input border border-border-subtle bg-surface text-body-md text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
             value={approval}
             onChange={(e) => setApproval(e.target.value)}
@@ -403,11 +368,7 @@ export function MovementForm() {
             <Search className="w-4 h-4 mr-1.5" />
             {t('stockMovements.form.search', 'Agregar producto')}
           </Button>
-          <Button
-            variant="primary"
-            onClick={handleSubmit}
-            disabled={loading || rows.length === 0}
-          >
+          <Button variant="primary" onClick={handleSubmit} disabled={loading || rows.length === 0}>
             <Send className="w-4 h-4 mr-1.5" />
             {loading
               ? t('stockMovements.form.submitting', 'Registrando...')
@@ -416,10 +377,143 @@ export function MovementForm() {
         </div>
       </div>
 
+      {/* Modal de edición de item */}
+      <EnhancedModal
+        isOpen={editingIndex !== null}
+        onClose={closeEdit}
+        title={t('stockMovements.edit.title', 'Editar movimiento')}
+        size="md"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={closeEdit}>
+              {t('action.cancel', 'Cancelar')}
+            </Button>
+            <Button variant="primary" type="button" onClick={saveEdit} disabled={!draft}>
+              {t('action.save', 'Guardar')}
+            </Button>
+          </div>
+        }
+      >
+        {draft && (
+          <div className="space-y-md">
+            <div className="rounded-input bg-surface-muted border border-border-subtle p-3">
+              <p className="text-data-mono text-primary font-bold text-body-sm-bold uppercase">{draft.product.id}</p>
+              <h3 className="text-body-md-bold text-foreground">{draft.product.name}</h3>
+            </div>
+
+            {draft.variants.length > 0 && (
+              <div className="space-y-xs">
+                <Label htmlFor="edit-variant" className="text-body-md-bold text-foreground">
+                  {t('stockMovements.form.variant', 'Variante (opcional)')}
+                </Label>
+                <select
+                  id="edit-variant"
+                  className="h-10 w-full px-3 rounded-input border border-border-subtle bg-surface text-body-md text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  value={draft.selectedVariantId}
+                  onChange={(e) => setDraft({ ...draft, selectedVariantId: e.target.value, value: '' })}
+                >
+                  <option value="">
+                    {t('stockMovements.form.mainProduct', 'Producto Principal (General)')}
+                  </option>
+                  {draft.variants.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {variantLabel(v)} · {t('stockMovements.form.stock', 'Stock')}: {v.stock_quantity ?? 0}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="space-y-xs">
+              <Label className="text-body-md-bold text-foreground">
+                {t('stockMovements.form.mode.label', 'Modo de ajuste')}
+              </Label>
+              <div className="flex gap-2">
+                {(['target', 'delta'] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setDraft({ ...draft, mode: m, value: '' })}
+                    className={`flex-1 h-10 rounded-button border text-body-sm-bold uppercase transition-all ${
+                      draft.mode === m
+                        ? 'bg-primary text-on-primary border-primary'
+                        : 'bg-surface text-muted-foreground border-border-subtle hover:bg-surface-muted'
+                    }`}
+                  >
+                    {t(`stockMovements.form.mode.${m}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-md">
+              <div className="space-y-xs">
+                <Label htmlFor="edit-value" className="text-body-md-bold text-foreground">
+                  {draft.mode === 'target'
+                    ? t('stockMovements.form.targetStock', 'Stock objetivo')
+                    : t('stockMovements.form.delta', 'Diferencia (+/−)')}
+                </Label>
+                <Input
+                  id="edit-value"
+                  type="number"
+                  step={rowIsDecimal(draft.product) ? '0.01' : '1'}
+                  className="font-data-mono"
+                  placeholder={draft.mode === 'target' ? `0 ${getUnitLabel(draft.product.base_unit || '')}` : '+/−'}
+                  value={draft.value}
+                  onChange={(e) => setDraft({ ...draft, value: e.target.value })}
+                />
+              </div>
+              <div className="space-y-xs">
+                <Label className="text-body-md-bold text-foreground">
+                  {t('stockMovements.form.resultingStock', 'Stock resultante')}
+                </Label>
+                <div className="h-10 px-3 flex items-center rounded-input border border-border-subtle bg-surface-muted text-body-md font-data-mono">
+                  {(() => {
+                    const r = resultingStockFor(draft);
+                    return r === null ? '—' : `${formatNumber(r)} ${getUnitLabel(draft.product.base_unit || '')}`;
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-xs">
+              <Label htmlFor="edit-category" className="text-body-md-bold text-foreground">
+                {t('stockMovements.form.reasonCategory', 'Categoría de motivo')}
+              </Label>
+              <select
+                id="edit-category"
+                className="h-10 w-full px-3 rounded-input border border-border-subtle bg-surface text-body-md text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                value={draft.reasonCategory}
+                onChange={(e) => setDraft({ ...draft, reasonCategory: e.target.value as ReasonCategory })}
+              >
+                {REASON_CATEGORIES.map((rc) => (
+                  <option key={rc} value={rc}>
+                    {t(`stockMovements.reasons.${rc}`, rc)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-xs">
+              <Label htmlFor="edit-reason" className="text-body-md-bold text-foreground">
+                {t('stockMovements.form.reason', 'Motivo / Justificación')}
+              </Label>
+              <Input
+                id="edit-reason"
+                type="text"
+                placeholder={t('stockMovements.form.reasonPlaceholder', 'Detalle del motivo...')}
+                value={draft.reason}
+                onChange={(e) => setDraft({ ...draft, reason: e.target.value })}
+              />
+            </div>
+          </div>
+        )}
+      </EnhancedModal>
+
       <ProductSearchModal
         open={showSearch}
         onClose={() => setShowSearch(false)}
-        onSelect={handleAddProduct}
+        onSelect={handleSelectProduct}
       />
     </div>
   );

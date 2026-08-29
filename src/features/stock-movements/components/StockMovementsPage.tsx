@@ -71,9 +71,7 @@ export function StockMovementsPage() {
         {/* Content */}
         {tab === 'register' && (
           <div className="grid grid-cols-1 gap-lg">
-            <div className="w-full max-w-3xl mx-auto">
-              <MovementForm />
-            </div>
+            <MovementForm />
           </div>
         )}
         {tab === 'history' && <MovementsHistoryTable />}

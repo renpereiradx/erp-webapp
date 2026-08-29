@@ -27,22 +27,27 @@ export type ReferenceType =
 export interface StockTransaction {
   id: number;
   product_id: string;
-  variant_id?: number | null;
+  variant_id?: string | null;
   branch_id: number;
   transaction_type: TransactionType;
   quantity_change: number;
+  quantity_before?: number;
+  quantity_after?: number;
   unit_price?: number | null;
   reference_type?: ReferenceType | null;
   reference_id?: number | string | null;
   reason?: string | null;
+  user_id?: string;
   metadata?: Record<string, unknown> | null;
   created_at: string;
+  transaction_date?: string;
 }
 
 /** Fila de los endpoints de lectura de historial (product / by-date / by-id). */
 export interface StockTransactionHistory extends StockTransaction {
   product_name?: string;
   variant_name?: string;
+  user_name?: string;
   balance_after?: number;
 }
 

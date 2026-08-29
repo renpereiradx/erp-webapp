@@ -210,7 +210,7 @@ export function MovementsHistoryTable() {
                     {row.reason || '—'}
                   </TableCell>
                   <TableCell className="text-body-md text-muted-foreground">
-                    {(row.metadata as any)?.operator || '—'}
+                    {row.user_name || (row.metadata as any)?.operator || '—'}
                   </TableCell>
                 </TableRow>
               ))}

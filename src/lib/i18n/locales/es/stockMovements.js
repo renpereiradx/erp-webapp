@@ -87,6 +87,18 @@ export const stockMovements = {
     success: 'Movimiento registrado',
     batchCount: '{count} movimiento(s) registrado(s).',
 
+    queue: {
+      product: 'Producto',
+      adjustment: 'Ajuste',
+      reason: 'Motivo',
+      actions: 'Acciones',
+      edit: 'Editar',
+    },
+
+    edit: {
+      title: 'Editar movimiento',
+    },
+
     errors: {
       product_required: 'Seleccioná un producto',
       target_invalid: 'Ingresá un stock objetivo válido (≥ 0)',

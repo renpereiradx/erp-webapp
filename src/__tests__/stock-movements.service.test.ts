@@ -34,7 +34,7 @@ describe('stockMovementsService', () => {
 
       const result = await stockMovementsService.registerMovement(payload);
 
-      expect(result).toEqual(created);
+      expect(result).toMatchObject({ id: 99, product_id: 'P1', transaction_type: 'ADJUSTMENT', quantity_change: 2 });
       expect(mockPost).toHaveBeenCalledTimes(1);
       expect(mockPost).toHaveBeenCalledWith('/stock-transactions/', payload);
     });
@@ -66,7 +66,8 @@ describe('stockMovementsService', () => {
     it('getProductHistory hits /stock-transactions/product/{id} with limit/offset params', async () => {
       mockGet.mockResolvedValue([{ id: 1 }]);
       const result = await stockMovementsService.getProductHistory('P1', 25, 0);
-      expect(result).toEqual([{ id: 1 }]);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ id: 1 });
       expect(mockGet).toHaveBeenCalledWith('/stock-transactions/product/P1', {
         params: { limit: 25, offset: 0 },
       });
@@ -118,6 +119,38 @@ describe('stockMovementsService', () => {
       mockGet.mockResolvedValue({ not: 'an array' });
       const result = await stockMovementsService.getProductHistory('P1');
       expect(result).toEqual([]);
+    });
+
+    it('normalizes PascalCase backend responses to the snake_case contract', async () => {
+      const pascalRow = {
+        ID: 1,
+        ProductID: 'P1',
+        TransactionType: 'ADJUSTMENT',
+        QuantityChange: 5,
+        QuantityBefore: 10,
+        QuantityAfter: 15,
+        TransactionDate: '2026-08-29T00:00:00Z',
+        UserName: 'admin',
+        ProductName: 'Coca Cola',
+        Reason: 'conteo',
+        Metadata: { variant_id: null },
+      };
+      mockGet.mockResolvedValue([pascalRow]);
+
+      const result = await stockMovementsService.getProductHistory('P1');
+
+      expect(result[0]).toMatchObject({
+        id: 1,
+        product_id: 'P1',
+        transaction_type: 'ADJUSTMENT',
+        quantity_change: 5,
+        balance_after: 15,
+        created_at: '2026-08-29T00:00:00Z',
+        user_name: 'admin',
+        product_name: 'Coca Cola',
+        reason: 'conteo',
+      });
+      expect((result[0].metadata as any)?.operator).toBe('admin');
     });
   });
 });
