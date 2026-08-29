@@ -36,10 +36,21 @@ const ENDPOINTS = {
 } as const;
 
 export const stockMovementsService = {
-  /** POST /stock-transactions/ → 201 StockTransaction */
-  async registerMovement(payload: RegisterMovementPayload): Promise<StockTransaction> {
+  /**
+   * POST /stock-transactions/ → 201 StockTransaction | StockTransaction[]
+   * Accepts a single payload (returns a single object) or an array of payloads
+   * (returns an array). The backend mirrors the input shape.
+   */
+  async registerMovement(
+    payloadOrList: RegisterMovementPayload | RegisterMovementPayload[],
+  ): Promise<StockTransaction | StockTransaction[]> {
     try {
-      return await apiClient.post(ENDPOINTS.transactions, payload);
+      if (Array.isArray(payloadOrList)) {
+        const result = await apiClient.post(ENDPOINTS.transactions, payloadOrList);
+        return Array.isArray(result) ? result : [];
+      }
+      const result = await apiClient.post(ENDPOINTS.transactions, payloadOrList);
+      return result;
     } catch (error: any) {
       throw toApiError(error, 'Error al registrar el movimiento de stock');
     }

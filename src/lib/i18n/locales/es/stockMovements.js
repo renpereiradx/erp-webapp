@@ -29,14 +29,16 @@ export const stockMovements = {
 
     form: {
       title: 'Nuevo Movimiento',
+      batchHint: 'Registrá una o varias filas en un solo envío.',
       selectedProduct: 'Producto Seleccionado',
-      noProduct: 'No hay producto seleccionado.',
+      noProduct: 'No hay productos en la cola.',
       searchCta: 'Buscar uno',
       currentStock: 'Stock Actual',
       variant: 'Variante (opcional)',
       mainProduct: 'Producto Principal (General)',
       stock: 'Stock',
       mode: {
+        label: 'Modo de ajuste',
         target: 'Establecer stock',
         delta: 'Ajustar por diferencia',
       },
@@ -55,8 +57,8 @@ export const stockMovements = {
       reasonPlaceholder: 'Detalle del motivo del movimiento...',
       source: 'Fuente',
       date: 'Fecha',
-      search: 'Buscar',
-      submit: 'Registrar movimiento',
+      search: 'Agregar producto',
+      submit: 'Registrar movimiento(s)',
       submitting: 'Registrando...',
     },
 
@@ -83,6 +85,7 @@ export const stockMovements = {
     },
 
     success: 'Movimiento registrado',
+    batchCount: '{count} movimiento(s) registrado(s).',
 
     errors: {
       product_required: 'Seleccioná un producto',
@@ -97,9 +100,12 @@ export const stockMovements = {
         product: 'Por producto',
         date: 'Por fecha',
       },
+      productIdLabel: 'ID de producto',
       productIdPlaceholder: 'ID de producto',
       refresh: 'Consultar',
       empty: 'Sin movimientos para mostrar.',
+      emptyHint: 'Consultá por producto o rango de fechas.',
+      errorTitle: 'Error al cargar',
       col: {
         date: 'Fecha',
         type: 'Tipo',

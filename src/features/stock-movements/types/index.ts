@@ -77,7 +77,7 @@ export interface InventoryDiscrepancyReport {
 /** Payload de escritura para POST /stock-transactions/. */
 export interface RegisterMovementPayload {
   product_id: string;
-  variant_id?: number;
+  variant_id?: string;
   transaction_type: TransactionType;
   quantity_change: number;
   unit_price?: number;

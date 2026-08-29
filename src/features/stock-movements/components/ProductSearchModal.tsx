@@ -1,21 +1,21 @@
 /**
  * Modal de búsqueda de producto para el feature Stock Movements.
  * Reutiliza el patrón del viejo InventoryAdjustmentManual (debounce + teclado) pero aislado
- * y tipado. Usa productService.search (catálogo v3.0+).
+ * y tipado. Usa productService.search (catálogo v3.0+). Diseño: DESIGN.md (EnhancedModal).
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Package, Search, X } from 'lucide-react';
+import { Package, Search } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import EnhancedModal from '@/components/ui/EnhancedModal';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { productService } from '@/services/productService';
 import { formatNumber } from '@/utils/currencyUtils';
 import { toApiError } from '@/utils/ApiError';
 
 /**
  * Forma mínima del producto del catálogo tal como la usa este feature.
- * Se define a mano (en vez de derivar de ProductEnriched) porque la respuesta real incluye
- * campos como `image_url` que no están declarados en el tipo ProductEnriched pero sí existen
- * en runtime (los usa ProductsTable).
  */
 export interface CatalogProduct {
   id: string;
@@ -94,8 +94,6 @@ export function ProductSearchModal({ open, onClose, onSelect }: Props) {
 
   const filtered = useMemo(() => results, [results]);
 
-  if (!open) return null;
-
   const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const n = filtered.length;
     if (n === 0) return;
@@ -116,90 +114,79 @@ export function ProductSearchModal({ open, onClose, onSelect }: Props) {
   };
 
   return (
-    <div className='fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200'>
-      <div className='bg-white w-full max-w-2xl rounded-xl shadow-fluent-16 overflow-hidden flex flex-col max-h-[80vh] scale-100 animate-in zoom-in-95 duration-200'>
-        <header className='p-6 border-b border-border-subtle flex items-center justify-between bg-white sticky top-0 z-10'>
-          <div>
-            <h2 className='text-xl font-black text-text-main tracking-tighter uppercase'>
-              {t('stockMovements.search.title', 'Buscar Producto')}
-            </h2>
-            <p className='text-xs text-text-secondary font-medium uppercase tracking-widest'>
-              {t('stockMovements.search.hint', 'Ctrl+A para abrir rápido')}
-            </p>
-          </div>
-          <button onClick={onClose} className='p-2 hover:bg-slate-100 rounded-full transition-colors'>
-            <X size={24} className='text-text-secondary' />
-          </button>
-        </header>
-
-        <div className='p-6 bg-slate-50 border-b border-border-subtle'>
-          <div className='relative'>
-            <Search className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400' size={20} />
-            <input
-              ref={inputRef}
-              type='text'
-              className='w-full pl-12 pr-4 h-14 border border-border-subtle rounded-xl text-lg bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all'
-              placeholder={t('stockMovements.search.placeholder', 'Nombre, SKU o ID de producto...')}
-              value={term}
-              onChange={(e) => setTerm(e.target.value)}
-              onKeyDown={handleKey}
-            />
-          </div>
+    <EnhancedModal
+      isOpen={open}
+      onClose={onClose}
+      title={t('stockMovements.search.title', 'Buscar Producto')}
+      size="lg"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={onClose}>
+            {t('action.cancel', 'Cancelar')}
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-md">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+          <Input
+            ref={inputRef}
+            type="text"
+            className="pl-10 h-12"
+            placeholder={t('stockMovements.search.placeholder', 'Nombre, SKU o ID de producto...')}
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            onKeyDown={handleKey}
+          />
         </div>
 
-        <div className='flex-1 overflow-auto p-2 custom-scrollbar' ref={listRef}>
+        <div className="overflow-y-auto max-h-[45vh] custom-scrollbar" ref={listRef}>
           {loading ? (
-            <div className='py-12 flex flex-col items-center gap-3'>
-              <div className='size-8 border-4 border-primary border-t-transparent rounded-full animate-spin' />
-              <p className='text-xs font-bold text-slate-400 uppercase tracking-widest'>
+            <div className="py-12 flex flex-col items-center gap-3">
+              <div className="size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+              <p className="text-body-sm-bold text-muted-foreground uppercase tracking-widest">
                 {t('stockMovements.search.searching', 'Buscando...')}
               </p>
             </div>
           ) : filtered.length > 0 ? (
-            <div className='grid grid-cols-1 gap-1'>
+            <div className="grid grid-cols-1 gap-1">
               {filtered.map((product, index) => (
-                <div
+                <button
                   key={product.id}
                   id={`sm-option-${index}`}
-                  className={`p-4 flex gap-4 cursor-pointer rounded-lg transition-all ${
-                    highlight === index ? 'bg-primary text-white' : 'hover:bg-slate-50'
+                  type="button"
+                  className={`p-4 flex gap-4 text-left cursor-pointer rounded-input transition-all ${
+                    highlight === index ? 'bg-primary text-on-primary' : 'hover:bg-surface-muted'
                   }`}
                   onClick={() => onSelect(product)}
                   onMouseEnter={() => setHighlight(index)}
                 >
-                  <div className='size-12 bg-white rounded-lg flex items-center justify-center text-primary overflow-hidden shrink-0 border border-border-subtle'>
+                  <div className="size-12 bg-surface rounded-input flex items-center justify-center text-primary overflow-hidden shrink-0 border border-border-subtle">
                     {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className='w-full h-full object-cover' />
+                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                     ) : (
-                      <Package size={24} strokeWidth={1.5} />
+                      <Package className="w-6 h-6" strokeWidth={1.5} />
                     )}
                   </div>
-                  <div className='flex-1 min-w-0'>
-                    <div className='flex justify-between items-start'>
-                      <p
-                        className={`text-[10px] font-data-mono font-bold uppercase ${
-                          highlight === index ? 'text-white/80' : 'text-primary'
-                        }`}
-                      >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start">
+                      <p className={`text-data-mono font-data-mono font-bold uppercase ${highlight === index ? 'text-on-primary/80' : 'text-primary'}`}>
                         {product.id}
                       </p>
-                      <p
-                        className={`text-[10px] font-black uppercase ${
-                          highlight === index ? 'text-white/90' : 'text-slate-400'
-                        }`}
-                      >
+                      <p className={`text-body-sm-bold uppercase ${highlight === index ? 'text-on-primary/90' : 'text-muted-foreground'}`}>
                         {t('stockMovements.search.stock', 'Stock')}: {formatNumber(product.stock_quantity || 0)}
                       </p>
                     </div>
-                    <h4 className='font-bold leading-tight truncate'>{product.name}</h4>
+                    <h4 className="text-body-md-bold leading-tight truncate">{product.name}</h4>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           ) : (
-            <div className='py-20 text-center'>
-              <Package className='mx-auto text-slate-200 mb-4' size={64} strokeWidth={1} />
-              <p className='text-slate-400 font-medium italic'>
+            <div className="py-20 text-center">
+              <Package className="mx-auto text-border mb-4" size={64} strokeWidth={1} />
+              <p className="text-muted-foreground italic">
                 {term.trim().length < 2
                   ? t('stockMovements.search.minChars', 'Escribe al menos 2 caracteres')
                   : t('stockMovements.search.noResults', 'No se encontraron productos')}
@@ -208,6 +195,6 @@ export function ProductSearchModal({ open, onClose, onSelect }: Props) {
           )}
         </div>
       </div>
-    </div>
+    </EnhancedModal>
   );
 }

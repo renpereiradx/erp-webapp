@@ -1,13 +1,27 @@
 /**
  * Tabla de historial de movimientos del ledger (/stock-transactions/*).
  * Soporta dos vistas:
- *  - Por producto: GET /stock-transactions/product/{id}
+ *  - Por producto: GET /stock-transactions/product/{id} (incluye las variantes del producto).
  *  - Por rango de fecha: GET /stock-transactions/by-date
+ * Diseño: DESIGN.md (tokens, DataState, Table ui/).
  */
 
 import { useState } from 'react';
 import { History, RefreshCw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import DataState from '@/components/ui/DataState';
 import { formatNumber } from '@/utils/currencyUtils';
 import { useStockMovementsStore } from '@/store/useStockMovementsStore';
 import type { StockTransactionHistory } from '../types';
@@ -50,23 +64,26 @@ export function MovementsHistoryTable() {
   const typeLabel = (tt: string) =>
     transactionTypes?.[tt] || t(`stockMovements.types.${tt}`, tt);
 
+  const isDeltaPositive = (n: number) => n > 0;
+
   return (
-    <div className='bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden'>
-      <div className='flex items-center justify-between mb-4'>
-        <h2 className='text-sm font-black uppercase text-text-main tracking-widest flex items-center gap-2'>
-          <History size={16} /> {t('stockMovements.history.title', 'Historial de Movimientos')}
+    <div className="rounded-md bg-surface shadow-whisper border border-border-subtle overflow-hidden">
+      <div className="p-lg pb-0">
+        <h2 className="text-title-md text-foreground font-bold flex items-center gap-2 mb-md">
+          <History className="w-5 h-5 text-primary" />
+          {t('stockMovements.history.title', 'Historial de Movimientos')}
         </h2>
       </div>
 
       {/* Controles */}
-      <div className='flex flex-wrap items-end gap-3 mb-4'>
-        <div className='flex gap-1 p-1 bg-slate-100 rounded-lg'>
+      <div className="px-lg pb-lg flex flex-wrap items-end gap-3">
+        <div className="flex gap-1 p-1 bg-surface-muted rounded-md">
           {(['product', 'date'] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`px-3 h-8 text-[11px] font-black uppercase rounded-md transition-all ${
-                view === v ? 'bg-white shadow-sm text-text-main' : 'text-text-secondary'
+              className={`px-3 h-8 rounded-button text-body-sm-bold uppercase transition-all ${
+                view === v ? 'bg-surface shadow-sm text-foreground' : 'text-muted-foreground'
               }`}
             >
               {t(`stockMovements.history.view.${v}`)}
@@ -75,98 +92,132 @@ export function MovementsHistoryTable() {
         </div>
 
         {view === 'product' ? (
-          <input
-            type='text'
-            placeholder={t('stockMovements.history.productIdPlaceholder', 'ID de producto')}
-            value={productId}
-            onChange={(e) => setProductId(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && run()}
-            className='h-10 px-3 border border-border-subtle rounded-lg bg-white text-sm flex-1 min-w-[200px] focus:ring-2 focus:ring-primary focus:border-transparent outline-none'
-          />
+          <div className="flex-1 min-w-[220px] space-y-xs">
+            <Label htmlFor="h-product-id" className="text-body-sm-bold text-muted-foreground uppercase">
+              {t('stockMovements.history.productIdLabel', 'ID de producto')}
+            </Label>
+            <Input
+              id="h-product-id"
+              type="text"
+              className="h-10"
+              placeholder={t('stockMovements.history.productIdPlaceholder', 'ID de producto')}
+              value={productId}
+              onChange={(e) => setProductId(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && run()}
+            />
+          </div>
         ) : (
           <>
-            <input
-              type='date'
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className='h-10 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none'
-            />
-            <input
-              type='date'
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className='h-10 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none'
-            />
+            <div className="space-y-xs">
+              <Label htmlFor="h-from" className="text-body-sm-bold text-muted-foreground uppercase">
+                {t('stockMovements.summary.from', 'Desde')}
+              </Label>
+              <Input
+                id="h-from"
+                type="date"
+                className="h-10"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-xs">
+              <Label htmlFor="h-to" className="text-body-sm-bold text-muted-foreground uppercase">
+                {t('stockMovements.summary.to', 'Hasta')}
+              </Label>
+              <Input
+                id="h-to"
+                type="date"
+                className="h-10"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
           </>
         )}
 
-        <button
-          onClick={run}
-          disabled={loading}
-          className='h-10 px-4 flex items-center gap-2 bg-primary text-white text-xs font-black uppercase rounded-lg hover:bg-primary-hover transition-all disabled:opacity-50'
-        >
-          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+        <Button variant="primary" onClick={run} disabled={loading}>
+          <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
           {t('stockMovements.history.refresh', 'Consultar')}
-        </button>
+        </Button>
       </div>
 
-      {error && (
-        <div className='bg-error/10 text-error p-3 rounded text-xs font-bold mb-3'>{error}</div>
-      )}
-
-      <div className='overflow-x-auto'>
-        <table className='w-full text-sm'>
-          <thead>
-            <tr className='text-left text-[10px] font-black uppercase text-slate-400 border-b border-border-subtle'>
-              <th className='py-2 pr-3'>{t('stockMovements.history.col.date', 'Fecha')}</th>
-              <th className='py-2 pr-3'>{t('stockMovements.history.col.type', 'Tipo')}</th>
-              <th className='py-2 pr-3 text-right'>{t('stockMovements.history.col.delta', 'Δ')}</th>
-              <th className='py-2 pr-3 text-right'>{t('stockMovements.history.col.balance', 'Saldo')}</th>
-              <th className='py-2 pr-3'>{t('stockMovements.history.col.reason', 'Motivo')}</th>
-              <th className='py-2'>{t('stockMovements.history.col.operator', 'Operador')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={6} className='py-10 text-center text-text-secondary italic'>
-                  {t('stockMovements.history.empty', 'Sin movimientos para mostrar.')}
-                </td>
-              </tr>
-            ) : (
-              rows.map((row: StockTransactionHistory) => (
-                <tr key={row.id} className='border-b border-slate-50 hover:bg-slate-50/60'>
-                  <td className='py-2 pr-3 text-xs text-text-secondary whitespace-nowrap'>
+      {/* Estados de datos */}
+      {loading ? (
+        <div className="px-lg pb-lg">
+          <DataState variant="loading" skeletonProps={{ count: 5, variant: 'list' }} testId="history-loading" />
+        </div>
+      ) : error ? (
+        <div className="px-lg pb-lg">
+          <DataState variant="error" title={t('stockMovements.history.errorTitle', 'Error al cargar')} message={error} onRetry={run} testId="history-error" />
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="px-lg pb-lg">
+          <DataState
+            variant="empty"
+            title={t('stockMovements.history.empty', 'Sin movimientos para mostrar.')}
+            description={t('stockMovements.history.emptyHint', 'Consultá por producto o rango de fechas.')}
+            testId="history-empty"
+          />
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-surface-muted">
+              <TableRow>
+                <TableHead className="text-label-caps uppercase text-muted-foreground">
+                  {t('stockMovements.history.col.date', 'Fecha')}
+                </TableHead>
+                <TableHead className="text-label-caps uppercase text-muted-foreground">
+                  {t('stockMovements.history.col.type', 'Tipo')}
+                </TableHead>
+                <TableHead className="text-label-caps uppercase text-muted-foreground text-right">
+                  {t('stockMovements.history.col.delta', 'Δ')}
+                </TableHead>
+                <TableHead className="text-label-caps uppercase text-muted-foreground text-right">
+                  {t('stockMovements.history.col.balance', 'Saldo')}
+                </TableHead>
+                <TableHead className="text-label-caps uppercase text-muted-foreground">
+                  {t('stockMovements.history.col.reason', 'Motivo')}
+                </TableHead>
+                <TableHead className="text-label-caps uppercase text-muted-foreground">
+                  {t('stockMovements.history.col.operator', 'Operador')}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row: StockTransactionHistory) => (
+                <TableRow key={row.id} className="hover:bg-surface-muted transition-colors duration-150">
+                  <TableCell className="text-body-md text-muted-foreground whitespace-nowrap">
                     {new Date(row.created_at).toLocaleString('es-ES')}
-                  </td>
-                  <td className='py-2 pr-3'>
-                    <span className='text-[10px] font-black uppercase px-2 py-0.5 rounded bg-slate-100 text-text-main'>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="default" size="sm">
                       {typeLabel(row.transaction_type)}
-                    </span>
-                  </td>
-                  <td
-                    className={`py-2 pr-3 text-right font-data-mono font-bold ${
-                      row.quantity_change > 0 ? 'text-success' : 'text-error'
+                    </Badge>
+                  </TableCell>
+                  <TableCell
+                    className={`text-right font-data-mono font-bold ${
+                      isDeltaPositive(row.quantity_change) ? 'text-success' : 'text-error'
                     }`}
                   >
                     {row.quantity_change > 0 ? '+' : ''}
                     {formatNumber(row.quantity_change)}
-                  </td>
-                  <td className='py-2 pr-3 text-right font-data-mono'>
+                  </TableCell>
+                  <TableCell className="text-right font-data-mono text-foreground">
                     {row.balance_after !== undefined ? formatNumber(row.balance_after) : '—'}
-                  </td>
-                  <td className='py-2 pr-3 text-xs text-text-main max-w-[220px] truncate' title={row.reason ?? ''}>
+                  </TableCell>
+                  <TableCell className="text-body-md text-foreground max-w-[220px] truncate" title={row.reason ?? ''}>
                     {row.reason || '—'}
-                  </td>
-                  <td className='py-2 text-xs text-text-secondary'>
+                  </TableCell>
+                  <TableCell className="text-body-md text-muted-foreground">
                     {(row.metadata as any)?.operator || '—'}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }

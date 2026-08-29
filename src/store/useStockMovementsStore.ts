@@ -35,7 +35,7 @@ interface StockMovementsState {
   error: string | null;
 
   // acciones
-  registerMovement: (payload: RegisterMovementPayload) => Promise<StockTransaction>;
+  registerMovement: (payload: RegisterMovementPayload | RegisterMovementPayload[]) => Promise<StockTransaction | StockTransaction[]>;
   fetchHistory: (productId: string, limit?: number, offset?: number) => Promise<void>;
   fetchByDate: (params: {
     startDate: string;
@@ -73,7 +73,10 @@ export const useStockMovementsStore = create<StockMovementsState>()(
         set({ loading: true, error: null });
         try {
           const tx = await stockMovementsService.registerMovement(payload);
-          set({ loading: false, lastRegistered: tx });
+          set({
+            loading: false,
+            lastRegistered: Array.isArray(tx) ? (tx[tx.length - 1] ?? null) : tx,
+          });
           return tx;
         } catch (e: any) {
           set({ loading: false, error: e?.message ?? 'register_failed' });

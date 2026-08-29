@@ -83,7 +83,7 @@ export function buildMovementMetadata(input: {
 export const movementFormSchema = z
   .object({
     product_id: z.string().min(1),
-    variant_id: z.number().int().positive().optional(),
+    variant_id: z.string().optional(),
     mode: z.enum(['target', 'delta']),
     targetStock: z.number().optional(),
     delta: z.number().optional(),
