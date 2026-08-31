@@ -111,7 +111,7 @@ export const PendingSalesStep = forwardRef<PendingSalesStepRef, PendingSalesStep
                       {formatCurrency(Number(sale.total_amount) || 0, sale.currency || 'PYG')}
                     </p>
                     {isFromOtherBranch && (
-                      <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold uppercase text-orange-700 bg-orange-50 border border-orange-200 rounded px-1.5 py-0.5">
+                      <span className="inline-flex items-center gap-1 mt-1 text-body-sm-bold uppercase text-warning bg-warning/10 border border-warning/30 rounded px-1.5 py-0.5">
                         <MapPin size={10} />
                         {t('sales.checkoutWizard.pendingSales.otherBranch', 'Otra sucursal')}
                       </span>

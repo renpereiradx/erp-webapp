@@ -95,7 +95,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
 
   return (
     <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-surface rounded-md shadow-whisper w-full max-w-3xl overflow-hidden animate-in zoom-in-95 flex flex-col md:flex-row md:min-h-[450px]">
+      <div className="bg-surface rounded-xl shadow-fluent-16 w-full max-w-3xl overflow-hidden animate-in zoom-in-95 flex flex-col md:flex-row md:min-h-[450px]">
         
         {/* Left Panel: Product Identity & Details */}
         <div className="w-full md:w-2/5 bg-background p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-surface-deep">
@@ -176,12 +176,12 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
           {/* Selector Area */}
           <div className="p-6 flex-1 overflow-y-auto max-h-[350px] md:max-h-[380px] space-y-5">
             {loading ? (
-              <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-400 text-sm">
+              <div className="flex flex-col items-center justify-center gap-3 py-16 text-on-surface-deep text-body-md">
                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 <span>Cargando variantes del catálogo...</span>
               </div>
             ) : variants.length === 0 ? (
-              <div className="text-center py-16 text-slate-400 text-sm">
+              <div className="text-center py-16 text-on-surface-deep text-body-md">
                 Este producto no tiene variantes registradas.
               </div>
             ) : attributeKeys.length === 0 ? (
@@ -205,16 +205,16 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                           <Package size={16} />
                         </div>
                         <div className="min-w-0">
-                          <h4 className="text-sm font-bold text-slate-800 truncate">{v.variant_name}</h4>
-                          <p className="text-[10px] text-slate-400 font-mono uppercase mt-0.5 truncate">{v.sku}</p>
+                          <h4 className="text-body-md-bold text-foreground truncate">{v.variant_name}</h4>
+                          <p className="text-body-sm text-outline-fg font-data-mono uppercase mt-0.5 truncate">{v.sku}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4 shrink-0">
                         <div className="text-right">
-                          <p className="text-sm font-black text-slate-800">{formatPrice(v.current_price)}</p>
+                          <p className="text-body-md-bold font-data-mono text-foreground">{formatPrice(v.current_price)}</p>
                           <p className={cn(
-                            "text-[10px] font-bold mt-0.5 uppercase",
-                            isOutOfStock ? "text-rose-600" : "text-emerald-600"
+                            "text-body-sm-bold mt-0.5 uppercase",
+                            isOutOfStock ? "text-error" : "text-success"
                           )}>
                             Stock: {stock}
                           </p>
@@ -256,7 +256,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
 
                   return (
                     <div key={attrKey} className="space-y-2">
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <span className="text-label-caps text-on-surface-deep uppercase">
                         Seleccionar {attrKey}
                       </span>
                       <div className="flex flex-wrap gap-2">
@@ -288,7 +288,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                             >
                               {val}
                               {isSelected && (
-                                <Check size={12} className="text-white shrink-0" />
+                                <Check size={12} className="text-on-primary shrink-0" />
                               )}
                             </button>
                           );
@@ -310,25 +310,25 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                     <div className={cn(
                       "p-4 rounded-md border flex items-center justify-between transition-all",
                       (selectedVariant.stock_quantity || 0) > 0
-                        ? "bg-emerald-50/40 border-emerald-100 text-emerald-800"
-                        : "bg-rose-50/40 border-rose-100 text-rose-800"
+                        ? "bg-success/10 border-success/30 text-success"
+                        : "bg-error/10 border-error/30 text-error"
                     )}>
                       <div className="min-w-0">
                         <h4 className="font-bold text-sm flex items-center gap-1.5">
                           {(selectedVariant.stock_quantity || 0) > 0 
-                            ? <CheckCircle2 size={16} className="text-emerald-500" /> 
-                            : <AlertCircle size={16} className="text-rose-500" />}
+                            ? <CheckCircle2 size={16} className="text-success" /> 
+                            : <AlertCircle size={16} className="text-error" />}
                           {selectedVariant.variant_name}
                         </h4>
-                        <p className="text-[10px] text-slate-500 font-mono mt-1">SKU: {selectedVariant.sku}</p>
+                        <p className="text-body-sm text-on-surface-deep font-data-mono mt-1">SKU: {selectedVariant.sku}</p>
                       </div>
                       <div className="text-right shrink-0 ml-4">
-                        <p className="text-base font-black text-slate-850">
+                        <p className="text-body-lg font-data-mono text-foreground">
                           {formatPrice(selectedVariant.current_price)}
                         </p>
                         <p className={cn(
-                          "text-[10px] font-bold mt-0.5 uppercase",
-                          (selectedVariant.stock_quantity || 0) > 0 ? "text-emerald-600" : "text-rose-600"
+                          "text-body-sm-bold mt-0.5 uppercase",
+                          (selectedVariant.stock_quantity || 0) > 0 ? "text-success" : "text-error"
                         )}>
                           Stock: {selectedVariant.stock_quantity || 0}
                         </p>
@@ -366,7 +366,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                   Producto principal
                 </div>
                 {product.product_type !== 'SERVICE' && (
-                  <span className={cn("text-[10px] font-bold uppercase", baseStock > 0 ? "text-emerald-600" : "text-rose-600")}>
+                  <span className={cn("text-body-sm-bold uppercase", baseStock > 0 ? "text-success" : "text-error")}>
                     Stock: {baseStock}
                   </span>
                 )}

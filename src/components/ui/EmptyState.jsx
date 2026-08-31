@@ -7,15 +7,15 @@ import React from 'react';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 
-const EmptyState = ({ 
+const EmptyState = ({
   icon: Icon,
-  title, 
-  description, 
-  actionLabel, 
-  onAction,
+  title,
+  description,
+  actionLabel = undefined,
+  onAction = undefined,
   size = 'medium',
   variant = 'default',
-  'data-testid': testId 
+  'data-testid': testId
 }) => {
   const { t } = useI18n();
 

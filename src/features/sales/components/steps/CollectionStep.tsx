@@ -239,7 +239,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
             </p>
           )}
           {!isLoadingRegisters && inBranch.length === 0 && otherBranches.length > 0 && (
-            <p className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded-sm px-3 py-2">
+            <p className="flex items-start gap-2 text-body-sm text-warning bg-warning/10 rounded-sm px-3 py-2">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               <span>
                 {t(
@@ -337,7 +337,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
                 )}
               </div>
               <div className="flex flex-col items-end">
-                <span className="text-2xl font-black font-data-mono text-emerald-400">
+                <span className="text-headline-lg-mobile font-data-mono text-success">
                   {formatCurrency(baseChange, currencyCode)}
                 </span>
                 {isForeign && foreignChange > 0 && (

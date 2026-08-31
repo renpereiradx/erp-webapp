@@ -222,8 +222,11 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
   const baseCurrencyCode = baseCurrency?.code || 'PYG'
   const selectedCurrency = currencies.find((c) => String(c.id) === String(currencyId))
   const currencyCode = baseCurrencyCode
-  const isCashMethod = paymentMethods.find((m) => String(m.id) === String(paymentMethodId))?.name
-    ?.toLowerCase()
+  // El nombre puede venir en `name` o en `description` según la fuente del
+  // método (API/demo): chequear ambos, igual que hace el label de las cards.
+  const selectedMethod = paymentMethods.find((m) => String(m.id) === String(paymentMethodId))
+  const isCashMethod = (selectedMethod?.name || selectedMethod?.description || '')
+    .toLowerCase()
     .includes('efectivo')
 
   // Cobro en divisa: solo cuando la moneda elegida difiere de la base Y hay
@@ -342,15 +345,21 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     : t('sales.checkoutWizard.action.next', 'Avanzar')
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-5xl bg-surface shadow-fluent-16 rounded-md flex flex-col md:flex-row overflow-hidden min-h-[70vh] max-h-[92vh] animate-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-md animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('sales.checkoutWizard.title', 'Concretar Venta')}
+      data-testid="sales-checkout-wizard"
+    >
+      <div className="relative w-full max-w-5xl bg-surface shadow-fluent-16 rounded-xl flex flex-col md:flex-row overflow-hidden min-h-[70vh] max-h-[92vh] animate-in zoom-in-95 duration-200">
         {/* ─── Panel izquierdo: Stepper ─────────────────────────────── */}
         <div className="flex-1 flex flex-col bg-surface-muted min-h-0">
           {/* Header con indicador de pasos */}
-          <div className="px-6 py-5 border-b border-surface-deep bg-surface-muted">
+          <div className="px-6 py-5 border-b border-divider bg-surface-muted">
             <div className="flex items-center gap-2 mb-3">
-              <div className="size-9 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
-                <ShoppingCart size={18} />
+              <div className="size-9 bg-primary-container rounded-md flex items-center justify-center text-on-primary-container">
+                <ShoppingCart size={18} aria-hidden="true" />
               </div>
               <div>
                 <h2 className="text-headline-lg-mobile text-foreground leading-none">
@@ -361,27 +370,32 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                 </p>
               </div>
             </div>
-            {/* Indicador de progreso */}
-            <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Indicador de progreso (segmentos tipo chevron del mockup) */}
+            <div className="flex items-center gap-1 w-full" role="list" aria-label={t('sales.checkoutWizard.stepsAria', 'Pasos del checkout')}>
               {steps.map((stepId, idx) => {
                 const done = idx < currentStepIdx
                 const active = idx === currentStepIdx
                 return (
                   <React.Fragment key={stepId}>
                     <div
+                      role="listitem"
+                      aria-current={active ? 'step' : undefined}
                       className={cn(
-                        'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all',
+                        'flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-md text-body-sm-bold transition-colors duration-150 min-w-0',
                         active
-                          ? 'bg-primary text-on-primary shadow-sm'
+                          ? 'bg-primary text-on-primary'
                           : done
-                            ? 'bg-emerald-100 text-emerald-700'
+                            ? 'bg-surface-subtle text-success'
                             : 'bg-surface-subtle text-on-surface-deep',
                       )}
                     >
-                      {done && <CheckCircle2 size={12} />}
-                      <span>{stepLabels[stepId]}</span>
+                      <span className="font-data-mono">{idx + 1}.</span>
+                      <span className="truncate">{stepLabels[stepId]}</span>
+                      {done && <CheckCircle2 size={12} className="shrink-0" aria-hidden="true" />}
                     </div>
-                    {idx < steps.length - 1 && <ChevronRight size={12} className="text-outline-fg" />}
+                    {idx < steps.length - 1 && (
+                      <ChevronRight size={14} className="text-outline-fg shrink-0" aria-hidden="true" />
+                    )}
                   </React.Fragment>
                 )
               })}
@@ -477,14 +491,14 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
           </div>
 
           {/* Footer con acciones */}
-          <div className="px-6 py-4 border-t border-surface-deep bg-surface-muted flex items-center gap-2">
+          <div className="px-6 py-4 border-t border-divider bg-surface-muted flex items-center gap-2">
             <Button
               variant="ghost"
               onClick={handleBack}
               disabled={isProcessingSale}
               className="h-12 px-4 text-on-surface-deep hover:bg-surface-subtle"
             >
-              <ChevronLeft size={16} className="mr-1" />
+              <ChevronLeft size={16} className="mr-1" aria-hidden="true" />
               {t('sales.checkoutWizard.action.back', 'Volver')}
             </Button>
             <div className="flex-1" />
@@ -499,61 +513,67 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
               </Button>
             )}
             <Button
+              variant="primary"
               onClick={handlePrimary}
               disabled={isProcessingSale || !isStepValid()}
-              className="h-12 px-6 bg-primary text-on-primary hover:bg-primary/90 shadow-sm"
+              className="h-12 px-6"
+              data-testid="wizard-primary-action"
             >
               {isProcessingSale ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
                   {t('sales.checkoutWizard.action.processing', 'Procesando...')}
                 </>
               ) : (
                 <>
                   {primaryActionLabel}
-                  <span className="ml-2 text-xs opacity-80 font-data-mono">({primaryLabel})</span>
+                  <span className="ml-2 text-body-sm font-data-mono opacity-80">({primaryLabel})</span>
                 </>
               )}
             </Button>
           </div>
         </div>
 
-        {/* ─── Panel derecho: Carrito fijo ──────────────────────────── */}
-        <div className="md:w-[360px] flex flex-col bg-surface border-t md:border-t-0 md:border-l border-surface-deep min-h-0">
-          <div className="px-5 py-4 border-b border-surface-deep">
-            <p className="text-label-caps text-on-surface-deep">
-              {t('sales.checkoutWizard.cart', 'Carrito')} · {items.length}
+        {/* ─── Panel derecho: Cart Review (solo lectura) ────────────── */}
+        <div className="md:w-[360px] flex flex-col bg-surface border-t md:border-t-0 md:border-l border-divider min-h-0">
+          <div className="px-5 py-4 border-b border-divider flex items-center justify-between">
+            <p className="text-title-md text-foreground">
+              {t('sales.checkoutWizard.cartReview', 'Cart Review')}
             </p>
+            <Badge variant="secondary" size="sm" className="font-data-mono">
+              {items.length}
+            </Badge>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
+          <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2" role="list" aria-label={t('sales.checkoutWizard.cartReview', 'Cart Review')}>
             {items.length === 0 ? (
-              <p className="text-center py-8 text-sm text-on-surface-deep">
+              <p className="text-center py-8 text-body-md text-on-surface-deep">
                 {t('sales.checkoutWizard.cartEmpty', 'El carrito está vacío')}
               </p>
             ) : (
               items.map((item) => (
                 <div
                   key={item.id}
+                  role="listitem"
                   className={cn(
-                    'flex items-start justify-between gap-2 py-2 border-b border-surface-deep/50 last:border-0',
+                    'flex items-start justify-between gap-2 py-2 border-b border-divider last:border-0',
                     item.isFromPendingSale && 'opacity-60',
                   )}
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-bold text-foreground truncate">
+                    <div className="text-body-md-bold text-foreground truncate">
                       {item.isFromPendingSale && (
-                        <Badge className="mr-1 bg-surface-deep text-on-surface-deep border-none text-[8px] uppercase align-middle">
+                        <Badge variant="secondary" size="sm" className="mr-1 align-middle">
                           P
                         </Badge>
                       )}
                       {item.name}
                     </div>
-                    <p className="text-xs text-on-surface-deep font-data-mono">
+                    <p className="text-body-sm text-on-surface-deep font-data-mono">
                       {item.quantity} {item.unit} × {formatCurrency(Number(item.price) || 0, currencyCode)}
                     </p>
                   </div>
-                  <p className="text-sm font-bold font-data-mono text-foreground shrink-0">
+                  <p className="text-body-md-bold font-data-mono text-foreground shrink-0">
                     {formatCurrency(getItemLineTotal(item), currencyCode)}
                   </p>
                 </div>
@@ -562,33 +582,33 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
           </div>
 
           {/* Totales */}
-          <div className="px-5 py-4 border-t border-surface-deep space-y-1.5 bg-surface-muted">
-            <div className="flex justify-between text-xs text-on-surface-deep">
+          <div className="px-5 py-4 border-t border-divider space-y-1.5 bg-surface-muted">
+            <div className="flex justify-between text-body-sm text-on-surface-deep">
               <span>{t('sales.checkoutWizard.subtotal', 'Subtotal')}</span>
               <span className="font-data-mono">{formatCurrency(totals.subtotal, currencyCode)}</span>
             </div>
             {totals.discount_total > 0 && (
-              <div className="flex justify-between text-xs text-error">
+              <div className="flex justify-between text-body-sm text-error">
                 <span>{t('sales.checkoutWizard.discount', 'Descuento')}</span>
                 <span className="font-data-mono">-{formatCurrency(totals.discount_total, currencyCode)}</span>
               </div>
             )}
             {totals.tax_amount > 0 && (
-              <div className="flex justify-between text-xs text-on-surface-deep">
+              <div className="flex justify-between text-body-sm text-on-surface-deep">
                 <span>{t('sales.checkoutWizard.tax', 'Impuestos')}</span>
                 <span className="font-data-mono">{formatCurrency(totals.tax_amount, currencyCode)}</span>
               </div>
             )}
-            <div className="flex justify-between items-end pt-2 border-t border-surface-deep">
-              <span className="text-label-caps text-on-surface-deep">
+            <div className="flex justify-between items-end pt-2 border-t border-divider">
+              <span className="text-label-caps text-on-surface-deep uppercase">
                 {t('sales.checkoutWizard.total', 'Total')}
               </span>
-              <span className="text-headline-lg-mobile text-primary font-data-mono tracking-tighter">
+              <span className="text-headline-lg-mobile text-primary font-data-mono tracking-tight" data-testid="wizard-total">
                 {formatCurrency(totals.total, currencyCode)}
               </span>
             </div>
             {foreignCurrency && foreignDue > 0 && (
-              <p className="text-xs text-on-surface-deep text-right font-data-mono">
+              <p className="text-body-sm text-on-surface-deep text-right font-data-mono">
                 ≈ {formatCurrency(foreignDue, foreignCurrency.code)}
               </p>
             )}

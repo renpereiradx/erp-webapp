@@ -82,7 +82,9 @@ export const WalkInReservationForm = ({
     ;(async () => {
       try {
         const list = await reservationService.getProducts()
-        if (!cancelled) setProducts(list || [])
+        // Un response no-array (proxy/error intermedio) no debe tirar abajo
+        // el wizard entero: los steps viven bajo un único error boundary.
+        if (!cancelled) setProducts(Array.isArray(list) ? list : [])
       } catch {
         if (!cancelled) setProducts([])
       }

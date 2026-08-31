@@ -135,9 +135,9 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
 
             {/* Previews de los próximos pasos condicionales */}
             {pendingSalesCount > 0 && (
-              <div className="mt-3 p-3 bg-amber-50 rounded-md border border-amber-200 flex items-start gap-2">
-                <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-xs font-medium text-amber-700">
+              <div className="mt-3 p-3 bg-warning/10 rounded-md border border-warning/30 flex items-start gap-2">
+                <AlertTriangle size={16} className="text-warning shrink-0 mt-0.5" />
+                <p className="text-body-sm text-warning">
                   {t('sales.checkoutWizard.client.hasPending', {
                     count: pendingSalesCount,
                     defaultValue: `Este cliente tiene ${pendingSalesCount} venta(s) pendiente(s).`,

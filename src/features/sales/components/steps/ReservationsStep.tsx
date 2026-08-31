@@ -87,7 +87,7 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
                       <div
                         className={cn(
                           'size-5 rounded-md border-2 flex items-center justify-center transition-all',
-                          isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-outline-fg bg-surface',
+                          isSelected ? 'bg-primary border-primary text-on-primary' : 'border-outline-fg bg-surface',
                         )}
                       >
                         {isSelected ? <Check size={12} strokeWidth={3} /> : <Plus size={12} strokeWidth={3} className="opacity-0" />}
@@ -126,7 +126,7 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
                       <span
                         className={cn(
                           'text-lg font-black font-data-mono tracking-tighter',
-                          isSelected ? 'text-emerald-600' : 'text-foreground',
+                          isSelected ? 'text-primary' : 'text-foreground',
                         )}
                       >
                         {formatCurrency(Number(res.total_amount) || 0)}

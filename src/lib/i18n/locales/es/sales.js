@@ -39,7 +39,6 @@ export const sales = {
   'sales.new.summary.taxes': 'Impuestos',
   'sales.new.summary.discounts': 'Descuentos',
   'sales.new.summary.total': 'Total',
-  'sales.new.summary.clear': 'Limpiar',
   'sales.new.summary.complete': 'Completar Venta',
 
   // Cliente
@@ -91,7 +90,6 @@ export const sales = {
   'sales.history.table.total': 'Total',
   'sales.history.table.status': 'Estado',
   'sales.history.table.actions': 'Acciones',
-  'sales.history.empty': 'No hay ventas registradas',
   'sales.history.empty_description': 'Las ventas aparecerán aquí',
 
   // Modal de producto
@@ -428,4 +426,123 @@ export const sales = {
   // Desglose de IVA en el sumario (tasa dinámica)
   'sales.summary.vatLine': 'Liquidación IVA {pct}%',
   'sales.summary.exempt': 'Monto Exento',
+
+  // ─── POS /ventas (alineación DESIGN.md + mockups sale-ui-example) ────────
+  'sales.navAria': 'Secciones de ventas',
+  'sales.tab.new': 'Nueva Venta',
+  'sales.tab.history': 'Historial',
+
+  // Carrito
+  'sales.cart.title': 'Productos Seleccionados',
+  'sales.cart.empty': 'Carrito vacío',
+  'sales.cart.emptyHint': 'Buscá un producto arriba para agregarlo (F2 foco en búsqueda).',
+  'sales.cart.unitLabel': 'Unidad',
+  'sales.cart.unitPrice': 'Unitario',
+  'sales.cart.lineTotal': 'Total Línea',
+  'sales.cart.appliedDiscount': 'Descuento Aplicado',
+  'sales.cart.processedBadge': 'Procesado',
+  'sales.cart.editAria': 'Editar producto',
+  'sales.cart.removeAria': 'Quitar producto',
+  'sales.cart.col.id': 'ID',
+  'sales.cart.col.product': 'Producto',
+  'sales.cart.col.qty': 'Cant.',
+  'sales.cart.col.price': 'Precio',
+  'sales.cart.col.discount': 'Desc.',
+  'sales.cart.col.total': 'Total',
+  'sales.cart.col.actions': 'Acciones',
+
+  // Buscador de productos
+  'sales.search.placeholder': 'Buscar producto por código, nombre o código de barras... (F2)',
+  'sales.search.resultsAria': 'Resultados de búsqueda',
+  'sales.search.qtyLabel': 'Cant',
+  'sales.search.invalidQty': 'Cantidad inválida',
+  'sales.search.outOfStock': 'Sin stock disponible para {name}',
+  'sales.search.outOfStockShort': 'Sin stock',
+  'sales.search.soldOut': 'Agotado',
+  'sales.search.multipleVariants': 'Múltiples Variantes',
+  'sales.search.selectVariant': 'Seleccionar Variante',
+  'sales.search.stock': 'Stock: {qty} {unit}',
+  'sales.search.inCart': '{qty} en carrito',
+
+  // Hints de atajos del POS
+  'sales.hints.search': 'Buscar',
+  'sales.hints.checkout': 'Cobrar',
+  'sales.hints.clear': 'Limpiar',
+
+  // Resumen de checkout (panel derecho)
+  'sales.new.summary.emptyCart': 'Agrega productos al carrito para continuar.',
+  'sales.new.summary.branchWarning':
+    'Estás modificando una venta pendiente originada en otra sucursal. Los productos que añadas descontarán inventario de la sucursal origen.',
+  'sales.new.summary.previousSale': 'Venta Procesada (Anterior)',
+  'sales.new.summary.newItems': 'Nuevos Ítems',
+  'sales.new.summary.combinedSubtotal': 'Subtotal Combinado',
+  'sales.new.summary.finalPrice': 'Precio Final de Venta',
+  'sales.new.summary.finalPriceHint': 'Este monto ajusta proporcionalmente todos los precios en el carrito.',
+  'sales.new.summary.editable': 'Editable',
+  'sales.new.summary.checkout': 'Cobrar (F12)',
+  'sales.new.summary.updateSale': 'Actualizar Venta #{id} (F12)',
+  'sales.new.summary.clear': 'Limpiar Carrito (F4)',
+
+  // Modal de edición de ítem
+  'sales.editItem.titleEdit': 'Editar Detalles',
+  'sales.editItem.titleNew': 'Configurar Producto',
+  'sales.editItem.quantity': 'Cantidad',
+  'sales.editItem.unit': 'Unidad de Medida',
+  'sales.editItem.basePrice': 'Precio Base Unit.',
+  'sales.editItem.finalPrice': 'Precio Final Unit.',
+  'sales.editItem.adjustment': 'Ajuste o Descuento',
+  'sales.editItem.fixedAmount': 'Monto Fijo',
+  'sales.editItem.percentage': 'Porcentaje',
+  'sales.editItem.discountInput': 'Monto o porcentaje de descuento',
+  'sales.editItem.reasonPlaceholder': 'Razón del ajuste...',
+  'sales.editItem.otherReason': 'Otras razones...',
+  'sales.editItem.customReasonPlaceholder': 'Especificar motivo detallado del ajuste...',
+  'sales.editItem.grossSubtotal': 'Subtotal Bruto',
+  'sales.editItem.discount': 'Descuento',
+  'sales.editItem.surcharge': 'Recargo',
+  'sales.editItem.lineTotal': 'Total a Pagar',
+  'sales.editItem.save': 'Guardar Cambios',
+  'sales.editItem.confirm': 'Confirmar Adición',
+
+  // Anulación de venta
+  'sales.cancelSale.title': 'Anular Venta #{id}',
+  'sales.cancelSale.warning':
+    '¿Estás seguro de anular esta venta? Esta acción revertirá el stock y los cobros realizados.',
+  'sales.cancelSale.impact': 'Impacto Estimado',
+  'sales.cancelSale.paymentsToReverse': 'Cobros a revertir:',
+  'sales.cancelSale.totalToReverse': 'Monto total:',
+  'sales.cancelSale.reason': 'Motivo de anulación',
+  'sales.cancelSale.reasonPlaceholder': 'Ej: Error en facturación, devolución...',
+  'sales.cancelSale.cancelling': 'Anulando...',
+  'sales.cancelSale.confirm': 'Sí, Anular',
+
+  // Historial
+  'sales.status.paid': 'Pagada',
+  'sales.history.quickSearch': 'Búsqueda rápida',
+  'sales.history.searchPlaceholder': 'Cliente o #Venta',
+  'sales.history.from': 'Desde',
+  'sales.history.to': 'Hasta',
+  'sales.history.filter': 'Filtrar',
+  'sales.history.loadLatest': 'Ver Últimos',
+  'sales.history.clear': 'Limpiar filtros',
+  'sales.history.records': 'Registros',
+  'sales.history.errorTitle': 'Error al cargar',
+  'sales.history.empty': 'No se encontraron resultados',
+  'sales.history.emptyHint': 'Ajustá la búsqueda o el rango de fechas y volvé a filtrar.',
+  'sales.history.col.id': 'ID',
+  'sales.history.col.date': 'Fecha',
+  'sales.history.col.client': 'Cliente',
+  'sales.history.col.total': 'Total',
+  'sales.history.col.status': 'Estado',
+  'sales.history.col.actions': 'Acciones',
+  'sales.history.totalAmount': 'Importe Total',
+  'sales.history.details': 'Detalles',
+  'sales.history.viewDetail': 'Ver Detalle',
+  'sales.history.viewAria': 'Ver detalle',
+  'sales.history.moreAria': 'Más acciones',
+  'sales.history.cancelSale': 'Anular Venta',
+
+  // Wizard de checkout
+  'sales.checkoutWizard.stepsAria': 'Pasos del checkout',
+  'sales.checkoutWizard.cartReview': 'Cart Review',
 }

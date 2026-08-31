@@ -4,7 +4,7 @@
  * Honra el store global de atajos personalizables (useKeyboardShortcutsStore):
  * el atajo principal de avance/confirmación es `sales.processSale` (Ctrl+G por
  * defecto, configurable por el usuario). Se mantienen alias de compatibilidad
- * (F12, Enter) para no romper el hábito de los operadores.
+ * (F12, Ctrl+Enter, Enter) para no romper el hábito de los operadores.
  *
  * F2 → foco al primer input del paso actual.
  * F3 → foco al buscador de cliente (solo útil en ClientStep; el callback lo
@@ -81,6 +81,14 @@ export function useCheckoutShortcuts(
 
       // Alias de compatibilidad: F12 = acción principal.
       if (e.key === 'F12') {
+        e.preventDefault()
+        if (handlers.enabled !== false) handlers.onPrimary()
+        return
+      }
+
+      // Alias Ctrl+Enter = acción principal (funciona dentro y fuera de inputs;
+      // precede al Enter-simple para que el modificador no lo dispare dos veces).
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault()
         if (handlers.enabled !== false) handlers.onPrimary()
         return
