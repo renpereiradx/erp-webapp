@@ -7,7 +7,7 @@ name: Precision Air
 # hex: se usan las clases Tailwind ya generadas (ver tablas en el cuerpo).
 # ─────────────────────────────────────────────────────────────────────────────
 colors:
-  background: '#f8f9ff'
+  background: '#e9edf6'
   surface-dim: '#d7dae2'
   surface: '#ffffff'
   surface-muted: '#f1f3fc'
@@ -191,7 +191,7 @@ construye con peso tipográfico y tono de superficie, no con bordes ni sombras f
 
 | Necesidad | Clase | Hex | Regla |
 |:----------|:------|:----|:------|
-| Fondo de página | `bg-background` | `#f8f9ff` | SIEMPRE el lienzo base. Nunca blanco puro ni grises de Tailwind. |
+| Fondo de página | `bg-background` | `#e9edf6` | SIEMPRE el lienzo base (más oscuro que `surface` para que las cards despeguen). Nunca blanco puro ni grises de Tailwind. |
 | Card, modal, panel principal | `bg-surface` | `#ffffff` | El contenido "flota" sobre el fondo. |
 | Sidebar, zona secundaria, header de tabla | `bg-surface-muted` | `#f1f3fc` | Separación sutil sin bordes. |
 | Hover de filas / estados sutiles | `bg-surface-muted` | `#f1f3fc` | Mismo token, contexto hover. |
