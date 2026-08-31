@@ -60,3 +60,5 @@ validation-*.html
 *_DRAFT.*
 *_TODO.*
 *_TEMP.*
+# ZCode local session state
+.zcode/
