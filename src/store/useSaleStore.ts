@@ -298,6 +298,11 @@ const useSaleStore = create<SaleState>()(
               count: response.data?.length || 0,
               params: JSON.stringify(params),
             })
+          } else {
+            // Sin flag success (p.ej. respuesta demo o shape inesperado) el
+            // loading debe limpiarse igual: si no, el historial queda en
+            // skeleton para siempre.
+            set({ loading: false })
           }
 
           return response
@@ -324,6 +329,8 @@ const useSaleStore = create<SaleState>()(
               count: response.data?.length || 0,
               client_name: clientName,
             })
+          } else {
+            set({ loading: false })
           }
 
           return response
