@@ -12,7 +12,31 @@ import usePriceAdjustmentNewStore from '@/store/usePriceAdjustmentNewStore';
 import { priceAdjustmentService } from '@/services/priceAdjustmentService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { variantService } from '@/services/variantService';
+import { getGroupedUnitOptions, getUnitLabel } from '@/constants/units';
 import useAuthStore from '@/store/useAuthStore';
+
+// Devuelve el precio de una unidad concreta dentro de unit_prices, o null si no existe.
+// Evita tomar ciegamente unit_prices[0] (que el backend ordena alfabéticamente por unidad,
+// no por relevancia): para un producto con unit/hour, el precio correcto es el de la unidad
+// seleccionada (p. ej. base_unit), no el que aparece primero en el array.
+const getUnitPriceFor = (unitList, unit) => {
+  const up = (unitList || []).find(u => u.unit === unit);
+  return up ? up.price_per_unit : null;
+};
+
+// Devuelve la unidad con el precio más recientemente actualizado (por updated_at).
+const getMostRecentUnit = (unitList) => {
+  const sorted = [...(unitList || [])].sort(
+    (a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
+  );
+  return sorted[0]?.unit || null;
+};
+
+// Valores de unidad del catálogo compartido (una sola vez). Se usa para no perder
+// el valor actual en el <select> si una unidad viene fuera del catálogo (legacy).
+const CATALOG_UNIT_VALUES = new Set(
+  getGroupedUnitOptions().flatMap(g => g.options.map(o => o.value))
+);
 
 const PriceAdjustmentDetail = () => {
   const { t } = useI18n();
@@ -28,7 +52,7 @@ const PriceAdjustmentDetail = () => {
   // Estado del formulario
   const [formData, setFormData] = useState({
     new_price: '',
-    unit: 'UNIT',
+    unit: 'unit',
     reason: '',
     reasonTemplate: '',
     approved_by: '',
@@ -169,6 +193,19 @@ const PriceAdjustmentDetail = () => {
     }
   }, [product, activeBranch]);
 
+  // Pre-seleccionar la unidad: base_unit si tiene precio, si no la de actualización más
+  // reciente. Esto evita que "Precio Actual" muestre el precio de una unidad equivocada.
+  useEffect(() => {
+    if (!product) return;
+    const base = product.base_unit;
+    const units = (product.unit_prices || []).map(u => u.unit);
+    let def = base;
+    if (!def || !units.includes(def)) {
+      def = getMostRecentUnit(product.unit_prices) || 'unit';
+    }
+    setFormData(prev => (prev.unit === def ? prev : { ...prev, unit: def }));
+  }, [product]);
+
   // Función para cargar el historial de ajustes (compartida entre montaje y actualización)
   const loadHistory = useCallback(async () => {
     if (!product || !product.product_id) return;
@@ -244,9 +281,10 @@ const PriceAdjustmentDetail = () => {
     }
 
     const selectedVariant = variants.find(v => v.variant_id === selectedVariantId);
-    const currentOldPrice = selectedVariant
-      ? (selectedVariant.unit_prices?.[0]?.price_per_unit || selectedVariant.current_price || selectedVariant.price || 0)
-      : (product.unit_prices?.[0]?.price_per_unit || product.current_price || product.price || 0);
+    const unitPricesForSubmit = selectedVariant ? selectedVariant.unit_prices : product.unit_prices;
+    const currentOldPrice = getUnitPriceFor(unitPricesForSubmit, formData.unit)
+      ?? (selectedVariant ? (selectedVariant.current_price ?? selectedVariant.price) : (product.current_price ?? product.price))
+      ?? 0;
 
     const newPrice = parseFloat(formData.new_price)
 
@@ -294,9 +332,10 @@ const PriceAdjustmentDetail = () => {
 
   // Handle different price formats from API (financial endpoint returns unit_prices array)
   const selectedVariant = variants.find(v => v.variant_id === selectedVariantId);
-  const currentPrice = selectedVariant
-    ? (selectedVariant.unit_prices?.[0]?.price_per_unit || selectedVariant.current_price || selectedVariant.price || 0)
-    : (product.unit_prices?.[0]?.price_per_unit || product.current_price || product.price || 0);
+  const unitPricesForDisplay = selectedVariant ? selectedVariant.unit_prices : product.unit_prices;
+  const currentPrice = getUnitPriceFor(unitPricesForDisplay, formData.unit)
+    ?? (selectedVariant ? (selectedVariant.current_price ?? selectedVariant.price) : (product.current_price ?? product.price))
+    ?? 0;
 
   const isFormValid = formData.new_price && formData.reason.trim().length >= 10 && Object.keys(formErrors).length === 0;
 
@@ -333,6 +372,7 @@ const PriceAdjustmentDetail = () => {
               </p>
               <h2 className='text-3xl font-black text-text-main break-words'>
                 PYG {currentPrice.toLocaleString('es-PY')}
+                <span className='text-base font-bold text-text-secondary'>{' / '}{getUnitLabel(formData.unit)}</span>
               </h2>
             </div>
             <div className='shrink-0 size-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center'>
@@ -375,7 +415,7 @@ const PriceAdjustmentDetail = () => {
                     <option value="">{t('priceAdjustmentDetail.variant.base', 'Producto Principal (General)')}</option>
                     {variants.map(v => (
                       <option key={v.variant_id} value={v.variant_id}>
-                        {v.variant_name} {v.sku ? `(${v.sku})` : ''} - PYG {(v.unit_prices?.[0]?.price_per_unit || v.current_price || v.price || 0).toLocaleString('es-PY')}
+                        {v.variant_name} {v.sku ? `(${v.sku})` : ''} - PYG {(getUnitPriceFor(v.unit_prices, formData.unit) ?? v.current_price ?? v.price ?? 0).toLocaleString('es-PY')}
                       </option>
                     ))}
                   </select>
@@ -412,10 +452,14 @@ const PriceAdjustmentDetail = () => {
                     onChange={handleChange}
                     className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   >
-                    <option value="UNIT">{t('priceAdjustmentDetail.unit.unit', 'unidad')}</option>
-                    <option value="kg">{t('priceAdjustmentDetail.unit.kg', 'kg')}</option>
-                    <option value="meter">{t('priceAdjustmentDetail.unit.meter', 'metro')}</option>
-                    <option value="pack">{t('priceAdjustmentDetail.unit.pack', 'paquete')}</option>
+                    {!CATALOG_UNIT_VALUES.has(formData.unit) && (
+                      <option value={formData.unit}>{formData.unit}</option>
+                    )}
+                    {getGroupedUnitOptions().map(group => (
+                      <optgroup key={group.label} label={group.label} className="font-black uppercase text-[10px]">
+                        {group.options.map(opt => <option key={opt.value} value={opt.value} className="font-bold">{opt.label}</option>)}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
               </div>
