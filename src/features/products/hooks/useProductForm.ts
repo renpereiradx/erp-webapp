@@ -15,6 +15,7 @@ export const baseProductSchema = z.object({
   base_unit: z.string().default('unit'),
   tax_rate_id: z.string().optional(),
   is_variable_measure: z.boolean().default(false),
+  is_bookable: z.boolean().default(false),
   scale_code: z.string().optional(),
 });
 
@@ -51,6 +52,15 @@ export const productSchema = baseProductSchema.superRefine((data, ctx) => {
       path: ["is_variable_measure"]
     });
   }
+
+  // D-SR-4: reservable solo para servicios (se venden por franja horaria).
+  if (data.is_bookable && data.productType !== 'SERVICE') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Solo los productos de tipo Servicio pueden ser reservables",
+      path: ["is_bookable"]
+    });
+  }
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;
@@ -78,6 +88,7 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
     base_unit: 'unit',
     tax_rate_id: '',
     is_variable_measure: false,
+    is_bookable: false,
     scale_code: '',
   });
 
@@ -146,13 +157,14 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
           base_unit: product.base_unit || 'unit',
           tax_rate_id: (product.override_tax_rate_id || product.tax_rate_id)?.toString() || '',
           is_variable_measure: product.is_variable_measure || false,
+          is_bookable: product.is_bookable || false,
           scale_code: product.scale_code || '',
         });
       } else {
         setFormData({
           name: '', category: '', productType: 'PHYSICAL', description: '',
           barcode: '', brand_id: '', origin: '', base_unit: 'unit', tax_rate_id: '',
-          is_variable_measure: false, scale_code: '',
+          is_variable_measure: false, is_bookable: false, scale_code: '',
         });
       }
       setErrors({});
@@ -216,6 +228,9 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
         base_unit: formData.base_unit || 'unit',
         override_tax_rate_id: formData.tax_rate_id ? parseInt(formData.tax_rate_id) : undefined,
         is_variable_measure: formData.is_variable_measure,
+        // Reservabilidad explícita (D-SR-4): el schema ya garantiza
+        // is_bookable ⇒ SERVICE; solo SERVICE envía el flag.
+        is_bookable: formData.productType === 'SERVICE' ? formData.is_bookable : false,
         scale_code: formData.is_variable_measure ? (formData.scale_code?.trim() || null) : null,
         state: true,
         is_active: true,

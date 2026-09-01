@@ -310,7 +310,14 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                         <select
                           name="productType"
                           value={formData.productType}
-                          onChange={handleChange}
+                          onChange={e => {
+                            handleChange(e);
+                            // Al salir de SERVICE el flag deja de tener sentido
+                            // (D-SR-4: reservable ⇒ SERVICE) y se resetea.
+                            if (e.target.value !== 'SERVICE') {
+                              setFormData(prev => ({ ...prev, is_bookable: false }));
+                            }
+                          }}
                           className={selectClass}
                         >
                           <option value="PHYSICAL">{t('products.type.physical')}</option>
@@ -321,6 +328,33 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                       </div>
                     </div>
                   </div>
+
+                  {/* Reservable (agenda) — solo SERVICE (D-SR-4) */}
+                  {formData.productType === 'SERVICE' && (
+                    <div className="flex items-center justify-between p-4 bg-slate-50/50 border border-border-subtle rounded-xl transition-all duration-200 hover:bg-slate-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="flex flex-col pr-3">
+                        <span className="text-xs font-bold text-text-main">{t('products.modal.field.bookable')}</span>
+                        <span className="text-[9px] text-text-secondary font-black uppercase tracking-wider mt-0.5">{t('products.modal.field.bookableHint')}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, is_bookable: !prev.is_bookable }))}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-primary/15 ${
+                          formData.is_bookable ? 'bg-primary' : 'bg-slate-200'
+                        }`}
+                        role="switch"
+                        aria-checked={formData.is_bookable}
+                        data-testid="product-bookable-switch"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-background shadow-md ring-0 transition duration-200 ease-in-out ${
+                            formData.is_bookable ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  )}
 
                   {/* Descripción */}
                   <div className="space-y-1.5">

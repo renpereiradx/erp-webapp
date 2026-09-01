@@ -125,6 +125,8 @@ export const products = {
   'products.modal.field.category': 'Categoría',
   'products.modal.field.purchase_price': 'Precio de Compra',
   'products.modal.field.product_type': 'Tipo de Producto',
+  'products.modal.field.bookable': 'Reservable (agenda de horarios)',
+  'products.modal.field.bookableHint': 'Se vende por franja horaria en la agenda',
   'products.modal.field.description': 'Descripción',
   'products.modal.field.barcode': 'Código de Barras',
   'products.modal.field.brand': 'Marca',
