@@ -41,6 +41,7 @@ import { reservationService } from '@/services/reservationService';
 import type { WalkInSpec } from '@/features/sales/components/steps/WalkInReservationForm';
 import { useI18n } from '@/lib/i18n';
 import { toApiError } from '@/utils/ApiError';
+import { formatCurrency } from '@/utils/currencyUtils';
 import { isDecimalUnit } from '@/constants/units';
 import ToastContainer from '@/components/ui/ToastContainer';
 
@@ -1339,6 +1340,13 @@ const SalesNew: React.FC = () => {
               // divisa, los metadatos describen qué entregó el cliente y a qué
               // tasa. El backend valida la tasa y completa original_amount.
               amount_received: collection.amountReceived,
+              // Cobro parcial: aplica al saldo solo lo tipeado en "monto a
+              // aplicar"; la diferencia con lo recibido es vuelto. La venta
+              // nace PARTIAL_PAYMENT con el resto como saldo (backend la
+              // crea con saldo; después se abona con cobros parciales).
+              ...(collection.amountToApply != null && {
+                amount_to_apply: collection.amountToApply,
+              }),
               payment_method_id: collection.paymentMethodId || Number(paymentMethodId) || 0,
               // Caja opcional: si el operador la eligió en el paso de cobro se
               // envía; sin caja, el backend procesa el pago sin caja (nunca
@@ -1369,7 +1377,22 @@ const SalesNew: React.FC = () => {
           }
 
           const saleId = result?.sale?.sale_id || '';
-          toast.success(saleId ? `Venta #${saleId} cobrada exitosamente` : 'Cobro registrado exitosamente');
+          if (collection.amountToApply != null && collection.amountToApply < total) {
+            // Cobro parcial: la venta quedó con saldo pendiente; avisar en
+            // lugar de "cobrada exitosamente" para que no se confunda con PAID.
+            toast.info(
+              t(
+                'sales.checkoutWizard.partialCollectionToast',
+                'Cobro parcial registrado: {applied}. Saldo pendiente: {pending}.',
+                {
+                  applied: formatCurrency(collection.amountToApply),
+                  pending: formatCurrency(Math.max(0, total - collection.amountToApply)),
+                },
+              ),
+            );
+          } else {
+            toast.success(saleId ? `Venta #${saleId} cobrada exitosamente` : 'Cobro registrado exitosamente');
+          }
         } else {
           toast.error('No hay datos de venta para procesar');
           return;

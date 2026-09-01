@@ -418,6 +418,22 @@ export const sales = {
   'sales.checkoutWizard.collection.exact': 'Exacto',
   'sales.checkoutWizard.collection.notes': 'Notas (opcional)',
   'sales.checkoutWizard.collection.notesPlaceholder': 'Notas del cobro...',
+  'sales.checkoutWizard.collection.amountToApply': 'Monto a aplicar al saldo (opcional)',
+  'sales.checkoutWizard.collection.applyPlaceholder': 'Aplicar todo lo recibido',
+  'sales.checkoutWizard.collection.amountToApplyHint':
+    'Vacío = aplica todo. Si aplicás menos, la diferencia queda como saldo pendiente en la venta.',
+  'sales.checkoutWizard.collection.pendingBalance': 'Saldo pendiente',
+  'sales.checkoutWizard.collection.pendingAfterChange': 'Saldo: {amount}',
+  'sales.checkoutWizard.collection.exactCollection': 'Cobro exacto',
+  'sales.checkoutWizard.collection.cashShortfall': 'Falta efectivo',
+  'sales.checkoutWizard.collection.cashShortfallHint':
+    'El monto a aplicar no puede superar el efectivo recibido. Ajustá los montos.',
+  'sales.checkoutWizard.partialCollectionToast':
+    'Cobro parcial registrado: {applied}. Saldo pendiente: {pending}.',
+  'sales.checkoutWizard.pendingSales.newSaleRow': 'Nueva venta',
+  'sales.checkoutWizard.pendingSales.newSaleRowHint':
+    'El carrito actual se cobra como una venta aparte',
+  'sales.checkoutWizard.pendingSales.moreItems': '+{count} más',
 
   // ─── Cobros de ventas (página SalePayment) ───────────────────────────────
   'sales.payments.confirmSuccess': 'Cobro registrado exitosamente',

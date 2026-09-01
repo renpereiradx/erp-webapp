@@ -2,9 +2,14 @@
  * CollectionStep — paso final del SaleCheckoutWizard.
  *
  * Selección de caja de cobro (precarga la caja activa del operador) + monto
- * recibido + cálculo de vuelto en vivo. El orquestador decide qué hacer al
- * confirmar (pos-checkout atómico o dejar pendiente); este paso solo recoge
- * los datos del cobro y reporta el estado de validez.
+ * recibido + monto a aplicar + cálculo de vuelto en vivo. El orquestador
+ * decide qué hacer al confirmar (pos-checkout atómico o dejar pendiente);
+ * este paso solo recoge los datos del cobro y reporta el estado de validez.
+ *
+ * Cobro parcial: lo que el cliente ENTREGA (monto recibido) es independiente
+ * de lo que se APLICA al saldo (monto a aplicar). Entregar un billete mayor
+ * a lo que el cliente quiere pagar devuelve vuelto; aplicar menos que el
+ * total deja saldo pendiente en la venta (queda PARTIAL_PAYMENT).
  *
  * Cobro en divisa: con foreignCurrency activo, el monto recibido se carga en
  * ESA divisa (lo que el cliente entrega físicamente) y el VUELTO se da en
@@ -12,7 +17,7 @@
  * monto aplicado al saldo viaja siempre en moneda base.
  */
 import { forwardRef, useImperativeHandle, useEffect, useMemo, useRef, useState } from 'react'
-import { Calculator, AlertTriangle, Info } from 'lucide-react'
+import { Calculator, AlertTriangle, Info, Banknote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cashRegisterService } from '@/services/cashRegisterService'
@@ -24,6 +29,13 @@ import {
   computeForeignChange,
   computeBaseChange,
 } from '@/domain/sale/calculations/foreignPayment'
+import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput'
+import {
+  computeAppliedAmount,
+  computeCollectionChange,
+  computePendingBalance,
+  computeCashShortfall,
+} from '@/domain/sale/calculations/collectionSplit'
 import {
   partitionOpenRegisters,
   resolveDefaultRegisterId,
@@ -37,6 +49,14 @@ export interface CollectionStepRef {
 export interface CollectionData {
   /** Monto aplicado al saldo, SIEMPRE en la moneda del documento (base). */
   amountReceived: number
+  /**
+   * Parte del efectivo que entra al saldo (null = aplicar todo lo recibido).
+   * La diferencia con amountReceived es VUELTO; la diferencia con el total
+   * queda como SALDO PENDIENTE en la venta.
+   */
+  amountToApply: number | null
+  /** Efectivo que falta para cubrir lo aplicado (> 0 bloquea Confirmar). */
+  cashShortfall: number
   paymentMethodId: number
   cashRegisterId: number | null
   notes: string | null
@@ -96,9 +116,13 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
     const [isLoadingRegisters, setIsLoadingRegisters] = useState(false)
     // En modo divisa, lo que tipea el operador es lo que entrega el cliente
     // (en ESA divisa); en modo base, el monto en guaraníes como siempre.
+    // Estado SIEMPRE canónico (dígitos); el formateo de miles es solo display.
     const [amountInput, setAmountInput] = useState<string>(() =>
       isForeign && foreignDue > 0 ? String(foreignDue) : String(totalAmount || ''),
     )
+    // Monto a APLICAR al saldo (cobro parcial): vacío = aplicar todo lo
+    // recibido. Solo aplica al cobro en efectivo en moneda base.
+    const [applyInput, setApplyInput] = useState('')
     const [notes, setNotes] = useState('')
     const [showNotes, setShowNotes] = useState(false)
 
@@ -167,8 +191,27 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
         : isForeign
           ? totalAmount
           : typedAmount
+
+      // Lo aplicado al saldo: en no-efectivo (y en divisa, donde no hay input
+      // de aplicación) el backend aplica min(recibido, total). En efectivo en
+      // base manda lo tipeado en "monto a aplicar" (vacío = todo lo recibido).
+      const appliedBase = !isCash
+        ? totalAmount
+        : isForeign
+          ? Math.min(baseReceived, totalAmount)
+          : computeAppliedAmount(Number(applyInput) || 0, typedAmount, totalAmount)
+      const shortfall =
+        !isCash || isForeign ? 0 : computeCashShortfall(typedAmount, appliedBase)
+
       onDataChange({
         amountReceived: baseReceived,
+        amountToApply:
+          !isCash || isForeign
+            ? null
+            : Number(applyInput) > 0
+              ? appliedBase
+              : null,
+        cashShortfall: shortfall,
         paymentMethodId: Number(paymentMethodId) || 0,
         cashRegisterId: cashRegisterId ? Number(cashRegisterId) : null,
         notes: notes.trim() || null,
@@ -177,14 +220,27 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
         foreignAmountReceived: foreignReceived,
       })
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [amountInput, cashRegisterId, notes, paymentMethodId, isForeign, foreignDue, rate])
+    }, [amountInput, applyInput, cashRegisterId, notes, paymentMethodId, isForeign, foreignDue, rate])
 
     // Vuelto: se entrega en guaraníes (base). La cifra en divisa es solo
     // referencia para el operador.
     const foreignChange = computeForeignChange(Number(amountInput) || 0, foreignDue)
-    const baseChange = isForeign
-      ? computeBaseChange(Number(amountInput) || 0, rate, totalAmount)
-      : Math.max(0, (Number(amountInput) || 0) - totalAmount)
+
+    // Desglose del cobro en base: recibido vs aplicado vs total.
+    const typedReceived = Number(amountInput) || 0
+    const appliedAmount = !isCash
+      ? totalAmount
+      : isForeign
+        ? Math.min(computeBaseFromForeign(typedReceived, rate), totalAmount)
+        : computeAppliedAmount(Number(applyInput) || 0, typedReceived, totalAmount)
+    const changeAmount = isForeign
+      ? computeBaseChange(typedReceived, rate, totalAmount)
+      : computeCollectionChange(typedReceived, appliedAmount)
+    const pendingAmount = computePendingBalance(totalAmount, appliedAmount)
+    const shortfallAmount = isCash && !isForeign ? computeCashShortfall(typedReceived, appliedAmount) : 0
+    const hasShortfall = shortfallAmount > 0
+    const hasChange = changeAmount > 0
+    const hasPending = pendingAmount > 0
 
     return (
       <div className="space-y-5">
@@ -265,11 +321,10 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
               </label>
               <Input
                 ref={amountRef}
-                type="number"
-                min="0"
-                step={isForeign ? '0.01' : '1'}
-                value={amountInput}
-                onChange={(e) => setAmountInput(e.target.value)}
+                type="text"
+                inputMode="numeric"
+                value={formatNumberInput(amountInput)}
+                onChange={(e) => setAmountInput(parseNumberInput(e.target.value))}
                 className="h-14 text-2xl font-bold font-data-mono px-4"
                 placeholder="0"
               />
@@ -285,6 +340,35 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
                 </p>
               )}
             </div>
+
+            {/* Monto a aplicar (cobro parcial, solo efectivo en moneda base):
+                cuánto de lo recibido entra al saldo. Vacío = todo. */}
+            {!isForeign && (
+              <div>
+                <label
+                  htmlFor="wizard-amount-apply"
+                  className="text-xs font-bold uppercase text-on-surface-deep flex items-center gap-2 mb-2"
+                >
+                  <Banknote size={14} />
+                  {t('sales.checkoutWizard.collection.amountToApply', 'Monto a aplicar al saldo (opcional)')}
+                </label>
+                <Input
+                  id="wizard-amount-apply"
+                  type="text"
+                  inputMode="numeric"
+                  value={formatNumberInput(applyInput)}
+                  onChange={(e) => setApplyInput(parseNumberInput(e.target.value))}
+                  className="h-12 text-xl font-bold font-data-mono px-4"
+                  placeholder={t('sales.checkoutWizard.collection.applyPlaceholder', 'Aplicar todo lo recibido')}
+                />
+                <p className="mt-1.5 text-xs text-on-surface-deep">
+                  {t(
+                    'sales.checkoutWizard.collection.amountToApplyHint',
+                    'Vacío = aplica todo. Si aplicás menos, la diferencia queda como saldo pendiente en la venta.',
+                  )}
+                </p>
+              </div>
+            )}
 
             {isForeign ? (
               // En divisa los billetes rápidos en guaraníes no aplican; queda
@@ -323,24 +407,64 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
               </div>
             )}
 
-            <div className="p-4 bg-foreground rounded-md flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-on-surface-deep">
-                  {t('sales.checkoutWizard.change', 'Vuelto')}
+            {/* Franja de resolución del cobro: vuelto a entregar y/o saldo
+                pendiente que queda en la venta. En tinte de error cuando el
+                efectivo no cubre lo aplicado (bloquea Confirmar). */}
+            <div
+              className={`p-4 rounded-md border flex items-start justify-between gap-3 ${
+                hasShortfall ? 'bg-error/10 border-error/30' : 'bg-success/10 border-success/30'
+              }`}
+              data-testid="wizard-change-strip"
+            >
+              <div className="min-w-0">
+                <span
+                  className={`text-xs font-bold uppercase tracking-widest ${
+                    hasShortfall ? 'text-error' : 'text-on-surface-deep'
+                  }`}
+                >
+                  {hasShortfall
+                    ? t('sales.checkoutWizard.collection.cashShortfall', 'Falta efectivo')
+                    : hasChange
+                      ? t('sales.checkoutWizard.change', 'Vuelto a entregar')
+                      : hasPending
+                        ? t('sales.checkoutWizard.collection.pendingBalance', 'Saldo pendiente')
+                        : t('sales.checkoutWizard.collection.exactCollection', 'Cobro exacto')}
                 </span>
                 {isForeign && (
-                  <p className="text-[10px] text-on-surface-deep/70 uppercase tracking-wide">
+                  <p className="text-[10px] text-on-surface-deep/80 uppercase tracking-wide mt-0.5">
                     {t('sales.checkoutWizard.collection.changeInBase', 'se entrega en {base}', {
                       base: currencyCode,
                     })}
                   </p>
                 )}
+                {hasShortfall ? (
+                  <p className="text-xs text-error mt-1">
+                    {t(
+                      'sales.checkoutWizard.collection.cashShortfallHint',
+                      'El monto a aplicar no puede superar el efectivo recibido. Ajustá los montos.',
+                    )}
+                  </p>
+                ) : hasChange && hasPending ? (
+                  <p className="text-xs text-on-surface-deep mt-1 font-data-mono">
+                    {t('sales.checkoutWizard.collection.pendingAfterChange', 'Saldo: {amount}', {
+                      amount: formatCurrency(pendingAmount, currencyCode),
+                    })}
+                  </p>
+                ) : null}
               </div>
-              <div className="flex flex-col items-end">
-                <span className="text-headline-lg-mobile font-data-mono text-success">
-                  {formatCurrency(baseChange, currencyCode)}
+              <div className="flex flex-col items-end shrink-0">
+                <span
+                  className={`text-headline-lg-mobile font-data-mono font-bold ${
+                    hasShortfall ? 'text-error' : 'text-success'
+                  }`}
+                >
+                  {hasShortfall
+                    ? formatCurrency(shortfallAmount, currencyCode)
+                    : hasChange
+                      ? formatCurrency(changeAmount, currencyCode)
+                      : formatCurrency(pendingAmount, currencyCode)}
                 </span>
-                {isForeign && foreignChange > 0 && (
+                {isForeign && !hasShortfall && foreignChange > 0 && (
                   <span className="text-xs text-on-surface-deep font-data-mono">
                     ≈ {formatCurrency(foreignChange, foreignCode)}
                   </span>

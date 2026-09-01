@@ -20,6 +20,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { ExchangeRateService } from '@/services/exchangeRateService'
 import { computeForeignDue } from '@/domain/sale/calculations/foreignPayment'
+import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput'
 import { formatCurrency } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
@@ -216,13 +217,12 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
                 </label>
                 <Input
                   id="wizard-exchange-rate"
-                  type="number"
-                  step="0.0001"
-                  min="0"
-                  value={exchangeRate}
-                  onChange={(e) => setExchangeRate(e.target.value)}
+                  type="text"
+                  inputMode="decimal"
+                  value={formatNumberInput(exchangeRate)}
+                  onChange={(e) => setExchangeRate(parseNumberInput(e.target.value))}
                   className="h-10 font-data-mono"
-                  placeholder="0.00"
+                  placeholder="0,00"
                 />
                 <p className="text-body-sm text-on-surface-deep">
                   {t(

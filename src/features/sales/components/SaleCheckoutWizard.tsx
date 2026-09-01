@@ -113,11 +113,14 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
   const [exchangeRate, setExchangeRate] = useState('')
 
   // ─── Estado de ventas pendientes (selección local) ──────────────────────
+  // 0 = fila "Nueva venta" (seleccionada por defecto); i>=1 = activeSales[i-1].
   const [pendingIndex, setPendingIndex] = useState(0)
 
   // ─── Datos del paso de cobro (reportados por CollectionStep) ────────────
   const [collectionData, setCollectionData] = useState<CollectionData>({
     amountReceived: 0,
+    amountToApply: null,
+    cashShortfall: 0,
     paymentMethodId: Number(paymentMethodId) || 0,
     cashRegisterId: null,
     notes: null,
@@ -256,9 +259,10 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
         // backend sin currency_id (registrando guaraníes que eran dólares).
         return !!paymentMethodId && (!isForeignCollection || foreignRate > 0)
       case 'collection':
-        // Efectivo: sin monto recibido no hay cobro. (En no-efectivo el paso
-        // siempre reporta el total del documento como monto recibido.)
-        return !isCashMethod || collectionData.amountReceived > 0
+        // Efectivo: sin monto recibido no hay cobro, y el monto a aplicar no
+        // puede superar el efectivo recibido (falta efectivo). (En
+        // no-efectivo el paso siempre reporta el total como monto recibido.)
+        return !isCashMethod || (collectionData.amountReceived > 0 && collectionData.cashShortfall <= 0)
       default:
         return false
     }
@@ -282,10 +286,11 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     if (isProcessingSale) return
 
     // En el paso de pendientes, "continuar" ejecuta el merge antes de avanzar.
-    // Sin selección (pendingIndex = -1) se omite: la venta sigue siendo nueva.
-    if (currentStep === 'pending' && pendingIndex >= 0) {
+    // pendingIndex 0 = fila "Nueva venta" (default): avanzar sigue como venta
+    // nueva sin merge; i>=1 continúa la venta activeSales[i-1].
+    if (currentStep === 'pending' && pendingIndex > 0) {
       try {
-        await onContinueSale(pendingIndex)
+        await onContinueSale(pendingIndex - 1)
       } catch {
         return // el error lo maneja SalesNew (toast SALE_ALREADY_PAID, etc.)
       }
@@ -323,7 +328,8 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
       if (currentStep === 'pending') setPendingIndex((i) => Math.max(i - 1, 0))
     },
     onArrowDown: () => {
-      if (currentStep === 'pending') setPendingIndex((i) => Math.min(i + 1, activeSales.length - 1))
+      // Filas 0..N: 0 = "Nueva venta", 1..N = ventas pendientes.
+      if (currentStep === 'pending') setPendingIndex((i) => Math.min(i + 1, activeSales.length))
     },
     enabled: isStepValid(),
   })
@@ -469,9 +475,10 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                   variant="outline"
                   onClick={() => {
                     // Limpia el estado de merge y avanza: la venta queda como
-                    // nueva (sin continuar la pendiente seleccionada).
+                    // nueva (sin continuar la pendiente seleccionada). La
+                    // selección vuelve a la fila "Nueva venta" (default).
                     onNewSale()
-                    setPendingIndex(-1)
+                    setPendingIndex(0)
                     goToNextStep()
                   }}
                   className="w-full h-11"
