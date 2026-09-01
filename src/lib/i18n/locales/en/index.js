@@ -14,6 +14,7 @@ import { receivables } from './receivables'
 import { purchasePaymentsMvp } from './purchasePaymentsMvp'
 import { party } from './party'
 import { fiscal } from './fiscal'
+import { businessPrefs } from './businessPrefs'
 import { es } from '../es/index'
 
 /**
@@ -40,6 +41,7 @@ export const en = {
   ...purchasePaymentsMvp,
   ...party,
   ...fiscal,
+  ...businessPrefs,
   // TODO: Add English translations for new modules:
   // - clients
   // - suppliers

@@ -6,6 +6,7 @@
 
 import { useI18n } from '@/lib/i18n'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import {
   Moon,
@@ -19,6 +20,7 @@ import {
   Command,
   Scale,
   ArrowRightLeft,
+  SlidersHorizontal,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -104,6 +106,16 @@ const systemNavRows: NavRow[] = [
   },
 ]
 
+/** Fila admin (settings:write): toggles de módulos del negocio. */
+const businessPrefsRow: NavRow = {
+  icon: SlidersHorizontal,
+  titleKey: 'businessPrefs.title',
+  titleFallback: 'Preferencias del negocio',
+  descKey: 'businessPrefs.generic.description',
+  descFallback: 'Configuración global de este negocio.',
+  href: '/configuracion/preferencias',
+}
+
 interface SectionTitleProps {
   labelKey: string
   fallback: string
@@ -155,6 +167,7 @@ function NavCardRow({ row }: { row: NavRow }) {
 export default function SettingsPage() {
   const { t } = useI18n()
   const { toggleTheme, isDark } = useTheme()
+  const { hasPermission } = useAuth()
 
   return (
     <div className="min-h-screen bg-background">
@@ -260,6 +273,7 @@ export default function SettingsPage() {
                   {systemNavRows.map((row) => (
                     <NavCardRow key={row.href} row={row} />
                   ))}
+                  {hasPermission('settings:write') && <NavCardRow row={businessPrefsRow} />}
                 </div>
               </CardContent>
             </Card>

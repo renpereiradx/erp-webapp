@@ -88,11 +88,14 @@ export const distinctSearchableRoutes = [
   },
 
   // Reservas y Horarios
+  // requiredModule: con el módulo desactivado (business settings) el palette
+  // no debe ofrecer una ruta que redirige con toast (route guard).
   {
     name: 'Gestión de Agenda y Reservas',
     href: '/gestion-agenda',
     icon: CalendarCheck,
-    category: 'Reservas'
+    category: 'Reservas',
+    requiredModule: 'reservations'
   },
 
   // Inventario y Precios

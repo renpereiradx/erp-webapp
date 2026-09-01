@@ -62,6 +62,7 @@ import { AttributesPage } from '@/pages/AttributesPage'
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import Settings from '@/pages/Settings'
+import BusinessPreferencesPage from '@/features/settings/components/BusinessPreferencesPage'
 import BranchManagement from '@/pages/BranchManagement'
 import UserManagementList from '@/pages/UserManagementList.tsx'
 import UserDetailedProfile from '@/pages/UserDetailedProfile.tsx'
@@ -410,6 +411,11 @@ function AppContent() {
 
                       {/* Configuración */}
                       <Route path='/configuracion' element={<Settings />} />
+                      <Route path='/configuracion/preferencias' element={
+                        <PermissionGuard permission="settings:write">
+                          <BusinessPreferencesPage />
+                        </PermissionGuard>
+                      } />
                       <Route path='/configuracion/perfil' element={<MyProfileAndSecurity />} />
                       <Route path='/configuracion/sucursales' element={
                         <RoleGuard allowedRoles={['F2VLso']}>

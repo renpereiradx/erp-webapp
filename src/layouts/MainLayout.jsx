@@ -593,6 +593,12 @@ const MainLayout = ({ children }) => {
               },
             ],
           },
+          {
+            name: t('businessPrefs.title', 'Preferencias del negocio'),
+            href: '/configuracion/preferencias',
+            icon: SlidersHorizontal,
+            permission: 'settings:write'
+          },
           { name: t('settings.title', 'Ajustes Generales'), href: '/configuracion', icon: Settings },
         ],
       },
@@ -697,6 +703,8 @@ const MainLayout = ({ children }) => {
     // Agregar rutas buscables adicionales que no están en el sidebar
     if (distinctSearchableRoutes && Array.isArray(distinctSearchableRoutes)) {
       distinctSearchableRoutes.forEach(route => {
+        // Gates por módulo del negocio (ej. reservas desactivadas)
+        if (route.requiredModule === 'reservations' && !reservationsEnabled) return
         // Evitar duplicados si ya están en el menú de navegación
         if (!items.some(item => item.href === route.href)) {
           items.push({
@@ -737,7 +745,7 @@ const MainLayout = ({ children }) => {
       
       return !isBI
     })
-  }, [navigation, distinctSearchableRoutes])
+  }, [navigation, distinctSearchableRoutes, reservationsEnabled])
 
   const normalizeText = (text) => {
     if (!text || typeof text !== 'string') return ''
