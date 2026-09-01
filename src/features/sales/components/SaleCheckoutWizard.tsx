@@ -18,6 +18,7 @@ import { ShoppingCart, CheckCircle2, ChevronLeft, ChevronRight, Loader2, AlertCi
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useBranch } from '@/contexts/BranchContext'
+import { useReservationsEnabled } from '@/store/useBusinessConfigStore'
 import { saleService } from '@/services/saleService'
 import { formatCurrency } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
@@ -105,6 +106,8 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
 }) => {
   const { t } = useI18n()
   const { currentBranchId } = useBranch()
+  // Módulo de reservas del negocio (fail-open: sin config cargada ⇒ true).
+  const reservationsEnabled = useReservationsEnabled()
 
   // ─── Estado de multi-moneda (pago) ──────────────────────────────────────
   // La venta se emite en moneda base; la divisa elegida es la de COBRO y la
@@ -130,19 +133,21 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
   })
 
   // ─── Pasos visibles (condicionales) ─────────────────────────────────────
-  // Reglas en checkoutSteps.computeCheckoutSteps: 'reservations' aparece con
-  // reservas confirmadas pendientes o con cliente seleccionado (walk-in),
-  // PERO se suprime cuando el carrito ya tiene un ítem con reserve_id (el
-  // backend admite una sola reserva por venta y el paso ya no aporta nada).
+  // Reglas en checkoutSteps.computeCheckoutSteps: 'reservations' requiere el
+  // módulo activo para el negocio y, además, reservas confirmadas pendientes
+  // o cliente seleccionado (walk-in); se suprime cuando el carrito ya tiene
+  // un ítem con reserve_id (el backend admite una sola reserva por venta y
+  // el paso ya no aporta nada).
   const steps = useMemo<CheckoutStepId[]>(
     () =>
       computeCheckoutSteps({
+        reservationsEnabled,
         activeSalesCount: activeSales.length,
         pendingReservationsCount: pendingReservations.length,
         hasClient: !!client,
         hasReserveInCart: items.some((i) => !!i?.reserve_id),
       }),
-    [activeSales.length, pendingReservations.length, client, items],
+    [reservationsEnabled, activeSales.length, pendingReservations.length, client, items],
   )
 
   // Última versión de steps para los state updaters (el array puede encoger

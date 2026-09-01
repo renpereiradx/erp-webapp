@@ -15,6 +15,7 @@ import {
 } from '../features/sales/checkoutSteps'
 
 const base: CheckoutStepsInput = {
+  reservationsEnabled: true,
   activeSalesCount: 0,
   pendingReservationsCount: 0,
   hasClient: false,
@@ -74,5 +75,18 @@ describe('computeCheckoutSteps', () => {
   it('hides reservations when a reserve is in the cart even without a selected client', () => {
     const steps = computeCheckoutSteps(input({ hasReserveInCart: true }))
     expect(steps).not.toContain('reservations')
+  })
+
+  it('hides reservations when the module is disabled for the business, even with a client', () => {
+    const steps = computeCheckoutSteps(
+      input({ reservationsEnabled: false, hasClient: true, pendingReservationsCount: 2 }),
+    )
+    expect(steps).not.toContain('reservations')
+    expect(steps).toEqual(['client', 'payment', 'collection'])
+  })
+
+  it('shows reservations when the module is enabled and a client is selected', () => {
+    const steps = computeCheckoutSteps(input({ reservationsEnabled: true, hasClient: true }))
+    expect(steps).toContain('reservations')
   })
 })
