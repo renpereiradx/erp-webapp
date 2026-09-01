@@ -19,7 +19,8 @@ interface BusinessConfigState {
   loaded: boolean;
   error: string | null;
   fetchSettings: () => Promise<void>;
-  updateSetting: (key: string, value: unknown) => Promise<void>;
+  /** Devuelve la fila guardada (con updated_at/updated_by) para feedback de UI. */
+  updateSetting: (key: string, value: unknown) => Promise<BusinessSetting>;
 }
 
 export const useBusinessConfigStore = create<BusinessConfigState>()(
@@ -55,6 +56,7 @@ export const useBusinessConfigStore = create<BusinessConfigState>()(
       updateSetting: async (key, value) => {
         const saved = await businessSettingsService.update(key, value);
         set((state) => ({ settings: { ...state.settings, [key]: saved.value } }));
+        return saved;
       },
     }),
     { name: 'BusinessConfigStore' },
