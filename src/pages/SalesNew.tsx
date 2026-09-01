@@ -25,6 +25,7 @@ import {
   resolveApplicableRateFraction,
   coerceTaxRateFraction,
 } from '@/domain/tax/resolveApplicableRate';
+import { isBlockedByStock } from '@/domain/products/sellability';
 import { getDefaultVatPercent } from '@/store/useTaxRateStore';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -621,11 +622,9 @@ const SalesNew: React.FC = () => {
       return;
     }
 
-    if (product.product_type !== 'SERVICE' && !product.has_variants && variantId === undefined) {
-      if (product.stock <= 0) {
-        toast.error(`El producto "${product.name}" no tiene stock disponible en esta sucursal.`);
-        return;
-      }
+    if (variantId === undefined && isBlockedByStock(product)) {
+      toast.error(`El producto "${product.name}" no tiene stock disponible en esta sucursal.`);
+      return;
     }
 
     const finalVariantId = variantId === null ? null : variantId;

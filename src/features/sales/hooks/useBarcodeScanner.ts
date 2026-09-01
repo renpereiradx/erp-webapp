@@ -1,6 +1,7 @@
 import { useState, useCallback, RefObject } from 'react';
 import { saleService } from '@/services/saleService';
 import { getDefaultVatPercent } from '@/store/useTaxRateStore';
+import { isBlockedByStock } from '@/domain/products/sellability';
 // We will type the callback parameters
 
 interface UseBarcodeScannerProps {
@@ -38,7 +39,7 @@ export const useBarcodeScanner = ({
         const productType = scanResult.product_type || 'PHYSICAL';
         const stock = Number(scanResult.stock_quantity || 0);
 
-        if (productType !== 'SERVICE' && stock <= 0) {
+        if (isBlockedByStock({ product_type: productType, stock, has_variants: false })) {
           toast.dismiss(scanToast);
           toast.error(`El producto "${scanResult.product_name || 'escaneado'}" no tiene stock disponible en esta sucursal.`);
           setIsScanningBarcode(false);

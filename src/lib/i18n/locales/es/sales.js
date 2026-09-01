@@ -474,6 +474,7 @@ export const sales = {
   'sales.search.invalidQty': 'Cantidad inválida',
   'sales.search.outOfStock': 'Sin stock disponible para {name}',
   'sales.search.outOfStockShort': 'Sin stock',
+  'sales.search.serviceBadge': 'Servicio',
   'sales.search.soldOut': 'Agotado',
   'sales.search.multipleVariants': 'Múltiples Variantes',
   'sales.search.selectVariant': 'Seleccionar Variante',

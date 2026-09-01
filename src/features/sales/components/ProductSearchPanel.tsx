@@ -18,6 +18,13 @@ import { isDecimalUnit } from '@/constants/units';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/useToast';
+import {
+  availableStockFor,
+  isBlockedByStock,
+  maxSellableQty,
+  requiresStock,
+  stockBadgeKind,
+} from '@/domain/products/sellability';
 
 export interface SearchResultProduct {
   id: string;
@@ -28,6 +35,7 @@ export interface SearchResultProduct {
   base_unit: string;
   has_valid_price: boolean;
   has_variants?: boolean;
+  product_type?: string;
 }
 
 export interface ProductSearchPanelProps {
@@ -82,13 +90,13 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
     if (event.key === 'Enter') {
       event.preventDefault();
       const quantityInCart = getQuantityInCart(product.id);
-      const availableStock = Math.max(0, product.stock - quantityInCart);
+      const maxQty = maxSellableQty(product, quantityInCart);
       const qty = clampRequestedQty(
         parseFloat(String(selectedQty)),
-        availableStock,
+        maxQty,
         isDecimalUnit(product.base_unit),
       );
-      if (qty > availableStock || qty <= 0) {
+      if (qty > maxQty || qty <= 0) {
         toast.error(t('sales.search.invalidQty', 'Cantidad inválida'));
         return;
       }
@@ -133,8 +141,9 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
             {results.map((product, index) => {
               const isHighlighted = index === highlightedIndex;
               const quantityInCart = getQuantityInCart(product.id);
-              const availableStock = Math.max(0, product.stock - quantityInCart);
-              const isOutOfStock = availableStock <= 0 && !product.has_variants;
+              const availableStock = availableStockFor(product, quantityInCart);
+              const isOutOfStock = isBlockedByStock(product, quantityInCart);
+              const badgeKind = stockBadgeKind(product);
 
               return (
                 <div key={product.id ? `search-product-${product.id}` : `search-product-index-${index}`} className="w-full mb-0.5 last:mb-0">
@@ -186,10 +195,14 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
                             </span>
                           </div>
                           <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-                            {product.has_variants ? (
+                            {badgeKind === 'variants' ? (
                               <Badge variant="secondary" size="sm" className="gap-1 shrink-0">
                                 <Layers size={10} />
                                 {t('sales.search.multipleVariants', 'Múltiples Variantes')}
+                              </Badge>
+                            ) : badgeKind === 'service' ? (
+                              <Badge variant="secondary" size="sm" className="shrink-0">
+                                {t('sales.search.serviceBadge', 'Servicio')}
                               </Badge>
                             ) : availableStock > 0 ? (
                               <Badge variant="success" size="sm" className="shrink-0">
@@ -231,13 +244,13 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
                               type="number"
                               min={isDecimalUnit(product.base_unit) ? '0.01' : '1'}
                               step={isDecimalUnit(product.base_unit) ? '0.01' : '1'}
-                              max={availableStock}
+                              max={requiresStock(product) ? availableStock : undefined}
                               value={selectedQty}
                               onChange={(e) => onSelectedQtyChange(e.target.value)}
                               onBlur={() => {
                                 const clamped = clampRequestedQty(
                                   parseFloat(String(selectedQty)),
-                                  availableStock,
+                                  maxSellableQty(product, quantityInCart),
                                   isDecimalUnit(product.base_unit),
                                 );
                                 onSelectedQtyChange(clamped);

@@ -5,6 +5,7 @@ import { variantService } from '@/services/variantService';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { requiresStock } from '@/domain/products/sellability';
 
 export function VariantSelectorModal({ product, onClose, onSelect }: any) {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -92,6 +93,8 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
   const variantsTotalStock = variants.reduce((acc, v) => acc + (v.stock_quantity || 0), 0);
   const totalConsolidatedStock = product.stock || 0;
   const baseStock = Math.max(0, totalConsolidatedStock - variantsTotalStock);
+  const needsStock = requiresStock(product);
+  const mainBlocked = needsStock && baseStock <= 0;
 
   return (
     <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-md animate-in fade-in duration-200">
@@ -353,19 +356,19 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
               <button
                 type="button"
                 onClick={() => onSelect({ id: null, variant_name: 'Producto Principal' }, 1)}
-                disabled={product.product_type !== 'SERVICE' && baseStock <= 0}
+                disabled={mainBlocked}
                 className={cn(
                   "flex-1 px-4 py-2.5 rounded-button transition-all flex flex-col items-center justify-center gap-0.5 border",
-                  product.product_type !== 'SERVICE' && baseStock <= 0
+                  mainBlocked
                     ? "bg-surface-subtle text-on-surface-deep border-surface-deep opacity-60 cursor-not-allowed"
                     : "bg-surface-subtle hover:bg-surface-muted text-foreground text-body-sm-bold border-transparent"
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <Package size={14} className={product.product_type !== 'SERVICE' && baseStock <= 0 ? "text-on-surface-deep" : "text-primary"} />
+                  <Package size={14} className={mainBlocked ? "text-on-surface-deep" : "text-primary"} />
                   Producto principal
                 </div>
-                {product.product_type !== 'SERVICE' && (
+                {needsStock && (
                   <span className={cn("text-body-sm-bold uppercase", baseStock > 0 ? "text-success" : "text-error")}>
                     Stock: {baseStock}
                   </span>
