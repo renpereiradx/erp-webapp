@@ -1268,6 +1268,39 @@ const SalesNew: React.FC = () => {
     };
   }, [items, selectedClient, currencyId, toast]);
 
+  // Payload para agregar productos a una venta EXISTENTE (modo merge): filtra
+  // los ítems nuevos (sin isFromPendingSale) y mapea cada detalle con la
+  // convención precio/descuento. Lo comparten onConfirmWizard (merge + cobro)
+  // y onLeavePendingWizard (merge + "Dejar pendiente") para no duplicar reglas.
+  const buildAddProductsPayload = useCallback((sourceItems: CartItem[]) => {
+    const newItems = sourceItems.filter((item) => !item.isFromPendingSale);
+    if (newItems.length === 0) return null;
+    return {
+      allow_price_modifications: newItems.some(
+        (item) => Math.abs((Number(item.price) || 0) - (Number(item.originalPrice) || 0)) > 0.01,
+      ),
+      product_details: newItems.map((item) => {
+        const currentPrice = Number(item.price) || 0;
+        const originalPrice = Number(item.originalPrice) || 0;
+        const hasModification = Math.abs(currentPrice - originalPrice) > 0.01;
+        const discountInputVal = Number(item.discountInput) || 0;
+        return {
+          product_id: item.productId,
+          ...(item.variantId !== undefined ? { variant_id: item.variantId } : {}),
+          quantity: Number(item.quantity) || 1,
+          unit: item.unit || 'unit',
+          ...(item.reserve_id && { reserve_id: item.reserve_id }),
+          ...(hasModification && {
+            sale_price: currentPrice,
+            price_change_reason: (item.discountReason || 'Ajuste de precio').trim(),
+            [item.discountType === 'percent' ? 'discount_percent' : 'discount_amount']: discountInputVal,
+            discount_reason: (item.discountReason || 'Ajuste de precio').trim(),
+          }),
+        };
+      }),
+    };
+  }, []);
+
   // Mantener el ref de F12 apuntando a la última versión de handleSaveSale.
   useEffect(() => {
     handleSaveSaleRef.current = handleSaveSale;
@@ -1288,42 +1321,52 @@ const SalesNew: React.FC = () => {
       try {
         if (currentSaleId) {
           // Modo merge: agregar productos nuevos a la venta existente.
-          const newItems = items.filter((item) => !item.isFromPendingSale);
-          if (newItems.length === 0) {
+          const payload = buildAddProductsPayload(items);
+          if (!payload) {
             toast.info('No hay productos nuevos para agregar a esta venta');
             return;
           }
-          const payload = {
-            allow_price_modifications: newItems.some(
-              (item) => Math.abs((Number(item.price) || 0) - (Number(item.originalPrice) || 0)) > 0.01,
-            ),
-            product_details: newItems.map((item) => {
-              const currentPrice = Number(item.price) || 0;
-              const originalPrice = Number(item.originalPrice) || 0;
-              const hasModification = Math.abs(currentPrice - originalPrice) > 0.01;
-              const discountInputVal = Number(item.discountInput) || 0;
-              return {
-                product_id: item.productId,
-                ...(item.variantId !== undefined ? { variant_id: item.variantId } : {}),
-                quantity: Number(item.quantity) || 1,
-                unit: item.unit || 'unit',
-                ...(item.reserve_id && { reserve_id: item.reserve_id }),
-                ...(hasModification && {
-                  sale_price: currentPrice,
-                  price_change_reason: (item.discountReason || 'Ajuste de precio').trim(),
-                  [item.discountType === 'percent' ? 'discount_percent' : 'discount_amount']: discountInputVal,
-                  discount_reason: (item.discountReason || 'Ajuste de precio').trim(),
-                }),
-              };
-            }),
-          };
           const response = await saleService.addProductsToSale(currentSaleId, payload, activeSale?.branch_id);
           if (!response?.success) {
             throw new Error(response?.error || 'No se pudo actualizar la venta');
           }
           toast.success(
-            `Venta #${currentSaleId} actualizada (${response?.data?.items_added ?? newItems.length} ítem${newItems.length > 1 ? 's' : ''}).`,
+            `Venta #${currentSaleId} actualizada (${response?.data?.items_added ?? payload.product_details.length} ítem${payload.product_details.length > 1 ? 's' : ''}).`,
           );
+
+          // Cobro en modo merge: la venta existente debe quedar COBRADA, no solo
+          // aumentada. Antes solo se llamaba a addProductsToSale y el cobro se
+          // ignoraba por completo → la venta seguía PENDING pese a confirmar el
+          // pago. POST /payment/process usa CashRegisterOptional (caja opcional),
+          // consistente con el paso de cobro del wizard que permite "Sin caja".
+          const paymentPayload: any = {
+            sales_order_id: currentSaleId,
+            amount_received: collection.amountReceived,
+            payment_method_id: collection.paymentMethodId || Number(paymentMethodId) || 0,
+            ...(collection.amountToApply != null && { amount_to_apply: collection.amountToApply }),
+            ...(collection.cashRegisterId != null && { cash_register_id: collection.cashRegisterId }),
+            ...(collection.notes && { payment_notes: collection.notes }),
+            ...(collection.currencyId != null && {
+              currency_id: collection.currencyId,
+              exchange_rate: collection.exchangeRate,
+              original_amount: collection.foreignAmountReceived ?? undefined,
+            }),
+          };
+          const paymentResult = await salePaymentService.processPayment(paymentPayload);
+          if (paymentResult?.success === false) {
+            throw new Error(paymentResult?.error || paymentResult?.message || 'No se pudo registrar el cobro');
+          }
+          const appliedAmount = collection.amountToApply ?? collection.amountReceived;
+          if (appliedAmount < total) {
+            toast.info(
+              t('sales.checkoutWizard.partialCollectionToast', 'Cobro parcial registrado: {applied}. Saldo pendiente: {pending}.', {
+                applied: formatCurrency(appliedAmount),
+                pending: formatCurrency(Math.max(0, total - appliedAmount)),
+              }),
+            );
+          } else {
+            toast.success(`Venta #${currentSaleId} cobrada exitosamente`);
+          }
         } else if (pendingSaleData) {
           // Modo venta nueva: checkout POS atómico (venta + pago).
           // Reconstruir el payload desde el carrito vigente: el operador
@@ -1445,7 +1488,19 @@ const SalesNew: React.FC = () => {
     setIsProcessingSale(true);
     try {
       if (currentSaleId) {
-        // En modo merge, dejar pendiente = no agregar nada (la venta ya existe).
+        // Modo merge + "Dejar pendiente": persiste los ítems nuevos del carrito
+        // en la venta existente (sin cobrar). Antes no se agregaba nada y los
+        // ítems nuevos se perdían al salir del flujo.
+        const payload = buildAddProductsPayload(items);
+        if (payload) {
+          const response = await saleService.addProductsToSale(currentSaleId, payload, activeSale?.branch_id);
+          if (!response?.success) {
+            throw new Error(response?.error || 'No se pudo actualizar la venta');
+          }
+          toast.success(
+            `Venta #${currentSaleId} actualizada (${response?.data?.items_added ?? payload.product_details.length} ítem${payload.product_details.length > 1 ? 's' : ''}).`,
+          );
+        }
         toast.info(`Venta #${currentSaleId} queda pendiente`);
       } else if (pendingSaleData) {
         const salePayload = buildNewSaleData() ?? pendingSaleData;
@@ -1461,7 +1516,7 @@ const SalesNew: React.FC = () => {
     } finally {
       setIsProcessingSale(false);
     }
-  }, [currentSaleId, pendingSaleData, createSale, buildNewSaleData]);
+  }, [currentSaleId, pendingSaleData, createSale, buildNewSaleData, buildAddProductsPayload, activeSale]);
 
   // ─── Walk-in: registrar uso de cancha desde el wizard ──────────────────────
   // Flujo: cliente usó la cancha sin reserva previa y quiere pagar. Crea la
