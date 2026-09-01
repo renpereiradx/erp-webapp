@@ -385,7 +385,76 @@
 }
 
 /* =============================================================================
-   SCROLLBAR
+   DIALOG PRIMITIVES (ui/dialog.jsx + ui/alert-dialog.jsx)
+   Fix: .radix-dialog__overlay / .radix-dialog__content are referenced by the
+   Radix Dialog primitives but were never defined in any imported stylesheet
+   (only in the unused leftover test.css). Without these the dialog mounts but
+   renders IN-FLOW at the bottom of the DOM (invisible, off-screen). These
+   classes center the content and place the overlay behind it. Tokens semantic
+   (flip with .dark), consistent with DESIGN.md §6.6.
+   ============================================================================= */
+@layer components {
+  .radix-dialog__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background-color: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: dialog-fade-in 200ms ease-out;
+  }
+
+  .radix-dialog__content {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    max-height: 90vh;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border-subtle);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-fluent-16);
+    animation: dialog-zoom-in 200ms ease-out;
+  }
+
+  .radix-dialog__header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+
+  .radix-dialog__title {
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.025em;
+    color: var(--color-foreground);
+  }
+
+  .radix-dialog__description {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+  }
+}
+
+@keyframes dialog-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dialog-zoom-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* SCROLLBAR
    ============================================================================= */
 ::-webkit-scrollbar {
   width: 6px;
