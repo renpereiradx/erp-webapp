@@ -181,10 +181,15 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
       setCurrencyId(curr => curr || resolveDefaultCurrencyId(normalized))
 
       const [allRegs, activeReg] = registersData
-      const openRegs = Array.isArray(allRegs) ? allRegs.filter(cr => {
+      // GET /cash-registers devuelve { data:[...], pagination } (wrapper), no un
+      // array plano. Normalizar ambos shapes (defensivo, igual que el resto del
+      // repo con `response.data || []`) — si no, openRegs queda [] y el submit
+      // de cobro se queda deshabilitado con "No hay cajas registradoras abiertas".
+      const regList = Array.isArray(allRegs) ? allRegs : (allRegs?.data || [])
+      const openRegs = regList.filter(cr => {
         const s = (cr?.status || cr?.state || '').toUpperCase()
         return s === 'OPEN' || s === 'ACTIVE'
-      }) : []
+      })
       setCashRegisters(openRegs)
 
       if (activeReg?.id) {
