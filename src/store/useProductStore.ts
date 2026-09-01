@@ -23,7 +23,6 @@ import type { ProductEnriched } from '@/types'
 
 interface ProductState {
   products: any[];
-  serviceCourts: any[];
   productsById: Record<string, any>;
   pageCache: Record<number, any>;
   pageCacheTTL: number;
@@ -74,7 +73,6 @@ const useProductStore = create<ProductState>()(
     (set, get) => ({
       // =================== ESTADO ===================
       products: [],
-      serviceCourts: [],
       productsById: {}, // Normalización por id
       pageCache: {}, // { pageNumber: { ts, products } }
       pageCacheTTL: 120000,
@@ -1369,123 +1367,6 @@ const useProductStore = create<ProductState>()(
       },
 
       // Limpiar productos (para estado inicial)
-      // Obtener servicios de canchas para reservas (usando endpoint enriquecido)
-      fetchServiceCourts: async () => {
-        const startTime = Date.now()
-        set({ loading: true, error: null })
-
-        try {
-          const { DEMO_CONFIG } = await import('@/config/demoAuth')
-          
-          let services: any[] = []
-          
-          if (DEMO_CONFIG.enabled) {
-            const { DEMO_PRODUCT_DATA } = await import('../config/demoData')
-            services = DEMO_PRODUCT_DATA.filter(p => p.product_type === 'SERVICE')
-          } else {
-            try {
-              const result = await get()._withRetry(
-                async () => {
-                  return await apiClient.get('/products/enriched')
-                },
-                { telemetryKey: 'products.fetch_service_courts' }
-              )
-
-              if (Array.isArray(result)) {
-                services = result.filter(p => p.product_type === 'SERVICE')
-              } else if (result?.data && Array.isArray(result.data)) {
-                services = result.data.filter(p => p.product_type === 'SERVICE')
-              }
-            } catch (enrichedError: any) {
-              console.warn('⚠️ Endpoint /products/enriched no disponible, usando fallback al listado normal:', enrichedError.message)
-              
-              // FALLBACK: Usar listado de productos normal si el enriquecido falla
-              const normalResult = await get()._withRetry(
-                async () => {
-                  return await apiClient.get('/products/')
-                },
-                { telemetryKey: 'products.fetch_service_courts_fallback' }
-              )
-              
-              const rawData = Array.isArray(normalResult) ? normalResult : (normalResult?.data || [])
-              services = rawData.filter(p => p.product_type === 'SERVICE' || p.category_name?.toLowerCase().includes('cancha'))
-            }
-          }
-
-          // Enriquecer servicios con información de precios y datos procesados
-          const { createProductSummary } = await import('@/utils/productUtils')
-          const enrichedServices = services.map(service => {
-            const summary = createProductSummary(service)
-            return {
-              ...service,
-              // Añadir las propiedades que necesita la UI de reservas
-              price_formatted:
-                summary?.priceFormatted ||
-                (service.price
-                  ? `PYG ${service.price.toLocaleString('es-ES')}`
-                  : null) ||
-                (service.purchase_price
-                  ? `PYG ${service.purchase_price.toLocaleString('es-ES')}`
-                  : null),
-              has_valid_price:
-                summary?.hasValidPrice ||
-                !!(
-                  service.price ||
-                  service.purchase_price ||
-                  service.unit_prices?.length
-                ),
-              state:
-                service.state !== undefined
-                  ? service.state
-                  : service.is_active !== undefined
-                  ? service.is_active
-                  : true,
-            }
-          })
-
-          // Actualizar productos con los servicios específicos enriquecidos
-          const servicesById = Object.fromEntries(
-            enrichedServices.map(s => [s.id, s])
-          )
-          set({
-            products: enrichedServices,
-            serviceCourts: enrichedServices,
-            productsById: servicesById,
-            totalProducts: enrichedServices.length,
-            totalPages: 1,
-            currentPage: 1,
-            loading: false,
-            error: null,
-          })
-
-          telemetry.record('products.fetch_service_courts.success', {
-            duration: Date.now() - startTime,
-            count: enrichedServices.length,
-            withPrices: enrichedServices.filter(s => s.has_valid_price).length,
-          })
-
-          return enrichedServices
-        } catch (error: any) {
-          const errorMsg =
-            error.message || 'Error al cargar servicios de canchas'
-          set({
-            products: [],
-            productsById: {},
-            totalProducts: 0,
-            totalPages: 0,
-            loading: false,
-            error: errorMsg,
-          })
-
-          telemetry.record('products.fetch_service_courts.error', {
-            duration: Date.now() - startTime,
-            error: error.message,
-          })
-
-          throw error
-        }
-      },
-
       clearProducts: () => {
         set({
           products: [],
