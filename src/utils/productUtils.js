@@ -48,6 +48,25 @@ export const getProductStock = (product) => {
 };
 
 /**
+ * Devuelve el precio de la unidad base (base_unit) de un producto enriquecido.
+ * El JSON unit_prices llega ordenado alfabéticamente por unidad, así que
+ * unit_prices[0] NO es necesariamente el precio canónico. Un producto tiene
+ * UNA sola unidad de medida (base_unit, inmutable) y su precio debe anclarse
+ * a esa unidad; si no existe, cae al primer precio disponible.
+ */
+export const getProductBaseUnitPrice = (product) => {
+  if (!product) return null;
+  const unitPrices = product.unit_prices;
+  if (!Array.isArray(unitPrices) || unitPrices.length === 0) return null;
+  const base = product.base_unit;
+  if (base) {
+    const entry = unitPrices.find(u => u.unit === base);
+    if (entry) return entry.price_per_unit;
+  }
+  return unitPrices[0]?.price_per_unit ?? null;
+};
+
+/**
  * Extrae información de precio de un producto enriquecido
  */
 export const getProductPrice = (product) => {
@@ -55,12 +74,14 @@ export const getProductPrice = (product) => {
   
   // Nueva estructura financiera - unit_prices
   if (product.unit_prices && Array.isArray(product.unit_prices) && product.unit_prices.length > 0) {
-    const unitPrice = product.unit_prices[0];
+    const unit = product.base_unit || product.unit_prices[0].unit;
+    const unitPrice = product.unit_prices.find(u => u.unit === unit) || product.unit_prices[0];
+    const price = getProductBaseUnitPrice(product) ?? unitPrice.price_per_unit;
     return {
-      purchasePrice: unitPrice.price_per_unit,
+      purchasePrice: price,
       effectiveDate: unitPrice.effective_date,
       unit: unitPrice.unit,
-      formatted: formatPrice(unitPrice.price_per_unit)
+      formatted: formatPrice(price)
     };
   }
   

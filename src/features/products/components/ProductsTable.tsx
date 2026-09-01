@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ProductEnriched } from '@/domain/products/models';
+import { getProductBaseUnitPrice } from '@/utils/productUtils';
 
 interface ProductsTableProps {
   products: ProductEnriched[];
@@ -88,10 +89,13 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
           const categoryName = product.category?.name || product.category_name || '-';
           const stockInfo = getStockDisplay(product);
 
-          // Extraer costo y precio con fallbacks
+          // Extraer costo y precio con fallbacks (anclados a la unidad base)
+          const baseUnit = product.base_unit || 'unit';
           const purchaseCost =
-            product.purchase_price ?? product.unit_costs_summary?.[0]?.last_cost ?? 0;
-          const salesPrice = product.price ?? product.unit_prices?.[0]?.price_per_unit ?? 0;
+            (product.unit_costs_summary || []).find(u => u.unit === baseUnit)?.last_cost
+            ?? product.purchase_price
+            ?? 0;
+          const salesPrice = product.price ?? getProductBaseUnitPrice(product) ?? 0;
 
           return (
             <TableRow
