@@ -216,14 +216,13 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
 
   // ─── Cálculos del carrito (panel derecho) ───────────────────────────────
   const totals = useMemo(() => {
-    const saleItems = items.map((item) => ({
-      quantity: Number(item.quantity) || 0,
-      unit_price: Number(item.price) || 0,
-      discount_amount: item.discountType === 'amount' ? Number(item.discountInput) || 0 : 0,
-      discount_percent: item.discountType === 'percent' ? Number(item.discountInput) || 0 : 0,
-      tax_rate: Number(item.taxRate) || 0,
-    }))
-    return saleService.calculateLocalTotals(saleItems)
+    // Reutiliza calculateLocalTotals sobre los CartItem TAL CUAL (la misma vía
+    // que SalesNew). El mapeo anterior reducía el ítem a
+    // {unit_price: item.price, discount_amount} y, al perder `originalPrice`,
+    // el descuento aparecía aplicado SOBRE el precio ya descontado → doble
+    // descuento (el total del Cart Review no coincidía con el Resumen).
+    // calculateLocalTotals usa originalPrice como base cuando hay descuento.
+    return saleService.calculateLocalTotals(items)
   }, [items])
 
   const baseCurrency = currencies.find((c) => c.is_base || c.is_base_currency)
