@@ -15,13 +15,12 @@ import { useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/useToast';
 import { useI18n } from '@/lib/i18n';
-import { fiscalService } from '@/features/fiscal/services/fiscalService';
+import { fiscalService, isApiNotFound } from '@/features/fiscal/services/fiscalService';
 import type { SaleFiscalStatus } from '@/features/fiscal/types';
 
-const isNotFound = (error: unknown): boolean => {
-  const e = error as { response?: { status?: number }; status?: number };
-  return e?.response?.status === 404 || e?.status === 404;
-};
+// ApiError no trae `status` ni `response`: el código determinista es
+// `code === 'NOT_FOUND'` (helper compartido del service).
+const isNotFound = isApiNotFound;
 
 export interface SaleFiscalPanelState {
   /** null = venta sin documento fiscal (404) o sin cargar aún. */

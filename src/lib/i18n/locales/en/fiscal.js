@@ -269,4 +269,17 @@ export const fiscal = {
   'fiscal.ops.alerts.tipo.inutilizacion_pendiente': 'Pending inutilization',
   'fiscal.ops.alerts.tipo.timbrado_por_vencer': 'Timbrado expiring',
   'fiscal.ops.alerts.tipo.timbrado_vencido': 'Timbrado expired',
+
+  // FE6 — environment status (S2.5, S6-audit H9)
+  'fiscal.ops.env.title': 'SIFEN environment',
+  'fiscal.ops.env.ambiente.TEST': 'TEST (sandbox)',
+  'fiscal.ops.env.ambiente.PROD': 'PROD (production)',
+  'fiscal.ops.env.emissionOn': 'SIFEN emission active',
+  'fiscal.ops.env.ready': 'CSC and certificate ready',
+  'fiscal.ops.env.cscMissing': 'CSC not configured',
+  'fiscal.ops.env.certMissing': 'No certificate loaded',
+  'fiscal.ops.env.inactive': 'Configured but inactive — SIFEN emission off',
+  'fiscal.ops.env.unconfiguredBadge': 'Not configured',
+  'fiscal.ops.env.unconfigured': 'No environment configured — SIFEN emission is disabled',
+  'fiscal.ops.env.unavailable': 'Environment status unavailable',
 }

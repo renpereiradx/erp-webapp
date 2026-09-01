@@ -6,8 +6,9 @@
 (backend, fases S0–S7).
 **Estado:** 🔄 En ejecución — FE1 ✅ (`e18b12b`), FE2 ✅ (`07af0b1`), FE3 ✅
 (`9857ee0` + backend `9ee383b`), FE4 ✅ (`79cf698`, `a3558e3`, `b0a8a87`,
-`e0a0adc`, `9c29444` — 2026-08-20) y FE5 ✅ (2026-08-20, `b73a5fc` +
+`e0a0adc`, `9c29444` — 2026-08-20), FE5 ✅ (2026-08-20, `b73a5fc` +
 `9bc18a4` + `571be5c`, backend `e125f1c`/`8685e9b`/`3256751`/`d3a82bb`)
+y FE6 ✅ (2026-08-31 — cierre del H9-audit S6, ver sección abajo)
 completadas; S6 cerrada. **Remediación auditoría S6 (2026-08-24) aplicada —
 ver sección abajo. Remediación auditoría S7 (2026-08-25, parte FE del H9-b)
 aplicada — ver sección abajo.**
@@ -53,7 +54,9 @@ DESIGN.md para UI, pnpm exclusivo, `tsc --noEmit` en 0 errores, tests = baseline
      `X-Branch-ID` (administración global, igual que `/branches/`).
 2. No exponer campos de `sifen_config` sensibles (CSC); solo lecturas de estado (ambiente,
    conectividad opcional en el dashboard de ops). → Cubierto: el FE nunca llama
-   `PUT /sifen/config`; la lectura de estado del ambiente se consume en FE5.2.
+   `PUT /sifen/config`; la lectura de estado del ambiente se consume en FE6
+   (la nota previa decía "FE5.2", pero el dashboard de FE5.2 solo consumía
+   métricas — lo detectó el H9 de la auditoría S6).
 
 ### FE3 — Panel fiscal de la venta (acompaña FASE S3/S5 backend) ✅ (2026-08-20, commits `9ee383b` BE + `9857ee0` FE)
 1. Panel en el detalle de venta: CDC (grupos de 4), timbrado, número, estado SIFEN con color,
@@ -169,7 +172,8 @@ exposición CORS de `Content-Disposition` (H7 — commits en business_management
 **H9** (ℹ️ tipos/endpoint sin consumir) queda anotado para el cierre S7 como
 pedía la propia auditoría: `SifenConfigPublic` como documentación del contrato
 y la capa de alertas `GET /sifen/metrics/alerts` es el hogar natural del
-dashboard de ops.
+dashboard de ops. → La mitad de alertas se cerró en la remediación S7 (H9-b,
+abajo); la mitad `SifenConfigPublic` se cierra en **FE6**.
 
 **Verificación:** `tsc --noEmit` 0 errores · `vitest src/domain/fiscal
 src/features/fiscal` 8 archivos / **75 tests** verdes (66 + 9 nuevos del
@@ -200,6 +204,42 @@ remediación S6.
 fallidos preexistentes, 0 nuevos) · `pnpm build` exit 0. El resto de la
 remediación S7 (H1 wire de consulta, H2–H8, H10) vive en
 `business_management/conductor/PLAN_SIFEN_FACTURACION_ELECTRONICA_STATUS.md`.
+
+### FE6 — Estado del ambiente SIFEN (2026-08-31) ✅ — cierre del H9-audit S6
+
+La auditoría S6 (H9) detectó que `SifenConfigPublic` (`GET /sifen/config/
+{ambiente}`, S2.5) era tipo-documentación sin consumir: FE2.2 declaraba
+cubierta la "lectura de estado del ambiente en FE5.2", pero el dashboard solo
+consumía métricas. Este fase cierra esa promesa (la otra mitad del H9 —
+alertas — se cerró en la remediación S7-H9-b).
+
+1. **Dominio puro** `domain/fiscal/environment.ts`: `resolveEnvironmentStatus`
+   resuelve qué ambiente rige consultando TEST y PROD en paralelo (no existe
+   endpoint "ambiente activo"); si ambos estuvieran activos gana PROD (la
+   verdad más riesgosa primero). Salud: ok (activo con CSC + certificado) /
+   incomplete / inactive (config sin activar, D3) / unconfigured (ambos 404).
+   9 tests (prioridad PROD, bordes de salud, no-mutación).
+2. **Service** `fiscalService.getConfigPublic(ambiente)`: 404 = `null`
+   (ambiente sin configurar es estado legítimo, no error). El helper
+   `isApiNotFound` corregido: el `ApiError` del cliente no trae `status` ni
+   `response` — el código determinista es `code === 'NOT_FOUND'`. **Fix
+   colateral:** `useSaleFiscalPanel.isNotFound` usaba los checks viejos
+   (nunca matcheaban) → el estado "venta sin documento fiscal" era
+   inalcanzable; ahora comparte el helper.
+3. **Hook** `useFiscalMetrics`: query `['sifen-environment']` (staleTime 60 s,
+   inválida con el refresh global); su error NO contamina el banner de
+   métricas — la franja degrada sola a "no disponible".
+4. **Dashboard FE5.2**: franja `EnvironmentStrip` arriba de los KPIs —
+   badge del ambiente (TEST=info, PROD=warning; secondary si inactivo),
+   badge de emisión activa, y salud de config (ready / CSC sin configurar /
+   sin certificado), con estados unconfigured/inactive/unavailable.
+   Sin secretos: el endpoint público solo expone flags (regla 4).
+5. i18n: 11 claves `fiscal.ops.env.*` en es/en, sin ICU.
+
+**Verificación FE6:** `tsc --noEmit` 0 errores · vitest fiscal 10 archivos /
+89 tests verdes (80 + 9 nuevos) · suite completa = baseline (48 fallidos
+preexistentes, 0 nuevos; total 462) · `pnpm build` OK · cruce mecánico i18n:
+fiscal.js es/en 255/255, 0 faltantes, sin ICU.
 
 ## 3. Checklist para retomar
 

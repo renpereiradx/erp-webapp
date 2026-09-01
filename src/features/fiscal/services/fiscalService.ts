@@ -25,7 +25,20 @@ import type {
   NotaEmitida,
   FiscalMetricsOverview,
   FiscalOpsAlerts,
+  SifenConfigPublic,
 } from '@/features/fiscal/types';
+import type { SifenAmbiente } from '@/domain/fiscal/environment';
+
+/**
+ * 404 real del backend. El cliente lanza ApiError, que NO trae `status` ni
+ * `response`: el código determinista es `code === 'NOT_FOUND'` (mapa
+ * STATUS_TO_CODE de utils/ApiError). Los checks con response/status se
+ * conservan por defensiva. (Mismo fix que useSaleFiscalPanel.isNotFound.)
+ */
+export const isApiNotFound = (error: unknown): boolean => {
+  const e = error as { response?: { status?: number }; status?: number; code?: string };
+  return e?.code === 'NOT_FOUND' || e?.response?.status === 404 || e?.status === 404;
+};
 
 const FISCAL = {
   saleFiscal: (saleId: string) => `/sale/${encodeURIComponent(saleId)}/fiscal`,
@@ -150,6 +163,23 @@ export const fiscalService = {
    */
   async getMetricsAlerts(dias = 30): Promise<FiscalOpsAlerts> {
     return apiClient.get('/sifen/metrics/alerts', { params: { dias } });
+  },
+
+  // ============ FE6 — estado del ambiente (S2.5, H9-audit S6) ============
+
+  /**
+   * Vista pública de la config de un ambiente (GET /sifen/config/{ambiente},
+   * S2.5): flags csc_set/has_cert — los secretos jamás viajan (regla 4).
+   * Devuelve null cuando el ambiente no está configurado (404 del backend):
+   * estado legítimo del dashboard de ops, no un error.
+   */
+  async getConfigPublic(ambiente: SifenAmbiente): Promise<SifenConfigPublic | null> {
+    try {
+      return await apiClient.get(`/sifen/config/${ambiente}`);
+    } catch (e) {
+      if (isApiNotFound(e)) return null;
+      throw e;
+    }
   },
 };
 

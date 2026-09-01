@@ -1,12 +1,13 @@
 /**
  * FiscalOpsDashboard — dashboard de operación fiscal SIFEN (FE5.2, S7.2).
  * KPIs: pendientes de envío (ventana 72 h, MT §6.2), extemporáneos,
- * caducidad de timbrados; panel de alertas accionables (S7-H9-b) y tabla de
- * rechazos por código (d_cod_res).
+ * caducidad de timbrados; panel de alertas accionables (S7-H9-b), tabla de
+ * rechazos por código (d_cod_res) y estado del ambiente (FE6/H9-audit S6).
  *
- * Consume GET /sifen/metrics/overview + GET /sifen/metrics/alerts (permiso
- * sifen:read). El backend clasifica contra su propio reloj; el FE solo
- * renderiza (re-ordena las alertas por severidad en domain/fiscal/alerts).
+ * Consume GET /sifen/metrics/overview + GET /sifen/metrics/alerts +
+ * GET /sifen/config/{TEST,PROD} (permiso sifen:read). El backend clasifica
+ * contra su propio reloj; el FE solo renderiza (re-ordena las alertas por
+ * severidad y resuelve el ambiente activo en domain/fiscal).
  */
 import React from 'react';
 import {
@@ -18,6 +19,7 @@ import {
   Hourglass,
   Loader2,
   RefreshCw,
+  Server,
   ShieldAlert,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +29,7 @@ import { useI18n } from '@/lib/i18n';
 import { useFiscalMetrics } from '@/features/fiscal/hooks/useFiscalMetrics';
 import { fiscalDocTypeFromCode } from '@/domain/fiscal/states';
 import { sortAlertsBySeverity } from '@/domain/fiscal/alerts';
+import type { EnvironmentStatus } from '@/domain/fiscal/environment';
 import type { FiscalAlert, FiscalAlertNivel, RechazoPorCodigo, TimbradoVencimiento } from '@/features/fiscal/types';
 
 // S6-H6: el locale sigue el idioma activo de la UI (es → es-PY, en → en-US).
@@ -116,6 +119,72 @@ const AlertaRow: React.FC<{ item: FiscalAlert; t: ReturnType<typeof useI18n>['t'
   </div>
 );
 
+/**
+ * FE6 (H9-audit S6): franja de estado del ambiente SIFEN — cierra la promesa
+ * FE2.2 de lectura de estado (ambiente activo, emisión habilitada, CSC y
+ * certificado cargados) sin exponer secretos (el endpoint público solo trae
+ * flags). La resolución del ambiente que rige es dominio puro.
+ */
+const EnvironmentStrip: React.FC<{ environment: EnvironmentStatus | undefined; t: ReturnType<typeof useI18n>['t'] }> = ({ environment, t }) => {
+  let body: React.ReactNode;
+  if (!environment) {
+    // Error de la query de ambiente (las métricas pueden seguir OK): degrada solo esta franja.
+    body = <span className="text-sm text-text-secondary">{t('fiscal.ops.env.unavailable', 'Estado del ambiente no disponible')}</span>;
+  } else if (environment.health === 'unconfigured') {
+    body = (
+      <>
+        <Badge variant="outline" size="sm">{t('fiscal.ops.env.unconfiguredBadge', 'Sin configurar')}</Badge>
+        <span className="text-sm text-text-secondary">
+          {t('fiscal.ops.env.unconfigured', 'Ningún ambiente configurado — la emisión SIFEN está deshabilitada')}
+        </span>
+      </>
+    );
+  } else if (environment.health === 'inactive') {
+    body = (
+      <>
+        <Badge variant="secondary" size="sm">
+          {t(`fiscal.ops.env.ambiente.${environment.active?.ambiente ?? ''}`, environment.active?.ambiente ?? '?')}
+        </Badge>
+        <span className="text-sm text-text-secondary">
+          {t('fiscal.ops.env.inactive', 'Configurado pero inactivo — emisión SIFEN apagada')}
+        </span>
+      </>
+    );
+  } else {
+    const { active, health } = environment;
+    body = (
+      <>
+        <Badge variant={active?.ambiente === 'PROD' ? 'warning' : 'info'} size="sm">
+          {t(`fiscal.ops.env.ambiente.${active?.ambiente ?? ''}`, active?.ambiente ?? '?')}
+        </Badge>
+        <Badge variant="success" size="sm">{t('fiscal.ops.env.emissionOn', 'Emisión SIFEN activa')}</Badge>
+        {health === 'ok' ? (
+          <Badge variant="success" size="sm">{t('fiscal.ops.env.ready', 'CSC y certificado listos')}</Badge>
+        ) : (
+          <>
+            {!active?.csc_set && <Badge variant="warning" size="sm">{t('fiscal.ops.env.cscMissing', 'CSC sin configurar')}</Badge>}
+            {!active?.has_cert && <Badge variant="warning" size="sm">{t('fiscal.ops.env.certMissing', 'Sin certificado cargado')}</Badge>}
+          </>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <Card className="rounded-xl border-border-subtle shadow-fluent-2 animate-in fade-in">
+      <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-2.5 md:gap-3">
+        <div className="flex items-center gap-2 shrink-0">
+          <Server size={16} className="text-primary" />
+          <span className="text-sm font-black uppercase tracking-wide text-text-main">
+            {t('fiscal.ops.env.title', 'Ambiente SIFEN')}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap md:ml-auto">{body}</div>
+      </CardContent>
+    </Card>
+  );
+};
+
 // El backend solo lista los timbrados por vencer (0–30 días): dias_restantes
 // es siempre ≥ 0 aquí (S6-H8) — los vencidos viven en el KPI timbrados_vencidos.
 const TimbradoRow: React.FC<{ item: TimbradoVencimiento; locale: string }> = ({ item, locale }) => {
@@ -141,7 +210,7 @@ const TimbradoRow: React.FC<{ item: TimbradoVencimiento; locale: string }> = ({ 
 const FiscalOpsDashboard: React.FC = () => {
   const { t, lang } = useI18n();
   const locale = localeFromLang(lang);
-  const { data, alerts, loading, isFetching, error, refresh } = useFiscalMetrics(30);
+  const { data, alerts, environment, loading, isFetching, error, refresh } = useFiscalMetrics(30);
 
   const hasRechazos = (data?.rechazos_por_codigo?.length ?? 0) > 0;
   const hasTimbrados = (data?.timbrados_por_vencer?.length ?? 0) > 0;
@@ -191,6 +260,9 @@ const FiscalOpsDashboard: React.FC = () => {
         </div>
       ) : (
         <>
+          {/* Estado del ambiente (FE6/H9-audit S6): contexto previo a todo KPI */}
+          <EnvironmentStrip environment={environment} t={t} />
+
           {/* KPIs */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             <KpiCard
