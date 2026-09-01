@@ -5,6 +5,7 @@
 
 import React from 'react';
 
+/** @param {{ title?: any; subtitle?: any; actions?: React.ReactNode; compact?: boolean; breadcrumb?: any }} props */
 const PageHeader = ({ title, subtitle, actions = null, compact = true, breadcrumb = null }) => {
   const renderBreadcrumb = () => {
     if (!breadcrumb) return <div className="text-muted-foreground mb-1 text-sm font-medium">Sección</div>;

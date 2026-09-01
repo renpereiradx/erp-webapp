@@ -1,9 +1,33 @@
 import { useState, useEffect } from 'react';
 import { useVariants } from '@/hooks/useVariants';
+import { useI18n } from '@/lib/i18n';
 import { VariantModal } from '@/components/modals/VariantModal';
-import { Package, Search, LayoutGrid, List } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import { Package, Plus, Pencil, AlertTriangle, Search } from 'lucide-react';
+import { formatCurrency } from '@/utils/currencyUtils';
 
-export function ProductVariantsManager({ productId, categoryId, compact = false }: { productId: string; categoryId?: string | number; compact?: boolean }) {
+interface ProductVariantsManagerProps {
+  productId: string;
+  categoryId?: string | number;
+  compact?: boolean;
+}
+
+const tableHeadClass = 'text-label-caps uppercase text-on-surface-deep bg-surface-muted';
+const dataChipClass = 'bg-surface-subtle text-on-surface-deep rounded-xs px-1.5 py-0.5 text-body-sm-bold';
+
+export function ProductVariantsManager({ productId, categoryId }: ProductVariantsManagerProps) {
+  const { t } = useI18n();
   const { variants, searchTerm, setSearchTerm, toggleVariantStatus, createVariant, editVariant, setActiveProductId, loading } = useVariants();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [variantToEdit, setVariantToEdit] = useState<any>(null);
@@ -21,7 +45,7 @@ export function ProductVariantsManager({ productId, categoryId, compact = false 
 
   const handleCreate = () => {
     if (!productId) {
-      alert('Debe guardar los datos básicos del producto antes de poder agregarle variantes.');
+      alert(t('products.variants.save_first_text'));
       return;
     }
     setVariantToEdit(null);
@@ -36,230 +60,155 @@ export function ProductVariantsManager({ productId, categoryId, compact = false 
     }
   };
 
-  // Dinamic styles based on compact prop
-  const gapClass = compact ? "gap-4" : "gap-6";
-  const headerGapClass = compact ? "gap-3" : "gap-4";
-  const searchInputClass = compact 
-    ? "pl-8 pr-3 py-1 bg-surface border border-divider/30 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-52 h-8"
-    : "pl-10 pr-4 py-2 bg-surface border border-divider/30 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-64 h-10";
-  const searchIconSize = compact ? 14 : 18;
-  const searchIconClass = compact 
-    ? "material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-divider text-[16px]"
-    : "material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-divider text-[20px]";
-  const gridButtonPadding = compact ? "p-1 rounded shadow-xs" : "p-1.5 rounded-md bg-secondary-container text-on-secondary-container shadow-sm";
-  const gridButtonSize = compact ? 14 : 16;
-  const listButtonPadding = compact ? "p-1 rounded" : "p-1.5 rounded-md text-on-surface-deep hover:bg-surface-subtle";
-  const listButtonSize = compact ? 14 : 16;
-  const createButtonClass = compact
-    ? "flex items-center gap-1.5 px-4 py-1.5 btn-primary text-white font-label-sm text-xs rounded-full hover:opacity-90 transition-opacity shadow-xs whitespace-nowrap h-8"
-    : "flex items-center gap-2 px-6 py-2.5 btn-primary text-white font-label-md text-label-md rounded-full hover:opacity-90 transition-opacity shadow-sm whitespace-nowrap h-10";
-  const createButtonIconTextSize = compact ? "text-[15px]" : "text-[18px]";
-  const loadingPadding = compact ? "p-6 text-xs" : "p-8 text-sm";
-  
-  const emptyContainerPadding = compact ? "p-8 rounded-xl" : "p-12 rounded-2xl";
-  const emptyIconSize = compact ? 24 : 32;
-  const emptyTitleClass = compact ? "text-sm font-bold text-foreground mb-1" : "text-title-md font-bold text-foreground mb-2";
-  const emptyTextClass = compact ? "text-xs text-on-surface-deep mb-4" : "text-body-sm text-on-surface-deep mb-6";
-  const emptyButtonClass = compact
-    ? "px-4 py-1.5 bg-secondary-container text-on-secondary-container text-xs font-semibold rounded-full hover:bg-secondary-container/80 transition-colors"
-    : "px-6 py-2 bg-secondary-container text-on-secondary-container font-label-md rounded-full hover:bg-secondary-container/80 transition-colors";
+  if (loading) {
+    return (
+      <div className="space-y-md p-md" aria-busy="true">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full bg-surface-muted" />
+        ))}
+      </div>
+    );
+  }
 
-  const tableShadowClass = compact 
-    ? "bg-surface border border-surface-deep/30 rounded-lg overflow-hidden shadow-[0_2px_10px_rgba(19,127,236,0.02)] flex flex-col"
-    : "bg-surface border border-surface-deep/30 rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(19,127,236,0.05)] flex flex-col";
-  const tableTextSizeClass = compact ? "text-xs" : "text-sm";
-  const tableMinWClass = compact ? "min-w-[700px]" : "min-w-[900px]";
-  const thPaddingClass = compact ? "py-1.5 px-3" : "py-md px-md";
-  const thTextSizeClass = compact ? "text-[10px] tracking-wider font-semibold" : "font-label-md text-label-md font-semibold";
-  const thRadiusLeftClass = compact ? "rounded-tl-lg" : "rounded-tl-xl";
-  const thRadiusRightClass = compact ? "rounded-tr-lg" : "rounded-tr-xl";
-  const tdPaddingClass = compact ? "py-1.5 px-3" : "py-sm px-md";
-  const toggleWrapperWidth = compact ? "w-8" : "w-10 mr-2";
-  const toggleInputClass = compact
-    ? "toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-3 appearance-none cursor-pointer transition-transform duration-200 ease-in-out"
-    : "toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform duration-200 ease-in-out";
-  const toggleLabelClass = compact
-    ? "toggle-label block overflow-hidden h-4 rounded-full cursor-pointer transition-colors duration-200 ease-in-out"
-    : "toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors duration-200 ease-in-out";
-  const iconWrapperSizeClass = compact ? "w-7 h-7" : "w-10 h-10";
-  const iconTextSizeClass = compact ? "text-[15px]" : "text-[20px]";
-  const variantNameClass = compact ? "font-bold text-xs text-foreground" : "font-title-sm text-title-sm text-foreground font-bold";
-  const badgeTextSizeClass = compact ? "text-[9px] px-1 py-0.2" : "font-label-sm text-[11px] px-1.5 py-0.5";
-  const attrBadgeClass = compact 
-    ? "text-[9px] px-1.5 py-0.5 rounded-md"
-    : "font-label-sm text-[11px] px-2 py-1 rounded-md text-[11px] border border-secondary-container";
-  const attrBadgeNameOpacity = compact ? "opacity-70 mr-0.5 font-normal" : "opacity-70 mr-1 font-normal";
-  const numericTextClass = compact 
-    ? "font-data-tabular font-bold text-xs"
-    : "font-data-tabular font-bold text-title-md text-foreground";
-  const lowStockBadgeClass = compact
-    ? "text-[8px] text-error flex items-center gap-0.5 font-semibold"
-    : "font-label-sm text-[10px] text-error flex items-center gap-0.5";
-  const lowStockIconSize = compact ? "text-[9px]" : "text-[12px]";
-  const editButtonPaddingClass = compact ? "p-1 rounded text-secondary hover:bg-secondary-container hover:text-on-secondary-container transition-colors" : "p-1.5 rounded-md text-secondary hover:bg-secondary-container hover:text-on-secondary-container transition-colors";
-  const editIconSize = compact ? "text-[15px]" : "text-[18px]";
-  const hoverRowStyle = compact 
-    ? "hover:bg-slate-50/50 shadow-[inset_2px_0_0_transparent] hover:shadow-[inset_2px_0_0_#005baf] transition-all duration-150 group"
-    : "hover:bg-background shadow-[inset_2px_0_0_transparent] hover:shadow-[inset_2px_0_0_#005baf] transition-all duration-150 group";
+  if (!productId) {
+    return (
+      <div className="text-center border border-dashed border-border-subtle bg-surface-muted rounded-md p-lg">
+        <Package className="mx-auto text-on-surface-deep mb-sm" size={24} />
+        <h3 className="text-title-md text-foreground mb-xs">{t('products.variants.save_first_title')}</h3>
+        <p className="text-body-md text-on-surface-deep">{t('products.variants.save_first_text')}</p>
+      </div>
+    );
+  }
+
+  if (variants.length === 0) {
+    return (
+      <div className="text-center border border-dashed border-border-subtle bg-surface-muted rounded-md p-lg">
+        <Package className="mx-auto text-on-surface-deep mb-sm" size={24} />
+        <h3 className="text-title-md text-foreground mb-xs">{t('products.variants.empty_title')}</h3>
+        <p className="text-body-md text-on-surface-deep">{t('products.variants.empty_text')}</p>
+        <Button type="button" variant="secondary" className="mt-md rounded-button" onClick={handleCreate}>
+          {t('products.variants.action.create_first', 'Agregar primera variante')}
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className={`flex flex-col ${gapClass}`}>
-      <div className={`flex flex-col md:flex-row md:items-center justify-between ${headerGapClass}`}>
-        {/* Actions Toolbar */}
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <span className={searchIconClass}>
-              <Search size={searchIconSize} />
-            </span>
-            <input 
-              type="text" 
-              placeholder="Buscar variantes..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={searchInputClass}
-            />
-          </div>
-          <div className="flex items-center bg-surface border border-divider/30 rounded-lg p-0.5">
-            <button type="button" className={gridButtonPadding}>
-              <LayoutGrid size={gridButtonSize} />
-            </button>
-            <button type="button" className={listButtonPadding}>
-              <List size={listButtonSize} />
-            </button>
-          </div>
+    <div className="flex flex-col gap-md">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-sm">
+        {/* Search */}
+        <div className="relative">
+          <span className="absolute inset-y-0 left-0 pl-sm flex items-center text-on-surface-deep pointer-events-none">
+            <Search className="w-4 h-4" />
+          </span>
+          <Input
+            id="variant-search"
+            type="text"
+            placeholder={t('products.variants.search_placeholder', 'Buscar variantes...')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-64"
+            aria-label={t('products.variants.search_placeholder', 'Buscar variantes...')}
+          />
         </div>
 
-        <button 
-          type="button"
-          onClick={handleCreate}
-          className={createButtonClass}
-        >
-          <span className={`material-symbols-outlined ${createButtonIconTextSize}`}>add</span>
-          Nueva Variante
-        </button>
+        <Button type="button" variant="primary" className="rounded-button" onClick={handleCreate}>
+          <Plus className="w-4 h-4 mr-2" />
+          {t('products.variants.action.new', 'Nueva Variante')}
+        </Button>
       </div>
 
-      {loading ? (
-        <div className={`text-center text-slate-400 ${loadingPadding}`}>Cargando variantes...</div>
-      ) : !productId ? (
-        <div className={`text-center border-2 border-dashed border-divider/30 bg-surface ${emptyContainerPadding}`}>
-          <Package className="mx-auto text-divider mb-2" size={emptyIconSize} />
-          <h3 className={emptyTitleClass}>Guarde el producto primero</h3>
-          <p className={emptyTextClass}>Debe guardar los datos básicos de este producto antes de poder agregarle variantes.</p>
-        </div>
-      ) : variants.length === 0 ? (
-        <div className={`text-center border-2 border-dashed border-divider/30 bg-surface ${emptyContainerPadding}`}>
-          <Package className="mx-auto text-divider mb-2" size={emptyIconSize} />
-          <h3 className={emptyTitleClass}>Sin variantes configuradas</h3>
-          <p className={emptyTextClass}>Comienza a agregar combinaciones de atributos (ej. Color y Talla) para este producto.</p>
-          <button 
-            type="button"
-            onClick={handleCreate}
-            className={emptyButtonClass}
-          >
-            Agregar primera variante
-          </button>
-        </div>
-      ) : (
-        <div className={tableShadowClass}>
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className={`w-full ${tableMinWClass} text-left border-collapse ${tableTextSizeClass}`}>
-              <thead>
-                <tr className="bg-surface-muted border-b border-surface-deep">
-                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-deep ${thRadiusLeftClass} w-12`}>ESTADO</th>
-                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-deep`}>INFO VARIANTE</th>
-                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-deep`}>ATRIBUTOS</th>
-                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-deep text-right`}>STOCK</th>
-                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-deep text-right`}>PRECIO</th>
-                  <th className={`${thPaddingClass} ${thTextSizeClass} text-on-surface-deep text-center ${thRadiusRightClass} w-16`}>ACCIONES</th>
-                </tr>
-              </thead>
-              <tbody className="text-foreground divide-y divide-surface-deep/30">
-                {variants.map((variant) => (
-                  <tr key={variant.id} className={hoverRowStyle}>
-                    <td className={`${tdPaddingClass} text-center`}>
-                      <div className={`relative inline-block align-middle select-none transition duration-200 ease-in ${toggleWrapperWidth}`}>
-                        <input 
-                          checked={variant.isActive} 
-                          onChange={() => toggleVariantStatus(variant.id, variant.isActive)}
-                          className={`${toggleInputClass} ${variant.isActive ? 'border-primary translate-x-[100%]' : 'border-divider translate-x-0'}`} 
-                          id={`toggle-${variant.id}`} 
-                          type="checkbox"
-                        />
-                        <label 
-                          htmlFor={`toggle-${variant.id}`} 
-                          className={`${toggleLabelClass} ${variant.isActive ? 'bg-primary/20' : 'bg-surface-subtle'}`}
-                        ></label>
+      <div className="bg-surface border border-border-subtle rounded-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table className="min-w-[700px]">
+            <TableHeader>
+              <TableRow className="bg-surface-muted hover:bg-surface-muted border-0">
+                <TableHead className={`${tableHeadClass} w-12`}>{t('products.variants.table.state', 'Estado')}</TableHead>
+                <TableHead className={tableHeadClass}>{t('products.variants.table.info', 'Info Variante')}</TableHead>
+                <TableHead className={tableHeadClass}>{t('products.variants.table.attributes', 'Atributos')}</TableHead>
+                <TableHead className={`${tableHeadClass} text-right`}>{t('products.table.stock')}</TableHead>
+                <TableHead className={`${tableHeadClass} text-right`}>{t('products.variants.table.price', 'Precio')}</TableHead>
+                <TableHead className={`${tableHeadClass} text-center w-16`}>{t('products.table.actions')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {variants.map((variant) => (
+                <TableRow key={variant.id} className="group hover:bg-surface-muted transition-colors duration-150">
+                  <TableCell className="text-center">
+                    <Switch
+                      checked={variant.isActive}
+                      onCheckedChange={() => toggleVariantStatus(variant.id, variant.isActive)}
+                      aria-label={`${t('products.variants.table.state')}: ${variant.name}`}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-sm">
+                      <div className="rounded-sm bg-surface-subtle flex items-center justify-center text-primary size-8 shrink-0">
+                        <Package className="w-4 h-4" />
                       </div>
-                    </td>
-                    <td className={tdPaddingClass}>
-                      <div className="flex items-center gap-2">
-                        <div className={`rounded bg-surface-subtle flex items-center justify-center text-primary shrink-0 ${iconWrapperSizeClass}`}>
-                          <span className={`material-symbols-outlined ${iconTextSizeClass}`}>style</span>
-                        </div>
-                        <div>
-                          <p className={variantNameClass}>{variant.name}</p>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <span className={`bg-slate-100 text-slate-500 rounded-md border border-slate-200/50 font-data-tabular ${badgeTextSizeClass}`}>SKU: {variant.sku}</span>
-                            <span className={`bg-slate-100 text-slate-500 rounded-md border border-slate-200/50 font-data-tabular ${badgeTextSizeClass}`}>BC: {variant.barcode}</span>
-                          </div>
+                      <div>
+                        <p className="text-body-md-bold text-foreground">{variant.name}</p>
+                        <div className="flex items-center gap-xs mt-xs">
+                          <span className={dataChipClass}>{t('products.variants.sku_label')}: {variant.sku}</span>
+                          <span className={dataChipClass}>{t('products.variants.barcode_label')}: {variant.barcode}</span>
                         </div>
                       </div>
-                    </td>
-                    <td className={tdPaddingClass}>
-                      <div className="flex flex-wrap gap-1">
-                        {variant.attributes.map((attr, idx) => (
-                          <span 
-                            key={idx} 
-                            className={`${attrBadgeClass} ${attr.bgColor} ${attr.color} border ${attr.borderColor}`}
-                          >
-                            <span className={attrBadgeNameOpacity}>{attr.name}:</span>
-                            <span className="font-bold">{attr.value}</span>
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className={`${tdPaddingClass} text-right`}>
-                      <div className="flex flex-col items-end">
-                        <span className={`${numericTextClass} ${variant.lowStock ? 'text-error' : ''}`}>
-                          {variant.stock}
-                        </span>
-                        {variant.lowStock && (
-                          <span className={lowStockBadgeClass}>
-                            <span className={`material-symbols-outlined ${lowStockIconSize}`}>warning</span> Bajo
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className={`${tdPaddingClass} text-right`}>
-                      <span className={numericTextClass}>
-                        ${variant.price}
-                      </span>
-                    </td>
-                    <td className={`${tdPaddingClass} text-center`}>
-                      <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          type="button"
-                          onClick={() => handleEdit(variant)}
-                          className={editButtonPaddingClass}
-                          title="Editar Variante"
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-xs">
+                      {variant.attributes.map((attr, idx) => (
+                        <span
+                          key={idx}
+                          className={`${attr.bgColor} ${attr.color} border ${attr.borderColor} text-body-sm-bold px-1.5 py-0.5 rounded-xs`}
                         >
-                          <span className={`material-symbols-outlined ${editIconSize}`}>edit</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                          <span className="opacity-70">{attr.name}:</span>
+                          <span className="font-bold">{attr.value}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex flex-col items-end gap-xs">
+                      <span className={`text-data-mono font-data-mono ${variant.lowStock ? 'text-error' : 'text-foreground'}`}>
+                        {variant.stock}
+                      </span>
+                      {variant.lowStock && (
+                        <span className="flex items-center gap-xs text-body-sm-bold text-error">
+                          <AlertTriangle className="w-4 h-4" /> {t('products.variants.low_stock', 'Bajo')}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className="text-data-mono font-data-mono text-foreground">{formatCurrency(variant.price)}</span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-150">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(variant)}
+                        title={t('products.variants.action.edit', 'Editar Variante')}
+                        aria-label={t('products.variants.action.edit', 'Editar Variante')}
+                        className="text-on-surface-deep hover:text-primary transition-colors duration-150"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
-      )}
+      </div>
 
       {/* Modal */}
-      <VariantModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <VariantModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         onCreate={handleSaveVariant}
         product={{ id: productId, category_id: categoryId }}
         variantToEdit={variantToEdit}

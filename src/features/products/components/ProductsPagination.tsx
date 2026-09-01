@@ -27,37 +27,43 @@ export const ProductsPagination: React.FC<ProductsPaginationProps> = ({
   const { t } = useI18n();
 
   return (
-    <div className="px-10 py-6 flex items-center justify-between bg-slate-50/50 border-t border-border-subtle">
-      <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary">
-        {t('products.pagination.showing', {
-          start: startIndex,
-          end: endIndex,
+    <div className="px-lg py-md flex items-center justify-between bg-surface-muted border-t border-border-subtle">
+      <p className="text-body-sm-bold text-on-surface-deep">
+        <span className="text-data-mono font-data-mono">
+          {startIndex}–{endIndex}
+        </span>{' '}
+        {t('products.pagination.of_total', {
           total: totalProducts,
         })}
       </p>
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-md">
+        <div className="flex items-center gap-xs">
           <Button
-            variant="outline"
+            variant="secondary"
             size="icon"
             onClick={onPreviousPage}
             disabled={currentPage === 1 || loading}
-            className="size-8 rounded border-border-subtle hover:bg-white disabled:opacity-30"
+            aria-label={t('products.pagination.prev', 'Anterior')}
+            className="rounded-button"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft className="w-4 h-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             size="icon"
             onClick={onNextPage}
             disabled={currentPage === totalPages || totalPages === 0 || loading}
-            className="size-8 rounded border-border-subtle hover:bg-white disabled:opacity-30"
+            aria-label={t('products.pagination.next', 'Siguiente')}
+            className="rounded-button"
           >
-            <ChevronRight size={18} />
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-main">
-          Página {currentPage} de {totalPages || 1}
+        <span className="text-body-sm-bold text-foreground">
+          {t('products.pagination.page', {
+            current: currentPage,
+            total: totalPages || 1,
+          })}
         </span>
       </div>
     </div>

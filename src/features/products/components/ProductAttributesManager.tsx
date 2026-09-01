@@ -1,16 +1,36 @@
 import { useState, useEffect } from 'react';
-import { Save, RefreshCw, Layers, Plus, X } from 'lucide-react';
+import { Save, RefreshCw, Layers, Plus, X, Info } from 'lucide-react';
 import { attributeService } from '@/services/attributeService';
 import { categoryService } from '@/services/categoryService';
 import { useToast } from '@/hooks/useToast';
+import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
-export function ProductAttributesManager({ productId, categoryId }: { productId: string; categoryId?: string | number }) {
+interface ProductAttributesManagerProps {
+  productId: string;
+  categoryId?: string | number;
+}
+
+export function ProductAttributesManager({ productId, categoryId }: ProductAttributesManagerProps) {
+  const { t } = useI18n();
   const [attributesDef, setAttributesDef] = useState<any[]>([]);
   const [productValues, setProductValues] = useState<Record<string, any>>({});
   const [savingId, setSavingId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  
+
   // New Definition State
   const [isCreatingDef, setIsCreatingDef] = useState(false);
   const [newDefName, setNewDefName] = useState('');
@@ -54,14 +74,14 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
       // Traer TODAS las definiciones para poder filtrar localmente los globales y los de la categoría
       const allDefs = await attributeService.getAllDefinitions();
       const allDefsArray = Array.isArray(allDefs) ? allDefs : (allDefs?.data || []);
-      
+
       // Filtramos los globales (category_id es null) y los de la categoría actual
       const applicableDefs = allDefsArray.filter((d: any) => d.category_id == null || d.category_id == categoryId);
 
 
       if (!ignore) {
         const valsArray = Array.isArray(currentVals) ? currentVals : (currentVals?.data || []);
-        
+
         setAttributesDef(applicableDefs.filter((d: any) => !d.is_variant && !d.isVariant));
 
         const valMap: Record<string, any> = {};
@@ -76,7 +96,7 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
     } catch (err) {
       if (!ignore) {
         console.error("Error loading attributes", err);
-        toast.error("Error al cargar los atributos del producto");
+        toast.error(t('products.attributes.error.load'));
       }
     } finally {
       if (!ignore) setLoading(false);
@@ -97,24 +117,24 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
 
   const handleSave = async (attr: any) => {
     if (!productId) {
-      toast.error('Debe guardar los datos básicos del producto antes de asignar atributos.');
+      toast.error(t('products.attributes.save_first_text'));
       return;
     }
     setSavingId(attr.id || attr.attribute_id);
     try {
       const payload: any = {};
       const val = productValues[attr.id || attr.attribute_id];
-      
+
       if (attr.data_type === 'STRING' || attr.data_type === 'LIST') payload.value_text = val;
       else if (attr.data_type === 'NUMBER') payload.value_number = val ? Number(val) : null;
       else if (attr.data_type === 'BOOLEAN') payload.value_boolean = val === 'true' || val === true;
       else if (attr.data_type === 'DATE') payload.value_date = val;
 
       await attributeService.assignProductAttribute(productId, attr.id || attr.attribute_id, payload);
-      toast.success(`Atributo ${attr.name} guardado`);
+      toast.success(t('products.attributes.saved', { name: attr.name }));
     } catch (err) {
       console.error(err);
-      toast.error(`Error al guardar ${attr.name}`);
+      toast.error(t('products.attributes.error.save', { name: attr.name }));
     } finally {
       setSavingId(null);
     }
@@ -126,10 +146,10 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
     setCreatingDefLoader(true);
     try {
       const code = newDefName.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
-      
+
       const isSystemCategory = newDefCategory === 'General';
       const catIdPayload = isSystemCategory ? null : Number(newDefCategory);
-      
+
       const res: any = await attributeService.createDefinition({
         category_id: catIdPayload,
         category: isSystemCategory ? newDefCategory : undefined,
@@ -141,10 +161,10 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
         is_variant: false,
         options: newDefType === 'LIST' ? newDefOptions.filter(o => o.trim() !== '') : undefined
       });
-      
+
       const createdAttr = res.data || res;
       const createdAttrId = createdAttr?.id || createdAttr?.attribute_id;
-      
+
       if (productId && createdAttrId && newDefValue.trim() !== '') {
         const payload: any = {};
         if (newDefType === 'STRING' || newDefType === 'LIST') payload.value_text = newDefValue.trim();
@@ -154,8 +174,8 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
 
         await attributeService.assignProductAttribute(productId, createdAttrId, payload);
       }
-      
-      toast.success('Atributo creado y guardado exitosamente');
+
+      toast.success(t('products.attributes.created'));
       setIsCreatingDef(false);
       setNewDefName('');
       setNewDefType('STRING');
@@ -163,7 +183,7 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
       setNewDefOptions([]);
       await loadData();
     } catch (err: any) {
-      toast.error(err.message || 'Error al crear la definición del atributo');
+      toast.error(err.message || t('products.attributes.error.create'));
     } finally {
       setCreatingDefLoader(false);
     }
@@ -171,196 +191,211 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
 
   if (loading && attributesDef.length === 0) {
     return (
-      <div className="p-8 text-center text-slate-400 text-xs">
-        <RefreshCw className="animate-spin mx-auto mb-2" size={20} />
-        Cargando atributos descriptivos...
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-md" aria-busy="true">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full bg-surface-muted" />
+        ))}
       </div>
     );
   }
 
   if (!productId) {
     return (
-      <div className="p-12 text-center border-2 border-dashed border-divider/30 rounded-2xl bg-surface">
-        <Layers className="mx-auto text-divider mb-4" size={32} />
-        <h3 className="text-title-md font-bold text-foreground mb-2">Guarde el producto primero</h3>
-        <p className="text-body-sm text-on-surface-deep">Debe guardar los datos básicos de este producto antes de asignar atributos descriptivos.</p>
+      <div className="p-lg text-center border border-dashed border-border-subtle rounded-md bg-surface">
+        <Layers className="mx-auto text-on-surface-deep mb-md" size={24} />
+        <h3 className="text-title-md text-foreground mb-xs">{t('products.variants.save_first_title')}</h3>
+        <p className="text-body-md text-on-surface-deep">{t('products.attributes.save_first_text')}</p>
       </div>
     );
   }
 
   if (!categoryId) {
     return (
-      <div className="p-8 text-center text-amber-600 bg-amber-50 border border-dashed border-amber-200 rounded-xl">
-        <Layers className="mx-auto mb-2 opacity-50" size={24} />
-        <p className="text-sm font-bold">No hay categoría seleccionada</p>
-        <p className="text-xs mt-1">Debe seleccionar una categoría en la pestaña <b>Datos Básicos</b> para gestionar los atributos.</p>
+      <div className="p-md text-center bg-warning/10 border border-dashed border-warning/30 rounded-md">
+        <Layers className="mx-auto mb-sm opacity-50 text-warning" size={24} />
+        <p className="text-body-md-bold text-warning">{t('products.attributes.no_category_title')}</p>
+        <p className="text-body-md text-warning mt-xs">{t('products.attributes.no_category_text')}</p>
       </div>
     );
   }
 
+  const attrLabelClass = 'text-label-caps uppercase text-on-surface-deep';
+
   return (
-    <div className="space-y-4">
-      <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3 flex justify-between items-start gap-4">
-        <p className="text-[10px] text-blue-700 font-medium">
-          Estos atributos describen las propiedades del producto y NO dividen el inventario. 
-          Use este panel para especificar origen, materiales, garantías, etc.
+    <div className="space-y-md">
+      <div className="bg-primary-fixed text-on-primary-fixed rounded-md p-sm flex justify-between items-start gap-md">
+        <p className="text-body-md flex items-start gap-sm">
+          <Info className="w-4 h-4 mt-0.5 shrink-0" />
+          {t('products.attributes.info')}
         </p>
-        {categoryId && (
-          <Button 
-            type="button"
-            size="sm" 
-            variant="outline" 
-            className="shrink-0 h-7 text-[10px] uppercase font-bold text-primary border-primary/20 hover:bg-primary/5"
-            onClick={(e) => {
-              e.preventDefault();
-              setIsCreatingDef(!isCreatingDef);
-            }}
-          >
-            {isCreatingDef ? <X size={12} className="mr-1" /> : <Plus size={12} className="mr-1" />}
-            {isCreatingDef ? 'Cancelar' : 'Nuevo Atributo'}
-          </Button>
-        )}
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className="shrink-0 rounded-button"
+          onClick={(e) => {
+            e.preventDefault();
+            setIsCreatingDef(!isCreatingDef);
+          }}
+        >
+          {isCreatingDef ? <X className="w-4 h-4 mr-1" /> : <Plus className="w-4 h-4 mr-1" />}
+          {isCreatingDef ? t('products.modal.action.cancel') : t('products.attributes.action.new')}
+        </Button>
       </div>
 
       {isCreatingDef && (
-        <div className="p-5 bg-slate-50 border border-primary/20 rounded-2xl mb-6 space-y-4 animate-in slide-in-from-top-3 duration-200">
-          <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-slate-100">
-            <Plus size={14} /> Nuevo Atributo Descriptivo
+        <div className="p-md bg-surface-muted border border-primary/20 rounded-md mb-md space-y-md animate-in slide-in-from-top-2 duration-150">
+          <h4 className="text-label-caps uppercase text-primary flex items-center gap-xs pb-sm border-b border-border-subtle">
+            <Plus className="w-4 h-4" /> {t('products.attributes.new_title')}
           </h4>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Nombre del atributo</label>
-              <input 
-                className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                placeholder="Ej. Material, RAM, Garantía"
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
+            <div className="space-y-xs">
+              <Label htmlFor="attr-def-name" className={attrLabelClass}>{t('products.attributes.field.name')}</Label>
+              <Input
+                id="attr-def-name"
+                placeholder={t('products.attributes.field.name_placeholder')}
                 value={newDefName}
                 onChange={e => setNewDefName(e.target.value)}
               />
             </div>
-            
-            <div>
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Tipo de Dato</label>
-              <select 
-                className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                value={newDefType}
-                onChange={e => {
-                  setNewDefType(e.target.value);
-                  setNewDefValue('');
-                }}
-              >
-                <option value="STRING">Texto (STRING)</option>
-                <option value="NUMBER">Número (NUMBER)</option>
-                <option value="BOOLEAN">Sí / No (BOOLEAN)</option>
-                <option value="DATE">Fecha (DATE)</option>
-                <option value="LIST">Lista de opciones (LIST)</option>
-              </select>
+
+            <div className="space-y-xs">
+              <Label htmlFor="attr-def-type" className={attrLabelClass}>{t('products.attributes.field.type')}</Label>
+              <Select value={newDefType} onValueChange={v => { setNewDefType(v); setNewDefValue(''); }}>
+                <SelectTrigger id="attr-def-type" className="rounded-input" aria-label={t('products.attributes.field.type')}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-md shadow-fluent-8">
+                  <SelectItem value="STRING" className="text-body-md">{t('products.attributes.field.type.STRING')}</SelectItem>
+                  <SelectItem value="NUMBER" className="text-body-md">{t('products.attributes.field.type.NUMBER')}</SelectItem>
+                  <SelectItem value="BOOLEAN" className="text-body-md">{t('products.attributes.field.type.BOOLEAN')}</SelectItem>
+                  <SelectItem value="DATE" className="text-body-md">{t('products.attributes.field.type.DATE')}</SelectItem>
+                  <SelectItem value="LIST" className="text-body-md">{t('products.attributes.field.type.LIST')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div>
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Grupo / Categoría</label>
-              <select 
-                className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                value={newDefCategory}
-                onChange={e => setNewDefCategory(e.target.value)}
-              >
-                <optgroup label="Grupos de Sistema">
-                  <option value="General">General (Sin categoría)</option>
-                </optgroup>
-                {apiCategories.length > 0 && (
-                  <optgroup label="Categorías de Producto">
-                    {apiCategories.map((c: any) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} {Number(c.id) === Number(categoryId) ? '(Actual del Producto)' : ''}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
+            <div className="space-y-xs">
+              <Label htmlFor="attr-def-group" className={attrLabelClass}>{t('products.attributes.field.group')}</Label>
+              <Select value={newDefCategory} onValueChange={v => setNewDefCategory(v)}>
+                <SelectTrigger id="attr-def-group" className="rounded-input" aria-label={t('products.attributes.field.group')}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-md shadow-fluent-8 max-h-64">
+                  <SelectGroup>
+                    <SelectLabel className={attrLabelClass}>{t('products.attributes.field.group.system')}</SelectLabel>
+                    <SelectItem value="General" className="text-body-md">
+                      {t('products.attributes.field.group.general')}
+                    </SelectItem>
+                  </SelectGroup>
+                  {apiCategories.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className={attrLabelClass}>{t('products.attributes.field.group.product')}</SelectLabel>
+                      {apiCategories.map((c: any) => (
+                        <SelectItem key={c.id} value={c.id.toString()} className="text-body-md">
+                          {c.name} {Number(c.id) === Number(categoryId) ? t('products.attributes.field.group.current') : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           {newDefType === 'LIST' && (
-            <div className="bg-white p-3.5 rounded-xl border border-slate-100 space-y-2.5">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex justify-between items-center">
-                Opciones de la lista
-                <button 
-                  type="button" 
-                  onClick={() => setNewDefOptions([...newDefOptions, ''])} 
-                  className="text-primary hover:underline flex items-center text-[10px]"
+            <div className="bg-surface rounded-md border border-border-subtle p-md space-y-sm">
+              <div className="flex justify-between items-center">
+                <Label className={attrLabelClass}>{t('products.attributes.field.options')}</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setNewDefOptions([...newDefOptions, ''])}
+                  className="text-primary"
                 >
-                  <Plus size={12} className="mr-0.5" /> Añadir opción
-                </button>
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  <Plus className="w-4 h-4 mr-1" /> {t('products.attributes.field.options_add')}
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-sm">
                 {newDefOptions.map((opt, i) => (
-                  <div key={i} className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
-                    <input 
-                      className="flex-1 bg-transparent text-xs outline-none w-full" 
-                      placeholder={`Opción ${i + 1}`} 
-                      value={opt} 
+                  <div key={i} className="flex items-center gap-xs bg-surface-muted border border-border-subtle rounded-input px-sm py-1">
+                    <Input
+                      className="flex-1 border-0 bg-transparent h-7 px-0 focus-visible:ring-0"
+                      placeholder={t('products.attributes.field.option_placeholder', { index: i + 1 })}
+                      value={opt}
+                      aria-label={t('products.attributes.field.option_placeholder', { index: i + 1 })}
                       onChange={(e) => {
                         const nextOpts = [...newDefOptions];
                         nextOpts[i] = e.target.value;
                         setNewDefOptions(nextOpts);
                       }}
                     />
-                    <button 
-                      type="button" 
-                      onClick={() => setNewDefOptions(newDefOptions.filter((_, idx) => idx !== i))} 
-                      className="text-slate-400 hover:text-error shrink-0"
+                    <button
+                      type="button"
+                      onClick={() => setNewDefOptions(newDefOptions.filter((_, idx) => idx !== i))}
+                      aria-label={t('products.modal.action.delete')}
+                      className="text-on-surface-deep hover:text-error shrink-0"
                     >
-                      <X size={12} />
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
                 {newDefOptions.length === 0 && (
-                  <p className="text-[11px] text-slate-400 italic col-span-3">Añade al menos una opción para tu lista.</p>
+                  <p className="text-body-md text-on-surface-deep italic col-span-3">{t('products.attributes.field.options_empty')}</p>
                 )}
               </div>
             </div>
           )}
 
-          <div>
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Valor para este producto (Opcional)</label>
+          <div className="space-y-xs">
+            <Label htmlFor="attr-def-value" className={attrLabelClass}>{t('products.attributes.field.value')}</Label>
             {newDefType === 'LIST' ? (
-              <select
-                className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                value={newDefValue}
-                onChange={e => setNewDefValue(e.target.value)}
-              >
-                <option value="">Seleccionar...</option>
-                {newDefOptions.filter(o => o.trim() !== '').map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
+              <Select value={newDefValue || undefined} onValueChange={v => setNewDefValue(v)}>
+                <SelectTrigger id="attr-def-value" className="rounded-input" aria-label={t('products.attributes.field.value')}>
+                  <SelectValue placeholder={t('products.attributes.field.select')} />
+                </SelectTrigger>
+                <SelectContent className="rounded-md shadow-fluent-8">
+                  {newDefOptions.filter(o => o.trim() !== '').map(opt => (
+                    <SelectItem key={opt} value={opt} className="text-body-md">{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             ) : newDefType === 'BOOLEAN' ? (
-              <select
-                className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                value={newDefValue}
-                onChange={e => setNewDefValue(e.target.value)}
-              >
-                <option value="">No especificado</option>
-                <option value="true">Sí</option>
-                <option value="false">No</option>
-              </select>
+              <Select value={newDefValue || 'unspecified'} onValueChange={v => setNewDefValue(v === 'unspecified' ? '' : v)}>
+                <SelectTrigger id="attr-def-value" className="rounded-input" aria-label={t('products.attributes.field.value')}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-md shadow-fluent-8">
+                  <SelectItem value="unspecified" className="text-body-md">{t('products.attributes.field.unspecified')}</SelectItem>
+                  <SelectItem value="true" className="text-body-md">{t('products.details.common.yes')}</SelectItem>
+                  <SelectItem value="false" className="text-body-md">{t('products.details.common.no')}</SelectItem>
+                </SelectContent>
+              </Select>
             ) : (
-              <input
+              <Input
+                id="attr-def-value"
                 type={newDefType === 'NUMBER' ? 'number' : newDefType === 'DATE' ? 'date' : 'text'}
-                className="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                placeholder={newDefType === 'NUMBER' ? 'Ej. 120' : newDefType === 'DATE' ? 'Seleccionar fecha' : 'Ej. Importado, 55 pulgadas, etc.'}
+                placeholder={
+                  newDefType === 'NUMBER'
+                    ? t('products.attributes.field.value_placeholder_number')
+                    : newDefType === 'DATE'
+                      ? t('products.attributes.field.value_placeholder_date')
+                      : t('products.attributes.field.value_placeholder_text')
+                }
                 value={newDefValue}
                 onChange={e => setNewDefValue(e.target.value)}
               />
             )}
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
-            <Button 
+          <div className="flex justify-end gap-sm pt-sm border-t border-border-subtle">
+            <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               size="sm"
-              className="text-[10px] uppercase font-bold px-4 h-8 rounded-lg"
+              className="rounded-button"
               onClick={() => {
                 setIsCreatingDef(false);
                 setNewDefName('');
@@ -369,36 +404,36 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
                 setNewDefOptions([]);
               }}
             >
-              Cancelar
+              {t('products.modal.action.cancel')}
             </Button>
-            <Button 
+            <Button
               type="button"
+              variant="primary"
               size="sm"
-              className="bg-primary hover:bg-primary/95 text-white text-[10px] uppercase font-bold px-5 h-8 rounded-lg flex items-center gap-1.5 shadow-sm"
+              className="rounded-button"
+              loading={creatingDefLoader}
               disabled={!newDefName.trim() || creatingDefLoader || (newDefType === 'LIST' && newDefOptions.filter(o => o.trim() !== '').length === 0)}
               onClick={(e) => {
                 e.preventDefault();
                 handleCreateDefinition();
               }}
             >
-              {creatingDefLoader ? <RefreshCw size={12} className="animate-spin" /> : 'Crear y Guardar'}
+              {t('products.attributes.action.create')}
             </Button>
           </div>
         </div>
       )}
 
       {attributesDef.length === 0 && !isCreatingDef ? (
-        <div className="p-8 text-center text-slate-400 bg-slate-50 border border-dashed border-slate-200 rounded-xl">
-          <Layers className="mx-auto mb-2 text-slate-300" size={24} />
-          <p className="text-sm font-medium">No hay atributos descriptivos definidos para esta categoría.</p>
-          {categoryId && (
-            <Button type="button" variant="outline" size="sm" className="mt-3" onClick={(e) => { e.preventDefault(); setIsCreatingDef(true); }}>
-              <Plus size={14} className="mr-1" /> Crear el primero
-            </Button>
-          )}
+        <div className="p-lg text-center bg-surface-muted border border-dashed border-border-subtle rounded-md">
+          <Layers className="mx-auto mb-sm text-on-surface-deep" size={24} />
+          <p className="text-body-md text-on-surface-deep">{t('products.attributes.empty')}</p>
+          <Button type="button" variant="secondary" size="sm" className="mt-md rounded-button" onClick={(e) => { e.preventDefault(); setIsCreatingDef(true); }}>
+            <Plus className="w-4 h-4 mr-1" /> {t('products.attributes.action.create_first')}
+          </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
           {attributesDef.map(attr => {
             const attrId = attr.id || attr.attribute_id;
             const val = productValues[attrId] || '';
@@ -406,72 +441,75 @@ export function ProductAttributesManager({ productId, categoryId }: { productId:
             const hasValue = val !== '' && val !== null && val !== undefined;
 
           return (
-            <div 
-              key={attrId} 
-              className={`flex flex-col gap-1.5 p-3 rounded-xl transition-all duration-200 ${
-                hasValue 
-                  ? 'bg-primary/[0.04] border border-primary/30 shadow-sm ring-1 ring-primary/10' 
-                  : 'bg-slate-50 border border-slate-100 hover:border-slate-200 opacity-80 hover:opacity-100'
-              }`}
+            <div
+              key={attrId}
+              className={cn(
+                'flex flex-col gap-xs p-sm rounded-md transition-colors duration-150 border',
+                hasValue
+                  ? 'bg-primary/5 border-primary/30'
+                  : 'bg-surface-muted border-border-subtle'
+              )}
             >
               <div className="flex items-center justify-between">
-                <label className={`text-[10px] font-black uppercase tracking-wider ${hasValue ? 'text-primary' : 'text-slate-500'}`}>
+                <label className={cn(attrLabelClass, hasValue ? 'text-primary' : 'text-on-surface-deep')}>
                   {attr.name} {attr.is_required && <span className="text-error">*</span>}
                 </label>
                 {hasValue && (
-                  <span className="text-[8px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-sm uppercase tracking-widest">
-                    Activo
+                  <span className="text-body-sm-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full uppercase">
+                    {t('products.attributes.active')}
                   </span>
                 )}
               </div>
-              
-              <div className="flex gap-2 items-center mt-1">
+
+              <div className="flex gap-sm items-center mt-xs">
                 <div className="flex-1">
                   {attr.data_type === 'LIST' && attr.options ? (
-                    <select
-                      className={`w-full h-9 px-3 bg-white border rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors ${hasValue ? 'border-primary/30' : 'border-slate-200'}`}
-                      value={val}
-                      onChange={e => handleChange(attrId, e.target.value)}
-                    >
-                      <option value="">Seleccionar...</option>
-                      {attr.options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
+                    <Select value={val || undefined} onValueChange={v => handleChange(attrId, v)}>
+                      <SelectTrigger className="rounded-input bg-surface" aria-label={attr.name}>
+                        <SelectValue placeholder={t('products.attributes.field.select')} />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-md shadow-fluent-8 max-h-64">
+                        {attr.options.map((opt: string) => (
+                          <SelectItem key={opt} value={opt} className="text-body-md">{opt}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   ) : attr.data_type === 'BOOLEAN' ? (
-                    <select
-                      className={`w-full h-9 px-3 bg-white border rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors ${hasValue ? 'border-primary/30' : 'border-slate-200'}`}
-                      value={String(val)}
-                      onChange={e => handleChange(attrId, e.target.value)}
-                    >
-                      <option value="">No especificado</option>
-                      <option value="true">Sí</option>
-                      <option value="false">No</option>
-                    </select>
+                    <Select value={String(val) || 'unspecified'} onValueChange={v => handleChange(attrId, v === 'unspecified' ? '' : v)}>
+                      <SelectTrigger className="rounded-input bg-surface" aria-label={attr.name}>
+                        <SelectValue placeholder={t('products.attributes.field.unspecified')} />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-md shadow-fluent-8">
+                        <SelectItem value="unspecified" className="text-body-md">{t('products.attributes.field.unspecified')}</SelectItem>
+                        <SelectItem value="true" className="text-body-md">{t('products.details.common.yes')}</SelectItem>
+                        <SelectItem value="false" className="text-body-md">{t('products.details.common.no')}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   ) : (
-                    <input
+                    <Input
                       type={attr.data_type === 'NUMBER' ? 'number' : attr.data_type === 'DATE' ? 'date' : 'text'}
-                      className={`w-full h-9 px-3 bg-white border rounded-lg text-sm text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors ${hasValue ? 'border-primary/30' : 'border-slate-200'}`}
-                      placeholder={`Valor para ${attr.name}`}
+                      className="bg-surface rounded-input"
+                      placeholder={t('products.attributes.value_for', { name: attr.name })}
                       value={val}
+                      aria-label={t('products.attributes.value_for', { name: attr.name })}
                       onChange={e => handleChange(attrId, e.target.value)}
                     />
                   )}
                 </div>
-                <Button 
+                <Button
                   type="button"
-                  size="sm" 
+                  size="icon"
+                  variant={hasValue ? 'primary' : 'secondary'}
                   onClick={(e) => {
                     e.preventDefault();
                     handleSave(attr);
-                  }} 
+                  }}
                   disabled={isSaving}
-                  className={`h-9 w-9 p-0 border-none shadow-none transition-all duration-200 ${
-                    hasValue 
-                      ? 'bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20' 
-                      : 'bg-slate-200 hover:bg-slate-300 text-slate-500'
-                  }`}
-                  title="Guardar atributo individual"
+                  className="shrink-0"
+                  title={t('products.attributes.action.save_title')}
+                  aria-label={t('products.attributes.action.save_title')}
                 >
-                  {isSaving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                  {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 </Button>
               </div>
             </div>

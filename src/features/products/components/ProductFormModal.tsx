@@ -2,36 +2,40 @@ import { useState, useMemo, useEffect } from 'react'
 import { useI18n } from '@/lib/i18n'
 import { getGroupedUnitOptions } from '@/constants/units'
 import {
-  X,
-  Save,
   Trash2,
   AlertTriangle,
-  Package,
   Info,
-  ChevronDown,
   CheckCircle2,
   Plus,
-  RefreshCw,
   FileText,
   Settings2,
   Barcode,
   Percent,
   Tags,
+  Save,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
+import EnhancedModal from '@/components/ui/EnhancedModal'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 import { CategoryManagementModal } from '@/features/categories'
 import { useProductForm } from '../hooks/useProductForm';
 
 /**
  * ProductFormModal Component
- * Rediseñado con Tailwind CSS siguiendo fielmente Fluent Design System 2
+ * Construido sobre EnhancedModal siguiendo DESIGN.md (§6.4, §6.6)
  */
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -39,10 +43,12 @@ interface ProductFormModalProps {
   product?: any | null;
 }
 
+type FormTab = 'basic' | 'details' | 'measure'
+
 export default function ProductFormModal({ isOpen, onClose, product = null }: ProductFormModalProps) {
   const { t } = useI18n()
-  const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'measure'>('basic')
-  
+  const [activeTab, setActiveTab] = useState<FormTab>('basic')
+
   const {
     formData,
     setFormData,
@@ -71,7 +77,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
   } = useProductForm({ product, isOpen, onClose });
 
   const handleAddBrand = async () => {
-    const name = window.prompt('Ingrese el nombre de la nueva marca:');
+    const name = window.prompt(t('products.modal.prompt.new_brand', 'Ingrese el nombre de la nueva marca:'));
     if (!name?.trim()) return;
     try {
       const { brandService } = await import('@/services/brandService');
@@ -102,11 +108,11 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
       } else if (errors.tax_rate_id || errors.origin || errors.brand_id) {
         setActiveTab('details');
       }
-      
+
       // Scroll to top so the banner is visible
       const formContainer = document.getElementById('product-form-container');
       if (formContainer) {
-        formContainer.scrollTo({ top: 0, behavior: 'smooth' });
+        formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
   }, [errors]);
@@ -128,101 +134,102 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
 
   if (!isOpen) return null
 
-  const labelClass = "text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary mb-2 flex items-center gap-1 font-display"
-  const inputClass = "w-full h-11 px-4 bg-white border border-border-subtle rounded-xl text-sm text-text-main font-bold outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-slate-300 font-display hover:border-slate-300"
-  const selectClass = "w-full h-11 px-4 bg-white border border-border-subtle rounded-xl text-sm text-text-main font-bold outline-none focus:ring-4 focus:ring-primary/10 transition-all appearance-none cursor-pointer font-display hover:border-slate-300"
+  const labelClass = 'text-body-md-bold text-foreground'
+  const errorTextClass = 'text-body-md text-error'
 
   // Detección de errores en tiempo real por pestaña para los indicadores de alerta
   const hasBasicTabErrors = !!errors.name || !!errors.category || !!errors.description || !formData.name.trim() || !formData.category || !formData.description.trim();
   const hasMeasureTabErrors = !!errors.base_unit || !!errors.scale_code || (formData.is_variable_measure && !formData.scale_code);
 
+  const tabs: Array<{ id: FormTab; label: string; icon: React.ReactNode; hasError?: boolean }> = [
+    {
+      id: 'basic',
+      label: t('products.modal.tab.basic', 'Datos Básicos'),
+      icon: <FileText className="w-4 h-4" />,
+      hasError: hasBasicTabErrors,
+    },
+    {
+      id: 'details',
+      label: t('products.modal.tab.details', 'Detalles y SIFEN'),
+      icon: <Settings2 className="w-4 h-4" />,
+    },
+    {
+      id: 'measure',
+      label: t('products.modal.tab.measure', 'Inventario y Balanza'),
+      icon: <Barcode className="w-4 h-4" />,
+      hasError: hasMeasureTabErrors,
+    },
+  ]
+
+  const sectionHeaderClass = 'flex items-center gap-xs pb-sm border-b border-border-subtle text-on-surface-deep'
+
+  const renderErrorText = (message?: string) =>
+    message ? <p className={errorTextClass}>{message}</p> : null
+
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 font-display">
-      <div 
-        className="bg-white rounded-2xl shadow-fluent-16 w-full max-w-4xl h-[84vh] max-h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 font-display"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header con gradiente */}
-        <div className="px-8 py-5 border-b border-border-subtle flex items-center justify-between bg-gradient-to-r from-primary/[0.03] via-transparent to-transparent">
-          <div className="flex items-center gap-3.5">
-            <div className="size-11 bg-primary rounded-xl flex items-center justify-center text-white shadow-md shadow-primary/10">
-              {isEditMode ? <Package size={22} /> : <Plus size={22} />}
-            </div>
+    <>
+      <EnhancedModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={isEditMode ? t('products.modal.edit.title') : t('products.modal.create.title')}
+        subtitle={isEditMode ? t('products.modal.edit.subtitle') : t('products.modal.create.subtitle')}
+        variant="default"
+        size="xl"
+        closeOnOverlayClick={false}
+        className="rounded-xl flex flex-col"
+        testId="product-form-modal"
+        footer={
+          <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-black text-text-main tracking-tight uppercase leading-none">
-                {isEditMode ? t('products.modal.edit.title') : t('products.modal.create.title')}
-              </h2>
-              <p className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mt-1">
-                {isEditMode ? t('products.modal.edit.subtitle') : t('products.modal.create.subtitle')}
-              </p>
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-error hover:bg-error-container hover:text-on-error-container"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isSubmitting || isDeleting}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {t('products.modal.action.delete')}
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-sm">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onClose}
+                disabled={isSubmitting || isDeleting}
+              >
+                {t('products.modal.action.cancel')}
+              </Button>
+              <Button
+                type="submit"
+                form="product-form"
+                variant="primary"
+                loading={isSubmitting}
+                disabled={isSubmitting || isDeleting}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isSubmitting ? t('products.modal.action.saving') : t('products.modal.action.save')}
+              </Button>
             </div>
           </div>
-          <button 
-            onClick={onClose} 
-            className="p-2 hover:bg-slate-100 rounded-full text-text-secondary hover:text-text-main transition-all hover:rotate-90 duration-200"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Tabs superiores */}
-        <div className="flex border-b border-border-subtle bg-slate-50/50 px-8 gap-6 overflow-x-auto scrollbar-none">
-          <button
-            type="button"
-            onClick={() => setActiveTab('basic')}
-            className={`py-3 px-1 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-200 flex items-center gap-2 relative ${
-              activeTab === 'basic'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-text-secondary hover:text-text-main'
-            }`}
-          >
-            <FileText size={14} />
-            <span>Datos Básicos</span>
-            {hasBasicTabErrors && (
-              <span className="absolute top-2.5 right-[-6px] h-2 w-2 rounded-full bg-error animate-pulse border border-white" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('details')}
-            className={`py-3 px-1 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-200 flex items-center gap-2 relative ${
-              activeTab === 'details'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-text-secondary hover:text-text-main'
-            }`}
-          >
-            <Settings2 size={14} />
-            <span>Detalles y SIFEN</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('measure')}
-            className={`py-3 px-1 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-200 flex items-center gap-2 relative ${
-              activeTab === 'measure'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-text-secondary hover:text-text-main'
-            }`}
-          >
-            <Barcode size={14} />
-            <span>Inventario y Balanza</span>
-            {hasMeasureTabErrors && (
-              <span className="absolute top-2.5 right-[-6px] h-2 w-2 rounded-full bg-error animate-pulse border border-white" />
-            )}
-          </button>
-
-        </div>
-
-        {/* Form Body con Scroll */}
-        <div id="product-form-container" className="flex-1 overflow-y-auto p-8 bg-slate-50/30">
-          <form id="product-form" onSubmit={handleSubmit} className="space-y-6">
+        }
+      >
+        <div id="product-form-container">
+          <form id="product-form" onSubmit={handleSubmit} className="space-y-md">
             {Object.keys(errors).length > 0 && (
-              <div className="flex items-start gap-3 rounded-xl border border-error/20 bg-error/[0.02] p-4 text-xs text-error animate-in fade-in duration-200">
-                <AlertTriangle size={16} className="mt-0.5 shrink-0 text-error" />
-                <div className="space-y-1">
-                  <p className="font-bold uppercase tracking-wider text-[10px]">Por favor corrige los siguientes errores:</p>
-                  <ul className="list-disc list-inside space-y-0.5 font-medium">
+              <div
+                className="flex items-start gap-sm rounded-md bg-error-container text-on-error-container p-md animate-in fade-in duration-150"
+                role="alert"
+              >
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <div className="space-y-xs">
+                  <p className="text-body-md-bold uppercase">
+                    {t('products.modal.error.summary', 'Por favor corrige los siguientes errores:')}
+                  </p>
+                  <ul className="list-disc list-inside space-y-xs text-body-md">
                     {Object.values(errors).map((err: any, idx) => (
                       <li key={idx}>{err}</li>
                     ))}
@@ -231,38 +238,65 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
               </div>
             )}
 
+            {/* Tabs */}
+            <div role="tablist" aria-label={t('products.modal.create.title')} className="flex gap-lg border-b border-border-subtle sticky top-0 bg-surface z-10 overflow-x-auto">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative py-sm px-xs text-body-sm-bold uppercase tracking-wider border-b-2 transition-colors duration-150 flex items-center gap-xs ${
+                    activeTab === tab.id
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-on-surface-deep hover:text-foreground'
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                  {tab.hasError && (
+                    <span aria-hidden="true" className="absolute top-1.5 right-[-8px] size-2 rounded-full bg-error" />
+                  )}
+                </button>
+              ))}
+            </div>
+
             {/* CONTENIDO PESTAÑA: DATOS BÁSICOS */}
             {activeTab === 'basic' && (
-              <div className="space-y-6 animate-in fade-in duration-200 slide-in-from-left-3">
-                <div className="bg-white p-6 rounded-2xl border border-border-subtle shadow-sm space-y-6">
-                  <div className="flex items-center gap-2 pb-3 border-b border-slate-100 text-slate-800">
-                    <Info size={16} className="text-primary" />
-                    <h3 className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Información General</h3>
+              <div role="tabpanel" className="space-y-md animate-in fade-in duration-150">
+                <div className="bg-surface-muted rounded-md p-md space-y-md">
+                  <div className={sectionHeaderClass}>
+                    <Info className="w-4 h-4 text-primary" />
+                    <h3 className="text-label-caps uppercase">
+                      {t('products.modal.section.general_info', 'Información General')}
+                    </h3>
                   </div>
 
                   {/* Nombre */}
-                  <div className="space-y-1.5">
-                    <label className={labelClass}>
-                      {t('products.modal.field.product_name')} <span className="text-error font-black ml-1">*</span>
-                    </label>
-                    <input
+                  <div className="space-y-xs">
+                    <Label htmlFor="product-name" className={labelClass}>
+                      {t('products.modal.field.product_name')} <span className="text-error">*</span>
+                    </Label>
+                    <Input
+                      id="product-name"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
                       placeholder={t('products.modal.placeholder.product_name')}
-                      className={`${inputClass} ${errors.name ? 'border-error ring-error/10' : ''}`}
+                      state={errors.name ? 'error' : ''}
                     />
-                    {errors.name && <p className="text-[10px] text-error font-black uppercase tracking-widest mt-1.5">{errors.name}</p>}
+                    {renderErrorText(errors.name)}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
                     {/* Categoría */}
-                    <div className="space-y-1.5">
-                      <label className={labelClass}>
-                        {t('products.modal.field.category')} <span className="text-error font-black ml-1">*</span>
-                      </label>
+                    <div className="space-y-xs">
+                      <Label className={labelClass}>
+                        {t('products.modal.field.category')} <span className="text-error">*</span>
+                      </Label>
                       <Select
-                        value={formData.category}
+                        value={formData.category || undefined}
                         onValueChange={v => {
                           setFormData(prev => ({ ...prev, category: v }));
                           setErrors(prev => ({ ...prev, category: undefined }));
@@ -270,106 +304,96 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                         disabled={loadingCategories}
                       >
                         <SelectTrigger
-                          className={`h-11 rounded-xl border-border-subtle font-bold ${errors.category ? 'border-error' : ''}`}
+                          id="product-category-trigger"
+                          className="rounded-input"
                           data-testid="product-category-trigger"
+                          aria-label={t('products.modal.field.category')}
                         >
                           <SelectValue
-                            placeholder={loadingCategories ? 'Cargando...' : t('products.modal.placeholder.category')}
+                            placeholder={loadingCategories ? t('common.loading') : t('products.modal.placeholder.category')}
                           />
                         </SelectTrigger>
-                        <SelectContent className="">
+                        <SelectContent className="rounded-md shadow-fluent-8">
                           {categories.map(cat => (
-                            <SelectItem
-                              key={cat.id}
-                              value={cat.id.toString()}
-                              className="font-bold text-xs uppercase tracking-wider"
-                            >
+                            <SelectItem key={cat.id} value={cat.id.toString()} className="text-body-md">
                               {cat.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      {errors.category && <p className="text-[10px] text-error font-black uppercase tracking-widest mt-1.5">{errors.category}</p>}
+                      {renderErrorText(errors.category)}
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={openCategoryManager}
-                        className="h-auto px-0 py-1 text-[10px] uppercase tracking-widest font-bold text-primary hover:bg-transparent hover:underline flex items-center gap-1.5 justify-start"
+                        className="h-auto px-0 py-xs text-primary hover:bg-transparent hover:underline flex items-center gap-xs justify-start"
                         data-testid="product-category-manage"
                       >
-                        <Tags size={12} />
+                        <Tags className="w-4 h-4" />
                         {t('products.modal.category.manage')}
                       </Button>
                     </div>
 
                     {/* Tipo de Producto */}
-                    <div className="space-y-1.5">
-                      <label className={labelClass}>{t('products.modal.field.product_type')}</label>
-                      <div className="relative">
-                        <select
-                          name="productType"
-                          value={formData.productType}
-                          onChange={e => {
-                            handleChange(e);
-                            // Al salir de SERVICE el flag deja de tener sentido
-                            // (D-SR-4: reservable ⇒ SERVICE) y se resetea.
-                            if (e.target.value !== 'SERVICE') {
-                              setFormData(prev => ({ ...prev, is_bookable: false }));
-                            }
-                          }}
-                          className={selectClass}
-                        >
-                          <option value="PHYSICAL">{t('products.type.physical')}</option>
-                          <option value="SERVICE">{t('products.type.service')}</option>
-                          <option value="PRODUCTION">MANUFACTURADO</option>
-                        </select>
-                        <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                      </div>
+                    <div className="space-y-xs">
+                      <Label className={labelClass}>{t('products.modal.field.product_type')}</Label>
+                      <Select
+                        value={formData.productType || undefined}
+                        onValueChange={v => {
+                          setFormData(prev => ({ ...prev, productType: v }));
+                          setErrors(prev => ({ ...prev, productType: undefined }));
+                          // Al salir de SERVICE el flag deja de tener sentido
+                          // (D-SR-4: reservable ⇒ SERVICE) y se resetea.
+                          if (v !== 'SERVICE') {
+                            setFormData(prev => ({ ...prev, is_bookable: false }));
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="rounded-input" aria-label={t('products.modal.field.product_type')}>
+                          <SelectValue placeholder={t('products.modal.field.product_type')} />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-md shadow-fluent-8">
+                          <SelectItem value="PHYSICAL" className="text-body-md">{t('products.type.physical')}</SelectItem>
+                          <SelectItem value="SERVICE" className="text-body-md">{t('products.type.service')}</SelectItem>
+                          <SelectItem value="PRODUCTION" className="text-body-md">{t('products.type.production', 'Manufacturado')}</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
                   {/* Reservable (agenda) — solo SERVICE (D-SR-4) */}
                   {formData.productType === 'SERVICE' && (
-                    <div className="flex items-center justify-between p-4 bg-slate-50/50 border border-border-subtle rounded-xl transition-all duration-200 hover:bg-slate-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="flex flex-col pr-3">
-                        <span className="text-xs font-bold text-text-main">{t('products.modal.field.bookable')}</span>
-                        <span className="text-[9px] text-text-secondary font-black uppercase tracking-wider mt-0.5">{t('products.modal.field.bookableHint')}</span>
+                    <div className="flex items-center justify-between gap-md bg-surface rounded-md border border-border-subtle p-md animate-in fade-in slide-in-from-top-2 duration-150">
+                      <div className="flex flex-col gap-xs">
+                        <span className="text-body-md-bold text-foreground">{t('products.modal.field.bookable')}</span>
+                        <span className="text-body-sm-bold text-on-surface-deep">{t('products.modal.field.bookableHint')}</span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, is_bookable: !prev.is_bookable }))}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-primary/15 ${
-                          formData.is_bookable ? 'bg-primary' : 'bg-slate-200'
-                        }`}
-                        role="switch"
-                        aria-checked={formData.is_bookable}
+                      <Switch
+                        checked={formData.is_bookable}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_bookable: checked }))}
+                        aria-label={t('products.modal.field.bookable')}
                         data-testid="product-bookable-switch"
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-background shadow-md ring-0 transition duration-200 ease-in-out ${
-                            formData.is_bookable ? 'translate-x-5' : 'translate-x-0'
-                          }`}
-                        />
-                      </button>
+                      />
                     </div>
                   )}
 
                   {/* Descripción */}
-                  <div className="space-y-1.5">
-                    <label className={labelClass}>
-                      {t('products.modal.field.description')} <span className="text-error font-black ml-1">*</span>
-                    </label>
-                    <textarea
+                  <div className="space-y-xs">
+                    <Label htmlFor="product-description" className={labelClass}>
+                      {t('products.modal.field.description')} <span className="text-error">*</span>
+                    </Label>
+                    <Textarea
+                      id="product-description"
                       name="description"
                       value={formData.description}
                       onChange={handleChange}
                       rows={3}
                       placeholder={t('products.modal.placeholder.description')}
-                      className={`${inputClass} h-auto py-3.5 resize-none ${errors.description ? 'border-error' : ''}`}
+                      className="resize-none"
+                      aria-invalid={!!errors.description}
                     />
-                    {errors.description && <p className="text-[10px] text-error font-black uppercase tracking-widest mt-1.5">{errors.description}</p>}
+                    {renderErrorText(errors.description)}
                   </div>
                 </div>
               </div>
@@ -377,83 +401,112 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
 
             {/* CONTENIDO PESTAÑA: DETALLES Y SIFEN */}
             {activeTab === 'details' && (
-              <div className="space-y-6 animate-in fade-in duration-200 slide-in-from-left-3">
-                <div className="bg-white p-6 rounded-2xl border border-border-subtle shadow-sm space-y-6">
-                  <div className="flex items-center gap-2 pb-3 border-b border-slate-100 text-slate-800">
-                    <Percent size={16} className="text-primary" />
-                    <h3 className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Clasificación e Impuestos</h3>
+              <div role="tabpanel" className="space-y-md animate-in fade-in duration-150">
+                <div className="bg-surface-muted rounded-md p-md space-y-md">
+                  <div className={sectionHeaderClass}>
+                    <Percent className="w-4 h-4 text-primary" />
+                    <h3 className="text-label-caps uppercase">
+                      {t('products.modal.section.classification', 'Clasificación e Impuestos')}
+                    </h3>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
                     {/* Tasa de IVA (SIFEN v1.2) */}
-                    <div className="space-y-1.5">
-                      <label className={labelClass}>
-                        Tasa de IVA (SIFEN)
-                        <span className="ml-1.5 text-[9px] text-blue-600 font-bold uppercase bg-blue-50 px-1 rounded border border-blue-100">v1.2</span>
-                      </label>
-                      <div className="relative">
-                        <select
-                          name="tax_rate_id"
-                          value={formData.tax_rate_id}
-                          onChange={handleChange}
-                          className={selectClass}
-                          disabled={loadingTaxRates}
-                        >
-                          <option value="">{loadingTaxRates ? 'Cargando...' : 'Usar por defecto (Categoría)'}</option>
+                    <div className="space-y-xs">
+                      <Label className={labelClass}>
+                        {t('products.modal.field.tax_rate', 'Tasa de IVA (SIFEN)')}
+                        <span className="bg-primary-fixed text-on-primary-fixed rounded-xs px-1 py-0.5 text-body-sm-bold">
+                          v1.2
+                        </span>
+                      </Label>
+                      <Select
+                        value={formData.tax_rate_id || 'default'}
+                        onValueChange={v => {
+                          setFormData(prev => ({ ...prev, tax_rate_id: v === 'default' ? '' : v }));
+                          setErrors(prev => ({ ...prev, tax_rate_id: undefined }));
+                        }}
+                        disabled={loadingTaxRates}
+                      >
+                        <SelectTrigger className="rounded-input" aria-label={t('products.modal.field.tax_rate', 'Tasa de IVA (SIFEN)')}>
+                          <SelectValue
+                            placeholder={loadingTaxRates ? t('common.loading') : t('products.modal.option.default_tax', 'Usar por defecto (Categoría)')}
+                          />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-md shadow-fluent-8">
+                          <SelectItem value="default" className="text-body-md">
+                            {t('products.modal.option.default_tax', 'Usar por defecto (Categoría)')}
+                          </SelectItem>
                           {taxRates.map(rate => (
-                            <option key={rate.id} value={rate.id}>
+                            <SelectItem key={rate.id} value={rate.id.toString()} className="text-body-md">
                               {rate.tax_name || rate.name} ({rate.rate}%) - {rate.code}
-                            </option>
+                            </SelectItem>
                           ))}
-                        </select>
-                        <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                      </div>
-                      <p className="text-[10px] text-slate-400 italic mt-1.5">
-                        Si no se selecciona, heredará el IVA de la categoría.
+                        </SelectContent>
+                      </Select>
+                      <p className="text-body-sm-bold text-on-surface-deep">
+                        {t('products.modal.helper.tax_inherit', 'Si no se selecciona, heredará el IVA de la categoría.')}
                       </p>
                     </div>
 
                     {/* Origen */}
-                    <div className="space-y-1.5">
-                      <label className={labelClass}>{t('products.modal.field.origin')}</label>
-                      <div className="relative">
-                        <select name="origin" value={formData.origin} onChange={handleChange} className={selectClass}>
-                          <option value="">{t('products.modal.placeholder.origin')}</option>
-                          <option value="NACIONAL">{t('products.origin.national')}</option>
-                          <option value="IMPORTADO">{t('products.origin.imported')}</option>
-                        </select>
-                        <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                      </div>
+                    <div className="space-y-xs">
+                      <Label className={labelClass}>{t('products.modal.field.origin')}</Label>
+                      <Select
+                        value={formData.origin || undefined}
+                        onValueChange={v => {
+                          setFormData(prev => ({ ...prev, origin: v }));
+                          setErrors(prev => ({ ...prev, origin: undefined }));
+                        }}
+                      >
+                        <SelectTrigger className="rounded-input" aria-label={t('products.modal.field.origin')}>
+                          <SelectValue placeholder={t('products.modal.placeholder.origin')} />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-md shadow-fluent-8">
+                          <SelectItem value="NACIONAL" className="text-body-md">{t('products.origin.national')}</SelectItem>
+                          <SelectItem value="IMPORTADO" className="text-body-md">{t('products.origin.imported')}</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {/* Marca */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-xs">
                       <div className="flex justify-between items-center">
-                        <label className={labelClass}>{t('products.modal.field.brand')}</label>
-                        <button type="button" onClick={handleAddBrand} className="text-[10px] text-primary hover:underline font-bold uppercase">
-                          + Nueva
-                        </button>
+                        <Label className={labelClass}>{t('products.modal.field.brand')}</Label>
+                        <Button type="button" variant="link" size="sm" onClick={handleAddBrand} className="text-body-sm-bold">
+                          <Plus className="w-4 h-4 mr-1" />
+                          {t('products.modal.action.new_brand', '+ Nueva')}
+                        </Button>
                       </div>
-                      <div className="relative flex items-center gap-2">
-                        <div className="relative flex-1">
-                          <select name="brand_id" value={formData.brand_id} onChange={handleChange} className={selectClass}>
-                          <option value="">{loadingBrands ? 'Cargando marcas...' : 'Seleccione una marca (opcional)'}</option>
+                      <Select
+                        value={formData.brand_id || undefined}
+                        onValueChange={v => {
+                          setFormData(prev => ({ ...prev, brand_id: v }));
+                          setErrors(prev => ({ ...prev, brand_id: undefined }));
+                        }}
+                        disabled={loadingBrands}
+                      >
+                        <SelectTrigger className="rounded-input" aria-label={t('products.modal.field.brand')}>
+                          <SelectValue
+                            placeholder={loadingBrands ? t('products.modal.option.loading_brands', 'Cargando marcas...') : t('products.modal.option.select_brand', 'Seleccione una marca (opcional)')}
+                          />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-md shadow-fluent-8">
                           {brands.map(brand => (
-                            <option key={brand.id} value={brand.id}>
+                            <SelectItem key={brand.id} value={brand.id.toString()} className="text-body-md">
                               {brand.name}
-                            </option>
+                            </SelectItem>
                           ))}
-                          </select>
-                          <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                        </div>
-                      </div>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {/* Propietario o Metadata en edición */}
                     {isEditMode && product?.user_id && (
-                      <div className="space-y-1.5">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary mb-2 block font-display">Creador / Propietario</span>
-                        <div className="h-11 px-4 border border-slate-100 rounded-xl bg-slate-50 flex items-center text-xs font-bold text-slate-500 font-mono">
+                      <div className="space-y-xs">
+                        <span className="text-body-md-bold text-foreground">
+                          {t('products.modal.field.owner', 'Creador / Propietario')}
+                        </span>
+                        <div className="h-10 px-md border border-border-subtle rounded-input bg-surface-muted flex items-center text-data-mono font-data-mono text-on-surface-deep">
                           {product.user_id}
                         </div>
                       </div>
@@ -465,113 +518,152 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
 
             {/* CONTENIDO PESTAÑA: INVENTARIO Y BALANZA */}
             {activeTab === 'measure' && (
-              <div className="space-y-6 animate-in fade-in duration-200 slide-in-from-left-3">
-                <div className="bg-white p-6 rounded-2xl border border-border-subtle shadow-sm space-y-6">
-                  <div className="flex items-center gap-2 pb-3 border-b border-slate-100 text-slate-800">
-                    <Barcode size={16} className="text-primary" />
-                    <h3 className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Códigos, Medidas e Inventario</h3>
+              <div role="tabpanel" className="space-y-md animate-in fade-in duration-150">
+                <div className="bg-surface-muted rounded-md p-md space-y-md">
+                  <div className={sectionHeaderClass}>
+                    <Barcode className="w-4 h-4 text-primary" />
+                    <h3 className="text-label-caps uppercase">
+                      {t('products.modal.section.codes', 'Códigos, Medidas e Inventario')}
+                    </h3>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
                     {/* Código de Barras */}
-                    <div className="space-y-1.5">
-                      <label className={labelClass}>{t('products.modal.field.barcode')}</label>
-                      <input name="barcode" value={formData.barcode} onChange={handleChange} placeholder="Ej: 779123456789" className={inputClass} />
+                    <div className="space-y-xs">
+                      <Label htmlFor="product-barcode" className={labelClass}>{t('products.modal.field.barcode')}</Label>
+                      <Input
+                        id="product-barcode"
+                        name="barcode"
+                        value={formData.barcode}
+                        onChange={handleChange}
+                        placeholder={t('products.modal.placeholder.barcode')}
+                        className="text-data-mono font-data-mono"
+                      />
+                      {renderErrorText(errors.barcode)}
                     </div>
 
                     {/* Unidad de Medida */}
-                    <div className="space-y-1.5">
-                      <label className={labelClass}>
-                        Unidad de Medida {isEditMode && <span className="ml-1.5 text-[8px] text-amber-600 font-bold uppercase bg-amber-50 px-1 rounded border border-amber-100">inmutable</span>}
-                      </label>
-                      <div className="relative">
-                        <select 
-                          name="base_unit" 
-                          value={formData.base_unit} 
-                          onChange={handleChange} 
-                          className={`${selectClass} ${errors.base_unit ? 'border-error' : ''}`} 
-                          disabled={isEditMode}
+                    <div className="space-y-xs">
+                      <Label className={labelClass}>
+                        {t('products.modal.field.unit_of_measure', 'Unidad de Medida')}
+                        {isEditMode && (
+                          <span className="bg-tertiary-fixed text-on-tertiary-fixed rounded-xs px-1 py-0.5 text-body-sm-bold uppercase">
+                            {t('products.modal.field.immutable', 'inmutable')}
+                          </span>
+                        )}
+                      </Label>
+                      <Select
+                        value={formData.base_unit || undefined}
+                        onValueChange={v => {
+                          setFormData(prev => ({ ...prev, base_unit: v }));
+                          setErrors(prev => ({ ...prev, base_unit: undefined }));
+                        }}
+                        disabled={isEditMode}
+                      >
+                        <SelectTrigger
+                          className={cn('rounded-input', errors.base_unit && 'border-error')}
+                          aria-label={t('products.modal.field.unit_of_measure', 'Unidad de Medida')}
                         >
+                          <SelectValue placeholder={t('products.modal.field.unit_of_measure', 'Unidad de Medida')} />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-md shadow-fluent-8 max-h-64">
                           {getGroupedUnitOptions().map(group => (
-                            <optgroup key={group.label} label={group.label} className="font-black uppercase text-[10px]">
-                              {group.options.map(opt => <option key={opt.value} value={opt.value} className="font-bold">{opt.label}</option>)}
-                            </optgroup>
+                            <SelectGroup key={group.label}>
+                              <SelectLabel className="text-label-caps uppercase text-on-surface-deep">
+                                {group.label}
+                              </SelectLabel>
+                              {group.options.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value} className="text-body-md">
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
                           ))}
-                        </select>
-                        <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                      </div>
-                      {errors.base_unit && <p className="text-[10px] text-error font-black uppercase tracking-widest mt-1.5">{errors.base_unit}</p>}
+                        </SelectContent>
+                      </Select>
+                      {renderErrorText(errors.base_unit)}
                     </div>
                   </div>
 
-                  {/* Switch para Medida Variable (Estilizado) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                    <div className="flex items-center justify-between p-4 bg-slate-50/50 border border-border-subtle rounded-xl transition-all duration-200 hover:bg-slate-50">
-                      <div className="flex flex-col pr-3">
-                        <span className="text-xs font-bold text-text-main">Medida Variable</span>
-                        <span className="text-[9px] text-text-secondary font-black uppercase tracking-wider mt-0.5">Venta por peso/volumen</span>
+                  {/* Medida Variable */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-md pt-xs">
+                    <div className="flex items-center justify-between gap-md bg-surface rounded-md border border-border-subtle p-md">
+                      <div className="flex flex-col gap-xs">
+                        <span className="text-body-md-bold text-foreground">
+                          {t('products.modal.field.variable_measure', 'Medida Variable')}
+                        </span>
+                        <span className="text-body-sm-bold text-on-surface-deep">
+                          {t('products.modal.field.variable_measure_hint', 'Venta por peso/volumen')}
+                        </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
+                      <Switch
+                        checked={formData.is_variable_measure}
+                        onCheckedChange={(checked) => {
                           setFormData(prev => ({
                             ...prev,
-                            is_variable_measure: !prev.is_variable_measure,
-                            scale_code: !prev.is_variable_measure ? prev.scale_code : ''
+                            is_variable_measure: checked,
+                            scale_code: checked ? prev.scale_code : ''
                           }))
                         }}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-primary/15 ${
-                          formData.is_variable_measure ? 'bg-primary' : 'bg-slate-200'
-                        }`}
-                        role="switch"
-                        aria-checked={formData.is_variable_measure}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-background shadow-md ring-0 transition duration-200 ease-in-out ${
-                            formData.is_variable_measure ? 'translate-x-5' : 'translate-x-0'
-                          }`}
-                        />
-                      </button>
+                        aria-label={t('products.modal.field.variable_measure', 'Medida Variable')}
+                      />
                     </div>
 
                     {/* Código de Balanza */}
                     {formData.is_variable_measure && (
-                      <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-200">
-                        <label className={labelClass}>Código de Balanza</label>
-                        <input
+                      <div className="space-y-xs animate-in slide-in-from-top-2 duration-150">
+                        <Label htmlFor="product-scale-code" className={labelClass}>
+                          {t('products.modal.field.scale_code', 'Código de Balanza')}
+                        </Label>
+                        <Input
+                          id="product-scale-code"
                           name="scale_code"
                           value={formData.scale_code}
                           onChange={e => {
                             const val = e.target.value.replace(/\D/g, '').slice(0, 5)
                             setFormData(prev => ({ ...prev, scale_code: val }))
                           }}
-                          placeholder="Ej: 123"
-                          className={`${inputClass} ${errors.scale_code ? 'border-error' : ''}`}
+                          placeholder="123"
+                          className="text-data-mono font-data-mono"
+                          state={errors.scale_code ? 'error' : ''}
                         />
-                        <p className="text-[9px] text-text-secondary font-bold uppercase tracking-wider mt-1">
-                          Código corto para balanzas EAN-13 (1-5 dígitos)
+                        <p className="text-body-sm-bold text-on-surface-deep">
+                          {t('products.modal.field.scale_code_hint', 'Código corto para balanzas EAN-13 (1-5 dígitos)')}
                         </p>
-                        {errors.scale_code && <p className="text-[10px] text-error font-black uppercase tracking-widest mt-1.5">{errors.scale_code}</p>}
+                        {renderErrorText(errors.scale_code)}
                       </div>
                     )}
                   </div>
 
-                  {/* Barra de completitud de datos (Fluent) */}
-                  <div className="mt-8 pt-6 border-t border-slate-100 space-y-3">
-                    <div className="flex items-center justify-between text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                      <span>Completitud de Ficha</span>
-                      <span className={`${
-                        completitudPct === 100 ? 'text-success' : 'text-slate-400'
-                      } flex items-center gap-1 font-bold`}>
-                        <CheckCircle2 size={10} /> {completitudPct === 100 ? 'Ficha Completa' : 'En progreso'}
+                  {/* Barra de completitud de datos */}
+                  <div className="pt-md border-t border-border-subtle space-y-sm">
+                    <div className="flex items-center justify-between text-label-caps uppercase text-on-surface-deep">
+                      <span>{t('products.modal.completeness.title', 'Completitud de Ficha')}</span>
+                      <span
+                        className={cn(
+                          'flex items-center gap-xs text-body-sm-bold normal-case',
+                          completitudPct === 100 ? 'text-success' : 'text-on-surface-deep'
+                        )}
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        {completitudPct === 100
+                          ? t('products.modal.completeness.complete', 'Ficha Completa')
+                          : t('products.modal.completeness.progress', 'En progreso')}
                       </span>
                     </div>
-                    <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden shadow-inner border border-slate-200/40">
-                      <div 
-                        className={`h-full transition-all duration-700 shadow-sm rounded-full bg-gradient-to-r ${
-                          completitudPct < 50 ? 'from-orange-500 to-amber-500' : completitudPct < 90 ? 'from-amber-500 to-emerald-400' : 'from-emerald-400 to-success'
-                        }`} 
+                    <div
+                      className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden"
+                      role="progressbar"
+                      aria-valuenow={completitudPct}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={t('products.modal.completeness.title', 'Completitud de Ficha')}
+                    >
+                      <div
+                        className={cn(
+                          'h-full rounded-full transition-all duration-150',
+                          completitudPct < 50 ? 'bg-error' : completitudPct < 90 ? 'bg-warning' : 'bg-success'
+                        )}
                         style={{ width: `${completitudPct}%` }}
                       />
                     </div>
@@ -579,84 +671,43 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                 </div>
               </div>
             )}
-
           </form>
         </div>
+      </EnhancedModal>
 
-        {/* Footer */}
-        <div className="px-8 py-5 border-t border-border-subtle flex items-center justify-between bg-slate-50/50">
-          <div>
-            {isEditMode && (
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-error hover:text-error hover:bg-error/5 font-black uppercase text-[10px] tracking-widest rounded-lg px-4 h-11 border border-transparent hover:border-error/10 transition-colors"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={isSubmitting || isDeleting}
-              >
-                <Trash2 size={15} className="mr-2" />
-                {t('products.modal.action.delete')}
-              </Button>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
+      {/* Delete Confirmation */}
+      <EnhancedModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title={t('products.modal.delete.title')}
+        variant="error"
+        size="sm"
+        testId="product-delete-modal"
+        footer={
+          <div className="flex items-center justify-end gap-sm">
             <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting || isDeleting}
-              className="bg-white border-border-subtle text-text-main font-black uppercase text-[10px] tracking-widest px-6 h-11 rounded-xl shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-colors"
+              variant="secondary"
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={isDeleting}
             >
               {t('products.modal.action.cancel')}
             </Button>
-            <Button
-              type="submit"
-              form="product-form"
-              disabled={isSubmitting || isDeleting}
-              className="bg-primary hover:bg-primary/95 text-white font-black uppercase text-[10px] tracking-widest px-8 h-11 rounded-xl shadow-md shadow-primary/10 transition-all active:scale-[0.98] flex items-center"
-            >
-              {isSubmitting ? <RefreshCw size={15} className="animate-spin mr-2" /> : <Save size={15} className="mr-2" />}
-              {isSubmitting ? t('products.modal.action.saving') : t('products.modal.action.save')}
+            <Button variant="destructive" onClick={handleDelete} loading={isDeleting} disabled={isDeleting}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              {isDeleting ? t('products.modal.action.deleting') : t('products.modal.action.confirmDelete')}
             </Button>
           </div>
+        }
+      >
+        <div className="space-y-md">
+          <p className="text-body-md text-foreground">
+            {t('products.modal.delete.message', { name: product?.product_name || product?.name || '' })}
+          </p>
+          <p className="text-body-md text-on-surface-deep bg-surface-muted rounded-md p-sm">
+            {t('products.modal.delete.warning')}
+          </p>
         </div>
-      </div>
-
-      {/* Delete Confirmation (Fluent Style) */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-fluent-16 w-full max-w-md p-7 animate-in zoom-in-95 border border-slate-100">
-            <div className="flex items-center gap-3.5 text-error mb-6">
-              <div className="p-3 bg-error/10 rounded-xl">
-                <AlertTriangle size={26} className="text-error" />
-              </div>
-              <h2 className="text-xl font-black tracking-tight uppercase leading-none">{t('products.modal.delete.title')}</h2>
-            </div>
-            <p className="text-sm text-text-main mb-3 leading-relaxed font-semibold">
-              {t('products.modal.delete.message', { name: product?.product_name || product?.name || '' })}
-            </p>
-            <p className="text-[10px] text-text-secondary mb-8 font-bold uppercase tracking-wider bg-slate-50 p-2.5 rounded-lg border border-slate-200/40">{t('products.modal.delete.warning')}</p>
-            <div className="flex items-center gap-3 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={isDeleting}
-                className="font-black uppercase text-[10px] tracking-widest border-border-subtle h-11 px-5 rounded-xl hover:bg-slate-50 transition-colors"
-              >
-                {t('products.modal.action.cancel')}
-              </Button>
-              <Button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="bg-error hover:bg-error/95 text-white font-black uppercase text-[10px] tracking-widest h-11 px-6 rounded-xl shadow-md shadow-error/10 transition-all active:scale-[0.98] flex items-center"
-              >
-                {isDeleting ? <RefreshCw size={15} className="animate-spin mr-2" /> : <Trash2 size={15} className="mr-2" />}
-                {isDeleting ? t('products.modal.action.deleting') : t('products.modal.action.confirmDelete')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      </EnhancedModal>
 
       <CategoryManagementModal
         isOpen={isCategoryManagerOpen}
@@ -664,7 +715,6 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
         onCreated={handleCategoryCreated}
         onDeleted={handleCategoryDeleted}
       />
-    </div>
+    </>
   )
 }
-

@@ -1,9 +1,10 @@
 import React from 'react';
-import { Search, Filter, RefreshCw, X, Plus } from 'lucide-react';
+import { Search, Filter, RefreshCw, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
   Select,
@@ -34,8 +35,9 @@ interface ProductsFiltersProps {
   setAdvancedSearchPayload?: React.Dispatch<React.SetStateAction<AdvancedProductSearchPayload>>;
   onRefresh: () => void;
   loading: boolean;
-  onOpenCreateModal: () => void;
 }
+
+const filterLabelClass = 'text-label-caps uppercase text-on-surface-deep';
 
 export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
   isSearching,
@@ -55,7 +57,6 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
   setAdvancedSearchPayload,
   onRefresh,
   loading,
-  onOpenCreateModal,
 }) => {
   const { t } = useI18n();
 
@@ -73,81 +74,73 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
   };
 
   return (
-    <Card className="bg-surface border-none rounded-xl shadow-whisper p-6">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <Card className="bg-surface border-0 rounded-md shadow-whisper p-lg">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-md">
         {/* Search */}
         <div className="relative flex-1 max-w-xl">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+          <span className="absolute inset-y-0 left-0 pl-sm flex items-center text-on-surface-deep pointer-events-none">
             {isSearching ? (
-              <RefreshCw className="size-5 animate-spin" />
+              <RefreshCw className="w-5 h-5 animate-spin" />
             ) : (
-              <Search className="size-5" />
+              <Search className="w-5 h-5" />
             )}
           </span>
           <Input
             ref={searchInputRef}
             type="search"
-            className="block w-full pl-10 pr-3 py-2.5 border border-[#455f89]/20 rounded-input bg-background focus:bg-white focus:ring focus:ring-primary/20 focus:border-primary transition-all h-11 font-body-md text-foreground"
+            className="block w-full pl-10"
             placeholder={t('products.search.by_name_sku') + ' (F2)'}
             value={searchTerm}
             onChange={onSearchChange}
             onKeyDown={onSearchKeyDown}
           />
           {searchTerm && searchTerm.trim().length > 0 && searchTerm.trim().length < 3 && (
-            <p className="absolute -bottom-6 left-0 text-[10px] font-black uppercase tracking-widest text-warning">
+            <p className="absolute -bottom-6 left-0 text-body-sm-bold text-warning">
               {t('products.search.min_chars', 'Escribe al menos 3 caracteres')} (
               {searchTerm.trim().length}/3)
             </p>
           )}
         </div>
 
-        {/* Filters Toggle */}
-        <div className="flex items-center gap-2">
+        {/* Toolbar */}
+        <div className="flex items-center gap-sm">
           <Button
-            variant={showFilters ? 'default' : 'outline'}
-            size="sm"
+            variant={showFilters ? 'subtle' : 'secondary'}
+            size="default"
             onClick={onToggleFilters}
+            aria-pressed={showFilters}
             className={cn(
-              'h-11 px-6 font-body-sm-bold rounded-button transition-all',
-              showFilters
-                ? 'bg-gradient-to-br from-primary to-primary-container text-white border-none'
-                : 'bg-surface-muted border-none text-foreground hover:bg-surface-subtle'
+              'h-10 font-body-sm-bold rounded-button',
+              showFilters && 'bg-surface-subtle text-foreground'
             )}
           >
-            <Filter className="size-4 mr-2" />
-            Filtros Avanzados
+            <Filter className="w-4 h-4 mr-2" />
+            {t('products.filter.advanced', 'Filtros Avanzados')}
           </Button>
           <Button
-            variant="ghost"
+            variant="secondary"
             onClick={onRefresh}
             disabled={loading}
-            className="h-11 px-4 bg-surface-muted border-none text-foreground hover:bg-surface-subtle font-body-sm-bold rounded-button"
+            className="h-10 font-body-sm-bold rounded-button"
           >
-            <RefreshCw className={`size-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">
               {t('products.action.refresh', 'Refrescar')}
             </span>
-          </Button>
-          <Button
-            className="bg-gradient-to-br from-primary to-primary-container text-white px-6 h-11 font-body-sm-bold rounded-button shadow-whisper"
-            onClick={onOpenCreateModal}
-          >
-            <Plus className="size-4 mr-2" />
-            <span>{t('products.action.new_product', 'Nuevo Producto')}</span>
           </Button>
         </div>
       </div>
 
       {/* Advanced Filters Panel */}
       {showFilters && (
-        <div className="mt-6 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-2">
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="mt-lg pt-lg border-t border-border-subtle animate-in fade-in slide-in-from-top-2 duration-150">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md mb-lg">
             {/* Category Filter */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
+            <div className="space-y-sm">
+              <Label htmlFor="filter-category" className={filterLabelClass}>
                 {t('products.filter.category', 'Categoría')}
-              </label>
+              </Label>
               <Select
                 value={localFilters.category}
                 onValueChange={(value) => {
@@ -160,18 +153,18 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
                   }
                 }}
               >
-                    <SelectTrigger className="w-full border border-[#455f89]/20 bg-background h-11 font-body-md rounded-input focus:ring focus:ring-primary/20 focus:border-primary">
+                <SelectTrigger id="filter-category" className="w-full rounded-input">
                   <SelectValue placeholder={t('products.filter.all_categories')} />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-none shadow-whisper">
-                  <SelectItem value="all" className="font-bold text-xs uppercase">
+                <SelectContent className="rounded-md shadow-fluent-8">
+                  <SelectItem value="all" className="text-body-md">
                     {t('products.filter.all_categories')}
                   </SelectItem>
                   {categories.map((cat) => (
                     <SelectItem
                       key={cat.id}
                       value={cat.id.toString()}
-                      className="font-bold text-xs uppercase"
+                      className="text-body-md"
                     >
                       {cat.name}
                     </SelectItem>
@@ -181,27 +174,27 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
             </div>
 
             {/* Status Filter */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
+            <div className="space-y-sm">
+              <Label htmlFor="filter-status" className={filterLabelClass}>
                 {t('products.filter.status', 'Estado')}
-              </label>
+              </Label>
               <Select
                 value={localFilters.status}
                 onValueChange={(value) =>
                   setLocalFilters((prev) => ({ ...prev, status: value }))
                 }
               >
-                    <SelectTrigger className="w-full border border-[#455f89]/20 bg-background h-11 font-body-md rounded-input focus:ring focus:ring-primary/20 focus:border-primary">
+                <SelectTrigger id="filter-status" className="w-full rounded-input">
                   <SelectValue placeholder={t('products.filter.all_statuses')} />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-none shadow-whisper">
-                  <SelectItem value="all" className="font-bold text-xs uppercase">
+                <SelectContent className="rounded-md shadow-fluent-8">
+                  <SelectItem value="all" className="text-body-md">
                     {t('products.filter.all_statuses')}
                   </SelectItem>
-                  <SelectItem value="active" className="font-bold text-xs uppercase">
+                  <SelectItem value="active" className="text-body-md">
                     {t('products.state.active')}
                   </SelectItem>
-                  <SelectItem value="inactive" className="font-bold text-xs uppercase">
+                  <SelectItem value="inactive" className="text-body-md">
                     {t('products.state.inactive')}
                   </SelectItem>
                 </SelectContent>
@@ -209,10 +202,10 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
             </div>
 
             {/* Sort By */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
-                Ordenar Por
-              </label>
+            <div className="space-y-sm">
+              <Label htmlFor="filter-sort" className={filterLabelClass}>
+                {t('products.filter.sort_by', 'Ordenar Por')}
+              </Label>
               <Select
                 value={advancedSearchPayload?.sort_by || 'newest'}
                 onValueChange={(value: any) => {
@@ -224,23 +217,24 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
                   }
                 }}
               >
-                    <SelectTrigger className="w-full border border-[#455f89]/20 bg-background h-11 font-body-md rounded-input focus:ring focus:ring-primary/20 focus:border-primary">
-                  <SelectValue placeholder="Ordenar por..." />
+                <SelectTrigger id="filter-sort" className="w-full rounded-input">
+                  <SelectValue placeholder={t('products.filter.sort_by')} />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-none shadow-whisper">
-                  <SelectItem value="newest" className="font-bold text-xs uppercase">Más recientes</SelectItem>
-                  <SelectItem value="name_asc" className="font-bold text-xs uppercase">Nombre (A-Z)</SelectItem>
-                  <SelectItem value="name_desc" className="font-bold text-xs uppercase">Nombre (Z-A)</SelectItem>
-                  <SelectItem value="price_asc" className="font-bold text-xs uppercase">Menor Precio</SelectItem>
-                  <SelectItem value="price_desc" className="font-bold text-xs uppercase">Mayor Precio</SelectItem>
+                <SelectContent className="rounded-md shadow-fluent-8">
+                  <SelectItem value="newest" className="text-body-md">{t('products.filter.sort.newest')}</SelectItem>
+                  <SelectItem value="name_asc" className="text-body-md">{t('products.filter.sort.name_asc')}</SelectItem>
+                  <SelectItem value="name_desc" className="text-body-md">{t('products.filter.sort.name_desc')}</SelectItem>
+                  <SelectItem value="price_asc" className="text-body-md">{t('products.filter.sort.price_asc')}</SelectItem>
+                  <SelectItem value="price_desc" className="text-body-md">{t('products.filter.sort.price_desc')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Stock Toggle */}
-            <div className="space-y-2 flex flex-col justify-center pt-5">
-              <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-border-subtle">
-                <Switch 
+            <div className="flex flex-col justify-center pt-sm">
+              <div className="flex items-center gap-md bg-surface-muted p-md rounded-md">
+                <Switch
+                  id="filter-in-stock"
                   checked={advancedSearchPayload?.in_stock_only || false}
                   onCheckedChange={(checked) => {
                     if (setAdvancedSearchPayload) {
@@ -248,27 +242,27 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
                     }
                   }}
                 />
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Solo con stock disponible
-                </label>
+                <Label htmlFor="filter-in-stock" className="text-body-sm-bold text-foreground">
+                  {t('products.filter.in_stock_only', 'Solo con stock disponible')}
+                </Label>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md">
             {/* Dynamic Facets (Brands, Tags, Attributes) */}
             {facets.map((facet) => {
               if (facet.code === 'price') {
                 return (
-                  <div key={facet.code} className="space-y-2 col-span-1 md:col-span-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
-                      {facet.name}
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <Input 
-                        type="number" 
-                        placeholder="Mínimo" 
-                        className="h-11 border border-[#455f89]/20 bg-background rounded-input font-body-md focus:ring focus:ring-primary/20 focus:border-primary"
+                  <div key={facet.code} className="space-y-sm col-span-1 md:col-span-2">
+                    <span className={filterLabelClass}>{facet.name}</span>
+                    <div className="flex items-center gap-sm">
+                      <Input
+                        id="filter-price-min"
+                        type="number"
+                        placeholder={t('products.filter.price_min', 'Mínimo')}
+                        className="rounded-input"
+                        aria-label={t('products.filter.price_min', 'Mínimo')}
                         value={advancedSearchPayload?.price_min || ''}
                         onChange={(e) => {
                           if (setAdvancedSearchPayload) {
@@ -276,11 +270,13 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
                           }
                         }}
                       />
-                      <span className="text-slate-400 font-bold">-</span>
-                      <Input 
-                        type="number" 
-                        placeholder="Máximo" 
-                        className="h-11 border border-[#455f89]/20 bg-background rounded-input font-body-md focus:ring focus:ring-primary/20 focus:border-primary"
+                      <span className="text-on-surface-deep">-</span>
+                      <Input
+                        id="filter-price-max"
+                        type="number"
+                        placeholder={t('products.filter.price_max', 'Máximo')}
+                        className="rounded-input"
+                        aria-label={t('products.filter.price_max', 'Máximo')}
                         value={advancedSearchPayload?.price_max || ''}
                         onChange={(e) => {
                           if (setAdvancedSearchPayload) {
@@ -303,10 +299,10 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
               }
 
               return (
-                <div key={facet.code} className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
+                <div key={facet.code} className="space-y-sm">
+                  <Label htmlFor={`filter-facet-${facet.code}`} className={filterLabelClass}>
                     {facet.name}
-                  </label>
+                  </Label>
                   <Select
                     value={currentValue}
                     onValueChange={(value) => {
@@ -320,21 +316,21 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
                       }
                     }}
                   >
-                        <SelectTrigger className="w-full border border-[#455f89]/20 bg-background h-11 font-body-md rounded-input focus:ring focus:ring-primary/20 focus:border-primary">
-                      <SelectValue placeholder={`Cualquier ${facet.name.toLowerCase()}`} />
+                    <SelectTrigger id={`filter-facet-${facet.code}`} className="w-full rounded-input">
+                      <SelectValue placeholder={t('products.filter.any_value', { name: facet.name.toLowerCase() })} />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-none shadow-whisper max-h-64">
-                      <SelectItem value="all" className="font-bold text-xs uppercase">
-                        Todos
+                    <SelectContent className="rounded-md shadow-fluent-8 max-h-64">
+                      <SelectItem value="all" className="text-body-md">
+                        {t('products.filter.all', 'Todos')}
                       </SelectItem>
                       {facet.options.map((opt) => (
                         <SelectItem
                           key={opt.value}
                           value={opt.value.toString()}
-                          className="font-bold text-xs uppercase flex justify-between"
+                          className="text-body-md"
                         >
                           <span>{opt.label}</span>
-                          {opt.count && <span className="text-slate-400 ml-2">({opt.count})</span>}
+                          {opt.count && <span className="text-on-surface-deep ml-2">({opt.count})</span>}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -345,20 +341,21 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-sm mt-lg pt-lg border-t border-border-subtle">
             <Button
               variant="ghost"
-              className="px-6 bg-surface-muted border-none text-foreground h-11 hover:bg-surface-subtle font-body-sm-bold rounded-button"
+              className="font-body-sm-bold rounded-button"
               onClick={onClearFilters}
             >
-              <X className="size-4 mr-2" />
+              <X className="w-4 h-4 mr-2" />
               {t('products.filter.clear', 'Limpiar')}
             </Button>
             <Button
-              className="px-8 bg-gradient-to-br from-primary to-primary-container text-white h-11 font-body-sm-bold rounded-button shadow-whisper"
+              variant="secondary"
+              className="font-body-sm-bold rounded-button"
               onClick={onApplyFilters}
             >
-              <Search className="size-4 mr-2" />
+              <Search className="w-4 h-4 mr-2" />
               {t('products.filter.apply', 'Aplicar Filtros')}
             </Button>
           </div>
@@ -367,4 +364,3 @@ export const ProductsFilters: React.FC<ProductsFiltersProps> = ({
     </Card>
   );
 };
-

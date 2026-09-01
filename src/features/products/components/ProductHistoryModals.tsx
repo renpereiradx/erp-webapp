@@ -1,10 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { X, TrendingUp, TrendingDown, ShieldAlert } from 'lucide-react';
+import { TrendingUp, TrendingDown, ShieldAlert } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import EnhancedModal from '@/components/ui/EnhancedModal';
 import { formatCurrency } from '@/utils/currencyUtils';
+import { cn } from '@/lib/utils';
 import { usePriceTransactions } from '@/hooks/usePriceTransactions';
 import { useCostTransactions } from '@/hooks/useCostTransactions';
 
@@ -15,10 +27,33 @@ interface CommonModalProps {
   onClose: () => void;
 }
 
+const historyHeadClass = 'text-label-caps uppercase text-on-surface-deep bg-surface-muted';
+
+/** Estado de carga con forma de tabla (§6.7). */
+const HistorySkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => (
+  <div className="space-y-md p-md" aria-busy="true">
+    {Array.from({ length: rows }).map((_, i) => (
+      <Skeleton key={i} className="h-8 w-full bg-surface-muted" />
+    ))}
+  </div>
+);
+
+const HistoryError: React.FC<{ message: string }> = ({ message }) => (
+  <div className="p-lg text-center bg-error-container text-on-error-container rounded-md" role="alert">
+    <ShieldAlert className="mx-auto mb-sm" size={32} />
+    <p className="text-body-md-bold">{message}</p>
+  </div>
+);
+
+const HistoryEmpty: React.FC<{ message: string }> = ({ message }) => (
+  <p className="text-center py-xl text-body-md text-on-surface-deep">{message}</p>
+);
+
 // ----------------------------------------------------------------------------
 // 1. ProductPriceHistoryDialog
 // ----------------------------------------------------------------------------
 export function ProductPriceHistoryDialog({ productId, productName, isOpen, onClose }: CommonModalProps) {
+  const { t } = useI18n();
   const { getProductHistory, loading, error, formatTransactionType } = usePriceTransactions();
   const [history, setHistory] = useState<any[]>([]);
 
@@ -35,91 +70,84 @@ export function ProductPriceHistoryDialog({ productId, productName, isOpen, onCl
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-gray-800">Historial de Precios de Venta</h3>
-            <p className="text-xs text-gray-500">{productName}</p>
-          </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full text-gray-400">
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="flex-1 p-6 overflow-y-auto space-y-4">
-          {loading ? (
-            <div className="flex flex-col items-center py-12 gap-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#106ebe]"></div>
-              <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Cargando auditoría...</span>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12 text-red-600 bg-red-50 rounded-xl border border-red-100">
-              <ShieldAlert className="mx-auto mb-2 text-red-500" size={32} />
-              <p className="font-semibold">{error}</p>
-            </div>
-          ) : history.length === 0 ? (
-            <p className="text-center py-12 text-gray-400">No hay cambios de precio registrados para este producto.</p>
-          ) : (
-            <div className="border border-gray-100 rounded-xl overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>
-                    <th className="py-2.5 px-4 text-[10px] font-bold text-gray-500 uppercase">Fecha</th>
-                    <th className="py-2.5 px-4 text-[10px] font-bold text-gray-500 uppercase">Tipo</th>
-                    <th className="py-2.5 px-4 text-[10px] font-bold text-gray-500 uppercase">Cambio</th>
-                    <th className="py-2.5 px-4 text-[10px] font-bold text-gray-500 uppercase">Usuario</th>
-                    <th className="py-2.5 px-4 text-[10px] font-bold text-gray-500 uppercase">Motivo</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 text-xs">
-                  {history.map((item: any, i: number) => {
-                    const priceChange = item.price_change || (item.new_price - item.old_price);
-                    const isIncrease = priceChange > 0;
-                    return (
-                      <tr key={item.transaction_id || i} className="hover:bg-gray-50/50">
-                        <td className="py-3 px-4 text-gray-600 font-medium whitespace-nowrap">
-                          {new Date(item.transaction_date || item.effective_date).toLocaleDateString('es-PY', {
-                            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                          })}
-                        </td>
-                        <td className="py-3 px-4 font-semibold text-gray-700 whitespace-nowrap">
-                          {formatTransactionType(item.transaction_type)}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-gray-800">
-                              {formatCurrency(item.old_price)} → {formatCurrency(item.new_price)}
-                            </span>
-                            <span className={`flex items-center gap-0.5 font-bold mt-0.5 ${isIncrease ? 'text-green-600' : priceChange < 0 ? 'text-red-600' : 'text-gray-500'}`}>
-                              {isIncrease ? <TrendingUp size={12} /> : priceChange < 0 ? <TrendingDown size={12} /> : null}
-                              {isIncrease ? '+' : ''}{formatCurrency(priceChange)}
-                              {item.price_change_percent != null && ` (${isIncrease ? '+' : ''}${item.price_change_percent.toFixed(1)}%)`}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-600 font-medium">
-                          {item.user_name || item.user_id || 'Sistema'}
-                        </td>
-                        <td className="py-3 px-4 text-gray-500 italic max-w-xs truncate" title={item.reason}>
-                          {item.reason || '-'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
-          <Button onClick={onClose} className="border-gray-200 text-gray-700 px-6" variant="outline">
-            Cerrar
+    <EnhancedModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t('products.history.price.title', 'Historial de Precios de Venta')}
+      subtitle={productName}
+      variant="default"
+      size="lg"
+      className="rounded-xl flex flex-col"
+      testId="price-history-modal"
+      footer={
+        <div className="flex justify-end">
+          <Button variant="secondary" onClick={onClose}>
+            {t('action.close', 'Cerrar')}
           </Button>
         </div>
-      </div>
-    </div>
+      }
+    >
+      {loading ? (
+        <HistorySkeleton />
+      ) : error ? (
+        <HistoryError message={error} />
+      ) : history.length === 0 ? (
+        <HistoryEmpty message={t('products.history.empty_prices', 'No hay cambios de precio registrados para este producto.')} />
+      ) : (
+        <div className="rounded-md bg-surface shadow-whisper border border-border-subtle overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-surface-muted hover:bg-surface-muted border-0">
+                <TableHead className={historyHeadClass}>{t('products.history.table.date', 'Fecha')}</TableHead>
+                <TableHead className={historyHeadClass}>{t('products.history.table.type', 'Tipo')}</TableHead>
+                <TableHead className={historyHeadClass}>{t('products.history.table.change', 'Cambio')}</TableHead>
+                <TableHead className={historyHeadClass}>{t('products.history.table.user', 'Usuario')}</TableHead>
+                <TableHead className={historyHeadClass}>{t('products.history.table.reason', 'Motivo')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {history.map((item: any, i: number) => {
+                const priceChange = item.price_change || (item.new_price - item.old_price);
+                const isIncrease = priceChange > 0;
+                return (
+                  <TableRow key={item.transaction_id || i} className="hover:bg-surface-muted transition-colors duration-150">
+                    <TableCell className="text-data-mono font-data-mono text-on-surface-deep whitespace-nowrap">
+                      {new Date(item.transaction_date || item.effective_date).toLocaleDateString('es-PY', {
+                        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                      })}
+                    </TableCell>
+                    <TableCell className="text-body-md text-foreground whitespace-nowrap">
+                      {formatTransactionType(item.transaction_type)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <div className="flex flex-col gap-xs">
+                        <span className="text-data-mono font-data-mono text-foreground">
+                          {formatCurrency(item.old_price)} → {formatCurrency(item.new_price)}
+                        </span>
+                        <span className={cn(
+                          'flex items-center gap-xs text-data-mono font-data-mono',
+                          isIncrease ? 'text-success' : priceChange < 0 ? 'text-error' : 'text-on-surface-deep'
+                        )}>
+                          {isIncrease ? <TrendingUp className="w-4 h-4" /> : priceChange < 0 ? <TrendingDown className="w-4 h-4" /> : null}
+                          {isIncrease ? '+' : ''}{formatCurrency(priceChange)}
+                          {item.price_change_percent != null && ` (${isIncrease ? '+' : ''}${item.price_change_percent.toFixed(1)}%)`}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-body-md text-foreground">
+                      {item.user_name || item.user_id || t('products.history.system', 'Sistema')}
+                    </TableCell>
+                    <TableCell className="text-body-md text-on-surface-deep max-w-xs truncate" title={item.reason}>
+                      {item.reason || '-'}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </EnhancedModal>
   );
 }
 
@@ -127,6 +155,7 @@ export function ProductPriceHistoryDialog({ productId, productName, isOpen, onCl
 // 2. ProductCostHistoryDialog
 // ----------------------------------------------------------------------------
 export function ProductCostHistoryDialog({ productId, productName, isOpen, onClose }: CommonModalProps) {
+  const { t } = useI18n();
   const { getCostTransactionHistory, loading, error } = useCostTransactions();
   const [history, setHistory] = useState<any[]>([]);
 
@@ -143,110 +172,108 @@ export function ProductCostHistoryDialog({ productId, productName, isOpen, onClo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-gray-800">Historial de Costos de Compra</h3>
-            <p className="text-xs text-gray-500">{productName}</p>
-          </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full text-gray-400">
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="flex-1 p-6 overflow-y-auto space-y-4">
-          {loading ? (
-            <div className="flex flex-col items-center py-12 gap-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#106ebe]"></div>
-              <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Cargando auditoría...</span>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12 text-red-600 bg-red-50 rounded-xl border border-red-100">
-              <ShieldAlert className="mx-auto mb-2 text-red-500" size={32} />
-              <p className="font-semibold">{error}</p>
-            </div>
-          ) : history.length === 0 ? (
-            <p className="text-center py-12 text-gray-400">No hay transacciones de costo registradas para este producto.</p>
-          ) : (
-            <div className="border border-gray-100 rounded-xl overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>
-                    <th className="py-2.5 px-4 text-[10px] font-bold text-gray-500 uppercase">Fecha</th>
-                    <th className="py-2.5 px-4 text-[10px] font-bold text-gray-500 uppercase">Unidad</th>
-                    <th className="py-2.5 px-4 text-[10px] font-bold text-gray-500 uppercase">Costo</th>
-                    <th className="py-2.5 px-4 text-[10px] font-bold text-gray-500 uppercase">Fuente</th>
-                    <th className="py-2.5 px-4 text-[10px] font-bold text-gray-500 uppercase">Usuario</th>
-                    <th className="py-2.5 px-4 text-[10px] font-bold text-gray-500 uppercase">Motivo</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 text-xs">
-                  {history.map((item: any, i: number) => {
-                    const costChange = item.price_change || (item.new_price - item.old_price) || 0;
-                    const isIncrease = costChange > 0;
-                    const costVal = item.cost_per_unit || item.new_price;
-                    const sourceText = item.source || (item.metadata?.source === 'demo_mode' ? 'DEMO' : 'MANUAL');
-                    return (
-                      <tr key={item.id || item.transaction_id || i} className="hover:bg-gray-50/50">
-                        <td className="py-3 px-4 text-gray-600 font-medium whitespace-nowrap">
-                          {(() => {
-                            const dateVal = item.transaction_date || item.created_at || item.effective_from;
-                            return dateVal ? new Date(dateVal).toLocaleString('es-PY', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            }) : '-';
-                          })()}
-                        </td>
-                        <td className="py-3 px-4 font-semibold text-gray-700 whitespace-nowrap">
-                          {item.unit || 'unit'}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-gray-800">
-                              {formatCurrency(costVal)}
-                            </span>
-                            {item.old_price != null && item.new_price != null && (
-                              <span className={`flex items-center gap-0.5 font-bold mt-0.5 ${isIncrease ? 'text-red-600' : costChange < 0 ? 'text-green-600' : 'text-gray-500'}`}>
-                                {isIncrease ? <TrendingUp size={12} /> : costChange < 0 ? <TrendingDown size={12} /> : null}
-                                {isIncrease ? '+' : ''}{formatCurrency(costChange)}
-                                {item.price_change_percent != null && ` (${isIncrease ? '+' : ''}${item.price_change_percent.toFixed(1)}%)`}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            sourceText === 'PURCHASE' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                          }`}>
-                            {sourceText}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-gray-600 font-medium">
-                          {item.created_by || item.user_name || 'Sistema'}
-                        </td>
-                        <td className="py-3 px-4 text-gray-500 italic max-w-xs truncate" title={item.reason || item.metadata?.reason}>
-                          {item.reason || item.metadata?.reason || '-'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
-          <Button onClick={onClose} className="border-gray-200 text-gray-700 px-6" variant="outline">
-            Cerrar
+    <EnhancedModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t('products.history.cost.title', 'Historial de Costos de Compra')}
+      subtitle={productName}
+      variant="default"
+      size="lg"
+      className="rounded-xl flex flex-col"
+      testId="cost-history-modal"
+      footer={
+        <div className="flex justify-end">
+          <Button variant="secondary" onClick={onClose}>
+            {t('action.close', 'Cerrar')}
           </Button>
         </div>
-      </div>
-    </div>
+      }
+    >
+      {loading ? (
+        <HistorySkeleton />
+      ) : error ? (
+        <HistoryError message={error} />
+      ) : history.length === 0 ? (
+        <HistoryEmpty message={t('products.history.empty_costs', 'No hay transacciones de costo registradas para este producto.')} />
+      ) : (
+        <div className="rounded-md bg-surface shadow-whisper border border-border-subtle overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-surface-muted hover:bg-surface-muted border-0">
+                <TableHead className={historyHeadClass}>{t('products.history.table.date', 'Fecha')}</TableHead>
+                <TableHead className={historyHeadClass}>{t('products.details.table.unit')}</TableHead>
+                <TableHead className={historyHeadClass}>{t('products.history.table.cost', 'Costo')}</TableHead>
+                <TableHead className={historyHeadClass}>{t('products.history.table.source', 'Fuente')}</TableHead>
+                <TableHead className={historyHeadClass}>{t('products.history.table.user', 'Usuario')}</TableHead>
+                <TableHead className={historyHeadClass}>{t('products.history.table.reason', 'Motivo')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {history.map((item: any, i: number) => {
+                const costChange = item.price_change || (item.new_price - item.old_price) || 0;
+                const isIncrease = costChange > 0;
+                const costVal = item.cost_per_unit || item.new_price;
+                const sourceText = item.source || (item.metadata?.source === 'demo_mode' ? 'DEMO' : 'MANUAL');
+                return (
+                  <TableRow key={item.id || item.transaction_id || i} className="hover:bg-surface-muted transition-colors duration-150">
+                    <TableCell className="text-data-mono font-data-mono text-on-surface-deep whitespace-nowrap">
+                      {(() => {
+                        const dateVal = item.transaction_date || item.created_at || item.effective_from;
+                        return dateVal ? new Date(dateVal).toLocaleString('es-PY', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : '-';
+                      })()}
+                    </TableCell>
+                    <TableCell className="text-body-md text-foreground whitespace-nowrap">
+                      {item.unit || 'unit'}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <div className="flex flex-col gap-xs">
+                        <span className="text-data-mono font-data-mono text-foreground">
+                          {formatCurrency(costVal)}
+                        </span>
+                        {item.old_price != null && item.new_price != null && (
+                          <span className={cn(
+                            'flex items-center gap-xs text-data-mono font-data-mono',
+                            isIncrease ? 'text-error' : costChange < 0 ? 'text-success' : 'text-on-surface-deep'
+                          )}>
+                            {isIncrease ? <TrendingUp className="w-4 h-4" /> : costChange < 0 ? <TrendingDown className="w-4 h-4" /> : null}
+                            {isIncrease ? '+' : ''}{formatCurrency(costChange)}
+                            {item.price_change_percent != null && ` (${isIncrease ? '+' : ''}${item.price_change_percent.toFixed(1)}%)`}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <span
+                        className={cn(
+                          'text-body-sm-bold rounded-full px-2 py-0.5',
+                          sourceText === 'PURCHASE'
+                            ? 'bg-primary-fixed text-on-primary-fixed'
+                            : 'bg-secondary-fixed text-on-secondary-fixed'
+                        )}
+                      >
+                        {sourceText}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-body-md text-foreground">
+                      {item.created_by || item.user_name || t('products.history.system', 'Sistema')}
+                    </TableCell>
+                    <TableCell className="text-body-md text-on-surface-deep max-w-xs truncate" title={item.reason || item.metadata?.reason}>
+                      {item.reason || item.metadata?.reason || '-'}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </EnhancedModal>
   );
 }
 
@@ -260,6 +287,7 @@ interface AdjustmentProps extends CommonModalProps {
 }
 
 export function ProductPriceAdjustmentDialog({ productId, productName, currentPriceOrCost, unit, isOpen, onClose, onSuccess }: AdjustmentProps) {
+  const { t } = useI18n();
   const { registerTransaction, loading, error, clearError } = usePriceTransactions();
   const [newPrice, setNewPrice] = useState('');
   const [reason, setReason] = useState('');
@@ -308,104 +336,106 @@ export function ProductPriceAdjustmentDialog({ productId, productName, currentPr
   const pct = currentPriceOrCost ? (diff / currentPriceOrCost) * 100 : 0;
 
   return (
-    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-gray-800">Ajustar Precio de Venta</h3>
-            <p className="text-xs text-gray-500">{productName}</p>
+    <EnhancedModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t('products.adjust.price.title', 'Ajustar Precio de Venta')}
+      subtitle={productName}
+      variant="default"
+      size="md"
+      closeOnOverlayClick={false}
+      className="rounded-xl flex flex-col"
+      testId="price-adjustment-modal"
+      footer={
+        <div className="flex justify-end gap-sm">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            {t('products.modal.action.cancel')}
+          </Button>
+          <Button type="submit" form="price-adjustment-form" variant="primary" loading={loading} disabled={loading || !newPrice}>
+            {loading ? t('products.modal.action.saving') : t('products.adjust.action.save', 'Guardar Cambio')}
+          </Button>
+        </div>
+      }
+    >
+      <form id="price-adjustment-form" onSubmit={handleSubmit} className="space-y-md">
+        {error && (
+          <div className="p-sm bg-error-container text-on-error-container rounded-md text-body-md" role="alert">
+            {error}
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full text-gray-400">
-            <X size={18} />
-          </button>
+        )}
+
+        <div className="p-sm bg-primary-fixed text-on-primary-fixed rounded-md flex justify-between text-body-md-bold">
+          <span>{t('products.adjust.current_price', 'Precio Actual:')}</span>
+          <span className="text-data-mono font-data-mono">{formatCurrency(currentPriceOrCost)} / {unit}</span>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 p-6 space-y-4">
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600 font-medium">
-              {error}
-            </div>
+        <div className="space-y-xs">
+          <Label htmlFor="new_price" className="text-body-md-bold text-foreground">{t('products.adjust.new_price', 'Nuevo Precio')}</Label>
+          <Input
+            id="new_price"
+            type="number"
+            step="0.01"
+            min="0.01"
+            value={newPrice}
+            onChange={(e) => setNewPrice(e.target.value)}
+            placeholder="0.00"
+            required
+            className="text-data-mono font-data-mono"
+          />
+          {newPrice && (
+            <span className={cn(
+              'text-body-sm-bold block',
+              diff >= 0 ? 'text-success' : 'text-error'
+            )}>
+              {t('products.adjust.difference', { value: `${diff >= 0 ? '+' : ''}${formatCurrency(diff)} (${diff >= 0 ? '+' : ''}${pct.toFixed(2)}%)` })}
+            </span>
           )}
+        </div>
 
-          <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl flex justify-between text-xs text-blue-900 font-bold">
-            <span>Precio Actual:</span>
-            <span>{formatCurrency(currentPriceOrCost)} / {unit}</span>
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="new_price" className="">Nuevo Precio</Label>
+        <div className="grid grid-cols-2 gap-md">
+          <div className="space-y-xs">
+            <Label htmlFor="cost_factor" className="text-body-md-bold text-foreground">{t('products.adjust.cost_factor', 'Factor Costo (0 - 1)')}</Label>
             <Input
-              id="new_price"
+              id="cost_factor"
               type="number"
               step="0.01"
-              min="0.01"
-              value={newPrice}
-              onChange={(e) => setNewPrice(e.target.value)}
-              placeholder="0.00"
-              required
-              className=""
-            />
-            {newPrice && (
-              <span className={`text-[10px] font-bold block mt-1 ${diff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                Diferencia: {diff >= 0 ? '+' : ''}{formatCurrency(diff)} ({diff >= 0 ? '+' : ''}{pct.toFixed(2)}%)
-              </span>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="cost_factor" className="">Factor Costo (0 - 1)</Label>
-              <Input
-                id="cost_factor"
-                type="number"
-                step="0.01"
-                min="0"
-                max="1"
-                value={costFactor}
-                onChange={(e) => setCostFactor(e.target.value)}
-                placeholder="0.65"
-                className=""
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="margin_percent" className="">Margen %</Label>
-              <Input
-                id="margin_percent"
-                type="number"
-                step="0.1"
-                min="0"
-                value={marginPercent}
-                onChange={(e) => setMarginPercent(e.target.value)}
-                placeholder="35.0"
-                className=""
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="reason" className="">Motivo del Ajuste</Label>
-            <Textarea
-              id="reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Ej. Análisis de precios de mercado, incremento del costo de envío..."
-              rows={2}
-              required
-              className=""
+              min="0"
+              max="1"
+              value={costFactor}
+              onChange={(e) => setCostFactor(e.target.value)}
+              placeholder="0.65"
+              className="text-data-mono font-data-mono"
             />
           </div>
-
-          <div className="flex gap-3 pt-2">
-            <Button type="button" onClick={onClose} variant="outline" className="flex-1 border-gray-200 text-gray-700">
-              Cancelar
-            </Button>
-            <Button type="submit" className="flex-1 bg-[#106ebe] hover:bg-[#005a9e] text-white" disabled={loading || !newPrice}>
-              {loading ? 'Guardando...' : 'Guardar Cambio'}
-            </Button>
+          <div className="space-y-xs">
+            <Label htmlFor="margin_percent" className="text-body-md-bold text-foreground">{t('products.adjust.margin_percent', 'Margen %')}</Label>
+            <Input
+              id="margin_percent"
+              type="number"
+              step="0.1"
+              min="0"
+              value={marginPercent}
+              onChange={(e) => setMarginPercent(e.target.value)}
+              placeholder="35.0"
+              className="text-data-mono font-data-mono"
+            />
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <div className="space-y-xs">
+          <Label htmlFor="adjust-price-reason" className="text-body-md-bold text-foreground">{t('products.adjust.reason', 'Motivo del Ajuste')}</Label>
+          <Textarea
+            id="adjust-price-reason"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder={t('products.adjust.placeholder.reason_price', 'Ej. Análisis de precios de mercado, incremento del costo de envío...')}
+            rows={2}
+            required
+            className=""
+          />
+        </div>
+      </form>
+    </EnhancedModal>
   );
 }
 
@@ -413,6 +443,7 @@ export function ProductPriceAdjustmentDialog({ productId, productName, currentPr
 // 4. ProductCostAdjustmentDialog
 // ----------------------------------------------------------------------------
 export function ProductCostAdjustmentDialog({ productId, productName, currentPriceOrCost, unit, isOpen, onClose, onSuccess }: AdjustmentProps) {
+  const { t } = useI18n();
   const { registerManualCostAdjustment, loading, error, clearError } = useCostTransactions();
   const [newCost, setNewCost] = useState('');
   const [reason, setReason] = useState('');
@@ -453,73 +484,75 @@ export function ProductCostAdjustmentDialog({ productId, productName, currentPri
   const pct = currentPriceOrCost ? (diff / currentPriceOrCost) * 100 : 0;
 
   return (
-    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-gray-800">Ajustar Costo de Compra</h3>
-            <p className="text-xs text-gray-500">{productName}</p>
+    <EnhancedModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t('products.adjust.cost.title', 'Ajustar Costo de Compra')}
+      subtitle={productName}
+      variant="default"
+      size="md"
+      closeOnOverlayClick={false}
+      className="rounded-xl flex flex-col"
+      testId="cost-adjustment-modal"
+      footer={
+        <div className="flex justify-end gap-sm">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            {t('products.modal.action.cancel')}
+          </Button>
+          <Button type="submit" form="cost-adjustment-form" variant="primary" loading={loading} disabled={loading || !newCost || !reason.trim()}>
+            {loading ? t('products.modal.action.saving') : t('products.adjust.action.save', 'Guardar Cambio')}
+          </Button>
+        </div>
+      }
+    >
+      <form id="cost-adjustment-form" onSubmit={handleSubmit} className="space-y-md">
+        {error && (
+          <div className="p-sm bg-error-container text-on-error-container rounded-md text-body-md" role="alert">
+            {error}
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full text-gray-400">
-            <X size={18} />
-          </button>
+        )}
+
+        <div className="p-sm bg-secondary-fixed text-on-secondary-fixed rounded-md flex justify-between text-body-md-bold">
+          <span>{t('products.adjust.current_cost', 'Costo Actual:')}</span>
+          <span className="text-data-mono font-data-mono">{formatCurrency(currentPriceOrCost)} / {unit}</span>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 p-6 space-y-4">
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600 font-medium">
-              {error}
-            </div>
+        <div className="space-y-xs">
+          <Label htmlFor="new_cost" className="text-body-md-bold text-foreground">{t('products.adjust.new_cost', 'Nuevo Costo por Unidad')}</Label>
+          <Input
+            id="new_cost"
+            type="number"
+            step="0.01"
+            min="0.00"
+            value={newCost}
+            onChange={(e) => setNewCost(e.target.value)}
+            placeholder="0.00"
+            required
+            className="text-data-mono font-data-mono"
+          />
+          {newCost && (
+            <span className={cn(
+              'text-body-sm-bold block',
+              diff >= 0 ? 'text-error' : 'text-success'
+            )}>
+              {t('products.adjust.difference', { value: `${diff >= 0 ? '+' : ''}${formatCurrency(diff)} (${diff >= 0 ? '+' : ''}${pct.toFixed(2)}%)` })}
+            </span>
           )}
+        </div>
 
-          <div className="p-3 bg-purple-50 border border-purple-100 rounded-xl flex justify-between text-xs text-purple-900 font-bold">
-            <span>Costo Actual:</span>
-            <span>{formatCurrency(currentPriceOrCost)} / {unit}</span>
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="new_cost" className="">Nuevo Costo por Unidad</Label>
-            <Input
-              id="new_cost"
-              type="number"
-              step="0.01"
-              min="0.00"
-              value={newCost}
-              onChange={(e) => setNewCost(e.target.value)}
-              placeholder="0.00"
-              required
-              className=""
-            />
-            {newCost && (
-              <span className={`text-[10px] font-bold block mt-1 ${diff >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                Diferencia: {diff >= 0 ? '+' : ''}{formatCurrency(diff)} ({diff >= 0 ? '+' : ''}{pct.toFixed(2)}%)
-              </span>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="reason" className="">Motivo del Ajuste (Requerido)</Label>
-            <Textarea
-              id="reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Ej. Actualización de tarifas del distribuidor local, ajuste por depreciación..."
-              rows={3}
-              required
-              className=""
-            />
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <Button type="button" onClick={onClose} variant="outline" className="flex-1 border-gray-200 text-gray-700">
-              Cancelar
-            </Button>
-            <Button type="submit" className="flex-1 bg-[#106ebe] hover:bg-[#005a9e] text-white" disabled={loading || !newCost || !reason.trim()}>
-              {loading ? 'Guardando...' : 'Guardar Cambio'}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="space-y-xs">
+          <Label htmlFor="adjust-cost-reason" className="text-body-md-bold text-foreground">{t('products.adjust.reason_required', 'Motivo del Ajuste (Requerido)')}</Label>
+          <Textarea
+            id="adjust-cost-reason"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder={t('products.adjust.placeholder.reason_cost', 'Ej. Actualización de tarifas del distribuidor local, ajuste por depreciación...')}
+            rows={3}
+            required
+            className=""
+          />
+        </div>
+      </form>
+    </EnhancedModal>
   );
 }

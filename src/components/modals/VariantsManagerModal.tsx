@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { Package, Layers } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
+import { Button } from '@/components/ui/button';
+import EnhancedModal from '@/components/ui/EnhancedModal';
 import { ProductVariantsManager } from '@/features/products/components/ProductVariantsManager';
 import { ProductAttributesManager } from '@/features/products/components/ProductAttributesManager';
 import { ProductTagsManager } from '@/features/products/components/ProductTagsManager';
@@ -9,114 +13,124 @@ interface VariantsManagerModalProps {
   product: any;
 }
 
+type ManagerTab = 'variants' | 'attributes';
+
 export const VariantsManagerModal: React.FC<VariantsManagerModalProps> = ({ isOpen, onClose, product }) => {
-  const [activeTab, setActiveTab] = useState<'variants' | 'attributes'>('variants');
+  const { t } = useI18n();
+  const [activeTab, setActiveTab] = useState<ManagerTab>('variants');
 
   if (!isOpen) return null;
 
+  const productId = product?.id || product?.product_id;
+  const categoryId = product?.categoryId || product?.category_id || product?.category?.id || product?.category;
+  const productName = product?.name || product?.product_name;
+
+  const tabs: Array<{ id: ManagerTab; label: string; icon: React.ReactNode }> = [
+    {
+      id: 'variants',
+      label: t('products.variants.manager.tab_variants', 'Variantes (SKUs)'),
+      icon: <Package className="w-4 h-4" />,
+    },
+    {
+      id: 'attributes',
+      label: t('products.variants.manager.tab_attributes', 'Ficha Técnica (Atributos y Etiquetas)'),
+      icon: <Layers className="w-4 h-4" />,
+    },
+  ];
+
   return (
-    <div className="fixed inset-0 z-[1010] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <div className="bg-background w-full max-w-6xl h-[85vh] rounded-2xl shadow-fluent-16 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-        <header className="flex justify-between items-center w-full px-6 py-4 border-b border-divider/30 bg-background">
-          <div className="flex items-center gap-md">
-            <h2 className="font-headline-md text-headline-md font-extrabold text-primary">Administrar Variantes, Atributos y Etiquetas</h2>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-surface-subtle rounded-full text-on-surface-deep">
-            <span className="material-symbols-outlined">close</span>
-          </button>
-        </header>
-
-        {/* Tabs superiores */}
-        <div className="flex border-b border-divider/30 bg-surface px-6 gap-6">
-          <button
-            type="button"
-            onClick={() => setActiveTab('variants')}
-            className={`py-3 px-1 text-sm font-bold uppercase tracking-wider border-b-2 transition-all duration-200 flex items-center gap-2 ${
-              activeTab === 'variants'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-on-surface-deep hover:text-foreground'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">package</span>
-            <span>Variantes (SKUs)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('attributes')}
-            className={`py-3 px-1 text-sm font-bold uppercase tracking-wider border-b-2 transition-all duration-200 flex items-center gap-2 ${
-              activeTab === 'attributes'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-on-surface-deep hover:text-foreground'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">layers</span>
-            <span>FICHA TÉCNICA (ATRIBUTOS Y ETIQUETAS)</span>
-          </button>
+    <EnhancedModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t('products.variants.manager.title', 'Administrar Variantes, Atributos y Etiquetas')}
+      subtitle={productName}
+      variant="default"
+      size="full"
+      className="rounded-xl flex flex-col"
+      testId="variants-manager-modal"
+      footer={
+        <div className="flex justify-end">
+          <Button variant="secondary" onClick={onClose}>
+            {t('action.close', 'Cerrar')}
+          </Button>
         </div>
-
-        <main className="flex-1 p-6 overflow-y-auto custom-scrollbar">
-          <div className="max-w-[1400px] mx-auto flex flex-col gap-lg">
-            {/* Top Context Header Card */}
-            <div className="bg-surface rounded-xl p-lg shadow-whisper flex flex-col md:flex-row md:items-center justify-between gap-md border border-divider/30 mb-6">
-              <div>
-                <div className="flex items-center gap-xs text-primary mb-xs">
-                  <span className="material-symbols-outlined text-[18px]">{activeTab === 'variants' ? 'package' : 'layers'}</span>
-                  <span className="font-label-md text-label-md uppercase tracking-wider">
-                    {activeTab === 'variants' ? 'Matriz de Variantes' : 'Ficha Técnica'}
-                  </span>
-                </div>
-                <h2 className="font-headline-lg text-headline-lg text-foreground mb-sm">Producto: {product?.name || product?.product_name}</h2>
-                {activeTab === 'attributes' && (
-                  <p className="text-sm text-on-surface-deep max-w-4xl mt-2 leading-relaxed">
-                    <strong className="text-primary font-bold">Atributos:</strong> Definen características intrínsecas y técnicas (talla, color, dimensiones).<br/>
-                    <strong className="text-primary font-bold">Etiquetas:</strong> Son agrupadores transversales rápidos para marketing o estado (Nuevo, Oferta, Destacado).
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {activeTab === 'variants' && (
-              <ProductVariantsManager 
-                productId={product?.id || product?.product_id} 
-                categoryId={product?.categoryId || product?.category_id || product?.category?.id || product?.category} 
-              />
-            )}
-
-            {activeTab === 'attributes' && (
-              <div className="space-y-8">
-                {/* Sección de Etiquetas (Tags) */}
-                <div className="bg-surface p-6 rounded-xl border border-divider/30 shadow-sm">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="material-symbols-outlined text-primary text-[20px]">sell</span>
-                    <h3 className="font-headline-sm text-headline-sm font-bold text-foreground">Etiquetas del Producto</h3>
-                  </div>
-                  <ProductTagsManager 
-                    productId={product?.id || product?.product_id} 
-                    categoryId={product?.categoryId || product?.category_id || product?.category?.id || product?.category} 
-                  />
-                  <p className="text-[11px] text-on-surface-deep font-medium mt-3 uppercase tracking-wider">
-                    Agregue etiquetas rápidas para filtros y catálogos (Ej. "Nuevo", "Oferta", "Destacado").
-                  </p>
-                </div>
-
-                {/* Sección de Atributos (Ficha Técnica) */}
-                <div className="bg-surface p-6 rounded-xl border border-divider/30 shadow-sm">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="material-symbols-outlined text-primary text-[20px]">list_alt</span>
-                    <h3 className="font-headline-sm text-headline-sm font-bold text-foreground">Atributos Descriptivos</h3>
-                  </div>
-                  <ProductAttributesManager 
-                    productId={product?.id || product?.product_id} 
-                    categoryId={product?.categoryId || product?.category_id || product?.category?.id || product?.category} 
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </main>
+      }
+    >
+      {/* Tabs */}
+      <div role="tablist" aria-label={t('products.variants.manager.title')} className="flex gap-lg border-b border-border-subtle mb-lg overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`py-sm px-xs text-body-sm-bold uppercase tracking-wider border-b-2 transition-colors duration-150 flex items-center gap-xs whitespace-nowrap ${
+              activeTab === tab.id
+                ? 'border-primary text-primary'
+                : 'border-transparent text-on-surface-deep hover:text-foreground'
+            }`}
+          >
+            {tab.icon}
+            <span>{tab.label}</span>
+          </button>
+        ))}
       </div>
-    </div>
+
+      {/* Context header */}
+      <div className="bg-surface-muted rounded-md p-md mb-lg flex flex-col md:flex-row md:items-center justify-between gap-md">
+        <div>
+          <div className="flex items-center gap-xs text-primary mb-xs">
+            {activeTab === 'variants' ? <Package className="w-4 h-4" /> : <Layers className="w-4 h-4" />}
+            <span className="text-label-caps uppercase text-on-surface-deep">
+              {activeTab === 'variants'
+                ? t('products.variants.matrix', 'Matriz de Variantes')
+                : t('products.variants.technical_sheet', 'Ficha Técnica')}
+            </span>
+          </div>
+          <h2 className="text-title-md text-foreground">{productName}</h2>
+          {activeTab === 'attributes' && (
+            <p className="text-body-md text-on-surface-deep mt-sm leading-relaxed">
+              <strong className="text-primary">{t('products.variants.attributes_help_label', 'Atributos:')}</strong>{' '}
+              {t('products.variants.attributes_help_text')}
+              <br />
+              <strong className="text-primary">{t('products.variants.tags_help_label', 'Etiquetas:')}</strong>{' '}
+              {t('products.variants.tags_help_text')}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {activeTab === 'variants' && (
+        <div role="tabpanel">
+          <ProductVariantsManager productId={productId} categoryId={categoryId} />
+        </div>
+      )}
+
+      {activeTab === 'attributes' && (
+        <div role="tabpanel" className="space-y-lg">
+          {/* Sección de Etiquetas (Tags) */}
+          <div className="bg-surface-muted rounded-md p-md">
+            <div className="flex items-center gap-sm mb-md">
+              <Package className="w-5 h-5 text-primary" />
+              <h3 className="text-title-md text-foreground">{t('products.tags.section_title', 'Etiquetas del Producto')}</h3>
+            </div>
+            <ProductTagsManager productId={productId} categoryId={categoryId} />
+            <p className="text-body-sm-bold text-on-surface-deep mt-sm uppercase">
+              {t('products.tags.hint', 'Agregue etiquetas rápidas para filtros y catálogos (Ej. "Nuevo", "Oferta", "Destacado").')}
+            </p>
+          </div>
+
+          {/* Sección de Atributos (Ficha Técnica) */}
+          <div className="bg-surface-muted rounded-md p-md">
+            <div className="flex items-center gap-sm mb-md">
+              <Layers className="w-5 h-5 text-primary" />
+              <h3 className="text-title-md text-foreground">{t('products.attributes.section_title', 'Atributos Descriptivos')}</h3>
+            </div>
+            <ProductAttributesManager productId={productId} categoryId={categoryId} />
+          </div>
+        </div>
+      )}
+    </EnhancedModal>
   );
 };
-

@@ -61,11 +61,11 @@ const Products = () => {
   } = useProductsLogic();
 
   const isAdvancedSearchActive = viewMode === 'search' && (
-    Object.keys(advancedSearchPayload).length > 0 || 
-    localFilters.category !== 'all' || 
+    Object.keys(advancedSearchPayload).length > 0 ||
+    localFilters.category !== 'all' ||
     localFilters.status !== 'all'
   );
-  
+
   const displayProducts = isAdvancedSearchActive ? advancedProducts : products;
   const displayTotal = isAdvancedSearchActive ? advancedTotal : totalProducts;
 
@@ -73,8 +73,8 @@ const Products = () => {
   const endIndex = Math.min(currentPage * 10, displayTotal);
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-display">
-      <ProductsHeader />
+    <div className="mx-auto w-full max-w-container-max flex flex-col gap-lg animate-in fade-in duration-150">
+      <ProductsHeader onOpenCreateModal={handleOpenCreateModal} />
 
       <ProductsFilters
         isSearching={isSearching}
@@ -94,10 +94,9 @@ const Products = () => {
         setAdvancedSearchPayload={setAdvancedSearchPayload}
         onRefresh={handleRefresh}
         loading={loading}
-        onOpenCreateModal={handleOpenCreateModal}
       />
 
-      <div className="bg-surface rounded-xl shadow-whisper border border-slate-200/60 overflow-hidden">
+      <div className="bg-surface rounded-md shadow-whisper border-0 overflow-hidden">
         <ProductsTable
           products={displayProducts}
           onOpenDetailsModal={handleOpenDetailsModal}
