@@ -1,7 +1,9 @@
-/**
- * SalesOrderDetail Page - Refactored to Tailwind (Fluent 2.0)
- * Optimized for Mobile/Tablet with Items Card View
- */
+// ===========================================================================
+// SalesOrderDetail Page — /cobros-ventas/:saleId
+// Design: DESIGN.md (design/tokens.json) — semantic tokens + components ui/
+// Logic: saleService / salePaymentService / clientService (unchanged)
+// i18n: useI18n() (ES/EN — ES keys in src/lib/i18n/locales/es/sales.js)
+// ===========================================================================
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -66,7 +68,7 @@ const SalesOrderDetail = () => {
     try {
       const saleResponse = await saleService.getSaleById(saleId)
       if (!saleResponse.success) {
-        setError('Venta no encontrada')
+        setError(t('sales.detail.notFound', 'Venta no encontrada'))
         return
       }
 
@@ -155,12 +157,12 @@ const SalesOrderDetail = () => {
       if (paymentStatus?.payments) setPayments(paymentStatus.payments)
     } catch (err: any) {
       console.error('Error in loadSale:', err)
-      setError(err.message || 'Error loading sale')
-      showError('Error de carga')
+      setError(err.message || t('sales.detail.errorLoad', 'Error al cargar la venta'))
+      showError(t('sales.detail.errorLoad', 'Error de carga'))
     } finally {
       setLoading(false)
     }
-  }, [saleId, showError])
+  }, [saleId, showError, t])
 
   useEffect(() => { loadSale() }, [loadSale])
 
@@ -219,7 +221,7 @@ const SalesOrderDetail = () => {
   const handlePaymentSubmit = async paymentData => {
     try {
       await salePaymentService.processSalePaymentWithCashRegister(paymentData)
-      showSuccess('Pago registrado exitosamente')
+      showSuccess(t('sales.detail.paymentSuccess', 'Pago registrado exitosamente'))
       await loadSale()
     } catch (error) {
       console.error('Error registering payment:', error)
@@ -227,21 +229,21 @@ const SalesOrderDetail = () => {
     }
   }
 
-  const formatCurrency = useCallback(amount => {
+  const formatCurrency = useCallback((amount: number | string | null | undefined) => {
     const code = normalizeCurrencyCode(sale?.currency)
     return new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
       style: 'currency', currency: code,
       minimumFractionDigits: code === 'PYG' ? 0 : 2,
       maximumFractionDigits: code === 'PYG' ? 0 : 2,
-    }).format(amount || 0)
+    }).format((Number(amount) || 0))
   }, [lang, sale?.currency])
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     const s = status?.toLowerCase()
     if (s === 'paid' || s === 'completed') return 'bg-success text-success'
-    if (s === 'partial' || s === 'partial_payment') return 'bg-info text-info'
+    if (s === 'partial' || s === 'partial_payment') return 'bg-warning text-warning'
     if (s === 'cancelled') return 'bg-error text-error'
-    return 'bg-warning text-warning'
+    return 'bg-secondary text-secondary'
   }
 
   const items = sale?.items || []
@@ -249,319 +251,372 @@ const SalesOrderDetail = () => {
   const paidAmount = sale?.paid_amount ?? sale?.total_paid ?? sale?.amount_paid ?? 0
   const balanceDue = sale?.balance_due ?? Math.max(totalAmount - paidAmount, 0)
   const paymentProgress = totalAmount > 0 ? Math.min(100, Math.round((paidAmount / totalAmount) * 100)) : 0
-  // IVA liquidado por el backend (snapshots por línea, feat/iva-consistency).
-  // El header no trae tax_amount: se suma el de las líneas; fallback al campo
-  // legacy de nivel venta si existiera.
+  // IVA liquidado por el backend (snapshots por línea). El header no trae
+  // tax_amount: se suma el de las líneas; fallback al campo legacy.
   const totalTax =
     items.reduce((acc: number, it: any) => acc + (Number(it.tax_amount) || 0), 0) ||
     Number(sale?.tax_amount) ||
     0
 
-  if (loading) return <div className="flex flex-col items-center justify-center h-[70vh] gap-4"><RefreshCw className="w-10 h-10 animate-spin text-primary opacity-20" /><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cargando Detalle...</p></div>
-  if (error || !sale) return <div className="h-[70vh] flex items-center justify-center"><DataState variant="error" title="Error" message={error || 'Venta no encontrada'} onRetry={loadSale} /></div>
+  if (loading)
+    return (
+      <div className='flex flex-col items-center justify-center h-[70vh] gap-4'>
+        <RefreshCw className='w-10 h-10 animate-spin text-primary opacity-20' />
+        <p className='text-label-caps uppercase text-muted-foreground'>
+          {t('sales.detail.loading', 'Cargando Detalle...')}
+        </p>
+      </div>
+    )
+  if (error || !sale)
+    return (
+      <div className='h-[70vh] flex items-center justify-center'>
+        <DataState variant='error' title={t('common.error', 'Error')} message={error || t('sales.detail.notFound', 'Venta no encontrada')} onRetry={loadSale} testId='detail-error' />
+      </div>
+    )
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-display">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 border-l-4 border-primary pl-6 py-2">
-        <div className="flex items-center gap-4">
-          <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary shadow-fluent-2">
-            <Receipt size={28} />
-          </div>
-          <div>
-            <h1 className="text-headline-lg text-foreground leading-none mb-1">Detalle de Venta</h1>
-            <p className="text-body-md text-on-surface-deep">
-              Orden #{sale?.id || '—'} • {sale?.date ? new Date(sale.date).toLocaleDateString() : 'Fecha no disponible'}
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => navigate(-1)} className="h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest hover:bg-slate-50">
-            <ArrowLeft size={14} className="mr-2" /> Volver
-          </Button>
-          <Button variant="outline" onClick={loadSale} className="h-10 px-4 border-border-subtle font-black uppercase text-[10px] tracking-widest hover:bg-slate-50">
-            <RefreshCw size={14} className="mr-2" /> Actualizar
-          </Button>
-          {sale.status !== 'CANCELLED' && sale.status !== 'PAID' && (
-            <Button onClick={() => setIsPaymentModalOpen(true)} className="h-10 px-6 bg-primary hover:bg-primary-hover text-white font-black uppercase text-[10px] tracking-widest rounded shadow-fluent-2">
-              <DollarSign size={14} className="mr-2" /> Registrar Cobro
-            </Button>
-          )}
-          {sale.status !== 'CANCELLED' && (
-            <Button 
-              variant="outline" 
-              onClick={handleCancelSale} 
-              disabled={isCancelling}
-              className="h-10 px-4 border-error text-error hover:bg-red-50 font-black uppercase text-[10px] tracking-widest"
-            >
-              <Ban size={14} className="mr-2" /> Anular Venta
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Info & Items */}
-        <div className="lg:col-span-8 space-y-8">
-          {/* Status Card */}
-          <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden">
-            <div className="p-1 bg-slate-50 border-b border-border-subtle flex justify-center">
-                <div className="px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] bg-white border border-border-subtle shadow-sm flex items-center gap-2">
-                    <span className={cn("size-2 rounded-full animate-pulse", getStatusColor(sale.status).split(' ')[0])}></span>
-                    Estado de la Orden: <span className={cn("font-black", getStatusColor(sale.status).split(' ')[1])}>{sale.status}</span>
-                </div>
+    <div className='min-h-screen bg-background'>
+      <div className='mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl space-y-xl'>
+        {/* Header */}
+        <header className='flex flex-col md:flex-row md:items-start justify-between gap-md border-l-4 border-primary pl-4'>
+          <div className='flex items-center gap-md'>
+            <div className='size-12 bg-primary/10 rounded-md flex items-center justify-center text-primary'>
+              <Receipt size={24} />
             </div>
-            <CardContent className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em]">Cliente</p>
-                  <p className="font-bold text-sm text-text-main truncate">{sale.client_name}</p>
-                  <p className="text-xs text-text-secondary font-mono">{sale.client_document || 'Sin documento'}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em]">Vendedor</p>
-                  <p className="font-bold text-sm text-text-main">{sale.user_name}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em]">Método Pago</p>
-                  <div className="flex items-center gap-2 font-bold text-sm text-text-main">
-                    <CreditCard size={14} className="text-slate-400" /> {sale.payment_method || 'Efectivo'}
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em]">Moneda</p>
-                  <div className="flex items-center gap-2 font-bold text-sm text-text-main font-mono">
-                    <Coins size={14} className="text-slate-400" /> {sale.currency}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <div>
+              <h1 className='text-headline-lg text-foreground leading-none'>
+                {t('sales.detail.title', 'Detalle de Venta')}
+              </h1>
+              <p className='text-body-md text-muted-foreground'>
+                {t('sales.detail.orderLine', { id: sale?.id || '—' })} •{' '}
+                {sale?.date
+                  ? new Date(sale.date).toLocaleDateString()
+                  : t('sales.detail.noDate', 'Fecha no disponible')}
+              </p>
+            </div>
+          </div>
+          <div className='flex flex-wrap gap-sm'>
+            <Button variant='outline' size='sm' onClick={() => navigate(-1)}>
+              <ArrowLeft size={14} className='mr-1.5' />
+              {t('action.back', 'Volver')}
+            </Button>
+            <Button variant='outline' size='sm' onClick={loadSale}>
+              <RefreshCw size={14} className='mr-1.5' />
+              {t('action.update', 'Actualizar')}
+            </Button>
+            {sale.status !== 'CANCELLED' && sale.status !== 'PAID' && (
+              <Button variant='primary' onClick={() => setIsPaymentModalOpen(true)}>
+                <DollarSign size={14} className='mr-1.5' />
+                {t('sales.cobros.action.payment', 'Registrar Cobro')}
+              </Button>
+            )}
+            {sale.status !== 'CANCELLED' && (
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleCancelSale}
+                disabled={isCancelling}
+                className='text-error border-error hover:bg-error/10'
+              >
+                <Ban size={14} className='mr-1.5' />
+                {t('sales.cobros.action.cancel', 'Anular Venta')}
+              </Button>
+            )}
+          </div>
+        </header>
 
-          {/* Items Table */}
-          <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b border-border-subtle p-6 flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-black tracking-tighter uppercase">Productos y Servicios</CardTitle>
-                <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Detalle de conceptos facturados</CardDescription>
-              </div>
-              <Badge variant="outline" className="font-black text-[9px] uppercase tracking-widest">{items.length} Ítems</Badge>
-            </CardHeader>
-            <CardContent className="p-0">
-              {!items || items.length === 0 ? (
-                <div className="py-16 text-center opacity-40">
-                  <Package size={48} className="mx-auto mb-4 text-slate-300" />
-                  <p className="text-xs font-black uppercase tracking-widest">No hay items en esta orden</p>
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-lg'>
+          {/* Left Column: Info & Items */}
+          <div className='lg:col-span-8 space-y-xl'>
+            {/* Status Card */}
+            <Card className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden'>
+              <div className='p-sm bg-surface-muted border-b border-border-subtle flex justify-center'>
+                <div className='px-md py-xs rounded-full text-label-caps uppercase bg-surface border border-border-subtle shadow-whisper flex items-center gap-2'>
+                  <span className={cn('size-2 rounded-full animate-pulse', getStatusColor(sale.status).split(' ')[0])} />
+                  {t('sales.detail.statusLine', 'Estado de la Orden:')}{' '}
+                  <span className={cn('font-black', getStatusColor(sale.status).split(' ')[1])}>{sale.status}</span>
                 </div>
-              ) : (
-                <>
-                  {/* Desktop Table */}
-                  <div className="hidden md:block overflow-x-auto">
-                    <Table>
-                      <TableHeader className="bg-slate-50/80">
-                        <TableRow className="border-b border-border-subtle">
-                          <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 py-4 px-8">Ítem</TableHead>
-                          <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">Cant.</TableHead>
-                          <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Precio s/IVA</TableHead>
-                          <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">IVA</TableHead>
-                          <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right px-8">Total</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody className="divide-y divide-slate-50">
-                        {items.map((item, idx) => {
-                          const unitPriceWoTax = item.unit_price_without_tax ?? item.unit_price ?? item.price
-                          const taxAmount = item.tax_amount ?? 0
-                          const totalWithTax = item.total_with_tax ?? item.total_price ?? item.total
-                          return (
-                            <TableRow key={item.id || idx} className="hover:bg-slate-50 transition-colors">
-                              <TableCell className="py-5 px-8">
-                                <div className="flex flex-col">
-                                    <span className="font-bold text-text-main text-sm">{item.product_name || item.name}</span>
+              </div>
+              <CardContent className='p-lg'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-lg'>
+                  <div className='space-y-xs'>
+                    <p className='text-label-caps uppercase text-muted-foreground'>{t('sales.detail.customer', 'Información del Cliente')}</p>
+                    <p className='text-body-md-bold text-foreground truncate'>{sale.client_name}</p>
+                    <p className='text-body-md text-muted-foreground font-data-mono'>{sale.client_document || t('sales.detail.noDocument', 'Sin documento')}</p>
+                  </div>
+                  <div className='space-y-xs'>
+                    <p className='text-label-caps uppercase text-muted-foreground'>{t('sales.detail.seller', 'Vendedor')}</p>
+                    <p className='text-body-md-bold text-foreground'>{sale.user_name}</p>
+                  </div>
+                  <div className='space-y-xs'>
+                    <p className='text-label-caps uppercase text-muted-foreground'>{t('sales.detail.paymentMethod', 'Método de Pago')}</p>
+                    <div className='flex items-center gap-2 text-body-md-bold text-foreground'>
+                      <CreditCard size={14} className='text-muted-foreground' /> {sale.payment_method || t('sales.detail.defaultPayment', 'Efectivo')}
+                    </div>
+                  </div>
+                  <div className='space-y-xs'>
+                    <p className='text-label-caps uppercase text-muted-foreground'>{t('sales.detail.currency', 'Moneda')}</p>
+                    <div className='flex items-center gap-2 text-body-md-bold text-foreground font-data-mono'>
+                      <Coins size={14} className='text-muted-foreground' /> {sale.currency}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Items Table */}
+            <Card className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden'>
+              <CardHeader className='bg-surface-muted border-b border-border-subtle p-md flex flex-row items-center justify-between'>
+                <div>
+                  <CardTitle className='text-title-md text-foreground tracking-tight'>
+                    {t('sales.detail.itemsTitle', 'Productos y Servicios')}
+                  </CardTitle>
+                  <CardDescription className='text-body-sm-bold text-muted-foreground'>
+                    {t('sales.detail.itemsSubtitle', 'Detalle de conceptos facturados')}
+                  </CardDescription>
+                </div>
+                <Badge variant='secondary' size='sm'>
+                  {t('sales.detail.itemsCount', { count: items.length })}
+                </Badge>
+              </CardHeader>
+              <CardContent className='p-0'>
+                {!items || items.length === 0 ? (
+                  <div className='py-16 text-center'>
+                    <Package size={48} className='mx-auto mb-md text-muted-foreground/40' />
+                    <p className='text-label-caps uppercase text-muted-foreground'>
+                      {t('sales.detail.noItems', 'No hay items en esta orden')}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Desktop Table */}
+                    <div className='hidden md:block overflow-x-auto'>
+                      <Table>
+                        <TableHeader className='bg-surface-muted'>
+                          <TableRow className='border-b border-border-subtle'>
+                            <TableHead className='text-label-caps uppercase text-muted-foreground py-4 px-lg'>
+                              {t('sales.detail.colItem', 'Ítem')}
+                            </TableHead>
+                            <TableHead className='text-label-caps uppercase text-muted-foreground text-center'>
+                              {t('sales.detail.quantityShort', 'Cant.')}
+                            </TableHead>
+                            <TableHead className='text-label-caps uppercase text-muted-foreground text-right'>
+                              {t('sales.detail.colUnitPrice', 'Precio s/IVA')}
+                            </TableHead>
+                            <TableHead className='text-label-caps uppercase text-muted-foreground text-right'>
+                              {t('sales.detail.colTax', 'IVA')}
+                            </TableHead>
+                            <TableHead className='text-label-caps uppercase text-muted-foreground text-right px-lg'>
+                              {t('sales.detail.colTotal', 'Total')}
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {items.map((item, idx) => {
+                            const unitPriceWoTax = item.unit_price_without_tax ?? item.unit_price ?? item.price
+                            const taxAmount = item.tax_amount ?? 0
+                            const totalWithTax = item.total_with_tax ?? item.total_price ?? item.total
+                            return (
+                              <TableRow key={item.id || idx} className='hover:bg-surface-muted transition-colors duration-150'>
+                                <TableCell className='py-5 px-lg'>
+                                  <div className='flex flex-col'>
+                                    <span className='text-body-md-bold text-foreground'>{item.product_name || item.name}</span>
                                     {item.variant_name && (
-                                      <span className="text-xs text-text-secondary mt-0.5">{item.variant_name}</span>
+                                      <span className='text-body-md text-muted-foreground mt-0.5'>{item.variant_name}</span>
                                     )}
                                     {item.applied_tax_rate !== undefined && (
-                                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">IVA Aplicado: {item.applied_tax_rate}%</span>
+                                      <span className='text-label-caps text-muted-foreground mt-xs'>
+                                        {t('sales.detail.taxApplied', { rate: item.applied_tax_rate })}
+                                      </span>
                                     )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-center font-bold text-text-secondary text-sm">x{item.quantity || 1}</TableCell>
-                              <TableCell className="text-right font-bold text-text-secondary tabular-nums font-mono">{formatCurrency(unitPriceWoTax)}</TableCell>
-                              <TableCell className="text-right font-bold text-slate-400 tabular-nums font-mono">{taxAmount > 0 ? formatCurrency(taxAmount) : '-'}</TableCell>
-                              <TableCell className="text-right font-black text-primary tabular-nums px-8 font-mono">{formatCurrency(totalWithTax)}</TableCell>
-                            </TableRow>
-                          )
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  {/* Mobile Card View */}
-                  <div className="md:hidden divide-y divide-border-subtle">
-                    {items.map((item, idx) => {
-                      const unitPriceWoTax = item.unit_price_without_tax ?? item.unit_price ?? item.price
-                      const taxAmount = item.tax_amount ?? 0
-                      const totalWithTax = item.total_with_tax ?? item.total_price ?? item.total
-                      return (
-                        <div key={idx} className="p-6 space-y-4">
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="flex flex-col">
-                              <span className="font-black text-text-main text-sm uppercase tracking-tight leading-tight">
-                                {item.product_name || item.name}
+                                  </div>
+                                </TableCell>
+                                <TableCell className='text-center text-body-md text-muted-foreground'>x{item.quantity || 1}</TableCell>
+                                <TableCell className='text-right font-data-mono text-data-mono text-muted-foreground'>{formatCurrency(unitPriceWoTax)}</TableCell>
+                                <TableCell className='text-right font-data-mono text-data-mono text-muted-foreground'>{taxAmount > 0 ? formatCurrency(taxAmount) : '-'}</TableCell>
+                                <TableCell className='text-right text-data-mono font-data-mono text-primary px-lg'>{formatCurrency(totalWithTax)}</TableCell>
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    {/* Mobile Card View */}
+                    <div className='md:hidden divide-y divide-border-subtle'>
+                      {items.map((item, idx) => {
+                        const unitPriceWoTax = item.unit_price_without_tax ?? item.unit_price ?? item.price
+                        const taxAmount = item.tax_amount ?? 0
+                        const totalWithTax = item.total_with_tax ?? item.total_price ?? item.total
+                        return (
+                          <div key={idx} className='p-md space-y-md'>
+                            <div className='flex justify-between items-start gap-md'>
+                              <div className='flex flex-col'>
+                                <span className='font-data-mono text-data-mono text-foreground uppercase tracking-tight leading-tight'>
+                                  {item.product_name || item.name}
+                                </span>
+                                {item.variant_name && (
+                                  <span className='text-body-md text-muted-foreground mt-xs leading-tight'>{item.variant_name}</span>
+                                )}
+                              </div>
+                              <span className='bg-surface-muted px-sm py-xs rounded text-label-caps text-muted-foreground whitespace-nowrap uppercase'>
+                                x{item.quantity || 1} {item.unit || ''}
                               </span>
-                              {item.variant_name && (
-                                <span className="text-[10px] text-text-secondary mt-1 leading-tight uppercase tracking-tight">{item.variant_name}</span>
-                              )}
                             </div>
-                            <span className="bg-slate-100 px-2 py-0.5 rounded text-[9px] font-black text-text-secondary whitespace-nowrap uppercase tracking-widest">x{item.quantity || 1} {item.unit || ''}</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-3 p-4 bg-slate-50 rounded-xl border border-border-subtle">
-                            <div className="space-y-1">
-                                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Precio s/IVA</p>
-                                <p className="font-bold text-sm tabular-nums font-mono">{formatCurrency(unitPriceWoTax)}</p>
-                            </div>
-                            <div className="space-y-1 text-right">
-                                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">IVA</p>
-                                <p className="font-bold text-sm tabular-nums font-mono text-slate-400">{taxAmount > 0 ? formatCurrency(taxAmount) : '-'}</p>
-                            </div>
-                            <div className="col-span-2 pt-2 border-t border-slate-200 mt-1 flex justify-between items-center">
-                                <span className="text-[9px] font-black uppercase text-text-secondary tracking-widest">Subtotal con IVA</span>
-                                <span className="font-black text-lg text-primary tabular-nums font-mono">{formatCurrency(totalWithTax)}</span>
+                            <div className='grid grid-cols-2 gap-sm p-md bg-surface-muted rounded-md border border-border-subtle'>
+                              <div className='space-y-xs'>
+                                <p className='text-label-caps uppercase text-muted-foreground'>{t('sales.detail.colUnitPrice', 'Precio s/IVA')}</p>
+                                <p className='text-body-md-bold font-data-mono text-data-mono'>{formatCurrency(unitPriceWoTax)}</p>
+                              </div>
+                              <div className='space-y-xs text-right'>
+                                <p className='text-label-caps uppercase text-muted-foreground'>{t('sales.detail.colTax', 'IVA')}</p>
+                                <p className='text-body-md-bold font-data-mono text-data-mono text-muted-foreground'>{taxAmount > 0 ? formatCurrency(taxAmount) : '-'}</p>
+                              </div>
+                              <div className='col-span-2 pt-sm border-t border-border-subtle mt-xs flex justify-between items-center'>
+                                <span className='text-label-caps uppercase text-muted-foreground'>{t('sales.detail.subtotalWithTax', 'Subtotal con IVA')}</span>
+                                <span className='text-title-md font-data-mono text-data-mono text-primary'>{formatCurrency(totalWithTax)}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Column: Totals & Payments */}
-        <div className="lg:col-span-4 space-y-8">
-          {/* Totals Card */}
-          <Card className="rounded-xl border-border-subtle shadow-fluent-8 bg-primary text-white overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-8 opacity-10"><Calculator size={120} /></div>
-            <CardHeader className="border-b border-white/10 relative z-10">
-              <CardTitle className="text-lg font-black tracking-tighter uppercase text-white/90">Resumen Financiero</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8 relative z-10">
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Subtotal Neto</p>
-                  <p className="text-lg font-bold tabular-nums font-mono">{formatCurrency(totalAmount - totalTax)}</p>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Total Impuestos</p>
-                  <p className="text-lg font-bold tabular-nums font-mono">+{formatCurrency(totalTax)}</p>
-                </div>
-                <div className="pt-6 border-t border-white/20 flex justify-between items-end">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-1">Total de Venta</p>
-                    <h3 className="text-3xl font-black tabular-nums font-mono tracking-tighter">{formatCurrency(sale.total_amount)}</h3>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Payment Status KPI */}
-          <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden">
-            <CardContent className="p-8 space-y-8">
-                <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-black uppercase text-text-secondary tracking-[0.2em] mb-2">Saldo Pendiente</p>
-                        <h2 className={cn(
-                            "text-3xl font-black tabular-nums font-mono truncate tracking-tighter",
-                            balanceDue > 0 ? "text-error" : "text-success"
-                        )}>
-                            {formatCurrency(balanceDue)}
-                        </h2>
+                        )
+                      })}
                     </div>
-                    <div className={cn(
-                        "shrink-0 size-12 rounded-xl flex items-center justify-center shadow-fluent-2",
-                        balanceDue > 0 ? "bg-error/10 text-error" : "bg-success/10 text-success"
-                    )}>
-                        <Wallet size={24} />
-                    </div>
-                </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-                <div className="space-y-3 pt-4 border-t border-slate-100">
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-text-secondary">
-                        <span>Progreso de Pago</span>
-                        <span>{paymentProgress}%</span>
-                    </div>
-                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                        <div className="h-full bg-primary transition-all duration-1000 shadow-sm" style={{ width: `${paymentProgress}%` }}></div>
-                    </div>
-                </div>
-            </CardContent>
-          </Card>
-
-          {/* Payments History */}
-          <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden group">
-            <CardHeader 
-              className="bg-slate-50/50 border-b border-border-subtle p-6 cursor-pointer hover:bg-slate-100 transition-colors flex flex-row items-center justify-between space-y-0"
-              onClick={() => navigate(`/cobros-ventas/${saleId}/pagos`)}
-            >
-              <div>
-                <CardTitle className="text-lg font-black tracking-tighter uppercase flex items-center gap-2">
-                  Historial de Cobros
-                  <ChevronRight size={18} className="text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
+          {/* Right Column: Totals & Payments */}
+          <div className='lg:col-span-4 space-y-xl'>
+            {/* Totals Card */}
+            <Card className='bg-primary text-primary-foreground rounded-md shadow-fluent-8 border-0 overflow-hidden relative'>
+              <div className='absolute top-0 right-0 p-lg opacity-10'><Calculator size={120} /></div>
+              <CardHeader className='border-b border-primary-foreground/10 relative z-10'>
+                <CardTitle className='text-title-md font-black tracking-tight uppercase text-primary-foreground/90'>
+                  {t('sales.detail.summary', 'Resumen Financiero')}
                 </CardTitle>
-                <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Pagos parciales recibidos</CardDescription>
-              </div>
-              <Button variant="ghost" size="sm" className="h-8 px-2 text-[9px] font-black uppercase tracking-widest text-primary border border-primary/20 bg-primary/5 hover:bg-primary hover:text-white transition-all">
-                Ver Detalles
-              </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              {payments.length === 0 ? (
-                <div className="py-12 text-center text-text-secondary font-bold italic uppercase text-[10px] tracking-widest">No se registran pagos</div>
-              ) : (
-                <div className="divide-y divide-border-subtle">
-                  {payments.map(payment => (
-                    <div key={payment.payment_id} className="p-5 hover:bg-slate-50 transition-colors">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-3">
-                            <div className="size-8 rounded-lg bg-green-50 text-success flex items-center justify-center border border-green-100"><CheckCircle size={16} /></div>
-                            <div>
-                                <p className="font-bold text-sm text-text-main uppercase tracking-tight">Cobro Recibido</p>
-                                <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest">{new Date(payment.payment_date).toLocaleDateString()}</p>
-                            </div>
-                        </div>
-                        <p className="font-black text-success font-mono text-sm">+{formatCurrency(payment.amount_paid)}</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-border-subtle">{payment.payment_method}</Badge>
-                        {payment.payment_reference && <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-border-subtle max-w-[120px] truncate">Ref: {payment.payment_reference}</Badge>}
-                      </div>
+              </CardHeader>
+              <CardContent className='p-lg space-y-xl relative z-10'>
+                <div className='space-y-lg'>
+                  <div className='flex justify-between items-center'>
+                    <p className='text-label-caps uppercase tracking-widest text-primary-foreground/60'>{t('sales.detail.subtotal', 'Subtotal Neto')}</p>
+                    <p className='text-body-lg font-bold font-data-mono text-data-mono'>{formatCurrency(totalAmount - totalTax)}</p>
+                  </div>
+                  <div className='flex justify-between items-center'>
+                    <p className='text-label-caps uppercase tracking-widest text-primary-foreground/60'>{t('sales.detail.tax', 'Total Impuestos')}</p>
+                    <p className='text-body-lg font-bold font-data-mono text-data-mono'>+{formatCurrency(totalTax)}</p>
+                  </div>
+                  <div className='pt-lg border-t border-primary-foreground/20 flex justify-between items-end'>
+                    <div>
+                      <p className='text-label-caps uppercase tracking-widest text-primary-foreground/60 mb-xs'>{t('sales.detail.totalAmount', 'Total de Venta')}</p>
+                      <h3 className='text-headline-lg font-data-mono text-data-mono tracking-tighter'>{formatCurrency(totalAmount)}</h3>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Payment Status KPI */}
+            <Card className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden'>
+              <CardContent className='p-lg space-y-xl'>
+                <div className='flex justify-between items-start gap-md'>
+                  <div className='flex-1 min-w-0'>
+                    <p className='text-label-caps uppercase text-muted-foreground mb-sm'>{t('sales.detail.balanceDue', 'Saldo Pendiente')}</p>
+                    <h2 className={cn(
+                      'text-headline-lg font-data-mono text-data-mono truncate tracking-tighter',
+                      balanceDue > 0 ? 'text-error' : 'text-success'
+                    )}>
+                      {formatCurrency(balanceDue)}
+                    </h2>
+                  </div>
+                  <div className={cn(
+                    'shrink-0 size-12 rounded-md flex items-center justify-center shadow-whisper',
+                    balanceDue > 0 ? 'bg-error/10 text-error' : 'bg-success/10 text-success'
+                  )}>
+                    <Wallet size={24} />
+                  </div>
+                </div>
+
+                <div className='space-y-sm pt-md border-t border-border-subtle'>
+                  <div className='flex justify-between text-label-caps uppercase text-muted-foreground tabular-nums'>
+                    <span>{t('sales.detail.paymentProgress', 'Progreso de Pago')}</span>
+                    <span>{paymentProgress}%</span>
+                  </div>
+                  <div className='h-2.5 bg-surface-muted rounded-full overflow-hidden'>
+                    <div className='h-full bg-primary transition-colors duration-150' style={{ width: `${paymentProgress}%` }} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Payments History */}
+            <Card className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden group'>
+              <CardHeader
+                className='bg-surface-muted border-b border-border-subtle p-md cursor-pointer hover:bg-surface-subtle transition-colors duration-150 flex flex-row items-center justify-between space-y-0'
+                onClick={() => navigate(`/cobros-ventas/${saleId}/pagos`)}
+              >
+                <div>
+                  <CardTitle className='text-title-md text-foreground tracking-tight flex items-center gap-2'>
+                    {t('sales.detail.paymentHistory', 'Historial de Cobros')}
+                    <ChevronRight size={18} className='text-primary opacity-0 group-hover:opacity-100 transition-all duration-150' />
+                  </CardTitle>
+                  <CardDescription className='text-body-sm-bold text-muted-foreground'>
+                    {t('sales.detail.historySubtitle', 'Pagos parciales recibidos')}
+                  </CardDescription>
+                </div>
+                <Button variant='ghost' size='sm' className='text-label-caps uppercase text-primary border border-primary/20 bg-primary/5 hover:bg-primary hover:text-primary-foreground transition-colors duration-150'>
+                  {t('sales.cobros.action.details', 'Ver Detalles')}
+                </Button>
+              </CardHeader>
+              <CardContent className='p-0'>
+                {payments.length === 0 ? (
+                  <div className='py-12 text-center text-label-caps uppercase text-muted-foreground'>
+                    {t('sales.detail.noPayments', 'No se registran pagos')}
+                  </div>
+                ) : (
+                  <div className='divide-y divide-border-subtle'>
+                    {payments.map(payment => (
+                      <div key={payment.payment_id} className='p-md hover:bg-surface-muted transition-colors duration-150'>
+                        <div className='flex justify-between items-start mb-sm'>
+                          <div className='flex items-center gap-md'>
+                            <div className='size-8 rounded-md bg-success/10 text-success flex items-center justify-center border border-success/30'><CheckCircle size={16} /></div>
+                            <div>
+                              <p className='text-body-md-bold text-foreground tracking-tight'>{t('sales.detail.paymentReceived', 'Cobro Recibido')}</p>
+                              <p className='text-label-caps uppercase text-muted-foreground'>{new Date(payment.payment_date).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                          <p className='font-data-mono text-data-mono text-success'>+{formatCurrency(payment.amount_paid)}</p>
+                        </div>
+                        <div className='flex flex-wrap gap-sm mt-sm'>
+                          <Badge variant='outline' size='sm' className='text-label-caps uppercase text-muted-foreground border-border-subtle'>{payment.payment_method}</Badge>
+                          {payment.payment_reference && <Badge variant='outline' size='sm' className='text-label-caps uppercase text-muted-foreground border-border-subtle max-w-[120px] truncate'>Ref: {payment.payment_reference}</Badge>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
+
+        {/* Panel fiscal SIFEN (FE3) — complementa el detalle; 404 = branch no fiscal */}
+        {saleId && <SaleFiscalPanel saleId={saleId} saleTotal={Number(totalAmount) || undefined} />}
+
+        <RegisterSalePaymentModal open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen} sale={{ ...sale, balance_due: balanceDue, currency: sale?.currency || 'PYG' }} onSubmit={handlePaymentSubmit} />
+
+        {/* CANCEL SALE MODAL (FE4.1) — motivo obligatorio + aviso de plazos SIFEN */}
+        <CancelSaleModal
+          open={showCancelPreview && !!cancelPreviewData}
+          onClose={() => setShowCancelPreview(false)}
+          sale={sale}
+          cancelPreviewData={cancelPreviewData}
+          isSubmitting={isCancelling}
+          onSubmit={handleConfirmCancellation}
+          formatTotal={formatCurrency}
+        />
+        <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
       </div>
-
-      {/* Panel fiscal SIFEN (FE3) — complementa el detalle; 404 = branch no fiscal */}
-      {saleId && <SaleFiscalPanel saleId={saleId} saleTotal={Number(totalAmount) || undefined} />}
-
-      <RegisterSalePaymentModal open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen} sale={{ ...sale, balance_due: balanceDue, currency: sale?.currency || 'PYG' }} onSubmit={handlePaymentSubmit} />
-
-      {/* CANCEL SALE MODAL (FE4.1) — motivo obligatorio + aviso de plazos SIFEN */}
-      <CancelSaleModal
-        open={showCancelPreview && !!cancelPreviewData}
-        onClose={() => setShowCancelPreview(false)}
-        sale={sale}
-        cancelPreviewData={cancelPreviewData}
-        isSubmitting={isCancelling}
-        onSubmit={handleConfirmCancellation}
-        formatTotal={formatCurrency}
-      />
-      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   )
 }
