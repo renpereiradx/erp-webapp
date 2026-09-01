@@ -9,6 +9,7 @@ import { Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import usePriceAdjustmentNewStore from '@/store/usePriceAdjustmentNewStore';
 import { useNavigate } from 'react-router-dom';
+import { getProductBaseUnitPrice } from '@/utils/productUtils';
 
 const PriceAdjustmentNew = () => {
   const { t } = useI18n();
@@ -185,7 +186,7 @@ const PriceAdjustmentNew = () => {
                       {product.product_id || product.id}
                     </td>
                     <td className="py-4 px-4 font-black">
-                      PYG {(product.unit_prices?.[0]?.price_per_unit || product.current_price || product.price || 0).toLocaleString('es-PY')}
+                      PYG {(getProductBaseUnitPrice(product) ?? product.current_price ?? product.price ?? 0).toLocaleString('es-PY')}
                     </td>
                     <td className="py-4 px-6 text-right">
                       <button
