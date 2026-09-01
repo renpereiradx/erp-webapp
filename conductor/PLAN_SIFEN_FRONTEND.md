@@ -8,7 +8,7 @@
 (`9857ee0` + backend `9ee383b`), FE4 ✅ (`79cf698`, `a3558e3`, `b0a8a87`,
 `e0a0adc`, `9c29444` — 2026-08-20), FE5 ✅ (2026-08-20, `b73a5fc` +
 `9bc18a4` + `571be5c`, backend `e125f1c`/`8685e9b`/`3256751`/`d3a82bb`)
-y FE6 ✅ (2026-08-31 — cierre del H9-audit S6, ver sección abajo)
+y FE6 ✅ (2026-08-31, `d2234ca` — cierre del H9-audit S6, ver sección abajo)
 completadas; S6 cerrada. **Remediación auditoría S6 (2026-08-24) aplicada —
 ver sección abajo. Remediación auditoría S7 (2026-08-25, parte FE del H9-b)
 aplicada — ver sección abajo.**
