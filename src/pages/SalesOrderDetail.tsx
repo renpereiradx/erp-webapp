@@ -23,7 +23,6 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
 import {
   Table,
@@ -329,7 +328,7 @@ const SalesOrderDetail = () => {
           {/* Left Column: Info & Items */}
           <div className='lg:col-span-8 space-y-xl'>
             {/* Status Card */}
-            <Card className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden'>
+            <div className='bg-surface rounded-md shadow-whisper overflow-hidden'>
               <div className='p-sm bg-surface-muted border-b border-border-subtle flex justify-center'>
                 <div className='px-md py-xs rounded-full text-label-caps uppercase bg-surface border border-border-subtle shadow-whisper flex items-center gap-2'>
                   <span className={cn('size-2 rounded-full animate-pulse', getStatusColor(sale.status).split(' ')[0])} />
@@ -337,7 +336,7 @@ const SalesOrderDetail = () => {
                   <span className={cn('font-black', getStatusColor(sale.status).split(' ')[1])}>{sale.status}</span>
                 </div>
               </div>
-              <CardContent className='p-lg'>
+              <div className='p-lg'>
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-lg'>
                   <div className='space-y-xs'>
                     <p className='text-label-caps uppercase text-muted-foreground'>{t('sales.detail.customer', 'Información del Cliente')}</p>
@@ -361,25 +360,25 @@ const SalesOrderDetail = () => {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Items Table */}
-            <Card className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden'>
-              <CardHeader className='bg-surface-muted border-b border-border-subtle p-md flex flex-row items-center justify-between'>
+            <div className='bg-surface rounded-md shadow-whisper overflow-hidden'>
+              <div className='bg-surface-muted border-b border-border-subtle p-md flex flex-row items-center justify-between'>
                 <div>
-                  <CardTitle className='text-title-md text-foreground tracking-tight'>
+                  <div className='text-title-md text-foreground tracking-tight'>
                     {t('sales.detail.itemsTitle', 'Productos y Servicios')}
-                  </CardTitle>
-                  <CardDescription className='text-body-sm-bold text-muted-foreground'>
+                  </div>
+                  <div className='text-body-sm-bold text-muted-foreground'>
                     {t('sales.detail.itemsSubtitle', 'Detalle de conceptos facturados')}
-                  </CardDescription>
+                  </div>
                 </div>
                 <Badge variant='secondary' size='sm'>
                   {t('sales.detail.itemsCount', { count: items.length })}
                 </Badge>
-              </CardHeader>
-              <CardContent className='p-0'>
+              </div>
+              <div className='p-0'>
                 {!items || items.length === 0 ? (
                   <div className='py-16 text-center'>
                     <Package size={48} className='mx-auto mb-md text-muted-foreground/40' />
@@ -482,43 +481,43 @@ const SalesOrderDetail = () => {
                     </div>
                   </>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           {/* Right Column: Totals & Payments */}
           <div className='lg:col-span-4 space-y-xl'>
             {/* Totals Card */}
-            <Card className='bg-primary text-primary-foreground rounded-md shadow-fluent-8 border-0 overflow-hidden relative'>
+            <div className='bg-primary text-primary-foreground rounded-md shadow-fluent-8 overflow-hidden relative'>
               <div className='absolute top-0 right-0 p-lg opacity-10'><Calculator size={120} /></div>
-              <CardHeader className='border-b border-primary-foreground/10 relative z-10'>
-                <CardTitle className='text-title-md font-black tracking-tight uppercase text-primary-foreground/90'>
+              <div className='border-b border-primary-foreground/10 relative z-10 p-md'>
+                <div className='text-title-md font-black tracking-tight uppercase text-primary-foreground/90'>
                   {t('sales.detail.summary', 'Resumen Financiero')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='p-lg space-y-xl relative z-10'>
+                </div>
+              </div>
+              <div className='p-lg space-y-xl relative z-10'>
                 <div className='space-y-lg'>
                   <div className='flex justify-between items-center'>
                     <p className='text-label-caps uppercase tracking-widest text-primary-foreground/60'>{t('sales.detail.subtotal', 'Subtotal Neto')}</p>
-                    <p className='text-body-lg font-bold font-data-mono text-data-mono'>{formatCurrency(totalAmount - totalTax)}</p>
+                    <p className='text-body-lg font-bold font-data-mono text-data-mono text-primary-foreground'>{formatCurrency(totalAmount - totalTax)}</p>
                   </div>
                   <div className='flex justify-between items-center'>
                     <p className='text-label-caps uppercase tracking-widest text-primary-foreground/60'>{t('sales.detail.tax', 'Total Impuestos')}</p>
-                    <p className='text-body-lg font-bold font-data-mono text-data-mono'>+{formatCurrency(totalTax)}</p>
+                    <p className='text-body-lg font-bold font-data-mono text-data-mono text-primary-foreground'>+{formatCurrency(totalTax)}</p>
                   </div>
                   <div className='pt-lg border-t border-primary-foreground/20 flex justify-between items-end'>
                     <div>
                       <p className='text-label-caps uppercase tracking-widest text-primary-foreground/60 mb-xs'>{t('sales.detail.totalAmount', 'Total de Venta')}</p>
-                      <h3 className='text-headline-lg font-data-mono text-data-mono tracking-tighter'>{formatCurrency(totalAmount)}</h3>
+                      <h3 className='text-headline-lg font-data-mono text-data-mono text-primary-foreground tracking-tighter'>{formatCurrency(totalAmount)}</h3>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Payment Status KPI */}
-            <Card className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden'>
-              <CardContent className='p-lg space-y-xl'>
+            <div className='bg-surface rounded-md shadow-whisper overflow-hidden'>
+              <div className='p-lg space-y-xl'>
                 <div className='flex justify-between items-start gap-md'>
                   <div className='flex-1 min-w-0'>
                     <p className='text-label-caps uppercase text-muted-foreground mb-sm'>{t('sales.detail.balanceDue', 'Saldo Pendiente')}</p>
@@ -546,29 +545,29 @@ const SalesOrderDetail = () => {
                     <div className='h-full bg-primary transition-colors duration-150' style={{ width: `${paymentProgress}%` }} />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Payments History */}
-            <Card className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden group'>
-              <CardHeader
+            <div className='bg-surface rounded-md shadow-whisper overflow-hidden group'>
+              <div
                 className='bg-surface-muted border-b border-border-subtle p-md cursor-pointer hover:bg-surface-subtle transition-colors duration-150 flex flex-row items-center justify-between space-y-0'
                 onClick={() => navigate(`/cobros-ventas/${saleId}/pagos`)}
               >
                 <div>
-                  <CardTitle className='text-title-md text-foreground tracking-tight flex items-center gap-2'>
+                  <div className='text-title-md text-foreground tracking-tight flex items-center gap-2'>
                     {t('sales.detail.paymentHistory', 'Historial de Cobros')}
                     <ChevronRight size={18} className='text-primary opacity-0 group-hover:opacity-100 transition-all duration-150' />
-                  </CardTitle>
-                  <CardDescription className='text-body-sm-bold text-muted-foreground'>
+                  </div>
+                  <div className='text-body-sm-bold text-muted-foreground'>
                     {t('sales.detail.historySubtitle', 'Pagos parciales recibidos')}
-                  </CardDescription>
+                  </div>
                 </div>
                 <Button variant='ghost' size='sm' className='text-label-caps uppercase text-primary border border-primary/20 bg-primary/5 hover:bg-primary hover:text-primary-foreground transition-colors duration-150'>
                   {t('sales.cobros.action.details', 'Ver Detalles')}
                 </Button>
-              </CardHeader>
-              <CardContent className='p-0'>
+              </div>
+              <div className='p-0'>
                 {payments.length === 0 ? (
                   <div className='py-12 text-center text-label-caps uppercase text-muted-foreground'>
                     {t('sales.detail.noPayments', 'No se registran pagos')}
@@ -595,8 +594,8 @@ const SalesOrderDetail = () => {
                     ))}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
 
