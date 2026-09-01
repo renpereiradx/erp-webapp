@@ -206,17 +206,49 @@ export const saleService = {
         return status === 'PENDING'
       })
 
+    // Normaliza NESTED (legacy live handler: {sale:{...}, details, items,
+    // total_amount}) y FLAT (docs/internal) a una sola forma plana. Sin esto
+    // el paso de pendientes muestra `# — 0 ítem(s)` (sale.id/items_count no
+    // existen en el shape anidado).
+    const normalizeSaleShape = (s: any) => {
+      if (!s || typeof s !== 'object') return s
+      const inner = s.sale || {}
+      const details = Array.isArray(s.details) ? s.details : []
+      return {
+        ...s,
+        sale_id: s.sale_id ?? inner.id ?? s.id,
+        id: s.id ?? inner.id ?? s.sale_id,
+        sale_date: s.sale_date ?? inner.sale_date,
+        status: s.status ?? inner.status,
+        branch_id: s.branch_id ?? inner.branch_id,
+        currency: s.currency ?? inner.currency,
+        total_amount: s.total_amount ?? inner.total_amount,
+        items_count: s.items_count ?? s.item_count ?? s.items ?? details.length,
+        details,
+      }
+    }
+    const normalizeList = (rows: any[]) => (Array.isArray(rows) ? rows.map(normalizeSaleShape) : [])
+
     // 1) Intentar por el nuevo endpoint especifico
     try {
       const response = await apiClient.getPendingSalesByClientId(clientId)
       const { data } = this.extractSalesAndPagination(response)
-      return { success: true, data: data }
+      const normalized = normalizeList(onlyPending(data))
+      if (normalized.length > 0) {
+        return { success: true, data: normalized }
+      }
+      // El endpoint dedicado puede responder vacío por scoping de sucursal
+      // aunque existan pendientes: caer al fallback por client_id antes de
+      // rendirse (mismo criterio de filtro PENDING).
+      const fb = await apiClient.getSalesByClientId(clientId, 1, 100)
+      const fbData = this.extractSalesAndPagination(fb).data
+      return { success: true, data: normalizeList(onlyPending(fbData)) }
     } catch (errorPendingEndpoint: any) {
       // Si el endpoint no existe aun, hacemos fallback a filtrar manualmente
       try {
         const response = await apiClient.getSalesByClientId(clientId, 1, 100)
         const { data } = this.extractSalesAndPagination(response)
-        return { success: true, data: onlyPending(data) }
+        return { success: true, data: normalizeList(onlyPending(data)) }
       } catch (errorById: any) {
         const notFoundById =
           String(errorById?.message || '')

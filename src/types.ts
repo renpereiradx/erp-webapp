@@ -996,6 +996,13 @@ export interface ProcessSaleEnhancedResponse {
  */
 export interface POSPayment {
   amount_received: number;
+  /**
+   * Cash actually applied to the sale's balance (document currency). The
+   * difference with amount_received is CHANGE handed back on the spot; the
+   * difference with the sale total stays as PENDING balance (the sale is
+   * created as PARTIAL_PAYMENT). Omitted = apply everything received.
+   */
+  amount_to_apply?: number | null;
   payment_method_id: number;
   cash_register_id?: number | null;
   payment_reference?: string | null;
