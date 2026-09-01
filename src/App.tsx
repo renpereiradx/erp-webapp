@@ -12,6 +12,10 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import useTaxRateStore from '@/store/useTaxRateStore'
+import {
+  useReservationsEnabled,
+} from '@/store/useBusinessConfigStore'
+import { useI18n } from '@/lib/i18n'
 import MainLayout from '@/layouts/MainLayout'
 import PriceAdjustmentLayout from '@/layouts/PriceAdjustmentLayout'
 import Dashboard from '@/pages/Dashboard'
@@ -122,7 +126,7 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import RoleGuard from '@/components/auth/RoleGuard'
 import PermissionGuard from '@/components/auth/PermissionGuard'
 import { useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 // Componente de protección de rutas
 const ProtectedRoute = ({ children }) => {
@@ -154,6 +158,31 @@ const ProtectedRoute = ({ children }) => {
   }
 
   return children
+}
+
+// Gate de ruta del módulo de reservas (PLAN_SERVICIOS_Y_RESERVAS_CONFIGURABLES
+// S3): con el toggle del negocio en off, /gestion-agenda redirige al dashboard
+// con un aviso. Fail-open (D-SR-5): solo un `false` explícito bloquea.
+const ReservationsModuleRoute = ({ children }: { children: React.ReactNode }) => {
+  const { t } = useI18n()
+  const reservationsEnabled = useReservationsEnabled()
+  const toastShownRef = useRef(false)
+
+  useEffect(() => {
+    if (!reservationsEnabled && !toastShownRef.current) {
+      toastShownRef.current = true
+      import('sonner').then(({ toast }) => {
+        toast.error(
+          t('reservations.moduleDisabled', 'El módulo de reservas está deshabilitado para este negocio'),
+        )
+      })
+    }
+  }, [reservationsEnabled, t])
+
+  if (!reservationsEnabled) {
+    return <Navigate to='/dashboard' replace />
+  }
+  return <>{children}</>
 }
 
 // Componente interno que usa los hooks
@@ -322,7 +351,11 @@ function AppContent() {
                       />
                       <Route
                         path='/gestion-agenda'
-                        element={<BookingUnifiedDashboard />}
+                        element={
+                          <ReservationsModuleRoute>
+                            <BookingUnifiedDashboard />
+                          </ReservationsModuleRoute>
+                        }
                       />
                       <Route
                         path='/movimientos-stock'

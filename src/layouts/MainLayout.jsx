@@ -53,6 +53,10 @@ import {
   Gauge,
 } from 'lucide-react'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
+import {
+  useBusinessConfigStore,
+  useReservationsEnabled,
+} from '@/store/useBusinessConfigStore'
 import { distinctSearchableRoutes } from '@/config/searchableRoutes'
 import { useToast } from '@/hooks/useToast'
 import BranchSwitcher from '@/components/BranchSwitcher'
@@ -82,6 +86,18 @@ const MainLayout = ({ children }) => {
   const { user, logout, hasPermission, hasAnyPermission } = useAuth()
   const { t } = useI18n()
   const { matchesShortcut } = useKeyboardShortcutsStore()
+  const reservationsEnabled = useReservationsEnabled()
+
+  // Bootstrap de configuración del negocio (post-login). El layout es el
+  // shell autenticado: aquí es seguro llamar a GET /settings. Fail-open
+  // (D-SR-5): si falla, los gates conservan el default `true`.
+  const fetchSettings = useBusinessConfigStore((s) => s.fetchSettings)
+  const configLoaded = useBusinessConfigStore((s) => s.loaded)
+  useEffect(() => {
+    if (!configLoaded) {
+      fetchSettings().catch(() => {})
+    }
+  }, [configLoaded, fetchSettings])
 
   // Scroll selected search item into view
   useEffect(() => {
@@ -399,12 +415,18 @@ const MainLayout = ({ children }) => {
             children: [
               { name: 'Nueva Venta', href: '/ventas', icon: PlusCircle },
               { name: 'Presupuestos', href: '/comercial/presupuestos', icon: FileText, permission: 'budgets:read' },
-              {
-                name: 'Agenda y Reservas',
-                href: '/gestion-agenda',
-                icon: Calendar,
-                permission: 'reserves:read'
-              },
+              // Gate del módulo: con reservas desactivadas la entrada no existe
+              // (no solo se oculta) — el route guard redirige igualmente.
+              ...(reservationsEnabled
+                ? [
+                    {
+                      name: 'Agenda y Reservas',
+                      href: '/gestion-agenda',
+                      icon: Calendar,
+                      permission: 'reserves:read',
+                    },
+                  ]
+                : []),
             ],
           },
           {
@@ -495,19 +517,24 @@ const MainLayout = ({ children }) => {
         // anyOf: vendedores con clients:read ven el directorio sin parties:read
         permissions: ['parties:read', 'clients:read', 'suppliers:read']
       },
-      {
-        name: t('common.services_planning', 'Planificación y Reservas'),
-        href: '#',
-        icon: Calendar,
-        permission: 'reserves:read',
-        children: [
-          {
-            name: t('reservations.title', 'Gestión de Agenda'),
-            href: '/gestion-agenda',
-            icon: Calendar,
-          },
-        ],
-      },
+      // Sección completa gated por el módulo de reservas del negocio.
+      ...(reservationsEnabled
+        ? [
+            {
+              name: t('common.services_planning', 'Planificación y Reservas'),
+              href: '#',
+              icon: Calendar,
+              permission: 'reserves:read',
+              children: [
+                {
+                  name: t('reservations.title', 'Gestión de Agenda'),
+                  href: '/gestion-agenda',
+                  icon: Calendar,
+                },
+              ],
+            },
+          ]
+        : []),
       {
         name: t('common.system_config', 'Configuración y Sistema'),
         href: '#',
@@ -592,7 +619,7 @@ const MainLayout = ({ children }) => {
 
     return filterNavItems(navItems);
     },
-    [t, hasPermission, hasAnyPermission]
+    [t, hasPermission, hasAnyPermission, reservationsEnabled]
   )
 
   const isActive = useCallback((href) => {

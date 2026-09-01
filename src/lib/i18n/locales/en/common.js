@@ -114,4 +114,8 @@ export const common = {
   'errors.toast.copy_code': 'Copy code',
   'errors.toast.retry': 'Retry',
   'errors.toast.diagnostics': 'Diagnostics',
+
+  // Reservations module (business-level toggle)
+  'reservations.title': 'Schedule Management',
+  'reservations.moduleDisabled': 'The reservations module is disabled for this business',
 }

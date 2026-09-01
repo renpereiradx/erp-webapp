@@ -106,6 +106,7 @@ export const common = {
   // Agenda y Reservas
   'reservations.title': 'Gestión de Agenda',
   'reservations.subtitle': 'Gestión unificada de horarios y reservas',
+  'reservations.moduleDisabled': 'El módulo de reservas está deshabilitado para este negocio',
 
   // Filtros
   'common.filters': 'Filtros',
