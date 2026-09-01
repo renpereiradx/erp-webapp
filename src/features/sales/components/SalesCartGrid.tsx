@@ -75,7 +75,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
             <Table className="table-fixed">
               <TableHeader className="bg-surface-muted">
                 <TableRow className="hover:bg-surface-muted">
-                  <TableHead className="w-14 px-3 text-label-caps uppercase text-on-surface-deep">
+                  <TableHead className="w-24 px-3 text-label-caps uppercase text-on-surface-deep">
                     {t('sales.cart.col.id', 'ID')}
                   </TableHead>
                   <TableHead className="px-3 text-label-caps uppercase text-on-surface-deep">
@@ -116,7 +116,11 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                     )}
                   >
                     <TableCell className="px-3 text-body-md text-outline-fg font-data-mono align-top">
-                      {item.productId || '-'}
+                      {/* IDs largos (SALE-/product ids) desbordan la celda fija
+                          y pintan encima de la columna Producto: truncar. */}
+                      <div className="truncate" title={String(item.productId || '-')}>
+                        {item.productId || '-'}
+                      </div>
                     </TableCell>
                     <TableCell className="px-3 text-body-md-bold text-foreground align-top">
                       <div className="flex items-start gap-2">
@@ -196,7 +200,9 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
             >
               <div className="flex justify-between items-start gap-4">
                 <div className="min-w-0">
-                  <p className="text-body-sm text-outline-fg font-data-mono mb-0.5">#{item.productId || '-'}</p>
+                  <p className="text-body-sm text-outline-fg font-data-mono mb-0.5 truncate" title={String(item.productId || '-')}>
+                    #{item.productId || '-'}
+                  </p>
                   <h4 className="text-body-md-bold text-foreground leading-tight">
                     {item.isFromPendingSale && (
                       <Badge variant="secondary" size="sm" className="mr-1.5 align-middle">

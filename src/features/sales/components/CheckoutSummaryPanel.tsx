@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageBar } from '@/components/ui/MessageBar';
 import { formatCurrency } from '@/utils/currencyUtils';
+import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput';
 import { useI18n } from '@/lib/i18n';
 
 export interface TaxBucket {
@@ -66,6 +67,13 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
   mergeSaleId,
 }) => {
   const { t } = useI18n();
+  // Draft del input de Precio Final: mientras se tipea, el valor visible es
+  // lo escrito (incluido vacío/borrado). Sin draft, el input controlado con
+  // `total` re-escribe el valor derivado en el mismo tick y el cursor "se
+  // traga" los dígitos; borrar todo dispararía además un ajuste a 0. El
+  // commit solo ocurre con un número válido; al salir (blur) el draft se
+  // descarta y vuelve a mostrarse el total real.
+  const [finalPriceDraft, setFinalPriceDraft] = React.useState<string | null>(null);
 
   return (
     <Card className="bg-surface rounded-md shadow-whisper border-0 p-lg flex flex-col">
@@ -165,9 +173,20 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
             <div className="relative">
               <Input
                 id="final-sale-price"
-                type="number"
-                value={finalPriceValue}
-                onChange={(e) => onFinalPriceChange(Math.max(0, Number(e.target.value)))}
+                type="text"
+                inputMode="numeric"
+                value={finalPriceDraft !== null ? formatNumberInput(finalPriceDraft) : formatNumberInput(finalPriceValue)}
+                onChange={(e) => {
+                  const canonical = parseNumberInput(e.target.value);
+                  setFinalPriceDraft(canonical);
+                  const parsed = Number(canonical);
+                  // Solo commitea números válidos; '' no dispara el ajuste
+                  // proporcional hasta que haya un valor concreto.
+                  if (canonical !== '' && Number.isFinite(parsed)) {
+                    onFinalPriceChange(Math.max(0, parsed));
+                  }
+                }}
+                onBlur={() => setFinalPriceDraft(null)}
                 disabled={itemsCount === 0}
                 className="h-11 pl-4 pr-16 text-body-lg font-data-mono text-primary border-divider bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-sm"
               />

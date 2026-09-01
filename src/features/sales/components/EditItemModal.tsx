@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import EnhancedModal from '@/components/ui/EnhancedModal';
 import { formatCurrency } from '@/utils/currencyUtils';
+import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput';
 import { isDecimalUnit } from '@/constants/units';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
@@ -73,11 +74,20 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
 }) => {
   const { t } = useI18n();
   const quantityRef = useRef<HTMLInputElement>(null);
+  // Drafts de tipeo para cantidad/precio/descuento: muestran lo escrito (con
+  // miles formateados) y commitean solo números válidos, para que borrar no
+  // dispare el clamp de cantidad ni el recálculo precio↔descuento a 0.
+  const [qtyDraft, setQtyDraft] = React.useState<string | null>(null);
+  const [priceDraft, setPriceDraft] = React.useState<string | null>(null);
+  const [discountDraft, setDiscountDraft] = React.useState<string | null>(null);
 
   // EnhancedModal enfoca el contenedor al abrir; 60ms después devolvemos el
   // foco a Cantidad (mismo patrón que los pasos del wizard) para tipear directo.
   useEffect(() => {
     if (!isOpen || !focusQuantityOnOpen) return;
+    setQtyDraft(null);
+    setPriceDraft(null);
+    setDiscountDraft(null);
     const timer = setTimeout(() => {
       quantityRef.current?.focus();
       quantityRef.current?.select();
@@ -153,9 +163,18 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             <Input
               id="edit-item-quantity"
               ref={quantityRef}
-              type="number"
-              value={quantity}
-              onChange={(e) => onQuantityChange(e.target.value)}
+              type={allowDecimal ? 'number' : 'text'}
+              inputMode={allowDecimal ? 'decimal' : 'numeric'}
+              value={qtyDraft !== null ? qtyDraft : formatNumberInput(quantity)}
+              onChange={(e) => {
+                const canonical = parseNumberInput(e.target.value);
+                setQtyDraft(canonical);
+                const parsed = Number(canonical);
+                if (canonical !== '' && Number.isFinite(parsed)) {
+                  onQuantityChange(allowDecimal ? canonical : Math.max(1, Math.trunc(parsed)));
+                }
+              }}
+              onBlur={() => setQtyDraft(null)}
               min={allowDecimal ? '0.01' : '1'}
               step={allowDecimal ? '0.01' : '1'}
               className="h-10 text-body-md font-data-mono text-foreground"
@@ -203,9 +222,18 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             </label>
             <Input
               id="edit-item-final-price"
-              type="number"
-              value={price}
-              onChange={(e) => onPriceChange(Math.max(0, Number(e.target.value)))}
+              type="text"
+              inputMode="numeric"
+              value={priceDraft !== null ? formatNumberInput(priceDraft) : formatNumberInput(price)}
+              onChange={(e) => {
+                const canonical = parseNumberInput(e.target.value);
+                setPriceDraft(canonical);
+                const parsed = Number(canonical);
+                if (canonical !== '' && Number.isFinite(parsed)) {
+                  onPriceChange(Math.max(0, parsed));
+                }
+              }}
+              onBlur={() => setPriceDraft(null)}
               className="h-10 text-body-md font-data-mono text-primary"
             />
           </div>
@@ -247,9 +275,18 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 {discountType === 'percent' ? <Percent size={16} /> : <DollarSign size={16} />}
               </div>
               <Input
-                type="number"
-                value={discount}
-                onChange={(e) => handleDiscountChange(Number(e.target.value))}
+                type="text"
+                inputMode="numeric"
+                value={discountDraft !== null ? formatNumberInput(discountDraft) : formatNumberInput(discount)}
+                onChange={(e) => {
+                  const canonical = parseNumberInput(e.target.value);
+                  setDiscountDraft(canonical);
+                  const parsed = Number(canonical);
+                  if (canonical !== '' && Number.isFinite(parsed)) {
+                    handleDiscountChange(Math.max(0, parsed));
+                  }
+                }}
+                onBlur={() => setDiscountDraft(null)}
                 placeholder="0"
                 aria-label={t('sales.editItem.discountInput', 'Monto o porcentaje de descuento')}
                 className="h-10 pl-9 pr-3 text-body-md font-data-mono"
