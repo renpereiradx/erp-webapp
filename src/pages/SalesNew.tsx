@@ -1337,26 +1337,37 @@ const SalesNew: React.FC = () => {
           // Cobro en modo merge: la venta existente debe quedar COBRADA, no solo
           // aumentada. Antes solo se llamaba a addProductsToSale y el cobro se
           // ignoraba por completo → la venta seguía PENDING pese a confirmar el
-          // pago. POST /payment/process usa CashRegisterOptional (caja opcional),
-          // consistente con el paso de cobro del wizard que permite "Sin caja".
-          const paymentPayload: any = {
-            sales_order_id: currentSaleId,
-            amount_received: collection.amountReceived,
-            payment_method_id: collection.paymentMethodId || Number(paymentMethodId) || 0,
-            ...(collection.amountToApply != null && { amount_to_apply: collection.amountToApply }),
-            ...(collection.cashRegisterId != null && { cash_register_id: collection.cashRegisterId }),
+          // pago. PUT /sale/{id}/confirm-payment usa CashRegisterExplicit: la
+          // caja es opcional y NUNCA se auto-resuelve (si el operador eligió
+          // "Sin caja", el cobro avanza sin caja). POST /payment/process usaba
+          // CashRegisterOptional y auto-resolvía una caja de otra sucursal →
+          // 500 "Branch mismatch" al cobrar sin caja.
+          const appliedAmount = collection.amountToApply ?? collection.amountReceived;
+          const matchedMethod =
+            paymentMethods.find((m) => String(m.id) === String(collection.paymentMethodId)) ||
+            paymentMethods.find((m) => String(m.id) === String(paymentMethodId));
+          const methodName =
+            matchedMethod?.name || matchedMethod?.description || matchedMethod?.method_code || 'CASH';
+          const confirmPayload: any = {
+            payment_methods: [
+              {
+                method: methodName,
+                amount: appliedAmount,
+                amount_received: collection.amountReceived,
+                ...(collection.currencyId != null && {
+                  currency_id: collection.currencyId,
+                  exchange_rate: collection.exchangeRate,
+                  original_amount: collection.foreignAmountReceived ?? undefined,
+                }),
+              },
+            ],
+            caja_id: collection.cashRegisterId ?? undefined,
             ...(collection.notes && { payment_notes: collection.notes }),
-            ...(collection.currencyId != null && {
-              currency_id: collection.currencyId,
-              exchange_rate: collection.exchangeRate,
-              original_amount: collection.foreignAmountReceived ?? undefined,
-            }),
           };
-          const paymentResult = await salePaymentService.processPayment(paymentPayload);
+          const paymentResult = await salePaymentService.confirmSalePayment(currentSaleId, confirmPayload);
           if (paymentResult?.success === false) {
             throw new Error(paymentResult?.error || paymentResult?.message || 'No se pudo registrar el cobro');
           }
-          const appliedAmount = collection.amountToApply ?? collection.amountReceived;
           if (appliedAmount < total) {
             toast.info(
               t('sales.checkoutWizard.partialCollectionToast', 'Cobro parcial registrado: {applied}. Saldo pendiente: {pending}.', {
