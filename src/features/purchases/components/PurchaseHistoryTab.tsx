@@ -1,6 +1,27 @@
 import React from 'react';
 import { Search, Building, MoreVertical, Eye, Ban } from 'lucide-react';
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic';
+import { useI18n } from '@/lib/i18n';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+import GenericSkeletonList from '@/components/ui/GenericSkeletonList';
+import DataState from '@/components/ui/DataState';
+import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/utils/currencyUtils';
 
 export type PurchaseHistoryTabProps = Pick<
@@ -17,12 +38,14 @@ export type PurchaseHistoryTabProps = Pick<
   | 'purchaseOrders'
   | 'formatDate'
   | 'getStatusText'
-  | 'openActionMenu'
-  | 'setOpenActionMenu'
   | 'handleViewPurchase'
   | 'canWrite'
   | 'handleCancelPurchase'
+  | 'loading'
+  | 'error'
 >;
+
+const headClass = 'text-label-caps uppercase text-on-surface-deep';
 
 export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
   searchTerm,
@@ -37,78 +60,93 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
   purchaseOrders,
   formatDate,
   getStatusText,
-  openActionMenu,
-  setOpenActionMenu,
   handleViewPurchase,
   canWrite,
   handleCancelPurchase,
+  loading,
+  error,
 }) => {
+  const { t } = useI18n();
+
+  const renderStatusBadge = (status?: string) => {
+    const normalized = status?.toUpperCase();
+    const isCompleted = normalized === 'COMPLETED' || normalized === 'RECEIVED';
+    const isCancelled = normalized === 'CANCELLED';
+    return (
+      <Badge variant={isCompleted ? 'success' : isCancelled ? 'destructive' : 'warning'}>
+        {getStatusText(status)}
+      </Badge>
+    );
+  };
+
   return (
-    <div className='space-y-4 md:space-y-6 animate-in slide-in-from-bottom-4 duration-500'>
-      {/* History Filter Toolbar - Fluent 2 CommandBar style */}
-      <section className='bg-surface rounded-md border border-surface-deep shadow-whisper overflow-hidden'>
-        <div className='p-4 md:p-5 border-b border-surface-deep flex flex-col xl:flex-row justify-between items-center bg-surface-muted gap-4'>
-          <div className='flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto'>
+    <div className='space-y-lg'>
+      {/* History Filter Toolbar */}
+      <section className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden'>
+        <div className='p-md lg:p-lg border-b border-divider flex flex-col xl:flex-row justify-between items-center bg-surface-muted gap-md'>
+          <div className='flex flex-col sm:flex-row items-center gap-md w-full xl:w-auto'>
             <div className='relative w-full sm:w-80'>
               <Search
                 className='absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg'
                 size={16}
+                aria-hidden='true'
               />
-              <input
+              <Input
                 type='text'
-                placeholder='Buscar por ID o Proveedor...'
-                className='w-full pl-9 pr-3 py-2 bg-surface border border-surface-deep rounded-md text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
+                aria-label={t('purchases.search.placeholder', 'Buscar por proveedor o ID...')}
+                placeholder={t('purchases.search.placeholder', 'Buscar por proveedor o ID...')}
+                className='pl-9 bg-surface'
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleFilter()}
               />
             </div>
-            <button
-              className='w-full sm:w-auto px-5 py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-md shadow-sm active:scale-[0.98] transition-all duration-150 text-sm'
-              onClick={handleFilter}
-            >
-              Buscar
-            </button>
+            <Button variant='primary' onClick={handleFilter} className='w-full sm:w-auto'>
+              {t('purchases.history.search', 'Buscar')}
+            </Button>
           </div>
 
-          <div className='flex flex-wrap items-center gap-3 w-full xl:w-auto justify-end'>
-            <div className='flex p-0.5 bg-surface-subtle rounded-md'>
-              <button
-                className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-150 ${
-                  searchType === 'date'
-                    ? 'bg-surface shadow-sm text-primary'
-                    : 'text-on-surface-deep hover:text-foreground'
-                }`}
-                onClick={() => setSearchType('date')}
-              >
-                Fecha
-              </button>
-              <button
-                className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-150 ${
-                  searchType === 'supplier'
-                    ? 'bg-surface shadow-sm text-primary'
-                    : 'text-on-surface-deep hover:text-foreground'
-                }`}
-                onClick={() => setSearchType('supplier')}
-              >
-                Proveedor
-              </button>
+          <div className='flex flex-wrap items-center gap-md w-full xl:w-auto justify-end'>
+            <div
+              role='tablist'
+              aria-label={t('purchases.search.type', 'Tipo de búsqueda')}
+              className='flex p-0.5 bg-surface-subtle rounded-md'
+            >
+              {([
+                { id: 'date', label: t('purchases.search.by_date', 'Fecha') },
+                { id: 'supplier', label: t('purchases.search.by_supplier', 'Proveedor') },
+              ]).map(option => (
+                <button
+                  key={option.id}
+                  role='tab'
+                  aria-selected={searchType === option.id}
+                  onClick={() => setSearchType(option.id)}
+                  className={cn(
+                    'px-md py-1.5 text-body-sm-bold rounded-sm transition-colors duration-150 cursor-pointer',
+                    searchType === option.id
+                      ? 'bg-surface text-primary shadow-fluent-2'
+                      : 'text-on-surface-deep hover:text-foreground'
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
 
             {searchType === 'date' && (
-              <div className='flex items-center gap-2 bg-surface px-3 py-1.5 rounded-md border border-surface-deep'>
+              <div className='flex items-center gap-sm bg-surface px-md py-1.5 rounded-md border border-border-subtle'>
                 <input
                   type='date'
-                  className='bg-transparent border-none text-xs text-foreground outline-none'
+                  aria-label={t('purchases.search.start_date', 'Fecha inicio')}
+                  className='bg-transparent text-body-sm text-foreground outline-none'
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
                 />
-                <span className='text-outline-fg'>
-                  →
-                </span>
+                <span className='text-outline-fg' aria-hidden='true'>→</span>
                 <input
                   type='date'
-                  className='bg-transparent border-none text-xs text-foreground outline-none'
+                  aria-label={t('purchases.search.end_date', 'Fecha fin')}
+                  className='bg-transparent text-body-sm text-foreground outline-none'
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
                 />
@@ -117,50 +155,57 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
           </div>
         </div>
 
-        {/* History Table - Fluent 2 DataGrid */}
-        <div className='overflow-x-auto min-h-[400px]'>
-          <table className='w-full text-left border-collapse min-w-[900px]'>
-            <thead className='bg-surface-subtle text-xs font-semibold text-on-surface-deep'>
-              <tr>
-                <th className='px-5 py-3 border-b border-surface-deep'>
-                  Orden ID
-                </th>
-                <th className='px-5 py-3 border-b border-surface-deep'>
-                  Fecha Pedido
-                </th>
-                <th className='px-5 py-3 border-b border-surface-deep'>
-                  Proveedor
-                </th>
-                <th className='px-5 py-3 border-b border-surface-deep text-right'>
-                  Monto Total
-                </th>
-                <th className='px-5 py-3 border-b border-surface-deep text-center'>
-                  Estado
-                </th>
-                <th className='px-5 py-3 border-b border-surface-deep text-right w-20'>
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className='divide-y divide-[var(--fluent-border-neutral,#E1DFDD)] dark:divide-[var(--fluent-neutral-grey-140,#484644)]'>
-              {purchaseOrders.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className='py-20 text-center text-outline-fg text-sm'
-                  >
-                    <div className='flex flex-col items-center justify-center gap-2'>
-                      <Search size={32} className="opacity-20" />
-                      <p>No se encontraron registros de compra</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                purchaseOrders.map((orderData: any) => {
+        {!loading && !error && purchaseOrders.length > 0 && (
+          <div className='overflow-x-auto'>
+            <Table className='min-w-[900px]'>
+              <TableHeader className='bg-surface-muted'>
+                <TableRow className='hover:bg-surface-muted border-0'>
+                  <TableHead className={`${headClass} px-lg py-md`}>{t('purchases.table.id', 'ID Compra')}</TableHead>
+                  <TableHead className={`${headClass} px-lg py-md`}>{t('purchases.history.order_date', 'Fecha Pedido')}</TableHead>
+                  <TableHead className={`${headClass} px-lg py-md`}>{t('purchases.table.supplier', 'Proveedor')}</TableHead>
+                  <TableHead className={`${headClass} px-lg py-md text-right`}>{t('purchases.history.total_amount', 'Monto Total')}</TableHead>
+                  <TableHead className={`${headClass} px-lg py-md text-center`}>{t('purchases.table.status', 'Estado')}</TableHead>
+                  <TableHead className={`${headClass} px-lg py-md text-right w-20`}>{t('purchases.table.actions', 'Acciones')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading && (
+                  <TableRow className='hover:bg-transparent border-0'>
+                    <TableCell colSpan={6} className='py-lg'>
+                      <GenericSkeletonList count={5} data-testid='purchases-history-loading' />
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {!loading && error && (
+                  <TableRow className='hover:bg-transparent border-0'>
+                    <TableCell colSpan={6} className='py-lg'>
+                      <DataState
+                        variant='error'
+                        testId='purchases-history-error'
+                        title={t('purchases.error.title', 'Error al cargar compras')}
+                        message={error}
+                        onRetry={handleFilter}
+                      />
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {!loading && !error && purchaseOrders.length === 0 && (
+                  <TableRow className='hover:bg-transparent border-0'>
+                    <TableCell colSpan={6} className='py-lg'>
+                      <DataState
+                        variant='empty'
+                        testId='purchases-history-empty'
+                        title={t('purchases.empty.title', 'Sin órdenes de compra')}
+                        description={t('purchases.empty.message', 'No hay órdenes de compra registradas')}
+                      />
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {!loading && !error && purchaseOrders.map((orderData: any) => {
                   const order = orderData.purchase || orderData;
-                  const isCompleted =
-                    order.status?.toUpperCase() === 'COMPLETED' ||
-                    order.status?.toUpperCase() === 'RECEIVED';
                   const isCancelled =
                     order.status?.toUpperCase() === 'CANCELLED';
 
@@ -175,108 +220,90 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
                     !isFullyPaid && totalAmount > 0 && !isCancelled;
 
                   return (
-                    <tr
+                    <TableRow
                       key={order.id}
-                      className='hover:bg-surface-deep transition-colors duration-100'
+                      className='hover:bg-surface-muted transition-colors duration-150'
                     >
-                      <td className='px-5 py-3.5 font-semibold text-primary text-sm'>
-                        <div>#{order.id}</div>
+                      <TableCell className='px-lg py-3.5'>
+                        <div className='text-data-mono font-data-mono text-primary'>
+                          #{order.id}
+                        </div>
                         {order.branch_id && (
-                          <div className='text-[10px] text-gray-400 dark:text-gray-500 font-normal flex items-center gap-1 mt-0.5'>
-                            <Building size={10} className="inline mr-1" />
-                            <span>Sucursal: {order.branch_id}</span>
+                          <div className='text-body-sm text-outline-fg flex items-center gap-1 mt-0.5'>
+                            <Building size={12} aria-hidden='true' />
+                            <span>
+                              {t('purchases.history.branch', 'Sucursal')}: {order.branch_id}
+                            </span>
                           </div>
                         )}
-                      </td>
-                      <td className='px-5 py-3.5 text-on-surface-deep text-sm'>
+                      </TableCell>
+                      <TableCell className='px-lg py-3.5 text-data-mono font-data-mono text-on-surface-deep'>
                         {formatDate(order.order_date)}
-                      </td>
-                      <td className='px-5 py-3.5 font-medium text-foreground text-sm'>
-                        <div>{order.supplier_name || '-'}</div>
+                      </TableCell>
+                      <TableCell className='px-lg py-3.5'>
+                        <div className='text-body-md-bold text-foreground'>
+                          {order.supplier_name || '-'}
+                        </div>
                         {order.payment_method && (
-                          <div className='text-[10px] text-gray-400 dark:text-gray-500 font-normal mt-0.5'>
-                            Pago: <span className='font-semibold'>{order.payment_method}</span>
+                          <div className='text-body-sm text-outline-fg mt-0.5'>
+                            {t('purchases.history.payment', 'Pago')}:{' '}
+                            <span className='text-body-sm-bold'>{order.payment_method}</span>
                           </div>
                         )}
-                      </td>
-                      <td className='px-5 py-3.5 text-right font-semibold text-foreground'>
-                        {formatCurrency(
-                          order.total_amount,
-                          order.currency,
-                        )}
-                      </td>
-                      <td className='px-5 py-3.5 text-center'>
+                      </TableCell>
+                      <TableCell className='px-lg py-3.5 text-right text-data-mono font-data-mono text-foreground'>
+                        {formatCurrency(order.total_amount, order.currency)}
+                      </TableCell>
+                      <TableCell className='px-lg py-3.5'>
                         <div className='flex flex-col items-center gap-1'>
-                          <span
-                            className={`inline-flex px-2.5 py-1 rounded-md text-xs font-semibold ${
-                              isCompleted
-                                ? 'bg-[rgba(16,124,16,0.1)] text-success'
-                                : isCancelled
-                                  ? 'bg-[rgba(209,52,56,0.1)] text-error'
-                                  : 'bg-[rgba(255,185,0,0.15)] text-[#B87900]'
-                            }`}
-                          >
-                            {getStatusText(order.status)}
-                          </span>
+                          {renderStatusBadge(order.status)}
                           {hasBalance && (
-                            <span className='inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-orange-100 text-orange-700 border border-orange-200'>
-                              Saldo Pendiente
-                            </span>
+                            <Badge variant='warning' size='sm'>
+                              {t('purchases.history.pending_balance', 'Saldo Pendiente')}
+                            </Badge>
                           )}
-                          {isFullyPaid && isCompleted && (
-                            <span className='inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-600 border border-blue-100'>
-                              Pagado
-                            </span>
+                          {isFullyPaid && (
+                            <Badge variant='success' size='sm'>
+                              {t('purchases.history.paid', 'Pagado')}
+                            </Badge>
                           )}
                         </div>
-                      </td>
-                      <td className='px-5 py-3.5 text-right'>
-                        <div className='relative inline-block'>
-                          <button
-                            onClick={() =>
-                              setOpenActionMenu(
-                                openActionMenu === order.id
-                                  ? null
-                                  : order.id,
-                              )
-                            }
-                            className='p-1.5 text-outline-fg hover:text-foreground hover:bg-surface-muted rounded-md transition-all'
-                          >
-                            <MoreVertical size={18} />
-                          </button>
-                          {openActionMenu === order.id && (
-                            <div className='absolute right-0 mt-1 w-48 bg-surface rounded-md shadow-md border border-surface-deep z-40 py-1 overflow-hidden'>
-                              <button
-                                onClick={() => handleViewPurchase(order)}
-                                className='w-full px-4 py-2.5 text-left text-sm text-foreground hover:bg-surface-deep flex items-center gap-3 transition-colors'
+                      </TableCell>
+                      <TableCell className='px-lg py-3.5 text-right'>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              aria-label={t('purchases.table.actions_aria', 'Abrir menú de acciones')}
+                            >
+                              <MoreVertical size={18} aria-hidden='true' />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='end' className='w-48'>
+                            <DropdownMenuItem onClick={() => handleViewPurchase(order)}>
+                              <Eye size={16} className='text-primary' aria-hidden='true' />
+                              {t('purchases.history.view_detail', 'Ver Detalle')}
+                            </DropdownMenuItem>
+                            {!isCancelled && canWrite && (
+                              <DropdownMenuItem
+                                onClick={() => handleCancelPurchase(order)}
+                                className='text-error focus:text-error'
                               >
-                                <Eye
-                                  size={16}
-                                  className='text-primary'
-                                />{' '}
-                                Ver Detalle
-                              </button>
-                              {!isCancelled && canWrite && (
-                                <button
-                                  onClick={() =>
-                                    handleCancelPurchase(order)
-                                  }
-                                  className='w-full px-4 py-2.5 text-left text-sm text-error hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors'
-                                >
-                                  <Ban size={16} /> Anular Orden
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+                                <Ban size={16} aria-hidden='true' />
+                                {t('purchases.history.cancel_order', 'Anular Orden')}
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
                   );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </section>
     </div>
   );

@@ -1,9 +1,21 @@
 import React, { useState, useEffect } from 'react'
-import { X, Search, Check, Package } from 'lucide-react'
+import { Search, Check, Package, X } from 'lucide-react'
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic'
+import { useI18n } from '@/lib/i18n'
 import { formatCurrency } from '@/utils/currencyUtils'
 import { variantService } from '@/services/variantService'
 import { ProductVariant } from '@/types'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 export type PurchaseProductModalProps = ReturnType<typeof usePurchasesLogic>
 
@@ -33,7 +45,6 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
     setModalUnit,
     modalUnitPrice,
     setModalUnitPrice,
-    t,
     modalTaxRateId,
     setModalTaxRateId,
     loading,
@@ -55,6 +66,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
     setModalSelectedVariant,
   } = props
 
+  const { t } = useI18n()
   const [variants, setVariants] = useState<ProductVariant[]>([])
   const [loadingVariants, setLoadingVariants] = useState(false)
   const [partialSelectedAttrs, setPartialSelectedAttrs] = useState<Record<string, string>>({})
@@ -85,11 +97,11 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isModalOpen) return;
-      
+
       const isConfirmValid = !(
-        !modalSelectedProduct || 
-        modalQuantity === '' || Number(modalQuantity) <= 0 || 
-        modalUnitPrice === '' || 
+        !modalSelectedProduct ||
+        modalQuantity === '' || Number(modalQuantity) <= 0 ||
+        modalUnitPrice === '' ||
         ((modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && modalVariantId === undefined)
       );
 
@@ -118,69 +130,76 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
   if (!isModalOpen) return null
 
+  const hasVariants = !!(
+    modalSelectedProduct?.has_variant ||
+    modalSelectedProduct?.has_variants ||
+    variants.length > 0
+  )
+
+  const labelClass = 'text-label-caps uppercase text-on-surface-deep'
+
   return (
-    <div className='fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4'>
-      <div
-        className='absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity'
-        onClick={() => setIsModalOpen(false)}
-      ></div>
-      <div className='relative bg-surface w-full max-w-4xl max-h-[98vh] rounded-md shadow-whisper overflow-hidden flex flex-col border border-surface-deep'>
+    <Dialog open={isModalOpen} onOpenChange={open => { if (!open) setIsModalOpen(false) }}>
+      <DialogContent className='w-[95vw] max-w-5xl max-h-[95vh] p-0 overflow-hidden flex flex-col bg-surface border border-border-subtle shadow-fluent-16 rounded-xl'>
+        <DialogTitle className='sr-only'>
+          {editingItemId
+            ? t('purchases.product_modal.title_edit', 'Editar Artículo')
+            : t('purchases.product_modal.title_add', 'Agregar Artículo de Compra')}
+        </DialogTitle>
+        <DialogDescription className='sr-only'>
+          {t('purchases.product_modal.subtitle', 'Seleccione un producto, configure cantidad, costo y estrategia de precio')}
+        </DialogDescription>
+
         {/* Header */}
-        <header className='px-5 py-3 border-b border-surface-deep flex justify-between items-center bg-surface-muted shrink-0'>
-          <div>
-            <h3 className='text-base font-semibold text-foreground'>
-              {editingItemId
-                ? 'Editar Artículo'
-                : 'Agregar Artículo de Compra'}
-            </h3>
-            <p className='text-xs text-on-surface-deep mt-0.5'>
-              Seleccione un producto, configure cantidad, costo y estrategia
-              de precio
-            </p>
-          </div>
-          <button
-            onClick={() => setIsModalOpen(false)}
-            className='w-8 h-8 flex items-center justify-center text-outline-fg hover:text-error hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all'
-          >
-            <X size={18} />
-          </button>
+        <header className='px-lg py-md border-b border-divider bg-surface-muted shrink-0 pr-16'>
+          <h2 className='text-title-md text-foreground'>
+            {editingItemId
+              ? t('purchases.product_modal.title_edit', 'Editar Artículo')
+              : t('purchases.product_modal.title_add', 'Agregar Artículo de Compra')}
+          </h2>
+          <p className='text-body-sm text-on-surface-deep mt-0.5'>
+            {t('purchases.product_modal.subtitle', 'Seleccione un producto, configure cantidad, costo y estrategia de precio')}
+          </p>
         </header>
 
         {/* Content - 2-column layout */}
-        <div className='flex-1 overflow-y-auto p-5'>
-          <div className='grid grid-cols-1 lg:grid-cols-2 gap-5'>
+        <div className='flex-1 overflow-y-auto p-lg'>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-lg'>
             {/* Column 1: Product Search, Selection & Basic Info */}
-            <div className='space-y-4'>
+            <div className='space-y-md'>
               {/* Product Search */}
-              <div className='space-y-1.5'>
-                <label className='text-sm font-medium text-on-surface-deep'>
-                  Buscar Producto
-                </label>
+              <div className='space-y-xs'>
+                <Label htmlFor='purchase-product-search' className={labelClass}>
+                  {t('purchases.product_modal.search_label', 'Buscar Producto')}
+                </Label>
                 <div className='relative'>
                   <Search
                     className='absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg'
                     size={16}
+                    aria-hidden='true'
                   />
                   <input
                     ref={modalProductSearchRef}
+                    id='purchase-product-search'
                     autoFocus
                     type='text'
-                    className='w-full pl-9 pr-9 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
-                    placeholder='Buscar por SKU, EAN o Nombre...'
+                    className='w-full pl-9 pr-9 py-2.5 bg-surface-muted border border-border-subtle rounded-input text-body-md text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors duration-150'
+                    placeholder={t('purchases.product_modal.search_placeholder', 'Buscar por SKU, EAN o Nombre...')}
                     value={modalProductSearch}
                     onChange={e => setModalProductSearch(e.target.value)}
                     onKeyDown={handleModalProductSearchKeyDown}
                     onFocus={() => setShowProductDropdown(true)}
                   />
                   {searchingProducts && (
-                    <div className='absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[var(--fluent-brand-primary,#0078D4)] border-t-transparent rounded-full animate-spin'></div>
+                    <div className='absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin' aria-hidden='true' />
                   )}
 
                   {showProductDropdown &&
                     filteredModalProducts.length > 0 && (
                       <div
                         ref={productDropdownRef}
-                        className='absolute top-full left-0 right-0 mt-1 bg-surface rounded-md shadow-md border border-surface-deep overflow-hidden z-50 max-h-[220px] overflow-y-auto'
+                        className='absolute top-full left-0 right-0 mt-1 bg-surface rounded-md shadow-fluent-8 border border-border-subtle overflow-hidden z-50 max-h-[220px] overflow-y-auto py-1'
+                        role='listbox'
                       >
                         {filteredModalProducts.map((p, index) => {
                           const isActive = activeProductIndex === index
@@ -191,11 +210,13 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                               data-product-index={index}
                               role='option'
                               aria-selected={isActive}
-                              className={`relative px-4 py-2.5 cursor-pointer border-b border-surface-deep last:border-none flex justify-between items-center transition-colors ${
+                              className={cn(
+                                'relative px-md py-2.5 cursor-pointer flex justify-between items-center transition-colors duration-150',
+                                index < filteredModalProducts.length - 1 && 'border-b border-border-subtle',
                                 isActive
-                                  ? 'bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-130,#605E5C)] ring-1 ring-inset ring-[var(--fluent-brand-primary,#0078D4)]'
-                                  : 'hover:bg-surface-deep'
-                              }`}
+                                  ? 'bg-primary/5 ring-1 ring-inset ring-primary'
+                                  : 'hover:bg-surface-muted'
+                              )}
                               onMouseEnter={() =>
                                 setActiveProductIndex(index)
                               }
@@ -203,42 +224,41 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                             >
                               {isActive && (
                                 <span
-                                  className='absolute left-0 top-1 bottom-1 w-1 rounded-r bg-[var(--fluent-brand-primary,#0078D4)]'
+                                  className='absolute left-0 top-1 bottom-1 w-1 rounded-r-sm bg-primary'
                                   aria-hidden='true'
                                 />
                               )}
                               <div className='min-w-0 flex-1'>
                                 <div
-                                  className={`font-medium text-sm truncate ${
-                                    isActive
-                                      ? 'text-primary'
-                                      : 'text-foreground'
-                                  }`}
+                                  className={cn(
+                                    'text-body-md-bold truncate',
+                                    isActive ? 'text-primary' : 'text-foreground'
+                                  )}
                                 >
                                   {getProductName(p)}
                                 </div>
                                 <div className='flex flex-wrap gap-1.5 mt-0.5 items-center'>
-                                  <span className='text-[10px] text-outline-fg'>
+                                  <span className='text-body-sm font-data-mono text-outline-fg'>
                                     ID: {p.id || p.product_id || '-'}
                                   </span>
                                   {/* Indicador de variantes */}
                                   {((p.has_variant || p.has_variants) || (Array.isArray(p.variants) && p.variants.length > 0)) && (
-                                    <span className='text-[9px] px-1 py-0.5 rounded bg-[rgba(0,120,212,0.1)] border border-[rgba(0,120,212,0.25)] text-primary font-semibold'>
-                                      variantes
-                                    </span>
+                                    <Badge variant='info' size='sm'>
+                                      {t('purchases.product_modal.variants_badge', 'Variantes')}
+                                    </Badge>
                                   )}
                                   {/* Marca */}
                                   {p.brand_name && (
-                                    <span className='text-[9px] px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 border border-slate-200 dark:border-slate-600 font-medium'>
+                                    <Badge variant='secondary' size='sm'>
                                       {p.brand_name}
-                                    </span>
+                                    </Badge>
                                   )}
-                                  {/* Tags (máx 2) */}
+                                  {/* Tags (máx 2, color dinámico del dato) */}
                                   {Array.isArray(p.tags) && p.tags.slice(0, 2).map((tag: any) => (
                                     <span
                                       key={tag.id}
-                                      className='text-[9px] px-1 py-0.5 rounded text-white font-semibold'
-                                      style={{ backgroundColor: tag.color || '#8b5cf6' }}
+                                      className='inline-flex items-center px-1.5 py-0.5 rounded-xs text-body-sm-bold text-on-primary'
+                                      style={tag.color ? { backgroundColor: tag.color } : undefined}
                                     >
                                       {tag.name}
                                     </span>
@@ -247,9 +267,12 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                               </div>
                               <div className='text-right shrink-0 ml-3'>
                                 <div
-                                  className={`text-[10px] font-medium ${(p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0) > 0 ? 'text-success' : 'text-error'}`}
+                                  className={cn(
+                                    'text-body-sm font-data-mono',
+                                    (p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0) > 0 ? 'text-success' : 'text-error'
+                                  )}
                                 >
-                                  Stock:{' '}
+                                  {t('purchases.product_modal.stock_label', 'Stock:')}{' '}
                                   {p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0}
                                 </div>
                               </div>
@@ -264,340 +287,345 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               {/* Selected Product Card */}
               {modalSelectedProduct ? (
                 <>
-                  <div className='p-4 bg-[rgba(0,120,212,0.06)] dark:bg-[rgba(0,120,212,0.12)] border border-[rgba(0,120,212,0.15)] rounded-[var(--fluent-corner-radius-large,6px)]'>
-                  <div className='flex items-start gap-3'>
-                    <div className='w-10 h-10 bg-[var(--fluent-brand-primary,#0078D4)] rounded-md flex items-center justify-center text-white font-semibold text-lg shrink-0'>
-                      {(
-                        modalSelectedProduct.name ||
-                        modalSelectedProduct.product_name ||
-                        '?'
-                      )?.charAt(0)}
-                    </div>
-                    <div className='min-w-0 flex-1'>
-                      <div className='flex items-start justify-between gap-2 flex-wrap'>
-                        <h4 className='font-semibold text-sm text-foreground'>
-                          {modalSelectedProduct.name ||
-                            modalSelectedProduct.product_name ||
-                            '-'}
-                        </h4>
-                        <div className='flex items-center gap-1.5 shrink-0 flex-wrap'>
-                          {/* Badge: Con Variantes */}
-                          {(modalSelectedProduct.has_variant || modalSelectedProduct.has_variants || variants.length > 0) && (
-                            <span className='inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[var(--fluent-corner-radius-small,2px)] bg-[rgba(0,120,212,0.1)] border border-[rgba(0,120,212,0.25)] text-primary text-[9px] font-semibold uppercase tracking-wide'>
-                              <Package size={9} /> Variantes
-                            </span>
-                          )}
-                          {/* Badge: Marca */}
-                          {modalSelectedProduct.brand_name && (
-                            <span className='inline-flex items-center px-1.5 py-0.5 rounded-[var(--fluent-corner-radius-small,2px)] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 text-[9px] font-medium'>
-                              {modalSelectedProduct.brand_name}
-                            </span>
-                          )}
-                        </div>
+                  <div className='p-md bg-primary/5 border border-primary/20 rounded-md'>
+                    <div className='flex items-start gap-md'>
+                      <div className='size-10 bg-primary rounded-md flex items-center justify-center text-on-primary text-title-md shrink-0'>
+                        {(
+                          modalSelectedProduct.name ||
+                          modalSelectedProduct.product_name ||
+                          '?'
+                        )?.charAt(0)}
                       </div>
-                      {/* Tags row */}
-                      {modalSelectedProduct.tags && modalSelectedProduct.tags.length > 0 && (
-                        <div className='flex flex-wrap gap-1 mt-1.5'>
-                          {modalSelectedProduct.tags.slice(0, 5).map((tag: any) => (
-                            <span
-                              key={tag.id}
-                              className='inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold text-white'
-                              style={{ backgroundColor: tag.color || '#8b5cf6' }}
-                            >
-                              {tag.name}
-                            </span>
-                          ))}
-                          {modalSelectedProduct.tags.length > 5 && (
-                            <span className='text-[9px] text-outline-fg'>
-                              +{modalSelectedProduct.tags.length - 5}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      <div className='grid grid-cols-4 gap-2 mt-2'>
-                        <div>
-                          <p className='text-[10px] text-outline-fg'>
-                            ID
-                          </p>
-                          <p className='text-xs text-on-surface-deep'>
-                            {modalSelectedProduct.id ||
-                              modalSelectedProduct.product_id ||
+                      <div className='min-w-0 flex-1'>
+                        <div className='flex items-start justify-between gap-2 flex-wrap'>
+                          <h3 className='text-body-md-bold text-foreground'>
+                            {modalSelectedProduct.name ||
+                              modalSelectedProduct.product_name ||
                               '-'}
-                          </p>
-                        </div>
-                        <div>
-                          <p className='text-[10px] text-outline-fg'>
-                            Últ. Costo
-                          </p>
-                          <p className='text-xs text-on-surface-deep font-semibold'>
-                            {formatCurrency(
-                              modalSelectedProduct.last_purchase_cost ||
-                                modalSelectedProduct.cost_price ||
-                                0
+                          </h3>
+                          <div className='flex items-center gap-1.5 shrink-0 flex-wrap'>
+                            {/* Badge: Con Variantes */}
+                            {hasVariants && (
+                              <Badge variant='info' size='sm'>
+                                <Package size={10} className='mr-1' aria-hidden='true' />
+                                {t('purchases.product_modal.variants_badge', 'Variantes')}
+                              </Badge>
                             )}
-                          </p>
-                        </div>
-                        <div>
-                          <p className='text-[10px] text-outline-fg'>
-                            Precio Venta
-                          </p>
-                          <p className='text-xs text-on-surface-deep font-semibold text-primary'>
-                            {formatCurrency(
-                              modalSelectedProduct.sale_price || modalSelectedProduct.unit_price || modalSelectedProduct.price || 0
+                            {/* Badge: Marca */}
+                            {modalSelectedProduct.brand_name && (
+                              <Badge variant='secondary' size='sm'>
+                                {modalSelectedProduct.brand_name}
+                              </Badge>
                             )}
-                          </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className='text-[10px] text-outline-fg'>
-                            Unidad
-                          </p>
-                          <p className='text-xs text-on-surface-deep'>
-                            {modalSelectedProduct.unit ||
-                              modalSelectedProduct.unit_name ||
-                              'unit'}
-                          </p>
+                        {/* Tags row (color dinámico del dato) */}
+                        {modalSelectedProduct.tags && modalSelectedProduct.tags.length > 0 && (
+                          <div className='flex flex-wrap gap-1 mt-1.5'>
+                            {modalSelectedProduct.tags.slice(0, 5).map((tag: any) => (
+                              <span
+                                key={tag.id}
+                                className='inline-flex items-center px-1.5 py-0.5 rounded-xs text-body-sm-bold text-on-primary'
+                                style={tag.color ? { backgroundColor: tag.color } : undefined}
+                              >
+                                {tag.name}
+                              </span>
+                            ))}
+                            {modalSelectedProduct.tags.length > 5 && (
+                              <span className='text-body-sm text-outline-fg'>
+                                +{modalSelectedProduct.tags.length - 5}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        <div className='grid grid-cols-4 gap-2 mt-2'>
+                          <div>
+                            <p className={labelClass}>ID</p>
+                            <p className='text-body-sm text-on-surface-deep font-data-mono'>
+                              {modalSelectedProduct.id ||
+                                modalSelectedProduct.product_id ||
+                                '-'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className={labelClass}>
+                              {t('purchases.product_modal.last_cost', 'Últ. Costo')}
+                            </p>
+                            <p className='text-body-sm font-data-mono text-on-surface-deep'>
+                              {formatCurrency(
+                                modalSelectedProduct.last_purchase_cost ||
+                                  modalSelectedProduct.cost_price ||
+                                  0
+                              )}
+                            </p>
+                          </div>
+                          <div>
+                            <p className={labelClass}>
+                              {t('purchases.product_modal.sale_price', 'Precio Venta')}
+                            </p>
+                            <p className='text-body-sm font-data-mono text-primary'>
+                              {formatCurrency(
+                                modalSelectedProduct.sale_price || modalSelectedProduct.unit_price || modalSelectedProduct.price || 0
+                              )}
+                            </p>
+                          </div>
+                          <div>
+                            <p className={labelClass}>
+                              {t('purchases.product_modal.unit_label', 'Unidad')}
+                            </p>
+                            <p className='text-body-sm text-on-surface-deep'>
+                              {modalSelectedProduct.unit ||
+                                modalSelectedProduct.unit_name ||
+                                'unit'}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                
-                {(modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && (
-                  <div className='mt-4 space-y-3'>
-                    <div className='flex items-center justify-between'>
-                      <label className='text-sm font-medium text-on-surface-deep'>
-                        Seleccionar Variante <span className='text-error'>*</span>
-                      </label>
-                      {modalVariantId && (
-                        <button
-                          type='button'
-                          onClick={() => {
-                            setModalVariantId(undefined);
-                            setModalVariantName(undefined);
-                            setModalSelectedVariant(undefined);
-                          }}
-                          className='text-xs text-outline-fg hover:text-error transition-colors flex items-center gap-1'
-                        >
-                          <X size={12} /> Limpiar
-                        </button>
-                      )}
-                    </div>
 
-                    {loadingVariants ? (
-                      <div className='flex items-center gap-2 py-3 text-outline-fg text-sm'>
-                        <div className='w-4 h-4 border-2 border-[var(--fluent-brand-primary,#0078D4)] border-t-transparent rounded-full animate-spin' />
-                        Cargando variantes...
+                  {hasVariants && (
+                    <div className='mt-1 space-y-md'>
+                      <div className='flex items-center justify-between'>
+                        <Label className='text-body-md-bold text-foreground'>
+                          {t('purchases.product_modal.select_variant', 'Seleccionar Variante')}{' '}
+                          <span className='text-error'>*</span>
+                        </Label>
+                        {modalVariantId && (
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => {
+                              setModalVariantId(undefined);
+                              setModalVariantName(undefined);
+                              setModalSelectedVariant(undefined);
+                            }}
+                            className='text-outline-fg'
+                          >
+                            <X size={12} className='mr-1' aria-hidden='true' />
+                            {t('purchases.product_modal.clear', 'Limpiar')}
+                          </Button>
+                        )}
                       </div>
-                    ) : variants.length === 0 ? (
-                      <div className='py-3 text-sm text-[var(--fluent-semantic-warning,#F7630C)] flex items-center gap-2'>
-                        <Package size={16} />
-                        Este producto no tiene variantes activas
-                      </div>
-                    ) : (() => {
-                      // Extraer atributos únicos de todas las variantes activas
-                      const allAttrKeys = Array.from(
-                        new Set(variants.flatMap(v => Object.keys(v.variant_attributes || {})))
-                      );
 
-                      // Estado de selección por atributo
-                      const selectedAttrs: Record<string, string> = { ...partialSelectedAttrs };
-                      // Asegurar que si modalVariantId existe pero partialSelectedAttrs no tiene los attrs, se sincronicen (útil al editar)
-                      if (modalVariantId && Object.keys(partialSelectedAttrs).length === 0) {
-                        const sv = variants.find(v => v.id === modalVariantId);
-                        if (sv?.variant_attributes) {
-                          Object.assign(selectedAttrs, sv.variant_attributes);
-                          // Sincronizamos en el ciclo siguiente para que la UI ya tenga este estado
-                          setTimeout(() => setPartialSelectedAttrs(sv.variant_attributes || {}), 0);
-                        }
-                      }
-
-                      // Función para seleccionar un valor de atributo
-                      const handleAttrSelect = (attrKey: string, attrValue: string) => {
-                        const newSelected = { ...selectedAttrs };
-                        if (newSelected[attrKey] === attrValue) {
-                          delete newSelected[attrKey]; // Deseleccionar
-                        } else {
-                          newSelected[attrKey] = attrValue;
-                        }
-                        
-                        setPartialSelectedAttrs(newSelected);
-                        
-                        // Buscar la variante que coincida con los atributos seleccionados hasta ahora
-                        const matched = variants.find(v =>
-                          Object.entries(newSelected).every(
-                            ([k, val]) => String(v.variant_attributes?.[k]) === String(val)
-                          )
+                      {loadingVariants ? (
+                        <div className='flex items-center gap-sm py-3 text-on-surface-deep text-body-md'>
+                          <div className='w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin' aria-hidden='true' />
+                          {t('purchases.product_modal.loading_variants', 'Cargando variantes...')}
+                        </div>
+                      ) : variants.length === 0 ? (
+                        <div className='py-3 text-body-md text-warning flex items-center gap-sm'>
+                          <Package size={16} aria-hidden='true' />
+                          {t('purchases.product_modal.no_variants', 'Este producto no tiene variantes activas')}
+                        </div>
+                      ) : (() => {
+                        // Extraer atributos únicos de todas las variantes activas
+                        const allAttrKeys = Array.from(
+                          new Set(variants.flatMap(v => Object.keys(v.variant_attributes || {})))
                         );
-                        if (matched && Object.keys(newSelected).length === allAttrKeys.length) {
-                          setModalVariantId(matched.id);
-                          setModalVariantName(matched.variant_name);
-                          setModalSelectedVariant(matched);
-                        } else {
-                          // Parcialmente seleccionado: limpiar variante
-                          setModalVariantId(undefined);
-                          setModalVariantName(undefined);
-                          setModalSelectedVariant(undefined);
-                          // Si hay solo 1 atributo y se seleccionó, también auto-seleccionar
-                          if (allAttrKeys.length === 1 && matched) {
+
+                        // Estado de selección por atributo
+                        const selectedAttrs: Record<string, string> = { ...partialSelectedAttrs };
+                        // Asegurar que si modalVariantId existe pero partialSelectedAttrs no tiene los attrs, se sincronicen (útil al editar)
+                        if (modalVariantId && Object.keys(partialSelectedAttrs).length === 0) {
+                          const sv = variants.find(v => v.id === modalVariantId);
+                          if (sv?.variant_attributes) {
+                            Object.assign(selectedAttrs, sv.variant_attributes);
+                            // Sincronizamos en el ciclo siguiente para que la UI ya tenga este estado
+                            setTimeout(() => setPartialSelectedAttrs(sv.variant_attributes || {}), 0);
+                          }
+                        }
+
+                        // Función para seleccionar un valor de atributo
+                        const handleAttrSelect = (attrKey: string, attrValue: string) => {
+                          const newSelected = { ...selectedAttrs };
+                          if (newSelected[attrKey] === attrValue) {
+                            delete newSelected[attrKey]; // Deseleccionar
+                          } else {
+                            newSelected[attrKey] = attrValue;
+                          }
+
+                          setPartialSelectedAttrs(newSelected);
+
+                          // Buscar la variante que coincida con los atributos seleccionados hasta ahora
+                          const matched = variants.find(v =>
+                            Object.entries(newSelected).every(
+                              ([k, val]) => String(v.variant_attributes?.[k]) === String(val)
+                            )
+                          );
+                          if (matched && Object.keys(newSelected).length === allAttrKeys.length) {
                             setModalVariantId(matched.id);
                             setModalVariantName(matched.variant_name);
                             setModalSelectedVariant(matched);
+                          } else {
+                            // Parcialmente seleccionado: limpiar variante
+                            setModalVariantId(undefined);
+                            setModalVariantName(undefined);
+                            setModalSelectedVariant(undefined);
+                            // Si hay solo 1 atributo y se seleccionó, también auto-seleccionar
+                            if (allAttrKeys.length === 1 && matched) {
+                              setModalVariantId(matched.id);
+                              setModalVariantName(matched.variant_name);
+                              setModalSelectedVariant(matched);
+                            }
                           }
-                        }
-                      };
+                        };
 
-                      return (
-                        <div className='space-y-3'>
-                          {allAttrKeys.map(attrKey => {
-                            // Opciones disponibles para este atributo dado lo ya seleccionado en OTROS atributos
-                            const otherSelectedAttrs = Object.fromEntries(
-                              Object.entries(selectedAttrs).filter(([k]) => k !== attrKey)
-                            );
-                            const availableForThisAttr = Array.from(
-                              new Set(
-                                variants
-                                  .filter(v =>
-                                    Object.entries(otherSelectedAttrs).every(
-                                      ([k, val]) => String(v.variant_attributes?.[k]) === String(val)
+                        return (
+                          <div className='space-y-md'>
+                            {allAttrKeys.map(attrKey => {
+                              // Opciones disponibles para este atributo dado lo ya seleccionado en OTROS atributos
+                              const otherSelectedAttrs = Object.fromEntries(
+                                Object.entries(selectedAttrs).filter(([k]) => k !== attrKey)
+                              );
+                              const availableForThisAttr = Array.from(
+                                new Set(
+                                  variants
+                                    .filter(v =>
+                                      Object.entries(otherSelectedAttrs).every(
+                                        ([k, val]) => String(v.variant_attributes?.[k]) === String(val)
+                                      )
                                     )
-                                  )
-                                  .map(v => String(v.variant_attributes?.[attrKey]))
-                                  .filter(Boolean)
-                              )
-                            );
+                                    .map(v => String(v.variant_attributes?.[attrKey]))
+                                    .filter(Boolean)
+                                )
+                              );
 
-                            const selectedValue = selectedAttrs[attrKey];
+                              const selectedValue = selectedAttrs[attrKey];
 
-                            return (
-                              <div key={attrKey} className='space-y-1.5'>
-                                <span className='text-xs font-semibold text-on-surface-deep uppercase tracking-wide'>
-                                  {attrKey}
-                                </span>
-                                <div className='flex flex-wrap gap-2'>
-                                  {availableForThisAttr.map(val => {
-                                    const isSelected = selectedValue === val;
+                              return (
+                                <div key={attrKey} className='space-y-1.5'>
+                                  <span className={labelClass}>
+                                    {attrKey}
+                                  </span>
+                                  <div className='flex flex-wrap gap-2'>
+                                    {availableForThisAttr.map(val => {
+                                      const isSelected = selectedValue === val;
 
-                                    return (
-                                      <button
-                                        key={val}
-                                        type='button'
-                                        onClick={() => handleAttrSelect(attrKey, val)}
-                                        className={`
-                                          px-3 py-1.5 text-xs font-semibold rounded-md
-                                          border transition-all duration-150 relative
-                                          ${isSelected
-                                            ? 'bg-[var(--fluent-brand-primary,#0078D4)] text-white border-[var(--fluent-brand-primary,#0078D4)] shadow-whisper'
-                                            : 'bg-surface-muted text-foreground border-surface-deep hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-primary'
-                                          }
-                                        `}
-                                        disabled={false}
-                                      >
-                                        {val}
-                                        {isSelected && (
-                                          <Check size={10} className='inline ml-1 -mt-0.5' />
-                                        )}
-                                      </button>
-                                    );
-                                  })}
+                                      return (
+                                        <button
+                                          key={val}
+                                          type='button'
+                                          onClick={() => handleAttrSelect(attrKey, val)}
+                                          className={cn(
+                                            'px-md py-1.5 text-body-sm-bold rounded-md border transition-colors duration-150 cursor-pointer',
+                                            isSelected
+                                              ? 'bg-primary text-on-primary border-primary'
+                                              : 'bg-surface-muted text-foreground border-border-subtle hover:border-primary hover:text-primary'
+                                          )}
+                                        >
+                                          {val}
+                                          {isSelected && (
+                                            <Check size={12} className='inline ml-1 -mt-0.5' aria-hidden='true' />
+                                          )}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
 
-                          {/* Resumen de variante seleccionada */}
-                          {modalVariantId && (() => {
-                            const sv = variants.find(v => v.id === modalVariantId);
-                            if (!sv) return null;
-                            const stock = sv.stock_quantity ?? 0;
-                            return (
-                              <div className={`flex items-center justify-between px-3 py-2 rounded-md border text-xs font-medium transition-colors ${
-                                stock > 0
-                                  ? 'bg-[rgba(16,124,16,0.06)] border-[rgba(16,124,16,0.2)] text-success'
-                                  : 'bg-[rgba(209,52,56,0.06)] border-[rgba(209,52,56,0.2)] text-error'
-                              }`}>
-                                <span className='flex items-center gap-1.5'>
-                                  <Check size={12} />
-                                  {sv.variant_name || sv.sku}
-                                  {sv.sku && sv.sku !== sv.variant_name && (
-                                    <span className='opacity-70 font-mono'>· {sv.sku}</span>
-                                  )}
-                                </span>
-                                <span>
-                                  Stock: <strong>{stock}</strong>
-                                </span>
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      );
-                    })()}
+                            {/* Resumen de variante seleccionada */}
+                            {modalVariantId && (() => {
+                              const sv = variants.find(v => v.id === modalVariantId);
+                              if (!sv) return null;
+                              const stock = sv.stock_quantity ?? 0;
+                              return (
+                                <div className={cn(
+                                  'flex items-center justify-between px-md py-2 rounded-md border text-body-sm-bold transition-colors duration-150',
+                                  stock > 0
+                                    ? 'bg-success/10 border-success/20 text-success'
+                                    : 'bg-error-container border-error/20 text-on-error-container'
+                                )}>
+                                  <span className='flex items-center gap-1.5'>
+                                    <Check size={12} aria-hidden='true' />
+                                    {sv.variant_name || sv.sku}
+                                    {sv.sku && sv.sku !== sv.variant_name && (
+                                      <span className='opacity-70 font-data-mono'>· {sv.sku}</span>
+                                    )}
+                                  </span>
+                                  <span className='font-data-mono'>
+                                    {t('purchases.product_modal.stock_label', 'Stock:')} {stock}
+                                  </span>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        );
+                      })()}
 
-                    {/* Opción para agregar producto base (principal) */}
-                    <div className="mt-4 pt-3 border-t border-surface-deep">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setModalVariantId(null);
-                          setModalVariantName(undefined);
-                          setModalSelectedVariant(undefined);
-                        }}
-                        className={`w-full px-3 py-2 text-xs font-semibold rounded-md border transition-all flex items-center justify-center gap-2 ${
-                          modalVariantId === null
-                            ? 'bg-[var(--fluent-brand-primary,#0078D4)] text-white border-[var(--fluent-brand-primary,#0078D4)] shadow-whisper'
-                            : 'bg-surface-muted text-foreground border-surface-deep hover:border-[var(--fluent-brand-primary,#0078D4)] hover:text-primary'
-                        }`}
-                      >
-                        <Package size={14} />
-                        Añadir producto principal sin variante
-                        {modalVariantId === null && <Check size={14} />}
-                      </button>
+                      {/* Opción para agregar producto base (principal) */}
+                      <div className='mt-1 pt-md border-t border-border-subtle'>
+                        <button
+                          type='button'
+                          onClick={() => {
+                            setModalVariantId(null);
+                            setModalVariantName(undefined);
+                            setModalSelectedVariant(undefined);
+                          }}
+                          className={cn(
+                            'w-full px-md py-2 text-body-sm-bold rounded-md border transition-colors duration-150 flex items-center justify-center gap-sm cursor-pointer',
+                            modalVariantId === null
+                              ? 'bg-primary text-on-primary border-primary'
+                              : 'bg-surface-muted text-foreground border-border-subtle hover:border-primary hover:text-primary'
+                          )}
+                        >
+                          <Package size={14} aria-hidden='true' />
+                          {t('purchases.product_modal.add_base', 'Añadir producto principal sin variante')}
+                          {modalVariantId === null && <Check size={14} aria-hidden='true' />}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 </>
               ) : (
-                <div className='h-24 border-2 border-dashed border-surface-deep rounded-[var(--fluent-corner-radius-large,6px)] flex flex-col items-center justify-center'>
+                <div className='h-24 border-2 border-dashed border-border-subtle rounded-md flex flex-col items-center justify-center'>
                   <Package
                     size={24}
                     className='text-outline-fg'
+                    aria-hidden='true'
                   />
-                  <p className='text-xs text-outline-fg mt-1'>
-                    Selecciona un producto
+                  <p className='text-body-sm text-outline-fg mt-1'>
+                    {t('purchases.product_modal.select_placeholder', 'Selecciona un producto')}
                   </p>
                 </div>
               )}
 
               {/* Quantity, Unit & Cost */}
-              <div className='grid grid-cols-3 gap-3'>
+              <div className='grid grid-cols-3 gap-md'>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-on-surface-deep'>
-                    Cantidad
-                  </label>
-                  <input
+                  <Label htmlFor='purchase-modal-quantity' className={labelClass}>
+                    {t('purchases.product_modal.quantity', 'Cantidad')}
+                  </Label>
+                  <Input
                     ref={modalQuantityRef}
+                    id='purchase-modal-quantity'
                     type='number'
-                    className='w-full px-3 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-base font-semibold text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
+                    className='bg-surface-muted text-body-md-bold'
                     value={modalQuantity}
                     onChange={e => setModalQuantity(e.target.value)}
                     placeholder='0'
                   />
-                  <p className='text-xs text-outline-fg'>
-                    Unidades a comprar
+                  <p className='text-body-sm text-outline-fg'>
+                    {t('purchases.product_modal.quantity_hint', 'Unidades a comprar')}
                   </p>
                 </div>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-on-surface-deep'>
-                    Unidad
-                  </label>
-                  <input
+                  <Label htmlFor='purchase-modal-unit' className={labelClass}>
+                    {t('purchases.product_modal.unit_label', 'Unidad')}
+                  </Label>
+                  <Input
+                    id='purchase-modal-unit'
                     type='text'
                     list='allowed-units'
-                    className='w-full px-3 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-base font-semibold text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
+                    className='bg-surface-muted text-body-md-bold'
                     value={modalUnit}
                     onChange={e => setModalUnit(e.target.value)}
-                    placeholder='Ej. kg, box, unit'
+                    placeholder={t('purchases.product_modal.unit_placeholder', 'Ej. kg, box, unit')}
                   />
                   <datalist id='allowed-units'>
                     <option value='unit' />
@@ -608,34 +636,36 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     <option value='pack' />
                     <option value='dozen' />
                   </datalist>
-                  <p className='text-xs text-outline-fg'>
-                    Medida de compra
+                  <p className='text-body-sm text-outline-fg'>
+                    {t('purchases.product_modal.unit_hint', 'Medida de compra')}
                   </p>
                 </div>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-on-surface-deep'>
-                    Costo Unit.
-                  </label>
-                  <input
+                  <Label htmlFor='purchase-modal-cost' className={labelClass}>
+                    {t('purchases.product_modal.cost', 'Costo Unit.')}
+                  </Label>
+                  <Input
+                    id='purchase-modal-cost'
                     type='number'
-                    className='w-full px-3 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-base font-semibold text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all'
+                    className='bg-surface-muted text-body-md-bold'
                     value={modalUnitPrice}
                     onChange={e => setModalUnitPrice(e.target.value)}
                     placeholder='0.00'
                   />
-                  <p className='text-xs text-outline-fg truncate' title='Precio de compra por unidad'>
-                    Precio por unidad
+                  <p className='text-body-sm text-outline-fg truncate' title={t('purchases.product_modal.cost_hint', 'Precio por unidad')}>
+                    {t('purchases.product_modal.cost_hint', 'Precio por unidad')}
                   </p>
                 </div>
               </div>
 
               {/* Tax Rate */}
               <div className='space-y-1.5'>
-                <label className='text-sm font-medium text-on-surface-deep'>
+                <Label htmlFor='purchase-modal-tax' className={labelClass}>
                   {t('purchases.modal.tax_rate', 'Tasa de Impuesto')}
-                </label>
+                </Label>
                 <select
-                  className='w-full px-3 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all cursor-pointer'
+                  id='purchase-modal-tax'
+                  className='w-full px-md py-2.5 bg-surface-muted border border-border-subtle rounded-input text-body-md text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors duration-150 cursor-pointer'
                   value={modalTaxRateId || ''}
                   onChange={e =>
                     setModalTaxRateId(
@@ -646,7 +676,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                 >
                   <option value=''>
                     {loading
-                      ? 'Cargando...'
+                      ? t('common.loading', 'Cargando...')
                       : t('purchases.modal.no_tax', 'Sin impuesto')}
                   </option>
                   {taxRates.map(taxRate => (
@@ -665,24 +695,24 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
                       if (modalTaxRateId && modalTaxRateId === productTaxId) {
                         return (
-                          <span className='inline-flex items-center gap-1.5 px-2 py-0.5 text-xs rounded border border-blue-100 dark:border-blue-900/30 bg-blue-50/70 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 font-medium'>
-                            <span className='w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse'></span>
-                            Impuesto específico del producto
-                          </span>
+                          <Badge variant='info' size='sm'>
+                            <span className='size-1.5 rounded-full bg-current mr-1 animate-pulse' aria-hidden='true' />
+                            {t('purchases.product_modal.tax_source_product', 'Impuesto específico del producto')}
+                          </Badge>
                         );
                       } else if (modalTaxRateId && modalTaxRateId === categoryTaxId) {
                         return (
-                          <span className='inline-flex items-center gap-1.5 px-2 py-0.5 text-xs rounded border border-green-100 dark:border-green-900/30 bg-green-50/70 dark:bg-green-950/20 text-green-600 dark:text-green-400 font-medium'>
-                            <span className='w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse'></span>
-                            Impuesto sugerido por categoría {categoryName ? `(${categoryName})` : ''}
-                          </span>
+                          <Badge variant='success' size='sm'>
+                            <span className='size-1.5 rounded-full bg-current mr-1 animate-pulse' aria-hidden='true' />
+                            {t('purchases.product_modal.tax_source_category', 'Impuesto sugerido por categoría {category}', { category: categoryName })}
+                          </Badge>
                         );
                       } else if (modalTaxRateId) {
                         return (
-                          <span className='inline-flex items-center gap-1.5 px-2 py-0.5 text-xs rounded border border-amber-100 dark:border-amber-900/30 bg-amber-50/70 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 font-medium'>
-                            <span className='w-1.5 h-1.5 rounded-full bg-amber-500'></span>
-                            Impuesto personalizado manualmente
-                          </span>
+                          <Badge variant='warning' size='sm'>
+                            <span className='size-1.5 rounded-full bg-current mr-1' aria-hidden='true' />
+                            {t('purchases.product_modal.tax_source_custom', 'Impuesto personalizado manualmente')}
+                          </Badge>
                         );
                       }
                       return null;
@@ -692,73 +722,71 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               </div>
 
               {/* Price Includes Tax Toggle */}
-              <div className='flex items-center gap-3 p-2.5 bg-surface-muted border border-surface-deep rounded-md'>
+              <div className='flex items-center gap-md p-2.5 bg-surface-muted border border-border-subtle rounded-md'>
                 <input
                   type='checkbox'
                   id='priceIncludesTax'
-                  className='w-4 h-4 text-primary border-surface-deep rounded focus:ring-primary cursor-pointer'
+                  className='w-4 h-4 accent-primary cursor-pointer'
                   checked={modalPriceIncludesTax}
                   onChange={e => setModalPriceIncludesTax(e.target.checked)}
                 />
                 <label
                   htmlFor='priceIncludesTax'
-                  className='text-sm font-medium text-foreground cursor-pointer select-none'
+                  className='text-body-md-bold text-foreground cursor-pointer select-none'
                 >
-                  {t(
-                    'purchases.modal.price_includes_tax',
-                    'Precio incluye IVA',
-                  )}
+                  {t('purchases.modal.price_includes_tax', 'Precio incluye IVA')}
                 </label>
               </div>
             </div>
 
             {/* Column 2: Pricing Strategy & Financial Summary */}
-            <div className='space-y-4'>
+            <div className='space-y-md'>
               {/* Pricing Mode Toggle */}
               <div className='space-y-1.5'>
-                <label className='text-sm font-medium text-on-surface-deep'>
-                  Estrategia de Precio de Venta
-                </label>
-                <div className='flex p-0.5 bg-surface-subtle rounded-md'>
-                  <button
-                    className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-150 ${
-                      pricingMode === 'margin'
-                        ? 'bg-surface shadow-sm text-primary'
-                        : 'text-on-surface-deep'
-                    }`}
-                    onClick={() => setPricingMode('margin')}
-                  >
-                    Por Margen %
-                  </button>
-                  <button
-                    className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-150 ${
-                      pricingMode === 'sale_price'
-                        ? 'bg-surface shadow-sm text-primary'
-                        : 'text-on-surface-deep'
-                    }`}
-                    onClick={() => setPricingMode('sale_price')}
-                  >
-                    Precio Fijo
-                  </button>
+                <Label className={labelClass}>
+                  {t('purchases.product_modal.pricing_strategy', 'Estrategia de Precio de Venta')}
+                </Label>
+                <div className='flex p-0.5 bg-surface-subtle rounded-md' role='tablist'>
+                  {([
+                    { id: 'margin', label: t('purchases.product_modal.mode_margin', 'Por Margen %') },
+                    { id: 'sale_price', label: t('purchases.product_modal.mode_fixed', 'Precio Fijo') },
+                  ]).map(mode => (
+                    <button
+                      key={mode.id}
+                      role='tab'
+                      aria-selected={pricingMode === mode.id}
+                      className={cn(
+                        'flex-1 py-2.5 text-body-sm-bold rounded-sm transition-colors duration-150 cursor-pointer',
+                        pricingMode === mode.id
+                          ? 'bg-surface text-primary shadow-fluent-2'
+                          : 'text-on-surface-deep hover:text-foreground'
+                      )}
+                      onClick={() => setPricingMode(mode.id as 'margin' | 'sale_price')}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* Margin & Price Fields */}
-              <div className='grid grid-cols-2 gap-3'>
+              <div className='grid grid-cols-2 gap-md'>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-on-surface-deep'>
+                  <Label htmlFor='purchase-modal-margin' className={labelClass}>
                     {pricingMode === 'margin'
-                      ? 'Margen de Ganancia'
-                      : 'Margen Calculado'}
-                  </label>
+                      ? t('purchases.product_modal.margin_label_margin', 'Margen de Ganancia')
+                      : t('purchases.product_modal.margin_label_calc', 'Margen Calculado')}
+                  </Label>
                   <div className='relative'>
-                    <input
+                    <Input
+                      id='purchase-modal-margin'
                       type='number'
-                      className={`w-full pl-3 pr-8 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-base font-semibold transition-all ${
+                      className={cn(
+                        'bg-surface-muted text-body-md-bold pr-8',
                         pricingMode !== 'margin'
                           ? 'opacity-60 cursor-not-allowed text-outline-fg'
-                          : 'text-success focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
-                      }`}
+                          : 'text-success'
+                      )}
                       value={
                         pricingMode === 'margin'
                           ? modalProfitPct
@@ -770,29 +798,31 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                       }
                       readOnly={pricingMode !== 'margin'}
                     />
-                    <span className='absolute right-3 top-1/2 -translate-y-1/2 text-sm text-outline-fg'>
+                    <span className='absolute right-3 top-1/2 -translate-y-1/2 text-body-md text-outline-fg'>
                       %
                     </span>
                   </div>
-                  <p className='text-xs text-outline-fg'>
+                  <p className='text-body-sm text-outline-fg'>
                     {pricingMode === 'margin'
-                      ? 'Define el % de ganancia deseado'
-                      : 'Porcentaje resultante del precio fijo'}
+                      ? t('purchases.product_modal.margin_hint_margin', 'Define el % de ganancia deseado')
+                      : t('purchases.product_modal.margin_hint_calc', 'Porcentaje resultante del precio fijo')}
                   </p>
                 </div>
                 <div className='space-y-1.5'>
-                  <label className='text-sm font-medium text-on-surface-deep'>
+                  <Label htmlFor='purchase-modal-sale-price' className={labelClass}>
                     {pricingMode === 'sale_price'
-                      ? 'Precio de Venta'
-                      : 'Precio Sugerido'}
-                  </label>
-                  <input
+                      ? t('purchases.product_modal.price_label_fixed', 'Precio de Venta')
+                      : t('purchases.product_modal.price_label_suggested', 'Precio Sugerido')}
+                  </Label>
+                  <Input
+                    id='purchase-modal-sale-price'
                     type='number'
-                    className={`w-full px-3 py-2.5 bg-surface-muted border border-surface-deep rounded-md text-base font-semibold transition-all ${
+                    className={cn(
+                      'bg-surface-muted text-body-md-bold',
                       pricingMode !== 'sale_price'
                         ? 'opacity-60 cursor-not-allowed text-outline-fg'
-                        : 'text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
-                    }`}
+                        : 'text-primary'
+                    )}
                     value={
                       pricingMode === 'sale_price'
                         ? modalSalePrice
@@ -804,30 +834,30 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     }
                     readOnly={pricingMode !== 'sale_price'}
                   />
-                  <p className='text-xs text-outline-fg'>
+                  <p className='text-body-sm text-outline-fg'>
                     {pricingMode === 'sale_price'
-                      ? 'Precio final al público'
-                      : 'Calculado según margen'}
+                      ? t('purchases.product_modal.price_hint_fixed', 'Precio final al público')
+                      : t('purchases.product_modal.price_hint_suggested', 'Calculado según margen')}
                   </p>
                 </div>
               </div>
 
               {/* Pricing Summary */}
-              <div className='p-4 bg-[rgba(0,120,212,0.06)] dark:bg-[rgba(0,120,212,0.12)] rounded-md border border-[rgba(0,120,212,0.15)]'>
-                <div className='grid grid-cols-2 gap-3'>
+              <div className='p-md bg-primary/5 rounded-md border border-primary/20'>
+                <div className='grid grid-cols-2 gap-md'>
                   <div>
-                    <span className='block text-xs text-outline-fg'>
-                      Costo Unitario
+                    <span className='block text-body-sm text-outline-fg'>
+                      {t('purchases.product_modal.unit_cost', 'Costo Unitario')}
                     </span>
-                    <span className='text-sm font-medium text-foreground'>
+                    <span className='text-data-mono font-data-mono text-foreground'>
                       {formatCurrency(modalUnitPrice || 0)}
                     </span>
                   </div>
                   <div>
-                    <span className='block text-xs text-outline-fg'>
-                      Precio Venta Unitario
+                    <span className='block text-body-sm text-outline-fg'>
+                      {t('purchases.product_modal.unit_sale_price', 'Precio Venta Unitario')}
                     </span>
-                    <span className='text-sm font-semibold text-success'>
+                    <span className='text-data-mono font-data-mono text-success'>
                       {formatCurrency(effectiveSalePrice)}
                     </span>
                   </div>
@@ -835,28 +865,28 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
               </div>
 
               {/* Financial Projection Panel */}
-              <div className='p-4 bg-surface-subtle rounded-[var(--fluent-corner-radius-large,6px)] border border-surface-deep'>
-                <div className='text-xs font-semibold text-on-surface-deep uppercase tracking-wide mb-3'>
-                  Proyección Financiera
+              <div className='p-md bg-surface-subtle rounded-md border border-border-subtle'>
+                <div className='text-label-caps uppercase text-on-surface-deep mb-md'>
+                  {t('purchases.product_modal.projection', 'Proyección Financiera')}
                 </div>
                 <div className='space-y-2'>
                   {/* Resumen de Línea */}
-                  <div className='flex justify-between items-center py-2 border-b border-surface-deep'>
-                    <span className='text-xs text-on-surface-deep'>
-                      Subtotal Línea
+                  <div className='flex justify-between items-center py-2 border-b border-border-subtle'>
+                    <span className='text-body-sm text-on-surface-deep'>
+                      {t('purchases.product_modal.line_subtotal', 'Subtotal Línea')}
                     </span>
-                    <span className='text-xs text-outline-fg'>
+                    <span className='text-body-sm font-data-mono text-outline-fg'>
                       {modalQuantity || 0} ×{' '}
                       {formatCurrency(modalUnitPrice || 0)}
                     </span>
                   </div>
 
                   {/* Total Compra */}
-                  <div className='flex justify-between items-center py-2 border-b border-surface-deep'>
-                    <span className='text-sm text-on-surface-deep'>
-                      Total Compra
+                  <div className='flex justify-between items-center py-2 border-b border-border-subtle'>
+                    <span className='text-body-md text-on-surface-deep'>
+                      {t('purchases.totals.total', 'Total Compra')}
                     </span>
-                    <span className='text-sm font-semibold text-foreground'>
+                    <span className='text-body-md font-data-mono text-foreground'>
                       {formatCurrency(
                         (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0),
                       )}
@@ -864,11 +894,11 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   </div>
 
                   {/* Total Venta Esperado */}
-                  <div className='flex justify-between items-center py-2 border-b border-surface-deep'>
-                    <span className='text-sm text-on-surface-deep'>
-                      Venta Esperada
+                  <div className='flex justify-between items-center py-2 border-b border-border-subtle'>
+                    <span className='text-body-md text-on-surface-deep'>
+                      {t('purchases.totals.expected_sale', 'Venta Esperada')}
                     </span>
-                    <span className='text-sm font-semibold text-primary'>
+                    <span className='text-body-md font-data-mono text-primary'>
                       {formatCurrency(
                         (Number(modalQuantity) || 0) * effectiveSalePrice,
                       )}
@@ -877,12 +907,15 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
                   {/* Ganancia Esperada */}
                   <div className='flex justify-between items-center pt-2'>
-                    <span className='text-sm font-medium text-foreground'>
-                      Ganancia Esperada
+                    <span className='text-body-md-bold text-foreground'>
+                      {t('purchases.product_modal.expected_profit', 'Ganancia Esperada')}
                     </span>
                     <div className='text-right'>
                       <span
-                        className={`text-lg font-bold ${(Number(modalQuantity) || 0) * effectiveSalePrice - (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0) >= 0 ? 'text-success' : 'text-error'}`}
+                        className={cn(
+                          'text-title-md font-data-mono text-data-mono',
+                          (Number(modalQuantity) || 0) * effectiveSalePrice - (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0) >= 0 ? 'text-success' : 'text-error'
+                        )}
                       >
                         {formatCurrency(
                           (Number(modalQuantity) || 0) * effectiveSalePrice -
@@ -891,7 +924,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                       </span>
                       {(Number(modalQuantity) || 0) > 0 &&
                         (Number(modalUnitPrice) || 0) > 0 && (
-                          <span className='ml-1.5 text-xs font-medium text-success'>
+                          <span className='ml-1.5 text-body-sm text-success'>
                             (+{effectiveProfitPct.toFixed(1)}%)
                           </span>
                         )}
@@ -904,33 +937,29 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
         </div>
 
         {/* Footer */}
-        <footer className='px-5 py-3 border-t border-surface-deep bg-surface-muted flex justify-end items-center gap-3 shrink-0'>
-          <button
-            className='px-5 py-2 font-medium text-on-surface-deep hover:text-foreground hover:bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:hover:bg-[var(--fluent-neutral-grey-130,#605E5C)] rounded-md transition-all text-sm border border-surface-deep'
-            onClick={() => setIsModalOpen(false)}
-          >
-            Cancelar
-          </button>
-          <button
-            className='px-5 py-2 text-sm font-medium text-primary hover:bg-[var(--fluent-brand-primary-tint,#EFF6FC)] rounded-md'
-            onClick={() => setModalVariantId(null)}
-          >
-            Seleccionar Producto Genérico
-          </button>
-          <button
-            className='px-5 py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-md shadow-whisper active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none text-sm'
+        <footer className='px-lg py-md border-t border-divider bg-surface-muted flex justify-end items-center gap-md shrink-0'>
+          <Button variant='secondary' onClick={() => setIsModalOpen(false)}>
+            {t('common.cancel', 'Cancelar')}
+          </Button>
+          <Button variant='ghost' onClick={() => setModalVariantId(null)}>
+            {t('purchases.product_modal.select_generic', 'Seleccionar Producto Genérico')}
+          </Button>
+          <Button
+            variant='primary'
             onClick={handleConfirmAddProduct}
             disabled={
-              !modalSelectedProduct || 
-              modalQuantity === '' || Number(modalQuantity) <= 0 || 
-              modalUnitPrice === '' || 
-              ((modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && modalVariantId === undefined)
+              !modalSelectedProduct ||
+              modalQuantity === '' || Number(modalQuantity) <= 0 ||
+              modalUnitPrice === '' ||
+              (hasVariants && modalVariantId === undefined)
             }
           >
-            {editingItemId ? 'Guardar Cambios' : 'Agregar a la Orden'}
-          </button>
+            {editingItemId
+              ? t('purchases.product_modal.save', 'Guardar Cambios')
+              : t('purchases.product_modal.add_to_order', 'Agregar a la Orden')}
+          </Button>
         </footer>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

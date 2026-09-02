@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { AlertCircle, History, Plus, ShoppingCart } from 'lucide-react'
+import { AlertCircle, History, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
+import PageHeader from '@/components/ui/PageHeader'
 import ToastContainer from '@/components/ui/ToastContainer'
 
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic'
@@ -16,11 +18,12 @@ import { PurchaseCancelModal } from '@/features/purchases/components/PurchaseCan
 import { PurchaseConfirmationModal } from '@/features/purchases/components/PurchaseConfirmationModal'
 
 /**
- * Purchases Page - Fluent Design System 2
- * Refactored with Tailwind CSS using Fluent 2 design tokens.
- * Modal optimized for low-height desktop screens (720p+).
+ * Purchases Page — Fluent Design System 2 (DESIGN.md).
+ * Contenedor puro: la lógica vive en usePurchasesLogic y la presentación
+ * en los componentes del feature.
  */
 const Purchases = () => {
+  const { t } = useI18n()
   const [showCheckoutWizard, setShowCheckoutWizard] = useState(false);
   const logic = usePurchasesLogic();
 
@@ -40,7 +43,6 @@ const Purchases = () => {
     error,
     paymentMethods,
     setActiveTab,
-    t,
     toast,
   } = logic
 
@@ -77,60 +79,59 @@ const Purchases = () => {
     setShowCheckoutWizard(false)
   }
 
+  const tabs = [
+    { id: 'nueva-compra', label: t('purchases.tab.new', 'Nueva Compra'), icon: <Plus size={16} aria-hidden="true" /> },
+    { id: 'historial', label: t('purchases.tab.history', 'Historial de Compras'), icon: <History size={16} aria-hidden="true" /> },
+  ]
+
   return (
-    <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-display'>
-      {/* Header Section */}
-      <header className='flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2'>
-        <div className='flex items-center gap-4'>
-          <div className='size-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-fluent-8'>
-            <ShoppingCart size={28} />
+    <div className='mx-auto w-full max-w-container-max flex flex-col gap-lg animate-in fade-in duration-150'>
+      <PageHeader
+        breadcrumb={t('purchases.title', 'Compras')}
+        title={t('purchases.management.title', 'Gestión de Compras')}
+        subtitle={t('purchases.management.subtitle', 'Abastecimiento y órdenes de compra a proveedores')}
+        actions={
+          <div
+            role='tablist'
+            aria-label={t('purchases.management.title', 'Gestión de Compras')}
+            className='flex items-center gap-1 p-1 bg-surface-muted rounded-button border border-border-subtle'
+          >
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                role='tab'
+                aria-selected={activeTab === tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'flex items-center gap-sm px-lg py-2 rounded-sm text-body-sm-bold transition-colors duration-150 cursor-pointer',
+                  activeTab === tab.id
+                    ? 'bg-surface text-primary shadow-fluent-2'
+                    : 'text-on-surface-deep hover:text-foreground'
+                )}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            ))}
           </div>
-          <div>
-            <h1 className='text-headline-lg text-foreground leading-none mb-1'>
-              {t('purchases.management.title', 'Gestión de Compras')}
-            </h1>
-            <p className='text-body-md text-on-surface-deep'>
-              {t('purchases.management.subtitle', 'Abastecimiento y órdenes de compra a proveedores')}
-            </p>
-          </div>
-        </div>
+        }
+      />
 
-        <div className='flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit'>
-          {[
-            { id: 'nueva-compra', label: 'Nueva Orden', icon: <Plus size={16} /> },
-            { id: 'historial', label: 'Historial', icon: <History size={16} /> },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'flex items-center gap-2 px-6 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all',
-                activeTab === tab.id
-                  ? 'bg-white dark:bg-surface-dark text-primary shadow-fluent-2'
-                  : 'text-text-secondary hover:text-text-main'
-              )}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
-      </header>
-
-      <main className='w-full'>
+      <main className='w-full flex flex-col gap-lg'>
         {error && (
-          <div className='mb-6 p-4 bg-error/5 border border-error/20 rounded-xl flex items-center gap-3'>
-            <AlertCircle className="text-error" size={18} />
-            <p className='text-xs font-bold text-error uppercase tracking-wider'>{error}</p>
+          <div
+            role='alert'
+            className='p-md bg-error-container text-on-error-container rounded-md flex items-center gap-sm'
+          >
+            <AlertCircle className='size-4 shrink-0' aria-hidden='true' />
+            <p className='text-body-sm-bold'>{error}</p>
           </div>
         )}
 
         {activeTab === 'nueva-compra' && (
-          <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6'>
-            <div className='lg:col-span-12 space-y-4 md:space-y-6'>
-              <PurchaseCartTable {...logic} />
-              <PurchaseTotalsCard {...logic} onCheckout={() => setShowCheckoutWizard(true)} />
-            </div>
+          <div className='space-y-lg'>
+            <PurchaseCartTable {...logic} />
+            <PurchaseTotalsCard {...logic} onCheckout={() => setShowCheckoutWizard(true)} />
           </div>
         )}
 

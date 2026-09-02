@@ -110,7 +110,7 @@ export const PurchasePaymentStep = forwardRef<PurchasePaymentStepRef, PurchasePa
         </div>
 
         {/* Notas de la compra */}
-        <div className="space-y-2 pt-2 border-t border-surface-deep">
+        <div className="space-y-2 pt-2 border-t border-divider">
           <div className="flex items-center gap-2">
             <StickyNote size={16} className="text-on-surface-deep" />
             <label className="text-label-caps text-on-surface-deep" htmlFor="wizard-purchase-notes">
@@ -125,7 +125,7 @@ export const PurchasePaymentStep = forwardRef<PurchasePaymentStepRef, PurchasePa
               'purchases.checkoutWizard.payment.notesPlaceholder',
               'Ej: Pedido urgente de insumos...',
             )}
-            className="w-full h-20 p-3 rounded-md border border-divider bg-surface text-sm resize-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+            className="w-full h-20 p-3 rounded-md border border-border-subtle bg-surface text-body-md text-foreground resize-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
           />
         </div>
       </div>

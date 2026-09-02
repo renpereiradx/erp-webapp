@@ -143,8 +143,8 @@ export const PurchaseCollectionStep = forwardRef<
           ))}
         </select>
         {registersFailed && !isLoadingRegisters && (
-          <p className="mt-1.5 text-xs text-error flex items-center gap-1.5">
-            <AlertCircle size={12} className="shrink-0" />
+          <p className="mt-1.5 text-body-sm text-error flex items-center gap-1.5">
+            <AlertCircle size={14} className="shrink-0" aria-hidden="true" />
             {t('purchases.checkoutWizard.collection.registersError', 'No se pudieron cargar las cajas. Verificá tu sesión e intentá de nuevo.')}
           </p>
         )}
@@ -153,18 +153,22 @@ export const PurchaseCollectionStep = forwardRef<
       {/* Monto a pagar */}
       <div className="space-y-3">
         <div>
-          <label className="text-xs font-bold uppercase text-on-surface-deep flex items-center gap-2 mb-2">
-            <Calculator size={14} />
+          <label
+            className="text-label-caps uppercase text-on-surface-deep flex items-center gap-2 mb-2"
+            htmlFor="wizard-purchase-amount"
+          >
+            <Calculator size={14} aria-hidden="true" />
             {t('purchases.checkoutWizard.collection.amountPaid', 'Monto a pagar')}
           </label>
           <Input
             ref={amountRef}
+            id="wizard-purchase-amount"
             type="number"
             min="0"
             step="1"
             value={amountPaid}
             onChange={(e) => setAmountPaid(e.target.value)}
-            className="h-14 text-2xl font-bold font-data-mono px-4"
+            className="h-14 text-title-md font-data-mono text-data-mono px-4"
             placeholder="0"
           />
         </div>
@@ -172,7 +176,7 @@ export const PurchaseCollectionStep = forwardRef<
         <Button
           variant="outline"
           size="sm"
-          className="text-xs font-bold"
+          className="text-body-sm-bold"
           onClick={() => setAmountPaid(String(totalAmount))}
         >
           {t('purchases.checkoutWizard.collection.exact', 'Exacto')}: {formatCurrency(totalAmount, currencyCode)}
@@ -184,7 +188,7 @@ export const PurchaseCollectionStep = forwardRef<
         <button
           type="button"
           onClick={() => setShowNotes((v) => !v)}
-          className="text-sm text-on-surface-deep hover:text-foreground transition-colors"
+          className="text-body-md text-on-surface-deep hover:text-foreground transition-colors duration-150 cursor-pointer"
         >
           {t('purchases.checkoutWizard.collection.notes', 'Notas del pago (opcional)')}
         </button>
@@ -194,7 +198,7 @@ export const PurchaseCollectionStep = forwardRef<
             onChange={(e) => setNotes(e.target.value)}
             placeholder={t('purchases.checkoutWizard.collection.notesPlaceholder', 'Notas del pago...')}
             rows={2}
-            className="mt-2 w-full rounded-md border border-input bg-surface px-3 py-2 text-sm resize-none"
+            className="mt-2 w-full rounded-md border border-border-subtle bg-surface px-3 py-2 text-body-md text-foreground resize-none"
           />
         )}
       </div>

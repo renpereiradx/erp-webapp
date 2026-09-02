@@ -1,6 +1,8 @@
 import React from 'react';
-import { Ban } from 'lucide-react';
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic';
+import { useI18n } from '@/lib/i18n';
+import EnhancedModal from '@/components/ui/EnhancedModal';
+import { Button } from '@/components/ui/button';
 
 export type PurchaseCancelModalProps = Pick<
   ReturnType<typeof usePurchasesLogic>,
@@ -20,60 +22,61 @@ export const PurchaseCancelModal: React.FC<PurchaseCancelModalProps> = ({
   handleConfirmCancellation,
   canWrite,
 }) => {
-  if (!showCancelPreview || !cancelPreviewData || !orderToCancel) return null;
+  const { t } = useI18n();
+  const isOpen = showCancelPreview && !!cancelPreviewData && !!orderToCancel;
+  const impact = cancelPreviewData?.impact_analysis;
 
   return (
-    <div className='fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4'>
-      <div
-        className='absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity'
-        onClick={() => setShowCancelPreview(false)}
-      ></div>
-      <div className='relative bg-surface w-full max-w-sm rounded-md shadow-whisper p-6 border border-surface-deep text-center space-y-5 animate-in fade-in zoom-in-95 duration-200'>
-        <div className='w-14 h-14 bg-[rgba(209,52,56,0.1)] text-error rounded-full flex items-center justify-center mx-auto'>
-          <Ban size={28} />
+    <EnhancedModal
+      isOpen={isOpen}
+      onClose={() => setShowCancelPreview(false)}
+      title={t('purchases.cancel.title', '¿Anular esta orden?')}
+      variant='error'
+      size='sm'
+      footer={
+        <div className='flex justify-end gap-sm w-full'>
+          <Button variant='secondary' onClick={() => setShowCancelPreview(false)}>
+            {t('common.cancel', 'Cancelar')}
+          </Button>
+          <Button variant='destructive' onClick={handleConfirmCancellation} disabled={!canWrite}>
+            {t('purchases.cancel.confirm', 'Sí, Anular')}
+          </Button>
         </div>
-        <div>
-          <h3 className='text-lg font-semibold text-foreground'>
-            ¿Anular esta orden?
-          </h3>
-          <p className='text-sm text-on-surface-deep mt-2'>
-            Esta acción afectará los saldos con{' '}
-            <span className='font-semibold text-error'>
-              {orderToCancel.supplier_name}
-            </span>
-            .
-          </p>
-          {cancelPreviewData.impact_analysis && (
-            <div className='mt-4 p-3 bg-red-50 text-red-700 text-xs rounded text-left border border-red-100'>
-              <p className='font-semibold mb-1'>Impacto de la anulación:</p>
-              <ul className='list-disc pl-4 space-y-1'>
-                {cancelPreviewData.impact_analysis.requires_payment_reversal && (
-                  <li>Se reversarán {cancelPreviewData.impact_analysis.payments_to_cancel || 0} pagos.</li>
-                )}
-                {cancelPreviewData.impact_analysis.requires_stock_adjustment && (
-                  <li>Se ajustará el stock de {cancelPreviewData.impact_analysis.stock_adjustments_required || 0} items.</li>
-                )}
-                <li>Total a reversar: {cancelPreviewData.impact_analysis.total_to_reverse || 0}</li>
-              </ul>
-            </div>
-          )}
-        </div>
-        <div className='flex gap-3 pt-2'>
-          <button
-            className='flex-1 py-2.5 font-medium text-on-surface-deep hover:bg-surface-muted rounded-md border border-surface-deep transition-colors text-sm'
-            onClick={() => setShowCancelPreview(false)}
-          >
-            Cancelar
-          </button>
-          <button
-            className='flex-1 py-2.5 bg-error hover:bg-[#B52E31] text-white font-semibold rounded-md shadow-whisper active:scale-[0.98] transition-all text-sm disabled:opacity-50 disabled:pointer-events-none'
-            onClick={handleConfirmCancellation}
-            disabled={!canWrite}
-          >
-            Sí, Anular
-          </button>
-        </div>
+      }
+    >
+      <div className='space-y-md'>
+        <p className='text-body-md text-on-surface-deep'>
+          {t('purchases.cancel.body', 'Esta acción afectará los saldos con {supplier}.', {
+            supplier: orderToCancel?.supplier_name ?? '',
+          })}
+        </p>
+        {impact && (
+          <div className='p-md bg-error-container text-on-error-container rounded-md text-left space-y-1'>
+            <p className='text-body-sm-bold'>{t('purchases.cancel.impact_title', 'Impacto de la anulación:')}</p>
+            <ul className='list-disc pl-4 text-body-sm space-y-1'>
+              {impact.requires_payment_reversal && (
+                <li>
+                  {t('purchases.cancel.impact_payments', 'Se reversarán {count} pagos.', {
+                    count: impact.payments_to_cancel || 0,
+                  })}
+                </li>
+              )}
+              {impact.requires_stock_adjustment && (
+                <li>
+                  {t('purchases.cancel.impact_stock', 'Se ajustará el stock de {count} items.', {
+                    count: impact.stock_adjustments_required || 0,
+                  })}
+                </li>
+              )}
+              <li>
+                {t('purchases.cancel.impact_total', 'Total a reversar: {amount}', {
+                  amount: impact.total_to_reverse || 0,
+                })}
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
-    </div>
+    </EnhancedModal>
   );
 };

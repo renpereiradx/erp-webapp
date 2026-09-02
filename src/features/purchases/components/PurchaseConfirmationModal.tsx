@@ -1,6 +1,17 @@
-import React, { useEffect } from 'react';
-import { CheckCircle, Building, AlertCircle } from 'lucide-react';
+import React from 'react';
+import { Building } from 'lucide-react';
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic';
+import { useI18n } from '@/lib/i18n';
+import EnhancedModal from '@/components/ui/EnhancedModal';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
 
 export type PurchaseConfirmationModalProps = Pick<
@@ -21,124 +32,132 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
   setActiveTab,
   handleFilter,
 }) => {
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!showConfirmationModal || !latestPurchaseResult) return;
-      // Esc = cerrar resumen. (Antes Enter/F12 disparaban el pago legacy, pero
-      // el PurchaseCheckoutWizard ya integra crear+pago, así que esa acción era
-      // muerta y confusa: quedaba solo como resumen post-compra.)
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        setShowConfirmationModal(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showConfirmationModal, latestPurchaseResult, setShowConfirmationModal]);
+  const { t } = useI18n();
 
+  // Guard de narrowing: sin resultado no hay modal (EnhancedModal ni se monta).
   if (!showConfirmationModal || !latestPurchaseResult) return null;
 
+  const handleClose = () => setShowConfirmationModal(false);
+
+  const handleViewHistory = () => {
+    handleClose();
+    setActiveTab('historial');
+    handleFilter();
+  };
+
   return (
-    <div className='fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4'>
-      <div
-        className='absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity'
-        onClick={() => setShowConfirmationModal(false)}
-      ></div>
-      <div className='relative bg-surface w-full max-w-lg rounded-md shadow-whisper p-6 border border-surface-deep flex flex-col max-h-[90vh] animate-in fade-in slide-in-from-bottom-4 duration-300'>
-        <div className='flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 pb-3 shrink-0'>
-          <div className='w-10 h-10 bg-[rgba(16,124,16,0.1)] text-success rounded-full flex items-center justify-center'>
-            <CheckCircle size={22} />
+    <EnhancedModal
+      isOpen
+      onClose={handleClose}
+      title={t('purchases.confirmation.title', 'Compra Registrada')}
+      subtitle={t('purchases.confirmation.subtitle', 'Orden de compra #{id} guardada con éxito.', {
+        id: latestPurchaseResult?.id ?? '',
+      })}
+      variant='success'
+      size='md'
+      footer={
+        <div className='flex justify-end gap-sm w-full'>
+          <Button variant='secondary' onClick={handleViewHistory}>
+            {t('purchases.confirmation.actions.history', 'Ver en Historial')}
+          </Button>
+          <Button variant='primary' onClick={handleClose}>
+            {t('purchases.confirmation.actions.close', 'Cerrar')}
+          </Button>
+        </div>
+      }
+    >
+      <div className='space-y-md'>
+        <div className='grid grid-cols-2 gap-md p-md bg-surface-muted rounded-md text-left'>
+          <div>
+            <span className='block text-label-caps uppercase text-outline-fg'>
+              {t('purchases.confirmation.total', 'Monto Total')}
+            </span>
+            <span className='text-data-mono font-data-mono text-foreground'>
+              {formatCurrency(latestPurchaseResult.total_amount ?? 0, paymentCurrency)}
+            </span>
           </div>
           <div>
-            <h3 className='text-lg font-semibold text-foreground'>
-              Compra Registrada
-            </h3>
-            <p className='text-xs text-on-surface-deep'>
-              Orden de compra #{latestPurchaseResult.id} guardada con éxito.
-            </p>
+            <span className='block text-label-caps uppercase text-outline-fg'>
+              {t('purchases.confirmation.branch', 'Sucursal Asignada')}
+            </span>
+            <span className='text-body-md-bold text-foreground flex items-center gap-1 mt-0.5'>
+              <Building size={14} className='text-primary' aria-hidden='true' />
+              {t('purchases.confirmation.branch_value', 'Sucursal #{id}', {
+                id: latestPurchaseResult.branch_id ?? '',
+              })}
+            </span>
           </div>
         </div>
 
-        <div className='flex-1 overflow-y-auto py-4 space-y-4 pr-1'>
-          <div className='grid grid-cols-2 gap-4 text-left p-3 bg-gray-50 dark:bg-gray-800/40 rounded-lg'>
-            <div>
-              <span className='block text-[10px] font-bold text-gray-400 uppercase tracking-tight'>Monto Total</span>
-              <span className='text-base font-bold text-text-main'>{formatCurrency(latestPurchaseResult.total_amount, paymentCurrency)}</span>
+        {latestPurchaseResult.warnings?.length > 0 && (
+          <div className='p-md bg-warning/10 border border-warning/20 rounded-md text-left space-y-1.5'>
+            <div className='flex items-center gap-1.5 text-body-sm-bold text-warning uppercase'>
+              {t('purchases.confirmation.warnings', 'Advertencias')}
             </div>
-            <div>
-              <span className='block text-[10px] font-bold text-gray-400 uppercase tracking-tight'>Sucursal Asignada</span>
-              <span className='text-sm font-semibold text-text-main flex items-center gap-1 mt-0.5'>
-                <Building size={12} className="text-primary" />
-                Sucursal #{latestPurchaseResult.branch_id}
-              </span>
+            <ul className='list-disc pl-4 text-body-sm text-foreground space-y-1'>
+              {latestPurchaseResult.warnings.map((w: any, idx: number) => (
+                <li key={idx}>
+                  {w.type === 'PRICE_DERIVATION_SKIPPED'
+                    ? t('purchases.confirmation.warning.price', '{product}: {reason}', {
+                        product: w.product_name || w.product_id || t('purchases.confirmation.fallback_product', 'Producto'),
+                        reason: w.reason || t('purchases.confirmation.warning.no_price_reason', 'No se pudo derivar precio'),
+                      })
+                    : t('purchases.confirmation.warning.tax_rate', '{product}: Tasa observada del {rate}% difiere de la esperada.', {
+                        product: w.product_name || w.name || t('purchases.confirmation.fallback_product', 'Producto'),
+                        rate: w.observed_tax_rate || w.tax_rate,
+                      })}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {latestPurchaseResult.details?.length > 0 && (
+          <div className='space-y-sm text-left'>
+            <span className='block text-label-caps uppercase text-outline-fg'>
+              {t('purchases.confirmation.fiscal_title', 'Liquidación Fiscal por Ítem')}
+            </span>
+            <div className='rounded-md border border-border-subtle overflow-hidden'>
+              <Table>
+                <TableHeader className='bg-surface-muted'>
+                  <TableRow className='hover:bg-surface-muted border-0'>
+                    <TableHead className='text-label-caps uppercase text-on-surface-deep px-md py-sm'>
+                      {t('purchases.confirmation.col_product', 'Producto')}
+                    </TableHead>
+                    <TableHead className='text-label-caps uppercase text-on-surface-deep px-sm py-sm text-center'>
+                      {t('purchases.confirmation.col_qty', 'Cant.')}
+                    </TableHead>
+                    <TableHead className='text-label-caps uppercase text-on-surface-deep px-sm py-sm text-center'>
+                      {t('purchases.confirmation.col_iva', 'IVA')}
+                    </TableHead>
+                    <TableHead className='text-label-caps uppercase text-on-surface-deep px-md py-sm text-right'>
+                      {t('purchases.confirmation.col_source', 'Fuente')}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {latestPurchaseResult.details.map((detail: any, idx: number) => (
+                    <TableRow key={idx} className='hover:bg-surface-muted transition-colors duration-150'>
+                      <TableCell className='px-md py-sm text-body-md text-foreground truncate max-w-[140px]'>
+                        {detail.name || detail.product_name || `#${detail.product_id}`}
+                      </TableCell>
+                      <TableCell className='px-sm py-sm text-center text-data-mono font-data-mono text-foreground'>
+                        {formatNumber(detail.quantity)}
+                      </TableCell>
+                      <TableCell className='px-sm py-sm text-center text-data-mono font-data-mono text-primary'>
+                        {detail.applied_tax_rate ?? detail.tax_rate ?? 0}%
+                      </TableCell>
+                      <TableCell className='px-md py-sm text-right text-body-sm text-outline-fg'>
+                        {detail.tax_resolution_source || 'default'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </div>
-
-          {latestPurchaseResult.warnings && latestPurchaseResult.warnings.length > 0 && (
-            <div className='p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 rounded-lg text-left space-y-1.5'>
-              <div className='flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-semibold text-xs uppercase tracking-wider'>
-                <AlertCircle size={14} /> Advertencias
-              </div>
-              <ul className='list-disc pl-4 text-xs text-amber-800 dark:text-amber-300 space-y-1'>
-                {latestPurchaseResult.warnings.map((w: any, idx: number) => (
-                  <li key={idx}>
-                    {w.type === 'PRICE_DERIVATION_SKIPPED'
-                      ? `${w.product_name || w.product_id || 'Producto'}: ${w.reason || 'No se pudo derivar precio'}`
-                      : `${w.product_name || w.name || 'Producto'}: Tasa observada del ${w.observed_tax_rate || w.tax_rate}% difiere de la esperada.`}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {latestPurchaseResult.details && latestPurchaseResult.details.length > 0 && (
-            <div className='space-y-1.5 text-left'>
-              <span className='block text-[10px] font-bold text-gray-400 uppercase tracking-tight'>Liquidación Fiscal por Ítem</span>
-              <div className='border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden'>
-                <table className='w-full text-xs text-left border-collapse'>
-                  <thead className='bg-gray-50 dark:bg-gray-800/60 font-semibold text-gray-500'>
-                    <tr>
-                      <th className='px-3 py-2'>Producto</th>
-                      <th className='px-2 py-2 text-center'>Cant.</th>
-                      <th className='px-2 py-2 text-center'>IVA</th>
-                      <th className='px-3 py-2 text-right'>Fuente</th>
-                    </tr>
-                  </thead>
-                  <tbody className='divide-y divide-gray-100 dark:divide-gray-800'>
-                    {latestPurchaseResult.details.map((detail: any, idx: number) => (
-                      <tr key={idx} className='hover:bg-gray-50/50 dark:hover:bg-gray-800/20'>
-                        <td className='px-3 py-2 font-medium truncate max-w-[140px]'>{detail.name || detail.product_name || `Producto #${detail.product_id}`}</td>
-                        <td className='px-2 py-2 text-center'>{formatNumber(detail.quantity)}</td>
-                        <td className='px-2 py-2 text-center font-semibold text-primary'>{detail.applied_tax_rate ?? detail.tax_rate ?? 0}%</td>
-                        <td className='px-3 py-2 text-right text-text-secondary italic text-[10px]'>{detail.tax_resolution_source || 'default'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className='flex gap-3 pt-3 border-t border-gray-100 dark:border-gray-800 shrink-0'>
-          <button
-            className='flex-1 py-2.5 font-medium text-on-surface-deep hover:bg-surface-muted rounded-md border border-surface-deep transition-colors text-sm'
-            onClick={() => {
-              setShowConfirmationModal(false)
-              setActiveTab('historial')
-              handleFilter()
-            }}
-          >
-            Ver en Historial
-          </button>
-          <button
-            className='flex-1 py-2.5 bg-primary hover:bg-primary/90 text-white font-semibold rounded-md shadow-whisper active:scale-[0.98] transition-all text-sm'
-            onClick={() => setShowConfirmationModal(false)}
-          >
-            Cerrar
-          </button>
-        </div>
+        )}
       </div>
-    </div>
+    </EnhancedModal>
   );
 };
