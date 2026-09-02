@@ -253,8 +253,11 @@ export const sales = {
   'sales.registerPaymentModal.cashRegister.placeholder':
     'Seleccionar caja registradora',
   'sales.registerPaymentModal.cashRegister.loading': 'Cargando cajas...',
+  'sales.registerPaymentModal.cashRegister.open': 'Abierta',
   'sales.registerPaymentModal.cashRegister.empty':
-    'No hay cajas registradoras abiertas disponibles',
+    'No hay cajas registradoras disponibles. El cobro se registrará sin caja vinculada.',
+  'sales.registerPaymentModal.cashRegister.optionalHint':
+    'Sin caja seleccionada: el pago no quedará vinculado a una caja registradora.',
   'sales.registerPaymentModal.cashRegister.none': 'Sin caja registradora',
   'sales.registerPaymentModal.cashRegister.balance': 'Saldo: {{amount}}',
   'sales.registerPaymentModal.cashRegister.closed': 'Cerrada',
@@ -665,8 +668,6 @@ export const sales = {
   'sales.registerPaymentModal.client': 'Cliente',
   'sales.registerPaymentModal.walkIn': 'Consumidor Final',
   'sales.registerPaymentModal.newBalance': 'Nuevo Saldo',
-  'sales.registerPaymentModal.systemFooter': 'SISTEMA DE GESTIÓN OPERATIVA',
-  'sales.registerPaymentModal.systemVersion': 'FLUENT ERP v2.0',
   'sales.registerPaymentModal.fundsOrigin': 'Origen de Fondos',
   'sales.registerPaymentModal.register': 'Registro Contable',
   'sales.registerPaymentModal.summary': 'Resumen de Aplicación',

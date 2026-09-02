@@ -77,9 +77,11 @@ export const tRaw = (key, defaultValue, vars) => {
   // 3. Fallback
   template = template || defaultValue || key
 
-  // Interpolación de variables ({var} o {{var}})
+  // Interpolación de variables ({var} o {{var}}). El patrón {{var}} va
+  // primero: si se aplicara {var} antes, consumiría las llaves internas de
+  // {{var}} y dejaría un {valor} literal sin resolver.
   if (vars && typeof vars === 'object') {
-    const patterns = [/\{(\w+)\}/g, /\{\{(\w+)\}\}/g];
+    const patterns = [/\{\{(\w+)\}\}/g, /\{(\w+)\}/g];
     patterns.forEach(pattern => {
       template = String(template).replace(pattern, (_, varKey) =>
         Object.prototype.hasOwnProperty.call(vars, varKey)
@@ -155,9 +157,10 @@ export function useI18n() {
         console.warn(`[i18n] Traducción no encontrada: "${key}" (idioma: ${lang})`)
       }
 
-      // Interpolación de variables ({var} o {{var}})
+      // Interpolación de variables ({var} o {{var}}). El patrón {{var}} va
+      // primero para no romper las llaves de la variante doble.
       if (vars && typeof vars === 'object') {
-        const patterns = [/\{(\w+)\}/g, /\{\{(\w+)\}\}/g];
+        const patterns = [/\{\{(\w+)\}\}/g, /\{(\w+)\}/g];
         patterns.forEach(pattern => {
           template = String(template).replace(pattern, (_, varKey) =>
             Object.prototype.hasOwnProperty.call(vars, varKey)
