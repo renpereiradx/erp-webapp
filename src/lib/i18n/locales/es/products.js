@@ -172,6 +172,8 @@ export const products = {
   'products.details.section.unit_prices': 'Precios por Unidad',
   'products.details.section.cost_summary': 'Resumen de Costos',
   'products.details.section.inventory': 'Inventario',
+  'products.details.section.price': 'Precio de Venta',
+  'products.details.price.per_unit': 'por {unit}',
   'products.details.section.margin_analysis': 'Análisis de Margen',
   'products.details.section.financial_health': 'Salud Financiera',
   'products.details.table.unit': 'Unidad',

@@ -81,6 +81,8 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
   const productType = product.product_type || product.productType;
   const description = product.description;
   const unitPrices = product.unit_prices || [];
+  // Precio de venta destacado: se prefiere el de la unidad base del producto.
+  const salePrice = unitPrices.find((up: any) => up.unit === product.base_unit) || unitPrices[0];
   const unitCostsSummary = product.unit_costs_summary || [];
   const stockQuantity = product.stock_quantity ?? product.stock ?? 0;
   const stockStatus = product.stock_status || (stockQuantity < 10 ? 'low_stock' : 'in_stock');
@@ -424,6 +426,21 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
           {/* Sidebar Stats Area (4/12) */}
           <div className="lg:col-span-4 space-y-lg">
 
+            {/* Sale Price Card — dato crítico, jerarquía visual máxima */}
+            {salePrice && (
+              <div className="space-y-md">
+                <h3 className="text-label-caps uppercase text-on-surface-deep">{t('products.details.section.price', 'Precio de Venta')}</h3>
+                <div className={cn(sidebarCardClass, 'bg-primary/5 border-primary/30')}>
+                  <div className="font-data-mono text-headline-lg text-primary leading-none break-words">
+                    {formatCurrency(salePrice.price_per_unit)}
+                  </div>
+                  <p className="text-body-sm-bold text-on-surface-deep mt-xs uppercase">
+                    {t('products.details.price.per_unit', 'por {unit}', { unit: salePrice.unit || '-' })}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Inventory Card */}
             <div className="space-y-md">
               <h3 className="text-label-caps uppercase text-on-surface-deep">{t('products.details.section.inventory')}</h3>
@@ -442,21 +459,21 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                 {hasVariants ? (
                   <div className="space-y-md">
                     <div>
-                      <div className="text-data-mono font-data-mono text-foreground leading-none">{totalConsolidatedStock}</div>
+                      <div className="font-data-mono text-headline-lg text-foreground leading-none">{totalConsolidatedStock}</div>
                       <p className="text-body-sm-bold text-on-surface-deep mt-xs">{t('products.details.inventory.total_stock', 'Stock Total (Base + Variantes)')}</p>
                     </div>
                     <div className="pt-sm border-t border-border-subtle">
-                      <div className="text-data-mono font-data-mono text-foreground leading-none">{baseStock}</div>
+                      <div className="font-data-mono text-title-md text-foreground leading-none">{baseStock}</div>
                       <p className="text-body-sm-bold text-on-surface-deep mt-xs">{t('products.details.inventory.base_stock', 'Stock Base (Sin Variantes)')}</p>
                     </div>
                     <div className="mt-auto pt-sm border-t border-border-subtle bg-surface-muted -mx-md -mb-md px-md py-md rounded-b-md flex justify-between items-center">
                       <span className="text-label-caps uppercase text-on-surface-deep">{t('products.details.inventory.variants_stock', 'Stock en Variantes')}</span>
-                      <span className="text-data-mono font-data-mono text-primary">{variantsTotalStock}</span>
+                      <span className="font-data-mono text-title-md text-primary">{variantsTotalStock}</span>
                     </div>
                   </div>
                 ) : (
                   <div>
-                    <div className="text-data-mono font-data-mono text-foreground">{stockQuantity}</div>
+                    <div className="font-data-mono text-headline-lg text-foreground leading-none">{stockQuantity}</div>
                     <p className="text-body-sm-bold text-on-surface-deep mt-xs">{t('products.details.inventory.base_product', 'Stock del producto base')}</p>
                   </div>
                 )}
@@ -472,7 +489,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                     <TrendingUp className="w-5 h-5" />
                     <span className="text-label-caps uppercase">{t('products.details.label.best_margin')}</span>
                   </div>
-                  <div className="text-data-mono font-data-mono text-success">{bestMarginPercent?.toFixed(2)}%</div>
+                  <div className="font-data-mono text-title-md text-success">{bestMarginPercent?.toFixed(2)}%</div>
                   <p className="text-body-sm-bold text-on-surface-deep mt-xs uppercase">
                     {t('products.details.best_margin_basis', { unit: bestMarginUnit })}
                   </p>
