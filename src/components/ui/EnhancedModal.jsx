@@ -138,11 +138,16 @@ const EnhancedModal = ({
     fixed inset-0 z-50 flex items-center justify-center p-4
     bg-black/50 backdrop-blur-sm
     animate-in fade-in duration-200
+    transition-[left] duration-300 ease-in-out
   `;
 
   return createPortal(
     <div
       className={`${getOverlayStyles()} ${overlayClassName}`}
+      // Centra el modal sobre el área de contenido (excluye el sidebar).
+      // MainLayout expone --erp-content-inset según el ancho real del menú;
+      // fuera del layout (login, etc.) vale 0px y se centra en todo el viewport.
+      style={{ left: 'var(--erp-content-inset, 0px)' }}
       onClick={handleOverlayClick}
       data-testid={`${testId}-overlay`}
       role="dialog"

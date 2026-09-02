@@ -814,6 +814,15 @@ const MainLayout = ({ children }) => {
     return () => window.removeEventListener('resize', checkScreenSize)
   }, [])
 
+  // Expone el ancho del sidebar para que los modales portales a document.body
+  // (EnhancedModal) se centren sobre el área de contenido y no sobre el viewport
+  // completo (w-72 expandido / w-20 colapsado / 0 en pantallas pequeñas).
+  useEffect(() => {
+    const inset = isLargeScreen ? (isSidebarExpanded ? '18rem' : '5rem') : '0px'
+    document.documentElement.style.setProperty('--erp-content-inset', inset)
+    return () => document.documentElement.style.removeProperty('--erp-content-inset')
+  }, [isLargeScreen, isSidebarExpanded])
+
   const handleLogout = async () => {
     try { await logout(); navigate('/login'); } catch (error) { console.error('Logout error:', error); }
   }
