@@ -61,6 +61,7 @@
   --color-surface-subtle: #ebeef6;
   --color-surface-deep: #dfe2eb;
   --color-foreground: #181c22;
+  --color-on-surface-deep: #414753;
   --color-divider: #c1c6d5;
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -199,6 +200,7 @@
   --color-surface-subtle: #1e1d1d;
   --color-surface-deep: #3f3e3d;
   --color-foreground: #f3f2f1;
+  --color-on-surface-deep: #d2d0ce;
   --color-divider: #3f3e3d;
 }
 
