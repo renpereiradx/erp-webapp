@@ -254,8 +254,11 @@ export const sales = {
     'Seleccionar caja registradora',
   'sales.registerPaymentModal.cashRegister.loading': 'Cargando cajas...',
   'sales.registerPaymentModal.cashRegister.open': 'Abierta',
+  'sales.registerPaymentModal.cashRegister.otherBranch': 'Otra sucursal',
   'sales.registerPaymentModal.cashRegister.empty':
-    'No hay cajas registradoras disponibles. El cobro se registrará sin caja vinculada.',
+    'No hay cajas registradoras abiertas disponibles. El cobro se registrará sin caja vinculada.',
+  'sales.registerPaymentModal.cashRegister.noBranchOpen':
+    'No hay cajas abiertas en la sucursal de esta venta. Abrí una caja en esa sucursal para vincularla al cobro.',
   'sales.registerPaymentModal.cashRegister.optionalHint':
     'Sin caja seleccionada: el pago no quedará vinculado a una caja registradora.',
   'sales.registerPaymentModal.cashRegister.none': 'Sin caja registradora',

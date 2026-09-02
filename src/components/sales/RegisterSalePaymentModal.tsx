@@ -40,6 +40,10 @@ import { cashRegisterService } from '@/services/cashRegisterService'
 import { CurrencyService } from '@/services/currencyService'
 import { ExchangeRateService } from '@/services/exchangeRateService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
+import {
+  partitionOpenRegisters,
+  resolveDefaultRegisterId,
+} from '@/features/sales/registerSelection'
 import { normalizeCurrencyCode, formatPYG } from '@/utils/currencyUtils'
 import { round2, computeForeignDue } from '@/domain/sale/calculations/foreignPayment'
 
@@ -81,6 +85,8 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
   // Id (numérico como string) de la moneda de COBRO; default: la del documento.
   const [currencyId, setCurrencyId] = useState<string>('')
   const [cashRegisterId, setCashRegisterId] = useState<string>('')
+  // Caja activa del operador según el backend ('' = sin caja activa).
+  const [activeRegisterId, setActiveRegisterId] = useState<string>('')
 
   const userEditedAmountToApply = useRef<boolean>(false)
 
@@ -171,22 +177,10 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
         ])
       ])
 
-      // Método de pago: default según el método registrado en la venta; si no
-      // hay match, el marcado como default (o el primero).
+      // Métodos de pago: solo se cargan; el default (método de la venta, o el
+      // marcado como default) se DERIVA en render — ver effectivePaymentMethodId.
       const validMethods = Array.isArray(methods) ? methods : []
       setPaymentMethods(validMethods)
-      if (validMethods.length > 0) {
-        const methodLabels = m => [m.description, m.name, m.display_name, m.method_code]
-          .filter(Boolean)
-          .map(v => String(v).toUpperCase())
-        const saleMethod = String(sale?.payment_method || '').trim().toUpperCase()
-        const bySale = saleMethod
-          ? validMethods.find(m => methodLabels(m).includes(saleMethod))
-            || validMethods.find(m => methodLabels(m).some(v => v.includes(saleMethod) || saleMethod.includes(v)))
-          : null
-        const def = bySale || validMethods.find(m => m.is_default) || validMethods[0]
-        setPaymentMethodId(curr => curr || String(def.id || def.payment_method_id))
-      }
 
       const normalized = Array.isArray(currencyList) ? currencyList : []
       setCurrencies(normalized)
@@ -196,31 +190,22 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
       // array plano. Normalizar ambos shapes (defensivo, igual que el resto del
       // repo con `response.data || []`).
       const regList = Array.isArray(allRegs) ? allRegs : (allRegs?.data || [])
-      // Se listan TODAS las cajas (abiertas y cerradas) con su estado; el
-      // backend valida al procesar el pago.
-      const normalizedRegs = regList
+      // Regla de producto (features/sales/registerSelection.ts): solo se
+      // ofrecen cajas ABIERTAS; las cerradas no se listan.
+      const openRegs = regList
         .filter(cr => cr?.id !== undefined && cr?.id !== null)
         .map(cr => {
           const status = String(cr?.status || cr?.state || '').toUpperCase()
           const isOpen = status === 'OPEN' || status === 'ACTIVE' || status === 'ABIERTA' || cr?.is_open === true
-          return { ...cr, is_open: isOpen }
+          return { ...cr, is_open: isOpen, branchId: cr?.branch_id ?? null }
         })
-      setCashRegisters(normalizedRegs)
-
-      // Default: la caja activa del operador si figura abierta en la lista;
-      // si no, la primera caja abierta disponible.
+        .filter(cr => cr.is_open)
+      setCashRegisters(openRegs)
       const activeId = activeReg?.id ?? activeReg?.cash_register_id
-      const activeInList = activeId != null
-        && normalizedRegs.some(cr => String(cr.id) === String(activeId) && cr.is_open)
-      const defaultReg = activeInList
-        ? normalizedRegs.find(cr => String(cr.id) === String(activeId))
-        : normalizedRegs.find(cr => cr.is_open)
-      if (defaultReg) {
-        setCashRegisterId(curr => curr || String(defaultReg.id))
-      }
+      setActiveRegisterId(activeId != null ? String(activeId) : '')
     } catch (e) { console.error('Error loading modal data:', e) }
     finally { setCashRegistersLoading(false) }
-  }, [sale?.payment_method])
+  }, [])
 
   useEffect(() => { if (open) loadData() }, [loadData, open])
 
@@ -320,6 +305,26 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
     return { id, label }
   }).filter(o => o.id !== 'undefined'), [paymentMethods])
 
+  // Valor efectivo del select de método de pago, DERIVADO en render: la
+  // elección del operador, o el default — el método registrado en la venta
+  // (description/method_code); si no hay match, el marcado como default o el
+  // primero. Mismo patrón que cashRegisterValue: evita el placeholder de
+  // Radix cuando el dato llega después de montar el select.
+  const effectivePaymentMethodId = useMemo(() => {
+    if (paymentMethodId) return paymentMethodId
+    if (paymentMethodOptions.length === 0) return ''
+    const saleMethod = String(sale?.payment_method || '').trim().toUpperCase()
+    let def = null
+    if (saleMethod) {
+      def = paymentMethodOptions.find(m => m.label.toUpperCase() === saleMethod)
+        || paymentMethodOptions.find(m => {
+          const l = m.label.toUpperCase()
+          return l.includes(saleMethod) || saleMethod.includes(l)
+        })
+    }
+    return (def || paymentMethodOptions[0]).id
+  }, [paymentMethodId, paymentMethodOptions, sale?.payment_method])
+
   const validationErrors = useMemo(() => {
     const errors: { amountReceived: string | null, exchangeRate: string | null, amountToApply: string | null, hasErrors: boolean } = { amountReceived: null, exchangeRate: null, amountToApply: null, hasErrors: false }
     if (!sale) return errors
@@ -370,37 +375,60 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
     return Math.max(0, balanceDue - toApply)
   }, [sale, amountToApply, parseNumberWithDots])
 
-  const cashRegisterOptions = useMemo(() => cashRegisters.map(cr => ({
-    value: String(cr.id),
-    label: cr.name || cr.description || `Caja #${cr.id}`,
-    isOpen: cr.is_open === true,
-    balanceLabel: typeof cr.current_balance === 'number' ? formatLocalizedCurrency(cr.current_balance, cr.currency) : null,
-    meta: cr.location || cr.branch_name || null
-  })), [cashRegisters, formatLocalizedCurrency])
+  const cashRegisterOptions = useMemo(() => {
+    // Abiertas de la sucursal de la venta: seleccionables. Las de otra
+    // sucursal se muestran deshabilitadas (el backend rechaza el pago con
+    // ellas); las cerradas no se listan.
+    const partition = partitionOpenRegisters(cashRegisters, sale?.branch_id ?? null)
+    return [...partition.inBranch, ...partition.otherBranches].map(cr => ({
+      value: String(cr.id),
+      label: cr.name || cr.description || `Caja #${cr.id}`,
+      selectable: partition.inBranch.includes(cr),
+      balanceLabel: typeof cr.current_balance === 'number' ? formatLocalizedCurrency(cr.current_balance, cr.currency) : null,
+      meta: cr.location || cr.branch_name || null
+    }))
+  }, [cashRegisters, sale?.branch_id, formatLocalizedCurrency])
 
-  const selectedRegister = useMemo(
-    () => cashRegisters.find(cr => String(cr.id) === String(cashRegisterId)),
-    [cashRegisters, cashRegisterId],
+  // Valor efectivo del select de caja, DERIVADO en render: la elección del
+  // operador, o el default (caja activa del operador si pertenece a la
+  // sucursal de la venta; si no, la primera abierta de esa sucursal).
+  // Derivarlo —y no setearlo por efecto— evita que el trigger de Radix quede
+  // en placeholder cuando los datos llegan después de montar el select.
+  const cashRegisterValue = useMemo(() => {
+    if (cashRegisterId) return cashRegisterId
+    const { inBranch } = partitionOpenRegisters(cashRegisters, sale?.branch_id ?? null)
+    const def = resolveDefaultRegisterId(inBranch, activeRegisterId || null) ?? inBranch[0]?.id ?? null
+    return def != null ? String(def) : ''
+  }, [cashRegisterId, cashRegisters, sale?.branch_id, activeRegisterId])
+
+  const selectedCashRegisterOption = useMemo(
+    () => cashRegisterOptions.find(o => o.value === cashRegisterValue) ?? null,
+    [cashRegisterOptions, cashRegisterValue],
+  )
+
+  const hasSelectableRegisters = useMemo(
+    () => cashRegisterOptions.some(o => o.selectable),
+    [cashRegisterOptions],
   )
 
   // Caja opcional (alineado con el checkout): sin caja el pago se registra
-  // igual; si la caja elegida está cerrada se advierte, y sin cajas cargadas
-  // se explica que el cobro irá sin caja vinculada.
+  // igual; si no hay cajas abiertas —o no hay en la sucursal de la venta— se
+  // explica qué pasa antes de intentar cobrar.
   const cashRegisterHint = useMemo(() => {
     if (isCashRegistersLoading) return ''
     if (cashRegisters.length === 0) {
-      return t('sales.registerPaymentModal.cashRegister.empty', 'No hay cajas registradoras disponibles. El cobro se registrará sin caja vinculada.')
+      return t('sales.registerPaymentModal.cashRegister.empty', 'No hay cajas registradoras abiertas disponibles. El cobro se registrará sin caja vinculada.')
     }
-    if (!cashRegisterId) {
+    if (!hasSelectableRegisters) {
+      return t('sales.registerPaymentModal.cashRegister.noBranchOpen', 'No hay cajas abiertas en la sucursal de esta venta. Abrí una caja en esa sucursal para vincularla al cobro.')
+    }
+    if (!cashRegisterValue) {
       return t('sales.registerPaymentModal.cashRegister.optionalHint', 'Sin caja seleccionada: el pago no quedará vinculado a una caja registradora.')
     }
-    if (selectedRegister && !selectedRegister.is_open) {
-      return t('sales.registerPaymentModal.cashRegister.closedWarning', 'La caja seleccionada está cerrada; el pago no afectará su balance hasta que se reabra.')
-    }
     return ''
-  }, [isCashRegistersLoading, cashRegisters.length, cashRegisterId, selectedRegister, t])
+  }, [isCashRegistersLoading, cashRegisters.length, hasSelectableRegisters, cashRegisterValue, t])
 
-  const isSubmitDisabled = !sale || isSubmitting || validationErrors.hasErrors || !amountReceived || !amountToApply || !paymentMethodId
+  const isSubmitDisabled = !sale || isSubmitting || validationErrors.hasErrors || !amountReceived || !amountToApply || !effectivePaymentMethodId
 
   const handleSubmit = async event => {
     event.preventDefault()
@@ -411,7 +439,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
 
     setSubmitting(true)
     try {
-      const selectedMethod = paymentMethods.find(m => String(m.id || m.payment_method_id) === String(paymentMethodId))
+      const selectedMethod = paymentMethods.find(m => String(m.id || m.payment_method_id) === String(effectivePaymentMethodId))
 
       await onSubmit({
         sales_order_id: sale.id || sale.sale_id,
@@ -420,13 +448,13 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
         // el backend).
         amount_received: Number(baseNumericReceived.toFixed(2)),
         amount_to_apply: Number(numericAmountToApply.toFixed(2)),
-        payment_method_id: Number(paymentMethodId),
+        payment_method_id: Number(effectivePaymentMethodId),
         payment_method_name: selectedMethod ? (selectedMethod.name || selectedMethod.description || 'CASH').toUpperCase() : 'CASH',
         // Metadatos del cobro en divisa (auditoría; el saldo se salda en base).
         currency_id: isForeign && selectedCurrency ? Number(selectedCurrency.id) : undefined,
         exchange_rate: isForeign ? rate : undefined,
         original_amount: isForeign ? Number(foreignReceived.toFixed(2)) : undefined,
-        cash_register_id: cashRegisterId ? Number(cashRegisterId) : undefined,
+        cash_register_id: cashRegisterValue ? Number(cashRegisterValue) : undefined,
         payment_notes: notes.trim() || null,
       })
       resetForm()
@@ -434,7 +462,9 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
     } catch (error: any) {
       const norm = toApiError(error)
       if (norm.code === 'CONFLICT') {
-        setFormError(t('sales.errors.cashRegisterRequired', 'Necesitás una caja abierta para cobrar. Abrí una caja e intentá de nuevo.'))
+        // El backend explica el rechazo concreto (caja requerida, branch
+        // mismatch, caja cerrada): su mensaje es más accionable que uno genérico.
+        setFormError(norm.message || t('sales.errors.cashRegisterRequired', 'Necesitás una caja abierta para cobrar. Abrí una caja e intentá de nuevo.'))
       } else {
         setFormError(error?.message || t('sales.registerPaymentModal.submitError', 'Error al registrar'))
       }
@@ -443,14 +473,9 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
     }
   }
 
-  const selectedCashRegisterOption = useMemo(
-    () => cashRegisterOptions.find(o => o.value === cashRegisterId) ?? null,
-    [cashRegisterOptions, cashRegisterId],
-  )
-
   const selectedMethodLabel = useMemo(
-    () => paymentMethodOptions.find(m => m.id === paymentMethodId)?.label ?? null,
-    [paymentMethodOptions, paymentMethodId],
+    () => paymentMethodOptions.find(m => m.id === effectivePaymentMethodId)?.label ?? null,
+    [paymentMethodOptions, effectivePaymentMethodId],
   )
 
   // Labels explícitos para el trigger del select: Radix solo porta el texto del
@@ -709,7 +734,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                 <div className='p-lg grid grid-cols-1 md:grid-cols-2 gap-lg'>
                   <div className='space-y-sm'>
                     <Label htmlFor='payment-method' className='text-label-caps uppercase text-muted-foreground'>{t('sales.registerPaymentModal.paymentMethod', 'Método de Pago')}</Label>
-                    <Select value={paymentMethodId} onValueChange={setPaymentMethodId}>
+                    <Select value={effectivePaymentMethodId} onValueChange={setPaymentMethodId}>
                       <SelectTrigger
                         id='payment-method'
                         className='rounded-input border-border-subtle bg-surface-muted text-body-md-bold data-[placeholder]:text-muted-foreground'
@@ -727,7 +752,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                   </div>
                   <div className='space-y-sm'>
                     <Label htmlFor='payment-cash-register' className='text-label-caps uppercase text-muted-foreground'>{t('sales.registerPaymentModal.cashRegister', 'Caja Operativa')}</Label>
-                    <Select value={cashRegisterId} onValueChange={setCashRegisterId}>
+                    <Select value={cashRegisterValue} onValueChange={setCashRegisterId}>
                       <SelectTrigger
                         id='payment-cash-register'
                         className='rounded-input border-border-subtle bg-surface-muted text-body-md-bold data-[placeholder]:text-muted-foreground'
@@ -738,11 +763,11 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                               <span className='truncate'>{selectedCashRegisterOption.label}</span>
                               <span className={cn(
                                 'shrink-0 text-body-sm-bold',
-                                selectedCashRegisterOption.isOpen ? 'text-success' : 'text-muted-foreground'
+                                selectedCashRegisterOption.selectable ? 'text-success' : 'text-muted-foreground'
                               )}>
-                                {selectedCashRegisterOption.isOpen
+                                {selectedCashRegisterOption.selectable
                                   ? t('sales.registerPaymentModal.cashRegister.open', 'Abierta')
-                                  : t('sales.registerPaymentModal.cashRegister.closed', 'Cerrada')}
+                                  : t('sales.registerPaymentModal.cashRegister.otherBranch', 'Otra sucursal')}
                               </span>
                             </span>
                           ) : null}
@@ -750,14 +775,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                       </SelectTrigger>
                       <SelectContent className='bg-surface border-border-subtle shadow-fluent-8 min-w-[300px]'>
                         {cashRegisterOptions.map(opt => (
-                          <SelectItem key={opt.value} value={opt.value} className='py-sm'>
+                          <SelectItem key={opt.value} value={opt.value} disabled={!opt.selectable} className='py-sm'>
                             <div className='flex flex-col gap-xs pr-6'>
                               <div className='flex items-center gap-sm'>
                                 <span className='text-body-md-bold text-foreground'>{opt.label}</span>
-                                <span className={cn('text-body-sm-bold', opt.isOpen ? 'text-success' : 'text-muted-foreground')}>
-                                  {opt.isOpen
+                                <span className={cn('text-body-sm-bold', opt.selectable ? 'text-success' : 'text-muted-foreground')}>
+                                  {opt.selectable
                                     ? t('sales.registerPaymentModal.cashRegister.open', 'Abierta')
-                                    : t('sales.registerPaymentModal.cashRegister.closed', 'Cerrada')}
+                                    : t('sales.registerPaymentModal.cashRegister.otherBranch', 'Otra sucursal')}
                                 </span>
                               </div>
                               {(opt.balanceLabel || opt.meta) && (
@@ -778,7 +803,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                     {cashRegisterHint && (
                       <p className={cn(
                         'flex items-start gap-xs text-label-caps uppercase mt-xs',
-                        cashRegisters.length === 0 ? 'text-warning' : 'text-muted-foreground'
+                        !hasSelectableRegisters ? 'text-warning' : 'text-muted-foreground'
                       )}>
                         <AlertCircle size={13} className='mt-[1px] shrink-0' />
                         <span>{cashRegisterHint}</span>
