@@ -28,6 +28,7 @@ import { receivables } from './receivables'
 import payables from './payables'
 import { fiscal } from './fiscal'
 import { businessPrefs } from './businessPrefs'
+import { shell } from './shell'
 
 /**
  * Diccionario completo de traducciones en español
@@ -58,5 +59,6 @@ export const es = {
   payables,
   ...fiscal,
   ...businessPrefs,
+  ...shell,
   ...other,
 }

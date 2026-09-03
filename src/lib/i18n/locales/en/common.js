@@ -80,6 +80,7 @@ export const common = {
   'common.total': 'Total',
   'common.subtotal': 'Subtotal',
   'common.user': 'User',
+  'common.notifications': 'Notifications',
   'common.normal': 'Normal',
 
   // Filters
