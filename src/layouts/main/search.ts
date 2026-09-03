@@ -88,11 +88,25 @@ export const buildSearchableItems = (
   return items.filter((item) => !isDegradableBI(item))
 }
 
+/**
+ * Haystack de búsqueda precomputado por item (nombre + sección, sin tildes).
+ * WeakMap: se calcula una vez por objeto item y se libera con el índice cuando
+ * la navegación cambia, en vez de renormalizar ~300 strings por tecla.
+ */
+const haystackCache = new WeakMap<SearchableItem, string>()
+
+const getHaystack = (item: SearchableItem): string => {
+  let haystack = haystackCache.get(item)
+  if (!haystack) {
+    haystack = `${normalizeText(item.name)} ${normalizeText(item.parent)}`
+    haystackCache.set(item, haystack)
+  }
+  return haystack
+}
+
 /** Filtra por término contra el nombre y la sección padre (sin tildes). */
 export const filterSearchResults = (items: SearchableItem[], term: string): SearchableItem[] => {
-  const normalized = normalizeText(term)
-  if (!normalized) return []
-  return items.filter(
-    (item) => normalizeText(item.name).includes(normalized) || normalizeText(item.parent).includes(normalized),
-  )
+  const needle = normalizeText(term)
+  if (!needle) return []
+  return items.filter((item) => getHaystack(item).includes(needle))
 }

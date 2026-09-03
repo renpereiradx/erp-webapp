@@ -72,7 +72,7 @@ export default function Header({
               onFocus={() => setIsOpen(true)}
             />
           </div>
-          {isOpen && term && (
+          {isOpen && term.length > 0 ? (
             <div className="absolute top-full left-0 right-0 mt-sm bg-surface rounded-md shadow-fluent-8 border border-border-subtle overflow-hidden z-[100] max-h-96 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="py-sm">
                 {results.map((item, index) => {
@@ -107,7 +107,7 @@ export default function Header({
                 })}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
