@@ -14,7 +14,6 @@ import {
   CheckCircle,
   Ban,
   Coins,
-  Calculator,
   DollarSign,
 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
@@ -380,33 +379,31 @@ const PurchasePaymentDetailPage = () => {
         {/* Right Column */}
         <div className='lg:col-span-4 space-y-lg'>
           {/* Totals Card */}
-          <section className='bg-inverse-surface text-on-primary rounded-md shadow-fluent-8 overflow-hidden relative'>
-            <div className='absolute top-0 right-0 p-lg opacity-10' aria-hidden='true'>
-              <Calculator size={110} />
-            </div>
-            <div className='px-lg py-md border-b border-on-primary/10 relative z-10'>
-              <h2 className='text-title-md uppercase text-on-primary/90'>
+          <section className='bg-surface rounded-md border border-border-subtle shadow-whisper overflow-hidden'>
+            <div className='bg-surface-muted border-b border-border-subtle p-lg'>
+              <h2 className='text-title-md text-foreground'>
                 {t('purchasePaymentsMvp.detail.summary.title', 'Resumen de la orden')}
               </h2>
             </div>
-            <div className='p-lg space-y-lg relative z-10'>
-              <div className='space-y-md'>
-                <div className='flex justify-between items-center'>
-                  <p className='text-label-caps uppercase text-on-primary/60'>{t('purchasePaymentsMvp.detail.summary.paid', 'Monto abonado')}</p>
-                  <p className='text-data-mono font-data-mono text-success'>{currencyFormatter.format(paidAmount)}</p>
+            <div className='p-lg space-y-md'>
+              <div className='flex justify-between items-center'>
+                <p className='text-label-caps uppercase text-muted-foreground'>{t('purchasePaymentsMvp.detail.summary.paid', 'Monto abonado')}</p>
+                <p className='text-data-mono font-data-mono text-success'>{currencyFormatter.format(paidAmount)}</p>
+              </div>
+              <div className='flex justify-between items-center'>
+                <p className='text-label-caps uppercase text-muted-foreground'>{t('purchasePaymentsMvp.detail.summary.pending', 'Saldo pendiente')}</p>
+                <p className='text-data-mono font-data-mono text-error'>{currencyFormatter.format(Number(balanceDue) || 0)}</p>
+              </div>
+              <div className='pt-md border-t border-border-subtle'>
+                <div className='flex justify-between text-label-caps uppercase text-muted-foreground mb-sm'>
+                  <span>{t('purchasePaymentsMvp.detail.summary.progress', 'Progreso del pago')}</span>
+                  <span className='font-data-mono text-foreground'>{paymentProgress}%</span>
                 </div>
-                <div className='flex justify-between items-center'>
-                  <p className='text-label-caps uppercase text-on-primary/60'>{t('purchasePaymentsMvp.detail.summary.pending', 'Saldo pendiente')}</p>
-                  <p className='text-data-mono font-data-mono text-primary'>{currencyFormatter.format(Number(balanceDue) || 0)}</p>
-                </div>
-                <div className='pt-lg border-t border-on-primary/20'>
-                  <div className='flex justify-between text-label-caps uppercase text-on-primary/60 mb-sm'>
-                    <span>{t('purchasePaymentsMvp.detail.summary.progress', 'Progreso del pago')}</span>
-                    <span className='font-data-mono'>{paymentProgress}%</span>
-                  </div>
-                  <div className='h-2 w-full bg-on-primary/10 rounded-full overflow-hidden'>
-                    <div className='h-full bg-primary transition-all duration-150' style={{ width: `${paymentProgress}%` }} />
-                  </div>
+                <div className='h-2 w-full bg-surface-muted rounded-full overflow-hidden'>
+                  <div
+                    className={`h-full transition-colors duration-150 ${paymentProgress >= 100 ? 'bg-success' : 'bg-primary'}`}
+                    style={{ width: `${paymentProgress}%` }}
+                  />
                 </div>
               </div>
             </div>
