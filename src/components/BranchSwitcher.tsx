@@ -3,12 +3,14 @@ import { Building2, ChevronDown, Globe, Check, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { branchService } from '@/features/branches/services/branchService';
 import { useBranch } from '@/contexts/BranchContext';
+import { useI18n } from '@/lib/i18n';
 
 const BranchSwitcher = () => {
   const { currentBranchId, allowedBranches, changeBranch, canViewGlobal } = useBranch();
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
-  
+
   // Cargar información de sucursales para mostrar nombres reales
   const { data: branchesResponse, isLoading } = useQuery({
     queryKey: ['branches-names'],
@@ -17,11 +19,11 @@ const BranchSwitcher = () => {
   });
 
   const branches = branchesResponse?.branches || [];
-  
+
   const getBranchName = (id: number | null) => {
-    if (!id) return 'Todas las Sucursales';
+    if (!id) return t('branches.all', 'Todas las Sucursales');
     const branch = branches.find((b: any) => b.id === id);
-    return branch ? branch.name : `Sucursal ${id}`;
+    return branch ? branch.name : t('branches.withId', 'Sucursal {{id}}', { id });
   };
 
   const activeBranchLabel = getBranchName(currentBranchId);
@@ -49,62 +51,64 @@ const BranchSwitcher = () => {
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-subtle bg-white shadow-sm hover:shadow-md transition-all duration-200 ${
+        aria-label={t('branches.select', 'Seleccionar Sucursal')}
+        aria-expanded={isOpen}
+        className={`flex items-center gap-xs px-sm py-xs rounded-button border border-border-subtle bg-surface shadow-whisper hover:shadow-fluent-8 transition-shadow duration-150 ${
           isOpen ? 'ring-2 ring-primary/20 border-primary/30' : ''
         }`}
       >
-        <div className={`p-1 rounded-md ${currentBranchId ? 'bg-primary/10 text-primary' : 'bg-amber-100 text-amber-600'}`}>
+        <div className={`p-xs rounded-sm ${currentBranchId ? 'bg-primary/10 text-primary' : 'bg-warning/10 text-warning'}`}>
           {currentBranchId ? <Building2 size={16} /> : <Globe size={16} />}
         </div>
-        <div className="flex flex-col items-start">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">
-            Sucursal Activa
+        <div className="flex flex-col items-start gap-xs">
+          <span className="text-label-caps uppercase text-on-surface-deep leading-none">
+            {t('branches.active', 'Sucursal Activa')}
           </span>
-          <span className="text-xs font-bold text-text-main leading-none">
+          <span className="text-body-sm-bold text-foreground leading-none">
             {activeBranchLabel}
           </span>
         </div>
-        <ChevronDown 
-          size={14} 
-          className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+        <ChevronDown
+          size={14}
+          className={`text-on-surface-deep transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-fluent-16 border border-border-subtle overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
-          <div className="p-3 border-b border-slate-50 bg-slate-50/50">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Seleccionar Sucursal
+        <div className="absolute top-full right-0 mt-sm w-64 bg-surface rounded-md shadow-fluent-8 border border-border-subtle overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
+          <div className="p-md border-b border-border-subtle bg-surface-muted">
+            <p className="text-label-caps uppercase text-on-surface-deep">
+              {t('branches.select', 'Seleccionar Sucursal')}
             </p>
           </div>
-          
-          <div className="p-1 max-h-64 overflow-y-auto custom-scrollbar">
+
+          <div className="p-xs max-h-64 overflow-y-auto custom-scrollbar">
             {/* Opción Global para Admin */}
             {canViewGlobal && (
               <button
                 onClick={() => { changeBranch(null); setIsOpen(false); }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                  currentBranchId === null 
-                    ? 'bg-amber-50 text-amber-700' 
-                    : 'text-text-secondary hover:bg-slate-50 hover:text-text-main'
+                className={`w-full flex items-center justify-between px-md py-sm rounded-sm text-body-md transition-colors duration-150 ${
+                  currentBranchId === null
+                    ? 'bg-warning/10 text-warning'
+                    : 'text-on-surface-deep hover:bg-surface-muted hover:text-foreground'
                 }`}
               >
-                <div className="flex flex-col items-start gap-0.5">
-                  <span className="flex items-center gap-2">
-                     <Globe size={12} className={currentBranchId === null ? 'text-amber-600' : 'text-slate-400'} />
-                     <span className="text-sm">Todas las Sucursales</span>
+                <div className="flex flex-col items-start gap-xs">
+                  <span className="flex items-center gap-xs">
+                     <Globe size={14} />
+                     <span className="text-body-md">{t('branches.all', 'Todas las Sucursales')}</span>
                   </span>
-                  <span className="text-[10px] text-slate-400 font-medium pl-5 uppercase">
-                    Acceso Administrativo (Sin Filtro)
+                  <span className="text-label-caps uppercase text-on-surface-deep pl-sm">
+                    {t('branches.globalAccess', 'Acceso Administrativo (Sin Filtro)')}
                   </span>
                 </div>
-                {currentBranchId === null && <Check size={14} />}
+                {currentBranchId === null && <Check size={16} />}
               </button>
             )}
 
             {/* Lista de Sucursales */}
             {isLoading ? (
-              <div className="flex justify-center p-4"><Loader2 size={16} className="animate-spin text-primary" /></div>
+              <div className="flex justify-center p-md"><Loader2 size={16} className="animate-spin text-primary" /></div>
             ) : (
               branchesToShow.map((branchId: number) => {
                 const branch = branches.find((b: any) => b.id === branchId);
@@ -112,31 +116,33 @@ const BranchSwitcher = () => {
                   <button
                     key={branchId}
                     onClick={() => { changeBranch(branchId); setIsOpen(false); }}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                      currentBranchId === branchId 
-                        ? 'bg-primary/5 text-primary' 
-                        : 'text-text-secondary hover:bg-slate-50 hover:text-text-main'
+                    className={`w-full flex items-center justify-between px-md py-sm rounded-sm text-body-md transition-colors duration-150 ${
+                      currentBranchId === branchId
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-on-surface-deep hover:bg-surface-muted hover:text-foreground'
                     }`}
                   >
-                    <div className="flex flex-col items-start gap-0.5">
-                      <span className="flex items-center gap-2">
-                         <Building2 size={12} className={currentBranchId === branchId ? 'text-primary' : 'text-slate-400'} />
-                         <span className="text-sm">{branch ? branch.name : `Sucursal ${branchId}`}</span>
+                    <div className="flex flex-col items-start gap-xs">
+                      <span className="flex items-center gap-xs">
+                         <Building2 size={14} />
+                         <span className="text-body-md">{branch ? branch.name : t('branches.withId', 'Sucursal {{id}}', { id: branchId })}</span>
                       </span>
-                      <span className="text-[10px] text-slate-400 font-medium pl-5 uppercase">
-                        {branch ? `${branch.branch_type || 'Punto de Venta'} • ${branch.city || 'Ubicación'}` : 'Sucursal de Operaciones'}
+                      <span className="text-label-caps uppercase text-on-surface-deep pl-sm">
+                        {branch
+                          ? `${branch.branch_type || t('branches.pointOfSale', 'Punto de Venta')} • ${branch.city || t('branches.location', 'Ubicación')}`
+                          : t('branches.operations', 'Sucursal de Operaciones')}
                       </span>
                     </div>
-                    {currentBranchId === branchId && <Check size={14} />}
+                    {currentBranchId === branchId && <Check size={16} />}
                   </button>
                 );
               })
             )}
           </div>
-          
-          <div className="p-2 border-t border-slate-50 bg-slate-50/30">
-            <p className="text-[9px] text-center text-slate-400 font-medium">
-              El cambio afecta a todos los módulos
+
+          <div className="p-sm border-t border-border-subtle bg-surface-muted">
+            <p className="text-label-caps text-center text-on-surface-deep">
+              {t('branches.globalNotice', 'El cambio afecta a todos los módulos')}
             </p>
           </div>
         </div>
