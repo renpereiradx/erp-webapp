@@ -408,9 +408,13 @@
 
   .radix-dialog__content {
     position: fixed;
-    left: 50%;
+    /* Centrado sobre el área de contenido, no sobre el viewport: MainLayout
+       expone --erp-content-inset (ancho del sidebar), igual que EnhancedModal.
+       El centro del área de contenido es 50% del viewport + la mitad del inset. */
+    left: calc(50% + var(--erp-content-inset, 0px) / 2);
     top: 50%;
     transform: translate(-50%, -50%);
+    transition: left 300ms ease-in-out;
     z-index: 100;
     max-height: 90vh;
     overflow: hidden;
