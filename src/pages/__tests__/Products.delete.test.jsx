@@ -26,51 +26,39 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => navigate,
 }));
 
-// Mock ProductFormModal: we trigger the deletion from here
-// In the real app, ProductFormModal calls deleteProduct from the store.
-// Here we simulate that behavior.
-vi.mock('@/components/ProductFormModal', () => ({
-  __esModule: true,
-  default: ({ isOpen, onClose, product }) => {
-    if (!isOpen) return null;
-    return (
-      <div data-testid="mock-product-form">
-        <button 
-          onClick={async () => {
-            // Simulate the deletion logic that would be in ProductFormModal
-            // In reality, it would call store.deleteProduct(product.id)
-            // and then handle telemetry/toast.
-            // But since we want to test if Products.jsx handles it, 
-            // we just call onClose and assume the store was called.
-            
-            // Actually, the old test verified that deleteProduct was called.
-            // So we'll call it here from the mock.
-            const store = (await import('@/store/useProductStore')).default;
-            // Get the current state
-            const state = typeof store === 'function' ? store() : store.getState?.() || {};
-            await state.deleteProduct(product.product_id || product.id);
-            
-            // Record telemetry as if it happened in store (or component)
-            const { telemetry } = await import('@/utils/telemetry');
-            telemetry.record('products.delete.success', { id: product.product_id || product.id });
-            
-            // Show toast
-            const { useToast } = await import('@/hooks/useToast');
-            // This is a bit tricky since useToast is a hook, but we are in a component mock
-            // Let's just assume the real ProductFormModal does it.
-            
-            onClose();
-          }} 
-          data-testid="delete-btn"
-        >
-          DELETE_PRODUCT
-        </button>
-      </div>
-    );
-  }
-}));
+// Barrel real de la feature con ProductFormModal stub funcional (desde él se
+// dispara la baja) y ProductDetailsModal stub (llama useAuth en render).
+vi.mock('@/features/products', async (importOriginal) => {
+  const mod = await importOriginal();
+  return {
+    ...mod,
+    ProductDetailsModal: () => null,
+    ProductFormModal: ({ isOpen, onClose, product }) => {
+      if (!isOpen) return null;
+      return (
+        <div data-testid="mock-product-form">
+          <button
+            onClick={async () => {
+              // Simula lo que hace el ProductFormModal real: llama al store,
+              // registra telemetría y cierra el modal.
+              const store = (await import('@/store/useProductStore')).default;
+              const state = typeof store === 'function' ? store() : store.getState?.() || {};
+              await state.deleteProduct(product.product_id || product.id);
 
-vi.mock('@/components/ProductDetailsModal', () => ({ default: () => null }));
+              const { telemetry } = await import('@/utils/telemetry');
+              telemetry.record('products.delete.success', { id: product.product_id || product.id });
+
+              onClose();
+            }}
+            data-testid="delete-btn"
+          >
+            DELETE_PRODUCT
+          </button>
+        </div>
+      );
+    },
+  };
+});
 
 // Mock del store de productos
 const deleteProduct = vi.fn(async () => true);

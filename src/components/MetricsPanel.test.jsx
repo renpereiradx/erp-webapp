@@ -21,11 +21,12 @@ vi.mock('@/store/useProductStore', () => {
 describe('MetricsPanel', () => {
   test('renders cache stats and circuit info', () => {
     render(<MetricsPanel />);
-    expect(screen.getByText(/Hits/i)).toBeInTheDocument();
-    // match label + value allowing whitespace/newlines
-    expect(screen.getByText(/cache hits\s*:\s*5/i)).toBeInTheDocument();
-    expect(screen.getByText(/cache misses\s*:\s*3/i)).toBeInTheDocument();
-    expect(screen.getByText(/Failures/i)).toBeInTheDocument();
-    expect(screen.getByText(/failures\s*:\s*2/i)).toBeInTheDocument();
+    // Label y valor viven en nodos separados (label : <span>valor</span>):
+    // se aserta sobre la fila contenedora, no sobre un único nodo de texto.
+    expect(screen.getByText(/hits/i)).toBeInTheDocument();
+    expect(screen.getByText(/cache hits/i).parentElement).toHaveTextContent('5');
+    expect(screen.getByText(/cache misses/i).parentElement).toHaveTextContent('3');
+    expect(screen.getByText(/failures/i).parentElement).toHaveTextContent('2');
+    expect(screen.getByText(/closed/i)).toBeInTheDocument();
   });
 });

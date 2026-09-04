@@ -12,7 +12,10 @@ describe('GenericSkeletonList', () => {
 
   test('renders custom count items', () => {
     render(<GenericSkeletonList count={3} />);
-    const items = screen.getAllByTestId(/generic-skeleton-/);
+    // Por rol a11y (listitem); el testid del contenedor 'generic-skeleton-list'
+    // también matchea un regex /^generic-skeleton-/ sin anclar.
+    const items = screen.getAllByRole('listitem');
     expect(items.length).toBe(3);
+    expect(screen.getAllByTestId(/^generic-skeleton-\d+$/)).toHaveLength(3);
   });
 });
