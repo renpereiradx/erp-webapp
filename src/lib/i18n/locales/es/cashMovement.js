@@ -111,4 +111,40 @@ export const cashMovement = {
   'cashMovement.error.noCashRegister': 'Debe seleccionar una caja registradora',
   'cashMovement.error.noConcept': 'Debe seleccionar un concepto',
   'cashMovement.error.invalidAmount': 'El monto debe ser mayor a 0',
+
+  // Página de movimientos (/movimientos-caja)
+  'cashMovement.page.loadingRegister': 'Cargando movimientos...',
+  'cashMovement.page.filter': 'Filtros',
+  'cashMovement.page.register': 'Registrar movimiento',
+  'cashMovement.page.allTypesPlaceholder': 'Todos los tipos',
+  'cashMovement.page.applyFilters': 'Aplicar filtros',
+
+  // Tabla de movimientos
+  'cashMovement.table.dateTime': 'Fecha y Hora',
+  'cashMovement.table.voided': 'Anulado: {reason}',
+  'cashMovement.table.voidAction': 'Anular Movimiento',
+  'cashMovement.user.system': 'Sistema',
+
+  // Estados vacíos de la tabla
+  'cashMovement.empty.title': 'Sin resultados',
+  'cashMovement.empty.description':
+    'No se encontraron movimientos registrados con los filtros actuales.',
+  'cashMovement.empty.seeAll': 'Ver todos los movimientos',
+
+  // Modal de registro manual
+  'cashMovement.modal.registerTitle': 'Registrar movimiento manual',
+  'cashMovement.modal.registerDescription':
+    'Agregue fondos o registre egresos directamente en la caja.',
+  'cashMovement.field.conceptRequired': 'Concepto de operación',
+  'cashMovement.field.amountPYG': 'Monto (₲)',
+  'cashMovement.field.additionalNotes': 'Notas adicionales',
+  'cashMovement.placeholder.concept': 'Seleccione un motivo...',
+
+  // Modal de anulación
+  'cashMovement.void.dialogDescription':
+    'Esta acción es irreversible y revertirá el saldo.',
+  'cashMovement.void.reasonLabel': 'Motivo de la anulación',
+  'cashMovement.void.reasonHint': 'Se requieren al menos 5 caracteres.',
+  'cashMovement.void.reasonPlaceholder': 'Ej: Error de tipeo, devolución...',
+  'cashMovement.void.confirmAction': 'Confirmar anulación',
 }

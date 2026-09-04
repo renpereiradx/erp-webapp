@@ -1,3 +1,9 @@
+/**
+ * Validation rules for cash-register forms.
+ * Returns i18n message KEYS (never user-facing text); the UI resolves
+ * them via t(key, fallback).
+ */
+
 export function isValidInitialBalance(balance: number): boolean {
   return !isNaN(balance) && balance >= 0;
 }
@@ -7,18 +13,18 @@ export function isValidMovementAmount(amount: number): boolean {
 }
 
 export function validateOpenForm(name: string, initialBalance: number): string | null {
-  if (!name.trim()) return 'El nombre de la caja es requerido';
-  if (!isValidInitialBalance(initialBalance)) return 'El fondo inicial no es válido';
+  if (!name.trim()) return 'cashRegister.error.noName';
+  if (!isValidInitialBalance(initialBalance)) return 'cashRegister.error.invalidBalance';
   return null;
 }
 
 export function validateCloseForm(finalBalance: number): string | null {
-  if (isNaN(finalBalance) || finalBalance < 0) return 'El saldo ingresado no es válido';
+  if (isNaN(finalBalance) || finalBalance < 0) return 'cashRegister.error.invalidFinalBalance';
   return null;
 }
 
 export function validateMovementForm(amount: number, concept: string): string | null {
-  if (!isValidMovementAmount(amount)) return 'El monto no es válido';
-  if (!concept.trim()) return 'El concepto es requerido';
+  if (!isValidMovementAmount(amount)) return 'cashMovement.error.invalidAmount';
+  if (!concept.trim()) return 'cashMovement.error.noConcept';
   return null;
 }
