@@ -49,6 +49,7 @@ export function UsersTable({
         <TableRow className="bg-surface-muted hover:bg-surface-muted border-0">
           <TableHead className="w-12 px-md text-center">
             <Checkbox
+              className="shrink-0"
               aria-label={t('users.selectAll', 'Seleccionar todos')}
               checked={allSelected}
               onCheckedChange={(checked) => onSelectAll(checked === true)}
@@ -71,6 +72,7 @@ export function UsersTable({
             >
               <TableCell className="px-md text-center">
                 <Checkbox
+                  className="shrink-0"
                   aria-label={t('users.selectRow', 'Seleccionar usuario')}
                   checked={isSelected}
                   onCheckedChange={() => onToggleSelect(user.id)}
