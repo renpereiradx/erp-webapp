@@ -1,11 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { Brand } from '../types/brand';
+import { useEffect, useState } from 'react'
+import { Image, Info, Trash2, X } from 'lucide-react'
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useI18n } from '@/lib/i18n'
+import { slugify } from '@/domain/shared/slugify'
+
+import type { Brand } from '../types/brand'
 
 interface BrandDetailFormProps {
-  brand: Brand | { id: 'new' } | null;
-  onSave: (data: Partial<Brand>) => void;
-  onCancel: () => void;
-  onDelete: (id: string) => void;
+  brand: Brand | { id: 'new' } | null
+  onSave: (data: Partial<Brand>) => void
+  onCancel: () => void
+  onDelete: (id: string) => void
 }
 
 export const BrandDetailForm: React.FC<BrandDetailFormProps> = ({
@@ -14,7 +32,9 @@ export const BrandDetailForm: React.FC<BrandDetailFormProps> = ({
   onCancel,
   onDelete,
 }) => {
-  const [formData, setFormData] = useState<Partial<Brand>>({});
+  const { t } = useI18n()
+  const [formData, setFormData] = useState<Partial<Brand>>({})
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
     if (brand) {
@@ -25,150 +45,166 @@ export const BrandDetailForm: React.FC<BrandDetailFormProps> = ({
           description: '',
           logoUrl: '',
           isActive: true,
-        });
+        })
       } else {
-        setFormData(brand as Brand);
+        setFormData(brand as Brand)
       }
     }
-  }, [brand]);
+  }, [brand])
 
-  if (!brand) return null;
+  if (!brand) return null
 
-  const isNew = brand.id === 'new';
+  const isNew = brand.id === 'new'
 
   const handleChange = (field: keyof Brand, value: string | boolean) => {
     setFormData((prev) => {
-      const next = { ...prev, [field]: value };
+      const next = { ...prev, [field]: value }
       if (field === 'name' && isNew) {
-        // Auto-generate slug for new brands
-        next.slug = (value as string)
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/(^-|-$)+/g, '');
+        // Auto-genera el slug solo en marcas nuevas
+        next.slug = slugify(String(value))
       }
-      return next;
-    });
-  };
+      return next
+    })
+  }
 
   const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
+    e.preventDefault()
+    onSave(formData)
+  }
 
   return (
-    <section className="w-full h-full bg-background rounded-[16px] shadow-sm border border-divider/30 flex flex-col shrink-0 overflow-hidden">
-      <div className="p-lg border-b border-divider/20 flex justify-between items-center bg-surface rounded-t-[16px]">
-        <h3 className="font-title-md text-title-md font-bold text-foreground">Ficha de Marca</h3>
-        <button type="button" onClick={onCancel} className="text-on-surface-deep hover:text-foreground hover:bg-surface-muted p-1 rounded transition-colors">
-          <span className="material-symbols-outlined">close</span>
-        </button>
+    <section className="w-full bg-surface rounded-md shadow-whisper border-0 flex flex-col overflow-hidden">
+      <div className="p-lg border-b border-border-subtle flex justify-between items-center">
+        <h3 className="text-title-md text-foreground">{t('brands.form.title')}</h3>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onCancel}
+          aria-label={t('common.close')}
+        >
+          <X className="w-5 h-5" />
+        </Button>
       </div>
-      
-      <div className="p-lg flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-lg">
-        {/* Cover / Logo Area */}
-        <div className="flex flex-col items-center mb-sm">
-          <div className="w-20 h-20 rounded-xl bg-surface-subtle border border-divider flex items-center justify-center mb-sm shadow-sm relative group overflow-hidden cursor-pointer">
+
+      <div className="p-lg flex-1 flex flex-col gap-lg">
+        {/* Logo */}
+        <div className="flex flex-col items-center">
+          <div className="w-20 h-20 rounded-md bg-surface-subtle border border-border-subtle flex items-center justify-center mb-sm overflow-hidden">
             {formData.logoUrl ? (
-               <img src={formData.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+              <img src={formData.logoUrl} alt={t('brands.logo_alt')} className="w-full h-full object-cover" />
             ) : (
-               <span className="material-symbols-outlined text-[32px] text-on-surface-deep group-hover:opacity-0 transition-opacity">
-                 {formData.icon || 'public'}
-               </span>
+              <Image className="w-8 h-8 text-on-surface-deep" />
             )}
-            <div className="absolute inset-0 bg-surface-deep/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="material-symbols-outlined text-primary text-[20px]">upload</span>
-              <span className="font-label-caps text-[10px] text-primary mt-1">Subir</span>
-            </div>
           </div>
-          <span className="font-body-md-bold text-body-md-bold text-foreground">
-            {formData.name || 'Sin nombre'}
+          <span className="text-body-md-bold text-foreground">
+            {formData.name || t('brands.form.no_name')}
           </span>
-          {!isNew && (
-            <span className="font-data-mono text-[12px] text-on-surface-deep">ID: {brand.id}</span>
-          )}
+          {!isNew ? (
+            <span className="text-data-mono font-data-mono text-body-sm text-on-surface-deep">
+              ID: {brand.id}
+            </span>
+          ) : null}
         </div>
 
-        {/* Form Fields */}
+        {/* Campos */}
         <form id="brand-form" className="flex flex-col gap-md" onSubmit={handleSave}>
-          <div className="flex flex-col gap-xs">
-            <label className="font-body-md-bold text-body-md-bold text-foreground">
-              Nombre de la Marca <span className="text-error">*</span>
-            </label>
-            <input
+          <div className="space-y-xs">
+            <Label htmlFor="brand-name" className="text-body-md-bold text-foreground">
+              {t('brands.form.name')} <span className="text-error">*</span>
+            </Label>
+            <Input
+              id="brand-name"
               required
-              className="w-full px-3 py-2 bg-surface border border-divider rounded-xl font-body-md text-body-md text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-              placeholder="Ej. Global Tech"
+              className="bg-surface"
+              placeholder={t('brands.form.name_placeholder')}
               type="text"
               value={formData.name || ''}
               onChange={(e) => handleChange('name', e.target.value)}
             />
           </div>
-          
-          <div className="flex flex-col gap-xs">
-            <label className="font-body-md-bold text-body-md-bold text-foreground flex items-center">
-              Slug 
-              <span className="material-symbols-outlined text-[14px] text-on-surface-deep ml-1 cursor-help" title="Identificador único para URLs">info</span>
-            </label>
-            <input
-              className={`w-full px-3 py-2 border border-divider rounded-xl font-data-mono text-data-mono focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${!isNew ? 'bg-surface-muted cursor-not-allowed text-on-surface-deep' : 'bg-surface text-foreground'}`}
+
+          <div className="space-y-xs">
+            <Label htmlFor="brand-slug" className="text-body-md-bold text-foreground flex items-center">
+              {t('brands.form.slug')}
+              <span className="ml-xs cursor-help" title={t('brands.form.slug_hint')}>
+                <Info className="w-3.5 h-3.5 text-on-surface-deep" />
+              </span>
+            </Label>
+            <Input
+              id="brand-slug"
+              className={`text-data-mono font-data-mono ${!isNew ? 'bg-surface-muted text-on-surface-deep' : 'bg-surface'}`}
               disabled={!isNew}
               type="text"
               value={formData.slug || ''}
               onChange={(e) => handleChange('slug', e.target.value)}
             />
           </div>
-          
-          <div className="flex flex-col gap-xs">
-            <label className="font-body-md-bold text-body-md-bold text-foreground">Logo URL</label>
-            <div className="relative">
-              <input
-                className="w-full pl-3 pr-10 py-2 bg-surface border border-divider rounded-xl font-data-mono text-data-mono text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                type="text"
-                placeholder="https://"
-                value={formData.logoUrl || ''}
-                onChange={(e) => handleChange('logoUrl', e.target.value)}
-              />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-on-surface-deep hover:text-primary transition-colors" type="button">
-                <span className="material-symbols-outlined text-[18px]">upload_file</span>
-              </button>
-            </div>
+
+          <div className="space-y-xs">
+            <Label htmlFor="brand-logo" className="text-body-md-bold text-foreground">
+              {t('brands.form.logo_url')}
+            </Label>
+            <Input
+              id="brand-logo"
+              className="text-data-mono font-data-mono"
+              type="text"
+              placeholder="https://"
+              value={formData.logoUrl || ''}
+              onChange={(e) => handleChange('logoUrl', e.target.value)}
+            />
           </div>
         </form>
       </div>
-      <div className="flex items-center justify-between p-4 sm:p-lg border-t border-divider/30 mt-auto bg-background rounded-b-[16px] shrink-0">
+
+      <div className="flex items-center justify-between p-lg border-t border-border-subtle">
         {!isNew ? (
-          <button
+          <Button
             type="button"
-            onClick={() => {
-              if (window.confirm('¿Está seguro de que desea eliminar esta marca?')) {
-                onDelete(String(brand.id));
-              }
-            }}
-            className="text-error hover:bg-error/10 p-2 rounded-lg transition-colors flex items-center justify-center"
-            title="Eliminar marca"
+            variant="ghost"
+            className="text-error hover:text-error"
+            onClick={() => setIsDeleteDialogOpen(true)}
           >
-            <span className="material-symbols-outlined text-[24px]">delete</span>
-          </button>
+            <Trash2 className="w-4 h-4 mr-xs" />
+            {t('brands.form.delete')}
+          </Button>
         ) : (
-          <div /> // Espaciador para mantener alineación
+          <div />
         )}
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="btn-tertiary px-4 py-2 rounded-lg text-body-md font-bold transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            form="brand-form"
-            className="btn-primary px-4 py-2 rounded-lg text-body-md shadow-sm hover:shadow-md transition-all"
-          >
-            Guardar
-          </button>
+        <div className="flex items-center gap-sm">
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            {t('common.cancel')}
+          </Button>
+          <Button type="submit" variant="primary" form="brand-form">
+            {t('common.save')}
+          </Button>
         </div>
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('brands.delete.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('brands.delete.description', { name: formData.name ?? '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-error hover:bg-error/90 text-on-error"
+              onClick={() => {
+                setIsDeleteDialogOpen(false)
+                onDelete(String(brand.id))
+              }}
+            >
+              {t('brands.delete.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
-  );
-};
+  )
+}
+
+export default BrandDetailForm

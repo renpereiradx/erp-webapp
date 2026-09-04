@@ -6,6 +6,8 @@
 import { common } from './common'
 import { products } from './products'
 import { categories } from './categories'
+import { brands } from './brands'
+import { attributes } from './attributes'
 import { purchases } from './purchases'
 import { priceAdjustments } from './priceAdjustments'
 import { productAdjustments } from './productAdjustments'
@@ -39,6 +41,8 @@ export const es = {
   ...common,
   ...products,
   ...categories,
+  ...brands,
+  ...attributes,
   ...purchases,
   ...priceAdjustments,
   ...productAdjustments,

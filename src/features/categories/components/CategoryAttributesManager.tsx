@@ -1,61 +1,102 @@
-import { useState, useEffect } from 'react';
-import { attributeService } from '@/services/attributeService';
-import { useToast } from '@/hooks/useToast';
-import { Layers, Plus, Trash2, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react'
+import { Layers, Loader2, Plus, Trash2 } from 'lucide-react'
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
+import GenericSkeletonList from '@/components/ui/GenericSkeletonList'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useI18n } from '@/lib/i18n'
+import { useToast } from '@/hooks/useToast'
+import { attributeService } from '@/services/attributeService'
+import { codify } from '@/domain/shared/slugify'
 
 interface CategoryAttributesManagerProps {
-  categoryId: number;
+  categoryId: number
 }
 
+const DATA_TYPES = ['STRING', 'NUMBER', 'BOOLEAN', 'DATE', 'LIST', 'MULTI_SELECT'] as const
+const OPTION_TYPES: string[] = ['LIST', 'MULTI_SELECT']
+
 export function CategoryAttributesManager({ categoryId }: CategoryAttributesManagerProps) {
-  const toast = useToast();
-  const [attributes, setAttributes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  
+  const { t } = useI18n()
+  const toast = useToast()
+  const [attributes, setAttributes] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isCreating, setIsCreating] = useState(false)
+  const [attributeToDelete, setAttributeToDelete] = useState<any | null>(null)
+
   // Form state
-  const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const [dataType, setDataType] = useState('STRING');
-  const [optionsStr, setOptionsStr] = useState('');
-  const [isVariant, setIsVariant] = useState(false);
+  const [name, setName] = useState('')
+  const [code, setCode] = useState('')
+  const [dataType, setDataType] = useState<string>('STRING')
+  const [optionsStr, setOptionsStr] = useState('')
+  const [isVariant, setIsVariant] = useState(false)
 
   const loadAttributes = async (ignore = false) => {
     try {
-      const res = await attributeService.getCategoryAttributes(categoryId);
+      const res = await attributeService.getCategoryAttributes(categoryId)
       if (!ignore) {
-        setAttributes(Array.isArray(res) ? res : (res?.data || []));
+        setAttributes(Array.isArray(res) ? res : res?.data || [])
       }
     } catch (error) {
-      if (!ignore) toast.error('Error al cargar los atributos de la categoría');
+      if (!ignore) toast.error(t('categories.attributesPanel.toast.load_error'))
     } finally {
-      if (!ignore) setLoading(false);
+      if (!ignore) setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    let ignore = false;
-    loadAttributes(ignore);
-    return () => { ignore = true; };
-  }, [categoryId]);
+    let ignore = false
+    loadAttributes(ignore)
+    return () => {
+      ignore = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryId])
+
+  const handleNameChange = (value: string) => {
+    setName(value)
+    // Auto-genera el código mientras no se haya editado manualmente.
+    if (!code || code === codify(name).slice(0, -1)) {
+      setCode(codify(value))
+    }
+  }
 
   const handleCreate = async () => {
     if (!name.trim() || !code.trim()) {
-      toast.error('Nombre y código son requeridos');
-      return;
+      toast.error(t('categories.attributesPanel.toast.name_code_required'))
+      return
     }
 
-    let options: string[] = [];
-    if (dataType === 'LIST' || dataType === 'MULTI_SELECT') {
-      options = optionsStr.split(',').map(s => s.trim()).filter(Boolean);
+    let options: string[] = []
+    if (OPTION_TYPES.includes(dataType)) {
+      options = optionsStr.split(',').map((s) => s.trim()).filter(Boolean)
       if (options.length === 0) {
-        toast.error('Debe proveer opciones separadas por coma');
-        return;
+        toast.error(t('categories.attributesPanel.toast.options_required'))
+        return
       }
     }
 
-    setIsCreating(true);
+    setIsCreating(true)
     try {
       await attributeService.createDefinition({
         category_id: categoryId,
@@ -66,152 +107,199 @@ export function CategoryAttributesManager({ categoryId }: CategoryAttributesMana
         is_filterable: true,
         is_visible: true,
         is_variant: isVariant,
-      });
-      toast.success('Atributo creado exitosamente');
-      setName('');
-      setCode('');
-      setOptionsStr('');
-      setDataType('STRING');
-      setIsVariant(false);
-      await loadAttributes();
+      })
+      toast.success(t('categories.attributesPanel.toast.created'))
+      setName('')
+      setCode('')
+      setOptionsStr('')
+      setDataType('STRING')
+      setIsVariant(false)
+      await loadAttributes()
     } catch (error: any) {
-      toast.error(error?.message || 'Error al crear atributo');
+      toast.error(error?.message || t('categories.attributesPanel.toast.create_error'))
     } finally {
-      setIsCreating(false);
+      setIsCreating(false)
     }
-  };
+  }
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('¿Está seguro de eliminar este atributo? Afectará a todos los productos de esta categoría.')) return;
+  const handleDelete = async () => {
+    if (!attributeToDelete) return
     try {
-      await attributeService.deleteDefinition(id);
-      toast.success('Atributo eliminado');
-      await loadAttributes();
+      await attributeService.deleteDefinition(attributeToDelete.id)
+      toast.success(t('categories.attributesPanel.toast.deleted'))
+      await loadAttributes()
     } catch (error: any) {
-      toast.error(error?.message || 'Error al eliminar atributo');
+      toast.error(error?.message || t('categories.attributesPanel.toast.delete_error'))
+    } finally {
+      setAttributeToDelete(null)
     }
-  };
+  }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8 bg-slate-50 border border-border-subtle rounded-xl border-dashed">
-        <Loader2 className="animate-spin text-primary mr-2" size={20} />
-        <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Cargando Atributos...</span>
-      </div>
-    );
+    return <GenericSkeletonList count={2} data-testid="category-attributes-loading" />
   }
 
   return (
-    <div className="space-y-4">
-      {/* List of existing attributes */}
-      <div className="space-y-2">
+    <div className="space-y-md">
+      {/* Atributos existentes */}
+      <div className="space-y-sm">
         {attributes.length === 0 ? (
-          <div className="p-4 bg-slate-50 border border-slate-200 border-dashed rounded-xl flex items-center justify-center text-xs text-slate-400 font-medium">
-            No hay atributos definidos para esta categoría
+          <div className="p-md bg-surface-muted border border-border-subtle border-dashed rounded-md flex items-center justify-center text-body-sm text-on-surface-deep">
+            {t('categories.attributesPanel.empty')}
           </div>
         ) : (
-          <div className="grid gap-2">
-            {attributes.map(attr => (
-              <div key={attr.id} className="flex flex-col p-3 bg-white border border-border-subtle rounded-xl shadow-sm">
+          <div className="grid gap-sm">
+            {attributes.map((attr) => (
+              <div
+                key={attr.id}
+                className="flex flex-col p-sm bg-surface border border-border-subtle rounded-md shadow-whisper"
+              >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-black text-text-main uppercase tracking-wider">{attr.name}</span>
-                    <span className="ml-2 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded uppercase">{attr.data_type}</span>
-                    {(attr.is_variant || attr.isVariant) && (
-                      <span className="ml-2 text-[10px] font-bold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded uppercase">Variante</span>
-                    )}
+                  <div className="flex items-center gap-sm flex-wrap">
+                    <span className="text-body-md-bold text-foreground">{attr.name}</span>
+                    <Badge variant="secondary">{attr.data_type}</Badge>
+                    {(attr.is_variant || attr.isVariant) ? (
+                      <Badge variant="info">{t('categories.attributesPanel.variant')}</Badge>
+                    ) : null}
                   </div>
-                  <button 
-                    type="button" 
-                    onClick={() => handleDelete(attr.id)}
-                    className="text-slate-400 hover:text-error transition-colors p-1"
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setAttributeToDelete(attr)}
+                    aria-label={t('categories.attributesPanel.delete.title')}
                   >
-                    <Trash2 size={14} />
-                  </button>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
-                <div className="text-[10px] font-bold text-text-secondary font-mono mt-1">Code: {attr.code}</div>
-                {attr.options && attr.options.length > 0 && (
-                  <div className="text-[10px] font-medium text-slate-500 mt-1">
-                    Opciones: {attr.options.join(', ')}
+                <div className="text-data-mono font-data-mono text-on-surface-deep mt-xs">
+                  {t('categories.attributesPanel.code_label')} {attr.code}
+                </div>
+                {attr.options && attr.options.length > 0 ? (
+                  <div className="text-body-sm text-on-surface-deep mt-xs">
+                    {t('categories.attributesPanel.options_label')} {attr.options.join(', ')}
                   </div>
-                )}
+                ) : null}
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Inline Form to Create New Attribute */}
-      <div className="p-4 bg-slate-50 rounded-xl border border-border-subtle space-y-3">
-        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-main flex items-center gap-1.5">
-          <Layers size={14} className="text-primary" />
-          Nuevo Atributo
+      {/* Formulario inline de nuevo atributo */}
+      <div className="p-md bg-surface-muted rounded-md border border-border-subtle space-y-md">
+        <h4 className="text-label-caps uppercase text-foreground flex items-center gap-xs">
+          <Layers className="w-4 h-4 text-primary" />
+          {t('categories.attributesPanel.new_title')}
         </h4>
-        <div className="grid grid-cols-2 gap-3">
-          <input 
-            value={name} 
-            onChange={e => {
-              setName(e.target.value);
-              // auto generate code
-              if (!code || code === name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, -1)) {
-                setCode(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '_'));
-              }
-            }}
-            placeholder="Nombre (ej. Talla)" 
-            className="w-full h-9 px-3 bg-white border border-border-subtle rounded-lg text-xs font-bold outline-none focus:border-primary"
-          />
-          <input 
-            value={code} 
-            onChange={e => setCode(e.target.value)}
-            placeholder="Código (ej. talla)" 
-            className="w-full h-9 px-3 bg-white border border-border-subtle rounded-lg text-xs font-mono outline-none focus:border-primary"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <select 
-            value={dataType} 
-            onChange={e => setDataType(e.target.value)}
-            className="w-full h-9 px-3 bg-white border border-border-subtle rounded-lg text-xs font-bold outline-none focus:border-primary"
-          >
-            <option value="STRING">Texto Corto (String)</option>
-            <option value="NUMBER">Número</option>
-            <option value="BOOLEAN">Si/No (Booleano)</option>
-            <option value="DATE">Fecha</option>
-            <option value="LIST">Lista (Una opción)</option>
-            <option value="MULTI_SELECT">Multi Selección</option>
-          </select>
-          
-          {(dataType === 'LIST' || dataType === 'MULTI_SELECT') && (
-            <input 
-              value={optionsStr} 
-              onChange={e => setOptionsStr(e.target.value)}
-              placeholder="Opciones (ej. S, M, L)" 
-              className="w-full h-9 px-3 bg-white border border-border-subtle rounded-lg text-xs font-bold outline-none focus:border-primary"
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
+          <div className="space-y-xs">
+            <Label htmlFor={`attr-name-${categoryId}`} className="text-body-sm-bold text-foreground">
+              {t('attributes.editor.name')}
+            </Label>
+            <Input
+              id={`attr-name-${categoryId}`}
+              value={name}
+              onChange={(e) => handleNameChange(e.target.value)}
+              placeholder={t('categories.attributesPanel.name_placeholder')}
             />
-          )}
+          </div>
+          <div className="space-y-xs">
+            <Label htmlFor={`attr-code-${categoryId}`} className="text-body-sm-bold text-foreground">
+              {t('attributes.editor.code')}
+            </Label>
+            <Input
+              id={`attr-code-${categoryId}`}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder={t('categories.attributesPanel.code_placeholder')}
+              className="text-data-mono font-data-mono"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-2 py-1">
-          <input 
-            type="checkbox" 
-            id="isVariant" 
-            checked={isVariant} 
-            onChange={e => setIsVariant(e.target.checked)} 
-            className="w-4 h-4 text-primary border-border-subtle rounded focus:ring-primary"
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
+          <div className="space-y-xs">
+            <Label htmlFor={`attr-type-${categoryId}`} className="text-body-sm-bold text-foreground">
+              {t('attributes.editor.type')}
+            </Label>
+            <Select value={dataType} onValueChange={setDataType}>
+              <SelectTrigger id={`attr-type-${categoryId}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DATA_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {t(`categories.attributesPanel.data_type.${type}`, type)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {OPTION_TYPES.includes(dataType) ? (
+            <div className="space-y-xs">
+              <Label htmlFor={`attr-options-${categoryId}`} className="text-body-sm-bold text-foreground">
+                {t('categories.attributesPanel.options_label')}
+              </Label>
+              <Input
+                id={`attr-options-${categoryId}`}
+                value={optionsStr}
+                onChange={(e) => setOptionsStr(e.target.value)}
+                placeholder={t('categories.attributesPanel.options_placeholder')}
+              />
+            </div>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-sm">
+          <Checkbox
+            id={`attr-variant-${categoryId}`}
+            checked={isVariant}
+            onCheckedChange={(checked) => setIsVariant(checked === true)}
           />
-          <label htmlFor="isVariant" className="text-xs font-bold text-text-secondary select-none cursor-pointer">
-            Usar para generar variantes (ej. Talla, Color)
-          </label>
+          <Label
+            htmlFor={`attr-variant-${categoryId}`}
+            className="text-body-sm text-on-surface-deep select-none cursor-pointer font-normal"
+          >
+            {t('categories.attributesPanel.variant_hint')}
+          </Label>
         </div>
-        <Button 
-          type="button" 
+        <Button
+          type="button"
+          variant="primary"
           onClick={handleCreate}
           disabled={isCreating}
-          className="w-full bg-slate-800 hover:bg-slate-900 text-white font-black uppercase text-[10px] tracking-widest h-9 rounded-lg"
+          className="w-full"
         >
-          {isCreating ? <Loader2 size={14} className="animate-spin mr-2" /> : <Plus size={14} className="mr-2" />}
-          Crear Atributo
+          {isCreating ? <Loader2 className="w-4 h-4 mr-xs animate-spin" /> : <Plus className="w-4 h-4 mr-xs" />}
+          {t('categories.attributesPanel.create')}
         </Button>
       </div>
+
+      <AlertDialog
+        open={!!attributeToDelete}
+        onOpenChange={(open) => {
+          if (!open) setAttributeToDelete(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('categories.attributesPanel.delete.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('categories.attributesPanel.delete.description', {
+                name: attributeToDelete?.name ?? '',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-error hover:bg-error/90 text-on-error"
+              onClick={handleDelete}
+            >
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
-  );
+  )
 }

@@ -25,7 +25,7 @@ function AlertDialogPortal({
 }
 
 function AlertDialogOverlay({
-  className,
+  className = '',
   ...props
 }) {
   return (
@@ -40,7 +40,7 @@ function AlertDialogOverlay({
 }
 
 function AlertDialogContent({
-  className,
+  className = '',
   ...props
 }) {
   return (
@@ -58,7 +58,7 @@ function AlertDialogContent({
 }
 
 function AlertDialogHeader({
-  className,
+  className = '',
   ...props
 }) {
   return (
@@ -70,7 +70,7 @@ function AlertDialogHeader({
 }
 
 function AlertDialogFooter({
-  className,
+  className = '',
   ...props
 }) {
   return (
@@ -82,7 +82,7 @@ function AlertDialogFooter({
 }
 
 function AlertDialogTitle({
-  className,
+  className = '',
   ...props
 }) {
   return (
@@ -94,7 +94,7 @@ function AlertDialogTitle({
 }
 
 function AlertDialogDescription({
-  className,
+  className = '',
   ...props
 }) {
   return (
@@ -106,14 +106,14 @@ function AlertDialogDescription({
 }
 
 function AlertDialogAction({
-  className,
+  className = '',
   ...props
 }) {
   return (<AlertDialogPrimitive.Action className={cn(buttonVariants(), className)} {...props} />);
 }
 
 function AlertDialogCancel({
-  className,
+  className = '',
   ...props
 }) {
   return (

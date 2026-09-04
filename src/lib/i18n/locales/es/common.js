@@ -26,6 +26,7 @@ export const common = {
   'action.edit': 'Editar',
   'action.delete': 'Eliminar',
   'action.save': 'Guardar',
+  'action.save_changes': 'Guardar cambios',
   'action.cancel': 'Cancelar',
   'action.confirm': 'Confirmar',
   'action.close': 'Cerrar',
@@ -75,8 +76,11 @@ export const common = {
   'common.home': 'Inicio',
   'common.cancel': 'Cancelar',
   'common.save': 'Guardar',
+  'common.close': 'Cerrar',
+  'common.delete': 'Eliminar',
   'common.optional': 'Opcional',
   'common.loading': 'Cargando...',
+  'errors.load_title': 'No se pudo cargar la información',
   'common.saving': 'Guardando...',
   'common.searching': 'Buscando...',
   'common.no_results': 'No se encontraron resultados',
@@ -151,6 +155,7 @@ export const common = {
   'common.pagination.previous': 'Anterior',
   'common.pagination.next': 'Siguiente',
   'common.pagination.showing': 'Mostrando',
+  'common.pagination.to': 'a',
   'common.pagination.of': 'de',
 
   // Settings - Atajos de teclado

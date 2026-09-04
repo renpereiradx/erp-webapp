@@ -6,6 +6,8 @@
 import { common } from './common'
 import { products } from './products'
 import { categories } from './categories'
+import { brands } from './brands'
+import { attributes } from './attributes'
 import { purchases } from './purchases'
 import { currencies } from './currencies'
 import { exchangeRates } from './exchangeRates'
@@ -44,6 +46,8 @@ export const en = {
   ...fiscal,
   ...businessPrefs,
   ...shell,
+  ...brands,
+  ...attributes,
   // TODO: Add English translations for new modules:
   // - clients
   // - suppliers

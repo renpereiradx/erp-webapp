@@ -1,121 +1,122 @@
-import React, { useState } from 'react';
-import { Brand } from '../types/brand';
+import { useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight, Image } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import EmptyState from '@/components/ui/EmptyState'
+import { useI18n } from '@/lib/i18n'
+
+import type { Brand } from '../types/brand'
 
 interface BrandListProps {
-  brands: Brand[];
-  totalBrands: number;
-  selectedBrandId: string | null;
-  onSelectBrand: (id: string) => void;
-  searchQuery?: string;
-  onSearchChange?: (query: string) => void;
+  brands: Brand[]
+  selectedBrandId: string | null
+  onSelectBrand: (id: string) => void
 }
 
+const ITEMS_PER_PAGE = 8
+
+/** Master del workspace de marcas: directorio paginado (la búsqueda vive en la toolbar de la página). */
 export const BrandList: React.FC<BrandListProps> = ({
   brands,
   selectedBrandId,
   onSelectBrand,
-  searchQuery = '',
-  onSearchChange,
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
-  const totalPages = Math.ceil(brands.length / itemsPerPage);
-  
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedBrands = brands.slice(startIndex, startIndex + itemsPerPage);
+  const { t } = useI18n()
+  const [currentPage, setCurrentPage] = useState(1)
+  const totalPages = Math.ceil(brands.length / ITEMS_PER_PAGE)
 
-  const handlePrevPage = () => setCurrentPage((p) => Math.max(1, p - 1));
-  const handleNextPage = () => setCurrentPage((p) => Math.min(totalPages, p + 1));
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const paginatedBrands = brands.slice(startIndex, startIndex + ITEMS_PER_PAGE)
 
-  // Reset to page 1 when search changes
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, brands.length]);
+  // Reset to page 1 when the list changes (filter applied from the toolbar)
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [brands.length])
+
   return (
-    <div className="bg-background rounded-[16px] shadow-sm border border-divider/30 p-lg flex flex-col h-full overflow-hidden">
-      <div className="flex justify-between items-center mb-md border-b border-divider/20 pb-sm">
-        <h3 className="font-title-md text-title-md text-foreground">Directorio de Marcas</h3>
-        <div className="flex gap-sm items-center w-full max-w-[240px]">
-          <div className="relative w-full">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg text-[18px]">search</span>
-            <input 
-              className="w-full pl-9 pr-3 py-1.5 bg-surface border border-divider rounded-lg font-body-md text-body-md text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all" 
-              placeholder="Buscar marcas..." 
-              type="text"
-              value={searchQuery}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-            />
+    <div className="bg-surface rounded-md shadow-whisper border-0 p-lg flex flex-col">
+      {brands.length === 0 ? (
+        <EmptyState
+          icon={Image}
+          size="small"
+          title={t('brands.table.empty')}
+          description={t('brands.table.empty_description')}
+        />
+      ) : (
+        <>
+          <div className="overflow-auto custom-scrollbar">
+            <table className="w-full text-left border-separate border-spacing-y-2">
+              <thead>
+                <tr>
+                  <th className="text-label-caps uppercase text-on-surface-deep pb-sm pl-sm w-16">{t('brands.table.logo')}</th>
+                  <th className="text-label-caps uppercase text-on-surface-deep pb-sm">{t('brands.table.name')}</th>
+                  <th className="text-label-caps uppercase text-on-surface-deep pb-sm">{t('brands.table.slug')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedBrands.map((brand) => (
+                  <tr
+                    key={brand.id}
+                    onClick={() => onSelectBrand(String(brand.id))}
+                    className={`rounded-md transition-colors duration-150 group cursor-pointer border ${
+                      selectedBrandId === String(brand.id)
+                        ? 'bg-surface-muted border-primary/40'
+                        : 'bg-surface border-transparent hover:bg-surface-muted'
+                    }`}
+                  >
+                    <td className="py-sm pl-sm rounded-l-md">
+                      {brand.logoUrl ? (
+                        <img
+                          src={brand.logoUrl}
+                          alt={brand.name}
+                          className="w-8 h-8 rounded-sm object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-sm bg-surface-subtle flex items-center justify-center text-on-surface-deep">
+                          <Image className="w-4 h-4" />
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-sm text-body-md-bold text-foreground">{brand.name}</td>
+                    <td className="py-sm pr-sm text-data-mono font-data-mono text-on-surface-deep rounded-r-md">{brand.slug}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-      </div>
-      <div className="flex-1 overflow-auto custom-scrollbar">
-        <table className="w-full text-left border-separate border-spacing-y-2">
-          <thead className="sticky top-0 bg-surface z-10">
-            <tr>
-              <th className="font-label-caps text-label-caps text-on-surface-deep pb-sm pl-sm w-16">Logo</th>
-              <th className="font-label-caps text-label-caps text-on-surface-deep pb-sm">Nombre</th>
-              <th className="font-label-caps text-label-caps text-on-surface-deep pb-sm">Slug</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedBrands.map((brand) => (
-              <tr
-                key={brand.id}
-                onClick={() => onSelectBrand(String(brand.id))}
-                className={`rounded-xl transition-colors group cursor-pointer border ${
-                  selectedBrandId === brand.id
-                    ? 'bg-surface-muted border-primary/40'
-                    : 'bg-surface border-transparent hover:bg-surface-muted hover:border-primary/20'
-                }`}
+          <div className="mt-md pt-sm border-t border-border-subtle flex justify-between items-center">
+            <span className="text-body-md text-on-surface-deep">
+              {t('brands.pagination.showing', {
+                from: paginatedBrands.length > 0 ? startIndex + 1 : 0,
+                to: Math.min(startIndex + ITEMS_PER_PAGE, brands.length),
+                total: brands.length,
+              })}
+            </span>
+            <div className="flex gap-xs">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t('common.pagination.previous')}
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               >
-                <td className="py-sm pl-sm rounded-l-xl">
-                  {brand.logoUrl ? (
-                    <img
-                      src={brand.logoUrl}
-                      alt={brand.name}
-                      className="w-8 h-8 rounded-lg object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-lg bg-surface-subtle flex items-center justify-center text-on-surface-deep">
-                      <span className="material-symbols-outlined text-[16px]">{brand.icon || 'public'}</span>
-                    </div>
-                  )}
-                </td>
-                <td className="py-sm font-body-md-bold text-body-md-bold text-foreground">{brand.name}</td>
-                <td className="py-sm pr-sm font-data-mono text-data-mono text-on-surface-deep">{brand.slug}</td>
-              </tr>
-            ))}
-            {brands.length === 0 && (
-              <tr>
-                <td colSpan={3} className="py-lg text-center text-on-surface-deep">
-                  No se encontraron marcas.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-      <div className="mt-md pt-sm border-t border-divider flex justify-between items-center">
-        <span className="font-body-md text-body-md text-on-surface-deep">
-          Mostrando {paginatedBrands.length > 0 ? startIndex + 1 : 0} - {Math.min(startIndex + itemsPerPage, brands.length)} de {brands.length} marcas
-        </span>
-        <div className="flex gap-xs">
-          <button 
-            className="p-1 rounded text-foreground hover:bg-surface-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
-            disabled={currentPage === 1}
-            onClick={handlePrevPage}
-          >
-            <span className="material-symbols-outlined">chevron_left</span>
-          </button>
-          <button 
-            className="p-1 rounded text-foreground hover:bg-surface-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={currentPage === totalPages || totalPages === 0}
-            onClick={handleNextPage}
-          >
-            <span className="material-symbols-outlined">chevron_right</span>
-          </button>
-        </div>
-      </div>
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t('common.pagination.next')}
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
-  );
-};
+  )
+}
+
+export default BrandList
