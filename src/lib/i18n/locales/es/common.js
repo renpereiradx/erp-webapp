@@ -134,6 +134,8 @@ export const common = {
     'Demasiadas solicitudes, espera e intenta de nuevo.',
   'errors.hint.CONFLICT': 'Conflicto de estado, refresca los datos.',
   'errors.hint.UNKNOWN': 'Ocurrió un error inesperado.',
+  'errors.code_label': 'Código: {code}',
+  'errors.hint.label': 'Pista',
 
   // Toast de error
   'errors.toast.copy_code': 'Copiar código',

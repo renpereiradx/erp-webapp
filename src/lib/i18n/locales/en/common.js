@@ -110,6 +110,8 @@ export const common = {
   'errors.hint.RATE_LIMIT': 'Too many requests, wait and retry.',
   'errors.hint.CONFLICT': 'State conflict, refresh the data.',
   'errors.hint.UNKNOWN': 'An unexpected error occurred.',
+  'errors.code_label': 'Error code: {code}',
+  'errors.hint.label': 'Hint',
 
   // Error toasts
   'errors.toast.copy_code': 'Copy code',
