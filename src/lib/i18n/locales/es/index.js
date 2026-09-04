@@ -23,6 +23,7 @@ import { currencies } from './currencies'
 import { exchangeRates } from './exchangeRates'
 import { dashboard } from './dashboard'
 import { users } from './users'
+import { sessions } from './sessions'
 import { myProfile } from './my-profile'
 import { receivables } from './receivables'
 import payables from './payables'
@@ -54,6 +55,7 @@ export const es = {
   ...exchangeRates,
   ...dashboard,
   ...users,
+  ...sessions,
   ...myProfile,
   ...receivables,
   payables,
