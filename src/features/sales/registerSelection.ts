@@ -12,22 +12,22 @@ export interface RegisterOption {
   branchId: number | null | undefined
 }
 
-export interface PartitionedRegisters {
+export interface PartitionedRegisters<T extends RegisterOption = RegisterOption> {
   /** Cajas abiertas de la sucursal actual (seleccionables). */
-  inBranch: RegisterOption[]
+  inBranch: T[]
   /** Cajas abiertas de otras sucursales (se muestran deshabilitadas). */
-  otherBranches: RegisterOption[]
+  otherBranches: T[]
   /** Hay alguna caja abierta en cualquier sucursal. */
   hasAny: boolean
 }
 
 /** Separa las cajas abiertas por sucursal. Sin branchId conocido, todas van a inBranch. */
-export function partitionOpenRegisters(
-  registers: RegisterOption[],
+export function partitionOpenRegisters<T extends RegisterOption>(
+  registers: T[],
   branchId: number | null | undefined,
-): PartitionedRegisters {
-  const inBranch: RegisterOption[] = []
-  const otherBranches: RegisterOption[] = []
+): PartitionedRegisters<T> {
+  const inBranch: T[] = []
+  const otherBranches: T[] = []
   for (const r of registers) {
     if (branchId == null || r.branchId == null || Number(r.branchId) === Number(branchId)) {
       inBranch.push(r)

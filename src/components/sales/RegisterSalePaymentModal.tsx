@@ -65,6 +65,20 @@ interface RegisterSalePaymentModalProps {
   onSubmit: (data: any) => Promise<void>;
 }
 
+// Caja abierta ya normalizada por loadData: estructura mínima que consumen
+// partitionOpenRegisters/resolveDefaultRegisterId (RegisterOption) más los
+// campos de visualización del select.
+interface OpenCashRegister {
+  id: number;
+  branchId: number | null;
+  name?: string;
+  description?: string;
+  current_balance?: number;
+  currency?: string;
+  location?: string;
+  branch_name?: string;
+}
+
 /**
  * Registro de cobro para ventas pendientes, alineado con la política de
  * "cobro en divisa" del SaleCheckoutWizard: el saldo de la venta se salda
@@ -95,7 +109,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setSubmitting] = useState<boolean>(false)
 
-  const [cashRegisters, setCashRegisters] = useState<any[]>([])
+  const [cashRegisters, setCashRegisters] = useState<OpenCashRegister[]>([])
   const [isCashRegistersLoading, setCashRegistersLoading] = useState<boolean>(false)
   const [paymentMethods, setPaymentMethods] = useState<any[]>([])
   const [currencies, setCurrencies] = useState<any[]>([])
@@ -314,13 +328,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
     if (paymentMethodId) return paymentMethodId
     if (paymentMethodOptions.length === 0) return ''
     const saleMethod = String(sale?.payment_method || '').trim().toUpperCase()
-    let def = null
+    let def: { id: string, label: string } | null = null
     if (saleMethod) {
       def = paymentMethodOptions.find(m => m.label.toUpperCase() === saleMethod)
-        || paymentMethodOptions.find(m => {
-          const l = m.label.toUpperCase()
-          return l.includes(saleMethod) || saleMethod.includes(l)
-        })
+          ?? paymentMethodOptions.find(m => {
+            const l = m.label.toUpperCase()
+            return l.includes(saleMethod) || saleMethod.includes(l)
+          })
+          ?? null
     }
     return (def || paymentMethodOptions[0]).id
   }, [paymentMethodId, paymentMethodOptions, sale?.payment_method])
@@ -397,7 +412,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
   const cashRegisterValue = useMemo(() => {
     if (cashRegisterId) return cashRegisterId
     const { inBranch } = partitionOpenRegisters(cashRegisters, sale?.branch_id ?? null)
-    const def = resolveDefaultRegisterId(inBranch, activeRegisterId || null) ?? inBranch[0]?.id ?? null
+    const def = resolveDefaultRegisterId(inBranch, activeRegisterId ? Number(activeRegisterId) : null) ?? inBranch[0]?.id ?? null
     return def != null ? String(def) : ''
   }, [cashRegisterId, cashRegisters, sale?.branch_id, activeRegisterId])
 
