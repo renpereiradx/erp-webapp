@@ -4,6 +4,15 @@
  */
 
 export const party = {
+  // Página /parties (directorio unificado)
+  'parties.title': 'Gestión de Entidades',
+  'parties.subtitle': 'Administra clientes y proveedores del sistema.',
+  'parties.breadcrumb.home': 'Inicio',
+  'parties.breadcrumb.clients': 'Clientes',
+  'parties.breadcrumb.suppliers': 'Proveedores',
+  'parties.tab.clients': 'Directorio de Clientes',
+  'parties.tab.suppliers': 'Directorio de Proveedores',
+
   // Campos compartidos
   'party.field.document_type': 'Tipo de documento',
   'party.field.nationality': 'Nacionalidad',
