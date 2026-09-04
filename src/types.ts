@@ -35,6 +35,7 @@ export interface User {
   updated_at?: string;
   last_login_at?: string;
   sessions_count?: number;
+  failed_login_attempts?: number;
   active_branch?: number | null;
   allowed_branches?: number[];
   permissions?: string[]; // Formato: "recurso:acción"
