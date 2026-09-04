@@ -59,6 +59,7 @@ import ExchangeRates from '@/pages/ExchangeRates'
 import CategoriesPage from '@/pages/CategoriesPage'
 import { BrandsPage } from '@/pages/BrandsPage'
 import { AttributesPage } from '@/pages/AttributesPage'
+import PrintersPage from '@/pages/PrintersPage'
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import Settings from '@/pages/Settings'
@@ -505,6 +506,14 @@ function AppContent() {
                         element={
                           <PermissionGuard permission="products:read">
                             <AttributesPage />
+                          </PermissionGuard>
+                        }
+                      />
+                      <Route
+                        path='/configuracion/impresoras'
+                        element={
+                          <PermissionGuard permission="documents:read">
+                            <PrintersPage />
                           </PermissionGuard>
                         }
                       />

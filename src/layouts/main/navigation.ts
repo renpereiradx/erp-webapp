@@ -21,6 +21,7 @@ import {
   Package,
   PieChart,
   PlusCircle,
+  Printer,
   Settings,
   Shield,
   ShoppingBag,
@@ -283,6 +284,12 @@ export const buildNavigation = (t: TFn, reservationsEnabled: boolean): Navigatio
         href: '/configuracion/sucursales',
         icon: Building2,
         permission: 'branches:read',
+      },
+      {
+        name: t('printers.nav', 'Impresoras de tickets'),
+        href: '/configuracion/impresoras',
+        icon: Printer,
+        permission: 'documents:read',
       },
       {
         name: t('common.financeConfig', 'Config. Financiera'),

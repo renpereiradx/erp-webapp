@@ -20,6 +20,7 @@ import {
   Command,
   Scale,
   ArrowRightLeft,
+  Printer,
   SlidersHorizontal,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -95,6 +96,14 @@ const systemNavRows: NavRow[] = [
     descKey: 'settings.scales.desc',
     descFallback: 'Configuración de balanzas y impresión de etiquetas',
     href: '/configuracion/balanzas',
+  },
+  {
+    icon: Printer,
+    titleKey: 'settings.printers.title',
+    titleFallback: 'Impresoras de tickets',
+    descKey: 'settings.printers.desc',
+    descFallback: 'Impresoras térmicas de recibos por red (58/80 mm)',
+    href: '/configuracion/impresoras',
   },
   {
     icon: ArrowRightLeft,
