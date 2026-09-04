@@ -1,3 +1,5 @@
+export type TFn = (key: string, defaultValue?: string, vars?: Record<string, unknown>) => string;
+
 export interface ProfileFormState {
   first_name: string;
   last_name: string;
@@ -10,4 +12,3 @@ export interface PasswordFormState {
   confirm_password: string;
   logout_other_sessions?: boolean;
 }
-
