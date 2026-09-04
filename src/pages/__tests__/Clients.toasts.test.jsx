@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { waitFor, cleanup } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { renderWithTheme } from '../../utils/themeTestUtils';
 
 vi.mock('../../hooks/useToast', () => {
@@ -54,7 +55,11 @@ describe('ClientsPage toasts y telemetría', () => {
       fetchClients: vi.fn(),
     });
 
-    const { unmount } = renderWithTheme(<ClientsPage />);
+    const { unmount } = renderWithTheme(
+      <MemoryRouter>
+        <ClientsPage />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       // telemetry.record debe ser llamado con el evento de error del store
