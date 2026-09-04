@@ -2,7 +2,12 @@
  * Hook del panel fiscal de una venta (FE3).
  * Orquesta: lectura del estado fiscal (GET /sale/{id}/fiscal), reenvío manual
  * (retryEmission, D2), descarga del KuDE PDF como blob con auth (S6-H1),
- * email del comprobante y reimpresión (ticket 80 mm con reprint_count).
+ * email del comprobante y reimpresión del ticket (POST .../ticket/print,
+ * S5.2 — impresión server-side con reprint_count).
+ *
+ * La impresión es OPCIONAL: `printConfigured` consulta /api/v1/printers
+ * (con documents:read) y expone si hay una RECEIPT activa+default — el
+ * panel deshabilita el botón con hint en lugar de golpear un 404.
  *
  * El 404 de GET /sale/{id}/fiscal es el estado "venta sin documento fiscal"
  * (branch no activado, D3) — NO un error: se expone como `isNotFiscal`.
@@ -15,7 +20,9 @@ import { useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/useToast';
 import { useI18n } from '@/lib/i18n';
+import { useAuth } from '@/contexts/AuthContext';
 import { fiscalService, isApiNotFound } from '@/features/fiscal/services/fiscalService';
+import { printersService } from '@/features/printers/services/printersService';
 import type { SaleFiscalStatus } from '@/features/fiscal/types';
 
 // ApiError no trae `status` ni `response`: el código determinista es
@@ -34,8 +41,12 @@ export interface SaleFiscalPanelState {
   downloading: boolean;
   emailing: boolean;
   reprinting: boolean;
-  /** Contador de reimpresiones: respuesta del render o estado fiscal (S6-H7). */
+  /** Contador de reimpresiones: respuesta del print o estado fiscal (S6-H7). */
   reprintCount: number | null;
+  /** true = hay RECEIPT activa+default; false = sin impresora; null = indeterminado. */
+  printConfigured: boolean | null;
+  /** El usuario puede interactuar con documents (documents:read). */
+  canUseDocuments: boolean;
   /** Reenvío manual del DE a SIFEN (POST /sale/{id}/fiscal/retry, D2). */
   retryEmission: () => Promise<SaleFiscalStatus | undefined>;
   /** Descarga el KuDE PDF autenticado y dispara el save del navegador. */
@@ -58,6 +69,8 @@ export const useSaleFiscalPanel = (saleId?: string): SaleFiscalPanelState => {
   const queryClient = useQueryClient();
   const { addToast } = useToast();
   const { t } = useI18n();
+  const { hasPermission } = useAuth();
+  const canUseDocuments = hasPermission('documents:read');
 
   const queryKey = useMemo(() => ['sale-fiscal', saleId] as const, [saleId]);
 
@@ -70,6 +83,23 @@ export const useSaleFiscalPanel = (saleId?: string): SaleFiscalPanelState => {
   });
 
   const isNotFiscal = !isLoading && !status && isNotFound(error);
+
+  // Impresión opcional: sin documents:read la acción ni se muestra; con el
+  // permiso, la disponibilidad real la da el registro de impresoras (existe
+  // una RECEIPT activa+default que el backend resolverá para el branch).
+  const printersQuery = useQuery({
+    queryKey: ['printers', 'active'],
+    queryFn: () => printersService.list({ active: true }),
+    enabled: canUseDocuments && !!saleId,
+    staleTime: 60 * 1000,
+    retry: false,
+  });
+
+  const printConfigured: boolean | null = !canUseDocuments
+    ? null
+    : printersQuery.isLoading
+      ? null
+      : (printersQuery.data ?? []).some((p) => p.purpose === 'RECEIPT' && p.is_default);
 
   const retryMutation = useMutation({
     mutationFn: () => fiscalService.retryEmission(saleId!),
@@ -99,7 +129,7 @@ export const useSaleFiscalPanel = (saleId?: string): SaleFiscalPanelState => {
   });
 
   const reprintMutation = useMutation({
-    mutationFn: () => fiscalService.renderTicket(saleId!),
+    mutationFn: () => fiscalService.printTicket(saleId!),
     onSuccess: () => {
       addToast(t('fiscal.panel.reprinted', 'Ticket reimpreso'), 'success');
       // Sincroniza el reprint_count inicial del estado (S6-H7).
@@ -152,6 +182,8 @@ export const useSaleFiscalPanel = (saleId?: string): SaleFiscalPanelState => {
     emailing: emailMutation.isPending,
     reprinting: reprintMutation.isPending,
     reprintCount: reprintMutation.data?.reprint_count ?? status?.reprint_count ?? null,
+    printConfigured,
+    canUseDocuments,
     retryEmission,
     downloadPdf,
     emailComprobante,

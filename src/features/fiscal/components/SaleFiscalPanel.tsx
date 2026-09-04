@@ -45,6 +45,7 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
   const {
     status, isLoading, isNotFiscal, error, refetch,
     retrying, downloading, emailing, reprinting, reprintCount,
+    printConfigured, canUseDocuments,
     retryEmission, downloadPdf, emailComprobante, reprintTicket,
   } = useSaleFiscalPanel(saleId);
 
@@ -93,6 +94,15 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
   // S6-H3: sin reprima de un DE anulado; confirmación para el rechazado.
   const canReprint = status.estado !== 'CANCELADO' && status.estado !== 'INUTILIZADO';
   const reprintBlockedTitle = t('fiscal.panel.reprintBlocked', 'No disponible: el DE está cancelado o inutilizado');
+  // Impresión OPCIONAL: sin documents:read la acción ni se muestra; sin
+  // impresora registrada (RECEIPT activa+default) queda deshabilitada con
+  // hint en lugar de golpear el 404 del backend.
+  const noPrinterTitle = t('fiscal.panel.noPrinter', 'Sin impresora configurada: registrala en Configuración → Impresoras');
+  const reprintTitle = !canReprint
+    ? reprintBlockedTitle
+    : printConfigured === false
+      ? noPrinterTitle
+      : undefined;
   const confirmRejectedReprint = (): boolean =>
     status.estado !== 'RECHAZADO' ||
     window.confirm(t('fiscal.panel.rejectedConfirm', 'El DE fue rechazado por SIFEN: el comprobante se entrega sin QR y con banda de invalidez. ¿Continuar?'));
@@ -194,17 +204,19 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
               {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
               {t('fiscal.panel.downloadPdf', 'KuDE PDF')}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-xs font-bold gap-1.5"
-              onClick={() => guardedReprintAction(reprintTicket)}
-              disabled={reprinting || !canReprint}
-              title={canReprint ? undefined : reprintBlockedTitle}
-            >
-              {reprinting ? <Loader2 size={14} className="animate-spin" /> : <Printer size={14} />}
-              {t('fiscal.panel.reprint', 'Reimprimir ticket')}
-            </Button>
+            {canUseDocuments && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-xs font-bold gap-1.5"
+                onClick={() => guardedReprintAction(reprintTicket)}
+                disabled={reprinting || !canReprint || printConfigured === false}
+                title={reprintTitle}
+              >
+                {reprinting ? <Loader2 size={14} className="animate-spin" /> : <Printer size={14} />}
+                {t('fiscal.panel.reprint', 'Reimprimir ticket')}
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

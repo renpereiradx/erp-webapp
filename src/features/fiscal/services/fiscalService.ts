@@ -5,7 +5,9 @@
  *   POST /sale/{id}/fiscal/retry      (FE3.3) reenvío manual del DE (D2)
  *   GET  /api/v1/documents/sales/{id}/comprobante.pdf   (S5.1) KuDE PDF (blob con auth)
  *   POST /api/v1/documents/sales/{id}/comprobante/email (S5.3) email del comprobante
- *   POST /api/v1/documents/sales/{id}/ticket/render     (S5.2) ticket 80 mm + reprint_count
+ *   POST /api/v1/documents/sales/{id}/ticket/print      (S5.2) impresión server-side
+ *       (TCP 9100 a la impresora indicada o a la RECEIPT default del branch;
+ *        sin impresora configurada responde 404 — la impresión es opcional)
  *
  * Ojo: el contexto documents del backend registra sus rutas bajo el prefijo
  * /api/v1 (único contexto que lo hace — el resto vive en la raíz), por lo que
@@ -45,12 +47,15 @@ const FISCAL = {
   saleFiscalRetry: (saleId: string) => `/sale/${encodeURIComponent(saleId)}/fiscal/retry`,
   comprobantePdf: (saleId: string) => `/api/v1/documents/sales/${encodeURIComponent(saleId)}/comprobante.pdf`,
   comprobanteEmail: (saleId: string) => `/api/v1/documents/sales/${encodeURIComponent(saleId)}/comprobante/email`,
-  ticketRender: (saleId: string) => `/api/v1/documents/sales/${encodeURIComponent(saleId)}/ticket/render`,
+  ticketPrint: (saleId: string) => `/api/v1/documents/sales/${encodeURIComponent(saleId)}/ticket/print`,
 };
 
-export interface TicketRenderResult {
+/** PrintTicketResponse del backend (internal/documents/dto.go). */
+export interface TicketPrintResult {
   success: boolean;
-  printer?: string;
+  sale_id: string;
+  printer: string;
+  printer_host: string;
   reprint_count: number;
   message?: string;
 }
@@ -90,11 +95,14 @@ export const fiscalService = {
   },
 
   /**
-   * Renderiza/imprime el ticket 80 mm (S5.2). La respuesta incluye
-   * `reprint_count` (contador de reimpresiones con auditoría).
+   * Imprime el ticket (S5.2) en la impresora de red: sin printer_id el
+   * backend resuelve la RECEIPT predeterminada del branch de la venta; si no
+   * hay ninguna responde 404 NOT_FOUND (la impresión es opcional — el panel
+   * consulta /api/v1/printers para deshabilitar la acción antes de fallar).
+   * La respuesta trae reprint_count (auditoría de reimpresiones, S6-H7).
    */
-  async renderTicket(saleId: string): Promise<TicketRenderResult> {
-    return apiClient.post(FISCAL.ticketRender(saleId));
+  async printTicket(saleId: string): Promise<TicketPrintResult> {
+    return apiClient.post(FISCAL.ticketPrint(saleId));
   },
 
   // ============ FE4 — inutilización de rangos (S4.2) ============

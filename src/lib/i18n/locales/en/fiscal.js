@@ -86,6 +86,7 @@ export const fiscal = {
   'fiscal.panel.retryError': 'Could not resend the document',
   'fiscal.panel.retryWindowExpired': 'Outside the 72 h window: resending requires an administrative procedure or a credit note',
   'fiscal.panel.reprintBlocked': 'Unavailable: the DE is cancelled or voided',
+  'fiscal.panel.noPrinter': 'No printer configured: register one in Settings → Ticket printers',
   'fiscal.panel.rejectedConfirm': 'The DE was rejected by SIFEN: the voucher is delivered without QR and with an invalidity banner. Continue?',
   'fiscal.panel.emailed': 'Receipt sent by email',
   'fiscal.panel.emailError': 'Could not send the email',

@@ -86,6 +86,7 @@ export const fiscal = {
   'fiscal.panel.retryError': 'No se pudo reenviar el documento',
   'fiscal.panel.retryWindowExpired': 'Fuera de la ventana de 72 h: el reenvío requiere trámite administrativo o nota de crédito',
   'fiscal.panel.reprintBlocked': 'No disponible: el DE está cancelado o inutilizado',
+  'fiscal.panel.noPrinter': 'Sin impresora configurada: registrala en Configuración → Impresoras',
   'fiscal.panel.rejectedConfirm': 'El DE fue rechazado por SIFEN: el comprobante se entrega sin QR y con banda de invalidez. ¿Continuar?',
   'fiscal.panel.emailed': 'Comprobante enviado por email',
   'fiscal.panel.emailError': 'No se pudo enviar el email',
