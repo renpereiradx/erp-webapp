@@ -114,4 +114,58 @@ export const users = {
   
   // Errores
   'users.errors.cannotRemoveLastRole': 'El usuario debe tener al menos un rol.',
+
+  // Encabezado y página
+  'users.description': 'Administra accesos, roles y seguridad de la plataforma.',
+  'users.lastActiveNever': 'Nunca',
+  'users.records': 'registros',
+  'users.exportSoon': 'La exportación estará disponible pronto.',
+  'users.resetPassword': 'Restablecer contraseña',
+  'users.resetPasswordSoon': 'El restablecimiento de contraseña estará disponible pronto.',
+  'users.memberSince': 'Miembro desde',
+  'users.lastAccess': 'Último Acceso',
+  'users.systemId': 'ID del Sistema',
+  'users.rolesPermissions': 'Roles y Permisos',
+  'users.securityActivity': 'Actividad de Seguridad',
+
+  // Filtros
+  'users.filter.roleAll': 'Todos los roles',
+  'users.filter.statusAll': 'Todos los estados',
+
+  // Acciones en bloque
+  'users.bulk.activate': 'Activar',
+  'users.bulk.deactivate': 'Desactivar',
+  'users.bulk.delete': 'Eliminar',
+  'users.bulk.activateSuccess': '{{count}} usuario(s) activado(s)',
+  'users.bulk.deactivateSuccess': '{{count}} usuario(s) desactivado(s)',
+  'users.bulk.deleteSuccess': '{{count}} usuario(s) eliminado(s)',
+  'users.bulk.partialError': 'Algunas operaciones no pudieron completarse',
+
+  // Confirmaciones (modal §6.6)
+  'users.deleteTitle': 'Eliminar usuario',
+  'users.deleteDescription': 'Esta acción es irreversible y no se puede deshacer.',
+  'users.deleteConfirm': 'Eliminar',
+  'users.deleteSuccess': 'Usuario eliminado correctamente',
+  'users.deleteError': 'Error al eliminar el usuario',
+  'users.bulkDeleteTitle': 'Eliminar usuarios seleccionados',
+  'users.bulkDeleteDescription':
+    'Se eliminarán {{count}} usuario(s). Esta acción es irreversible.',
+
+  // Estados de datos (§6.7)
+  'users.empty.title': 'Sin usuarios',
+  'users.empty.description': 'Crea el primer usuario para comenzar a gestionar accesos.',
+  'users.empty.searchTitle': 'Sin resultados',
+  'users.empty.searchDescription': 'Ajusta la búsqueda o los filtros e inténtalo de nuevo.',
+  'users.error.title': 'Error al cargar usuarios',
+
+  // Roles (gestión)
+  'users.roles.manageDescription': 'Asigna o remueve los roles de este usuario.',
+  'users.roles.searchPlaceholder': 'Buscar roles…',
+  'users.roles.lastActiveAt': 'Última actividad',
+  'users.roles.activeNow': 'Activo ahora',
+  'users.roles.permission.orgConfig': 'Gestiona configuraciones a nivel de organización',
+  'users.roles.permission.inviteMembers': 'Invita y desactiva miembros del equipo',
+  'users.roles.permission.securitySSO': 'Configura seguridad y proveedores SSO',
+  'users.roles.saveChanges': 'Guardar Cambios',
+  'users.roles.allAssigned': 'Todos los roles ya están asignados.',
 }

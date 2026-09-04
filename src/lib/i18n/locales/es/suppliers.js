@@ -40,6 +40,7 @@ export const suppliers = {
 
   // Tabla
   'supplier.table.name': 'Proveedor',
+  'supplier.table.select_all': 'Seleccionar todos los proveedores',
   'supplier.table.contact': 'Contacto',
   'supplier.table.tax': 'RFC / Tax ID',
   'supplier.table.created': 'Creado',

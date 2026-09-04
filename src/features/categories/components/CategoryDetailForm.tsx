@@ -1,41 +1,57 @@
-import React, { useEffect } from 'react';
-import type { Category, CategoryFormValues } from '../types';
-import useTaxRateStore from '@/store/useTaxRateStore';
+import { useEffect, useState } from 'react'
+import { FolderTree, Trash2 } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import EmptyState from '@/components/ui/EmptyState'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useI18n } from '@/lib/i18n'
+import useTaxRateStore from '@/store/useTaxRateStore'
+
+import type { Category, CategoryFormValues } from '../types'
+import { emptyCategoryFormValues } from '../types'
+
+const NONE_VALUE = 'none'
 
 interface CategoryDetailFormProps {
-  selectedCategory: Category | null;
-  categories: Category[];
-  handleSave: (values: CategoryFormValues) => void;
-  confirmDelete: () => void;
-  isMutating: boolean;
-  onCancel: () => void;
-  isOpen?: boolean; // Determines if the form is active (for creation or editing)
+  selectedCategory: Category | null
+  categories: Category[]
+  handleSave: (values: CategoryFormValues) => void
+  /** Dispara el flujo de confirmación de borrado (no borra directamente). */
+  onRequestDelete: (category: Category) => void
+  isMutating: boolean
+  onCancel: () => void
+  /** Determina si el formulario está activo (creación o edición). */
+  isOpen?: boolean
 }
 
 export function CategoryDetailForm({
   selectedCategory,
   categories,
   handleSave,
-  confirmDelete,
+  onRequestDelete,
   isMutating,
   onCancel,
   isOpen = true,
 }: CategoryDetailFormProps) {
-  const { taxRates, fetchTaxRates } = useTaxRateStore();
+  const { t } = useI18n()
+  const { taxRates, fetchTaxRates } = useTaxRateStore()
+
+  const [formData, setFormData] = useState<CategoryFormValues>(emptyCategoryFormValues)
 
   useEffect(() => {
-    fetchTaxRates();
-  }, [fetchTaxRates]);
+    fetchTaxRates().catch(() => {})
+  }, [fetchTaxRates])
 
-  const [formData, setFormData] = React.useState<CategoryFormValues>({
-    name: '',
-    description: '',
-    default_tax_rate_id: null,
-    parent_id: null,
-    is_active: true,
-  });
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedCategory) {
       setFormData({
         name: selectedCategory.name,
@@ -43,170 +59,151 @@ export function CategoryDetailForm({
         default_tax_rate_id: selectedCategory.default_tax_rate_id || null,
         parent_id: selectedCategory.parent_id || null,
         is_active: selectedCategory.is_active ?? true,
-      });
+      })
     } else {
-      setFormData({
-        name: '',
-        description: '',
-        default_tax_rate_id: null,
-        parent_id: null,
-        is_active: true,
-      });
+      setFormData(emptyCategoryFormValues)
     }
-  }, [selectedCategory, isOpen]);
+  }, [selectedCategory, isOpen])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { id, value } = e.target;
-    // Map DOM id back to state key
-    const key = id === 'cat-name' ? 'name' 
-              : id === 'cat-desc' ? 'description' 
-              : id === 'cat-parent' ? 'parent_id' 
-              : id === 'tax-rate' ? 'default_tax_rate_id' 
-              : null;
-    if (!key) return;
-
-    setFormData(prev => ({
-      ...prev,
-      [key]: value === 'none' ? null : key.includes('id') ? Number(value) : value,
-    }));
-  };
+  const update = <K extends keyof CategoryFormValues>(key: K, value: CategoryFormValues[K]) => {
+    setFormData((prev) => ({ ...prev, [key]: value }))
+  }
 
   const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSave(formData);
-  };
+    e.preventDefault()
+    handleSave(formData)
+  }
 
   if (!isOpen) {
     return (
-      <div className="flex flex-col bg-background rounded-[16px] shadow-sm border border-divider/30 p-lg min-h-[300px] items-center justify-center text-on-surface-deep opacity-60 shrink-0">
-        <span className="material-symbols-outlined text-[48px] mb-2">category</span>
-        <p>Selecciona una categoría del árbol o crea una nueva</p>
+      <div className="bg-surface rounded-md shadow-whisper border-0 p-lg">
+        <EmptyState
+          icon={FolderTree}
+          size="small"
+          title={t('categories.form.select_empty_title')}
+          description={t('categories.form.select_empty')}
+        />
       </div>
-    );
+    )
   }
 
+  const parentValue = formData.parent_id === null ? NONE_VALUE : String(formData.parent_id)
+  const taxRateValue =
+    formData.default_tax_rate_id === null ? NONE_VALUE : String(formData.default_tax_rate_id)
+  const availableParents = categories.filter((c) => c.id !== selectedCategory?.id)
+
   return (
-    <div className="flex flex-col bg-background rounded-[16px] shadow-sm border border-divider/30 p-lg shrink-0">
-      <div className="flex justify-between items-center mb-md border-b border-divider/20 pb-sm">
-        <h2 className="text-title-md font-title-md text-foreground font-bold">
-          {isOpen ? (selectedCategory ? 'Editando Categoría' : 'Nueva Categoría') : 'Detalle de Categoría'}
+    <div className="bg-surface rounded-md shadow-whisper border-0 p-lg">
+      <div className="flex justify-between items-center mb-md border-b border-border-subtle pb-sm">
+        <h2 className="text-title-md text-foreground">
+          {selectedCategory ? t('categories.form.editing') : t('categories.form.creating')}
         </h2>
-        {selectedCategory && (
-          <span className="bg-primary/10 text-primary text-label-sm font-bold px-sm py-[2px] rounded-full">
+        {selectedCategory ? (
+          <Badge variant="secondary" className="text-data-mono font-data-mono">
             ID: {selectedCategory.id}
-          </span>
-        )}
+          </Badge>
+        ) : null}
       </div>
-      
-      <form onSubmit={onSubmit} className="flex flex-col gap-md flex-1">
-        <div>
-          <label className="block text-label-caps font-label-caps text-on-surface-deep mb-xs" htmlFor="cat-name">
-            Nombre de la Categoría
-          </label>
-          <input
+
+      <form onSubmit={onSubmit} className="flex flex-col gap-md">
+        <div className="space-y-xs">
+          <Label htmlFor="cat-name" className="text-body-md-bold text-foreground">
+            {t('categories.field.name')}
+          </Label>
+          <Input
             id="cat-name"
             type="text"
-            className="w-full form-input-custom px-md py-sm bg-background text-body-md font-body-md text-foreground"
             value={formData.name}
-            onChange={handleChange}
-            placeholder="Ej. Deportivo"
+            onChange={(e) => update('name', e.target.value)}
+            placeholder={t('categories.form.name_placeholder')}
             required
             disabled={isMutating}
           />
         </div>
-        <div>
-          <label className="block text-label-caps font-label-caps text-on-surface-deep mb-xs" htmlFor="cat-desc">
-            Descripción
-          </label>
+        <div className="space-y-xs">
+          <Label htmlFor="cat-desc" className="text-body-md-bold text-foreground">
+            {t('categories.field.description')}
+          </Label>
           <textarea
             id="cat-desc"
             rows={3}
-            className="w-full form-input-custom px-md py-sm bg-background text-body-md font-body-md text-foreground resize-none"
+            className="w-full rounded-input border border-border-subtle bg-surface px-md py-sm text-body-md text-foreground resize-none focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/20 outline-none transition-colors disabled:opacity-50"
             value={formData.description}
-            onChange={handleChange}
-            placeholder="Descripción de la categoría"
+            onChange={(e) => update('description', e.target.value)}
+            placeholder={t('categories.form.description_placeholder')}
             disabled={isMutating}
-          ></textarea>
+          />
         </div>
-        <div>
-          <label className="block text-label-caps font-label-caps text-on-surface-deep mb-xs" htmlFor="cat-parent">
-            Categoría Padre
-          </label>
-          <div className="relative">
-            <select
-              id="cat-parent"
-              className="w-full form-input-custom px-md py-sm bg-background text-body-md font-body-md text-foreground appearance-none"
-              value={formData.parent_id ?? 'none'}
-              onChange={handleChange}
-              disabled={isMutating}
-            >
-              <option value="none">Ninguna (Raíz)</option>
-              {categories.filter(c => c.id !== selectedCategory?.id).map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+        <div className="space-y-xs">
+          <Label htmlFor="cat-parent" className="text-body-md-bold text-foreground">
+            {t('categories.field.parent')}
+          </Label>
+          <Select
+            value={parentValue}
+            onValueChange={(v) => update('parent_id', v === NONE_VALUE ? null : Number(v))}
+            disabled={isMutating}
+          >
+            <SelectTrigger id="cat-parent">
+              <SelectValue placeholder={t('categories.field.parent.none')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE_VALUE}>{t('categories.field.parent.none')}</SelectItem>
+              {availableParents.map((c) => (
+                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
               ))}
-            </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-deep pointer-events-none">
-              expand_more
-            </span>
-          </div>
+            </SelectContent>
+          </Select>
         </div>
-        <div>
-          <label className="block text-label-caps font-label-caps text-on-surface-deep mb-xs" htmlFor="tax-rate">
-            Tasa de IVA por Defecto
-          </label>
-          <div className="relative">
-            <select
-              id="tax-rate"
-              className="w-full form-input-custom px-md py-sm bg-background text-body-md font-body-md text-foreground appearance-none"
-              value={formData.default_tax_rate_id ?? 'none'}
-              onChange={handleChange}
-              disabled={isMutating}
-            >
-              <option value="none">Sin asignar</option>
+        <div className="space-y-xs">
+          <Label htmlFor="tax-rate" className="text-body-md-bold text-foreground">
+            {t('categories.field.tax_rate')}
+          </Label>
+          <Select
+            value={taxRateValue}
+            onValueChange={(v) =>
+              update('default_tax_rate_id', v === NONE_VALUE ? null : Number(v))
+            }
+            disabled={isMutating}
+          >
+            <SelectTrigger id="tax-rate">
+              <SelectValue placeholder={t('categories.field.tax_rate.placeholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE_VALUE}>{t('categories.form.tax_none')}</SelectItem>
               {taxRates.map((rate: any) => (
-                <option key={rate.id} value={rate.id}>
+                <SelectItem key={rate.id} value={String(rate.id)}>
                   {rate.tax_name || rate.name} ({rate.rate}%)
-                </option>
+                </SelectItem>
               ))}
-            </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-deep pointer-events-none">
-              expand_more
-            </span>
-          </div>
+            </SelectContent>
+          </Select>
         </div>
-        
-        {/* La clasificación SIFEN e IVA se configuran y aplican dinámicamente en el panel de Tasas de IVA de abajo */}
-        
-        <div className="mt-auto pt-lg flex justify-end gap-md items-center">
-          {selectedCategory && (
-            <button
+
+        {/* La clasificación SIFEN e IVA se configuran en el panel de Tasas de IVA de abajo */}
+
+        <div className="pt-lg flex justify-end gap-md items-center">
+          {selectedCategory ? (
+            <Button
               type="button"
-              onClick={confirmDelete}
-              className="text-error hover:text-error/80 font-bold text-body-md transition-colors mr-auto flex items-center gap-1"
+              variant="ghost"
+              className="text-error hover:text-error mr-auto"
+              onClick={() => onRequestDelete(selectedCategory)}
               disabled={isMutating}
             >
-              <span className="material-symbols-outlined text-[18px]">delete</span> Eliminar
-            </button>
-          )}
-          <button
-            type="button"
-            className="btn-tertiary px-lg py-sm rounded-lg text-body-md font-bold transition-colors"
-            onClick={onCancel}
-            disabled={isMutating}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn-primary px-lg py-sm rounded-lg text-body-md shadow-sm hover:shadow-md transition-all disabled:opacity-50"
-            disabled={isMutating}
-          >
-            Guardar Cambios
-          </button>
+              <Trash2 className="w-4 h-4 mr-xs" />
+              {t('categories.form.delete')}
+            </Button>
+          ) : null}
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={isMutating}>
+            {t('common.cancel')}
+          </Button>
+          <Button type="submit" variant="primary" loading={isMutating}>
+            {t('categories.form.save')}
+          </Button>
         </div>
       </form>
     </div>
-  );
+  )
 }
 
-export default CategoryDetailForm;
+export default CategoryDetailForm

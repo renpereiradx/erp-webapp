@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -36,66 +37,69 @@ const PartiesPage = () => {
   }, [searchParams, canSeeClients, canSeeSuppliers]);
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500 min-h-screen bg-[#faf9f8] p-6 md:p-8">
-      <div className="w-full max-w-[1600px] mx-auto flex flex-col gap-6">
-        
-        {/* Breadcrumbs */}
-        <nav className="flex items-center text-[11px] font-bold text-slate-400 uppercase tracking-widest gap-2">
-          <span onClick={() => navigate('/dashboard')} className="hover:text-[#0f6cbd] cursor-pointer transition-colors">
-            {t('parties.breadcrumb.home', 'Inicio')}
-          </span>
-          <span className="material-symbols-outlined text-[10px]">chevron_right</span>
-          <span className="text-[#242424] font-bold">
-            {activeTab === 'clientes' ? t('parties.breadcrumb.clients', 'Clientes') : t('parties.breadcrumb.suppliers', 'Proveedores')}
-          </span>
-        </nav>
+    <div className="flex flex-col gap-lg">
+      {/* Breadcrumb */}
+      <nav
+        aria-label={t('parties.breadcrumb.home', 'Inicio')}
+        className="flex items-center gap-xs text-label-caps uppercase text-on-surface-deep"
+      >
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="cursor-pointer transition-colors duration-150 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xs"
+        >
+          {t('parties.breadcrumb.home', 'Inicio')}
+        </button>
+        <ChevronRight className="size-3" aria-hidden="true" />
+        <span className="text-foreground">
+          {activeTab === 'clientes'
+            ? t('parties.breadcrumb.clients', 'Clientes')
+            : t('parties.breadcrumb.suppliers', 'Proveedores')}
+        </span>
+      </nav>
 
-        {/* Unified Page Header */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 border-l-4 border-[#0f6cbd] pl-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-[#242424]">
-              {t('parties.title', 'Gestión de Entidades')}
-            </h1>
-            <p className="text-[#616161] text-base font-medium mt-1.5">
-              {t('parties.subtitle', 'Administra clientes y proveedores del sistema.')}
-            </p>
-          </div>
-        </div>
+      {/* Page header */}
+      <header className="border-l-4 border-primary pl-4">
+        <h1 className="text-headline-lg-mobile md:text-headline-lg text-foreground leading-none">
+          {t('parties.title', 'Gestión de Entidades')}
+        </h1>
+        <p className="text-body-md text-on-surface-deep mt-sm">
+          {t('parties.subtitle', 'Administra clientes y proveedores del sistema.')}
+        </p>
+      </header>
 
-        {/* Fluent 2 Tabs */}
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
-          <TabsList className="bg-[#f3f2f1] text-[#616161] border border-[#d1d1d1] shadow-fluent-2 p-1 rounded-lg h-12 gap-1 w-full max-w-md">
-            {canSeeClients && (
-              <TabsTrigger 
-                value="clientes" 
-                className="flex-1 data-[state=active]:bg-white data-[state=active]:text-[#0f6cbd] data-[state=active]:shadow-sm rounded-md font-bold transition-all text-sm h-10"
-              >
-                {t('parties.tab.clients', 'Directorio de Clientes')}
-              </TabsTrigger>
-            )}
-            {canSeeSuppliers && (
-              <TabsTrigger 
-                value="proveedores" 
-                className="flex-1 data-[state=active]:bg-white data-[state=active]:text-[#0f6cbd] data-[state=active]:shadow-sm rounded-md font-bold transition-all text-sm h-10"
-              >
-                {t('parties.tab.suppliers', 'Directorio de Proveedores')}
-              </TabsTrigger>
-            )}
-          </TabsList>
-
+      {/* Fluent 2 tabs */}
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full gap-lg">
+        <TabsList className="bg-surface-muted border border-border-subtle shadow-fluent-2 p-xs rounded-button h-11 gap-xs w-full max-w-md">
           {canSeeClients && (
-            <TabsContent value="clientes" className="mt-0 outline-none">
-              <ClientsPage />
-            </TabsContent>
+            <TabsTrigger
+              value="clientes"
+              className="flex-1 data-[state=active]:bg-surface data-[state=active]:text-primary rounded-sm h-9 text-body-md"
+            >
+              {t('parties.tab.clients', 'Directorio de Clientes')}
+            </TabsTrigger>
           )}
           {canSeeSuppliers && (
-            <TabsContent value="proveedores" className="mt-0 outline-none">
-              <SuppliersPage />
-            </TabsContent>
+            <TabsTrigger
+              value="proveedores"
+              className="flex-1 data-[state=active]:bg-surface data-[state=active]:text-primary rounded-sm h-9 text-body-md"
+            >
+              {t('parties.tab.suppliers', 'Directorio de Proveedores')}
+            </TabsTrigger>
           )}
-        </Tabs>
+        </TabsList>
 
-      </div>
+        {canSeeClients && (
+          <TabsContent value="clientes" className="mt-0 outline-none">
+            <ClientsPage />
+          </TabsContent>
+        )}
+        {canSeeSuppliers && (
+          <TabsContent value="proveedores" className="mt-0 outline-none">
+            <SuppliersPage />
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 };

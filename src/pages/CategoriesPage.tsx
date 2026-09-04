@@ -1,68 +1,187 @@
-import { useCategoryManagement, CategoryTree, CategoryDetailForm, TaxRatesPanel } from '@/features/categories';
+import { FolderTree, Plus, Search } from 'lucide-react'
 
+import { useI18n } from '@/lib/i18n'
+import PageHeader from '@/components/ui/PageHeader'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import EmptyState from '@/components/ui/EmptyState'
+import GenericSkeletonList from '@/components/ui/GenericSkeletonList'
+import ErrorState from '@/components/ui/ErrorState'
+import WorkspaceLayout from '@/components/layout/WorkspaceLayout'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+
+import {
+  CategoryDetailForm,
+  CategoryTree,
+  TaxRatesPanel,
+  useCategoryManagement,
+} from '@/features/categories'
+
+/**
+ * Categories Page — Categorías e Impuestos.
+ * Workspace maestro-detalle (conductor/PLAN_CATALOG_WORKSPACE_LAYOUT_FRONTEND.md):
+ * árbol sticky a la izquierda; a la derecha, un único estado de bienvenida cuando
+ * no hay selección (antes se mostraban dos empty states) o formulario + panel fiscal.
+ */
 export default function CategoriesPage() {
+  const { t } = useI18n()
   const {
     categories,
     filteredCategories,
+    loading,
+    error,
     searchTerm,
     setSearchTerm,
     selectedCategory,
+    isDrawerOpen,
+    isDeleteDialogOpen,
+    isMutating,
+    isDeleting,
     openCreate,
     openEdit,
+    openDelete,
+    closeDrawer,
+    closeDeleteDialog,
     handleSave,
     confirmDelete,
-    isMutating,
-    isDrawerOpen,
-    closeDrawer
-  } = useCategoryManagement();
-  
+    refetch,
+  } = useCategoryManagement()
+
+  const handleConfirmDelete = async () => {
+    const deleted = await confirmDelete()
+    // Si se borró la categoría editada, el formulario vuelve al estado vacío.
+    if (deleted) closeDrawer()
+  }
+
+  const hasSelection = !!selectedCategory || isDrawerOpen
+
   return (
-    <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative bg-surface dark:bg-[#121212]">
-      <header className="flex justify-between items-center w-full px-lg max-w-container-max mx-auto h-16 shrink-0 z-30 bg-background shadow-sm">
-        <div className="flex items-center gap-lg flex-1">
-          <h2 className="font-headline-md text-headline-md font-black text-foreground hidden lg:block">Categorías e Impuestos</h2>
-          <div className="relative w-full max-w-md ml-0 lg:ml-lg">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg">search</span>
-            <input 
-              className="w-full pl-10 pr-4 py-2 bg-surface-muted border border-transparent rounded-xl font-body-md text-body-md text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
-              placeholder="Buscar categorías..." 
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
+        <PageHeader
+          breadcrumb={t('nav.categoriesTaxes')}
+          title={t('categories.page.title')}
+          subtitle={t('categories.page.subtitle')}
+          actions={
+            <Button variant="primary" onClick={openCreate}>
+              <Plus className="w-4 h-4 mr-xs" />
+              {t('categories.management.new')}
+            </Button>
+          }
+        />
 
-      {/* Main Workspace */}
-      <main className="flex-1 p-md md:p-gutter flex flex-col overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-lg h-full pb-xl">
-          {/* Column 1: Árbol de Categorías */}
-          <div className="lg:col-span-4 h-full">
-            <CategoryTree
-              categories={filteredCategories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={openEdit}
-              onAddCategory={openCreate}
-            />
-          </div>
+        {error ? (
+          <section className="mt-lg">
+            <ErrorState title={t('errors.load_title')} message={error} onRetry={refetch} />
+          </section>
+        ) : loading && categories.length === 0 ? (
+          <section className="mt-lg">
+            <GenericSkeletonList count={5} data-testid="page-loading" />
+          </section>
+        ) : (
+          <section className="mt-lg">
+            <WorkspaceLayout
+              testId="categories-workspace"
+              sticky="master"
+              masterClassName="lg:col-span-5"
+              detailClassName="lg:col-span-7"
+              toolbar={
+                <>
+                  <Badge variant="secondary">
+                    {t('categories.count', { count: filteredCategories.length })}
+                  </Badge>
+                  <div className="relative w-full sm:w-64">
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-deep pointer-events-none" />
+                    <Input
+                      className="pl-10 bg-surface border-border-subtle"
+                      placeholder={t('categories.search.placeholder')}
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      aria-label={t('categories.search.placeholder')}
+                    />
+                  </div>
+                </>
+              }
+              master={
+                <CategoryTree
+                  categories={filteredCategories}
+                  selectedCategory={selectedCategory}
+                  onSelectCategory={openEdit}
+                  onAddCategory={openCreate}
+                />
+              }
+              detail={
+                !hasSelection ? (
+                  <div className="bg-surface rounded-md shadow-whisper border-0 p-lg">
+                    <EmptyState
+                      icon={FolderTree}
+                      title={t('categories.welcome_title')}
+                      description={t('categories.welcome_description')}
+                      actionLabel={t('categories.management.new')}
+                      onAction={openCreate}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <CategoryDetailForm
+                      selectedCategory={selectedCategory}
+                      categories={categories}
+                      handleSave={handleSave}
+                      onRequestDelete={openDelete}
+                      isMutating={isMutating}
+                      onCancel={closeDrawer}
+                      isOpen={isDrawerOpen}
+                    />
 
-          {/* Column 2: Formularios y Configuración */}
-          <div className="lg:col-span-8 flex flex-col gap-lg h-full overflow-y-auto pr-sm custom-scrollbar pb-10">
-            <CategoryDetailForm
-              selectedCategory={selectedCategory}
-              categories={categories}
-              handleSave={handleSave}
-              confirmDelete={() => confirmDelete()}
-              isMutating={isMutating}
-              onCancel={closeDrawer}
-              isOpen={isDrawerOpen}
+                    <TaxRatesPanel selectedCategory={selectedCategory} />
+                  </>
+                )
+              }
             />
-            
-            <TaxRatesPanel selectedCategory={selectedCategory} />
-          </div>
-        </div>
-      </main>
+          </section>
+        )}
+      </div>
+
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) closeDeleteDialog()
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('categories.delete.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('categories.delete.description', { name: selectedCategory?.name ?? '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={(e) => {
+                // Evitar que Radix cierre el diálogo antes de conocer el resultado.
+                e.preventDefault()
+                handleConfirmDelete()
+              }}
+              className="bg-error hover:bg-error/90 text-on-error"
+            >
+              {isDeleting ? t('categories.delete.deleting') : t('categories.delete.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
-  );
+  )
 }

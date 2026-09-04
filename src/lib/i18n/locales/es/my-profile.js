@@ -27,5 +27,46 @@ export const myProfile = {
   'profile.errors.update_failed': 'Error al actualizar el perfil',
   'profile.errors.password_mismatch': 'Las contraseñas no coinciden',
   'profile.success.password_changed': 'Contraseña cambiada correctamente',
-  'profile.errors.password_change_failed': 'Error al cambiar la contraseña'
+  'profile.errors.password_change_failed': 'Error al cambiar la contraseña',
+  'profile.errors.fetch_failed': 'Error al cargar el perfil',
+
+  // Encabezado y estados
+  'profile.account_settings': 'Configuración de Cuenta',
+  'profile.status.active': 'Activo',
+  'profile.status.inactive': 'Inactivo',
+  'profile.loading': 'Cargando perfil…',
+  'profile.change_photo': 'Cambiar foto de perfil',
+  'profile.badge.current': 'Actual',
+
+  // Formularios
+  'profile.username': 'Nombre de Usuario',
+  'profile.email.readonly_hint': 'El correo no puede modificarse desde el perfil.',
+  'profile.password.show': 'Mostrar contraseña',
+  'profile.password.hide': 'Ocultar contraseña',
+  'profile.password.placeholder.repeat': 'Repite la nueva contraseña',
+  'profile.password.strength.label': 'Seguridad:',
+  'profile.password.strength.weak': 'Débil',
+  'profile.password.strength.fair': 'Regular',
+  'profile.password.strength.good': 'Buena',
+  'profile.password.strength.strong': 'Fuerte',
+  'profile.password.mismatch': 'Las contraseñas no coinciden',
+  'profile.password.logout_others': 'Cerrar todas las demás sesiones activas',
+  'profile.password.logout_others_hint':
+    'Al cambiar tu contraseña, todas las sesiones en otros dispositivos serán invalidadas por seguridad.',
+
+  // Sesiones activas
+  'profile.errors.sessions_failed': 'Error al cargar las sesiones activas',
+  'profile.sessions.loading': 'Cargando sesiones…',
+  'profile.sessions.empty': 'No se encontraron sesiones activas',
+  'profile.sessions.revoke': 'Revocar sesión',
+  'profile.sessions.expires': 'Expira',
+  'profile.sessions.activity_recent': 'Activo',
+  'profile.sessions.device_unknown': 'Dispositivo Desconocido',
+  'profile.sessions.revoke_all_title': 'Cerrar las demás sesiones',
+  'profile.sessions.revoke_all_description':
+    'Se cerrarán todas tus sesiones en otros dispositivos. Tendrás que iniciar sesión nuevamente en ellos.',
+  'profile.sessions.revoke_all_confirm': 'Cerrar sesiones',
+  'profile.sessions.revoke_success': 'Sesión revocada correctamente',
+  'profile.sessions.revoke_error': 'Error al revocar la sesión',
+  'profile.sessions.revoke_all_success': 'Sesiones cerradas correctamente'
 }

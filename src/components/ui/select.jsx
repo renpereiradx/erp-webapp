@@ -28,7 +28,7 @@ function SelectValue({ ...props }) {
   )
 }
 
-function SelectTrigger({ className, size = 'default', children, ...props }) {
+function SelectTrigger({ className = '', size = 'default', children, ...props }) {
   return (
     <SelectPrimitive.Trigger
       data-slot='select-trigger'
@@ -49,7 +49,7 @@ function SelectTrigger({ className, size = 'default', children, ...props }) {
 }
 
 /** @param {{ className?: string; children?: React.ReactNode; position?: string; [key: string]: any }} props */
-function SelectContent({ className, children, position = 'popper', ...props }) {
+function SelectContent({ className = '', children, position = 'popper', ...props }) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -81,7 +81,7 @@ function SelectContent({ className, children, position = 'popper', ...props }) {
   )
 }
 
-function SelectLabel({ className, ...props }) {
+function SelectLabel({ className = '', ...props }) {
   return (
     <SelectPrimitive.Label
       data-slot='select-label'
@@ -93,7 +93,7 @@ function SelectLabel({ className, ...props }) {
 }
 
 /** @param {{ className?: string; children?: React.ReactNode; [key: string]: any }} props */
-function SelectItem({ className, children, ...props }) {
+function SelectItem({ className = '', children, ...props }) {
   return (
     <SelectPrimitive.Item
       data-slot='select-item'
@@ -114,7 +114,7 @@ function SelectItem({ className, children, ...props }) {
   )
 }
 
-function SelectSeparator({ className, ...props }) {
+function SelectSeparator({ className = '', ...props }) {
   return (
     <SelectPrimitive.Separator
       data-slot='select-separator'
@@ -124,7 +124,7 @@ function SelectSeparator({ className, ...props }) {
   )
 }
 
-function SelectScrollUpButton({ className, ...props }) {
+function SelectScrollUpButton({ className = '', ...props }) {
   return (
     <SelectPrimitive.ScrollUpButton
       data-slot='select-scroll-up-button'
@@ -140,7 +140,7 @@ function SelectScrollUpButton({ className, ...props }) {
   )
 }
 
-function SelectScrollDownButton({ className, ...props }) {
+function SelectScrollDownButton({ className = '', ...props }) {
   return (
     <SelectPrimitive.ScrollDownButton
       data-slot='select-scroll-down-button'

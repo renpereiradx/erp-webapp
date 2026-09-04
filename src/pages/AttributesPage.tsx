@@ -1,10 +1,34 @@
-import React, { useState } from 'react';
-import { useAttributes } from '@/hooks/useAttributes';
-import { AttributesTab } from '@/components/attributes/AttributesTab';
-import { TagsTab } from '@/components/attributes/TagsTab';
+import { useState } from 'react'
+import { Plus, Search } from 'lucide-react'
 
+import { useI18n } from '@/lib/i18n'
+import PageHeader from '@/components/ui/PageHeader'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import SegmentedControl from '@/components/ui/SegmentedControl'
+import GenericSkeletonList from '@/components/ui/GenericSkeletonList'
+import ErrorState from '@/components/ui/ErrorState'
+import WorkspaceLayout from '@/components/layout/WorkspaceLayout'
+
+import {
+  AttributeEditor,
+  AttributesTable,
+  TagEditor,
+  TagsTable,
+  useAttributes,
+} from '@/features/attributes'
+
+type AttributesTabKey = 'attributes' | 'tags'
+
+/**
+ * Attributes Page — Atributos y Etiquetas.
+ * Workspace maestro-detalle (conductor/PLAN_CATALOG_WORKSPACE_LAYOUT_FRONTEND.md):
+ * tabs + búsqueda en la toolbar, listado a la izquierda, editor sticky a la derecha.
+ */
 export const AttributesPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'attributes' | 'tags'>('attributes');
+  const { t } = useI18n()
+  const [activeTab, setActiveTab] = useState<AttributesTabKey>('attributes')
   const {
     filteredAttributes,
     filteredTags,
@@ -18,76 +42,135 @@ export const AttributesPage: React.FC = () => {
     setSelectedTag,
     categories,
     loading,
+    error,
     handleCreateNew,
     handleCreateNewTag,
     handleSaveAttribute,
     handleDeleteAttribute,
     handleSaveTag,
     handleDeleteTag,
-  } = useAttributes();
+    refetch,
+  } = useAttributes()
+
+  const tabOptions = [
+    { value: 'attributes' as const, label: t('attributes.tab.attributes') },
+    { value: 'tags' as const, label: t('attributes.tab.tags') },
+  ]
+  const isAttrTab = activeTab === 'attributes'
+  const searchTerm = isAttrTab ? searchAttrTerm : searchTagTerm
+  const resultCount = isAttrTab ? filteredAttributes.length : filteredTags.length
+
+  const searchPlaceholder = isAttrTab
+    ? t('attributes.search.placeholder_attr')
+    : t('attributes.search.placeholder_tag')
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen relative bg-background">
-      <header className="flex justify-between items-center w-full px-lg max-w-container-max mx-auto h-16 sticky top-0 z-30 bg-background shadow-sm">
-        <div className="flex items-center space-x-lg">
-          <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-black text-primary">Attribute Manager</h2>
-        </div>
-      </header>
-
-      <main className="flex-1 p-md md:p-gutter flex flex-col overflow-hidden">
-        {/* Page Header */}
-        <div className="flex justify-between items-end border-b border-divider/30 mb-lg">
-          {/* Tabs */}
-          <div className="flex">
-            <button 
-              onClick={() => setActiveTab('attributes')}
-              className={`font-body-sm-bold text-body-sm-bold pb-sm px-4 transition-colors ${activeTab === 'attributes' ? 'text-primary border-b-2 border-primary' : 'text-on-surface-deep hover:text-primary'}`}
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
+        <PageHeader
+          breadcrumb={t('nav.attributesTags')}
+          title={t('attributes.title')}
+          subtitle={t('attributes.subtitle')}
+          actions={
+            <Button
+              variant="primary"
+              onClick={isAttrTab ? handleCreateNew : handleCreateNewTag}
             >
-              Definición de Atributos
-            </button>
-            <button 
-              onClick={() => setActiveTab('tags')}
-              className={`font-body-sm-bold text-body-sm-bold pb-sm px-4 transition-colors ${activeTab === 'tags' ? 'text-primary border-b-2 border-primary' : 'text-on-surface-deep hover:text-primary'}`}
-            >
-              Etiquetas (Tags)
-            </button>
-          </div>
-          
-          <button 
-            onClick={activeTab === 'attributes' ? handleCreateNew : handleCreateNewTag}
-            className="bg-primary text-on-primary py-2 px-6 font-body-sm-bold hover:bg-primary-container hover:text-on-primary-container transition-colors"
-          >
-            {activeTab === 'attributes' ? 'Nuevo Atributo' : 'Nueva Etiqueta'}
-          </button>
-        </div>
+              <Plus className="w-4 h-4 mr-xs" />
+              {isAttrTab ? t('attributes.action.new_attribute') : t('attributes.action.new_tag')}
+            </Button>
+          }
+        />
 
-        {/* Tab Content */}
-        {activeTab === 'attributes' ? (
-          <AttributesTab 
-            attributes={filteredAttributes}
-            categories={categories}
-            searchTerm={searchAttrTerm}
-            onSearchChange={setSearchAttrTerm}
-            selectedAttribute={selectedAttribute}
-            onSelectAttribute={setSelectedAttribute}
-            onSaveAttribute={handleSaveAttribute}
-            onDeleteAttribute={handleDeleteAttribute}
-            loading={loading}
-          />
+        {error ? (
+          <section className="mt-lg">
+            <ErrorState title={t('errors.load_title')} message={error} onRetry={refetch} />
+          </section>
+        ) : loading && filteredAttributes.length === 0 && filteredTags.length === 0 ? (
+          <section className="mt-lg">
+            <GenericSkeletonList count={5} data-testid="page-loading" />
+          </section>
         ) : (
-          <TagsTab 
-            tags={filteredTags}
-            categories={categories}
-            searchTerm={searchTagTerm}
-            onSearchChange={setSearchTagTerm}
-            selectedTag={selectedTag}
-            onSelectTag={setSelectedTag}
-            onSaveTag={handleSaveTag}
-            onDeleteTag={handleDeleteTag}
-            loading={loading}
-          />
+          <section className="mt-lg">
+            <WorkspaceLayout
+              testId="attributes-workspace"
+              sticky="detail"
+              masterClassName="lg:col-span-8"
+              detailClassName="lg:col-span-4"
+              toolbar={
+                <>
+                  <SegmentedControl
+                    options={tabOptions}
+                    value={activeTab}
+                    onChange={(v) => setActiveTab(v as AttributesTabKey)}
+                    aria-label={t('attributes.tab.attributes')}
+                  />
+                  <div className="flex items-center gap-md">
+                    <div className="relative w-full sm:w-64">
+                      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-deep pointer-events-none" />
+                      <Input
+                        className="pl-10 bg-surface border-border-subtle"
+                        placeholder={searchPlaceholder}
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) =>
+                          isAttrTab ? setSearchAttrTerm(e.target.value) : setSearchTagTerm(e.target.value)
+                        }
+                        aria-label={searchPlaceholder}
+                      />
+                    </div>
+                    <Badge variant="secondary">
+                      {isAttrTab
+                        ? t('attributes.count', { count: resultCount })
+                        : t('attributes.count_tags', { count: resultCount })}
+                    </Badge>
+                  </div>
+                </>
+              }
+              master={
+                isAttrTab ? (
+                  <AttributesTable
+                    attributes={filteredAttributes}
+                    selectedAttribute={selectedAttribute}
+                    onSelectAttribute={setSelectedAttribute}
+                    loading={loading}
+                  />
+                ) : (
+                  <TagsTable
+                    tags={filteredTags}
+                    selectedTag={selectedTag}
+                    onSelectTag={setSelectedTag}
+                    loading={loading}
+                  />
+                )
+              }
+              detail={
+                isAttrTab ? (
+                  <AttributeEditor
+                    selectedAttribute={selectedAttribute}
+                    onSelectAttribute={setSelectedAttribute}
+                    categories={categories}
+                    onSaveAttribute={handleSaveAttribute}
+                    onDeleteAttribute={handleDeleteAttribute}
+                    loading={loading}
+                  />
+                ) : (
+                  <TagEditor
+                    selectedTag={selectedTag}
+                    onSelectTag={setSelectedTag}
+                    categories={categories}
+                    onSaveTag={handleSaveTag}
+                    onDeleteTag={handleDeleteTag}
+                    loading={loading}
+                  />
+                )
+              }
+            />
+          </section>
         )}
-      </main>
+      </div>
     </div>
-  );
-};
+  )
+}
+
+export default AttributesPage

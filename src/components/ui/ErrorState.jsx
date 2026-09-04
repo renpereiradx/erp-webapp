@@ -3,6 +3,18 @@ import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 
+/**
+ * @param {{
+ *   title?: any;
+ *   message?: any;
+ *   code?: string;
+ *   hint?: string;
+ *   onRetry?: () => void;
+ *   onSecondary?: () => void;
+ *   actions?: Array<{ label: any; onClick: () => void; variant?: string }>;
+ *   'data-testid'?: string;
+ * }} props
+ */
 const ErrorState = ({ title, message, code, hint, onRetry, onSecondary, actions = [], 'data-testid': testId }) => {
   const { t } = useI18n();
   const ariaLabel = code === 'NETWORK' ? t('announce.error_network', { msg: message }) : code === 'VALIDATION' ? t('announce.error_validation', { msg: message }) : message;

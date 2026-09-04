@@ -28,7 +28,7 @@ const CashRegister = () => {
     closeCashRegister,
     registerMovement,
     getCashRegisterReport,
-  } = useCashRegisterSession();
+  } = useCashRegisterSession({ includeHistory: true });
 
   const [openCashRegisterDialog, setOpenCashRegisterDialog] = useState(false);
   const [closeCashRegisterDialog, setCloseCashRegisterDialog] = useState(false);

@@ -6,6 +6,8 @@
 import { common } from './common'
 import { products } from './products'
 import { categories } from './categories'
+import { brands } from './brands'
+import { attributes } from './attributes'
 import { purchases } from './purchases'
 import { priceAdjustments } from './priceAdjustments'
 import { productAdjustments } from './productAdjustments'
@@ -23,6 +25,7 @@ import { currencies } from './currencies'
 import { exchangeRates } from './exchangeRates'
 import { dashboard } from './dashboard'
 import { users } from './users'
+import { sessions } from './sessions'
 import { myProfile } from './my-profile'
 import { receivables } from './receivables'
 import payables from './payables'
@@ -38,6 +41,8 @@ export const es = {
   ...common,
   ...products,
   ...categories,
+  ...brands,
+  ...attributes,
   ...purchases,
   ...priceAdjustments,
   ...productAdjustments,
@@ -54,6 +59,7 @@ export const es = {
   ...exchangeRates,
   ...dashboard,
   ...users,
+  ...sessions,
   ...myProfile,
   ...receivables,
   payables,

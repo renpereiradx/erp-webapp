@@ -424,19 +424,19 @@ function AppContent() {
                       } />
                       
                       <Route path='/configuracion/usuarios' element={
-                        <RoleGuard allowedRoles={['F2VLso']}>
+                        <PermissionGuard permission="users:read">
                           <UserManagementList />
-                        </RoleGuard>
+                        </PermissionGuard>
                       } />
                       <Route path='/configuracion/usuarios/:id' element={
-                        <RoleGuard allowedRoles={['F2VLso']}>
+                        <PermissionGuard permission="users:read">
                           <UserDetailedProfile />
-                        </RoleGuard>
+                        </PermissionGuard>
                       } />
                       <Route path='/configuracion/sesiones' element={
-                        <RoleGuard allowedRoles={['F2VLso']}>
+                        <PermissionGuard permission="users:read">
                           <AdminSessionsDashboard />
-                        </RoleGuard>
+                        </PermissionGuard>
                       } />
                       <Route path='/configuracion/balanzas' element={
                         <PermissionGuard permission="products:read">

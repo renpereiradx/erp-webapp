@@ -26,6 +26,7 @@ export const common = {
   'action.edit': 'Edit',
   'action.delete': 'Delete',
   'action.save': 'Save',
+  'action.save_changes': 'Save changes',
   'action.cancel': 'Cancel',
   'action.confirm': 'Confirm',
   'action.close': 'Close',
@@ -90,8 +91,13 @@ export const common = {
   'common.processing': 'Processing...',
   'common.cancel': 'Cancel',
   'common.save': 'Save',
+  'common.close': 'Close',
+  'common.delete': 'Delete',
   'common.optional': 'Optional',
   'common.home': 'Home',
+
+  // Error states
+  'errors.load_title': 'Could not load data',
 
   // Badges
   'badge.low_stock': 'Low stock',

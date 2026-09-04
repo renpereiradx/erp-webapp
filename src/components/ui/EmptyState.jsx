@@ -7,6 +7,19 @@ import React from 'react';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 
+/**
+ * @param {{
+ *   icon?: React.ComponentType<{ className?: string }>;
+ *   title?: any;
+ *   description?: any;
+ *   actionLabel?: string;
+ *   onAction?: () => void;
+ *   size?: 'small' | 'medium' | 'large';
+ *   variant?: 'default' | 'search' | 'instruction';
+ *   className?: string;
+ *   'data-testid'?: string;
+ * }} props
+ */
 const EmptyState = ({
   icon: Icon,
   title,

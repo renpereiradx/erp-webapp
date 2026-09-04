@@ -15,6 +15,15 @@ export const party = {
   'party.field.address_country': 'Country',
   'party.select.placeholder': 'Not specified',
 
+  // Unified /parties directory page
+  'parties.title': 'Entity Management',
+  'parties.subtitle': 'Manage the system clients and suppliers.',
+  'parties.breadcrumb.home': 'Home',
+  'parties.breadcrumb.clients': 'Clients',
+  'parties.breadcrumb.suppliers': 'Suppliers',
+  'parties.tab.clients': 'Client Directory',
+  'parties.tab.suppliers': 'Supplier Directory',
+
   // Quick client registration (POS)
   'party.quick_client.title': 'Quick client registration',
   'party.quick_client.subtitle': 'Minimal data to continue the sale',

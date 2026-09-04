@@ -16,6 +16,7 @@ export const clients = {
   'clients.search.db': 'Buscar en Base de Datos',
   'clients.search.label': 'Buscar clientes',
   'clients.search.placeholder': 'Buscar por nombre, documento o ID...',
+  'clients.search.min_chars': 'Escribe al menos 3 caracteres para buscar ({count}/3)',
   'clients.clear': 'Limpiar',
   'clients.filter.current_results_title': 'Filtrar Resultados Actuales',
   'clients.filter.name_placeholder': 'Filtrar por nombre...',
@@ -37,6 +38,7 @@ export const clients = {
   'clients.table.document': 'DOCUMENTO',
   'clients.table.contact': 'CONTACTO',
   'clients.table.status': 'ESTADO',
+  'clients.table.select_all': 'Seleccionar todos los clientes',
 
   // Estados
   'clients.status.active': 'Activo',
@@ -58,6 +60,7 @@ export const clients = {
   'client.modal.edit_subtitle': 'Modifica la información del cliente',
   'client.modal.create_subtitle': 'Ingresa los datos del nuevo cliente',
   'clients.modal.title.details': 'Detalles del Cliente',
+  'clients.details.risk_analysis': 'Análisis de Riesgo',
   'clients.modal.title.create': 'Nuevo Cliente',
   'clients.modal.title.edit': 'Editar Cliente',
   'clients.modal.field.id': 'ID',

@@ -91,4 +91,61 @@ export const cashRegister = {
   'cashRegister.loading': 'Cargando...',
   'cashRegister.opening': 'Abriendo caja...',
   'cashRegister.closing': 'Cerrando caja...',
+
+  // Página de jornada (/caja-registradora)
+  'cashRegister.page.title': 'Jornada de caja',
+  'cashRegister.page.subtitle':
+    'Control de apertura y cierre de terminales de punto de venta.',
+  'cashRegister.loadingSession': 'Cargando jornada...',
+  'cashRegister.action.seeMovements': 'Ver movimientos',
+  'cashRegister.tab.openPanel': 'Apertura de caja',
+  'cashRegister.tab.closePanel': 'Cierre de caja',
+
+  // Tarjeta de sesión activa
+  'cashRegister.session.activeTerminal': 'Terminal activa',
+  'cashRegister.session.noActiveTerminal': 'Sin terminal activa',
+  'cashRegister.session.noActiveTerminalDesc':
+    'No hay una jornada abierta. Inicie la apertura para registrar movimientos.',
+  'cashRegister.session.systemBalance': 'Saldo en sistema',
+  'cashRegister.session.notDefined': 'No definida',
+  'cashRegister.action.closeJourney': 'Cerrar jornada',
+
+  // Formulario de apertura (jornada)
+  'cashRegister.open.identifier': 'Nombre identificador',
+  'cashRegister.open.identifierPlaceholder': 'Ej: CAJA-01 Turno Mañana',
+  'cashRegister.open.effectiveDate': 'Fecha efectiva',
+  'cashRegister.open.initialFloat': 'Fondo inicial de maniobra',
+  'cashRegister.open.auditNotes': 'Notas de auditoría',
+  'cashRegister.open.auditNotesPlaceholder':
+    'Añada detalles sobre el estado inicial del efectivo o novedades...',
+  'cashRegister.open.restrictionTitle': 'Restricción de operación',
+  'cashRegister.open.restrictionDesc':
+    'Ya existe una sesión activa para este terminal. Debe finalizar la jornada actual antes de iniciar una nueva apertura de fondos.',
+
+  // Formulario de cierre (jornada)
+  'cashRegister.close.countRequired': 'Arqueo requerido',
+  'cashRegister.close.countHelp':
+    'Ingrese el efectivo total contado físicamente en {name}.',
+  'cashRegister.close.physicalFinal': 'Balance físico final',
+  'cashRegister.close.auditDifference': 'Diferencia de auditoría',
+  'cashRegister.close.balanced': 'Balance cuadrado',
+  'cashRegister.close.needsJustification': 'Requiere justificación',
+  'cashRegister.close.observations': 'Observaciones de cierre',
+  'cashRegister.close.observationsPlaceholder':
+    'Describa el motivo de cualquier discrepancia detectada o novedades durante el turno...',
+  'cashRegister.close.finalize': 'Finalizar y cerrar caja',
+  'cashRegister.close.noTerminalTitle': 'No hay terminal activa',
+  'cashRegister.close.noTerminalDesc':
+    'Debe existir una jornada operativa abierta para poder realizar el cierre.',
+  'cashRegister.close.goToOpen': 'Ir a Apertura',
+
+  // Campos comunes de jornada
+  'cashRegister.field.identifier': 'Identificador',
+  'cashRegister.field.initialFloat': 'Fondo inicial',
+
+  // Errores de jornada
+  'cashRegister.error.noActiveSession': 'No hay caja activa',
+  'cashRegister.error.noSessionId':
+    'No se pudo identificar la caja activa para cerrarla',
+  'cashRegister.error.invalidFinalBalance': 'El saldo ingresado no es válido',
 }
