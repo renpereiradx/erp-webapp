@@ -7,7 +7,7 @@ import { vi } from 'vitest';
 describe('ErrorState', () => {
   test('renders message, code, hint and retry', () => {
     const onRetry = vi.fn();
-  renderWithTheme(
+    renderWithTheme(
       <ErrorState
         title="Load failed"
         message="Network unreachable"
@@ -19,10 +19,13 @@ describe('ErrorState', () => {
     );
 
     expect(screen.getByText('Load failed')).toBeInTheDocument();
-    expect(screen.getByText('Network unreachable')).toBeInTheDocument();
-    expect(screen.getByText(/Código|Error code|Código:/i) || screen.getByText(/Error code:/i)).toBeTruthy();
-    const retry = screen.getByTestId('error-retry');
-    fireEvent.click(retry);
+    // El mensaje vive en un role="status" con aria-live.
+    expect(screen.getByRole('status')).toHaveTextContent('Network unreachable');
+    // Contrato con i18n real (vitest.setup): 'errors.code_label' → 'Código: {code}'.
+    expect(screen.getByText('Código: NETWORK')).toBeInTheDocument();
+    expect(screen.getByText('Check network')).toBeInTheDocument();
+    expect(screen.getByTestId('error-retry')).toHaveAccessibleName(/reintentar/i);
+    fireEvent.click(screen.getByTestId('error-retry'));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 });

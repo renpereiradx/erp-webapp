@@ -1,13 +1,20 @@
 /**
- * Tests MVP para Price Adjustment Store
- * Siguiendo patrón de testing simple y efectivo
+ * usePriceAdjustmentStore — contract tests.
+ * Movido desde src/__tests__/priceAdjustment.store.test.js a la ubicación
+ * canónica de stores. El mock del servicio se ajustó al contrato actual:
+ * priceAdjustmentService.createPriceAdjustment resuelve { success, data }.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import usePriceAdjustmentStore from '../store/usePriceAdjustmentStore';
-import { priceAdjustmentService } from '../services/priceAdjustmentService';
+import usePriceAdjustmentStore from '../usePriceAdjustmentStore';
+import { priceAdjustmentService } from '@/services/priceAdjustmentService';
 
-vi.mock('../services/priceAdjustmentService');
+vi.mock('@/services/priceAdjustmentService');
+vi.mock('@/store/useProductStore', () => ({
+  default: {
+    getState: () => ({ invalidateProductCache: vi.fn() }),
+  },
+}));
 
 describe('PriceAdjustment Store', () => {
   beforeEach(() => {
@@ -31,7 +38,11 @@ describe('PriceAdjustment Store', () => {
         created_at: new Date().toISOString()
       };
 
-      priceAdjustmentService.createPriceAdjustment.mockResolvedValue(mockAdjustment);
+      // Contrato actual del servicio: resuelve { success, data }
+      priceAdjustmentService.createPriceAdjustment.mockResolvedValue({
+        success: true,
+        data: mockAdjustment,
+      });
 
       const adjustmentData = {
         product_id: 'PROD_TEST_001',
@@ -44,7 +55,7 @@ describe('PriceAdjustment Store', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockAdjustment);
-      
+
       const state = usePriceAdjustmentStore.getState();
       expect(state.adjustments).toHaveLength(1);
       expect(state.adjustments[0]).toEqual(mockAdjustment);
@@ -67,11 +78,31 @@ describe('PriceAdjustment Store', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe(errorMessage);
-      
+
       const state = usePriceAdjustmentStore.getState();
       expect(state.adjustments).toHaveLength(0);
       expect(state.creating).toBe(false);
       expect(state.error).toBe(errorMessage);
+    });
+
+    it('should set error when the service reports failure', async () => {
+      priceAdjustmentService.createPriceAdjustment.mockResolvedValue({
+        success: false,
+        message: 'Stock insuficiente',
+      });
+
+      const result = await usePriceAdjustmentStore.getState().createPriceAdjustment({
+        product_id: 'PROD_TEST_001',
+        new_price: 16.50,
+        unit: 'UNIT',
+        reason: 'Test adjustment',
+      });
+
+      expect(result.success).toBe(false);
+
+      const state = usePriceAdjustmentStore.getState();
+      expect(state.error).toBe('Stock insuficiente');
+      expect(state.creating).toBe(false);
     });
   });
 
@@ -101,7 +132,7 @@ describe('PriceAdjustment Store', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockHistory.history);
-      
+
       const state = usePriceAdjustmentStore.getState();
       expect(state.productHistory['PROD_TEST_001']).toBeDefined();
       expect(state.loading).toBe(false);
@@ -116,7 +147,7 @@ describe('PriceAdjustment Store', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe(errorMessage);
-      
+
       const state = usePriceAdjustmentStore.getState();
       expect(state.loading).toBe(false);
       expect(state.error).toBe(errorMessage);
@@ -148,7 +179,7 @@ describe('PriceAdjustment Store', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockAdjustments);
-      
+
       const state = usePriceAdjustmentStore.getState();
       expect(state.adjustments).toEqual(mockAdjustments);
       expect(state.loading).toBe(false);
@@ -176,14 +207,14 @@ describe('PriceAdjustment Store', () => {
           created_at: '2023-01-03T00:00:00Z'
         }
       ];
-      
+
       usePriceAdjustmentStore.setState({ adjustments: testAdjustments });
     });
 
     it('should filter adjustments by product', () => {
       const state = usePriceAdjustmentStore.getState();
       const productAdjustments = state.getAdjustmentsByProduct('PROD_A');
-      
+
       expect(productAdjustments).toHaveLength(2);
       expect(productAdjustments.every(adj => adj.product_id === 'PROD_A')).toBe(true);
     });
@@ -191,7 +222,7 @@ describe('PriceAdjustment Store', () => {
     it('should get recent adjustments sorted by date', () => {
       const state = usePriceAdjustmentStore.getState();
       const recentAdjustments = state.getRecentAdjustments(2);
-      
+
       expect(recentAdjustments).toHaveLength(2);
       // Should be sorted by date descending (most recent first)
       expect(recentAdjustments[0].id).toBe(3);
@@ -202,35 +233,35 @@ describe('PriceAdjustment Store', () => {
   describe('utility functions', () => {
     it('should clear error', () => {
       usePriceAdjustmentStore.setState({ error: 'Test error' });
-      
+
       usePriceAdjustmentStore.getState().clearError();
-      
+
       expect(usePriceAdjustmentStore.getState().error).toBe(null);
     });
 
     it('should clear adjustments', () => {
-      usePriceAdjustmentStore.setState({ 
+      usePriceAdjustmentStore.setState({
         adjustments: [{ id: 1 }],
         error: 'Test error'
       });
-      
+
       usePriceAdjustmentStore.getState().clearAdjustments();
-      
+
       const state = usePriceAdjustmentStore.getState();
       expect(state.adjustments).toEqual([]);
       expect(state.error).toBe(null);
     });
 
     it('should clear product history', () => {
-      usePriceAdjustmentStore.setState({ 
+      usePriceAdjustmentStore.setState({
         productHistory: {
           'PROD_A': { history: [{ id: 1 }] },
           'PROD_B': { history: [{ id: 2 }] }
         }
       });
-      
+
       usePriceAdjustmentStore.getState().clearProductHistory('PROD_A');
-      
+
       const state = usePriceAdjustmentStore.getState();
       expect(state.productHistory['PROD_A']).toBeUndefined();
       expect(state.productHistory['PROD_B']).toBeDefined();

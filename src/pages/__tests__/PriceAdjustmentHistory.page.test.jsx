@@ -1,22 +1,23 @@
 /**
- * Tests para PriceAdjustmentHistory
- * Adaptados al componente real que usa priceAdjustmentService directamente.
+ * PriceAdjustmentHistory — page tests.
+ * Movido desde src/__tests__/priceAdjustment.page.test.jsx. Cambios según el
+ * diseño de tests: sin mock de lucide-react (jsdom renderiza los SVG) y con
+ * el diccionario i18n local completo para las keys que aserta el test.
  */
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import PriceAdjustmentHistory from '../pages/PriceAdjustmentHistory';
+import PriceAdjustmentHistory from '../PriceAdjustmentHistory';
 import { priceAdjustmentService } from '@/services/priceAdjustmentService';
 
-// Mock de servicios
 vi.mock('@/services/priceAdjustmentService', () => ({
   priceAdjustmentService: {
     getRecentAdjustments: vi.fn(),
   }
 }));
 
-// Mock de i18n
+// Mock de i18n con el diccionario que usa la página.
 vi.mock('@/lib/i18n', () => ({
   useI18n: () => ({
     t: (key) => {
@@ -25,6 +26,8 @@ vi.mock('@/lib/i18n', () => ({
         'priceAdjustmentHistory.filters.title': 'Filtros de Búsqueda',
         'priceAdjustmentHistory.filters.product': 'Producto',
         'priceAdjustmentHistory.filters.productPlaceholder': 'Buscar por producto...',
+        'priceAdjustmentHistory.filters.apply': 'Aplicar Filtros',
+        'priceAdjustmentHistory.filters.clear': 'Limpiar Filtros',
         'priceAdjustmentHistory.empty.title': 'Sin ajustes de precios',
         'priceAdjustmentHistory.empty.description': 'No se encontraron resultados',
         'priceAdjustmentHistory.table.product': 'Producto',
@@ -33,18 +36,6 @@ vi.mock('@/lib/i18n', () => ({
       return trans[key] || key;
     }
   })
-}));
-
-// Mock de lucide-react para evitar problemas de renderizado
-vi.mock('lucide-react', () => ({
-  RefreshCw: () => null,
-  Download: () => null,
-  ChevronLeft: () => null,
-  ChevronRight: () => null,
-  ArrowDown: () => null,
-  ArrowUp: () => null,
-  ArrowLeftRight: () => null,
-  Search: () => null,
 }));
 
 describe('PriceAdjustmentHistory Page', () => {
@@ -70,10 +61,9 @@ describe('PriceAdjustmentHistory Page', () => {
 
   it('should render and fetch data on mount', async () => {
     render(<PriceAdjustmentHistory />);
-    
-    // Check for title or filters title
+
     expect(screen.getByText('Filtros de Búsqueda')).toBeInTheDocument();
-    
+
     await waitFor(() => {
       expect(priceAdjustmentService.getRecentAdjustments).toHaveBeenCalled();
     });
@@ -81,7 +71,7 @@ describe('PriceAdjustmentHistory Page', () => {
 
   it('should render adjustments list when data exists', async () => {
     render(<PriceAdjustmentHistory />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Product Test')).toBeInTheDocument();
       expect(screen.getByText('ADJ-001')).toBeInTheDocument();
@@ -93,23 +83,22 @@ describe('PriceAdjustmentHistory Page', () => {
       data: [],
       total: 0
     });
-    
+
     render(<PriceAdjustmentHistory />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Sin ajustes de precios')).toBeInTheDocument();
     });
   });
 
-  it('should handle filters correctly', async () => {
+  it('should apply product filter and refetch', async () => {
     render(<PriceAdjustmentHistory />);
-    
+
     const productInput = screen.getByPlaceholderText('Buscar por producto...');
     fireEvent.change(productInput, { target: { value: 'banana' } });
-    
-    const applyButton = screen.getByText('priceAdjustmentHistory.filters.apply');
-    fireEvent.click(applyButton);
-    
+
+    fireEvent.click(screen.getByText('Aplicar Filtros'));
+
     await waitFor(() => {
       expect(priceAdjustmentService.getRecentAdjustments).toHaveBeenCalledWith(
         expect.objectContaining({ product: 'banana' })

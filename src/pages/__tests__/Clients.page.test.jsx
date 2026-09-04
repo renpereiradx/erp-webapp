@@ -57,11 +57,16 @@ describe('ClientsPage', () => {
   });
 
   it('renderiza lista de clientes', () => {
-  setStoreReturn({ clients: [{ id: 1, name: 'Test Client', contact: { email: 'test@test.com' }, tax_id: '123', metadata: {} }], loading: false, error: null });
+  setStoreReturn({ clients: [{ id: 1, name: 'Test Client', contact: { email: 'test@test.com' }, document_id: '123', metadata: {} }], loading: false, error: null });
 
     renderWithTheme(<ClientsPage />);
-    expect(screen.getByText('Clientes')).toBeInTheDocument();
+    // Contrato actual (workspace maestro-detalle): búsqueda + tabla de
+    // clientes con nombre normalizado, documento y contacto.
+    expect(screen.getByRole('searchbox')).toBeInTheDocument();
+    expect(screen.getByText('NOMBRE DEL CLIENTE')).toBeInTheDocument();
     expect(screen.getByText('Test Client')).toBeInTheDocument();
+    expect(screen.getByText('123')).toBeInTheDocument();
     expect(screen.getByText('test@test.com')).toBeInTheDocument();
+    expect(screen.getByText('Activo')).toBeInTheDocument();
   });
 });

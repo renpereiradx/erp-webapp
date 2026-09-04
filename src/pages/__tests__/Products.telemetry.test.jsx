@@ -20,10 +20,16 @@ vi.mock('@/utils/telemetry', () => ({
   },
 }));
 
-// Mock modales lazy
-vi.mock('@/components/ProductFormModal', () => ({ default: () => null }));
-vi.mock('@/components/ProductDetailsModal', () => ({ default: () => null }));
-vi.mock('@/components/DeleteProductModal', () => ({ default: () => null }));
+// Stub de modales pesados vía el barrel real de la feature (patrón
+// importOriginal): la página importa los modales desde @/features/products.
+vi.mock('@/features/products', async (importOriginal) => {
+  const mod = await importOriginal();
+  return {
+    ...mod,
+    ProductFormModal: () => null,
+    ProductDetailsModal: () => null,
+  };
+});
 
 // Mock react-router-dom
 const navigate = vi.fn();
