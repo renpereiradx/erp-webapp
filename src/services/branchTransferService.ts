@@ -5,9 +5,16 @@ import {
   BranchTransferItem,
   CreateBranchTransferRequest, 
   UpdateBranchTransferStatusRequest,
-  API_ENDPOINTS,
-  PaginatedResponse
+  API_ENDPOINTS
 } from '../types';
+
+/** Forma real de la respuesta del backend: { transfers, total, page, page_size }. */
+export interface BranchTransferListResponse {
+  transfers: BranchTransfer[];
+  total: number;
+  page: number;
+  page_size: number;
+}
 
 /**
  * Servicio para la gestión de transferencias entre sucursales.
@@ -46,7 +53,7 @@ export const branchTransferService = {
     destination_branch_id?: number;
     page?: number;
     page_size?: number;
-  } = {}): Promise<PaginatedResponse<BranchTransfer>> {
+  } = {}): Promise<BranchTransferListResponse> {
     const startTime = Date.now();
     try {
       const response = await apiClient.get(API_ENDPOINTS.BRANCH_TRANSFERS, { params: filters });

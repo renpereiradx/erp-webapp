@@ -1,6 +1,7 @@
 import {
   Activity,
   AlertTriangle,
+  ArrowLeftRight,
   Award,
   BarChart,
   BarChart3,
@@ -238,6 +239,12 @@ export const buildNavigation = (t: TFn, reservationsEnabled: boolean): Navigatio
         ],
       },
       { name: t('nav.requisitions', 'Requisiciones'), href: '/logistica/requisiciones', icon: ClipboardList },
+      {
+        name: t('nav.transfers', 'Transferencias'),
+        href: '/transferencias',
+        icon: ArrowLeftRight,
+        permission: 'transfers:read',
+      },
       {
         name: t('productAdjustments.title', 'Ajustes de Producto'),
         href: '#',

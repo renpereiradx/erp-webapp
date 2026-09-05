@@ -33,6 +33,7 @@ import { fiscal } from './fiscal'
 import { businessPrefs } from './businessPrefs'
 import { printers } from './printers'
 import { shell } from './shell'
+import { transfers } from './transfers'
 
 /**
  * Diccionario completo de traducciones en español
@@ -68,5 +69,6 @@ export const es = {
   ...businessPrefs,
   ...printers,
   ...shell,
+  ...transfers,
   ...other,
 }
