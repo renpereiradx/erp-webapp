@@ -18,7 +18,7 @@ const authState = vi.hoisted(() => ({
   user: null as Record<string, unknown> | null,
   token: null as string | null,
   isAuthenticated: false,
-  hasPermission: (_permission: string) => false,
+  hasPermission: (_permission: string): boolean => false,
 }))
 
 vi.mock('@/contexts/AuthContext', () => ({
