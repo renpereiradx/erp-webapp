@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBranch } from '@/contexts/BranchContext';
+import { useI18n } from '@/lib/i18n';
 import { branchService } from '@/features/branches/services/branchService';
 import { Branch } from '@/types';
 import { Building2, ArrowRight, Loader2, LogOut } from 'lucide-react';
@@ -9,11 +10,12 @@ import { Building2, ArrowRight, Loader2, LogOut } from 'lucide-react';
 const BranchSelection = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t } = useI18n();
   const { changeBranch, allowedBranches, canViewGlobal } = useBranch();
   
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const fetchBranchDetails = async () => {
@@ -53,7 +55,7 @@ const BranchSelection = () => {
         setBranches(userBranches);
       } catch (err) {
         console.error('Error fetching branches:', err);
-        setError('No se pudieron cargar los detalles de las sucursales.');
+        setError(true);
       } finally {
         setLoading(false);
       }
@@ -72,7 +74,7 @@ const BranchSelection = () => {
       <div className="min-h-screen bg-background-base flex flex-col items-center justify-center p-4">
         <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">
-          Cargando sucursales disponibles...
+          {t('branchSelection.loading', 'Cargando sucursales disponibles...')}
         </p>
       </div>
     );
@@ -84,10 +86,13 @@ const BranchSelection = () => {
         <div className="flex justify-between items-center mb-6">
           <div className="flex flex-col gap-1.5 border-l-4 border-primary pl-5">
             <h1 className="text-3xl font-bold text-text-main tracking-tight">
-              Seleccionar Punto de Venta
+              {t('branchSelection.title', 'Seleccionar Punto de Venta')}
             </h1>
             <p className="text-text-secondary text-base font-medium">
-              Bienvenido, {user?.first_name} {user?.last_name} &bull; Elige una sucursal para comenzar
+              {t('branchSelection.welcome', 'Bienvenido, {first_name} {last_name} • Elige una sucursal para comenzar', {
+                first_name: user?.first_name ?? '',
+                last_name: user?.last_name ?? '',
+              })}
             </p>
           </div>
           <button
@@ -95,7 +100,7 @@ const BranchSelection = () => {
             className="flex items-center gap-2 px-4 py-2 border border-border-base text-text-main text-xs font-bold rounded hover:bg-slate-50 transition-all shadow-sm bg-white"
           >
             <LogOut size={16} />
-            <span>Cerrar Sesión</span>
+            <span>{t('action.logout', 'Cerrar Sesión')}</span>
           </button>
         </div>
 
@@ -103,8 +108,8 @@ const BranchSelection = () => {
           <div className="mb-4 flex items-start gap-4 p-5 rounded-lg bg-[#fde7e9] border border-[#fde7e9]">
             <span className="material-symbols-outlined text-error">error</span>
             <div>
-              <h4 className="font-bold text-sm text-[#a4262c] leading-none">Error</h4>
-              <p className="text-xs text-[#a4262c] mt-1.5 font-medium">{error}</p>
+              <h4 className="font-bold text-sm text-[#a4262c] leading-none">{t('branchSelection.errorTitle', 'Error')}</h4>
+              <p className="text-xs text-[#a4262c] mt-1.5 font-medium">{t('branchSelection.loadError', 'No se pudieron cargar los detalles de las sucursales.')}</p>
             </div>
           </div>
         )}
@@ -127,17 +132,17 @@ const BranchSelection = () => {
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
-                      ID: {branch.code || branch.id}
+                      {t('branchSelection.branchId', 'ID: {id}', { id: branch.code || branch.id })}
                     </span>
                     <h3 className="text-xl font-bold tracking-tight text-text-main group-hover:text-primary transition-colors">
                       {branch.name}
                     </h3>
                   </div>
                   <p className="text-sm text-text-secondary font-medium mt-1 line-clamp-2">
-                    {branch.address || 'Sin dirección registrada'} &bull; {branch.city || ''}
+                    {branch.address || t('branchSelection.noAddress', 'Sin dirección registrada')} &bull; {branch.city || ''}
                   </p>
                   <div className="mt-8 flex items-center gap-1.5 text-primary font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                    <span>Conectarse</span>
+                    <span>{t('branchSelection.connect', 'Conectarse')}</span>
                     <ArrowRight size={14} />
                   </div>
                 </div>
@@ -150,10 +155,10 @@ const BranchSelection = () => {
                   <Building2 size={32} className="text-slate-400" />
                 </div>
                 <h3 className="text-xl font-bold text-text-main tracking-tight mb-2">
-                  No tienes sucursales asignadas
+                  {t('branchSelection.noBranchesTitle', 'No tienes sucursales asignadas')}
                 </h3>
                 <p className="text-text-secondary text-sm font-medium max-w-md">
-                  Contacta a un administrador para que te otorgue acceso a un punto de venta.
+                  {t('branchSelection.noBranchesHint', 'Contacta a un administrador para que te otorgue acceso a un punto de venta.')}
                 </p>
               </div>
             )
@@ -167,11 +172,11 @@ const BranchSelection = () => {
           <div className="flex gap-6 opacity-60">
             <div className="flex items-center gap-1.5">
                <span className="material-symbols-outlined text-sm text-success">verified_user</span>
-               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Security Active</span>
+               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{t('branchSelection.securityActive', 'Security Active')}</span>
             </div>
             <div className="flex items-center gap-1.5">
                <span className="material-symbols-outlined text-sm text-info">cloud_done</span>
-               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Synced to Cloud</span>
+               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{t('branchSelection.syncedToCloud', 'Synced to Cloud')}</span>
             </div>
           </div>
         </div>

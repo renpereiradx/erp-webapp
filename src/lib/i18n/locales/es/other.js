@@ -86,4 +86,19 @@ export const other = {
   'announce.error_network': 'Error de red: {msg}',
   'announce.results_for': 'Resultados: {total} para "{term}"',
   'announce.total_results': 'Total resultados: {total}',
+
+  // Branch Selection (selector de punto de venta)
+  'branchSelection.loading': 'Cargando sucursales disponibles...',
+  'branchSelection.title': 'Seleccionar Punto de Venta',
+  'branchSelection.welcome': 'Bienvenido, {first_name} {last_name} • Elige una sucursal para comenzar',
+  'branchSelection.logout': 'Cerrar Sesión',
+  'branchSelection.errorTitle': 'Error',
+  'branchSelection.loadError': 'No se pudieron cargar los detalles de las sucursales.',
+  'branchSelection.branchId': 'ID: {id}',
+  'branchSelection.noAddress': 'Sin dirección registrada',
+  'branchSelection.connect': 'Conectarse',
+  'branchSelection.noBranchesTitle': 'No tienes sucursales asignadas',
+  'branchSelection.noBranchesHint': 'Contacta a un administrador para que te otorgue acceso a un punto de venta.',
+  'branchSelection.securityActive': 'Security Active',
+  'branchSelection.syncedToCloud': 'Synced to Cloud',
 }

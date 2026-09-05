@@ -1,9 +1,10 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useI18n } from '@/lib/i18n';
+import { ROLES, ROLE_NAMES } from '@/constants/roles';
 
 interface RoleGuardProps {
   children: React.ReactNode;
@@ -15,13 +16,17 @@ interface RoleGuardProps {
 /**
  * RoleGuard component to protect routes or sections based on user roles.
  * Prevents 403 Forbidden errors by checking permissions before rendering protected content.
+ * §7.2 (PLAN_VENDOR_ROLE): role IDs come from constants/roles.ts (mirror of
+ * backend constants/roles.go) — never hardcode role IDs or name maps here.
  */
 const RoleGuard: React.FC<RoleGuardProps> = ({
   children,
-  allowedRoles = ['F2VLso'],
+  allowedRoles = [ROLES.ADMIN],
   redirectTo,
   showError = true
-}) => {  const { user, isAuthenticated, loading, authLoading } = useAuth();
+}) => {
+  const { user, isAuthenticated, loading, authLoading } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   if (loading || authLoading) {
@@ -39,7 +44,7 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
   // Check if user has any of the required roles
   // We check both direct role_id and roles array for compatibility
   const userRoles = user?.roles?.map(r => r.id) || [];
-  const hasRole = allowedRoles.some(role => 
+  const hasRole = allowedRoles.some(role =>
     user?.role_id === role || userRoles.includes(role)
   );
 
@@ -48,16 +53,7 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
       return <Navigate to={redirectTo} replace />;
     }
 
-    // Map common role IDs to human-readable names for the error message
-    const roleNames: Record<string, string> = {
-      'F2VLso': 'Administrador',
-      'VENDEDOR': 'Vendedor',
-      'GESTOR': 'Gestor',
-      'ENCR01': 'Encargado',
-      // Add more common mappings if needed
-    };
-
-    const displayRoles = allowedRoles.map(role => roleNames[role] || role).join(', ');
+    const displayRoles = allowedRoles.map(role => ROLE_NAMES[role] || role).join(', ');
 
     if (showError) {
       return (
@@ -66,18 +62,19 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
             <ShieldAlert size={40} />
           </div>
           <h2 className="text-2xl font-black text-text-main uppercase tracking-tight mb-2">
-            Acceso Restringido
+            {t('roleGuard.title', 'Acceso Restringido')}
           </h2>
           <p className="text-text-secondary max-w-md mb-8">
-            Lo sentimos, no tienes los permisos suficientes para acceder a esta sección.
-            Esta funcionalidad está reservada para usuarios con rol: <span className="font-bold">{displayRoles}</span>.
+            {t('roleGuard.message',
+              'Lo sentimos, no tenés los permisos suficientes para acceder a esta sección. Esta funcionalidad está reservada para usuarios con rol:')}{' '}
+            <span className="font-bold">{displayRoles}</span>.
           </p>
           <div className="flex gap-4">
             <Button variant="outline" onClick={() => navigate(-1)}>
-              Regresar
+              {t('roleGuard.goBack', 'Regresar')}
             </Button>
             <Button onClick={() => navigate('/dashboard')}>
-              Ir al Dashboard
+              {t('roleGuard.goDashboard', 'Ir al Dashboard')}
             </Button>
           </div>
         </div>

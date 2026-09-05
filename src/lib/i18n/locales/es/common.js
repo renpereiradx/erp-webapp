@@ -192,4 +192,11 @@ export const common = {
   'settings.shortcuts.sales.history': 'Ver historial (Ctrl+Shift+H)',
   'settings.shortcuts.general.close_modal': 'Cerrar modal',
   'settings.shortcuts.general.save': 'Guardar',
+
+  // RoleGuard (acceso restringido por rol)
+  'roleGuard.title': 'Acceso Restringido',
+  'roleGuard.message':
+    'Lo sentimos, no tenés los permisos suficientes para acceder a esta sección. Esta funcionalidad está reservada para usuarios con rol:',
+  'roleGuard.goBack': 'Regresar',
+  'roleGuard.goDashboard': 'Ir al Dashboard',
 }
