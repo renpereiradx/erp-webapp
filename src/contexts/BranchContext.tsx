@@ -47,9 +47,9 @@ export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                                    JSON.parse(localStorage.getItem('allowedBranches') || '[]');
       
       setAllowedBranches(finalAllowedBranches);
-      
+
       // El rol 'F2VLso' es el ID de Administrador en el sistema real
-      const isAdmin = user?.role_id === 'admin' || user?.role_id === 'F2VLso' || 
+      const isAdmin = user?.role_id === 'admin' || user?.role_id === 'F2VLso' ||
                       user?.roles?.some(r => r.id === 'admin' || r.id === 'F2VLso');
       setCanViewGlobal(!!isAdmin);
 
@@ -58,18 +58,31 @@ export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const bid = parseInt(urlBranchId);
         setCurrentBranchId(bid);
         localStorage.setItem('activeBranch', bid.toString());
-      } else if (savedBranch) {
-        setCurrentBranchId(parseInt(savedBranch));
-      } else if (jwtBranchId !== null && jwtBranchId !== undefined) {
-        setCurrentBranchId(jwtBranchId);
-        localStorage.setItem('activeBranch', jwtBranchId.toString());
-      } else if (finalAllowedBranches.length === 1) {
-        // Si solo hay una sucursal, la seleccionamos automáticamente
-        setCurrentBranchId(finalAllowedBranches[0]);
-        localStorage.setItem('activeBranch', finalAllowedBranches[0].toString());
       } else {
-        // Si hay múltiples o ninguna, dejamos que el usuario elija o se mantenga en global
-        setCurrentBranchId(null);
+        // A5 (PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES): una sucursal guardada
+        // que ya no está en la lista permitida (acceso revocado) se ignora y
+        // se borra — setearla igual haría que todos los requests caigan en
+        // 403. Los admins no dependen de la lista (bypass backend).
+        const savedBranchId = savedBranch !== null && !isNaN(parseInt(savedBranch)) ? parseInt(savedBranch) : null;
+        const savedBranchStillAllowed =
+          savedBranchId !== null && (isAdmin || finalAllowedBranches.includes(savedBranchId));
+        if (savedBranchId !== null && !savedBranchStillAllowed) {
+          localStorage.removeItem('activeBranch');
+        }
+
+        if (savedBranchStillAllowed && savedBranchId !== null) {
+          setCurrentBranchId(savedBranchId);
+        } else if (jwtBranchId !== null && jwtBranchId !== undefined) {
+          setCurrentBranchId(jwtBranchId);
+          localStorage.setItem('activeBranch', jwtBranchId.toString());
+        } else if (finalAllowedBranches.length === 1) {
+          // Si solo hay una sucursal, la seleccionamos automáticamente
+          setCurrentBranchId(finalAllowedBranches[0]);
+          localStorage.setItem('activeBranch', finalAllowedBranches[0].toString());
+        } else {
+          // Si hay múltiples o ninguna, dejamos que el usuario elija o se mantenga en global
+          setCurrentBranchId(null);
+        }
       }
     } else {
       setCurrentBranchId(null);
