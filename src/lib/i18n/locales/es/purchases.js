@@ -308,6 +308,11 @@ export const purchases = {
   'purchases.confirmation.col_source': 'Fuente',
   'purchases.confirmation.actions.history': 'Ver en Historial',
   'purchases.confirmation.actions.close': 'Cerrar',
+  'purchases.confirmation.actions.sendToBranch': 'Enviar a sucursal…',
+
+  // F.5a — sucursal de carga visible en el wizard (modelo depósito puro)
+  'purchases.branchBanner.title': 'Sucursal de carga: ',
+  'purchases.branchBanner.noBranch': 'sin sucursal activa — seleccioná una sucursal para operar',
 
   // Modal de agregar/editar artículo
   'purchases.product_modal.title_edit': 'Editar Artículo',

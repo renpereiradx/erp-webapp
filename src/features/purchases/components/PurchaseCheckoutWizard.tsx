@@ -26,6 +26,7 @@ import { useI18n } from '@/lib/i18n'
 import { useCheckoutShortcuts } from '@/features/sales/hooks/useCheckoutShortcuts';
 import { PurchaseTotals } from '@/domain/purchase/calculations/purchaseCalculator';
 import { SupplierStep, SupplierStepRef } from './steps/SupplierStep'
+import PurchaseBranchBanner from './PurchaseBranchBanner'
 import { PurchasePaymentStep, PurchasePaymentStepRef } from './steps/PurchasePaymentStep'
 import {
   PurchaseCollectionStep,
@@ -307,6 +308,11 @@ export const PurchaseCheckoutWizard = ({
 
           {/* Contenido del paso */}
           <div className="flex-1 overflow-y-auto px-6 py-5 bg-surface">
+            {/* F.5a: la sucursal de carga (= sucursal activa) visible en todo
+                el wizard; sin selector libre (modelo depósito puro §4.6). */}
+            <div className="mb-md">
+              <PurchaseBranchBanner />
+            </div>
             {currentStep === 'supplier' && (
               <SupplierStep
                 ref={supplierRef}

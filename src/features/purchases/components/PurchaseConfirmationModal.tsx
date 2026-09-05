@@ -1,7 +1,8 @@
 import React from 'react';
-import { Building } from 'lucide-react';
+import { Building, Truck } from 'lucide-react';
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic';
 import { useI18n } from '@/lib/i18n';
+import { useAuth } from '@/contexts/AuthContext';
 import EnhancedModal from '@/components/ui/EnhancedModal';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +23,10 @@ export type PurchaseConfirmationModalProps = Pick<
   | 'paymentCurrency'
   | 'setActiveTab'
   | 'handleFilter'
->;
+> & {
+  /** F.5: abre la transferencia precargada con los ítems de esta compra. */
+  onSendToBranch?: () => void;
+};
 
 export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps> = ({
   showConfirmationModal,
@@ -31,8 +35,10 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
   paymentCurrency,
   setActiveTab,
   handleFilter,
+  onSendToBranch,
 }) => {
   const { t } = useI18n();
+  const { hasPermission } = useAuth();
 
   // Guard de narrowing: sin resultado no hay modal (EnhancedModal ni se monta).
   if (!showConfirmationModal || !latestPurchaseResult) return null;
@@ -43,6 +49,18 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
     handleClose();
     setActiveTab('historial');
     handleFilter();
+  };
+
+  // F.5: CTA post-compra → transferencia precargada (gated transfers:write,
+  // requiere ítems transferibles y callback cableado desde la página).
+  const showSendToBranch =
+    Boolean(onSendToBranch) &&
+    hasPermission('transfers:write') &&
+    (latestPurchaseResult.transferable_items?.length ?? 0) > 0;
+
+  const handleSendToBranch = () => {
+    handleClose();
+    onSendToBranch?.();
   };
 
   return (
@@ -60,6 +78,12 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
           <Button variant='secondary' onClick={handleViewHistory}>
             {t('purchases.confirmation.actions.history', 'Ver en Historial')}
           </Button>
+          {showSendToBranch && (
+            <Button variant='secondary' data-testid='purchase-send-to-branch' onClick={handleSendToBranch}>
+              <Truck size={16} className='mr-1.5' aria-hidden='true' />
+              {t('purchases.confirmation.actions.sendToBranch', 'Enviar a sucursal…')}
+            </Button>
+          )}
           <Button variant='primary' onClick={handleClose}>
             {t('purchases.confirmation.actions.close', 'Cerrar')}
           </Button>

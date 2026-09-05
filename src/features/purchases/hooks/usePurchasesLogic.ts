@@ -139,6 +139,10 @@ export const usePurchasesLogic = () => {
     branch_id: any;
     warnings: any[];
     details: any[];
+    // F.5 (PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES): snapshot transferible de
+    // los ítems comprados (producto/variante/cantidad/costo) para precargar la
+    // transferencia post-compra hacia la sucursal destino.
+    transferable_items: any[];
   } | null>(null)
 
   const fixMojibakeText = value => {
@@ -836,7 +840,16 @@ export const usePurchasesLogic = () => {
           total_amount: result.total_amount || dbPurchase?.total_amount || 0,
           branch_id: result.branch_id || dbPurchase?.branch_id || currentBranchId || 1,
           warnings: result.warnings || [],
-          details: dbDetails
+          details: dbDetails,
+          // F.5: el carrito se limpia en este mismo flujo; el snapshot se toma
+          // del closure antes del clear para el CTA "Enviar a sucursal…".
+          transferable_items: purchaseItems.map(i => ({
+            product_id: i.product_id,
+            variant_id: i.variant_id || undefined,
+            product_name: i.variant_name ? `${i.name} (${i.variant_name})` : i.name,
+            quantity: Number(i.quantity),
+            unit_cost: Number(i.unit_price),
+          }))
         })
 
         // No abrimos PurchaseConfirmationModal aquí: el PurchaseCheckoutWizard

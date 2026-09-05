@@ -16,6 +16,8 @@ import type { PurchaseCollectionData } from '@/features/purchases/components/ste
 
 import { PurchaseCancelModal } from '@/features/purchases/components/PurchaseCancelModal'
 import { PurchaseConfirmationModal } from '@/features/purchases/components/PurchaseConfirmationModal'
+import CreateTransferModal from '@/features/transfers/components/CreateTransferModal'
+import type { PreloadedTransferItem } from '@/features/transfers/types'
 
 /**
  * Purchases Page — Fluent Design System 2 (DESIGN.md).
@@ -25,6 +27,11 @@ import { PurchaseConfirmationModal } from '@/features/purchases/components/Purch
 const Purchases = () => {
   const { t } = useI18n()
   const [showCheckoutWizard, setShowCheckoutWizard] = useState(false);
+  // F.5: precarga de la transferencia post-compra ("Enviar a sucursal…").
+  const [transferPreload, setTransferPreload] = useState<{
+    items: PreloadedTransferItem[];
+    branchId: number | null;
+  } | null>(null)
   const logic = usePurchasesLogic();
 
   useEffect(() => {
@@ -67,6 +74,9 @@ const Purchases = () => {
       })
     } finally {
       setShowCheckoutWizard(false)
+      // F.5: post-compra se muestra el resultado con el CTA "Enviar a
+      // sucursal…" (transferencia precargada con los ítems de la compra).
+      logic.setShowConfirmationModal(true)
     }
   }
 
@@ -147,7 +157,30 @@ const Purchases = () => {
       <PurchaseCancelModal {...logic} />
 
       {/* CONFIRMATION MODAL - Extracted to component */}
-      <PurchaseConfirmationModal {...logic} />
+      <PurchaseConfirmationModal
+        {...logic}
+        onSendToBranch={() => {
+          const result = logic.latestPurchaseResult
+          if (!result) return
+          setTransferPreload({
+            items: (result.transferable_items || []) as PreloadedTransferItem[],
+            branchId: result.branch_id ?? null,
+          })
+        }}
+      />
+
+      {/* F.5: transferencia precargada con los ítems de la compra recién
+          registrada; origen = sucursal donde la compra cargó stock. */}
+      {transferPreload && (
+        <CreateTransferModal
+          open
+          onOpenChange={(open) => {
+            if (!open) setTransferPreload(null)
+          }}
+          sourceBranchId={transferPreload.branchId}
+          initialItems={transferPreload.items}
+        />
+      )}
 
       <PurchaseCheckoutWizard
         isOpen={showCheckoutWizard}
