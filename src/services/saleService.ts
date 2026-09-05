@@ -10,6 +10,7 @@ import {
   SaleRequest, 
   AddProductsToSaleRequest
 } from '@/types'
+import type { CancellationRequest } from '@/features/sales/types/cancellation'
 import { validateSaleOrder } from '@/domain/sale/validators/saleValidator'
 import { calculateSaleTotals } from '@/domain/sale/calculations/saleCalculator'
 import { extractListResponse } from '@/utils/extractListResponse'
@@ -476,6 +477,56 @@ export const saleService = {
       return { success: true, data: response }
     } catch (error: any) {
       console.error('Error scanning barcode in saleService:', error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  // ============ SOLICITUDES DE ANULACIÓN (FASE C, PLAN_VENDOR_ROLE) ============
+
+  /** POST /sale/{id}/cancellation-requests — el vendor solicita la anulación. */
+  async requestSaleCancellation(saleId: string, reason: string) {
+    try {
+      const response = await apiClient.createCancellationRequest(saleId, reason)
+      return { success: true, data: response }
+    } catch (error: any) {
+      console.error(`Error requesting cancellation for sale ${saleId}:`, error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  /** GET /sale/cancellation-requests — bandeja del aprobador. */
+  async listCancellationRequests(params: { status?: string; page?: number; page_size?: number } = {}) {
+    try {
+      const response = await apiClient.listCancellationRequests(params)
+      return {
+        success: true,
+        data: (response?.data ?? []) as CancellationRequest[],
+        total: response?.pagination?.total_records ?? 0,
+      }
+    } catch (error: any) {
+      console.error('Error listing cancellation requests:', error)
+      return { success: false, error: error.message, data: [] as CancellationRequest[], total: 0 }
+    }
+  },
+
+  /** POST /sale/cancellation-requests/{id}/approve — anula la venta. */
+  async approveCancellationRequest(id: number | string) {
+    try {
+      const response = await apiClient.approveCancellationRequest(id)
+      return { success: true, data: response }
+    } catch (error: any) {
+      console.error(`Error approving cancellation request ${id}:`, error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  /** POST /sale/cancellation-requests/{id}/reject — rechazo con motivo. */
+  async rejectCancellationRequest(id: number | string, reason: string) {
+    try {
+      const response = await apiClient.rejectCancellationRequest(id, reason)
+      return { success: true, data: response }
+    } catch (error: any) {
+      console.error(`Error rejecting cancellation request ${id}:`, error)
       return { success: false, error: error.message }
     }
   },

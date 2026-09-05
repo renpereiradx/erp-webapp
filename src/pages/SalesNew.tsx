@@ -9,12 +9,16 @@ import { CheckoutSummaryPanel } from '@/features/sales/components/CheckoutSummar
 import { SalesHistoryView } from '@/features/sales/components/SalesHistoryView';
 import { EditItemModal } from '@/features/sales/components/EditItemModal';
 import { CancelSaleModal } from '@/features/sales/components/CancelSaleModal';
+import { RequestCancellationModal } from '@/features/sales/components/RequestCancellationModal';
+import { CancellationRequestsPanel } from '@/features/sales/components/CancellationRequestsPanel';
+import { useCancellationRequests } from '@/features/sales/hooks/useCancellationRequests';
 import { PRICE_CHANGE_REASONS } from '@/features/sales/constants/priceChangeReasons';
 import type { CollectionData } from '@/features/sales/components/steps/CollectionStep';
 import {
   History,
   Plus,
   ShoppingCart,
+  ClipboardX,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -191,6 +195,10 @@ const SalesNew: React.FC = () => {
   // B.3/B.5 (PLAN_VENDOR_ROLE): cosmetic gating — the server enforces both.
   const canApplyDiscount = hasPermission('sales:apply_discount');
   const canCancelSale = hasPermission('sales:cancel');
+  // FASE C: sin sales:cancel pero con sales:write, la anulación pasa por
+  // solicitud (el backend la valida igual — acá es solo ruteo de UI).
+  const canRequestCancellation = canWrite;
+  const cancellationRequests = useCancellationRequests(canCancelSale);
   const productSearchInputRef = useRef<HTMLInputElement>(null);
   const dropdownQuantityInputRef = useRef<HTMLInputElement>(null);
   // Última versión de handleSaveSale para el listener global de F12 (evita
@@ -207,7 +215,7 @@ const SalesNew: React.FC = () => {
     loading: saleLoading,
   } = useSaleStore();
 
-  const [activeTab, setActiveTab] = useState<'new-sale' | 'history'>('new-sale');
+  const [activeTab, setActiveTab] = useState<'new-sale' | 'history' | 'cancellations'>('new-sale');
 
   const [items, setItems] = useState<CartItem[]>([]);
   const [variantSelectorProduct, setVariantSelectorProduct] = useState<ProductDisplay | null>(null);
@@ -246,6 +254,11 @@ const SalesNew: React.FC = () => {
   const [cancelReason, setCancelReason] = useState('');
   const [cancelPreview, setCancelPreview] = useState<Record<string, unknown> | null>(null);
   const [cancelSubmitting, setCancelSubmitting] = useState(false);
+
+  // FASE C: solicitud de anulación del vendor (sin sales:cancel).
+  const [requestCancellationSale, setRequestCancellationSale] = useState<Record<string, unknown> | null>(null);
+  const [requestCancellationReason, setRequestCancellationReason] = useState('');
+  const [requestCancellationSubmitting, setRequestCancellationSubmitting] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedModalProduct, setSelectedModalProduct] = useState<Record<string, unknown> | null>(null);
@@ -1066,6 +1079,35 @@ const SalesNew: React.FC = () => {
     }
   };
 
+  // ─── FASE C: solicitud de anulación (vendor sin sales:cancel) ───────────────
+
+  const handleRequestCancellation = useCallback((sale: Record<string, unknown>) => {
+    setRequestCancellationSale(sale);
+    setRequestCancellationReason('');
+  }, []);
+
+  const handleConfirmRequestCancellation = async () => {
+    if (!requestCancellationSale) return;
+    const saleId = requestCancellationSale.sale_id || requestCancellationSale.id;
+    if (!saleId) return;
+    setRequestCancellationSubmitting(true);
+    try {
+      const result = await saleService.requestSaleCancellation(String(saleId), requestCancellationReason.trim());
+      if (result.success) {
+        toast.success(t('sales.cancellation.requestedToast', 'Solicitud enviada: un encargado la revisará'));
+        setRequestCancellationSale(null);
+        setRequestCancellationReason('');
+        handleHistoryFilter();
+      } else {
+        toast.errorFrom(new Error(result.error), {
+          fallback: t('sales.cancellation.requestError', 'No se pudo enviar la solicitud'),
+        });
+      }
+    } finally {
+      setRequestCancellationSubmitting(false);
+    }
+  };
+
   const handleSaveSale = async () => {
     // El cliente se selecciona dentro del SaleCheckoutWizard (ClientStep,
     // paso 1). No gatear acá: si no hay cliente, el wizard abre igual y
@@ -1682,8 +1724,16 @@ const SalesNew: React.FC = () => {
         </div>
         <nav className="flex items-center gap-2" aria-label={t('sales.navAria', 'Secciones de ventas')}>
           {[
-            { id: 'new-sale' as const, label: t('sales.tab.new', 'Nueva Venta'), icon: Plus },
-            { id: 'history' as const, label: t('sales.tab.history', 'Historial'), icon: History },
+            { id: 'new-sale' as const, label: t('sales.tab.new', 'Nueva Venta'), icon: Plus, badge: undefined as number | undefined },
+            { id: 'history' as const, label: t('sales.tab.history', 'Historial'), icon: History, badge: undefined as number | undefined },
+            ...(canCancelSale
+              ? [{
+                  id: 'cancellations' as const,
+                  label: t('sales.tab.cancellations', 'Anulaciones'),
+                  icon: ClipboardX,
+                  badge: cancellationRequests.pendingCount,
+                }]
+              : []),
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1699,6 +1749,14 @@ const SalesNew: React.FC = () => {
             >
               <tab.icon size={16} aria-hidden="true" />
               <span>{tab.label}</span>
+              {tab.badge != null && tab.badge > 0 && (
+                <span
+                  className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-error text-on-error text-body-sm-bold font-data-mono"
+                  data-testid="cancellations-tab-badge"
+                >
+                  {tab.badge}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -1812,6 +1870,23 @@ const SalesNew: React.FC = () => {
             onViewSale={(sale) => handleViewSale(sale as unknown as Record<string, unknown>)}
             onCancelSale={(sale) => handleCancelSale(sale as unknown as Record<string, unknown>)}
             canCancelSale={canCancelSale}
+            canRequestCancellation={canRequestCancellation}
+            onRequestCancellation={(sale) => handleRequestCancellation(sale as unknown as Record<string, unknown>)}
+          />
+        )}
+
+        {activeTab === 'cancellations' && canCancelSale && (
+          <CancellationRequestsPanel
+            requests={cancellationRequests.requests}
+            total={cancellationRequests.total}
+            loading={cancellationRequests.loading}
+            error={cancellationRequests.error}
+            statusFilter={cancellationRequests.statusFilter}
+            onStatusFilterChange={cancellationRequests.setStatusFilter}
+            onRetry={cancellationRequests.refresh}
+            onApprove={(request) => cancellationRequests.approve(request)}
+            onReject={(request, reason) => cancellationRequests.reject(request, reason)}
+            actingId={cancellationRequests.actingId}
           />
         )}
       </main>
@@ -1866,6 +1941,16 @@ const SalesNew: React.FC = () => {
         onConfirm={handleConfirmCancelSale}
         submitting={cancelSubmitting}
         canCancel={canCancelSale}
+      />
+
+      <RequestCancellationModal
+        isOpen={!!requestCancellationSale}
+        onClose={() => setRequestCancellationSale(null)}
+        saleId={String(requestCancellationSale?.sale_id || requestCancellationSale?.id || '')}
+        reason={requestCancellationReason}
+        onReasonChange={setRequestCancellationReason}
+        onConfirm={handleConfirmRequestCancellation}
+        submitting={requestCancellationSubmitting}
       />
 
       <SaleCheckoutWizard

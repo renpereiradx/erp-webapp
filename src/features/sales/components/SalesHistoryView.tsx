@@ -5,7 +5,7 @@
  * ventas); acá solo se presenta y se disparan los callbacks.
  */
 import React from 'react';
-import { Ban, Eye, Filter, History, MoreVertical, Search, X } from 'lucide-react';
+import { Ban, Eye, Filter, History, MoreVertical, Search, SendHorizonal, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -80,6 +80,9 @@ interface SalesHistoryViewProps {
   onCancelSale: (sale: HistorySaleRow) => void;
   /** B.5: anulación directa — solo con sales:cancel (roles avanzados). */
   canCancelSale: boolean;
+  /** FASE C: sin sales:cancel pero con sales:write, se puede solicitar. */
+  canRequestCancellation?: boolean;
+  onRequestCancellation?: (sale: HistorySaleRow) => void;
 }
 
 export const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({
@@ -100,6 +103,8 @@ export const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({
   onViewSale,
   onCancelSale,
   canCancelSale,
+  canRequestCancellation = false,
+  onRequestCancellation,
 }) => {
   const { t } = useI18n();
 
@@ -267,6 +272,15 @@ export const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({
                                   <Ban size={14} /> {t('sales.history.cancelSale', 'Anular Venta')}
                                 </DropdownMenuItem>
                               )}
+                              {sale.status !== 'CANCELLED' && !canCancelSale && canRequestCancellation && (
+                                <DropdownMenuItem
+                                  onClick={() => onRequestCancellation?.(sale)}
+                                  className="gap-2 text-warning focus:text-warning"
+                                  data-testid={`request-cancellation-${sale.internalKey}`}
+                                >
+                                  <SendHorizonal size={14} /> {t('sales.cancellation.requestItem', 'Solicitar Anulación')}
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -338,6 +352,20 @@ export const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({
                         className="h-9 w-10 text-error"
                       >
                         <Ban size={14} />
+                      </Button>
+                    )}
+                    {sale.status !== 'CANCELLED' && !canCancelSale && canRequestCancellation && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        aria-label={t('sales.cancellation.requestItem', 'Solicitar Anulación')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRequestCancellation?.(sale);
+                        }}
+                        className="h-9 w-10 text-warning"
+                      >
+                        <SendHorizonal size={14} />
                       </Button>
                     )}
                   </div>

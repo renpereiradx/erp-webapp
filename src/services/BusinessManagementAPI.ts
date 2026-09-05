@@ -552,6 +552,34 @@ class BusinessManagementAPI {
     return this.put(`/sale/${id}`, { reason }, options)
   }
 
+  // ============ Solicitudes de anulación (FASE C, PLAN_VENDOR_ROLE) ============
+
+  /**
+   * POST /sale/{id}/cancellation-requests — el vendor (sin sales:cancel)
+   * solicita la anulación; un rol avanzado la aprueba o rechaza.
+   */
+  async createCancellationRequest(saleId: string | number, reason: string, options: RequestOptions = {}): Promise<any> {
+    return this.post(`/sale/${saleId}/cancellation-requests`, { reason }, options)
+  }
+
+  /** GET /sale/cancellation-requests?status=pending — bandeja del aprobador. */
+  async listCancellationRequests(
+    params: { status?: string; page?: number; page_size?: number } = {},
+    options: RequestOptions = {},
+  ): Promise<any> {
+    return this.get('/sale/cancellation-requests', { ...options, params: { ...options.params, ...params } })
+  }
+
+  /** POST /sale/cancellation-requests/{id}/approve — anula la venta (SIFEN + revert). */
+  async approveCancellationRequest(id: number | string, options: RequestOptions = {}): Promise<any> {
+    return this.post(`/sale/cancellation-requests/${id}/approve`, {}, options)
+  }
+
+  /** POST /sale/cancellation-requests/{id}/reject — rechazo con motivo obligatorio. */
+  async rejectCancellationRequest(id: number | string, reason: string, options: RequestOptions = {}): Promise<any> {
+    return this.post(`/sale/cancellation-requests/${id}/reject`, { reason }, options)
+  }
+
   // ============ SIFEN (FE4 — inutilización y notas) ============
   // Endpoints /sifen/* excluidos del header X-Branch-ID por isSifenAdmin.
 
