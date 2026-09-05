@@ -168,4 +168,12 @@ export const users = {
   'users.roles.permission.securitySSO': 'Configura seguridad y proveedores SSO',
   'users.roles.saveChanges': 'Guardar Cambios',
   'users.roles.allAssigned': 'Todos los roles ya están asignados.',
+
+  // Sucursales del usuario (D.2 — PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES)
+  'users.form.branches.title': 'Sucursales Asignadas',
+  'users.form.branches.loading': 'Cargando sucursales...',
+  'users.form.branches.empty': 'Sin sucursales asignadas.',
+  'users.form.branches.default': 'Por defecto',
+  'users.form.branches.manageLink': 'Administrar accesos en Configuración → Sucursales',
+  'users.form.branches.createNote': 'Al crear el usuario se le otorga acceso automático a la sucursal principal. Los accesos se ajustan luego en Configuración → Sucursales.',
 }

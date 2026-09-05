@@ -65,6 +65,8 @@ import BranchSelection from '@/pages/BranchSelection.tsx'
 import Settings from '@/pages/Settings'
 import BusinessPreferencesPage from '@/features/settings/components/BusinessPreferencesPage'
 import BranchManagement from '@/pages/BranchManagement'
+import TerminalPairing from '@/features/branches/components/TerminalPairing'
+import TransfersPage from '@/features/transfers/components/TransfersPage'
 import UserManagementList from '@/pages/UserManagementList.tsx'
 import UserDetailedProfile from '@/pages/UserDetailedProfile.tsx'
 import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity.tsx'
@@ -334,7 +336,11 @@ function AppContent() {
                       {/* Rutas con layout de tabs */}
                       <Route
                         path='/ajustes-precios'
-                        element={<PriceAdjustmentLayout />}
+                        element={
+                          <PermissionGuard permission='products:read'>
+                            <PriceAdjustmentLayout />
+                          </PermissionGuard>
+                        }
                       >
                         <Route index element={<PriceAdjustmentNew />} />
                         <Route
@@ -345,11 +351,19 @@ function AppContent() {
                       {/* Rutas independientes sin tabs */}
                       <Route
                         path='/ajustes-precios/detalle'
-                        element={<PriceAdjustmentDetail />}
+                        element={
+                          <PermissionGuard permission='products:read'>
+                            <PriceAdjustmentDetail />
+                          </PermissionGuard>
+                        }
                       />
                       <Route
                         path='/ajustes-precios/historial/:adjustmentId'
-                        element={<PriceAdjustmentHistoryDetail />}
+                        element={
+                          <PermissionGuard permission='products:read'>
+                            <PriceAdjustmentHistoryDetail />
+                          </PermissionGuard>
+                        }
                       />
                       <Route
                         path='/gestion-agenda'
@@ -361,7 +375,11 @@ function AppContent() {
                       />
                       <Route
                         path='/movimientos-stock'
-                        element={<StockMovements />}
+                        element={
+                          <PermissionGuard permission='inventory:read'>
+                            <StockMovements />
+                          </PermissionGuard>
+                        }
                       />
                       {/* Redirects de rutas legacy de ajuste de stock → unificación /stock-transactions/ */}
                       <Route path='/ajustes-inventario' element={<Navigate to='/movimientos-stock' replace />} />
@@ -373,8 +391,25 @@ function AppContent() {
                       <Route path='/logistica/requisiciones/nueva' element={<PurchaseRequisitionCreate />} />
                       <Route path='/logistica/requisiciones/:id' element={<PurchaseRequisitionDetail />} />
 
+                      {/* F.4: transferencias entre sucursales */}
+                      <Route
+                        path='/transferencias'
+                        element={
+                          <PermissionGuard permission='transfers:read'>
+                            <TransfersPage />
+                          </PermissionGuard>
+                        }
+                      />
+
                       {/* --- RUTAS AISLADAS TEMPORALMENTE PARA REFACTORING --- */}
-                      <Route path='/compras' element={<Purchases />} />
+                      <Route
+                        path='/compras'
+                        element={
+                          <PermissionGuard permission='purchases:read'>
+                            <Purchases />
+                          </PermissionGuard>
+                        }
+                      />
                       <Route path='/comercial/presupuestos' element={<BudgetManagement />} />
                       <Route path='/comercial/presupuestos/nuevo' element={<BudgetCreate />} />
                       <Route path='/comercial/presupuestos/:id' element={<BudgetDetail />} />
@@ -382,23 +417,43 @@ function AppContent() {
                       {/* Nuevas rutas de sistemas de pagos */}
                       <Route
                         path='/caja-registradora'
-                        element={<NewCashRegister />}
+                        element={
+                          <PermissionGuard permission='cash:read'>
+                            <NewCashRegister />
+                          </PermissionGuard>
+                        }
                       />
                       <Route
                         path='/movimientos-caja'
-                        element={<CashMovements />}
+                        element={
+                          <PermissionGuard permission='cash:read'>
+                            <CashMovements />
+                          </PermissionGuard>
+                        }
                       />
                       <Route
                         path='/movimientos-caja/nuevo'
-                        element={<RegisterCashMovement />}
+                        element={
+                          <PermissionGuard permission='cash:read'>
+                            <RegisterCashMovement />
+                          </PermissionGuard>
+                        }
                       />
                       <Route
                         path='/pagos-compras'
-                        element={<PurchasePayments />}
+                        element={
+                          <PermissionGuard permission='purchases:read'>
+                            <PurchasePayments />
+                          </PermissionGuard>
+                        }
                       />
                       <Route
                         path='/pagos-compras/:orderId'
-                        element={<PurchasePaymentDetail />}
+                        element={
+                          <PermissionGuard permission='purchases:read'>
+                            <PurchasePaymentDetail />
+                          </PermissionGuard>
+                        }
                       />
                       <Route path='/cobros-ventas' element={<SalePayment />} />
                       <Route
@@ -422,6 +477,12 @@ function AppContent() {
                         <RoleGuard allowedRoles={['F2VLso']}>
                           <BranchManagement />
                         </RoleGuard>
+                      } />
+
+                      <Route path='/configuracion/terminal' element={
+                        <PermissionGuard permission="branches:switch">
+                          <TerminalPairing />
+                        </PermissionGuard>
                       } />
                       
                       <Route path='/configuracion/usuarios' element={
@@ -483,7 +544,11 @@ function AppContent() {
                       />
                       <Route
                         path='/configuracion/tipos-cambio'
-                        element={<ExchangeRates />}
+                        element={
+                          <PermissionGuard permission='payments:read'>
+                            <ExchangeRates />
+                          </PermissionGuard>
+                        }
                       />
                       <Route
                         path='/configuracion/categorias'

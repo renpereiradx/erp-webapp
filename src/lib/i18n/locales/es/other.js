@@ -101,4 +101,29 @@ export const other = {
   'branchSelection.noBranchesHint': 'Contacta a un administrador para que te otorgue acceso a un punto de venta.',
   'branchSelection.securityActive': 'Security Active',
   'branchSelection.syncedToCloud': 'Synced to Cloud',
+
+  // Accesos a sucursales (D.1 — PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES)
+  'branchAccess.isDefault': 'Sucursal por defecto',
+  'branchAccess.isDefaultHint': 'La sesión de este usuario abrirá por defecto en esta sucursal. Marcar una nueva quita la marca de la anterior.',
+  'branchAccess.defaultBadge': 'Por defecto',
+  'branchAccess.setDefault': 'Marcar como sucursal por defecto',
+  'branchAccess.setDefaultSuccess': 'Sucursal por defecto actualizada',
+  'branchAccess.setDefaultError': 'Error al marcar sucursal por defecto',
+
+  // Terminal (D.3/D.4/D.5 — emparejamiento y gating de cambio de sucursal)
+  'settings.terminal.title': 'Terminal',
+  'settings.terminal.desc': 'Vincula este dispositivo a una sucursal',
+  'terminal.title': 'Terminal',
+  'terminal.subtitle': 'Vincula este dispositivo a una sucursal para operar sin elegir sucursal en cada inicio.',
+  'terminal.statusTitle': 'Estado de esta terminal',
+  'terminal.pairedBadge': 'Vinculada',
+  'terminal.unpairedBadge': 'Sin vincular',
+  'terminal.unpairedHint': 'Esta terminal no tiene sucursal asignada.',
+  'terminal.unpair': 'Desvincular terminal',
+  'terminal.unpairSuccess': 'Terminal desvinculada',
+  'terminal.pairSuccess': 'Terminal vinculada a {name}',
+  'terminal.effectHint': 'Quienes operen desde aquí sin permiso de cambio de sucursal entrarán directo a la sucursal vinculada.',
+  'terminal.pickTitle': 'Elegir sucursal de la terminal',
+  'terminal.loading': 'Cargando sucursales...',
+  'terminal.noCity': 'Sin ciudad',
 }

@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Info,
   Monitor,
+  MonitorSmartphone,
   Command,
   Scale,
   ArrowRightLeft,
@@ -123,6 +124,16 @@ const businessPrefsRow: NavRow = {
   descKey: 'businessPrefs.generic.description',
   descFallback: 'Configuración global de este negocio.',
   href: '/configuracion/preferencias',
+}
+
+/** Fila branches:switch (D.3): emparejamiento de terminal con sucursal. */
+const terminalRow: NavRow = {
+  icon: MonitorSmartphone,
+  titleKey: 'settings.terminal.title',
+  titleFallback: 'Terminal',
+  descKey: 'settings.terminal.desc',
+  descFallback: 'Vincula este dispositivo a una sucursal',
+  href: '/configuracion/terminal',
 }
 
 interface SectionTitleProps {
@@ -282,6 +293,7 @@ export default function SettingsPage() {
                   {systemNavRows.map((row) => (
                     <NavCardRow key={row.href} row={row} />
                   ))}
+                  {hasPermission('branches:switch') && <NavCardRow row={terminalRow} />}
                   {hasPermission('settings:write') && <NavCardRow row={businessPrefsRow} />}
                 </div>
               </CardContent>

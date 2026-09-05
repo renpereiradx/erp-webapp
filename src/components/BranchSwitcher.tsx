@@ -3,10 +3,12 @@ import { Building2, ChevronDown, Globe, Check, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { branchService } from '@/features/branches/services/branchService';
 import { useBranch } from '@/contexts/BranchContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/lib/i18n';
 
 const BranchSwitcher = () => {
   const { currentBranchId, allowedBranches, changeBranch, canViewGlobal } = useBranch();
+  const { hasPermission } = useAuth();
   const { t } = useI18n();
   const [isOpen, setIsOpen] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -42,8 +44,12 @@ const BranchSwitcher = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Si no hay sucursales permitidas y no es admin, no mostrar nada
-  if (allowedBranches.length <= 1 && !canViewGlobal) {
+  // D.5 (PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES): solo con `branches:switch`
+  // (o admin). Sin el permiso, la sucursal la decide la terminal vinculada /
+  // la asignación del encargado — no el usuario. Se mantiene el auto-ocultar
+  // con ≤1 sucursal permitida.
+  const canSwitchBranches = canViewGlobal || hasPermission('branches:switch');
+  if (!canSwitchBranches || (allowedBranches.length <= 1 && !canViewGlobal)) {
     return null;
   }
 

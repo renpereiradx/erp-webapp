@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { decodeJWTPayload } from '@/utils/jwtUtils';
+import { readDeviceDefaultBranch } from '@/utils/deviceBranch';
 
 interface BranchContextType {
   currentBranchId: number | null;
@@ -13,7 +14,7 @@ interface BranchContextType {
 const BranchContext = createContext<BranchContextType | undefined>(undefined);
 
 export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user, token, isAuthenticated } = useAuth();
+  const { user, token, isAuthenticated, hasPermission } = useAuth();
   const [currentBranchId, setCurrentBranchId] = useState<number | null>(null);
   const [allowedBranches, setAllowedBranches] = useState<number[]>([]);
   const [canViewGlobal, setCanViewGlobal] = useState(false);
@@ -53,8 +54,21 @@ export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                       user?.roles?.some(r => r.id === 'admin' || r.id === 'F2VLso');
       setCanViewGlobal(!!isAdmin);
 
+      // D.4 (PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES): terminal vinculada
+      // (device.defaultBranch). Solo fuerza sucursal para usuarios SIN
+      // `branches:switch`; si la sucursal emparejada ya no está permitida se
+      // ignora y se sigue la jerarquía normal (fail-open controlado).
+      const canSwitchBranches = isAdmin || hasPermission('branches:switch');
+      const deviceBranchId = readDeviceDefaultBranch();
+      const deviceBranchForced =
+        !canSwitchBranches && deviceBranchId !== null && finalAllowedBranches.includes(deviceBranchId);
+
       // Resolución de sucursal activa según jerarquía
-      if (urlBranchId && !isNaN(parseInt(urlBranchId))) {
+      if (deviceBranchForced && deviceBranchId !== null) {
+        // La terminal vinculada manda por encima de URL, localStorage y JWT.
+        setCurrentBranchId(deviceBranchId);
+        localStorage.setItem('activeBranch', deviceBranchId.toString());
+      } else if (urlBranchId && !isNaN(parseInt(urlBranchId))) {
         const bid = parseInt(urlBranchId);
         setCurrentBranchId(bid);
         localStorage.setItem('activeBranch', bid.toString());
@@ -89,7 +103,7 @@ export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       setAllowedBranches([]);
       setCanViewGlobal(false);
     }
-  }, [isAuthenticated, user, token]);
+  }, [isAuthenticated, user, token, hasPermission]);
 
   const changeBranch = useCallback((branchId: number | null) => {
     setCurrentBranchId(branchId);

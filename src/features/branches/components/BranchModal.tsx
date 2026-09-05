@@ -43,7 +43,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Building2, Plus, Trash2, ShieldCheck, Receipt, UserPlus, Loader2 } from 'lucide-react';
+import { Building2, Plus, Trash2, ShieldCheck, Receipt, UserPlus, Loader2, Star } from 'lucide-react';
 
 interface BranchModalProps {
   isOpen: boolean;
@@ -160,6 +160,18 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
       setAccessForm({ user_id: '', access_type: 'FULL', is_default_branch: false });
     },
     onError: (error: any) => addToast(error.message || 'Error al otorgar acceso', 'error')
+  });
+
+  // D.1 (PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES): marcar el acceso existente
+  // de un usuario como sucursal por defecto. El backend limpia el default
+  // anterior antes de escribir (índice único uk_user_default_branch).
+  const setDefaultAccessMutation = useMutation({
+    mutationFn: (userId: string) => branchService.updateAccess(branch!.id, userId, { is_default_branch: true }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branch-access', branch?.id] });
+      addToast(t('branchAccess.setDefaultSuccess', 'Sucursal por defecto actualizada'), 'success');
+    },
+    onError: (error: any) => addToast(error.message || t('branchAccess.setDefaultError', 'Error al marcar sucursal por defecto'), 'error')
   });
 
   const addFiscalMutation = useMutation({
@@ -533,7 +545,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="size-8 p-0 text-slate-400 hover:text-error hover:bg-error/10"
+                            className="size-8 p-0 text-on-surface-deep hover:text-error hover:bg-error/10"
                             onClick={() => {
                               if (window.confirm(t('fiscal.branch.deleteConfirm', '¿Estás seguro de eliminar esta configuración fiscal?'))) {
                                 deleteFiscalMutation.mutate(cfg.id);
@@ -600,6 +612,21 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     </select>
                   </div>
                 </div>
+                <div className="col-span-2 flex items-start gap-3 p-3 bg-white/70 border border-success/20 rounded-lg">
+                  <input
+                    type="checkbox"
+                    id="access-is-default"
+                    className="mt-0.5 size-4 rounded border-border-subtle text-success focus:ring-success/20"
+                    checked={accessForm.is_default_branch || false}
+                    onChange={(e) => setAccessForm({ ...accessForm, is_default_branch: e.target.checked })}
+                  />
+                  <label htmlFor="access-is-default" className="text-sm font-medium text-foreground cursor-pointer leading-tight">
+                    {t('branchAccess.isDefault', 'Sucursal por defecto')}
+                    <span className="block text-xs text-on-surface-deep font-normal mt-0.5">
+                      {t('branchAccess.isDefaultHint', 'La sesión de este usuario abrirá por defecto en esta sucursal. Marcar una nueva quita la marca de la anterior.')}
+                    </span>
+                  </label>
+                </div>
                 <div className="mt-4 flex justify-end gap-3">
                    <Button size="sm" variant="ghost" className="h-10 text-xs font-bold text-slate-600 hover:text-slate-800" onClick={() => setShowAddAccess(false)}>Descartar</Button>
                    <Button 
@@ -643,24 +670,46 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                            <span className="font-mono text-xs">{acc.user_id}</span>
                         </TableCell>
                         <TableCell className="py-4 px-4">
-                          <span className={`px-3 py-1 rounded-md text-[11px] font-black uppercase tracking-wider border ${
-                            acc.access_type === 'FULL' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
-                            acc.access_type === 'LIMITED' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                            'bg-slate-100 text-slate-600 border-slate-200'
-                          }`}>
-                            {acc.access_type}
-                          </span>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`px-3 py-1 rounded-md text-[11px] font-black uppercase tracking-wider border ${
+                              acc.access_type === 'FULL' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              acc.access_type === 'LIMITED' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                              'bg-slate-100 text-slate-600 border-slate-200'
+                            }`}>
+                              {acc.access_type}
+                            </span>
+                            {acc.is_default_branch && (
+                              <span className="px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-success/10 text-success border border-success/20 flex items-center gap-1">
+                                <Star size={10} /> {t('branchAccess.defaultBadge', 'Por defecto')}
+                              </span>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="py-4 px-4 text-slate-500">{new Date(acc.granted_at).toLocaleDateString()}</TableCell>
                         <TableCell className="py-4 px-4 text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="size-8 p-0 text-slate-400 hover:text-error hover:bg-error/10"
-                            onClick={() => revokeAccessMutation.mutate(acc.user_id)}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            {!acc.is_default_branch && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title={t('branchAccess.setDefault', 'Marcar como sucursal por defecto')}
+                                aria-label={t('branchAccess.setDefault', 'Marcar como sucursal por defecto')}
+                                className="size-8 p-0 text-on-surface-deep hover:text-primary hover:bg-primary/10"
+                                onClick={() => setDefaultAccessMutation.mutate(acc.user_id)}
+                                disabled={setDefaultAccessMutation.isPending}
+                              >
+                                <Star size={16} />
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="size-8 p-0 text-on-surface-deep hover:text-error hover:bg-error/10"
+                              onClick={() => revokeAccessMutation.mutate(acc.user_id)}
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
