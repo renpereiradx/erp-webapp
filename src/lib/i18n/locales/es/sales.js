@@ -526,6 +526,7 @@ export const sales = {
   'sales.editItem.lineTotal': 'Total a Pagar',
   'sales.editItem.save': 'Guardar Cambios',
   'sales.editItem.confirm': 'Confirmar Adición',
+  'sales.editItem.discountLocked': 'Requiere permiso para aplicar descuentos',
 
   // Anulación de venta
   'sales.cancelSale.title': 'Anular Venta #{id}',

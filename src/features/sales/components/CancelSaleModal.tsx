@@ -22,7 +22,8 @@ interface CancelSaleModalProps {
   preview: Record<string, unknown> | null;
   onConfirm: () => void;
   submitting: boolean;
-  canWrite: boolean;
+  /** B.5: confirm disabled without sales:cancel. */
+  canCancel: boolean;
 }
 
 export const CancelSaleModal: React.FC<CancelSaleModalProps> = ({
@@ -34,7 +35,7 @@ export const CancelSaleModal: React.FC<CancelSaleModalProps> = ({
   preview,
   onConfirm,
   submitting,
-  canWrite,
+  canCancel,
 }) => {
   const { t } = useI18n();
   const impact = (preview?.impact_analysis as Record<string, number> | undefined) ?? null;
@@ -52,7 +53,7 @@ export const CancelSaleModal: React.FC<CancelSaleModalProps> = ({
           <Button variant="secondary" onClick={onClose} disabled={submitting}>
             {t('common.cancel', 'Cancelar')}
           </Button>
-          <Button variant="destructive" onClick={onConfirm} disabled={submitting || !canWrite}>
+          <Button variant="destructive" onClick={onConfirm} disabled={submitting || !canCancel}>
             {submitting
               ? t('sales.cancelSale.cancelling', 'Anulando...')
               : t('sales.cancelSale.confirm', 'Sí, Anular')}

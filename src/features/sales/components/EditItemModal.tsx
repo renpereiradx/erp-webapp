@@ -8,7 +8,7 @@
  * borrador y se calcula el resumen de línea para previsualizar el impacto.
  */
 import React, { useEffect, useMemo, useRef } from 'react';
-import { DollarSign, Percent } from 'lucide-react';
+import { DollarSign, Lock, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -44,6 +44,13 @@ interface EditItemModalProps {
   customReason: string;
   onCustomReasonChange: (v: string) => void;
   onConfirm: () => void;
+  /**
+   * B.4 (PLAN_VENDOR_ROLE): false cuando el usuario carece de
+   * sales:apply_discount — precio final, descuento y razón quedan
+   * deshabilitados con candado. La validez real la impone el backend (B.3);
+   * esto es UX, no seguridad.
+   */
+  canApplyDiscount?: boolean;
   /** Autofoco en Cantidad (atajo Alt+Q sobre la fila activa del carrito). */
   focusQuantityOnOpen?: boolean;
 }
@@ -70,6 +77,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   customReason,
   onCustomReasonChange,
   onConfirm,
+  canApplyDiscount = true,
   focusQuantityOnOpen,
 }) => {
   const { t } = useI18n();
@@ -234,7 +242,8 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 }
               }}
               onBlur={() => setPriceDraft(null)}
-              className="h-10 text-body-md font-data-mono text-primary"
+              disabled={!canApplyDiscount}
+              className="h-10 text-body-md font-data-mono text-primary disabled:cursor-not-allowed disabled:text-on-surface-deep"
             />
           </div>
         </div>
@@ -247,26 +256,33 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             <span className="text-body-md-bold text-foreground">
               {t('sales.editItem.adjustment', 'Ajuste o Descuento')}
             </span>
-            <div className="flex p-1 bg-surface-muted rounded-md w-fit" role="group" aria-label={t('sales.editItem.adjustment', 'Ajuste o Descuento')}>
-              {(['amount', 'percent'] as const).map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setDiscountType(type)}
-                  aria-pressed={discountType === type}
-                  className={cn(
-                    'flex-1 px-3 py-1 text-body-sm-bold rounded-sm transition-colors duration-150',
-                    discountType === type
-                      ? 'bg-surface text-foreground shadow-whisper'
-                      : 'text-on-surface-deep hover:text-foreground',
-                  )}
-                >
-                  {type === 'amount'
-                    ? t('sales.editItem.fixedAmount', 'Monto Fijo')
-                    : t('sales.editItem.percentage', 'Porcentaje')}
-                </button>
-              ))}
-            </div>
+            {canApplyDiscount ? (
+              <div className="flex p-1 bg-surface-muted rounded-md w-fit" role="group" aria-label={t('sales.editItem.adjustment', 'Ajuste o Descuento')}>
+                {(['amount', 'percent'] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setDiscountType(type)}
+                    aria-pressed={discountType === type}
+                    className={cn(
+                      'flex-1 px-3 py-1 text-body-sm-bold rounded-sm transition-colors duration-150',
+                      discountType === type
+                        ? 'bg-surface text-foreground shadow-whisper'
+                        : 'text-on-surface-deep hover:text-foreground',
+                    )}
+                  >
+                    {type === 'amount'
+                      ? t('sales.editItem.fixedAmount', 'Monto Fijo')
+                      : t('sales.editItem.percentage', 'Porcentaje')}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <span className="flex items-center gap-1.5 text-body-sm text-on-surface-deep" data-testid="discount-locked-hint">
+                <Lock size={14} aria-hidden />
+                {t('sales.editItem.discountLocked', 'Requiere permiso para aplicar descuentos')}
+              </span>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
@@ -288,12 +304,13 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 }}
                 onBlur={() => setDiscountDraft(null)}
                 placeholder="0"
+                disabled={!canApplyDiscount}
                 aria-label={t('sales.editItem.discountInput', 'Monto o porcentaje de descuento')}
-                className="h-10 pl-9 pr-3 text-body-md font-data-mono"
+                className="h-10 pl-9 pr-3 text-body-md font-data-mono disabled:cursor-not-allowed disabled:text-on-surface-deep"
               />
             </div>
 
-            <Select value={discountReason} onValueChange={onDiscountReasonChange}>
+            <Select value={discountReason} onValueChange={onDiscountReasonChange} disabled={!canApplyDiscount}>
               <SelectTrigger id="edit-item-reason" className="w-full h-10 text-body-md">
                 <SelectValue placeholder={t('sales.editItem.reasonPlaceholder', 'Razón del ajuste...')} />
               </SelectTrigger>

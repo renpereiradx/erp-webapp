@@ -188,6 +188,9 @@ const SalesNew: React.FC = () => {
   const { hasPermission } = useAuth();
   const { currentBranchId } = useBranch();
   const canWrite = hasPermission('sales:write');
+  // B.3/B.5 (PLAN_VENDOR_ROLE): cosmetic gating — the server enforces both.
+  const canApplyDiscount = hasPermission('sales:apply_discount');
+  const canCancelSale = hasPermission('sales:cancel');
   const productSearchInputRef = useRef<HTMLInputElement>(null);
   const dropdownQuantityInputRef = useRef<HTMLInputElement>(null);
   // Última versión de handleSaveSale para el listener global de F12 (evita
@@ -1808,7 +1811,7 @@ const SalesNew: React.FC = () => {
             onClear={handleHistoryClear}
             onViewSale={(sale) => handleViewSale(sale as unknown as Record<string, unknown>)}
             onCancelSale={(sale) => handleCancelSale(sale as unknown as Record<string, unknown>)}
-            canWrite={canWrite}
+            canCancelSale={canCancelSale}
           />
         )}
       </main>
@@ -1843,6 +1846,7 @@ const SalesNew: React.FC = () => {
           onDiscountReasonChange={setModalDiscountReason}
           customReason={modalCustomReasonText}
           onCustomReasonChange={setModalCustomReasonText}
+          canApplyDiscount={canApplyDiscount}
           onConfirm={handleConfirmAdd}
           focusQuantityOnOpen
         />
@@ -1861,7 +1865,7 @@ const SalesNew: React.FC = () => {
         preview={cancelPreview}
         onConfirm={handleConfirmCancelSale}
         submitting={cancelSubmitting}
-        canWrite={canWrite}
+        canCancel={canCancelSale}
       />
 
       <SaleCheckoutWizard

@@ -78,7 +78,8 @@ interface SalesHistoryViewProps {
   onClear: () => void;
   onViewSale: (sale: HistorySaleRow) => void;
   onCancelSale: (sale: HistorySaleRow) => void;
-  canWrite: boolean;
+  /** B.5: anulación directa — solo con sales:cancel (roles avanzados). */
+  canCancelSale: boolean;
 }
 
 export const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({
@@ -98,7 +99,7 @@ export const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({
   onClear,
   onViewSale,
   onCancelSale,
-  canWrite,
+  canCancelSale,
 }) => {
   const { t } = useI18n();
 
@@ -261,7 +262,7 @@ export const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({
                               <DropdownMenuItem onClick={() => onViewSale(sale)} className="gap-2">
                                 <Eye size={14} /> {t('sales.history.viewDetail', 'Ver Detalle')}
                               </DropdownMenuItem>
-                              {sale.status !== 'CANCELLED' && canWrite && (
+                              {sale.status !== 'CANCELLED' && canCancelSale && (
                                 <DropdownMenuItem onClick={() => onCancelSale(sale)} className="gap-2 text-error focus:text-error">
                                   <Ban size={14} /> {t('sales.history.cancelSale', 'Anular Venta')}
                                 </DropdownMenuItem>
@@ -325,7 +326,7 @@ export const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({
                     >
                       <Eye size={14} className="mr-1.5 text-primary" /> {t('sales.history.details', 'Detalles')}
                     </Button>
-                    {sale.status !== 'CANCELLED' && (
+                    {sale.status !== 'CANCELLED' && canCancelSale && (
                       <Button
                         variant="outline"
                         size="sm"
