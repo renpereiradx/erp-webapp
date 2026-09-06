@@ -1,5 +1,16 @@
 import '@testing-library/jest-dom';
 
+// jsdom no implementa ResizeObserver: primitivas Radix que miden su trigger
+// (react-use-size) lo necesitan al montar (FASE E: Checkbox en el form de
+// terminales). Stub mínimo, sin observación real.
+if (typeof (globalThis as any).ResizeObserver === 'undefined') {
+  (globalThis as any).ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 // Worker stability: force a full GC between test files (setup runs once per file).
 // Without this, one fork accumulates several jsdom environments and OOMs on long runs
 // ("Worker exited unexpectedly"). Requires --expose-gc in poolOptions.forks.execArgv.

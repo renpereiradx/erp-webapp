@@ -18,6 +18,7 @@ import {
   Info,
   Monitor,
   MonitorSmartphone,
+  Smartphone,
   Command,
   Scale,
   ArrowRightLeft,
@@ -134,6 +135,16 @@ const terminalRow: NavRow = {
   descKey: 'settings.terminal.desc',
   descFallback: 'Vincula este dispositivo a una sucursal',
   href: '/configuracion/terminal',
+}
+
+/** Fila branches:switch (FASE E): registro de terminales POS en backend. */
+const devicesRow: NavRow = {
+  icon: Smartphone,
+  titleKey: 'settings.devices.title',
+  titleFallback: 'Terminales',
+  descKey: 'settings.devices.desc',
+  descFallback: 'Registro de terminales POS emparejadas a sucursal',
+  href: '/configuracion/terminales',
 }
 
 interface SectionTitleProps {
@@ -294,6 +305,7 @@ export default function SettingsPage() {
                     <NavCardRow key={row.href} row={row} />
                   ))}
                   {hasPermission('branches:switch') && <NavCardRow row={terminalRow} />}
+                  {hasPermission('branches:switch') && <NavCardRow row={devicesRow} />}
                   {hasPermission('settings:write') && <NavCardRow row={businessPrefsRow} />}
                 </div>
               </CardContent>

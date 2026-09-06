@@ -126,4 +126,13 @@ export const other = {
   'terminal.pickTitle': 'Elegir sucursal de la terminal',
   'terminal.loading': 'Cargando sucursales...',
   'terminal.noCity': 'Sin ciudad',
+  // FASE E: registro de la terminal en backend
+  'terminal.registeredBadge': 'Registrada (#{id})',
+  'terminal.registerTitle': 'Registrar terminal',
+  'terminal.registerHint': 'Ingresá el código de emparejamiento de una terminal registrada (Configuración → Terminales).',
+  'terminal.registerPlaceholder': 'Código (ej. ABCD2345)',
+  'terminal.register': 'Emparejar',
+  'terminal.registering': 'Emparejando…',
+  'terminal.registerSuccess': 'Terminal registrada: {name} → {branch}',
+  'terminal.registerError': 'Código de emparejamiento inválido',
 }

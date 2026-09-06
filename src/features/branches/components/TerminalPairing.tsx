@@ -1,30 +1,40 @@
 // ===========================================================================
-// TerminalPairing (D.3 — PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES)
-// Emparejamiento one-time de esta terminal (navegador) con una sucursal:
-// guarda `device.defaultBranch` en localStorage. Los usuarios SIN
-// `branches:switch` que operen desde aquí entran directo a esa sucursal
-// (resolución en BranchContext, D.4). Ruta: /configuracion/terminal,
-// gated con `branches:switch`.
+// TerminalPairing (D.3 + FASE E — PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES)
+// Emparejamiento de esta terminal (navegador) con una sucursal:
+//  - FASE E: registro en backend con código de emparejamiento → guarda
+//    `device.id` (header X-Device-ID en cada request; el middleware resuelve
+//    la sucursal server-side) + `device.defaultBranch` como fallback.
+//  - Nivel 1 (fallback sin registro): guarda solo `device.defaultBranch`.
+// Los usuarios SIN `branches:switch` que operen desde aquí entran directo a
+// esa sucursal (resolución en BranchContext, D.4). Ruta:
+// /configuracion/terminal, gated con `branches:switch`.
 // ===========================================================================
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle2, MonitorSmartphone, Store, Unlink } from 'lucide-react'
+import { CheckCircle2, MonitorSmartphone, QrCode, Store, Unlink } from 'lucide-react'
 
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
 import { branchService } from '@/features/branches/services/branchService'
-import { pairDeviceWithBranch, readDeviceDefaultBranch, unpairDevice } from '@/utils/deviceBranch'
+import { deviceService } from '@/features/devices/services/deviceService'
+import {
+  clearPairedDevice, pairDeviceWithBranch, readDeviceDefaultBranch, readDeviceId, setPairedDevice,
+} from '@/utils/deviceBranch'
 import type { Branch } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 
 const TerminalPairing = () => {
   const { t } = useI18n()
   const { addToast } = useToast()
 
   const pairedBranchId = readDeviceDefaultBranch()
+  const registeredDeviceId = readDeviceId()
+  const [pairingCode, setPairingCode] = useState('')
+  const [pairing, setPairing] = useState(false)
 
   const { data: branchesResponse, isLoading } = useQuery({
     queryKey: ['branches-names'],
@@ -46,8 +56,32 @@ const TerminalPairing = () => {
     )
   }
 
+  const handleRegister = async () => {
+    const code = pairingCode.trim()
+    if (!code) return
+    setPairing(true)
+    try {
+      const device = await deviceService.pair(code)
+      setPairedDevice(device.id, device.branch_id)
+      setPairingCode('')
+      const branchName = branches.find((b) => b.id === device.branch_id)?.name || `#${device.branch_id}`
+      addToast(
+        t('terminal.registerSuccess', 'Terminal registrada: {name} → {branch}', {
+          name: device.name,
+          branch: branchName,
+        }),
+        'success',
+      )
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string }
+      addToast(e?.response?.data?.message || e?.message || t('terminal.registerError', 'Código de emparejamiento inválido'), 'error')
+    } finally {
+      setPairing(false)
+    }
+  }
+
   const handleUnpair = () => {
-    unpairDevice()
+    clearPairedDevice()
     addToast(t('terminal.unpairSuccess', 'Terminal desvinculada'), 'success')
   }
 
@@ -83,7 +117,16 @@ const TerminalPairing = () => {
                     <MonitorSmartphone className="size-5" />
                   </span>
                   <div className="min-w-0">
-                    {pairedBranch ? (
+                    {registeredDeviceId ? (
+                      <>
+                        <Badge variant="success" className="mb-1">
+                          {t('terminal.registeredBadge', 'Registrada (#{id})', { id: String(registeredDeviceId) })}
+                        </Badge>
+                        <p className="truncate text-body-md-bold text-foreground">
+                          {pairedBranch?.name || t('terminal.unpairedHint', 'Esta terminal no tiene sucursal asignada.')}
+                        </p>
+                      </>
+                    ) : pairedBranch ? (
                       <>
                         <Badge variant="success" className="mb-1">
                           {t('terminal.pairedBadge', 'Vinculada')}
@@ -114,6 +157,41 @@ const TerminalPairing = () => {
                     'Quienes operen desde aquí sin permiso de cambio de sucursal entrarán directo a la sucursal vinculada.',
                   )}
                 </p>
+              </CardContent>
+            </Card>
+
+            {/* FASE E: registro de la terminal en backend vía código */}
+            <Card className="border-0 bg-surface p-lg shadow-whisper">
+              <CardContent className="flex flex-col gap-sm p-0">
+                <h3 className="text-label-caps uppercase text-on-surface-deep">
+                  {t('terminal.registerTitle', 'Registrar terminal')}
+                </h3>
+                <p className="text-body-sm text-on-surface-deep">
+                  {t(
+                    'terminal.registerHint',
+                    'Ingresá el código de emparejamiento de una terminal registrada (Configuración → Terminales).',
+                  )}
+                </p>
+                <div className="flex gap-sm">
+                  <Input
+                    value={pairingCode}
+                    onChange={(e) => setPairingCode(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') void handleRegister()
+                    }}
+                    placeholder={t('terminal.registerPlaceholder', 'Código (ej. ABCD2345)')}
+                    aria-label={t('terminal.registerPlaceholder', 'Código (ej. ABCD2345)')}
+                    data-testid="terminal-pairing-code"
+                    className="font-data-mono text-data-mono uppercase"
+                    maxLength={12}
+                  />
+                  <Button onClick={() => void handleRegister()} disabled={pairing || !pairingCode.trim()} data-testid="terminal-register">
+                    <QrCode className="size-4" />
+                    {pairing
+                      ? t('terminal.registering', 'Emparejando…')
+                      : t('terminal.register', 'Emparejar')}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </section>

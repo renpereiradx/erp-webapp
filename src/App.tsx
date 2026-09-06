@@ -66,6 +66,7 @@ import Settings from '@/pages/Settings'
 import BusinessPreferencesPage from '@/features/settings/components/BusinessPreferencesPage'
 import BranchManagement from '@/pages/BranchManagement'
 import TerminalPairing from '@/features/branches/components/TerminalPairing'
+import DevicesPage from '@/pages/DevicesPage'
 import TransfersPage from '@/features/transfers/components/TransfersPage'
 import UserManagementList from '@/pages/UserManagementList.tsx'
 import UserDetailedProfile from '@/pages/UserDetailedProfile.tsx'
@@ -482,6 +483,12 @@ function AppContent() {
                       <Route path='/configuracion/terminal' element={
                         <PermissionGuard permission="branches:switch">
                           <TerminalPairing />
+                        </PermissionGuard>
+                      } />
+
+                      <Route path='/configuracion/terminales' element={
+                        <PermissionGuard permission="branches:switch">
+                          <DevicesPage />
                         </PermissionGuard>
                       } />
                       

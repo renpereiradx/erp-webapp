@@ -34,6 +34,7 @@ import { businessPrefs } from './businessPrefs'
 import { printers } from './printers'
 import { shell } from './shell'
 import { transfers } from './transfers'
+import { devices } from './devices'
 
 /**
  * Diccionario completo de traducciones en español
@@ -70,5 +71,6 @@ export const es = {
   ...printers,
   ...shell,
   ...transfers,
+  ...devices,
   ...other,
 }

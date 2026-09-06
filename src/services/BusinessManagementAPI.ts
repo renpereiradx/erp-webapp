@@ -114,6 +114,12 @@ class BusinessManagementAPI {
       headers['X-Branch-ID'] = activeBranch
     }
 
+    // FASE E (PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES): terminal registrada en
+    // backend — el middleware resuelve su sucursal para usuarios sin
+    // branches:switch y audita last_seen por request.
+    const deviceId = localStorage.getItem('device.id')
+    if (deviceId) headers['X-Device-ID'] = deviceId
+
     return headers
   }
 
