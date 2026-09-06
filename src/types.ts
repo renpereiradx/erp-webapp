@@ -1544,12 +1544,14 @@ export interface BranchTransferItem {
   id: number;
   transfer_id: number;
   product_id: string;
+  variant_id?: string;
   quantity_requested: number;
   quantity_approved?: number;
   quantity_shipped?: number;
   quantity_received?: number;
   unit_cost?: number;
   notes?: string;
+  purchase_order_id?: number; // F.6: trazabilidad compra → transferencia
   product_name?: string; // JOIN
 }
 
@@ -1560,9 +1562,11 @@ export interface CreateBranchTransferRequest {
   notes?: string;
   items: Array<{
     product_id: string;
+    variant_id?: string;
     quantity_requested: number;
     unit_cost?: number;
     notes?: string;
+    purchase_order_id?: number;
   }>;
 }
 

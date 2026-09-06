@@ -28,6 +28,8 @@ export interface PreloadedTransferItem {
   product_name?: string
   quantity: number
   unit_cost?: number
+  /** F.6: compra de la que proviene el ítem, para trazabilidad. */
+  purchase_order_id?: number
 }
 
 /** Normaliza la respuesta del listado: el backend devuelve { transfers }. */

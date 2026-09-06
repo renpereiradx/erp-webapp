@@ -7,7 +7,8 @@
 // ===========================================================================
 
 import { useState } from 'react'
-import { ArrowRight, Loader2, Truck } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, FileText, Loader2, Truck } from 'lucide-react'
 
 import { useI18n } from '@/lib/i18n'
 import { useAuth } from '@/contexts/AuthContext'
@@ -111,6 +112,16 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
   const nextAction = current ? nextActionForStatus(current.status) : null
   const showActionForm = actionMode === 'REJECTED' || actionMode === 'SHIPPED'
 
+  // F.6: compras de origen de los ítems (una transferencia post-compra las
+  // trae todas de la misma compra; líneas manuales no registran ninguna).
+  const sourcePurchaseIds = [
+    ...new Set(
+      items
+        .map((item) => item.purchase_order_id)
+        .filter((id): id is number => typeof id === 'number'),
+    ),
+  ]
+
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : closeModal())}>
       <DialogContent className="sm:max-w-[680px] max-h-[90vh] overflow-y-auto">
@@ -162,6 +173,24 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
                 </li>
               )}
             </ul>
+
+            {sourcePurchaseIds.length > 0 && (
+              <p className="flex flex-wrap items-center gap-xs text-body-sm text-on-surface-deep">
+                <FileText className="size-4" aria-hidden="true" />
+                {t('transfers.sourcePurchase', 'Compra de origen')}:
+                {sourcePurchaseIds.map((id) => (
+                  <Link
+                    key={id}
+                    to="/compras"
+                    data-testid={`transfer-source-purchase-${id}`}
+                    aria-label={t('transfers.sourcePurchaseAria', 'Ver la compra de origen #{id} en el historial de compras', { id: String(id) })}
+                    className="text-body-sm-bold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded-sm"
+                  >
+                    #{id}
+                  </Link>
+                ))}
+              </p>
+            )}
 
             {canWrite && actionMode === null && nextAction && (
               <div className="flex flex-wrap items-center gap-sm">

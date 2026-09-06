@@ -51,6 +51,8 @@ export const transfers = {
   'transfers.statusError': 'Error al actualizar la transferencia',
   'transfers.requestedQty': '{qty} u.',
   'transfers.noItems': 'Sin ítems',
+  'transfers.sourcePurchase': 'Compra de origen',
+  'transfers.sourcePurchaseAria': 'Ver la compra de origen #{id} en el historial de compras',
   'transfers.approve': 'Aprobar',
   'transfers.reject': 'Rechazar',
   'transfers.ship': 'Despachar',

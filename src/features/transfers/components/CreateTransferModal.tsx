@@ -34,6 +34,8 @@ interface TransferLine {
   product_name: string
   quantity: number
   unit_cost?: number
+  /** F.6: compra de la que proviene la línea (solo ítems precargados). */
+  purchase_order_id?: number
 }
 
 interface CreateTransferModalProps {
@@ -57,6 +59,7 @@ function linesFromPreloaded(items: PreloadedTransferItem[]): TransferLine[] {
     product_name: item.product_name || item.product_id,
     quantity: item.quantity,
     unit_cost: item.unit_cost,
+    purchase_order_id: item.purchase_order_id,
   }))
 }
 
@@ -141,6 +144,7 @@ const CreateTransferModal = ({
         quantity_requested: line.quantity,
         ...(line.variant_id ? { variant_id: line.variant_id } : {}),
         ...(line.unit_cost != null ? { unit_cost: line.unit_cost } : {}),
+        ...(line.purchase_order_id != null ? { purchase_order_id: line.purchase_order_id } : {}),
       })),
     }
     createMutation.mutate(payload, {

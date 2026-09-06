@@ -1,13 +1,15 @@
 /**
- * F.4 (PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES) — bandeja y workflow de
+ * F.4/F.5/F.6 (PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES) — bandeja y workflow de
  * transferencias entre sucursales. Contrato UI:
  *
  * - TransfersPage: lista desde branchTransferService, badge de pendientes,
  *   filtro por estado, "Nueva Transferencia" solo con `transfers:write`.
  * - CreateTransferModal: ítems precargados (F.5), submit deshabilitado sin
- *   destino, payload con source = sucursal activa.
+ *   destino, payload con source = sucursal activa; los ítems precargados
+ *   llevan purchase_order_id (F.6).
  * - TransferDetailModal: acciones por estado (APPROVED/REJECTED en PENDING,
- *   SHIPPED con tracking, IN_TRANSIT, RECEIVED); REJECTED exige motivo.
+ *   SHIPPED con tracking, IN_TRANSIT, RECEIVED); REJECTED exige motivo;
+ *   link a la compra de origen cuando los ítems la registran (F.6).
  *
  * Mocks en la frontera: branchTransferService, branchService, AuthContext,
  * BranchContext e i18n (firma real, fallback español). lucide-react NO se
@@ -18,6 +20,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
+import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const mockHasPermission = vi.fn<(permission: string) => boolean>()
@@ -87,7 +90,11 @@ const transferPending: BranchTransfer = {
 
 const renderWithProviders = (ui: React.ReactElement) => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+  return render(
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+    </MemoryRouter>,
+  )
 }
 
 beforeEach(() => {
@@ -198,6 +205,31 @@ describe('CreateTransferModal — creación (F.4/F.5)', () => {
       ),
     )
   })
+
+  it('stamps preloaded items with their source purchase id (F.6)', async () => {
+    const user = userEvent.setup()
+    const createTransfer = vi.mocked(branchTransferService.createTransfer).mockResolvedValue(transferPending)
+    renderWithProviders(
+      <CreateTransferModal
+        {...baseProps}
+        initialItems={[
+          { product_id: 'P1', product_name: 'Yerba 1kg', quantity: 2, purchase_order_id: 42 },
+        ]}
+      />,
+    )
+
+    await screen.findByText('Sucursal Centro')
+    await user.selectOptions(screen.getByLabelText('Sucursal de destino'), '2')
+    await user.click(screen.getByTestId('transfer-submit'))
+
+    await waitFor(() =>
+      expect(createTransfer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          items: [expect.objectContaining({ product_id: 'P1', purchase_order_id: 42 })],
+        }),
+      ),
+    )
+  })
 })
 
 describe('TransferDetailModal — acciones del workflow (F.4)', () => {
@@ -254,5 +286,32 @@ describe('TransferDetailModal — acciones del workflow (F.4)', () => {
         expect.objectContaining({ new_status: 'SHIPPED', shipping_tracking_number: 'TRK-99' }),
       ),
     )
+  })
+
+  it('links items back to their source purchase and omits it for manual lines (F.6)', async () => {
+    getTransferById.mockResolvedValue({
+      transfer: transferPending,
+      items: [
+        { id: 1, transfer_id: 11, product_id: 'P1', quantity_requested: 5, product_name: 'Yerba 1kg', purchase_order_id: 42 },
+        { id: 2, transfer_id: 11, product_id: 'P2', quantity_requested: 1, product_name: 'Azúcar 1kg' },
+      ],
+    })
+    renderWithProviders(<TransferDetailModal transfer={transferPending} open onOpenChange={vi.fn()} />)
+
+    expect(await screen.findByText(/Compra de origen/)).toBeInTheDocument()
+    const link = screen.getByTestId('transfer-source-purchase-42')
+    expect(link).toHaveAttribute('href', '/compras')
+    expect(link).toHaveTextContent('#42')
+  })
+
+  it('shows no source purchase link when no item came from a purchase (F.6)', async () => {
+    getTransferById.mockResolvedValue({
+      transfer: transferPending,
+      items: [{ id: 1, transfer_id: 11, product_id: 'P1', quantity_requested: 5, product_name: 'Yerba 1kg' }],
+    })
+    renderWithProviders(<TransferDetailModal transfer={transferPending} open onOpenChange={vi.fn()} />)
+
+    await screen.findByText('Yerba 1kg')
+    expect(screen.queryByText(/Compra de origen/)).not.toBeInTheDocument()
   })
 })

@@ -843,12 +843,14 @@ export const usePurchasesLogic = () => {
           details: dbDetails,
           // F.5: el carrito se limpia en este mismo flujo; el snapshot se toma
           // del closure antes del clear para el CTA "Enviar a sucursal…".
+          // F.6: cada ítem registra la compra de la que proviene.
           transferable_items: purchaseItems.map(i => ({
             product_id: i.product_id,
             variant_id: i.variant_id || undefined,
             product_name: i.variant_name ? `${i.name} (${i.variant_name})` : i.name,
             quantity: Number(i.quantity),
             unit_cost: Number(i.unit_price),
+            purchase_order_id: result.purchase_order_id,
           }))
         })
 
