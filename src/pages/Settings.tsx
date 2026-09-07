@@ -305,7 +305,7 @@ export default function SettingsPage() {
                     <NavCardRow key={row.href} row={row} />
                   ))}
                   {hasPermission('branches:switch') && <NavCardRow row={terminalRow} />}
-                  {hasPermission('branches:switch') && <NavCardRow row={devicesRow} />}
+                  {hasPermission('branches:write') && <NavCardRow row={devicesRow} />}
                   {hasPermission('settings:write') && <NavCardRow row={businessPrefsRow} />}
                 </div>
               </CardContent>

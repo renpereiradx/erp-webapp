@@ -2,8 +2,8 @@
  * DevicesPage — administración de terminales POS (contexto devices del
  * backend, FASE E). Workspace maestro-detalle: listado con búsqueda +
  * formulario de alta/edición. Ruta /configuracion/terminales, gating
- * branches:switch (la misma persona que empareja la terminal administra el
- * registro).
+ * branches:write (alineado con el split por método del backend: lectura
+ * branches:read, escritura branches:write).
  *
  * Cada terminal emparejada fuerza su sucursal server-side para usuarios sin
  * `branches:switch` (middleware X-Device-ID) y audita last_seen por request.

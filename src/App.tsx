@@ -487,7 +487,7 @@ function AppContent() {
                       } />
 
                       <Route path='/configuracion/terminales' element={
-                        <PermissionGuard permission="branches:switch">
+                        <PermissionGuard permission="branches:write">
                           <DevicesPage />
                         </PermissionGuard>
                       } />
