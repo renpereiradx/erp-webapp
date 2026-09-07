@@ -35,6 +35,7 @@ import { printers } from './printers'
 import { shell } from './shell'
 import { transfers } from './transfers'
 import { devices } from './devices'
+import { catalog } from './catalog'
 
 /**
  * Diccionario completo de traducciones en español
@@ -72,5 +73,6 @@ export const es = {
   ...shell,
   ...transfers,
   ...devices,
+  ...catalog,
   ...other,
 }

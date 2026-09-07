@@ -30,6 +30,13 @@ vi.mock('@/lib/i18n', () => ({
   }),
 }))
 
+// PLAN_CATALOGO_VENDEDOR 3.4: la tabla gatea costo/margen tras useAuth;
+// por defecto las pruebas ven la tabla completa (hasPermission → true).
+const mockHasPermission = vi.fn<(permission: string) => boolean>(() => true)
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ hasPermission: (permission: string) => mockHasPermission(permission) }),
+}))
+
 const makeProduct = (overrides: Partial<ProductEnriched> = {}): ProductEnriched => ({
   id: 'p1',
   name: 'Cerveza Stout',
@@ -102,5 +109,39 @@ describe('ProductsTable', () => {
     )
 
     expect(screen.getByText('No Disponible')).toBeInTheDocument()
+  })
+
+  // PLAN_CATALOGO_VENDEDOR 3.4: sin products:cost la columna de costo y el
+  // chip de margen no se renderizan (defensa en profundidad del strip server-side).
+  it('oculta la columna de costo y el margen sin products:cost', () => {
+    mockHasPermission.mockImplementation((permission: string) => permission !== 'products:cost')
+
+    render(
+      <ProductsTable
+        products={[makeProduct()]}
+        onOpenDetailsModal={vi.fn()}
+        onOpenEditModal={vi.fn()}
+      />
+    )
+
+    expect(screen.queryByText('Costo de Compra')).not.toBeInTheDocument()
+    expect(screen.queryByText(/marg\./)).not.toBeInTheDocument()
+    // Nombre, categoría, IVA, stock, precio, estado (6 columnas visibles).
+    // Producto, categoría, IVA, stock, precio, estado, acciones.
+    expect(screen.getAllByRole('columnheader').length).toBe(7)
+  })
+
+  it('muestra el chip de margen solo con products:cost', () => {
+    mockHasPermission.mockImplementation(() => true)
+    render(
+      <ProductsTable
+        products={[makeProduct()]}
+        onOpenDetailsModal={vi.fn()}
+        onOpenEditModal={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText('Costo de Compra')).toBeInTheDocument()
+    expect(screen.getByText(/marg\./)).toBeInTheDocument()
   })
 })

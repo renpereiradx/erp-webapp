@@ -55,13 +55,15 @@ describe('navigation — perfil vendedor puro', () => {
     expect(findByName(tree, 'Directorio de Contactos')).toBeDefined()
   })
 
-  it('VNDR01 v2: Gestión Comercial queda solo con Ventas (sin Pagos y Cobros ni Compras)', () => {
+  it('VNDR01 v2: Gestión Comercial queda con Catálogo y Ventas (sin Pagos y Cobros ni Compras)', () => {
     const tree = filterNavigationItems(buildNavigation(t, false), checksFor(VENDOR_PERMS))
     const comercial = findByName(tree, 'Gestión Comercial')
 
     // "Pagos y Cobros" es cobranza (cash:write), no payments:read — este es
     // instrumental del checkout y NO habilita el workspace de cobros.
-    expect(childNames(comercial)).toEqual(['Ventas'])
+    // PLAN_CATALOGO_VENDEDOR 3.3: el Catálogo (products:read) ES para el
+    // vendedor — es su consulta de precios sin datos de costo.
+    expect(childNames(comercial)).toEqual(['Catálogo', 'Ventas'])
   })
 
   it('VNDR01 v2: dentro de Ventas solo quedan Nueva Venta y Presupuestos', () => {

@@ -68,6 +68,7 @@ import BranchManagement from '@/pages/BranchManagement'
 import TerminalPairing from '@/features/branches/components/TerminalPairing'
 import DevicesPage from '@/pages/DevicesPage'
 import TransfersPage from '@/features/transfers/components/TransfersPage'
+import { CatalogBoard } from '@/features/catalog'
 import UserManagementList from '@/pages/UserManagementList.tsx'
 import UserDetailedProfile from '@/pages/UserDetailedProfile.tsx'
 import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity.tsx'
@@ -299,12 +300,12 @@ function AppContent() {
                       <Route path='/bi/pronosticos/ingresos' element={<PronosticoIngresos />} />
                       
                       {/* Profitability Analytics Module (Detailed) */}
-                      <Route path='/profitability/dashboard' element={<ProfitabilityDashboard />} />
-                      <Route path='/profitability/products' element={<ProductProfitability />} />
-                      <Route path='/profitability/customers' element={<CustomerProfitability />} />
-                      <Route path='/profitability/categories' element={<CategoryProfitability />} />
-                      <Route path='/profitability/trends' element={<ProfitabilityTrends />} />
-                      <Route path='/profitability/sellers' element={<SellerProfitability />} />
+                      <Route path='/profitability/dashboard' element={<PermissionGuard permission="analytics:read"><ProfitabilityDashboard /></PermissionGuard>} />
+                      <Route path='/profitability/products' element={<PermissionGuard permission="analytics:read"><ProductProfitability /></PermissionGuard>} />
+                      <Route path='/profitability/customers' element={<PermissionGuard permission="analytics:read"><CustomerProfitability /></PermissionGuard>} />
+                      <Route path='/profitability/categories' element={<PermissionGuard permission="analytics:read"><CategoryProfitability /></PermissionGuard>} />
+                      <Route path='/profitability/trends' element={<PermissionGuard permission="analytics:read"><ProfitabilityTrends /></PermissionGuard>} />
+                      <Route path='/profitability/sellers' element={<PermissionGuard permission="analytics:read"><SellerProfitability /></PermissionGuard>} />
 
                       {/* BI Inventory Analytics (Detailed) */}
                       <Route path='/bi/inventory/stock-levels' element={<BIStockManagement />} />
@@ -316,7 +317,7 @@ function AppContent() {
                       <Route path='/receivables/overdue' element={<OverdueAccounts />} />
                       <Route path='/receivables/client-profile/:clientId' element={<ClientCreditProfile />} />
                       <Route path='/receivables/aging-report' element={<AgingReport />} />
-                      <Route path='/productos' element={<PermissionGuard permission="products:read"><Products /></PermissionGuard>} />
+                      <Route path='/productos' element={<PermissionGuard permission="products:write"><Products /></PermissionGuard>} />
                       <Route path='/parties' element={<PermissionGuard anyOf={['parties:read', 'clients:read', 'suppliers:read']}><PartiesPage /></PermissionGuard>} />
                       <Route path='/payables/suppliers/:id/analysis' element={<SupplierAnalysis />} />
                       <Route path='/ventas' element={<PermissionGuard permission="sales:read"><SalesNew /></PermissionGuard>} />
@@ -398,6 +399,17 @@ function AppContent() {
                         element={
                           <PermissionGuard permission='transfers:read'>
                             <TransfersPage />
+                          </PermissionGuard>
+                        }
+                      />
+
+                      {/* PLAN_CATALOGO_VENDEDOR 3.3: catálogo comercial
+                          read-only (vendedor/cajero). products:read, no write. */}
+                      <Route
+                        path='/catalogo'
+                        element={
+                          <PermissionGuard permission='products:read'>
+                            <CatalogBoard />
                           </PermissionGuard>
                         }
                       />
@@ -519,12 +531,12 @@ function AppContent() {
                         </PermissionGuard>
                       } />
                       <Route path='/configuracion/balanzas' element={
-                        <PermissionGuard permission="products:read">
+                        <PermissionGuard permission="products:write">
                           <ScaleConfigPage />
                         </PermissionGuard>
                       } />
                       <Route path='/configuracion/conversiones' element={
-                        <PermissionGuard permission="products:read">
+                        <PermissionGuard permission="products:write">
                           <UnitConversionsPage />
                         </PermissionGuard>
                       } />
@@ -571,7 +583,7 @@ function AppContent() {
                       <Route
                         path='/configuracion/categorias'
                         element={
-                          <PermissionGuard permission="products:read">
+                          <PermissionGuard permission="products:write">
                             <CategoriesPage />
                           </PermissionGuard>
                         }
@@ -579,7 +591,7 @@ function AppContent() {
                       <Route
                         path='/configuracion/marcas'
                         element={
-                          <PermissionGuard permission="products:read">
+                          <PermissionGuard permission="products:write">
                             <BrandsPage />
                           </PermissionGuard>
                         }
@@ -587,7 +599,7 @@ function AppContent() {
                       <Route
                         path='/configuracion/atributos'
                         element={
-                          <PermissionGuard permission="products:read">
+                          <PermissionGuard permission="products:write">
                             <AttributesPage />
                           </PermissionGuard>
                         }

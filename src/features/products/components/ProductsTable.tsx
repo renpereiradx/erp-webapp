@@ -1,6 +1,7 @@
 import React from 'react';
 import { Package, MoreVertical } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Table,
   TableHeader,
@@ -33,6 +34,10 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
   children,
 }) => {
   const { t } = useI18n();
+  // PLAN_CATALOGO_VENDEDOR 3.4: el costo y el margen se renderizan solo con
+  // products:cost (defensa en profundidad; la garantía real es server-side).
+  const { hasPermission } = useAuth();
+  const canViewCosts = hasPermission('products:cost');
 
   const getStockDisplay = (product: any) => {
     const stock = product.stock_quantity ?? product.stock ?? product.quantity ?? 0;
@@ -68,14 +73,16 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
           <TableHead className={cn(headClass, 'py-md px-md text-right')}>
             {t('products.table.stock')}
           </TableHead>
-          <TableHead className={cn(headClass, 'py-md px-md text-right')}>
-            <div className="flex flex-col">
-              <span>{t('products.table.cost_purchase', 'Costo de Compra')}</span>
-              <span className="normal-case tracking-normal">
-                {t('products.table.cost_neto', 'Neto')}
-              </span>
-            </div>
-          </TableHead>
+          {canViewCosts && (
+            <TableHead className={cn(headClass, 'py-md px-md text-right')}>
+              <div className="flex flex-col">
+                <span>{t('products.table.cost_purchase', 'Costo de Compra')}</span>
+                <span className="normal-case tracking-normal">
+                  {t('products.table.cost_neto', 'Neto')}
+                </span>
+              </div>
+            </TableHead>
+          )}
           <TableHead className={cn(headClass, 'py-md px-md text-right')}>
             <div className="flex flex-col">
               <span>{t('products.table.price_sale', 'Precio de Venta')}</span>
@@ -164,16 +171,18 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                   </span>
                 </span>
               </TableCell>
-              <TableCell className={cn(cellClass, 'text-right')}>
-                <div className="flex flex-col items-end gap-xs">
-                  <span className="text-data-mono font-data-mono text-on-surface-deep">
-                    {formatCurrency(purchaseCost)}
-                  </span>
-                  <span className="text-label-caps uppercase text-on-surface-deep">
-                    {t('products.table.cost_neto', 'Neto')}
-                  </span>
-                </div>
-              </TableCell>
+              {canViewCosts && (
+                <TableCell className={cn(cellClass, 'text-right')}>
+                  <div className="flex flex-col items-end gap-xs">
+                    <span className="text-data-mono font-data-mono text-on-surface-deep">
+                      {formatCurrency(purchaseCost)}
+                    </span>
+                    <span className="text-label-caps uppercase text-on-surface-deep">
+                      {t('products.table.cost_neto', 'Neto')}
+                    </span>
+                  </div>
+                </TableCell>
+              )}
               <TableCell className={cn(cellClass, 'text-right')}>
                 <div className="flex items-center justify-end gap-sm">
                   <div className="flex flex-col items-end gap-xs">
@@ -184,7 +193,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                       {t('products.table.with_tax', 'Con IVA')}
                     </span>
                   </div>
-                  {salesPrice > 0 && purchaseCost > 0 && (
+                  {canViewCosts && salesPrice > 0 && purchaseCost > 0 && (
                     <span
                       className={cn(
                         'text-data-mono font-data-mono rounded-full px-2 py-0.5 shrink-0',

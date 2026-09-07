@@ -28,6 +28,7 @@ import {
   ShoppingBag,
   ShoppingCart,
   SlidersHorizontal,
+  Store,
   Tags,
   TrendingUp,
   User,
@@ -172,6 +173,14 @@ export const buildNavigation = (t: TFn, reservationsEnabled: boolean): Navigatio
     icon: ShoppingCart,
     children: [
       {
+        // PLAN_CATALOGO_VENDEDOR 3.3: consulta de precios sin datos de costo
+        // (la garantía real es server-side, permiso products:cost).
+        name: t('nav.catalog', 'Catálogo'),
+        href: '/catalogo',
+        icon: Store,
+        permission: 'products:read',
+      },
+      {
         name: t('sales.title', 'Ventas'),
         href: '#',
         icon: ShoppingCart,
@@ -229,11 +238,14 @@ export const buildNavigation = (t: TFn, reservationsEnabled: boolean): Navigatio
     icon: Package,
     permission: 'inventory:read',
     children: [
-      { name: t('products.title', 'Productos'), href: '/productos', icon: Package, permission: 'products:read' },
+      // PLAN_CATALOGO_VENDEDOR 3.4: la gestión de productos exige write
+      // (quien solo consulta precios tiene /catalogo). Ride-along §5.4:
+      // los metadatos de catálogo también pasan a write.
+      { name: t('products.title', 'Productos'), href: '/productos', icon: Package, permission: 'products:write' },
       {
         name: t('nav.classificationCatalogs', 'Clasificación y Catálogos'),
         icon: Tags,
-        permission: 'products:read',
+        permission: 'products:write',
         children: [
           { name: t('nav.categoriesTaxes', 'Categorías e Impuestos'), href: '/configuracion/categorias' },
           { name: t('nav.brands', 'Marcas'), href: '/configuracion/marcas' },

@@ -46,6 +46,12 @@ vi.mock('@/store/useProductStore', () => ({
 
 import Products from '@/pages/Products';
 
+// PLAN_CATALOGO_VENDEDOR 3.4: ProductsHeader/ProductDetailsModal/ProductsTable
+// consumen useAuth (gates products:write / products:cost).
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ hasPermission: () => true, hasAnyPermission: () => true })
+}));
+
 const createBaseStoreState = (overrides = {}) => ({
   products: [],
   loading: false,

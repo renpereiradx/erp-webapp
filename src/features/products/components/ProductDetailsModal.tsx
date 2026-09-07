@@ -41,6 +41,10 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
   const { t } = useI18n();
   const { hasPermission } = useAuth();
   const canWrite = hasPermission('products:write');
+  // PLAN_CATALOGO_VENDEDOR 3.4: costo, margen y salud financiera solo con
+  // products:cost (el backend ya strippea los campos; esto es defensa en
+  // profundidad de UI para roles write-sin-cost).
+  const canViewCosts = hasPermission('products:cost');
 
   // Sub-modal states
   const [isPriceHistoryOpen, setIsPriceHistoryOpen] = useState(false);
@@ -279,8 +283,8 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
               </section>
             )}
 
-            {/* Costs Table */}
-            {unitCostsSummary.length > 0 && (
+            {/* Costs Table — solo con products:cost (PLAN_CATALOGO_VENDEDOR 3.4) */}
+            {canViewCosts && unitCostsSummary.length > 0 && (
               <section>
                 <div className="flex items-center gap-xs mb-sm text-primary">
                   <Activity className="w-5 h-5" />
@@ -480,8 +484,8 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
               </div>
             </div>
 
-            {/* Profit Margin Card */}
-            {bestMarginUnit && (
+            {/* Profit Margin Card — solo con products:cost (PLAN_CATALOGO_VENDEDOR 3.4) */}
+            {canViewCosts && bestMarginUnit && (
               <div className="space-y-md">
                 <h3 className="text-label-caps uppercase text-on-surface-deep">{t('products.details.section.performance', 'Rendimiento')}</h3>
                 <div className={cn(sidebarCardClass, 'bg-success/10 border-success/30')}>
@@ -503,7 +507,10 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
               <div className={cn(sidebarCardClass, 'space-y-md')}>
                 {[
                   { label: t('products.details.health.has_prices'), checked: hasPrices, icon: <Layout className="w-4 h-4" /> },
-                  { label: t('products.details.health.has_costs'), checked: hasCosts, icon: <Activity className="w-4 h-4" /> },
+                  // El estado de costos es dato gated: oculto sin products:cost.
+                  ...(canViewCosts
+                    ? [{ label: t('products.details.health.has_costs'), checked: hasCosts, icon: <Activity className="w-4 h-4" /> }]
+                    : []),
                   { label: t('products.details.health.has_stock', 'Inventario Base'), checked: hasStock, icon: <Package className="w-4 h-4" /> }
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between gap-sm">
@@ -523,20 +530,22 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
               </div>
             </div>
 
-            {/* Financial Health Status */}
-            <div className={cn(
-              'p-md rounded-md flex items-center gap-sm border',
-              hasPrices && hasCosts
-                ? 'bg-success/10 text-success border-success/30'
-                : 'bg-warning/10 text-warning border-warning/30'
-            )}>
-              <ShieldCheck className="w-5 h-5 shrink-0" />
-              <div className="text-body-md-bold leading-tight">
-                {hasPrices && hasCosts
-                  ? t('products.details.financial.complete', 'Producto con configuración financiera completa')
-                  : t('products.details.financial.incomplete', 'Requiere revisión de configuración financiera')}
+            {/* Financial Health Status — evalúa costos: solo con products:cost */}
+            {canViewCosts && (
+              <div className={cn(
+                'p-md rounded-md flex items-center gap-sm border',
+                hasPrices && hasCosts
+                  ? 'bg-success/10 text-success border-success/30'
+                  : 'bg-warning/10 text-warning border-warning/30'
+              )}>
+                <ShieldCheck className="w-5 h-5 shrink-0" />
+                <div className="text-body-md-bold leading-tight">
+                  {hasPrices && hasCosts
+                    ? t('products.details.financial.complete', 'Producto con configuración financiera completa')
+                    : t('products.details.financial.incomplete', 'Requiere revisión de configuración financiera')}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </EnhancedModal>

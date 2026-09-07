@@ -8,6 +8,12 @@ import * as productStore from '@/store/useProductStore';
 import { MemoryRouter } from 'react-router-dom';
 import { AnnouncementProvider } from '@/contexts/AnnouncementContext';
 
+// PLAN_CATALOGO_VENDEDOR 3.4: ProductsHeader/ProductDetailsModal/ProductsTable
+// consumen useAuth (gates products:write / products:cost).
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ hasPermission: () => true, hasAnyPermission: () => true })
+}));
+
 vi.mock('@/features/products/components/ProductDetailsModal', () => ({ default: () => null }));
 
 // Mock store selectors minimalmente

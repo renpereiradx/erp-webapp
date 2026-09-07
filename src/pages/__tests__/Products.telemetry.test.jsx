@@ -69,6 +69,12 @@ vi.mock('@/store/useProductStore', () => ({
 
 import Products from '@/pages/Products';
 
+// PLAN_CATALOGO_VENDEDOR 3.4: ProductsHeader/ProductDetailsModal/ProductsTable
+// consumen useAuth (gates products:write / products:cost).
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ hasPermission: () => true, hasAnyPermission: () => true })
+}));
+
 describe('Products telemetry', () => {
   it('registra products.error.store y muestra toast ante error de store', async () => {
   renderWithTheme(<Products />);
