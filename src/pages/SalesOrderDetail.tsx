@@ -41,6 +41,7 @@ import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
 import { clientService } from '@/services/clientService'
 import { useToast } from '@/hooks/useToast'
+import { useAuth } from '@/contexts/AuthContext'
 import { normalizeCurrencyCode } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
 import ToastContainer from '@/components/ui/ToastContainer'
@@ -50,6 +51,14 @@ const SalesOrderDetail = () => {
   const navigate = useNavigate()
   const { lang, t } = useI18n()
   const { error: showError, success: showSuccess, toasts, removeToast } = useToast()
+  const { hasPermission } = useAuth()
+
+  // Detalle acotado (perfil vendedor puro): lo que cobra, anula o fiscaliza
+  // se gatea por permiso — el vendedor ve venta (cliente, productos, totales),
+  // el cajero además cobros (cash:write) y los roles avanzados anulación.
+  const canCollect = hasPermission('cash:write')
+  const canCancelSale = hasPermission('sales:cancel')
+  const canSeeFiscal = hasPermission('sifen:read')
 
   const [sale, setSale] = useState<any>(null)
   const [payments, setPayments] = useState<any[]>([])
@@ -303,13 +312,13 @@ const SalesOrderDetail = () => {
               <RefreshCw size={14} className='mr-1.5' />
               {t('action.update', 'Actualizar')}
             </Button>
-            {sale.status !== 'CANCELLED' && sale.status !== 'PAID' && (
+            {canCollect && sale.status !== 'CANCELLED' && sale.status !== 'PAID' && (
               <Button variant='primary' onClick={() => setIsPaymentModalOpen(true)}>
                 <DollarSign size={14} className='mr-1.5' />
                 {t('sales.cobros.action.payment', 'Registrar Cobro')}
               </Button>
             )}
-            {sale.status !== 'CANCELLED' && (
+            {canCancelSale && sale.status !== 'CANCELLED' && (
               <Button
                 variant='outline'
                 size='sm'
@@ -347,12 +356,14 @@ const SalesOrderDetail = () => {
                     <p className='text-label-caps uppercase text-muted-foreground'>{t('sales.detail.seller', 'Vendedor')}</p>
                     <p className='text-body-md-bold text-foreground'>{sale.user_name}</p>
                   </div>
-                  <div className='space-y-xs'>
-                    <p className='text-label-caps uppercase text-muted-foreground'>{t('sales.detail.paymentMethod', 'Método de Pago')}</p>
-                    <div className='flex items-center gap-2 text-body-md-bold text-foreground'>
-                      <CreditCard size={14} className='text-muted-foreground' /> {sale.payment_method || t('sales.detail.defaultPayment', 'Efectivo')}
+                  {canCollect && (
+                    <div className='space-y-xs'>
+                      <p className='text-label-caps uppercase text-muted-foreground'>{t('sales.detail.paymentMethod', 'Método de Pago')}</p>
+                      <div className='flex items-center gap-2 text-body-md-bold text-foreground'>
+                        <CreditCard size={14} className='text-muted-foreground' /> {sale.payment_method || t('sales.detail.defaultPayment', 'Efectivo')}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className='space-y-xs'>
                     <p className='text-label-caps uppercase text-muted-foreground'>{t('sales.detail.currency', 'Moneda')}</p>
                     <div className='flex items-center gap-2 text-body-md-bold text-foreground font-data-mono'>
@@ -515,41 +526,44 @@ const SalesOrderDetail = () => {
               </div>
             </div>
 
-            {/* Payment Status KPI */}
-            <div className='bg-surface rounded-md shadow-whisper overflow-hidden'>
-              <div className='p-lg space-y-xl'>
-                <div className='flex justify-between items-start gap-md'>
-                  <div className='flex-1 min-w-0'>
-                    <p className='text-label-caps uppercase text-muted-foreground mb-sm'>{t('sales.detail.balanceDue', 'Saldo Pendiente')}</p>
-                    <h2 className={cn(
-                      'text-headline-lg font-data-mono text-data-mono truncate tracking-tighter',
-                      balanceDue > 0 ? 'text-error' : 'text-success'
+            {/* Payment Status KPI — solo roles de cobranza (cash:write) */}
+            {canCollect && (
+              <div className='bg-surface rounded-md shadow-whisper overflow-hidden'>
+                <div className='p-lg space-y-xl'>
+                  <div className='flex justify-between items-start gap-md'>
+                    <div className='flex-1 min-w-0'>
+                      <p className='text-label-caps uppercase text-muted-foreground mb-sm'>{t('sales.detail.balanceDue', 'Saldo Pendiente')}</p>
+                      <h2 className={cn(
+                        'text-headline-lg font-data-mono text-data-mono truncate tracking-tighter',
+                        balanceDue > 0 ? 'text-error' : 'text-success'
+                      )}>
+                        {formatCurrency(balanceDue)}
+                      </h2>
+                    </div>
+                    <div className={cn(
+                      'shrink-0 size-12 rounded-md flex items-center justify-center shadow-whisper',
+                      balanceDue > 0 ? 'bg-error/10 text-error' : 'bg-success/10 text-success'
                     )}>
-                      {formatCurrency(balanceDue)}
-                    </h2>
+                      <Wallet size={24} />
+                    </div>
                   </div>
-                  <div className={cn(
-                    'shrink-0 size-12 rounded-md flex items-center justify-center shadow-whisper',
-                    balanceDue > 0 ? 'bg-error/10 text-error' : 'bg-success/10 text-success'
-                  )}>
-                    <Wallet size={24} />
-                  </div>
-                </div>
 
-                <div className='space-y-sm pt-md border-t border-border-subtle'>
-                  <div className='flex justify-between text-label-caps uppercase text-muted-foreground tabular-nums'>
-                    <span>{t('sales.detail.paymentProgress', 'Progreso de Pago')}</span>
-                    <span>{paymentProgress}%</span>
-                  </div>
-                  <div className='h-2.5 bg-surface-muted rounded-full overflow-hidden'>
-                    <div className='h-full bg-primary transition-colors duration-150' style={{ width: `${paymentProgress}%` }} />
+                  <div className='space-y-sm pt-md border-t border-border-subtle'>
+                    <div className='flex justify-between text-label-caps uppercase text-muted-foreground tabular-nums'>
+                      <span>{t('sales.detail.paymentProgress', 'Progreso de Pago')}</span>
+                      <span>{paymentProgress}%</span>
+                    </div>
+                    <div className='h-2.5 bg-surface-muted rounded-full overflow-hidden'>
+                      <div className='h-full bg-primary transition-colors duration-150' style={{ width: `${paymentProgress}%` }} />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Payments History */}
-            <div className='bg-surface rounded-md shadow-whisper overflow-hidden group'>
+            {/* Payments History — solo roles de cobranza (cash:write) */}
+            {canCollect && (
+              <div className='bg-surface rounded-md shadow-whisper overflow-hidden group'>
               <div
                 className='bg-surface-muted border-b border-border-subtle p-md cursor-pointer hover:bg-surface-subtle transition-colors duration-150 flex flex-row items-center justify-between space-y-0'
                 onClick={() => navigate(`/cobros-ventas/${saleId}/pagos`)}
@@ -595,12 +609,14 @@ const SalesOrderDetail = () => {
                   </div>
                 )}
               </div>
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Panel fiscal SIFEN (FE3) — complementa el detalle; 404 = branch no fiscal */}
-        {saleId && <SaleFiscalPanel saleId={saleId} saleTotal={Number(totalAmount) || undefined} />}
+        {/* Panel fiscal SIFEN (FE3) — complementa el detalle; 404 = branch no fiscal.
+            Gateado a sifen:read: el vendedor puro no ve estado fiscal. */}
+        {saleId && canSeeFiscal && <SaleFiscalPanel saleId={saleId} saleTotal={Number(totalAmount) || undefined} />}
 
         <RegisterSalePaymentModal open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen} sale={{ ...sale, balance_due: balanceDue, currency: sale?.currency || 'PYG' }} onSubmit={handlePaymentSubmit} />
 

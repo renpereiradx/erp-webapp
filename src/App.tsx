@@ -456,14 +456,25 @@ function AppContent() {
                           </PermissionGuard>
                         }
                       />
-                      <Route path='/cobros-ventas' element={<SalePayment />} />
+                      <Route
+                        path='/cobros-ventas'
+                        element={
+                          <PermissionGuard permission='cash:write'>
+                            <SalePayment />
+                          </PermissionGuard>
+                        }
+                      />
                       <Route
                         path='/cobros-ventas/:saleId'
                         element={<SalesOrderDetail />}
                       />
                       <Route
                         path='/cobros-ventas/:saleId/pagos'
-                        element={<SalesPaymentHistory />}
+                        element={
+                          <PermissionGuard permission='cash:write'>
+                            <SalesPaymentHistory />
+                          </PermissionGuard>
+                        }
                       />
 
                       {/* Configuración */}

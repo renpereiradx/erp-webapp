@@ -203,7 +203,9 @@ export const buildNavigation = (t: TFn, reservationsEnabled: boolean): Navigatio
         name: t('common.payments', 'Pagos y Cobros'),
         href: '#',
         icon: DollarSign,
-        permission: 'payments:read',
+        // Cobranza = territorio de cajero (cash:write), no payments:read —
+        // payments:read es instrumental para el checkout del vendedor.
+        permission: 'cash:write',
         children: [
           { name: t('sales.payments', 'Cobros Ventas'), href: '/cobros-ventas', icon: CreditCard },
           { name: t('purchasePaymentsMvp.title', 'Pagos Compras'), href: '/pagos-compras', icon: CircleDollarSign },
@@ -285,12 +287,17 @@ export const buildNavigation = (t: TFn, reservationsEnabled: boolean): Navigatio
     name: t('common.system_config', 'Configuración y Sistema'),
     href: '#',
     icon: Settings,
+    // anyOf: si el rol no califica a ningún hijo, la sección completa se
+    // oculta (p. ej. VNDR01 perfil vendedor puro no ve Configuración).
+    permissions: ['branches:write', 'documents:read', 'tax:write', 'users:read', 'settings:write'],
     children: [
       {
         name: t('branches.title', 'Sucursales'),
         href: '/configuracion/sucursales',
         icon: Building2,
-        permission: 'branches:read',
+        // La ruta es admin-only (RoleGuard F2VLso); el nav se alinea a
+        // branches:write para no mostrar entradas que redirigen.
+        permission: 'branches:write',
       },
       {
         name: t('printers.nav', 'Impresoras de tickets'),
@@ -302,7 +309,9 @@ export const buildNavigation = (t: TFn, reservationsEnabled: boolean): Navigatio
         name: t('common.financeConfig', 'Config. Financiera'),
         href: '#',
         icon: Coins,
-        permission: 'tax:read',
+        // La config de monedas/métodos/tipos de cambio es de administración:
+        // solo roles con tax:write (F2VLso).
+        permission: 'tax:write',
         children: [
           { name: t('currencies.title', 'Monedas'), href: '/configuracion/monedas', icon: Coins },
           { name: t('nav.payment_methods', 'Métodos de Pago'), href: '/configuracion/metodos-pago', icon: CreditCard },
@@ -331,7 +340,13 @@ export const buildNavigation = (t: TFn, reservationsEnabled: boolean): Navigatio
         icon: SlidersHorizontal,
         permission: 'settings:write',
       },
-      { name: t('settings.title', 'Ajustes Generales'), href: '/configuracion', icon: Settings },
+      {
+        name: t('settings.title', 'Ajustes Generales'),
+        href: '/configuracion',
+        icon: Settings,
+        // Ajustes de negocio: alineado a settings:write (Preferencias).
+        permission: 'settings:write',
+      },
     ],
   },
 ]

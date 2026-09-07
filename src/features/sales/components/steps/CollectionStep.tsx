@@ -21,6 +21,7 @@ import { Calculator, AlertTriangle, Info, Banknote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cashRegisterService } from '@/services/cashRegisterService'
+import { hasStoredPermission } from '@/utils/userPermissions'
 import { formatCurrency } from '@/utils/currencyUtils'
 import { useI18n } from '@/lib/i18n'
 import {
@@ -148,9 +149,13 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
       const load = async () => {
         setIsLoadingRegisters(true)
         try {
+          // El selector de caja de cobro es de cajero: sin cash:read (perfil
+          // vendedor puro) no se disparan las requests — quedan vacías y el
+          // backend no adivina ninguna caja (pos-checkout es sales:write).
+          const canSeeCash = hasStoredPermission('cash:read')
           const [allRegisters, activeRegister] = await Promise.all([
-            cashRegisterService.getCashRegisters().catch(() => []),
-            cashRegisterService.getActiveCashRegister().catch(() => null),
+            canSeeCash ? cashRegisterService.getCashRegisters().catch(() => []) : Promise.resolve([]),
+            canSeeCash ? cashRegisterService.getActiveCashRegister().catch(() => null) : Promise.resolve(null),
           ])
           if (cancelled) return
           const raw = Array.isArray(allRegisters) ? allRegisters : (allRegisters as any)?.data || []
