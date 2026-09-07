@@ -1,5 +1,6 @@
 import apiService from './api';
 import { telemetry } from '../utils/telemetry';
+import { persistPermissions } from '../utils/userPermissions';
 import { 
   DEMO_CONFIG,
   validateDemoCredentials,
@@ -87,6 +88,8 @@ const authService = {
       if (role_id) localStorage.setItem('roleId', role_id);
       if (active_branch) localStorage.setItem('activeBranch', active_branch.toString());
       if (allowed_branches) localStorage.setItem('allowedBranches', JSON.stringify(allowed_branches));
+      // Permisos para gateo no-React (stores/servicios); AuthContext refresca vía /me
+      persistPermissions(result.permissions || result.data?.permissions);
 
       return {
         success: true,

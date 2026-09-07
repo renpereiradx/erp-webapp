@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { 
-  DEMO_CONFIG_DASHBOARD, 
+import {
+  DEMO_CONFIG_DASHBOARD,
   getDemoDashboardData
 } from '../config/demoData';
 import { dashboardService } from '../services/bi/dashboardService';
@@ -9,6 +9,7 @@ import { receivablesService } from '../services/bi/receivablesService';
 import { payablesService } from '../services/bi/payablesService';
 import { salesAnalyticsService } from '../services/bi/salesAnalyticsService';
 import profitabilityService from '../features/profitability/services/profitabilityService';
+import { hasStoredPermission } from '../utils/userPermissions';
 
 // Interfaces para el estado del Dashboard
 export interface DashboardSummary {
@@ -350,15 +351,27 @@ const useDashboardStore = create<DashboardState>()(
         set({ loading: true, error: null });
         
         try {
+          // Gate por permiso: los roles acotados (p. ej. VNDR01 §4.1 del
+          // PLAN_VENDOR_ROLE) no tienen analytics:read ni payables:read; pedir
+          // esos endpoints igual dispara 403 con toasts de error. Sin lista
+          // persistida se comporta como antes (fail-open a propósito).
           const results = await Promise.allSettled([
              dashboardService.getSummary({ period }),
              dashboardService.getAlerts(),
              dashboardService.getRecentActivity(),
              dashboardService.getTrends({ period }),
-             profitabilityService.getTrends({ period }),
-             receivablesService.getSummary(period),
-             payablesService.getOverview({ period }),
-             salesAnalyticsService.getPerformance({ period, compare: true })
+             hasStoredPermission('analytics:read')
+               ? profitabilityService.getTrends({ period })
+               : Promise.resolve({ data: null }),
+             hasStoredPermission('receivables:read')
+               ? receivablesService.getSummary(period)
+               : Promise.resolve({ data: null }),
+             hasStoredPermission('payables:read')
+               ? payablesService.getOverview({ period })
+               : Promise.resolve({ data: null }),
+             hasStoredPermission('analytics:read')
+               ? salesAnalyticsService.getPerformance({ period, compare: true })
+               : Promise.resolve({ data: null })
           ]);
 
           const [

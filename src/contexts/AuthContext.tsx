@@ -7,6 +7,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import authService from '../services/authService';
 import apiService from '../services/api';
 import userService from '../services/userService';
+import { persistPermissions, clearStoredPermissions } from '../utils/userPermissions';
 import { User } from '@/types';
 
 interface AuthContextType {
@@ -81,6 +82,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               active_branch: userData.active_branch || (localStorage.getItem('activeBranch') ? parseInt(localStorage.getItem('activeBranch')!) : undefined),
               allowed_branches: userData.allowed_branches || (localStorage.getItem('allowedBranches') ? JSON.parse(localStorage.getItem('allowedBranches')!) : undefined)
             });
+            // Permisos para gateo no-React (stores/servicios), refrescados en cada init vía /me
+            persistPermissions(userData.permissions);
           }
         } catch (e) {
           // Silent error: If token is invalid/expired, it's expected during init or refresh
@@ -116,6 +119,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setToken(result.token);
         if (result.session_id) setSessionId(result.session_id);
         setIsAuthenticated(true);
+        // /me (abajo) es la fuente canónica; el login persiste lo inmediato
+        persistPermissions(result.permissions || result.user?.permissions);
         
         // Cargar datos completos del usuario desde /me
         try {
@@ -187,6 +192,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // 🔧 FIX: Limpiar token ANTES de actualizar el estado
     // Esto previene que requests pendientes usen un token inválido
     apiService.clearToken();
+    clearStoredPermissions();
 
     // Verificar que el token se limpió correctamente
     const remainingToken = apiService.getToken();
