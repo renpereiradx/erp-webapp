@@ -37,6 +37,18 @@ const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
     } catch (error: any) {
       lastError = error
 
+      // Los 4xx no son transitorios (404 "no hay caja activa" es un estado
+      // esperado, no un fallo de red): reintentar solo triplicaría la request.
+      const status = error?.status
+      if (
+        typeof status === 'number' &&
+        status >= 400 &&
+        status < 500 &&
+        status !== 429
+      ) {
+        throw error
+      }
+
       if (attempt < maxRetries) {
         // Backoff simple: 500ms * intento
         const backoffMs = 500 * (attempt + 1)

@@ -65,4 +65,25 @@ describe('toApiError', () => {
     const err = toApiError({})
     expect(err.code).toBe('UNKNOWN')
   })
+
+  it('preserves the HTTP status as error.status', () => {
+    // Regresión (caja): el servicio espera error.status === 404 para tratar
+    // "No hay caja activa" como estado normal (null) y no como fallo. Antes
+    // el status se descartaba y el 404 llegaba como error genérico → la
+    // página de caja quedaba clavada en ErrorState y el vendor no podía
+    // abrir una caja.
+    const err = toApiError(
+      { success: false, error_code: 'NOT_FOUND', message: 'No hay caja activa' },
+      'fallback',
+      undefined,
+      404,
+    )
+    expect(err.status).toBe(404)
+    expect(err.code).toBe('NOT_FOUND')
+  })
+
+  it('leaves status undefined for network errors (no httpStatus)', () => {
+    const err = toApiError({ message: 'Error de red' })
+    expect(err.status).toBeUndefined()
+  })
 })

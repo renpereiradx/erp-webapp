@@ -1,12 +1,16 @@
 import { ERROR_CODES } from '@/utils/errorCodes';
 
 export class ApiError extends Error {
-  constructor(code, message, hint, correlationId) {
+  constructor(code, message, hint, correlationId, status) {
     super(message);
     this.name = 'ApiError';
     this.code = code;
     this.hint = hint;
     this.correlationId = correlationId;
+    // HTTP status when the error originated from a response (undefined for
+    // network/parse errors). Consumers gate on error.status (e.g. 404 = "no
+    // active register" is an expected state, not a failure).
+    this.status = status;
   }
 }
 
@@ -67,5 +71,5 @@ export const toApiError = (err, fallbackMessage = 'Error desconocido', correlati
   }
 
   const meta = ERROR_CODES[code] || ERROR_CODES.UNKNOWN;
-  return new ApiError(code, message, meta.hint || backendError.hint, correlationId);
+  return new ApiError(code, message, meta.hint || backendError.hint, correlationId, httpStatus);
 };

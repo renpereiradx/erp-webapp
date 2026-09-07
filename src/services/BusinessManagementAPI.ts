@@ -199,6 +199,9 @@ class BusinessManagementAPI {
         throw new ApiError(
           'UNAUTHORIZED',
           'Sesión expirada o token inválido. Por favor, inicie sesión nuevamente.',
+          undefined,
+          undefined,
+          401,
         )
       }
 
