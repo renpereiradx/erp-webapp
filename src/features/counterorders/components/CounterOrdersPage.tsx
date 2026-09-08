@@ -71,7 +71,10 @@ export function CounterOrdersPage() {
   const releaseMutation = useReleaseCounterOrder()
   const cancelMutation = useCancelCounterOrder()
 
-  const canProcessInRegister = hasPermission('sales:write')
+  // FASE 4 (PLAN_PEDIDOS_MOSTRADOR v3): procesar en caja = cobrar. El gate
+  // pasa de sales:write a cash:write — quien cobra maneja dinero (el vendor
+  // nunca tuvo cash:write; CAJA01/ENCR01 sí).
+  const canProcessInRegister = hasPermission('cash:write')
 
   const handleView = useCallback((order: CounterOrderSummary) => {
     setViewingId(order.id)

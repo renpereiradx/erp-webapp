@@ -193,6 +193,17 @@ const ReservationsModuleRoute = ({ children }: { children: React.ReactNode }) =>
 }
 
 // Componente interno que usa los hooks
+// PLAN_PEDIDOS_MOSTRADOR FASE 4: la landing del vendor puro es /pedidos.
+// "Vendor puro" = puede ver pedidos pero no crear/cobrar ventas
+// (counterorders:read sin sales:write). El resto aterriza en /dashboard.
+function HomeRedirect() {
+  const { hasPermission } = useAuth()
+  if (hasPermission('counterorders:read') && !hasPermission('sales:write')) {
+    return <Navigate to='/pedidos' replace />
+  }
+  return <Navigate to='/dashboard' replace />
+}
+
 function AppContent() {
   const { isAuthenticated, loading } = useAuth()
 
@@ -271,7 +282,7 @@ function AppContent() {
                       {/* Ruta por defecto - Dashboard */}
                       <Route
                         path='/'
-                        element={<Navigate to='/dashboard' replace />}
+                        element={<HomeRedirect />}
                       />
                       <Route path='/dashboard' element={<Dashboard />} />
                       <Route path='/dashboard/financial-summary' element={<FinancialSummaryDashboard />} />

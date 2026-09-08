@@ -22,7 +22,7 @@ Cada módulo de la API tiene un middleware que protege todos sus endpoints. Los 
 | Rol | ID | Tipo | Descripción |
 |-----|-----|------|-------------|
 | `ADMIN` | `F2VLso` | Interno | Acceso total, bypass del middleware |
-| `VENDOR` | `VNDR01` | Interno | Ventas, caja, reservas, presupuestos |
+| `VENDOR` | `VNDR01` | Interno | Pedidos de mostrador (`/pedidos`), presupuestos, clientes |
 | `BUYER` | `BUYR01` | Interno | Compras, inventario, manufactura, transferencias |
 | `INVENTORY` | `SUPL01` | Interno | Stock, manufactura, transferencias entre sucursales |
 | `SUPPLIER` | `SUPLR01` | Externo | Solo ver sus órdenes de compra y pagos |
@@ -81,27 +81,31 @@ Acceso total. Bypass completo del middleware. No necesita permisos específicos.
 
 ### VENDOR (`VNDR01`)
 
+> **Perfil "vendedor solo vendedor" v3** (PLAN_PEDIDOS_MOSTRADOR FASE 4,
+> 2026-09-08): SIN `sales:write` ni `cash:write`. No crea ventas ni cobra.
+> Su flujo es `/pedidos` (landing del vendor); `/ventas` abre en Historial y
+> sin tab "Nueva Venta". Conserva la solicitud de anulación (re-gateada a
+> `sales:read`; la aprobación es `sales:cancel` de roles avanzados).
+
 | Permiso | Descripción para UI |
 |---------|-------------------|
 | `products:read` | Ver productos, precios, catálogo |
-| `sales:read` | Ver ventas realizadas |
-| `sales:write` | Crear, editar, cancelar ventas |
-| `dashboard:read` | Ver dashboard principal |
-| `receivables:read` | Ver cuentas por cobrar |
-| `reports:read` | Ver reportes financieros |
-| `analytics:read` | Ver analíticas y BI |
-| `parties:read` | Ver clientes |
-| `cash:read` | Ver cajas registradoras |
-| `cash:write` | Abrir/cerrar cajas, movimientos |
-| `reserves:read` | Ver reservas |
-| `reserves:write` | Crear/gestionar reservas |
+| `sales:read` | Ver historial/detalle acotado de ventas + solicitar anulación |
+| `counterorders:read` | Ver la bandeja `/pedidos` |
+| `counterorders:write` | Crear/editar/cancelar pedidos de mostrador |
+| `clients:read` | Buscar clientes (wizard de pedidos) |
+| `clients:write` | Alta rápida de cliente (QuickClientModal) |
 | `budgets:read` | Ver presupuestos |
 | `budgets:write` | Crear/editar presupuestos |
+| `dashboard:read` | Ver dashboard principal |
 | `branches:read` | Ver sucursales |
-| `payments:read` | Ver métodos de pago |
-| `payments:write` | Procesar pagos |
-| `schedules:read` | Ver horarios |
-| `schedules:write` | Generar/editar horarios |
+| `payments:read` | Instrumental de checkout (métodos de pago, /payment-methods) |
+| `tax:read` | Ver tasas de IVA |
+| `settings:read` | Ver configuración (solo lectura) |
+
+Re-gates server-side que el frontend NO debe intentar esquivar: `POST
+/sale/pos-checkout` y `PUT /sale/{id}/confirm-payment` exigen `cash:write`
+por ruta (además del grupo `sales:read/write`).
 
 ### BUYER (`BUYR01`)
 

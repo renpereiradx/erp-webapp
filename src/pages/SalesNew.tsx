@@ -206,6 +206,10 @@ const SalesNew: React.FC = () => {
   // FASE C: sin sales:cancel pero con sales:write, la anulación pasa por
   // solicitud (el backend la valida igual — acá es solo ruteo de UI).
   const canRequestCancellation = canWrite;
+  // FASE 4 (PLAN_PEDIDOS_MOSTRADOR v3): sin sales:write el vendor NO crea
+  // ventas — /ventas abre directo en Historial y la tab "Nueva Venta" no
+  // existe (el flujo del vendor es /pedidos).
+  const initialTab = canWrite ? 'new-sale' : 'history';
   const cancellationRequests = useCancellationRequests(canCancelSale);
   const productSearchInputRef = useRef<HTMLInputElement>(null);
   const dropdownQuantityInputRef = useRef<HTMLInputElement>(null);
@@ -223,7 +227,7 @@ const SalesNew: React.FC = () => {
     loading: saleLoading,
   } = useSaleStore();
 
-  const [activeTab, setActiveTab] = useState<'new-sale' | 'history' | 'cancellations'>('new-sale');
+  const [activeTab, setActiveTab] = useState<'new-sale' | 'history' | 'cancellations'>(initialTab);
 
   const [items, setItems] = useState<CartItem[]>([]);
   const [variantSelectorProduct, setVariantSelectorProduct] = useState<ProductDisplay | null>(null);
@@ -1775,7 +1779,11 @@ const SalesNew: React.FC = () => {
         </div>
         <nav className="flex items-center gap-2" aria-label={t('sales.navAria', 'Secciones de ventas')}>
           {[
-            { id: 'new-sale' as const, label: t('sales.tab.new', 'Nueva Venta'), icon: Plus, badge: undefined as number | undefined },
+            // FASE 4 (PLAN_PEDIDOS_MOSTRADOR v3): sin sales:write no hay
+            // "Nueva Venta" — el vendor entra directo al Historial.
+            ...(canWrite
+              ? [{ id: 'new-sale' as const, label: t('sales.tab.new', 'Nueva Venta'), icon: Plus, badge: undefined as number | undefined }]
+              : []),
             { id: 'history' as const, label: t('sales.tab.history', 'Historial'), icon: History, badge: undefined as number | undefined },
             ...(canCancelSale
               ? [{

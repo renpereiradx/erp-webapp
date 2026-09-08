@@ -180,9 +180,13 @@ describe('CounterOrdersPage — bandeja', () => {
     expect(screen.queryByTestId('counterorder-release-CO-2')).not.toBeInTheDocument()
   })
 
-  it('"Procesar en caja" aparece solo con sales:write y reclama el pedido', async () => {
+  it('"Procesar en caja" aparece solo con cash:write (FASE 4) y reclama el pedido', async () => {
     mockHasPermission.mockImplementation(
-      p => p === 'counterorders:read' || p === 'counterorders:write' || p === 'sales:write',
+      p =>
+        p === 'counterorders:read' ||
+        p === 'counterorders:write' ||
+        p === 'sales:write' ||
+        p === 'cash:write',
     )
     claimMock.mockResolvedValue({
       ...orderOpen,
