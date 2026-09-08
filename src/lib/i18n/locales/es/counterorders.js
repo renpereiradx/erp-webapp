@@ -91,4 +91,15 @@ export const counterorders = {
   'counterorders.cancel.reason_placeholder': 'Ej.: el cliente se fue sin comprar',
   'counterorders.cancel.confirm': 'Cancelar pedido',
   'counterorders.cancel.success': 'Pedido cancelado',
+
+  // Wizard de caja (FASE 3)
+  'counterorders.checkout.loaded': 'Pedido {code} cargado ({count} ítems)',
+  'counterorders.checkout.claim_error': 'No se pudo abrir el pedido en caja',
+  'counterorders.checkout.convert_failed':
+    'La venta se cobró, pero el pedido {code} quedó sin marcar como procesado.',
+  'counterorders.checkout.convert_mark': 'Marcar como procesado',
+  'counterorders.checkout.convert_retry_failed':
+    'No se pudo marcar el pedido como procesado. Intentá de nuevo desde /pedidos.',
+  'counterorders.checkout.preload_gone': 'El pedido {code} ya no está disponible en caja.',
+  'counterorders.checkout.preload_error': 'No se pudo abrir el pedido en caja',
 }

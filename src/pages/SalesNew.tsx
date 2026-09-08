@@ -49,6 +49,9 @@ import { toApiError } from '@/utils/ApiError';
 import { formatCurrency } from '@/utils/currencyUtils';
 import { isDecimalUnit } from '@/constants/units';
 import ToastContainer from '@/components/ui/ToastContainer';
+import { useCounterOrderCheckout } from '@/features/counterorders/hooks/useCounterOrderCheckout';
+import { useClientActiveCounterOrders } from '@/features/counterorders/hooks/useCounterOrders';
+import type { CounterOrderSummary } from '@/features/counterorders/types';
 
 interface CartItem {
   id: string;
@@ -69,6 +72,11 @@ interface CartItem {
   reserve_id?: number;  // ID numerico de la reserva si aplica
   variantId?: string | null;
   variantName?: string;
+  // Ítem cargado desde un pedido de mostrador (PLAN_PEDIDOS_MOSTRADOR FASE 3):
+  // se marca para poder liberarlo del carrito si el pedido se libera.
+  isFromCounterOrder?: boolean;
+  counterOrderId?: string;
+  counterOrderCode?: string;
 }
 
 interface Client extends SearchableDropdownItem {
@@ -722,6 +730,31 @@ const SalesNew: React.FC = () => {
     }
   };
 
+  // ─── Pedidos de mostrador (PLAN_PEDIDOS_MOSTRADOR FASE 3) ────────────────
+  // Orquestación del pedido dentro del wizard: claim al continuar, ítems →
+  // CartItems con flag isFromCounterOrder, release al salir sin procesar y
+  // convert tras el cobro. La lógica vive en el hook del feature.
+  const clientCounterOrdersQuery = useClientActiveCounterOrders(selectedClient?.id ?? null);
+  const clientCounterOrders: CounterOrderSummary[] = clientCounterOrdersQuery.data ?? [];
+
+  const counterOrderFlow = useCounterOrderCheckout({
+    toast,
+    t: (key: string, fallback?: string, vars?: Record<string, unknown>) => t(key, fallback, vars),
+    addItems: (items) => setItems((prev) => [...prev, ...items]),
+    enterMergeMode: (sale: any) => {
+      setCurrentSaleId(sale?.sale_id || sale?.id);
+      setActiveSale(sale);
+    },
+    openWizard: () => setShowCheckoutWizard(true),
+    selectClient: (client) => handleSelectClient(client as Client),
+  });
+
+  const handleContinueOrder = useCallback(
+    async (order: CounterOrderSummary, mergeSale: any | null) =>
+      counterOrderFlow.continueOrder(order, mergeSale ?? undefined),
+    [counterOrderFlow],
+  );
+
   const handleContinueSale = useCallback(async (saleOverride?: any) => {
     const sale = saleOverride || activeSale;
     if (!sale) return;
@@ -1363,9 +1396,12 @@ const SalesNew: React.FC = () => {
   const onConfirmWizard = useCallback(
     async (collection: CollectionData) => {
       setIsProcessingSale(true);
+      // Venta resultante del checkout (para marcar el pedido CONVERTED).
+      let checkoutSaleId = '';
       try {
         if (currentSaleId) {
           // Modo merge: agregar productos nuevos a la venta existente.
+          checkoutSaleId = currentSaleId;
           const payload = buildAddProductsPayload(items);
           if (!payload) {
             toast.info('No hay productos nuevos para agregar a esta venta');
@@ -1475,6 +1511,7 @@ const SalesNew: React.FC = () => {
           }
 
           const saleId = result?.sale?.sale_id || '';
+          checkoutSaleId = saleId;
           if (collection.amountToApply != null && collection.amountToApply < total) {
             // Cobro parcial: la venta quedó con saldo pendiente; avisar en
             // lugar de "cobrada exitosamente" para que no se confunda con PAID.
@@ -1494,6 +1531,12 @@ const SalesNew: React.FC = () => {
         } else {
           toast.error('No hay datos de venta para procesar');
           return;
+        }
+        // PLAN_PEDIDOS_MOSTRADOR: si el cobro salió de un pedido de mostrador,
+        // marcarlo CONVERTED con la venta (idempotente; en error queda
+        // CLAIMED con toast accionable de reintento — el hook lo maneja).
+        if (counterOrderFlow.hasClaimedOrder()) {
+          await counterOrderFlow.convertAfterCheckout(checkoutSaleId);
         }
         resetSaleState();
       } catch (e: any) {
@@ -1542,11 +1585,13 @@ const SalesNew: React.FC = () => {
   // onLeavePendingWizard: persiste la venta sin cobrar (venta a crédito/asíncrono).
   const onLeavePendingWizard = useCallback(async () => {
     setIsProcessingSale(true);
+    let checkoutSaleId = '';
     try {
       if (currentSaleId) {
         // Modo merge + "Dejar pendiente": persiste los ítems nuevos del carrito
         // en la venta existente (sin cobrar). Antes no se agregaba nada y los
         // ítems nuevos se perdían al salir del flujo.
+        checkoutSaleId = currentSaleId;
         const payload = buildAddProductsPayload(items);
         if (payload) {
           const response = await saleService.addProductsToSale(currentSaleId, payload, activeSale?.branch_id);
@@ -1564,7 +1609,13 @@ const SalesNew: React.FC = () => {
         if (!response?.sale_id) {
           throw new Error(response?.error || response?.message || 'No se pudo registrar la venta');
         }
+        checkoutSaleId = String(response.sale_id);
         toast.success('Venta guardada como pendiente');
+      }
+      // PLAN_PEDIDOS_MOSTRADOR: los ítems del pedido quedaron persistidos en
+      // la venta (merge o venta nueva pendiente) — marcarlo CONVERTED.
+      if (counterOrderFlow.hasClaimedOrder()) {
+        await counterOrderFlow.convertAfterCheckout(checkoutSaleId);
       }
       resetSaleState();
     } catch (e: any) {
@@ -1955,7 +2006,16 @@ const SalesNew: React.FC = () => {
 
       <SaleCheckoutWizard
         isOpen={showCheckoutWizard}
-        onClose={() => setShowCheckoutWizard(false)}
+        onClose={() => {
+          // Salir sin procesar: liberar el claim del pedido (vuelve OPEN en
+          // la bandeja; el sweep de 20 min cubre si falla) y quitar sus
+          // ítems del carrito.
+          if (counterOrderFlow.hasClaimedOrder()) {
+            setItems((prev) => prev.filter((item) => !item.isFromCounterOrder));
+            void counterOrderFlow.releaseClaimed();
+          }
+          setShowCheckoutWizard(false);
+        }}
         items={items}
         getItemLineTotal={getItemLineTotal}
         client={selectedClient}
@@ -1963,14 +2023,18 @@ const SalesNew: React.FC = () => {
         onClearClient={handleClearClient}
         activeSales={activeSales}
         onContinueSale={handleContinueSaleByIndex}
+        counterOrders={clientCounterOrders}
+        onContinueOrder={handleContinueOrder}
         onNewSale={() => {
           setCurrentSaleId(null);
           setActiveSale(null);
           // "Nueva venta" no arrastra los ítems de la pendiente continuada
           // (isFromPendingSale) ni las reservas marcadas: la venta arranca
-          // limpia y el monto del cobro vuelve a ser coherente.
-          setItems((prev) => prev.filter((item) => !item.isFromPendingSale));
+          // limpia y el monto del cobro vuelve a ser coherente. Tampoco
+          // arrastra ítems del pedido elegido: se libera su claim.
+          setItems((prev) => prev.filter((item) => !item.isFromPendingSale && !item.isFromCounterOrder));
           setSelectedResIds(new Set());
+          if (counterOrderFlow.hasClaimedOrder()) void counterOrderFlow.releaseClaimed();
         }}
         pendingReservations={pendingReservations}
         selectedResIds={selectedResIds}

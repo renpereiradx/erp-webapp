@@ -31,6 +31,8 @@ import { ReservationsStep, ReservationsStepRef } from './steps/ReservationsStep'
 import { PaymentStep, PaymentStepRef } from './steps/PaymentStep'
 import { CollectionStep, CollectionStepRef, CollectionData } from './steps/CollectionStep'
 import type { WalkInSpec } from './steps/WalkInReservationForm'
+import type { CounterOrderDestination } from './steps/PendingSalesStep'
+import type { CounterOrderSummary } from '@/features/counterorders/types'
 import { computeCheckoutSteps, type CheckoutStepId } from '../checkoutSteps'
 
 interface SaleCheckoutWizardProps {
@@ -46,10 +48,18 @@ interface SaleCheckoutWizardProps {
   onClientSelect: (client: any) => void
   onClearClient: () => void
 
-  // Ventas pendientes (paso condicional)
+  // Ventas pendientes + pedidos de mostrador (paso condicional)
   activeSales: any[]
   onContinueSale: (index: number) => void | Promise<void>
   onNewSale: () => void
+  /** Pedidos de mostrador activos del cliente (OPEN/CLAIMED). */
+  counterOrders: CounterOrderSummary[]
+  /**
+   * Procesa el pedido elegido: claim (409 si otra caja llegó primero) +
+   * carga de ítems al carrito. `mergeSale` no-null = destino merge a esa
+   * pendiente; null = venta nueva. Devuelve false si el claim falló.
+   */
+  onContinueOrder: (order: CounterOrderSummary, mergeSale: any | null) => Promise<boolean>
 
   // Reservas (paso condicional) + walk-in (registro de uso sin reserva previa)
   pendingReservations: any[]
@@ -86,6 +96,8 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
   activeSales,
   onContinueSale,
   onNewSale,
+  counterOrders,
+  onContinueOrder,
   pendingReservations,
   selectedResIds,
   onToggleReservation,
@@ -119,6 +131,13 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
   // 0 = fila "Nueva venta" (seleccionada por defecto); i>=1 = activeSales[i-1].
   const [pendingIndex, setPendingIndex] = useState(0)
 
+  // ─── Estado de pedidos de mostrador (PLAN_PEDIDOS_MOSTRADOR FASE 3.1) ───
+  // Selección excluyente con la de pendientes: elegir un pedido deselecciona
+  // la fila de pendientes y viceversa. El claim ocurre al Avanzar (§3.2).
+  const [selectedOrderKey, setSelectedOrderKey] = useState<string | null>(null)
+  const [orderDestination, setOrderDestination] = useState<CounterOrderDestination>('new')
+  const [mergeSaleIndex, setMergeSaleIndex] = useState(0)
+
   // ─── Datos del paso de cobro (reportados por CollectionStep) ────────────
   const [collectionData, setCollectionData] = useState<CollectionData>({
     amountReceived: 0,
@@ -143,11 +162,12 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
       computeCheckoutSteps({
         reservationsEnabled,
         activeSalesCount: activeSales.length,
+        counterOrdersCount: counterOrders.length,
         pendingReservationsCount: pendingReservations.length,
         hasClient: !!client,
         hasReserveInCart: items.some((i) => !!i?.reserve_id),
       }),
-    [reservationsEnabled, activeSales.length, pendingReservations.length, client, items],
+    [reservationsEnabled, activeSales.length, counterOrders.length, pendingReservations.length, client, items],
   )
 
   // Última versión de steps para los state updaters (el array puede encoger
@@ -171,6 +191,9 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     if (isOpen) {
       setCurrentStepIdx(0)
       setPendingIndex(0)
+      setSelectedOrderKey(null)
+      setOrderDestination('new')
+      setMergeSaleIndex(0)
       setExchangeRate('')
     }
   }, [isOpen])
@@ -289,14 +312,25 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
   const handlePrimary = async () => {
     if (isProcessingSale) return
 
-    // En el paso de pendientes, "continuar" ejecuta el merge antes de avanzar.
-    // pendingIndex 0 = fila "Nueva venta" (default): avanzar sigue como venta
-    // nueva sin merge; i>=1 continúa la venta activeSales[i-1].
-    if (currentStep === 'pending' && pendingIndex > 0) {
-      try {
-        await onContinueSale(pendingIndex - 1)
-      } catch {
-        return // el error lo maneja SalesNew (toast SALE_ALREADY_PAID, etc.)
+    // En el paso de pendientes/pedidos:
+    //  - pedido elegido → claim + carga (claim 409 ⇒ no avanzar);
+    //  - "Nueva venta"/pendiente (comportamiento previo): avanzar ejecuta el
+    //    merge; pendingIndex 0 sigue como venta nueva sin merge.
+    if (currentStep === 'pending') {
+      const selectedOrder = selectedOrderKey
+        ? counterOrders.find((o) => o.id === selectedOrderKey)
+        : null
+      if (selectedOrder) {
+        const mergeSale =
+          orderDestination === 'merge' ? (activeSales[mergeSaleIndex] ?? null) : null
+        const ok = await onContinueOrder(selectedOrder, mergeSale)
+        if (!ok) return // el error lo informa SalesNew (toast claim 409)
+      } else if (pendingIndex > 0) {
+        try {
+          await onContinueSale(pendingIndex - 1)
+        } catch {
+          return // el error lo maneja SalesNew (toast SALE_ALREADY_PAID, etc.)
+        }
       }
     }
 
@@ -422,6 +456,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                 onClearClient={onClearClient}
                 pendingSalesCount={activeSales.length}
                 reservationsCount={pendingReservations.length}
+                counterOrdersCount={counterOrders.length}
               />
             )}
             {currentStep === 'pending' && (
@@ -430,7 +465,23 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                 activeSales={activeSales}
                 currentBranchId={currentBranchId}
                 selectedIndex={pendingIndex}
-                onSelectIndex={setPendingIndex}
+                onSelectIndex={(idx) => {
+                  // Selección excluyente: elegir pendiente suelta el pedido.
+                  setSelectedOrderKey(null)
+                  setPendingIndex(idx)
+                }}
+                counterOrders={counterOrders}
+                selectedOrderKey={selectedOrderKey}
+                onSelectOrder={(key) => {
+                  // Elegir pedido vuelve la selección de pendientes a
+                  // "Nueva venta" (default).
+                  setSelectedOrderKey(key)
+                  if (key !== null) setPendingIndex(0)
+                }}
+                orderDestination={orderDestination}
+                onDestinationChange={setOrderDestination}
+                mergeSaleIndex={mergeSaleIndex}
+                onMergeSaleIndexChange={setMergeSaleIndex}
               />
             )}
             {currentStep === 'reservations' && (
@@ -479,8 +530,10 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                   variant="outline"
                   onClick={() => {
                     // Limpia el estado de merge y avanza: la venta queda como
-                    // nueva (sin continuar la pendiente seleccionada). La
-                    // selección vuelve a la fila "Nueva venta" (default).
+                    // nueva (sin continuar la pendiente ni procesar el
+                    // pedido elegido). La selección de pedido se suelta y la
+                    // de pendientes vuelve a la fila "Nueva venta" (default).
+                    setSelectedOrderKey(null)
                     onNewSale()
                     setPendingIndex(0)
                     goToNextStep()

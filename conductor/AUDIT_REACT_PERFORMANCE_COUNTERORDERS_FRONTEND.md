@@ -26,3 +26,17 @@
 
 - `SalesNew.tsx` sigue siendo el punto de integración de FASE 3; la orquestación debe vivir en `useCounterOrderCheckout` (hook nuevo), no engordando la página (riesgo §7 del plan).
 - El agrupamiento del escáner en `useBarcodeScanner` (sales) agrupa solo por `productId`; el builder implementa su propio escaneo para respetar `variant_id`. Si se unifica, mover `salesScan`-to-cart a un adaptador compartido en `domain/`.
+
+## FASE 3 — integración en el wizard de caja (2026-09-08)
+
+Alcance auditedo: `useCounterOrderCheckout.ts`, `PendingSalesStep.tsx` (sección pedidos), `ClientStep.tsx` (aviso), `SaleCheckoutWizard.tsx` (props de pedidos), `SalesNew.tsx` (wiring mínimo), `checkoutSteps.ts` (input nuevo).
+
+| # | Regla | Hallazgo | Acción |
+|:-:|:------|:---------|:-------|
+| 1 | `rerender-use-ref-transient-values` | El claim vigente (`claimedOrderId`) se lee en callbacks del flujo de cobro, no en render | ✔ `useRef` en el hook: cero re-renders por cambios de claim |
+| 2 | `rerender-dependencies` | `handleContinueOrder` (SalesNew) | ✔ Depende solo del objeto del hook; los handlers del wizard llegan estables |
+| 3 | `rerender-derived-state` | `clientCounterOrders` derivado de react-query | ✔ Directo desde `data` (sin estado duplicado); query con `enabled: !!clientId` y `staleTime` 10s para no martillar al seleccionar cliente |
+| 4 | `rerender-move-effect-to-event` | Precarga de /pedidos→/ventas corre en effect de montaje | ⚠ Aceptado: es un evento cross-página (navegación con payload), no un evento del árbol; corre una sola vez |
+| 5 | `rendering-conditional-render` | Sección pedidos en `PendingSalesStep` | ✔ Filas CLAIMED deshabilitadas renderizadas como `disabled` (no removidas) para que la caja vea "En caja con X"; sin fugas de `0` |
+| 6 | `js-index-maps` | Búsqueda del pedido elegido por key | ✔ `Array.find` sobre ≤20 pedidos activos del cliente (query page_size 20); no amerita Map |
+| 7 | `async-defer-await` | Consulta de pedidos del cliente | ✔ Solo cuando hay cliente seleccionado (fail-open a vacío); el claim ocurre recién al Avanzar |

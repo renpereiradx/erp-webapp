@@ -1,11 +1,13 @@
 /**
  * Tests for the SaleCheckoutWizard step composition (pure domain logic).
  *
- * Covers the "Reservas" step visibility rules:
- * - hidden when the cart already carries an item with `reserve_id`
- *   (backend allows a single reservation per sale);
- * - visible otherwise when there are pending reservations or a selected
- *   client (walk-in registration keeps working).
+ * Covers the conditional step visibility rules:
+ * - 'pending': shown with pending sales OR active counter orders
+ *   (PLAN_PEDIDOS_MOSTRADOR FASE 3.1);
+ * - "Reservas": hidden when the cart already carries an item with
+ *   `reserve_id` (backend allows a single reservation per sale); visible
+ *   otherwise when there are pending reservations or a selected client
+ *   (walk-in registration keeps working).
  */
 
 import { describe, it, expect } from 'vitest'
@@ -17,6 +19,7 @@ import {
 const base: CheckoutStepsInput = {
   reservationsEnabled: true,
   activeSalesCount: 0,
+  counterOrdersCount: 0,
   pendingReservationsCount: 0,
   hasClient: false,
   hasReserveInCart: false,
@@ -88,5 +91,18 @@ describe('computeCheckoutSteps', () => {
   it('shows reservations when the module is enabled and a client is selected', () => {
     const steps = computeCheckoutSteps(input({ reservationsEnabled: true, hasClient: true }))
     expect(steps).toContain('reservations')
+  })
+
+  // ─────────────────────────────────────────────────────────────
+  // counter orders (PLAN_PEDIDOS_MOSTRADOR FASE 3.1)
+  // ─────────────────────────────────────────────────────────────
+  it('shows the pending step when the client has active counter orders only', () => {
+    const steps = computeCheckoutSteps(input({ counterOrdersCount: 2 }))
+    expect(steps).toEqual(['client', 'pending', 'payment', 'collection'])
+  })
+
+  it('omits the pending step when there are neither pending sales nor counter orders', () => {
+    const steps = computeCheckoutSteps(input({ counterOrdersCount: 0, activeSalesCount: 0 }))
+    expect(steps).not.toContain('pending')
   })
 })

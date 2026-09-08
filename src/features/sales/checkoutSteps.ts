@@ -4,7 +4,8 @@
  * Orden fijo: Cliente → (Pendientes) → (Reservas) → Pago → Cobro.
  *
  * Reglas:
- * - 'pending' aparece si el cliente tiene ventas pendientes.
+ * - 'pending' aparece si el cliente tiene ventas pendientes o pedidos de
+ *   mostrador (PLAN_PEDIDOS_MOSTRADOR: el paso pasa a listar ambos).
  * - 'reservations' requiere que el módulo de reservas esté ACTIVO para el
  *   negocio (business_settings, fail-open: false ⇒ nunca visible) y, además,
  *   que haya reservas confirmadas pendientes de cargar o un cliente
@@ -24,6 +25,8 @@ export interface CheckoutStepsInput {
   reservationsEnabled: boolean
   /** Cantidad de ventas pendientes del cliente. */
   activeSalesCount: number
+  /** Cantidad de pedidos de mostrador activos del cliente (PLAN_PEDIDOS_MOSTRADOR). */
+  counterOrdersCount: number
   /** Cantidad de reservas confirmadas aún no cargadas al carrito. */
   pendingReservationsCount: number
   /** Hay cliente seleccionado (habilita walk-in dentro del paso Reservas). */
@@ -34,7 +37,7 @@ export interface CheckoutStepsInput {
 
 export function computeCheckoutSteps(input: CheckoutStepsInput): CheckoutStepId[] {
   const list: CheckoutStepId[] = ['client']
-  if (input.activeSalesCount > 0) list.push('pending')
+  if (input.activeSalesCount > 0 || input.counterOrdersCount > 0) list.push('pending')
 
   const reservationsVisible =
     input.reservationsEnabled &&

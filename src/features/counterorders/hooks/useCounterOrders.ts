@@ -58,6 +58,29 @@ export function useCounterOrder(orderId: string | null) {
   })
 }
 
+/**
+ * Pedidos activos (OPEN/CLAIMED) de un cliente — paso del wizard de caja
+ * (FASE 3.1). Una sola consulta sin status (el backend ordena por fecha y el
+ * filtrado activo es en FE); staleTime corto porque el claim de otra caja
+ * cambia el estado visible.
+ */
+export function useClientActiveCounterOrders(clientId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['counter-orders', 'client-active', clientId ?? null],
+    queryFn: async () => {
+      const response = await counterOrderService.list({
+        client_id: clientId!,
+        page: 1,
+        page_size: 20,
+      })
+      const all = extractCounterOrders(response)
+      return all.filter(o => o.status === 'OPEN' || o.status === 'CLAIMED')
+    },
+    enabled: !!clientId,
+    staleTime: 10_000,
+  })
+}
+
 export function useCreateCounterOrder() {
   const queryClient = useQueryClient()
   return useMutation({

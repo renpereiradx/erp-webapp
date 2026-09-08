@@ -27,10 +27,12 @@ interface ClientStepProps {
   onClearClient: () => void
   pendingSalesCount: number
   reservationsCount: number
+  /** Pedidos de mostrador activos del cliente (PLAN_PEDIDOS_MOSTRADOR 3.3). */
+  counterOrdersCount: number
 }
 
 export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
-  ({ client, onClientSelect, onClearClient, pendingSalesCount, reservationsCount }, ref) => {
+  ({ client, onClientSelect, onClearClient, pendingSalesCount, reservationsCount, counterOrdersCount }, ref) => {
     const { t } = useI18n()
     const { searchClients } = useClientStore()
     const searchInputRef = useRef<HTMLInputElement>(null)
@@ -134,6 +136,20 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
             </div>
 
             {/* Previews de los próximos pasos condicionales */}
+            {counterOrdersCount > 0 && (
+              <div
+                className="mt-3 p-3 bg-primary/10 rounded-md border border-primary/30 flex items-start gap-2"
+                data-testid="client-step-counterorders-notice"
+              >
+                <AlertTriangle size={16} className="text-primary shrink-0 mt-0.5" />
+                <p className="text-body-sm text-primary">
+                  {t('sales.checkoutWizard.client.hasCounterOrders', {
+                    count: counterOrdersCount,
+                    defaultValue: `Este cliente tiene ${counterOrdersCount} pedido(s) del vendedor activo(s).`,
+                  })}
+                </p>
+              </div>
+            )}
             {pendingSalesCount > 0 && (
               <div className="mt-3 p-3 bg-warning/10 rounded-md border border-warning/30 flex items-start gap-2">
                 <AlertTriangle size={16} className="text-warning shrink-0 mt-0.5" />
