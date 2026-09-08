@@ -36,6 +36,7 @@ import { shell } from './shell'
 import { transfers } from './transfers'
 import { devices } from './devices'
 import { catalog } from './catalog'
+import { counterorders } from './counterorders'
 
 /**
  * Diccionario completo de traducciones en español
@@ -74,5 +75,6 @@ export const es = {
   ...transfers,
   ...devices,
   ...catalog,
+  ...counterorders,
   ...other,
 }

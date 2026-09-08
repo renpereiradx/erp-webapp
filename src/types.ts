@@ -2127,6 +2127,14 @@ export const API_ENDPOINTS = {
   BUDGET_BY_CLIENT: (clientId: string) => `/budgets/client/${clientId}`,
   BUDGET_CONVERT_TO_SALE: (id: string) => `/budgets/${id}/convert`,
 
+  // Counter Orders (PLAN_PEDIDOS_MOSTRADOR — pedidos de mostrador vendedor→caja)
+  COUNTER_ORDERS: '/counter-orders',
+  COUNTER_ORDER_BY_ID: (id: string) => `/counter-orders/${id}`,
+  COUNTER_ORDER_CLAIM: (id: string) => `/counter-orders/${id}/claim`,
+  COUNTER_ORDER_RELEASE: (id: string) => `/counter-orders/${id}/release`,
+  COUNTER_ORDER_CONVERT: (id: string) => `/counter-orders/${id}/convert`,
+  COUNTER_ORDER_CANCEL: (id: string) => `/counter-orders/${id}/cancel`,
+
   // Purchase Requisitions (v2.0)
   PURCHASE_REQUISITIONS: '/purchase-requisitions',
   PURCHASE_REQUISITION_BY_ID: (id: string) => `/purchase-requisitions/${id}`,

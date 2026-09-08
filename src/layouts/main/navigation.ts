@@ -173,6 +173,13 @@ export const buildNavigation = (t: TFn, reservationsEnabled: boolean): Navigatio
     icon: ShoppingCart,
     children: [
       {
+        // PLAN_PEDIDOS_MOSTRADOR: carrito del vendedor → cobro en caja.
+        name: t('nav.counterorders', 'Pedidos'),
+        href: '/pedidos',
+        icon: ClipboardList,
+        permission: 'counterorders:read',
+      },
+      {
         // PLAN_CATALOGO_VENDEDOR 3.3: consulta de precios sin datos de costo
         // (la garantía real es server-side, permiso products:cost).
         name: t('nav.catalog', 'Catálogo'),

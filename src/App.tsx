@@ -69,6 +69,7 @@ import TerminalPairing from '@/features/branches/components/TerminalPairing'
 import DevicesPage from '@/pages/DevicesPage'
 import TransfersPage from '@/features/transfers/components/TransfersPage'
 import { CatalogBoard } from '@/features/catalog'
+import { CounterOrdersPage } from '@/features/counterorders'
 import UserManagementList from '@/pages/UserManagementList.tsx'
 import UserDetailedProfile from '@/pages/UserDetailedProfile.tsx'
 import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity.tsx'
@@ -410,6 +411,17 @@ function AppContent() {
                         element={
                           <PermissionGuard permission='products:read'>
                             <CatalogBoard />
+                          </PermissionGuard>
+                        }
+                      />
+
+                      {/* PLAN_PEDIDOS_MOSTRADOR 2.3: pedidos de mostrador —
+                          carrito del vendedor que la caja procesa. */}
+                      <Route
+                        path='/pedidos'
+                        element={
+                          <PermissionGuard permission='counterorders:read'>
+                            <CounterOrdersPage />
                           </PermissionGuard>
                         }
                       />
