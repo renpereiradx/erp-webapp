@@ -80,6 +80,7 @@ export const counterorders = {
   'counterorders.detail.claimed_by': 'en caja con {name}',
   'counterorders.detail.stock_warning': 'Stock disponible: {stock}',
   'counterorders.detail.total': 'Total estimado (precios de hoy)',
+  'counterorders.detail.total_with_warnings': 'Total estimado (excluye ítems con advertencia)',
   'counterorders.detail.sale_link': 'Procesado como venta {saleId}',
   'counterorders.detail.cancel_reason': 'Cancelado: {reason}',
 

@@ -17,6 +17,8 @@ export interface CounterOrderListParams {
   status?: string;
   client_id?: string;
   branch_id?: number;
+  /** "Ver todas las sucursales" (audit A3): requiere branches:switch server-side. */
+  all_branches?: number;
   q?: string;
   page?: number;
   page_size?: number;

@@ -25,7 +25,8 @@ export interface CounterOrdersQuery {
   page: number
   /** undefined = filtrar por la sucursal activa (backend resuelve por header). */
   branchId?: number | null
-  /** "ver todas": no filtra por sucursal (requiere branches:switch). */
+  /** "ver todas": requiere branches:switch (el backend re-valida; sin el
+   *  permiso el scope queda en la sucursal activa). */
   allBranches?: boolean
 }
 
@@ -38,7 +39,13 @@ export function useCounterOrders(query: CounterOrdersQuery) {
         page_size: COUNTER_ORDERS_PAGE_SIZE,
         ...(query.status !== 'ALL' ? { status: query.status } : {}),
         ...(query.search ? { q: query.search } : {}),
-        ...(query.allBranches ? {} : query.branchId ? { branch_id: query.branchId } : {}),
+        // Audit A3: sin el flag explícito el backend siempre cae a la
+        // sucursal activa del JWT y "ver todas" era un no-op.
+        ...(query.allBranches
+          ? { all_branches: 1 }
+          : query.branchId
+            ? { branch_id: query.branchId }
+            : {}),
       }
       const response = await counterOrderService.list(params)
       return {

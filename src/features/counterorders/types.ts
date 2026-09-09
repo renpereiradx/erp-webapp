@@ -76,6 +76,14 @@ export interface ResolvedCounterOrderItem extends CounterOrderItem, ResolvedLine
   product_name: string;
   stock_available?: number | null;
   stock_warning: boolean;
+  /**
+   * Degradación por ítem (auditoría C2): la línea cuyo precio no se puede
+   * resolver vuelve con el warning seteado, montos en cero y excluida del
+   * total — en vez de tumbar la lectura completa. El texto lo provee el
+   * backend (mismo criterio que los mensajes de error).
+   */
+  price_warning?: string | null;
+  tax_warning?: string | null;
 }
 
 /** Lectura resuelta (GET / create / update / claim). */

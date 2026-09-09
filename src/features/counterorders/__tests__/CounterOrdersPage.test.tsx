@@ -217,4 +217,23 @@ describe('CounterOrdersPage — bandeja', () => {
     await userEvent.type(screen.getByTestId('counterorders-search'), 'juan')
     await waitFor(() => expect(listMock).toHaveBeenCalledWith(expect.objectContaining({ q: 'juan' })))
   })
+
+  it('"Ver todas las sucursales" con branches:switch pide all_branches y suelta branch_id (audit A3)', async () => {
+    mockHasPermission.mockImplementation(
+      p => p === 'counterorders:read' || p === 'counterorders:write' || p === 'branches:switch',
+    )
+    renderPage()
+    await userEvent.click(await screen.findByTestId('counterorders-all-branches'))
+    await waitFor(() =>
+      expect(listMock).toHaveBeenCalledWith(expect.objectContaining({ all_branches: 1 })),
+    )
+    const lastCall = listMock.mock.calls[listMock.mock.calls.length - 1][0] as Record<string, unknown>
+    expect(lastCall.branch_id).toBeUndefined()
+  })
+
+  it('sin branches:switch el toggle no se renderiza', async () => {
+    renderPage()
+    await screen.findByTestId('counterorder-row-CO-1')
+    expect(screen.queryByTestId('counterorders-all-branches')).not.toBeInTheDocument()
+  })
 })

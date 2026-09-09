@@ -25,6 +25,10 @@ interface OrderDetailModalProps {
 export function OrderDetailModal({ open, detail, isLoading, summary, onClose }: OrderDetailModalProps) {
   const { t } = useI18n()
   const order = detail ?? summary
+  // Degradación por ítem (C2): si alguna línea no resolvió precio/IVA, el
+  // total es parcial y la etiqueta debe decirlo.
+  const hasResolutionWarnings =
+    detail?.items?.some(item => item.price_warning || item.tax_warning) ?? false
 
   return (
     <EnhancedModal
@@ -105,6 +109,15 @@ export function OrderDetailModal({ open, detail, isLoading, summary, onClose }: 
                       })}
                     </p>
                   )}
+                  {(item.price_warning || item.tax_warning) && (
+                    <p
+                      className="text-body-sm-bold text-warning flex items-center gap-1 mt-xs"
+                      data-testid={`counterorder-item-warning-${item.id}`}
+                    >
+                      <AlertTriangle className="size-3.5 shrink-0" aria-hidden="true" />
+                      {item.price_warning || item.tax_warning}
+                    </p>
+                  )}
                 </div>
                 <div className="text-right shrink-0">
                   <span
@@ -122,8 +135,10 @@ export function OrderDetailModal({ open, detail, isLoading, summary, onClose }: 
           </ul>
 
           <div className="flex items-center justify-between pt-sm border-t border-border-subtle">
-            <span className="text-body-md text-on-surface-deep">
-              {t('counterorders.detail.total', 'Total estimado (precios de hoy)')}
+            <span className={cn('text-body-md text-on-surface-deep', hasResolutionWarnings && 'text-warning')}>
+              {hasResolutionWarnings
+                ? t('counterorders.detail.total_with_warnings', 'Total estimado (excluye ítems con advertencia)')
+                : t('counterorders.detail.total', 'Total estimado (precios de hoy)')}
             </span>
             <span
               data-testid="counterorder-detail-total"

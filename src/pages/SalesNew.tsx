@@ -203,9 +203,12 @@ const SalesNew: React.FC = () => {
   // B.3/B.5 (PLAN_VENDOR_ROLE): cosmetic gating — the server enforces both.
   const canApplyDiscount = hasPermission('sales:apply_discount');
   const canCancelSale = hasPermission('sales:cancel');
-  // FASE C: sin sales:cancel pero con sales:write, la anulación pasa por
-  // solicitud (el backend la valida igual — acá es solo ruteo de UI).
-  const canRequestCancellation = canWrite;
+  // FASE C: sin sales:cancel, la anulación pasa por solicitud. FASE 4
+  // (PLAN_PEDIDOS_MOSTRADOR v3) revocó sales:write a VNDR01 pero el backend
+  // re-gateó la creación de solicitudes a sales:read (routes.go) para
+  // conservar esta función: el gate FE tiene que seguirlo (audit A1 —
+  // con = canWrite el vendor perdió el botón "Solicitar Anulación").
+  const canRequestCancellation = hasPermission('sales:read');
   // FASE 4 (PLAN_PEDIDOS_MOSTRADOR v3): sin sales:write el vendor NO crea
   // ventas — /ventas abre directo en Historial y la tab "Nueva Venta" no
   // existe (el flujo del vendor es /pedidos).
@@ -1463,13 +1466,21 @@ const SalesNew: React.FC = () => {
           } else {
             toast.success(`Venta #${currentSaleId} cobrada exitosamente`);
           }
-        } else if (pendingSaleData) {
+        } else if (pendingSaleData || items.length > 0) {
           // Modo venta nueva: checkout POS atómico (venta + pago).
           // Reconstruir el payload desde el carrito vigente: el operador
           // puede haber agregado reservas dentro del wizard (walk-in o
           // existentes) DESPUÉS de que handleSaveSale armó pendingSaleData.
           // Refleja la moneda seleccionada en el wizard (puede haber cambiado).
+          // Audit C3: también cubre el wizard abierto por precarga desde
+          // /pedidos ("Procesar en caja"), que nunca arma pendingSaleData —
+          // antes caía al else con "No hay datos de venta para procesar" y
+          // el flujo quedaba sin salida.
           const salePayload = buildNewSaleData() ?? pendingSaleData;
+          if (!salePayload) {
+            // buildNewSaleData ya informó el problema (regla de reservas).
+            return;
+          }
           const result = await salePaymentService.posCheckout({
             // Documento SIEMPRE en moneda base (política cobro en divisa).
             sale: { ...salePayload, currency_id: Number(baseCurrencyId) || 1 },
@@ -1607,8 +1618,15 @@ const SalesNew: React.FC = () => {
           );
         }
         toast.info(`Venta #${currentSaleId} queda pendiente`);
-      } else if (pendingSaleData) {
+      } else if (pendingSaleData || items.length > 0) {
+        // Audit C3: mismo criterio que onConfirmWizard — el wizard de precarga
+        // desde /pedidos no arma pendingSaleData; "Dejar pendiente" igual debe
+        // persistir la venta nueva (si no, liberaba el claim y perdía el flujo).
         const salePayload = buildNewSaleData() ?? pendingSaleData;
+        if (!salePayload) {
+          // buildNewSaleData ya informó el problema (regla de reservas).
+          return;
+        }
         const response = await createSale(salePayload);
         if (!response?.sale_id) {
           throw new Error(response?.error || response?.message || 'No se pudo registrar la venta');
@@ -1627,7 +1645,7 @@ const SalesNew: React.FC = () => {
     } finally {
       setIsProcessingSale(false);
     }
-  }, [currentSaleId, pendingSaleData, createSale, buildNewSaleData, buildAddProductsPayload, activeSale]);
+  }, [currentSaleId, items, pendingSaleData, createSale, buildNewSaleData, buildAddProductsPayload, activeSale]);
 
   // ─── Walk-in: registrar uso de cancha desde el wizard ──────────────────────
   // Flujo: cliente usó la cancha sin reserva previa y quiere pagar. Crea la
