@@ -66,9 +66,22 @@ vi.mock('@/services/counterOrderService', () => ({
 }))
 
 // Módulos pesados del builder: el modal cerrado no participa en estos tests.
+// El catálogo es controlable por test (grilla del picker + variantes).
+const catalogMock = vi.hoisted(() => ({
+  products: [] as Array<Record<string, unknown>>,
+  variants: [] as Array<Record<string, unknown>>,
+}))
 vi.mock('@/features/catalog/hooks/useCatalogProducts', () => ({
-  useCatalogProducts: () => ({ data: undefined, isLoading: false }),
-  useCatalogVariants: () => ({ data: undefined, isLoading: false }),
+  useCatalogProducts: () => ({
+    data: {
+      products: catalogMock.products,
+      total: catalogMock.products.length,
+      page: 1,
+      totalPages: 1,
+    },
+    isLoading: false,
+  }),
+  useCatalogVariants: () => ({ data: catalogMock.variants, isLoading: false }),
 }))
 vi.mock('@/features/catalog/hooks/useDebouncedValue', () => ({
   useDebouncedValue: (value: unknown) => value,
@@ -134,6 +147,8 @@ const renderPage = () => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  catalogMock.products = []
+  catalogMock.variants = []
   mockHasPermission.mockImplementation(p => p === 'counterorders:read' || p === 'counterorders:write')
   listMock.mockResolvedValue({
     data: [orderOpen, orderClaimed],
@@ -235,5 +250,59 @@ describe('CounterOrdersPage — bandeja', () => {
     renderPage()
     await screen.findByTestId('counterorder-row-CO-1')
     expect(screen.queryByTestId('counterorders-all-branches')).not.toBeInTheDocument()
+  })
+})
+
+describe('OrderBuilder — picker de productos (stock y producto base)', () => {
+  const camiseta = {
+    id: 'PROD-CAM',
+    name: 'CAMISETA ADIDAS',
+    base_unit: 'unit',
+    current_price: 72800,
+    stock_quantity: 67,
+    stock_status: 'in_stock',
+    has_variant: true,
+    variant_count: 2,
+  }
+  const variants = [
+    { id: 'VAR-NEGRO', parent_product_id: 'PROD-CAM', variant_name: 'NEGRO M', sku: 'CC2Y5J-NEGRO-M', stock_quantity: 5, is_active: true },
+    { id: 'VAR-VERDE', parent_product_id: 'PROD-CAM', variant_name: 'VERDE XL', sku: 'CC2Y5J-VERDE-XL', stock_quantity: 0, is_active: true },
+  ]
+
+  it('las variantes muestran el stock enriquecido, no 0 fijo (fix capturas)', async () => {
+    catalogMock.products = [camiseta]
+    catalogMock.variants = variants
+    renderPage()
+    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
+    await userEvent.click(await screen.findByText(/Elegir variante \(2\)/))
+    const list = await screen.findByTestId('counterorder-pick-variants-PROD-CAM')
+    expect(list).toHaveTextContent('Stock: 5')
+    expect(list).toHaveTextContent('Stock: 0')
+  })
+
+  it('permite agregar el producto base además de sus variantes', async () => {
+    catalogMock.products = [camiseta]
+    catalogMock.variants = variants
+    renderPage()
+    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
+    // Fila base con su [+] (antes el base no era seleccionable).
+    await screen.findByTestId('counterorder-pick-base-PROD-CAM')
+    await userEvent.click(screen.getByTestId('counterorder-add-PROD-CAM'))
+    const lines = screen.getByTestId('counterorder-builder-lines')
+    expect(lines).toHaveTextContent('CAMISETA ADIDAS')
+    // Línea base ≠ línea variante (keys distintas), y el nombre de la
+    // variante distingue la línea en el carrito.
+    await userEvent.click(screen.getByText(/Elegir variante \(2\)/))
+    await userEvent.click(await screen.findByTestId('counterorder-add-variant-VAR-NEGRO'))
+    expect(lines).toHaveTextContent('CAMISETA ADIDAS · NEGRO M')
+    expect(screen.getByTestId('counterorder-builder-units')).toHaveTextContent('2 unidades')
+  })
+
+  it('los productos sin variante conservan su botón Agregar directo', async () => {
+    catalogMock.products = [{ ...camiseta, id: 'PROD-SIMPLE', has_variant: false, variant_count: 0 }]
+    renderPage()
+    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
+    await userEvent.click(await screen.findByTestId('counterorder-add-PROD-SIMPLE'))
+    expect(screen.getByTestId('counterorder-builder-lines')).toHaveTextContent('CAMISETA ADIDAS')
   })
 })

@@ -72,6 +72,31 @@ const ProductPickCard = memo(function ProductPickCard({ product, onAdd }: Produc
       </div>
       {product.has_variant ? (
         <div className="space-y-xs">
+          {/* El producto base también es vendible (línea sin variant_id):
+              precio por get_active_price y filas de stock propias (variant
+              NULL). Antes solo se podían agregar variantes. */}
+          <div
+            className="flex items-center justify-between gap-sm rounded-sm bg-surface-muted px-sm py-xs"
+            data-testid={`counterorder-pick-base-${product.id}`}
+          >
+            <span className="min-w-0">
+              <span className="text-body-sm-bold text-foreground block truncate">
+                {t('counterorders.builder.base_product', 'Producto base')}
+              </span>
+              <span className="text-label-caps uppercase text-on-surface-deep font-data-mono">
+                {t('counterorders.builder.stock', 'Stock')}: {stock ?? 0}
+              </span>
+            </span>
+            <Button
+              variant="default"
+              size="sm"
+              data-testid={`counterorder-add-${product.id}`}
+              onClick={() => onAdd(product, null, undefined, stock)}
+              aria-label={`${t('counterorders.builder.add', 'Agregar')} ${product.name}`}
+            >
+              <Plus className="size-3.5" aria-hidden="true" />
+            </Button>
+          </div>
           <Button variant="secondary" size="sm" className="w-full" onClick={() => setExpanded(prev => !prev)}>
             {expanded
               ? t('counterorders.builder.hide_variants', 'Ocultar variantes')
@@ -185,12 +210,15 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
     (
       product: CatalogProduct,
       variantId?: string | null,
-      _variantName?: string,
+      variantName?: string,
       stock?: number | null,
     ) => {
       cart.addProduct({
         productId: product.id,
-        name: product.name,
+        // La línea distingue base de variante: el backend solo guarda
+        // variant_id (nombre crudo en el detalle) — el nombre visible viaja
+        // en la línea del carrito.
+        name: variantName ? `${product.name} · ${variantName}` : product.name,
         quantity: 1,
         variantId: variantId ?? null,
         unit: product.base_unit || 'unit',

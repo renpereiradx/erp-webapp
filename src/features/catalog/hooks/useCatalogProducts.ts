@@ -12,6 +12,7 @@ import { productService } from '@/services/productService'
 import { categoryService } from '@/services/categoryService'
 import { brandService } from '@/services/brandService'
 import { variantService } from '@/services/variantService'
+import { useBranch } from '@/contexts/BranchContext'
 import type { ProductVariant } from '@/types'
 import {
   CATALOG_PAGE_SIZE,
@@ -88,12 +89,19 @@ export function useCatalogFacets() {
   return { categories, brands }
 }
 
-/** Variantes de un producto, cargadas solo al expandir su tarjeta. */
+/**
+ * Variantes de un producto, cargadas solo al expandir su tarjeta. Usa la
+ * MISMA fuente que el selector de /ventas (getEnrichedVariants): el listado
+ * crudo de variantes no trae stock ni precio — mostrar `stock_quantity ?? 0`
+ * era siempre 0 (fix capturas 2026-09-09). El stock se pide por sucursal
+ * activa, que es la que valida la venta al cobrar.
+ */
 export function useCatalogVariants(productId: string | null) {
+  const { currentBranchId } = useBranch()
   return useQuery({
-    queryKey: ['catalog', 'variants', productId],
+    queryKey: ['catalog', 'variants', productId, currentBranchId ?? null],
     queryFn: (): Promise<ProductVariant[]> =>
-      variantService.getVariantsByProductId(productId!, false),
+      variantService.getEnrichedVariants(productId!, currentBranchId ?? undefined, false),
     enabled: productId !== null,
     staleTime: 60_000,
   })

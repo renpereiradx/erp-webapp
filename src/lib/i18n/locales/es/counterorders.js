@@ -51,6 +51,7 @@ export const counterorders = {
   'counterorders.builder.stock': 'Stock',
   'counterorders.builder.out_of_stock': 'Sin stock',
   'counterorders.builder.add': 'Agregar',
+  'counterorders.builder.base_product': 'Producto base',
   'counterorders.builder.pick_variant': 'Elegir variante',
   'counterorders.builder.hide_variants': 'Ocultar variantes',
   'counterorders.builder.no_variants': 'Sin variantes activas.',

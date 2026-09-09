@@ -55,7 +55,16 @@ vi.mock('@/services/brandService', () => ({
 vi.mock('@/services/variantService', () => ({
   variantService: {
     getVariantsByProductId: vi.fn(),
+    // useCatalogVariants usa la misma fuente que /ventas (enriquecida con
+    // stock por sucursal); el listado crudo no trae stock.
+    getEnrichedVariants: vi.fn(),
   },
+}))
+
+// useCatalogVariants lee la sucursal activa (el stock de variantes es por
+// sucursal): se mockea la frontera del contexto, no el hook.
+vi.mock('@/contexts/BranchContext', () => ({
+  useBranch: () => ({ currentBranchId: 1 }),
 }))
 
 import { productService } from '@/services/productService'
@@ -64,7 +73,7 @@ import { CatalogBoard } from '../components/CatalogBoard'
 import type { CatalogProduct } from '../types'
 
 const searchAdvanced = vi.mocked(productService.searchAdvanced)
-const getVariantsByProductId = vi.mocked(variantService.getVariantsByProductId)
+const getEnrichedVariants = vi.mocked(variantService.getEnrichedVariants)
 
 const card = (overrides: Partial<CatalogProduct>): CatalogProduct => ({
   id: 'p1',
@@ -171,7 +180,7 @@ describe('CatalogBoard', () => {
 
   it('expande variantes bajo demanda', async () => {
     const user = userEvent.setup()
-    getVariantsByProductId.mockResolvedValue([
+    getEnrichedVariants.mockResolvedValue([
       {
         id: 'v1',
         parent_product_id: 'p1',
@@ -193,11 +202,13 @@ describe('CatalogBoard', () => {
 
     await screen.findByTestId('catalog-card-p1')
     // Las variantes no se piden hasta expandir la tarjeta.
-    expect(getVariantsByProductId).not.toHaveBeenCalled()
+    expect(getEnrichedVariants).not.toHaveBeenCalled()
 
     await user.click(screen.getByRole('button', { name: /variantes/i }))
     expect(await screen.findByTestId('catalog-variants-p1')).toHaveTextContent('Paquete 1kg')
-    expect(getVariantsByProductId).toHaveBeenCalledWith('p1', false)
+    // Stock enriquecido por sucursal activa (branch 1 del mock de contexto).
+    expect(screen.getByTestId('catalog-variants-p1')).toHaveTextContent('Stock: 10')
+    expect(getEnrichedVariants).toHaveBeenCalledWith('p1', 1, false)
   })
 
   it('pagina con prev/next', async () => {
