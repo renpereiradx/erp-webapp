@@ -1,5 +1,6 @@
 import { apiClient } from './api';
 import { ProductVariant, VariantStockSum } from '@/types';
+import type { ProductStockSummary } from '@/features/catalog/types';
 
 export const variantService = {
   getVariantsByProductId: async (productId: string, includeInactive: boolean = false): Promise<ProductVariant[]> => {
@@ -108,6 +109,21 @@ export const variantService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching total stock:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Stock del producto dividido en base (sin variante) y variantes, en una
+   * sola consulta y un solo alcance de sucursal. Es el mapeo que renderizan
+   * las cards de catálogo y pedidos (total = base + variantes).
+   */
+  getStockSummary: async (productId: string, branchId?: number): Promise<ProductStockSummary> => {
+    try {
+      const response = await apiClient.get(`/products/${productId}/stock-summary`, { params: { branch_id: branchId } });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching stock summary:', error);
       throw error;
     }
   }

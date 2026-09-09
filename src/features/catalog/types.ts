@@ -33,6 +33,22 @@ export interface CatalogFilters {
 
 export type CatalogSortOption = 'name_asc' | 'price_asc' | 'price_desc' | 'newest'
 
+/**
+ * Stock del producto en un solo alcance (sucursal activa u opcional): el
+ * desglose total/base/variantes que renderizan las cards de catálogo y
+ * pedidos — el mismo mapeo del admin de productos.
+ */
+export interface ProductStockSummary {
+  product_id: string
+  branch_id?: number | null
+  /** Filas de stock sin variante (producto base). */
+  base_stock: number
+  /** Suma de las filas de variantes. */
+  variants_stock: number
+  /** base + variantes. */
+  total_stock: number
+}
+
 export interface CatalogPageData {
   products: CatalogProduct[]
   total: number

@@ -58,11 +58,14 @@ vi.mock('@/services/variantService', () => ({
     // useCatalogVariants usa la misma fuente que /ventas (enriquecida con
     // stock por sucursal); el listado crudo no trae stock.
     getEnrichedVariants: vi.fn(),
+    // Desglose total/base/variantes por sucursal para la tarjeta.
+    getStockSummary: vi.fn(),
   },
 }))
 
-// useCatalogVariants lee la sucursal activa (el stock de variantes es por
-// sucursal): se mockea la frontera del contexto, no el hook.
+// useCatalogVariants/useProductStockSummary leen la sucursal activa (el
+// stock de variantes es por sucursal): se mockea la frontera del contexto,
+// no el hook.
 vi.mock('@/contexts/BranchContext', () => ({
   useBranch: () => ({ currentBranchId: 1 }),
 }))
@@ -74,6 +77,7 @@ import type { CatalogProduct } from '../types'
 
 const searchAdvanced = vi.mocked(productService.searchAdvanced)
 const getEnrichedVariants = vi.mocked(variantService.getEnrichedVariants)
+const getStockSummary = vi.mocked(variantService.getStockSummary)
 
 const card = (overrides: Partial<CatalogProduct>): CatalogProduct => ({
   id: 'p1',
@@ -195,8 +199,15 @@ describe('CatalogBoard', () => {
         updated_at: '',
       },
     ])
+    getStockSummary.mockResolvedValue({
+      product_id: 'p1',
+      branch_id: 1,
+      base_stock: 4,
+      variants_stock: 10,
+      total_stock: 14,
+    })
     searchAdvanced.mockResolvedValue(
-      advancedResponse([card({ has_variant: true, variant_count: 1 })])
+      advancedResponse([card({ has_variant: true, variant_count: 1, stock_quantity: 14 })])
     )
     renderBoard()
 
@@ -208,7 +219,11 @@ describe('CatalogBoard', () => {
     expect(await screen.findByTestId('catalog-variants-p1')).toHaveTextContent('Paquete 1kg')
     // Stock enriquecido por sucursal activa (branch 1 del mock de contexto).
     expect(screen.getByTestId('catalog-variants-p1')).toHaveTextContent('Stock: 10')
+    // Desglose total/base/variantes en el alcance de la sucursal.
+    expect(screen.getByTestId('catalog-stock-breakdown-p1')).toHaveTextContent('Base: 4')
+    expect(screen.getByTestId('catalog-stock-breakdown-p1')).toHaveTextContent('En variantes: 10')
     expect(getEnrichedVariants).toHaveBeenCalledWith('p1', 1, false)
+    expect(getStockSummary).toHaveBeenCalledWith('p1', 1)
   })
 
   it('pagina con prev/next', async () => {

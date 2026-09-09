@@ -20,6 +20,7 @@ import {
   type CatalogFilters,
   type CatalogPageData,
   type CatalogProduct,
+  type ProductStockSummary,
 } from '../types'
 
 /** Respuesta cruda del backend (AdvancedSearchResponse, Go). */
@@ -104,6 +105,24 @@ export function useCatalogVariants(productId: string | null) {
       variantService.getEnrichedVariants(productId!, currentBranchId ?? undefined, false),
     enabled: productId !== null,
     staleTime: 60_000,
+  })
+}
+
+/**
+ * Desglose total/base/variantes del producto en la sucursal activa (una
+ * consulta). Las cards lo muestran como "Stock: total" + fila base con su
+ * propio stock — sin mezclar alcances. Si el backend aún no tiene el
+ * endpoint, la query falla en silencio y las cards caen al total global.
+ */
+export function useProductStockSummary(productId: string | null) {
+  const { currentBranchId } = useBranch()
+  return useQuery({
+    queryKey: ['catalog', 'stock-summary', productId, currentBranchId ?? null],
+    queryFn: (): Promise<ProductStockSummary> =>
+      variantService.getStockSummary(productId!, currentBranchId ?? undefined),
+    enabled: productId !== null,
+    staleTime: 30_000,
+    retry: false,
   })
 }
 

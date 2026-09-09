@@ -70,6 +70,7 @@ vi.mock('@/services/counterOrderService', () => ({
 const catalogMock = vi.hoisted(() => ({
   products: [] as Array<Record<string, unknown>>,
   variants: [] as Array<Record<string, unknown>>,
+  stockSummary: null as Record<string, unknown> | null,
 }))
 vi.mock('@/features/catalog/hooks/useCatalogProducts', () => ({
   useCatalogProducts: () => ({
@@ -82,6 +83,7 @@ vi.mock('@/features/catalog/hooks/useCatalogProducts', () => ({
     isLoading: false,
   }),
   useCatalogVariants: () => ({ data: catalogMock.variants, isLoading: false }),
+  useProductStockSummary: () => ({ data: catalogMock.stockSummary, isLoading: false }),
 }))
 vi.mock('@/features/catalog/hooks/useDebouncedValue', () => ({
   useDebouncedValue: (value: unknown) => value,
@@ -149,6 +151,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   catalogMock.products = []
   catalogMock.variants = []
+  catalogMock.stockSummary = null
   mockHasPermission.mockImplementation(p => p === 'counterorders:read' || p === 'counterorders:write')
   listMock.mockResolvedValue({
     data: [orderOpen, orderClaimed],
@@ -277,16 +280,22 @@ describe('OrderBuilder — picker de productos (stock y producto base)', () => {
     await userEvent.click(await screen.findByText(/Elegir variante \(2\)/))
     const list = await screen.findByTestId('counterorder-pick-variants-PROD-CAM')
     expect(list).toHaveTextContent('Stock: 5')
-    expect(list).toHaveTextContent('Stock: 0')
+    // Sin unidades: chip de error en vez de "Stock: 0".
+    expect(list).toHaveTextContent('Sin stock')
   })
 
   it('permite agregar el producto base además de sus variantes', async () => {
     catalogMock.products = [camiseta]
     catalogMock.variants = variants
+    // Desglose por sucursal: la fila base muestra SU stock (44), no el
+    // total que mezcla variantes (67).
+    catalogMock.stockSummary = { product_id: 'PROD-CAM', branch_id: 1, base_stock: 44, variants_stock: 23, total_stock: 67 }
     renderPage()
     await userEvent.click(await screen.findByTestId('counterorders-new-button'))
-    // Fila base con su [+] (antes el base no era seleccionable).
-    await screen.findByTestId('counterorder-pick-base-PROD-CAM')
+    // Fila base con su [+] y su stock propio (antes el base no era seleccionable).
+    const baseRow = await screen.findByTestId('counterorder-pick-base-PROD-CAM')
+    expect(baseRow).toHaveTextContent('Stock: 44')
+    expect(screen.getByTestId('counterorder-pick-PROD-CAM')).toHaveTextContent('Stock: 67')
     await userEvent.click(screen.getByTestId('counterorder-add-PROD-CAM'))
     const lines = screen.getByTestId('counterorder-builder-lines')
     expect(lines).toHaveTextContent('CAMISETA ADIDAS')
@@ -296,6 +305,15 @@ describe('OrderBuilder — picker de productos (stock y producto base)', () => {
     await userEvent.click(await screen.findByTestId('counterorder-add-variant-VAR-NEGRO'))
     expect(lines).toHaveTextContent('CAMISETA ADIDAS · NEGRO M')
     expect(screen.getByTestId('counterorder-builder-units')).toHaveTextContent('2 unidades')
+  })
+
+  it('sin stock-summary la fila base cae al total proyectado (compat backend viejo)', async () => {
+    catalogMock.products = [camiseta]
+    catalogMock.variants = variants
+    renderPage()
+    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
+    const baseRow = await screen.findByTestId('counterorder-pick-base-PROD-CAM')
+    expect(baseRow).toHaveTextContent('Stock: 67')
   })
 
   it('los productos sin variante conservan su botón Agregar directo', async () => {

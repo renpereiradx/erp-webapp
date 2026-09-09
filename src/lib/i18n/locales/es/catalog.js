@@ -25,6 +25,8 @@ export const catalog = {
   'catalog.card.pvp': 'P.V.P. (Con IVA)',
   'catalog.card.stock': 'Stock',
   'catalog.card.out_of_stock': 'Sin stock',
+  'catalog.card.stock_base': 'Base',
+  'catalog.card.stock_variants': 'En variantes',
   'catalog.card.variants': 'Variantes',
   'catalog.card.loading_variants': 'Cargando variantes…',
   'catalog.card.no_variants': 'Sin variantes activas.',

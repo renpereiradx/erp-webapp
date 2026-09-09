@@ -11,9 +11,10 @@ import useClientStore from '@/store/useClientStore'
 import QuickClientModal from '@/features/party/components/QuickClientModal'
 import { saleService } from '@/services/saleService'
 import { formatCurrency } from '@/utils/currencyUtils'
-import { useCatalogProducts, useCatalogVariants } from '@/features/catalog/hooks/useCatalogProducts'
+import { useCatalogProducts, useCatalogVariants, useProductStockSummary } from '@/features/catalog/hooks/useCatalogProducts'
 import { useDebouncedValue } from '@/features/catalog/hooks/useDebouncedValue'
 import { DEFAULT_CATALOG_FILTERS, type CatalogProduct } from '@/features/catalog/types'
+import { cn } from '@/lib/utils'
 import { useCreateCounterOrder, useUpdateCounterOrder } from '../hooks/useCounterOrders'
 import { useOrderCart } from '../hooks/useOrderCart'
 import type { CounterOrderDetail } from '../types'
@@ -42,32 +43,53 @@ interface ClientDropdownItem extends SearchableDropdownItem {
 }
 
 /** Tarjeta compacta de producto para el picker del carrito (memoizada:
- * la grilla re-renderiza en cada tecla de búsqueda). */
+ * la grilla re-renderiza en cada tecla de búsqueda). El stock sigue el
+ * mapeo del admin de productos en el alcance de la sucursal activa:
+ * chip con el total y fila base con SU stock (summary del backend). */
 interface ProductPickCardProps {
   product: CatalogProduct
   onAdd: (product: CatalogProduct, variantId?: string | null, variantName?: string, stock?: number | null) => void
 }
 
-const ProductPickCard = memo(function ProductPickCard({ product, onAdd }: ProductPickCardProps) {  const { t } = useI18n()
+const ProductPickCard = memo(function ProductPickCard({ product, onAdd }: ProductPickCardProps) {
+  const { t } = useI18n()
   const [expanded, setExpanded] = useState(false)
   const variantsQuery = useCatalogVariants(expanded && product.has_variant ? product.id : null)
-  const stock = product.stock_quantity ?? null
+  const summaryQuery = useProductStockSummary(product.has_variant ? product.id : null)
+  const summary = summaryQuery.data ?? null
+  const stock = product.has_variant
+    ? (summary?.total_stock ?? product.stock_quantity ?? null)
+    : (product.stock_quantity ?? null)
+  // Fila base: stock SIN variantes (fallback al proyectado global si el
+  // backend aún no tiene stock-summary).
+  const baseStock = product.has_variant
+    ? (summary?.base_stock ?? product.stock_quantity ?? null)
+    : (product.stock_quantity ?? null)
   const outOfStock = product.stock_status === 'out_of_stock' || (stock !== null && stock <= 0)
+  const stockLabel = (value: number | null) =>
+    value == null || value <= 0
+      ? t('counterorders.builder.out_of_stock', 'Sin stock')
+      : `${t('counterorders.builder.stock', 'Stock')}: ${value}`
 
   return (
     <article
       data-testid={`counterorder-pick-${product.id}`}
       className="bg-surface rounded-md shadow-whisper border border-border-subtle p-sm flex flex-col gap-xs"
     >
-      <p className="text-body-sm-bold text-foreground truncate">{product.name}</p>
+      <p className="text-body-sm-bold text-foreground truncate" title={product.name}>
+        {product.name}
+      </p>
       <div className="flex items-center justify-between gap-sm">
-        <span className="font-data-mono text-body-sm text-primary">
+        <span className="font-data-mono text-body-sm text-primary whitespace-nowrap">
           {product.current_price != null ? formatCurrency(product.current_price) : '—'}
         </span>
-        <span className={outOfStock ? 'text-label-caps uppercase text-error' : 'text-label-caps uppercase text-on-surface-deep'}>
-          {outOfStock
-            ? t('counterorders.builder.out_of_stock', 'Sin stock')
-            : `${t('counterorders.builder.stock', 'Stock')}: ${stock ?? 0}`}
+        <span
+          className={cn(
+            'text-label-caps uppercase whitespace-nowrap',
+            outOfStock ? 'text-error' : 'text-on-surface-deep',
+          )}
+        >
+          {stockLabel(stock)}
         </span>
       </div>
       {product.has_variant ? (
@@ -76,22 +98,23 @@ const ProductPickCard = memo(function ProductPickCard({ product, onAdd }: Produc
               precio por get_active_price y filas de stock propias (variant
               NULL). Antes solo se podían agregar variantes. */}
           <div
-            className="flex items-center justify-between gap-sm rounded-sm bg-surface-muted px-sm py-xs"
+            className="flex items-center justify-between gap-md rounded-sm bg-surface-muted px-sm py-xs"
             data-testid={`counterorder-pick-base-${product.id}`}
           >
-            <span className="min-w-0">
+            <span className="min-w-0 flex-1">
               <span className="text-body-sm-bold text-foreground block truncate">
                 {t('counterorders.builder.base_product', 'Producto base')}
               </span>
-              <span className="text-label-caps uppercase text-on-surface-deep font-data-mono">
-                {t('counterorders.builder.stock', 'Stock')}: {stock ?? 0}
+              <span className="text-label-caps uppercase text-on-surface-deep font-data-mono whitespace-nowrap">
+                {stockLabel(baseStock)}
               </span>
             </span>
             <Button
               variant="default"
               size="sm"
+              className="shrink-0"
               data-testid={`counterorder-add-${product.id}`}
-              onClick={() => onAdd(product, null, undefined, stock)}
+              onClick={() => onAdd(product, null, undefined, baseStock)}
               aria-label={`${t('counterorders.builder.add', 'Agregar')} ${product.name}`}
             >
               <Plus className="size-3.5" aria-hidden="true" />
@@ -107,19 +130,20 @@ const ProductPickCard = memo(function ProductPickCard({ product, onAdd }: Produc
               {(variantsQuery.data ?? []).map(variant => (
                 <li
                   key={variant.id}
-                  className="flex items-center justify-between gap-sm rounded-sm bg-surface-muted px-sm py-xs"
+                  className="flex items-center justify-between gap-md rounded-sm bg-surface-muted px-sm py-xs"
                 >
-                  <span className="min-w-0">
-                    <span className="text-body-sm-bold text-foreground block truncate">
+                  <span className="min-w-0 flex-1">
+                    <span className="text-body-sm-bold text-foreground block truncate" title={variant.variant_name}>
                       {variant.variant_name}
                     </span>
-                    <span className="text-label-caps uppercase text-on-surface-deep font-data-mono">
-                      {t('counterorders.builder.stock', 'Stock')}: {variant.stock_quantity ?? 0}
+                    <span className="text-label-caps uppercase text-on-surface-deep font-data-mono block truncate">
+                      {stockLabel(variant.stock_quantity ?? 0)}
                     </span>
                   </span>
                   <Button
                     variant="default"
                     size="sm"
+                    className="shrink-0"
                     data-testid={`counterorder-add-variant-${variant.id}`}
                     onClick={() =>
                       onAdd(product, variant.id, variant.variant_name, variant.stock_quantity ?? null)
