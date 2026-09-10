@@ -460,6 +460,155 @@
   to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
+/* =============================================================================
+   SEGMENTED CONTROL (ui/SegmentedControl.jsx)
+   Los estilos originales vivían en SCSS y se perdieron en la migración a
+   Tailwind (29de862): el control quedaba como botones planos sin pista ni
+   indicador. Restaurado con tokens semánticos (flip con .dark), Fluent 2.
+   El componente posiciona el indicador inline (width/transform medidos).
+   ============================================================================= */
+@layer components {
+  .segmented-control {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-muted);
+    border: 1px solid var(--color-border-subtle);
+    isolation: isolate; /* contexto de apilamiento para el indicador */
+  }
+
+  .segmented-control--small {
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .segmented-control--small .segmented-control__option {
+    padding: var(--spacing-xs) 12px;
+    font-size: var(--text-body-sm-bold);
+  }
+
+  .segmented-control__indicator {
+    position: absolute;
+    top: var(--spacing-xs);
+    bottom: var(--spacing-xs);
+    left: var(--spacing-xs);
+    border-radius: var(--radius-xs);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-fluent-2);
+    pointer-events: none;
+    z-index: 0;
+    transition: transform 200ms ease-in-out, width 200ms ease-in-out;
+  }
+
+  .segmented-control--small .segmented-control__indicator {
+    top: 2px;
+    bottom: 2px;
+    left: 2px;
+  }
+
+  .segmented-control__option {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: var(--text-body-md);
+    font-weight: 500;
+    line-height: var(--text-body-md--line-height);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    user-select: none;
+    transition: color 150ms ease-in-out, background-color 150ms ease-in-out;
+  }
+
+  .segmented-control__option:hover {
+    background-color: color-mix(in srgb, var(--color-foreground) 8%, transparent);
+  }
+
+  .segmented-control__option:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-surface-muted), 0 0 0 4px var(--color-primary);
+  }
+
+  .segmented-control__option--active {
+    color: var(--color-foreground);
+    font-weight: 600;
+  }
+
+  .segmented-control__option--active:hover {
+    background-color: transparent;
+  }
+
+  .segmented-control__option:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+    color: var(--color-outline-fg);
+  }
+
+  .segmented-control__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+  }
+
+  .segmented-control__icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .segmented-control__label {
+    display: inline-block;
+  }
+}
+
+/* Responsive: en mobile la pista ocupa el ancho completo y reparte opciones */
+@media (max-width: 480px) {
+  .segmented-control {
+    width: 100%;
+  }
+
+  .segmented-control .segmented-control__option {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segmented-control__indicator,
+  .segmented-control__option {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* Alto contraste: indicador fuera, selección con fondo sólido */
+@media (prefers-contrast: more) {
+  .segmented-control {
+    border-width: 2px;
+    border-color: var(--color-divider);
+  }
+
+  .segmented-control__option--active {
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+
+  .segmented-control__indicator {
+    display: none;
+  }
+}
+
 /* SCROLLBAR
    ============================================================================= */
 ::-webkit-scrollbar {
