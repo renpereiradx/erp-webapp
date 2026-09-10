@@ -12,6 +12,7 @@
 // ===========================================================================
 
 import { useCallback, useEffect, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { counterOrderService } from '@/services/counterOrderService'
 import { useCounterOrderPreloadStore } from '@/store/useCounterOrderPreloadStore'
 import type { CounterOrderDetail, CounterOrderSummary } from '../types'
@@ -64,8 +65,17 @@ export function useCounterOrderCheckout(options: UseCounterOrderCheckoutOptions)
   const { toast, t, addItems, enterMergeMode, openWizard, selectClient, enabled = true } = options
   const claimedOrderIdRef = useRef<string | null>(null)
   const claimedOrderCodeRef = useRef<string>('')
+  const queryClient = useQueryClient()
 
   const consumePreload = useCounterOrderPreloadStore(state => state.consumePreload)
+
+  // claim/release/convert se hacen por service directo (sin hooks de mutación),
+  // así que nadie invalida ['counter-orders']. Con el staleTime global de 5 min
+  // la bandeja /pedidos servía cache fresco: el pedido seguía figurando EN CAJA
+  // (o abierto) hasta recargar la página.
+  const invalidateCounterOrders = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['counter-orders'] })
+  }, [queryClient])
 
   // ─── Mapa ítem resuelto → CartItem ────────────────────────────────────────
   const mapItems = useCallback(
@@ -110,6 +120,7 @@ export function useCounterOrderCheckout(options: UseCounterOrderCheckoutOptions)
             count: detail.items?.length ?? 0,
           }),
         )
+        invalidateCounterOrders()
         return true
       } catch (err) {
         // 409 anti doble-caja (§4.2): otra caja reclamó el pedido primero.
@@ -117,7 +128,7 @@ export function useCounterOrderCheckout(options: UseCounterOrderCheckoutOptions)
         return false
       }
     },
-    [addItems, enterMergeMode, mapItems, t, toast],
+    [addItems, enterMergeMode, invalidateCounterOrders, mapItems, t, toast],
   )
 
   // ─── Release al salir sin procesar ────────────────────────────────────────
@@ -128,10 +139,11 @@ export function useCounterOrderCheckout(options: UseCounterOrderCheckoutOptions)
     claimedOrderCodeRef.current = ''
     try {
       await counterOrderService.release(orderId)
+      invalidateCounterOrders()
     } catch {
       // Fail-open: el sweep de 20 minutos (§4.3) libera claims huérfanos.
     }
-  }, [])
+  }, [invalidateCounterOrders])
 
   // ─── Convert tras el cobro (idempotente por sale_id) ──────────────────────
   const convertAfterCheckout = useCallback(
@@ -142,16 +154,20 @@ export function useCounterOrderCheckout(options: UseCounterOrderCheckoutOptions)
         await counterOrderService.convert(orderId, saleId)
         claimedOrderIdRef.current = null
         claimedOrderCodeRef.current = ''
+        invalidateCounterOrders()
       } catch (err) {
         // La venta YA existe y está cobrada: no bloquear por el marcado.
         // Toast accionable con reintento (§7: "caja muere entre checkout y
         // convert → el pedido queda CLAIMED y se recupera con reintento").
+        // Sin invalidar acá: si el convert falló, el pedido sigue CLAIMED y
+        // el cache de la bandeja sigue siendo correcto.
         const retry = (): void => {
           counterOrderService
             .convert(orderId, saleId)
             .then(() => {
               claimedOrderIdRef.current = null
               claimedOrderCodeRef.current = ''
+              invalidateCounterOrders()
             })
             .catch(() => {
               toast.error(t('counterorders.checkout.convert_retry_failed', 'No se pudo marcar el pedido como procesado. Intentá de nuevo desde /pedidos.'))
@@ -168,7 +184,7 @@ export function useCounterOrderCheckout(options: UseCounterOrderCheckoutOptions)
         void err
       }
     },
-    [t, toast],
+    [invalidateCounterOrders, t, toast],
   )
 
   const hasClaimedOrder = useCallback(() => claimedOrderIdRef.current !== null, [])
