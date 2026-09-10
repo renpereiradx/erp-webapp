@@ -120,8 +120,12 @@ export const variantService = {
    */
   getStockSummary: async (productId: string, branchId?: number): Promise<ProductStockSummary> => {
     try {
-      const response = await apiClient.get(`/products/${productId}/stock-summary`, { params: { branch_id: branchId } });
-      return response.data;
+      // apiClient.get ya desempaqueta el body JSON y el handler de Go escribe
+      // el resumen directo (writeJSON(w, summary)), sin wrapper {data: ...}.
+      // Devolver response.data era undefined → react-query rechazaba la query
+      // ("Query data cannot be undefined") por cada card del catálogo.
+      const summary = await apiClient.get(`/products/${productId}/stock-summary`, { params: { branch_id: branchId } });
+      return summary;
     } catch (error) {
       console.error('Error fetching stock summary:', error);
       throw error;
