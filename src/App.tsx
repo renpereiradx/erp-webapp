@@ -122,6 +122,7 @@ import SalesAnalyticsProductsCategories from '@/pages/sales-analytics/ProductsCa
 import SalesAnalyticsInsights from '@/pages/sales-analytics/CustomerSellerInsights'
 import SalesAnalyticsTrendsVelocity from '@/pages/sales-analytics/TrendsVelocity'
 import SalesAnalyticsPeriodComparison from '@/pages/sales-analytics/PeriodComparison'
+import SalesAnalyticsDiscounts from '@/pages/sales-analytics/Discounts'
 import InventoryTurnoverABC from '@/pages/InventoryAnalytics/InventoryTurnoverABC'
 import InventoryDashboard from '@/pages/InventoryAnalytics/InventoryDashboard'
 import StockLevelsReorder from '@/pages/InventoryAnalytics/StockLevelsReorder'
@@ -340,6 +341,7 @@ function AppContent() {
                       <Route path='/sales-analytics/insights' element={<SalesAnalyticsInsights />} />
                       <Route path='/sales-analytics/trends-velocity' element={<SalesAnalyticsTrendsVelocity />} />
                       <Route path='/sales-analytics/period-comparison' element={<SalesAnalyticsPeriodComparison />} />
+                      <Route path='/sales-analytics/discounts' element={<PermissionGuard permission="reports:read"><SalesAnalyticsDiscounts /></PermissionGuard>} />
 
                       {/* Inventory Analytics Routes */}
                       <Route path='/inventory-analytics/dashboard' element={<InventoryDashboard />} />

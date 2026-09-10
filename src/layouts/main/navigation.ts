@@ -1,5 +1,6 @@
 import {
   Activity,
+  Percent,
   AlertTriangle,
   ArrowLeftRight,
   Award,
@@ -77,6 +78,7 @@ export const buildNavigation = (t: TFn, reservationsEnabled: boolean): Navigatio
           { name: t('nav.insights', 'Insights Clientes/Vend.'), href: '/sales-analytics/insights', icon: Users },
           { name: t('nav.trendsVelocity', 'Tendencias y Velocidad'), href: '/sales-analytics/trends-velocity', icon: Zap },
           { name: t('nav.periodComparison', 'Comparativa Períodos'), href: '/sales-analytics/period-comparison', icon: Activity },
+          { name: t('nav.salesDiscounts', 'Descuentos'), href: '/sales-analytics/discounts', icon: Percent, permission: 'reports:read' },
         ],
       },
       {

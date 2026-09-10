@@ -123,6 +123,31 @@ export const salesAnalyticsService = {
       console.error('Error fetching sales by seller:', error);
       throw error;
     }
+  },
+
+  /**
+   * Líneas de venta con descuento (quién descontó cuánto).
+   * PLAN_MONOROL_DESCUENTOS_CREDITO_CLIENTE B3/B4.
+   */
+  async getDiscounts(params: { start_date: string; end_date: string; branch_id?: number }): Promise<any> {
+    try {
+      return await apiClient.get('/sales-analytics/discounts', { params });
+    } catch (error: any) {
+      console.error('Error fetching discount lines:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Resumen de descuentos agrupado (seller | applier | branch).
+   */
+  async getDiscountsSummary(params: { start_date: string; end_date: string; group_by?: 'seller' | 'applier' | 'branch'; branch_id?: number }): Promise<any> {
+    try {
+      return await apiClient.get('/sales-analytics/discounts/summary', { params });
+    } catch (error: any) {
+      console.error('Error fetching discount summary:', error);
+      throw error;
+    }
   }
 };
 

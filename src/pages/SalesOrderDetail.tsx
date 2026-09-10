@@ -59,6 +59,8 @@ const SalesOrderDetail = () => {
   const canCollect = hasPermission('cash:write')
   const canCancelSale = hasPermission('sales:cancel')
   const canSeeFiscal = hasPermission('sifen:read')
+  // Descuento aplicado por X — motivo (PLAN_MONOROL_DESCUENTOS_CREDITO_CLIENTE B4)
+  const canSeeDiscountAuthor = hasPermission('reports:read')
 
   const [sale, setSale] = useState<any>(null)
   const [payments, setPayments] = useState<any[]>([])
@@ -439,6 +441,12 @@ const SalesOrderDetail = () => {
                                         {t('sales.detail.taxApplied', { rate: item.applied_tax_rate })}
                                       </span>
                                     )}
+                                    {canSeeDiscountAuthor && item.discount_applied_by && (
+                                      <span className='inline-flex items-center gap-1 mt-xs px-xs py-0.5 rounded bg-primary/10 text-primary text-label-caps w-fit'>
+                                        {t('sales.detail.discountAppliedBy', 'Descuento aplicado por {name}', { name: item.discount_applied_by_name || item.discount_applied_by })}
+                                        {item.discount_reason ? ` — ${item.discount_reason}` : ''}
+                                      </span>
+                                    )}
                                   </div>
                                 </TableCell>
                                 <TableCell className='text-center text-body-md text-muted-foreground'>x{item.quantity || 1}</TableCell>
@@ -466,6 +474,12 @@ const SalesOrderDetail = () => {
                                 </span>
                                 {item.variant_name && (
                                   <span className='text-body-md text-muted-foreground mt-xs leading-tight'>{item.variant_name}</span>
+                                )}
+                                {canSeeDiscountAuthor && item.discount_applied_by && (
+                                  <span className='inline-flex items-center gap-1 mt-xs px-xs py-0.5 rounded bg-primary/10 text-primary text-label-caps w-fit'>
+                                    {t('sales.detail.discountAppliedBy', 'Descuento aplicado por {name}', { name: item.discount_applied_by_name || item.discount_applied_by })}
+                                    {item.discount_reason ? ` — ${item.discount_reason}` : ''}
+                                  </span>
                                 )}
                               </div>
                               <span className='bg-surface-muted px-sm py-xs rounded text-label-caps text-muted-foreground whitespace-nowrap uppercase'>
