@@ -207,9 +207,11 @@ const useUserStore = create((set, get) => ({
         await get().fetchUserById(userId);
         return { success: true };
       }
-      return { success: false, error: response?.error?.message || 'Error assigning role' };
+      return { success: false, error: response?.error?.message || 'Error assigning role', code: response?.error?.code };
     } catch (error) {
-      return { success: false, error: error.message };
+      // ApiError carries the backend error code (e.g. USER_ALREADY_HAS_ROLE,
+      // mono-role guard) so the UI can map it to an i18n key.
+      return { success: false, error: error.message, code: error.code };
     }
   },
 

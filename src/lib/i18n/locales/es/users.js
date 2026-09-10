@@ -114,6 +114,8 @@ export const users = {
   
   // Errores
   'users.errors.cannotRemoveLastRole': 'El usuario debe tener al menos un rol.',
+  'users.errors.singleRoleOnly': 'El usuario ya tiene un rol asignado; el sistema opera con un solo rol por usuario. Remueva el rol actual antes de asignar uno nuevo.',
+  'users.errors.assignRoleFailed': 'No se pudo asignar el rol.',
 
   // Encabezado y página
   'users.description': 'Administra accesos, roles y seguridad de la plataforma.',

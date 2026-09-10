@@ -30,8 +30,8 @@ interface ManageRolesPanelProps {
 interface UsersStoreSlice {
   roles: Role[];
   fetchRoles: () => Promise<void>;
-  assignRole: (userId: string, roleId: string) => Promise<{ success: boolean; error?: string }>;
-  removeRole: (userId: string, roleId: string) => Promise<{ success: boolean; error?: string }>;
+  assignRole: (userId: string, roleId: string) => Promise<{ success: boolean; error?: string; code?: string }>;
+  removeRole: (userId: string, roleId: string) => Promise<{ success: boolean; error?: string; code?: string }>;
 }
 
 function roleDescription(role: Role, t: TFn): string {
@@ -83,9 +83,25 @@ export function ManageRolesPanel({ user, open, onOpenChange }: ManageRolesPanelP
         toast.warning(t('users.errors.cannotRemoveLastRole', 'El usuario debe tener al menos un rol.'));
         return;
       }
-      await removeRole(user.id, roleId);
+      const result = await removeRole(user.id, roleId);
+      if (!result.success) {
+        toast.error(result.error || t('users.errors.assignRoleFailed', 'No se pudo asignar el rol.'));
+      }
     } else {
-      await assignRole(user.id, roleId);
+      const result = await assignRole(user.id, roleId);
+      if (!result.success) {
+        // Mono-role (migration 20260909213019): the backend rejects a second
+        // role with USER_ALREADY_HAS_ROLE; map it to i18n, fall back to the
+        // verbatim backend message for anything else.
+        const message =
+          result.code === 'USER_ALREADY_HAS_ROLE'
+            ? t(
+                'users.errors.singleRoleOnly',
+                'El usuario ya tiene un rol asignado; el sistema opera con un solo rol por usuario. Remueva el rol actual antes de asignar uno nuevo.',
+              )
+            : result.error || t('users.errors.assignRoleFailed', 'No se pudo asignar el rol.');
+        toast.error(message);
+      }
     }
   };
 
