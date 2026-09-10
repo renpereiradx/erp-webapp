@@ -294,7 +294,10 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
   const handleClientSearch = useCallback(
     async (term: string): Promise<ClientDropdownItem[]> => {
       const clients = await searchClients(term)
-      return clients.map(c => ({ id: String(c.id), name: String(c.name) }))
+      // displayName = nombre + apellido (normalizeClient); `.name` es solo el
+      // primer nombre — el dropdown mostraba "Fernando" en vez de
+      // "Fernando Maciel" (el wizard de /ventas ya usaba displayName).
+      return clients.map(c => ({ id: String(c.id), name: String(c.displayName || c.name) }))
     },
     [searchClients],
   )

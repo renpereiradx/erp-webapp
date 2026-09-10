@@ -96,12 +96,27 @@ vi.mock('@/store/useCounterOrderPreloadStore', () => ({
     selector ? selector(preloadStore) : preloadStore,
 }))
 
+// Búsqueda de clientes del builder: el store real (useClientStore) consume
+// este service; se mockea en su frontera. El factory debe exportar todos los
+// símbolos que el store usa (getAll/searchByName/create/update/delete).
+vi.mock('@/services/clientService', () => ({
+  clientService: {
+    getAll: vi.fn(),
+    searchByName: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+}))
+
 import { CounterOrdersPage } from '../components/CounterOrdersPage'
 import { counterOrderService } from '@/services/counterOrderService'
+import { clientService } from '@/services/clientService'
 
 const listMock = vi.mocked(counterOrderService.list)
 const cancelMock = vi.mocked(counterOrderService.cancel)
 const claimMock = vi.mocked(counterOrderService.claim)
+const searchByNameMock = vi.mocked(clientService.searchByName)
 
 const orderOpen = {
   id: 'CO-1',
@@ -322,5 +337,22 @@ describe('OrderBuilder — picker de productos (stock y producto base)', () => {
     await userEvent.click(await screen.findByTestId('counterorders-new-button'))
     await userEvent.click(await screen.findByTestId('counterorder-add-PROD-SIMPLE'))
     expect(screen.getByTestId('counterorder-builder-lines')).toHaveTextContent('CAMISETA ADIDAS')
+  })
+
+  it('el dropdown de cliente muestra nombre + apellido (displayName, no solo primer nombre)', async () => {
+    // Shape cruda del backend (parties): el store la normaliza y arma
+    // displayName "Fernando Maciel"; el builder debe mostrarlo completo.
+    searchByNameMock.mockResolvedValue([
+      { id: 'client-1', first_name: 'Fernando', last_name: 'Maciel' },
+    ] as unknown as Awaited<ReturnType<typeof clientService.searchByName>>)
+    renderPage()
+    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
+
+    const input = screen.getByPlaceholderText('Buscar cliente por nombre…')
+    await userEvent.type(input, 'fer')
+    // Antes mostraba "Fernando" (c.name = primer nombre).
+    expect(
+      await screen.findByRole('button', { name: 'Fernando Maciel' }, { timeout: 2500 }),
+    ).toBeInTheDocument()
   })
 })
