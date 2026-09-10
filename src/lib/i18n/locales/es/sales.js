@@ -98,10 +98,12 @@ export const sales = {
   'sales.product_modal.add': 'Agregar',
   'sales.product_modal.cancel': 'Cancelar',
 
-  // Estados
+  // Estados (transactions.sales_orders: PENDING → PAID | PARTIAL_PAYMENT, CANCELLED)
   'sales.status.completed': 'Completada',
   'sales.status.pending': 'Pendiente',
   'sales.status.cancelled': 'Cancelada',
+  'sales.status.paid': 'Pagada',
+  'sales.status.partial_payment': 'Pago parcial',
 
   // Gestión de Cobros (Nueva página)
   'sales.payment.title': 'Gestión de Cobros',

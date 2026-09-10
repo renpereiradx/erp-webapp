@@ -38,6 +38,8 @@ export interface HistorySaleRow {
   status: string;
 }
 
+// Estados reales de transactions.sales_orders (internal/sale/domain.go):
+// PENDING → PAID | PARTIAL_PAYMENT, más CANCELLED y COMPLETED (legacy).
 type StatusVariant = 'success' | 'warning' | 'destructive' | 'secondary';
 
 const statusVariant = (status: string): StatusVariant => {
@@ -46,6 +48,7 @@ const statusVariant = (status: string): StatusVariant => {
     case 'PAID':
       return 'success';
     case 'PENDING':
+    case 'PARTIAL_PAYMENT':
       return 'warning';
     case 'CANCELLED':
       return 'destructive';
@@ -59,6 +62,7 @@ const statusLabelKeys: Record<string, string> = {
   PENDING: 'sales.status.pending',
   CANCELLED: 'sales.status.cancelled',
   PAID: 'sales.status.paid',
+  PARTIAL_PAYMENT: 'sales.status.partial_payment',
 };
 
 interface SalesHistoryViewProps {
@@ -115,6 +119,7 @@ export const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({
       PENDING: 'Pendiente',
       CANCELLED: 'Cancelada',
       PAID: 'Pagada',
+      PARTIAL_PAYMENT: 'Pago parcial',
     };
     return (key ? t(key, fallback[status]) : null) || status;
   };
