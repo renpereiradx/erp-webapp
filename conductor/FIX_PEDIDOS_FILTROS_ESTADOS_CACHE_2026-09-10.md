@@ -72,3 +72,34 @@ release OK/fallido, convert OK/fallido+reintento).
 2. `fix(sales)` — mapeo PARTIAL_PAYMENT + keys i18n + test (`SalesHistoryView.tsx`, `es/sales.js`, test nuevo)
 3. `fix(counterorders)` — invalidación de `['counter-orders']` en el checkout hook + tests
 4. `docs(conductor)` — este registro
+
+---
+
+# Adenda (misma sesión, tarde): stock-summary undefined + cliente incompleto en Nuevo pedido
+
+## 4. Catálogo: "Query data cannot be undefined" por cada card (`variantService.ts`)
+
+**Causa raíz:** `getStockSummary` devolvía `response.data`, pero `apiClient.get` ya desempaqueta el
+body JSON y el handler de Go escribe el resumen **directo** (`writeJSON(w, summary)` en
+`internal/catalog/http_variant.go`, sin wrapper `{data: ...}`) → el queryFn resolvía `undefined` y
+react-query rechazaba `["catalog","stock-summary",productId,branchId]` por cada tarjeta con
+variantes al abrir /catálogo o el builder de /pedidos. Las tarjetas caían al total proyectado por el
+fallback (por eso la UI no se notaba rota), pero el desglose base/variantes nunca llegó.
+
+**Fix:** `getStockSummary` retorna el body directo. `getTotalStock`/`getVariantStock` tienen el mismo
+patrón latente pero **no tienen consumidores** — se dejan como están. Test de contrato nuevo:
+`src/services/__tests__/variantService.service.test.ts` (mock en la frontera `../api`).
+
+## 5. Nuevo pedido: el dropdown de cliente mostraba solo el primer nombre (`OrderBuilder.tsx`)
+
+**Causa raíz:** `normalizeClient` (useClientStore) expone `name` (solo `first_name`) y `displayName`
+(nombre + apellido). El builder mapeaba `name: String(c.name)` → "Fernando" en vez de
+"Fernando Maciel". El wizard de /ventas (`ClientStep`) ya usaba `displayName || item.name`.
+
+**Fix:** `handleClientSearch` usa `displayName || name`; el cliente seleccionado al carrito también
+lleva el nombre completo. Test en `CounterOrdersPage.test.tsx` (mock de `@/services/clientService`
+exportando todos los símbolos que el store consume; assertion por rol/nombre accesible del botón).
+
+## Gates (adenda)
+
+`npx vitest --run` → **620/620** (89 archivos, +3 tests) · tsc 0 · build OK · lint:design limpio.
