@@ -70,9 +70,11 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
             <Button variant="outline" onClick={() => navigate(-1)}>
               Regresar
             </Button>
-            <Button onClick={() => navigate('/dashboard')}>
-              Ir al Dashboard
-            </Button>
+            {hasPermission('dashboard:read') && (
+              <Button onClick={() => navigate('/dashboard')}>
+                Ir al Dashboard
+              </Button>
+            )}
           </div>
         </div>
       );

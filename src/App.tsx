@@ -199,11 +199,21 @@ const ReservationsModuleRoute = ({ children }: { children: React.ReactNode }) =>
 // (counterorders:read sin sales:write). El resto aterriza en /dashboard.
 function HomeRedirect() {
   const { hasPermission } = useAuth()
+  // PERFIL VENDEDOR v3: sin dashboard:read el usuario no aterriza en el
+  // dashboard (su sección de nav está gated por el mismo permiso).
+  if (!hasPermission('dashboard:read')) {
+    return <Navigate to='/pedidos' replace />
+  }
   if (hasPermission('counterorders:read') && !hasPermission('sales:write')) {
     return <Navigate to='/pedidos' replace />
   }
   return <Navigate to='/dashboard' replace />
 }
+
+/** Guard del módulo dashboard (dashboard:read; el sidebar ya lo gated). */
+const DashboardRoute = ({ children }: { children: React.ReactNode }) => (
+  <PermissionGuard permission='dashboard:read'>{children}</PermissionGuard>
+)
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth()
@@ -256,7 +266,7 @@ function AppContent() {
               path='/login'
               element={
                 isAuthenticated ? (
-                  <Navigate to='/dashboard' replace />
+                  <HomeRedirect />
                 ) : (
                   <Login />
                 )
@@ -285,14 +295,14 @@ function AppContent() {
                         path='/'
                         element={<HomeRedirect />}
                       />
-                      <Route path='/dashboard' element={<Dashboard />} />
-                      <Route path='/dashboard/financial-summary' element={<FinancialSummaryDashboard />} />
-                      <Route path='/dashboard/kpis' element={<DetailedKPIs />} />
-                      <Route path='/dashboard/sales-heatmap' element={<SalesHeatmap />} />
-                      <Route path='/dashboard/alerts' element={<ConsolidatedAlerts />} />
-                      <Route path='/dashboard/top-products' element={<TopProductsOverview />} />
-                      <Route path='/dashboard/receivables' element={<ReceivablesDashboard />} />
-                      <Route path='/dashboard/payables' element={<PayablesDashboard />} />
+                      <Route path='/dashboard' element={<DashboardRoute><Dashboard /></DashboardRoute>} />
+                      <Route path='/dashboard/financial-summary' element={<DashboardRoute><FinancialSummaryDashboard /></DashboardRoute>} />
+                      <Route path='/dashboard/kpis' element={<DashboardRoute><DetailedKPIs /></DashboardRoute>} />
+                      <Route path='/dashboard/sales-heatmap' element={<DashboardRoute><SalesHeatmap /></DashboardRoute>} />
+                      <Route path='/dashboard/alerts' element={<DashboardRoute><ConsolidatedAlerts /></DashboardRoute>} />
+                      <Route path='/dashboard/top-products' element={<DashboardRoute><TopProductsOverview /></DashboardRoute>} />
+                      <Route path='/dashboard/receivables' element={<DashboardRoute><ReceivablesDashboard /></DashboardRoute>} />
+                      <Route path='/dashboard/payables' element={<DashboardRoute><PayablesDashboard /></DashboardRoute>} />
                       <Route path='/payables/invoices' element={<InvoicesMasterList />} />
                       <Route path='/payables/detail/:id' element={<InvoiceDetail />} />
                       <Route path='/payables/cash-flow' element={<CashFlowProjection />} />

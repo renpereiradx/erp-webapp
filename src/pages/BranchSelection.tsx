@@ -9,7 +9,7 @@ import { Building2, ArrowRight, Loader2, LogOut } from 'lucide-react';
 
 const BranchSelection = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
   const { t } = useI18n();
   const { changeBranch, allowedBranches, canViewGlobal } = useBranch();
   
@@ -66,7 +66,9 @@ const BranchSelection = () => {
 
   const handleSelectBranch = (branchId: number | null) => {
     changeBranch(branchId);
-    navigate('/dashboard');
+    // PERFIL VENDEDOR v3: sin dashboard:read el landing es /pedidos (misma
+    // regla que HomeRedirect en App.tsx).
+    navigate(hasPermission('dashboard:read') ? '/dashboard' : '/pedidos');
   };
 
   if (loading) {
