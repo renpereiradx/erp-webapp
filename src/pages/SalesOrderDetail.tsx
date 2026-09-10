@@ -20,6 +20,7 @@ import {
   CheckCircle,
   DollarSign,
   Ban,
+  CalendarClock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -67,6 +68,17 @@ const SalesOrderDetail = () => {
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false)
+  // Presentación "A crédito" (PLAN_MONOROL_DESCUENTOS_CREDITO_CLIENTE C6):
+  // PENDING/PARTIAL_PAYMENT significan saldo abierto; solo cambia la
+  // etiqueta — el status interno queda intacto.
+  const isCreditStatus = sale?.status === 'PENDING' || sale?.status === 'PARTIAL_PAYMENT'
+  const formatDate = useCallback((dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString()
+    } catch {
+      return dateString
+    }
+  }, [])
   const [showCancelPreview, setShowCancelPreview] = useState(false)
   const [cancelPreviewData, setCancelPreviewData] = useState<any>(null)
   const [isCancelling, setIsCancelling] = useState(false)
@@ -346,6 +358,16 @@ const SalesOrderDetail = () => {
                   {t('sales.detail.statusLine', 'Estado de la Orden:')}{' '}
                   <span className={cn('font-black', getStatusColor(sale.status).split(' ')[1])}>{sale.status}</span>
                 </div>
+                {isCreditStatus && (
+                  <div className='pb-sm -mt-1 flex justify-center'>
+                    <span className='text-label-caps uppercase text-muted-foreground inline-flex items-center gap-1'>
+                      <CalendarClock size={12} />
+                      {sale.due_date
+                        ? t('sales.detail.creditDue', 'A crédito — vence {date}', { date: formatDate(sale.due_date) })
+                        : t('sales.detail.creditNoDue', 'A crédito — sin fecha de vencimiento')}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className='p-lg'>
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-lg'>

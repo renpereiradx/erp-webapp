@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import EnhancedModal from '@/components/ui/EnhancedModal';
 import DetailField from '@/features/party/components/DetailField';
+import CreditAccountSection from '@/features/party/components/CreditAccountSection';
 import { countryDisplayName } from '@/domain/party/identity';
 import type { ClientInput } from '@/domain/party/clientForm';
 
@@ -140,6 +141,10 @@ const ClientDetailsContent = ({
           value={formatDateTime(client.created_at)}
           mono
         />
+
+        {/* Cuenta corriente: deuda con aging, saldo a favor y cobro a cuenta
+            (PLAN_MONOROL_DESCUENTOS_CREDITO_CLIENTE C6) */}
+        <CreditAccountSection clientId={String(client.id || '')} />
       </div>
     </EnhancedModal>
   );

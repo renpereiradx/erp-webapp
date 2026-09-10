@@ -695,6 +695,8 @@ export const sales = {
   'sales.detail.itemsTitle': 'Productos y Servicios',
   'sales.detail.itemsSubtitle': 'Detalle de conceptos facturados',
   'sales.detail.discountAppliedBy': 'Descuento aplicado por {name}',
+  'sales.detail.creditDue': 'A crédito — vence {date}',
+  'sales.detail.creditNoDue': 'A crédito — sin fecha de vencimiento',
   'sales.detail.itemsCount': '{count} Ítems',
   'sales.detail.noItems': 'No hay items en esta orden',
   'sales.detail.colItem': 'Ítem',
