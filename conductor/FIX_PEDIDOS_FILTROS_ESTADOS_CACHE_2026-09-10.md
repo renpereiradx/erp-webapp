@@ -134,3 +134,36 @@ llamador (status 403 en el ApiError), que ya pinta su estado. Test de política:
 ## Gates (adenda 2)
 
 `npx vitest --run` → **622/622** (90 archivos, +2 tests) · tsc 0 · build OK · lint:design limpio.
+
+---
+
+# Adenda 3 (2026-09-11): historial de ventas mostraba ventas de OTRA sucursal → 404 al abrir
+
+**Reporte (vendor Hernan, active_branch JWT = 1):** el historial mostraba 86 ventas (branch 1) aun
+con `X-Branch-ID: 3` en el resto de los requests; al abrir `GET /sale/SALE-1789070908-585` con ese
+header → 404 "Venta no encontrada". Además "veo las mismas ventas al seleccionar JUST STYLE y
+PRINCIPAL".
+
+**Causa raíz (FE, no backend):** el store Zustand `useSaleStore` cachea `sales` y sobrevive a
+logout/login y cambios de sucursal (SPA sin reload). El auto-load del historial solo fetchwhen
+`sales.length === 0` — un set cacheado de otra sucursal se mostraba tal cual, y al abrir una de
+esas ventas el detalle pedía con el `X-Branch-ID` vigente → 404. Verificado que el backend SÍ
+filtra: `/sale/date_range` con branch 1 → 66 (todas branch 1), con branch 3 → 5 (todas branch 3).
+
+**Fix:**
+- `useSaleStore`: nuevo campo `salesBranchId` — ancla `localStorage.activeBranch` (misma fuente del
+  header que arma apiClient) al set de `sales` en los 3 fetchers; `clearSales` lo resetea.
+- `SalesNew`: el auto-load del historial ahora dispara cuando el set está vacío **o**
+  `salesBranchId !== currentBranchId` (guard anti-loop: un intento por branch vía ref — un fetch
+  fallido no reintenta en cadena).
+
+**Quedó pendiente (observado, no tocado):** `/auth/refresh` resetea `active_branch` del nuevo token
+a la default (ver adenda 2) — con localStorage stale puede divergir del resto de los requests.
+
+**Nota sobre "muchos cancelados":** los ~84 registros "Cancelada" de Fernando Maciel (Gs. 3.630,
+10/9) son residuos de pruebas del 10/09 (fixes C4/anulaciones) en la dev DB — el backend los lista
+correctamente; en producción un historial muestra las anuladas con su estado real.
+
+## Gates (adenda 3)
+
+`npx vitest --run` → **622/622** · tsc 0 · build OK · lint:design limpio.

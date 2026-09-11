@@ -17,6 +17,8 @@ import {
 
 interface SaleState {
   sales: any[];
+  /** Branch (X-Branch-ID de localStorage.activeBranch) con la que se cargó `sales`. */
+  salesBranchId: number | null;
   currentSale: SaleEnhancedResponse | null;
   currentSaleMetadata: SaleMetadata | null;
   saleItems: any[];
@@ -106,6 +108,20 @@ interface SaleState {
 const getSaleIdentifier = (sale: any) =>
   sale?.sale_id || sale?.id || sale?.saleId || null
 
+/**
+ * Sucursal activa según la misma fuente que usa apiClient para el header
+ * X-Branch-ID (localStorage.activeBranch). Anclarla junto al set cacheado
+ * permite detectar que `sales` corresponde a OTRA sucursal y recargar: un
+ * set stale mostraba ventas que luego daban 404 al abrirse (el detalle sí
+ * pide con la sucursal vigente) y sobrevivía a logout/login (SPA sin reload).
+ */
+const cachedActiveBranchId = (): number | null => {
+  const raw = localStorage.getItem('activeBranch')
+  if (!raw) return null
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 const normalizeStorePagination = (rawPagination: any, fallbackCount = 0): PaginationState => {
   const totalRecords = Number(
     rawPagination?.total_records ??
@@ -139,6 +155,7 @@ const useSaleStore = create<SaleState>()(
     (set, get) => ({
       // ============ Estado MVP (Arrays simples) ============
       sales: [],
+      salesBranchId: null,
       currentSale: null,
       currentSaleMetadata: null,
       saleItems: [],
@@ -263,6 +280,7 @@ const useSaleStore = create<SaleState>()(
           if ((response as any).success) {
             set({
               sales: response.data || [],
+              salesBranchId: cachedActiveBranchId(),
               pagination: normalizeStorePagination(response.pagination, response.data?.length || 0),
               filters,
               loading: false,
@@ -290,6 +308,7 @@ const useSaleStore = create<SaleState>()(
           if ((response as any).success) {
             set({
               sales: response.data || [],
+              salesBranchId: cachedActiveBranchId(),
               pagination: normalizeStorePagination(response.pagination, response.data?.length || 0),
               loading: false,
             })
@@ -321,6 +340,7 @@ const useSaleStore = create<SaleState>()(
           if ((response as any).success) {
             set({
               sales: response.data || [],
+              salesBranchId: cachedActiveBranchId(),
               pagination: normalizeStorePagination(response.pagination, response.data?.length || 0),
               loading: false,
             })
@@ -343,6 +363,7 @@ const useSaleStore = create<SaleState>()(
       clearSales: () => {
         set({
           sales: [],
+          salesBranchId: null,
           pagination: {
             totalItems: 0,
             totalPages: 0,

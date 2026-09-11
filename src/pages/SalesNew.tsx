@@ -452,11 +452,28 @@ const SalesNew: React.FC = () => {
       });
   }, [sales, historySearch]);
 
+  // El historial es POR SUCURSAL: el set cacheado en el store puede ser de
+  // otra activa (sobrevive logout/login y cambios de sucursal — SPA sin
+  // reload) y abrir esas ventas da 404: el detalle pide con el X-Branch-ID
+  // vigente. Recarga cuando el set está vacío o corresponde a otra branch.
+  const salesBranchId = useSaleStore((state) => state.salesBranchId);
+  const historyStale =
+    activeTab === 'history' &&
+    !saleLoading &&
+    (sales.length === 0 || (salesBranchId ?? null) !== (currentBranchId ?? null));
+  const historyLoadAttemptedRef = useRef<number | null>(null);
   useEffect(() => {
-    if (activeTab === 'history' && sales.length === 0 && !saleLoading) {
-      handleHistoryFilter();
+    if (!historyStale) {
+      historyLoadAttemptedRef.current = null; // datos válidos de nuevo: reset
+      return;
     }
-  }, [activeTab]);
+    const branchKey = currentBranchId ?? null;
+    // Un intento por branch: evita re-fetch en loop si el fetch falla.
+    if (historyLoadAttemptedRef.current === branchKey) return;
+    historyLoadAttemptedRef.current = branchKey;
+    handleHistoryFilter();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historyStale, currentBranchId]);
 
   useEffect(() => {
     const loadPaymentData = async () => {
