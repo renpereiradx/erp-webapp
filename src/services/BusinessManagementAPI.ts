@@ -233,10 +233,18 @@ class BusinessManagementAPI {
           errorData.code = 'RATE_LIMIT_EXCEEDED';
         }
         
-        // Manejo específico de RBAC
-        if (response.status === 403 && typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('api:forbidden', { 
-            detail: errorData.message || 'Acceso denegado: No cuentas con los permisos necesarios.' 
+        // Manejo específico de RBAC: solo una ESCRITURA denegada dispara el
+        // aviso global. En lecturas cada pantalla ya resuelve su estado de
+        // error/fallback (DataState, llamadas opcionales con catch propio) y
+        // un toast de "Acceso denegado" por cada GET que el rol no puede
+        // traer era ruido: demonizaba resultados correctos (ej. detalle de
+        // venta del vendor — la página carga completo, pero llamadas
+        // auxiliares 403 mostraban el toast como si hubiera fallado).
+        const isReadMethod =
+          !options.method || options.method === 'GET' || options.method === 'HEAD'
+        if (response.status === 403 && !isReadMethod && typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('api:forbidden', {
+            detail: errorData.message || 'Acceso denegado: No cuentas con los permisos necesarios.'
           }));
         }
         
