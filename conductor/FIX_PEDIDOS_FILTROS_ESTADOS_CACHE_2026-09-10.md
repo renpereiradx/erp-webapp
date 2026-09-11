@@ -103,3 +103,34 @@ exportando todos los símbolos que el store consume; assertion por rol/nombre ac
 ## Gates (adenda)
 
 `npx vitest --run` → **620/620** (89 archivos, +3 tests) · tsc 0 · build OK · lint:design limpio.
+
+---
+
+# Adenda 2 (2026-09-11): toast "Acceso denegado" en detalle de venta del vendor
+
+**Reporte:** con rol vendor, `/cobros-ventas/:saleId` renderiza completo pero aparece el toast
+"Acceso denegado: No cuentas con los permisos necesarios." (screenshot: ~8 GETs 403 bajo `/sale/...`
++ 401s auxiliares en `/tax-rates` y `/api/v1`).
+
+**Causa raíz:** el aviso global `api:forbidden` (App.tsx → toast.error) se disparaba con **cualquier**
+403 desde `BusinessManagementAPI.makeRequest`, incluidos GETs auxiliares que el rol no puede traer.
+La página ya resuelve esas fallas con catch propio + fallbacks (payment-status, cliente) y el
+contenido principal carga — el toast demonizaba un resultado correcto.
+
+**Verificación API (dev):** con JWT de vendor (VNDR01: sales:read, clients:read, payments:read,
+tax:read… sin cash:*/sifen:read) los endpoints principales `/sale/{id}` y `/sale/{id}/payment-status`
+responden 200 con la sucursal de la venta; los 403 de la consola son llamadas auxiliares. Hallazgo
+lateral: `/auth/refresh` re-emite el token con `active_branch` reseteada a la default (1) — se
+documenta como deuda de auth, no se toca acá.
+
+**Fix (`BusinessManagementAPI.ts`):** `api:forbidden` solo se dispara para **escrituras** denegadas
+(POST/PUT/DELETE/PATCH) — ahí el toast ES el feedback de la acción. En GET/HEAD el error viaja al
+llamador (status 403 en el ApiError), que ya pinta su estado. Test de política:
+`src/services/__tests__/BusinessManagementAPI.forbidden.test.ts` (GET 403 sin evento; POST 403 con evento).
+
+**Nota dev-DB:** `vnd_88a096d5-efc6-44bd-8067-d9` quedó con password `e2etest123` (hash copiado de
+`e2ecaja01`) + acceso branch 3 LIMITED, para reproducir flujos de vendor multi-sucursal.
+
+## Gates (adenda 2)
+
+`npx vitest --run` → **622/622** (90 archivos, +2 tests) · tsc 0 · build OK · lint:design limpio.
