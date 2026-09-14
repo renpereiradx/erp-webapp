@@ -23,6 +23,8 @@ import { OrdersBoard } from '../components/OrdersBoard'
 import { OrderBuilder } from '../components/OrderBuilder'
 import { OrderDetailModal } from '../components/OrderDetailModal'
 import { CancelOrderDialog } from '../components/CancelOrderDialog'
+import { CounterOrdersMetricsPanel } from '../components/CounterOrdersMetricsPanel'
+import { OrderTicketModal } from '../components/OrderTicketModal'
 import type { CounterOrderDetail, CounterOrderStatusFilter, CounterOrderSummary } from '../types'
 
 // ===========================================================================
@@ -56,6 +58,8 @@ export function CounterOrdersPage() {
   const debouncedSearch = useDebouncedValue(search.trim(), 350)
 
   const [viewingId, setViewingId] = useState<string | null>(null)
+  // FASE 5: pedido del que se muestra el ticket imprimible (null = cerrado).
+  const [ticketOrder, setTicketOrder] = useState<CounterOrderDetail | null>(null)
   const [editing, setEditing] = useState<CounterOrderSummary | null>(null)
   const [editingDetail, setEditingDetail] = useState<CounterOrderDetail | null>(null)
   const [builderOpen, setBuilderOpen] = useState(false)
@@ -143,12 +147,19 @@ export function CounterOrdersPage() {
   )
 
   const handleSaved = useCallback((detail: CounterOrderDetail) => {
+    const wasCreate = editing === null
     setBuilderOpen(false)
     setEditing(null)
     setEditingDetail(null)
     // El detalle recién guardado trae los precios resueltos por el backend.
-    setViewingId(detail.id)
-  }, [])
+    // FASE 5: un pedido NUEVO abre directo el ticket imprimible (el vendedor
+    // se lo entrega al cliente); una edición reabre el detalle de siempre.
+    if (wasCreate) {
+      setTicketOrder(detail)
+    } else {
+      setViewingId(detail.id)
+    }
+  }, [editing])
 
   const handleNew = useCallback(() => {
     setEditing(null)
@@ -167,6 +178,10 @@ export function CounterOrdersPage() {
           'Pedidos de mostrador: el vendedor arma el carrito, la caja lo cobra.',
         )}
       />
+
+      {/* FASE 5: métricas solo para analítica de gestión (reports:read). El
+          gate vive acá para que el query no se dispare sin permiso. */}
+      {hasPermission('reports:read') && <CounterOrdersMetricsPanel />}
 
       <div className="flex flex-col md:flex-row md:items-center gap-sm md:justify-between">
         <SegmentedControl
@@ -273,7 +288,13 @@ export function CounterOrdersPage() {
         isLoading={detailQuery.isLoading}
         summary={query.data?.orders.find(o => o.id === viewingId) ?? null}
         onClose={() => setViewingId(null)}
+        onPrint={setTicketOrder}
       />
+
+      {/* FASE 5: ticket QR del pedido (render FE, impresión local por iframe).
+          Se abre desde el detalle y automáticamente al guardar un pedido
+          nuevo — el vendedor se lo entrega al cliente. */}
+      <OrderTicketModal open={ticketOrder !== null} order={ticketOrder} onClose={() => setTicketOrder(null)} />
 
       <CancelOrderDialog
         order={cancelling}

@@ -102,4 +102,37 @@ export const counterorders = {
     'No se pudo marcar el pedido como procesado. Intentá de nuevo desde /pedidos.',
   'counterorders.checkout.preload_gone': 'El pedido {code} ya no está disponible en caja.',
   'counterorders.checkout.preload_error': 'No se pudo abrir el pedido en caja',
+  // Stock en caja (FASE 5): el pedido no reserva stock; avisar al reclamar.
+  'counterorders.checkout.stock_warning':
+    'Atención: {count} ítem(s) sin stock suficiente en esta sucursal',
+
+  // Métricas de la bandeja (FASE 5, reports:read)
+  'counterorders.metrics.title': 'Métricas de pedidos',
+  'counterorders.metrics.loading': 'Calculando métricas…',
+  'counterorders.metrics.created': 'Creados ({days}d)',
+  'counterorders.metrics.converted': 'Convertidos',
+  'counterorders.metrics.conversion_rate': 'Tasa de conversión',
+  'counterorders.metrics.percent': '{value}%',
+  'counterorders.metrics.avg_time': 'Tiempo medio a caja',
+  'counterorders.metrics.minutes': '{value} min',
+  'counterorders.metrics.active': 'Activos ahora',
+  'counterorders.metrics.lost': 'Cancelados / Vencidos',
+  'counterorders.metrics.range_days': '{n} d',
+
+  // Ticket del pedido (FASE 5, render FE)
+  'counterorders.ticket.title': 'Ticket {code}',
+  'counterorders.ticket.print_ticket': 'Imprimir ticket',
+  'counterorders.ticket.print': 'Imprimir',
+  'counterorders.ticket.empty': 'No hay detalle de pedido para imprimir.',
+  'counterorders.ticket.heading': 'PEDIDO DE MOSTRADOR',
+  'counterorders.ticket.client': 'Cliente: {name}',
+  'counterorders.ticket.vendor': 'Vendedor: {name}',
+  'counterorders.ticket.emitted': 'Emitido: {date}',
+  'counterorders.ticket.col_item': 'ÍTEM',
+  'counterorders.ticket.col_qty': 'CANT',
+  'counterorders.ticket.col_total': 'TOTAL',
+  'counterorders.ticket.total': 'TOTAL',
+  'counterorders.ticket.notes': 'Nota: {notes}',
+  'counterorders.ticket.footer':
+    'Precios vigentes al emitir. Presentá este código en caja para procesar el pedido.',
 }

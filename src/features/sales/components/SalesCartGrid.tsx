@@ -36,6 +36,20 @@ const ShortcutHint = ({ keys }: { keys: string }) => (
   </span>
 );
 
+type TFn = (key: string, fallback?: string, vars?: Record<string, unknown>) => string;
+
+/**
+ * FASE 5 (stock en caja): los ítems cargados desde un pedido de mostrador
+ * viajan con el stock resuelto al leer. Si ya no alcanza —otra venta pagada
+ * lo consumió, el pedido no reserva— la fila lo grita antes del error seco
+ * del checkout. null = no aplica (sin dato de stock o cantidad cubierta).
+ */
+function stockBadgeLabel(item: { stock?: number; quantity: number }, t: TFn): string | null {
+  if (item.stock == null || item.stock >= item.quantity) return null;
+  if (item.stock <= 0) return t('sales.cart.outOfStock', 'Sin stock');
+  return t('sales.cart.lowStock', 'Stock insuficiente: {stock}', { stock: item.stock });
+}
+
 export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
   items,
   onEditItem,
@@ -52,6 +66,11 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
   // La columna Desc. solo se muestra cuando hay descuentos: en el caso común
   // (sin descuentos) libera ancho para el nombre del producto en el POS.
   const hasDiscounts = items.some((item) => getItemLineDiscount(item) > 0);
+  // Label de stock por fila, calculado UNA vez por render (no dos por celda).
+  // useI18n es JS: su t llega sin firma (patrón repo: cast local a TFn).
+  const stockLabels = new Map(
+    items.map((item) => [item.id, stockBadgeLabel(item, t as unknown as TFn)] as const),
+  );
 
   const emptyState = (
     <EmptyState
@@ -127,6 +146,11 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                         {item.isFromPendingSale && (
                           <Badge variant="secondary" size="sm">
                             {t('sales.cart.processedBadge', 'Procesado')}
+                          </Badge>
+                        )}
+                        {stockLabels.get(item.id) && (
+                          <Badge variant="destructive" size="sm" data-testid={`sales-cart-stock-${item.id}`}>
+                            {stockLabels.get(item.id)}
                           </Badge>
                         )}
                         <div className="min-w-0">
@@ -207,6 +231,11 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                     {item.isFromPendingSale && (
                       <Badge variant="secondary" size="sm" className="mr-1.5 align-middle">
                         {t('sales.cart.processedBadge', 'Procesado')}
+                      </Badge>
+                    )}
+                    {stockLabels.get(item.id) && (
+                      <Badge variant="destructive" size="sm" className="mr-1.5 align-middle" data-testid={`sales-cart-stock-${item.id}`}>
+                        {stockLabels.get(item.id)}
                       </Badge>
                     )}
                     {item.name}

@@ -130,3 +130,16 @@ export function extractCounterOrderDetail(response: unknown): CounterOrderDetail
   if ('items' in (res as CounterOrderDetail)) return res as CounterOrderDetail;
   return (res as { data?: CounterOrderDetail }).data ?? null;
 }
+
+/** Lectura operativa de la bandeja (FASE 5): GET /counter-orders/metrics. */
+export interface CounterOrderMetrics {
+  days: number;
+  branch_id?: number;
+  created: number;
+  converted: number;
+  cancelled: number;
+  expired: number;
+  active: number;
+  avg_minutes_to_convert: number;
+  conversion_rate: number;
+}

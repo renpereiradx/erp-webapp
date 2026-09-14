@@ -120,6 +120,17 @@ export function useCounterOrderCheckout(options: UseCounterOrderCheckoutOptions)
             count: detail.items?.length ?? 0,
           }),
         )
+        // FASE 5 ("reserva solo si está pagado"): el pedido no toca stock; si
+        // otra venta ya consumió el que este necesita, el cajero lo sabe AHORA
+        // (resolve-on-read) y no en el error seco del checkout.
+        const outOfStock = (detail.items ?? []).filter(item => item.stock_warning).length
+        if (outOfStock > 0) {
+          toast.error(
+            t('counterorders.checkout.stock_warning', 'Atención: {count} ítem(s) sin stock suficiente en esta sucursal', {
+              count: outOfStock,
+            }),
+          )
+        }
         invalidateCounterOrders()
         return true
       } catch (err) {

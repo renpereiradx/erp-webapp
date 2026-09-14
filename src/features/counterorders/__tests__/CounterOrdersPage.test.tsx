@@ -62,6 +62,7 @@ vi.mock('@/services/counterOrderService', () => ({
     release: vi.fn(),
     convert: vi.fn(),
     cancel: vi.fn(),
+    metrics: vi.fn(),
   },
 }))
 

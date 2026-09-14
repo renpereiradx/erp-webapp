@@ -9,6 +9,7 @@ import { API_ENDPOINTS } from '../types';
 import type {
   CounterOrderDetail,
   CounterOrderListResponse,
+  CounterOrderMetrics,
   CreateCounterOrderPayload,
   UpdateCounterOrderPayload,
 } from '@/features/counterorders/types';
@@ -67,6 +68,17 @@ export const counterOrderService = {
   /** Cancelación con motivo obligatorio. */
   async cancel(id: string, reason: string): Promise<{ message: string }> {
     return apiClient.post(API_ENDPOINTS.COUNTER_ORDER_CANCEL(id), { reason }) as Promise<{ message: string }>;
+  },
+
+  /**
+   * Métricas de la bandeja (FASE 5): creados/convertidos/tiempo medio
+   * mostrador→caja. Ruta gateada reports:read (el panel del FE se oculta sin
+   * ese permiso); days la normaliza el backend (default 30, cap 365).
+   */
+  async metrics(days?: number): Promise<CounterOrderMetrics> {
+    return apiClient.get(`${API_ENDPOINTS.COUNTER_ORDERS}/metrics`, {
+      params: days ? { days } : {},
+    }) as Promise<CounterOrderMetrics>;
   },
 };
 

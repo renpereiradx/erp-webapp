@@ -15,6 +15,8 @@ interface OrderDetailModalProps {
   /** Fila de la bandeja (para encabezado mientras llega el detalle). */
   summary: CounterOrderSummary | null
   onClose: () => void
+  /** FASE 5: abre el ticket imprimible del pedido (render FE). */
+  onPrint?: (detail: CounterOrderDetail) => void
 }
 
 /**
@@ -22,7 +24,7 @@ interface OrderDetailModalProps {
  * warnings informativos de stock (§4.4), nota del vendedor y, si fue
  * procesado, la venta enlazada (§4.8).
  */
-export function OrderDetailModal({ open, detail, isLoading, summary, onClose }: OrderDetailModalProps) {
+export function OrderDetailModal({ open, detail, isLoading, summary, onClose, onPrint }: OrderDetailModalProps) {
   const { t } = useI18n()
   const order = detail ?? summary
   // Degradación por ítem (C2): si alguna línea no resolvió precio/IVA, el
@@ -39,6 +41,11 @@ export function OrderDetailModal({ open, detail, isLoading, summary, onClose }: 
       testId="counterorder-detail-modal"
       footer={
         <div className="flex justify-end gap-sm">
+          {detail && onPrint && (
+            <Button variant="secondary" onClick={() => onPrint(detail)} data-testid="counterorder-detail-print">
+              {t('counterorders.ticket.print_ticket', 'Imprimir ticket')}
+            </Button>
+          )}
           <Button variant="secondary" onClick={onClose}>
             {t('common.close', 'Cerrar')}
           </Button>

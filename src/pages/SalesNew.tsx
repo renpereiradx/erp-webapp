@@ -1632,6 +1632,18 @@ const SalesNew: React.FC = () => {
         const rawMsg = String(e?.message || norm.message || '').toLowerCase();
         if (norm.code === 'SALE_ALREADY_PAID' || norm.code === 'ALREADY_CANCELLED') {
           toast.error(t('sales.errors.saleAlreadyPaid', 'No se pueden agregar items a una venta ya pagada. Creá una venta nueva.') + ` (${norm.code})`);
+        } else if (rawMsg.includes('insufficient_stock') || rawMsg.includes('stock insuficiente')) {
+          // FASE 5 (stock en caja): el pedido no reserva stock; si otra venta
+          // pagada consumió lo que este necesitaba, process_sale_with_reserve
+          // revierte TODO y el SQL nombra producto + disponible + solicitado.
+          // Mostrarlo completo: el operador coordina con el cliente o libera
+          // el pedido desde /pedidos.
+          toast.error(
+            t(
+              'sales.errors.insufficientStock',
+              'No hay stock disponible para procesar la venta. La operación se canceló.',
+            ) + (String(e?.message || norm.message) ? ` ${String(e?.message || norm.message)}` : ''),
+          );
         } else if (rawMsg.includes('branch mismatch')) {
           // La caja seleccionada pertenece a otra sucursal y el SQL de pago la
           // rechazó. Guiar al operador en vez de mostrar un error genérico.

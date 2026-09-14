@@ -330,6 +330,12 @@ export const sales = {
     'La caja seleccionada no está abierta. Abrí una caja de esta sucursal o cobrá sin caja.',
   'sales.errors.paymentConflict':
     'El cobro fue rechazado por el backend. Revisá el monto y la caja e intentá de nuevo.',
+  // Stock en caja (FASE 5): el pedido no reserva stock; si la venta pagada de
+  // otro ya consumió lo necesario, el checkout revierte y esto lo explica.
+  'sales.errors.insufficientStock':
+    'No hay stock disponible para procesar la venta. La operación se canceló.',
+  'sales.cart.outOfStock': 'Sin stock',
+  'sales.cart.lowStock': 'Stock insuficiente: {stock}',
 
   // ─── SaleCheckoutWizard (stepper de concreción) ───────────────────────────
   'sales.checkoutWizard.title': 'Concretar Venta',

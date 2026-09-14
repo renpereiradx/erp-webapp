@@ -165,6 +165,30 @@ describe('useCounterOrderCheckout', () => {
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['counter-orders'] })
   })
 
+  // FASE 5 (stock en caja): el pedido no reserva stock; si el detalle trae
+  // stock_warning, el cajero lo sabe al reclamar, no en el error del checkout.
+  it('continueOrder: ítem sin stock → toast de advertencia tras el claim', async () => {
+    const detail = orderDetail()
+    detail.items[0].stock_available = 0
+    detail.items[0].stock_warning = true
+    claimMock.mockResolvedValue(detail)
+    renderHook()
+
+    const ok = await latest.continueOrder(orderSummary())
+    expect(ok).toBe(true)
+    expect(options.toast.error).toHaveBeenCalledWith(
+      'Atención: 1 ítem(s) sin stock suficiente en esta sucursal',
+    )
+  })
+
+  it('continueOrder: ítem con stock OK → sin toast de advertencia', async () => {
+    claimMock.mockResolvedValue(orderDetail())
+    renderHook()
+
+    await latest.continueOrder(orderSummary())
+    expect(options.toast.error).not.toHaveBeenCalled()
+  })
+
   it('continueOrder: claim 409 (otra caja) → false + toast de error, sin ítems', async () => {
     claimMock.mockRejectedValue(new Error('el pedido PED-ABC234 ya está siendo procesado'))
     const { addItems, invalidateSpy } = renderHook()
