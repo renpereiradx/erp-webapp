@@ -1028,6 +1028,12 @@ export interface POSPayment {
 export interface POSCheckoutRequest {
   sale: SaleRequest;
   payment: POSPayment;
+  /**
+   * Pedido de mostrador reclamado (FASE 5B): el backend lo marca CONVERTED
+   * dentro de la misma tx del checkout (idempotente; el /convert post-hoc
+   * queda como path de recuperación).
+   */
+  counter_order_id?: string;
 }
 
 /**
@@ -1159,6 +1165,11 @@ export interface CancelSaleRequest {
 export interface AddProductsToSaleRequest {
   allow_price_modifications: boolean;
   product_details: SaleOrderDetailRequest[];
+  /**
+   * Pedido de mostrador reclamado (FASE 5B, merge): los ítems aterrizan y el
+   * pedido se marca CONVERTED en la misma tx.
+   */
+  counter_order_id?: string;
 }
 
 /**

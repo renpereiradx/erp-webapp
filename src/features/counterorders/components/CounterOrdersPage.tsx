@@ -37,6 +37,8 @@ const STATUS_OPTIONS: Array<{ value: CounterOrderStatusFilter; labelKey: string;
   { value: 'CLAIMED', labelKey: 'counterorders.status.CLAIMED', fallback: 'En caja' },
   { value: 'CONVERTED', labelKey: 'counterorders.status.CONVERTED', fallback: 'Procesados' },
   { value: 'CANCELLED', labelKey: 'counterorders.status.CANCELLED', fallback: 'Cancelados' },
+  // FASE 5A: los OPEN de más de 72h vencen con el sweep del listado.
+  { value: 'EXPIRED', labelKey: 'counterorders.status.EXPIRED', fallback: 'Vencidos' },
 ]
 
 export function CounterOrdersPage() {

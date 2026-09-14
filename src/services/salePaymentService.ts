@@ -270,6 +270,8 @@ export const salePaymentService = {
         amount_received: Number(request.payment.amount_received) || 0,
         payment_method_id: Number(request.payment.payment_method_id) || 0,
       },
+      // FASE 5B: cierre atómico del pedido de mostrador en la tx del checkout.
+      ...(request.counter_order_id ? { counter_order_id: request.counter_order_id } : {}),
     };
 
     try {
