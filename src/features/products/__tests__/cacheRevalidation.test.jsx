@@ -10,6 +10,12 @@ vi.mock('@/services/productService', async (orig) => {
       ...mod.productService,
       getProducts: vi.fn(async (page, size) => Array.from({ length: size }, (_, i) => ({ id: `P${page}-${i}`, name: `Prod ${page}-${i}` }))),
       getProductsPaginated: vi.fn(async (page, size) => Array.from({ length: size }, (_, i) => ({ id: `P${page}-${i}`, name: `Prod ${page}-${i}` }))),
+      // Búsqueda plana (granularity=variant): el store consume este endpoint
+      // para el listado paginado y la búsqueda (PLAN_VARIANTES_PLANAS_AJUSTES F-C).
+      searchAdvanced: vi.fn(async (payload) => ({
+        products: Array.from({ length: payload?.page_size ?? 10 }, (_, i) => ({ id: `P${payload?.page ?? 1}-${i}`, name: `Prod ${payload?.page ?? 1}-${i}` })),
+        total_count: 100,
+      })),
       searchInfo: vi.fn(async (term) => [{ id: 'S1', name: term }])
     }
   };
@@ -33,7 +39,7 @@ describe('Cache revalidation & trimming', () => {
     useProductStore.setState({ pageCache: aged });
     // fetch again to trigger background revalidation
     await act(async () => { await store.fetchProductsPaginated(1, 5); });
-    expect(productService.getProductsPaginated).toHaveBeenCalled();
+    expect(productService.searchAdvanced).toHaveBeenCalled();
   });
 
   test('search cache auto revalidates when stale (half TTL)', async () => {
@@ -46,7 +52,7 @@ describe('Cache revalidation & trimming', () => {
     await act(async () => { await store.searchProducts('term'); });
     // Allow background revalidation promise to start/finish
     await new Promise(resolve => setTimeout(resolve, 10));
-    expect(productService.searchInfo).toHaveBeenCalledTimes(2);
+    expect(productService.searchAdvanced).toHaveBeenCalledTimes(2);
   });
 
   test('page cache trimming removes old entries beyond limit', async () => {

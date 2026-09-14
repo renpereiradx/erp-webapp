@@ -274,6 +274,8 @@ export const products = {
   'products.table.with_tax': 'Con IVA',
   'products.table.margin': 'marg.',
   'products.table.variable_measure': 'Medida Variable',
+  'products.table.parent_product': 'Producto padre: {name}',
+  'products.table.base_row': 'Producto base',
   'products.state.available': 'Disponible',
   'products.state.unavailable': 'No Disponible',
 

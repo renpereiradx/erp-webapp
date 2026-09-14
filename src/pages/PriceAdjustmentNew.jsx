@@ -178,12 +178,22 @@ const PriceAdjustmentNew = () => {
                 </tr>
               ) : (
                 products.map((product) => (
-                  <tr key={product.product_id || product.id} className="hover:bg-gray-50 transition-colors group">
+                  <tr key={`${product.product_id || product.id}-${product.variant_id || 'base'}`} className="hover:bg-gray-50 transition-colors group">
                     <td className="py-4 px-6 font-bold text-text-main">
-                      {product.product_name || product.name || t('field.no_name', 'Sin nombre')}
+                      {/* Fila plana: la variante es la unidad ajustable; se
+                          indica su producto padre (owner request 2026-09-14). */}
+                      {product.variant_name || product.product_name || product.name || t('field.no_name', 'Sin nombre')}
+                      {product.variant_id && (
+                        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-primary/10 text-primary align-middle">
+                          {t('priceAdjustmentNew.table.parent_of', 'Producto padre: {name}', { name: product.product_name || product.name })}
+                        </span>
+                      )}
+                      {product.sku && (
+                        <span className="block font-mono text-[11px] font-normal text-on-surface-deep mt-0.5">{product.sku}</span>
+                      )}
                     </td>
                     <td className="py-4 px-4 font-mono text-xs text-primary font-bold">
-                      {product.product_id || product.id}
+                      {product.sku || product.product_id || product.id}
                     </td>
                     <td className="py-4 px-4 font-black">
                       PYG {(getProductBaseUnitPrice(product) ?? product.current_price ?? product.price ?? 0).toLocaleString('es-PY')}

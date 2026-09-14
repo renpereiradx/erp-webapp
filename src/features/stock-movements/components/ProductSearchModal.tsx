@@ -1,7 +1,10 @@
 /**
  * Modal de búsqueda de producto para el feature Stock Movements.
  * Reutiliza el patrón del viejo InventoryAdjustmentManual (debounce + teclado) pero aislado
- * y tipado. Usa productService.search (catálogo v3.0+). Diseño: DESIGN.md (EnhancedModal).
+ * y tipado. Búsqueda PLANA (granularity=variant,
+ * PLAN_VARIANTES_PLANAS_AJUSTES_PRODUCTOS F-B): cada fila es una unidad
+ * vendible — la variante llega elegida y se indica su producto padre.
+ * Diseño: DESIGN.md (EnhancedModal).
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -15,7 +18,7 @@ import { formatNumber } from '@/utils/currencyUtils';
 import { toApiError } from '@/utils/ApiError';
 
 /**
- * Forma mínima del producto del catálogo tal como la usa este feature.
+ * Forma mínima de la unidad vendible del catálogo tal como la usa este feature.
  */
 export interface CatalogProduct {
   id: string;
@@ -25,6 +28,11 @@ export interface CatalogProduct {
   stock_quantity?: number | null;
   state?: boolean;
   is_active?: boolean;
+  /** Fila plana (granularity=variant): variante ya resuelta en la fila. */
+  variant_id?: string | null;
+  is_base_row?: boolean;
+  variant_name?: string | null;
+  sku?: string | null;
 }
 
 interface Props {
@@ -54,8 +62,14 @@ export function ProductSearchModal({ open, onClose, onSelect }: Props) {
     setLoading(true);
     const id = setTimeout(async () => {
       try {
-        const raw = await productService.search(trimmed);
-        const arr = ((Array.isArray(raw) ? raw : [raw]) as CatalogProduct[]).filter(
+        const response = await productService.searchAdvanced({
+          search: trimmed,
+          granularity: 'variant',
+          page: 1,
+          page_size: 20,
+        });
+        const raw = Array.isArray(response?.products) ? response.products : [];
+        const arr = (raw as CatalogProduct[]).filter(
           (p) => p.state !== false && p.is_active !== false,
         );
         if (!cancelled) setResults(arr);
@@ -151,9 +165,13 @@ export function ProductSearchModal({ open, onClose, onSelect }: Props) {
             </div>
           ) : filtered.length > 0 ? (
             <div className="grid grid-cols-1 gap-1">
-              {filtered.map((product, index) => (
+              {filtered.map((product, index) => {
+                const label = product.variant_name
+                  ? `${product.name} · ${product.variant_name}`
+                  : product.name;
+                return (
                 <button
-                  key={product.id}
+                  key={product.variant_id || product.id}
                   id={`sm-option-${index}`}
                   type="button"
                   className={`p-4 flex gap-4 text-left cursor-pointer rounded-input transition-all ${
@@ -164,7 +182,7 @@ export function ProductSearchModal({ open, onClose, onSelect }: Props) {
                 >
                   <div className="size-12 bg-surface rounded-input flex items-center justify-center text-primary overflow-hidden shrink-0 border border-border-subtle">
                     {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                      <img src={product.image_url} alt={label} className="w-full h-full object-cover" />
                     ) : (
                       <Package className="w-6 h-6" strokeWidth={1.5} />
                     )}
@@ -172,16 +190,23 @@ export function ProductSearchModal({ open, onClose, onSelect }: Props) {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
                       <p className={`text-data-mono font-data-mono font-bold uppercase ${highlight === index ? 'text-on-primary/80' : 'text-primary'}`}>
-                        {product.id}
+                        {product.sku || product.id}
                       </p>
                       <p className={`text-body-sm-bold uppercase ${highlight === index ? 'text-on-primary/90' : 'text-muted-foreground'}`}>
                         {t('stockMovements.search.stock', 'Stock')}: {formatNumber(product.stock_quantity || 0)}
                       </p>
                     </div>
-                    <h4 className="text-body-md-bold leading-tight truncate">{product.name}</h4>
+                    <h4 className="text-body-md-bold leading-tight truncate">{label}</h4>
+                    {/* Indicación del producto padre en filas de variante */}
+                    {product.variant_id && (
+                      <p className={`text-body-sm uppercase tracking-wide ${highlight === index ? 'text-on-primary/70' : 'text-muted-foreground'}`}>
+                        {t('stockMovements.search.parent_of', 'Producto padre: {name}', { name: product.name })}
+                      </p>
+                    )}
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="py-20 text-center">

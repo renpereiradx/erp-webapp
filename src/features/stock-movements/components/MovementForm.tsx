@@ -28,8 +28,6 @@ import {
 import EnhancedModal from '@/components/ui/EnhancedModal';
 import { formatNumber } from '@/utils/currencyUtils';
 import { getUnitLabel, isDecimalUnit } from '@/constants/units';
-import { variantService } from '@/services/variantService';
-import useAuthStore from '@/store/useAuthStore';
 import type { ProductVariant } from '@/types';
 import { useStockMovements, type MovementRow } from '../hooks/useStockMovements';
 import type { MovementFormValues } from '@/domain/stock/movements';
@@ -76,7 +74,6 @@ function rowIsDecimal(product?: CatalogProduct): boolean {
 export function MovementForm() {
   const { t } = useI18n();
   const { registerBatch, loading, error, clearError } = useStockMovements();
-  const activeBranch = useAuthStore((s) => s.activeBranch);
 
   const [rows, setRows] = useState<MovementRowUI[]>([]);
   const [showSearch, setShowSearch] = useState(false);
@@ -102,22 +99,35 @@ export function MovementForm() {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   }, []);
 
-  // Al elegir un producto en el buscador: agrega la fila y abre el modal de edición.
+  // Al elegir una unidad en el buscador: agrega la fila y abre el modal de
+  // edición. Fila plana (PLAN_VARIANTES_PLANAS_AJUSTES_PRODUCTOS F-B): la
+  // variante ya viene elegida en la fila — sin segunda llamada de variantes.
   const handleSelectProduct = useCallback(
     async (product: CatalogProduct) => {
       setShowSearch(false);
       let variants: ProductVariant[] = [];
-      try {
-        const data = await variantService.getEnrichedVariants(product.id, activeBranch, false);
-        variants = data || [];
-      } catch (e) {
-        console.error('Error fetching variants', e);
-        variants = [];
+      let selectedVariantId = '';
+      if (product.variant_id) {
+        selectedVariantId = product.variant_id;
+        // Variante mínima para que el selector y el stock actual de la fila
+        // reflejen la unidad elegida (el stock ya viaja en la fila).
+        variants = [
+          {
+            id: product.variant_id,
+            parent_product_id: product.id,
+            variant_name: product.variant_name || product.variant_id,
+            sku: product.sku || '',
+            variant_attributes: {},
+            is_active: true,
+            display_order: 0,
+            stock_quantity: product.stock_quantity ?? 0,
+          } as ProductVariant,
+        ];
       }
       const row: MovementRowUI = {
         product,
         variants,
-        selectedVariantId: '',
+        selectedVariantId,
         mode: 'target',
         value: '',
         reasonCategory: 'INVENTORY_COUNT',
@@ -128,7 +138,7 @@ export function MovementForm() {
       setEditingIndex(index);
       setDraft(row);
     },
-    [activeBranch, rows.length],
+    [rows.length],
   );
 
   const openEdit = (index: number) => {

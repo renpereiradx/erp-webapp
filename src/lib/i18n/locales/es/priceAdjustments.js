@@ -49,6 +49,7 @@ export const priceAdjustments = {
   'priceAdjustmentNew.loading': 'Cargando productos...',
   'priceAdjustmentNew.action.retry': 'Reintentar',
   'priceAdjustmentNew.table.name': 'Nombre del Producto',
+  'priceAdjustmentNew.table.parent_of': 'Producto padre: {name}',
   'priceAdjustmentNew.table.id': 'ID del Producto',
   'priceAdjustmentNew.table.price': 'Precio Actual',
   'priceAdjustmentNew.table.actions': 'Acción',

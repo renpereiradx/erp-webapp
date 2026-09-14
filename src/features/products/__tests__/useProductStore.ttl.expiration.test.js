@@ -22,9 +22,11 @@ describe('TTL expiration behaviour', () => {
     // set short TTL for test
     store.setTestingTTL(1000); // 1s
 
-    const firstData = [ { id: 'X1', name: 'Prod X1' } ];
-    const secondData = [ { id: 'X1', name: 'Prod X1 v2' } ];
-    const spy = vi.spyOn(productService, 'getProductsPaginated')
+    // Búsqueda plana (granularity=variant): el listado paginado consume
+    // searchAdvanced con envelope { products, total_count }.
+    const firstData = { products: [ { id: 'X1', name: 'Prod X1' } ], total_count: 1 };
+    const secondData = { products: [ { id: 'X1', name: 'Prod X1 v2' } ], total_count: 1 };
+    const spy = vi.spyOn(productService, 'searchAdvanced')
       .mockResolvedValueOnce(firstData)
       .mockResolvedValueOnce(secondData);
 
@@ -57,9 +59,11 @@ describe('TTL expiration behaviour', () => {
     const firstSearch = [ { id: 'S1', name: 'abc-one' } ];
     const secondSearch = [ { id: 'S1', name: 'abc-one' }, { id: 'S2', name: 'abc-two' } ];
 
-    const spy = vi.spyOn(productService, 'searchInfo')
-      .mockResolvedValueOnce(firstSearch)
-      .mockResolvedValueOnce(secondSearch);
+    // La búsqueda plana es la fuente primaria (fetchInfoWithFallback); la
+    // cadena legacy por-producto queda solo para fallas del endpoint.
+    const spy = vi.spyOn(productService, 'searchAdvanced')
+      .mockResolvedValueOnce({ products: firstSearch, total_count: 1 })
+      .mockResolvedValueOnce({ products: secondSearch, total_count: 2 });
 
     await store.searchProducts(term);
     const s3 = useProductStore.getState();

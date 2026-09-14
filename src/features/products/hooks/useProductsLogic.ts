@@ -141,7 +141,7 @@ export const useProductsLogic = () => {
       setCurrentPage(currentPage - 1);
       if (viewMode === 'search') {
         if (Object.keys(advancedSearchPayload).length > 0 || localFilters.category !== 'all' || localFilters.status !== 'all') {
-          const payload = { ...advancedSearchPayload, search: searchTerm, page: currentPage - 1, page_size: 10 };
+          const payload = { ...advancedSearchPayload, search: searchTerm, page: currentPage - 1, page_size: 10, granularity: 'variant' as const };
           if (localFilters.category !== 'all' && !payload.category_id) payload.category_id = parseInt(localFilters.category);
           
           setIsSearching(true);
@@ -163,7 +163,7 @@ export const useProductsLogic = () => {
       setCurrentPage(currentPage + 1);
       if (viewMode === 'search') {
         if (Object.keys(advancedSearchPayload).length > 0 || localFilters.category !== 'all' || localFilters.status !== 'all') {
-          const payload = { ...advancedSearchPayload, search: searchTerm, page: currentPage + 1, page_size: 10 };
+          const payload = { ...advancedSearchPayload, search: searchTerm, page: currentPage + 1, page_size: 10, granularity: 'variant' as const };
           if (localFilters.category !== 'all' && !payload.category_id) payload.category_id = parseInt(localFilters.category);
           
           setIsSearching(true);
@@ -190,7 +190,7 @@ export const useProductsLogic = () => {
       setViewMode('search');
       setIsSearching(true);
       
-      const payload: AdvancedProductSearchPayload = { ...advancedSearchPayload, search: searchTerm, page: 1, page_size: 10 };
+      const payload: AdvancedProductSearchPayload = { ...advancedSearchPayload, search: searchTerm, page: 1, page_size: 10, granularity: 'variant' };
       
       // Si la categoría está en localFilters pero no en advancedSearchPayload, agregarla
       if (localFilters.category !== 'all' && !payload.category_id) {
@@ -251,8 +251,25 @@ export const useProductsLogic = () => {
     setIsFormModalOpen(true);
   };
 
-  const handleOpenEditModal = (product: ProductEnriched) => {
-    setSelectedProduct(product);
+  // Fila plana (granularity=variant, PLAN_VARIANTES_PLANAS_AJUSTES_PRODUCTOS
+  // F-C): la fila trae la unidad vendible; los modales admin necesitan el
+  // producto PADRE enriquecido (formulario completo + gestor de variantes).
+  const resolveEnrichedForModal = async (product: any): Promise<ProductEnriched> => {
+    const isEnriched = product?.description !== undefined && product?.unit_prices !== undefined;
+    if (isEnriched) return product;
+    const productId = String(product?.id || product?.product_id || '');
+    try {
+      // getById retorna el ProductEnriched del contrato API; el hook trabaja
+      // con el modelo de dominio (state no-opcional).
+      return (await productService.getById(productId)) as unknown as ProductEnriched;
+    } catch (err) {
+      console.error('Error resolving enriched product for modal', err);
+      return product; // degradación: abrir con la fila tal cual
+    }
+  };
+
+  const handleOpenEditModal = async (product: ProductEnriched) => {
+    setSelectedProduct(await resolveEnrichedForModal(product));
     setIsFormModalOpen(true);
   };
 
@@ -262,8 +279,8 @@ export const useProductsLogic = () => {
     handleRefresh();
   };
 
-  const handleOpenDetailsModal = (product: ProductEnriched) => {
-    setSelectedProduct(product);
+  const handleOpenDetailsModal = async (product: ProductEnriched) => {
+    setSelectedProduct(await resolveEnrichedForModal(product));
     setIsDetailsModalOpen(true);
   };
 

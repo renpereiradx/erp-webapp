@@ -37,36 +37,34 @@ const usePriceAdjustmentNewStore = create(
 
       clearSelectedProduct: () => set({ selectedProduct: null }),
 
-      // Buscar productos usando el store de productos
+      // Buscar unidades vendibles (variantes planas) para ajuste de precios
       searchProducts: async (searchTerm = '', page = 1, pageSize = 10) => {
         set({ loading: true, error: null });
         const startTime = Date.now();
 
         try {
-          // Usar el searchProducts del store de productos que ya tiene la lógica de búsqueda
-          const productStore = useProductStore.getState();
-          const result = await productStore.searchProducts(searchTerm, { limit: pageSize });
+          // Búsqueda plana (granularity=variant,
+          // PLAN_VARIANTES_PLANAS_AJUSTES_PRODUCTOS F-A): cada fila es una
+          // unidad vendible — variante o producto — con su precio efectivo
+          // (current_price variante-primero, fallback padre). La variante
+          // llega elegida: sin segundo paso. El término matchea también
+          // SKU/código de variante. Paginación server-side real.
+          const response = await productService.searchAdvanced({
+            search: searchTerm.trim() || undefined,
+            granularity: 'variant',
+            page,
+            page_size: pageSize,
+          });
 
-          // Manejar diferentes formatos de respuesta
-          let products = [];
-          let pagination = { page: 1, page_size: pageSize, total: 0, total_pages: 0 };
-
-          if (result && !result.circuitOpen) {
-            // Filtrar solo productos activos
-            const allProducts = result.data || [];
-            products = allProducts.filter(product => {
-              // Un producto está activo si ninguno de estos campos es false
-              return product.state !== false && product.is_active !== false;
-            });
-
-            const total = products.length;
-            pagination = {
-              page: page,
-              page_size: pageSize,
-              total: total,
-              total_pages: Math.ceil(total / pageSize)
-            };
-          }
+          const rows = Array.isArray(response?.products) ? response.products : [];
+          const products = rows.filter(product => product.state !== false);
+          const total = response?.total_count ?? products.length;
+          const pagination = {
+            page,
+            page_size: pageSize,
+            total,
+            total_pages: Math.max(1, Math.ceil(total / pageSize)),
+          };
 
           set({
             products,

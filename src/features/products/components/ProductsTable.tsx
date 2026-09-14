@@ -99,24 +99,42 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
       </TableHeader>
       <TableBody>
         {children}
-        {products.map((product) => {
+        {products.map((product: any) => {
           const productId = String(product.id || product.product_id);
-          const productName = product.name || product.product_name || t('field.no_name');
+          // Fila plana (granularity=variant): la variante es la unidad de la
+          // fila; se indica su producto padre (owner request 2026-09-14).
+          const isVariantRow = Boolean(product.variant_id);
+          const isBaseRow = Boolean(product.is_base_row);
+          const productName = isVariantRow && product.variant_name
+            ? product.variant_name
+            : product.name || product.product_name || t('field.no_name');
+          const parentName = product.name || product.product_name || '';
           const categoryName = product.category?.name || product.category_name || '-';
           const stockInfo = getStockDisplay(product);
 
-          // Extraer costo y precio con fallbacks (anclados a la unidad base)
+          // Extraer costo y precio con fallbacks. Filas planas: current_cost
+          // (products:cost-gated) y current_price (variante-primero, con IVA).
           const baseUnit = product.base_unit || 'unit';
           const purchaseCost =
             (product.unit_costs_summary || []).find(u => u.unit === baseUnit)?.last_cost
+            ?? product.current_cost
             ?? product.purchase_price
             ?? 0;
-          const salesPrice = product.price ?? getProductBaseUnitPrice(product) ?? 0;
+          const salesPrice = product.price
+            ?? getProductBaseUnitPrice(product)
+            ?? product.current_price
+            ?? 0;
           const isAvailable = product.state !== false;
+          // Filas planas: sin datos de tasa aplicable — no inventar "10% STD".
+          const isFlatRow = product.variant_id !== undefined || product.is_base_row !== undefined;
+          const taxLabel = product.applied_tax_name
+            || product.tax_rate_name
+            || product.tax_rate_code
+            || (isFlatRow ? '—' : '10% (STD)');
 
           return (
             <TableRow
-              key={productId}
+              key={isVariantRow ? `${productId}-${product.variant_id}` : productId}
               className="hover:bg-surface-muted transition-colors duration-150 group border-none"
             >
               <TableCell className="py-md px-md">
@@ -132,13 +150,28 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                       <Package className="w-5 h-5" />
                     )}
                   </div>
-                  <div className="flex flex-col gap-xs">
+                  <div className="flex flex-col gap-xs min-w-0">
                     <span
-                      className="text-body-md-bold text-foreground cursor-pointer hover:text-primary transition-colors duration-150"
+                      className="text-body-md-bold text-foreground cursor-pointer hover:text-primary transition-colors duration-150 truncate"
                       onClick={() => onOpenDetailsModal(product)}
+                      title={productName}
                     >
                       {productName}
                     </span>
+                    {isVariantRow ? (
+                      <span className={cn(chipClass, 'bg-secondary-fixed text-on-secondary-fixed w-max max-w-full truncate')}>
+                        {t('products.table.parent_product', 'Producto padre: {name}', { name: parentName })}
+                      </span>
+                    ) : isBaseRow ? (
+                      <span className={cn(chipClass, 'bg-secondary-fixed text-on-secondary-fixed w-max')}>
+                        {t('products.table.base_row', 'Producto base')}
+                      </span>
+                    ) : null}
+                    {isVariantRow && product.sku && (
+                      <span className="text-label-caps uppercase text-on-surface-deep font-data-mono truncate">
+                        {product.sku}
+                      </span>
+                    )}
                     {product.is_variable_measure && (
                       <span className={cn(chipClass, 'bg-tertiary-fixed text-on-tertiary-fixed w-max')}>
                         {t('products.table.variable_measure', 'Medida Variable')}
@@ -152,10 +185,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
               </TableCell>
               <TableCell className={cellClass}>
                 <span className={cn(chipClass, 'bg-primary-fixed text-on-primary-fixed')}>
-                  {product.applied_tax_name ||
-                    product.tax_rate_name ||
-                    product.tax_rate_code ||
-                    '10% (STD)'}
+                  {taxLabel}
                 </span>
               </TableCell>
               <TableCell className={cn(cellClass, 'text-right')}>

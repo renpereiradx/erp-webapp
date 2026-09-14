@@ -68,7 +68,11 @@ const PriceAdjustmentDetail = () => {
 
   // Estado para variantes
   const [variants, setVariants] = useState([]);
-  const [selectedVariantId, setSelectedVariantId] = useState('');
+  // Fila plana (PLAN_VARIANTES_PLANAS_AJUSTES_PRODUCTOS F-A): la variante ya
+  // viene elegida desde la búsqueda — se preselecciona en el formulario.
+  const [selectedVariantId, setSelectedVariantId] = useState(
+    location.state?.selectedProduct?.variant_id || ''
+  );
 
   // Plantillas predefinidas para razones de ajuste - Alineado con adjustment_type v2.1
   const reasonTemplates = [

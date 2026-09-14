@@ -23,6 +23,7 @@ export const stockMovements = {
       placeholder: 'Nombre, SKU o ID de producto...',
       searching: 'Buscando...',
       stock: 'Stock',
+      parent_of: 'Producto padre: {name}',
       minChars: 'Escribe al menos 2 caracteres',
       noResults: 'No se encontraron productos',
     },

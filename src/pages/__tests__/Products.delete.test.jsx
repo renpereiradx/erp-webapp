@@ -60,6 +60,23 @@ vi.mock('@/features/products', async (importOriginal) => {
   };
 });
 
+// Mock del service: el handler de edición resuelve el producto enriquecido
+// (frontera consumida por useProductsLogic).
+vi.mock('@/services/productService', () => ({
+  productService: {
+    getById: vi.fn(async (id) => ({
+      id,
+      product_id: id,
+      name: 'Prod 1',
+      description: '',
+      unit_prices: [],
+      category: { id: 1, name: 'Cat' },
+    })),
+    searchAdvanced: vi.fn(async () => ({ products: [], total_count: 0 })),
+    getSearchFacets: vi.fn(async () => ({ facets: [] })),
+  },
+}));
+
 // Mock del store de productos
 const deleteProduct = vi.fn(async () => true);
 const fetchProductsPaginated = vi.fn();
@@ -107,12 +124,13 @@ describe('Products delete flow', () => {
   it('abre el modal de edición y permite eliminar', async () => {
     renderWithTheme(<Products />);
 
-    // Abrir modal de edición
+    // Abrir modal de edición (el handler resuelve el padre enriquecido:
+    // async — esperar el modal con findBy)
     const editBtn = screen.getByTestId('edit-product-p1');
     fireEvent.click(editBtn);
 
     // Click en borrar (dentro del modal mockeado)
-    const deleteBtn = screen.getByTestId('delete-btn');
+    const deleteBtn = await screen.findByTestId('delete-btn');
     fireEvent.click(deleteBtn);
 
     await waitFor(() => {

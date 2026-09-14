@@ -185,6 +185,8 @@ export interface AdvancedProductSearchPayload {
   page?: number;
   page_size?: number;
   branch_id?: number;
+  /** Modo plano: una fila por unidad vendible (variante o producto). */
+  granularity?: 'product' | 'variant';
 }
 
 export interface ProductSearchFacetOption {

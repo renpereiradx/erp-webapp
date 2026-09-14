@@ -439,13 +439,27 @@ const useProductStore = create<ProductState>()(
             }
           }
 
+          // Búsqueda plana (granularity=variant,
+          // PLAN_VARIANTES_PLANAS_AJUSTES_PRODUCTOS F-C): una fila por unidad
+          // vendible — variantes con indicación de su producto padre — y
+          // total server-side real para la paginación.
           const response = await get()._withRetry(
-            () => productService.getProductsPaginated(currentPage, currentPageSize, options),
+            () => productService.searchAdvanced({
+              granularity: 'variant',
+              page: currentPage,
+              page_size: currentPageSize,
+            }, { signal: options.signal }),
             { telemetryKey: 'products.fetchPaginated' }
           )
 
-          const products = Array.isArray(response) ? response : []
-          const totalCount = products.length
+          const products = Array.isArray(response)
+            ? response
+            : Array.isArray(response?.products)
+              ? response.products
+              : []
+          const totalCount = Array.isArray(response)
+            ? products.length
+            : (response?.total_count ?? products.length)
 
           // Aplicar filtros locales si están definidos
           let filteredProducts = products
@@ -837,6 +851,21 @@ const useProductStore = create<ProductState>()(
         try {
           const term = termRaw
           const fetchInfoWithFallback = async (searchTerm: string, signal?: AbortSignal) => {
+            // Búsqueda plana (granularity=variant): unidades vendibles con
+            // matcheo por SKU/barcode de variante. La cadena legacy
+            // por-producto queda como fallback solo si el endpoint falla.
+            try {
+              const flat = await productService.searchAdvanced(
+                { search: searchTerm, granularity: 'variant', page: 1, page_size: 100 },
+                { signal },
+              )
+              const flatRows = Array.isArray(flat?.products) ? flat.products : []
+              if (flatRows.length > 0) return flatRows
+              return []
+            } catch (err) {
+              if (signal?.aborted) throw err
+              console.warn('flat search failed, falling back to legacy info search', err)
+            }
             const res = await productService.searchInfo(searchTerm, { signal });
             let prods = (Array.isArray(res) ? res : [res]).filter(Boolean);
             if (prods.length === 0) {
