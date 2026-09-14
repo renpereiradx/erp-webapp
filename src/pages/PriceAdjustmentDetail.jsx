@@ -46,8 +46,10 @@ const PriceAdjustmentDetail = () => {
   const { selectedProduct, creating, error, clearError, createPriceAdjustment, resetState } = usePriceAdjustmentNewStore();
   const { activeBranch } = useAuthStore();
 
-  // Obtener producto de la navegación o del store
-  const product = location.state?.selectedProduct || selectedProduct;
+  // Producto de la navegación o del store. Preferimos el ENRIQUECIDO que el
+  // handler resolvió por id (unit_prices/tasas del padre); la fila plana del
+  // state queda como fallback y aporta variant_id para la preselección.
+  const product = selectedProduct || location.state?.selectedProduct;
 
   // Estado del formulario
   const [formData, setFormData] = useState({

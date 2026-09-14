@@ -80,3 +80,16 @@ Sin cambios de backend ni migraciones.
   con plana+legacy cayendo juntas, ttl.expiration, Products.delete). Nota: el breaker de
   búsqueda ahora registra falla sólo si la capa plana Y la legacy fallan.
   Gates: vitest 626/626 (91 archivos), tsc 0, `pnpm build`, `lint:design`.
+
+- 2026-09-14 (hotfix post-QA) — Tres bugs de la primera pasada, reportados por el owner:
+  (1) `usePriceAdjustmentNewStore` sin import de `productService` → "productService is not
+  defined" en /ajustes-precios (la edición del import se perdió en un lote fallido).
+  (2) El cuadro de búsqueda de /productos usa `fetchProducts` del store — NO `searchProducts`
+  ni `fetchProductsPaginated`; ese método seguía en `GET /products/search/{name}` (por-padre).
+  Ahora su primaria es la búsqueda plana con fallback por-nombre ante falla. (3) El hook
+  `useProductsLogic` de-duplicaba filas por id de producto (guard anti-keys-duplicadas) y
+  colapsaba todas las variantes de un producto en una sola fila — la dedup ahora es por
+  unidad (producto, variante). Además, en el flujo de ajuste de precios: `select` pasa
+  `product_id || id` (la fila plana no trae product_id) y el Detail prefiere el producto
+  padre ENRIQUECIDO (resuelto por getById en el handler) sobre la fila cruda del state.
+  Verificado contra BD dev: "nike" → 6 filas planas (2 bases + 4 variantes).

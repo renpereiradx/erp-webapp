@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import useProductStore from '@/store/useProductStore';
+import { productService } from '@/services/productService';
 import { priceAdjustmentService } from '@/services/priceAdjustmentService';
 import { telemetry } from '@/utils/telemetry';
 

@@ -668,20 +668,33 @@ const useProductStore = create<ProductState>()(
 
           if (searchTerm && searchTerm.trim()) {
             try {
-              response = await productService.search(searchTerm.trim())
+              // Búsqueda plana (granularity=variant,
+              // PLAN_VARIANTES_PLANAS_AJUSTES_PRODUCTOS F-C): unidades
+              // vendibles — el término matchea también SKU/código de
+              // variante. Los fallbacks por-producto quedan sólo ante falla.
+              const flat = await productService.searchAdvanced(
+                { search: searchTerm.trim(), granularity: 'variant', page: 1, page_size: 100 },
+                { signal: options.signal },
+              )
+              response = Array.isArray(flat?.products) ? flat.products : []
             } catch (searchError) {
-              if (DEMO_CONFIG_PRODUCTS.enabled) {
-                console.log('🔄 Products Store: Buscando en mocks (fallback)...');
-                await simulateDelay();
-                const term = searchTerm.toLowerCase();
-                const filtered = DEMO_PRODUCT_DATA.filter(p => 
-                  p.name.toLowerCase().includes(term) || 
-                  p.barcode?.includes(term) ||
-                  p.product_id.toLowerCase().includes(term)
-                );
-                response = filtered;
-              } else {
-                throw searchError;
+              if (options.signal?.aborted) throw searchError
+              try {
+                response = await productService.search(searchTerm.trim())
+              } catch (legacyError) {
+                if (DEMO_CONFIG_PRODUCTS.enabled) {
+                  console.log('🔄 Products Store: Buscando en mocks (fallback)...');
+                  await simulateDelay();
+                  const term = searchTerm.toLowerCase();
+                  const filtered = DEMO_PRODUCT_DATA.filter(p =>
+                    p.name.toLowerCase().includes(term) ||
+                    p.barcode?.includes(term) ||
+                    p.product_id.toLowerCase().includes(term)
+                  );
+                  response = filtered;
+                } else {
+                  throw legacyError;
+                }
               }
             }
 

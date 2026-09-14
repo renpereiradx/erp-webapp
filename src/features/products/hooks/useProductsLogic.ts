@@ -29,15 +29,20 @@ export const useProductsLogic = () => {
     clearError,
   } = useProductStore();
 
-  // De-duplicar productos por ID para evitar claves duplicadas de React
+  // De-duplicar productos para evitar claves duplicadas de React. Con filas
+  // planas (granularity=variant) la unidad es (producto, variante): las
+  // variantes comparten el id del padre y NO deben colapsarse en una fila.
   const products = useMemo(() => {
     const seen = new Set();
     return storeProducts.filter((product: any) => {
-      const id = product.id || product.product_id;
-      if (!id || seen.has(id)) {
+      const productId = product.id || product.product_id;
+      const key = product.variant_id
+        ? `${productId}|${product.variant_id}`
+        : productId;
+      if (!key || seen.has(key)) {
         return false;
       }
-      seen.add(id);
+      seen.add(key);
       return true;
     });
   }, [storeProducts]);
