@@ -14,6 +14,7 @@ import { CancellationRequestsPanel } from '@/features/sales/components/Cancellat
 import { useCancellationRequests } from '@/features/sales/hooks/useCancellationRequests';
 import { PRICE_CHANGE_REASONS } from '@/features/sales/constants/priceChangeReasons';
 import type { CollectionData } from '@/features/sales/components/steps/CollectionStep';
+import type { AddProductsToSaleRequest } from '@/types';
 import {
   History,
   Plus,
@@ -100,6 +101,11 @@ interface ProductDisplay {
   has_valid_price: boolean;
   has_variants?: boolean;
   product_type?: string;
+  /** Fila plana (granularity=variant): variante ya resuelta en la fila. */
+  variantId?: string | null;
+  variantName?: string;
+  /** Etiqueta compuesta "Producto · Variante" para el dropdown. */
+  displayName?: string;
 }
 
 const formatDateTime = (value: string | Date | null | undefined): string => {
@@ -149,6 +155,25 @@ const getProductDisplay = (product: Record<string, unknown>): ProductDisplay => 
     has_valid_price: Number(price) > 0,
     has_variants: Boolean(product.has_variant || product.has_variants || (Array.isArray(product.variants) && product.variants.length > 0)),
     product_type: String(product.product_type || 'PHYSICAL'),
+  };
+};
+
+/**
+ * Fila plana de búsqueda (granularity=variant, PLAN_BUSQUEDA_VARIANTES_PLANAS
+ * F5): la fila ya resuelve producto+variante — variant_id, precio efectivo
+ * (variante-primero, fallback padre) y stock propio de la unidad. La
+ * variante llega elegida: el dropdown ya no abre el selector por defecto.
+ */
+const getUnitDisplay = (unit: Record<string, unknown>): ProductDisplay => {
+  const display = getProductDisplay(unit);
+  const variantId = (unit.variant_id as string | null) ?? null;
+  const variantName = (unit.variant_name as string | null) ?? null;
+  return {
+    ...display,
+    has_variants: false, // fila unidad: se agrega directo, sin selector
+    variantId,
+    variantName: variantName ?? undefined,
+    displayName: variantName ? `${display.name} · ${variantName}` : display.name,
   };
 };
 
@@ -510,13 +535,21 @@ const SalesNew: React.FC = () => {
       const term = productSearchTerm.trim();
       if (term.length >= 3) {
         try {
-          const results = await productService.search(term);
-          const allResults = Array.isArray(results) ? results : results ? [results] : [];
-          const activeResults = (allResults as unknown as Record<string, unknown>[]).filter(p => {
-            if (typeof p.status === 'boolean') return p.status;
-            return p.state !== false && p.is_active !== false;
+          // Búsqueda plana (granularity=variant): el término matchea también
+          // SKU/barcode/nombre de variante y cada fila trae precio/stock
+          // propio — sin segundo paso de selección de variante.
+          const response = await productService.searchAdvanced({
+            search: term || undefined,
+            granularity: 'variant',
+            page: 1,
+            page_size: 15,
           });
-          const displayResults = activeResults.slice(0, 15).map(p => getProductDisplay(p));
+          const raw = (response as any)?.products;
+          const allResults: Record<string, unknown>[] = Array.isArray(raw) ? raw : [];
+          const displayResults = allResults
+            .filter(p => p.state !== false)
+            .slice(0, 15)
+            .map(p => getUnitDisplay(p));
           setProductSearchResults(displayResults);
           setShowProductDropdown(true);
           setProductHighlightedIndex(displayResults.length > 0 ? 0 : -1);
@@ -572,7 +605,9 @@ const SalesNew: React.FC = () => {
               } else {
                 let qty = parseFloat(String(selectedProductQuantity));
                 if (isNaN(qty) || qty <= 0) qty = 1;
-                addProductToCart(selectedProduct, qty);
+                // Fila plana: la variante ya viene resuelta (undefined nunca
+                // llega acá, así el selector de variantes no se abre).
+                addProductToCart(selectedProduct, qty, selectedProduct.variantId ?? null, selectedProduct.variantName);
                 setProductSearchTerm('');
                 setProductHighlightedIndex(-1);
                 setSelectedProductQuantity(1);
@@ -1196,7 +1231,7 @@ const SalesNew: React.FC = () => {
           }
         }
 
-        const payload = {
+        const payload: AddProductsToSaleRequest = {
           allow_price_modifications: newItems.some(item => Math.abs((Number(item.price) || 0) - (Number(item.originalPrice) || 0)) > 0.01),
           product_details: newItems.map(item => {
             const currentPrice = Number(item.price) || 0;
@@ -1219,6 +1254,10 @@ const SalesNew: React.FC = () => {
             };
           }),
         };
+        // FASE 5B: si hay un pedido de mostrador reclamado, cerrarlo en la
+        // misma tx que agrega los ítems (el carrito puede venir de /pedidos).
+        const claimedOrderId = counterOrderFlow.getClaimedOrderId();
+        if (claimedOrderId) payload.counter_order_id = claimedOrderId;
 
         const response = await saleService.addProductsToSale(currentSaleId, payload, activeSale?.branch_id);
         
@@ -1374,7 +1413,8 @@ const SalesNew: React.FC = () => {
   // los ítems nuevos (sin isFromPendingSale) y mapea cada detalle con la
   // convención precio/descuento. Lo comparten onConfirmWizard (merge + cobro)
   // y onLeavePendingWizard (merge + "Dejar pendiente") para no duplicar reglas.
-  const buildAddProductsPayload = useCallback((sourceItems: CartItem[]) => {
+  const buildAddProductsPayload = useCallback(
+    (sourceItems: CartItem[]): AddProductsToSaleRequest | null => {
     const newItems = sourceItems.filter((item) => !item.isFromPendingSale);
     if (newItems.length === 0) return null;
     return {
@@ -1431,6 +1471,9 @@ const SalesNew: React.FC = () => {
             toast.info('No hay productos nuevos para agregar a esta venta');
             return;
           }
+          // FASE 5B: cierre atómico del pedido de mostrador en la tx del merge.
+          const claimedOrderId = counterOrderFlow.getClaimedOrderId();
+          if (claimedOrderId) payload.counter_order_id = claimedOrderId;
           const response = await saleService.addProductsToSale(currentSaleId, payload, activeSale?.branch_id);
           if (!response?.success) {
             throw new Error(response?.error || 'No se pudo actualizar la venta');
@@ -1525,6 +1568,12 @@ const SalesNew: React.FC = () => {
                 original_amount: collection.foreignAmountReceived ?? undefined,
               }),
             },
+            // FASE 5B: cierre atómico del pedido de mostrador en la tx del
+            // checkout (venta + pago + convert juntos; el /convert post-hoc
+            // queda como recuperación idempotente).
+            ...(counterOrderFlow.hasClaimedOrder() && {
+              counter_order_id: counterOrderFlow.getClaimedOrderId() ?? undefined,
+            }),
           });
 
           // El backend puede responder success:false / payment_error SIN error
@@ -1626,6 +1675,9 @@ const SalesNew: React.FC = () => {
         checkoutSaleId = currentSaleId;
         const payload = buildAddProductsPayload(items);
         if (payload) {
+          // FASE 5B: cierre atómico del pedido de mostrador en la tx del merge.
+          const claimedOrderId = counterOrderFlow.getClaimedOrderId();
+          if (claimedOrderId) payload.counter_order_id = claimedOrderId;
           const response = await saleService.addProductsToSale(currentSaleId, payload, activeSale?.branch_id);
           if (!response?.success) {
             throw new Error(response?.error || 'No se pudo actualizar la venta');
@@ -1766,8 +1818,12 @@ const SalesNew: React.FC = () => {
 
   // Cantidad de un producto ya agregada al carrito (stock virtual del dropdown).
   const getQuantityInCart = useCallback(
-    (productId: string) =>
-      items.filter((item) => item.productId === productId).reduce((sum, item) => sum + item.quantity, 0),
+    // Stock virtual por unidad: variante y producto base cuentan aparte
+    // (un carrito con "Camisa · Rojo" no consume el stock de la fila base).
+    (productId: string, variantId?: string | null) =>
+      items
+        .filter((item) => item.productId === productId && (item.variantId ?? null) === (variantId ?? null))
+        .reduce((sum, item) => sum + item.quantity, 0),
     [items],
   );
 
@@ -1892,7 +1948,8 @@ const SalesNew: React.FC = () => {
                   selectedQty={selectedProductQuantity}
                   onSelectedQtyChange={setSelectedProductQuantity}
                   onProductClick={(product, qty) => {
-                    addProductToCart(product as ProductDisplay, qty);
+                    const unit = product as ProductDisplay;
+                    addProductToCart(unit, qty, unit.variantId ?? null, unit.variantName);
                     setProductSearchTerm('');
                     setShowProductDropdown(false);
                     setProductHighlightedIndex(-1);

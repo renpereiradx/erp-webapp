@@ -1,17 +1,20 @@
 /**
- * CatalogBoard (PLAN_CATALOGO_VENDEDOR 3.3) — contrato UI:
+ * CatalogBoard (PLAN_CATALOGO_VENDEDOR 3.3; filas planas:
+ * PLAN_BUSQUEDA_VARIANTES_PLANAS F4) — contrato UI:
  *
  * - Renderiza precio de venta (P.V.P.) y datos no sensibles; NUNCA texto de
  *   costo/margen (el catálogo no los consume ni antes ni después del strip
  *   server-side).
+ * - Cada unidad vendible es su propia tarjeta: variantes con precio y stock
+ *   propio, sin N+1 (getEnrichedVariants/getStockSummary ya no participan).
  * - Búsqueda con debounce contra /products/search/advanced; filtros de
  *   categoría/marca; paginación prev/next.
  * - Estados de datos obligatorios (DESIGN.md §6.7): skeleton, error con
  *   retry, empty.
  *
- * Mocks en la frontera: productService, categoryService, brandService,
- * variantService e i18n (firma real, fallback español). lucide-react NO se
- * mockea (PLAN_TEST_DESIGN_FRONTEND).
+ * Mocks en la frontera: productService, categoryService, brandService e
+ * i18n (firma real, fallback español). lucide-react NO se mockea
+ * (PLAN_TEST_DESIGN_FRONTEND).
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -52,36 +55,20 @@ vi.mock('@/services/brandService', () => ({
   },
 }))
 
-vi.mock('@/services/variantService', () => ({
-  variantService: {
-    getVariantsByProductId: vi.fn(),
-    // useCatalogVariants usa la misma fuente que /ventas (enriquecida con
-    // stock por sucursal); el listado crudo no trae stock.
-    getEnrichedVariants: vi.fn(),
-    // Desglose total/base/variantes por sucursal para la tarjeta.
-    getStockSummary: vi.fn(),
-  },
-}))
-
-// useCatalogVariants/useProductStockSummary leen la sucursal activa (el
-// stock de variantes es por sucursal): se mockea la frontera del contexto,
-// no el hook.
-vi.mock('@/contexts/BranchContext', () => ({
-  useBranch: () => ({ currentBranchId: 1 }),
-}))
-
 import { productService } from '@/services/productService'
-import { variantService } from '@/services/variantService'
 import { CatalogBoard } from '../components/CatalogBoard'
-import type { CatalogProduct } from '../types'
+import type { CatalogSellableUnit } from '../types'
 
 const searchAdvanced = vi.mocked(productService.searchAdvanced)
-const getEnrichedVariants = vi.mocked(variantService.getEnrichedVariants)
-const getStockSummary = vi.mocked(variantService.getStockSummary)
 
-const card = (overrides: Partial<CatalogProduct>): CatalogProduct => ({
+/** Fila plana (granularity=variant) de una unidad vendible. */
+const unit = (overrides: Partial<CatalogSellableUnit>): CatalogSellableUnit => ({
   id: 'p1',
+  variant_id: null,
+  is_base_row: false,
   name: 'Harina 000',
+  variant_name: null,
+  sku: null,
   barcode: '7501234567890',
   base_unit: 'kg',
   current_price: 15000,
@@ -96,7 +83,7 @@ const card = (overrides: Partial<CatalogProduct>): CatalogProduct => ({
   ...overrides,
 })
 
-const advancedResponse = (products: CatalogProduct[]) => ({
+const advancedResponse = (products: CatalogSellableUnit[]) => ({
   products: products as unknown as Array<Record<string, unknown>>,
   total_count: products.length,
   page: 1,
@@ -118,7 +105,7 @@ function renderBoard() {
 }
 
 beforeEach(() => {
-  searchAdvanced.mockResolvedValue(advancedResponse([card({})]))
+  searchAdvanced.mockResolvedValue(advancedResponse([unit({})]))
 })
 
 afterEach(() => {
@@ -166,6 +153,28 @@ describe('CatalogBoard', () => {
     )
   })
 
+  it('muestra cada variante como tarjeta propia con precio y stock de la unidad (sin N+1)', async () => {
+    searchAdvanced.mockResolvedValue(
+      advancedResponse([
+        unit({ id: 'p1', variant_id: null, is_base_row: true, name: 'Camisa Oxford', stock_quantity: 3, stock_status: 'medium_stock' }),
+        unit({ id: 'p1', variant_id: 'var-rojo', is_base_row: false, name: 'Camisa Oxford', variant_name: 'Rojo / M', sku: 'CAM-ROJ-M', current_price: 16000, stock_quantity: 7 }),
+        unit({ id: 'p1', variant_id: 'var-azul', is_base_row: false, name: 'Camisa Oxford', variant_name: 'Azul / L', sku: 'CAM-AZL-L', current_price: 15500, stock_quantity: 0, stock_status: 'out_of_stock' }),
+      ])
+    )
+    renderBoard()
+
+    // Tres tarjetas: base + 2 variantes, cada testid distinto pese a
+    // compartir producto padre.
+    expect(await screen.findByTestId('catalog-card-p1')).toBeInTheDocument()
+    expect(screen.getByTestId('catalog-card-var-rojo')).toBeInTheDocument()
+    expect(screen.getByTestId('catalog-card-var-azul')).toBeInTheDocument()
+
+    // Precio y stock son los de CADA unidad (no el agregado del padre).
+    expect(screen.getByTestId('catalog-price-var-rojo')).toHaveTextContent('16.000')
+    expect(screen.getByTestId('catalog-card-var-rojo')).toHaveTextContent('Stock: 7 kg')
+    expect(screen.getByTestId('catalog-card-var-azul')).toHaveTextContent('Sin stock')
+  })
+
   it('muestra el estado vacío cuando no hay resultados', async () => {
     searchAdvanced.mockResolvedValue(
       advancedResponse([]) as unknown as { products: Array<Record<string, unknown>> }
@@ -182,54 +191,10 @@ describe('CatalogBoard', () => {
     expect(await screen.findByTestId('error-state')).toBeInTheDocument()
   })
 
-  it('expande variantes bajo demanda', async () => {
-    const user = userEvent.setup()
-    getEnrichedVariants.mockResolvedValue([
-      {
-        id: 'v1',
-        parent_product_id: 'p1',
-        sku: 'HAR-1KG',
-        variant_name: 'Paquete 1kg',
-        variant_attributes: {},
-        is_active: true,
-        display_order: 0,
-        stock_quantity: 10,
-        current_price: 16000,
-        created_at: '',
-        updated_at: '',
-      },
-    ])
-    getStockSummary.mockResolvedValue({
-      product_id: 'p1',
-      branch_id: 1,
-      base_stock: 4,
-      variants_stock: 10,
-      total_stock: 14,
-    })
-    searchAdvanced.mockResolvedValue(
-      advancedResponse([card({ has_variant: true, variant_count: 1, stock_quantity: 14 })])
-    )
-    renderBoard()
-
-    await screen.findByTestId('catalog-card-p1')
-    // Las variantes no se piden hasta expandir la tarjeta.
-    expect(getEnrichedVariants).not.toHaveBeenCalled()
-
-    await user.click(screen.getByRole('button', { name: /variantes/i }))
-    expect(await screen.findByTestId('catalog-variants-p1')).toHaveTextContent('Paquete 1kg')
-    // Stock enriquecido por sucursal activa (branch 1 del mock de contexto).
-    expect(screen.getByTestId('catalog-variants-p1')).toHaveTextContent('Stock: 10')
-    // Desglose total/base/variantes en el alcance de la sucursal.
-    expect(screen.getByTestId('catalog-stock-breakdown-p1')).toHaveTextContent('Base: 4')
-    expect(screen.getByTestId('catalog-stock-breakdown-p1')).toHaveTextContent('En variantes: 10')
-    expect(getEnrichedVariants).toHaveBeenCalledWith('p1', 1, false)
-    expect(getStockSummary).toHaveBeenCalledWith('p1', 1)
-  })
-
   it('pagina con prev/next', async () => {
     const user = userEvent.setup()
     searchAdvanced.mockResolvedValue({
-      products: [card({})] as unknown as Array<Record<string, unknown>>,
+      products: [unit({})] as unknown as Array<Record<string, unknown>>,
       total_count: 24,
       page: 1,
       page_size: 12,

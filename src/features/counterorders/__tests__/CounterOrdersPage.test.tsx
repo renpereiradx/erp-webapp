@@ -66,24 +66,19 @@ vi.mock('@/services/counterOrderService', () => ({
 }))
 
 // Módulos pesados del builder: el modal cerrado no participa en estos tests.
-// El catálogo es controlable por test (grilla del picker + variantes).
+// El catálogo plano es controlable por test (grilla de unidades vendibles).
 const catalogMock = vi.hoisted(() => ({
-  products: [] as Array<Record<string, unknown>>,
-  variants: [] as Array<Record<string, unknown>>,
-  stockSummary: null as Record<string, unknown> | null,
+  units: [] as Array<Record<string, unknown>>,
 }))
 vi.mock('@/features/catalog/hooks/useCatalogProducts', () => ({
   useCatalogProducts: () => ({
-    data: {
-      products: catalogMock.products,
-      total: catalogMock.products.length,
-      page: 1,
-      totalPages: 1,
-    },
+    data: { products: [], total: 0, page: 1, totalPages: 1 },
     isLoading: false,
   }),
-  useCatalogVariants: () => ({ data: catalogMock.variants, isLoading: false }),
-  useProductStockSummary: () => ({ data: catalogMock.stockSummary, isLoading: false }),
+  useCatalogSellableUnits: () => ({
+    data: { products: catalogMock.units, total: catalogMock.units.length, page: 1, totalPages: 1 },
+    isLoading: false,
+  }),
 }))
 vi.mock('@/features/catalog/hooks/useDebouncedValue', () => ({
   useDebouncedValue: (value: unknown) => value,
@@ -164,9 +159,7 @@ const renderPage = () => {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  catalogMock.products = []
-  catalogMock.variants = []
-  catalogMock.stockSummary = null
+  catalogMock.units = []
   mockHasPermission.mockImplementation(p => p === 'counterorders:read' || p === 'counterorders:write')
   listMock.mockResolvedValue({
     data: [orderOpen, orderClaimed],
@@ -198,6 +191,20 @@ describe('CounterOrdersPage — bandeja', () => {
     await waitFor(() =>
       expect(listMock).toHaveBeenCalledWith(
         expect.objectContaining({ status: 'OPEN', branch_id: 1, page: 1, page_size: 20 }),
+      ),
+    )
+  })
+
+  // FASE 5A (PLAN_PEDIDOS_FASE5_MEJORAS): los OPEN > 72h vencen con el sweep
+  // del listado; la bandeja ofrece el chip para verlos.
+  it('filtra pedidos EXPIRED con el chip Vencidos', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByTestId('counterorder-row-CO-1')
+    await user.click(screen.getByRole('tab', { name: 'Vencidos' }))
+    await waitFor(() =>
+      expect(listMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: 'EXPIRED', page: 1 }),
       ),
     )
   })
@@ -271,72 +278,103 @@ describe('CounterOrdersPage — bandeja', () => {
   })
 })
 
-describe('OrderBuilder — picker de productos (stock y producto base)', () => {
-  const camiseta = {
+describe('OrderBuilder — picker plano de unidades vendibles', () => {
+  // Filas tal cual las emite granularity=variant: fila base primero y
+  // variantes después, cada una con precio/stock propio (sin N+1).
+  const baseRow = {
     id: 'PROD-CAM',
+    variant_id: null,
+    is_base_row: true,
     name: 'CAMISETA ADIDAS',
+    variant_name: null,
+    sku: null,
     base_unit: 'unit',
     current_price: 72800,
-    stock_quantity: 67,
-    stock_status: 'in_stock',
+    stock_quantity: 44,
+    stock_status: 'medium_stock',
     has_variant: true,
     variant_count: 2,
+    state: true,
   }
-  const variants = [
-    { id: 'VAR-NEGRO', parent_product_id: 'PROD-CAM', variant_name: 'NEGRO M', sku: 'CC2Y5J-NEGRO-M', stock_quantity: 5, is_active: true },
-    { id: 'VAR-VERDE', parent_product_id: 'PROD-CAM', variant_name: 'VERDE XL', sku: 'CC2Y5J-VERDE-XL', stock_quantity: 0, is_active: true },
-  ]
+  const negroRow = {
+    ...baseRow,
+    variant_id: 'VAR-NEGRO',
+    is_base_row: false,
+    variant_name: 'NEGRO M',
+    sku: 'CC2Y5J-NEGRO-M',
+    current_price: 75000,
+    stock_quantity: 5,
+    stock_status: 'in_stock',
+  }
+  const verdeRow = {
+    ...baseRow,
+    variant_id: 'VAR-VERDE',
+    is_base_row: false,
+    variant_name: 'VERDE XL',
+    sku: 'CC2Y5J-VERDE-XL',
+    stock_quantity: 0,
+    stock_status: 'out_of_stock',
+  }
 
-  it('las variantes muestran el stock enriquecido, no 0 fijo (fix capturas)', async () => {
-    catalogMock.products = [camiseta]
-    catalogMock.variants = variants
+  it('cada fila plana muestra el stock y precio de SU unidad (sin N+1 de variantes)', async () => {
+    catalogMock.units = [baseRow, negroRow, verdeRow]
     renderPage()
     await userEvent.click(await screen.findByTestId('counterorders-new-button'))
-    await userEvent.click(await screen.findByText(/Elegir variante \(2\)/))
-    const list = await screen.findByTestId('counterorder-pick-variants-PROD-CAM')
-    expect(list).toHaveTextContent('Stock: 5')
-    // Sin unidades: chip de error en vez de "Stock: 0".
-    expect(list).toHaveTextContent('Sin stock')
+
+    const negro = screen.getByTestId('counterorder-pick-VAR-NEGRO')
+    expect(negro).toHaveTextContent('CAMISETA ADIDAS · NEGRO M')
+    expect(negro).toHaveTextContent('CC2Y5J-NEGRO-M')
+    expect(negro).toHaveTextContent('Stock: 5')
+
+    // Sin unidades: "Sin stock" en vez de "Stock: 0".
+    expect(screen.getByTestId('counterorder-pick-VAR-VERDE')).toHaveTextContent('Sin stock')
+
+    // La fila base lleva su chip y SU stock (44), no el agregado.
+    const base = screen.getByTestId('counterorder-pick-PROD-CAM')
+    expect(base).toHaveTextContent('Producto base')
+    expect(base).toHaveTextContent('Stock: 44')
   })
 
-  it('permite agregar el producto base además de sus variantes', async () => {
-    catalogMock.products = [camiseta]
-    catalogMock.variants = variants
-    // Desglose por sucursal: la fila base muestra SU stock (44), no el
-    // total que mezcla variantes (67).
-    catalogMock.stockSummary = { product_id: 'PROD-CAM', branch_id: 1, base_stock: 44, variants_stock: 23, total_stock: 67 }
+  it('agrega la variante y el producto base como líneas distintas', async () => {
+    catalogMock.units = [baseRow, negroRow]
     renderPage()
     await userEvent.click(await screen.findByTestId('counterorders-new-button'))
-    // Fila base con su [+] y su stock propio (antes el base no era seleccionable).
-    const baseRow = await screen.findByTestId('counterorder-pick-base-PROD-CAM')
-    expect(baseRow).toHaveTextContent('Stock: 44')
-    expect(screen.getByTestId('counterorder-pick-PROD-CAM')).toHaveTextContent('Stock: 67')
+
     await userEvent.click(screen.getByTestId('counterorder-add-PROD-CAM'))
     const lines = screen.getByTestId('counterorder-builder-lines')
     expect(lines).toHaveTextContent('CAMISETA ADIDAS')
-    // Línea base ≠ línea variante (keys distintas), y el nombre de la
-    // variante distingue la línea en el carrito.
-    await userEvent.click(screen.getByText(/Elegir variante \(2\)/))
-    await userEvent.click(await screen.findByTestId('counterorder-add-variant-VAR-NEGRO'))
+
+    await userEvent.click(await screen.findByTestId('counterorder-add-VAR-NEGRO'))
     expect(lines).toHaveTextContent('CAMISETA ADIDAS · NEGRO M')
     expect(screen.getByTestId('counterorder-builder-units')).toHaveTextContent('2 unidades')
   })
 
-  it('sin stock-summary la fila base cae al total proyectado (compat backend viejo)', async () => {
-    catalogMock.products = [camiseta]
-    catalogMock.variants = variants
-    renderPage()
-    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
-    const baseRow = await screen.findByTestId('counterorder-pick-base-PROD-CAM')
-    expect(baseRow).toHaveTextContent('Stock: 67')
-  })
-
   it('los productos sin variante conservan su botón Agregar directo', async () => {
-    catalogMock.products = [{ ...camiseta, id: 'PROD-SIMPLE', has_variant: false, variant_count: 0 }]
+    catalogMock.units = [{ ...baseRow, id: 'PROD-SIMPLE', has_variant: false, variant_count: 0, is_base_row: false }]
     renderPage()
     await userEvent.click(await screen.findByTestId('counterorders-new-button'))
     await userEvent.click(await screen.findByTestId('counterorder-add-PROD-SIMPLE'))
     expect(screen.getByTestId('counterorder-builder-lines')).toHaveTextContent('CAMISETA ADIDAS')
+  })
+
+  it('densidad: una sola tarjeta muestra las variantes extras tras "+n variantes más"', async () => {
+    const manyVariants = ['V1', 'V2', 'V3', 'V4'].map((v, i) => ({
+      ...baseRow,
+      variant_id: `VAR-${v}`,
+      is_base_row: false,
+      variant_name: `COLOR ${v}`,
+      sku: `SKU-${v}`,
+      stock_quantity: i + 1,
+      stock_status: 'in_stock',
+    }))
+    catalogMock.units = [baseRow, ...manyVariants]
+    renderPage()
+    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
+
+    // Cap: base + 3 variantes visibles; la 4ta queda tras el CTA.
+    expect(screen.queryByTestId('counterorder-pick-VAR-V4')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByTestId('counterorder-pick-more-PROD-CAM'))
+    expect(await screen.findByTestId('counterorder-pick-VAR-V4')).toBeInTheDocument()
   })
 
   it('el dropdown de cliente muestra nombre + apellido (displayName, no solo primer nombre)', async () => {

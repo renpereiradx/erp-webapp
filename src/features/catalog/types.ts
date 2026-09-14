@@ -56,6 +56,32 @@ export interface CatalogPageData {
   totalPages: number
 }
 
+/**
+ * Fila plana de unidad vendible: proyección de `SellableUnitResponse`
+ * (POST /products/search/advanced con `granularity: "variant"` —
+ * PLAN_BUSQUEDA_VARIANTES_PLANAS §3.2). Cada fila ya resuelve la variante:
+ * `variant_id` + `current_price` (variante-primero, fallback padre) y
+ * `stock_quantity` propio de la unidad. `is_base_row` marca la fila
+ * "producto base" de un producto CON variantes (stock base-only).
+ */
+export interface CatalogSellableUnit extends CatalogProduct {
+  /** Producto padre; undefined/null en la fila base y productos sin variantes. */
+  variant_id?: string | null
+  is_base_row: boolean
+  /** Nombre de la variante (ej. "Rojo / M"); solo en filas de variante. */
+  variant_name?: string | null
+  sku?: string | null
+  variant_attributes?: Record<string, unknown> | null
+}
+
+/** Página del modo plano: mismas claves del envelope que CatalogPageData. */
+export interface SellableUnitsPageData {
+  products: CatalogSellableUnit[]
+  total: number
+  page: number
+  totalPages: number
+}
+
 export const CATALOG_PAGE_SIZE = 12
 
 export const DEFAULT_CATALOG_FILTERS: CatalogFilters = {

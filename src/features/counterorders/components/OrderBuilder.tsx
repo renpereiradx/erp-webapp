@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState, Fragment } from 'react'
 import { Barcode, Minus, Plus, ShoppingCart, Trash2, UserPlus } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
@@ -11,20 +11,19 @@ import useClientStore from '@/store/useClientStore'
 import QuickClientModal from '@/features/party/components/QuickClientModal'
 import { saleService } from '@/services/saleService'
 import { formatCurrency } from '@/utils/currencyUtils'
-import { useCatalogProducts, useCatalogVariants, useProductStockSummary } from '@/features/catalog/hooks/useCatalogProducts'
+import { useCatalogSellableUnits } from '@/features/catalog/hooks/useCatalogProducts'
 import { useDebouncedValue } from '@/features/catalog/hooks/useDebouncedValue'
-import { DEFAULT_CATALOG_FILTERS, type CatalogProduct } from '@/features/catalog/types'
+import { DEFAULT_CATALOG_FILTERS, type CatalogSellableUnit } from '@/features/catalog/types'
 import { cn } from '@/lib/utils'
 import { useCreateCounterOrder, useUpdateCounterOrder } from '../hooks/useCounterOrders'
 import { useOrderCart } from '../hooks/useOrderCart'
 import type { CounterOrderDetail } from '../types'
 
 // ===========================================================================
-// OrderBuilder (PLAN_PEDIDOS_MOSTRADOR — FASE 2.1)
-// Carrito del vendedor: busca productos (catálogo comercial), escanea
-// códigos de barra, asocia cliente (búsqueda o alta rápida), agrega notas y
-// guarda el pedido OPEN. Los totales los resuelve el backend al guardar
-// (resolve-on-read §3.3) — acá solo hay hints informativos.
+// OrderBuilder (PLAN_PEDIDOS_MOSTRADOR — FASE 2.1; picker plano:
+// PLAN_BUSQUEDA_VARIANTES_PLANAS F3). Carrito del vendedor: busca unidades
+// vendibles (granularity=variant — cada fila ya resuelve producto+variante),
+// escanea códigos de barra, asocia cliente, guarda el pedido OPEN.
 // ===========================================================================
 
 interface OrderBuilderProps {
@@ -42,46 +41,67 @@ interface ClientDropdownItem extends SearchableDropdownItem {
   name: string
 }
 
-/** Tarjeta compacta de producto para el picker del carrito (memoizada:
- * la grilla re-renderiza en cada tecla de búsqueda). El stock sigue el
- * mapeo del admin de productos en el alcance de la sucursal activa:
- * chip con el total y fila base con SU stock (summary del backend). */
-interface ProductPickCardProps {
-  product: CatalogProduct
-  onAdd: (product: CatalogProduct, variantId?: string | null, variantName?: string, stock?: number | null) => void
+/** Densidad (PLAN_BUSQUEDA_VARIANTES_PLANAS §3.6): además de la fila base se
+ * muestran como máximo esta cantidad de variantes por producto; el resto
+ * queda tras el CTA "+n variantes más". */
+const MAX_VARIANT_ROWS_PER_PRODUCT = 3
+
+/** Agrupa filas adyacentes por producto (el backend ordena por nombre, con
+ * la fila base primero y variantes por display_order, así que un producto
+ * nunca aparece en dos grupos). */
+function groupAdjacentUnits(units: CatalogSellableUnit[]): CatalogSellableUnit[][] {
+  const groups: CatalogSellableUnit[][] = []
+  for (const unit of units) {
+    const last = groups[groups.length - 1]
+    if (last && last[0].id === unit.id) last.push(unit)
+    else groups.push([unit])
+  }
+  return groups
 }
 
-const ProductPickCard = memo(function ProductPickCard({ product, onAdd }: ProductPickCardProps) {
+/** Tarjeta plana de unidad vendible (memoizada: la grilla re-renderiza en
+ * cada tecla de búsqueda). La fila ya resuelve la variante: nombre compuesto
+ * "Producto · Variante", chip de SKU, precio efectivo y stock propio. */
+interface ProductPickCardProps {
+  unit: CatalogSellableUnit
+  onAdd: (unit: CatalogSellableUnit) => void
+}
+
+const ProductPickCard = memo(function ProductPickCard({ unit, onAdd }: ProductPickCardProps) {
   const { t } = useI18n()
-  const [expanded, setExpanded] = useState(false)
-  const variantsQuery = useCatalogVariants(expanded && product.has_variant ? product.id : null)
-  const summaryQuery = useProductStockSummary(product.has_variant ? product.id : null)
-  const summary = summaryQuery.data ?? null
-  const stock = product.has_variant
-    ? (summary?.total_stock ?? product.stock_quantity ?? null)
-    : (product.stock_quantity ?? null)
-  // Fila base: stock SIN variantes (fallback al proyectado global si el
-  // backend aún no tiene stock-summary).
-  const baseStock = product.has_variant
-    ? (summary?.base_stock ?? product.stock_quantity ?? null)
-    : (product.stock_quantity ?? null)
-  const outOfStock = product.stock_status === 'out_of_stock' || (stock !== null && stock <= 0)
-  const stockLabel = (value: number | null) =>
-    value == null || value <= 0
+  const label = unit.variant_name ? `${unit.name} · ${unit.variant_name}` : unit.name
+  const stock = unit.stock_quantity ?? null
+  const outOfStock = unit.stock_status === 'out_of_stock' || (stock !== null && stock <= 0)
+  const stockLabel =
+    stock == null || stock <= 0
       ? t('counterorders.builder.out_of_stock', 'Sin stock')
-      : `${t('counterorders.builder.stock', 'Stock')}: ${value}`
+      : `${t('counterorders.builder.stock', 'Stock')}: ${stock}`
+  // La fila base comparte id con sus variantes: el testid usa variant_id.
+  const testId = unit.variant_id ?? unit.id
 
   return (
     <article
-      data-testid={`counterorder-pick-${product.id}`}
+      data-testid={`counterorder-pick-${testId}`}
       className="bg-surface rounded-md shadow-whisper border border-border-subtle p-sm flex flex-col gap-xs"
     >
-      <p className="text-body-sm-bold text-foreground truncate" title={product.name}>
-        {product.name}
-      </p>
+      <div className="flex items-start gap-xs">
+        <p className="text-body-sm-bold text-foreground min-w-0 truncate flex-1" title={label}>
+          {label}
+        </p>
+        {unit.is_base_row && (
+          <span className="shrink-0 rounded-sm bg-surface-muted px-xs py-0.5 text-label-caps uppercase text-on-surface-deep">
+            {t('counterorders.builder.base_product', 'Producto base')}
+          </span>
+        )}
+      </div>
+      {unit.sku && (
+        <span className="font-data-mono text-label-caps uppercase text-on-surface-deep truncate" title={unit.sku}>
+          {unit.sku}
+        </span>
+      )}
       <div className="flex items-center justify-between gap-sm">
         <span className="font-data-mono text-body-sm text-primary whitespace-nowrap">
-          {product.current_price != null ? formatCurrency(product.current_price) : '—'}
+          {unit.current_price != null ? formatCurrency(unit.current_price) : '—'}
         </span>
         <span
           className={cn(
@@ -89,93 +109,21 @@ const ProductPickCard = memo(function ProductPickCard({ product, onAdd }: Produc
             outOfStock ? 'text-error' : 'text-on-surface-deep',
           )}
         >
-          {stockLabel(stock)}
+          {stockLabel}
         </span>
       </div>
-      {product.has_variant ? (
-        <div className="space-y-xs">
-          {/* El producto base también es vendible (línea sin variant_id):
-              precio por get_active_price y filas de stock propias (variant
-              NULL). Antes solo se podían agregar variantes. */}
-          <div
-            className="flex items-center justify-between gap-md rounded-sm bg-surface-muted px-sm py-xs"
-            data-testid={`counterorder-pick-base-${product.id}`}
-          >
-            <span className="min-w-0 flex-1">
-              <span className="text-body-sm-bold text-foreground block truncate">
-                {t('counterorders.builder.base_product', 'Producto base')}
-              </span>
-              <span className="text-label-caps uppercase text-on-surface-deep font-data-mono whitespace-nowrap">
-                {stockLabel(baseStock)}
-              </span>
-            </span>
-            <Button
-              variant="default"
-              size="sm"
-              className="shrink-0"
-              data-testid={`counterorder-add-${product.id}`}
-              onClick={() => onAdd(product, null, undefined, baseStock)}
-              aria-label={`${t('counterorders.builder.add', 'Agregar')} ${product.name}`}
-            >
-              <Plus className="size-3.5" aria-hidden="true" />
-            </Button>
-          </div>
-          <Button variant="secondary" size="sm" className="w-full" onClick={() => setExpanded(prev => !prev)}>
-            {expanded
-              ? t('counterorders.builder.hide_variants', 'Ocultar variantes')
-              : `${t('counterorders.builder.pick_variant', 'Elegir variante')} (${product.variant_count})`}
-          </Button>
-          {expanded && (
-            <ul className="space-y-xs" data-testid={`counterorder-pick-variants-${product.id}`}>
-              {(variantsQuery.data ?? []).map(variant => (
-                <li
-                  key={variant.id}
-                  className="flex items-center justify-between gap-md rounded-sm bg-surface-muted px-sm py-xs"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="text-body-sm-bold text-foreground block truncate" title={variant.variant_name}>
-                      {variant.variant_name}
-                    </span>
-                    <span className="text-label-caps uppercase text-on-surface-deep font-data-mono block truncate">
-                      {stockLabel(variant.stock_quantity ?? 0)}
-                    </span>
-                  </span>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="shrink-0"
-                    data-testid={`counterorder-add-variant-${variant.id}`}
-                    onClick={() =>
-                      onAdd(product, variant.id, variant.variant_name, variant.stock_quantity ?? null)
-                    }
-                    aria-label={`${t('counterorders.builder.add', 'Agregar')} ${variant.variant_name}`}
-                  >
-                    <Plus className="size-3.5" aria-hidden="true" />
-                  </Button>
-                </li>
-              ))}
-              {!variantsQuery.isLoading && (variantsQuery.data ?? []).length === 0 && (
-                <li className="text-body-sm text-on-surface-deep">
-                  {t('counterorders.builder.no_variants', 'Sin variantes activas.')}
-                </li>
-              )}
-            </ul>
-          )}
-        </div>
-      ) : (
-        // Un pedido admite productos sin stock (§5.2): el stock se valida
-        // hard al procesar la venta; acá es solo warning informativo.
-        <Button
-          variant="default"
-          size="sm"
-          data-testid={`counterorder-add-${product.id}`}
-          onClick={() => onAdd(product, null, undefined, stock)}
-          aria-label={`${t('counterorders.builder.add', 'Agregar')} ${product.name}`}
-        >
-          <Plus className="size-4" aria-hidden="true" />
-          {t('counterorders.builder.add', 'Agregar')}
-        </Button>
-      )}
+      {/* Un pedido admite productos sin stock (§5.2): el stock se valida
+          hard al procesar la venta; acá es solo warning informativo. */}
+      <Button
+        variant="default"
+        size="sm"
+        data-testid={`counterorder-add-${testId}`}
+        onClick={() => onAdd(unit)}
+        aria-label={`${t('counterorders.builder.add', 'Agregar')} ${label}`}
+      >
+        <Plus className="size-4" aria-hidden="true" />
+        {t('counterorders.builder.add', 'Agregar')}
+      </Button>
     </article>
   )
 })
@@ -191,12 +139,18 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
   const [barcode, setBarcode] = useState('')
   const [quickClientOpen, setQuickClientOpen] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
+  /** Productos con variantes expandidas más allá del cap de densidad. */
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(() => new Set())
 
   const debouncedSearch = useDebouncedValue(searchTerm.trim(), 350)
-  const catalogQuery = useCatalogProducts(
+  const catalogQuery = useCatalogSellableUnits(
     open ? debouncedSearch : '',
     DEFAULT_CATALOG_FILTERS,
     1,
+  )
+  const unitGroups = useMemo(
+    () => groupAdjacentUnits(catalogQuery.data?.products ?? []),
+    [catalogQuery.data],
   )
 
   const createMutation = useCreateCounterOrder()
@@ -230,28 +184,31 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, mode, editingOrder])
 
-  const handleAddProduct = useCallback(
-    (
-      product: CatalogProduct,
-      variantId?: string | null,
-      variantName?: string,
-      stock?: number | null,
-    ) => {
+  const handleAddUnit = useCallback(
+    (unit: CatalogSellableUnit) => {
       cart.addProduct({
-        productId: product.id,
+        productId: unit.id,
         // La línea distingue base de variante: el backend solo guarda
-        // variant_id (nombre crudo en el detalle) — el nombre visible viaja
-        // en la línea del carrito.
-        name: variantName ? `${product.name} · ${variantName}` : product.name,
+        // variant_id — el nombre visible compone "Producto · Variante".
+        name: unit.variant_name ? `${unit.name} · ${unit.variant_name}` : unit.name,
         quantity: 1,
-        variantId: variantId ?? null,
-        unit: product.base_unit || 'unit',
-        priceHint: product.current_price,
-        stockHint: stock ?? product.stock_quantity,
+        variantId: unit.variant_id ?? null,
+        unit: unit.base_unit || 'unit',
+        priceHint: unit.current_price,
+        stockHint: unit.stock_quantity,
       })
     },
     [cart],
   )
+
+  const toggleProductExpanded = useCallback((productId: string) => {
+    setExpandedProducts(prev => {
+      const next = new Set(prev)
+      if (next.has(productId)) next.delete(productId)
+      else next.add(productId)
+      return next
+    })
+  }, [])
 
   const handleBarcode = useCallback(
     async (event: React.FormEvent) => {
@@ -441,9 +398,38 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
               </p>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm overflow-y-auto max-h-[45vh] pr-1">
-              {(catalogQuery.data?.products ?? []).map(product => (
-                <ProductPickCard key={product.id} product={product} onAdd={handleAddProduct} />
-              ))}
+              {unitGroups.map(group => {
+                const productId = group[0].id
+                const expanded = expandedProducts.has(productId)
+                const visible =
+                  expanded || group.length <= MAX_VARIANT_ROWS_PER_PRODUCT + 1
+                    ? group
+                    : [group[0], ...group.slice(1, MAX_VARIANT_ROWS_PER_PRODUCT + 1)]
+                const hidden = group.length - visible.length
+                return (
+                  <Fragment key={productId}>
+                    {visible.map(unit => (
+                      <ProductPickCard
+                        key={unit.variant_id ?? unit.id}
+                        unit={unit}
+                        onAdd={handleAddUnit}
+                      />
+                    ))}
+                    {hidden > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => toggleProductExpanded(productId)}
+                        className="col-span-full text-left text-body-sm text-primary hover:underline px-xs"
+                        data-testid={`counterorder-pick-more-${productId}`}
+                      >
+                        {t('counterorders.builder.more_variants', '+{count} variantes más', {
+                          count: hidden,
+                        })}
+                      </button>
+                    )}
+                  </Fragment>
+                )
+              })}
             </div>
           </section>
 

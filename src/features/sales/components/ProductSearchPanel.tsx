@@ -36,6 +36,11 @@ export interface SearchResultProduct {
   has_valid_price: boolean;
   has_variants?: boolean;
   product_type?: string;
+  /** Fila plana (granularity=variant): variante ya resuelta en la fila. */
+  variantId?: string | null;
+  variantName?: string;
+  /** Etiqueta compuesta "Producto · Variante"; cae a `name`. */
+  displayName?: string;
 }
 
 export interface ProductSearchPanelProps {
@@ -49,11 +54,11 @@ export interface ProductSearchPanelProps {
   onHighlight: (index: number) => void;
   selectedQty: number | string;
   onSelectedQtyChange: (value: number | string) => void;
-  /** Click o Enter sobre el resultado: agrega (o abre variantes) en el padre. */
+  /** Click o Enter sobre el resultado: agrega la unidad al carrito. */
   onProductClick: (product: SearchResultProduct, qty: number) => void;
   onClose: () => void;
-  /** Cantidad ya agregada al carrito de un producto (stock virtual). */
-  getQuantityInCart: (productId: string) => number;
+  /** Cantidad ya agregada al carrito de una unidad (stock virtual). */
+  getQuantityInCart: (productId: string, variantId?: string | null) => number;
 }
 
 /** Normaliza la cantidad tipeada al rango válido [minQty, available]. */
@@ -89,7 +94,7 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
   const handleQtyKeyDown = (event: React.KeyboardEvent, product: SearchResultProduct) => {
     if (event.key === 'Enter') {
       event.preventDefault();
-      const quantityInCart = getQuantityInCart(product.id);
+      const quantityInCart = getQuantityInCart(product.id, product.variantId ?? null);
       const maxQty = maxSellableQty(product, quantityInCart);
       const qty = clampRequestedQty(
         parseFloat(String(selectedQty)),
@@ -140,13 +145,14 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
           <div className="p-1">
             {results.map((product, index) => {
               const isHighlighted = index === highlightedIndex;
-              const quantityInCart = getQuantityInCart(product.id);
+              const quantityInCart = getQuantityInCart(product.id, product.variantId ?? null);
+              const rowKey = product.variantId ?? product.id;
               const availableStock = availableStockFor(product, quantityInCart);
               const isOutOfStock = isBlockedByStock(product, quantityInCart);
               const badgeKind = stockBadgeKind(product);
 
               return (
-                <div key={product.id ? `search-product-${product.id}` : `search-product-index-${index}`} className="w-full mb-0.5 last:mb-0">
+                <div key={rowKey ? `search-product-${rowKey}` : `search-product-index-${index}`} className="w-full mb-0.5 last:mb-0">
                   <div
                     className={cn(
                       'flex items-center w-full transition-colors duration-150 rounded-md overflow-hidden',
@@ -179,7 +185,7 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
                       <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                         <div className="flex items-center gap-2 min-w-0">
                           <p className="text-body-md-bold text-foreground truncate leading-none uppercase">
-                            {product.name}
+                            {product.displayName ?? product.name}
                           </p>
                           <Badge variant="secondary" size="sm" className="font-data-mono shrink-0">
                             #{product.sku}

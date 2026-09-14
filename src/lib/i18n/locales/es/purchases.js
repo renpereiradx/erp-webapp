@@ -321,6 +321,7 @@ export const purchases = {
   'purchases.product_modal.search_label': 'Buscar Producto',
   'purchases.product_modal.search_placeholder': 'Buscar por SKU, EAN o Nombre...',
   'purchases.product_modal.variants_badge': 'Variantes',
+  'purchases.product_modal.base_row': 'Producto base',
   'purchases.product_modal.stock_label': 'Stock:',
   'purchases.product_modal.last_cost': 'Últ. Costo',
   'purchases.product_modal.sale_price': 'Precio Venta',

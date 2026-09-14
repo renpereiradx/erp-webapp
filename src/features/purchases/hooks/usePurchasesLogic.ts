@@ -212,15 +212,23 @@ export const usePurchasesLogic = () => {
   // Filtering Logic — un mismo producto puede estar múltiples veces con variantes distintas
   const filteredModalProducts = useMemo(() => {
     if (!modalProductResults) return []
-    // Solo excluimos si el producto ya está SIN variantes
-    const existingWithoutVariant = new Set(
+    // Excluimos unidades ya agregadas: productos sin variante por su id,
+    // variantes por (producto, variante).
+    const existingBase = new Set(
       purchaseItems
         .filter(item => !item.variant_id)
         .map(item => item.product_id),
     )
-    return modalProductResults.filter(
-      product => !existingWithoutVariant.has(product.id || product.product_id),
+    const existingUnits = new Set(
+      purchaseItems
+        .filter(item => item.variant_id)
+        .map(item => `${item.product_id}|${item.variant_id}`),
     )
+    return modalProductResults.filter(p => {
+      const pid = p.id || p.product_id
+      if (p.variant_id) return !existingUnits.has(`${pid}|${p.variant_id}`)
+      return !existingBase.has(pid)
+    })
   }, [modalProductResults, purchaseItems])
 
   useEffect(() => {
@@ -487,12 +495,18 @@ export const usePurchasesLogic = () => {
       setSearchingProducts(true)
       setShowProductDropdown(true)
       try {
-        const res = await productService.search(
-          modalProductSearch.trim(),
-          { limit: 10 },
-        )
+        // Búsqueda plana (granularity=variant, PLAN_BUSQUEDA_VARIANTES_PLANAS
+        // F6): cada fila es una unidad vendible — el término matchea también
+        // SKU/barcode de variante y la fila trae stock/costo propio.
+        const res = await productService.searchAdvanced({
+          search: modalProductSearch.trim(),
+          granularity: 'variant',
+          page: 1,
+          page_size: 10,
+        })
+        const raw = (res as any)?.products
         setModalProductResults(
-          (Array.isArray(res) ? res : []).filter(p => p.state !== false),
+          (Array.isArray(raw) ? raw : []).filter(p => p.state !== false),
         )
       } catch (err) {
         console.error('Error searching products:', err)
@@ -584,12 +598,16 @@ export const usePurchasesLogic = () => {
     const productId = p.id || p.product_id;
     if (!productId) return;
 
+    // Fila plana (granularity=variant): la variante ya viene elegida en la
+    // fila — null = fila base o producto sin variantes (línea explícita sin
+    // variante, sin gate de chips).
+    const flatVariantId = (p.variant_id as string | null | undefined) ?? null;
     isSelectingProductRef.current = true;
 
     try {
       setSearchingProducts(true);
       const fullProduct = await productService.getForPurchase(productId) as any;
-      
+
       const normalizedProduct = {
         ...fullProduct,
         id: fullProduct.product_id || fullProduct.id,
@@ -609,15 +627,28 @@ export const usePurchasesLogic = () => {
         has_variants: Boolean(fullProduct.has_variant || fullProduct.has_variants),
       };
 
-      setModalVariantId(undefined);
-      setModalVariantName(undefined);
-      setModalSelectedVariant(undefined);
+      setModalVariantId(flatVariantId);
+      setModalVariantName(flatVariantId ? (p.variant_name || undefined) : undefined);
+      // Datos enriquecidos de la fila para la línea de compra (SKU/atributos
+      // sin segunda llamada).
+      setModalSelectedVariant(
+        flatVariantId
+          ? {
+              id: flatVariantId,
+              sku: p.sku,
+              variant_name: p.variant_name,
+              variant_attributes: p.variant_attributes || {},
+            }
+          : undefined,
+      );
       setModalSelectedProduct(normalizedProduct);
       setModalProductSearch(normalizedProduct.name || '');
       setShowProductDropdown(false);
       setModalUnit(normalizedProduct.unit || 'unit');
 
-      const cost = normalizedProduct.cost_price || 0;
+      // Costo prefill de la UNIDAD: current_cost de la fila (variante-primero,
+      // products:cost-gated server-side) con fallback al costo del padre.
+      const cost = Number(p.current_cost || 0) || normalizedProduct.cost_price || 0;
       setModalUnitPrice(cost);
       
       // Default pricing: cost * (1 + 0.3)

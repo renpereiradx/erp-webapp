@@ -20,7 +20,9 @@ import {
   type CatalogFilters,
   type CatalogPageData,
   type CatalogProduct,
+  type CatalogSellableUnit,
   type ProductStockSummary,
+  type SellableUnitsPageData,
 } from '../types'
 
 /** Respuesta cruda del backend (AdvancedSearchResponse, Go). */
@@ -50,6 +52,17 @@ function toCatalogProduct(raw: Record<string, unknown>): CatalogProduct {
   }
 }
 
+function toCatalogSellableUnit(raw: Record<string, unknown>): CatalogSellableUnit {
+  return {
+    ...toCatalogProduct(raw),
+    variant_id: (raw.variant_id as string | null) ?? null,
+    is_base_row: Boolean(raw.is_base_row),
+    variant_name: (raw.variant_name as string | null) ?? null,
+    sku: (raw.sku as string | null) ?? null,
+    variant_attributes: (raw.variant_attributes as Record<string, unknown> | null) ?? null,
+  }
+}
+
 export function useCatalogProducts(search: string, filters: CatalogFilters, page: number) {
   return useQuery({
     queryKey: ['catalog', search, filters, page],
@@ -66,6 +79,38 @@ export function useCatalogProducts(search: string, filters: CatalogFilters, page
 
       return {
         products: (response?.products ?? []).map(toCatalogProduct),
+        total: response?.total_count ?? 0,
+        page: response?.page ?? page,
+        totalPages: response?.total_pages ?? 0,
+      }
+    },
+    placeholderData: previous => previous,
+  })
+}
+
+/**
+ * Modo plano (granularity "variant", PLAN_BUSQUEDA_VARIANTES_PLANAS F2): una
+ * fila por unidad vendible — variantes activas + fila base + productos sin
+ * variantes. El término también matchea SKU/barcode/nombre de variante, y
+ * cada fila trae precio y stock propios (sin N+1 de variantes).
+ */
+export function useCatalogSellableUnits(search: string, filters: CatalogFilters, page: number) {
+  return useQuery({
+    queryKey: ['catalog', 'units', search, filters, page],
+    queryFn: async (): Promise<SellableUnitsPageData> => {
+      const response = (await productService.searchAdvanced({
+        search: search || undefined,
+        category_id: filters.categoryId ?? undefined,
+        brand_ids: filters.brandIds.length > 0 ? filters.brandIds : undefined,
+        in_stock_only: filters.inStockOnly || undefined,
+        sort_by: filters.sortBy,
+        page,
+        page_size: CATALOG_PAGE_SIZE,
+        granularity: 'variant',
+      })) as RawAdvancedSearchResponse
+
+      return {
+        products: (response?.products ?? []).map(toCatalogSellableUnit),
         total: response?.total_count ?? 0,
         page: response?.page ?? page,
         totalPages: response?.total_pages ?? 0,

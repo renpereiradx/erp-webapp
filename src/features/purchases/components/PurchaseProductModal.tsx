@@ -206,7 +206,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
 
                           return (
                             <div
-                              key={p.id || p.product_id}
+                              key={p.variant_id || p.id || p.product_id}
                               data-product-index={index}
                               role='option'
                               aria-selected={isActive}
@@ -235,14 +235,23 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                                     isActive ? 'text-primary' : 'text-foreground'
                                   )}
                                 >
-                                  {getProductName(p)}
+                                  {/* Fila plana: "Producto · Variante" cuando la unidad es una variante */}
+                                  {p.variant_name
+                                    ? `${getProductName(p)} · ${p.variant_name}`
+                                    : getProductName(p)}
                                 </div>
                                 <div className='flex flex-wrap gap-1.5 mt-0.5 items-center'>
                                   <span className='text-body-sm font-data-mono text-outline-fg'>
-                                    ID: {p.id || p.product_id || '-'}
+                                    {p.sku || `ID: ${p.id || p.product_id || '-'}`}
                                   </span>
-                                  {/* Indicador de variantes */}
-                                  {((p.has_variant || p.has_variants) || (Array.isArray(p.variants) && p.variants.length > 0)) && (
+                                  {/* Fila base de un producto con variantes */}
+                                  {p.is_base_row && (
+                                    <Badge variant='secondary' size='sm'>
+                                      {t('purchases.product_modal.base_row', 'Producto base')}
+                                    </Badge>
+                                  )}
+                                  {/* Indicador de variantes (solo filas sin variante resuelta) */}
+                                  {!p.variant_id && ((p.has_variant || p.has_variants) || (Array.isArray(p.variants) && p.variants.length > 0)) && (
                                     <Badge variant='info' size='sm'>
                                       {t('purchases.product_modal.variants_badge', 'Variantes')}
                                     </Badge>

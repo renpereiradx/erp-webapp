@@ -21,17 +21,18 @@ import {
   type CatalogFilters,
   type CatalogSortOption,
 } from '../types'
-import { useCatalogFacets, useCatalogProducts } from '../hooks/useCatalogProducts'
+import { useCatalogFacets, useCatalogSellableUnits } from '../hooks/useCatalogProducts'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { CatalogCard } from './CatalogCard'
 
 const SORT_OPTIONS: CatalogSortOption[] = ['name_asc', 'price_asc', 'price_desc', 'newest']
 
 /**
- * Catálogo comercial (PLAN_CATALOGO_VENDEDOR 3.3): consulta de precios
- * read-only para vendedor y cajero. Búsqueda con debounce + soporte de
- * código de barras, filtros de categoría/marca, grilla mobile-first y
- * paginación. Sin acciones de gestión.
+ * Catálogo comercial (PLAN_CATALOGO_VENDEDOR 3.3; filas planas:
+ * PLAN_BUSQUEDA_VARIANTES_PLANAS F4): consulta de precios read-only para
+ * vendedor y cajero. Búsqueda con debounce — también por SKU/nombre de
+ * variante —, filtros de categoría/marca, grilla mobile-first y paginación.
+ * Sin acciones de gestión.
  */
 export function CatalogBoard() {
   const { t } = useI18n()
@@ -42,7 +43,7 @@ export function CatalogBoard() {
 
   const debouncedSearch = useDebouncedValue(searchTerm.trim(), 350)
   const { categories, brands } = useCatalogFacets()
-  const productsQuery = useCatalogProducts(debouncedSearch, filters, page)
+  const unitsQuery = useCatalogSellableUnits(debouncedSearch, filters, page)
 
   const categoryOptions = useMemo(
     () => (categories.data ?? []).filter((c: any) => c?.is_active !== false),
@@ -53,9 +54,9 @@ export function CatalogBoard() {
     [brands.data]
   )
 
-  const products = productsQuery.data?.products ?? []
-  const total = productsQuery.data?.total ?? 0
-  const totalPages = productsQuery.data?.totalPages ?? 0
+  const units = unitsQuery.data?.products ?? []
+  const total = unitsQuery.data?.total ?? 0
+  const totalPages = unitsQuery.data?.totalPages ?? 0
 
   const updateFilters = (patch: Partial<CatalogFilters>) => {
     setFilters(prev => ({ ...prev, ...patch }))
@@ -163,7 +164,7 @@ export function CatalogBoard() {
           </div>
 
           {/* Estados de datos (DESIGN.md §6.7) */}
-          {productsQuery.isLoading && (
+          {unitsQuery.isLoading && (
             <div
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md"
               aria-busy="true"
@@ -174,15 +175,15 @@ export function CatalogBoard() {
             </div>
           )}
 
-          {productsQuery.isError && (
+          {unitsQuery.isError && (
             <ErrorState
               title={t('errors.load_title', 'Error al cargar')}
               message={t('catalog.error.message', 'No se pudo cargar el catálogo.')}
-              onRetry={() => productsQuery.refetch()}
+              onRetry={() => unitsQuery.refetch()}
             />
           )}
 
-          {!productsQuery.isLoading && !productsQuery.isError && products.length === 0 && (
+          {!unitsQuery.isLoading && !unitsQuery.isError && units.length === 0 && (
             <EmptyState
               icon={Package}
               title={t('catalog.empty.title', 'Sin resultados')}
@@ -193,14 +194,14 @@ export function CatalogBoard() {
             />
           )}
 
-          {!productsQuery.isLoading && !productsQuery.isError && products.length > 0 && (
+          {!unitsQuery.isLoading && !unitsQuery.isError && units.length > 0 && (
             <>
               <p className="text-body-sm text-on-surface-deep" data-testid="catalog-count">
                 {t('catalog.count', '{total} productos', { total })}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md">
-                {products.map(product => (
-                  <CatalogCard key={product.id} product={product} />
+                {units.map(unit => (
+                  <CatalogCard key={unit.variant_id ?? unit.id} unit={unit} />
                 ))}
               </div>
 
