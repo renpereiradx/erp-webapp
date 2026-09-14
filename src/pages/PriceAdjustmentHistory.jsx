@@ -1,20 +1,41 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshCw, Download, ChevronLeft, ChevronRight, ArrowDown, ArrowUp, ArrowLeftRight, Filter } from 'lucide-react'
+import React, { useCallback, useEffect, useState } from 'react'
+import { RefreshCw, Download, ChevronLeft, ChevronRight, ArrowDown, ArrowUp, ArrowLeftRight, Filter, Package } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import { priceAdjustmentService } from '@/services/priceAdjustmentService'
+import { getGroupedUnitOptions } from '@/constants/units'
+
+// Tipos de ajuste que escribe el backend en metadata->>'adjustment_type'
+// (enum del schema de metadata). '' = sin filtro.
+const ADJUSTMENT_TYPE_OPTIONS = [
+  'MARKET_UPDATE',
+  'COMPETITOR_ADJUSTMENT',
+  'PROMOTION',
+  'COST_CHANGE',
+  'CURRENCY_ADJUSTMENT',
+  'CORRECTION',
+  'SEASONAL',
+  'MANUAL_ADJUSTMENT',
+]
+
+const UNIT_OPTIONS = getGroupedUnitOptions().flatMap(g => g.options.map(o => o.value))
+
+const EMPTY_FILTERS = {
+  product: '',
+  user: '',
+  unit: '',
+  adjustmentType: '',
+  dateFrom: '',
+  dateTo: '',
+}
 
 const PriceAdjustmentHistory = () => {
   const { t } = useI18n()
 
-  // State para los filtros - con valores por defecto como en la referencia
-  const [filters, setFilters] = useState({
-    product: '',
-    user: '',
-    unit: '',
-    adjustmentType: '',
-    dateFrom: '01/10/2024',
-    dateTo: '31/10/2024',
-  })
+  // Borrador de filtros (inputs) vs filtros aplicados (fetch). Aplicar/Limpiar
+  // o Enter copian el borrador a los aplicados — tipear NO dispara requests.
+  const [draftFilters, setDraftFilters] = useState(EMPTY_FILTERS)
+  const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS)
+  const [dateRangeError, setDateRangeError] = useState('')
 
   // State para los datos
   const [adjustments, setAdjustments] = useState([])
@@ -27,68 +48,38 @@ const PriceAdjustmentHistory = () => {
   const [totalResults, setTotalResults] = useState(0)
   const itemsPerPage = 25
 
-  // Datos de demostración - como en la referencia
-  const demoData = useMemo(() => [
-    {
-      id: 'ADJ-01589',
-      adjustment_id: 'ADJ-01589',
-      product_name: 'Leche Entera 1L',
-      old_value: 25.50,
-      new_value: 24.99,
-      user_id: 'Ana Pérez',
-      adjustment_date: '2024-10-25T14:30:00',
-      unit: 'Sucursal Centro',
-      adjustment_type: 'Descuento',
-    },
-    {
-      id: 'ADJ-01588',
-      adjustment_id: 'ADJ-01588',
-      product_name: 'Pan de Caja Integral',
-      old_value: 42.00,
-      new_value: 45.00,
-      user_id: 'Juan García',
-      adjustment_date: '2024-10-25T11:15:00',
-      unit: 'Almacén General',
-      adjustment_type: 'Aumento',
-    },
-    {
-      id: 'ADJ-01587',
-      adjustment_id: 'ADJ-01587',
-      product_name: 'Atún en Agua 140g',
-      old_value: 18.90,
-      new_value: 18.50,
-      user_id: 'Sistema',
-      adjustment_date: '2024-10-24T23:00:00',
-      unit: 'Todas',
-      adjustment_type: 'Corrección',
-    },
-  ], [])
-
-  // Cargar datos
+  // Cargar datos — todos los filtros viajan server-side (endpoint
+  // /manual_adjustment/price/date-range), incluido el total real para paginar.
   const fetchAdjustments = useCallback(async () => {
     setLoading(true)
     setError(null)
 
     try {
-      const response = await priceAdjustmentService.getRecentAdjustments({
-        page: currentPage,
-        limit: itemsPerPage,
-        ...filters,
-      })
+      const offset = (currentPage - 1) * itemsPerPage
+      const response = await priceAdjustmentService.getByDateRange(
+        appliedFilters.dateFrom,
+        appliedFilters.dateTo,
+        appliedFilters.product.trim(),
+        itemsPerPage,
+        offset,
+        {
+          user: appliedFilters.user.trim(),
+          unit: appliedFilters.unit,
+          adjustment_type: appliedFilters.adjustmentType,
+        },
+      )
 
+      const total = response.total || 0
       setAdjustments(response.data || [])
-      setTotalResults(response.total || response.data?.length || 0)
-      setTotalPages(Math.ceil((response.total || response.data?.length || 0) / itemsPerPage))
-    } catch {
-      // Si falla la API, usar datos de demostración
-      setAdjustments(demoData)
-      setTotalResults(150) // Simular 150 resultados totales como en la referencia
-      setTotalPages(6) // 6 páginas como en la referencia
-      setError(null)
+      setTotalResults(total)
+      setTotalPages(Math.max(1, Math.ceil(total / itemsPerPage)))
+    } catch (err) {
+      // Sin fallback demo: los errores se muestran con reintento.
+      setError(err?.message || t('priceAdjustmentHistory.error.loading'))
     } finally {
       setLoading(false)
     }
-  }, [currentPage, filters, itemsPerPage, demoData])
+  }, [currentPage, appliedFilters, t])
 
   useEffect(() => {
     fetchAdjustments()
@@ -96,25 +87,31 @@ const PriceAdjustmentHistory = () => {
 
   // Handlers para filtros
   const handleFilterChange = useCallback((field, value) => {
-    setFilters(prev => ({ ...prev, [field]: value }))
+    setDraftFilters(prev => ({ ...prev, [field]: value }))
   }, [])
 
   const handleClearFilters = useCallback(() => {
-    setFilters({
-      product: '',
-      user: '',
-      unit: '',
-      adjustmentType: '',
-      dateFrom: '',
-      dateTo: '',
-    })
+    setDraftFilters(EMPTY_FILTERS)
+    setAppliedFilters(EMPTY_FILTERS)
+    setDateRangeError('')
     setCurrentPage(1)
   }, [])
 
-  const handleApplyFilters = useCallback(() => {
+  const applyFilters = useCallback(() => {
+    // Validación de rango: ISO yyyy-mm-dd compara lexicográficamente.
+    if (draftFilters.dateFrom && draftFilters.dateTo && draftFilters.dateFrom > draftFilters.dateTo) {
+      setDateRangeError(t('priceAdjustmentHistory.filters.dateRangeError'))
+      return
+    }
+    setDateRangeError('')
+    setAppliedFilters(draftFilters)
     setCurrentPage(1)
-    fetchAdjustments()
-  }, [fetchAdjustments])
+  }, [draftFilters, t])
+
+  const handleSubmitFilters = useCallback((e) => {
+    e.preventDefault()
+    applyFilters()
+  }, [applyFilters])
 
   const handleRefresh = useCallback(() => {
     fetchAdjustments()
@@ -152,6 +149,16 @@ const PriceAdjustmentHistory = () => {
     return 'correction'
   }, [])
 
+  // Tipo declarado en metadata (MARKET_UPDATE, etc.) con fallback a la
+  // dirección del cambio. El SELECT trae 'price' literal, que no dice nada.
+  const getTypeLabel = useCallback((adjustment, changeType) => {
+    const metaType = adjustment.metadata?.adjustment_type
+    if (metaType && ADJUSTMENT_TYPE_OPTIONS.includes(metaType)) {
+      return t(`priceAdjustmentHistory.adjustmentType.${metaType}`)
+    }
+    return t(`priceAdjustmentHistory.type.${changeType}`)
+  }, [t])
+
   // Función para formatear fecha
   const formatDateTime = useCallback((dateString) => {
     if (!dateString) return '—'
@@ -169,6 +176,9 @@ const PriceAdjustmentHistory = () => {
   const formatPrice = useCallback((price) => {
     return `PYG ${Number(price || 0).toLocaleString('es-PY')}`
   }, [])
+
+  const inputClass = "h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+  const filterLabelClass = "text-[10px] font-black uppercase text-slate-400 tracking-wider"
 
   // Renderizar contenido
   const renderContent = () => {
@@ -201,23 +211,29 @@ const PriceAdjustmentHistory = () => {
         {/* Contador de resultados */}
         <div className="px-6 py-4 border-b border-border-subtle flex justify-between items-center bg-[#fafafa]">
           <p className="text-[13px] text-gray-500 font-medium">
-            {t('priceAdjustmentHistory.results.showing')}{' '}
-            <span className="font-bold text-text-main">{startIndex}</span>{' '}
-            {t('priceAdjustmentHistory.results.to')}{' '}
-            <span className="font-bold text-text-main">{endIndex}</span>{' '}
-            {t('priceAdjustmentHistory.results.of')}{' '}
-            <span className="font-bold text-text-main">{totalResults}</span>{' '}
-            {t('priceAdjustmentHistory.results.results')}
+            {totalResults === 0 ? (
+              t('priceAdjustmentHistory.results.results')
+            ) : (
+              <>
+                {t('priceAdjustmentHistory.results.showing')}{' '}
+                <span className="font-bold text-text-main">{startIndex}</span>{' '}
+                {t('priceAdjustmentHistory.results.to')}{' '}
+                <span className="font-bold text-text-main">{endIndex}</span>{' '}
+                {t('priceAdjustmentHistory.results.of')}{' '}
+                <span className="font-bold text-text-main">{totalResults}</span>{' '}
+                {t('priceAdjustmentHistory.results.results')}
+              </>
+            )}
           </p>
           <div className='flex gap-2'>
-            <button 
-              className="p-2 text-text-secondary hover:bg-slate-100 rounded transition-colors" 
+            <button
+              className="p-2 text-text-secondary hover:bg-slate-100 rounded transition-colors"
               onClick={handleRefresh}
               title='Refrescar'
             >
               <RefreshCw size={18} />
             </button>
-            <button 
+            <button
               className="p-2 text-text-secondary hover:bg-slate-100 rounded transition-colors"
               onClick={handleExport}
               title='Descargar CSV'
@@ -253,12 +269,18 @@ const PriceAdjustmentHistory = () => {
                   const adjustmentId = adjustment.adjustment_id || adjustment.id || '—'
 
                   return (
-                    <tr key={adjustment.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={adjustment.id || adjustment.adjustment_id} className="hover:bg-gray-50 transition-colors">
                       <td className="py-4 px-6 font-mono text-xs text-primary font-bold">
                         {adjustmentId}
                       </td>
                       <td className="py-4 px-4 font-bold text-text-main">
                         {adjustment.product_name || adjustment.product?.name || '—'}
+                        {adjustment.variant_name && (
+                          <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-primary/10 text-primary align-middle">
+                            <Package size={10} />
+                            {adjustment.variant_name}
+                          </span>
+                        )}
                       </td>
                       <td className="py-4 px-4 text-slate-500">
                         {formatPrice(adjustment.old_value || adjustment.old_price)}
@@ -278,7 +300,7 @@ const PriceAdjustmentHistory = () => {
                         </div>
                       </td>
                       <td className="py-4 px-4">
-                        {adjustment.user_id || adjustment.user?.name || '—'}
+                        {adjustment.user_name || adjustment.user_id || '—'}
                       </td>
                       <td className="py-4 px-4 text-xs text-slate-500">
                         {formatDateTime(adjustment.adjustment_date || adjustment.created_at)}
@@ -288,7 +310,7 @@ const PriceAdjustmentHistory = () => {
                       </td>
                       <td className="py-4 px-6 text-right">
                         <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${changeType === 'increase' ? 'bg-[#dff6dd] text-[#107c10]' : changeType === 'decrease' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}>
-                          {adjustment.adjustment_type || t(`priceAdjustmentHistory.type.${changeType}`)}
+                          {getTypeLabel(adjustment, changeType)}
                         </span>
                       </td>
                     </tr>
@@ -335,7 +357,7 @@ const PriceAdjustmentHistory = () => {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500">
       {/* Filtros */}
-      <div className="bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle">
+      <form className="bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle" onSubmit={handleSubmitFilters}>
         <div className="flex items-center gap-2 mb-6">
           <Filter size={18} className='text-primary' />
           <h3 className="text-sm font-black uppercase text-text-main tracking-widest">
@@ -344,97 +366,115 @@ const PriceAdjustmentHistory = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className='flex flex-col gap-1.5'>
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+            <label htmlFor="pa-hist-product" className={filterLabelClass}>
               {t('priceAdjustmentHistory.filters.product')}
-            </span>
+            </label>
             <input
+              id="pa-hist-product"
               type="text"
               placeholder={t('priceAdjustmentHistory.filters.productPlaceholder')}
-              value={filters.product}
+              value={draftFilters.product}
               onChange={(e) => handleFilterChange('product', e.target.value)}
-              className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+              className={inputClass}
             />
           </div>
 
           <div className='flex flex-col gap-1.5'>
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+            <label htmlFor="pa-hist-user" className={filterLabelClass}>
               {t('priceAdjustmentHistory.filters.user')}
-            </span>
+            </label>
             <input
+              id="pa-hist-user"
               type="text"
               placeholder={t('priceAdjustmentHistory.filters.userPlaceholder')}
-              value={filters.user}
+              value={draftFilters.user}
               onChange={(e) => handleFilterChange('user', e.target.value)}
-              className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+              className={inputClass}
             />
           </div>
 
           <div className='flex flex-col gap-1.5'>
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+            <label htmlFor="pa-hist-unit" className={filterLabelClass}>
               {t('priceAdjustmentHistory.filters.unit')}
-            </span>
-            <input
-              type="text"
-              placeholder={t('priceAdjustmentHistory.filters.unitPlaceholder')}
-              value={filters.unit}
+            </label>
+            <select
+              id="pa-hist-unit"
+              value={draftFilters.unit}
               onChange={(e) => handleFilterChange('unit', e.target.value)}
-              className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-            />
+              className={inputClass}
+            >
+              <option value="">{t('priceAdjustmentHistory.filters.unitPlaceholder')}</option>
+              {UNIT_OPTIONS.map(unit => (
+                <option key={unit} value={unit}>{unit}</option>
+              ))}
+            </select>
           </div>
 
           <div className='flex flex-col gap-1.5'>
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+            <label htmlFor="pa-hist-type" className={filterLabelClass}>
               {t('priceAdjustmentHistory.filters.adjustmentType')}
-            </span>
-            <input
-              type="text"
-              placeholder={t('priceAdjustmentHistory.filters.adjustmentTypePlaceholder')}
-              value={filters.adjustmentType}
+            </label>
+            <select
+              id="pa-hist-type"
+              value={draftFilters.adjustmentType}
               onChange={(e) => handleFilterChange('adjustmentType', e.target.value)}
-              className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-            />
+              className={inputClass}
+            >
+              <option value="">{t('priceAdjustmentHistory.filters.adjustmentTypePlaceholder')}</option>
+              {ADJUSTMENT_TYPE_OPTIONS.map(typeValue => (
+                <option key={typeValue} value={typeValue}>
+                  {t(`priceAdjustmentHistory.adjustmentType.${typeValue}`)}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
         {/* Segunda fila: Rango de fechas y acciones */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mt-6 pt-6 border-t border-slate-50">
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mt-6 pt-6 border-t border-slate-50">
           <div className="flex-1 max-w-md flex flex-col gap-1.5">
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+            <span className={filterLabelClass}>
               {t('priceAdjustmentHistory.filters.dateRange')}
             </span>
             <div className="flex items-center gap-2">
               <input
-                type="text"
-                value={filters.dateFrom}
+                type="date"
+                aria-label={t('priceAdjustmentHistory.filters.dateFromPlaceholder')}
+                value={draftFilters.dateFrom}
                 onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                className="h-11 flex-1 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                className={inputClass}
               />
               <span className="text-slate-300">—</span>
               <input
-                type="text"
-                value={filters.dateTo}
+                type="date"
+                aria-label={t('priceAdjustmentHistory.filters.dateToPlaceholder')}
+                value={draftFilters.dateTo}
                 onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                className="h-11 flex-1 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                className={inputClass}
               />
             </div>
+            {dateRangeError && (
+              <p className="text-error text-[10px] font-bold uppercase" role="alert">{dateRangeError}</p>
+            )}
           </div>
 
           <div className="flex gap-3">
             <button
+              type="button"
               onClick={handleClearFilters}
               className="px-6 py-2.5 border border-border-subtle text-text-main text-xs font-bold uppercase rounded hover:bg-slate-50 transition-all"
             >
               {t('priceAdjustmentHistory.filters.clear')}
             </button>
             <button
-              onClick={handleApplyFilters}
+              type="submit"
               className="px-6 py-2.5 bg-primary text-white text-xs font-black uppercase rounded shadow-sm hover:bg-primary-hover active:scale-[0.98] transition-all"
             >
               {t('priceAdjustmentHistory.filters.apply')}
             </button>
           </div>
         </div>
-      </div>
+      </form>
 
       {/* Contenido principal */}
       {renderContent()}

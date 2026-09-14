@@ -200,6 +200,17 @@ export const priceAdjustments = {
   'priceAdjustmentHistory.empty.title': 'No se encontraron resultados',
   'priceAdjustmentHistory.empty.description':
     'Prueba a cambiar o eliminar algunos filtros para encontrar lo que buscas.',
+  'priceAdjustmentHistory.table.variant': 'Variante',
+  'priceAdjustmentHistory.filters.dateRangeError':
+    'La fecha de inicio no puede ser mayor a la fecha de fin',
+  'priceAdjustmentHistory.adjustmentType.MARKET_UPDATE': 'Ajuste de Mercado',
+  'priceAdjustmentHistory.adjustmentType.COMPETITOR_ADJUSTMENT': 'Por Competencia',
+  'priceAdjustmentHistory.adjustmentType.PROMOTION': 'Promoción',
+  'priceAdjustmentHistory.adjustmentType.COST_CHANGE': 'Cambio de Costo',
+  'priceAdjustmentHistory.adjustmentType.CURRENCY_ADJUSTMENT': 'Ajuste por Divisa',
+  'priceAdjustmentHistory.adjustmentType.CORRECTION': 'Corrección',
+  'priceAdjustmentHistory.adjustmentType.SEASONAL': 'Estacional',
+  'priceAdjustmentHistory.adjustmentType.MANUAL_ADJUSTMENT': 'Ajuste Manual',
   'priceAdjustmentHistory.error.title': 'Error al cargar historial',
   'priceAdjustmentHistory.error.loading':
     'No se pudo cargar el historial de ajustes',

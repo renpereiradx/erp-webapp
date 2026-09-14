@@ -256,15 +256,27 @@ export const priceAdjustmentService = {
   },
 
   // New method for date range queries
-  async getByDateRange(startDate, endDate, productId = null, limit = 50, offset = 0) {
+  // extraFilters: { user, unit, adjustment_type } — filtros del historial
+  // global que el backend aplica server-side (params user/unit/adjustment_type).
+  async getByDateRange(
+    startDate,
+    endDate,
+    productId = null,
+    limit = 50,
+    offset = 0,
+    extraFilters: { user?: string; unit?: string; adjustment_type?: string } = {}
+  ) {
     const startTime = Date.now();
-    
+
     try {
       const result = await _fetchWithRetry(async () => {
         const params = new URLSearchParams();
         if (startDate) params.append('start_date', startDate);
         if (endDate) params.append('end_date', endDate);
         if (productId) params.append('product_id', productId);
+        if (extraFilters.user) params.append('user', extraFilters.user);
+        if (extraFilters.unit) params.append('unit', extraFilters.unit);
+        if (extraFilters.adjustment_type) params.append('adjustment_type', extraFilters.adjustment_type);
         params.append('limit', limit.toString());
         params.append('offset', offset.toString());
 
@@ -274,11 +286,12 @@ export const priceAdjustmentService = {
 
       telemetry.record('priceAdjustment.service.getByDateRange', {
         duration: Date.now() - startTime,
-        count: result?.adjustments?.length || 0
+        productId
       });
 
-      // Transform the data to match expected frontend structure
-      return { data: transformAdjustmentData(result?.adjustments) };
+      const data = transformAdjustmentData(result?.adjustments);
+      // Total real server-side (COUNT OVER) para paginar sin adivinar.
+      return { data, total: result?.total ?? data.length };
     } catch (error: any) {
       telemetry.record('priceAdjustment.service.error', {
         duration: Date.now() - startTime,
