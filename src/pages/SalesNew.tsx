@@ -168,8 +168,15 @@ const getUnitDisplay = (unit: Record<string, unknown>): ProductDisplay => {
   const display = getProductDisplay(unit);
   const variantId = (unit.variant_id as string | null) ?? null;
   const variantName = (unit.variant_name as string | null) ?? null;
+  // Fila plana: el precio efectivo viaja en `current_price` — variante-primero
+  // con fallback al padre (la herencia ya viene resuelta por el backend); los
+  // campos legacy (sale_price/unit_prices) no existen en esta fila.
+  const flatPrice = Number(unit.current_price ?? 0);
+  const price = flatPrice > 0 ? flatPrice : display.price;
   return {
     ...display,
+    price,
+    has_valid_price: price > 0,
     has_variants: false, // fila unidad: se agrega directo, sin selector
     variantId,
     variantName: variantName ?? undefined,
