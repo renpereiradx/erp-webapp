@@ -19,6 +19,7 @@ import { formatCurrency } from '@/utils/currencyUtils';
 import { cn } from '@/lib/utils';
 import { usePriceTransactions } from '@/hooks/usePriceTransactions';
 import { useCostTransactions } from '@/hooks/useCostTransactions';
+import { priceAdjustmentService } from '@/services/priceAdjustmentService';
 
 interface CommonModalProps {
   productId: string;
@@ -26,6 +27,17 @@ interface CommonModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+/**
+ * Chip que identifica a qué variante pertenece una transacción de precio.
+ * Las variantes conviven con el padre en price_transactions (mismo
+ * product_id), así que sin esta etiqueta el historial es ambiguo.
+ */
+const VariantTag: React.FC<{ name?: string; id?: string | null }> = ({ name, id }) => (
+  <span className="text-body-sm-bold rounded-full px-2 py-0.5 bg-primary-fixed text-on-primary-fixed whitespace-nowrap">
+    {name || id || '?'}
+  </span>
+);
 
 const historyHeadClass = 'text-label-caps uppercase text-on-surface-deep bg-surface-muted';
 
@@ -52,7 +64,11 @@ const HistoryEmpty: React.FC<{ message: string }> = ({ message }) => (
 // ----------------------------------------------------------------------------
 // 1. ProductPriceHistoryDialog
 // ----------------------------------------------------------------------------
-export function ProductPriceHistoryDialog({ productId, productName, isOpen, onClose }: CommonModalProps) {
+export function ProductPriceHistoryDialog({ productId, productName, isOpen, onClose, variantNameById }: CommonModalProps & {
+  // Mapa variant_id → nombre para etiquetar filas de variantes (opcional:
+  // sin mapa se muestra el id crudo).
+  variantNameById?: Record<string, string>;
+}) {
   const { t } = useI18n();
   const { getProductHistory, loading, error, formatTransactionType } = usePriceTransactions();
   const [history, setHistory] = useState<any[]>([]);
@@ -109,6 +125,7 @@ export function ProductPriceHistoryDialog({ productId, productName, isOpen, onCl
               {history.map((item: any, i: number) => {
                 const priceChange = item.price_change || (item.new_price - item.old_price);
                 const isIncrease = priceChange > 0;
+                const variantId: string | null = item.variant_id || item.metadata?.variant_id || null;
                 return (
                   <TableRow key={item.transaction_id || i} className="hover:bg-surface-muted transition-colors duration-150">
                     <TableCell className="text-data-mono font-data-mono text-on-surface-deep whitespace-nowrap">
@@ -117,7 +134,12 @@ export function ProductPriceHistoryDialog({ productId, productName, isOpen, onCl
                       })}
                     </TableCell>
                     <TableCell className="text-body-md text-foreground whitespace-nowrap">
-                      {formatTransactionType(item.transaction_type)}
+                      <div className="flex flex-col gap-xs">
+                        <span>{formatTransactionType(item.transaction_type)}</span>
+                        {variantId && (
+                          <VariantTag id={variantId} name={variantNameById?.[variantId]} />
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <div className="flex flex-col gap-xs">
@@ -283,16 +305,24 @@ export function ProductCostHistoryDialog({ productId, productName, isOpen, onClo
 interface AdjustmentProps extends CommonModalProps {
   currentPriceOrCost: number;
   unit: string;
+  // Cuando el ajuste viene de una fila de VARIANTE de la tabla de precios,
+  // viaja variant_id: sin él el backend upsertea la fila del producto padre
+  // (owner report 2026-09-14).
+  variantId?: string | null;
+  variantName?: string;
   onSuccess?: () => void;
 }
 
-export function ProductPriceAdjustmentDialog({ productId, productName, currentPriceOrCost, unit, isOpen, onClose, onSuccess }: AdjustmentProps) {
+export function ProductPriceAdjustmentDialog({ productId, productName, currentPriceOrCost, unit, variantId, variantName, isOpen, onClose, onSuccess }: AdjustmentProps) {
   const { t } = useI18n();
-  const { registerTransaction, loading, error, clearError } = usePriceTransactions();
   const [newPrice, setNewPrice] = useState('');
   const [reason, setReason] = useState('');
   const [costFactor, setCostFactor] = useState('');
   const [marginPercent, setMarginPercent] = useState('');
+  // El write va directo por priceAdjustmentService (no lanza): el error se
+  // guarda local para que el modal NO se cierre ante un fallo.
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -300,32 +330,43 @@ export function ProductPriceAdjustmentDialog({ productId, productName, currentPr
       setReason('');
       setCostFactor('');
       setMarginPercent('');
-      clearError();
+      setError(null);
     }
-  }, [isOpen, clearError]);
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPrice || parseFloat(newPrice) <= 0) return;
 
+    setLoading(true);
+    setError(null);
     try {
-      await registerTransaction({
+      // /manual_adjustment/price (no /price-transactions): es el único write
+      // path variant-aware — registra el ajuste Y su price_transaction.
+      const result = await priceAdjustmentService.createPriceAdjustment({
         product_id: productId,
-        transaction_type: 'MANUAL_ADJUSTMENT',
+        variant_id: variantId || undefined,
         new_price: parseFloat(newPrice),
         unit: unit || 'unit',
-        price_type: 'SELLING_PRICE',
         reason: reason || 'Ajuste manual desde ficha',
-        cost_factor: costFactor ? parseFloat(costFactor) : undefined,
-        margin_percent: marginPercent ? parseFloat(marginPercent) : undefined,
+        adjustment_type: 'MANUAL_ADJUSTMENT',
+        old_price: currentPriceOrCost,
         metadata: {
-          source: 'product_details'
+          source: 'product_details',
+          ...(costFactor ? { cost_factor: parseFloat(costFactor) } : {}),
+          ...(marginPercent ? { margin_percent: parseFloat(marginPercent) } : {})
         }
       });
+      if (!result.success) {
+        throw new Error(result.error || 'Error al registrar el ajuste');
+      }
       onSuccess?.();
       onClose();
     } catch (err) {
       console.error(err);
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -365,7 +406,14 @@ export function ProductPriceAdjustmentDialog({ productId, productName, currentPr
         )}
 
         <div className="p-sm bg-primary-fixed text-on-primary-fixed rounded-md flex justify-between text-body-md-bold">
-          <span>{t('products.adjust.current_price', 'Precio Actual:')}</span>
+          <span>
+            {t('products.adjust.current_price', 'Precio Actual:')}
+            {variantId && (
+              <span className="block text-body-sm-bold opacity-80">
+                {t('products.details.table.variant_tag', 'Variante')}: {variantName || variantId}
+              </span>
+            )}
+          </span>
           <span className="text-data-mono font-data-mono">{formatCurrency(currentPriceOrCost)} / {unit}</span>
         </div>
 

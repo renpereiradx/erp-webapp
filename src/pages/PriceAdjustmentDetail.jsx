@@ -15,12 +15,18 @@ import { variantService } from '@/services/variantService';
 import { getGroupedUnitOptions, getUnitLabel } from '@/constants/units';
 import useAuthStore from '@/store/useAuthStore';
 
+// Las variantes enriquecidas (/products/{id}/variants) exponen `id`, no
+// `variant_id`; normalizamos para matchear contra selectedVariantId.
+const getVariantId = (v) => v?.variant_id || v?.id || '';
+
 // Devuelve el precio de una unidad concreta dentro de unit_prices, o null si no existe.
 // Evita tomar ciegamente unit_prices[0] (que el backend ordena alfabéticamente por unidad,
 // no por relevancia): para un producto con unit/hour, el precio correcto es el de la unidad
 // seleccionada (p. ej. base_unit), no el que aparece primero en el array.
-const getUnitPriceFor = (unitList, unit) => {
-  const up = (unitList || []).find(u => u.unit === unit);
+// Con requireParent filtra filas de variantes: unit_prices del padre enriquecido
+// viaja mezclado (padre + variantes) y el precio del padre es la fila sin variant_id.
+const getUnitPriceFor = (unitList, unit, requireParent = false) => {
+  const up = (unitList || []).find(u => u.unit === unit && (!requireParent || !u.variant_id));
   return up ? up.price_per_unit : null;
 };
 
@@ -214,18 +220,19 @@ const PriceAdjustmentDetail = () => {
 
   // Función para cargar el historial de ajustes (compartida entre montaje y actualización)
   const loadHistory = useCallback(async () => {
-    if (!product || !product.product_id) return;
+    if (!product || !(product.product_id || product.id)) return;
 
     setLoadingHistory(true);
     setHistoryError(null);
 
     try {
-      const result = await priceAdjustmentService.getProductHistory(product.product_id, 10, 0);
-      // Filtrar solo ajustes de precio
-      const priceAdjustments = (result.history || []).filter(
-        adj => adj.adjustment_type === 'price'
-      );
-      setHistory(priceAdjustments);
+      // /manual_adjustment/product/{id}/history es de AJUSTES DE STOCK
+      // (inventory): filtraba adjustment_type==='price' y quedaba siempre
+      // vacío. El historial de precios vive en /manual_adjustment/price/
+      // date-range, que acepta product_id sin fechas (owner report 2026-09-14).
+      const productId = product.product_id || product.id;
+      const result = await priceAdjustmentService.getByDateRange('', '', productId, 10, 0);
+      setHistory(result.data || []);
     } catch (error) {
       console.error('Error loading history:', error);
       setHistoryError(error.message || t('priceAdjustmentDetail.history.error', 'Error al cargar historial'));
@@ -286,9 +293,9 @@ const PriceAdjustmentDetail = () => {
       return
     }
 
-    const selectedVariant = variants.find(v => v.variant_id === selectedVariantId);
+    const selectedVariant = variants.find(v => getVariantId(v) === selectedVariantId);
     const unitPricesForSubmit = selectedVariant ? selectedVariant.unit_prices : product.unit_prices;
-    const currentOldPrice = getUnitPriceFor(unitPricesForSubmit, formData.unit)
+    const currentOldPrice = getUnitPriceFor(unitPricesForSubmit, formData.unit, !selectedVariant)
       ?? (selectedVariant ? (selectedVariant.current_price ?? selectedVariant.price) : (product.current_price ?? product.price))
       ?? 0;
 
@@ -337,9 +344,9 @@ const PriceAdjustmentDetail = () => {
   }
 
   // Handle different price formats from API (financial endpoint returns unit_prices array)
-  const selectedVariant = variants.find(v => v.variant_id === selectedVariantId);
+  const selectedVariant = variants.find(v => getVariantId(v) === selectedVariantId);
   const unitPricesForDisplay = selectedVariant ? selectedVariant.unit_prices : product.unit_prices;
-  const currentPrice = getUnitPriceFor(unitPricesForDisplay, formData.unit)
+  const currentPrice = getUnitPriceFor(unitPricesForDisplay, formData.unit, !selectedVariant)
     ?? (selectedVariant ? (selectedVariant.current_price ?? selectedVariant.price) : (product.current_price ?? product.price))
     ?? 0;
 
@@ -420,7 +427,7 @@ const PriceAdjustmentDetail = () => {
                   >
                     <option value="">{t('priceAdjustmentDetail.variant.base', 'Producto Principal (General)')}</option>
                     {variants.map(v => (
-                      <option key={v.variant_id} value={v.variant_id}>
+                      <option key={getVariantId(v)} value={getVariantId(v)}>
                         {v.variant_name} {v.sku ? `(${v.sku})` : ''} - PYG {(getUnitPriceFor(v.unit_prices, formData.unit) ?? v.current_price ?? v.price ?? 0).toLocaleString('es-PY')}
                       </option>
                     ))}
@@ -639,6 +646,11 @@ const PriceAdjustmentDetail = () => {
                                 </div>
                               </td>
                               <td className="py-4 px-4 max-w-[200px]">
+                                {adj.variant_id && (
+                                  <p className='text-[9px] font-black uppercase text-primary tracking-wider truncate'>
+                                    {variants.find(v => getVariantId(v) === adj.variant_id)?.variant_name || adj.variant_id}
+                                  </p>
+                                )}
                                 <p className='truncate italic text-slate-500' title={adj.reason}>
                                   {adj.reason}
                                 </p>

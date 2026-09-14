@@ -177,6 +177,7 @@ export const products = {
   'products.details.section.margin_analysis': 'Análisis de Margen',
   'products.details.section.financial_health': 'Salud Financiera',
   'products.details.table.unit': 'Unidad',
+  'products.details.table.variant_tag': 'Variante',
   'products.details.table.price': 'Precio',
   'products.details.table.currency': 'Moneda',
   'products.details.label.state': 'Estado',

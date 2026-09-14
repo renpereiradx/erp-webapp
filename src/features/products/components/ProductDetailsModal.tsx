@@ -56,6 +56,8 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
   // Track specific row unit and value for adjusting
   const [selectedUnit, setSelectedUnit] = useState('unit');
   const [selectedValue, setSelectedValue] = useState(0);
+  // Variante de la fila de precio elegida para ajustar (null = fila del padre).
+  const [selectedVariantForRow, setSelectedVariantForRow] = useState<string | null>(null);
 
   // Variants state
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -101,6 +103,15 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
   const variantsTotalStock = variants.reduce((acc, v) => acc + (v.stock_quantity || 0), 0);
   const totalConsolidatedStock = stockQuantity; // stockQuantity is already consolidated
   const baseStock = Math.max(0, stockQuantity - variantsTotalStock);
+
+  // unit_prices del padre enriquecido viaja mezclado (filas del padre + de sus
+  // variantes, todas con la misma unidad): sin la etiqueta el usuario no puede
+  // distinguir a qué variante pertenece cada precio (owner report 2026-09-14).
+  const variantNameById: Record<string, string> = {};
+  variants.forEach((v) => {
+    const vid = (v as any).variant_id || v.id;
+    if (vid) variantNameById[vid] = v.variant_name;
+  });
 
   const isAvailable = !(product.state === false || product.status === false || product.is_active === false);
 
@@ -251,7 +262,16 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                     <TableBody>
                       {unitPrices.map((up: any) => (
                         <TableRow key={up.id} className="hover:bg-surface-muted transition-colors duration-150">
-                          <TableCell className="text-body-md text-foreground">{up.unit || '-'}</TableCell>
+                          <TableCell className="text-body-md text-foreground">
+                            <div className="flex items-center gap-sm">
+                              <span>{up.unit || '-'}</span>
+                              {up.variant_id && (
+                                <span className="text-body-sm-bold rounded-full px-2 py-0.5 bg-primary-fixed text-on-primary-fixed">
+                                  {variantNameById[up.variant_id] || up.variant_id}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell className="text-data-mono font-data-mono text-right text-foreground">{formatCurrency(up.price_per_unit)}</TableCell>
                           <TableCell className="text-data-mono font-data-mono text-on-surface-deep">
                             {up.updated_at || up.effective_date ? new Date(up.updated_at || up.effective_date).toLocaleDateString('es') : '-'}
@@ -270,6 +290,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                               () => {
                                 setSelectedUnit(up.unit || 'unit');
                                 setSelectedValue(up.price_per_unit || 0);
+                                setSelectedVariantForRow(up.variant_id || null);
                                 setIsPriceAdjustmentOpen(true);
                               },
                               <Edit className="w-4 h-4" />
@@ -555,6 +576,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
         <ProductPriceHistoryDialog
           productId={productId}
           productName={productName}
+          variantNameById={variantNameById}
           isOpen={isPriceHistoryOpen}
           onClose={() => setIsPriceHistoryOpen(false)}
         />
@@ -575,6 +597,8 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
           productName={productName}
           currentPriceOrCost={selectedValue}
           unit={selectedUnit}
+          variantId={selectedVariantForRow}
+          variantName={selectedVariantForRow ? variantNameById[selectedVariantForRow] : undefined}
           isOpen={isPriceAdjustmentOpen}
           onClose={() => setIsPriceAdjustmentOpen(false)}
           onSuccess={() => {

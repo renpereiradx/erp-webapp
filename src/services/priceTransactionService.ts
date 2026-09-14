@@ -195,44 +195,13 @@ export const priceTransactionService = {
       
       console.log('✅ PriceTransaction: Product history loaded');
       return { success: true, data: result };
-      
+
     } catch (error: any) {
       console.error('❌ PriceTransaction history error:', error.message);
-      
-      // Fallback demo data
-      if (process.env.NODE_ENV === 'development') {
-        const demoHistory = {
-          product_id: productId,
-          history: [
-            {
-              transaction_id: 1,
-              product_id: productId,
-              product_name: "Demo Product",
-              transaction_type: "MANUAL_ADJUSTMENT",
-              old_price: 15.00,
-              new_price: 16.50,
-              price_change: 1.50,
-              price_change_percent: 10.0,
-              effective_date: new Date().toISOString(),
-              reference_type: "manual_adjustment",
-              reference_id: "ADJ-001",
-              user_id: "demo_user",
-              user_name: "Demo User",
-              transaction_date: new Date().toISOString(),
-              reason: "Market price adjustment (demo)",
-              currency_id: "PYG",
-              exchange_rate: 1.0,
-              metadata: { source: "demo_mode" }
-            }
-          ],
-          limit,
-          offset,
-          count: 1
-        };
-        
-        return { success: true, data: demoHistory };
-      }
-      
+
+      // Sin fallback demo: enmascaraba fallos del backend con una fila falsa
+      // (owner report 2026-09-14: el historial del modal mostraba datos demo
+      // mientras el endpoint devolvía 500). El error se propaga al hook.
       return { success: false, error: error.message };
     }
   },

@@ -155,6 +155,7 @@ export const products = {
   'products.modal.completeness.progress': 'In progress',
 
   // Details modal
+  'products.details.table.variant_tag': 'Variant',
   'products.details.table.validity': 'Effective',
   'products.details.table.actions': 'Actions',
   'products.details.table.variance': 'Variance',

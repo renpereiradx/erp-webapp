@@ -73,6 +73,10 @@ export const priceAdjustmentService = {
       const result = await _fetchWithRetry(async () => {
         return await apiClient.post('/manual_adjustment/price', {
           product_id: adjustmentData.product_id,
+          // Sin variant_id (undefined) el backend ajusta la fila del producto
+          // padre; con variant_id upsertea la fila unit_prices de la variante
+          // (owner report 2026-09-14: se perdía y el ajuste caía al padre).
+          variant_id: adjustmentData.variant_id,
           new_price: adjustmentData.new_price,
           unit: adjustmentData.unit || 'unit',
           reason: adjustmentData.reason,
