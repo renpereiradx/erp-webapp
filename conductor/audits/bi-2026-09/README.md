@@ -18,7 +18,8 @@ backend vivo en `:5050`. FASE 2 arranca solo cuando el gate de FASE 1 (backend) 
 | **2A — CxP (6 páginas)** | ✅ 2026-09-16 | `CxP-*.md` ×6 | FE `2a1cce6` |
 | **2B — CxC (6 páginas)** | ✅ 2026-09-16 | `CxC-*.md` ×6 | FE `adc32fa` |
 | **2C — Dashboard (5 páginas)** | ✅ 2026-09-16 | `Dashboard-*.md` ×5 | FE `9e6bd6c` |
-| **2D — Sales Analytics (6 páginas)** | ✅ 2026-09-16 | `SalesAnalytics-*.md` ×6 | FE (este repo) |
+| **2D — Sales Analytics (6 páginas)** | ✅ 2026-09-16 | `SalesAnalytics-*.md` ×6 | FE `60df285` |
+| **2E — Pronósticos (5 páginas)** | ✅ 2026-09-16 | `Pronosticos-*.md` ×5 | FE (este repo) |
 | 2B — CxC (6) | ⏳ | | |
 | 2C — Dashboard (5) | ⏳ | | |
 | 2D — Sales Analytics (6) | ⏳ | | |
@@ -80,3 +81,12 @@ Categorías PASS condicional (patrón de referencia; categorías suman el total 
 crudos; "+12%" literal) · Descuentos PASS condicional (úNICA con guard reports:read ✅; datos
 reales; 1 fila incoherente 100.000→105.690 con "descuento 5.690"). Transversal: 5/6 rutas SIN
 guard; MOCK_* presentes en 4 archivos pero con API sana los datos reales reemplazan (catch-only).
+
+**Resultado 2E (veredicto por página)**: Dashboard Pronósticos FAIL P1 (insight
+"+33521439.14%" = monto en $ pegado como %; resto real y coherente) · Salud Inventario
+**PASS** (mejor pág del grupo: forecast por producto real y accionable) · Pronóstico Ventas
+**PASS** (historial+proyección reales, stats honestas post-T20: confianza 6,86%, R² 0,07;
+bandas T20 no mostradas) · Demanda PASS condicional (13 filas sin paginar; confianza 75%
+repetida) · Ingresos FAIL P1 (3 escenarios Gs. 0 "Prob. 0%" = mapping; bandas Gs. 0 no
+mapeadas; tabla mensual real). Transversal: 5 rutas sin guard; mock catch-only en el service;
+"₲"/"$"/"Gs." conviven (inconsistencia de símbolo).
