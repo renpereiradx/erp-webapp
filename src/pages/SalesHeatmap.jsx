@@ -80,7 +80,7 @@ const SalesHeatmap = () => {
     };
 
     const formatCurrency = (val) => {
-        if (!val) return '$0';
+        if (!val) return 'Gs. 0';
         return formatPYG(val);
     };
 

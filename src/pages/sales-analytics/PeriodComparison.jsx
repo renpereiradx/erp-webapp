@@ -104,6 +104,21 @@ const PeriodComparison = () => {
     }).format(value)
   }
 
+  // % de margen con guard de división por cero
+  const pctOf = (margin, sales) =>
+    sales > 0 ? `${((margin / sales) * 100).toFixed(1)}%` : '—'
+
+  // Delta en puntos porcentuales entre los márgenes de ambos períodos
+  const marginPct1 =
+    compareData?.period_1?.total_sales > 0
+      ? (compareData.period_1.gross_margin / compareData.period_1.total_sales) * 100
+      : 0
+  const marginPct2 =
+    compareData?.period_2?.total_sales > 0
+      ? (compareData.period_2.gross_margin / compareData.period_2.total_sales) * 100
+      : 0
+  const marginPp = Math.round((marginPct1 - marginPct2) * 10) / 10
+
   return (
     <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-display'>
       {/* Header */}
@@ -240,10 +255,10 @@ const PeriodComparison = () => {
             />
             <CompareKPICard
               title='Margen Bruto'
-              value={`${((compareData.period_1.gross_margin / compareData.period_1.total_sales) * 100).toFixed(1)}%`}
-              prevValue={`${((compareData.period_2.gross_margin / compareData.period_2.total_sales) * 100).toFixed(1)}%`}
+              value={`${pctOf(compareData.period_1.gross_margin, compareData.period_1.total_sales)}`}
+              prevValue={`${pctOf(compareData.period_2.gross_margin, compareData.period_2.total_sales)}`}
               diff={compareData.differences.margin_change_pct}
-              absDiff={`${compareData.differences.margin_change_pct >= 0 ? '+' : ''}${(compareData.differences.margin_change_pct * 0.1).toFixed(1)}pp`}
+              absDiff={`${marginPp >= 0 ? '+' : ''}${marginPp}pp`}
             />
           </div>
         )}
@@ -352,7 +367,7 @@ const CompareKPICard = ({ title, value, prevValue, diff, absDiff }) => (
         }`}
       >
         {diff >= 0 ? '+' : ''}
-        {diff}%
+        {Math.round(diff * 10) / 10}%
       </span>
     </div>
     <div className='flex items-end justify-between'>

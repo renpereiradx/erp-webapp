@@ -57,7 +57,10 @@ const InvoiceDetail = () => {
       </div>
       <div className="space-y-2">
         <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Error de Carga</h3>
-        <p className="text-sm text-slate-500 max-w-[320px] font-medium leading-relaxed">{error}</p>
+        {/* Mensaje para el usuario: el detalle técnico queda en consola (auditoría 2A: leak "is not a function") */}
+        <p className="text-sm text-on-surface-deep max-w-[320px] font-medium leading-relaxed">
+          No se pudo cargar el detalle de la factura. Verifique su conexión e intente nuevamente.
+        </p>
       </div>
       <button 
         onClick={() => fetchPayableById(id)}

@@ -7,6 +7,7 @@ import {
 } from './mocks/biForecastingMock'
 import { DEMO_CONFIG } from '@/config/demoAuth'
 import { apiClient } from '@/services/api'
+import { formatPYG } from '@/utils/currencyUtils'
 
 const toNumber = value => {
   const num = Number(value ?? 0);
@@ -51,6 +52,17 @@ const formatPeriod = (period) => {
   return startLabel === endLabel ? startLabel : `${startLabel} - ${endLabel}`;
 }
 
+// key_insights[].value mezcla semánticas según Type: los insights de
+// proyección de ingresos son montos, los de riesgo de inventario son
+// conteos y el resto son porcentajes (formatearlos todos como % producía
+// el "+33521439.14%" de la auditoría 2E).
+const formatInsightVariacion = (type, value) => {
+  const num = toNumber(value)
+  if (type === 'REVENUE_PROJECTION') return formatPYG(num, { compact: true, showSymbol: false })
+  if (type === 'INVENTORY_RISK') return `${Math.round(num)}`
+  return `${num >= 0 ? '+' : ''}${Math.round(num * 10) / 10}%`
+}
+
 const normalizeDashboard = (payload, _params) => {
   if (payload?.kpis && payload?.insights && payload?.recomendaciones) {
     return {
@@ -61,10 +73,9 @@ const normalizeDashboard = (payload, _params) => {
     }
   }
 
-  const salesGrowth = toNumber(payload?.sales_forecast?.summary?.growth_rate)
-  const revenueGrowth = toNumber(
-    payload?.revenue_forecast?.summary?.growth_rate,
-  )
+  const round1 = (v) => Math.round(toNumber(v) * 10) / 10
+  const salesGrowth = round1(payload?.sales_forecast?.summary?.growth_rate)
+  const revenueGrowth = round1(payload?.revenue_forecast?.summary?.growth_rate)
   const riskCount = toNumber(
     payload?.inventory_forecast?.summary?.high_risk_products,
   )
@@ -81,7 +92,7 @@ const normalizeDashboard = (payload, _params) => {
       id: index + 1,
       tipo: item?.impact === 'HIGH' ? 'ALTO_IMPACTO' : 'MEDIO_IMPACTO',
       impacto: impact,
-      variacion: `${numericValue >= 0 ? '+' : ''}${numericValue}%`,
+      variacion: formatInsightVariacion(item?.type, numericValue),
       titulo: item?.title || 'Insight',
       descripcion: item?.description || 'Sin descripción disponible.',
       icono: mapInsightIcon(item?.category),
