@@ -1,9 +1,6 @@
 import React, { useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { 
-  Wallet, 
-  Filter, 
-  Download, 
+import {
+  Wallet,
   ChevronRight
 } from "lucide-react";
 import { Link } from 'react-router-dom';
@@ -12,25 +9,25 @@ import { Link } from 'react-router-dom';
 import KpiSection from '@/features/cash-flow/components/KpiSection';
 import TrendChart from '@/features/cash-flow/components/TrendChart';
 import PaymentCalendar from '@/features/cash-flow/components/PaymentCalendar';
-import TreasuryInsights from '@/features/cash-flow/components/TreasuryInsights';
 import { useCashFlow } from '@/features/cash-flow/hooks/useCashFlow';
-import { bankPositions } from '@/features/cash-flow/data/mockData';
 
 /**
  * Main Page Component for Cash Flow Projection.
  * Refactored for 100% Fidelity with Stitch and layout-guidelines.md
  * Optimized header layout for a cleaner, more horizontal look.
+ * Auditoría BI 2A: sin datos de bancos ni insights (no hay endpoint) la
+ * sección TreasuryInsights y sus fabricaciones fueron eliminadas.
  */
 const CashFlowProjection = () => {
-  const { 
-    period, 
-    setPeriod, 
-    filteredData, 
-    stats, 
+  const {
+    period,
+    setPeriod,
+    filteredData,
+    stats,
     pendingPayments,
-    bankPositions,
-    insights,
-    loading 
+    loading,
+    error,
+    refresh
   } = useCashFlow();
 
   useEffect(() => {
@@ -43,6 +40,20 @@ const CashFlowProjection = () => {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] animate-pulse">Calculando Proyección Financiera...</p>
+      </div>
+    );
+  }
+
+  if (error && filteredData.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <p className="text-sm font-bold text-foreground">No se pudo cargar la proyección de flujo de caja.</p>
+        <button
+          onClick={refresh}
+          className="px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl bg-primary text-on-primary hover:bg-primary-container transition-all shadow-md"
+        >
+          Reintentar
+        </button>
       </div>
     );
   }
@@ -102,18 +113,6 @@ const CashFlowProjection = () => {
               })}
             </div>
 
-            <div className="hidden xl:block h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-
-            <div className="flex items-center gap-2.5">
-              <button className="inline-flex items-center px-3.5 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm active:scale-95 text-slate-600 dark:text-slate-300">
-                <Filter className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
-                Filtros
-              </button>
-              <button className="inline-flex items-center px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl bg-primary text-white hover:bg-blue-600 transition-all shadow-md shadow-primary/20 active:scale-95">
-                <Download className="h-3.5 w-3.5 mr-1.5" />
-                Exportar
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -132,21 +131,8 @@ const CashFlowProjection = () => {
         {/* Main Graphical Analysis */}
         <TrendChart data={filteredData} />
 
-        {/* Operational Grid: Pending Calendar & Strategic Insights */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          <div className="lg:col-span-8">
-            <PaymentCalendar pendingPayments={pendingPayments} />
-          </div>
-
-          <div className="lg:col-span-4">
-            <TreasuryInsights 
-              bankPositions={bankPositions} 
-              insights={insights}
-            />
-          </div>
-
-        </div>
+        {/* Operational Grid: Pending Calendar (fuente real: /payables/schedule) */}
+        <PaymentCalendar pendingPayments={pendingPayments} />
       </div>
     </div>
   );

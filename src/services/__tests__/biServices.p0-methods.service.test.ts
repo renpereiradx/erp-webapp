@@ -61,6 +61,16 @@ describe('payablesService — métodos P0', () => {
     await payablesService.getStatistics('week');
     expect(apiClient.get).toHaveBeenCalledWith('/payables/statistics', { params: { period: 'week' } });
   });
+
+  it('getCashFlowProjection usa /payables/cash-flow (contrato proyección, no el estado contable)', async () => {
+    await payablesService.getCashFlowProjection(90);
+    expect(apiClient.get).toHaveBeenCalledWith('/payables/cash-flow', { params: { days: 90 } });
+  });
+
+  it('getSupplierPayables usa /payables/supplier/{id} (detalle con facturas)', async () => {
+    await payablesService.getSupplierPayables('SUP-1');
+    expect(apiClient.get).toHaveBeenCalledWith('/payables/supplier/SUP-1');
+  });
 });
 
 describe('receivablesService — métodos P0', () => {

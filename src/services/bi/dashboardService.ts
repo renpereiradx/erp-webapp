@@ -8,9 +8,11 @@ import { BIParams, DashboardSummary, KPIData, SalesHeatmapData } from '../../typ
  */
 export const dashboardService = {
   /**
-   * Obtiene el resumen ejecutivo del dashboard
+   * Obtiene el resumen ejecutivo del dashboard.
+   * Devuelve el envelope {success, data} tal como llega del BE — el tipo
+   * honesto es lo que permite al store desenvolver .data (fix NA-DB-1).
    */
-  async getSummary(params: BIParams = {}): Promise<DashboardSummary> {
+  async getSummary(params: BIParams = {}): Promise<{ data: DashboardSummary }> {
     try {
       const response = await apiClient.get('/dashboard/summary', { params });
       return response;

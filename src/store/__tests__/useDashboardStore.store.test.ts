@@ -94,4 +94,17 @@ describe('useDashboardStore.fetchDashboardData — gate por permiso', () => {
     expect(payablesService.getOverview).toHaveBeenCalledTimes(1);
     expect(useDashboardStore.getState().salesPerformance).toEqual({ comparison: {} });
   });
+
+  it('NA-DB-1: guarda el payload (.data), no el envelope {success, data}', async () => {
+    await useDashboardStore.getState().fetchDashboardData('month');
+
+    const state = useDashboardStore.getState();
+    // El bug original: summary = {success, data:{sales...}} → Dashboard.jsx
+    // leía summary?.sales?.total → undefined → Resumen Ejecutivo en Gs. 0.
+    expect(state.summary).toEqual({ sales: { total: 1, count: 1, average_ticket: 1, currency: 'PYG' } });
+    expect(state.payablesOverview).toEqual({ payment_rate: 1 });
+    expect(state.receivablesOverview).toEqual({ collection_rate: 1 });
+    expect(state.trends).toEqual({ series: [] });
+    expect(state.profitabilityTrends).toEqual({ data_points: [] });
+  });
 });

@@ -6,7 +6,6 @@ import SupplierHeader from '@/features/accounts-payable/components/SupplierAnaly
 import DebtKpis from '@/features/accounts-payable/components/SupplierAnalysis/DebtKpis';
 import AnalysisCards from '@/features/accounts-payable/components/SupplierAnalysis/AnalysisCards';
 import ActiveObligationsTable from '@/features/accounts-payable/components/SupplierAnalysis/ActiveObligationsTable';
-import DebtTrendChart from '@/features/accounts-payable/components/SupplierAnalysis/DebtTrendChart';
 
 // Hooks
 import { useSupplierAnalysis } from '@/features/accounts-payable/hooks/useSupplierAnalysis';
@@ -14,10 +13,13 @@ import { useSupplierAnalysis } from '@/features/accounts-payable/hooks/useSuppli
 /**
  * Supplier Analysis and Debt Page.
  * 100% STITCH FIDELITY - RESPONSIVE OPTIMIZED
+ * Auditoría BI 2A: la página estaba EN BLANCO con API 200 (destructuring
+ * drift). Remapeada al contrato real; el gráfico de tendencia se eliminó
+ * (no hay endpoint histórico). Estados error/empty honestos.
  */
 const SupplierAnalysis = () => {
   const { id } = useParams();
-  const { loading, supplier, tableStats } = useSupplierAnalysis(id);
+  const { loading, supplier, tableStats, error } = useSupplierAnalysis(id);
 
   if (loading) {
     return (
@@ -30,7 +32,22 @@ const SupplierAnalysis = () => {
     );
   }
 
-  if (!supplier) return null;
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <p className="text-sm font-bold text-foreground">No se pudo cargar el análisis del proveedor.</p>
+        <p className="text-[10px] text-on-surface-deep uppercase tracking-widest">Verifique la conexión e intente nuevamente</p>
+      </div>
+    );
+  }
+
+  if (!supplier) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-2">
+        <p className="text-sm font-bold text-foreground">Proveedor no encontrado.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 pb-12">
@@ -38,7 +55,6 @@ const SupplierAnalysis = () => {
       <DebtKpis stats={supplier.stats} />
       <AnalysisCards rating={supplier.rating} terms={supplier.terms} />
       <ActiveObligationsTable invoices={supplier.invoices} summary={tableStats} />
-      <DebtTrendChart data={supplier.trend} />
     </div>
   );
 };

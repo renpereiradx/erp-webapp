@@ -389,7 +389,10 @@ const useDashboardStore = create<DashboardState>()(
             throw summaryRes.reason;
           }
 
-          const summaryData = summaryRes.value;
+          // NA-DB-1 (auditoría BI 2C): guardar el payload (.data), no el
+          // envelope {success, data} — el envelope dejaba el Resumen
+          // Ejecutivo en Gs. 0 con la API llena.
+          const summaryData = summaryRes.value.data;
           
           const alertsData = alertsRes.status === 'fulfilled' 
             ? ((alertsRes.value.data as any).alerts || []) 
@@ -411,8 +414,11 @@ const useDashboardStore = create<DashboardState>()(
             ? receivablesRes.value.data
             : null;
 
+          // Mismo desenvuelto que receivablesData: payment_rate vive en .data.
+          // El gate por permiso introduce la unión FinancialOverview |
+          // {data: null} — normalizo a payload o null.
           const payablesData = payablesRes.status === 'fulfilled'
-            ? payablesRes.value
+            ? ((payablesRes.value as { data?: unknown }).data ?? null)
             : null;
 
           const salesPerfData = salesPerfRes.status === 'fulfilled'

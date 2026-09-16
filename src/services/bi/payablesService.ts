@@ -134,6 +134,37 @@ export const payablesService = {
   },
 
   /**
+   * Proyección de flujo de caja (GET /payables/cash-flow?days=N).
+   * Contrato: CashFlowProjection {period, expected_inflows, expected_outflows,
+   * net_cash_flow, cumulative_flow, projection_days[]}. Es la fuente REAL de
+   * la página de proyección — /financial-reports/cash-flow devuelve el
+   * estado contable (CashFlowStatement), otro contrato (audit 2A).
+   */
+  async getCashFlowProjection(days = 30): Promise<any> {
+    try {
+      return await apiClient.get('/payables/cash-flow', { params: { days } });
+    } catch (error: any) {
+      console.error('Error fetching cash flow projection:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Facturas de un proveedor (GET /payables/supplier/{id}).
+   * Contrato: SupplierPayables {total_pending, total_overdue, pending_count,
+   * credit_terms, payment_history, average_days_to_pay, oldest_debt,
+   * payables[]}.
+   */
+  async getSupplierPayables(supplierId: string): Promise<any> {
+    try {
+      return await apiClient.get(`/payables/supplier/${supplierId}`);
+    } catch (error: any) {
+      console.error(`Error fetching payables for supplier ${supplierId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
    * Análisis detallado de un proveedor
    */
   async getSupplierAnalysis(supplierId: string): Promise<{ success: boolean, data: any }> {
