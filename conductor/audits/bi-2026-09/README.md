@@ -15,7 +15,8 @@ backend vivo en `:5050`. FASE 2 arranca solo cuando el gate de FASE 1 (backend) 
 
 | Bloque | Estado | Fichas | Commit |
 |:--|:--|:--|:--|
-| **2A — CxP (6 páginas)** | ✅ 2026-09-16 | `CxP-*.md` ×6 | FE (este repo) |
+| **2A — CxP (6 páginas)** | ✅ 2026-09-16 | `CxP-*.md` ×6 | FE `2a1cce6` |
+| **2B — CxC (6 páginas)** | ✅ 2026-09-16 | `CxC-*.md` ×6 | FE (este repo) |
 | 2B — CxC (6) | ⏳ | | |
 | 2C — Dashboard (5) | ⏳ | | |
 | 2D — Sales Analytics (6) | ⏳ | | |
@@ -36,3 +37,19 @@ destructuring contra contrato inexistente + error nunca renderizado). Transversa
 rechaza con 403; solo el dashboard tiene gate (y por `dashboard:read`, no `payables:read`).
 Corrección al plan: la página del detalle es `InvoiceDetail.jsx`, no `PayableDetail.jsx`
 (stale). RBAC BE ✅: `payables:read` 403 para VNDR01 en todos los endpoints probados.
+
+**Resultado 2B (veredicto por página)**: Resumen FAIL (P0-2 envenena el `Promise.all` → todo
+en ceros + curva SVG fabricada + chip "Sincronizado con API" falso + "-∞") · Lista Maestra
+FAIL (P0-2 → vacío deshonesto; Exportar/Nuevo Cobro/Aplicar = stubs con toast "Función no
+implementada todavía" — **los filtros no aplican**) · Detalle FAIL (2 métodos inexistentes;
+error honesto ✅; `GET /receivables/{id}` 200 verificado) · Vencidas FAIL trivial (puro
+name-mismatch `getOverdueAccounts` vs `getOverdue` — y es la ruta canónica de las alertas
+T5) · Aging **PASS condicional** (datos reales coherentes al centavo; 7 filas; deudas: chip
+"Oct 2023" hardcodeado, gráfico 6-meses sin fuente, buckets≠total en algunas filas) · Perfil
+Crédito FAIL (base real: saldo/facturas/paginación ✅ — pero score 50 fallback vs `risk_level:
+LOW` real, límite 150M literal con "80% utilizado" incoherente, barras literales "Gs. 250M",
+falsa alerta >90 días con 0 reales, vencimientos "Nov 12, 2023" imposibles). Transversal 2B:
+**P0-2 se amplía a 4 métodos faltantes** (`getMasterList`, `getTransactionDetail`,
+`getTransactionHistory`, `getOverdueAccounts`); **doble montaje** `/receivables` (sin guard)
+vs `/dashboard/receivables` (DashboardRoute) del mismo componente; vendedor accede por URL a
+las rutas del grupo (patrón NA-CXP-2).
