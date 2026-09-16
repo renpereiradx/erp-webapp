@@ -34,7 +34,7 @@ const DetailItem = ({ label, value, navigate }) => {
     if ((label.toLowerCase().includes('client') || label.toLowerCase().includes('customer')) && (typeof value === 'string' || typeof value === 'number')) {
         return (
             <button 
-              onClick={() => navigate(`/clientes?search=${value}`)}
+              onClick={() => navigate(`/parties?tab=clientes`)}
               className="flex items-center gap-1.5 text-[#106ebe] hover:underline font-bold"
             >
               <span className="material-symbols-outlined text-[16px]">person</span>
@@ -444,7 +444,7 @@ const ConsolidatedAlerts = () => {
                           )}
                           {(alert.category?.includes('sal') || alert.category?.includes('client')) && (
                             <button 
-                                onClick={() => navigate('/clientes')}
+                                onClick={() => navigate('/parties?tab=clientes')}
                                 className="flex items-center gap-4 w-full p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all group border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
                             >
                                 <div className="size-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-[#106ebe] group-hover:scale-110 transition-transform shadow-sm">

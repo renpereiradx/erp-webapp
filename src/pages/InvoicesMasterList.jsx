@@ -1,12 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Search, 
-  Download, 
-  Plus, 
-  Filter, 
-  ChevronLeft, 
-  ChevronRight, 
+import {
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
   MoreVertical,
   RefreshCcw,
   Settings,
@@ -160,17 +158,6 @@ const InvoicesMasterList = () => {
             Lista Maestra de Facturas
           </h1>
           <div className="flex items-center gap-2">
-            <button className="flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm active:scale-95">
-              <Download size={14} />
-              Exportar
-            </button>
-            <button 
-              onClick={() => navigate('/payables/new')}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-primary/25 text-xs font-black active:scale-95"
-            >
-              <Plus size={16} />
-              Nueva Factura
-            </button>
           </div>
         </div>
       </header>
@@ -533,15 +520,6 @@ const InvoicesMasterList = () => {
       </main>
 
       {/* Floating Action Button - Mobile */}
-      {isMobile && (
-        <button 
-          onClick={() => navigate('/payables/new')}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center z-50 active:scale-95 transition-transform"
-        >
-          <Plus size={28} />
-        </button>
-      )}
-
       {/* Helper FAB - Fluent Style */}
       {!isMobile && (
         <button className="fixed bottom-8 right-8 w-12 h-12 bg-white dark:bg-slate-900 text-slate-400 hover:text-primary rounded-full shadow-2xl flex items-center justify-center border border-slate-200 dark:border-slate-800 transition-all hover:scale-110 active:scale-95 group z-50">

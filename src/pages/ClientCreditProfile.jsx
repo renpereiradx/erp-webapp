@@ -61,7 +61,7 @@ const ClientCreditProfile = () => {
             <Home size={14} /> Inicio
           </a>
           <ChevronRight size={14} className="text-slate-300" />
-          <a className="hover:text-primary transition-colors" href="#" onClick={() => navigate('/clientes')}>Clientes</a>
+          <a className="hover:text-primary transition-colors" href="#" onClick={() => navigate('/parties?tab=clientes')}>Clientes</a>
           <ChevronRight size={14} className="text-slate-300" />
           <span className="text-[#111418] dark:text-white font-medium">{data.client.name}</span>
         </nav>
