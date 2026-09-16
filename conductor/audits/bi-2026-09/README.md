@@ -21,7 +21,8 @@ backend vivo en `:5050`. FASE 2 arranca solo cuando el gate de FASE 1 (backend) 
 | **2D — Sales Analytics (6 páginas)** | ✅ 2026-09-16 | `SalesAnalytics-*.md` ×6 | FE `60df285` |
 | **2E — Pronósticos (5 páginas)** | ✅ 2026-09-16 | `Pronosticos-*.md` ×5 | FE `b90854a` |
 | **2F — Rentabilidad (6 páginas)** | ✅ 2026-09-16 | `Rentabilidad-*.md` ×6 | FE `329fd60` |
-| **2G — Inventario (4 páginas)** | ✅ 2026-09-16 | `Inventario-*.md` ×4 | FE (este repo) |
+| **2G — Inventario (4 páginas)** | ✅ 2026-09-16 | `Inventario-*.md` ×4 | FE `1fca552` |
+| **2H — Reportes Financieros (7 páginas)** | ✅ 2026-09-16 | `FinReportes-*.md` ×5 (SIFEN ×2 en una ficha) | FE (este repo) |
 | 2B — CxC (6) | ⏳ | | |
 | 2C — Dashboard (5) | ⏳ | | |
 | 2D — Sales Analytics (6) | ⏳ | | |
@@ -108,3 +109,13 @@ Stock Levels PASS condicional (**20 filas >10 sin paginación server-side** — 
 confirmado; destino de action_url T5 ✅) · Riesgos **PASS** (dead stock real post-T13; menor:
 reorden Gs. 0 con 2 SKUs). Único grupo .tsx completo ✅; endpoints resucitados T13/T16
 verificados con datos en vivo.
+
+**Resultado 2H (7 páginas en sidebar; el plan decía 8 — conteo stale)**: Resumen Financiero
+FAIL P1 (**"Posición de Caja $1.2M" = monto del mock Santander; "Pronóstico $742k
+Powered by Predictive BI" fabricado; badge "Sincronizado Hace 4m" falso**) · Gestión IVA
+FAIL P0-trivial (**hook llama `getVat`/`getTaxSummary` inexistentes** — el service define
+`getVATReport`; API 200 con IVA legal post-T11 invisible para el usuario) · Cash Flow
+Analítico PASS cond (real, "Fuente: API" honesto; saldo final incoherente 124.860 ignora
+entradas) · PyG PASS cond (real post-BC-5; sin líneas de gastos operativos) · Libros Legales
+**PASS** (patrón referencia intacto) · SIFEN Inutilización + Ops **PASS** (estados vacíos
+honestos, sin cert = "Sin configurar" correcto). Transversal: 5/7 rutas sin guard.
