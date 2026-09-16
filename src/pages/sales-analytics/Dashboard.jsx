@@ -128,7 +128,7 @@ const Dashboard = () => {
         />
         <KPICard
           title='Margen Bruto'
-          value={`${kpis.gross_margin_pct}%`}
+          value={`${Math.round((kpis.gross_margin_pct || 0) * 10) / 10}%`}
           growth={kpis.margin_growth_pct}
         />
       </div>
