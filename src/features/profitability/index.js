@@ -4,5 +4,3 @@ export { default as CustomerProfitability } from './components/CustomerProfitabi
 export { default as CategoryProfitability } from './components/CategoryProfitability';
 export { default as ProfitabilityTrends } from './components/ProfitabilityTrends';
 export { default as SellerProfitability } from './components/SellerProfitability';
-export { default as StockManagement } from './components/StockManagement';
-export { default as InventoryRisk } from './components/InventoryRisk';

@@ -98,7 +98,6 @@ import ClientCreditProfile from '@/pages/ClientCreditProfile'
 import AgingReport from '@/pages/AgingReport'
 import ProfitAndLoss from '@/pages/ProfitAndLoss'
 import LegalBooks from '@/pages/LegalBooks'
-import ProfitabilityAnalysis from '@/pages/ProfitabilityAnalysis'
 import AdminSessionsDashboard from '@/pages/AdminSessionsDashboard.tsx'
 import {
   ProfitabilityDashboard,
@@ -107,8 +106,6 @@ import {
   CategoryProfitability,
   ProfitabilityTrends,
   SellerProfitability,
-  StockManagement as BIStockManagement,
-  InventoryRisk as BIInventoryRisk,
 } from '@/features/profitability'
 import {
   DashboardPronosticos,
@@ -368,11 +365,6 @@ function AppContent() {
                           <LegalBooks />
                         </PermissionGuard>
                       } />
-                      <Route path='/finance/profitability' element={
-                        <PermissionGuard permission='analytics:read'>
-                          <ProfitabilityAnalysis />
-                        </PermissionGuard>
-                      } />
                       
                       {/* BI Forecasting Routes */}
                       <Route path='/bi/pronosticos/dashboard' element={
@@ -408,10 +400,6 @@ function AppContent() {
                       <Route path='/profitability/categories' element={<PermissionGuard permission="analytics:read"><CategoryProfitability /></PermissionGuard>} />
                       <Route path='/profitability/trends' element={<PermissionGuard permission="analytics:read"><ProfitabilityTrends /></PermissionGuard>} />
                       <Route path='/profitability/sellers' element={<PermissionGuard permission="analytics:read"><SellerProfitability /></PermissionGuard>} />
-
-                      {/* BI Inventory Analytics (Detailed) */}
-                      <Route path='/bi/inventory/stock-levels' element={<BIStockManagement />} />
-                      <Route path='/bi/inventory/risk-analysis' element={<BIInventoryRisk />} />
 
                       <Route path='/receivables' element={
                         <PermissionGuard permission='receivables:read'>
