@@ -181,7 +181,7 @@ export const usePayables = () => {
           pendingAmount: p.pending_amount || 0,
           progress: p.original_amount > 0 ? (p.paid_amount / p.original_amount) * 100 : 0,
           detalle: {
-            emision: formatDate(p.order_date || p.created_at),
+            emision: formatDate(p.order_date || p.purchase_date || p.created_at),
             vencimiento: formatDate(p.due_date),
             terminos: p.credit_terms || 'Net 30 días',
             prioridad: p.priority === 'URGENT' || p.priority === 'HIGH' ? 'Alta' : 'Media'
@@ -193,8 +193,8 @@ export const usePayables = () => {
             email: p.supplier_email || 'No disponible',
             direccion: p.supplier_address || 'No disponible'
           },
-          pagos: p.payments?.map(py => ({
-            id: py.payment_id,
+          pagos: (p.payments || p.payment_history)?.map(py => ({
+            id: py.id || py.payment_id,
             fecha: formatDate(py.payment_date),
             metodo: py.payment_method,
             ref: py.reference,

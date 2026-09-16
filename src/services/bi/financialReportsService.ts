@@ -54,6 +54,32 @@ export const financialReportsService = {
   },
 
   /**
+   * Alias de getVATReport con firma por-período (Compatibilidad): la página
+   * de Gestión IVA llama `getVat('month')`. Períodos válidos BE: today,
+   * week, month, year (default month, 400 en otro caso — T9).
+   */
+  async getVat(period = 'month'): Promise<any> {
+    try {
+      return await apiClient.get('/financial-reports/vat', { params: { period } });
+    } catch (error: any) {
+      console.error('Error fetching VAT report:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Resumen fiscal consolidado (GET /financial-reports/tax-summary?period=)
+   */
+  async getTaxSummary(period = 'month'): Promise<any> {
+    try {
+      return await apiClient.get('/financial-reports/tax-summary', { params: { period } });
+    } catch (error: any) {
+      console.error('Error fetching tax summary:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Libro de Ventas Legal
    */
   async getSalesLedger(params: BIParams = {}): Promise<any> {

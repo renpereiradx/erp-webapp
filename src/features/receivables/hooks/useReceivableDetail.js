@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { receivablesService } from '@/services/bi/receivablesService';
 import { clientService } from '@/services/clientService';
-import apiService from '@/services/api';
 import { formatPYG } from '@/utils/currencyUtils';
 
 /**
@@ -104,10 +103,9 @@ export const useReceivableDetail = (id) => {
 
       // Intentar cargar historial de auditoría real si está disponible
       try {
-        // Asumimos que si el ID empieza con "SALE-" o similar, el entity_type es "SALE"
+        // Si el ID referencia la venta (prefijo SALE/VTA), la entidad auditada es SALE
         const entityType = id.includes('SALE') || id.includes('VTA') ? 'SALE' : 'RECEIVABLE';
-        const auditResponse = await receivablesService.getTransactionHistory?.(id) || 
-                              await apiService.get(`/api/v1/audit/entity/${entityType}/${id}/history`);
+        const auditResponse = await receivablesService.getTransactionHistory(id, entityType);
         
         if (auditResponse && auditResponse.success && auditResponse.data?.changes) {
           const auditActivities = auditResponse.data.changes.map(change => ({

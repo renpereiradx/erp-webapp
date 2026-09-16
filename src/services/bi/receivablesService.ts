@@ -118,6 +118,68 @@ export const receivablesService = {
       console.error('Error fetching top debtors:', error);
       throw error;
     }
+  },
+
+  /**
+   * Alias para getOverdue (Compatibilidad) — la ruta canónica de alertas T5
+   * (`/receivables/overdue`) monta el hook que llama este nombre.
+   */
+  async getOverdueAccounts(params: BIParams = {}): Promise<any> {
+    return this.getOverdue(params);
+  },
+
+  /**
+   * Lista maestra paginada (GET /receivables). El BE acepta `status` (enum),
+   * `client_id`, `page`/`page_size` (cap 100) y `sort_by`/`sort_order`
+   * (whitelist T3: date, amount, client, days_overdue). Filtros de UI sin
+   * soporte BE (search/montos/días) viajan y son ignorados — gap documentado
+   * en la auditoría 2B.
+   */
+  async getMasterList(
+    filters: Record<string, any> = {},
+    pagination: Record<string, any> = {},
+    sorting: Record<string, any> = {},
+  ): Promise<any> {
+    try {
+      const params: Record<string, any> = {
+        ...filters,
+        page: pagination.page,
+        page_size: pagination.page_size ?? pagination.pageSize,
+        sort_by: sorting.sortBy ?? 'date',
+        sort_order: sorting.sortOrder ?? 'desc',
+      };
+      if (!params.status || params.status === 'all') delete params.status;
+      return await apiClient.get('/receivables', { params });
+    } catch (error: any) {
+      console.error('Error fetching receivables master list:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Detalle de una cuenta por cobrar (GET /receivables/{id}, 404 tipado)
+   */
+  async getTransactionDetail(id: string): Promise<any> {
+    try {
+      return await apiClient.get(`/receivables/${id}`);
+    } catch (error: any) {
+      console.error(`Error fetching receivable ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Historial de auditoría de la entidad detrás de la cuenta
+   * (GET /audit/entity/{entity_type}/{id}/history — gate audit:read).
+   * Llamada opcional del hook de detalle: falla en silencio sin audit:read.
+   */
+  async getTransactionHistory(id: string, entityType = 'RECEIVABLE'): Promise<any> {
+    try {
+      return await apiClient.get(`/audit/entity/${entityType}/${id}/history`);
+    } catch (error: any) {
+      console.error(`Error fetching history for ${entityType} ${id}:`, error);
+      throw error;
+    }
   }
 };
 
