@@ -17,7 +17,8 @@ backend vivo en `:5050`. FASE 2 arranca solo cuando el gate de FASE 1 (backend) 
 |:--|:--|:--|:--|
 | **2A — CxP (6 páginas)** | ✅ 2026-09-16 | `CxP-*.md` ×6 | FE `2a1cce6` |
 | **2B — CxC (6 páginas)** | ✅ 2026-09-16 | `CxC-*.md` ×6 | FE `adc32fa` |
-| **2C — Dashboard (5 páginas)** | ✅ 2026-09-16 | `Dashboard-*.md` ×5 | FE (este repo) |
+| **2C — Dashboard (5 páginas)** | ✅ 2026-09-16 | `Dashboard-*.md` ×5 | FE `9e6bd6c` |
+| **2D — Sales Analytics (6 páginas)** | ✅ 2026-09-16 | `SalesAnalytics-*.md` ×6 | FE (este repo) |
 | 2B — CxC (6) | ⏳ | | |
 | 2C — Dashboard (5) | ⏳ | | |
 | 2D — Sales Analytics (6) | ⏳ | | |
@@ -67,3 +68,15 @@ selects Sucursal/Categoría sin cablear P1-4) · Alertas FAIL P1 (**"Gestionar" 
 condicional (datos reales coherentes; floats crudos "-63.017946…%"; Exportar/Filtros/more_vert
 decorativos). Todo el grupo gated `dashboard:read` ✅. El fallback demo P1-1 del store NO
 dispara con API sana (solo en catch).
+
+**Resultado 2D (veredicto por página)**: Dashboard Ejecutivo PASS condicional (datos reales;
+payment methods "UNKNOWN 100%" mapping roto; margen float crudo "56.176…%"; growth "+0%";
+MOCK_* en catch P1-2) · Insights FAIL P1 (growth/churn literales P1-3 confirmados: +12%/+5.4%/
+-2.1%/13.9%/+15% con "Retención 100%" contradictoria; meta sin fuente; tablas reales sin
+paginar) · TrendsVelocity FAIL P1 (heatmap grid SIN datos; "hora pico 14:00" hardcodeada P1-4;
+"+5%" literal; KPIs coherentes) · Comparativa FAIL P1 (datos reales; % crudos -77.0818…%;
+**margen incoherente: 37.7 vs 17.4 mostrado como "-5.0pp" cuando es +20.3pp**) · Productos y
+Categorías PASS condicional (patrón de referencia; categorías suman el total exacto; floats
+crudos; "+12%" literal) · Descuentos PASS condicional (úNICA con guard reports:read ✅; datos
+reales; 1 fila incoherente 100.000→105.690 con "descuento 5.690"). Transversal: 5/6 rutas SIN
+guard; MOCK_* presentes en 4 archivos pero con API sana los datos reales reemplazan (catch-only).
