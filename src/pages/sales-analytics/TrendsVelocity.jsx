@@ -270,7 +270,7 @@ const TrendsVelocity = () => {
               </p>
             </div>
             {peakHourLabel && (
-              <div className='bg-[#137fec]/10 text-[#137fec] text-[10px] font-black px-2 py-1 rounded uppercase font-mono tracking-widest'>
+              <div className='bg-primary/10 text-primary text-[10px] font-black px-2 py-1 rounded uppercase font-mono tracking-widest'>
                 Pico: {peakHourLabel}
               </div>
             )}
