@@ -5,32 +5,35 @@ import {
   RefreshCw, 
   Star, 
   Calendar, 
-  Download, 
-  Search, 
-  Bell,
-  Filter,
   TrendingUp,
   TrendingDown
 } from 'lucide-react';
 import salesAnalyticsService from '@/services/bi/salesAnalyticsService';
-import { MOCK_BY_CUSTOMER, MOCK_BY_SELLER } from '@/services/mocks/salesAnalyticsMock';
+import { Link } from 'react-router-dom';
 
 const CustomerSellerInsights = () => {
-  const [customerData, setCustomerData] = useState(MOCK_BY_CUSTOMER.data);
-  const [sellerData, setSellerData] = useState(MOCK_BY_SELLER.data);
+  const [customerData, setCustomerData] = useState(null);
+  const [sellerData, setSellerData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const [custRes, sellerRes] = await Promise.all([
           salesAnalyticsService.getByCustomer({ period: 'month' }),
           salesAnalyticsService.getBySeller({ period: 'month' })
         ]);
-        
+
         if (custRes && custRes.success) setCustomerData(custRes.data);
         if (sellerRes && sellerRes.success) setSellerData(sellerRes.data);
-      } catch (error) {
-        console.error("Error fetching insights data:", error);
+      } catch (err) {
+        console.error("Error fetching insights data:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -48,6 +51,24 @@ const CustomerSellerInsights = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <span className="ml-3 font-bold text-on-surface-deep uppercase tracking-widest text-xs">Cargando Insights...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
+        <p className="text-sm font-bold text-foreground">No se pudieron cargar los insights.</p>
+        <p className="text-xs text-on-surface-deep uppercase tracking-widest">Verifique la conexión e intente nuevamente</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-display">
         
@@ -62,10 +83,6 @@ const CustomerSellerInsights = () => {
               <Calendar className="text-slate-400" size={16} />
               <span className="text-xs font-bold uppercase">Periodo actual</span>
             </div>
-            <button className="flex items-center gap-2 rounded-lg bg-[#0f79eb] px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#0f79eb]/90 transition-all uppercase tracking-wider">
-              <Download size={16} />
-              Exportar Reporte
-            </button>
           </div>
         </div>
 
@@ -74,29 +91,25 @@ const CustomerSellerInsights = () => {
           <InsightKPICard 
             title="Total Clientes" 
             value={customerData?.summary?.total_customers || 0} 
-            growth={12} 
             subtext={`${customerData?.summary?.returning_customers || 0} Recurrentes | ${customerData?.summary?.new_customers || 0} Nuevos`}
             icon={<Users className="text-[#0f79eb]/60" size={24} />}
           />
           <InsightKPICard 
             title="Lifetime Value (LTV)" 
             value={formatCurrency(customerData?.summary?.average_lifetime_value || 0)} 
-            growth={5.4} 
             subtext="Promedio por cliente"
             icon={<Wallet className="text-[#0f79eb]/60" size={24} />}
           />
           <InsightKPICard 
             title="Tasa de Retención" 
             value={`${customerData?.summary?.customer_retention_rate || 0}%`} 
-            growth={-2.1} 
-            subtext="Churn rate: 13.9%"
+            subtext="Clientes que siguen comprando"
             icon={<RefreshCw className="text-[#0f79eb]/60" size={24} />}
           />
           <InsightKPICard 
             title="Venta Clientes Top" 
             value={formatCurrency(customerData?.summary?.top_customer_revenue || 0)} 
-            growth={15} 
-            subtext="Máximo histórico individual"
+            subtext="Mayor venta del período"
             icon={<Star className="text-[#0f79eb]/60" size={24} />}
           />
         </div>
@@ -105,7 +118,7 @@ const CustomerSellerInsights = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Segmentación de Clientes</h2>
-            <button className="text-xs font-black text-[#0f79eb] hover:underline uppercase tracking-tighter">Ver todos los clientes</button>
+            <Link to="/parties?tab=clientes" className="text-xs font-black text-[#0f79eb] hover:underline uppercase tracking-tighter">Ver todos los clientes</Link>
           </div>
           <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="overflow-x-auto">
@@ -154,9 +167,6 @@ const CustomerSellerInsights = () => {
         <div className="space-y-4 pb-12">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Ranking de Desempeño de Vendedores</h2>
-            <button className="rounded-lg border border-slate-200 bg-white p-2 text-slate-600 dark:border-slate-800 dark:bg-slate-900 shadow-sm hover:bg-slate-50">
-              <Filter size={20} />
-            </button>
           </div>
           <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="overflow-x-auto">
@@ -219,10 +229,12 @@ const InsightKPICard = ({ title, value, growth, subtext, icon }) => (
     </div>
     <p className="mt-2 text-3xl font-black font-mono tracking-tight">{value}</p>
     <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] uppercase font-black">
-      <span className={`flex items-center font-mono ${growth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-        {growth >= 0 ? <TrendingUp size={12} className="mr-1" /> : <TrendingDown size={12} className="mr-1" />}
-        {growth >= 0 ? '+' : ''}{growth}%
-      </span>
+      {growth != null && (
+        <span className={`flex items-center font-mono ${growth >= 0 ? 'text-success' : 'text-error'}`}>
+          {growth >= 0 ? <TrendingUp size={12} className="mr-1" /> : <TrendingDown size={12} className="mr-1" />}
+          {growth >= 0 ? '+' : ''}{growth}%
+        </span>
+      )}
       <span className="text-slate-400 line-clamp-1 tracking-tighter">{subtext}</span>
     </div>
   </div>

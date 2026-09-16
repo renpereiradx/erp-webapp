@@ -108,7 +108,16 @@ const ReceivablesDashboard = () => {
             
             <div className="relative h-[280px] w-full mt-4">
               {(() => {
-                const maxCollected = Math.max(...(summary.collectionTrend?.map(i => i.collected) || [1000000]));
+                const trendItems = Array.isArray(summary.collectionTrend) ? summary.collectionTrend : [];
+                if (trendItems.length === 0) {
+                  return (
+                    <div className="h-full flex flex-col items-center justify-center gap-2">
+                      <p className="text-sm font-bold text-on-surface-deep">Sin historial de cobranza para el período.</p>
+                      <p className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest">La tendencia se muestra al registrar cobros</p>
+                    </div>
+                  );
+                }
+                const maxCollected = trendItems.reduce((m, i) => Math.max(m, i.collected || 0), 0);
                 const scaleMax = Math.ceil(maxCollected / 50000000) * 50000000 || 200000000;
                 
                 return (

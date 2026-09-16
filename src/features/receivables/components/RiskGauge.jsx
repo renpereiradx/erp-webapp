@@ -22,18 +22,23 @@ const RiskGauge = ({ score = 0, level = 'Medium', recommendation = '' }) => {
     <div className="bg-white dark:bg-[#1e293b] rounded-xl border border-[#f0f2f4] dark:border-gray-800 p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-bold text-[#111418] dark:text-white uppercase tracking-tight">Perfil de Riesgo</h2>
-        <button className="text-primary text-[11px] font-bold uppercase hover:underline">Detalles</button>
       </div>
       <div className="flex flex-col items-center">
         {/* Radial Gauge (Reducido) */}
         <div className="relative size-32">
           <svg className="size-full -rotate-90" viewBox="0 0 36 36">
             <path className="text-[#f0f2f4] dark:text-gray-700" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3"></path>
-            <path className={`${styles.color} drop-shadow-md`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray={`${score}, 100`} strokeLinecap="round" strokeWidth="3"></path>
+            {score != null && (
+              <path className={`${styles.color} drop-shadow-md`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray={`${score}, 100`} strokeLinecap="round" strokeWidth="3"></path>
+            )}
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-black text-[#111418] dark:text-white">{score}</span>
-            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">Score</span>
+            {score != null ? (
+              <span className="text-2xl font-black text-foreground">{score}</span>
+            ) : (
+              <span className={`text-sm font-black uppercase tracking-tight ${styles.color}`}>{styles.label}</span>
+            )}
+            <span className="text-[9px] font-bold text-on-surface-deep uppercase tracking-widest leading-none">{score != null ? 'Score' : 'Sin score numérico'}</span>
           </div>
         </div>
         <div className="mt-3 text-center">

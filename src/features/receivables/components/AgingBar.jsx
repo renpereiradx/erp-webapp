@@ -34,7 +34,9 @@ const AgingBar = ({ aging = {}, totalAR = 0 }) => {
         </div>
         <div className="flex justify-between text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-[0.1em]">
           <span>Saldo Total: {totalAR || '0'}</span>
-          <span className="text-red-500">Alerta: &gt; 90 Días</span>
+          {Array.isArray(aging) && aging.some((s) => /90/.test(s.label) && s.width !== '0%') && (
+            <span className="text-error">Alerta: &gt; 90 Días</span>
+          )}
         </div>
       </div>
     </div>

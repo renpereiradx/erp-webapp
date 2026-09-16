@@ -29,7 +29,6 @@ const AgingSummaryChart = ({ agingData = {} }) => {
           <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Tramos de Antigüedad</h3>
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-0.5">Desglose porcentual de cartera</p>
         </div>
-        <button className="text-[10px] font-black text-primary hover:underline uppercase tracking-[0.2em]">Detalles</button>
       </div>
 
       <div className="p-6 flex flex-col gap-8">
@@ -113,10 +112,6 @@ const AgingSummaryChart = ({ agingData = {} }) => {
       {/* Footer Informativo */}
       <div className="mt-auto p-4 bg-slate-50/50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Corte: {new Date().toLocaleDateString('es-PY')}</span>
-        <div className="flex items-center gap-1.5">
-          <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Sincronizado con API</span>
-        </div>
       </div>
     </div>
   );

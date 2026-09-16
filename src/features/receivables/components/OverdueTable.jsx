@@ -99,7 +99,7 @@ const OverdueTable = ({ accounts = [], toast }) => {
                           >
                             {acc.client}
                           </span>
-                          <span className="text-[11px] text-slate-400 font-mono font-bold tracking-tight">INV-2023-00{idx+1}</span>
+                          <span className="text-[11px] text-slate-400 font-mono font-bold tracking-tight">{acc.id || '—'}</span>
                         </div>
                       </div>
                     </td>
@@ -131,8 +131,8 @@ const OverdueTable = ({ accounts = [], toast }) => {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex flex-col leading-tight">
-                        <span className="text-[12px] font-bold text-slate-700 dark:text-slate-200">Oct {24 - idx}</span>
-                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Vía Email</span>
+                        <span className="text-[12px] font-bold text-slate-700 dark:text-slate-200">{acc.lastContact}</span>
+                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{acc.contactVia}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">

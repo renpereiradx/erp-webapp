@@ -52,10 +52,18 @@ export const receivablesService = {
   },
 
   /**
-   * Alias para getAgingReport (Compatibilidad)
+   * Resumen de antigüedad por tramos (GET /receivables/aging/summary).
+   * Contrato: {current, days_30_60, days_60_90, over_90_days} con
+   * {amount, count, percentage}. NOTA: NO es alias del report detallado —
+   * el dashboard de CxC consume los tramos de este endpoint.
    */
   async getAgingSummary(params: BIParams = {}): Promise<any> {
-    return this.getAgingReport(params);
+    try {
+      return await apiClient.get('/receivables/aging/summary', { params });
+    } catch (error: any) {
+      console.error('Error fetching receivables aging summary:', error);
+      throw error;
+    }
   },
 
   /**

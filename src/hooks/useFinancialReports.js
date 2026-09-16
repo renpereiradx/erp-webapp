@@ -14,6 +14,7 @@ export const useFinancialReports = () => {
   const [salesLedger, setSalesLedger] = useState(null)
   const [purchaseLedger, setPurchaseLedger] = useState(null)
   const [profitMargins, setProfitMargins] = useState(null)
+  const [healthScore, setHealthScore] = useState(null)
 
   const fetchIncomeStatement = useCallback(
     async (period = 'month', compare = true) => {
@@ -278,11 +279,30 @@ export const useFinancialReports = () => {
     [toast],
   )
 
+  const fetchHealthScore = useCallback(
+    async (period = 'month') => {
+      setLoading(true)
+      setError(null)
+      try {
+        const response = await financialReportsService.getHealthScore({ period })
+        setHealthScore(response?.data ?? response)
+        return response
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [],
+  )
+
   return {
     loading,
     error,
     incomeStatement,
     cashFlow,
+    healthScore,
+    fetchHealthScore,
     vatReport,
     taxSummary,
     salesLedger,

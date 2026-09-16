@@ -60,27 +60,54 @@ export const useClientCreditProfile = (clientId) => {
             taxId: profile.tax_id || profile.taxId || basicInfoRes?.document_id || 'No registrado'
           },
           risk: {
-            score: risk.risk_score ?? risk.score ?? 50,
+            // La API no provee score numérico: el gauge muestra el nivel (RiskGauge maneja score null)
+            score: risk.risk_score ?? risk.score ?? null,
             level: (risk.risk_level || risk.level) === 'LOW' ? 'Riesgo Bajo' : 
                    (risk.risk_level || risk.level) === 'MEDIUM' ? 'Riesgo Medio' : 'Riesgo Alto',
             recommendation: Array.isArray(risk.recommendations) 
               ? risk.recommendations.join('. ') 
-              : risk.recommendation || 'Se recomienda monitoreo continuo.'
+              : risk.recommendation || ((risk.overdue_ratio ?? 0) >= 0.5
+                ? `El ${(risk.overdue_ratio * 100).toFixed(0)}% del saldo está vencido (máximo ${Math.round(risk.max_days_overdue || 0)} días). Solicitar regularización antes de nuevo crédito.`
+                : 'Sin alertas automáticas para este cliente.')
           },
           metrics: {
             outstanding: formatPYG(profile.total_pending),
-            limit: formatPYG(profile.credit_limit || 150000000),
+            limit: profile.credit_limit ? formatPYG(profile.credit_limit) : 'Sin límite definido',
             avgDays: `${profile.average_days_to_pay || profile.avg_days_to_pay || 0} Días`,
             lastPayment: formatPYG(profile.last_payment_amount || 0),
-            utilization: profile.credit_limit 
+            utilization: profile.credit_limit
               ? Math.round(((profile.total_pending || 0) / profile.credit_limit) * 100)
-              : 80
+              : null
           },
-          aging: [
-            { label: 'Corriente', amount: 'Gs. 250M', width: '55%', colorClass: 'aging-bar__segment--current', title: 'Corriente' },
-            { label: '31-60 Días', amount: 'Gs. 100M', width: '25%', colorClass: 'aging-bar__segment--31-60', title: '31-60 Días' },
-            { label: '>90 Días', amount: 'Gs. 40M', width: '20%', colorClass: 'aging-bar__segment--90', title: '>90 Días' }
-          ],
+          aging: (() => {
+            // Antigüedad real derivada de las facturas del cliente (pending + vencimiento)
+            const today = Date.now();
+            const DAY = 86400000;
+            const buckets = [
+              { label: 'Corriente', amount: 0, colorClass: 'aging-bar__segment--current' },
+              { label: '1-30 Días', amount: 0, colorClass: 'aging-bar__segment--1-30' },
+              { label: '31-60 Días', amount: 0, colorClass: 'aging-bar__segment--31-60' },
+              { label: '>60 Días', amount: 0, colorClass: 'aging-bar__segment--90' },
+            ];
+            (profile.receivables || []).forEach((inv) => {
+              const pending = inv.pending_amount || 0;
+              if (pending <= 0 || !inv.due_date) return;
+              const days = Math.floor((today - new Date(inv.due_date).getTime()) / DAY);
+              if (days <= 0) buckets[0].amount += pending;
+              else if (days <= 30) buckets[1].amount += pending;
+              else if (days <= 60) buckets[2].amount += pending;
+              else buckets[3].amount += pending;
+            });
+            const total = buckets.reduce((acc, b) => acc + b.amount, 0);
+            if (total <= 0) return [];
+            return buckets
+              .filter((b) => b.amount > 0)
+              .map((b) => ({
+                ...b,
+                amount: formatPYG(b.amount),
+                width: `${Math.round((b.amount / total) * 100)}%`,
+              }));
+          })(),
           invoices: Array.isArray(profile.receivables) 
             ? profile.receivables.map(inv => ({
                 id: inv.id,

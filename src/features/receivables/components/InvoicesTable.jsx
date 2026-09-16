@@ -31,7 +31,7 @@ const InvoicesTable = ({ invoices = [], outstandingAmount = 0 }) => {
           <tbody className="divide-y divide-[#f0f2f4] dark:divide-gray-800 text-[13px]">
             {invoices.map((inv, idx) => (
               <tr key={idx} className="hover:bg-[#f9fafb] dark:hover:bg-gray-800/50 transition-colors group">
-                <td className="px-6 py-4 font-bold text-primary hover:underline cursor-pointer">{inv.id || `INV-2023-00${idx+1}`}</td>
+                <td className="px-6 py-4 font-bold text-primary hover:underline cursor-pointer">{inv.id || '—'}</td>
                 <td className="px-6 py-4 text-[#111418] dark:text-gray-300 font-medium">{inv.date || 'Oct 12, 2023'}</td>
                 <td className="px-6 py-4 text-[#111418] dark:text-gray-300 font-medium">{inv.dueDate || 'Nov 12, 2023'}</td>
                 <td className="px-6 py-4 text-right font-mono text-gray-500">{inv.amount || '$10,000'}</td>
