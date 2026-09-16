@@ -2,21 +2,24 @@ import React from 'react';
 import { useBIForecasting, formatCurrency, formatNumber } from '../hooks/useBIForecasting';
 import BIForecastingNav from './BIForecastingNav';
 
+const PAGE_SIZE = 10;
+
 const PronosticoDemanda = () => {
-  const { data, loading, error, refetch } = useBIForecasting('demanda');
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const ITEMS_PER_PAGE = 5;
+  const [page, setPage] = React.useState(1);
+  const params = React.useMemo(() => ({ page, page_size: PAGE_SIZE }), [page]);
+  const { data, loading, error, refetch } = useBIForecasting('demanda', params);
 
   if (loading) return <div className="p-8 text-center font-bold text-slate-500">Cargando pronóstico de demanda...</div>;
   if (error) return <div className="p-8 text-center font-bold text-red-500">Error: {error}</div>;
   if (!data) return null;
 
-  const { kpis, categorias, productos_top, ui_labels } = data;
+  const { kpis, categorias, productos_top, ui_labels, pagination } = data;
 
-  // Lógica de paginación
-  const totalPages = Math.ceil(productos_top.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedProducts = productos_top.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  // Paginación server-side (cierre ② auditoría BI): el BE manda la página de
+  // productos y la metadata; el FE solo consume.
+  const totalPages = pagination?.total_pages || 1;
+  const totalItems = pagination?.total_items || productos_top.length;
+  const startIndex = (page - 1) * PAGE_SIZE;
 
   return (
     <div className="flex flex-col gap-8 max-w-[1280px] mx-auto w-full font-display">
@@ -130,7 +133,7 @@ const PronosticoDemanda = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {paginatedProducts.map((prod, idx) => (
+              {productos_top.map((prod, idx) => (
                 <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                   <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{prod.producto}</td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{prod.categoria}</td>
@@ -149,29 +152,30 @@ const PronosticoDemanda = () => {
             </tbody>
           </table>
           
-          {/* Footer de Paginación */}
+          {/* Footer de Paginación (server-side: metadata del BE) */}
           <div className="flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
             <p className="text-xs text-slate-500 font-medium">
-              Mostrando {startIndex + 1} - {Math.min(startIndex + ITEMS_PER_PAGE, productos_top.length)} de {productos_top.length} productos
+              Mostrando {totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + PAGE_SIZE, totalItems)} de {totalItems} productos
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <p className="text-xs text-on-surface-deep font-medium mr-2">Página {page} de {totalPages}</p>
               <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
+                onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                disabled={page === 1}
                 className={`px-3 py-1.5 text-xs font-bold rounded border transition-all ${
-                  currentPage === 1 
-                    ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' 
+                  page === 1
+                    ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 active:scale-95'
                 }`}
               >
                 Anterior
               </button>
               <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
+                onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={page >= totalPages}
                 className={`px-3 py-1.5 text-xs font-bold rounded border transition-all ${
-                  currentPage === totalPages 
-                    ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' 
+                  page >= totalPages
+                    ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 active:scale-95'
                 }`}
               >

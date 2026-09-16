@@ -433,6 +433,9 @@ const normalizeDemand = (payload, _params) => {
       valor: toNumber(item?.forecast_value || item?.valor),
       confianza: toNumber(item?.confidence) >= 85 ? 'Alta' : 'Media',
     })),
+    // El BE pagina el listado de productos server-side (cierre ② de la
+    // auditoría BI); el payload crudo se expone para los controles de página.
+    pagination: payload?.pagination || null,
   }
 }
 
