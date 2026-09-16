@@ -10,3 +10,29 @@ Estructura de la auditoría página por página del módulo "Inteligencia de Neg
 
 **Regla de sesión**: auditar siempre con `pnpm dev:api` (`.env.api`, `VITE_USE_DEMO=false`),
 backend vivo en `:5050`. FASE 2 arranca solo cuando el gate de FASE 1 (backend) esté verde.
+
+## Progreso FASE 2 (por bloques de riesgo)
+
+| Bloque | Estado | Fichas | Commit |
+|:--|:--|:--|:--|
+| **2A — CxP (6 páginas)** | ✅ 2026-09-16 | `CxP-*.md` ×6 | FE (este repo) |
+| 2B — CxC (6) | ⏳ | | |
+| 2C — Dashboard (5) | ⏳ | | |
+| 2D — Sales Analytics (6) | ⏳ | | |
+| 2E — Pronósticos (5) | ⏳ | | |
+| 2F — Rentabilidad (6) | ⏳ | | |
+| 2G — Inventario (4) | ⏳ | | |
+| 2H — Reportes Financieros (8) | ⏳ | | |
+| 2I — Auditoría (4) + rutas huérfanas + `SUMMARY.md` | ⏳ | | |
+
+**Resultado 2A (veredicto por página)**: Dashboard CxP FAIL (P0-1: 2 secciones muertas +
+afordancias decorativas) · Lista Maestra FAIL (P0-1: página entera en error; "Nueva Factura"
+→ `/payables/new` 404) · Detalle FAIL (P0-1 + leak de mensaje técnico) · Cash Flow FAIL
+(P0-6 ampliado: API 200 con datos, UI en cero por drift de contrato + bancos/insights
+fabricados + 7 botones muertos) · Aging **FAIL parcial** (datos reales ✅; 3 KPIs "---" por
+P0-1 + 4 botones decorativos) · Supplier Analysis FAIL (página en blanco con API sana:
+destructuring contra contrato inexistente + error nunca renderizado). Transversal:
+**`/payables/*` sin guard de ruta** — vendedor (VNDR01) accede por URL a 5 rutas que el BE
+rechaza con 403; solo el dashboard tiene gate (y por `dashboard:read`, no `payables:read`).
+Corrección al plan: la página del detalle es `InvoiceDetail.jsx`, no `PayableDetail.jsx`
+(stale). RBAC BE ✅: `payables:read` 403 para VNDR01 en todos los endpoints probados.
