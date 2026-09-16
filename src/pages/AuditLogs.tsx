@@ -1,17 +1,51 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import auditService from '@/services/bi/auditService';
 import { useToast } from '@/hooks/useToast';
 import ToastContainer from '@/components/ui/ToastContainer';
 
-const EMPTY_KPI_FORM = [
+/** Fila de GET /api/v1/audit/logs (contrato real: id/timestamp/username/action/entity/category/description/level). */
+interface AuditLogRow {
+  id: number | string;
+  timestamp: string;
+  username?: string;
+  action: string;
+  entity_id?: string;
+  category?: string;
+  description?: string;
+  level?: string;
+}
+
+interface AuditLogsPayload {
+  logs?: AuditLogRow[];
+  total?: number;
+  total_pages?: number;
+}
+
+interface AuditLogFilters {
+  search: string;
+  category: string;
+  level: string;
+  success: string;
+  start_date: string;
+  end_date: string;
+}
+
+interface AuditKPIs {
+  total_actions?: number | string;
+  successful_actions?: number | string;
+  failed_actions?: number | string;
+  unique_users?: number | string;
+}
+
+const EMPTY_KPI_FORM: Array<{ key: keyof AuditKPIs; label: string; icon: string; iconClass: string }> = [
   { key: 'total_actions', label: 'Acciones Totales', icon: 'data_exploration', iconClass: 'bg-primary/10 text-primary' },
   { key: 'successful_actions', label: 'Éxitos', icon: 'check_circle', iconClass: 'bg-success/10 text-success' },
   { key: 'failed_actions', label: 'Fallos', icon: 'error', iconClass: 'bg-error-container text-error' },
   { key: 'unique_users', label: 'Usuarios Únicos', icon: 'person_search', iconClass: 'bg-warning/10 text-warning' },
 ];
 
-const LEVEL_BADGES = {
+const LEVEL_BADGES: Record<string, string> = {
   INFO: 'bg-success/10 text-success border-success/20',
   WARNING: 'bg-warning/10 text-warning border-warning/20',
   ERROR: 'bg-error-container text-on-error-container border-error/20',
@@ -20,11 +54,11 @@ const LEVEL_BADGES = {
 export default function AuditLogs() {
   const navigate = useNavigate();
   const toast = useToast();
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState<AuditLogRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<AuditLogFilters>({
     search: '',
     category: '',
     level: '',
@@ -36,7 +70,7 @@ export default function AuditLogs() {
   const [pageSize, setPageSize] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [kpis, setKpis] = useState(null);
+  const [kpis, setKpis] = useState<AuditKPIs | null>(null);
 
   const fetchKpis = useCallback(async () => {
     try {
@@ -58,11 +92,11 @@ export default function AuditLogs() {
         page_size: pageSize,
       };
       const res = await auditService.getLogs(params);
-      const payload = res?.data || {};
+      const payload = ((res as any)?.data || {}) as AuditLogsPayload;
       setLogs(payload.logs || []);
       setTotal(payload.total || 0);
       setTotalPages(payload.total_pages || 1);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching logs:', err);
       setError(err.message);
       setLogs([]);
@@ -84,7 +118,7 @@ export default function AuditLogs() {
     fetchKpis();
   }, [fetchKpis]);
 
-  const handleFilterChange = (e) => {
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
     setPage(1);
@@ -105,7 +139,7 @@ export default function AuditLogs() {
       link.remove();
       URL.revokeObjectURL(url);
       toast.success('Exportación descargada');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error exporting logs:', err);
       toast.errorFrom(err, { fallback: 'No se pudo exportar el registro de auditoría' });
     } finally {
@@ -113,7 +147,8 @@ export default function AuditLogs() {
     }
   };
 
-  const kpiValue = (key) => (kpis && kpis[key] != null ? Number(kpis[key]).toLocaleString('es-PY') : '—');
+  const kpiValue = (key: keyof AuditKPIs) =>
+    kpis && kpis[key] != null ? Number(kpis[key]).toLocaleString('es-PY') : '—';
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 font-inter">
@@ -229,10 +264,10 @@ export default function AuditLogs() {
             </thead>
             <tbody className="divide-y divide-border-subtle">
               {loading ? (
-                <tr><td colSpan="6" className="text-center py-20 font-bold text-on-surface-deep uppercase tracking-widest animate-pulse">Cargando...</td></tr>
+                <tr><td colSpan={6} className="text-center py-20 font-bold text-on-surface-deep uppercase tracking-widest animate-pulse">Cargando...</td></tr>
               ) : error ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-20">
+                  <td colSpan={6} className="text-center py-20">
                     <p className="text-sm font-bold text-foreground">No se pudieron cargar los registros de auditoría.</p>
                     <button
                       onClick={fetchLogs}
@@ -243,7 +278,7 @@ export default function AuditLogs() {
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
-                <tr><td colSpan="6" className="text-center py-20 text-on-surface-deep">No se encontraron resultados</td></tr>
+                <tr><td colSpan={6} className="text-center py-20 text-on-surface-deep">No se encontraron resultados</td></tr>
               ) : (
                 logs.map((log) => (
                   <tr key={log.id} className="hover:bg-surface-muted transition-colors group cursor-pointer" onClick={() => navigate(`/auditoria/logs/${log.id}`)}>
@@ -269,7 +304,7 @@ export default function AuditLogs() {
                     </td>
                     <td className="px-6 py-4 text-sm text-on-surface-deep font-medium truncate max-w-xs">{log.description}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black border ${LEVEL_BADGES[log.level] || 'bg-surface-subtle text-on-surface-deep border-border-subtle'}`}>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black border ${LEVEL_BADGES[log.level || ''] || 'bg-surface-subtle text-on-surface-deep border-border-subtle'}`}>
                         {log.level}
                       </span>
                     </td>

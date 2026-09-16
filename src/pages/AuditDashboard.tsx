@@ -1,10 +1,61 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import auditService from '@/services/bi/auditService'
 
+type AuditPeriod = 'today' | 'week' | 'month' | 'year'
+
+interface AuditKPIs {
+  total_actions?: number | string
+  success_rate?: number | string
+  unique_users?: number | string
+}
+
+interface SecurityAlert {
+  severity?: string
+  occurred_at?: string
+  message?: string
+  user_id?: string | number
+  ip_address?: string
+}
+
+interface ActionCategory {
+  category: string
+  percentage?: number | string
+}
+
+interface TopUser {
+  user_id: string | number
+  username?: string
+  total_actions?: number | string
+  successful_actions?: number | string
+}
+
+/** Contrato real de GET /api/v1/audit/dashboard (kpis + security_alerts + actions_by_category + top_users). */
+interface AuditSummaryData {
+  kpis?: AuditKPIs | null
+  security_alerts?: SecurityAlert[]
+  actions_by_category?: ActionCategory[]
+  top_users?: TopUser[]
+}
+
+/** Punto de GET /api/v1/audit/trends. */
+interface AuditTrendPoint {
+  label?: string
+  total_actions?: number | string
+  successful?: number | string
+  failed?: number | string
+}
+
 const DONUT_COLORS = ['#0078D4', '#455f89', '#107c10', '#d83b01', '#964400']
 
-const buildCurvePath = (values, width, height) => {
+const PERIOD_OPTIONS: Array<{ label: string; value: AuditPeriod }> = [
+  { label: 'hoy', value: 'today' },
+  { label: 'semana', value: 'week' },
+  { label: 'mes', value: 'month' },
+  { label: 'ano', value: 'year' },
+]
+
+const buildCurvePath = (values: number[], width: number, height: number): string => {
   if (!values.length) return ''
   const max = Math.max(...values, 1)
   const step = values.length > 1 ? width / (values.length - 1) : width
@@ -18,15 +69,15 @@ const buildCurvePath = (values, width, height) => {
 }
 
 export default function AuditDashboard() {
-  const [period, setPeriod] = useState('month')
-  const [data, setData] = useState(null)
-  const [trends, setTrends] = useState([])
+  const [period, setPeriod] = useState<AuditPeriod>('month')
+  const [data, setData] = useState<AuditSummaryData | null>(null)
+  const [trends, setTrends] = useState<AuditTrendPoint[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
-  const securityAlerts = Array.isArray(data?.security_alerts) ? data.security_alerts : []
-  const actionsByCategory = Array.isArray(data?.actions_by_category) ? data.actions_by_category : []
-  const topUsers = Array.isArray(data?.top_users) ? data.top_users : []
+  const securityAlerts: SecurityAlert[] = Array.isArray(data?.security_alerts) ? data.security_alerts : []
+  const actionsByCategory: ActionCategory[] = Array.isArray(data?.actions_by_category) ? data.actions_by_category : []
+  const topUsers: TopUser[] = Array.isArray(data?.top_users) ? data.top_users : []
   const kpis = data?.kpis || null
   const totalLogs = Number(kpis?.total_actions || 0)
   const successRate = Number(kpis?.success_rate || 0)
@@ -47,7 +98,7 @@ export default function AuditDashboard() {
       // El endpoint responde el envelope {success, data} — el payload vive en .data
       setData(summaryRes?.data ?? summaryRes)
       setTrends(Array.isArray(trendsRes?.data) ? trendsRes.data : [])
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching audit summary:', err)
       setError(err.message)
     } finally {
@@ -118,30 +169,23 @@ export default function AuditDashboard() {
           </p>
         </div>
         <div className='flex h-11 items-center rounded-lg bg-surface-muted p-1.5 shadow-inner'>
-          {['hoy', 'semana', 'mes', 'ano'].map(p => (
+          {PERIOD_OPTIONS.map(({ label, value }) => (
             <label
-              key={p}
+              key={value}
               className={`flex cursor-pointer h-full items-center justify-center rounded-lg px-4 transition-all text-xs font-bold uppercase tracking-wider ${
-                (p === 'mes' && period === 'month') ||
-                (p === 'hoy' && period === 'today') ||
-                (p === 'semana' && period === 'week') ||
-                (p === 'ano' && period === 'year')
+                period === value
                   ? 'bg-surface shadow-sm text-primary'
                   : 'text-on-surface-deep hover:text-foreground'
               }`}
             >
-              <span className='capitalize'>{p}</span>
+              <span className='capitalize'>{label}</span>
               <input
                 className='hidden'
                 name='period'
                 type='radio'
-                value={p}
-                checked={
-                  period === (p === 'ano' ? 'year' : p === 'mes' ? 'month' : p)
-                }
-                onChange={() =>
-                  setPeriod(p === 'ano' ? 'year' : p === 'mes' ? 'month' : p)
-                }
+                value={value}
+                checked={period === value}
+                onChange={() => setPeriod(value)}
               />
             </label>
           ))}
