@@ -115,9 +115,46 @@ export const auditService = {
     try {
       return await apiClient.get(`/api/v1/audit/users/${userId}/activity`, { params: { period } });
     } catch (error: any) {
-      console.error(`Error fetching activity for user ${userId}:`, error);
+      console.error(`Error fetching audit user activity:`, error);
       throw error;
     }
+  },
+
+  /**
+   * Exporta logs (POST /api/v1/audit/export, cierre ⑤ auditoría BI).
+   * El BE responde un archivo crudo (json/csv) con Content-Disposition — no
+   * el envelope estándar — así que va por getBlob. Contrato del body:
+   * { filter: AuditLogFilter, format: 'json'|'csv', max_records <= 10000 }.
+   * El BE compara timestamp >= start AND timestamp < end (exclusivo), así que
+   * end_date se manda +1 día para cubrir el día completo.
+   */
+  async exportLogs(
+    filters: {
+      search?: string;
+      category?: string;
+      level?: string;
+      success?: string;
+      start_date?: string;
+      end_date?: string;
+    } = {},
+    { format = 'csv', max_records = 10000 }: { format?: 'json' | 'csv'; max_records?: number } = {}
+  ): Promise<{ blob: Blob; filename: string | null }> {
+    const filter: Record<string, unknown> = {};
+    if (filters.search?.trim()) filter.search_term = filters.search.trim(); // el body usa search_term, no search
+    if (filters.category) filter.category = filters.category;
+    if (filters.level) filter.level = filters.level;
+    if (filters.success === 'true' || filters.success === 'false') filter.success = filters.success === 'true';
+    if (filters.start_date) filter.start_date = new Date(`${filters.start_date}T00:00:00`).toISOString();
+    if (filters.end_date) {
+      const exclusiveEnd = new Date(`${filters.end_date}T00:00:00`);
+      exclusiveEnd.setDate(exclusiveEnd.getDate() + 1);
+      filter.end_date = exclusiveEnd.toISOString();
+    }
+    return apiClient.getBlob('/api/v1/audit/export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filter, format, max_records }),
+    });
   }
 };
 

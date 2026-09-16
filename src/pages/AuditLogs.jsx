@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import auditService from '@/services/bi/auditService';
+import { useToast } from '@/hooks/useToast';
+import ToastContainer from '@/components/ui/ToastContainer';
 
 const EMPTY_KPI_FORM = [
   { key: 'total_actions', label: 'Acciones Totales', icon: 'data_exploration', iconClass: 'bg-primary/10 text-primary' },
@@ -17,9 +19,11 @@ const LEVEL_BADGES = {
 
 export default function AuditLogs() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [exporting, setExporting] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     category: '',
@@ -86,6 +90,29 @@ export default function AuditLogs() {
     setPage(1);
   };
 
+  // Exporta con los filtros activos (POST /api/v1/audit/export → archivo CSV).
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const activeFilters = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== ''));
+      const { blob, filename } = await auditService.exportLogs(activeFilters, { format: 'csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename || `audit_logs_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success('Exportación descargada');
+    } catch (err) {
+      console.error('Error exporting logs:', err);
+      toast.errorFrom(err, { fallback: 'No se pudo exportar el registro de auditoría' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const kpiValue = (key) => (kpis && kpis[key] != null ? Number(kpis[key]).toLocaleString('es-PY') : '—');
 
   return (
@@ -97,6 +124,14 @@ export default function AuditLogs() {
           <h1 className="text-2xl font-black text-foreground tracking-tight">Registro de Auditoría</h1>
           <p className="text-on-surface-deep text-sm">Monitoreo avanzado de actividades del sistema en tiempo real.</p>
         </div>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface border border-border-subtle text-sm font-bold text-foreground hover:bg-surface-muted transition-all disabled:opacity-50"
+        >
+          <span className="material-symbols-outlined text-lg">download</span>
+          {exporting ? 'Exportando...' : 'Exportar CSV'}
+        </button>
       </div>
 
       {/* Filters Bar */}
@@ -295,6 +330,8 @@ export default function AuditLogs() {
           </div>
         ))}
       </div>
+
+      <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
     </div>
   );
 }
