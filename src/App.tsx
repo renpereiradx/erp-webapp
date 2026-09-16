@@ -303,24 +303,88 @@ function AppContent() {
                       <Route path='/dashboard/top-products' element={<DashboardRoute><TopProductsOverview /></DashboardRoute>} />
                       <Route path='/dashboard/receivables' element={<DashboardRoute><ReceivablesDashboard /></DashboardRoute>} />
                       <Route path='/dashboard/payables' element={<DashboardRoute><PayablesDashboard /></DashboardRoute>} />
-                      <Route path='/payables/invoices' element={<InvoicesMasterList />} />
-                      <Route path='/payables/detail/:id' element={<InvoiceDetail />} />
-                      <Route path='/payables/cash-flow' element={<CashFlowProjection />} />
-                      <Route path='/payables/aging-report' element={<PayablesAgingReport />} />
-                      <Route path='/finance/analytical-cash-flow' element={<CashFlowAnalysisDashboard />} />
-                      <Route path='/finance/tax-management' element={<TaxManagementDashboard />} />
-                      <Route path='/finance/sifen-inutilizacion' element={<SkippedNumbersPage />} />
-                      <Route path='/finance/sifen-ops' element={<FiscalOpsDashboard />} />
-                      <Route path='/finance/profit-and-loss' element={<ProfitAndLoss />} />
-                      <Route path='/finance/legal-books' element={<LegalBooks />} />
-                      <Route path='/finance/profitability' element={<ProfitabilityAnalysis />} />
+                      <Route path='/payables/invoices' element={
+                        <PermissionGuard permission='payables:read'>
+                          <InvoicesMasterList />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/payables/detail/:id' element={
+                        <PermissionGuard permission='payables:read'>
+                          <InvoiceDetail />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/payables/cash-flow' element={
+                        <PermissionGuard permission='payables:read'>
+                          <CashFlowProjection />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/payables/aging-report' element={
+                        <PermissionGuard permission='payables:read'>
+                          <PayablesAgingReport />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/finance/analytical-cash-flow' element={
+                        <PermissionGuard permission='reports:read'>
+                          <CashFlowAnalysisDashboard />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/finance/tax-management' element={
+                        <PermissionGuard permission='reports:read'>
+                          <TaxManagementDashboard />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/finance/sifen-inutilizacion' element={
+                        <PermissionGuard permission='sifen:read'>
+                          <SkippedNumbersPage />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/finance/sifen-ops' element={
+                        <PermissionGuard permission='sifen:read'>
+                          <FiscalOpsDashboard />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/finance/profit-and-loss' element={
+                        <PermissionGuard permission='reports:read'>
+                          <ProfitAndLoss />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/finance/legal-books' element={
+                        <PermissionGuard permission='reports:read'>
+                          <LegalBooks />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/finance/profitability' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <ProfitabilityAnalysis />
+                        </PermissionGuard>
+                      } />
                       
                       {/* BI Forecasting Routes */}
-                      <Route path='/bi/pronosticos/dashboard' element={<DashboardPronosticos />} />
-                      <Route path='/bi/pronosticos/inventario' element={<SaludInventario />} />
-                      <Route path='/bi/pronosticos/ventas' element={<PronosticoVentas />} />
-                      <Route path='/bi/pronosticos/demanda' element={<PronosticoDemanda />} />
-                      <Route path='/bi/pronosticos/ingresos' element={<PronosticoIngresos />} />
+                      <Route path='/bi/pronosticos/dashboard' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <DashboardPronosticos />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/bi/pronosticos/inventario' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <SaludInventario />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/bi/pronosticos/ventas' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <PronosticoVentas />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/bi/pronosticos/demanda' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <PronosticoDemanda />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/bi/pronosticos/ingresos' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <PronosticoIngresos />
+                        </PermissionGuard>
+                      } />
                       
                       {/* Profitability Analytics Module (Detailed) */}
                       <Route path='/profitability/dashboard' element={<PermissionGuard permission="analytics:read"><ProfitabilityDashboard /></PermissionGuard>} />
@@ -334,30 +398,94 @@ function AppContent() {
                       <Route path='/bi/inventory/stock-levels' element={<BIStockManagement />} />
                       <Route path='/bi/inventory/risk-analysis' element={<BIInventoryRisk />} />
 
-                      <Route path='/receivables' element={<ReceivablesDashboard />} />
-                      <Route path='/receivables/list' element={<ReceivablesMasterList />} />
-                      <Route path='/receivables/detail/:id' element={<ReceivableDetail />} />
-                      <Route path='/receivables/overdue' element={<OverdueAccounts />} />
-                      <Route path='/receivables/client-profile/:clientId' element={<ClientCreditProfile />} />
-                      <Route path='/receivables/aging-report' element={<AgingReport />} />
+                      <Route path='/receivables' element={
+                        <PermissionGuard permission='receivables:read'>
+                          <ReceivablesDashboard />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/receivables/list' element={
+                        <PermissionGuard permission='receivables:read'>
+                          <ReceivablesMasterList />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/receivables/detail/:id' element={
+                        <PermissionGuard permission='receivables:read'>
+                          <ReceivableDetail />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/receivables/overdue' element={
+                        <PermissionGuard permission='receivables:read'>
+                          <OverdueAccounts />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/receivables/client-profile/:clientId' element={
+                        <PermissionGuard permission='receivables:read'>
+                          <ClientCreditProfile />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/receivables/aging-report' element={
+                        <PermissionGuard permission='receivables:read'>
+                          <AgingReport />
+                        </PermissionGuard>
+                      } />
                       <Route path='/productos' element={<PermissionGuard permission="products:write"><Products /></PermissionGuard>} />
                       <Route path='/parties' element={<PermissionGuard anyOf={['parties:read', 'clients:read', 'suppliers:read']}><PartiesPage /></PermissionGuard>} />
-                      <Route path='/payables/suppliers/:id/analysis' element={<SupplierAnalysis />} />
+                      <Route path='/payables/suppliers/:id/analysis' element={
+                        <PermissionGuard permission='payables:read'>
+                          <SupplierAnalysis />
+                        </PermissionGuard>
+                      } />
                       <Route path='/ventas' element={<PermissionGuard permission="sales:read"><SalesNew /></PermissionGuard>} />
                       
                       {/* Sales Analytics Routes */}
-                      <Route path='/sales-analytics/dashboard' element={<SalesAnalyticsDashboard />} />
-                      <Route path='/sales-analytics/products-categories' element={<SalesAnalyticsProductsCategories />} />
-                      <Route path='/sales-analytics/insights' element={<SalesAnalyticsInsights />} />
-                      <Route path='/sales-analytics/trends-velocity' element={<SalesAnalyticsTrendsVelocity />} />
-                      <Route path='/sales-analytics/period-comparison' element={<SalesAnalyticsPeriodComparison />} />
+                      <Route path='/sales-analytics/dashboard' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <SalesAnalyticsDashboard />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/sales-analytics/products-categories' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <SalesAnalyticsProductsCategories />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/sales-analytics/insights' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <SalesAnalyticsInsights />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/sales-analytics/trends-velocity' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <SalesAnalyticsTrendsVelocity />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/sales-analytics/period-comparison' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <SalesAnalyticsPeriodComparison />
+                        </PermissionGuard>
+                      } />
                       <Route path='/sales-analytics/discounts' element={<PermissionGuard permission="reports:read"><SalesAnalyticsDiscounts /></PermissionGuard>} />
 
                       {/* Inventory Analytics Routes */}
-                      <Route path='/inventory-analytics/dashboard' element={<InventoryDashboard />} />
-                      <Route path='/inventory-analytics/turnover-abc' element={<InventoryTurnoverABC />} />
-                      <Route path='/inventory-analytics/stock-levels' element={<StockLevelsReorder />} />
-                      <Route path='/inventory-analytics/risk' element={<InventoryRisk />} />
+                      <Route path='/inventory-analytics/dashboard' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <InventoryDashboard />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/inventory-analytics/turnover-abc' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <InventoryTurnoverABC />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/inventory-analytics/stock-levels' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <StockLevelsReorder />
+                        </PermissionGuard>
+                      } />
+                      <Route path='/inventory-analytics/risk' element={
+                        <PermissionGuard permission='analytics:read'>
+                          <InventoryRisk />
+                        </PermissionGuard>
+                      } />
 
                       {/* Rutas con layout de tabs */}
                       <Route
@@ -578,24 +706,24 @@ function AppContent() {
                       
                       {/* Auditoría */}
                       <Route path='/auditoria' element={
-                        <RoleGuard allowedRoles={['F2VLso']}>
+                        <PermissionGuard permission='audit:read'>
                           <AuditDashboard />
-                        </RoleGuard>
+                        </PermissionGuard>
                       } />
                       <Route path='/auditoria/logs' element={
-                        <RoleGuard allowedRoles={['F2VLso']}>
+                        <PermissionGuard permission='audit:read'>
                           <AuditLogs />
-                        </RoleGuard>
+                        </PermissionGuard>
                       } />
                       <Route path='/auditoria/logs/:id' element={
-                        <RoleGuard allowedRoles={['F2VLso']}>
+                        <PermissionGuard permission='audit:read'>
                           <AuditLogDetail />
-                        </RoleGuard>
+                        </PermissionGuard>
                       } />
                       <Route path='/auditoria/usuarios/:id' element={
-                        <RoleGuard allowedRoles={['F2VLso']}>
+                        <PermissionGuard permission='audit:read'>
                           <AuditUserActivity />
-                        </RoleGuard>
+                        </PermissionGuard>
                       } />
 
                       {/* Configuración Financiera */}
