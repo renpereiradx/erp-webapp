@@ -25,10 +25,9 @@ import {
   BarChart2,
 } from 'lucide-react'
 import salesAnalyticsService from '@/services/bi/salesAnalyticsService'
-import { MOCK_COMPARE } from '@/services/mocks/salesAnalyticsMock'
 
 const PeriodComparison = () => {
-  const [compareData, setCompareData] = useState(MOCK_COMPARE.data)
+  const [compareData, setCompareData] = useState(null)
   const [chartData, setChartData] = useState([])
   const [loading, setLoading] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
@@ -215,6 +214,11 @@ const PeriodComparison = () => {
             {[1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} className="h-32 bg-slate-100 dark:bg-slate-800 rounded-lg"></div>
             ))}
+          </div>
+        ) : !compareData ? (
+          <div className="py-16 text-center">
+            <p className="text-sm font-bold text-foreground">No se pudo cargar la comparación de períodos.</p>
+            <p className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest mt-2">Verifique la conexión e intente nuevamente</p>
           </div>
         ) : (
           <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>

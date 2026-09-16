@@ -21,10 +21,9 @@ import {
   Banknote,
 } from 'lucide-react'
 import salesAnalyticsService from '@/services/bi/salesAnalyticsService'
-import { MOCK_VELOCITY } from '@/services/mocks/salesAnalyticsMock'
 
 const TrendsVelocity = () => {
-  const [velocityData, setVelocityData] = useState(MOCK_VELOCITY.data)
+  const [velocityData, setVelocityData] = useState(null)
   const [heatmapData, setHeatmapData] = useState(null)
   const [trendsData, setTrendsData] = useState({ daily: [], hourly: [] })
   const [loading, setLoading] = useState(true)

@@ -295,6 +295,18 @@ class BusinessManagementAPI {
       }
     }
 
+    // T8 (FASE 1 BE): payload parcial cuando una sub-consulta BI falla.
+    // Se notifica por evento; los datos válidos siguen llegando al caller.
+    if (parsedResponse && parsedResponse.metadata?.partial) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('api:partial-data', {
+            detail: parsedResponse.metadata.partial_errors || [],
+          }),
+        )
+      }
+    }
+
     return parsedResponse
   }
 

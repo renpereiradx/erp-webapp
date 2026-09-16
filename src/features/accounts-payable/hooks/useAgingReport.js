@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { receivablesService } from '@/services/bi/receivablesService'
-import { agingData as mockData } from '../data/agingMockData'
 
 /**
  * Transform API response to the format expected by UI components
@@ -118,8 +117,6 @@ export const useAgingReport = () => {
     } catch (err) {
       console.error('Error fetching aging report:', err)
       setError(err.message)
-      // Fallback to mock data on error
-      setData(mockData)
     } finally {
       setLoading(false)
     }

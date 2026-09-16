@@ -217,6 +217,7 @@ const DashboardRoute = ({ children }: { children: React.ReactNode }) => (
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth()
+  const lastPartialToastRef = useRef(0)
 
   useEffect(() => {
     // Bootstrap: cache the backend default VAT rate for cart calculators
@@ -238,12 +239,26 @@ function AppContent() {
       });
     };
 
+    // T8 (FASE 1 BE): metadata.partial en la respuesta = algunas sub-consultas
+    // fallaron pero el resto del payload es válido. Aviso global no bloqueante
+    // con dedupe de 5s (una página dispara varios endpoints en paralelo).
+    const handlePartialData = () => {
+      const now = Date.now()
+      if (now - lastPartialToastRef.current < 5000) return
+      lastPartialToastRef.current = now
+      import('sonner').then(({ toast }) => {
+        toast.warning('Datos parciales: algunas secciones no pudieron cargarse completamente.');
+      });
+    };
+
     window.addEventListener('api:forbidden', handleForbidden);
     window.addEventListener('api:method_not_allowed', handleMethodNotAllowed);
+    window.addEventListener('api:partial-data', handlePartialData);
 
     return () => {
       window.removeEventListener('api:forbidden', handleForbidden);
       window.removeEventListener('api:method_not_allowed', handleMethodNotAllowed);
+      window.removeEventListener('api:partial-data', handlePartialData);
     };
   }, []);
 

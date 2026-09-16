@@ -21,10 +21,9 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import salesAnalyticsService from '@/services/bi/salesAnalyticsService'
-import { MOCK_DASHBOARD } from '@/services/mocks/salesAnalyticsMock'
 
 const Dashboard = () => {
-  const [data, setData] = useState(MOCK_DASHBOARD.data)
+  const [data, setData] = useState(null)
   const [period, setPeriod] = useState('month')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -61,11 +60,11 @@ const Dashboard = () => {
     fetchData()
   }, [period])
 
-  const kpis = useMemo(() => data?.kpis || MOCK_DASHBOARD.data.kpis, [data])
-  const trends = useMemo(() => data?.trends || MOCK_DASHBOARD.data.trends, [data])
-  const alerts = useMemo(() => data?.alerts || MOCK_DASHBOARD.data.alerts, [data])
-  const topProducts = useMemo(() => data?.top_products || MOCK_DASHBOARD.data.top_products, [data])
-  const paymentMix = useMemo(() => data?.payment_mix || MOCK_DASHBOARD.data.payment_mix, [data])
+  const kpis = useMemo(() => data?.kpis || [], [data])
+  const trends = useMemo(() => data?.trends || [], [data])
+  const alerts = useMemo(() => data?.alerts || [], [data])
+  const topProducts = useMemo(() => data?.top_products || [], [data])
+  const paymentMix = useMemo(() => data?.payment_mix || [], [data])
 
   const formatCurrency = value => {
     return new Intl.NumberFormat('es-PY', {
