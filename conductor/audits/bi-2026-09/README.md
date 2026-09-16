@@ -20,7 +20,8 @@ backend vivo en `:5050`. FASE 2 arranca solo cuando el gate de FASE 1 (backend) 
 | **2C — Dashboard (5 páginas)** | ✅ 2026-09-16 | `Dashboard-*.md` ×5 | FE `9e6bd6c` |
 | **2D — Sales Analytics (6 páginas)** | ✅ 2026-09-16 | `SalesAnalytics-*.md` ×6 | FE `60df285` |
 | **2E — Pronósticos (5 páginas)** | ✅ 2026-09-16 | `Pronosticos-*.md` ×5 | FE `b90854a` |
-| **2F — Rentabilidad (6 páginas)** | ✅ 2026-09-16 | `Rentabilidad-*.md` ×6 | FE (este repo) |
+| **2F — Rentabilidad (6 páginas)** | ✅ 2026-09-16 | `Rentabilidad-*.md` ×6 | FE `329fd60` |
+| **2G — Inventario (4 páginas)** | ✅ 2026-09-16 | `Inventario-*.md` ×4 | FE (este repo) |
 | 2B — CxC (6) | ⏳ | | |
 | 2C — Dashboard (5) | ⏳ | | |
 | 2D — Sales Analytics (6) | ⏳ | | |
@@ -100,3 +101,10 @@ margen adicional del 0%"; **profit del módulo (309.960/56,18%) ≠ summary glob
 pendiente) · Tendencias FAIL P1 ("+-100%", pico "---", gráfico vacío, vigilancia 0%) ·
 Vendedores FAIL P1 (ranking real pero inflado por fan-out T15 del BE; "OBJETIVO
 CORPORATIVO: 0%"). Grupo 100% gated analytics:read ✅ (el mejor protegido).
+
+**Resultado 2G (veredicto por página)**: Dashboard **PASS** (mejor página BI: donut real, ABC,
+alertas con CTAs) · Rotación ABC PASS condicional (2.839 días = dev quirk real, falta nota) ·
+Stock Levels PASS condicional (**20 filas >10 sin paginación server-side** — P2 del plan
+confirmado; destino de action_url T5 ✅) · Riesgos **PASS** (dead stock real post-T13; menor:
+reorden Gs. 0 con 2 SKUs). Único grupo .tsx completo ✅; endpoints resucitados T13/T16
+verificados con datos en vivo.
