@@ -1,22 +1,36 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import auditService from '@/services/bi/auditService'
+
+const DONUT_COLORS = ['#0078D4', '#455f89', '#107c10', '#d83b01', '#964400']
+
+const buildCurvePath = (values, width, height) => {
+  if (!values.length) return ''
+  const max = Math.max(...values, 1)
+  const step = values.length > 1 ? width / (values.length - 1) : width
+  return values
+    .map((v, i) => {
+      const x = i * step
+      const y = height - (v / max) * (height - 10) - 5
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+    })
+    .join(' ')
+}
 
 export default function AuditDashboard() {
   const [period, setPeriod] = useState('month')
   const [data, setData] = useState(null)
+  const [trends, setTrends] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const securityAlerts = Array.isArray(data?.security_alerts)
-    ? data.security_alerts
-    : []
-  const actionsByCategory = Array.isArray(data?.actions_by_category)
-    ? data.actions_by_category
-    : []
+  const securityAlerts = Array.isArray(data?.security_alerts) ? data.security_alerts : []
+  const actionsByCategory = Array.isArray(data?.actions_by_category) ? data.actions_by_category : []
   const topUsers = Array.isArray(data?.top_users) ? data.top_users : []
-  const totalLogs = Number(data?.total_logs || 0)
-  const successRate = Number(data?.success_rate || 0)
-  const uniqueUsers = Number(data?.unique_users || 0)
+  const kpis = data?.kpis || null
+  const totalLogs = Number(kpis?.total_actions || 0)
+  const successRate = Number(kpis?.success_rate || 0)
+  const uniqueUsers = Number(kpis?.unique_users || 0)
 
   useEffect(() => {
     fetchSummary()
@@ -25,25 +39,70 @@ export default function AuditDashboard() {
   const fetchSummary = async () => {
     try {
       setLoading(true)
-      const summaryData = await auditService.getSummary(period)
-      setData(summaryData)
-    } catch (error) {
-      console.error('Error fetching audit summary:', error)
+      setError(null)
+      const [summaryRes, trendsRes] = await Promise.all([
+        auditService.getSummary(period),
+        auditService.getTrends(period).catch(() => null),
+      ])
+      // El endpoint responde el envelope {success, data} — el payload vive en .data
+      setData(summaryData?.data ?? summaryData)
+      setTrends(Array.isArray(trendsRes?.data) ? trendsRes.data : [])
+    } catch (err) {
+      console.error('Error fetching audit summary:', err)
+      setError(err.message)
     } finally {
       setLoading(false)
     }
   }
 
+  // Curva real: total de acciones por día desde /audit/trends
+  const trendPaths = useMemo(() => {
+    const ok = trends.filter((t) => t && (t.total_actions != null || t.successful != null))
+    const totals = ok.map((t) => Number(t.total_actions || 0))
+    const failed = ok.map((t) => Number(t.failed || 0))
+    return {
+      labels: ok.map((t) => t.label || ''),
+      total: buildCurvePath(totals, 400, 150),
+      failed: buildCurvePath(failed, 400, 150),
+      hasData: ok.some((t) => Number(t.total_actions || 0) > 0),
+    }
+  }, [trends])
+
+  // Donut real: segmentos desde actions_by_category (percentage real)
+  const donutSegments = useMemo(() => {
+    let offset = 0
+    return actionsByCategory.slice(0, 5).map((item, idx) => {
+      const pct = Number(item.percentage || 0)
+      const seg = { color: DONUT_COLORS[idx % DONUT_COLORS.length], pct, offset }
+      offset += pct
+      return seg
+    })
+  }, [actionsByCategory])
+
   if (loading) {
     return (
-      <div className='flex justify-center items-center h-64'>
+      <div className='flex justify-center items-center h-64 text-on-surface-deep'>
         Cargando dashboard...
       </div>
     )
   }
 
+  if (error) {
+    return (
+      <div className='flex flex-col items-center justify-center h-64 gap-4'>
+        <p className='text-foreground text-sm font-bold'>No se pudo cargar el dashboard de auditoría.</p>
+        <button
+          onClick={fetchSummary}
+          className='px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl bg-primary text-on-primary hover:bg-primary-container transition-all'
+        >
+          Reintentar
+        </button>
+      </div>
+    )
+  }
+
   if (!data) {
-    return <div className='text-red-500'>Error al cargar los datos.</div>
+    return <div className='text-error'>Error al cargar los datos.</div>
   }
 
   return (
@@ -51,14 +110,14 @@ export default function AuditDashboard() {
       {/* Header */}
       <div className='flex flex-wrap items-end justify-between gap-4'>
         <div className='flex flex-col gap-1'>
-          <h1 className='text-slate-900 text-3xl font-black leading-tight tracking-tight'>
+          <h1 className='text-foreground text-3xl font-black leading-tight tracking-tight'>
             Dashboard de Auditoría
           </h1>
-          <p className='text-slate-500 text-sm font-medium'>
+          <p className='text-on-surface-deep text-sm font-medium'>
             Control total de trazabilidad y eventos de seguridad del sistema.
           </p>
         </div>
-        <div className='flex h-11 items-center rounded-lg bg-slate-200/50 p-1.5 shadow-inner'>
+        <div className='flex h-11 items-center rounded-lg bg-surface-muted p-1.5 shadow-inner'>
           {['hoy', 'semana', 'mes', 'ano'].map(p => (
             <label
               key={p}
@@ -67,8 +126,8 @@ export default function AuditDashboard() {
                 (p === 'hoy' && period === 'today') ||
                 (p === 'semana' && period === 'week') ||
                 (p === 'ano' && period === 'year')
-                  ? 'bg-white shadow-sm text-[#137fec]'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? 'bg-surface shadow-sm text-primary'
+                  : 'text-on-surface-deep hover:text-foreground'
               }`}
             >
               <span className='capitalize'>{p}</span>
@@ -89,249 +148,210 @@ export default function AuditDashboard() {
         </div>
       </div>
 
-      {/* Fila de KPIs */}
+      {/* Fila de KPIs (fuente real: kpis del endpoint dashboard) */}
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
-        <div className='bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex items-center gap-4 transition-all hover:shadow-md'>
-          <div className='flex items-center justify-center size-12 rounded-lg bg-[#137fec]/10 text-[#137fec]'>
+        <div className='bg-surface p-6 rounded-lg shadow-sm border border-border-subtle flex items-center gap-4 transition-all hover:shadow-md'>
+          <div className='flex items-center justify-center size-12 rounded-lg bg-primary/10 text-primary'>
             <span className='material-symbols-outlined text-2xl'>history</span>
           </div>
           <div>
-            <p className='text-slate-500 text-xs font-semibold uppercase tracking-wide'>
+            <p className='text-on-surface-deep text-xs font-semibold uppercase tracking-wide'>
               Total de Acciones
             </p>
-            <p className='text-2xl font-bold text-slate-900'>
-              {totalLogs.toLocaleString()}
-            </p>
-            <p className='text-emerald-500 text-[11px] font-bold flex items-center gap-0.5'>
-              <span className='material-symbols-outlined text-sm'>
-                trending_up
-              </span>{' '}
-              +12.5% vs prev.
+            <p className='text-2xl font-bold text-foreground'>
+              {totalLogs.toLocaleString('es-PY')}
             </p>
           </div>
         </div>
 
-        <div className='bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex items-center gap-4'>
-          <div className='flex items-center justify-center size-12 rounded-lg bg-emerald-100 text-emerald-600'>
+        <div className='bg-surface p-6 rounded-lg shadow-sm border border-border-subtle flex items-center gap-4'>
+          <div className='flex items-center justify-center size-12 rounded-lg bg-success/10 text-success'>
             <span className='material-symbols-outlined text-2xl'>verified</span>
           </div>
           <div>
-            <p className='text-slate-500 text-xs font-semibold uppercase tracking-wide'>
+            <p className='text-on-surface-deep text-xs font-semibold uppercase tracking-wide'>
               Tasa de Éxito
             </p>
-            <p className='text-2xl font-bold text-slate-900'>{successRate}%</p>
-            <p className='text-emerald-500 text-[11px] font-bold flex items-center gap-0.5'>
-              <span className='material-symbols-outlined text-sm'>check</span>{' '}
-              Óptimo
+            <p className='text-2xl font-bold text-foreground'>
+              {totalLogs > 0 ? `${successRate}%` : 'n/d'}
             </p>
+            {totalLogs > 0 && (
+              <p className={`text-[11px] font-bold flex items-center gap-0.5 ${successRate >= 95 ? 'text-success' : 'text-warning'}`}>
+                <span className='material-symbols-outlined text-sm'>
+                  {successRate >= 95 ? 'check' : 'warning'}
+                </span>{' '}
+                {successRate >= 95 ? 'Óptimo' : 'Revisar fallos'}
+              </p>
+            )}
           </div>
         </div>
 
-        <div className='bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex items-center gap-4'>
-          <div className='flex items-center justify-center size-12 rounded-lg bg-indigo-100 text-indigo-600'>
+        <div className='bg-surface p-6 rounded-lg shadow-sm border border-border-subtle flex items-center gap-4'>
+          <div className='flex items-center justify-center size-12 rounded-lg bg-secondary/10 text-secondary'>
             <span className='material-symbols-outlined text-2xl'>person</span>
           </div>
           <div>
-            <p className='text-slate-500 text-xs font-semibold uppercase tracking-wide'>
+            <p className='text-on-surface-deep text-xs font-semibold uppercase tracking-wide'>
               Usuarios Únicos
             </p>
-            <p className='text-2xl font-bold text-slate-900'>{uniqueUsers}</p>
-            <p className='text-slate-400 text-[11px] font-bold'>Activos hoy</p>
+            <p className='text-2xl font-bold text-foreground'>{uniqueUsers}</p>
           </div>
         </div>
 
-        <div className='bg-white p-6 rounded-lg shadow-sm border border-red-100 flex items-center gap-4 bg-red-50/10'>
-          <div className='flex items-center justify-center size-12 rounded-lg bg-red-100 text-red-600'>
+        <div className='bg-surface p-6 rounded-lg shadow-sm border border-error/20 flex items-center gap-4'>
+          <div className='flex items-center justify-center size-12 rounded-lg bg-error-container text-on-error-container'>
             <span className='material-symbols-outlined text-2xl'>report</span>
           </div>
           <div>
-            <p className='text-slate-500 text-xs font-semibold uppercase tracking-wide'>
+            <p className='text-on-surface-deep text-xs font-semibold uppercase tracking-wide'>
               Alertas de Seguridad
             </p>
-            <div className='flex items-baseline gap-2'>
-              <p className='text-2xl font-bold text-slate-900'>
-                {securityAlerts.length}
-              </p>
-              <span className='bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase'>
-                Crítico
-              </span>
-            </div>
-            <p className='text-red-500 text-[11px] font-bold flex items-center gap-0.5'>
-              <span className='material-symbols-outlined text-sm'>warning</span>{' '}
-              Requiere atención
+            <p className='text-2xl font-bold text-foreground'>
+              {securityAlerts.length}
             </p>
+            {securityAlerts.length > 0 && (
+              <p className='text-error text-[11px] font-bold flex items-center gap-0.5'>
+                <span className='material-symbols-outlined text-sm'>warning</span>{' '}
+                Requiere atención
+              </p>
+            )}
           </div>
         </div>
       </div>
 
       {/* Fila de Gráficos */}
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-        <div className='bg-white p-6 rounded-lg shadow-sm border border-slate-200'>
+        <div className='bg-surface p-6 rounded-lg shadow-sm border border-border-subtle'>
           <div className='flex justify-between items-center mb-6'>
-            <h3 className='text-lg font-bold text-slate-900'>
+            <h3 className='text-lg font-bold text-foreground'>
               Tendencias de Actividad
             </h3>
             <div className='flex gap-4'>
               <div className='flex items-center gap-1.5'>
-                <span className='size-2 rounded-full bg-[#137fec]'></span>
-                <span className='text-[10px] font-bold text-slate-500 uppercase'>
-                  Éxito
+                <span className='size-2 rounded-full bg-primary'></span>
+                <span className='text-[10px] font-bold text-on-surface-deep uppercase'>
+                  Total
                 </span>
               </div>
               <div className='flex items-center gap-1.5'>
-                <span className='size-2 rounded-full bg-slate-300'></span>
-                <span className='text-[10px] font-bold text-slate-500 uppercase'>
+                <span className='size-2 rounded-full bg-warning'></span>
+                <span className='text-[10px] font-bold text-on-surface-deep uppercase'>
                   Fallidas
                 </span>
               </div>
             </div>
           </div>
-          <div className='h-64 flex flex-col justify-end'>
-            <svg
-              className='w-full h-full'
-              preserveAspectRatio='none'
-              viewBox='0 0 400 150'
-            >
-              <defs>
-                <linearGradient id='grad1' x1='0%' x2='0%' y1='0%' y2='100%'>
-                  <stop
-                    offset='0%'
-                    style={{
-                      stopColor: 'rgba(19,127,236,0.2)',
-                      stopOpacity: 1,
-                    }}
-                  />
-                  <stop
-                    offset='100%'
-                    style={{ stopColor: 'rgba(19,127,236,0)', stopOpacity: 0 }}
-                  />
-                </linearGradient>
-              </defs>
-              <path
-                d='M0,120 Q50,60 100,100 T200,40 T300,80 T400,20 L400,150 L0,150 Z'
-                fill='url(#grad1)'
-              ></path>
-              <path
-                d='M0,120 Q50,60 100,100 T200,40 T300,80 T400,20'
-                fill='none'
-                stroke='#137fec'
-                strokeWidth='3'
-              ></path>
-              <path
-                d='M0,140 Q50,130 100,145 T200,135 T300,140 T400,130'
-                fill='none'
-                stroke='#cbd5e1'
-                strokeDasharray='4'
-                strokeWidth='2'
-              ></path>
-            </svg>
-            <div className='flex justify-between mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-tighter'>
-              <span>Lun</span>
-              <span>Mar</span>
-              <span>Mié</span>
-              <span>Jue</span>
-              <span>Vie</span>
-              <span>Sáb</span>
-              <span>Dom</span>
-            </div>
-          </div>
-        </div>
-
-        <div className='bg-white p-6 rounded-lg shadow-sm border border-slate-200'>
-          <h3 className='text-lg font-bold text-slate-900 mb-6'>
-            Acciones por Categoría
-          </h3>
-          <div className='flex items-center justify-around h-64'>
-            <div className='relative flex items-center justify-center size-48'>
-              <svg className='size-full -rotate-90' viewBox='0 0 36 36'>
-                <circle
-                  className='stroke-slate-100'
-                  cx='18'
-                  cy='18'
+          {trendPaths.hasData ? (
+            <div className='h-64 flex flex-col justify-end'>
+              <svg
+                className='w-full h-full'
+                preserveAspectRatio='none'
+                viewBox='0 0 400 150'
+              >
+                <path
+                  d={trendPaths.failed}
                   fill='none'
-                  r='16'
-                  strokeWidth='4'
-                ></circle>
-                <circle
-                  cx='18'
-                  cy='18'
+                  className='stroke-warning'
+                  strokeDasharray='4'
+                  strokeWidth='2'
+                ></path>
+                <path
+                  d={trendPaths.total}
                   fill='none'
-                  r='16'
-                  stroke='#137fec'
-                  strokeDasharray='33.7 66.3'
-                  strokeDashoffset='0'
-                  strokeWidth='4'
-                ></circle>
-                <circle
-                  cx='18'
-                  cy='18'
-                  fill='none'
-                  r='16'
-                  stroke='#6366f1'
-                  strokeDasharray='20.1 79.9'
-                  strokeDashoffset='-33.7'
-                  strokeWidth='4'
-                ></circle>
-                <circle
-                  cx='18'
-                  cy='18'
-                  fill='none'
-                  r='16'
-                  stroke='#10b981'
-                  strokeDasharray='15 85'
-                  strokeDashoffset='-53.8'
-                  strokeWidth='4'
-                ></circle>
+                  className='stroke-primary'
+                  strokeWidth='3'
+                ></path>
               </svg>
-              <div className='absolute inset-0 flex flex-col items-center justify-center'>
-                <span className='text-3xl font-black text-slate-900'>100%</span>
-                <span className='text-[10px] font-bold text-slate-500 uppercase'>
-                  Total Log
-                </span>
+              <div className='flex justify-between mt-4 text-[10px] font-bold text-on-surface-deep uppercase tracking-tighter'>
+                {trendPaths.labels.slice(0, 7).map((label, idx) => (
+                  <span key={idx}>{label}</span>
+                ))}
               </div>
             </div>
-            <div className='flex flex-col gap-3'>
-              {actionsByCategory.map((item, idx) => {
-                const colors = [
-                  'bg-[#137fec]',
-                  'bg-indigo-500',
-                  'bg-emerald-500',
-                ]
-                return (
-                  <div key={item.category} className='flex items-center gap-3'>
+          ) : (
+            <div className='h-64 flex flex-col items-center justify-center gap-2'>
+              <span className='material-symbols-outlined text-3xl text-on-surface-deep'>show_chart</span>
+              <p className='text-sm font-bold text-on-surface-deep'>Sin actividad registrada en el período.</p>
+            </div>
+          )}
+        </div>
+
+        <div className='bg-surface p-6 rounded-lg shadow-sm border border-border-subtle'>
+          <h3 className='text-lg font-bold text-foreground mb-6'>
+            Acciones por Categoría
+          </h3>
+          {totalLogs > 0 && donutSegments.length > 0 ? (
+            <div className='flex items-center justify-around h-64'>
+              <div className='relative flex items-center justify-center size-48'>
+                <svg className='size-full -rotate-90' viewBox='0 0 36 36'>
+                  <circle
+                    className='stroke-border-subtle'
+                    cx='18'
+                    cy='18'
+                    fill='none'
+                    r='16'
+                    strokeWidth='4'
+                  ></circle>
+                  {donutSegments.map((seg, idx) => (
+                    <circle
+                      key={idx}
+                      cx='18'
+                      cy='18'
+                      fill='none'
+                      r='16'
+                      stroke={seg.color}
+                      strokeDasharray={`${(seg.pct / 100) * 100.5} ${100.5 - (seg.pct / 100) * 100.5}`}
+                      strokeDashoffset={`-${(seg.offset / 100) * 100.5}`}
+                      strokeWidth='4'
+                    ></circle>
+                  ))}
+                </svg>
+                <div className='absolute inset-0 flex flex-col items-center justify-center'>
+                  <span className='text-2xl font-black text-foreground'>{totalLogs.toLocaleString('es-PY')}</span>
+                  <span className='text-[10px] font-bold text-on-surface-deep uppercase'>
+                    Acciones
+                  </span>
+                </div>
+              </div>
+              <div className='flex flex-col gap-3'>
+                {donutSegments.map((seg, idx) => (
+                  <div key={actionsByCategory[idx].category} className='flex items-center gap-3'>
                     <span
-                      className={`size-3 rounded-sm ${colors[idx % colors.length]}`}
+                      className='size-3 rounded-sm'
+                      style={{ backgroundColor: seg.color }}
                     ></span>
                     <div className='flex flex-col'>
-                      <span className='text-xs font-bold text-slate-700 uppercase tracking-tighter'>
-                        {item.category}
+                      <span className='text-xs font-bold text-foreground uppercase tracking-tighter'>
+                        {actionsByCategory[idx].category}
                       </span>
-                      <span className='text-[10px] text-slate-500 font-bold'>
-                        {item.percentage}%
+                      <span className='text-[10px] text-on-surface-deep font-bold'>
+                        {seg.pct}%
                       </span>
                     </div>
                   </div>
-                )
-              })}
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className='h-64 flex flex-col items-center justify-center gap-2'>
+              <span className='material-symbols-outlined text-3xl text-on-surface-deep'>donut_small</span>
+              <p className='text-sm font-bold text-on-surface-deep'>Sin datos de categorías en el período.</p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Bottom Row */}
       <div className='grid grid-cols-1 xl:grid-cols-3 gap-6'>
-        <div className='xl:col-span-2 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden'>
-          <div className='p-6 border-b border-slate-100 flex justify-between items-center'>
-            <h3 className='text-lg font-bold text-slate-900'>
+        <div className='xl:col-span-2 bg-surface rounded-lg shadow-sm border border-border-subtle overflow-hidden'>
+          <div className='p-6 border-b border-border-subtle'>
+            <h3 className='text-lg font-bold text-foreground'>
               Top Usuarios Activos
             </h3>
-            <button className='text-[#137fec] text-xs font-bold hover:underline uppercase tracking-widest'>
-              Ver todo
-            </button>
           </div>
           <div className='overflow-x-auto'>
             <table className='w-full text-left'>
-              <thead className='bg-slate-50 text-slate-500 text-[11px] font-bold uppercase tracking-wider'>
+              <thead className='bg-surface-muted text-on-surface-deep text-[11px] font-bold uppercase tracking-wider'>
                 <tr>
                   <th className='px-6 py-4'>Usuario</th>
                   <th className='px-6 py-4 text-center'>Acciones Totales</th>
@@ -339,7 +359,7 @@ export default function AuditDashboard() {
                   <th className='px-6 py-4'></th>
                 </tr>
               </thead>
-              <tbody className='divide-y divide-slate-100'>
+              <tbody className='divide-y divide-border-subtle'>
                 {topUsers.map(user => {
                   const totalUserActions = Number(user.total_actions || 0)
                   const successfulUserActions = Number(
@@ -355,42 +375,38 @@ export default function AuditDashboard() {
                   return (
                     <tr
                       key={user.user_id}
-                      className='hover:bg-slate-50 transition-colors'
+                      className='hover:bg-surface-muted transition-colors'
                     >
                       <td className='px-6 py-4'>
                         <div className='flex items-center gap-3'>
-                          <div className='size-8 rounded-full bg-[#137fec]/10 text-[#137fec] flex items-center justify-center font-black text-xs border border-[#137fec]/20 uppercase'>
+                          <div className='size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-xs border border-primary/20 uppercase'>
                             {avatarLetter}
                           </div>
                           <Link
                             to={`/auditoria/usuarios/${user.user_id}`}
-                            className='text-sm font-semibold hover:text-[#137fec]'
+                            className='text-sm font-semibold text-foreground hover:text-primary'
                           >
                             {username}
                           </Link>
                         </div>
                       </td>
-                      <td className='px-6 py-4 text-center font-bold text-sm font-mono text-slate-600'>
-                        {totalUserActions.toLocaleString()}
+                      <td className='px-6 py-4 text-center font-bold text-sm font-mono text-foreground'>
+                        {totalUserActions.toLocaleString('es-PY')}
                       </td>
                       <td className='px-6 py-4'>
                         <div className='flex items-center justify-center gap-3'>
-                          <div className='w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden'>
+                          <div className='w-20 h-1.5 bg-surface-subtle rounded-full overflow-hidden'>
                             <div
-                              className='h-full bg-emerald-500'
+                              className='h-full bg-success'
                               style={{ width: `${successPercent}%` }}
                             ></div>
                           </div>
-                          <span className='text-xs font-bold text-slate-700'>
+                          <span className='text-xs font-bold text-foreground'>
                             {successPercent.toFixed(1)}%
                           </span>
                         </div>
                       </td>
-                      <td className='px-6 py-4 text-right'>
-                        <button className='material-symbols-outlined text-slate-400 hover:text-[#137fec]'>
-                          more_vert
-                        </button>
-                      </td>
+                      <td className='px-6 py-4'></td>
                     </tr>
                   )
                 })}
@@ -399,12 +415,12 @@ export default function AuditDashboard() {
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col overflow-hidden'>
-          <div className='p-6 border-b border-slate-100 flex justify-between items-center'>
-            <h3 className='text-lg font-bold text-slate-900'>
+        <div className='bg-surface rounded-lg shadow-sm border border-border-subtle flex flex-col overflow-hidden'>
+          <div className='p-6 border-b border-border-subtle flex justify-between items-center'>
+            <h3 className='text-lg font-bold text-foreground'>
               Alertas Recientes
             </h3>
-            <span className='flex items-center justify-center size-5 bg-red-100 text-red-600 text-[10px] font-black rounded-full'>
+            <span className='flex items-center justify-center size-5 bg-error-container text-on-error-container text-[10px] font-black rounded-full'>
               {securityAlerts.length}
             </span>
           </div>
@@ -412,32 +428,37 @@ export default function AuditDashboard() {
             {securityAlerts.map((alert, idx) => (
               <div
                 key={idx}
-                className='p-3 rounded-lg bg-red-50 border-l-4 border-red-500'
+                className='p-3 rounded-lg bg-error-container/50 border-l-4 border-error'
               >
                 <div className='flex justify-between items-start mb-1'>
-                  <span className='text-[9px] font-black uppercase text-red-600 tracking-widest bg-red-100 px-1.5 py-0.5 rounded'>
+                  <span className='text-[9px] font-black uppercase text-on-error-container tracking-widest bg-error-container px-1.5 py-0.5 rounded'>
                     {alert.severity}
                   </span>
-                  <span className='text-[10px] text-slate-500 font-medium'>
-                    hace poco
-                  </span>
+                  {alert.occurred_at && (
+                    <span className='text-[10px] text-on-surface-deep font-medium'>
+                      {new Date(alert.occurred_at).toLocaleString('es-PY', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
                 </div>
-                <p className='text-sm font-bold text-slate-800 mb-1 leading-snug'>
+                <p className='text-sm font-bold text-foreground mb-1 leading-snug'>
                   {alert.message}
                 </p>
-                <p className='text-[11px] text-slate-600 uppercase font-bold tracking-tighter'>
+                <p className='text-[11px] text-on-surface-deep uppercase font-bold tracking-tighter'>
                   ID: {alert.user_id} &middot; {alert.ip_address}
                 </p>
               </div>
             ))}
           </div>
-          <div className='p-4 border-t border-slate-100 text-center'>
-            <button className='text-slate-500 text-xs font-bold hover:text-[#137fec] transition-colors flex items-center justify-center gap-1 w-full uppercase tracking-widest'>
+          <div className='p-4 border-t border-border-subtle text-center'>
+            <Link
+              to='/auditoria/logs'
+              className='text-on-surface-deep text-xs font-bold hover:text-primary transition-colors flex items-center justify-center gap-1 w-full uppercase tracking-widest'
+            >
               Explorar historial completo{' '}
               <span className='material-symbols-outlined text-sm'>
                 arrow_forward
               </span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>

@@ -104,10 +104,10 @@ describe('receivablesService — métodos P0', () => {
 
   it('getTransactionHistory construye la URL de auditoría por entidad', async () => {
     await receivablesService.getTransactionHistory('SALE-9', 'SALE');
-    expect(apiClient.get).toHaveBeenCalledWith('/audit/entity/SALE/SALE-9/history');
+    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/audit/entity/SALE/SALE-9/history');
 
     await receivablesService.getTransactionHistory('R-1');
-    expect(apiClient.get).toHaveBeenNthCalledWith(2, '/audit/entity/RECEIVABLE/R-1/history');
+    expect(apiClient.get).toHaveBeenNthCalledWith(2, '/api/v1/audit/entity/RECEIVABLE/R-1/history');
   });
 
   it('getOverdueAccounts es alias de getOverdue (/receivables/overdue — ruta canónica T5)', async () => {

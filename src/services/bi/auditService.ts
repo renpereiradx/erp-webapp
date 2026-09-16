@@ -14,16 +14,26 @@ import {
  */
 export const auditService = {
   /**
-   * Lista logs de auditoría con filtros
+   * Lista logs de auditoría con filtros (GET /api/v1/audit/logs).
+   * El BE pagina de verdad (page/page_size, cap 100) y acepta además
+   * level, search, success, entity_type, entity_id, ip_address,
+   * sort_by/sort_order — la página de Logs consume el conjunto completo.
    */
   async getLogs(filters: {
     user_id?: string;
     category?: string;
     action?: string;
+    level?: string;
+    search?: string;
+    success?: string;
+    entity_type?: string;
+    entity_id?: string;
     start_date?: string;
     end_date?: string;
     page?: number;
     page_size?: number;
+    sort_by?: string;
+    sort_order?: string;
   } = {}): Promise<PaginatedResponse<AuditLog>> {
     const startTime = Date.now();
     try {
@@ -31,11 +41,25 @@ export const auditService = {
       telemetry.record('audit.service.list', { duration: Date.now() - startTime });
       return response;
     } catch (error: any) {
-      telemetry.record('audit.service.error', { 
-        duration: Date.now() - startTime, 
-        operation: 'getLogs', 
-        error: error.message 
+      telemetry.record('audit.service.error', {
+        duration: Date.now() - startTime,
+        operation: 'getLogs',
+        error: error.message
       });
+      throw error;
+    }
+  },
+
+  /**
+   * Tendencias de actividad de auditoría (GET /api/v1/audit/trends?period=).
+   * Contrato: []AuditTrend {date, label, total_actions, successful, failed,
+   * unique_users, error_rate} — fuente real de la curva del dashboard.
+   */
+  async getTrends(period: string = 'month'): Promise<any> {
+    try {
+      return await apiClient.get('/api/v1/audit/trends', { params: { period } });
+    } catch (error: any) {
+      console.error('Error fetching audit trends:', error);
       throw error;
     }
   },
@@ -89,7 +113,7 @@ export const auditService = {
    */
   async getUserActivity(userId: string | number, period: string = 'month'): Promise<any> {
     try {
-      return await apiClient.get(`/audit/users/${userId}/activity`, { params: { period } });
+      return await apiClient.get(`/api/v1/audit/users/${userId}/activity`, { params: { period } });
     } catch (error: any) {
       console.error(`Error fetching activity for user ${userId}:`, error);
       throw error;

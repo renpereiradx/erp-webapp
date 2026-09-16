@@ -170,12 +170,12 @@ export const receivablesService = {
 
   /**
    * Historial de auditoría de la entidad detrás de la cuenta
-   * (GET /audit/entity/{entity_type}/{id}/history — gate audit:read).
+   * (GET /api/v1/audit/entity/{entity_type}/{id}/history — gate audit:read).
    * Llamada opcional del hook de detalle: falla en silencio sin audit:read.
    */
   async getTransactionHistory(id: string, entityType = 'RECEIVABLE'): Promise<any> {
     try {
-      return await apiClient.get(`/audit/entity/${entityType}/${id}/history`);
+      return await apiClient.get(`/api/v1/audit/entity/${entityType}/${id}/history`);
     } catch (error: any) {
       console.error(`Error fetching history for ${entityType} ${id}:`, error);
       throw error;
