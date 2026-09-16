@@ -22,7 +22,8 @@ backend vivo en `:5050`. FASE 2 arranca solo cuando el gate de FASE 1 (backend) 
 | **2E — Pronósticos (5 páginas)** | ✅ 2026-09-16 | `Pronosticos-*.md` ×5 | FE `b90854a` |
 | **2F — Rentabilidad (6 páginas)** | ✅ 2026-09-16 | `Rentabilidad-*.md` ×6 | FE `329fd60` |
 | **2G — Inventario (4 páginas)** | ✅ 2026-09-16 | `Inventario-*.md` ×4 | FE `1fca552` |
-| **2H — Reportes Financieros (7 páginas)** | ✅ 2026-09-16 | `FinReportes-*.md` ×5 (SIFEN ×2 en una ficha) | FE (este repo) |
+| **2H — Reportes Financieros (7 páginas)** | ✅ 2026-09-16 | `FinReportes-*.md` ×5 (SIFEN ×2 en una ficha) | FE `06ecb4b` |
+| **2I — Auditoría (4 páginas) + huérfanas** | ✅ 2026-09-16 | `Auditoria-*.md` ×2 + `Huerfanas-*.md` | FE (este repo) |
 | 2B — CxC (6) | ⏳ | | |
 | 2C — Dashboard (5) | ⏳ | | |
 | 2D — Sales Analytics (6) | ⏳ | | |
@@ -30,7 +31,7 @@ backend vivo en `:5050`. FASE 2 arranca solo cuando el gate de FASE 1 (backend) 
 | 2F — Rentabilidad (6) | ⏳ | | |
 | 2G — Inventario (4) | ⏳ | | |
 | 2H — Reportes Financieros (8) | ⏳ | | |
-| 2I — Auditoría (4) + rutas huérfanas + `SUMMARY.md` | ⏳ | | |
+
 
 **Resultado 2A (veredicto por página)**: Dashboard CxP FAIL (P0-1: 2 secciones muertas +
 afordancias decorativas) · Lista Maestra FAIL (P0-1: página entera en error; "Nueva Factura"
@@ -119,3 +120,20 @@ Analítico PASS cond (real, "Fuente: API" honesto; saldo final incoherente 124.8
 entradas) · PyG PASS cond (real post-BC-5; sin líneas de gastos operativos) · Libros Legales
 **PASS** (patrón referencia intacto) · SIFEN Inutilización + Ops **PASS** (estados vacíos
 honestos, sin cert = "Sin configurar" correcto). Transversal: 5/7 rutas sin guard.
+
+**Resultado 2I (veredicto por página)**: Dashboard Auditoría FAIL (curva fabricada + donut
+"100%" con total 0 + "+12.5%" P1-7 verbatim + "0% éxito = Óptimo") · Logs **FAIL grave**
+(**KPIs 100% mock: "Éxitos 12,450 / Errores 42 / Advertencias 188 / Eventos 3,120" junto a
+tabla vacía real; "Página 1 de 30" sin filas**; BE pagina y el FE no consume) · Detalle PASS
+("Log no encontrado." honesto) · Actividad de Usuario PASS (empty honesto, .tsx).
+**Huérfanas (decisión FASE 2: ELIMINAR)**: `/bi/inventory/stock-levels` **CRASHEA**
+(ErrorBoundary) + 100% mock; `/bi/inventory/risk-analysis` 100% mock; `/finance/profitability`
+duplica profitability/dashboard.
+
+## CIERRE FASE 2 — ver `SUMMARY.md`
+
+**50 páginas auditadas: 10 PASS · 12 PASS condicional · 28 FAIL (56% no confiable)**.
+12 métodos de service inexistentes (clase P0-1), NA-DB-1 (envelope sin unwrap), NA-DB-2
+(símbolo $), ~10 fabricaciones activas, RBAC FE hueco (vendedor accede por URL a la mayoría
+del módulo), discrepancia de profit entre módulos (política de costo). Prioridades P0/P1/P2
+para FASE 3 consolidadas en SUMMARY §4.
