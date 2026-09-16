@@ -16,7 +16,8 @@ backend vivo en `:5050`. FASE 2 arranca solo cuando el gate de FASE 1 (backend) 
 | Bloque | Estado | Fichas | Commit |
 |:--|:--|:--|:--|
 | **2A — CxP (6 páginas)** | ✅ 2026-09-16 | `CxP-*.md` ×6 | FE `2a1cce6` |
-| **2B — CxC (6 páginas)** | ✅ 2026-09-16 | `CxC-*.md` ×6 | FE (este repo) |
+| **2B — CxC (6 páginas)** | ✅ 2026-09-16 | `CxC-*.md` ×6 | FE `adc32fa` |
+| **2C — Dashboard (5 páginas)** | ✅ 2026-09-16 | `Dashboard-*.md` ×5 | FE (este repo) |
 | 2B — CxC (6) | ⏳ | | |
 | 2C — Dashboard (5) | ⏳ | | |
 | 2D — Sales Analytics (6) | ⏳ | | |
@@ -53,3 +54,16 @@ falsa alerta >90 días con 0 reales, vencimientos "Nov 12, 2023" imposibles). Tr
 `getTransactionHistory`, `getOverdueAccounts`); **doble montaje** `/receivables` (sin guard)
 vs `/dashboard/receivables` (DashboardRoute) del mismo componente; vendedor accede por URL a
 las rutas del grupo (patrón NA-CXP-2).
+
+**Resultado 2C (veredicto por página)**: Resumen Ejecutivo FAIL P1-trivial (**NA-DB-1: el
+store guarda el envelope sin `.data` → todas las cards de summary en Gs. 0 mientras trends/
+alerts/activity reales muestran datos** — fix 1 línea, impacto máximo) · KPIs Detallado FAIL
+P1 (lee bien el contrato anidado de /kpis; Índice de Salud = TODO `turnover*10`; chips
+Región/Depto/Moneda con candado decorativos; 2 cards leen de summary) · Heatmap FAIL P1
+(**NA-DB-2: KPIs en "$0" — símbolo dólar en sistema PYG**; grid real con Peak coherente;
+selects Sucursal/Categoría sin cablear P1-4) · Alertas FAIL P1 (**"Gestionar" →
+/receivables/overdue verificado en vivo = T5 funciona**; 4 botones sin handler; P0-4
+/clientes no ejercitable — 0 alertas de esa categoría en dev) · Top Productos PASS
+condicional (datos reales coherentes; floats crudos "-63.017946…%"; Exportar/Filtros/more_vert
+decorativos). Todo el grupo gated `dashboard:read` ✅. El fallback demo P1-1 del store NO
+dispara con API sana (solo en catch).
