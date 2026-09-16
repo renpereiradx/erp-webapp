@@ -23,6 +23,21 @@ const formatDate = (dateStr) => {
     : date.toLocaleDateString('es-PY', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
+// supplier_contact del BE puede venir como blob JSON ({fax,email,phone,address})
+const resolveContact = (raw) => {
+  if (!raw || raw === 'No disponible') return '';
+  if (typeof raw === 'object') return raw.email || raw.phone || '';
+  if (typeof raw === 'string' && raw.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed.email || parsed.phone || '';
+    } catch {
+      return '';
+    }
+  }
+  return raw;
+};
+
 /**
  * Custom hook to manage supplier analysis data and logic.
  * Remapeado al contrato real (auditoría BI 2A):
@@ -59,7 +74,7 @@ export const useSupplierAnalysis = (id) => {
         const mappedData = {
           id: a.supplier_id || d.supplier_id || id,
           name: a.supplier_name || d.supplier_name || 'Proveedor',
-          contact: d.supplier_contact || 'No disponible',
+          contact: resolveContact(d.supplier_contact || a.supplier_contact),
           importance: IMPORTANCE_LABELS[a.importance] || null,
 
           stats: {
@@ -76,7 +91,7 @@ export const useSupplierAnalysis = (id) => {
             color: history.color,
             avgDays: a.avg_days_to_pay ?? d.average_days_to_pay ?? null,
             description: `Historial de pago ${history.label.toLowerCase()} según los registros de cumplimiento del proveedor${
-              (a.avg_days_to_pay ?? d.average_days_to_pay) != null
+              (a.avg_days_to_pay ?? d.average_days_to_pay) > 0
                 ? ` — paga en promedio a ${Math.round(a.avg_days_to_pay ?? d.average_days_to_pay)} días.`
                 : '.'
             }`,

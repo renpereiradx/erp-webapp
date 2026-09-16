@@ -45,7 +45,7 @@ export default function AuditDashboard() {
         auditService.getTrends(period).catch(() => null),
       ])
       // El endpoint responde el envelope {success, data} — el payload vive en .data
-      setData(summaryData?.data ?? summaryData)
+      setData(summaryRes?.data ?? summaryRes)
       setTrends(Array.isArray(trendsRes?.data) ? trendsRes.data : [])
     } catch (err) {
       console.error('Error fetching audit summary:', err)
