@@ -9,6 +9,8 @@ export const StockLevelsReorder: React.FC = () => {
   const [stockData, setStockData] = useState<StockLevelsData | null>(null);
   const [reorderData, setReorderData] = useState<ReorderAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [reorderTypeFilter, setReorderTypeFilter] = useState<'ALL' | 'URGENT' | 'SOON'>('ALL');
@@ -23,12 +25,16 @@ export const StockLevelsReorder: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         const [stockRes, reorderRes] = await Promise.all([
-          inventoryAnalyticsService.getStockLevels(),
+          inventoryAnalyticsService.getStockLevels({ page, page_size: 20 }),
           inventoryAnalyticsService.getReorderAnalysis()
         ]);
-        
-        if (stockRes.success) setStockData(stockRes.data);
+
+        if (stockRes.success) {
+          setStockData(stockRes.data);
+          setTotalPages(stockRes.data?.pagination?.total_pages || 1);
+        }
         if (reorderRes.success) setReorderData(reorderRes.data);
       } catch (error) {
         console.error("Error fetching stock levels data:", error);
@@ -38,7 +44,7 @@ export const StockLevelsReorder: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [page]);
 
   // Determine the base list of products to filter
   const getBaseProducts = () => {
@@ -156,6 +162,27 @@ export const StockLevelsReorder: React.FC = () => {
           products={filteredProducts} 
           totalItems={stockData.pagination.total_items}
         />
+      )}
+
+      {/* Paginación server-side (T9: el BE pagina, el FE consume) */}
+      {stockData && totalPages > 1 && (
+        <div className="flex items-center justify-end gap-4">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-surface-muted text-on-surface-deep disabled:opacity-50"
+          >
+            Anterior
+          </button>
+          <span className="text-xs text-on-surface-deep">Página {page} de {totalPages}</span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-surface-muted text-on-surface-deep disabled:opacity-50"
+          >
+            Siguiente
+          </button>
+        </div>
       )}
     </main>
   );
