@@ -19,7 +19,8 @@ backend vivo en `:5050`. FASE 2 arranca solo cuando el gate de FASE 1 (backend) 
 | **2B — CxC (6 páginas)** | ✅ 2026-09-16 | `CxC-*.md` ×6 | FE `adc32fa` |
 | **2C — Dashboard (5 páginas)** | ✅ 2026-09-16 | `Dashboard-*.md` ×5 | FE `9e6bd6c` |
 | **2D — Sales Analytics (6 páginas)** | ✅ 2026-09-16 | `SalesAnalytics-*.md` ×6 | FE `60df285` |
-| **2E — Pronósticos (5 páginas)** | ✅ 2026-09-16 | `Pronosticos-*.md` ×5 | FE (este repo) |
+| **2E — Pronósticos (5 páginas)** | ✅ 2026-09-16 | `Pronosticos-*.md` ×5 | FE `b90854a` |
+| **2F — Rentabilidad (6 páginas)** | ✅ 2026-09-16 | `Rentabilidad-*.md` ×6 | FE (este repo) |
 | 2B — CxC (6) | ⏳ | | |
 | 2C — Dashboard (5) | ⏳ | | |
 | 2D — Sales Analytics (6) | ⏳ | | |
@@ -90,3 +91,12 @@ bandas T20 no mostradas) · Demanda PASS condicional (13 filas sin paginar; conf
 repetida) · Ingresos FAIL P1 (3 escenarios Gs. 0 "Prob. 0%" = mapping; bandas Gs. 0 no
 mapeadas; tabla mensual real). Transversal: 5 rutas sin guard; mock catch-only en el service;
 "₲"/"$"/"Gs." conviven (inconsistencia de símbolo).
+
+**Resultado 2F (veredicto por página)**: Productos **PASS** (patrón de referencia; 7 SKUs
+reales) · Clientes PASS condicional (Pareto 0% placeholder) · Categorías FAIL P1 (**KPI
+"Líder en Beneficio: Gs. NaN"**) · Dashboard FAIL P1 (gráfico vacío; "Faltan Cobertura…
+margen adicional del 0%"; **profit del módulo (309.960/56,18%) ≠ summary global
+(289.260/52,4%) = política de costo distinta (fallback 0,7)** — decisión de negocio
+pendiente) · Tendencias FAIL P1 ("+-100%", pico "---", gráfico vacío, vigilancia 0%) ·
+Vendedores FAIL P1 (ranking real pero inflado por fan-out T15 del BE; "OBJETIVO
+CORPORATIVO: 0%"). Grupo 100% gated analytics:read ✅ (el mejor protegido).
