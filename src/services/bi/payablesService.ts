@@ -51,10 +51,12 @@ export const payablesService = {
 
   /**
    * Lista paginada de facturas (GET /payables).
-   * El BE acepta `status` (enum), `supplier_id`, `page`/`page_size` (cap 100)
-   * y `sort_by`/`sort_order` (whitelist: due_date, date, amount, supplier,
-   * priority). El resto de filtros de la UI viajan pero el endpoint hoy los
-   * ignora (gap de contrato documentado en la auditoría 2A).
+   * El BE acepta `status` (enum), `supplier_id`, `search` (id/proveedor/RUC/
+   * CI), `priority` (URGENT/HIGH/MEDIUM/LOW), `start_date`/`end_date`
+   * (YYYY-MM-DD, end exclusivo), `page`/`page_size` (cap 100) y
+   * `sort_by`/`sort_order` (whitelist: due_date, date, amount, supplier,
+   * priority). Cierre ④ de la auditoría BI: el gap de contrato por el que la
+   * UI enviaba search/priority/fechas y el BE las ignoraba está resuelto.
    */
   async getPayables(filters: Record<string, any> = {}, pagination: Record<string, any> = {}): Promise<any> {
     try {
