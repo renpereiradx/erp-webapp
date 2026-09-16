@@ -1,8 +1,6 @@
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { 
-  Download, 
-  Calendar as CalendarIcon, 
   Globe, 
   ChevronDown,
   RefreshCw,
@@ -80,22 +78,6 @@ const AgingReport = () => {
               </div>
             </div>
             
-            <div className="flex flex-wrap items-center gap-3">
-              <button 
-                disabled
-                className="flex items-center px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 cursor-not-allowed opacity-50"
-              >
-                <CalendarIcon size={16} className="mr-2" />
-                <span>Oct 2023</span>
-              </button>
-              <button 
-                onClick={() => toast.info(t('common.not_implemented'))}
-                className="inline-flex items-center px-5 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-md shadow-primary/20 active:scale-95"
-              >
-                <Download size={16} className="mr-2" />
-                Exportar Reporte
-              </button>
-            </div>
           </div>
         </div>
 

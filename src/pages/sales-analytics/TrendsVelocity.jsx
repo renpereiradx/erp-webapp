@@ -24,6 +24,11 @@ import salesAnalyticsService from '@/services/bi/salesAnalyticsService'
 
 const TrendsVelocity = () => {
   const [velocityData, setVelocityData] = useState(null)
+  // Hora pico REAL: la hora con más ventas del hourly (antes estaba fija en 14:00)
+  const peakHourLabel = (trendsData?.hourly || []).reduce(
+    (best, cur) => ((cur?.sales || 0) > (best?.sales || 0) ? cur : best),
+    null,
+  )?.label || null
   const [heatmapData, setHeatmapData] = useState(null)
   const [trendsData, setTrendsData] = useState({ daily: [], hourly: [] })
   const [loading, setLoading] = useState(true)
@@ -113,21 +118,21 @@ const TrendsVelocity = () => {
           title='Ventas por Día'
           value={formatCurrency(velocityData?.overall?.sales_per_day || 0)}
           icon={<Banknote size={20} />}
-          status='Promedio diario estable'
+          status='Promedio por día'
           trend={<TrendingUp size={14} className='text-emerald-500' />}
         />
         <VelocityKPICard
           title='Ventas por Hora'
           value={formatCurrency(velocityData?.overall?.sales_per_hour || 0)}
           icon={<Zap size={20} />}
-          status='Hora pico: 14:00 - 15:00'
+          status={peakHourLabel ? `Hora pico: ${peakHourLabel}` : 'Hora pico: n/d'}
           trend={<TrendingUp size={14} className='text-orange-500' />}
         />
         <VelocityKPICard
           title='Unidades por Día'
           value={velocityData?.overall?.units_per_day || 0}
           icon={<Package size={20} />}
-          status='+5% unidades vs mes anterior'
+          status='Promedio por día'
           isBadge={true}
         />
         <VelocityKPICard
@@ -264,9 +269,11 @@ const TrendsVelocity = () => {
                 Distribución horaria
               </p>
             </div>
-            <div className='bg-[#137fec]/10 text-[#137fec] text-[10px] font-black px-2 py-1 rounded uppercase font-mono tracking-widest'>
-              Pico: 14:00
-            </div>
+            {peakHourLabel && (
+              <div className='bg-[#137fec]/10 text-[#137fec] text-[10px] font-black px-2 py-1 rounded uppercase font-mono tracking-widest'>
+                Pico: {peakHourLabel}
+              </div>
+            )}
           </div>
           <div className='flex-1 font-mono'>
             {!loading && isMounted && (

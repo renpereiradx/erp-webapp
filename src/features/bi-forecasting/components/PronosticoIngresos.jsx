@@ -34,7 +34,15 @@ const PronosticoIngresos = () => {
       </div>
 
 
-      {/* Scenarios Grid */}
+      {/* Scenarios Grid (sin escenarios del BE: estado honesto, no tarjetas en cero) */}
+      {!escenarios ? (
+        <div className="bg-surface border border-border-subtle rounded-xl p-8 text-center">
+          <p className="text-sm font-bold text-foreground">Sin escenarios proyectados por el servicio.</p>
+          <p className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest mt-2">
+            La proyección mensual y el desglose por categoría se muestran con datos reales
+          </p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Pessimistic Scenario */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm flex flex-col gap-4">
@@ -99,6 +107,7 @@ const PronosticoIngresos = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* Detailed Monthly Forecast Table */}
       <div className="flex flex-col gap-4">

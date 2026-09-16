@@ -500,30 +500,34 @@ const normalizeRevenue = (payload, _params) => {
         crecimiento: "Crecimiento (%)"
       }
     },
-    escenarios: {
-      pesimista: {
-        nombre: pessimistic?.label || "Escenario Pesimista",
-        probabilidad: toNumber(pessimistic?.probability),
-        valor: toNumber(pessimistic?.forecast_amount),
-        variacion: `${toNumber(pessimistic?.growth_rate) >= 0 ? '+' : ''}${toNumber(pessimistic?.growth_rate)}%`,
-        descripcion: pessimistic?.description || 'Escenario conservador.',
-      },
-      base: {
-        nombre: baseline?.label || "Escenario Base",
-        probabilidad: toNumber(baseline?.probability),
-        valor: toNumber(baseline?.forecast_amount),
-        variacion: `${toNumber(baseline?.growth_rate) >= 0 ? '+' : ''}${toNumber(baseline?.growth_rate)}%`,
-        descripcion: baseline?.description || 'Escenario esperado.',
-        recomendado: !!baseline?.is_recommended || true,
-      },
-      optimista: {
-        nombre: optimistic?.label || "Escenario Optimista",
-        probabilidad: toNumber(optimistic?.probability),
-        valor: toNumber(optimistic?.forecast_amount),
-        variacion: `${toNumber(optimistic?.growth_rate) >= 0 ? '+' : ''}${toNumber(optimistic?.growth_rate)}%`,
-        descripcion: optimistic?.description || 'Escenario favorable.',
-      },
-    },
+    // El BE aún no provee scenarios (null en el contrato actual): fabricar
+    // tarjetas en Gs. 0 "Prob. 0%" era invención (auditoría 2E).
+    escenarios: (payload?.scenarios || []).length
+      ? {
+          pesimista: {
+            nombre: pessimistic?.label || "Escenario Pesimista",
+            probabilidad: toNumber(pessimistic?.probability),
+            valor: toNumber(pessimistic?.forecast_amount),
+            variacion: `${toNumber(pessimistic?.growth_rate) >= 0 ? '+' : ''}${toNumber(pessimistic?.growth_rate)}%`,
+            descripcion: pessimistic?.description || 'Escenario conservador.',
+          },
+          base: {
+            nombre: baseline?.label || "Escenario Base",
+            probabilidad: toNumber(baseline?.probability),
+            valor: toNumber(baseline?.forecast_amount),
+            variacion: `${toNumber(baseline?.growth_rate) >= 0 ? '+' : ''}${toNumber(baseline?.growth_rate)}%`,
+            descripcion: baseline?.description || 'Escenario esperado.',
+            recomendado: !!baseline?.is_recommended,
+          },
+          optimista: {
+            nombre: optimistic?.label || "Escenario Optimista",
+            probabilidad: toNumber(optimistic?.probability),
+            valor: toNumber(optimistic?.forecast_amount),
+            variacion: `${toNumber(optimistic?.growth_rate) >= 0 ? '+' : ''}${toNumber(optimistic?.growth_rate)}%`,
+            descripcion: optimistic?.description || 'Escenario favorable.',
+          },
+        }
+      : null,
     proyeccion_mensual,
     categorias,
     total: {
