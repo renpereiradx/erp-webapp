@@ -24,7 +24,7 @@ migradas, del store global de dashboard y del resultado de `pnpm build`.
 | H4 | **Páginas pesadas no divididas**: ConsolidatedAlerts (501 líns, 4 `.map` + 4 `.filter` por render), DetailedKPIs, InvoicesMasterList (533) renderizan todo en cada render sin `useMemo` en derivados | `rerender-memo` / `js-set-map-lookups` | MEDIO | Pendiente |
 | H5 | **Recharts se monta eager** con la app (AreaChart/BarChart importados estáticamente en ~15 páginas BI) — junto a H1 explica el chunk gigante | `bundle-conditional` | MEDIO-ALTO | Pendiente |
 | H6 | `isMounted` manual en 4 páginas migradas para recharts (`useState`+`useEffect` que solo setea true) — patrón correcto pero repetido; candidatos a hook compartido | `rerender-lazy-state-init` (menor) | BAJO | Deuda aceptada |
-| H7 | UI decorativa sin handler heredada de F2/P1-8 en páginas legacy NO migradas (chips bloqueados de DetailedKPIs, selects de SalesHeatmap, Exportar/Ver Detalles de sales Dashboard) — el gate FE-2 "toda afordancia funciona o desaparece" sigue abierto fuera del alcance FASE 4 | regla FE-2 del plan | MEDIO (honestidad) | Pendiente (FASE 5 o próxima pasada) |
+| H7 | UI decorativa sin handler heredada de F2/P1-8 en páginas legacy NO migradas (chips bloqueados de DetailedKPIs, selects de SalesHeatmap, Exportar/Ver Detalles de sales Dashboard) — el gate FE-2 "toda afordancia funciona o desaparece" sigue abierto fuera del alcance FASE 4 | regla FE-2 del plan | MEDIO (honestidad) | ✅ RESUELTO (FASE 5, FE `5ef861c` — ver nota al pie) |
 
 Lo que **ya quedó resuelto** por la migración FASE 4 (ver plan
 `conductor/PLAN_FASE4_MIGRACION_TSX_BI_2026-09-16.md`):
@@ -139,5 +139,10 @@ comportamiento preservado). Regla FE-2: cablear o quitar en la próxima pasada (
    (recharts). Gate: build con índice < 1 MB + smoke de navegación BI completa.
 2. **Selectores Zustand** (H2): mecánico por página, gate vitest.
 3. **Guard anti-carrera** en `useDashboardStore` (H3): copiar patrón `useBIForecasting`.
-4. **FASE 5**: tests de las páginas migradas (PLAN_TEST_DESIGN_FRONTEND) + resolución
-   definitiva de H7 (cablear o eliminar).
+4. ~~**FASE 5**: tests de las páginas migradas (PLAN_TEST_DESIGN_FRONTEND) + resolución
+   definitiva de H7 (cablear o eliminar).~~ ✅ **HECHA (2026-09-17, FE `5ef861c` + `b14b49e`)**:
+   78 tests (17 archivos, 734/734 verde) + H7 resuelto — cablear o eliminar según regla FE-2
+   (detalle de cada control en el registro FASE 5 del plan raíz, archivado en git). Los tests
+   además destaparon y corrigieron: fechas date-only del BE mostradas con un día de retraso en
+   TZ Asunción (cash-flow), doble signo "++5pp" en PeriodComparison y montos sin locale en la
+   tabla de obligaciones.
