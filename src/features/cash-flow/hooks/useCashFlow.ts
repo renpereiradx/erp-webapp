@@ -1,12 +1,56 @@
 import { useState, useEffect, useCallback } from 'react';
 import { payablesService } from '@/services/bi/payablesService';
+import type {
+  CashFlowPoint,
+  CashFlowStats,
+  ScheduledPaymentGroup,
+} from '../types';
 
-const formatDay = (dateStr) =>
+export type CashFlowPeriod = '30D' | '60D' | '90D';
+
+/** Día crudo de la proyección diaria (GET /payables/cash-flow → projection_days[]). */
+interface ProjectionDay {
+  date: string;
+  inflows?: number | string;
+  outflows?: number | string;
+  cumulative_flow?: number | string;
+}
+
+/** Resumen de la proyección (mismo endpoint). */
+interface CashFlowSummary {
+  expected_inflows?: number | string;
+  expected_outflows?: number | string;
+  net_cash_flow?: number | string;
+  projection_days?: ProjectionDay[];
+}
+
+/** Obligación del calendario (GET /payables/schedule → schedule[].items[]). */
+interface ScheduleItem {
+  payable_id?: string;
+  supplier_name?: string;
+  days_until_due?: number | null;
+  priority?: string;
+  amount?: number | string;
+}
+
+interface ScheduleBucket {
+  date: string;
+  total_due?: number | string;
+  items?: ScheduleItem[];
+}
+
+const formatDay = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString('es-PY', { day: '2-digit', month: 'short' });
 
-const isToday = (dateStr) => new Date(dateStr).toDateString() === new Date().toDateString();
+const isToday = (dateStr: string) => new Date(dateStr).toDateString() === new Date().toDateString();
 
-const EMPTY = {
+const num = (v: number | string | undefined | null): number => Number(v ?? 0) || 0;
+
+const EMPTY: {
+  filteredData: CashFlowPoint[];
+  stats: CashFlowStats;
+  pendingPayments: ScheduledPaymentGroup[];
+} = {
   filteredData: [],
   stats: { coverageRatio: 0, netFlow: 0, totalInflows: 0, totalOutflows: 0 },
   pendingPayments: [],
@@ -20,9 +64,9 @@ const EMPTY = {
  * muestra (regla FE-1: sin endpoint no se muestra).
  */
 export const useCashFlow = () => {
-  const [period, setPeriod] = useState('30D');
+  const [period, setPeriod] = useState<CashFlowPeriod>('30D');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState(EMPTY);
 
   const fetchData = useCallback(async () => {
@@ -35,34 +79,35 @@ export const useCashFlow = () => {
         payablesService.getSchedule(days),
       ]);
 
-      const cf = projRes?.data || {};
-      const cal = schedRes?.data || {};
+      const cf: CashFlowSummary = projRes?.data || {};
+      const cal = { schedule: (schedRes?.data as { schedule?: ScheduleBucket[] } | undefined)?.schedule || [] };
 
       // Gráfico de tendencias: proyección diaria real
-      const filteredData = (cf.projection_days || []).map((d) => ({
+      const filteredData: CashFlowPoint[] = (cf.projection_days || []).map((d) => ({
         name: formatDay(d.date),
-        ingresos: d.inflows,
-        egresos: d.outflows,
-        balance: d.cumulative_flow,
+        ingresos: num(d.inflows),
+        egresos: num(d.outflows),
+        balance: num(d.cumulative_flow),
       }));
 
       // KPIs reales de la proyección. Ratio de cobertura = cobros esperados
       // sobre pagos esperados (derivado, con guard de división por cero).
-      const stats = {
-        coverageRatio:
-          cf.expected_outflows > 0 ? cf.expected_inflows / cf.expected_outflows : 0,
-        netFlow: cf.net_cash_flow || 0,
-        totalInflows: cf.expected_inflows || 0,
-        totalOutflows: cf.expected_outflows || 0,
+      const expectedInflows = num(cf.expected_inflows);
+      const expectedOutflows = num(cf.expected_outflows);
+      const stats: CashFlowStats = {
+        coverageRatio: expectedOutflows > 0 ? expectedInflows / expectedOutflows : 0,
+        netFlow: num(cf.net_cash_flow),
+        totalInflows: expectedInflows,
+        totalOutflows: expectedOutflows,
       };
 
       // Calendario agrupado por día: buckets reales del schedule
-      const pendingPayments = (cal.schedule || []).map((bucket) => ({
+      const pendingPayments: ScheduledPaymentGroup[] = cal.schedule.map((bucket) => ({
         date: formatDay(bucket.date),
         isToday: isToday(bucket.date),
-        subtotal: bucket.total_due || 0,
+        subtotal: num(bucket.total_due),
         items: (bucket.items || []).map((it) => ({
-          id: it.payable_id,
+          id: it.payable_id || '',
           code: (it.supplier_name || '??').substring(0, 2).toUpperCase(),
           name: it.supplier_name || 'Proveedor',
           description:
@@ -72,13 +117,13 @@ export const useCashFlow = () => {
                 : `Vencido hace ${Math.abs(it.days_until_due)} día${Math.abs(it.days_until_due) === 1 ? '' : 's'}`
               : 'Fecha no disponible',
           category: it.priority || 'MEDIA',
-          amount: it.amount || 0,
+          amount: num(it.amount),
           priority: it.priority === 'URGENT' || it.priority === 'HIGH' ? 'PRIORIDAD ALTA' : 'PROGRAMADO',
         })),
       }));
 
       setData({ filteredData, stats, pendingPayments });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching cash flow data:', err);
       setError(err.message);
     } finally {
