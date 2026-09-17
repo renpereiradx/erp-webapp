@@ -168,7 +168,7 @@ const TrendsVelocity = () => {
         />
         <VelocityKPICard
           title='Unidades por Día'
-          value={velocityData?.overall?.units_per_day || 0}
+          value={Math.round((velocityData?.overall?.units_per_day || 0) * 10) / 10}
           icon={<Package size={20} />}
           status='Promedio por día'
           isBadge={true}
