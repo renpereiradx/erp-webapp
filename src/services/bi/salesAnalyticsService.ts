@@ -42,6 +42,21 @@ export const salesAnalyticsService = {
   },
 
   /**
+   * Obtiene tendencias por rango de fechas explícito (GET /sales-analytics/trends/date-range).
+   * params: { start_date, end_date, granularity? } — usada por la comparativa de
+   * períodos para traer las series reales de ambos períodos (FASE 4: fuera la
+   * serie "Período B" fabricada con ×0.85/×1.15).
+   */
+  async getTrendsDateRange(params: BIParams = {}): Promise<any> {
+    try {
+      return await apiClient.get('/sales-analytics/trends/date-range', { params });
+    } catch (error: any) {
+      console.error('Error fetching sales trends by date range:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Obtiene ventas por categoría
    */
   async getByCategory(params: BIParams & { limit?: number } = {}): Promise<any> {

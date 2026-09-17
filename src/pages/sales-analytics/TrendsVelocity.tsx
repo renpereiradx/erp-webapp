@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import {
   BarChart,
   Bar,
   XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   AreaChart,
@@ -22,17 +21,39 @@ import {
 } from 'lucide-react'
 import salesAnalyticsService from '@/services/bi/salesAnalyticsService'
 
+interface VelocityOverall {
+  sales_per_day?: number
+  sales_per_hour?: number
+  units_per_day?: number
+  avg_minutes_between_sales?: number
+}
+
+interface VelocityData {
+  overall?: VelocityOverall
+}
+
+interface HeatmapData {
+  data?: number[][]
+  period?: { start_date?: string; end_date?: string }
+}
+
+interface TrendPoint {
+  label?: string
+  sales?: number
+}
+
 const TrendsVelocity = () => {
-  const [velocityData, setVelocityData] = useState(null)
-  // Hora pico REAL: la hora con más ventas del hourly (antes estaba fija en 14:00)
-  const peakHourLabel = (trendsData?.hourly || []).reduce(
-    (best, cur) => ((cur?.sales || 0) > (best?.sales || 0) ? cur : best),
-    null,
-  )?.label || null
-  const [heatmapData, setHeatmapData] = useState(null)
-  const [trendsData, setTrendsData] = useState({ daily: [], hourly: [] })
+  const [velocityData, setVelocityData] = useState<VelocityData | null>(null)
+  const [heatmapData, setHeatmapData] = useState<HeatmapData | null>(null)
+  const [trendsData, setTrendsData] = useState<{ daily: TrendPoint[]; hourly: TrendPoint[] }>({ daily: [], hourly: [] })
   const [loading, setLoading] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
+  // Hora pico REAL: la hora con más ventas del hourly (antes estaba fija en 14:00)
+  const peakHourLabel =
+    (trendsData.hourly || []).reduce(
+      (best: TrendPoint | null, cur: TrendPoint) => ((cur?.sales || 0) > (best?.sales || 0) ? cur : best),
+      null,
+    )?.label || null
 
   useEffect(() => {
     setIsMounted(true)
@@ -67,24 +88,41 @@ const TrendsVelocity = () => {
     fetchData()
   }, [])
 
-  const getHeatmapIntensity = (dayIdx, hourIdx) => {
-    if (!heatmapData || !heatmapData.data) return 0.1
-    const value = heatmapData.data[dayIdx][hourIdx]
-    const max = 1000000 // Consistent with mock max
-    const ratio = value / max
+  // Intensidad relativa al máximo REAL del período (antes: max fijo 1000000
+  // "consistent with mock max" que aplastaba el heatmap — hallazgo P1-4).
+  const heatmapMax = (() => {
+    const rows = heatmapData?.data
+    if (!Array.isArray(rows)) return 0
+    let max = 0
+    for (const row of rows) {
+      if (!Array.isArray(row)) continue
+      for (const v of row) {
+        const n = Number(v) || 0
+        if (n > max) max = n
+      }
+    }
+    return max
+  })()
+
+  const getHeatmapIntensity = (dayIdx: number, hourIdx: number) => {
+    const row = heatmapData?.data?.[dayIdx]
+    if (!row) return 0.1
+    const value = Number(row[hourIdx]) || 0
+    if (heatmapMax <= 0) return 0.1
+    const ratio = value / heatmapMax
     return ratio > 0.8 ? 0.9 : ratio > 0.5 ? 0.6 : ratio > 0.2 ? 0.3 : 0.1
   }
 
-  const formatCurrency = value => {
+  const formatCurrency = (value: number | null | undefined) => {
     return new Intl.NumberFormat('es-PY', {
       style: 'currency',
       currency: 'PYG',
       maximumFractionDigits: 0,
-    }).format(value)
+    }).format(value || 0)
   }
 
   const periodLabel = heatmapData?.period
-    ? `${new Date(heatmapData.period.start_date).toLocaleDateString()} - ${new Date(heatmapData.period.end_date).toLocaleDateString()}`
+    ? `${new Date(heatmapData.period.start_date || '').toLocaleDateString()} - ${new Date(heatmapData.period.end_date || '').toLocaleDateString()}`
     : 'Periodo actual'
 
   return (
@@ -92,20 +130,20 @@ const TrendsVelocity = () => {
       {/* Header Section */}
       <div className='flex flex-wrap items-center justify-between gap-4'>
         <div className='flex flex-col gap-1'>
-          <h1 className='text-slate-900 dark:text-white text-3xl font-black leading-tight tracking-tight uppercase'>
+          <h1 className='text-foreground text-3xl font-black leading-tight tracking-tight uppercase'>
             Tendencias Temporales y Velocidad
           </h1>
-          <p className='text-slate-500 dark:text-slate-400 text-sm font-medium'>
+          <p className='text-on-surface-deep text-sm font-medium'>
             Análisis detallado de frecuencia de transacciones y picos de demanda
             operativa.
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          <div className='flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-sm font-bold shadow-sm font-mono uppercase tracking-tighter'>
-            <Calendar size={18} className='text-slate-400' />
+          <div className='flex items-center gap-2 bg-surface border border-border-subtle rounded-lg px-4 py-2 text-sm font-bold shadow-sm font-mono uppercase tracking-tighter'>
+            <Calendar size={18} className='text-on-surface-deep' />
             <span>{periodLabel}</span>
           </div>
-          <button className='flex items-center gap-2 bg-[#137fec] hover:bg-[#137fec]/90 text-white px-5 py-2 rounded-lg font-bold text-sm transition-all shadow-md shadow-[#137fec]/20 uppercase tracking-wider'>
+          <button className='flex items-center gap-2 bg-primary hover:bg-primary/90 text-on-primary px-5 py-2 rounded-lg font-bold text-sm transition-all shadow-md shadow-primary/20 uppercase tracking-wider'>
             <RefreshCcw size={18} />
             <span>Actualizar</span>
           </button>
@@ -119,14 +157,14 @@ const TrendsVelocity = () => {
           value={formatCurrency(velocityData?.overall?.sales_per_day || 0)}
           icon={<Banknote size={20} />}
           status='Promedio por día'
-          trend={<TrendingUp size={14} className='text-emerald-500' />}
+          trend={<TrendingUp size={14} className='text-success' />}
         />
         <VelocityKPICard
           title='Ventas por Hora'
           value={formatCurrency(velocityData?.overall?.sales_per_hour || 0)}
           icon={<Zap size={20} />}
           status={peakHourLabel ? `Hora pico: ${peakHourLabel}` : 'Hora pico: n/d'}
-          trend={<TrendingUp size={14} className='text-orange-500' />}
+          trend={<TrendingUp size={14} className='text-warning' />}
         />
         <VelocityKPICard
           title='Unidades por Día'
@@ -144,28 +182,28 @@ const TrendsVelocity = () => {
       </div>
 
       {/* Heatmap Section */}
-      <div className='bg-white dark:bg-slate-900 p-8 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm'>
+      <div className='bg-surface p-8 rounded-lg border border-border-subtle shadow-sm'>
         <div className='flex items-center justify-between mb-8'>
           <div className='flex items-center gap-3'>
-            <h2 className='text-slate-900 dark:text-white text-xl font-bold tracking-tight uppercase'>
+            <h2 className='text-foreground text-xl font-bold tracking-tight uppercase'>
               Heatmap de Ventas
             </h2>
-            <Info size={18} className='text-slate-400 cursor-help' />
+            <Info size={18} className='text-on-surface-deep cursor-help' />
           </div>
           <div className='flex items-center gap-2'>
-            <span className='text-[10px] font-black text-slate-400 uppercase tracking-widest'>
+            <span className='text-[10px] font-black text-on-surface-deep uppercase tracking-widest'>
               Baja
             </span>
             <div className='flex gap-1'>
               {[0.1, 0.3, 0.6, 0.9].map(op => (
                 <div
                   key={op}
-                  className='size-3 rounded-sm bg-[#137fec]'
+                  className='size-3 rounded-sm bg-primary'
                   style={{ opacity: op }}
                 ></div>
               ))}
             </div>
-            <span className='text-[10px] font-black text-slate-400 uppercase tracking-widest'>
+            <span className='text-[10px] font-black text-on-surface-deep uppercase tracking-widest'>
               Alta
             </span>
           </div>
@@ -177,7 +215,7 @@ const TrendsVelocity = () => {
               {Array.from({ length: 24 }).map((_, i) => (
                 <div
                   key={i}
-                  className='text-[10px] font-black text-slate-400 text-center font-mono'
+                  className='text-[10px] font-black text-on-surface-deep text-center font-mono'
                 >
                   {i % 2 === 0 ? i.toString().padStart(2, '0') : ''}
                 </div>
@@ -196,7 +234,7 @@ const TrendsVelocity = () => {
                 key={day}
                 className='grid grid-cols-[80px_repeat(24,1fr)] gap-1 mb-1'
               >
-                <div className='text-[10px] font-black text-slate-500 flex items-center pr-2 uppercase tracking-tighter'>
+                <div className='text-[10px] font-black text-on-surface-deep flex items-center pr-2 uppercase tracking-tighter'>
                   {day}
                 </div>
                 {Array.from({ length: 24 }).map((_, hIdx) => {
@@ -204,7 +242,7 @@ const TrendsVelocity = () => {
                   return (
                     <div
                       key={hIdx}
-                      className='h-8 rounded-sm bg-[#137fec] hover:scale-110 transition-transform cursor-pointer shadow-sm border border-black/5'
+                      className='h-8 rounded-sm bg-primary hover:scale-110 transition-transform cursor-pointer shadow-sm border border-black/5'
                       style={{ opacity }}
                     ></div>
                   )
@@ -218,8 +256,8 @@ const TrendsVelocity = () => {
       {/* Charts Row */}
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
         {/* Ventas por Día de la Semana */}
-        <div className='bg-white dark:bg-slate-900 p-8 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[400px]'>
-          <h2 className='text-slate-900 dark:text-white text-xl font-bold tracking-tight mb-8 uppercase'>
+        <div className='bg-surface p-8 rounded-lg border border-border-subtle shadow-sm flex flex-col h-[400px]'>
+          <h2 className='text-foreground text-xl font-bold tracking-tight mb-8 uppercase'>
             Ventas por Día
           </h2>
           <div className='flex-1 font-mono'>
@@ -244,10 +282,11 @@ const TrendsVelocity = () => {
                       border: 'none',
                       fontFamily: 'Inter, sans-serif',
                     }}
-                    formatter={value => [formatCurrency(value), 'Ventas']}
+                    formatter={value => [formatCurrency(Number(value)), 'Ventas']}
                   />
                   <Bar
                     dataKey='sales'
+                    name='Ventas'
                     fill='#137fec'
                     radius={[4, 4, 0, 0]}
                     barSize={40}
@@ -259,13 +298,13 @@ const TrendsVelocity = () => {
         </div>
 
         {/* Ventas por Hora del Día */}
-        <div className='bg-white dark:bg-slate-900 p-8 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[400px]'>
+        <div className='bg-surface p-8 rounded-lg border border-border-subtle shadow-sm flex flex-col h-[400px]'>
           <div className='flex items-center justify-between mb-8'>
             <div>
-              <h2 className='text-slate-900 dark:text-white text-xl font-bold tracking-tight uppercase'>
+              <h2 className='text-foreground text-xl font-bold tracking-tight uppercase'>
                 Ventas por Hora
               </h2>
-              <p className='text-xs font-bold text-slate-400 uppercase tracking-tighter'>
+              <p className='text-xs font-bold text-on-surface-deep uppercase tracking-tighter'>
                 Distribución horaria
               </p>
             </div>
@@ -302,11 +341,12 @@ const TrendsVelocity = () => {
                       border: 'none',
                       fontFamily: 'Inter, sans-serif',
                     }}
-                    formatter={value => [formatCurrency(value), 'Ventas']}
+                    formatter={value => [formatCurrency(Number(value)), 'Ventas']}
                   />
                   <Area
                     type='monotone'
                     dataKey='sales'
+                    name='Ventas'
                     stroke='#137fec'
                     strokeWidth={3}
                     fillOpacity={1}
@@ -322,27 +362,36 @@ const TrendsVelocity = () => {
   )
 }
 
-const VelocityKPICard = ({ title, value, icon, status, trend, isBadge }) => (
-  <div className='bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2 hover:border-[#137fec] transition-all group'>
+interface VelocityKPICardProps {
+  title: string
+  value: string | number
+  icon: ReactNode
+  status?: string
+  trend?: ReactNode
+  isBadge?: boolean
+}
+
+const VelocityKPICard = ({ title, value, icon, status, trend, isBadge }: VelocityKPICardProps) => (
+  <div className='bg-surface p-6 rounded-lg border border-border-subtle shadow-sm flex flex-col gap-2 hover:border-primary transition-all group'>
     <div className='flex justify-between items-start'>
-      <p className='text-slate-500 dark:text-slate-400 text-[11px] font-black uppercase tracking-widest group-hover:text-[#137fec] transition-colors'>
+      <p className='text-on-surface-deep text-[11px] font-black uppercase tracking-widest group-hover:text-primary transition-colors'>
         {title}
       </p>
-      <div className='text-[#137fec] bg-[#137fec]/10 p-2 rounded-lg'>
+      <div className='text-primary bg-primary/10 p-2 rounded-lg'>
         {icon}
       </div>
     </div>
-    <p className='text-slate-900 dark:text-white text-3xl font-black tracking-tight font-mono leading-none'>
+    <p className='text-foreground text-3xl font-black tracking-tight font-mono leading-none'>
       {value}
     </p>
     <div className='flex items-center gap-1.5 mt-2'>
       {trend}
       {isBadge ? (
-        <span className='bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter font-mono'>
+        <span className='bg-success/10 text-success text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter font-mono'>
           {status}
         </span>
       ) : (
-        <p className='text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-tight'>
+        <p className='text-on-surface-deep text-[10px] font-bold uppercase tracking-tight'>
           {status}
         </p>
       )}

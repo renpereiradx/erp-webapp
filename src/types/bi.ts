@@ -12,6 +12,7 @@ export interface BIParams {
   brand_id?: number;
   tag?: string[];
   compare?: boolean; // sales-analytics: incluye comparación con periodo anterior
+  granularity?: string; // sales-analytics/trends: 'daily' | 'hourly'
 }
 
 export interface BIScope {
