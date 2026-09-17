@@ -18,11 +18,11 @@ migradas, del store global de dashboard y del resultado de `pnpm build`.
 
 | # | Hallazgo | Regla | Impacto | Estado |
 |:--|:---------|:------|:--------|:-------|
-| H1 | **Un solo chunk de 3.3 MB**: `dist/assets/index-*.js` contiene TODAS las páginas + recharts (sin `React.lazy` por ruta en `App.tsx`) | `bundle-dynamic-imports` | CRÍTICO (TTI inicial) | Pendiente |
-| H2 | **Suscripción sin selector al store global**: `useDashboardStore()` completo en 5 páginas (Dashboard, DetailedKPIs, ConsolidatedAlerts, TopProductsOverview) — cualquier set del store re-renderiza las 5 | `rerender-defer-reads` / selector granularity | ALTO | Pendiente |
-| H3 | **Fetch sin guard de desorden/desmontaje** en `useDashboardStore` (`fetchDashboardData` no tiene `mounted`/abort): cambiar de período rápido puede pintar la respuesta vieja | `client-*` (race) / honestidad | ALTO | Pendiente |
-| H4 | **Páginas pesadas no divididas**: ConsolidatedAlerts (501 líns, 4 `.map` + 4 `.filter` por render), DetailedKPIs, InvoicesMasterList (533) renderizan todo en cada render sin `useMemo` en derivados | `rerender-memo` / `js-set-map-lookups` | MEDIO | Pendiente |
-| H5 | **Recharts se monta eager** con la app (AreaChart/BarChart importados estáticamente en ~15 páginas BI) — junto a H1 explica el chunk gigante | `bundle-conditional` | MEDIO-ALTO | Pendiente |
+| H1 | **Un solo chunk de 3.3 MB**: `dist/assets/index-*.js` contiene TODAS las páginas + recharts (sin `React.lazy` por ruta en `App.tsx`) | `bundle-dynamic-imports` | CRÍTICO (TTI inicial) | ✅ Resuelto (`7e33f7b`: index 913-940 kB) |
+| H2 | **Suscripción sin selector al store global**: `useDashboardStore()` completo en 5 páginas (Dashboard, DetailedKPIs, ConsolidatedAlerts, TopProductsOverview) — cualquier set del store re-renderiza las 5 | `rerender-defer-reads` / selector granularity | ALTO | ✅ Resuelto (`7e33f7b`: selectores atómicos en 6 consumidores) |
+| H3 | **Fetch sin guard de desorden/desmontaje** en `useDashboardStore` (`fetchDashboardData` no tiene `mounted`/abort): cambiar de período rápido puede pintar la respuesta vieja | `client-*` (race) / honestidad | ALTO | ✅ Resuelto (`7e33f7b`: guard de secuencia en los 4 fetchers + fallbacks demo) |
+| H4 | **Páginas pesadas no divididas**: ConsolidatedAlerts (501 líns, 4 `.map` + 4 `.filter` por render), DetailedKPIs, InvoicesMasterList (533) renderizan todo en cada render sin `useMemo` en derivados | `rerender-memo` / `js-set-map-lookups` | MEDIO | ✅ Ya cubierto (verificado en `7e33f7b`: derivados con useMemo; master list filtra server-side post-T9) |
+| H5 | **Recharts se monta eager** con la app (AreaChart/BarChart importados estáticamente en ~15 páginas BI) — junto a H1 explica el chunk gigante | `bundle-conditional` | MEDIO-ALTO | ✅ Resuelto (`7e33f7b`: vendor chunk recharts 366 kB, solo lo cargan páginas BI lazy) |
 | H6 | `isMounted` manual en 4 páginas migradas para recharts (`useState`+`useEffect` que solo setea true) — patrón correcto pero repetido; candidatos a hook compartido | `rerender-lazy-state-init` (menor) | BAJO | Deuda aceptada |
 | H7 | UI decorativa sin handler heredada de F2/P1-8 en páginas legacy NO migradas (chips bloqueados de DetailedKPIs, selects de SalesHeatmap, Exportar/Ver Detalles de sales Dashboard) — el gate FE-2 "toda afordancia funciona o desaparece" sigue abierto fuera del alcance FASE 4 | regla FE-2 del plan | MEDIO (honestidad) | ✅ RESUELTO (FASE 5, FE `5ef861c` — ver nota al pie) |
 
@@ -133,16 +133,31 @@ comportamiento preservado). Regla FE-2: cablear o quitar en la próxima pasada (
 | `TrendsVelocity.tsx` | `Promise.all` ×4, `heatmapMax` single-pass O(days×24) (~170 ops, sin memo necesario — `rerender-simple-expression-in-memo`) | ✅ |
 | `PronosticoDemanda.tsx` / `PronosticoIngresos.tsx` | paginación server-side (DOM acotado), mapa de tokens O(1), `params` memoizado por `page` | ✅ |
 
-## Propuesta de trabajo (próxima sesión)
+## Resolución (2026-09-17, sesión post-FASE 5)
 
-1. **Code-splitting de rutas BI** (H1+H5): `React.lazy` por grupo + `manualChunks`
-   (recharts). Gate: build con índice < 1 MB + smoke de navegación BI completa.
-2. **Selectores Zustand** (H2): mecánico por página, gate vitest.
-3. **Guard anti-carrera** en `useDashboardStore` (H3): copiar patrón `useBIForecasting`.
-4. ~~**FASE 5**: tests de las páginas migradas (PLAN_TEST_DESIGN_FRONTEND) + resolución
-   definitiva de H7 (cablear o eliminar).~~ ✅ **HECHA (2026-09-17, FE `5ef861c` + `b14b49e`)**:
-   78 tests (17 archivos, 734/734 verde) + H7 resuelto — cablear o eliminar según regla FE-2
-   (detalle de cada control en el registro FASE 5 del plan raíz, archivado en git). Los tests
-   además destaparon y corrigieron: fechas date-only del BE mostradas con un día de retraso en
-   TZ Asunción (cash-flow), doble signo "++5pp" en PeriodComparison y montos sin locale en la
-   tabla de obligaciones.
+**H1+H5 · `7e33f7b` — code-splitting**: todas las rutas menos las landings (dashboard,
+pedidos, login, select-branch + shells) son `React.lazy` con un `<Suspense>` único
+(PageLoader con tokens DESIGN). recharts a vendor chunk propio (366 kB) que solo cargan
+las páginas BI. **Índice inicial: 3.387 kB → ~913-940 kB (-73%; gzip 812 → ~252 kB).**
+Smoke de navegación verificado en vivo (BI + pedidos + catálogo + sucursales).
+
+**H2 · `7e33f7b` — selectores atómicos**: los 6 consumidores sin selector (Dashboard,
+DetailedKPIs, ConsolidatedAlerts, TopProductsOverview, SalesHeatmap, SalesNew) usan
+`useDashboardStore((s) => s.campo)` por campo.
+
+**H3 · `7e33f7b` — guard anti-carrera**: contadores de secuencia por fetcher
+(dashboard/KPIs/heatmap/topProducts) en `useDashboardStore`; una resolución vieja no pinta
+estado ni dispara el fallback demo.
+
+**H4 · verificado**: ConsolidatedAlerts/TopProductsOverview ya derivaban dentro de
+`useMemo` e InvoicesMasterList filtra server-side (T9) — sin trabajo pendiente real.
+
+**H6** sigue como deuda aceptada; **H7** resuelto en FASE 5 (`5ef861c`).
+
+**Retro-i18n · `4be20be`**: sweep completo del módulo BI (12 páginas + 8 archivos de
+features) al nuevo namespace `locales/{es,en}/bi.js` (296 keys); el hook de proveedor emite
+claves de estado estables y la tabla resuelve labels con i18n; `fakeT` global de
+vitest.setup.ts corregido a la firma real `t(key, fallback, vars)`.
+
+Gates finales de la sesión: vitest 734/734 · tsc 0 · build (index ~940 kB) · lint:design
+limpio · smoke bilingüe (es/en) en navegador.
