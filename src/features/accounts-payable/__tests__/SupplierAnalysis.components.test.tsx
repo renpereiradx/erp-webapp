@@ -20,7 +20,7 @@ const invoices: SupplierInvoiceRow[] = [
     dueDate: '01 sept. 2026',
     originalAmount: 1000000,
     pendingAmount: 1000000,
-    status: 'Atrasado',
+    status: 'OVERDUE',
     isOverdue: true,
   },
   {
@@ -29,7 +29,7 @@ const invoices: SupplierInvoiceRow[] = [
     dueDate: '01 oct. 2026',
     originalAmount: 2000000,
     pendingAmount: 500000,
-    status: 'Parcialmente Pagado',
+    status: 'PARTIAL',
     isOverdue: false,
   },
 ];

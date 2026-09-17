@@ -1,3 +1,4 @@
+import { useI18n } from '@/lib/i18n';
 import type { PaymentHistoryColor, SupplierAnalysisData } from '../../types';
 
 interface AnalysisCardsProps {
@@ -20,6 +21,7 @@ const RATING_COLORS: Record<PaymentHistoryColor, string> = {
 };
 
 const AnalysisCards = ({ rating, terms }: AnalysisCardsProps) => {
+  const { t } = useI18n();
   return (
     <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 animate-in fade-in">
       {/* Payment Rating (enum real: EXCELLENT/GOOD/REGULAR/POOR) */}
@@ -28,11 +30,11 @@ const AnalysisCards = ({ rating, terms }: AnalysisCardsProps) => {
           <div className={`text-3xl md:text-4xl font-bold mb-2 ${RATING_COLORS[rating.color] || RATING_COLORS.slate}`}>
             {rating.historyLabel}
           </div>
-          <p className="text-[10px] text-on-surface-deep mt-2 font-medium uppercase tracking-widest">Calificación de Pago</p>
+          <p className="text-[10px] text-on-surface-deep mt-2 font-medium uppercase tracking-widest">{t('bi.supplier.rating.title', 'Calificación de Pago')}</p>
         </div>
         <div className="hidden md:block h-16 w-px bg-surface-muted"></div>
         <div>
-          <h4 className="text-base md:text-lg font-bold mb-2">Historial de Cumplimiento</h4>
+          <h4 className="text-base md:text-lg font-bold mb-2">{t('bi.supplier.rating.compliance', 'Historial de Cumplimiento')}</h4>
           <p className="text-xs md:text-sm text-on-surface-deep leading-relaxed">
             {rating.description}
           </p>
@@ -42,17 +44,17 @@ const AnalysisCards = ({ rating, terms }: AnalysisCardsProps) => {
       {/* Credit Terms (datos reales) */}
       <div className="bg-surface p-6 md:p-8 rounded-xl border border-border-subtle shadow-sm">
         <div className="flex justify-between items-start mb-6">
-          <h4 className="text-base md:text-lg font-bold">Términos de Crédito</h4>
+          <h4 className="text-base md:text-lg font-bold">{t('bi.supplier.terms.title', 'Términos de Crédito')}</h4>
         </div>
         <div className="grid grid-cols-2 gap-y-4 gap-x-4">
           <div className="min-w-0">
-            <p className="text-[10px] text-on-surface-deep uppercase truncate">Crédito Acordado</p>
+            <p className="text-[10px] text-on-surface-deep uppercase truncate">{t('bi.supplier.terms.credit', 'Crédito Acordado')}</p>
             <p className="text-sm md:text-base font-bold truncate">
               {terms.creditDays != null ? `Net ${terms.creditDays} días` : '—'}
             </p>
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] text-on-surface-deep uppercase truncate">Factura más antigua</p>
+            <p className="text-[10px] text-on-surface-deep uppercase truncate">{t('bi.supplier.terms.oldest', 'Factura más antigua')}</p>
             <p className="text-sm md:text-base font-bold text-error truncate">{terms.oldestInvoice}</p>
           </div>
         </div>

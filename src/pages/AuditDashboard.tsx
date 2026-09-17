@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { useI18n } from '@/lib/i18n'
 import auditService from '@/services/bi/auditService'
 
 type AuditPeriod = 'today' | 'week' | 'month' | 'year'
@@ -48,12 +49,20 @@ interface AuditTrendPoint {
 
 const DONUT_COLORS = ['#0078D4', '#455f89', '#107c10', '#d83b01', '#964400']
 
-const PERIOD_OPTIONS: Array<{ label: string; value: AuditPeriod }> = [
-  { label: 'hoy', value: 'today' },
-  { label: 'semana', value: 'week' },
-  { label: 'mes', value: 'month' },
-  { label: 'ano', value: 'year' },
+const PERIOD_OPTIONS: Array<{ labelKey: string; value: AuditPeriod }> = [
+  { labelKey: 'bi.audit.period.today', value: 'today' },
+  { labelKey: 'bi.audit.period.week', value: 'week' },
+  { labelKey: 'bi.audit.period.month', value: 'month' },
+  { labelKey: 'bi.audit.period.year', value: 'year' },
 ]
+
+// Fallbacks del t() (las keys existen en locales/{es,en}/bi)
+const PERIOD_FALLBACK: Record<AuditPeriod, string> = {
+  today: 'hoy',
+  week: 'semana',
+  month: 'mes',
+  year: 'año',
+}
 
 const buildCurvePath = (values: number[], width: number, height: number): string => {
   if (!values.length) return ''
@@ -69,6 +78,7 @@ const buildCurvePath = (values: number[], width: number, height: number): string
 }
 
 export default function AuditDashboard() {
+  const { t } = useI18n()
   const [period, setPeriod] = useState<AuditPeriod>('month')
   const [data, setData] = useState<AuditSummaryData | null>(null)
   const [trends, setTrends] = useState<AuditTrendPoint[]>([])
@@ -132,28 +142,24 @@ export default function AuditDashboard() {
 
   if (loading) {
     return (
-      <div className='flex justify-center items-center h-64 text-on-surface-deep'>
-        Cargando dashboard...
-      </div>
+      <div className='flex justify-center items-center h-64 text-on-surface-deep'>{t('bi.audit.loading', 'Cargando dashboard...')}</div>
     )
   }
 
   if (error) {
     return (
       <div className='flex flex-col items-center justify-center h-64 gap-4'>
-        <p className='text-foreground text-sm font-bold'>No se pudo cargar el dashboard de auditoría.</p>
+        <p className='text-foreground text-sm font-bold'>{t('bi.audit.loadError', 'No se pudo cargar el dashboard de auditoría.')}</p>
         <button
           onClick={fetchSummary}
           className='px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl bg-primary text-on-primary hover:bg-primary-container transition-all'
-        >
-          Reintentar
-        </button>
+        >{t('bi.common.retry', 'Reintentar')}</button>
       </div>
     )
   }
 
   if (!data) {
-    return <div className='text-error'>Error al cargar los datos.</div>
+    return <div className='text-error'>{t('bi.common.dataError', 'Error al cargar los datos.')}</div>
   }
 
   return (
@@ -161,15 +167,11 @@ export default function AuditDashboard() {
       {/* Header */}
       <div className='flex flex-wrap items-end justify-between gap-4'>
         <div className='flex flex-col gap-1'>
-          <h1 className='text-foreground text-3xl font-black leading-tight tracking-tight'>
-            Dashboard de Auditoría
-          </h1>
-          <p className='text-on-surface-deep text-sm font-medium'>
-            Control total de trazabilidad y eventos de seguridad del sistema.
-          </p>
+          <h1 className='text-foreground text-3xl font-black leading-tight tracking-tight'>{t('bi.audit.title', 'Dashboard de Auditoría')}</h1>
+          <p className='text-on-surface-deep text-sm font-medium'>{t('bi.audit.subtitle', 'Control total de trazabilidad y eventos de seguridad del sistema.')}</p>
         </div>
         <div className='flex h-11 items-center rounded-lg bg-surface-muted p-1.5 shadow-inner'>
-          {PERIOD_OPTIONS.map(({ label, value }) => (
+          {PERIOD_OPTIONS.map(({ labelKey, value }) => (
             <label
               key={value}
               className={`flex cursor-pointer h-full items-center justify-center rounded-lg px-4 transition-all text-xs font-bold uppercase tracking-wider ${
@@ -178,7 +180,7 @@ export default function AuditDashboard() {
                   : 'text-on-surface-deep hover:text-foreground'
               }`}
             >
-              <span className='capitalize'>{label}</span>
+              <span className='capitalize'>{t(labelKey, PERIOD_FALLBACK[value])}</span>
               <input
                 className='hidden'
                 name='period'
@@ -199,9 +201,7 @@ export default function AuditDashboard() {
             <span className='material-symbols-outlined text-2xl'>history</span>
           </div>
           <div>
-            <p className='text-on-surface-deep text-xs font-semibold uppercase tracking-wide'>
-              Total de Acciones
-            </p>
+            <p className='text-on-surface-deep text-xs font-semibold uppercase tracking-wide'>{t('bi.audit.kpi.totalActions', 'Total de Acciones')}</p>
             <p className='text-2xl font-bold text-foreground'>
               {totalLogs.toLocaleString('es-PY')}
             </p>
@@ -213,9 +213,7 @@ export default function AuditDashboard() {
             <span className='material-symbols-outlined text-2xl'>verified</span>
           </div>
           <div>
-            <p className='text-on-surface-deep text-xs font-semibold uppercase tracking-wide'>
-              Tasa de Éxito
-            </p>
+            <p className='text-on-surface-deep text-xs font-semibold uppercase tracking-wide'>{t('bi.audit.kpi.successRate', 'Tasa de Éxito')}</p>
             <p className='text-2xl font-bold text-foreground'>
               {totalLogs > 0 ? `${successRate}%` : 'n/d'}
             </p>
@@ -235,9 +233,7 @@ export default function AuditDashboard() {
             <span className='material-symbols-outlined text-2xl'>person</span>
           </div>
           <div>
-            <p className='text-on-surface-deep text-xs font-semibold uppercase tracking-wide'>
-              Usuarios Únicos
-            </p>
+            <p className='text-on-surface-deep text-xs font-semibold uppercase tracking-wide'>{t('bi.audit.kpi.uniqueUsers', 'Usuarios Únicos')}</p>
             <p className='text-2xl font-bold text-foreground'>{uniqueUsers}</p>
           </div>
         </div>
@@ -247,9 +243,7 @@ export default function AuditDashboard() {
             <span className='material-symbols-outlined text-2xl'>report</span>
           </div>
           <div>
-            <p className='text-on-surface-deep text-xs font-semibold uppercase tracking-wide'>
-              Alertas de Seguridad
-            </p>
+            <p className='text-on-surface-deep text-xs font-semibold uppercase tracking-wide'>{t('bi.audit.kpi.securityAlerts', 'Alertas de Seguridad')}</p>
             <p className='text-2xl font-bold text-foreground'>
               {securityAlerts.length}
             </p>
@@ -267,20 +261,18 @@ export default function AuditDashboard() {
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
         <div className='bg-surface p-6 rounded-lg shadow-sm border border-border-subtle'>
           <div className='flex justify-between items-center mb-6'>
-            <h3 className='text-lg font-bold text-foreground'>
-              Tendencias de Actividad
-            </h3>
+            <h3 className='text-lg font-bold text-foreground'>{t('bi.audit.chart.activityTrends', 'Tendencias de Actividad')}</h3>
             <div className='flex gap-4'>
               <div className='flex items-center gap-1.5'>
                 <span className='size-2 rounded-full bg-primary'></span>
                 <span className='text-[10px] font-bold text-on-surface-deep uppercase'>
-                  Total
+                  {t('bi.audit.chart.total', 'Total')}
                 </span>
               </div>
               <div className='flex items-center gap-1.5'>
                 <span className='size-2 rounded-full bg-warning'></span>
                 <span className='text-[10px] font-bold text-on-surface-deep uppercase'>
-                  Fallidas
+                  {t('bi.audit.chart.failed', 'Fallidas')}
                 </span>
               </div>
             </div>
@@ -315,15 +307,13 @@ export default function AuditDashboard() {
           ) : (
             <div className='h-64 flex flex-col items-center justify-center gap-2'>
               <span className='material-symbols-outlined text-3xl text-on-surface-deep'>show_chart</span>
-              <p className='text-sm font-bold text-on-surface-deep'>Sin actividad registrada en el período.</p>
+              <p className='text-sm font-bold text-on-surface-deep'>{t('bi.audit.chart.emptyActivity', 'Sin actividad registrada en el período.')}</p>
             </div>
           )}
         </div>
 
         <div className='bg-surface p-6 rounded-lg shadow-sm border border-border-subtle'>
-          <h3 className='text-lg font-bold text-foreground mb-6'>
-            Acciones por Categoría
-          </h3>
+          <h3 className='text-lg font-bold text-foreground mb-6'>{t('bi.audit.chart.byCategory', 'Acciones por Categoría')}</h3>
           {totalLogs > 0 && donutSegments.length > 0 ? (
             <div className='flex items-center justify-around h-64'>
               <div className='relative flex items-center justify-center size-48'>
@@ -353,7 +343,7 @@ export default function AuditDashboard() {
                 <div className='absolute inset-0 flex flex-col items-center justify-center'>
                   <span className='text-2xl font-black text-foreground'>{totalLogs.toLocaleString('es-PY')}</span>
                   <span className='text-[10px] font-bold text-on-surface-deep uppercase'>
-                    Acciones
+                    {t('bi.audit.chart.actions', 'Acciones')}
                   </span>
                 </div>
               </div>
@@ -379,7 +369,7 @@ export default function AuditDashboard() {
           ) : (
             <div className='h-64 flex flex-col items-center justify-center gap-2'>
               <span className='material-symbols-outlined text-3xl text-on-surface-deep'>donut_small</span>
-              <p className='text-sm font-bold text-on-surface-deep'>Sin datos de categorías en el período.</p>
+              <p className='text-sm font-bold text-on-surface-deep'>{t('bi.audit.chart.emptyCategories', 'Sin datos de categorías en el período.')}</p>
             </div>
           )}
         </div>
@@ -389,17 +379,15 @@ export default function AuditDashboard() {
       <div className='grid grid-cols-1 xl:grid-cols-3 gap-6'>
         <div className='xl:col-span-2 bg-surface rounded-lg shadow-sm border border-border-subtle overflow-hidden'>
           <div className='p-6 border-b border-border-subtle'>
-            <h3 className='text-lg font-bold text-foreground'>
-              Top Usuarios Activos
-            </h3>
+            <h3 className='text-lg font-bold text-foreground'>{t('bi.audit.table.topUsers', 'Top Usuarios Activos')}</h3>
           </div>
           <div className='overflow-x-auto'>
             <table className='w-full text-left'>
               <thead className='bg-surface-muted text-on-surface-deep text-[11px] font-bold uppercase tracking-wider'>
                 <tr>
-                  <th className='px-6 py-4'>Usuario</th>
-                  <th className='px-6 py-4 text-center'>Acciones Totales</th>
-                  <th className='px-6 py-4 text-center'>% Éxito</th>
+                  <th className='px-6 py-4'>{t('bi.audit.table.user', 'Usuario')}</th>
+                  <th className='px-6 py-4 text-center'>{t('bi.audit.table.totalActions', 'Acciones Totales')}</th>
+                  <th className='px-6 py-4 text-center'>{t('bi.audit.table.successRate', '% Éxito')}</th>
                   <th className='px-6 py-4'></th>
                 </tr>
               </thead>
@@ -413,7 +401,7 @@ export default function AuditDashboard() {
                     totalUserActions > 0
                       ? (successfulUserActions / totalUserActions) * 100
                       : 0
-                  const username = user?.username || 'N/A'
+                  const username = user?.username || t('bi.common.na', 'N/A')
                   const avatarLetter = username.charAt(0) || 'N'
 
                   return (
@@ -461,9 +449,7 @@ export default function AuditDashboard() {
 
         <div className='bg-surface rounded-lg shadow-sm border border-border-subtle flex flex-col overflow-hidden'>
           <div className='p-6 border-b border-border-subtle flex justify-between items-center'>
-            <h3 className='text-lg font-bold text-foreground'>
-              Alertas Recientes
-            </h3>
+            <h3 className='text-lg font-bold text-foreground'>{t('bi.audit.alerts.recent', 'Alertas Recientes')}</h3>
             <span className='flex items-center justify-center size-5 bg-error-container text-on-error-container text-[10px] font-black rounded-full'>
               {securityAlerts.length}
             </span>

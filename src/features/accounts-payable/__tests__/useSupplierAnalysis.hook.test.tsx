@@ -82,7 +82,7 @@ describe('useSupplierAnalysis', () => {
     expect(result.current.tableStats).toEqual({ total: 4, overdue: 1 });
   });
 
-  it('mapea estados de factura y describe el historial de pago real (enum → label)', async () => {
+  it('mapea estados de factura a claves estables y describe el historial real (la label la pone la tabla con i18n)', async () => {
     const { result } = renderHook(() => useSupplierAnalysis('SUP-1'));
     await waitFor(() => expect(result.current.supplier).not.toBeNull());
 
@@ -92,10 +92,10 @@ describe('useSupplierAnalysis', () => {
     expect(s.rating.description).toContain('paga en promedio a 18 días');
 
     expect(s.invoices.map((i) => i.status)).toEqual([
-      'Atrasado',
-      'Parcialmente Pagado',
-      'En Proceso',
-      'Completado',
+      'OVERDUE',
+      'PARTIAL',
+      'PROCESS',
+      'PAID',
     ]);
     expect(s.invoices[0].isOverdue).toBe(true);
     expect(s.invoices[3].isOverdue).toBe(false);

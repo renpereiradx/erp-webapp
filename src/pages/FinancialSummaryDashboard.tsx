@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 import { useFinancialReports } from '../hooks/useFinancialReports';
 import { formatPYG } from '../utils/currencyUtils';
 
@@ -31,7 +32,8 @@ interface HealthScoreData {
   net_margin?: number | null;
 }
 
-const RATING_LABELS: Record<string, string> = {
+// label visible via t() — fallback español (keys bi.financial.rating.*)
+const RATING_FALLBACK: Record<string, string> = {
   EXCELLENT: 'Excelente',
   GOOD: 'Buena',
   FAIR: 'Aceptable',
@@ -45,6 +47,7 @@ const RATING_LABELS: Record<string, string> = {
  * "$742k Predictive BI" hardcodeados — sin endpoint no se muestra).
  */
 const FinancialSummaryDashboard = () => {
+  const { t } = useI18n();
   const [period, setPeriod] = useState('Month');
   const [comparePrevious, setComparePrevious] = useState(true);
 
@@ -77,13 +80,19 @@ const FinancialSummaryDashboard = () => {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        <span className="ml-3 font-bold text-on-surface-deep uppercase tracking-widest text-xs">Cargando Resumen Financiero...</span>
+        <span className="ml-3 font-bold text-on-surface-deep uppercase tracking-widest text-xs">{t('bi.financial.loading', 'Cargando Resumen Financiero...')}</span>
       </div>
     );
   }
 
   const score = healthScore?.score != null ? Math.round(Number(healthScore.score)) : null;
-  const ratingLabel = (healthScore?.rating && RATING_LABELS[healthScore.rating]) ?? null;
+  const ratingLabel =
+    (healthScore?.rating &&
+      t(
+        `bi.financial.rating.${healthScore.rating.toLowerCase()}`,
+        RATING_FALLBACK[healthScore.rating] ?? '',
+      )) ||
+    null;
   const pct = (v: number | null | undefined) => (v == null ? '—' : `${v >= 0 ? '+' : ''}${v}%`);
 
   return (
@@ -91,20 +100,20 @@ const FinancialSummaryDashboard = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-foreground tracking-tight uppercase">Resumen Financiero</h1>
-          <p className="text-sm text-on-surface-deep font-medium">Monitoreo de salud empresarial en tiempo real asistido por BI</p>
+          <h1 className="text-3xl font-black text-foreground tracking-tight uppercase">{t('bi.financial.title', 'Resumen Financiero')}</h1>
+          <p className="text-sm text-on-surface-deep font-medium">{t('bi.financial.subtitle', 'Monitoreo de salud empresarial en tiempo real asistido por BI')}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-surface p-1 rounded-xl shadow-sm border border-border-subtle w-full sm:w-auto">
           <div className="flex h-9 items-center justify-center rounded-lg bg-surface-muted p-1 grow sm:grow-0">
-            {['Hoy', 'Semana', 'Mes', 'Año'].map((p) => {
+            {(['Hoy', 'Semana', 'Mes', 'Año'] as const).map((p) => {
               const value = p === 'Hoy' ? 'Today' : p === 'Semana' ? 'Week' : p === 'Mes' ? 'Month' : 'Year';
               const isSelected = period === value;
               return (
                 <label key={p} className={`flex cursor-pointer h-full grow items-center justify-center rounded-md px-4 transition-all text-[10px] font-black uppercase tracking-widest ${
                   isSelected ? 'bg-surface shadow-sm text-primary' : 'text-on-surface-deep hover:text-foreground'
                 }`}>
-                  <span>{p}</span>
+                  <span>{t(`bi.financial.period.${p.toLowerCase()}`, p)}</span>
                   <input
                     className="hidden"
                     type="radio"
@@ -124,7 +133,7 @@ const FinancialSummaryDashboard = () => {
       <div className="flex items-center justify-between bg-primary/5 px-6 py-4 rounded-xl border border-primary/10 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="size-2 rounded-full bg-primary animate-pulse shrink-0"></div>
-          <p className="text-foreground text-[10px] font-black uppercase tracking-[0.2em]">Comparar con el período anterior</p>
+          <p className="text-foreground text-[10px] font-black uppercase tracking-[0.2em]">{t('bi.financial.comparePrevious', 'Comparar con el período anterior')}</p>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">
           <input
@@ -149,7 +158,7 @@ const FinancialSummaryDashboard = () => {
               {pct(incomeStatement?.comparison?.revenue_change_pct)}
             </span>
           </div>
-          <p className="text-xs font-black uppercase tracking-widest text-on-surface-deep mb-1">Ingresos Totales</p>
+          <p className="text-xs font-black uppercase tracking-widest text-on-surface-deep mb-1">{t('bi.financial.kpi.revenue', 'Ingresos Totales')}</p>
           <h3 className="text-2xl font-black text-foreground tracking-tight">{formatPYG(incomeStatement?.revenue?.net_sales || 0)}</h3>
         </div>
 
@@ -163,7 +172,7 @@ const FinancialSummaryDashboard = () => {
               {pct(incomeStatement?.comparison?.expense_change_pct)}
             </span>
           </div>
-          <p className="text-xs font-black uppercase tracking-widest text-on-surface-deep mb-1">Gastos Operativos</p>
+          <p className="text-xs font-black uppercase tracking-widest text-on-surface-deep mb-1">{t('bi.financial.kpi.expenses', 'Gastos Operativos')}</p>
           <h3 className="text-2xl font-black text-foreground tracking-tight">{formatPYG(incomeStatement?.cost_of_sales?.cost_of_goods_sold || 0)}</h3>
         </div>
 
@@ -177,7 +186,7 @@ const FinancialSummaryDashboard = () => {
               {pct(incomeStatement?.comparison?.net_income_change_pct)}
             </span>
           </div>
-          <p className="text-xs font-black uppercase tracking-widest text-on-surface-deep mb-1">Utilidad Neta</p>
+          <p className="text-xs font-black uppercase tracking-widest text-on-surface-deep mb-1">{t('bi.financial.kpi.netIncome', 'Utilidad Neta')}</p>
           <h3 className="text-2xl font-black text-foreground tracking-tight">{formatPYG(incomeStatement?.net_income || 0)}</h3>
         </div>
 
@@ -188,7 +197,7 @@ const FinancialSummaryDashboard = () => {
               <span className="material-symbols-outlined text-[20px]">savings</span>
             </div>
           </div>
-          <p className="text-xs font-black uppercase tracking-widest text-on-surface-deep mb-1">Posición de Caja</p>
+          <p className="text-xs font-black uppercase tracking-widest text-on-surface-deep mb-1">{t('bi.financial.kpi.cash', 'Posición de Caja')}</p>
           <h3 className="text-2xl font-black text-foreground tracking-tight">
             {cashFlow?.ending_cash != null ? formatPYG(cashFlow.ending_cash) : '—'}
           </h3>
@@ -199,7 +208,7 @@ const FinancialSummaryDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Gauge & Health Score (real: /financial-reports/health-score) */}
         <div className="lg:col-span-1 bg-surface p-8 rounded-xl border border-border-subtle shadow-fluent-2 flex flex-col items-center text-center">
-          <h3 className="text-sm font-black text-foreground uppercase tracking-tight mb-8">Salud Financiera</h3>
+          <h3 className="text-sm font-black text-foreground uppercase tracking-tight mb-8">{t('bi.financial.health.title', 'Salud Financiera')}</h3>
           <div className="relative flex items-center justify-center mb-8">
             <svg className="w-48 h-48 transform -rotate-90">
               <circle className="text-surface-subtle" cx="96" cy="96" r="80" stroke="currentColor" strokeDasharray="502" strokeWidth="14" fill="transparent"></circle>
@@ -221,7 +230,7 @@ const FinancialSummaryDashboard = () => {
           </div>
           {healthScore?.working_capital != null && (
             <div className="w-full bg-success/5 p-5 rounded-xl border border-success/20 space-y-3">
-              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-deep">Capital de Trabajo</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-deep">{t('bi.financial.health.workingCapital', 'Capital de Trabajo')}</p>
               <p className="text-lg font-black text-foreground">{formatPYG(healthScore.working_capital)}</p>
             </div>
           )}
@@ -230,7 +239,7 @@ const FinancialSummaryDashboard = () => {
         {/* Financial Ratios (reales del health-score) */}
         <div className="lg:col-span-2 bg-surface p-8 rounded-xl border border-border-subtle shadow-fluent-2 flex flex-col">
           <div className="flex justify-between items-center mb-8">
-            <h3 className="text-sm font-black text-foreground uppercase tracking-tight">Ratios Financieros Clave</h3>
+            <h3 className="text-sm font-black text-foreground uppercase tracking-tight">{t('bi.financial.ratios.title', 'Ratios Financieros Clave')}</h3>
             <span className="material-symbols-outlined text-on-surface-deep">info</span>
           </div>
           <div className="space-y-10 flex-1">
@@ -238,7 +247,7 @@ const FinancialSummaryDashboard = () => {
               <div className="flex justify-between items-end">
                 <div className="space-y-1">
                   <p className="text-sm font-black text-foreground uppercase tracking-tight">Current Ratio</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-deep opacity-60">Capacidad de pago a corto plazo</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-deep opacity-60">{t('bi.financial.ratios.currentHint', 'Capacidad de pago a corto plazo')}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-black text-foreground tracking-tight">{healthScore?.current_ratio != null ? healthScore.current_ratio.toFixed(2) : '—'}</p>
@@ -254,7 +263,7 @@ const FinancialSummaryDashboard = () => {
               <div className="flex justify-between items-end">
                 <div className="space-y-1">
                   <p className="text-sm font-black text-foreground uppercase tracking-tight">Quick Ratio</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-deep opacity-60">Liquidez inmediata</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-deep opacity-60">{t('bi.financial.ratios.quickHint', 'Liquidez inmediata')}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-black text-foreground tracking-tight">{healthScore?.quick_ratio != null ? healthScore.quick_ratio.toFixed(2) : '—'}</p>
@@ -269,8 +278,8 @@ const FinancialSummaryDashboard = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-end">
                 <div className="space-y-1">
-                  <p className="text-sm font-black text-foreground uppercase tracking-tight">Margen Neto</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-deep opacity-60">Rentabilidad operativa</p>
+                  <p className="text-sm font-black text-foreground uppercase tracking-tight">{t('bi.financial.ratios.netMargin', 'Margen Neto')}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-deep opacity-60">{t('bi.financial.ratios.netMarginHint', 'Rentabilidad operativa')}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-black text-foreground tracking-tight">{healthScore?.net_margin != null ? `${healthScore.net_margin.toFixed(1)}%` : '—'}</p>
@@ -287,10 +296,8 @@ const FinancialSummaryDashboard = () => {
             </div>
           </div>
           <div className="mt-8 pt-6 border-t border-border-subtle flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-deep opacity-40 italic">Fuente: API</span>
-            <Link to="/finance/profit-and-loss" className="text-primary text-[11px] font-black uppercase tracking-widest flex items-center gap-1 hover:underline">
-              Detalle
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-deep opacity-40 italic">{t('bi.financial.source', 'Fuente: API')}</span>
+            <Link to="/finance/profit-and-loss" className="text-primary text-[11px] font-black uppercase tracking-widest flex items-center gap-1 hover:underline">{t('bi.financial.detail', 'Detalle')}<span className="material-symbols-outlined text-[16px]">arrow_forward</span>
             </Link>
           </div>
         </div>

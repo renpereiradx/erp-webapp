@@ -10,6 +10,7 @@ import {
   TrendingDown
 } from 'lucide-react';
 import salesAnalyticsService from '@/services/bi/salesAnalyticsService';
+import { useI18n } from '@/lib/i18n';
 import { Link } from 'react-router-dom';
 
 /** Summary de GET /sales-analytics/by-customer. */
@@ -43,6 +44,7 @@ interface SellerRow {
 }
 
 const CustomerSellerInsights = () => {
+  const { t } = useI18n();
   const [customerData, setCustomerData] = useState<{ summary?: CustomerSummary; customers?: CustomerRow[] } | null>(null);
   const [sellerData, setSellerData] = useState<{ sellers?: SellerRow[] } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,7 +88,7 @@ const CustomerSellerInsights = () => {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        <span className="ml-3 font-bold text-on-surface-deep uppercase tracking-widest text-xs">Cargando Insights...</span>
+        <span className="ml-3 font-bold text-on-surface-deep uppercase tracking-widest text-xs">{t('bi.insights.loading', 'Cargando Insights...')}</span>
       </div>
     );
   }
@@ -94,8 +96,8 @@ const CustomerSellerInsights = () => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
-        <p className="text-sm font-bold text-foreground">No se pudieron cargar los insights.</p>
-        <p className="text-xs text-on-surface-deep uppercase tracking-widest">Verifique la conexión e intente nuevamente</p>
+        <p className="text-sm font-bold text-foreground">{t('bi.insights.loadError', 'No se pudieron cargar los insights.')}</p>
+        <p className="text-xs text-on-surface-deep uppercase tracking-widest">{t('bi.common.checkConnection', 'Verifique la conexión e intente nuevamente')}</p>
       </div>
     );
   }
@@ -106,13 +108,13 @@ const CustomerSellerInsights = () => {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-black tracking-tight text-foreground uppercase leading-none">Insights de Clientes y Vendedores</h1>
-            <p className="text-on-surface-deep text-sm font-medium">Análisis detallado del rendimiento de ventas y comportamiento de la cartera.</p>
+            <h1 className="text-3xl font-black tracking-tight text-foreground uppercase leading-none">{t('bi.insights.title', 'Insights de Clientes y Vendedores')}</h1>
+            <p className="text-on-surface-deep text-sm font-medium">{t('bi.insights.subtitle', 'Análisis detallado del rendimiento de ventas y comportamiento de la cartera.')}</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface px-3 py-2 shadow-sm font-mono">
               <Calendar className="text-on-surface-deep" size={16} />
-              <span className="text-xs font-bold uppercase">Periodo actual</span>
+              <span className="text-xs font-bold uppercase">{t('bi.insights.currentPeriod', 'Periodo actual')}</span>
             </div>
           </div>
         </div>
@@ -122,7 +124,7 @@ const CustomerSellerInsights = () => {
           <InsightKPICard
             title="Total Clientes"
             value={customerData?.summary?.total_customers || 0}
-            subtext={`${customerData?.summary?.returning_customers || 0} Recurrentes | ${customerData?.summary?.new_customers || 0} Nuevos`}
+            subtext={t('bi.insights.recurringNew', '{recurrentes} Recurrentes | {nuevos} Nuevos', { recurrentes: customerData?.summary?.returning_customers || 0, nuevos: customerData?.summary?.new_customers || 0 })}
             icon={<Users className="text-primary/60" size={24} />}
           />
           <InsightKPICard
@@ -148,20 +150,20 @@ const CustomerSellerInsights = () => {
         {/* Client Segmentation Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-foreground uppercase tracking-tight">Segmentación de Clientes</h2>
-            <Link to="/parties?tab=clientes" className="text-xs font-black text-primary hover:underline uppercase tracking-tighter">Ver todos los clientes</Link>
+            <h2 className="text-xl font-bold text-foreground uppercase tracking-tight">{t('bi.insights.customersTitle', 'Segmentación de Clientes')}</h2>
+            <Link to="/parties?tab=clientes" className="text-xs font-black text-primary hover:underline uppercase tracking-tighter">{t('bi.insights.viewAllCustomers', 'Ver todos los clientes')}</Link>
           </div>
           <div className="overflow-hidden rounded-lg border border-border-subtle bg-surface shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm border-collapse">
                 <thead className="bg-surface-muted text-on-surface-deep uppercase text-[10px] font-black tracking-widest border-b border-border-subtle">
                   <tr>
-                    <th className="px-6 py-4">Nombre del Cliente</th>
-                    <th className="px-6 py-4">RUC</th>
-                    <th className="px-6 py-4 text-center">Segmento</th>
-                    <th className="px-6 py-4 text-center">Frecuencia</th>
-                    <th className="px-6 py-4 text-right">Total Compras</th>
-                    <th className="px-6 py-4 text-right">Última Compra</th>
+                    <th className="px-6 py-4">{t('bi.insights.col.customer', 'Nombre del Cliente')}</th>
+                    <th className="px-6 py-4">{t('bi.insights.col.ruc', 'RUC')}</th>
+                    <th className="px-6 py-4 text-center">{t('bi.insights.col.segment', 'Segmento')}</th>
+                    <th className="px-6 py-4 text-center">{t('bi.insights.col.frequency', 'Frecuencia')}</th>
+                    <th className="px-6 py-4 text-right">{t('bi.insights.col.purchases', 'Total Compras')}</th>
+                    <th className="px-6 py-4 text-right">{t('bi.insights.col.lastPurchase', 'Última Compra')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-subtle">
@@ -183,9 +185,7 @@ const CustomerSellerInsights = () => {
                   ))}
                   {(!customerData?.customers || customerData.customers.length === 0) && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-on-surface-deep font-medium italic text-xs uppercase tracking-widest">
-                        Sin datos de clientes disponibles
-                      </td>
+                      <td colSpan={6} className="px-6 py-8 text-center text-on-surface-deep font-medium italic text-xs uppercase tracking-widest">{t('bi.insights.emptyCustomers', 'Sin datos de clientes disponibles')}</td>
                     </tr>
                   )}
                 </tbody>
@@ -197,17 +197,17 @@ const CustomerSellerInsights = () => {
         {/* Seller Performance Section */}
         <div className="space-y-4 pb-12">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-foreground uppercase tracking-tight">Ranking de Desempeño de Vendedores</h2>
+            <h2 className="text-xl font-bold text-foreground uppercase tracking-tight">{t('bi.insights.sellersTitle', 'Ranking de Desempeño de Vendedores')}</h2>
           </div>
           <div className="overflow-hidden rounded-lg border border-border-subtle bg-surface shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm border-collapse">
                 <thead className="bg-surface-muted text-on-surface-deep uppercase text-[10px] font-black tracking-widest border-b border-border-subtle">
                   <tr>
-                    <th className="px-6 py-4">Vendedor</th>
-                    <th className="px-6 py-4 text-right">Ventas Totales</th>
-                    <th className="px-6 py-4 text-right">Unidades Vendidas</th>
-                    <th className="px-6 py-4">Progreso de Meta</th>
+                    <th className="px-6 py-4">{t('bi.insights.col.seller', 'Vendedor')}</th>
+                    <th className="px-6 py-4 text-right">{t('bi.sales.kpi.totalSales', 'Ventas Totales')}</th>
+                    <th className="px-6 py-4 text-right">{t('bi.insights.col.unitsSold', 'Unidades Vendidas')}</th>
+                    <th className="px-6 py-4">{t('bi.insights.col.targetProgress', 'Progreso de Meta')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-subtle">
@@ -220,7 +220,7 @@ const CustomerSellerInsights = () => {
                           </div>
                           <div>
                             <p className="font-bold text-foreground">{seller.seller_name}</p>
-                            <p className="text-[10px] text-on-surface-deep font-black uppercase tracking-widest">Rank <span className="font-mono">#{seller.rank}</span></p>
+                            <p className="text-[10px] text-on-surface-deep font-black uppercase tracking-widest">{t('bi.insights.rank', 'Rank')}<span className="font-mono">#{seller.rank}</span></p>
                           </div>
                         </div>
                       </td>
@@ -238,9 +238,7 @@ const CustomerSellerInsights = () => {
                   ))}
                   {(!sellerData?.sellers || sellerData.sellers.length === 0) && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-on-surface-deep font-medium italic text-xs uppercase tracking-widest">
-                        Sin datos de vendedores disponibles
-                      </td>
+                      <td colSpan={4} className="px-6 py-8 text-center text-on-surface-deep font-medium italic text-xs uppercase tracking-widest">{t('bi.insights.emptySellers', 'Sin datos de vendedores disponibles')}</td>
                     </tr>
                   )}
                 </tbody>

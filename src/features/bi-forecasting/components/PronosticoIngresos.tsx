@@ -65,8 +65,8 @@ const PronosticoIngresos = () => {
   const { data: rawData, loading, error, refetch } = useBIForecasting('ingresos');
   const data = rawData as IngresosData | null;
 
-  if (loading) return <div className="p-8 text-center font-bold text-on-surface-deep">Cargando pronóstico de ingresos...</div>;
-  if (error) return <div className="p-8 text-center font-bold text-error">Error: {error}</div>;
+  if (loading) return <div className="p-8 text-center font-bold text-on-surface-deep">{t('bi.forecast.revenue.loading', 'Cargando pronóstico de ingresos...')}</div>;
+  if (error) return <div className="p-8 text-center font-bold text-error">{t('bi.common.errorPrefix', 'Error: ')}{error}</div>;
   if (!data) return null;
 
   const { escenarios, proyeccion_mensual, categorias, total, ui_labels } = data;
@@ -78,7 +78,7 @@ const PronosticoIngresos = () => {
       {/* Page Header Section */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-foreground text-3xl font-extrabold tracking-tight">{ui_labels?.title || 'Pronóstico de Ingresos'}</h1>
+          <h1 className="text-foreground text-3xl font-extrabold tracking-tight">{ui_labels?.title || t('bi.forecast.revenue.title', 'Pronóstico de Ingresos')}</h1>
           <div className="flex items-center gap-2 text-on-surface-deep">
             <span className="material-symbols-outlined text-sm">calendar_today</span>
             <p className="text-base font-medium uppercase tracking-wider">{data.periodo_rango || '—'}</p>
@@ -99,10 +99,8 @@ const PronosticoIngresos = () => {
       {/* Scenarios Grid (sin escenarios del BE: estado honesto, no tarjetas en cero) */}
       {!escenarios ? (
         <div className="bg-surface border border-border-subtle rounded-xl p-8 text-center">
-          <p className="text-sm font-bold text-foreground">Sin escenarios proyectados por el servicio.</p>
-          <p className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest mt-2">
-            La proyección mensual y el desglose por categoría se muestran con datos reales
-          </p>
+          <p className="text-sm font-bold text-foreground">{t('bi.forecast.revenue.noScenarios', 'Sin escenarios proyectados por el servicio.')}</p>
+          <p className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest mt-2">{t('bi.forecast.revenue.noScenariosHint', 'La proyección mensual y el desglose por categoría se muestran con datos reales')}</p>
         </div>
       ) : (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -112,7 +110,7 @@ const PronosticoIngresos = () => {
             <div className="p-2 bg-error/10 rounded-lg">
               <span className="material-symbols-outlined text-error">trending_down</span>
             </div>
-            <span className="text-xs font-bold px-2 py-1 bg-surface-muted rounded text-on-surface-deep uppercase">{ui_labels?.probability_label || 'Prob.'} {escenarios.pesimista?.probabilidad ?? '—'}%</span>
+            <span className="text-xs font-bold px-2 py-1 bg-surface-muted rounded text-on-surface-deep uppercase">{ui_labels?.probability_label || t('bi.forecast.probability', 'Prob.')} {escenarios.pesimista?.probabilidad ?? '—'}%</span>
           </div>
           <div>
             <p className="text-on-surface-deep text-xs font-bold uppercase tracking-widest">{escenarios.pesimista?.nombre}</p>
@@ -129,13 +127,13 @@ const PronosticoIngresos = () => {
         {/* Base Scenario (Featured) */}
         <div className={`bg-surface border-2 ${escenarios.base?.recomendado ? 'border-primary shadow-xl shadow-primary/5' : 'border-border-subtle'} rounded-xl p-6 relative flex flex-col gap-4 ${escenarios.base?.recomendado ? 'transform scale-[1.02]' : ''}`}>
           {escenarios.base?.recomendado && (
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-md">{ui_labels?.recommended_badge || 'Recomendado'}</div>
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-md">{ui_labels?.recommended_badge || t('bi.forecast.recommended', 'Recomendado')}</div>
           )}
           <div className="flex justify-between items-start">
             <div className="p-2 bg-primary/10 rounded-lg">
               <span className="material-symbols-outlined text-primary">analytics</span>
             </div>
-            <span className="text-xs font-bold px-2 py-1 bg-primary/20 rounded text-primary uppercase">{ui_labels?.probability_label || 'Prob.'} {escenarios.base?.probabilidad ?? '—'}%</span>
+            <span className="text-xs font-bold px-2 py-1 bg-primary/20 rounded text-primary uppercase">{ui_labels?.probability_label || t('bi.forecast.probability', 'Prob.')} {escenarios.base?.probabilidad ?? '—'}%</span>
           </div>
           <div>
             <p className="text-primary text-xs font-bold uppercase tracking-widest">{escenarios.base?.nombre}</p>
@@ -155,7 +153,7 @@ const PronosticoIngresos = () => {
             <div className="p-2 bg-success/10 rounded-lg">
               <span className="material-symbols-outlined text-success">trending_up</span>
             </div>
-            <span className="text-xs font-bold px-2 py-1 bg-surface-muted rounded text-on-surface-deep uppercase">{ui_labels?.probability_label || 'Prob.'} {escenarios.optimista?.probabilidad ?? '—'}%</span>
+            <span className="text-xs font-bold px-2 py-1 bg-surface-muted rounded text-on-surface-deep uppercase">{ui_labels?.probability_label || t('bi.forecast.probability', 'Prob.')} {escenarios.optimista?.probabilidad ?? '—'}%</span>
           </div>
           <div>
             <p className="text-on-surface-deep text-xs font-bold uppercase tracking-widest">{escenarios.optimista?.nombre}</p>
@@ -173,16 +171,16 @@ const PronosticoIngresos = () => {
 
       {/* Detailed Monthly Forecast Table */}
       <div className="flex flex-col gap-4">
-        <h2 className="text-foreground text-xl font-bold px-1">{ui_labels?.monthly_table_title || 'Proyección Mensual'}</h2>
+        <h2 className="text-foreground text-xl font-bold px-1">{ui_labels?.monthly_table_title || t('bi.forecast.monthlyTitle', 'Proyección Mensual')}</h2>
         <div className="bg-surface border border-border-subtle rounded-xl overflow-hidden shadow-sm">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-muted border-b border-border-subtle">
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider">{ui_labels?.table_headers?.mes || 'Mes'}</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-right">{ui_labels?.table_headers?.base || 'Pronóstico Base (₲)'}</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-right text-error/80">{ui_labels?.table_headers?.inf || 'Límite Inferior (₲)'}</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-right text-success/80">{ui_labels?.table_headers?.sup || 'Límite Superior (₲)'}</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-center">{ui_labels?.table_headers?.estado || 'Estado'}</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider">{ui_labels?.table_headers?.mes || t('bi.forecast.col.month', 'Mes')}</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-right">{ui_labels?.table_headers?.base || t('bi.forecast.col.base', 'Pronóstico Base (₲)')}</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-right text-error/80">{ui_labels?.table_headers?.inf || t('bi.forecast.col.lower', 'Límite Inferior (₲)')}</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-right text-success/80">{ui_labels?.table_headers?.sup || t('bi.forecast.col.upper', 'Límite Superior (₲)')}</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-center">{ui_labels?.table_headers?.estado || t('bi.forecast.col.state', 'Estado')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
@@ -207,15 +205,15 @@ const PronosticoIngresos = () => {
 
       {/* Category Breakdown Table */}
       <div className="flex flex-col gap-4 mb-10">
-        <h2 className="text-foreground text-xl font-bold px-1">{ui_labels?.categories_table_title || 'Desglose por Categoría'}</h2>
+        <h2 className="text-foreground text-xl font-bold px-1">{ui_labels?.categories_table_title || t('bi.forecast.categoriesTitle', 'Desglose por Categoría')}</h2>
         <div className="bg-surface border border-border-subtle rounded-xl overflow-hidden shadow-sm">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-muted border-b border-border-subtle">
                 <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider">{ui_labels?.table_headers?.categoria || 'Categoría'}</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-right">{ui_labels?.table_headers?.valor || 'Ingreso Proyectado (₲)'}</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-right">{ui_labels?.table_headers?.porcentaje || '% del Total'}</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-right">{ui_labels?.table_headers?.crecimiento || 'Crecimiento (%)'}</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-right">{ui_labels?.table_headers?.valor || t('bi.forecast.col.projectedIncome', 'Ingreso Proyectado (₲)')}</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-right">{ui_labels?.table_headers?.porcentaje || t('bi.forecast.col.percentTotal', '% del Total')}</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-deep uppercase tracking-wider text-right">{ui_labels?.table_headers?.crecimiento || t('bi.forecast.col.growthPct', 'Crecimiento (%)')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
@@ -235,7 +233,7 @@ const PronosticoIngresos = () => {
             </tbody>
             <tfoot className="bg-surface-muted font-black border-t-2 border-border-subtle">
               <tr>
-                <td className="px-6 py-4 text-sm uppercase">{ui_labels?.total_label || 'Total Consolidado'}</td>
+                <td className="px-6 py-4 text-sm uppercase">{ui_labels?.total_label || t('bi.forecast.total', 'Total Consolidado')}</td>
                 <td className="px-6 py-4 text-sm text-right tabular-nums font-mono">{formatCurrency(total?.valor)}</td>
                 <td className="px-6 py-4 text-sm text-right tabular-nums font-mono">{total?.porcentaje}</td>
                 <td className="px-6 py-4 text-sm text-right tabular-nums text-success font-mono">{total?.crecimiento}</td>

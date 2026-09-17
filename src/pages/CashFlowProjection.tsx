@@ -4,6 +4,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { Link } from 'react-router-dom';
+import { useI18n } from '@/lib/i18n';
 
 // Feature imports
 import KpiSection from '@/features/cash-flow/components/KpiSection';
@@ -19,6 +20,7 @@ import { useCashFlow } from '@/features/cash-flow/hooks/useCashFlow';
  * sección TreasuryInsights y sus fabricaciones fueron eliminadas.
  */
 const CashFlowProjection = () => {
+  const { t } = useI18n();
   const {
     period,
     setPeriod,
@@ -31,7 +33,7 @@ const CashFlowProjection = () => {
   } = useCashFlow();
 
   useEffect(() => {
-    document.title = 'Proyección de Pagos y Flujo | ERP System';
+    document.title = 'Proyección de Pagos y Flujo | ERP System'; // título de pestaña: intencionalmente fuera de i18n
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
@@ -39,7 +41,7 @@ const CashFlowProjection = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[10px] font-black text-on-surface-deep uppercase tracking-[0.3em] animate-pulse">Calculando Proyección Financiera...</p>
+        <p className="text-[10px] font-black text-on-surface-deep uppercase tracking-[0.3em] animate-pulse">{t('bi.cashflow.loading', 'Calculando Proyección Financiera...')}</p>
       </div>
     );
   }
@@ -47,13 +49,11 @@ const CashFlowProjection = () => {
   if (error && filteredData.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <p className="text-sm font-bold text-foreground">No se pudo cargar la proyección de flujo de caja.</p>
+        <p className="text-sm font-bold text-foreground">{t('bi.cashflow.loadError', 'No se pudo cargar la proyección de flujo de caja.')}</p>
         <button
           onClick={refresh}
           className="px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl bg-primary text-on-primary hover:bg-primary-container transition-all shadow-md"
-        >
-          Reintentar
-        </button>
+        >{t('bi.common.retry', 'Reintentar')}</button>
       </div>
     );
   }
@@ -65,15 +65,11 @@ const CashFlowProjection = () => {
       <div className="flex flex-col gap-4">
         {/* Breadcrumbs */}
         <nav className="flex items-center text-xs font-bold text-on-surface-deep uppercase tracking-widest px-1">
-          <Link to="/dashboard/payables" className="hover:text-primary transition-colors flex items-center gap-1">
-            Finanzas
-          </Link>
+          <Link to="/dashboard/payables" className="hover:text-primary transition-colors flex items-center gap-1">{t('bi.cashflow.crumb.finance', 'Finanzas')}</Link>
           <ChevronRight size={12} className="mx-2 opacity-30" />
-          <Link to="/dashboard/payables" className="hover:text-primary transition-colors">
-            Cuentas por Pagar
-          </Link>
+          <Link to="/dashboard/payables" className="hover:text-primary transition-colors">{t('bi.cashflow.crumb.payables', 'Cuentas por Pagar')}</Link>
           <ChevronRight size={12} className="mx-2 opacity-30" />
-          <span className="text-foreground">Flujo de Caja</span>
+          <span className="text-foreground">{t('bi.cashflow.crumb.cashflow', 'Flujo de Caja')}</span>
         </nav>
 
         {/* Title & Actions - Refined Horizontal Layout */}
@@ -83,12 +79,8 @@ const CashFlowProjection = () => {
               <Wallet className="h-5 w-5" />
             </div>
             <div className="flex flex-col min-w-0">
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground uppercase truncate">
-                Proyección de Pagos y Flujo de Caja
-              </h1>
-              <p className="text-[10px] font-bold text-on-surface-deep uppercase tracking-[0.15em] mt-0.5 truncate">
-                Dashboard Inteligente de Liquidez
-              </p>
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground uppercase truncate">{t('bi.cashflow.title', 'Proyección de Pagos y Flujo de Caja')}</h1>
+              <p className="text-[10px] font-bold text-on-surface-deep uppercase tracking-[0.15em] mt-0.5 truncate">{t('bi.cashflow.subtitle', 'Dashboard Inteligente de Liquidez')}</p>
             </div>
           </div>
 
@@ -107,7 +99,7 @@ const CashFlowProjection = () => {
                         : 'text-on-surface-deep hover:text-foreground border border-transparent'
                     }`}
                   >
-                    {val === '30D' ? '30 Días' : val === '60D' ? '60 Días' : '90 Días'}
+                    {t(`bi.cashflow.period.${val.replace('D', '')}`, val.replace('D', '') + ' Días')}
                   </button>
                 );
               })}

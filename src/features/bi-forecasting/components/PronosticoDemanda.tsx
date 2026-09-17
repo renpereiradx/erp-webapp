@@ -52,8 +52,8 @@ const PronosticoDemanda = () => {
   const { data: rawData, loading, error, refetch } = useBIForecasting('demanda', params);
   const data = rawData as DemandaData | null;
 
-  if (loading) return <div className="p-8 text-center font-bold text-on-surface-deep">Cargando pronóstico de demanda...</div>;
-  if (error) return <div className="p-8 text-center font-bold text-error">Error: {error}</div>;
+  if (loading) return <div className="p-8 text-center font-bold text-on-surface-deep">{t('bi.forecast.demand.loading', 'Cargando pronóstico de demanda...')}</div>;
+  if (error) return <div className="p-8 text-center font-bold text-error">{t('bi.common.errorPrefix', 'Error: ')}{error}</div>;
   if (!data) return null;
 
   const { kpis, categorias, productos_top, ui_labels, pagination } = data;
@@ -71,8 +71,8 @@ const PronosticoDemanda = () => {
       {/* Header Section */}
       <div className="flex flex-wrap justify-between items-end gap-3">
         <div className="flex min-w-72 flex-col gap-1">
-          <h1 className="text-foreground text-4xl font-black leading-tight tracking-[-0.033em]">{ui_labels?.title || 'Pronóstico de Demanda'}</h1>
-          <p className="text-on-surface-deep text-base font-medium">{ui_labels?.period_label || 'Periodo proyectado:'} <span className="text-primary">{data.periodo_proyectado || '—'}</span></p>
+          <h1 className="text-foreground text-4xl font-black leading-tight tracking-[-0.033em]">{ui_labels?.title || t('bi.forecast.demand.title', 'Pronóstico de Demanda')}</h1>
+          <p className="text-on-surface-deep text-base font-medium">{ui_labels?.period_label || t('bi.forecast.projectedPeriod', 'Periodo proyectado:')} <span className="text-primary">{data.periodo_proyectado || '—'}</span></p>
         </div>
         {/* H7 (FASE 5): no hay endpoint de export; el botón refresca y se
             rotula como tal (antes "Exportar Análisis Completo" hacía refetch). */}
@@ -89,41 +89,41 @@ const PronosticoDemanda = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-2 rounded-xl p-6 bg-surface border border-border-subtle shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-on-surface-deep text-sm font-bold uppercase tracking-wider">{ui_labels?.metrics?.top_category || 'Categoría de Mayor Crecimiento'}</p>
+            <p className="text-on-surface-deep text-sm font-bold uppercase tracking-wider">{ui_labels?.metrics?.top_category || t('bi.forecast.demand.topCategory', 'Categoría de Mayor Crecimiento')}</p>
             <span className="material-symbols-outlined text-primary">trending_up</span>
           </div>
           <p className="text-foreground text-3xl font-black leading-tight">{kpis?.categoria_crecimiento?.nombre || '—'}</p>
           <div className="flex items-center gap-2">
             <span className="text-success text-lg font-bold">+{kpis?.categoria_crecimiento?.variacion ?? '—'}%</span>
-            <span className="text-on-surface-deep text-sm">{kpis?.categoria_crecimiento?.label || 'vs. periodo anterior'}</span>
+            <span className="text-on-surface-deep text-sm">{kpis?.categoria_crecimiento?.label || t('bi.forecast.vsPrevious', 'vs. periodo anterior')}</span>
           </div>
         </div>
         <div className="flex flex-col gap-2 rounded-xl p-6 bg-surface border border-border-subtle shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-on-surface-deep text-sm font-bold uppercase tracking-wider">{ui_labels?.metrics?.top_product || 'Producto con Mayor Demanda'}</p>
+            <p className="text-on-surface-deep text-sm font-bold uppercase tracking-wider">{ui_labels?.metrics?.top_product || t('bi.forecast.demand.topProduct', 'Producto con Mayor Demanda')}</p>
             <span className="material-symbols-outlined text-primary">stars</span>
           </div>
           <p className="text-foreground text-3xl font-black leading-tight">{kpis?.producto_demanda?.nombre || '—'}</p>
           <div className="flex items-center gap-2">
-            <span className="text-primary text-lg font-bold font-mono">{formatNumber(kpis?.producto_demanda?.unidades)} {ui_labels?.units_label || 'unidades'}</span>
-            <span className="text-on-surface-deep text-sm">{kpis?.producto_demanda?.label || 'Proyección trimestral'}</span>
+            <span className="text-primary text-lg font-bold font-mono">{formatNumber(kpis?.producto_demanda?.unidades)} {ui_labels?.units_label || t('bi.forecast.units', 'unidades')}</span>
+            <span className="text-on-surface-deep text-sm">{kpis?.producto_demanda?.label || t('bi.forecast.quarterly', 'Proyección trimestral')}</span>
           </div>
         </div>
       </div>
 
       {/* Main Data Grid (Categories) */}
       <div className="flex flex-col gap-4">
-        <h2 className="text-foreground text-2xl font-bold leading-tight">{ui_labels?.tables?.categories_title || 'Desglose por Categoría'}</h2>
+        <h2 className="text-foreground text-2xl font-bold leading-tight">{ui_labels?.tables?.categories_title || t('bi.forecast.categoriesTitle', 'Desglose por Categoría')}</h2>
         <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface shadow-sm">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-muted border-b border-border-subtle">
-                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.categoria || 'Categoría'}</th>
-                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.unidades_historicas || 'Histórico'}</th>
-                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider text-primary">{ui_labels?.table_headers?.unidades_proyectadas || 'Proyectado'}</th>
-                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.crecimiento || 'Crecimiento'}</th>
-                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider text-center">{ui_labels?.table_headers?.tendencia || 'Tendencia'}</th>
-                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.confianza || 'Confianza'}</th>
+                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.categoria || t('bi.forecast.col.category', 'Categoría')}</th>
+                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.unidades_historicas || t('bi.forecast.col.historic', 'Histórico')}</th>
+                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider text-primary">{ui_labels?.table_headers?.unidades_proyectadas || t('bi.forecast.col.projected', 'Proyectado')}</th>
+                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.crecimiento || t('bi.forecast.col.growth', 'Crecimiento')}</th>
+                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider text-center">{ui_labels?.table_headers?.tendencia || t('bi.forecast.col.trend', 'Tendencia')}</th>
+                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.confianza || t('bi.forecast.col.confidence', 'Confianza')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
@@ -157,16 +157,16 @@ const PronosticoDemanda = () => {
 
       {/* Top Star Products */}
       <div className="flex flex-col gap-4">
-        <h2 className="text-foreground text-2xl font-bold leading-tight">{ui_labels?.tables?.products_title || 'Top Productos'}</h2>
+        <h2 className="text-foreground text-2xl font-bold leading-tight">{ui_labels?.tables?.products_title || t('bi.sales.topProducts', 'Top Productos')}</h2>
         <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface shadow-sm">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-muted border-b border-border-subtle">
-                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.producto || 'Producto'}</th>
-                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.categoria || 'Categoría'}</th>
-                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.units_label ? `Unidades Estimadas (${ui_labels.units_label})` : 'Unidades Estimadas'}</th>
-                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.valor_estimado || 'Valor Estimado (₲)'}</th>
-                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.nivel_confianza || 'Nivel de Confianza'}</th>
+                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.producto || t('bi.sales.col.product', 'Producto')}</th>
+                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.categoria || t('bi.forecast.col.category', 'Categoría')}</th>
+                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.units_label ? `Unidades Estimadas (${ui_labels.units_label})` : t('bi.forecast.col.estUnits', 'Unidades Estimadas')}</th>
+                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.valor_estimado || t('bi.forecast.col.estValue', 'Valor Estimado (₲)')}</th>
+                <th className="px-6 py-4 text-on-surface-deep text-xs font-bold uppercase tracking-wider">{ui_labels?.table_headers?.nivel_confianza || t('bi.forecast.col.confidenceLevel', 'Nivel de Confianza')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
@@ -192,10 +192,10 @@ const PronosticoDemanda = () => {
           {/* Footer de Paginación (server-side: metadata del BE) */}
           <div className="flex items-center justify-between px-6 py-4 bg-surface-muted border-t border-border-subtle">
             <p className="text-xs text-on-surface-deep font-medium">
-              Mostrando {totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + PAGE_SIZE, totalItems)} de {totalItems} productos
+              {t('bi.forecast.showingProducts', 'Mostrando {a} - {b} de {c} productos', { a: totalItems === 0 ? 0 : startIndex + 1, b: Math.min(startIndex + PAGE_SIZE, totalItems), c: totalItems })}
             </p>
             <div className="flex gap-2 items-center">
-              <p className="text-xs text-on-surface-deep font-medium mr-2">Página {page} de {totalPages}</p>
+              <p className="text-xs text-on-surface-deep font-medium mr-2">{t('bi.logs.page', 'Página')} {page} {t('bi.logs.of', 'de')} {totalPages}</p>
               <button
                 onClick={() => setPage(prev => Math.max(prev - 1, 1))}
                 disabled={page === 1}
@@ -204,9 +204,7 @@ const PronosticoDemanda = () => {
                     ? 'bg-surface-muted text-on-surface-deep border-border-subtle cursor-not-allowed'
                     : 'bg-surface text-foreground border-border-subtle hover:bg-surface-muted active:scale-95'
                 }`}
-              >
-                Anterior
-              </button>
+              >{t('bi.common.prev', 'Anterior')}</button>
               <button
                 onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={page >= totalPages}
@@ -215,9 +213,7 @@ const PronosticoDemanda = () => {
                     ? 'bg-surface-muted text-on-surface-deep border-border-subtle cursor-not-allowed'
                     : 'bg-surface text-foreground border-border-subtle hover:bg-surface-muted active:scale-95'
                 }`}
-              >
-                Siguiente
-              </button>
+              >{t('bi.common.next', 'Siguiente')}</button>
             </div>
           </div>
         </div>

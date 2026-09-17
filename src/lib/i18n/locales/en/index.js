@@ -20,6 +20,7 @@ import { businessPrefs } from './businessPrefs'
 import { printers } from './printers'
 import { shell } from './shell'
 import { es } from '../es/index'
+import { bi } from './bi'
 
 /**
  * Complete English translation dictionary
@@ -50,6 +51,7 @@ export const en = {
   ...shell,
   ...brands,
   ...attributes,
+  ...bi,
   // TODO: Add English translations for new modules:
   // - clients
   // - suppliers

@@ -1,5 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useI18n } from "@/lib/i18n";
 import type { ScheduledPaymentGroup } from '../types';
 
 interface PaymentCalendarProps {
@@ -8,15 +9,16 @@ interface PaymentCalendarProps {
 }
 
 const PaymentCalendar = ({ pendingPayments }: PaymentCalendarProps) => {
+  const { t } = useI18n();
   return (
     <Card className="border-border-subtle shadow-sm overflow-hidden h-full">
       <CardHeader className="flex flex-row items-center justify-between border-b border-border-subtle px-6 py-5">
-        <CardTitle className="text-lg font-black text-foreground uppercase tracking-tight">Calendario de Pagos Pendientes</CardTitle>
+        <CardTitle className="text-lg font-black text-foreground uppercase tracking-tight">{t('bi.cashflow.calendar.title', 'Calendario de Pagos Pendientes')}</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         {pendingPayments.length === 0 && (
           <div className="px-6 py-12 text-center">
-            <p className="text-sm font-bold text-on-surface-deep">Sin pagos programados en el período seleccionado.</p>
+            <p className="text-sm font-bold text-on-surface-deep">{t('bi.cashflow.calendar.empty', 'Sin pagos programados en el período seleccionado.')}</p>
           </div>
         )}
         <div className="divide-y divide-border-subtle">
@@ -25,12 +27,12 @@ const PaymentCalendar = ({ pendingPayments }: PaymentCalendarProps) => {
               <div className="bg-surface-muted/50 px-6 py-3 border-b border-border-subtle flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {group.isToday && (
-                    <Badge className="bg-primary hover:bg-primary text-on-primary font-black text-[9px] px-2 py-0.5 rounded uppercase tracking-tighter">HOY</Badge>
+                    <Badge className="bg-primary hover:bg-primary text-on-primary font-black text-[9px] px-2 py-0.5 rounded uppercase tracking-tighter">{t('bi.cashflow.calendar.today', 'HOY')}</Badge>
                   )}
                   <span className="font-black text-foreground text-xs uppercase tracking-tight">{group.date}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[9px] font-black text-on-surface-deep uppercase block tracking-widest leading-none mb-1">Subtotal Salidas</span>
+                  <span className="text-[9px] font-black text-on-surface-deep uppercase block tracking-widest leading-none mb-1">{t('bi.cashflow.calendar.subtotal', 'Subtotal Salidas')}</span>
                   <span className="text-sm font-mono font-black text-warning tracking-tight tabular-nums">Gs. {group.subtotal.toLocaleString('es-PY')}</span>
                 </div>
               </div>
@@ -48,7 +50,7 @@ const PaymentCalendar = ({ pendingPayments }: PaymentCalendarProps) => {
                     </div>
                     <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-12 w-full sm:w-auto">
                       <div className="text-right hidden md:block">
-                        <div className="text-[9px] text-on-surface-deep font-black uppercase tracking-widest mb-1">Categoría</div>
+                        <div className="text-[9px] text-on-surface-deep font-black uppercase tracking-widest mb-1">{t('bi.cashflow.calendar.category', 'Categoría')}</div>
                         <div className="text-[11px] font-bold text-on-surface-deep uppercase">{item.category}</div>
                       </div>
                       <div className="text-right min-w-[100px]">

@@ -10,6 +10,7 @@ import {
 } from 'recharts'
 import { Activity, ChevronRight } from 'lucide-react'
 import salesAnalyticsService from '@/services/bi/salesAnalyticsService'
+import { useI18n } from '@/lib/i18n'
 
 /** Límites resueltos por el BE para cada período del compare. */
 interface ComparisonPeriodInfo {
@@ -71,6 +72,7 @@ interface CompareParams {
 const dayOf = (iso?: string): string | null => (iso ? String(iso).slice(0, 10) : null)
 
 const PeriodComparison = () => {
+  const { t } = useI18n()
   const [compareData, setCompareData] = useState<ComparisonData | null>(null)
   const [chartData, setChartData] = useState<ChartPoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -155,7 +157,7 @@ const PeriodComparison = () => {
   const handleCompare = () => {
     if (isCustom) {
       if (!customDates.start1 || !customDates.end1 || !customDates.start2 || !customDates.end2) {
-        alert('Por favor complete todas las fechas para la comparación personalizada')
+        alert(t('bi.compare.alertIncomplete', 'Por favor complete todas las fechas para la comparación personalizada'))
         return
       }
       fetchData(customDates)
@@ -192,16 +194,12 @@ const PeriodComparison = () => {
       {/* Header */}
       <header className='flex flex-col gap-1'>
         <div className='flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-on-surface-deep'>
-          <span>Ventas</span>
+          <span>{t('bi.compare.crumb.sales', 'Ventas')}</span>
           <ChevronRight size={10} />
-          <span className='text-primary'>Comparativa de Períodos</span>
+          <span className='text-primary'>{t('bi.compare.title', 'Comparativa de Períodos')}</span>
         </div>
-        <h2 className='text-2xl font-black text-foreground uppercase tracking-tight'>
-          Comparativa de Períodos
-        </h2>
-        <p className='text-sm text-on-surface-deep font-medium'>
-          Análisis detallado de rendimiento entre dos rangos de fechas seleccionados.
-        </p>
+        <h2 className='text-2xl font-black text-foreground uppercase tracking-tight'>{t('bi.compare.title', 'Comparativa de Períodos')}</h2>
+        <p className='text-sm text-on-surface-deep font-medium'>{t('bi.compare.subtitle', 'Análisis detallado de rendimiento entre dos rangos de fechas seleccionados.')}</p>
       </header>
 
       {/* Selection Bar */}
@@ -211,53 +209,47 @@ const PeriodComparison = () => {
              <button
                onClick={() => setIsCustom(false)}
                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${!isCustom ? 'bg-primary text-on-primary' : 'bg-surface-muted text-on-surface-deep'}`}
-             >
-               Períodos Predefinidos
-             </button>
+             >{t('bi.compare.preset', 'Períodos Predefinidos')}</button>
              <button
                onClick={() => setIsCustom(true)}
                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isCustom ? 'bg-primary text-on-primary' : 'bg-surface-muted text-on-surface-deep'}`}
-             >
-               Rangos Personalizados
-             </button>
+             >{t('bi.compare.custom', 'Rangos Personalizados')}</button>
           </div>
 
           <div className='flex flex-wrap items-end gap-6 max-w-6xl'>
             {!isCustom ? (
               <div className='flex-1 min-w-[280px]'>
-                <label className='block text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-2'>
-                  Seleccionar Período
-                </label>
+                <label className='block text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-2'>{t('bi.compare.selectPeriod', 'Seleccionar Período')}</label>
                 <select
                   value={selectedPeriod}
                   onChange={e => setSelectedPeriod(e.target.value)}
                   className='w-full rounded-lg border-border-subtle bg-surface text-sm font-bold focus:ring-primary focus:border-primary py-2.5'
                 >
-                  <option value="today">Hoy vs Ayer</option>
-                  <option value="week">Esta Semana vs Anterior</option>
-                  <option value="month">Este Mes vs Anterior</option>
-                  <option value="year">Este Año vs Anterior</option>
+                  <option value="today">{t('bi.compare.opt.today', 'Hoy vs Ayer')}</option>
+                  <option value="week">{t('bi.compare.opt.week', 'Esta Semana vs Anterior')}</option>
+                  <option value="month">{t('bi.compare.opt.month', 'Este Mes vs Anterior')}</option>
+                  <option value="year">{t('bi.compare.opt.year', 'Este Año vs Anterior')}</option>
                 </select>
               </div>
             ) : (
               <>
                 <div className='grid grid-cols-2 gap-4 flex-[2] min-w-[300px]'>
                   <div>
-                    <label className='block text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-2'>P1 Inicio</label>
+                    <label className='block text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-2'>{t('bi.compare.p1Start', 'P1 Inicio')}</label>
                     <input type="date" value={customDates.start1} onChange={e => setCustomDates(prev => ({...prev, start1: e.target.value}))} className='w-full rounded-lg border-border-subtle bg-surface text-sm font-bold py-2' />
                   </div>
                   <div>
-                    <label className='block text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-2'>P1 Fin</label>
+                    <label className='block text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-2'>{t('bi.compare.p1End', 'P1 Fin')}</label>
                     <input type="date" value={customDates.end1} onChange={e => setCustomDates(prev => ({...prev, end1: e.target.value}))} className='w-full rounded-lg border-border-subtle bg-surface text-sm font-bold py-2' />
                   </div>
                 </div>
                 <div className='grid grid-cols-2 gap-4 flex-[2] min-w-[300px]'>
                   <div>
-                    <label className='block text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-2'>P2 Inicio</label>
+                    <label className='block text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-2'>{t('bi.compare.p2Start', 'P2 Inicio')}</label>
                     <input type="date" value={customDates.start2} onChange={e => setCustomDates(prev => ({...prev, start2: e.target.value}))} className='w-full rounded-lg border-border-subtle bg-surface text-sm font-bold py-2' />
                   </div>
                   <div>
-                    <label className='block text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-2'>P2 Fin</label>
+                    <label className='block text-[10px] font-black text-on-surface-deep uppercase tracking-widest mb-2'>{t('bi.compare.p2End', 'P2 Fin')}</label>
                     <input type="date" value={customDates.end2} onChange={e => setCustomDates(prev => ({...prev, end2: e.target.value}))} className='w-full rounded-lg border-border-subtle bg-surface text-sm font-bold py-2' />
                   </div>
                 </div>
@@ -286,48 +278,48 @@ const PeriodComparison = () => {
           </div>
         ) : !compareData ? (
           <div className="py-16 text-center">
-            <p className="text-sm font-bold text-foreground">No se pudo cargar la comparación de períodos.</p>
-            <p className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest mt-2">Verifique la conexión e intente nuevamente</p>
+            <p className="text-sm font-bold text-foreground">{t('bi.compare.loadError', 'No se pudo cargar la comparación de períodos.')}</p>
+            <p className="text-[10px] font-black text-on-surface-deep uppercase tracking-widest mt-2">{t('bi.common.checkConnection', 'Verifique la conexión e intente nuevamente')}</p>
           </div>
         ) : (
           <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
             <CompareKPICard
-              title='Ventas Totales'
+              title={t('bi.sales.kpi.totalSales', 'Ventas Totales')}
               value={formatCurrency(compareData.period_1?.total_sales)}
               prevValue={formatCurrency(compareData.period_2?.total_sales)}
               diff={compareData.differences?.sales_change_pct}
               absDiff={formatCurrency(compareData.differences?.sales_change)}
             />
             <CompareKPICard
-              title='Transacciones'
+              title={t('bi.sales.kpi.transactions', 'Transacciones')}
               value={compareData.period_1?.total_transactions ?? 0}
               prevValue={compareData.period_2?.total_transactions ?? 0}
               diff={compareData.differences?.transactions_change_pct}
               absDiff={compareData.differences?.transactions_change ?? 0}
             />
             <CompareKPICard
-              title='Unidades Vendidas'
+              title={t('bi.insights.col.unitsSold', 'Unidades Vendidas')}
               value={compareData.period_1?.total_units ?? 0}
               prevValue={compareData.period_2?.total_units ?? 0}
               diff={compareData.differences?.units_change_pct}
               absDiff={compareData.differences?.units_change ?? 0}
             />
             <CompareKPICard
-              title='Ticket Promedio'
+              title={t('bi.sales.kpi.avgTicket', 'Ticket Promedio')}
               value={formatCurrency(compareData.period_1?.average_ticket)}
               prevValue={formatCurrency(compareData.period_2?.average_ticket)}
               diff={compareData.differences?.ticket_change_pct}
               absDiff={formatCurrency(compareData.differences?.ticket_change)}
             />
             <CompareKPICard
-              title='Clientes Únicos'
+              title={t('bi.compare.kpi.uniqueCustomers', 'Clientes Únicos')}
               value={compareData.period_1?.unique_customers ?? 0}
               prevValue={compareData.period_2?.unique_customers ?? 0}
               diff={compareData.differences?.customers_change_pct}
               absDiff={compareData.differences?.customers_change ?? 0}
             />
             <CompareKPICard
-              title='Margen Bruto'
+              title={t('bi.sales.kpi.grossMargin', 'Margen Bruto')}
               value={`${pctOf(compareData.period_1?.gross_margin, compareData.period_1?.total_sales)}`}
               prevValue={`${pctOf(compareData.period_2?.gross_margin, compareData.period_2?.total_sales)}`}
               diff={compareData.differences?.margin_change_pct}
@@ -340,25 +332,17 @@ const PeriodComparison = () => {
         <div className='bg-surface p-8 rounded-lg border border-border-subtle shadow-sm'>
           <div className='flex justify-between items-center mb-8'>
             <div>
-              <h3 className='text-lg font-bold uppercase tracking-tight'>
-                Tendencia Diaria de Ventas
-              </h3>
-              <p className='text-sm text-on-surface-deep font-medium font-display'>
-                Comparativa día a día entre Período A y Período B
-              </p>
+              <h3 className='text-lg font-bold uppercase tracking-tight'>{t('bi.compare.chartTitle', 'Tendencia Diaria de Ventas')}</h3>
+              <p className='text-sm text-on-surface-deep font-medium font-display'>{t('bi.compare.chartSubtitle', 'Comparativa día a día entre Período A y Período B')}</p>
             </div>
             <div className='flex gap-4'>
               <div className='flex items-center gap-2'>
                 <span className='w-3 h-3 rounded-full bg-primary'></span>
-                <span className='text-[10px] font-black uppercase tracking-widest text-on-surface-deep'>
-                  Período A
-                </span>
+                <span className='text-[10px] font-black uppercase tracking-widest text-on-surface-deep'>{t('bi.compare.periodA', 'Período A')}</span>
               </div>
               <div className='flex items-center gap-2'>
                 <span className='w-3 h-3 rounded-full bg-on-surface-deep'></span>
-                <span className='text-[10px] font-black uppercase tracking-widest text-on-surface-deep'>
-                  Período B
-                </span>
+                <span className='text-[10px] font-black uppercase tracking-widest text-on-surface-deep'>{t('bi.compare.periodB', 'Período B')}</span>
               </div>
             </div>
           </div>
@@ -399,12 +383,12 @@ const PeriodComparison = () => {
                       border: 'none',
                       fontFamily: 'Inter, sans-serif',
                     }}
-                    formatter={value => [formatCurrency(Number(value)), 'Ventas']}
+                    formatter={value => [formatCurrency(Number(value)), t('bi.compare.crumb.sales', 'Ventas')]}
                   />
                   <Area
                     type='monotone'
                     dataKey='periodA'
-                    name='Período A'
+                    name={t('bi.compare.periodA', 'Período A')}
                     stroke='#137fec'
                     strokeWidth={3}
                     fillOpacity={1}
@@ -414,7 +398,7 @@ const PeriodComparison = () => {
                   <Area
                     type='monotone'
                     dataKey='periodB'
-                    name='Período B'
+                    name={t('bi.compare.periodB', 'Período B')}
                     stroke='#94a3b8'
                     strokeWidth={2}
                     fillOpacity={0}

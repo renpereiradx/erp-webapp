@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useI18n } from "@/lib/i18n";
 import {
   AreaChart,
   Area,
@@ -16,6 +17,7 @@ interface TrendChartProps {
 }
 
 const TrendChart = ({ data }: TrendChartProps) => {
+  const { t } = useI18n();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -26,21 +28,21 @@ const TrendChart = ({ data }: TrendChartProps) => {
     <Card className="border-border-subtle shadow-sm overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-2">
         <div>
-          <CardTitle className="text-lg font-black text-foreground uppercase tracking-tight">Tendencia de Flujo de Caja</CardTitle>
-          <p className="text-[10px] font-bold text-on-surface-deep mt-1 uppercase tracking-widest">Proyección diaria de ingresos vs. egresos</p>
+          <CardTitle className="text-lg font-black text-foreground uppercase tracking-tight">{t('bi.cashflow.chart.title', 'Tendencia de Flujo de Caja')}</CardTitle>
+          <p className="text-[10px] font-bold text-on-surface-deep mt-1 uppercase tracking-widest">{t('bi.cashflow.chart.subtitle', 'Proyección diaria de ingresos vs. egresos')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-6">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-success shadow-sm"></span>
-            <span className="text-[10px] font-black text-on-surface-deep uppercase tracking-tighter">Entradas</span>
+            <span className="text-[10px] font-black text-on-surface-deep uppercase tracking-tighter">{t('bi.cashflow.legend.inflows', 'Entradas')}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-warning shadow-sm"></span>
-            <span className="text-[10px] font-black text-on-surface-deep uppercase tracking-tighter">Salidas</span>
+            <span className="text-[10px] font-black text-on-surface-deep uppercase tracking-tighter">{t('bi.cashflow.legend.outflows', 'Salidas')}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 border-2 border-primary border-dashed rounded-full shadow-sm"></span>
-            <span className="text-[10px] font-black text-on-surface-deep uppercase tracking-tighter">Saldo Neto</span>
+            <span className="text-[10px] font-black text-on-surface-deep uppercase tracking-tighter">{t('bi.cashflow.legend.net', 'Saldo Neto')}</span>
           </div>
         </div>
       </CardHeader>
@@ -87,7 +89,7 @@ const TrendChart = ({ data }: TrendChartProps) => {
                 <Area
                   type="monotone"
                   dataKey="ingresos"
-                  name="Entradas"
+                  name={t("bi.cashflow.legend.inflows", "Entradas")}
                   stroke="#10b981"
                   strokeWidth={3}
                   fillOpacity={1}
@@ -97,7 +99,7 @@ const TrendChart = ({ data }: TrendChartProps) => {
                 <Area
                   type="monotone"
                   dataKey="egresos"
-                  name="Salidas"
+                  name={t("bi.cashflow.legend.outflows", "Salidas")}
                   stroke="#f97316"
                   strokeWidth={3}
                   fill="transparent"
@@ -106,7 +108,7 @@ const TrendChart = ({ data }: TrendChartProps) => {
                 <Area
                   type="monotone"
                   dataKey="balance"
-                  name="Saldo Neto"
+                  name={t("bi.cashflow.legend.net", "Saldo Neto")}
                   stroke="#3b82f6"
                   strokeWidth={4}
                   strokeDasharray="8 8"

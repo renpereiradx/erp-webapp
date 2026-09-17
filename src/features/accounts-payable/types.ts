@@ -8,7 +8,8 @@ export interface SupplierInvoiceRow {
   dueDate: string;
   originalAmount: number;
   pendingAmount: number;
-  status: string;
+  /** Clave estable del estado (la label la resuelve la tabla con i18n). */
+  status: 'OVERDUE' | 'PARTIAL' | 'PAID' | 'PROCESS' | string;
   isOverdue: boolean;
 }
 

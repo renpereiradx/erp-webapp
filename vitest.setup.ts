@@ -27,12 +27,18 @@ try {
 import * as i18nModule from '@/lib/i18n';
 import { tRaw } from '@/lib/i18n';
 
-const fakeT = (key, vars) => {
+// Firma real de t(key, fallback?, vars?): el mock anterior descartaba el
+// fallback y trataba el 2do arg string como vars, rompiendo la interpolación
+// (renderizaba "{n} factura{s}" literal en tests de componentes BI).
+const fakeT = (key, fallbackOrVars, maybeVars) => {
   if (!key) return '';
+  const fallback = typeof fallbackOrVars === 'string' ? fallbackOrVars : undefined;
+  const vars = (typeof fallbackOrVars === 'object' && fallbackOrVars !== null ? fallbackOrVars : maybeVars) ?? {};
   let template = tRaw(key, '', {});
+  if ((!template || template === key) && fallback !== undefined) template = fallback;
   // If tRaw returns the key, fall back to a readable fragment
   if (!template || template === key) template = (key.includes('.') ? key.split('.').slice(-1)[0].replace(/_/g, ' ') : key);
-  if (!vars) return template;
+  if (!vars || typeof vars !== 'object') return template;
   return String(template).replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? String(vars[k]) : `{${k}}`));
 };
 

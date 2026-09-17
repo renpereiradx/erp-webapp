@@ -16,6 +16,7 @@ import {
   Area,
 } from 'recharts'
 import salesAnalyticsService from '@/services/bi/salesAnalyticsService'
+import { useI18n } from '@/lib/i18n'
 
 /** KPIs de GET /sales-analytics/dashboard. */
 interface SalesKPIs {
@@ -68,6 +69,7 @@ const labelMap: Record<string, string> = {
 }
 
 const Dashboard = () => {
+  const { t } = useI18n()
   const [data, setData] = useState<SalesDashboardData | null>(null)
   const [period, setPeriod] = useState('month')
   const [loading, setLoading] = useState(true)
@@ -84,11 +86,11 @@ const Dashboard = () => {
         if (response && response.success) {
           setData(response.data)
         } else {
-          throw new Error('Respuesta de API inválida')
+          throw new Error(t('bi.common.invalidResponse', 'Respuesta de API inválida'))
         }
       } catch (err: any) {
         console.error('Error fetching dashboard data:', err)
-        setError(err.message || 'Error al cargar datos')
+        setError(err.message || t('bi.common.loadErrorGeneric', 'Error al cargar datos'))
         // El fallback ya está en el estado inicial o se mantiene el anterior
       } finally {
         setLoading(false)
@@ -116,12 +118,8 @@ const Dashboard = () => {
       {/* Header */}
       <div className='flex flex-col md:flex-row md:items-start justify-between gap-4'>
         <div className='flex flex-col gap-1'>
-          <h1 className='text-foreground text-3xl font-black tracking-tight uppercase'>
-            Dashboard de Ventas
-          </h1>
-          <p className='text-on-surface-deep text-sm font-medium'>
-            Resumen ejecutivo del rendimiento comercial y financiero
-          </p>
+          <h1 className='text-foreground text-3xl font-black tracking-tight uppercase'>{t('bi.sales.title', 'Dashboard de Ventas')}</h1>
+          <p className='text-on-surface-deep text-sm font-medium'>{t('bi.sales.subtitle', 'Resumen ejecutivo del rendimiento comercial y financiero')}</p>
         </div>
         <div className='flex items-center gap-4'>
           <div className='flex h-10 items-center rounded-lg bg-surface-muted p-1 font-mono shadow-sm'>
@@ -152,22 +150,22 @@ const Dashboard = () => {
       {/* KPI Cards */}
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
         <KPICard
-          title='Ventas Totales'
+          title={t('bi.sales.kpi.totalSales', 'Ventas Totales')}
           value={formatCurrency(kpis.total_sales)}
           growth={kpis.sales_growth_pct}
         />
         <KPICard
-          title='Transacciones'
+          title={t('bi.sales.kpi.transactions', 'Transacciones')}
           value={kpis.total_transactions ?? 0}
           growth={kpis.transactions_growth_pct}
         />
         <KPICard
-          title='Ticket Promedio'
+          title={t('bi.sales.kpi.avgTicket', 'Ticket Promedio')}
           value={formatCurrency(kpis.average_ticket)}
           growth={kpis.ticket_growth_pct}
         />
         <KPICard
-          title='Margen Bruto'
+          title={t('bi.sales.kpi.grossMargin', 'Margen Bruto')}
           value={`${Math.round((kpis.gross_margin_pct || 0) * 10) / 10}%`}
           growth={kpis.margin_growth_pct}
         />
@@ -177,9 +175,7 @@ const Dashboard = () => {
       <div className='grid grid-cols-1 lg:grid-cols-10 gap-6'>
         <div className='lg:col-span-6 flex flex-col gap-4 rounded-lg p-6 bg-surface border border-border-subtle shadow-sm'>
           <div className='flex justify-between items-center mb-2'>
-            <h3 className='text-foreground text-lg font-bold uppercase tracking-tight'>
-              Tendencia de Ventas
-            </h3>
+            <h3 className='text-foreground text-lg font-bold uppercase tracking-tight'>{t('bi.sales.chart.trend', 'Tendencia de Ventas')}</h3>
           </div>
           <div className='h-[280px] w-full font-mono relative'>
             {loading && (
@@ -242,9 +238,7 @@ const Dashboard = () => {
           </div>
         </div>
         <div className='lg:col-span-4 flex flex-col gap-4 rounded-lg p-6 bg-surface border border-border-subtle shadow-sm'>
-          <h3 className='text-foreground text-lg font-bold mb-2 uppercase tracking-tight'>
-            Alertas del Sistema
-          </h3>
+          <h3 className='text-foreground text-lg font-bold mb-2 uppercase tracking-tight'>{t('bi.sales.alerts', 'Alertas del Sistema')}</h3>
           <div className='flex flex-col gap-3'>
             {alerts.map((alert, idx) => (
               <AlertItem key={idx} alert={alert} />
@@ -256,21 +250,19 @@ const Dashboard = () => {
       {/* Top Products & Payment Mix Row */}
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
         <div className='flex flex-col gap-4 rounded-lg p-6 bg-surface border border-border-subtle shadow-sm overflow-hidden'>
-          <h3 className='text-foreground text-lg font-bold uppercase tracking-tight'>
-            Top Productos
-          </h3>
+          <h3 className='text-foreground text-lg font-bold uppercase tracking-tight'>{t('bi.sales.topProducts', 'Top Productos')}</h3>
           <div className='overflow-x-auto'>
             <table className='w-full text-left border-collapse'>
               <thead>
                 <tr className='border-b border-border-subtle'>
                   <th className='py-3 text-on-surface-deep text-[10px] font-black uppercase tracking-wider'>
-                    Producto
+                    {t('bi.sales.col.product', 'Producto')}
                   </th>
                   <th className='py-3 text-on-surface-deep text-[10px] font-black uppercase tracking-wider text-right'>
-                    Unidades
+                    {t('bi.sales.col.units', 'Unidades')}
                   </th>
                   <th className='py-3 text-on-surface-deep text-[10px] font-black uppercase tracking-wider text-right'>
-                    Total
+                    {t('bi.sales.col.total', 'Total')}
                   </th>
                 </tr>
               </thead>
@@ -296,9 +288,7 @@ const Dashboard = () => {
           </div>
         </div>
         <div className='flex flex-col gap-4 rounded-lg p-6 bg-surface border border-border-subtle shadow-sm'>
-          <h3 className='text-foreground text-lg font-bold uppercase tracking-tight'>
-            Métodos de Pago
-          </h3>
+          <h3 className='text-foreground text-lg font-bold uppercase tracking-tight'>{t('bi.sales.paymentMix', 'Métodos de Pago')}</h3>
           <div className='flex flex-col gap-6 py-4'>
             {paymentMix.map((method, idx) => (
               <div key={idx} className='flex flex-col gap-2'>
@@ -323,7 +313,7 @@ const Dashboard = () => {
             ))}
           </div>
           <div className='mt-auto pt-4 border-t border-border-subtle flex justify-between items-center text-[10px] text-on-surface-deep font-bold uppercase tracking-widest'>
-            <span>* Actualizado en tiempo real</span>
+            <span>{t('bi.sales.realtime', '* Actualizado en tiempo real')}</span>
           </div>
         </div>
       </div>

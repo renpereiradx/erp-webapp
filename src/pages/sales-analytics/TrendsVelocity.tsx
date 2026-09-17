@@ -20,6 +20,7 @@ import {
   Banknote,
 } from 'lucide-react'
 import salesAnalyticsService from '@/services/bi/salesAnalyticsService'
+import { useI18n } from '@/lib/i18n'
 
 interface VelocityOverall {
   sales_per_day?: number
@@ -43,6 +44,7 @@ interface TrendPoint {
 }
 
 const TrendsVelocity = () => {
+  const { t } = useI18n()
   const [velocityData, setVelocityData] = useState<VelocityData | null>(null)
   const [heatmapData, setHeatmapData] = useState<HeatmapData | null>(null)
   const [trendsData, setTrendsData] = useState<{ daily: TrendPoint[]; hourly: TrendPoint[] }>({ daily: [], hourly: [] })
@@ -125,20 +127,15 @@ const TrendsVelocity = () => {
 
   const periodLabel = heatmapData?.period
     ? `${new Date(heatmapData.period.start_date || '').toLocaleDateString()} - ${new Date(heatmapData.period.end_date || '').toLocaleDateString()}`
-    : 'Periodo actual'
+    : t('bi.insights.currentPeriod', 'Periodo actual')
 
   return (
     <div className='flex flex-col gap-6 animate-in fade-in duration-500 font-display'>
       {/* Header Section */}
       <div className='flex flex-wrap items-center justify-between gap-4'>
         <div className='flex flex-col gap-1'>
-          <h1 className='text-foreground text-3xl font-black leading-tight tracking-tight uppercase'>
-            Tendencias Temporales y Velocidad
-          </h1>
-          <p className='text-on-surface-deep text-sm font-medium'>
-            Análisis detallado de frecuencia de transacciones y picos de demanda
-            operativa.
-          </p>
+          <h1 className='text-foreground text-3xl font-black leading-tight tracking-tight uppercase'>{t('bi.velocity.title', 'Tendencias Temporales y Velocidad')}</h1>
+          <p className='text-on-surface-deep text-sm font-medium'>{t('bi.velocity.subtitle', 'Análisis detallado de frecuencia de transacciones y picos de demanda operativa.')}</p>
         </div>
         <div className='flex items-center gap-3'>
           <div className='flex items-center gap-2 bg-surface border border-border-subtle rounded-lg px-4 py-2 text-sm font-bold shadow-sm font-mono uppercase tracking-tighter'>
@@ -151,7 +148,7 @@ const TrendsVelocity = () => {
             className='flex items-center gap-2 bg-primary hover:bg-primary/90 text-on-primary px-5 py-2 rounded-lg font-bold text-sm transition-all shadow-md shadow-primary/20 uppercase tracking-wider disabled:opacity-50'
           >
             <RefreshCcw size={18} />
-            <span>Actualizar</span>
+            <span>{t('action.refresh', 'Actualizar')}</span>
           </button>
         </div>
       </div>
@@ -159,31 +156,31 @@ const TrendsVelocity = () => {
       {/* KPI Row */}
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
         <VelocityKPICard
-          title='Ventas por Día'
+          title={t('bi.velocity.kpi.salesPerDay', 'Ventas por Día')}
           value={formatCurrency(velocityData?.overall?.sales_per_day || 0)}
           icon={<Banknote size={20} />}
-          status='Promedio por día'
+          status={t('bi.velocity.avgPerDay', 'Promedio por día')}
           trend={<TrendingUp size={14} className='text-success' />}
         />
         <VelocityKPICard
-          title='Ventas por Hora'
+          title={t('bi.velocity.hourlyChart', 'Ventas por Hora')}
           value={formatCurrency(velocityData?.overall?.sales_per_hour || 0)}
           icon={<Zap size={20} />}
-          status={peakHourLabel ? `Hora pico: ${peakHourLabel}` : 'Hora pico: n/d'}
+          status={peakHourLabel ? t('bi.velocity.peakHour', 'Hora pico: {hora}', { hora: peakHourLabel }) : t('bi.velocity.peakNone', 'Hora pico: n/d')}
           trend={<TrendingUp size={14} className='text-warning' />}
         />
         <VelocityKPICard
-          title='Unidades por Día'
+          title={t('bi.velocity.kpi.unitsPerDay', 'Unidades por Día')}
           value={Math.round((velocityData?.overall?.units_per_day || 0) * 10) / 10}
           icon={<Package size={20} />}
-          status='Promedio por día'
+          status={t('bi.velocity.avgPerDay', 'Promedio por día')}
           isBadge={true}
         />
         <VelocityKPICard
-          title='Ciclo de Venta'
+          title={t('bi.velocity.kpi.salesCycle', 'Ciclo de Venta')}
           value={`${velocityData?.overall?.avg_minutes_between_sales || 0} min`}
           icon={<Clock size={20} />}
-          status='Tiempo prom. entre ventas'
+          status={t('bi.velocity.cycleHint', 'Tiempo prom. entre ventas')}
         />
       </div>
 
@@ -191,15 +188,11 @@ const TrendsVelocity = () => {
       <div className='bg-surface p-8 rounded-lg border border-border-subtle shadow-sm'>
         <div className='flex items-center justify-between mb-8'>
           <div className='flex items-center gap-3'>
-            <h2 className='text-foreground text-xl font-bold tracking-tight uppercase'>
-              Heatmap de Ventas
-            </h2>
+            <h2 className='text-foreground text-xl font-bold tracking-tight uppercase'>{t('bi.velocity.heatmap', 'Heatmap de Ventas')}</h2>
             <Info size={18} className='text-on-surface-deep cursor-help' />
           </div>
           <div className='flex items-center gap-2'>
-            <span className='text-[10px] font-black text-on-surface-deep uppercase tracking-widest'>
-              Baja
-            </span>
+            <span className='text-[10px] font-black text-on-surface-deep uppercase tracking-widest'>{t('bi.supplier.importance.low', 'Baja')}</span>
             <div className='flex gap-1'>
               {[0.1, 0.3, 0.6, 0.9].map(op => (
                 <div
@@ -209,9 +202,7 @@ const TrendsVelocity = () => {
                 ></div>
               ))}
             </div>
-            <span className='text-[10px] font-black text-on-surface-deep uppercase tracking-widest'>
-              Alta
-            </span>
+            <span className='text-[10px] font-black text-on-surface-deep uppercase tracking-widest'>{t('bi.supplier.importance.high', 'Alta')}</span>
           </div>
         </div>
         <div className='overflow-x-auto'>
@@ -228,13 +219,13 @@ const TrendsVelocity = () => {
               ))}
             </div>
             {[
-              'Lunes',
-              'Martes',
-              'Miércoles',
-              'Jueves',
-              'Viernes',
-              'Sábado',
-              'Domingo',
+              t('day.monday', 'Lunes'),
+              t('day.tuesday', 'Martes'),
+              t('day.wednesday', 'Miércoles'),
+              t('day.thursday', 'Jueves'),
+              t('day.friday', 'Viernes'),
+              t('day.saturday', 'Sábado'),
+              t('day.sunday', 'Domingo'),
             ].map((day, dIdx) => (
               <div
                 key={day}
@@ -263,9 +254,7 @@ const TrendsVelocity = () => {
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
         {/* Ventas por Día de la Semana */}
         <div className='bg-surface p-8 rounded-lg border border-border-subtle shadow-sm flex flex-col h-[400px]'>
-          <h2 className='text-foreground text-xl font-bold tracking-tight mb-8 uppercase'>
-            Ventas por Día
-          </h2>
+          <h2 className='text-foreground text-xl font-bold tracking-tight mb-8 uppercase'>{t('bi.velocity.kpi.salesPerDay', 'Ventas por Día')}</h2>
           <div className='flex-1 font-mono'>
             {!loading && isMounted && (
               <ResponsiveContainer
@@ -307,16 +296,12 @@ const TrendsVelocity = () => {
         <div className='bg-surface p-8 rounded-lg border border-border-subtle shadow-sm flex flex-col h-[400px]'>
           <div className='flex items-center justify-between mb-8'>
             <div>
-              <h2 className='text-foreground text-xl font-bold tracking-tight uppercase'>
-                Ventas por Hora
-              </h2>
-              <p className='text-xs font-bold text-on-surface-deep uppercase tracking-tighter'>
-                Distribución horaria
-              </p>
+              <h2 className='text-foreground text-xl font-bold tracking-tight uppercase'>{t('bi.velocity.hourlyChart', 'Ventas por Hora')}</h2>
+              <p className='text-xs font-bold text-on-surface-deep uppercase tracking-tighter'>{t('bi.velocity.hourlyDist', 'Distribución horaria')}</p>
             </div>
             {peakHourLabel && (
               <div className='bg-primary/10 text-primary text-[10px] font-black px-2 py-1 rounded uppercase font-mono tracking-widest'>
-                Pico: {peakHourLabel}
+                {t('bi.velocity.peakBadge', 'Pico: {hora}', { hora: peakHourLabel })}
               </div>
             )}
           </div>

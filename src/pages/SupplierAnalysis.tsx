@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom';
+import { useI18n } from '@/lib/i18n';
 
 // Feature components
 import SupplierHeader from '@/features/accounts-payable/components/SupplierAnalysis/SupplierHeader';
@@ -17,6 +18,7 @@ import { useSupplierAnalysis } from '@/features/accounts-payable/hooks/useSuppli
  * (no hay endpoint histórico). Estados error/empty honestos.
  */
 const SupplierAnalysis = () => {
+  const { t } = useI18n();
   const { id } = useParams();
   const { loading, supplier, tableStats, error } = useSupplierAnalysis(id);
 
@@ -25,7 +27,7 @@ const SupplierAnalysis = () => {
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-[10px] font-bold text-on-surface-deep uppercase tracking-widest animate-pulse">Cargando Análisis Inteligente...</p>
+          <p className="text-[10px] font-bold text-on-surface-deep uppercase tracking-widest animate-pulse">{t('bi.supplier.loading', 'Cargando Análisis Inteligente...')}</p>
         </div>
       </div>
     );
@@ -34,8 +36,8 @@ const SupplierAnalysis = () => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <p className="text-sm font-bold text-foreground">No se pudo cargar el análisis del proveedor.</p>
-        <p className="text-[10px] text-on-surface-deep uppercase tracking-widest">Verifique la conexión e intente nuevamente</p>
+        <p className="text-sm font-bold text-foreground">{t('bi.supplier.loadError', 'No se pudo cargar el análisis del proveedor.')}</p>
+        <p className="text-[10px] text-on-surface-deep uppercase tracking-widest">{t('bi.common.checkConnection', 'Verifique la conexión e intente nuevamente')}</p>
       </div>
     );
   }
@@ -43,7 +45,7 @@ const SupplierAnalysis = () => {
   if (!supplier) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-2">
-        <p className="text-sm font-bold text-foreground">Proveedor no encontrado.</p>
+        <p className="text-sm font-bold text-foreground">{t('bi.supplier.notFound', 'Proveedor no encontrado.')}</p>
       </div>
     );
   }

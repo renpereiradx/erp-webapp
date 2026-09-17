@@ -1,19 +1,21 @@
 import { useState, useEffect, useMemo } from 'react';
 import { payablesService } from '@/services/bi/payablesService';
+import { tRaw } from '@/lib/i18n';
 import type { PaymentHistoryColor, SupplierAnalysisData, SupplierTableStats } from '../types';
 
-const PAYMENT_HISTORY_LABELS: Record<string, { label: string; color: PaymentHistoryColor }> = {
-  EXCELLENT: { label: 'Excelente', color: 'emerald' },
-  GOOD: { label: 'Bueno', color: 'blue' },
-  REGULAR: { label: 'Regular', color: 'amber' },
-  POOR: { label: 'Pobre', color: 'rose' },
+// Labels visibles via t() (keys bi.supplier.history.* / bi.supplier.importance.*)
+const PAYMENT_HISTORY_KEYS: Record<string, { key: string; color: PaymentHistoryColor }> = {
+  EXCELLENT: { key: 'bi.supplier.history.excellent', color: 'emerald' },
+  GOOD: { key: 'bi.supplier.history.good', color: 'blue' },
+  REGULAR: { key: 'bi.supplier.history.regular', color: 'amber' },
+  POOR: { key: 'bi.supplier.history.poor', color: 'rose' },
 };
 
-const IMPORTANCE_LABELS: Record<string, string> = {
-  CRITICAL: 'Crítica',
-  HIGH: 'Alta',
-  MEDIUM: 'Media',
-  LOW: 'Baja',
+const IMPORTANCE_KEYS: Record<string, string> = {
+  CRITICAL: 'bi.supplier.importance.critical',
+  HIGH: 'bi.supplier.importance.high',
+  MEDIUM: 'bi.supplier.importance.medium',
+  LOW: 'bi.supplier.importance.low',
 };
 
 const formatDate = (dateStr: string | null | undefined) => {
@@ -72,17 +74,18 @@ export const useSupplierAnalysis = (id: string | undefined) => {
         const d: Record<string, any> = detailRes?.data || {};
         const rawInvoices: Array<Record<string, any>> = Array.isArray(d.payables) ? d.payables : [];
 
-        const history = PAYMENT_HISTORY_LABELS[a.payment_history] || {
-          label: a.payment_history || 'Sin datos',
+        const history = PAYMENT_HISTORY_KEYS[a.payment_history] || {
+          key: 'bi.supplier.history.none',
           color: 'slate' as PaymentHistoryColor,
         };
+        const historyLabel = tRaw(history.key, 'Sin datos', {});
 
         const avgDays = a.avg_days_to_pay ?? d.average_days_to_pay ?? null;
         const mappedData: SupplierAnalysisData = {
           id: a.supplier_id || d.supplier_id || id,
-          name: a.supplier_name || d.supplier_name || 'Proveedor',
+          name: a.supplier_name || d.supplier_name || tRaw('bi.supplier.defaultName', 'Proveedor', {}),
           contact: resolveContact(d.supplier_contact || a.supplier_contact),
-          importance: IMPORTANCE_LABELS[a.importance] || null,
+          importance: a.importance ? tRaw(IMPORTANCE_KEYS[a.importance] ?? '', '', {}) || null : null,
 
           stats: {
             totalPending: num(a.total_pending ?? d.total_pending),
@@ -94,14 +97,16 @@ export const useSupplierAnalysis = (id: string | undefined) => {
           },
 
           rating: {
-            historyLabel: history.label,
+            historyLabel,
             color: history.color,
             avgDays,
-            description: `Historial de pago ${history.label.toLowerCase()} según los registros de cumplimiento del proveedor${
-              num(avgDays) > 0
-                ? ` — paga en promedio a ${Math.round(num(avgDays))} días.`
-                : '.'
-            }`,
+            description: `${tRaw('bi.supplier.rating.description', 'Historial de pago {label} según los registros de cumplimiento del proveedor{suffix}', {
+              label: historyLabel.toLowerCase(),
+              suffix:
+                num(avgDays) > 0
+                  ? ` — ${tRaw('bi.supplier.rating.avgDays', 'paga en promedio a {n} días', { n: Math.round(num(avgDays)) })}.`
+                  : '.',
+            })}`,
           },
 
           terms: {
@@ -115,14 +120,17 @@ export const useSupplierAnalysis = (id: string | undefined) => {
             dueDate: formatDate(inv.due_date),
             originalAmount: num(inv.original_amount),
             pendingAmount: num(inv.pending_amount),
+            // clave de estado ESTABLE (la label la pone la tabla con i18n):
+            // antes la label es-ES viajaba en el contrato y el switch de la
+            // tabla comparaba strings traducidos.
             status:
               inv.status === 'OVERDUE'
-                ? 'Atrasado'
+                ? 'OVERDUE'
                 : inv.status === 'PARTIAL'
-                  ? 'Parcialmente Pagado'
+                  ? 'PARTIAL'
                   : inv.status === 'PAID'
-                    ? 'Completado'
-                    : 'En Proceso',
+                    ? 'PAID'
+                    : 'PROCESS',
             isOverdue: inv.status === 'OVERDUE',
           })),
         };

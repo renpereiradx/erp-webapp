@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { payablesService } from '@/services/bi/payablesService';
+import { tRaw } from '@/lib/i18n';
 import type {
   CashFlowPoint,
   CashFlowStats,
@@ -116,16 +117,19 @@ export const useCashFlow = () => {
         items: (bucket.items || []).map((it) => ({
           id: it.payable_id || '',
           code: (it.supplier_name || '??').substring(0, 2).toUpperCase(),
-          name: it.supplier_name || 'Proveedor',
+          name: it.supplier_name || tRaw('bi.cashflow.item.defaultSupplier', 'Proveedor', {}),
           description:
             it.days_until_due != null
               ? it.days_until_due >= 0
-                ? `Vence en ${it.days_until_due} día${it.days_until_due === 1 ? '' : 's'}`
-                : `Vencido hace ${Math.abs(it.days_until_due)} día${Math.abs(it.days_until_due) === 1 ? '' : 's'}`
-              : 'Fecha no disponible',
-          category: it.priority || 'MEDIA',
+                ? tRaw('bi.cashflow.item.dueIn', 'Vence en {n} día{s}', { n: it.days_until_due, s: it.days_until_due === 1 ? '' : 's' })
+                : tRaw('bi.cashflow.item.overdueBy', 'Vencido hace {n} día{s}', { n: Math.abs(it.days_until_due), s: Math.abs(it.days_until_due) === 1 ? '' : 's' })
+              : tRaw('bi.cashflow.item.noDate', 'Fecha no disponible', {}),
+          category: it.priority || tRaw('bi.cashflow.item.mediumPriority', 'MEDIA', {}),
           amount: num(it.amount),
-          priority: it.priority === 'URGENT' || it.priority === 'HIGH' ? 'PRIORIDAD ALTA' : 'PROGRAMADO',
+          priority:
+            it.priority === 'URGENT' || it.priority === 'HIGH'
+              ? tRaw('bi.cashflow.item.highPriority', 'PRIORIDAD ALTA', {})
+              : tRaw('bi.cashflow.item.scheduled', 'PROGRAMADO', {}),
         })),
       }));
 
