@@ -15,7 +15,14 @@ const DetailedKPIs = () => {
   const navigate = useNavigate();
   const { currentBranchId } = useBranch();
   const [period, setPeriod] = useState('month');
-  const { summary, kpis, alerts, fetchDashboardData, fetchKPIData, loading, error } = useDashboardStore();
+  // H2 (audit react): selectores atómicos en vez de suscripción completa
+  const summary = useDashboardStore((s) => s.summary);
+  const kpis = useDashboardStore((s) => s.kpis);
+  const alerts = useDashboardStore((s) => s.alerts);
+  const fetchDashboardData = useDashboardStore((s) => s.fetchDashboardData);
+  const fetchKPIData = useDashboardStore((s) => s.fetchKPIData);
+  const loading = useDashboardStore((s) => s.loading);
+  const error = useDashboardStore((s) => s.error);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {

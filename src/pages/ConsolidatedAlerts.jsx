@@ -68,7 +68,10 @@ const DetailItem = ({ label, value, navigate }) => {
 
 const ConsolidatedAlerts = () => {
   const navigate = useNavigate();
-  const { alerts, fetchDashboardData, loading } = useDashboardStore();
+  // H2 (audit react): selectores atómicos
+  const alerts = useDashboardStore((s) => s.alerts);
+  const fetchDashboardData = useDashboardStore((s) => s.fetchDashboardData);
+  const loading = useDashboardStore((s) => s.loading);
   const [expandedAlertId, setExpandedAlertId] = useState(null);
   const [filterSeverity, setFilterSeverity] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');

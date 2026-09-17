@@ -100,7 +100,10 @@ export default defineConfig(({ mode }) => {
             '@radix-ui/react-tooltip'
           ],
           virtuoso: ['react-virtuoso'],
-          lucide: ['lucide-react']
+          lucide: ['lucide-react'],
+          // H5 (audit react): recharts solo lo cargan las páginas BI lazy —
+          // vendor aparte y cacheable entre páginas del módulo.
+          recharts: ['recharts']
         }
       }
     }

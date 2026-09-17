@@ -11,14 +11,13 @@ const uiDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const uiIndexToApiDay = (index) => (index + 1) % 7; 
 
 const SalesHeatmap = () => {
-    const { 
-        salesHeatmap, 
-        summary, 
-        activities, 
-        fetchSalesHeatmap, 
-        fetchDashboardData,
-        loading 
-    } = useDashboardStore();
+    // H2 (audit react): selectores atómicos
+    const salesHeatmap = useDashboardStore((s) => s.salesHeatmap);
+    const summary = useDashboardStore((s) => s.summary);
+    const activities = useDashboardStore((s) => s.activities);
+    const fetchSalesHeatmap = useDashboardStore((s) => s.fetchSalesHeatmap);
+    const fetchDashboardData = useDashboardStore((s) => s.fetchDashboardData);
+    const loading = useDashboardStore((s) => s.loading);
 
     const [lastUpdate, setLastUpdate] = useState(new Date());
     const [analysisWeeks, setAnalysisWeeks] = useState(4);

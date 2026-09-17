@@ -156,6 +156,15 @@ export interface DashboardState {
   fetchDashboardData: (period?: string) => Promise<void>;
 }
 
+// H3 (audit react): guard anti-carrera. Cambiar hoy/mes/año rápido resolvía
+// en cualquier orden y la respuesta vieja pisaba al estado con el período
+// equivocado (sin abort ni comparación). Cada fetcher lleva un contador de
+// secuencia: una resolución cuya solicitud ya no es la última se descarta.
+let seqDashboard = 0;
+let seqKPIs = 0;
+let seqHeatmap = 0;
+let seqTopProducts = 0;
+
 const useDashboardStore = create<DashboardState>()(
   devtools(
     (set) => ({
@@ -177,13 +186,16 @@ const useDashboardStore = create<DashboardState>()(
 
       // Acción para cargar los KPIs detallados
       fetchKPIData: async (period = 'month') => {
+        const requestId = ++seqKPIs;
         set({ loading: true, error: null });
         try {
           const response = await dashboardService.getKPIs({ period });
           // NOTE: the API returns KPIData[] while the state models DashboardKPIs
           // (contract drift pending BI unification) - cast keeps both paths typed
+          if (requestId !== seqKPIs) return; // llegó otra solicitud: descartar
           set({ kpis: response.data as unknown as DashboardKPIs, loading: false });
         } catch (error: any) {
+          if (requestId !== seqKPIs) return;
           if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
               console.log('🔄 Dashboard: Mapeando KPIs de modo demo...');
               try {
@@ -221,6 +233,7 @@ const useDashboardStore = create<DashboardState>()(
                       }
                   };
                   
+                  if (requestId !== seqKPIs) return;
                   set({ kpis: mappedKPIs, loading: false, error: null });
                   return;
               } catch (demoError) {
@@ -234,11 +247,14 @@ const useDashboardStore = create<DashboardState>()(
       },
       
       fetchSalesHeatmap: async (weeks = 4) => {
+        const requestId = ++seqHeatmap;
         set({ loading: true, error: null });
         try {
             const response = await dashboardService.getSalesHeatmap({ weeks });
+            if (requestId !== seqHeatmap) return;
             set({ salesHeatmap: response.data, loading: false });
         } catch(error: any) {
+            if (requestId !== seqHeatmap) return;
             if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
                 console.log('🔄 Dashboard: Mapeando Heatmap de modo demo...');
                 
@@ -274,6 +290,7 @@ const useDashboardStore = create<DashboardState>()(
                     }
                 }
 
+                if (requestId !== seqHeatmap) return;
                 set({ 
                     salesHeatmap: {
                         heatmap: demoHeatmap,
@@ -294,10 +311,12 @@ const useDashboardStore = create<DashboardState>()(
       },
 
       fetchTopProducts: async (period = 'week', limit = 10, sortBy = 'revenue') => {
+        const requestId = ++seqTopProducts;
         set({ loading: true, error: null });
         try {
             const response = await dashboardService.getTopProducts({ period, limit, sort_by: sortBy });
-            set({ 
+            if (requestId !== seqTopProducts) return;
+            set({
                 topProducts: response.data.products, 
                 topProductsMetrics: {
                     total_revenue: response.data.total_revenue,
@@ -306,6 +325,7 @@ const useDashboardStore = create<DashboardState>()(
                 loading: false 
             });
         } catch(error: any) {
+             if (requestId !== seqTopProducts) return;
              if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
                 console.log('🔄 Dashboard: Mapeando Top Products de modo demo...');
                 try {
@@ -327,6 +347,7 @@ const useDashboardStore = create<DashboardState>()(
                         tags: p.tags || ['destacado']
                     }));
                     
+                    if (requestId !== seqTopProducts) return;
                     set({ 
                         topProducts: mappedTopProducts, 
                         topProductsMetrics: {
@@ -348,6 +369,7 @@ const useDashboardStore = create<DashboardState>()(
       },
 
       fetchDashboardData: async (period = 'month') => {
+        const requestId = ++seqDashboard;
         set({ loading: true, error: null });
         
         try {
@@ -425,6 +447,9 @@ const useDashboardStore = create<DashboardState>()(
             ? salesPerfRes.value.data
             : null;
 
+          // H3: solo el último período solicitado pinta el store
+          if (requestId !== seqDashboard) return;
+
           set({
             summary: summaryData,
             alerts: alertsData,
@@ -439,12 +464,15 @@ const useDashboardStore = create<DashboardState>()(
           });
           
         } catch (error: any) {
+          // H3: una solicitud vieja no pinta ni el error ni el fallback demo
+          if (requestId !== seqDashboard) return;
           if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
             console.log('🔄 Dashboard: Mapeando datos de modo demo...');
             try {
               const demoResponse = await getDemoDashboardData();
               const { data, charts } = demoResponse;
               
+              if (requestId !== seqDashboard) return;
               set({
                 summary: {
                   sales: {

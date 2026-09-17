@@ -40,19 +40,19 @@ import {
 const Dashboard = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const { 
-    summary, 
-    alerts, 
-    activities, 
-    trends,
-    profitabilityTrends,
-    receivablesOverview,
-    payablesOverview,
-    salesPerformance,
-    loading, 
-    error, 
-    fetchDashboardData 
-  } = useDashboardStore();
+  // H2 (audit react): selectores atómicos — sin selector, cualquier set()
+  // del store re-renderizaba la página entera.
+  const summary = useDashboardStore((s) => s.summary);
+  const alerts = useDashboardStore((s) => s.alerts);
+  const activities = useDashboardStore((s) => s.activities);
+  const trends = useDashboardStore((s) => s.trends);
+  const profitabilityTrends = useDashboardStore((s) => s.profitabilityTrends);
+  const receivablesOverview = useDashboardStore((s) => s.receivablesOverview);
+  const payablesOverview = useDashboardStore((s) => s.payablesOverview);
+  const salesPerformance = useDashboardStore((s) => s.salesPerformance);
+  const loading = useDashboardStore((s) => s.loading);
+  const error = useDashboardStore((s) => s.error);
+  const fetchDashboardData = useDashboardStore((s) => s.fetchDashboardData);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isMounted, setIsMounted] = useState(false);
   const [period, setPeriod] = useState('month');

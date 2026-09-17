@@ -16,114 +16,113 @@ import {
   useReservationsEnabled,
 } from '@/store/useBusinessConfigStore'
 import { useI18n } from '@/lib/i18n'
-import MainLayout from '@/layouts/MainLayout'
-import PriceAdjustmentLayout from '@/layouts/PriceAdjustmentLayout'
+// H1+H5 (audit react): code-splitting por página — cero React.lazy antes;
+// TODO el árbol (incluido recharts ~1 MB) viajaba en un único chunk inicial
+// de 3.3 MB para cualquier ruta. Quedan eager solo las landings (login,
+// selección de sucursal, dashboard, ventas, pedidos) y los shells; el resto
+// se divide por página y recharts cae a un vendor chunk aparte (manualChunks).
+import { lazy, Suspense, useEffect, useRef } from 'react'
+
+// --- Eager: landings y shells (solo /dashboard y /pedidos aterrizan ahí;
+// /ventas también es landing pero arrastra el feature de ventas completo) ---
 import Dashboard from '@/pages/Dashboard'
-import FinancialSummaryDashboard from '@/pages/FinancialSummaryDashboard'
-import DetailedKPIs from '@/pages/DetailedKPIs'
-import SalesHeatmap from '@/pages/SalesHeatmap'
-import ConsolidatedAlerts from '@/pages/ConsolidatedAlerts'
-import TopProductsOverview from '@/pages/TopProductsOverview';
-import Products from '@/pages/Products';
-import PartiesPage from '@/pages/PartiesPage'
-import BudgetManagement from '@/pages/BudgetManagement'
-import BudgetCreate from '@/pages/BudgetCreate'
-import BudgetDetail from '@/pages/BudgetDetail'
-import PurchaseRequisitionList from '@/pages/PurchaseRequisitionList'
-import PurchaseRequisitionCreate from '@/pages/PurchaseRequisitionCreate'
-import PurchaseRequisitionDetail from '@/pages/PurchaseRequisitionDetail'
-import SalesNew from '@/pages/SalesNew'
-import ScaleConfigPage from '@/features/scales/components/ScaleConfigPage'
-import UnitConversionsPage from '@/features/unit-conversions/components/UnitConversionsPage'
-import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
-import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
-import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
-import PriceAdjustmentHistoryDetail from '@/pages/PriceAdjustmentHistoryDetail'
-import BookingUnifiedDashboard from '@/pages/BookingUnifiedDashboard'
-import StockMovements from '@/pages/StockMovements'
-// ISOLATED IMPORTS - Pages temporarily disabled for refactoring
-// import BookingSales from '@/pages/BookingSales';
-import Purchases from '@/pages/Purchases'
-import PurchasePayments from '@/pages/PurchasePayments'
-import PurchasePaymentDetail from '@/pages/PurchasePaymentDetail'
-// import CashRegister from '@/pages/CashRegister' // Obsoleto - usar NewCashRegister
-import NewCashRegister from '@/pages/NewCashRegister'
-import RegisterCashMovement from '@/pages/RegisterCashMovement'
-import CashMovements from '@/pages/CashMovements'
-import SalePayment from '@/pages/SalePayment'
-import SalesOrderDetail from '@/pages/SalesOrderDetail'
-import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
-import Currencies from '@/pages/Currencies'
-import PaymentMethods from '@/pages/PaymentMethods'
-import ExchangeRates from '@/pages/ExchangeRates'
-import CategoriesPage from '@/pages/CategoriesPage'
-import { BrandsPage } from '@/pages/BrandsPage'
-import { AttributesPage } from '@/pages/AttributesPage'
-import PrintersPage from '@/pages/PrintersPage'
+const SalesNew = lazy(() => import('@/pages/SalesNew'))
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
-import Settings from '@/pages/Settings'
-import BusinessPreferencesPage from '@/features/settings/components/BusinessPreferencesPage'
-import BranchManagement from '@/pages/BranchManagement'
-import TerminalPairing from '@/features/branches/components/TerminalPairing'
-import DevicesPage from '@/pages/DevicesPage'
-import TransfersPage from '@/features/transfers/components/TransfersPage'
-import { CatalogBoard } from '@/features/catalog'
 import { CounterOrdersPage } from '@/features/counterorders'
-import UserManagementList from '@/pages/UserManagementList.tsx'
-import UserDetailedProfile from '@/pages/UserDetailedProfile.tsx'
-import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity.tsx'
-import AuditDashboard from '@/pages/AuditDashboard'
-import AuditLogs from '@/pages/AuditLogs'
-import AuditLogDetail from '@/pages/AuditLogDetail'
-import AuditUserActivity from '@/pages/AuditUserActivity.tsx'
-// import ProductDetailTest from '@/components/ProductDetailTest';
-// import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 
-import ReceivablesDashboard from '@/pages/ReceivablesDashboard'
-import PayablesDashboard from '@/pages/PayablesDashboard'
-import PayablesAgingReport from '@/pages/PayablesAgingReport'
-import ReceivablesMasterList from '@/pages/ReceivablesMasterList'
-import InvoicesMasterList from '@/pages/InvoicesMasterList'
-import InvoiceDetail from '@/pages/InvoiceDetail'
-import CashFlowProjection from '@/pages/CashFlowProjection'
-import CashFlowAnalysisDashboard from '@/pages/CashFlowAnalysisDashboard'
-import TaxManagementDashboard from '@/pages/TaxManagementDashboard'
-import SkippedNumbersPage from '@/features/fiscal/pages/SkippedNumbersPage'
-import FiscalOpsDashboard from '@/features/fiscal/pages/FiscalOpsDashboard'
-import SupplierAnalysis from '@/pages/SupplierAnalysis'
-import ReceivableDetail from '@/pages/ReceivableDetail'
-import OverdueAccounts from '@/pages/OverdueAccounts'
-import ClientCreditProfile from '@/pages/ClientCreditProfile'
-import AgingReport from '@/pages/AgingReport'
-import ProfitAndLoss from '@/pages/ProfitAndLoss'
-import LegalBooks from '@/pages/LegalBooks'
-import AdminSessionsDashboard from '@/pages/AdminSessionsDashboard.tsx'
-import {
-  ProfitabilityDashboard,
-  ProductProfitability,
-  CustomerProfitability,
-  CategoryProfitability,
-  ProfitabilityTrends,
-  SellerProfitability,
-} from '@/features/profitability'
-import {
-  DashboardPronosticos,
-  SaludInventario,
-  PronosticoVentas,
-  PronosticoDemanda,
-  PronosticoIngresos
-} from '@/features/bi-forecasting'
-import SalesAnalyticsDashboard from '@/pages/sales-analytics/Dashboard'
-import SalesAnalyticsProductsCategories from '@/pages/sales-analytics/ProductsCategories'
-import SalesAnalyticsInsights from '@/pages/sales-analytics/CustomerSellerInsights'
-import SalesAnalyticsTrendsVelocity from '@/pages/sales-analytics/TrendsVelocity'
-import SalesAnalyticsPeriodComparison from '@/pages/sales-analytics/PeriodComparison'
-import SalesAnalyticsDiscounts from '@/pages/sales-analytics/Discounts'
-import InventoryTurnoverABC from '@/pages/InventoryAnalytics/InventoryTurnoverABC'
-import InventoryDashboard from '@/pages/InventoryAnalytics/InventoryDashboard'
-import StockLevelsReorder from '@/pages/InventoryAnalytics/StockLevelsReorder'
-import InventoryRisk from '@/pages/InventoryAnalytics/InventoryRisk'
+// --- Lazy: una chunk por página/feature ---
+const FinancialSummaryDashboard = lazy(() => import('@/pages/FinancialSummaryDashboard'))
+const DetailedKPIs = lazy(() => import('@/pages/DetailedKPIs'))
+const SalesHeatmap = lazy(() => import('@/pages/SalesHeatmap'))
+const ConsolidatedAlerts = lazy(() => import('@/pages/ConsolidatedAlerts'))
+const TopProductsOverview = lazy(() => import('@/pages/TopProductsOverview'))
+const Products = lazy(() => import('@/pages/Products'))
+const PartiesPage = lazy(() => import('@/pages/PartiesPage'))
+const BudgetManagement = lazy(() => import('@/pages/BudgetManagement'))
+const BudgetCreate = lazy(() => import('@/pages/BudgetCreate'))
+const BudgetDetail = lazy(() => import('@/pages/BudgetDetail'))
+const PurchaseRequisitionList = lazy(() => import('@/pages/PurchaseRequisitionList'))
+const PurchaseRequisitionCreate = lazy(() => import('@/pages/PurchaseRequisitionCreate'))
+const PurchaseRequisitionDetail = lazy(() => import('@/pages/PurchaseRequisitionDetail'))
+const ScaleConfigPage = lazy(() => import('@/features/scales/components/ScaleConfigPage'))
+const UnitConversionsPage = lazy(() => import('@/features/unit-conversions/components/UnitConversionsPage'))
+const PriceAdjustmentNew = lazy(() => import('@/pages/PriceAdjustmentNew'))
+const PriceAdjustmentDetail = lazy(() => import('@/pages/PriceAdjustmentDetail'))
+const PriceAdjustmentHistory = lazy(() => import('@/pages/PriceAdjustmentHistory'))
+const PriceAdjustmentHistoryDetail = lazy(() => import('@/pages/PriceAdjustmentHistoryDetail'))
+const BookingUnifiedDashboard = lazy(() => import('@/pages/BookingUnifiedDashboard'))
+const StockMovements = lazy(() => import('@/pages/StockMovements'))
+const Purchases = lazy(() => import('@/pages/Purchases'))
+const PurchasePayments = lazy(() => import('@/pages/PurchasePayments'))
+const PurchasePaymentDetail = lazy(() => import('@/pages/PurchasePaymentDetail'))
+const NewCashRegister = lazy(() => import('@/pages/NewCashRegister'))
+const RegisterCashMovement = lazy(() => import('@/pages/RegisterCashMovement'))
+const CashMovements = lazy(() => import('@/pages/CashMovements'))
+const SalePayment = lazy(() => import('@/pages/SalePayment'))
+const SalesOrderDetail = lazy(() => import('@/pages/SalesOrderDetail'))
+const SalesPaymentHistory = lazy(() => import('@/pages/SalesPaymentHistory'))
+const Currencies = lazy(() => import('@/pages/Currencies'))
+const PaymentMethods = lazy(() => import('@/pages/PaymentMethods'))
+const ExchangeRates = lazy(() => import('@/pages/ExchangeRates'))
+const CategoriesPage = lazy(() => import('@/pages/CategoriesPage'))
+const BrandsPage = lazy(() => import('@/pages/BrandsPage').then((m) => ({ default: m.BrandsPage })))
+const AttributesPage = lazy(() => import('@/pages/AttributesPage').then((m) => ({ default: m.AttributesPage })))
+const PrintersPage = lazy(() => import('@/pages/PrintersPage'))
+const Settings = lazy(() => import('@/pages/Settings'))
+const BusinessPreferencesPage = lazy(() => import('@/features/settings/components/BusinessPreferencesPage'))
+const BranchManagement = lazy(() => import('@/pages/BranchManagement'))
+const TerminalPairing = lazy(() => import('@/features/branches/components/TerminalPairing'))
+const DevicesPage = lazy(() => import('@/pages/DevicesPage'))
+const TransfersPage = lazy(() => import('@/features/transfers/components/TransfersPage'))
+const CatalogBoard = lazy(() => import('@/features/catalog').then((m) => ({ default: m.CatalogBoard })))
+const UserManagementList = lazy(() => import('@/pages/UserManagementList.tsx'))
+const UserDetailedProfile = lazy(() => import('@/pages/UserDetailedProfile.tsx'))
+const MyProfileAndSecurity = lazy(() => import('@/pages/MyProfileAndSecurity.tsx'))
+const AuditDashboard = lazy(() => import('@/pages/AuditDashboard'))
+const AuditLogs = lazy(() => import('@/pages/AuditLogs'))
+const AuditLogDetail = lazy(() => import('@/pages/AuditLogDetail'))
+const AuditUserActivity = lazy(() => import('@/pages/AuditUserActivity.tsx'))
+const ReceivablesDashboard = lazy(() => import('@/pages/ReceivablesDashboard'))
+const PayablesDashboard = lazy(() => import('@/pages/PayablesDashboard'))
+const PayablesAgingReport = lazy(() => import('@/pages/PayablesAgingReport'))
+const ReceivablesMasterList = lazy(() => import('@/pages/ReceivablesMasterList'))
+const InvoicesMasterList = lazy(() => import('@/pages/InvoicesMasterList'))
+const InvoiceDetail = lazy(() => import('@/pages/InvoiceDetail'))
+const CashFlowProjection = lazy(() => import('@/pages/CashFlowProjection'))
+const CashFlowAnalysisDashboard = lazy(() => import('@/pages/CashFlowAnalysisDashboard'))
+const TaxManagementDashboard = lazy(() => import('@/pages/TaxManagementDashboard'))
+const SkippedNumbersPage = lazy(() => import('@/features/fiscal/pages/SkippedNumbersPage'))
+const FiscalOpsDashboard = lazy(() => import('@/features/fiscal/pages/FiscalOpsDashboard'))
+const SupplierAnalysis = lazy(() => import('@/pages/SupplierAnalysis'))
+const ReceivableDetail = lazy(() => import('@/pages/ReceivableDetail'))
+const OverdueAccounts = lazy(() => import('@/pages/OverdueAccounts'))
+const ClientCreditProfile = lazy(() => import('@/pages/ClientCreditProfile'))
+const AgingReport = lazy(() => import('@/pages/AgingReport'))
+const ProfitAndLoss = lazy(() => import('@/pages/ProfitAndLoss'))
+const LegalBooks = lazy(() => import('@/pages/LegalBooks'))
+const AdminSessionsDashboard = lazy(() => import('@/pages/AdminSessionsDashboard.tsx'))
+const ProfitabilityDashboard = lazy(() => import('@/features/profitability').then((m) => ({ default: m.ProfitabilityDashboard })))
+const ProductProfitability = lazy(() => import('@/features/profitability').then((m) => ({ default: m.ProductProfitability })))
+const CustomerProfitability = lazy(() => import('@/features/profitability').then((m) => ({ default: m.CustomerProfitability })))
+const CategoryProfitability = lazy(() => import('@/features/profitability').then((m) => ({ default: m.CategoryProfitability })))
+const ProfitabilityTrends = lazy(() => import('@/features/profitability').then((m) => ({ default: m.ProfitabilityTrends })))
+const SellerProfitability = lazy(() => import('@/features/profitability').then((m) => ({ default: m.SellerProfitability })))
+const DashboardPronosticos = lazy(() => import('@/features/bi-forecasting').then((m) => ({ default: m.DashboardPronosticos })))
+const SaludInventario = lazy(() => import('@/features/bi-forecasting').then((m) => ({ default: m.SaludInventario })))
+const PronosticoVentas = lazy(() => import('@/features/bi-forecasting').then((m) => ({ default: m.PronosticoVentas })))
+const PronosticoDemanda = lazy(() => import('@/features/bi-forecasting').then((m) => ({ default: m.PronosticoDemanda })))
+const PronosticoIngresos = lazy(() => import('@/features/bi-forecasting').then((m) => ({ default: m.PronosticoIngresos })))
+const SalesAnalyticsDashboard = lazy(() => import('@/pages/sales-analytics/Dashboard'))
+const SalesAnalyticsProductsCategories = lazy(() => import('@/pages/sales-analytics/ProductsCategories'))
+const SalesAnalyticsInsights = lazy(() => import('@/pages/sales-analytics/CustomerSellerInsights'))
+const SalesAnalyticsTrendsVelocity = lazy(() => import('@/pages/sales-analytics/TrendsVelocity'))
+const SalesAnalyticsPeriodComparison = lazy(() => import('@/pages/sales-analytics/PeriodComparison'))
+const SalesAnalyticsDiscounts = lazy(() => import('@/pages/sales-analytics/Discounts'))
+const InventoryTurnoverABC = lazy(() => import('@/pages/InventoryAnalytics/InventoryTurnoverABC'))
+const InventoryDashboard = lazy(() => import('@/pages/InventoryAnalytics/InventoryDashboard'))
+const StockLevelsReorder = lazy(() => import('@/pages/InventoryAnalytics/StockLevelsReorder'))
+const InventoryRisk = lazy(() => import('@/pages/InventoryAnalytics/InventoryRisk'))
 import { AuthProvider, useAuth } from '@/contexts/AuthContext.tsx'
 import { BranchProvider, useBranch } from '@/contexts/BranchContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
@@ -131,7 +130,15 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import RoleGuard from '@/components/auth/RoleGuard'
 import PermissionGuard from '@/components/auth/PermissionGuard'
 import { useLocation } from 'react-router-dom'
-import { useEffect, useRef } from 'react'
+import MainLayout from '@/layouts/MainLayout'
+import PriceAdjustmentLayout from '@/layouts/PriceAdjustmentLayout'
+
+/** Fallback de Suspense para las rutas lazy (tokens DESIGN §2, sin hex). */
+const PageLoader = () => (
+  <div className='flex min-h-[50vh] items-center justify-center' role='status' aria-live='polite'>
+    <div className='h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent' />
+  </div>
+)
 
 // Componente de protección de rutas
 const ProtectedRoute = ({ children }) => {
@@ -301,6 +308,8 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <MainLayout>
+                    {/* H1: todas las rutas internas son lazy — fallback único */}
+                    <Suspense fallback={<PageLoader />}>
                     <Routes>
                       {/* Ruta por defecto - Dashboard */}
                       <Route
@@ -813,6 +822,7 @@ function AppContent() {
                         }
                       />
                     </Routes>
+                    </Suspense>
                   </MainLayout>
                 </ProtectedRoute>
               }

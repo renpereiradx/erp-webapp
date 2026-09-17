@@ -275,7 +275,8 @@ const SalesNew: React.FC = () => {
 
   const handleClearCart = useCallback(() => setItems([]), []);
   const handleGoToHistory = useCallback(() => setActiveTab('history'), []);
-  const { fetchDashboardData } = useDashboardStore();
+  // H2 (audit react): selector atómico (la acción es referencia estable)
+  const fetchDashboardData = useDashboardStore((s) => s.fetchDashboardData);
 
   const [searchTerm] = useState('');
   const [generalDiscount] = useState(0);

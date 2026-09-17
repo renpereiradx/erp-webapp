@@ -7,15 +7,14 @@ import { useI18n } from '@/lib/i18n';
 
 const TopProductsOverview = () => {
     const { t } = useI18n();
-    const { 
-        topProducts, 
-        topProductsMetrics, 
-        alerts, 
-        fetchTopProducts, 
-        fetchDashboardData, 
-        loading,
-        summary
-    } = useDashboardStore();
+    // H2 (audit react): selectores atómicos
+    const topProducts = useDashboardStore((s) => s.topProducts);
+    const topProductsMetrics = useDashboardStore((s) => s.topProductsMetrics);
+    const alerts = useDashboardStore((s) => s.alerts);
+    const fetchTopProducts = useDashboardStore((s) => s.fetchTopProducts);
+    const fetchDashboardData = useDashboardStore((s) => s.fetchDashboardData);
+    const loading = useDashboardStore((s) => s.loading);
+    const summary = useDashboardStore((s) => s.summary);
 
     const [period, setPeriod] = useState('month');
     const [searchQuery, setSearchQuery] = useState('');
