@@ -1,12 +1,16 @@
-import React from 'react';
 import { Mail } from "lucide-react";
+import type { SupplierAnalysisData } from '../../types';
+
+interface SupplierHeaderProps {
+  supplier: Pick<SupplierAnalysisData, 'name' | 'importance' | 'id' | 'contact'>;
+}
 
 /**
  * Supplier Header Component. Sin logo (el BE no lo provee → iniciales),
  * badge de importancia real del dto y sin botones decorativos muertos
  * ("Contactar"/"Órdenes" — auditoría BI 2A).
  */
-const SupplierHeader = ({ supplier }) => {
+const SupplierHeader = ({ supplier }: SupplierHeaderProps) => {
   const initials = (supplier.name || '??').substring(0, 2).toUpperCase();
 
   return (
@@ -17,14 +21,14 @@ const SupplierHeader = ({ supplier }) => {
         </div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3 mb-1">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white truncate">{supplier.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground truncate">{supplier.name}</h1>
             {supplier.importance && (
               <span className="px-3 py-1 bg-error-container text-on-error-container text-[10px] font-bold rounded-full tracking-wider border border-error/20 uppercase">
                 {supplier.importance}
               </span>
             )}
           </div>
-          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6 text-slate-500 dark:text-slate-400">
+          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6 text-on-surface-deep">
             <span className="flex items-center gap-1 text-xs md:text-sm font-medium">
               <span className="material-icons-round text-sm">fingerprint</span> {supplier.id}
             </span>
