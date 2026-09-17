@@ -39,10 +39,17 @@ interface ScheduleBucket {
   items?: ScheduleItem[];
 }
 
-const formatDay = (dateStr: string) =>
-  new Date(dateStr).toLocaleDateString('es-PY', { day: '2-digit', month: 'short' });
+/** El BE manda fechas date-only ('YYYY-MM-DD'), que `new Date()` parsea como
+ * UTC medianoche → en TZ America/Asuncion (UTC-3) se mostraba el día ANTERIOR
+ * (drift hallado por el test del hook, FASE 5). Se anclan a medianoche local. */
+const parseDay = (dateStr: string) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? new Date(`${dateStr}T00:00:00`) : new Date(dateStr);
 
-const isToday = (dateStr: string) => new Date(dateStr).toDateString() === new Date().toDateString();
+const formatDay = (dateStr: string) =>
+  parseDay(dateStr).toLocaleDateString('es-PY', { day: '2-digit', month: 'short' });
+
+const isToday = (dateStr: string) =>
+  parseDay(dateStr).toDateString() === new Date().toDateString();
 
 const num = (v: number | string | undefined | null): number => Number(v ?? 0) || 0;
 

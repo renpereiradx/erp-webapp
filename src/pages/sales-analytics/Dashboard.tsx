@@ -2,8 +2,6 @@ import { useState, useEffect, useMemo } from 'react'
 import {
   TrendingUp,
   TrendingDown,
-  Download,
-  MoreHorizontal,
   CheckCircle,
   AlertCircle,
   AlertTriangle,
@@ -141,10 +139,6 @@ const Dashboard = () => {
               </button>
             ))}
           </div>
-          <button className='flex items-center justify-center gap-2 rounded-lg h-10 px-4 bg-primary text-on-primary text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all uppercase tracking-wider'>
-            <Download size={18} />
-            <span>Exportar</span>
-          </button>
         </div>
       </div>
 
@@ -186,9 +180,6 @@ const Dashboard = () => {
             <h3 className='text-foreground text-lg font-bold uppercase tracking-tight'>
               Tendencia de Ventas
             </h3>
-            <button className='text-on-surface-deep hover:text-primary transition-colors'>
-              <MoreHorizontal size={20} />
-            </button>
           </div>
           <div className='h-[280px] w-full font-mono relative'>
             {loading && (
@@ -333,9 +324,6 @@ const Dashboard = () => {
           </div>
           <div className='mt-auto pt-4 border-t border-border-subtle flex justify-between items-center text-[10px] text-on-surface-deep font-bold uppercase tracking-widest'>
             <span>* Actualizado en tiempo real</span>
-            <button className='text-primary hover:underline'>
-              Ver Detalles
-            </button>
           </div>
         </div>
       </div>
@@ -433,12 +421,9 @@ const AlertItem = ({ alert }: AlertItemProps) => {
       className={`flex gap-4 p-4 rounded-lg border shadow-sm transition-all hover:translate-x-1 ${styles.bg} ${styles.border}`}
     >
       <div className='shrink-0'>{styles.icon}</div>
-      <div className='flex flex-col'>
+      <div className='flex flex-col gap-2'>
         <p className='text-foreground text-sm font-bold leading-tight font-mono'>
           {alert.message}
-        </p>
-        <p className='text-on-surface-deep text-[10px] font-black uppercase tracking-wider mt-1'>
-          Hacer clic para ver detalles
         </p>
       </div>
     </div>

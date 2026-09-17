@@ -1,3 +1,4 @@
+import { useI18n } from '@/lib/i18n';
 import { useBIForecasting, formatCurrency } from '../hooks/useBIForecasting';
 import BIForecastingNav from './BIForecastingNav';
 
@@ -60,6 +61,7 @@ const COLOR_DOT: Record<string, string> = {
 };
 
 const PronosticoIngresos = () => {
+  const { t } = useI18n();
   const { data: rawData, loading, error, refetch } = useBIForecasting('ingresos');
   const data = rawData as IngresosData | null;
 
@@ -82,12 +84,14 @@ const PronosticoIngresos = () => {
             <p className="text-base font-medium uppercase tracking-wider">{data.periodo_rango || '—'}</p>
           </div>
         </div>
+        {/* H7 (FASE 5): no hay endpoint de export; el botón refresca y se
+            rotula como tal (antes "Exportar Informe" hacía refetch). */}
         <button
           onClick={() => refetch()}
           className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary/90 text-on-primary rounded-lg font-bold transition-all shadow-sm"
         >
-          <span className="material-symbols-outlined">download</span>
-          <span>{ui_labels?.export_button || 'Exportar Informe'}</span>
+          <span className="material-symbols-outlined">refresh</span>
+          <span>{t('action.refresh', 'Actualizar')}</span>
         </button>
       </div>
 

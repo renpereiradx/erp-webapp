@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useI18n } from '@/lib/i18n';
 import { useBIForecasting, formatCurrency, formatNumber } from '../hooks/useBIForecasting';
 import BIForecastingNav from './BIForecastingNav';
 
@@ -45,6 +46,7 @@ interface DemandaData {
 }
 
 const PronosticoDemanda = () => {
+  const { t } = useI18n();
   const [page, setPage] = useState(1);
   const params = useMemo(() => ({ page, page_size: PAGE_SIZE }), [page]);
   const { data: rawData, loading, error, refetch } = useBIForecasting('demanda', params);
@@ -72,12 +74,14 @@ const PronosticoDemanda = () => {
           <h1 className="text-foreground text-4xl font-black leading-tight tracking-[-0.033em]">{ui_labels?.title || 'Pronóstico de Demanda'}</h1>
           <p className="text-on-surface-deep text-base font-medium">{ui_labels?.period_label || 'Periodo proyectado:'} <span className="text-primary">{data.periodo_proyectado || '—'}</span></p>
         </div>
+        {/* H7 (FASE 5): no hay endpoint de export; el botón refresca y se
+            rotula como tal (antes "Exportar Análisis Completo" hacía refetch). */}
         <button
           onClick={() => refetch()}
           className="flex min-w-[84px] cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-6 bg-surface text-foreground border border-border-subtle text-sm font-bold tracking-[0.015em] shadow-sm hover:bg-surface-muted"
         >
-          <span className="material-symbols-outlined text-lg">download</span>
-          <span className="truncate">{ui_labels?.export_button || 'Exportar Análisis Completo'}</span>
+          <span className="material-symbols-outlined text-lg">refresh</span>
+          <span className="truncate">{t('action.refresh', 'Actualizar')}</span>
         </button>
       </div>
 
@@ -153,15 +157,7 @@ const PronosticoDemanda = () => {
 
       {/* Top Star Products */}
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-foreground text-2xl font-bold leading-tight">{ui_labels?.tables?.products_title || 'Top Productos'}</h2>
-          <button
-            onClick={() => refetch()}
-            className="text-primary text-sm font-bold hover:underline"
-          >
-            {ui_labels?.tables?.view_all_button || 'Ver todos los productos'}
-          </button>
-        </div>
+        <h2 className="text-foreground text-2xl font-bold leading-tight">{ui_labels?.tables?.products_title || 'Top Productos'}</h2>
         <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface shadow-sm">
           <table className="w-full text-left border-collapse">
             <thead>

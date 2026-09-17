@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import {
   BarChart,
@@ -55,38 +55,40 @@ const TrendsVelocity = () => {
       null,
     )?.label || null
 
+  // H7 (FASE 5): "Actualizar" cableado — mismo fetch del mount, re-ejecutable.
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [velRes, heatRes, dailyTrends, hourlyTrends] = await Promise.all([
+        salesAnalyticsService.getVelocity({ period: 'month' }),
+        salesAnalyticsService.getHeatmap({ period: 'month' }),
+        salesAnalyticsService.getTrends({
+          period: 'month',
+          granularity: 'daily',
+        }),
+        salesAnalyticsService.getTrends({
+          period: 'month',
+          granularity: 'hourly',
+        }),
+      ])
+
+      if (velRes && velRes.success) setVelocityData(velRes.data)
+      if (heatRes && heatRes.success) setHeatmapData(heatRes.data)
+      setTrendsData({
+        daily: dailyTrends?.success ? dailyTrends.data.data_points : [],
+        hourly: hourlyTrends?.success ? hourlyTrends.data.data_points : [],
+      })
+    } catch (error) {
+      console.error('Error fetching velocity or heatmap data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     setIsMounted(true)
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const [velRes, heatRes, dailyTrends, hourlyTrends] = await Promise.all([
-          salesAnalyticsService.getVelocity({ period: 'month' }),
-          salesAnalyticsService.getHeatmap({ period: 'month' }),
-          salesAnalyticsService.getTrends({
-            period: 'month',
-            granularity: 'daily',
-          }),
-          salesAnalyticsService.getTrends({
-            period: 'month',
-            granularity: 'hourly',
-          }),
-        ])
-
-        if (velRes && velRes.success) setVelocityData(velRes.data)
-        if (heatRes && heatRes.success) setHeatmapData(heatRes.data)
-        setTrendsData({
-          daily: dailyTrends?.success ? dailyTrends.data.data_points : [],
-          hourly: hourlyTrends?.success ? hourlyTrends.data.data_points : [],
-        })
-      } catch (error) {
-        console.error('Error fetching velocity or heatmap data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
     fetchData()
-  }, [])
+  }, [fetchData])
 
   // Intensidad relativa al máximo REAL del período (antes: max fijo 1000000
   // "consistent with mock max" que aplastaba el heatmap — hallazgo P1-4).
@@ -143,7 +145,11 @@ const TrendsVelocity = () => {
             <Calendar size={18} className='text-on-surface-deep' />
             <span>{periodLabel}</span>
           </div>
-          <button className='flex items-center gap-2 bg-primary hover:bg-primary/90 text-on-primary px-5 py-2 rounded-lg font-bold text-sm transition-all shadow-md shadow-primary/20 uppercase tracking-wider'>
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className='flex items-center gap-2 bg-primary hover:bg-primary/90 text-on-primary px-5 py-2 rounded-lg font-bold text-sm transition-all shadow-md shadow-primary/20 uppercase tracking-wider disabled:opacity-50'
+          >
             <RefreshCcw size={18} />
             <span>Actualizar</span>
           </button>

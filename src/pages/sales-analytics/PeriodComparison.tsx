@@ -467,11 +467,17 @@ const CompareKPICard = ({ title, value, prevValue, diff, absDiff }: CompareKPICa
       <p
         className={`text-xs font-black font-mono ${(diff || 0) >= 0 ? 'text-success' : 'text-error'}`}
       >
-        {(diff || 0) >= 0 ? '+' : ''}
-        {absDiff}
+        {formatAbsDiff(absDiff, (diff || 0) >= 0)}
       </p>
     </div>
   </div>
 )
+
+/** El delta de margen viaja ya firmado ('+5pp'/'-3.2pp') — no duplicar el '+'.
+ * (El test de FASE 5 cazó el doble signo que se renderizaba: "++5pp"). */
+const formatAbsDiff = (absDiff: string | number, positive: boolean): string => {
+  if (typeof absDiff === 'string' && /^[+-]/.test(absDiff)) return absDiff
+  return `${positive ? '+' : ''}${absDiff}`
+}
 
 export default PeriodComparison

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import useDashboardStore from '@/store/useDashboardStore'
 import { formatPYG } from '@/utils/currencyUtils';
-import categoryService from '@/services/categoryService';
 
 const hours = [
   '8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM', '6PM', '7PM', '8PM', '9PM'
@@ -21,22 +20,12 @@ const SalesHeatmap = () => {
         loading 
     } = useDashboardStore();
 
-    const [selectedLocation, setSelectedLocation] = useState('All Locations')
-    const [selectedCategory, setSelectedCategory] = useState('All Categories')
-    const [categories, setCategories] = useState([]);
     const [lastUpdate, setLastUpdate] = useState(new Date());
     const [analysisWeeks, setAnalysisWeeks] = useState(4);
 
     const loadData = useCallback(async () => {
         fetchSalesHeatmap(analysisWeeks);
         if (!summary) fetchDashboardData();
-        
-        try {
-            const cats = await categoryService.getAll();
-            setCategories(cats || []);
-        } catch (error) {
-            console.error('Error fetching categories:', error);
-        }
         setLastUpdate(new Date());
     }, [fetchSalesHeatmap, fetchDashboardData, summary, analysisWeeks]);
 
@@ -141,17 +130,13 @@ const SalesHeatmap = () => {
                     <span className="text-sm font-medium text-gray-500">
                         {loading ? 'Actualizando...' : `Última actualización: ${lastUpdate.toLocaleTimeString()}`}
                     </span>
-                    <button 
+                    <button
                         onClick={handleRefresh}
                         disabled={loading}
                         className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                     >
                         <span className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`}>sync</span>
                         Actualizar
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                        <span className="material-symbols-outlined text-lg">download</span>
-                        Exportar Reporte
                     </button>
                 </div>
             </div>
@@ -220,52 +205,23 @@ const SalesHeatmap = () => {
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
                  {/* Heatmap Section (Span 9) */}
                  <div className="xl:col-span-9 flex flex-col gap-4">
-                     
+
                      {/* Heatmap Controls */}
                     <div className="bg-white dark:bg-[#1a2632] p-4 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center bg-[#f0f2f4] dark:bg-gray-800 rounded-lg p-1">
-                            <button 
+                            <button
                                 onClick={() => setAnalysisWeeks(prev => Math.max(1, prev - 1))}
                                 className="p-1 hover:bg-white dark:hover:bg-gray-700 rounded shadow-sm transition-all text-[#617589] hover:text-primary"
                             >
                                 <span className="material-symbols-outlined">chevron_left</span>
                             </button>
                             <span className="px-4 text-sm font-bold text-[#111418] dark:text-white">Análisis de últimas {analysisWeeks} semanas</span>
-                            <button 
+                            <button
                                 onClick={() => setAnalysisWeeks(prev => Math.min(52, prev + 1))}
                                 className="p-1 hover:bg-white dark:hover:bg-gray-700 rounded shadow-sm transition-all text-[#617589] hover:text-primary"
                             >
                                 <span className="material-symbols-outlined">chevron_right</span>
                             </button>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <select 
-                                    className="appearance-none bg-[#f0f2f4] dark:bg-gray-800 border-none text-[#111418] dark:text-white text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 pr-8 cursor-pointer font-medium"
-                                    value={selectedLocation}
-                                    onChange={(e) => setSelectedLocation(e.target.value)}
-                                >
-                                    <option value="All Locations">Todas las Sucursales</option>
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#617589]">
-                                    <span className="material-symbols-outlined text-lg">expand_more</span>
-                                </div>
-                            </div>
-                            <div className="relative">
-                                <select 
-                                    className="appearance-none bg-[#f0f2f4] dark:bg-gray-800 border-none text-[#111418] dark:text-white text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 pr-8 cursor-pointer font-medium"
-                                    value={selectedCategory}
-                                    onChange={(e) => setSelectedCategory(e.target.value)}
-                                >
-                                    <option value="All Categories">Todas las Categorías</option>
-                                    {categories.map(cat => (
-                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                    ))}
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#617589]">
-                                    <span className="material-symbols-outlined text-lg">expand_more</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
 

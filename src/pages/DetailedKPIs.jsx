@@ -104,12 +104,8 @@ const DetailedKPIs = () => {
         </div>
         <div className="flex gap-3">
           <button className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 shadow-sm" onClick={() => { fetchDashboardData(); fetchKPIData(period); }}>
-            <span className="material-symbols-outlined text-[18px]">{loading ? 'refresh' : 'share'}</span>
-            {t('common.share', 'Compartir')}
-          </button>
-          <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2 shadow-sm shadow-blue-200 dark:shadow-none">
-            <span className="material-symbols-outlined text-[18px]">download</span>
-            {t('dashboard.dashboard.actions.export', 'Exportar Informe')}
+            <span className="material-symbols-outlined text-[18px]">refresh</span>
+            {t('action.refresh', 'Actualizar')}
           </button>
         </div>
       </div>
@@ -129,19 +125,7 @@ const DetailedKPIs = () => {
           </select>
           <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[18px]">arrow_drop_down</span>
         </div>
-        
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-400 cursor-not-allowed">
-          {t('dashboard.filters.region', 'Región: Global')}
-          <span className="material-symbols-outlined text-[18px]">lock</span>
-        </button>
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-400 cursor-not-allowed">
-          {t('dashboard.filters.department', 'Depto: Todos')}
-          <span className="material-symbols-outlined text-[18px]">lock</span>
-        </button>
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-400 cursor-not-allowed">
-          {t('dashboard.filters.currency', 'Moneda: PYG')}
-          <span className="material-symbols-outlined text-[18px]">lock</span>
-        </button>
+
         <button className="ml-auto text-sm text-primary font-medium hover:underline" onClick={() => setPeriod('month')}>{t('common.clearFilters', 'Limpiar filtros')}</button>
       </div>
 
