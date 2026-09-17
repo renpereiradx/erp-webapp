@@ -66,21 +66,46 @@ reporte de performance sin migrar página).
 
 ## Checklist DESIGN por página (se completa por grupo)
 
-(Devuelve `[x]` solo lo verificable en código nuevo; desviaciones legacy se listan.)
+Devuelve `[x]` = verificado en el archivo migrado. Las páginas migradas quedan **limpias
+contra `lint:design --base main`** (hex/clases genéricas/arbitrarios fuera de escala en
+`className`): todo el contenido legacy de color slate/blue/emerald/rose/hex fue mapeado a
+tokens §2 durante la migración. Desviaciones anotadas se documentan en
+`AUDIT_REACT_PERFORMANCE_BI_FRONTEND.md` y quedan como deuda visible (no bloquean gate).
 
 | Página | §10 tokens/hex | §10 t() en nuevo | §6.7 estados | §6.3 tabla | Commit |
 |:-------|:---------------|:-----------------|:-------------|:-----------|:-------|
-| AuditDashboard | ☐ | ☐ | ☐ | ☐ | ☐ |
-| AuditLogs | ☐ | ☐ | ☐ | ☐ | ☐ |
-| FinancialSummaryDashboard | ☐ | ☐ | ☐ | n/a | ☐ |
-| CashFlowProjection (+feature) | ☐ | ☐ | ☐ | n/a | ☐ |
-| SupplierAnalysis (+feature) | ☐ | ☐ | ☐ | ☐ | ☐ |
-| sales-analytics Dashboard | ☐ | ☐ | ☐ | n/a | ☐ |
-| CustomerSellerInsights | ☐ | ☐ | ☐ | ☐ | ☐ |
-| PeriodComparison | ☐ | ☐ | ☐ | ☐ | ☐ |
-| TrendsVelocity | ☐ | ☐ | ☐ | ☐ | ☐ |
-| PronosticoDemanda | ☐ | ☐ | ☐ | ☐ | ☐ |
-| PronosticoIngresos | ☐ | ☐ | ☐ | ☐ | ☐ |
+| AuditDashboard | [x] (ya token-clean de F3C) | [x] (sin strings nuevos) | [x] loading/error + vacíos por sección | [x] top usuarios | `1fdb8d3` |
+| AuditLogs | [x] (ya token-clean de F3C) | [x] | [x] loading/error/empty en tabla | [x] logs paginada | `1fdb8d3` |
+| FinancialSummaryDashboard | [x] slate/blue/green/red/amber → tokens | [x] | parcial: spinner legacy (no skeleton), error vía toast del hook | n/a | `bcc2280` |
+| CashFlowProjection (+feature) | [x] slate/blue/green/orange → tokens | [x] | [x] loading/error/retry + vacío calendario | n/a | `fbecb52` |
+| SupplierAnalysis (+feature) | [x] hex (#28a745, #137fec, #dc3545) y badges slate/red/amber → tokens | [x] | [x] loading/error/not-found | [x] obligaciones (ver reporte: Filtrar/Exportar/paginación decorativas heredadas) | `eedad31` |
+| sales-analytics Dashboard | [x] slate/emerald/rose/hex → tokens | [x] | [x] error banner añadido (estado existía y no se mostraba) | [x] top productos | `7ab6c85` |
+| CustomerSellerInsights | [x] amber/blue/slate/hex → tokens | [x] | [x] loading/error + filas vacías | [x] clientes y vendedores | `7ab6c85` |
+| PeriodComparison | [x] slate/emerald/rose/hex → tokens | [x] | [x] skeletons + error + vacío | n/a | `7ab6c85` |
+| TrendsVelocity | [x] slate/hex → tokens | [x] | parcial: sin loading dedicado en heatmap (charts con gate `!loading`) | n/a | `7ab6c85` |
+| PronosticoDemanda | [x] slate/emerald/rose → tokens | [x] | [x] loading/error + paginación server-side | [x] categorías y productos | `46d1857` |
+| PronosticoIngresos | [x] red/emerald/slate → tokens + dot de paleta compilable | [x] | [x] loading/error + estado sin escenarios | [x] mensual y categorías | `46d1857` |
+
+Nota i18n: los strings preexistentes en estos archivos siguen hardcoded (deuda legacy del
+área BI, fuera del alcance "sin strings NUEVOS hardcoded"); el sweep retro-i18n de las ~12
+páginas migradas queda como tarea independiente estimada en el reporte de cierre.
+
+## Hallazgos de la migración (drift que la conversión destapó)
+
+1. **`TrendsVelocity` crasheaba en dev HEAD** (TDZ: `peakHourLabel` leía `trendsData`
+   antes de su declaración) — resucitada y su heatmap usa el **máximo real del período**
+   (P1-4: max fijo 1000000 sobrevivió a F3H/J). `7ab6c85`.
+2. **`PeriodComparison` fabricaba la serie "Período B"** (`sales ×0.85 / ×1.15`): ahora
+   ambas series vienen de `/trends/date-range` con los límites que el propio compare
+   devuelve; nuevo `salesAnalyticsService.getTrendsDateRange`. `7ab6c85`.
+3. **`sales-analytics/Dashboard` nunca enviaba `period`** (pasaba un string crudo a
+   `getDashboard(params)`): el selector no filtraba; además su estado `error` no se
+   renderizaba. Ambos corregidos. `7ab6c85`.
+4. **`TrendChart` de cash-flow con series muertas**: `dataKey` inflows/outflows/net/date vs
+   contrato real `name/ingresos/egresos/balance` (resto del drift 2A que sobrevivió a F3B).
+   `fbecb52`.
+5. **`PronosticoIngresos`**: `bg-${color}-500` dinámico nunca compilaba (Tailwind JIT) →
+   mapa de tokens; fallbacks de período inventados → `—`. `46d1857`.
 
 ## Entregables
 
