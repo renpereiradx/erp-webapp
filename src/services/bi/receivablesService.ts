@@ -7,9 +7,12 @@ import { BIParams, FinancialOverview, AgingReportItem } from '../../types/bi';
  */
 export const receivablesService = {
   /**
-   * Resumen general de cuentas por cobrar (Nuevo Estándar)
+   * Resumen general de cuentas por cobrar (Nuevo Estándar).
+   * Devuelve el envelope {success, data} tal como llega del BE — el tipo
+   * honesto es lo que permite al store desenvolver .data (patrón
+   * dashboardService.getSummary / fix NA-DB-1).
    */
-  async getOverview(params: BIParams = {}): Promise<FinancialOverview> {
+  async getOverview(params: BIParams = {}): Promise<{ success?: boolean; data: FinancialOverview }> {
     try {
       return await apiClient.get('/receivables/overview', { params });
     } catch (error: any) {
@@ -19,14 +22,14 @@ export const receivablesService = {
   },
 
   /**
-   * Alias para getOverview (Compatibilidad)
+   * @deprecated Alias de getOverview — usar el método canónico.
    */
   async getSummary(period: string = 'month'): Promise<any> {
     return this.getOverview({ period });
   },
 
   /**
-   * Alias para getOverview (Compatibilidad)
+   * @deprecated Alias de getOverview — usar el método canónico.
    */
   async getStatistics(period: string = 'month'): Promise<any> {
     return this.getOverview({ period });
@@ -45,7 +48,7 @@ export const receivablesService = {
   },
 
   /**
-   * Alias para getAgingReport (Compatibilidad)
+   * @deprecated Alias de getAgingReport — usar el método canónico.
    */
   async getDetailedAging(params: BIParams = {}): Promise<any> {
     return this.getAgingReport(params);
@@ -67,7 +70,7 @@ export const receivablesService = {
   },
 
   /**
-   * Alias para getAgingReport (Compatibilidad)
+   * @deprecated Alias de getAgingReport — usar el método canónico.
    */
   async getAging(params: BIParams = {}): Promise<any> {
     return this.getAgingReport(params);
@@ -110,7 +113,7 @@ export const receivablesService = {
   },
 
   /**
-   * Alias para getClientRisk (Compatibilidad)
+   * @deprecated Alias de getClientRisk — usar el método canónico.
    */
   async getClientRiskAnalysis(clientId: string): Promise<any> {
     return this.getClientRisk(clientId);
@@ -129,8 +132,7 @@ export const receivablesService = {
   },
 
   /**
-   * Alias para getOverdue (Compatibilidad) — la ruta canónica de alertas T5
-   * (`/receivables/overdue`) monta el hook que llama este nombre.
+   * @deprecated Alias de getOverdue — usar el método canónico.
    */
   async getOverdueAccounts(params: BIParams = {}): Promise<any> {
     return this.getOverdue(params);

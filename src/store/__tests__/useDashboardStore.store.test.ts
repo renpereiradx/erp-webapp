@@ -10,7 +10,7 @@ vi.mock('../../services/bi/dashboardService', () => ({
   },
 }));
 vi.mock('../../services/bi/receivablesService', () => ({
-  receivablesService: { getSummary: vi.fn() },
+  receivablesService: { getOverview: vi.fn() },
 }));
 vi.mock('../../services/bi/payablesService', () => ({
   payablesService: { getOverview: vi.fn() },
@@ -36,7 +36,7 @@ function mockAllServicesOk(): void {
   vi.mocked(dashboardService.getAlerts).mockResolvedValue({ data: { alerts: [] } } as never);
   vi.mocked(dashboardService.getRecentActivity).mockResolvedValue({ data: { activities: [] } } as never);
   vi.mocked(dashboardService.getTrends).mockResolvedValue({ data: { series: [] } } as never);
-  vi.mocked(receivablesService.getSummary).mockResolvedValue({ data: { collection_rate: 1 } } as never);
+  vi.mocked(receivablesService.getOverview).mockResolvedValue({ data: { collection_rate: 1 } } as never);
   vi.mocked(payablesService.getOverview).mockResolvedValue({ data: { payment_rate: 1 } } as never);
   vi.mocked(salesAnalyticsService.getPerformance).mockResolvedValue({ data: { comparison: {} } } as never);
   vi.mocked(profitabilityService.getTrends).mockResolvedValue({ data: { data_points: [] } } as never);
@@ -53,7 +53,7 @@ describe('useDashboardStore.fetchDashboardData — gate por permiso', () => {
     await useDashboardStore.getState().fetchDashboardData('month');
 
     expect(dashboardService.getSummary).toHaveBeenCalledTimes(1);
-    expect(receivablesService.getSummary).toHaveBeenCalledTimes(1);
+    expect(receivablesService.getOverview).toHaveBeenCalledTimes(1);
     expect(payablesService.getOverview).toHaveBeenCalledTimes(1);
     expect(salesAnalyticsService.getPerformance).toHaveBeenCalledTimes(1);
     expect(profitabilityService.getTrends).toHaveBeenCalledTimes(1);
@@ -68,7 +68,7 @@ describe('useDashboardStore.fetchDashboardData — gate por permiso', () => {
     // Permitidos
     expect(dashboardService.getSummary).toHaveBeenCalledTimes(1);
     expect(dashboardService.getTrends).toHaveBeenCalledTimes(1);
-    expect(receivablesService.getSummary).toHaveBeenCalledTimes(1);
+    expect(receivablesService.getOverview).toHaveBeenCalledTimes(1);
     // Gateados: no se llama al backend
     expect(salesAnalyticsService.getPerformance).not.toHaveBeenCalled();
     expect(profitabilityService.getTrends).not.toHaveBeenCalled();

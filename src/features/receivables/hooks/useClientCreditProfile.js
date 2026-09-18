@@ -26,7 +26,7 @@ export const useClientCreditProfile = (clientId) => {
         // Ejecutamos ambas peticiones en paralelo (Endpoints 6 y 7)
         const [profileRes, riskRes, basicInfoRes] = await Promise.all([
           receivablesService.getClientProfile(clientId).catch(err => ({ success: false, error: err })),
-          receivablesService.getClientRiskAnalysis(clientId).catch(err => ({ success: false, error: err })),
+          receivablesService.getClientRisk(clientId).catch(err => ({ success: false, error: err })),
           clientService.getById(clientId).catch(() => null)
         ]);
 

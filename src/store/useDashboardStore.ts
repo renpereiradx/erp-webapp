@@ -386,7 +386,7 @@ const useDashboardStore = create<DashboardState>()(
                ? profitabilityService.getTrends({ period })
                : Promise.resolve({ data: null }),
              hasStoredPermission('receivables:read')
-               ? receivablesService.getSummary(period)
+               ? receivablesService.getOverview({ period })
                : Promise.resolve({ data: null }),
              hasStoredPermission('payables:read')
                ? payablesService.getOverview({ period })

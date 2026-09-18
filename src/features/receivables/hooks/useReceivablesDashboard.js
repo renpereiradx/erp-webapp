@@ -76,9 +76,9 @@ export const useReceivablesDashboard = () => {
     setError(null)
     try {
       const [summaryRes, agingRes, statsRes, recentRes] = await Promise.all([
-        receivablesService.getSummary(),
+        receivablesService.getOverview(),
         receivablesService.getAgingSummary(),
-        receivablesService.getStatistics(),
+        receivablesService.getOverview(),
         receivablesService.getMasterList(
           { status: 'all' },
           { page: 1, pageSize: 5 },

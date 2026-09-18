@@ -109,7 +109,7 @@ export const useOverdueAccounts = () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await receivablesService.getOverdueAccounts()
+      const response = await receivablesService.getOverdue()
       const accountsData = response.data || response || []
 
       // Transform API data to UI format

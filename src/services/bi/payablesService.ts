@@ -19,7 +19,7 @@ export const payablesService = {
   },
 
   /**
-   * Alias para getOverview (Compatibilidad)
+   * @deprecated Alias de getOverview — usar el método canónico.
    */
   async getSummary(params: BIParams = {}): Promise<any> {
     return this.getOverview(params);

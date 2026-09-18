@@ -19,9 +19,9 @@ export const useAgingReport = (period = 'month') => {
       try {
         // Ejecutamos peticiones en paralelo (Endpoints 1, 9 y 12)
         const [overviewRes, reportRes, statsRes] = await Promise.all([
-          receivablesService.getSummary(period),
-          receivablesService.getDetailedAging(),
-          receivablesService.getStatistics(period)
+          receivablesService.getOverview({ period }),
+          receivablesService.getAgingReport(),
+          receivablesService.getOverview({ period })
         ]);
 
         if (isMounted) {
