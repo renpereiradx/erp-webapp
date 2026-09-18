@@ -3,6 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import useDashboardStore from '@/store/useDashboardStore';
 import { formatPYG } from '@/utils/currencyUtils';
 import { formatTimeInParaguayTimezone, formatDateInParaguayTimezone, formatReserveDate } from '@/utils/timeUtils';
+// F1 (PLAN_ALINEACION_BI_FRONTEND): lógica pura extraída a domain
+import {
+  filterAlerts,
+  getAlertMetrics,
+  getAvailableCategories,
+  getCategoryIcon,
+  getCategoryLabel,
+  isFinancialDetailKey,
+} from '@/domain/dashboard/alerts';
 
 /**
  * Renderizador de detalles de alerta para mejorar legibilidad
@@ -44,8 +53,7 @@ const DetailItem = ({ label, value, navigate }) => {
     }
 
     // Formateo de moneda para campos financieros comunes
-    const financialKeys = ['total', 'amount', 'revenue', 'profit', 'cost', 'price', 'balance', 'ticket'];
-    if (financialKeys.some(key => label.toLowerCase().includes(key)) && (typeof value === 'number' || !isNaN(Number(value)))) {
+    if (isFinancialDetailKey(label) && (typeof value === 'number' || !isNaN(Number(value)))) {
       return <span className="font-bold text-[#106ebe]">{formatPYG(value)}</span>;
     }
     
@@ -98,81 +106,16 @@ const ConsolidatedAlerts = () => {
   };
 
   // Extraer categorías únicas de las alertas reales
-  const availableCategories = useMemo(() => {
-    if (!alerts) return [];
-    const cats = new Set();
-    alerts.forEach(a => {
-        if (a.category) cats.add(a.category.toLowerCase());
-    });
-    return Array.from(cats).sort();
-  }, [alerts]);
-
-  // Mapeo de iconos por categoría (mejorado)
-  const getCategoryIcon = (category) => {
-    const cat = category?.toLowerCase() || '';
-    if (cat.includes('inv') || cat.includes('stock')) return 'inventory_2';
-    if (cat.includes('fin') || cat.includes('pay') || cat.includes('cash')) return 'payments';
-    if (cat.includes('sal') || cat.includes('order')) return 'shopping_cart';
-    if (cat.includes('sec') || cat.includes('auth')) return 'shield';
-    if (cat.includes('infra') || cat.includes('sys')) return 'dns';
-    if (cat.includes('client') || cat.includes('cust')) return 'groups';
-    return 'notifications';
-  };
-
-  const getCategoryLabel = (category) => {
-    const cat = category?.toLowerCase() || '';
-    if (cat.includes('inv') || cat.includes('stock')) return 'Inventario';
-    if (cat.includes('fin')) return 'Finanzas';
-    if (cat.includes('sal')) return 'Ventas';
-    if (cat.includes('sec')) return 'Seguridad';
-    if (cat.includes('infra')) return 'Infraestructura';
-    if (cat.includes('client') || cat.includes('cust')) return 'Clientes';
-    
-    // Capitalize fallback
-    return category ? category.charAt(0).toUpperCase() + category.slice(1) : 'Sistema';
-  };
+  const availableCategories = useMemo(() => getAvailableCategories(alerts), [alerts]);
 
   // Cálculo de métricas enriquecidas
-  const metrics = useMemo(() => {
-    if (!alerts) return { total: 0, critical: 0, inventory: 0, sales: 0 };
-    return {
-      total: alerts.length,
-      critical: alerts.filter(a => a.severity === 'critical' || a.severity === 'error').length,
-      inventory: alerts.filter(a => {
-          const c = a.category?.toLowerCase() || '';
-          return c.includes('inv') || c.includes('stock');
-      }).length,
-      sales: alerts.filter(a => {
-        const c = a.category?.toLowerCase() || '';
-        return c.includes('sal') || c.includes('client') || c.includes('cust');
-      }).length
-    };
-  }, [alerts]);
+  const metrics = useMemo(() => getAlertMetrics(alerts), [alerts]);
 
   // Lógica de filtrado
-  const filteredAlerts = useMemo(() => {
-      if (!alerts) return [];
-      let result = alerts;
-      
-      if (filterSeverity !== 'all') {
-        result = result.filter(a => a.severity === filterSeverity || (filterSeverity === 'critical' && a.severity === 'error'));
-      }
-
-      if (filterCategory !== 'all') {
-        result = result.filter(a => a.category?.toLowerCase().includes(filterCategory.toLowerCase()));
-      }
-      
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        result = result.filter(a => 
-          a.title?.toLowerCase().includes(query) || 
-          a.message?.toLowerCase().includes(query) ||
-          String(a.id).includes(query)
-        );
-      }
-      
-      return result;
-  }, [alerts, filterSeverity, filterCategory, searchQuery]);
+  const filteredAlerts = useMemo(
+    () => filterAlerts(alerts, { severity: filterSeverity, category: filterCategory, search: searchQuery }),
+    [alerts, filterSeverity, filterCategory, searchQuery],
+  );
 
   return (
     <div className="flex flex-col gap-6 font-display animate-in fade-in duration-500 p-4 md:p-8">

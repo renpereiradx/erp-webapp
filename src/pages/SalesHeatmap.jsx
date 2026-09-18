@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import useDashboardStore from '@/store/useDashboardStore'
 import { formatPYG } from '@/utils/currencyUtils';
-
-const hours = [
-  '8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM', '6PM', '7PM', '8PM', '9PM'
-]
-
-const uiDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-// Map UI index 0 (Mon) to API day 1 (Mon). UI index 6 (Dom) to API day 0 (Sun).
-const uiIndexToApiDay = (index) => (index + 1) % 7; 
+// F1 (PLAN_ALINEACION_BI_FRONTEND): lógica pura extraída a domain
+import {
+  HEATMAP_HOURS as hours,
+  HEATMAP_UI_DAYS as uiDays,
+  computeMaxSales,
+  getCellIntensity,
+} from '@/domain/dashboard/heatmap'
 
 const SalesHeatmap = () => {
     // H2 (audit react): selectores atómicos
@@ -42,30 +41,10 @@ const SalesHeatmap = () => {
     const peakTime = peakTimes[0] || { day: '-', hour: '-' };
 
     // Calculate Max Sales for Intensity
-    const maxSales = Math.max(...heatmapData.map(d => d.sales_count), 1);
+    const maxSales = computeMaxSales(heatmapData);
 
-    const getIntensity = (uiDayIndex, hourLabel) => {
-        let hour = parseInt(hourLabel);
-        if (hourLabel.includes('PM') && hour !== 12) hour += 12;
-        if (hourLabel.includes('AM') && hour === 12) hour = 0;
-
-        const apiDay = uiIndexToApiDay(uiDayIndex);
-        
-        const cell = heatmapData.find(d => d.day === apiDay && d.hour === hour);
-        if (!cell) return { ratio: 0, sales: 0, label: '', total_amount: 0 };
-
-        const ratio = cell.sales_count / maxSales;
-        let label = '';
-        if (ratio > 0.8) label = '$$$';
-        else if (ratio > 0.5) label = '$$';
-        
-        return {
-            ratio,
-            sales: cell.sales_count,
-            label,
-            total_amount: cell.total_amount
-        };
-    };
+    const getIntensity = (uiDayIndex, hourLabel) =>
+        getCellIntensity(heatmapData, maxSales, uiDayIndex, hourLabel);
 
     const formatCurrency = (val) => {
         if (!val) return 'Gs. 0';

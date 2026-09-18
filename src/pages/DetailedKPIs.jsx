@@ -5,6 +5,7 @@ import { useBranch } from '@/contexts/BranchContext';
 import useDashboardStore from '../store/useDashboardStore';
 import { formatPYG, formatNumber } from '@/utils/currencyUtils';
 import { formatTimeInParaguayTimezone } from '@/utils/timeUtils';
+import { getTimeAgo } from '@/domain/dashboard/shared';
 
 /**
  * Dashboard Page - Executive BI Dashboard
@@ -37,18 +38,6 @@ const DetailedKPIs = () => {
   }, [fetchDashboardData, fetchKPIData, period, currentBranchId]);
 
   const formatCurrency = (val) => formatPYG(val);
-
-  const getTimeAgo = (timestamp) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-    if (diffInMinutes < 1) return t('dashboard.activity.now', 'ahora');
-    if (diffInMinutes < 60) return `${diffInMinutes}m`;
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours}h`;
-    return date.toLocaleDateString();
-  };
 
   const vsLast30Days = t('dashboard.dashboard.kpi.vsPrevious30Days', 'vs. últimos 30 días');
 
@@ -349,7 +338,7 @@ const DetailedKPIs = () => {
                   <h4 className="text-sm font-semibold text-text-main">{alert.title}</h4>
                   <p className="text-xs text-text-secondary mt-1">{alert.message}</p>
                 </div>
-                <span className="text-xs text-text-secondary whitespace-nowrap">{getTimeAgo(alert.created_at)}</span>
+                <span className="text-xs text-text-secondary whitespace-nowrap">{getTimeAgo(alert.created_at, t('dashboard.activity.now', 'ahora'))}</span>
               </div>
             );
           })}

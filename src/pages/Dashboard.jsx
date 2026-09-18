@@ -5,6 +5,7 @@ import { useI18n } from '../lib/i18n';
 import useDashboardStore from '../store/useDashboardStore';
 import { formatTimeInParaguayTimezone } from '@/utils/timeUtils';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
+import { getActivityRoute, getTimeAgo } from '@/domain/dashboard/shared';
 import {
   DollarSign,
   ShoppingCart,
@@ -78,19 +79,6 @@ const Dashboard = () => {
     }
     return [];
   }, [profitabilityTrends]);
-
-  const getTimeAgo = (timestamp) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-    
-    if (diffInMinutes < 1) return t('dashboard.activity.now', 'ahora');
-    if (diffInMinutes < 60) return `${diffInMinutes}m`;
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours}h`;
-    return date.toLocaleDateString();
-  };
 
   if (loading && !summary) {
     return (
@@ -457,7 +445,7 @@ const Dashboard = () => {
                            <div className="flex-1 min-w-0 space-y-1">
                                <div className="flex items-center justify-between gap-4">
                                    <p className="text-sm font-bold text-text-main truncate group-hover:text-primary transition-colors">{alert.title}</p>
-                                   <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary whitespace-nowrap">{getTimeAgo(alert.created_at)}</span>
+                                   <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary whitespace-nowrap">{getTimeAgo(alert.created_at, t('dashboard.activity.now', 'ahora'))}</span>
                                </div>
                                <p className="text-xs text-text-secondary line-clamp-2">{alert.message}</p>
                            </div>
@@ -466,18 +454,11 @@ const Dashboard = () => {
 
                    {/* Map Recent Activities if few alerts */}
                    {alerts.length < 3 && activities.slice(0, 3 - alerts.length).map((activity) => {
-                       const getActivityRoute = () => {
-                           if (activity.type === 'sale') return `/cobros-ventas/${activity.details?.sale_id || ''}`;
-                           if (activity.type === 'purchase') return `/pagos-compras/${activity.details?.purchase_id || ''}`;
-                           if (activity.type === 'payment') return activity.details?.sale_id ? `/cobros-ventas/${activity.details.sale_id}/pagos` : '/movimientos-caja';
-                           return '/dashboard';
-                       };
-
                        return (
-                        <div 
-                          key={activity.id} 
+                        <div
+                          key={activity.id}
                           className="flex gap-4 p-6 cursor-pointer hover:bg-slate-50 transition-colors group"
-                          onClick={() => navigate(getActivityRoute())}
+                          onClick={() => navigate(getActivityRoute(activity))}
                         >
                             <div className={`size-10 rounded-lg shrink-0 flex items-center justify-center transition-transform group-hover:scale-110 ${
                                 activity.type === 'sale' ? 'bg-green-50 text-success' : 'bg-blue-50 text-primary'
@@ -487,7 +468,7 @@ const Dashboard = () => {
                             <div className="flex-1 min-w-0 space-y-1">
                                 <div className="flex items-center justify-between gap-4">
                                     <p className="text-sm font-bold text-text-main truncate group-hover:text-primary transition-colors">{activity.description}</p>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary whitespace-nowrap">{getTimeAgo(activity.timestamp)}</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary whitespace-nowrap">{getTimeAgo(activity.timestamp, t('dashboard.activity.now', 'ahora'))}</span>
                                 </div>
                                 <p className="text-xs text-text-secondary">
                                     {activity.user} {activity.amount ? `· ${formatCurrency(activity.amount)}` : ''}
