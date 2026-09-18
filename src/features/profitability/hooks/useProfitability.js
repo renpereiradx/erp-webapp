@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import profitabilityService from '../services/profitabilityService'
+import profitabilityService from '@/services/bi/profitabilityService'
 
 /**
  * Hook para gestionar datos de rentabilidad.

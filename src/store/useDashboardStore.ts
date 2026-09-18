@@ -8,7 +8,7 @@ import { dashboardService } from '../services/bi/dashboardService';
 import { receivablesService } from '../services/bi/receivablesService';
 import { payablesService } from '../services/bi/payablesService';
 import { salesAnalyticsService } from '../services/bi/salesAnalyticsService';
-import profitabilityService from '../features/profitability/services/profitabilityService';
+import profitabilityService from '../services/bi/profitabilityService';
 import { hasStoredPermission } from '../utils/userPermissions';
 
 // Interfaces para el estado del Dashboard

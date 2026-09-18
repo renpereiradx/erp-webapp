@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import biForecastingService from '@/services/biForecastingService'
+import biForecastingService from '@/services/bi/biForecastingService'
 
 export const useBIForecasting = (endpoint, params = {}) => {
   const [data, setData] = useState(null)

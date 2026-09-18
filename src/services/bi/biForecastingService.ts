@@ -4,7 +4,7 @@ import {
   MOCK_PRONOSTICO_VENTAS,
   MOCK_PRONOSTICO_DEMANDA,
   MOCK_PRONOSTICO_INGRESOS,
-} from './mocks/biForecastingMock'
+} from '../mocks/biForecastingMock'
 import { DEMO_CONFIG } from '@/config/demoAuth'
 import { apiClient } from '@/services/api'
 import { formatPYG } from '@/utils/currencyUtils'
