@@ -54,7 +54,7 @@ export const StockLevelsReorder: React.FC = () => {
   };
 
   // Helper to resolve a unified status string
-  const resolveUnifiedStatus = (product: any) => {
+  const resolveUnifiedStatus = (product: Record<string, any>) => {
     const raw = product.status || product.priority || '';
     if (raw === 'URGENT' || raw === 'OUT_OF_STOCK') return 'OUT_OF_STOCK';
     if (raw === 'HIGH' || raw === 'LOW_STOCK' || raw === 'MEDIUM') return 'LOW_STOCK';

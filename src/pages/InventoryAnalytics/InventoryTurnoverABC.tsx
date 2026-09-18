@@ -7,13 +7,13 @@ import { formatNumber } from '../../utils/currencyUtils';
 
 export const InventoryTurnoverABC: React.FC = () => {
   const [period, setPeriod] = useState('mes');
-  const [data, setData] = useState<any>(null); // Simplified typing here
+  const [data, setData] = useState<Record<string, any> | null>(null); // Simplified typing here
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await inventoryAnalyticsService.getTurnover(period as any);
+        const response = await inventoryAnalyticsService.getTurnover({ period });
         if (response.success) {
           setData(response.data);
         }

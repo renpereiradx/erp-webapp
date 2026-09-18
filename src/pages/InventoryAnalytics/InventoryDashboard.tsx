@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { inventoryAnalyticsService } from '@/services/bi/inventoryAnalyticsService';
-import { InventoryDashboardData } from '../../types/inventoryAnalytics';
+import { InventoryDashboardData, InventoryOverview } from '../../types/inventoryAnalytics';
 import { KPIWidget } from '../../components/InventoryAnalytics/Dashboard/KPIWidget';
 import { StockStatusChart, StockStatusItem } from '../../components/InventoryAnalytics/Dashboard/StockStatusChart';
 import { AlertsPanel, AlertItem } from '../../components/InventoryAnalytics/Dashboard/AlertsPanel';
@@ -11,7 +11,7 @@ import { buildAbcItems } from '@/domain/inventory-analytics/abc';
 
 export const InventoryDashboard: React.FC = () => {
   const [data, setData] = useState<InventoryDashboardData | null>(null);
-  const [overview, setOverview] = useState<any>(null); // Añadido para el overview
+  const [overview, setOverview] = useState<InventoryOverview | null>(null); // Añadido para el overview
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
