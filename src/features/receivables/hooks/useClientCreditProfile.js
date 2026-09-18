@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { receivablesService } from '@/services/bi/receivablesService';
 import { clientService } from '@/services/clientService';
+// F1 (PLAN_ALINEACION_BI_FRONTEND): buckets de antigüedad extraídos a domain
+import { buildInvoiceAgingBuckets } from '@/domain/receivables/aging';
 
 /**
  * Hook personalizado para manejar la lógica de negocio del perfil de crédito del cliente.
@@ -79,35 +81,11 @@ export const useClientCreditProfile = (clientId) => {
               ? Math.round(((profile.total_pending || 0) / profile.credit_limit) * 100)
               : null
           },
-          aging: (() => {
-            // Antigüedad real derivada de las facturas del cliente (pending + vencimiento)
-            const today = Date.now();
-            const DAY = 86400000;
-            const buckets = [
-              { label: 'Corriente', amount: 0, colorClass: 'aging-bar__segment--current' },
-              { label: '1-30 Días', amount: 0, colorClass: 'aging-bar__segment--1-30' },
-              { label: '31-60 Días', amount: 0, colorClass: 'aging-bar__segment--31-60' },
-              { label: '>60 Días', amount: 0, colorClass: 'aging-bar__segment--90' },
-            ];
-            (profile.receivables || []).forEach((inv) => {
-              const pending = inv.pending_amount || 0;
-              if (pending <= 0 || !inv.due_date) return;
-              const days = Math.floor((today - new Date(inv.due_date).getTime()) / DAY);
-              if (days <= 0) buckets[0].amount += pending;
-              else if (days <= 30) buckets[1].amount += pending;
-              else if (days <= 60) buckets[2].amount += pending;
-              else buckets[3].amount += pending;
-            });
-            const total = buckets.reduce((acc, b) => acc + b.amount, 0);
-            if (total <= 0) return [];
-            return buckets
-              .filter((b) => b.amount > 0)
-              .map((b) => ({
-                ...b,
-                amount: formatPYG(b.amount),
-                width: `${Math.round((b.amount / total) * 100)}%`,
-              }));
-          })(),
+          aging: buildInvoiceAgingBuckets(profile.receivables).map((b) => ({
+            ...b,
+            amount: formatPYG(b.amount),
+            width: `${b.percent}%`,
+          })),
           invoices: Array.isArray(profile.receivables) 
             ? profile.receivables.map(inv => ({
                 id: inv.id,

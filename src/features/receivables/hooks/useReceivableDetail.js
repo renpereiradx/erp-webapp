@@ -1,72 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { receivablesService } from '@/services/bi/receivablesService';
 import { clientService } from '@/services/clientService';
-import { formatPYG } from '@/utils/currencyUtils';
-
-/**
- * Transforms the flat API response into the nested structure expected by detail components.
- */
-const transformDetailData = (raw) => {
-  const statusLabels = {
-    OVERDUE: 'Overdue',
-    PENDING: 'Pending',
-    PARTIAL: 'Partial',
-    PAID: 'Paid',
-  };
-
-  return {
-    id: raw.id || raw.sale_order_id,
-    client: {
-      id: raw.client_id || '',
-      name: raw.client_name || '',
-      contact: raw.client_name || '',
-      email: raw.client_email || '',
-      phone: raw.client_phone || '',
-      address: raw.client_address || '',
-    },
-    transaction: {
-      status: statusLabels[raw.status] || raw.status || '',
-      issueDate: raw.sale_date?.split('T')[0] || '',
-      dueDate: raw.due_date?.split('T')[0] || '',
-      amount: formatPYG(raw.original_amount || 0),
-      paid: formatPYG(raw.paid_amount || 0),
-      balance: formatPYG(raw.pending_amount || 0),
-      rawAmount: raw.original_amount || 0,
-      rawPaid: raw.paid_amount || 0,
-      rawBalance: raw.pending_amount || 0,
-      daysOverdue: raw.days_overdue || 0,
-    },
-    paymentHistory: Array.isArray(raw.payment_history)
-      ? raw.payment_history.map((p) => ({
-          date: p.payment_date?.split('T')[0] || '',
-          ref: p.reference || '—',
-          method: p.payment_method || '',
-          note: p.processed_by || '',
-          amount: p.amount || 0,
-        }))
-      : [],
-    activities: [
-      ...(Array.isArray(raw.payment_history)
-        ? raw.payment_history.map((p) => ({
-            id: p.id || `pay-${p.payment_date}-${p.amount}`,
-            type: 'PAYMENT',
-            date: p.payment_date?.split('T')[0] || '',
-            time: p.payment_date?.split('T')[1]?.substring(0, 5) || '',
-            description: `Pago de ${formatPYG(p.amount)} recibido vía ${p.payment_method || 'Transferencia'}.`,
-            user: p.processed_by || 'Sistema',
-          }))
-        : []),
-      // Si el objeto tiene notas en metadata, incluirlas como actividad
-      ...(raw.metadata?.notes ? [{
-        id: 'note-0',
-        type: 'NOTE',
-        date: raw.sale_date?.split('T')[0] || new Date().toISOString().split('T')[0],
-        description: raw.metadata.notes,
-        user: raw.user_name || 'Vendedor',
-      }] : [])
-    ].sort((a, b) => new Date(b.date) - new Date(a.date)),
-  };
-};
+// F1 (PLAN_ALINEACION_BI_FRONTEND): mapeo del detalle extraído a domain
+import { transformDetailData } from '@/domain/receivables/mappers';
 
 /**
  * Hook para manejar el detalle de una cuenta por cobrar específica.

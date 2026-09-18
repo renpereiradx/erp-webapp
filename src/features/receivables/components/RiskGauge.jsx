@@ -1,21 +1,9 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
+// F1 (PLAN_ALINEACION_BI_FRONTEND): estilos de riesgo extraídos a domain
+import { getRiskStyles } from '@/domain/receivables/risk';
 
 const RiskGauge = ({ score = 0, level = 'Medium', recommendation = '' }) => {
-  // Determinamos colores basados en el nivel de riesgo
-  const getRiskStyles = (lvl) => {
-    switch(lvl?.toLowerCase()) {
-      case 'low': 
-      case 'bajo':
-        return { color: 'text-green-500', bg: 'bg-green-100 text-green-800', label: 'Riesgo Bajo', dot: 'bg-green-500' };
-      case 'high':
-      case 'alto':
-        return { color: 'text-red-500', bg: 'bg-red-100 text-red-800', label: 'Riesgo Alto', dot: 'bg-red-500' };
-      default:
-        return { color: 'text-yellow-500', bg: 'bg-yellow-100 text-yellow-800', label: 'Riesgo Medio', dot: 'bg-yellow-500' };
-    }
-  };
-
   const styles = getRiskStyles(level);
 
   return (

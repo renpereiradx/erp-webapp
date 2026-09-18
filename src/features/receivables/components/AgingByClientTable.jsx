@@ -1,6 +1,8 @@
 import React from 'react'
 import { formatPYG } from '@/utils/currencyUtils'
 import { MoreHorizontal } from 'lucide-react'
+// F1 (PLAN_ALINEACION_BI_FRONTEND): totales de cartera extraídos a domain
+import { sumClientAgingTotals } from '@/domain/receivables/aging'
 
 /**
  * Tabla detallada de antigüedad por cliente.
@@ -8,6 +10,7 @@ import { MoreHorizontal } from 'lucide-react'
  */
 const AgingByClientTable = ({ clientsData = [] }) => {
   const safeData = Array.isArray(clientsData) ? clientsData : []
+  const portfolioTotals = sumClientAgingTotals(safeData)
 
   return (
     <div className="bg-white dark:bg-[#1b2633] rounded-2xl border border-[#edebe9] dark:border-[#2d3d4f] shadow-[0_1.6px_3.6px_0_rgba(0,0,0,0.132),_0_0.3px_0.9px_0_rgba(0,0,0,0.108)] overflow-hidden flex flex-col flex-1 transition-all hover:shadow-md">
@@ -61,19 +64,19 @@ const AgingByClientTable = ({ clientsData = [] }) => {
             <tr>
               <td className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Totales de Cartera</td>
               <td className="px-4 py-4 text-right font-mono font-bold text-emerald-600">
-                {formatPYG(safeData.reduce((acc, c) => acc + (c.current || 0), 0))}
+                {formatPYG(portfolioTotals.current)}
               </td>
               <td className="px-4 py-4 text-right font-mono font-bold text-amber-600">
-                {formatPYG(safeData.reduce((acc, c) => acc + (c.days_31_60 || 0), 0))}
+                {formatPYG(portfolioTotals.days_31_60)}
               </td>
               <td className="px-4 py-4 text-right font-mono font-bold text-orange-600">
-                {formatPYG(safeData.reduce((acc, c) => acc + (c.days_61_90 || 0), 0))}
+                {formatPYG(portfolioTotals.days_61_90)}
               </td>
               <td className="px-4 py-4 text-right font-mono font-bold text-fluent-danger">
-                {formatPYG(safeData.reduce((acc, c) => acc + (c.over_90_days || 0), 0))}
+                {formatPYG(portfolioTotals.over_90_days)}
               </td>
               <td className="px-6 py-4 text-right font-mono font-black text-primary">
-                {formatPYG(safeData.reduce((acc, c) => acc + (c.total || 0), 0))}
+                {formatPYG(portfolioTotals.total)}
               </td>
             </tr>
           </tfoot>

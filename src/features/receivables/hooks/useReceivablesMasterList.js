@@ -1,58 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { receivablesService } from '@/services/bi/receivablesService'
-
-/**
- * Genera un color de avatar basado en el nombre del cliente
- */
-const getAvatarColor = name => {
-  const colors = [
-    '#dbeafe',
-    '#fef3c7',
-    '#e0e7ff',
-    '#dcfce7',
-    '#f3e8ff',
-    '#fce7f3',
-    '#fef2f2',
-    '#ecfdf5',
-    '#fef9c3',
-    '#ddd6fe',
-  ]
-  const index = name ? name.charCodeAt(0) % colors.length : 0
-  return colors[index]
-}
-
-/**
- * Mapea el estado del API al formato de color para los pills
- */
-const getStatusColor = status => {
-  const statusMap = {
-    OVERDUE: 'red',
-    PENDING: 'yellow',
-    PARTIAL: 'blue',
-    PAID: 'green',
-  }
-  return statusMap[status] || 'gray'
-}
-
-/**
- * Transforma un item del API al formato esperado por la tabla
- */
-const transformReceivableItem = item => {
-  const clientName = item.client_name || item.clientName || 'Cliente Desconocido';
-  return {
-    id: item.id || item.sale_order_id,
-    clientId: item.client_id || 'CLI-001',
-    clientName: clientName,
-    clientInitial: clientName.charAt(0).toUpperCase(),
-    clientColor: getAvatarColor(clientName),
-    issueDate: item.sale_date ? new Date(item.sale_date).toLocaleDateString('es-PY') : '',
-    dueDate: item.due_date ? new Date(item.due_date).toLocaleDateString('es-PY') : '',
-    originalAmt: item.original_amount || 0,
-    pendingAmt: item.pending_amount || 0,
-    status: item.status,
-    statusColor: getStatusColor(item.status),
-  }
-}
+// F1 (PLAN_ALINEACION_BI_FRONTEND): mapeo API→tabla extraído a domain
+import { transformReceivableItem } from '@/domain/receivables/mappers'
 
 /**
  * Hook para manejar la lista maestra de cuentas por cobrar.

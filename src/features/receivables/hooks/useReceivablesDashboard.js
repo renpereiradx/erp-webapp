@@ -1,55 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { receivablesService } from '@/services/bi/receivablesService'
-
-/**
- * Transforma la respuesta de /receivables/overview al formato esperado por SummaryCardsGrid
- */
-const transformSummary = apiData => {
-  const overduePercentage =
-    apiData.total_pending > 0
-      ? ((apiData.total_overdue / apiData.total_pending) * 100)
-      : 0
-
-  return {
-    totalReceivables: {
-      amount: apiData.total_pending || 0,
-      trend: apiData.collection_rate || 0,
-    },
-    overdueAmount: {
-      amount: apiData.total_overdue || 0,
-      percentage: overduePercentage,
-    },
-    // Estos datos ahora están totalmente soportados y confirmados en el Swagger
-    totalCount: apiData.total_count || 0,
-    overdueCount: apiData.overdue_count || 0,
-    avgDaysToCollect: Math.round(apiData.average_days_to_collect || 0),
-    collectionRate: apiData.collection_rate || 0,
-    collectionTrend: apiData.collection_trend || []
-  }
-}
-
-/**
- * Transforma una lista de cuentas por cobrar al formato de la tabla de facturas recientes
- */
-const transformRecentInvoices = items => {
-  return items.map(item => {
-    const clientName = item.client_name || item.clientName || 'Cliente';
-    return {
-      id: item.id || item.sale_order_id,
-      invoiceId: item.id || item.sale_order_id,
-      clientId: item.client_id || 'CLI-001',
-      client: clientName,
-      issueDate: item.sale_date ? new Date(item.sale_date).toLocaleDateString('es-PY', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Pendiente',
-      balance: item.pending_amount || 0,
-      daysOverdue: item.days_overdue || 0,
-      status: item.status,
-      statusColor:
-        item.status === 'OVERDUE' ? 'red' : 
-        item.status === 'PARTIAL' ? 'blue' : 
-        item.status === 'PENDING' ? 'yellow' : 'green',
-    }
-  })
-}
+// F1 (PLAN_ALINEACION_BI_FRONTEND): mapeos API→vista extraídos a domain
+import {
+  transformRecentInvoices,
+  transformSummary,
+} from '@/domain/receivables/mappers'
 
 /**
  * Hook para manejar los datos del dashboard de cuentas por cobrar.
