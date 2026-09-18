@@ -191,12 +191,22 @@ export interface ProfitabilityInsight {
   [key: string]: unknown
 }
 
+export interface TrendsSummary {
+  trend_direction?: 'UP' | 'DOWN' | string
+  growth_rate?: number
+  previous_growth_rate?: number
+  peak_profit_date?: string
+  peak_profit_value?: number
+  total_period_revenue?: number
+  average_gross_margin?: number
+  average_net_margin?: number
+  insights?: ProfitabilityInsight[]
+  [key: string]: unknown
+}
+
 export interface TrendsData {
   data_points?: TrendsDataPoint[]
-  summary?: {
-    insights?: ProfitabilityInsight[]
-    [key: string]: unknown
-  }
+  summary?: TrendsSummary
   [key: string]: unknown
 }
 
