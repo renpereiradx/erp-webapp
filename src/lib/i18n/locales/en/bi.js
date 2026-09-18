@@ -221,6 +221,8 @@ export const bi = {
   'bi.logs.searchPlaceholder': 'Email or ID...',
   'bi.logs.subtitle': 'Real-time advanced monitoring of system activity.',
   'bi.logs.title': 'Audit Log',
+  'bi.profitability.loadError': 'Failed to load profitability data',
+  'bi.profitability.unsupportedResource': 'Unsupported profitability resource: {r}',
   'bi.sales.alerts': 'System Alerts',
   'bi.sales.chart.trend': 'Sales Trend',
   'bi.sales.col.product': 'Product',
