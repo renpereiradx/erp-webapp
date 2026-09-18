@@ -1,6 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { useFinancialReports } from '@/hooks/useFinancialReports'
+import { useEffect, useMemo, useState } from 'react'
+import { useI18n } from '@/lib/i18n'
+import { useCashFlowReport } from '@/features/financial-reports/hooks/useFinancialReports'
 import { formatPYG } from '@/utils/currencyUtils'
+import PageHeader from '@/components/ui/PageHeader'
+import GenericSkeletonList from '@/components/ui/GenericSkeletonList'
+import ErrorState from '@/components/ui/ErrorState'
 // F1 (PLAN_ALINEACION_BI_FRONTEND): vista del flujo extraída a domain
 import {
   buildCashFlowView,
@@ -19,8 +23,9 @@ const PERIOD_OPTIONS = [
 const SOURCE_IS_DEMO = import.meta.env.VITE_USE_DEMO === 'true'
 
 const CashFlowAnalysisDashboard = () => {
+  const { t } = useI18n()
   const [period, setPeriod] = useState('month')
-  const { loading, error, cashFlow, fetchCashFlow } = useFinancialReports()
+  const { cashFlow, loading, error, fetchCashFlow } = useCashFlowReport()
 
   useEffect(() => {
     document.title = 'Flujo de Efectivo Analítico | ERP System'
@@ -55,11 +60,16 @@ const CashFlowAnalysisDashboard = () => {
 
   if (loading && !cashFlow) {
     return (
-      <div className='flex items-center justify-center min-h-[400px]'>
-        <div className='animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary'></div>
-        <span className='ml-3 font-bold text-slate-500 uppercase tracking-widest text-xs'>
-          Cargando flujo de efectivo...
-        </span>
+      <div className='min-h-screen bg-background'>
+        <div className='mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl space-y-lg' aria-busy='true' data-testid='cashflow-skeleton'>
+          <div className='h-16 bg-surface-muted rounded-md animate-pulse' />
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md'>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className='h-28 bg-surface-muted rounded-md animate-pulse' />
+            ))}
+          </div>
+          <GenericSkeletonList count={5} data-testid='page-skeleton-list' />
+        </div>
       </div>
     )
   }
@@ -67,80 +77,55 @@ const CashFlowAnalysisDashboard = () => {
   return (
     <div className='flex-1 w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen'>
       <main className='flex-1 p-6 lg:p-8 max-w-[1600px] mx-auto w-full space-y-8'>
-        <nav className='flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400'>
-          <span>Contabilidad</span>
-          <span className='material-symbols-outlined text-[16px]'>
-            chevron_right
-          </span>
-          <span>Reportes</span>
-          <span className='material-symbols-outlined text-[16px]'>
-            chevron_right
-          </span>
-          <span className='text-primary font-semibold'>Flujo de Efectivo</span>
-        </nav>
-
-        <div className='flex flex-col lg:flex-row lg:items-end justify-between gap-6'>
-          <div className='flex flex-col gap-2 max-w-3xl'>
-            <h1 className='text-slate-900 dark:text-white text-3xl font-bold tracking-tight'>
-              Flujo de Efectivo Analítico
-            </h1>
-            <p className='text-slate-500 dark:text-slate-400 text-sm leading-relaxed'>
-              Vista consolidada de entradas, salidas y saldo diario, conectada
-              al reporte financiero real.
-            </p>
-          </div>
-
-          <div className='flex flex-wrap items-center gap-3'>
-            <div className='flex bg-white dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700'>
-              {PERIOD_OPTIONS.map(option => {
-                const isActive = period === option.value
-                return (
+        <PageHeader
+          breadcrumb='Contabilidad · Reportes'
+          title='Flujo de Efectivo Analítico'
+          subtitle='Vista consolidada de entradas, salidas y saldo diario, conectada al reporte financiero real.'
+          actions={
+            <div className='flex flex-wrap items-center gap-sm'>
+              <div className='flex bg-surface p-xs rounded-md border border-border-subtle' role='group' aria-label='Período'>
+                {PERIOD_OPTIONS.map((option) => (
                   <button
                     key={option.value}
-                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                      isActive
-                        ? 'bg-slate-100 dark:bg-slate-700 text-primary shadow-sm'
-                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                    }`}
+                    type='button'
+                    aria-pressed={period === option.value}
                     onClick={() => setPeriod(option.value)}
+                    className={`px-md py-xs rounded-sm text-body-sm-bold transition-colors ${
+                      period === option.value
+                        ? 'bg-surface-muted text-primary shadow-sm'
+                        : 'text-on-surface-deep hover:text-foreground'
+                    }`}
                   >
                     {option.label}
                   </button>
-                )
-              })}
-            </div>
-
-            <span
-              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                SOURCE_IS_DEMO
-                  ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800'
-                  : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800'
-              }`}
-            >
-              {SOURCE_IS_DEMO ? 'Fuente: Demo' : 'Fuente: API'}
-            </span>
-
-            <button className='bg-primary text-white px-5 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20'>
-              <span className='material-symbols-outlined text-[20px]'>
-                file_download
+                ))}
+              </div>
+              <span
+                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                  SOURCE_IS_DEMO
+                    ? 'bg-warning/10 text-warning border-warning/20'
+                    : 'bg-success/10 text-success border-success/20'
+                }`}
+              >
+                {SOURCE_IS_DEMO ? 'Fuente: Demo' : 'Fuente: API'}
               </span>
-              Exportar
-            </button>
-          </div>
-        </div>
+              <button
+                type='button'
+                onClick={retryFetch}
+                className='inline-flex items-center gap-xs px-md py-xs rounded-button bg-surface border border-border-subtle text-body-sm-bold text-on-surface-deep hover:bg-surface-muted transition-colors'
+              >
+                {t('bi.profitability.action.refresh', 'Actualizar')}
+              </button>
+            </div>
+          }
+        />
 
         {error && !cashFlow && (
-          <div className='rounded-xl border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300 p-4 flex items-center justify-between gap-4'>
-            <p className='text-sm'>
-              No se pudo cargar el flujo de efectivo desde la API.
-            </p>
-            <button
-              onClick={retryFetch}
-              className='px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800'
-            >
-              Reintentar
-            </button>
-          </div>
+          <ErrorState
+            title='No se pudo cargar el flujo de efectivo'
+            message={error}
+            onRetry={retryFetch}
+          />
         )}
 
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
@@ -282,8 +267,8 @@ const CashFlowAnalysisDashboard = () => {
               </div>
 
               {dailyData.map((item, index) => {
-                const inflowPct = (item.inflows / maxBarValue) * 100
-                const outflowPct = (item.outflows / maxBarValue) * 100
+                const inflowPct = ((item.inflows ?? 0) / maxBarValue) * 100
+                const outflowPct = ((item.outflows ?? 0) / maxBarValue) * 100
                 const balancePosition = getBalancePosition(item.balance, minBalance, maxBalance)
 
                 return (
@@ -354,11 +339,11 @@ const CashFlowAnalysisDashboard = () => {
                         {row.concept}
                       </td>
                       <td className='px-6 py-4 text-sm font-medium text-emerald-600 text-right'>
-                        {row.inflows > 0 ? formatPYG(row.inflows) : '-'}
+                        {(row.inflows ?? 0) > 0 ? formatPYG(row.inflows ?? 0) : '-'}
                       </td>
                       <td className='px-6 py-4 text-sm font-medium text-rose-600 text-right'>
-                        {row.outflows > 0
-                          ? formatPYG(-Math.abs(row.outflows))
+                        {(row.outflows ?? 0) > 0
+                          ? formatPYG(-Math.abs(row.outflows ?? 0))
                           : '-'}
                       </td>
                     </tr>
@@ -413,9 +398,9 @@ const CashFlowAnalysisDashboard = () => {
                       {row.concept}
                     </span>
                     <span
-                      className={`font-bold ${row.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
+                      className={`font-bold ${(row.amount ?? 0) >= 0 ? 'text-success' : 'text-error'}`}
                     >
-                      {formatSignedPYG(row.amount)}
+                      {formatSignedPYG(row.amount ?? 0)}
                     </span>
                   </div>
                 ))}
@@ -446,9 +431,9 @@ const CashFlowAnalysisDashboard = () => {
                       {row.concept}
                     </span>
                     <span
-                      className={`font-bold ${row.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
+                      className={`font-bold ${(row.amount ?? 0) >= 0 ? 'text-success' : 'text-error'}`}
                     >
-                      {formatSignedPYG(row.amount)}
+                      {formatSignedPYG(row.amount ?? 0)}
                     </span>
                   </div>
                 ))}

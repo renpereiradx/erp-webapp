@@ -1,6 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { formatPYG } from '@/utils/currencyUtils'
-import { useFinancialReports } from '@/hooks/useFinancialReports'
+import { useVatReport, useTaxSummary } from '@/features/financial-reports/hooks/useFinancialReports'
+import PageHeader from '@/components/ui/PageHeader'
+import GenericSkeletonList from '@/components/ui/GenericSkeletonList'
+import ErrorState from '@/components/ui/ErrorState'
 // F1 (PLAN_ALINEACION_BI_FRONTEND): vista IVA extraída a domain
 import { buildVatView, monthLabel } from '@/domain/finance/vat'
 
@@ -16,14 +19,10 @@ const SOURCE_IS_DEMO = import.meta.env.VITE_USE_DEMO === 'true'
 const TaxManagementDashboard = () => {
   const [period, setPeriod] = useState('month')
 
-  const {
-    loading,
-    error,
-    vatReport,
-    taxSummary,
-    fetchVatReport,
-    fetchTaxSummary,
-  } = useFinancialReports()
+  const { vatReport, loading: vatLoading, error: vatError, fetchVatReport } = useVatReport();
+  const { taxSummary, loading: taxLoading, error: taxError, fetchTaxSummary } = useTaxSummary();
+  const loading = vatLoading || taxLoading;
+  const error = vatError || taxError;
 
   useEffect(() => {
     document.title = 'Gestión de IVA | ERP System'
@@ -60,31 +59,29 @@ const TaxManagementDashboard = () => {
 
   if (loading && !vatReport && !taxSummary) {
     return (
-      <div className='flex items-center justify-center min-h-[400px]'>
-        <div className='animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary'></div>
-        <span className='ml-3 font-bold text-slate-500 uppercase tracking-widest text-xs'>
-          Cargando reporte fiscal...
-        </span>
+      <div className='min-h-screen bg-background'>
+        <div className='mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl space-y-lg' aria-busy='true' data-testid='tax-skeleton'>
+          <div className='h-16 bg-surface-muted rounded-md animate-pulse' />
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md'>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className='h-24 bg-surface-muted rounded-md animate-pulse' />
+            ))}
+          </div>
+          <GenericSkeletonList count={5} data-testid='page-skeleton-list' />
+        </div>
       </div>
     )
   }
 
   return (
     <div className='flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-slate-950 min-h-screen'>
+      <PageHeader
+        breadcrumb='Finanzas'
+        title='Gestión de IVA y Resumen Fiscal'
+        subtitle={`Origen: ${SOURCE_IS_DEMO ? 'Demo' : 'API'}`}
+      />
       <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8'>
-        <div>
-          <h2 className='text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight'>
-            Gestión de IVA y Resumen Fiscal
-          </h2>
-          <div className='flex items-center gap-2 mt-1'>
-            <span className='material-symbols-outlined text-sm text-slate-400'>
-              calendar_month
-            </span>
-            <p className='text-slate-500 text-sm'>
-              Origen: {SOURCE_IS_DEMO ? 'Demo' : 'API'}
-            </p>
-          </div>
-        </div>
+        <div />
 
         <div className='flex flex-wrap gap-3 items-center'>
           <div className='flex bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700'>
@@ -106,23 +103,15 @@ const TaxManagementDashboard = () => {
             })}
           </div>
 
-          <button className='flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all text-slate-700 dark:text-slate-200'>
-            <span className='material-symbols-outlined text-lg'>file_download</span>
-            Descargar Formulario 120
-          </button>
         </div>
       </div>
 
       {error && !vatReport && !taxSummary && (
-        <div className='rounded-xl border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300 p-4 flex items-center justify-between gap-4 mb-6'>
-          <p className='text-sm'>No se pudo cargar el módulo fiscal desde la API.</p>
-          <button
-            onClick={retry}
-            className='px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800'
-          >
-            Reintentar
-          </button>
-        </div>
+        <ErrorState
+          title='No se pudo cargar el módulo fiscal'
+          message={error}
+          onRetry={retry}
+        />
       )}
 
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
