@@ -19,19 +19,19 @@ import { useI18n } from '@/lib/i18n'
 // H1+H5 (audit react): code-splitting por página — cero React.lazy antes;
 // TODO el árbol (incluido recharts ~1 MB) viajaba en un único chunk inicial
 // de 3.3 MB para cualquier ruta. Quedan eager solo las landings (login,
-// selección de sucursal, dashboard, ventas, pedidos) y los shells; el resto
-// se divide por página y recharts cae a un vendor chunk aparte (manualChunks).
+// selección de sucursal, pedidos) y los shells; el resto se divide por
+// página y recharts cae a un vendor chunk aparte (manualChunks).
+// D4 (PLAN_ALINEACION_BI_FRONTEND 2026-09-18): /dashboard también es lazy —
+// su import eager arrastraba recharts al chunk inicial.
 import { lazy, Suspense, useEffect, useRef } from 'react'
 
-// --- Eager: landings y shells (solo /dashboard y /pedidos aterrizan ahí;
-// /ventas también es landing pero arrastra el feature de ventas completo) ---
-import Dashboard from '@/pages/Dashboard'
+// --- Lazy: una chunk por página/feature ---
+const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const SalesNew = lazy(() => import('@/pages/SalesNew'))
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import { CounterOrdersPage } from '@/features/counterorders'
 
-// --- Lazy: una chunk por página/feature ---
 const FinancialSummaryDashboard = lazy(() => import('@/pages/FinancialSummaryDashboard'))
 const DetailedKPIs = lazy(() => import('@/pages/DetailedKPIs'))
 const SalesHeatmap = lazy(() => import('@/pages/SalesHeatmap'))
@@ -322,7 +322,13 @@ function AppContent() {
                       <Route path='/dashboard/sales-heatmap' element={<DashboardRoute><SalesHeatmap /></DashboardRoute>} />
                       <Route path='/dashboard/alerts' element={<DashboardRoute><ConsolidatedAlerts /></DashboardRoute>} />
                       <Route path='/dashboard/top-products' element={<DashboardRoute><TopProductsOverview /></DashboardRoute>} />
-                      <Route path='/dashboard/receivables' element={<DashboardRoute><ReceivablesDashboard /></DashboardRoute>} />
+                      {/* D3 (PLAN_ALINEACION_BI_FRONTEND): contenido CxC — mismo
+                          guard receivables:read que /receivables (sin redirect). */}
+                      <Route path='/dashboard/receivables' element={
+                        <PermissionGuard permission='receivables:read'>
+                          <ReceivablesDashboard />
+                        </PermissionGuard>
+                      } />
                       <Route path='/dashboard/payables' element={<DashboardRoute><PayablesDashboard /></DashboardRoute>} />
                       <Route path='/payables/invoices' element={
                         <PermissionGuard permission='payables:read'>
