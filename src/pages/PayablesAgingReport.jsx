@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 
 import { formatPYG, formatNumber } from '@/utils/currencyUtils'
-import { usePayables } from '../hooks/usePayables'
+import { usePayables } from '@/features/accounts-payable/hooks/usePayables'
 // F1 (PLAN_ALINEACION_BI_FRONTEND): transformaciones extraídas a domain
 import {
   buildAgingDistribution,

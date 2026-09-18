@@ -5,7 +5,7 @@ import KPICards from '../features/accounts-payable/components/KPICards';
 import AgingSummary from '../features/accounts-payable/components/AgingSummary';
 import UpcomingPayments from '../features/accounts-payable/components/UpcomingPayments';
 import SuppliersDebtTable from '../features/accounts-payable/components/SuppliersDebtTable';
-import { usePayables } from '../hooks/usePayables';
+import { usePayables } from '@/features/accounts-payable/hooks/usePayables';
 // F1 (PLAN_ALINEACION_BI_FRONTEND): transformaciones extraídas a domain
 import {
   buildAgingBars,
