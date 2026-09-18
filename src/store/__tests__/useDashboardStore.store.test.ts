@@ -57,7 +57,7 @@ describe('useDashboardStore.fetchDashboardData — gate por permiso', () => {
     expect(payablesService.getOverview).toHaveBeenCalledTimes(1);
     expect(salesAnalyticsService.getPerformance).toHaveBeenCalledTimes(1);
     expect(profitabilityService.getTrends).toHaveBeenCalledTimes(1);
-    expect(useDashboardStore.getState().error).toBeNull();
+    expect(useDashboardStore.getState().errorBySlice.dashboard).toBeNull();
   });
 
   it('perfil vendor (sin analytics:read ni payables:read) no dispara los 403', async () => {
@@ -75,8 +75,8 @@ describe('useDashboardStore.fetchDashboardData — gate por permiso', () => {
     expect(payablesService.getOverview).not.toHaveBeenCalled();
 
     const state = useDashboardStore.getState();
-    expect(state.error).toBeNull();
-    expect(state.loading).toBe(false);
+    expect(state.errorBySlice.dashboard).toBeNull();
+    expect(state.loadingBySlice.dashboard).toBe(false);
     expect(state.salesPerformance).toBeNull();
     expect(state.profitabilityTrends).toBeNull();
   });

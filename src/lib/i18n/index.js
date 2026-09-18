@@ -25,10 +25,24 @@ import { en } from './locales/en/index'
  * Diccionario completo de traducciones
  * Importado desde archivos modulares
  */
-const DICTIONARY = Object.freeze({
+const DICTIONARY = {
   es,
   en,
-})
+}
+
+/**
+ * Registra traducciones planas en un idioma ya cargado (usado por
+ * namespaces code-split que llegan de forma diferida, ej. bi.*).
+ * PLAN_ALINEACION_BI_FRONTEND F5: el namespace BI (~40 kB) sale del chunk
+ * inicial; las páginas BI son lazy y sus t(key, fallback) cubren el gap.
+ */
+export const registerTranslations = (lang, flatEntries) => {
+  if (DICTIONARY[lang] && flatEntries && typeof flatEntries === 'object') {
+    Object.assign(DICTIONARY[lang], flatEntries)
+  } else {
+    console.warn(`[i18n] registerTranslations: idioma o entradas inválidas (${lang})`)
+  }
+}
 
 /**
  * Idioma actual del sistema

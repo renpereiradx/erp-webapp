@@ -25,7 +25,13 @@ try {
 
 // Mock a basic i18n used across components to simplify tests: t(key, vars) returns interpolated string
 import * as i18nModule from '@/lib/i18n';
-import { tRaw } from '@/lib/i18n';
+import { tRaw, registerTranslations } from '@/lib/i18n';
+// Namespace bi.* diferido en runtime (chunk lazy): en tests se registra
+// síncrono para que tRaw devuelva el texto real (F5 bundle budget).
+import { bi as biEs } from './src/lib/i18n/locales/es/bi';
+import { bi as biEn } from './src/lib/i18n/locales/en/bi';
+registerTranslations('es', biEs);
+registerTranslations('en', biEn);
 
 // Firma real de t(key, fallback?, vars?): el mock anterior descartaba el
 // fallback y trataba el 2do arg string como vars, rompiendo la interpolación

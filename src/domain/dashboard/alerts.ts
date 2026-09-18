@@ -12,6 +12,8 @@ export interface AlertLike {
   title?: string | null
   message?: string | null
   details?: Record<string, unknown> | null
+  created_at?: string | null
+  action_url?: string | null
 }
 
 /** Unique lowercase categories present in the alerts, alphabetically sorted. */

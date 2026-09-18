@@ -7,6 +7,9 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './styles/material-icons.css'
 import App from './App'
+import { loadBiNamespace } from './lib/i18n/loadBiNamespace'
+// Namespace BI diferido: sale del chunk inicial (presupuesto F5)
+void loadBiNamespace()
 
 // Simple error boundary para hooks
 window.addEventListener('error', (event) => {

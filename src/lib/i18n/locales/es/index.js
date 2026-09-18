@@ -19,7 +19,6 @@ import { party } from './party'
 import { sales } from './sales'
 import { inventory } from './inventory'
 import { other } from './other'
-import { bi } from './bi'
 import { cashRegister } from './cashRegister'
 import { cashMovement } from './cashMovement'
 import { currencies } from './currencies'
@@ -78,5 +77,4 @@ export const es = {
   ...catalog,
   ...counterorders,
   ...other,
-  ...bi,
 }
