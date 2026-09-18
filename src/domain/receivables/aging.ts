@@ -8,6 +8,7 @@
 
 /** Row of the by-client aging table (amounts per bucket). */
 export interface ClientAgingRow {
+  client_name?: string | null
   current?: number | null
   days_31_60?: number | null
   days_61_90?: number | null

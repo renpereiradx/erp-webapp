@@ -4,7 +4,7 @@ import { tRaw } from '@/lib/i18n'
 import { transformReceivableItem } from '@/domain/receivables/mappers'
 import type { MasterListInvoice } from '../types'
 
-interface MasterListFilters {
+export interface MasterListFiltersState {
   search: string
   status: string
   dateStart: string
@@ -30,10 +30,10 @@ interface MasterListSorting {
  * Lista maestra de CxC (GET /receivables con filtros server-side y
  * búsqueda local). Migración FASE 3: .ts + guard anti-carrera + tRaw.
  */
-export const useReceivablesMasterList = (initialFilters: Partial<MasterListFilters> = {}) => {
+export const useReceivablesMasterList = (initialFilters: Partial<MasterListFiltersState> = {}) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filters, setFilters] = useState<MasterListFilters>({
+  const [filters, setFilters] = useState<MasterListFiltersState>({
     search: '',
     status: 'all',
     dateStart: '',
