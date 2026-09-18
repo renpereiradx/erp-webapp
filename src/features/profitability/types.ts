@@ -101,13 +101,23 @@ export interface ProfitabilityListSummary {
   margin_growth?: number
   total_profit?: number
   profit_growth?: number
+  total_profit_growth?: number
   total_revenue?: number
   revenue_growth?: number
   total_customers?: number
   total_customers_growth?: number
-  total_categories?: number
   average_customer_value?: number
   avg_value_growth?: number
+  active_customers?: number
+  active_customers_growth?: number
+  top_customers_pct?: number
+  top_customers_variation?: number
+  inactive_risk_customers?: number
+  most_profitable_name?: string
+  most_profitable_value?: number
+  most_profitable_growth?: number
+  least_profitable_name?: string
+  least_profitable_margin?: number
   [key: string]: unknown
 }
 
@@ -145,12 +155,14 @@ export interface CustomerProfitabilityData {
 // ---------------------------------------------------------------------------
 
 export interface CategoryProfitabilityItem {
-  id?: string | number
-  label?: string
+  category_id?: string | number
+  category_name?: string
+  product_count?: number
+  units_sold?: number
   revenue?: number
+  revenue_contribution_pct?: number
   gross_profit?: number
   gross_margin_pct?: number
-  transactions?: number
   [key: string]: unknown
 }
 

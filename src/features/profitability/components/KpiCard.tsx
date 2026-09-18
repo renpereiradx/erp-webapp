@@ -108,6 +108,7 @@ const KpiCard = ({
 
         <div className="flex flex-col gap-xs">
           <p className="text-label-caps uppercase text-on-surface-deep">{title}</p>
+          {subtitle && <p className="text-body-sm-bold text-primary truncate">{subtitle}</p>}
           <span className="text-title-md font-data-mono text-data-mono tracking-tight text-foreground truncate">
             {displayValue}
           </span>
