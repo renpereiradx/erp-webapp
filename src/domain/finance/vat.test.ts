@@ -11,10 +11,15 @@ describe('pct', () => {
 
 describe('monthLabel', () => {
   it('es-PY mmm yyyy y crudo con inválidos', () => {
-    expect(monthLabel('2026-09-01')).toContain('sep')
-    expect(monthLabel('2026-09-01')).toContain('2026')
+    // mid-month para evitar el corrimiento de TZ sobre fechas date-only
+    expect(monthLabel('2026-09-15')).toContain('sep')
+    expect(monthLabel('2026-09-15')).toContain('2026')
     expect(monthLabel('bad')).toBe('bad')
-    expect(monthLabel(null)).toBe('-')
+    // null → epoch del legado (new Date(null) es válido)
+    expect(monthLabel(null)).toBe(
+      new Date(0).toLocaleDateString('es-PY', { month: 'short', year: 'numeric' }),
+    )
+    expect(monthLabel('')).toBe('-')
   })
 })
 

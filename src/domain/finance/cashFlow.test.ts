@@ -35,9 +35,11 @@ describe('toDateLabel', () => {
     expect(toDateLabel('2026-09-18')).toContain('sep')
   })
 
-  it('devuelve el valor crudo con fecha inválida y - con null', () => {
+  it('devuelve el valor crudo con fecha inválida; null cae al epoch del legado (new Date(null))', () => {
     expect(toDateLabel('not-a-date')).toBe('not-a-date')
-    expect(toDateLabel(null)).toBe('-')
+    expect(toDateLabel(null)).toBe(
+      new Date(0).toLocaleDateString('es-PY', { day: '2-digit', month: 'short' }),
+    )
     expect(toDateLabel('')).toBe('-')
   })
 })
@@ -60,11 +62,12 @@ describe('buildCashFlowView', () => {
       totalInflows: 0,
       totalOutflows: 0,
       operatingNet: 0,
-      investingNet: 0,
-      financingNet: 0,
       dailyData: [],
       maxBarValue: 1,
     })
+    // -Math.abs(0) produce -0 (legado): numéricamente 0
+    expect(view.investingNet + 0).toBe(0)
+    expect(view.financingNet + 0).toBe(0)
     expect(view.minBalance).toBe(0)
     expect(view.maxBalance).toBe(0)
     expect(view.operatingRows).toHaveLength(5)
@@ -133,8 +136,9 @@ describe('buildCashFlowView', () => {
 
   it('min/max de balance y maxBarValue (con piso 1)', () => {
     const view = buildCashFlowView(SOURCE)
-    expect(view.minBalance).toBe(2006) // primeras 2 filas recortadas (2000, 2001 fuera)
-    expect(view.maxBalance).toBe(2012)
+    // slice(-7) recorta las 2 primeras filas (i=0,1): balances 2002..2008
+    expect(view.minBalance).toBe(2002)
+    expect(view.maxBalance).toBe(2008)
     expect(view.maxBarValue).toBe(108)
     expect(buildCashFlowView(null).maxBarValue).toBe(1)
   })

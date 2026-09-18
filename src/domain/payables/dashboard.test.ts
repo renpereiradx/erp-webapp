@@ -83,14 +83,15 @@ describe('buildUpcomingPayments', () => {
   it('mapea entradas con prioridad urgente y fallback de factura', () => {
     const cards = buildUpcomingPayments([
       {
-        date: '2026-09-20',
+        // T12:00 para que el día local no corra un día atrás en UTC-3
+        date: '2026-09-20T12:00:00',
         items: [{ payable_id: 'pay_123', supplier_name: 'Alpha', purchase_order_id: 77, amount: 1000, priority: 'HIGH' }],
       },
       {
-        date: '2026-10-01',
+        date: '2026-10-01T12:00:00',
         items: [{ payable_id: 'pay_456', supplier_name: 'Beta', amount: 2000, priority: 'LOW' }],
       },
-      { date: '2026-10-02', items: [] },
+      { date: '2026-10-02T12:00:00', items: [] },
     ])
     expect(cards).toHaveLength(2)
     expect(cards[0]).toMatchObject({
