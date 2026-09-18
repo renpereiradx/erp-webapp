@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
 import { useProfitability } from '../hooks/useProfitability';
 import { getDynamicFontClass } from '@/utils/ui';
-import { 
-  TrendingUp, 
+// F1 (PLAN_ALINEACION_BI_FRONTEND): geometría/formatos de margen extraídos a domain
+import {
+  contributionDonutGeometry,
+  formatCompactPYG,
+  getTopSeller,
+  marginBarWidth,
+} from '@/domain/profitability/margins';
+import {
+  TrendingUp,
   TrendingDown,
   Minus,
-  UserCheck, 
-  Search, 
-  Download, 
+  UserCheck,
+  Search,
+  Download,
   PieChart,
   BarChart3,
   Activity,
@@ -147,7 +154,7 @@ const SellerProfitability = () => {
     )
 
   const { sellers = [], summary = {}, contribution_share = [] } = data || {};
-  const topSeller = sellers.find(s => s.rank === 1) || sellers[0];
+  const topSeller = getTopSeller(sellers);
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-32 font-sans">
@@ -298,19 +305,19 @@ const SellerProfitability = () => {
                 <circle cx="50" cy="50" r="42" fill="transparent" stroke="#f3f2f1" strokeWidth="12" />
                 {contribution_share.map((item, i) => {
                   const colors = ['#0f6cbd', '#0078d4', '#2b88d8', '#edebe9'];
-                  let totalOffset = 0;
-                  for(let j=0; j<i; j++) totalOffset += contribution_share[j].pct;
+                  const totalOffset = contribution_share.slice(0, i).reduce((acc, it) => acc + (it.pct || 0), 0);
+                  const geo = contributionDonutGeometry(item.pct, totalOffset);
                   return (
-                    <circle 
+                    <circle
                       key={i}
-                      cx="50" cy="50" r="42" 
-                      fill="transparent" 
-                      stroke={colors[i]} 
-                      strokeWidth="14" 
-                      strokeDasharray="263.8" 
-                      strokeDashoffset={263.8 * (1 - item.pct/100)} 
-                      transform={`rotate(${(totalOffset * 3.6)} 50 50)`}
-                      strokeLinecap={item.pct > 5 ? 'round' : 'butt'}
+                      cx="50" cy="50" r="42"
+                      fill="transparent"
+                      stroke={colors[i]}
+                      strokeWidth="14"
+                      strokeDasharray={geo.dashArray}
+                      strokeDashoffset={geo.dashOffset}
+                      transform={`rotate(${geo.rotation} 50 50)`}
+                      strokeLinecap={geo.lineCap}
                       className="transition-all duration-1000 ease-out cursor-pointer hover:stroke-blue-400"
                     />
                   )
@@ -319,9 +326,7 @@ const SellerProfitability = () => {
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-white/40 backdrop-blur-sm rounded-full m-8 border border-white/50 shadow-inner">
                 <span className="text-[10px] font-black text-[#617589] uppercase tracking-[0.2em] leading-none">Neto Total</span>
                 <span className="text-3xl font-black text-[#111418] font-mono mt-2 tracking-tighter">
-                  {summary?.total_profit > 1000000 
-                    ? `${(summary.total_profit / 1000000).toFixed(1)}M` 
-                    : formatPYG(summary.total_profit)}
+                  {formatCompactPYG(summary.total_profit)}
                 </span>
               </div>
             </div>
@@ -366,7 +371,7 @@ const SellerProfitability = () => {
                   <span className="font-mono text-[#111418] text-sm">{formatPercent(s.gross_margin_pct)}% M.B.</span>
                 </div>
                 <div className="h-3 w-full bg-[#f3f2f1] rounded-full border border-[#e5e7eb] overflow-hidden p-0.5 shadow-inner">
-                  <div className="h-full bg-[#107c10] rounded-full shadow-[0_0_15px_rgba(16,124,16,0.3)] transition-all duration-1500 group-hover:scale-x-[1.02] origin-left" style={{ width: `${(s.gross_margin_pct / 50) * 100}%` }}></div>
+                  <div className="h-full bg-[#107c10] rounded-full shadow-[0_0_15px_rgba(16,124,16,0.3)] transition-all duration-1500 group-hover:scale-x-[1.02] origin-left" style={{ width: `${marginBarWidth(s.gross_margin_pct)}%` }}></div>
                 </div>
               </div>
             ))}

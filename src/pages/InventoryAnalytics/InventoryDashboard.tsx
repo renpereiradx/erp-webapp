@@ -6,6 +6,8 @@ import { StockStatusChart, StockStatusItem } from '../../components/InventoryAna
 import { AlertsPanel, AlertItem } from '../../components/InventoryAnalytics/Dashboard/AlertsPanel';
 import { ABCSummary, ABCItem } from '../../components/InventoryAnalytics/Dashboard/ABCSummary';
 import { formatPYG, formatNumber } from '../../utils/currencyUtils';
+// F1 (PLAN_ALINEACION_BI_FRONTEND): filas ABC extraídas a domain
+import { buildAbcItems } from '@/domain/inventory-analytics/abc';
 
 export const InventoryDashboard: React.FC = () => {
   const [data, setData] = useState<InventoryDashboardData | null>(null);
@@ -81,32 +83,7 @@ export const InventoryDashboard: React.FC = () => {
 
   const totalValueForABC = overview?.total_value || data.kpis.total_value;
 
-  const abcItems: ABCItem[] = [
-    { 
-      class: 'A', 
-      label: 'Clase A (Alta Rotación/Valor)', 
-      percentage: data.abc_summary.class_a_value_pct, 
-      count: data.abc_summary.class_a_count, 
-      value: formatPYG(totalValueForABC * data.abc_summary.class_a_value_pct / 100), 
-      description: 'Productos que representan el 80% del valor total.' 
-    },
-    { 
-      class: 'B', 
-      label: 'Clase B (Importancia Media)', 
-      percentage: data.abc_summary.class_b_value_pct, 
-      count: data.abc_summary.class_b_count, 
-      value: formatPYG(totalValueForABC * data.abc_summary.class_b_value_pct / 100), 
-      description: 'Productos que representan el 15% del valor total.' 
-    },
-    { 
-      class: 'C', 
-      label: 'Clase C (Bajo Valor Unitario)', 
-      percentage: data.abc_summary.class_c_value_pct, 
-      count: data.abc_summary.class_c_count, 
-      value: formatPYG(totalValueForABC * data.abc_summary.class_c_value_pct / 100), 
-      description: 'Productos que representan el 5% del valor total.' 
-    },
-  ];
+  const abcItems: ABCItem[] = buildAbcItems(data.abc_summary, totalValueForABC);
 
   return (
     <main className="max-w-[1400px] mx-auto w-full p-6 space-y-6 font-display">

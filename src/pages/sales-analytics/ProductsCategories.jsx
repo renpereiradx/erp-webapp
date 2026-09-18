@@ -15,6 +15,8 @@ import {
   RefreshCcw
 } from 'lucide-react';
 import salesAnalyticsService from '@/services/bi/salesAnalyticsService';
+// F1 (PLAN_ALINEACION_BI_FRONTEND): formato/paginación extraídos a domain
+import { clampPage, roundPct1 } from '@/domain/sales-analytics/format';
 
 const ProductsCategories = () => {
   const [categoriesData, setCategoriesData] = useState(null);
@@ -55,8 +57,10 @@ const ProductsCategories = () => {
   }, [period]);
 
   const handlePageChange = async (newPage) => {
+    const targetPage = clampPage(newPage, productsData.pagination);
+    if (targetPage === productsData.pagination.page) return;
     try {
-      const res = await salesAnalyticsService.getByProduct({ period, page: newPage, page_size: 10 });
+      const res = await salesAnalyticsService.getByProduct({ period, page: targetPage, page_size: 10 });
       if (res && res.success) setProductsData(res.data);
     } catch (err) {
       console.error("Error fetching page:", err);
@@ -190,7 +194,7 @@ const ProductsCategories = () => {
                 </div>
                 <div className="bg-white/10 p-3 rounded-lg border border-white/10">
                   <p className="text-white/60 text-[10px] uppercase font-black">Margen</p>
-                  <p className="text-xl font-black">{Math.round((categoriesData.categories?.[0]?.gross_margin_pct || 0) * 10) / 10}%</p>
+                  <p className="text-xl font-black">{roundPct1(categoriesData.categories?.[0]?.gross_margin_pct)}%</p>
                 </div>
               </div>
             </div>
@@ -259,9 +263,9 @@ const ProductsCategories = () => {
                     <td className="px-6 py-4 font-black text-right font-mono">{formatCurrency(product.sales)}</td>
                     <td className="px-6 py-4 text-right font-mono font-bold">{product.units_sold}</td>
                     <td className="px-6 py-4 text-right font-mono">{formatCurrency(product.average_price)}</td>
-                    <td className="px-6 py-4 text-emerald-600 font-black text-right font-mono">{Math.round(product.gross_margin_pct * 10) / 10}%</td>
+                    <td className="px-6 py-4 text-emerald-600 font-black text-right font-mono">{roundPct1(product.gross_margin_pct)}%</td>
                     <td className={`px-6 py-4 font-black text-right font-mono ${product.growth_pct >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {product.growth_pct >= 0 ? '+' : ''}{Math.round(product.growth_pct * 10) / 10}%
+                      {product.growth_pct >= 0 ? '+' : ''}{roundPct1(product.growth_pct)}%
                     </td>
                   </tr>
                 ))}
@@ -331,7 +335,7 @@ const PerformanceTable = ({ title, icon, data, type }) => (
               <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200 font-display text-sm">{item.top_product}</td>
               <td className="px-6 py-4 text-right font-bold">{item.units_sold}</td>
               <td className={`px-6 py-4 font-black text-right ${type === 'top' ? 'text-emerald-600' : item.growth_pct < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                {type === 'top' ? `${Math.round(item.gross_margin_pct * 10) / 10}%` : `${Math.round(item.growth_pct * 10) / 10}%`}
+                {type === 'top' ? `${roundPct1(item.gross_margin_pct)}%` : `${roundPct1(item.growth_pct)}%`}
               </td>
             </tr>
           ))}
