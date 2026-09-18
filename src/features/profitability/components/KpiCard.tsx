@@ -13,6 +13,8 @@ type KpiTone = 'primary' | 'success' | 'warning' | 'info'
 
 export interface KpiCardProps {
   title: string
+  /** Texto secundario bajo el título (ej. nombre del top seller). */
+  subtitle?: string
   value?: number | null
   trendValue?: number | null
   /** `true` (default): importa en Gs.; `false`: porcentaje. */
@@ -33,6 +35,7 @@ const TONE_CHIP: Record<KpiTone, string> = {
 
 const KpiCard = ({
   title,
+  subtitle,
   value,
   trendValue,
   isCurrency = true,
@@ -63,7 +66,10 @@ const KpiCard = ({
       >
         <div className="p-lg flex flex-col justify-between h-full gap-md">
           <div className="flex justify-between items-start gap-sm">
-            <p className="text-label-caps uppercase opacity-80">{title}</p>
+            <div>
+              <p className="text-label-caps uppercase opacity-80">{title}</p>
+              {subtitle && <p className="text-body-md opacity-90 truncate">{subtitle}</p>}
+            </div>
             <div className={`flex items-center gap-xs px-sm py-0.5 rounded-xs text-body-sm-bold font-data-mono bg-white/15`}>
               <TrendIcon className="w-3 h-3" strokeWidth={3} />
               {trendLabel}

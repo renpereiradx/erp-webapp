@@ -6,7 +6,7 @@ import { useI18n } from '@/lib/i18n'
  * hex). Tokens DESIGN; estado con aria-pressed. FASE 2.
  */
 
-export const PROFITABILITY_PERIODS = ['today', 'week', 'month', 'year'] as const
+export const PROFITABILITY_PERIODS = ['today', 'week', 'month', 'quarter', 'year'] as const
 
 export type ProfitabilityPeriod = (typeof PROFITABILITY_PERIODS)[number]
 
@@ -14,16 +14,24 @@ const PERIOD_FALLBACK: Record<ProfitabilityPeriod, string> = {
   today: 'Hoy',
   week: 'Semana',
   month: 'Mes',
+  quarter: 'Trim.',
   year: 'Año',
 }
 
 interface PeriodSelectorProps {
   value: ProfitabilityPeriod
   onChange: (period: ProfitabilityPeriod) => void
+  /** Subconjunto visible (default: today/week/month/year). */
+  periods?: ProfitabilityPeriod[]
   testId?: string
 }
 
-const PeriodSelector = ({ value, onChange, testId }: PeriodSelectorProps) => {
+const PeriodSelector = ({
+  value,
+  onChange,
+  periods = ['today', 'week', 'month', 'year'],
+  testId,
+}: PeriodSelectorProps) => {
   const { t } = useI18n()
 
   return (
@@ -33,7 +41,7 @@ const PeriodSelector = ({ value, onChange, testId }: PeriodSelectorProps) => {
       aria-label={t('bi.profitability.period.label', 'Período', {})}
       data-testid={testId}
     >
-      {PROFITABILITY_PERIODS.map((period) => {
+      {periods.map((period) => {
         const active = value === period
         return (
           <button

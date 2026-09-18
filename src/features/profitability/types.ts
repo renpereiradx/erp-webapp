@@ -215,6 +215,8 @@ export interface SellerProfitabilityData {
     gross_margin_pct?: number
     transactions?: number
     revenue?: number
+    total_sales?: number
+    total_revenue?: number
     [key: string]: unknown
   }>
   summary?: SellerSummary
