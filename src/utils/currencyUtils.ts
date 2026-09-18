@@ -1,19 +1,22 @@
 /**
- * Utilities for currency formatting and normalization, 
+ * Utilities for currency formatting and normalization,
  * specialized for Paraguayan Guaraníes (PYG).
  */
 
-/**
- * Formats a number as Paraguayan Guaraníes.
- * @param {number|string} amount - The value to format
- * @param {Object} options - Formatting options
- * @param {boolean} options.showSymbol - Whether to include 'Gs.' (default: true)
- * @param {boolean} options.compact - Whether to use compact notation like '1.5M' (default: false)
- * @returns {string} Formatted currency string
- */
-export const formatPYG = (amount, { showSymbol = true, compact = false } = {}) => {
-  const numericAmount = Number(amount) || 0;
-  
+export interface FormatPYGOptions {
+  /** Whether to include 'Gs.' (default: true) */
+  showSymbol?: boolean
+  /** Whether to use compact notation like '1.5M' (default: false) */
+  compact?: boolean
+}
+
+/** Formats a number as Paraguayan Guaraníes (e.g. 'Gs. 1.500.000' / 'Gs. 1,5M'). */
+export const formatPYG = (
+  amount: number | string,
+  { showSymbol = true, compact = false }: FormatPYGOptions = {},
+): string => {
+  const numericAmount = Number(amount) || 0
+
   if (compact) {
     const formatter = new Intl.NumberFormat('es-PY', {
       notation: 'compact',
@@ -33,16 +36,11 @@ export const formatPYG = (amount, { showSymbol = true, compact = false } = {}) =
   return showSymbol ? `Gs. ${formatted}` : formatted;
 };
 
-/**
- * Formats an amount with the specified currency code.
- * @param {number|string} amount - The value to format
- * @param {string} currencyCode - ISO 4217 currency code (default: 'PYG')
- * @returns {string} Formatted currency string
- */
-export const formatCurrency = (amount, currencyCode = 'PYG') => {
+/** Formats an amount with the specified ISO 4217 currency code (default 'PYG'). */
+export const formatCurrency = (amount: number | string, currencyCode = 'PYG'): string => {
   const numericAmount = Number(amount) || 0;
   const isPYG = currencyCode === 'PYG';
-  
+
   return new Intl.NumberFormat('es-PY', {
     style: 'currency',
     currency: currencyCode,
@@ -51,16 +49,11 @@ export const formatCurrency = (amount, currencyCode = 'PYG') => {
   }).format(numericAmount);
 };
 
-/**
- * Formats a generic number with consistent decimals.
- * @param {number|string} value - The value to format
- * @param {number} decimals - Maximum number of decimal places (default: 2)
- * @returns {string} Formatted number string
- */
-export const formatNumber = (value, decimals = 2) => {
+/** Formats a generic number with consistent decimals (maximum, default 2). */
+export const formatNumber = (value: number | string, decimals = 2): string => {
   const numericValue = Number(value);
   if (isNaN(numericValue)) return '0';
-  
+
   return new Intl.NumberFormat('es-PY', {
     minimumFractionDigits: 0,
     maximumFractionDigits: decimals,
@@ -70,10 +63,8 @@ export const formatNumber = (value, decimals = 2) => {
 /**
  * Normalizes an input value to a valid numeric amount for PYG.
  * Guaraníes do not use decimals in practice.
- * @param {string|number} value 
- * @returns {number}
  */
-export const normalizePYG = (value) => {
+export const normalizePYG = (value: string | number): number => {
   if (typeof value === 'string') {
     // Remove any non-digit characters except possibly a minus sign
     const cleaned = value.replace(/[^\d-]/g, '');
@@ -85,23 +76,21 @@ export const normalizePYG = (value) => {
 /**
  * Normalizes a currency string to a valid ISO 4217 code.
  * Handles common names returned by some API endpoints.
- * @param {string} code - The raw currency code/name
- * @returns {string} Normalized 3-letter currency code
  */
-export const normalizeCurrencyCode = (code) => {
+export const normalizeCurrencyCode = (code: string | null | undefined): string => {
   if (!code) return 'PYG';
-  
+
   const c = code.toString().trim().toUpperCase();
-  
+
   // Handle full names often returned in Spanish, with robustness for encoding issues
   if (/GUARAN/i.test(c)) {
     return 'PYG';
   }
-  
+
   if (/D.LAR|USD/i.test(c)) {
     return 'USD';
   }
-  
+
   // If it's already a 3-letter code, return it, otherwise default to PYG
   return c.length === 3 ? c : 'PYG';
 };
