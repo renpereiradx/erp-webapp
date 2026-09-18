@@ -74,7 +74,7 @@ const TaxManagementDashboard = () => {
   }
 
   return (
-    <div className='flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-slate-950 min-h-screen'>
+    <div className='flex-1 overflow-y-auto p-4 md:p-8 bg-surface-muted min-h-screen'>
       <PageHeader
         breadcrumb='Finanzas'
         title='Gestión de IVA y Resumen Fiscal'
@@ -84,7 +84,7 @@ const TaxManagementDashboard = () => {
         <div />
 
         <div className='flex flex-wrap gap-3 items-center'>
-          <div className='flex bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700'>
+          <div className='flex bg-surface p-1 rounded-xl border border-border-subtle'>
             {PERIOD_OPTIONS.map(option => {
               const active = period === option.value
               return (
@@ -93,8 +93,8 @@ const TaxManagementDashboard = () => {
                   onClick={() => setPeriod(option.value)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     active
-                      ? 'bg-slate-100 dark:bg-slate-800 text-primary shadow-sm'
-                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                      ? 'bg-surface-muted dark:bg-surface-deep text-primary shadow-sm'
+                      : 'text-on-surface-deep hover:text-foreground dark:hover:text-slate-200'
                   }`}
                 >
                   {option.label}
@@ -115,69 +115,69 @@ const TaxManagementDashboard = () => {
       )}
 
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
-        <div className='bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm'>
-          <p className='text-sm font-medium text-slate-500'>Total IVA Débito</p>
-          <h3 className='text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1'>
+        <div className='bg-surface p-6 rounded-xl border border-border-subtle shadow-sm'>
+          <p className='text-sm font-medium text-on-surface-deep'>Total IVA Débito</p>
+          <h3 className='text-2xl font-bold text-foreground mt-1'>
             {formatPYG(vatBalance.debit || salesVat.totalVat)}
           </h3>
-          <p className='text-emerald-500 text-xs font-semibold mt-2 flex items-center gap-1'>
+          <p className='text-success text-xs font-semibold mt-2 flex items-center gap-1'>
             <span className='material-symbols-outlined text-xs'>trending_up</span>
             {debitDelta >= 0 ? '+' : ''}
             {debitDelta.toFixed(1)}% vs periodo anterior
           </p>
         </div>
 
-        <div className='bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm'>
-          <p className='text-sm font-medium text-slate-500'>Total IVA Crédito</p>
-          <h3 className='text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1'>
+        <div className='bg-surface p-6 rounded-xl border border-border-subtle shadow-sm'>
+          <p className='text-sm font-medium text-on-surface-deep'>Total IVA Crédito</p>
+          <h3 className='text-2xl font-bold text-foreground mt-1'>
             {formatPYG(vatBalance.credit || purchaseVat.totalVat)}
           </h3>
-          <p className='text-rose-500 text-xs font-semibold mt-2 flex items-center gap-1'>
+          <p className='text-error text-xs font-semibold mt-2 flex items-center gap-1'>
             <span className='material-symbols-outlined text-xs'>trending_down</span>
             {creditDelta >= 0 ? '+' : ''}
             {creditDelta.toFixed(1)}% vs periodo anterior
           </p>
         </div>
 
-        <div className='bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm ring-2 ring-primary/20'>
+        <div className='bg-surface p-6 rounded-xl border border-border-subtle shadow-sm ring-2 ring-primary/20'>
           <p className='text-sm font-medium text-primary'>Saldo IVA a Pagar</p>
-          <h3 className='text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1'>
+          <h3 className='text-2xl font-bold text-foreground mt-1'>
             {formatPYG(vatBalance.payable || taxTotals.net)}
           </h3>
-          <p className='text-slate-400 text-xs font-medium mt-2'>
+          <p className='text-on-surface-deep text-xs font-medium mt-2'>
             Corresponde a liquidación del periodo
           </p>
         </div>
 
-        <div className='bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm'>
-          <p className='text-sm font-medium text-slate-500'>Crédito Acumulado</p>
-          <h3 className='text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1'>
+        <div className='bg-surface p-6 rounded-xl border border-border-subtle shadow-sm'>
+          <p className='text-sm font-medium text-on-surface-deep'>Crédito Acumulado</p>
+          <h3 className='text-2xl font-bold text-foreground mt-1'>
             {formatPYG(vatBalance.carryover || taxTotals.credits)}
           </h3>
-          <p className='text-slate-400 text-xs font-medium mt-2'>
+          <p className='text-on-surface-deep text-xs font-medium mt-2'>
             Saldo a favor para periodos siguientes
           </p>
         </div>
       </div>
 
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8'>
-        <div className='bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm'>
-          <div className='p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50'>
-            <h4 className='font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2'>
+        <div className='bg-surface rounded-xl border border-border-subtle overflow-hidden shadow-sm'>
+          <div className='p-4 border-b border-border-subtle bg-surface-muted'>
+            <h4 className='font-bold text-foreground flex items-center gap-2'>
               <span className='material-symbols-outlined text-primary'>outbox</span>
               IVA Ventas (Débito)
             </h4>
           </div>
           <div className='overflow-x-auto'>
             <table className='w-full text-left text-sm'>
-              <thead className='text-xs uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800'>
+              <thead className='text-xs uppercase text-on-surface-deep border-b border-border-subtle'>
                 <tr>
                   <th className='px-6 py-4 font-semibold'>Tasa</th>
                   <th className='px-6 py-4 font-semibold text-right'>Base Imponible</th>
                   <th className='px-6 py-4 font-semibold text-right'>IVA</th>
                 </tr>
               </thead>
-              <tbody className='divide-y divide-slate-100 dark:divide-slate-800'>
+              <tbody className='divide-y divide-border-subtle'>
                 <tr>
                   <td className='px-6 py-4 font-medium'>IVA 10%</td>
                   <td className='px-6 py-4 text-right'>{formatPYG(salesVat.base10)}</td>
@@ -193,7 +193,7 @@ const TaxManagementDashboard = () => {
                   <td className='px-6 py-4 text-right'>{formatPYG(salesVat.exempt)}</td>
                   <td className='px-6 py-4 text-right font-bold'>{formatPYG(0)}</td>
                 </tr>
-                <tr className='bg-slate-50/50 dark:bg-slate-800/20'>
+                <tr className='bg-surface-muted'>
                   <td className='px-6 py-4 font-bold text-primary'>TOTAL</td>
                   <td className='px-6 py-4 text-right font-bold'>{formatPYG(salesVat.totalGross)}</td>
                   <td className='px-6 py-4 text-right font-bold text-primary text-base'>
@@ -205,23 +205,23 @@ const TaxManagementDashboard = () => {
           </div>
         </div>
 
-        <div className='bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm'>
-          <div className='p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50'>
-            <h4 className='font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2'>
-              <span className='material-symbols-outlined text-emerald-500'>inbox</span>
+        <div className='bg-surface rounded-xl border border-border-subtle overflow-hidden shadow-sm'>
+          <div className='p-4 border-b border-border-subtle bg-surface-muted'>
+            <h4 className='font-bold text-foreground flex items-center gap-2'>
+              <span className='material-symbols-outlined text-success'>inbox</span>
               IVA Compras (Crédito)
             </h4>
           </div>
           <div className='overflow-x-auto'>
             <table className='w-full text-left text-sm'>
-              <thead className='text-xs uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800'>
+              <thead className='text-xs uppercase text-on-surface-deep border-b border-border-subtle'>
                 <tr>
                   <th className='px-6 py-4 font-semibold'>Tasa</th>
                   <th className='px-6 py-4 font-semibold text-right'>Base Imponible</th>
                   <th className='px-6 py-4 font-semibold text-right'>IVA</th>
                 </tr>
               </thead>
-              <tbody className='divide-y divide-slate-100 dark:divide-slate-800'>
+              <tbody className='divide-y divide-border-subtle'>
                 <tr>
                   <td className='px-6 py-4 font-medium'>IVA 10%</td>
                   <td className='px-6 py-4 text-right'>{formatPYG(purchaseVat.base10)}</td>
@@ -237,10 +237,10 @@ const TaxManagementDashboard = () => {
                   <td className='px-6 py-4 text-right'>{formatPYG(purchaseVat.exempt)}</td>
                   <td className='px-6 py-4 text-right font-bold'>{formatPYG(0)}</td>
                 </tr>
-                <tr className='bg-slate-50/50 dark:bg-slate-800/20'>
-                  <td className='px-6 py-4 font-bold text-emerald-600'>TOTAL</td>
+                <tr className='bg-surface-muted'>
+                  <td className='px-6 py-4 font-bold text-success'>TOTAL</td>
                   <td className='px-6 py-4 text-right font-bold'>{formatPYG(purchaseVat.totalGross)}</td>
-                  <td className='px-6 py-4 text-right font-bold text-emerald-600 text-base'>
+                  <td className='px-6 py-4 text-right font-bold text-success text-base'>
                     {formatPYG(purchaseVat.totalVat)}
                   </td>
                 </tr>
@@ -250,18 +250,18 @@ const TaxManagementDashboard = () => {
         </div>
       </div>
 
-      <div className='bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm'>
+      <div className='bg-surface rounded-xl border border-border-subtle p-6 shadow-sm'>
         <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6'>
-          <h4 className='font-bold text-slate-900 dark:text-slate-100 text-lg'>
+          <h4 className='font-bold text-foreground text-lg'>
             Tendencia Mensual: Débito vs Crédito
           </h4>
-          <div className='text-xs font-semibold text-slate-500'>
+          <div className='text-xs font-semibold text-on-surface-deep'>
             Posición neta: {formatPYG(taxTotals.net || vatBalance.payable)}
           </div>
         </div>
 
         {!monthlyRows.length ? (
-          <div className='h-64 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-sm text-slate-500'>
+          <div className='h-64 rounded-xl border border-dashed border-border-subtle flex items-center justify-center text-sm text-on-surface-deep'>
             No hay detalle mensual para este periodo.
           </div>
         ) : (
@@ -270,7 +270,7 @@ const TaxManagementDashboard = () => {
               <div key={`${item.month}-${index}`} className='flex-1 flex flex-col items-center gap-2 group'>
                 <div className='w-full flex justify-center items-end gap-1 h-full'>
                   <div
-                    className='w-1/3 bg-slate-200 dark:bg-slate-700 rounded-t-sm'
+                    className='w-1/3 bg-surface-deep rounded-t-sm'
                     style={{ height: `${Math.max(3, (item.credit / maxTrend) * 100)}%` }}
                   ></div>
                   <div
@@ -278,7 +278,7 @@ const TaxManagementDashboard = () => {
                     style={{ height: `${Math.max(3, (item.debit / maxTrend) * 100)}%` }}
                   ></div>
                 </div>
-                <span className='text-[10px] text-slate-400 font-bold uppercase'>
+                <span className='text-[10px] text-on-surface-deep font-bold uppercase'>
                   {monthLabel(item.month)}
                 </span>
               </div>

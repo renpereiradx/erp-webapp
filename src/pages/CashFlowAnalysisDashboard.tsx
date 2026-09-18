@@ -75,7 +75,7 @@ const CashFlowAnalysisDashboard = () => {
   }
 
   return (
-    <div className='flex-1 w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen'>
+    <div className='flex-1 w-full bg-surface-muted text-foreground min-h-screen'>
       <main className='flex-1 p-6 lg:p-8 max-w-[1600px] mx-auto w-full space-y-8'>
         <PageHeader
           breadcrumb='Contabilidad · Reportes'
@@ -129,64 +129,64 @@ const CashFlowAnalysisDashboard = () => {
         )}
 
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
-          <div className='bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between relative overflow-hidden'>
+          <div className='bg-surface p-6 rounded-xl border border-border-subtle shadow-sm flex flex-col justify-between relative overflow-hidden'>
             <div className='flex justify-between items-start mb-4'>
-              <p className='text-sm font-semibold text-slate-500 uppercase tracking-wider'>
+              <p className='text-sm font-semibold text-on-surface-deep uppercase tracking-wider'>
                 Saldo Inicial
               </p>
-              <div className='p-1.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-400'>
+              <div className='p-1.5 bg-surface-muted rounded text-on-surface-deep'>
                 <span className='material-symbols-outlined text-[20px]'>
                   account_balance
                 </span>
               </div>
             </div>
             <div>
-              <h3 className='text-4xl font-bold tracking-tight text-slate-900 dark:text-white'>
+              <h3 className='text-4xl font-bold tracking-tight text-foreground'>
                 {formatPYG(beginningCash)}
               </h3>
-              <p className='text-xs text-slate-400 mt-2'>
+              <p className='text-xs text-on-surface-deep mt-2'>
                 Periodo: {PERIOD_OPTIONS.find(p => p.value === period)?.label}
               </p>
             </div>
           </div>
 
-          <div className='bg-white dark:bg-slate-900 p-6 rounded-xl border-l-4 border-l-emerald-500 border-y border-r border-y-slate-200 border-r-slate-200 dark:border-y-slate-800 dark:border-r-slate-800 shadow-sm'>
+          <div className='bg-surface p-6 rounded-xl border-l-4 border-l-emerald-500 border-y border-r border-y-slate-200 border-r-slate-200 shadow-sm'>
             <div className='flex justify-between items-start mb-4'>
-              <p className='text-sm font-semibold text-slate-500 uppercase tracking-wider'>
+              <p className='text-sm font-semibold text-on-surface-deep uppercase tracking-wider'>
                 Entradas Totales
               </p>
-              <div className='p-1.5 bg-emerald-50 dark:bg-emerald-900/30 rounded text-emerald-600'>
+              <div className='p-1.5 bg-success/10 rounded text-success'>
                 <span className='material-symbols-outlined text-[20px]'>
                   arrow_downward
                 </span>
               </div>
             </div>
             <div>
-              <h3 className='text-4xl font-bold tracking-tight text-slate-900 dark:text-white'>
+              <h3 className='text-4xl font-bold tracking-tight text-foreground'>
                 {formatSignedPYG(totalInflows)}
               </h3>
-              <p className='text-xs text-slate-400 mt-2'>
+              <p className='text-xs text-on-surface-deep mt-2'>
                 Total acumulado del periodo
               </p>
             </div>
           </div>
 
-          <div className='bg-white dark:bg-slate-900 p-6 rounded-xl border-l-4 border-l-rose-500 border-y border-r border-y-slate-200 border-r-slate-200 dark:border-y-slate-800 dark:border-r-slate-800 shadow-sm'>
+          <div className='bg-surface p-6 rounded-xl border-l-4 border-l-rose-500 border-y border-r border-y-slate-200 border-r-slate-200 shadow-sm'>
             <div className='flex justify-between items-start mb-4'>
-              <p className='text-sm font-semibold text-slate-500 uppercase tracking-wider'>
+              <p className='text-sm font-semibold text-on-surface-deep uppercase tracking-wider'>
                 Salidas Totales
               </p>
-              <div className='p-1.5 bg-rose-50 dark:bg-rose-900/30 rounded text-rose-600'>
+              <div className='p-1.5 bg-error/10 rounded text-error'>
                 <span className='material-symbols-outlined text-[20px]'>
                   arrow_upward
                 </span>
               </div>
             </div>
             <div>
-              <h3 className='text-4xl font-bold tracking-tight text-slate-900 dark:text-white'>
+              <h3 className='text-4xl font-bold tracking-tight text-foreground'>
                 {formatPYG(-Math.abs(totalOutflows))}
               </h3>
-              <p className='text-xs text-slate-400 mt-2'>
+              <p className='text-xs text-on-surface-deep mt-2'>
                 Total egresado del periodo
               </p>
             </div>
@@ -194,10 +194,10 @@ const CashFlowAnalysisDashboard = () => {
 
           <div className='bg-primary p-6 rounded-xl shadow-lg shadow-primary/20 text-white relative overflow-hidden'>
             <div className='flex justify-between items-start mb-4 relative z-10'>
-              <p className='text-sm font-semibold text-blue-100 uppercase tracking-wider'>
+              <p className='text-sm font-semibold text-primary uppercase tracking-wider'>
                 Saldo Final
               </p>
-              <div className='p-1.5 bg-white/20 rounded text-white'>
+              <div className='p-1.5 bg-surface/20 rounded text-white'>
                 <span className='material-symbols-outlined text-[20px]'>
                   check_circle
                 </span>
@@ -207,7 +207,7 @@ const CashFlowAnalysisDashboard = () => {
               <h3 className='text-4xl font-bold tracking-tight'>
                 {formatPYG(endingCash)}
               </h3>
-              <p className='text-xs text-blue-100/80 mt-2'>
+              <p className='text-xs text-primary/80 mt-2'>
                 Variación neta: {formatSignedPYG(netCashChange)}
               </p>
             </div>
@@ -219,32 +219,32 @@ const CashFlowAnalysisDashboard = () => {
           </div>
         </div>
 
-        <div className='bg-white dark:bg-slate-900 p-8 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm'>
+        <div className='bg-surface p-8 rounded-xl border border-border-subtle shadow-sm'>
           <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8'>
             <div>
-              <h3 className='text-xl font-bold text-slate-900 dark:text-white'>
+              <h3 className='text-xl font-bold text-foreground'>
                 Tendencia de Flujo de Caja
               </h3>
-              <p className='text-sm text-slate-500'>
+              <p className='text-sm text-on-surface-deep'>
                 Entradas y salidas diarias reportadas por la API
               </p>
             </div>
             <div className='flex items-center gap-6'>
               <div className='flex items-center gap-2'>
-                <span className='w-3 h-3 rounded-full bg-emerald-500'></span>
-                <span className='text-sm font-medium text-slate-600 dark:text-slate-300'>
+                <span className='w-3 h-3 rounded-full bg-success'></span>
+                <span className='text-sm font-medium text-on-surface-deep'>
                   Entradas
                 </span>
               </div>
               <div className='flex items-center gap-2'>
-                <span className='w-3 h-3 rounded-full bg-rose-500'></span>
-                <span className='text-sm font-medium text-slate-600 dark:text-slate-300'>
+                <span className='w-3 h-3 rounded-full bg-error'></span>
+                <span className='text-sm font-medium text-on-surface-deep'>
                   Salidas
                 </span>
               </div>
               <div className='flex items-center gap-2'>
                 <span className='w-3 h-3 rounded-full border-2 border-primary border-dashed'></span>
-                <span className='text-sm font-medium text-slate-600 dark:text-slate-300'>
+                <span className='text-sm font-medium text-on-surface-deep'>
                   Saldo
                 </span>
               </div>
@@ -252,7 +252,7 @@ const CashFlowAnalysisDashboard = () => {
           </div>
 
           {!dailyData.length ? (
-            <div className='h-72 w-full rounded-xl border border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-sm text-slate-500'>
+            <div className='h-72 w-full rounded-xl border border-dashed border-border-subtle flex items-center justify-center text-sm text-on-surface-deep'>
               No hay desglose diario disponible para este periodo.
             </div>
           ) : (
@@ -261,7 +261,7 @@ const CashFlowAnalysisDashboard = () => {
                 {[...Array(5)].map((_, i) => (
                   <div
                     key={i}
-                    className='border-t border-slate-900 dark:border-white h-px w-full'
+                    className='border-t border-divider h-px w-full'
                   ></div>
                 ))}
               </div>
@@ -278,11 +278,11 @@ const CashFlowAnalysisDashboard = () => {
                   >
                     <div className='w-full flex items-end justify-center gap-2 h-full pb-2 relative'>
                       <div
-                        className='w-3 sm:w-5 bg-emerald-500/90 rounded-t-lg transition-all hover:bg-emerald-500'
+                        className='w-3 sm:w-5 bg-success/90 rounded-t-lg transition-all hover:bg-success'
                         style={{ height: `${clampNumber(inflowPct, 2, 100)}%` }}
                       ></div>
                       <div
-                        className='w-3 sm:w-5 bg-rose-500/90 rounded-t-lg transition-all hover:bg-rose-500'
+                        className='w-3 sm:w-5 bg-error/90 rounded-t-lg transition-all hover:bg-error'
                         style={{ height: `${clampNumber(outflowPct, 2, 100)}%` }}
                       ></div>
                       <div
@@ -290,7 +290,7 @@ const CashFlowAnalysisDashboard = () => {
                         style={{ bottom: `${balancePosition}%` }}
                       ></div>
                     </div>
-                    <span className='text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wide'>
+                    <span className='text-[10px] sm:text-xs font-medium text-on-surface-deep uppercase tracking-wide'>
                       {item.date}
                     </span>
                   </div>
@@ -301,10 +301,10 @@ const CashFlowAnalysisDashboard = () => {
         </div>
 
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-          <div className='lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden'>
-            <div className='px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20'>
+          <div className='lg:col-span-2 bg-surface rounded-xl border border-border-subtle shadow-sm overflow-hidden'>
+            <div className='px-6 py-5 border-b border-border-subtle flex justify-between items-center bg-surface-muted'>
               <h3 className='text-lg font-bold flex items-center gap-2'>
-                <span className='material-symbols-outlined text-emerald-600'>
+                <span className='material-symbols-outlined text-success'>
                   inventory_2
                 </span>
                 Actividades de Operación
@@ -312,8 +312,8 @@ const CashFlowAnalysisDashboard = () => {
               <span
                 className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
                   operatingNet >= 0
-                    ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20'
-                    : 'text-rose-600 bg-rose-50 dark:bg-rose-900/20'
+                    ? 'text-success bg-success/10 dark:bg-emerald-900/20'
+                    : 'text-error bg-error/10 dark:bg-rose-900/20'
                 }`}
               >
                 Neto: {formatSignedPYG(operatingNet)}
@@ -323,25 +323,25 @@ const CashFlowAnalysisDashboard = () => {
             <div className='overflow-x-auto'>
               <table className='w-full text-left border-collapse'>
                 <thead>
-                  <tr className='bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider'>
+                  <tr className='bg-surface-muted text-on-surface-deep text-xs font-bold uppercase tracking-wider'>
                     <th className='px-6 py-4'>Concepto</th>
                     <th className='px-6 py-4 text-right'>Entradas</th>
                     <th className='px-6 py-4 text-right'>Salidas</th>
                   </tr>
                 </thead>
-                <tbody className='divide-y divide-slate-100 dark:divide-slate-800'>
+                <tbody className='divide-y divide-border-subtle'>
                   {operatingRows.map(row => (
                     <tr
                       key={row.concept}
-                      className='hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors'
+                      className='hover:bg-surface-muted:bg-surface-deep/30 transition-colors'
                     >
-                      <td className='px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200'>
+                      <td className='px-6 py-4 text-sm font-semibold text-foreground'>
                         {row.concept}
                       </td>
-                      <td className='px-6 py-4 text-sm font-medium text-emerald-600 text-right'>
+                      <td className='px-6 py-4 text-sm font-medium text-success text-right'>
                         {(row.inflows ?? 0) > 0 ? formatPYG(row.inflows ?? 0) : '-'}
                       </td>
-                      <td className='px-6 py-4 text-sm font-medium text-rose-600 text-right'>
+                      <td className='px-6 py-4 text-sm font-medium text-error text-right'>
                         {(row.outflows ?? 0) > 0
                           ? formatPYG(-Math.abs(row.outflows ?? 0))
                           : '-'}
@@ -349,8 +349,8 @@ const CashFlowAnalysisDashboard = () => {
                     </tr>
                   ))}
 
-                  <tr className='bg-slate-50/60 dark:bg-slate-800/40'>
-                    <td className='px-6 py-4 text-sm font-black text-slate-900 dark:text-white'>
+                  <tr className='bg-surface-muted/60'>
+                    <td className='px-6 py-4 text-sm font-black text-foreground'>
                       Resultado Operativo
                     </td>
                     <td
@@ -360,8 +360,8 @@ const CashFlowAnalysisDashboard = () => {
                       <span
                         className={
                           operatingNet >= 0
-                            ? 'text-emerald-600'
-                            : 'text-rose-600'
+                            ? 'text-success'
+                            : 'text-error'
                         }
                       >
                         {formatSignedPYG(operatingNet)}
@@ -374,16 +374,16 @@ const CashFlowAnalysisDashboard = () => {
           </div>
 
           <div className='space-y-6'>
-            <div className='bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm'>
+            <div className='bg-surface p-6 rounded-xl border border-border-subtle shadow-sm'>
               <div className='flex items-center justify-between mb-4'>
                 <div className='flex items-center gap-2'>
-                  <span className='material-symbols-outlined text-blue-500'>
+                  <span className='material-symbols-outlined text-primary'>
                     trending_up
                   </span>
                   <h3 className='text-lg font-bold'>Inversión</h3>
                 </div>
                 <span
-                  className={`text-xs font-bold ${investingNet >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}
+                  className={`text-xs font-bold ${investingNet >= 0 ? 'text-success' : 'text-error'}`}
                 >
                   {formatSignedPYG(investingNet)} Neto
                 </span>
@@ -392,9 +392,9 @@ const CashFlowAnalysisDashboard = () => {
                 {investingRows.map(row => (
                   <div
                     key={row.concept}
-                    className='flex justify-between items-center text-sm p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg'
+                    className='flex justify-between items-center text-sm p-3 bg-surface-muted rounded-lg'
                   >
-                    <span className='text-slate-600 dark:text-slate-400 font-medium'>
+                    <span className='text-on-surface-deep font-medium'>
                       {row.concept}
                     </span>
                     <span
@@ -407,16 +407,16 @@ const CashFlowAnalysisDashboard = () => {
               </div>
             </div>
 
-            <div className='bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm'>
+            <div className='bg-surface p-6 rounded-xl border border-border-subtle shadow-sm'>
               <div className='flex items-center justify-between mb-4'>
                 <div className='flex items-center gap-2'>
-                  <span className='material-symbols-outlined text-indigo-500'>
+                  <span className='material-symbols-outlined text-secondary'>
                     account_balance
                   </span>
                   <h3 className='text-lg font-bold'>Financiación</h3>
                 </div>
                 <span
-                  className={`text-xs font-bold ${financingNet >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}
+                  className={`text-xs font-bold ${financingNet >= 0 ? 'text-success' : 'text-error'}`}
                 >
                   {formatSignedPYG(financingNet)} Neto
                 </span>
@@ -425,9 +425,9 @@ const CashFlowAnalysisDashboard = () => {
                 {financingRows.map(row => (
                   <div
                     key={row.concept}
-                    className='flex justify-between items-center text-sm p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg'
+                    className='flex justify-between items-center text-sm p-3 bg-surface-muted rounded-lg'
                   >
-                    <span className='text-slate-600 dark:text-slate-400 font-medium'>
+                    <span className='text-on-surface-deep font-medium'>
                       {row.concept}
                     </span>
                     <span
