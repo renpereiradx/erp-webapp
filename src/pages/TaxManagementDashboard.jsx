@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { formatPYG } from '@/utils/currencyUtils'
 import { useFinancialReports } from '@/hooks/useFinancialReports'
+// F1 (PLAN_ALINEACION_BI_FRONTEND): vista IVA extraída a domain
+import { buildVatView, monthLabel } from '@/domain/finance/vat'
 
 const PERIOD_OPTIONS = [
   { value: 'today', label: 'Hoy' },
@@ -10,25 +12,6 @@ const PERIOD_OPTIONS = [
 ]
 
 const SOURCE_IS_DEMO = import.meta.env.VITE_USE_DEMO === 'true'
-
-const toNumber = value => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : 0
-}
-
-const pct = (current, prev) => {
-  if (!prev) return 0
-  return ((current - prev) / prev) * 100
-}
-
-const monthLabel = dateLike => {
-  const date = new Date(dateLike)
-  if (Number.isNaN(date.getTime())) return dateLike || '-'
-  return date.toLocaleDateString('es-PY', {
-    month: 'short',
-    year: 'numeric',
-  })
-}
 
 const TaxManagementDashboard = () => {
   const [period, setPeriod] = useState('month')
@@ -60,81 +43,10 @@ const TaxManagementDashboard = () => {
     monthlyRows,
     debitDelta,
     creditDelta,
-  } = useMemo(() => {
-    const sales = vatReport?.sales_vat || {}
-    const purchases = vatReport?.purchases_vat || {}
-    const balance = vatReport?.vat_balance || {}
-    const summary = taxSummary || {}
-
-    const monthly = [
-      ...(Array.isArray(vatReport?.monthly_breakdown)
-        ? vatReport.monthly_breakdown.map(item => ({
-            month: item.month,
-            debit: toNumber(item.vat_debito),
-            credit: toNumber(item.vat_credito),
-            net: toNumber(item.balance),
-          }))
-        : []),
-      ...(Array.isArray(summary?.monthly_detail)
-        ? summary.monthly_detail.map(item => ({
-            month: item.month,
-            debit: toNumber(item.vat_debito),
-            credit: toNumber(item.vat_credito),
-            net: toNumber(item.net_vat),
-          }))
-        : []),
-    ]
-
-    const dedupedMonthly = monthly
-      .filter(item => item.month)
-      .reduce((acc, item) => {
-        acc[item.month] = item
-        return acc
-      }, {})
-
-    const rows = Object.values(dedupedMonthly)
-      .sort((a, b) => new Date(a.month) - new Date(b.month))
-      .slice(-6)
-
-    const current = rows[rows.length - 1]
-    const previous = rows[rows.length - 2]
-
-    return {
-      salesVat: {
-        base10: toNumber(sales.gross_sales_10),
-        iva10: toNumber(sales.vat_10),
-        base5: toNumber(sales.gross_sales_5),
-        iva5: toNumber(sales.vat_5),
-        exempt: toNumber(sales.exempt_sales),
-        totalGross: toNumber(sales.total_gross_sales),
-        totalVat: toNumber(sales.total_vat_debito),
-      },
-      purchaseVat: {
-        base10: toNumber(purchases.gross_purchases_10),
-        iva10: toNumber(purchases.vat_10),
-        base5: toNumber(purchases.gross_purchases_5),
-        iva5: toNumber(purchases.vat_5),
-        exempt: toNumber(purchases.exempt_purchases),
-        totalGross: toNumber(purchases.total_gross_purchases),
-        totalVat: toNumber(purchases.total_vat_credito),
-      },
-      vatBalance: {
-        debit: toNumber(balance.vat_debito),
-        credit: toNumber(balance.vat_credito),
-        payable: toNumber(balance.vat_payable),
-        carryover: toNumber(balance.credit_carryover),
-      },
-      taxTotals: {
-        liability: toNumber(summary.total_tax_liability),
-        credits: toNumber(summary.total_tax_credits),
-        net: toNumber(summary.net_tax_position),
-      },
-      monthlyRows: rows,
-      debitDelta: current && previous ? pct(current.debit, previous.debit) : 0,
-      creditDelta:
-        current && previous ? pct(current.credit, previous.credit) : 0,
-    }
-  }, [taxSummary, vatReport])
+  } = useMemo(
+    () => buildVatView(vatReport, taxSummary),
+    [taxSummary, vatReport],
+  )
 
   const maxTrend = Math.max(
     1,

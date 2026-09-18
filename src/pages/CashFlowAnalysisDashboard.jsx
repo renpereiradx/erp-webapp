@@ -1,6 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useFinancialReports } from '@/hooks/useFinancialReports'
 import { formatPYG } from '@/utils/currencyUtils'
+// F1 (PLAN_ALINEACION_BI_FRONTEND): vista del flujo extraída a domain
+import {
+  buildCashFlowView,
+  clampNumber,
+  formatSignedPYG,
+  getBalancePosition,
+} from '@/domain/finance/cashFlow'
 
 const PERIOD_OPTIONS = [
   { value: 'today', label: 'Hoy' },
@@ -10,27 +17,6 @@ const PERIOD_OPTIONS = [
 ]
 
 const SOURCE_IS_DEMO = import.meta.env.VITE_USE_DEMO === 'true'
-
-const toNumber = value => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : 0
-}
-
-const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
-
-const toDateLabel = value => {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value || '-'
-  }
-
-  return date.toLocaleDateString('es-PY', {
-    day: '2-digit',
-    month: 'short',
-  })
-}
-
-const formatSignedPYG = amount => `${amount > 0 ? '+' : ''}${formatPYG(amount)}`
 
 const CashFlowAnalysisDashboard = () => {
   const [period, setPeriod] = useState('month')
@@ -61,161 +47,7 @@ const CashFlowAnalysisDashboard = () => {
     maxBarValue,
     minBalance,
     maxBalance,
-  } = useMemo(() => {
-    const source = cashFlow || {}
-    const operating = source.operating_activities || {}
-    const investing = source.investing_activities || {}
-    const financing = source.financing_activities || {}
-
-    const beginning = toNumber(source.beginning_cash)
-    const reportedEnding = toNumber(source.ending_cash)
-    const reportedNetChange = toNumber(source.net_cash_change)
-
-    const salesInflow = toNumber(operating.cash_from_sales)
-    const receivablesInflow = toNumber(operating.cash_from_receivables)
-    const suppliersOutflow = toNumber(operating.cash_paid_to_suppliers)
-    const expensesOutflow = toNumber(operating.cash_paid_for_expenses)
-    const salariesOutflow = toNumber(operating.cash_paid_for_salaries)
-
-    const equipmentOutflow = toNumber(investing.equipment_purchases)
-    const loanOutflow = toNumber(financing.loan_payments)
-
-    const normalizedDaily = (
-      Array.isArray(source.daily_breakdown) ? source.daily_breakdown : []
-    )
-      .slice(-7)
-      .map(entry => ({
-        date: toDateLabel(entry.date),
-        inflows: toNumber(entry.inflows),
-        outflows: toNumber(entry.outflows),
-        netFlow: toNumber(entry.net_flow),
-        balance: toNumber(entry.balance),
-      }))
-
-    const totalInflowsFromDaily = normalizedDaily.reduce(
-      (sum, row) => sum + row.inflows,
-      0,
-    )
-    const totalOutflowsFromDaily = normalizedDaily.reduce(
-      (sum, row) => sum + row.outflows,
-      0,
-    )
-
-    const inflowsFromActivities = salesInflow + receivablesInflow
-    const outflowsFromActivities =
-      suppliersOutflow +
-      expensesOutflow +
-      salariesOutflow +
-      equipmentOutflow +
-      loanOutflow
-
-    const resolvedInflows =
-      totalInflowsFromDaily > 0 ? totalInflowsFromDaily : inflowsFromActivities
-    const resolvedOutflows =
-      totalOutflowsFromDaily > 0
-        ? totalOutflowsFromDaily
-        : outflowsFromActivities
-    const resolvedNetChange =
-      reportedNetChange !== 0
-        ? reportedNetChange
-        : resolvedInflows - resolvedOutflows
-    const resolvedEnding =
-      reportedEnding !== 0 ? reportedEnding : beginning + resolvedNetChange
-
-    const computedOperatingNet =
-      toNumber(operating.net_operating_cash_flow) ||
-      salesInflow +
-        receivablesInflow -
-        suppliersOutflow -
-        expensesOutflow -
-        salariesOutflow
-
-    const computedInvestingNet =
-      toNumber(investing.net_investing_cash_flow) || -Math.abs(equipmentOutflow)
-
-    const computedFinancingNet =
-      toNumber(financing.net_financing_cash_flow) || -Math.abs(loanOutflow)
-
-    const balances = normalizedDaily.length
-      ? normalizedDaily.map(row => row.balance)
-      : [beginning, resolvedEnding]
-
-    const minBal = Math.min(...balances)
-    const maxBal = Math.max(...balances)
-    const maxBar = Math.max(
-      1,
-      ...normalizedDaily.flatMap(row => [
-        row.inflows,
-        row.outflows,
-        Math.abs(row.netFlow),
-      ]),
-    )
-
-    return {
-      beginningCash: beginning,
-      endingCash: resolvedEnding,
-      netCashChange: resolvedNetChange,
-      totalInflows: resolvedInflows,
-      totalOutflows: resolvedOutflows,
-      operatingRows: [
-        {
-          concept: 'Cobros por ventas',
-          inflows: salesInflow,
-          outflows: 0,
-        },
-        {
-          concept: 'Cobros por cuentas por cobrar',
-          inflows: receivablesInflow,
-          outflows: 0,
-        },
-        {
-          concept: 'Pagos a proveedores',
-          inflows: 0,
-          outflows: suppliersOutflow,
-        },
-        {
-          concept: 'Pagos de gastos operativos',
-          inflows: 0,
-          outflows: expensesOutflow,
-        },
-        {
-          concept: 'Pagos de salarios',
-          inflows: 0,
-          outflows: salariesOutflow,
-        },
-      ],
-      operatingNet: computedOperatingNet,
-      investingRows: [
-        {
-          concept: 'Compra de equipos',
-          amount: -Math.abs(equipmentOutflow),
-        },
-      ],
-      investingNet: computedInvestingNet,
-      financingRows: [
-        {
-          concept: 'Pago de préstamos',
-          amount: -Math.abs(loanOutflow),
-        },
-      ],
-      financingNet: computedFinancingNet,
-      dailyData: normalizedDaily,
-      maxBarValue: maxBar,
-      minBalance: minBal,
-      maxBalance: maxBal,
-    }
-  }, [cashFlow])
-
-  const getBalancePosition = value => {
-    if (maxBalance === minBalance) {
-      return 50
-    }
-    return clamp(
-      ((value - minBalance) / (maxBalance - minBalance)) * 100,
-      5,
-      95,
-    )
-  }
+  } = useMemo(() => buildCashFlowView(cashFlow), [cashFlow])
 
   const retryFetch = () => {
     fetchCashFlow(period)
@@ -452,7 +284,7 @@ const CashFlowAnalysisDashboard = () => {
               {dailyData.map((item, index) => {
                 const inflowPct = (item.inflows / maxBarValue) * 100
                 const outflowPct = (item.outflows / maxBarValue) * 100
-                const balancePosition = getBalancePosition(item.balance)
+                const balancePosition = getBalancePosition(item.balance, minBalance, maxBalance)
 
                 return (
                   <div
@@ -462,11 +294,11 @@ const CashFlowAnalysisDashboard = () => {
                     <div className='w-full flex items-end justify-center gap-2 h-full pb-2 relative'>
                       <div
                         className='w-3 sm:w-5 bg-emerald-500/90 rounded-t-lg transition-all hover:bg-emerald-500'
-                        style={{ height: `${clamp(inflowPct, 2, 100)}%` }}
+                        style={{ height: `${clampNumber(inflowPct, 2, 100)}%` }}
                       ></div>
                       <div
                         className='w-3 sm:w-5 bg-rose-500/90 rounded-t-lg transition-all hover:bg-rose-500'
-                        style={{ height: `${clamp(outflowPct, 2, 100)}%` }}
+                        style={{ height: `${clampNumber(outflowPct, 2, 100)}%` }}
                       ></div>
                       <div
                         className='absolute w-3 sm:w-5 h-1 bg-primary rounded-full transition-all'
