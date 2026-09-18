@@ -32,7 +32,7 @@ export const InventoryTurnoverABC: React.FC = () => {
   }
 
   if (!data) {
-    return <div className="p-8 text-center text-rose-500">Error al cargar los datos.</div>;
+    return <div className="p-8 text-center text-error">Error al cargar los datos.</div>;
   }
 
   return (
@@ -40,13 +40,13 @@ export const InventoryTurnoverABC: React.FC = () => {
       {/* Page Title & Period Control */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-slate-900 dark:text-white text-3xl font-black tracking-tight uppercase">Análisis de Rotación y ABC</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-base font-medium">Análisis detallado de rotación por categoría y valorización ABC en Guaraníes (Gs.)</p>
+          <h1 className="text-foreground text-3xl font-black tracking-tight uppercase">Análisis de Rotación y ABC</h1>
+          <p className="text-on-surface-deep text-base font-medium">Análisis detallado de rotación por categoría y valorización ABC en Guaraníes (Gs.)</p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex h-10 items-center rounded-lg bg-slate-200/50 dark:bg-slate-800 p-1 shadow-sm font-mono">
+          <div className="flex h-10 items-center rounded-lg bg-surface-subtle/50 p-1 shadow-sm font-mono">
             {['hoy', 'semana', 'mes', 'año'].map((p) => (
-              <label key={p} className="flex cursor-pointer h-full items-center justify-center rounded px-4 text-sm font-bold text-slate-500 hover:text-slate-900 transition-all has-[:checked]:bg-white has-[:checked]:text-primary has-[:checked]:shadow-sm">
+              <label key={p} className="flex cursor-pointer h-full items-center justify-center rounded px-4 text-sm font-bold text-on-surface-deep hover:text-foreground transition-all has-[:checked]:bg-surface has-[:checked]:text-primary has-[:checked]:shadow-sm">
                 <span className="capitalize">{p}</span>
                 <input 
                   className="hidden" 
@@ -59,7 +59,7 @@ export const InventoryTurnoverABC: React.FC = () => {
               </label>
             ))}
           </div>
-          <button className="flex h-10 px-4 items-center justify-center rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-bold gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm uppercase tracking-wider">
+          <button className="flex h-10 px-4 items-center justify-center rounded-lg bg-surface border border-border-subtle text-foreground text-sm font-bold gap-2 hover:bg-surface-muted:bg-surface-deep transition-colors shadow-sm uppercase tracking-wider">
             <span className="material-symbols-outlined text-lg">download</span>
             Exportar
           </button>

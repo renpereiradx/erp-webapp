@@ -22,25 +22,25 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, to
     switch (status) {
       case 'IN_STOCK':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-success/10 text-success">
             En Stock
           </span>
         );
       case 'LOW_STOCK':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-warning/10 text-warning">
             Bajo
           </span>
         );
       case 'OUT_OF_STOCK':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-error/10 text-error">
             Agotado
           </span>
         );
       case 'OVERSTOCK':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary/10 text-secondary">
             Sobre-stock
           </span>
         );
@@ -50,11 +50,11 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, to
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden font-display">
+    <div className="bg-surface rounded-xl border border-border-subtle shadow-sm overflow-hidden font-display">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+            <tr className="bg-surface-muted border-b border-border-subtle text-on-surface-deep text-[10px] font-bold uppercase tracking-wider">
               <th className="py-3 px-4">Producto</th>
               <th className="py-3 px-4">SKU / Categoría</th>
               <th className="py-3 px-4 text-center">Stock / Mín</th>
@@ -65,7 +65,7 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, to
               <th className="py-3 px-4 text-center">Acción</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+          <tbody className="divide-y divide-border-subtle">
             {products.map((product) => {
               // Soporte para variaciones de nombres de campo entre endpoints:
               // stock-levels usa status canónico; reorder expone priority legacy
@@ -83,24 +83,24 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, to
               const totalValue = product.stock_value ?? (product as any).estimated_cost ?? 0;
 
               return (
-                <tr key={product.product_id} className="text-sm hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                <tr key={product.product_id} className="text-sm hover:bg-surface-muted:bg-surface-deep/30 transition-colors">
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                      <div className="size-10 rounded bg-surface-muted flex items-center justify-center text-on-surface-deep">
                         <span className="material-symbols-outlined text-xl">package_2</span>
                       </div>
-                      <span className="font-bold text-slate-900 dark:text-slate-100">{product.product_name}</span>
+                      <span className="font-bold text-foreground">{product.product_name}</span>
                     </div>
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex flex-col gap-1">
                       <div className="flex flex-col">
-                        <span className="text-xs font-mono text-slate-500">{product.sku}</span>
-                        <span className="text-xs text-slate-400">{product.category_name}</span>
+                        <span className="text-xs font-mono text-on-surface-deep">{product.sku}</span>
+                        <span className="text-xs text-on-surface-deep">{product.category_name}</span>
                       </div>
                       
                       {product.brand_name && (
-                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-0.5">
+                        <span className="text-[10px] text-on-surface-deep font-semibold bg-surface-muted px-1.5 py-0.5 rounded w-fit mt-0.5">
                           {product.brand_name}
                         </span>
                       )}
@@ -108,7 +108,7 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, to
                       {product.tags && product.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-0.5">
                           {product.tags.map(tag => (
-                            <span key={tag} className="text-[9px] text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded-full border border-primary-200 dark:border-primary-800/50">
+                            <span key={tag} className="text-[9px] text-primary-700 bg-primary-50 px-1.5 py-0.5 rounded-full border border-primary-200">
                               #{tag}
                             </span>
                           ))}
@@ -119,11 +119,11 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, to
                   <td className="py-4 px-4 text-center font-mono">
                     <div className="flex flex-col">
                       <span className="font-black">{product.current_stock}</span>
-                      <span className="text-[10px] text-slate-400">Mín: {product.min_stock}</span>
+                      <span className="text-[10px] text-on-surface-deep">Mín: {product.min_stock}</span>
                     </div>
                   </td>
                   <td className="py-4 px-4 text-center font-mono">
-                    <span className={`font-bold ${daysStock <= 5 ? 'text-rose-500' : 'text-slate-700 dark:text-slate-300'}`}>
+                    <span className={`font-bold ${daysStock <= 5 ? 'text-error' : 'text-foreground dark:text-on-surface-deep'}`}>
                       {formatNumber(daysStock)} d
                     </span>
                   </td>
@@ -137,7 +137,7 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, to
                     {formatPYG(totalValue || 0)}
                   </td>
                   <td className="py-4 px-4 text-center">
-                    <button className="p-2 text-slate-400 hover:text-primary transition-colors">
+                    <button className="p-2 text-on-surface-deep hover:text-primary transition-colors">
                       <span className="material-symbols-outlined text-lg">more_vert</span>
                     </button>
                   </td>
@@ -147,11 +147,11 @@ export const StockLevelsTable: React.FC<StockLevelsTableProps> = ({ products, to
           </tbody>
         </table>
       </div>
-      <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 flex items-center justify-between border-t border-slate-200 dark:border-slate-700 font-mono">
-        <p className="text-xs text-slate-500">Mostrando {products.length} de {totalItems || products.length} productos</p>
+      <div className="bg-surface-muted px-4 py-3 flex items-center justify-between border-t border-border-subtle font-mono">
+        <p className="text-xs text-on-surface-deep">Mostrando {products.length} de {totalItems || products.length} productos</p>
         <div className="flex gap-2">
-          <button className="px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold disabled:opacity-50" disabled>Anterior</button>
-          <button className="px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold">Siguiente</button>
+          <button className="px-3 py-1 bg-surface border border-border-subtle rounded text-xs font-bold disabled:opacity-50" disabled>Anterior</button>
+          <button className="px-3 py-1 bg-surface border border-border-subtle rounded text-xs font-bold">Siguiente</button>
         </div>
       </div>
     </div>

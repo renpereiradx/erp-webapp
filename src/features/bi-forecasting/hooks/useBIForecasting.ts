@@ -1,10 +1,22 @@
 import { useState, useEffect } from 'react'
+
+/**
+ * Hook de pronósticos (FASE 6: tipado mínimo; los formatters duplicados
+ * se mantienen sólo para PronosticoDemanda/PronosticoIngresos ya migradas
+ * con tests que fijan su salida — no usar en código nuevo).
+ */
+export interface BIForecastingResult {
+  data: any;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
 import biForecastingService from '@/services/bi/biForecastingService'
 
 export const useBIForecasting = (endpoint, params = {}) => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
   const refetch = () => setRefreshKey(prev => prev + 1)
@@ -49,7 +61,7 @@ export const useBIForecasting = (endpoint, params = {}) => {
       } catch (err) {
         if (mounted) {
           console.error(`Error fetching BI data for ${endpoint}:`, err)
-          setError(err.message || 'Error desconocido')
+          setError((err as Error)?.message || 'Error desconocido')
         }
       } finally {
         if (mounted) {
@@ -65,10 +77,10 @@ export const useBIForecasting = (endpoint, params = {}) => {
     }
   }, [endpoint, refreshKey, JSON.stringify(params)])
 
-  return { data, loading, error, refetch }
+  return { data, loading, error, refetch } as BIForecastingResult
 }
 
-export const formatCurrency = value => {
+export const formatCurrency = (value: number | null | undefined): string => {
   if (value === undefined || value === null) return '0 ₲'
   return new Intl.NumberFormat('es-PY', {
     style: 'currency',
@@ -79,10 +91,10 @@ export const formatCurrency = value => {
     .replace('PYG', '₲')
 }
 
-export const formatNumber = (value, decimals = 2) => {
+export const formatNumber = (value: number | string | null | undefined, decimals = 2): string => {
   if (value === undefined || value === null) return '0'
   return new Intl.NumberFormat('es-PY', {
     minimumFractionDigits: 0,
     maximumFractionDigits: decimals,
-  }).format(value)
+  }).format(Number(value ?? 0))
 }

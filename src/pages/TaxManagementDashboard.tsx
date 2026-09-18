@@ -94,7 +94,7 @@ const TaxManagementDashboard = () => {
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     active
                       ? 'bg-surface-muted dark:bg-surface-deep text-primary shadow-sm'
-                      : 'text-on-surface-deep hover:text-foreground dark:hover:text-slate-200'
+                      : 'text-on-surface-deep hover:text-foreground dark:hover:text-on-surface-deep'
                   }`}
                 >
                   {option.label}

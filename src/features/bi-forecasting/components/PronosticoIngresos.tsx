@@ -125,9 +125,9 @@ const PronosticoIngresos = () => {
         </div>
 
         {/* Base Scenario (Featured) */}
-        <div className={`bg-surface border-2 ${escenarios.base?.recomendado ? 'border-primary shadow-xl shadow-primary/5' : 'border-border-subtle'} rounded-xl p-6 relative flex flex-col gap-4 ${escenarios.base?.recomendado ? 'transform scale-[1.02]' : ''}`}>
+        <div className={`bg-surface border-2 ${escenarios.base?.recomendado ? 'border-primary shadow-fluent-8 shadow-primary/5' : 'border-border-subtle'} rounded-xl p-6 relative flex flex-col gap-4 ${escenarios.base?.recomendado ? 'transform scale-[1.02]' : ''}`}>
           {escenarios.base?.recomendado && (
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-md">{ui_labels?.recommended_badge || t('bi.forecast.recommended', 'Recomendado')}</div>
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-whisper">{ui_labels?.recommended_badge || t('bi.forecast.recommended', 'Recomendado')}</div>
           )}
           <div className="flex justify-between items-start">
             <div className="p-2 bg-primary/10 rounded-lg">

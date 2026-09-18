@@ -192,7 +192,7 @@ const CashFlowAnalysisDashboard = () => {
             </div>
           </div>
 
-          <div className='bg-primary p-6 rounded-xl shadow-lg shadow-primary/20 text-white relative overflow-hidden'>
+          <div className='bg-primary p-6 rounded-xl shadow-whisper shadow-primary/20 text-white relative overflow-hidden'>
             <div className='flex justify-between items-start mb-4 relative z-10'>
               <p className='text-sm font-semibold text-primary uppercase tracking-wider'>
                 Saldo Final
@@ -312,8 +312,8 @@ const CashFlowAnalysisDashboard = () => {
               <span
                 className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
                   operatingNet >= 0
-                    ? 'text-success bg-success/10 dark:bg-emerald-900/20'
-                    : 'text-error bg-error/10 dark:bg-rose-900/20'
+                    ? 'text-success bg-success/10 dark:bg-success/10/20'
+                    : 'text-error bg-error/10 dark:bg-error/10/20'
                 }`}
               >
                 Neto: {formatSignedPYG(operatingNet)}

@@ -12,25 +12,25 @@ export const ReorderAlertCard: React.FC<ReorderAlertCardProps> = ({ count, cost,
     switch (type) {
       case 'URGENT':
         return {
-          bg: 'bg-rose-50 dark:bg-rose-950/20',
-          border: 'border-rose-500',
+          bg: 'bg-error/10 dark:bg-rose-950/20',
+          border: 'border-error',
           text: 'text-rose-900 dark:text-rose-200',
-          accent: 'text-rose-600',
+          accent: 'text-error',
           icon: 'error'
         };
       case 'HIGH':
         return {
-          bg: 'bg-amber-50 dark:bg-amber-950/20',
-          border: 'border-amber-500',
-          text: 'text-amber-900 dark:text-amber-200',
-          accent: 'text-amber-600',
+          bg: 'bg-warning/10 dark:bg-amber-950/20',
+          border: 'border-warning',
+          text: 'text-warning dark:text-warning',
+          accent: 'text-warning',
           icon: 'warning'
         };
       default:
         return {
-          bg: 'bg-slate-50 dark:bg-slate-800',
-          border: 'border-slate-200',
-          text: 'text-slate-900 dark:text-slate-100',
+          bg: 'bg-surface-muted dark:bg-surface-deep',
+          border: 'border-border-subtle',
+          text: 'text-foreground dark:text-on-primary',
           accent: 'text-primary',
           icon: 'info'
         };

@@ -10,39 +10,39 @@ export const ForecastRiskList: React.FC<ForecastRiskListProps> = ({ products }) 
   const getRiskStyles = (risk: string) => {
     switch (risk) {
       case 'HIGH': return { 
-        border: 'border-red-500', 
-        badgeBg: 'bg-red-50 dark:bg-red-900/20', 
-        badgeText: 'text-red-600',
-        daysText: 'text-red-600',
+        border: 'border-error', 
+        badgeBg: 'bg-error/10 dark:bg-error/10/20', 
+        badgeText: 'text-error',
+        daysText: 'text-error',
         label: 'Alto',
         button: 'bg-primary/10 text-primary hover:bg-primary hover:text-white',
         buttonLabel: 'Generar OC Urgente'
       };
       case 'MEDIUM': return { 
-        border: 'border-orange-500', 
-        badgeBg: 'bg-orange-50 dark:bg-orange-900/20', 
-        badgeText: 'text-orange-600',
-        daysText: 'text-orange-600',
+        border: 'border-warning', 
+        badgeBg: 'bg-warning/10 dark:bg-warning/10/20', 
+        badgeText: 'text-warning',
+        daysText: 'text-warning',
         label: 'Medio',
-        button: 'bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200',
+        button: 'bg-surface-muted dark:bg-surface-deep text-on-surface-deep hover:bg-surface-subtle',
         buttonLabel: 'Revisar Demanda'
       };
       case 'LOW': return { 
-        border: 'border-emerald-500', 
-        badgeBg: 'bg-emerald-50 dark:bg-emerald-900/20', 
-        badgeText: 'text-emerald-600',
-        daysText: 'text-emerald-600',
+        border: 'border-success', 
+        badgeBg: 'bg-success/10 dark:bg-success/10/20', 
+        badgeText: 'text-success',
+        daysText: 'text-success',
         label: 'Bajo',
-        button: 'bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200',
+        button: 'bg-surface-muted dark:bg-surface-deep text-on-surface-deep hover:bg-surface-subtle',
         buttonLabel: 'Ver Historial'
       };
       default: return { 
-        border: 'border-slate-300', 
-        badgeBg: 'bg-slate-100', 
-        badgeText: 'text-slate-500',
-        daysText: 'text-slate-500',
+        border: 'border-border-subtle', 
+        badgeBg: 'bg-surface-muted', 
+        badgeText: 'text-on-surface-deep',
+        daysText: 'text-on-surface-deep',
         label: 'Normal',
-        button: 'bg-slate-100 text-slate-600',
+        button: 'bg-surface-muted text-on-surface-deep',
         buttonLabel: 'Detalles'
       };
     }
@@ -51,7 +51,7 @@ export const ForecastRiskList: React.FC<ForecastRiskListProps> = ({ products }) 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">analytics</span>
           Pronóstico de Agotamiento
         </h3>
@@ -60,28 +60,28 @@ export const ForecastRiskList: React.FC<ForecastRiskListProps> = ({ products }) 
         {products.map((product) => {
           const styles = getRiskStyles(product.risk);
           return (
-            <div key={product.product_id} className={`bg-white dark:bg-slate-900 p-4 rounded-lg border-l-4 ${styles.border} border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all`}>
+            <div key={product.product_id} className={`bg-surface dark:bg-inverse-background p-4 rounded-lg border-l-4 ${styles.border} border border-border-subtle dark:border-border-subtle shadow-sm hover:shadow-whisper transition-all`}>
               <div className="flex justify-between items-start mb-2 gap-2">
-                <span className="font-bold text-slate-900 dark:text-white leading-tight">{product.product_name}</span>
+                <span className="font-bold text-foreground leading-tight">{product.product_name}</span>
                 <span className={`text-[10px] font-black uppercase tracking-wider ${styles.badgeText} px-2 py-0.5 ${styles.badgeBg} rounded border border-current/10 shrink-0`}>
                   Riesgo {styles.label}
                 </span>
               </div>
               
               <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                <div className="flex flex-col border-r border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400 text-[10px] uppercase font-bold tracking-tight">Días para Agotamiento</span>
+                <div className="flex flex-col border-r border-border-subtle">
+                  <span className="text-on-surface-deep text-[10px] uppercase font-bold tracking-tight">Días para Agotamiento</span>
                   <span className={`${styles.daysText} font-black text-lg font-mono`}>{formatNumber(product.days_until_stockout)} días</span>
                 </div>
                 <div className="flex flex-col pl-2">
-                  <span className="text-slate-400 text-[10px] uppercase font-bold tracking-tight">Stock Actual</span>
-                  <span className="font-bold text-slate-700 dark:text-slate-300 text-lg font-mono">{product.current_stock || 0} <span className="text-[10px] font-normal font-display">uds.</span></span>
+                  <span className="text-on-surface-deep text-[10px] uppercase font-bold tracking-tight">Stock Actual</span>
+                  <span className="font-bold text-foreground text-lg font-mono">{product.current_stock || 0} <span className="text-[10px] font-normal font-display">uds.</span></span>
                 </div>
               </div>
 
-              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2 mb-3 border border-slate-100 dark:border-slate-800">
+              <div className="bg-surface-muted rounded-lg p-2 mb-3 border border-border-subtle">
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-bold uppercase">Pedido Sugerido:</span>
+                  <span className="text-on-surface-deep font-bold uppercase">Pedido Sugerido:</span>
                   <span className="text-primary font-black font-mono">+{product.recommended_order || 0} unidades</span>
                 </div>
               </div>

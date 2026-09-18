@@ -23,20 +23,20 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   const isGood = isPositiveGood ? isPositive : !isPositive;
   
   const colorClass = isGood 
-    ? 'text-emerald-600 dark:text-emerald-400' 
-    : 'text-rose-600 dark:text-rose-400';
+    ? 'text-success dark:text-success' 
+    : 'text-error dark:text-error';
     
   const iconName = isPositive ? 'trending_up' : 'trending_down';
   const displayChange = isPositive ? `+${formatNumber(changeValue)}%` : `${formatNumber(changeValue)}%`;
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm font-display">
+    <div className="flex flex-col gap-3 rounded-xl p-6 bg-surface border border-border-subtle shadow-sm font-display">
       <div className="flex items-center justify-between">
-        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">{title}</p>
+        <p className="text-on-surface-deep text-sm font-medium uppercase tracking-wider">{title}</p>
         <span className="material-symbols-outlined text-primary">{icon}</span>
       </div>
       <div className="flex items-baseline gap-4">
-        <p className="text-slate-900 dark:text-white text-4xl font-black font-mono">{value}</p>
+        <p className="text-foreground text-4xl font-black font-mono">{value}</p>
         {changeValue !== 0 && (
           <div className={`flex items-center font-bold text-sm font-mono ${colorClass}`}>
             <span className="material-symbols-outlined text-sm">{iconName}</span>
@@ -44,7 +44,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
           </div>
         )}
       </div>
-      <p className="text-slate-400 text-xs italic">{changeDescription}</p>
+      <p className="text-on-surface-deep text-xs italic">{changeDescription}</p>
     </div>
   );
 };

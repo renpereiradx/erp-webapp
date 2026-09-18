@@ -43,7 +43,7 @@ export const InventoryDashboard: React.FC = () => {
   }
 
   if (!data) {
-    return <div className="p-8 text-center text-rose-500">Error al cargar los datos del dashboard.</div>;
+    return <div className="p-8 text-center text-error">Error al cargar los datos del dashboard.</div>;
   }
 
   // Calculamos la ganancia de forma dinámica
@@ -51,10 +51,10 @@ export const InventoryDashboard: React.FC = () => {
                          (overview?.total_value && overview?.total_cost ? (overview.total_value - overview.total_cost) : data.kpis.potential_profit);
 
   const stockStatusItems: StockStatusItem[] = [
-    { label: 'En Stock', percentage: data.stock_status.in_stock_pct, count: data.stock_status.in_stock, colorClass: 'bg-emerald-500', strokeClass: 'stroke-emerald-500' },
-    { label: 'Bajo Stock', percentage: data.stock_status.low_stock_pct, count: data.stock_status.low_stock, colorClass: 'bg-amber-400', strokeClass: 'stroke-amber-400' },
-    { label: 'Sin Stock', percentage: data.stock_status.out_of_stock_pct, count: data.stock_status.out_of_stock, colorClass: 'bg-rose-500', strokeClass: 'stroke-rose-500' },
-    { label: 'Sobre-stock', percentage: data.stock_status.overstock_pct, count: data.stock_status.overstock, colorClass: 'bg-purple-500', strokeClass: 'stroke-purple-500' },
+    { label: 'En Stock', percentage: data.stock_status.in_stock_pct, count: data.stock_status.in_stock, colorClass: 'bg-success', strokeClass: 'stroke-emerald-500' },
+    { label: 'Bajo Stock', percentage: data.stock_status.low_stock_pct, count: data.stock_status.low_stock, colorClass: 'bg-warning', strokeClass: 'stroke-amber-400' },
+    { label: 'Sin Stock', percentage: data.stock_status.out_of_stock_pct, count: data.stock_status.out_of_stock, colorClass: 'bg-error', strokeClass: 'stroke-rose-500' },
+    { label: 'Sobre-stock', percentage: data.stock_status.overstock_pct, count: data.stock_status.overstock, colorClass: 'bg-secondary', strokeClass: 'stroke-purple-500' },
   ];
 
   const getActionLabel = (type: string, severity: string) => {
@@ -90,12 +90,12 @@ export const InventoryDashboard: React.FC = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">Dashboard de Inventario</h1>
-          <p className="text-slate-500 text-sm font-medium">Vista analítica de existencias y KPIs financieros en Guaraníes.</p>
+          <h1 className="text-3xl font-black tracking-tight text-foreground uppercase">Dashboard de Inventario</h1>
+          <p className="text-on-surface-deep text-sm font-medium">Vista analítica de existencias y KPIs financieros en Guaraníes.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg text-sm font-bold shadow-sm font-mono text-slate-600 dark:text-slate-300">
-            <span className="material-symbols-outlined text-slate-400 text-lg">calendar_today</span>
+          <div className="flex items-center gap-2 bg-surface border border-border-subtle px-3 py-2 rounded-lg text-sm font-bold shadow-sm font-mono text-on-surface-deep">
+            <span className="material-symbols-outlined text-on-surface-deep text-lg">calendar_today</span>
             <span>Periodo: {new Date().toLocaleDateString('es-PY', { month: 'long', year: 'numeric' })}</span>
           </div>
           <button 
@@ -119,22 +119,22 @@ export const InventoryDashboard: React.FC = () => {
           title="Ganancia Potencial"
           value={formatPYG(potentialProfit)}
           icon="payments"
-          iconColorClass="text-emerald-500"
-          bgColorClass="bg-emerald-50 dark:bg-emerald-500/10"
+          iconColorClass="text-success"
+          bgColorClass="bg-success/10 dark:bg-success/10"
         />
         <KPIWidget 
           title="Tasa de Rotación"
           value={`${formatNumber(data.kpis.turnover_rate)}x`}
           icon="sync_alt"
-          iconColorClass="text-blue-500"
-          bgColorClass="bg-blue-50 dark:bg-blue-500/10"
+          iconColorClass="text-primary"
+          bgColorClass="bg-primary/10 dark:bg-primary/10"
         />
         <KPIWidget 
           title="Stock Muerto"
           value={`${formatNumber(data.kpis.dead_stock_pct)}%`}
           icon="package_2"
-          iconColorClass="text-amber-500"
-          bgColorClass="bg-amber-50 dark:bg-amber-500/10"
+          iconColorClass="text-warning"
+          bgColorClass="bg-warning/10 dark:bg-warning/10"
         />
       </div>
 

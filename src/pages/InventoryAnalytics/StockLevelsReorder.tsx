@@ -92,20 +92,20 @@ export const StockLevelsReorder: React.FC = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">Niveles de Stock y Reabastecimiento</h1>
-          <p className="text-slate-500 text-sm font-medium">Gestión detallada de existencias y alertas de reposición.</p>
+          <h1 className="text-3xl font-black tracking-tight text-foreground uppercase">Niveles de Stock y Reabastecimiento</h1>
+          <p className="text-on-surface-deep text-sm font-medium">Gestión detallada de existencias y alertas de reposición.</p>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-wrap gap-4 items-center shadow-sm">
+      <div className="bg-surface p-4 rounded-xl border border-border-subtle flex flex-wrap gap-4 items-center shadow-sm">
         <div className="flex-1 min-w-[300px]">
           <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-deep">search</span>
             <input 
               type="text" 
               placeholder="Buscar por producto, SKU o categoría..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-sm font-medium"
+              className="w-full pl-10 pr-4 py-2 bg-surface-muted border-none rounded-lg focus:ring-2 focus:ring-primary text-sm font-medium"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -115,21 +115,21 @@ export const StockLevelsReorder: React.FC = () => {
           {reorderTypeFilter !== 'ALL' && (
             <button 
               onClick={() => setReorderTypeFilter('ALL')}
-              className="px-3 py-2 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 rounded-lg text-xs font-bold flex items-center gap-1 animate-pulse border border-rose-200 dark:border-rose-800"
+              className="px-3 py-2 bg-error/10 text-error rounded-lg text-xs font-bold flex items-center gap-1 animate-pulse border border-error/20"
             >
               <span className="material-symbols-outlined text-sm">close</span>
               Quitar Filtro Reorden
             </button>
           )}
-          <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2 hidden md:block"></div>
+          <div className="h-8 w-[1px] bg-surface-subtle mx-2 hidden md:block"></div>
           {statusOptions.map((opt) => (
             <button
               key={opt.id}
               onClick={() => setStatusFilter(opt.id)}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition-all uppercase tracking-wider ${
                 statusFilter === opt.id 
-                ? 'bg-primary text-white shadow-md' 
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                ? 'bg-primary text-white shadow-whisper' 
+                : 'bg-surface-muted dark:bg-surface-deep text-on-surface-deep dark:text-on-surface-deep hover:bg-surface-subtle'
               }`}
             >
               {opt.label}

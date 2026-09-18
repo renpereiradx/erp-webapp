@@ -22,17 +22,17 @@ export const KPIWidget: React.FC<KPIWidgetProps> = ({
   badge
 }) => {
   const trendColorClass = trendType === 'positive' 
-    ? 'text-emerald-600' 
+    ? 'text-success' 
     : trendType === 'negative' 
-      ? 'text-rose-600' 
-      : 'text-slate-500';
+      ? 'text-error' 
+      : 'text-on-surface-deep';
 
   const trendIcon = trendType === 'positive' ? 'trending_up' : trendType === 'negative' ? 'trending_down' : 'remove';
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-5 rounded-lg border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm font-display">
+    <div className="bg-surface p-5 rounded-lg border border-border-subtle flex flex-col justify-between shadow-sm font-display">
       <div className="flex justify-between items-start">
-        <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{title}</p>
+        <p className="text-sm font-medium text-on-surface-deep uppercase tracking-wider">{title}</p>
         <span className={`material-symbols-outlined ${iconColorClass} ${bgColorClass} p-2 rounded-lg`}>{icon}</span>
       </div>
       <div className="mt-4">
@@ -44,7 +44,7 @@ export const KPIWidget: React.FC<KPIWidgetProps> = ({
           </div>
         )}
         {badge && (
-          <div className="inline-flex items-center px-2 py-0.5 mt-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center px-2 py-0.5 mt-1 rounded-full bg-surface-muted text-on-surface-deep text-[10px] font-bold uppercase tracking-wider">
             {badge}
           </div>
         )}

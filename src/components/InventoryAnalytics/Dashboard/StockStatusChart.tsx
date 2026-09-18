@@ -23,10 +23,10 @@ export const StockStatusChart: React.FC<StockStatusChartProps> = ({
   let cumulativePercentage = 0;
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 h-full font-display">
+    <div className="bg-surface p-6 rounded-lg border border-border-subtle h-full font-display">
       <div className="flex items-center justify-between mb-8">
         <h3 className="text-lg font-bold uppercase tracking-tight">Estado del Stock</h3>
-        <button className="text-slate-400 hover:text-primary transition-colors">
+        <button className="text-on-surface-deep hover:text-primary transition-colors">
           <span className="material-symbols-outlined">more_horiz</span>
         </button>
       </div>
@@ -52,7 +52,7 @@ export const StockStatusChart: React.FC<StockStatusChartProps> = ({
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-3xl font-black font-mono">{totalValue}</span>
-            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-tighter">{totalLabel}</span>
+            <span className="text-[10px] uppercase font-bold text-on-surface-deep tracking-tighter">{totalLabel}</span>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-x-8 gap-y-4 w-full">
@@ -60,11 +60,11 @@ export const StockStatusChart: React.FC<StockStatusChartProps> = ({
             <div key={index} className="space-y-1">
               <div className="flex items-center gap-2">
                 <div className={`size-3 rounded-full ${item.colorClass}`}></div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{item.label}</p>
+                <p className="text-xs font-semibold text-on-surface-deep uppercase tracking-wider">{item.label}</p>
               </div>
               <p className="text-lg font-bold font-mono">
                 {Number(item.percentage).toFixed(2)}% 
-                <span className="text-xs font-normal text-slate-400 font-display"> ({item.count} items)</span>
+                <span className="text-xs font-normal text-on-surface-deep font-display"> ({item.count} items)</span>
               </p>
             </div>
           ))}

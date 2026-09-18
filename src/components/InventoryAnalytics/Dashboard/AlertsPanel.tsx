@@ -18,24 +18,24 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ alerts }) => {
     switch (severity) {
       case 'CRITICAL':
         return {
-          container: 'bg-rose-50 dark:bg-rose-950/20 border-rose-500 text-rose-900 dark:text-rose-200',
-          icon: 'text-rose-500',
+          container: 'bg-error/10 dark:bg-rose-950/20 border-error text-rose-900 dark:text-rose-200',
+          icon: 'text-error',
           iconName: 'error',
-          btn: 'text-rose-600'
+          btn: 'text-error'
         };
       case 'HIGH':
         return {
-          container: 'bg-amber-50 dark:bg-amber-950/20 border-amber-400 text-amber-900 dark:text-amber-200',
-          icon: 'text-amber-500',
+          container: 'bg-warning/10 dark:bg-amber-950/20 border-amber-400 text-amber-900 dark:text-amber-200',
+          icon: 'text-warning',
           iconName: 'report',
-          btn: 'text-amber-600'
+          btn: 'text-warning'
         };
       case 'MEDIUM':
       case 'LOW':
       default:
         return {
-          container: 'bg-slate-50 dark:bg-slate-800 border-slate-200 text-slate-900 dark:text-slate-100',
-          icon: 'text-slate-400',
+          container: 'bg-surface-muted dark:bg-surface-deep border-border-subtle text-foreground dark:text-slate-100',
+          icon: 'text-on-surface-deep',
           iconName: 'info',
           btn: 'text-primary'
         };
@@ -43,9 +43,9 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ alerts }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 h-full font-display">
+    <div className="bg-surface p-6 rounded-lg border border-border-subtle h-full font-display">
       <h3 className="text-lg font-bold mb-5 flex items-center gap-2 uppercase tracking-tight">
-        <span className="material-symbols-outlined text-rose-500">warning</span>
+        <span className="material-symbols-outlined text-error">warning</span>
         Alertas Críticas
       </h3>
       <div className="space-y-4">
@@ -70,7 +70,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ alerts }) => {
           );
         })}
         {alerts.length === 0 && (
-          <p className="text-sm text-slate-500 text-center py-8 italic">No hay alertas críticas en este momento.</p>
+          <p className="text-sm text-on-surface-deep text-center py-8 italic">No hay alertas críticas en este momento.</p>
         )}
       </div>
     </div>

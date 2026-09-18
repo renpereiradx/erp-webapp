@@ -32,7 +32,7 @@ export const InventoryRisk: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500 font-medium">Cargando análisis de riesgos...</div>;
+    return <div className="p-8 text-center text-on-surface-deep font-medium">Cargando análisis de riesgos...</div>;
   }
 
   return (
@@ -40,8 +40,8 @@ export const InventoryRisk: React.FC = () => {
       <main className="flex-1 max-w-[1440px] mx-auto w-full px-6 py-8">
         {/* Title Section */}
         <div className="mb-8 font-display">
-          <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">Riesgos y Stock Muerto (Gs.)</h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Monitoreo de capital inmovilizado y predicción de quiebres de stock basados en demanda actual.</p>
+          <h2 className="text-3xl font-black tracking-tight text-foreground uppercase">Riesgos y Stock Muerto (Gs.)</h2>
+          <p className="text-on-surface-deep mt-1 font-medium">Monitoreo de capital inmovilizado y predicción de quiebres de stock basados en demanda actual.</p>
         </div>
 
         {/* Impact Cards Row */}
@@ -54,8 +54,8 @@ export const InventoryRisk: React.FC = () => {
               trendValue={`${formatNumber(deadStockData.summary.percentage_of_stock)}%`}
               trendType="negative"
               icon="trending_down"
-              iconColorClass="text-red-600"
-              iconBgClass="bg-red-100 dark:bg-red-900/30"
+              iconColorClass="text-error"
+              iconBgClass="bg-error/10 dark:bg-error/10/30"
             />
           )}
           {forecastData && (
@@ -90,9 +90,9 @@ export const InventoryRisk: React.FC = () => {
       </main>
 
       {/* Footer / Insight Area */}
-      <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 py-8">
+      <footer className="mt-auto border-t border-border-subtle bg-surface-muted py-8">
         <div className="max-w-[1440px] mx-auto px-6">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 border border-slate-200 dark:border-slate-800 shadow-xl relative overflow-hidden">
+          <div className="bg-surface rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 border border-border-subtle shadow-fluent-8 relative overflow-hidden">
             {/* Accent decoration */}
             <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
             
@@ -102,20 +102,20 @@ export const InventoryRisk: React.FC = () => {
             
             <div className="flex-1 font-display">
               <div className="flex items-center gap-2 mb-2">
-                <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Análisis de Capital Inmovilizado</h4>
-                <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-black rounded-full uppercase tracking-widest animate-pulse">Acción Recomendada</span>
+                <h4 className="text-lg font-black text-foreground uppercase tracking-tight">Análisis de Capital Inmovilizado</h4>
+                <span className="px-2 py-0.5 bg-error/10 text-error text-[10px] font-black rounded-full uppercase tracking-widest animate-pulse">Acción Recomendada</span>
               </div>
-              <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium text-base">
-                Su inventario presenta un <span className="font-black font-mono text-rose-600 text-lg">{formatNumber(deadStockData?.summary.percentage_of_stock ?? 0)}% de stock sin movimiento</span>. 
+              <p className="text-on-surface-deep leading-relaxed font-medium text-base">
+                Su inventario presenta un <span className="font-black font-mono text-error text-lg">{formatNumber(deadStockData?.summary.percentage_of_stock ?? 0)}% de stock sin movimiento</span>. 
                 La ejecución inmediata de las liquidaciones sugeridas liberaría un flujo de caja de <span className="font-black font-mono text-primary text-xl underline decoration-primary/30 underline-offset-4">{formatPYG(deadStockData?.summary.potential_loss || 0)}</span>, 
-                capital crítico para cubrir el reabastecimiento de los <span className="font-bold text-slate-900 dark:text-white">{forecastData?.summary.products_at_risk} productos en riesgo</span> de agotamiento detectados.
+                capital crítico para cubrir el reabastecimiento de los <span className="font-bold text-foreground">{forecastData?.summary.products_at_risk} productos en riesgo</span> de agotamiento detectados.
               </p>
             </div>
             
             <div className="shrink-0 w-full md:w-auto">
               <button 
                 onClick={() => alert("Generando plan de liquidación y reabastecimiento estratégico...")}
-                className="w-full bg-primary hover:bg-primary/90 text-white font-black px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-primary/20 uppercase tracking-widest text-sm flex items-center justify-center gap-2 group"
+                className="w-full bg-primary hover:bg-primary/90 text-white font-black px-8 py-4 rounded-xl transition-all shadow-whisper hover:shadow-primary/20 uppercase tracking-widest text-sm flex items-center justify-center gap-2 group"
               >
                 Ejecutar Plan de Mitigación
                 <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>

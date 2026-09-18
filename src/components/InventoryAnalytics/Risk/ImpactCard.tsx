@@ -21,22 +21,22 @@ export const ImpactCard: React.FC<ImpactCardProps> = ({
   iconColorClass,
   iconBgClass
 }) => {
-  const trendColor = trendType === 'positive' ? 'text-emerald-600' : 'text-red-600';
+  const trendColor = trendType === 'positive' ? 'text-success' : 'text-error';
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between font-display">
+    <div className="bg-surface p-6 rounded-lg border border-border-subtle shadow-sm flex flex-col justify-between font-display">
       <div>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-slate-500 dark:text-slate-400 font-medium text-sm uppercase tracking-wider">{title}</span>
+          <span className="text-on-surface-deep font-medium text-sm uppercase tracking-wider">{title}</span>
           <div className={`p-2 ${iconBgClass} ${iconColorClass} rounded-full`}>
             <span className="material-symbols-outlined text-xl">{icon}</span>
           </div>
         </div>
-        <h3 className="text-4xl font-black text-slate-900 dark:text-white font-mono">{value}</h3>
+        <h3 className="text-4xl font-black text-foreground font-mono">{value}</h3>
       </div>
       <div className="mt-4 flex items-center gap-2 text-sm">
         <span className={`${trendColor} font-bold font-mono`}>{trendValue}</span>
-        <span className="text-slate-400">{trend}</span>
+        <span className="text-on-surface-deep">{trend}</span>
       </div>
     </div>
   );

@@ -27,14 +27,14 @@ export const ABCParetoChart: React.FC<ABCParetoChartProps> = ({
   const p3 = Math.min(classAPct + classBPct + classCPct, 100);
 
   return (
-    <div className="flex flex-col gap-6 bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm font-display">
+    <div className="flex flex-col gap-6 bg-surface rounded-xl p-6 border border-border-subtle shadow-sm font-display">
       <div className="flex items-center justify-between">
-        <h2 className="text-slate-900 dark:text-white text-xl font-bold uppercase tracking-tight">Desglose ABC de Valor</h2>
+        <h2 className="text-foreground text-xl font-bold uppercase tracking-tight">Desglose ABC de Valor</h2>
         <span className="px-2 py-1 bg-primary text-white text-[10px] font-bold rounded uppercase tracking-tighter font-mono">Pareto Real</span>
       </div>
       
       {/* Pareto Chart Dinámico */}
-      <div className="h-48 w-full flex items-end gap-2 px-2 border-b border-l border-slate-200 dark:border-slate-700 relative">
+      <div className="h-48 w-full flex items-end gap-2 px-2 border-b border-l border-border-subtle relative">
         <div className="w-full h-full absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
           <span className="material-symbols-outlined text-9xl">bar_chart</span>
         </div>
@@ -44,7 +44,7 @@ export const ABCParetoChart: React.FC<ABCParetoChartProps> = ({
           className="flex-1 bg-primary/90 rounded-t relative group cursor-pointer hover:bg-primary transition-all shadow-sm"
           style={{ height: `${hA}%` }}
         >
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-mono z-10 shadow-xl">
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-background text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-mono z-10 shadow-fluent-8">
             Clase A: {formatNumber(classAPct)}%
           </div>
         </div>
@@ -52,7 +52,7 @@ export const ABCParetoChart: React.FC<ABCParetoChartProps> = ({
           className="flex-1 bg-primary/60 rounded-t relative group cursor-pointer hover:bg-primary/70 transition-all shadow-sm"
           style={{ height: `${hB}%` }}
         >
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-mono z-10 shadow-xl">
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-background text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-mono z-10 shadow-fluent-8">
             Clase B: {formatNumber(classBPct)}%
           </div>
         </div>
@@ -60,7 +60,7 @@ export const ABCParetoChart: React.FC<ABCParetoChartProps> = ({
           className="flex-1 bg-primary/30 rounded-t relative group cursor-pointer hover:bg-primary/40 transition-all shadow-sm"
           style={{ height: `${hC}%` }}
         >
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-mono z-10 shadow-xl">
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-background text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-mono z-10 shadow-fluent-8">
             Clase C: {formatNumber(classCPct)}%
           </div>
         </div>
@@ -70,17 +70,17 @@ export const ABCParetoChart: React.FC<ABCParetoChartProps> = ({
           <path 
             d={`M 0,100 L 16.6,${100 - p1} L 50,${100 - p2} L 83.3,${100 - p3} L 100,0`} 
             fill="none" 
-            stroke="#137fec" 
+            className="stroke-primary drop-shadow-sm"
+            stroke="currentColor"
             strokeWidth="3" 
             vectorEffect="non-scaling-stroke"
-            className="drop-shadow-sm"
           ></path>
-          <circle cx="16.6" cy={100 - p1} fill="#137fec" r="4" className="filter drop-shadow-sm"></circle>
-          <circle cx="50" cy={100 - p2} fill="#137fec" r="4" className="filter drop-shadow-sm"></circle>
-          <circle cx="83.3" cy={100 - p3} fill="#137fec" r="4" className="filter drop-shadow-sm"></circle>
+          <circle cx="16.6" cy={100 - p1} fill="var(--color-primary)" r="4" className="filter drop-shadow-sm"></circle>
+          <circle cx="50" cy={100 - p2} fill="var(--color-primary)" r="4" className="filter drop-shadow-sm"></circle>
+          <circle cx="83.3" cy={100 - p3} fill="var(--color-primary)" r="4" className="filter drop-shadow-sm"></circle>
         </svg>
       </div>
-      <div className="flex justify-between text-[10px] font-bold text-slate-400 px-2 font-mono">
+      <div className="flex justify-between text-[10px] font-bold text-on-surface-deep px-2 font-mono">
         <span>CLASE A</span>
         <span>CLASE B</span>
         <span>CLASE C</span>
@@ -88,16 +88,16 @@ export const ABCParetoChart: React.FC<ABCParetoChartProps> = ({
 
       {/* Focused List Clase A */}
       <div className="flex flex-col gap-3">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
           <span className="size-2 rounded-full bg-primary"></span>
           Productos Top Clase A
         </h3>
         <div className="space-y-3">
           {classAProducts?.map((product) => (
-            <div key={product.id || (product as any).product_id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-700/30 border border-slate-100 dark:border-slate-700">
+            <div key={product.id || (product as any).product_id} className="flex items-center justify-between p-3 rounded-lg bg-surface-muted border border-border-subtle">
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-slate-800 dark:text-white">{product.name || (product as any).product_name}</span>
-                <span className="text-xs text-slate-500">Representa el <span className="font-mono">{formatNumber(product.percentage || (product as any).value_pct || 0)}%</span> del valor total</span>
+                <span className="text-sm font-bold text-foreground">{product.name || (product as any).product_name}</span>
+                <span className="text-xs text-on-surface-deep">Representa el <span className="font-mono">{formatNumber(product.percentage || (product as any).value_pct || 0)}%</span> del valor total</span>
               </div>
               <div className="text-right">
                 <span className="text-sm font-black text-primary font-mono">{formatPYG(product.value || (product as any).stock_value || 0)}</span>
@@ -105,7 +105,7 @@ export const ABCParetoChart: React.FC<ABCParetoChartProps> = ({
             </div>
           ))}
           {(!classAProducts || classAProducts.length === 0) && (
-            <p className="text-sm text-slate-500 text-center py-4 italic">No hay productos Clase A registrados.</p>
+            <p className="text-sm text-on-surface-deep text-center py-4 italic">No hay productos Clase A registrados.</p>
           )}
         </div>
       </div>
