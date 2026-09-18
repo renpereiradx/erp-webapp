@@ -17,6 +17,13 @@ import {
 
 import { formatPYG, formatNumber } from '@/utils/currencyUtils'
 import { usePayables } from '../hooks/usePayables'
+// F1 (PLAN_ALINEACION_BI_FRONTEND): transformaciones extraídas a domain
+import {
+  buildAgingDistribution,
+  buildAgingReportKpis,
+  buildAgingSegments,
+  buildSupplierAgingRows,
+} from '@/domain/payables/aging'
 
 /**
  * Reporte de Antigüedad de Deuda (Payables)
@@ -53,114 +60,21 @@ const PayablesAgingReport = () => {
   // 3. Derived State / Data Transformations (Calculate During Render)
 
   // KPIs for the top of the page
-  const agingKpis = useMemo(() => {
-    if (!overview || !statistics)
-      return { dpo: '---', overdue: '---', critical: '---' }
-    return {
-      dpo: `${Math.round(statistics.average_dpo || overview.average_days_to_pay || 0)} Días`,
-      overdue: `${formatNumber(statistics.overdue_percentage || 0)}%`,
-      critical: formatPYG(overview.aging_summary?.over_90_days?.amount || 0),
-    }
-  }, [overview, statistics])
+  const agingKpis = useMemo(
+    () => buildAgingReportKpis(overview, statistics),
+    [overview, statistics],
+  )
 
   // Distribution Chart Data (Hero Section)
-  const distribution = useMemo(() => {
-    if (!overview?.aging_summary) return null
-    const summary = overview.aging_summary
-    return {
-      total: overview.total_pending,
-      current: {
-        amount: summary.current.amount,
-        percentage: summary.current.percentage,
-      },
-      days30_60: {
-        amount: summary.days_30_60.amount,
-        percentage: summary.days_30_60.percentage,
-      },
-      days60_90: {
-        amount: summary.days_60_90.amount,
-        percentage: summary.days_60_90.percentage,
-      },
-      over90: {
-        amount: summary.over_90_days.amount,
-        percentage: summary.over_90_days.percentage,
-      },
-    }
-  }, [overview])
+  const distribution = useMemo(() => buildAgingDistribution(overview), [overview])
 
-  const distributionSegments = useMemo(() => {
-    if (!distribution) return []
-
-    return [
-      {
-        key: 'current',
-        label: 'Corriente',
-        shortLabel: '0-30 d',
-        percentage: Number(distribution.current.percentage || 0),
-        bgClass: 'bg-fluent-success',
-        textClass: 'text-white',
-      },
-      {
-        key: 'days30_60',
-        label: 'Vencido',
-        shortLabel: '31-60 d',
-        percentage: Number(distribution.days30_60.percentage || 0),
-        bgClass: 'bg-fluent-warning',
-        textClass: 'text-slate-900',
-      },
-      {
-        key: 'days60_90',
-        label: 'Vencido',
-        shortLabel: '61-90 d',
-        percentage: Number(distribution.days60_90.percentage || 0),
-        bgClass: 'bg-orange-500',
-        textClass: 'text-white',
-      },
-      {
-        key: 'over90',
-        label: 'Crítico',
-        shortLabel: '+90 d',
-        percentage: Number(distribution.over90.percentage || 0),
-        bgClass: 'bg-fluent-danger',
-        textClass: 'text-white',
-      },
-    ]
-  }, [distribution])
+  const distributionSegments = useMemo(() => buildAgingSegments(distribution), [distribution])
 
   // Analytical Breakdown Table Data
-  const filteredTableData = useMemo(() => {
-    if (!agingReport?.by_supplier) return []
-    
-    const filtered = searchTerm 
-      ? agingReport.by_supplier.filter(s => s.supplier_name.toLowerCase().includes(searchTerm.toLowerCase()))
-      : agingReport.by_supplier;
-
-    return filtered.map(s => {
-      // Determine risk level based on overdue amounts
-      let risk = 'Mínimo'
-      let riskClass = 'bg-fluent-success/10 text-fluent-success border-fluent-success/20'
-
-      if (s.over_90_days > 0) {
-        risk = 'Crítico'
-        riskClass = 'bg-fluent-danger/10 text-fluent-danger border-fluent-danger/20'
-      } else if (s.days_60_90 > 0 || s.days_30_60 > s.total * 0.5) {
-        risk = 'Moderado'
-        riskClass = 'bg-fluent-warning/10 text-fluent-warning border-fluent-warning/20'
-      }
-
-      return {
-        id: s.supplier_id,
-        name: s.supplier_name,
-        current: s.current,
-        days30_60: s.days_30_60,
-        days60_90: s.days_60_90,
-        over90: s.over_90_days,
-        total: s.total,
-        risk,
-        riskClass,
-      }
-    })
-  }, [agingReport, searchTerm])
+  const filteredTableData = useMemo(
+    () => buildSupplierAgingRows(agingReport?.by_supplier, searchTerm),
+    [agingReport, searchTerm],
+  )
 
   const paginatedData = useMemo(() => {
     return filteredTableData.slice((currentPage - 1) * pageSize, currentPage * pageSize);

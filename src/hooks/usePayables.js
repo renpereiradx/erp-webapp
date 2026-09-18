@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
 import { payablesService } from '@/services/bi/payablesService'
 import { useToast } from './useToast'
+// F1 (PLAN_ALINEACION_BI_FRONTEND): traducciones de estado/prioridad extraídas a domain
+import { translatePriority, translateStatus } from '@/domain/payables/statusLabels'
 
 /**
  * Hook for managing Accounts Payable data and state
@@ -62,35 +64,18 @@ export const usePayables = () => {
           rawData = response.data.payables
         }
 
-        // Helper translations for status and priority
-        const translateStatus = (status) => {
-          if (!status) return 'PENDIENTE'
-          const s = status.toUpperCase()
-          if (s === 'OVERDUE') return 'VENCIDO'
-          if (s === 'PENDING') return 'PENDIENTE'
-          if (s === 'PARTIAL') return 'PARCIAL'
-          if (s === 'PAID') return 'PAGADO'
-          return s
-        }
-
-        const translatePriority = (priority) => {
-          if (!priority) return 'MEDIA'
-          const p = priority.toUpperCase()
-          if (p === 'URGENT' || p === 'HIGH') return 'ALTA'
-          if (p === 'MEDIUM') return 'MEDIA'
-          if (p === 'LOW') return 'BAJA'
-          return p
-        }
+        // Helper translations for status and priority now imported from
+        // @/domain/payables/statusLabels (F1)
 
         const formatDate = (dateStr) => {
           if (!dateStr) return 'N/A'
           try {
             const date = new Date(dateStr)
             if (isNaN(date.getTime())) return dateStr
-            return date.toLocaleDateString('es-PY', { 
-              day: '2-digit', 
-              month: 'short', 
-              year: 'numeric' 
+            return date.toLocaleDateString('es-PY', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric'
             }).replace('.', '')
           } catch (e) {
             return dateStr
@@ -144,17 +129,6 @@ export const usePayables = () => {
       const response = await payablesService.getPayableById(id)
       if (response.success) {
         const p = response.data
-        
-        // Helper translations
-        const translateStatus = (status) => {
-          if (!status) return 'PENDIENTE'
-          const s = status.toUpperCase()
-          if (s === 'OVERDUE') return 'VENCIDO'
-          if (s === 'PENDING') return 'PENDIENTE'
-          if (s === 'PARTIAL') return 'PARCIAL'
-          if (s === 'PAID') return 'PAGADO'
-          return s
-        }
 
         const formatDate = (dateStr) => {
           if (!dateStr) return 'N/A'
