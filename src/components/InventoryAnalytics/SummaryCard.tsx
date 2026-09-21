@@ -5,7 +5,8 @@ export interface SummaryCardProps {
   title: string;
   icon: string;
   value: string;
-  changeValue: number;
+  /** Delta % vs periodo anterior; ausente o 0 = sin badge de cambio. */
+  changeValue?: number;
   changeDescription: string;
   isPositiveGood: boolean;
 }
@@ -14,7 +15,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   title,
   icon,
   value,
-  changeValue,
+  changeValue = 0,
   changeDescription,
   isPositiveGood
 }) => {

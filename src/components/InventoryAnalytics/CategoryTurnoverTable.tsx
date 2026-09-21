@@ -6,7 +6,7 @@ export interface CategoryTurnoverTableProps {
 }
 
 export const CategoryTurnoverTable: React.FC<CategoryTurnoverTableProps> = ({ categories }) => {
-  const getPerformanceBadge = (performance: string) => {
+  const getPerformanceBadge = (performance?: string) => {
     switch (performance) {
       case 'EXCELLENT':
         return (

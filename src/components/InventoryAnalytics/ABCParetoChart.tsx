@@ -93,14 +93,14 @@ export const ABCParetoChart: React.FC<ABCParetoChartProps> = ({
           Productos Top Clase A
         </h3>
         <div className="space-y-3">
-          {classAProducts?.map((product) => (
-            <div key={product.id || (product as any).product_id} className="flex items-center justify-between p-3 rounded-lg bg-surface-muted border border-border-subtle">
+          {classAProducts?.map((product, idx) => (
+            <div key={product.id || product.product_id || idx} className="flex items-center justify-between p-3 rounded-lg bg-surface-muted border border-border-subtle">
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-foreground">{product.name || (product as any).product_name}</span>
-                <span className="text-xs text-on-surface-deep">Representa el <span className="font-mono">{formatNumber(product.percentage || (product as any).value_pct || 0)}%</span> del valor total</span>
+                <span className="text-sm font-bold text-foreground">{product.name || product.product_name}</span>
+                <span className="text-xs text-on-surface-deep">Representa el <span className="font-mono">{formatNumber(product.percentage || product.sales_percentage || 0)}%</span> del valor total</span>
               </div>
               <div className="text-right">
-                <span className="text-sm font-black text-primary font-mono">{formatPYG(product.value || (product as any).stock_value || 0)}</span>
+                <span className="text-sm font-black text-primary font-mono">{formatPYG(product.value || product.stock_value || 0)}</span>
               </div>
             </div>
           ))}
