@@ -2,6 +2,7 @@
 
 **Fecha**: 2026-09-18 · **Qué es**: verificación independiente, contra el código actual (rama `dev` de `erp-webapp` y `main` de `business_management`), de cada compromiso documentado por el plan `PLAN_AUDIT_BI_INTELIGENCIA_NEGOCIOS_2026-09-14` (purgado del conductor raíz, commit `105b7fc`; versión final recuperable con `git show 13cb68f:conductor/PLAN_AUDIT_BI_INTELIGENCIA_NEGOCIOS_2026-09-14.md`).
 **Motivo**: detectar lo que quedó sin hacer para su corrección posterior. Los pendientes se mapean a `conductor/PLAN_ALINEACION_BI_FRONTEND_2026-09-18.md` (raíz) donde corresponde.
+**Addendum**: reverificado 2026-09-21 contra `dev` post-PLAN_ALINEACION (F0–F7 mergeados) — ver §5.
 
 ---
 
@@ -59,3 +60,25 @@
 ## 4. Conclusión
 
 El plan se ejecutó de forma verificable: FASE 1 (backend) y los fixes P0 de FASE 3 están completos y con evidencia en código; FASE 4/5 y la sesión post-cierre dejaron las 12 páginas migradas con tests. Los incumplimientos se concentran en tres clases: **(a)** dos remedios que quedaron cortos (fallback demo del store, código muerto P1-9), **(b)** todo lo que tocaba páginas legacy excluidas del alcance binario de FASE 4 (botones muertos, paginación, i18n — excluidas de forma documentada, hoy cubiertas por el plan de alineación), y **(c)** dos fabricaciones que la propia FASE 2 no detectó (strings fake de AuditLogDetail, donut de PyG). Todo lo anterior está absorbido por `PLAN_ALINEACION_BI_FRONTEND_2026-09-18.md` (F0/F5/F6) salvo la release note BC-1, que queda como tarea suelta del lado de docs/BE.
+
+## 5. Addendum 2026-09-21 — reverificación post PLAN_ALINEACION (F0–F7 mergeados a `dev`)
+
+Estado de los 11 pendientes de §3 contra `dev` de `erp-webapp` (`5bea50a` + fix `c585f08`) y `dev` de `business_management` (`e044750`). Correcciones aplicadas hoy: **FE `c585f08`** (fabricaciones + mock muerto) y **BE `e044750`** (release note BC-1). Gates: vitest **1013/1013** (134 archivos, +6 tests nuevos), `tsc` 0, `pnpm build`, `pnpm lint:design` — verdes.
+
+| # | Pendiente (§3) | Estado 2026-09-21 | Evidencia |
+|:--|:---------------|:------------------|:----------|
+| 1 | Fallback demo del store (P1-1) | ✅ Resuelto (D1/D2) | 0 refs a `DEMO_MODE`/`getDemoDashboardData`/`Math.random` en `useDashboardStore`; loading/error por slice. Los `IS_DEMO_MODE` restantes son de `saleService`/`salePaymentService` (modo demo de ventas, fuera de scope BI) |
+| 2 | Código muerto con mocks (P1-9) | ✅ Cerrado hoy, con hallazgo | `components/business-intelligence/` eliminado (F0); `receivablesMock` borrado (711e3cdb). **`salesAnalyticsMock.js` sobrevivía en `dev`**: el commit de borrado `7f43e9b` quedó colgante (ninguna rama lo contiene) pese a que el README raíz lo registraba como absorbido → borrado de verdad en `c585f08` (0 consumidores verificados). Quedan `auditMocks`/`clientMock`/`biForecastingMock` con consumidor real (modo demo) |
+| 3 | H7 en páginas legacy | ✅ Resuelto (F3–F6) | En las migradas .tsx los botones muertos fueron eliminados (ConsolidatedAlerts, Dashboard, InvoiceDetail, PayablesAgingReport, TaxManagementDashboard, ReceivablesMasterList, OverdueAccounts, TopProductsOverview, SalesHeatmap) o cableados (`DetailSidebar` Registrar Pago); PronosticoVentas/Ingresos: "Exportar" → "Actualizar" honesto |
+| 4 | Paginación P2 a medias | ⚠️ Deuda documentada (sin cambios) | `ProductsCategories` sí pagina server-side (page_size 10, verificado en test). El resto (CustomerSellerInsights, sales-analytics/Dashboard, SaludInventario, PronosticoVentas/Ingresos, OverdueAccounts) quedó con conteo real client-side; server-side pendiente, registrado como deuda puntual en el cierre del plan (README raíz) |
+| 5 | "+12% vs mes anterior" | ✅ Cerrado hoy + hallazgo nuevo | Eliminado de `ProductsCategories` (+ test anti-regresión que afirma su ausencia). **Nueva fabricación misma clase detectada en `AuditUserActivity`**: badges +12%/+5%/-2%, bloque "Tendencia Positiva +15%", "IP: 192.168.1.104" y "hace poco" hardcodeados — eliminados en `c585f08` |
+| 6 | Fakes de `AuditLogDetail` | ✅ Resuelto (F6) | endpoint y correlation-id reales con render condicional; el docstring del componente documenta los literales eliminados |
+| 7 | Donut decorativo fake PyG | ✅ Resuelto (F6) | eliminado (comentario in situ en `ProfitAndLoss.tsx`) |
+| 8 | `Dashboard` eager (H1) | ✅ Resuelto (D4) | `App.tsx:29` lazy; index 875.59 kB (presupuesto 940) |
+| 9 | Doble montaje receivables | ✅ Resuelto (D3) | `/dashboard/receivables` y `/receivables` ambos con `PermissionGuard receivables:read` (`App.tsx:327/:419`) |
+| 10 | Release note BC-1 | ✅ Cerrado hoy | `business_management/CHANGELOG.md` `[Unreleased]`: entrada BC-1 (semántica `BI_TIMEZONE`/`BI_STORAGE_TIMEZONE`, boundary no destructivo, guard de startup, runbook §4, fixed de audit/turnover) — BE `e044750` |
+| 11 | i18n solo en migradas | ⚠️ Casi completo | 19 páginas con i18n `bi.*`. **Excepción detectada**: `ProductsCategories` tenía 0 `t()` (solo pasó por el token-map de F6.2) → migrada a `bi.sales.categories.*` (28 keys es+en) en `c585f08`. Quedan como deuda legacy documentada: `AuditUserActivity` (0 i18n, colores genéricos, material icons) y `SaludInventario` (cobertura mínima, 1 `t()`) |
+
+**Hallazgo de proceso**: el addendum del cierre registraba "salesAnalyticsMock borrado (`7f43e9b`)" — ese commit existía como objeto pero ninguna rama lo referenciaba (el FF-merge registrado en reflog quedó en `5bea50a`). Lección: verificar con `git branch --contains <hash>` (o `git cat-file -e HEAD:<path>`) que un commit citado como absorbido es alcanzable desde la rama; el README raíz se corrigió en el wrapper.
+
+**Deuda restante (documentada, fuera del alcance de esta reverificación)**: paginación server-side de §4; migración full de `AuditUserActivity` (tokens DESIGN, i18n, iconos) — solo se le removieron fabricaciones; i18n completo de `SaludInventario`.
