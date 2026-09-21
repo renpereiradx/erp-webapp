@@ -47,15 +47,6 @@ interface InventoryData {
   notificaciones?: string;
   productos?: InventoryProducto[];
   paginacion?: { total?: number; mostrando?: number; page?: number; total_pages?: number };
-  ui_labels?: {
-    title?: string;
-    alerts_title?: string;
-    unit_label?: string;
-    global_label?: string;
-    items_label?: string;
-    unit_short?: string;
-    table_headers?: Record<string, string>;
-  };
 }
 
 const SaludInventario = () => {
@@ -101,8 +92,8 @@ const SaludInventario = () => {
     );
   }
 
-  const { kpis, notificaciones, productos, paginacion, ui_labels, updated_text } = data;
-  const unitShort = ui_labels?.unit_short || t('bi.forecast.inventory.unitShort', 'Unid.');
+  const { kpis, notificaciones, productos, paginacion, updated_text } = data;
+  const unitShort = t('bi.forecast.inventory.unitShort', 'Unid.');
 
   // Paginación server-side (patrón PronosticoDemanda): el BE manda la página
   // de productos y la metadata; el FE solo consume.
@@ -117,7 +108,7 @@ const SaludInventario = () => {
       {/* Title & Refresh */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{ui_labels?.title || t('bi.forecast.inventory.title', 'Salud del Inventario')}</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{t('bi.forecast.inventory.title', 'Salud del Inventario')}</h1>
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 rounded-full bg-error"></span>
             <p className="text-error font-semibold text-sm">{kpis?.productos_riesgo?.valor ?? 0} {t('bi.forecast.inventory.criticalAlerts', 'Alertas Críticas')}</p>
@@ -139,7 +130,7 @@ const SaludInventario = () => {
           <p className="text-on-surface-deep text-xs font-bold uppercase tracking-wider">{t('bi.forecast.inventory.kpi.stock', 'Stock Total')}</p>
           <div className="flex items-baseline gap-2">
             <p className="text-2xl font-black text-foreground font-mono">{formatNumber(kpis?.stock_total?.valor)}</p>
-            <p className="text-sm font-medium text-on-surface-deep">{ui_labels?.unit_label || t('bi.forecast.units', 'unidades')}</p>
+            <p className="text-sm font-medium text-on-surface-deep">{t('bi.forecast.units', 'unidades')}</p>
           </div>
           <p className={`${Number(kpis?.stock_total?.variacion) < 0 ? 'text-error' : 'text-success'} text-xs font-bold flex items-center gap-1 mt-1`}>
             <span className="material-symbols-outlined text-xs">{Number(kpis?.stock_total?.variacion) < 0 ? 'trending_down' : 'trending_up'}</span>
@@ -150,7 +141,7 @@ const SaludInventario = () => {
           <p className="text-on-surface-deep text-xs font-bold uppercase tracking-wider">{t('bi.forecast.inventory.kpi.coverage', 'Cobertura (%)')}</p>
           <div className="flex items-baseline gap-2">
             <p className="text-2xl font-black text-foreground font-mono">{kpis?.cobertura?.valor ?? 0}%</p>
-            <p className="text-sm font-medium text-on-surface-deep">{ui_labels?.global_label || t('bi.forecast.inventory.kpi.global', 'Global')}</p>
+            <p className="text-sm font-medium text-on-surface-deep">{t('bi.forecast.inventory.kpi.global', 'Global')}</p>
           </div>
           <p className="text-success text-xs font-bold flex items-center gap-1 mt-1">
             <span className="material-symbols-outlined text-xs">trending_up</span>
@@ -160,7 +151,7 @@ const SaludInventario = () => {
         <div className="bg-surface p-5 rounded-lg border border-border-subtle flex flex-col gap-1 shadow-sm">
           <p className="text-on-surface-deep text-xs font-bold uppercase tracking-wider">{t('bi.forecast.inventory.kpi.atRisk', 'Productos en Riesgo')}</p>
           <div className="flex items-center justify-between">
-            <p className="text-2xl font-black text-foreground">{kpis?.productos_riesgo?.valor ?? 0} {ui_labels?.items_label || t('bi.forecast.inventory.kpi.items', 'Items')}</p>
+            <p className="text-2xl font-black text-foreground">{kpis?.productos_riesgo?.valor ?? 0} {t('bi.forecast.inventory.kpi.items', 'Items')}</p>
             <span className="px-2 py-0.5 bg-error/10 text-error text-xs font-bold rounded">{t('bi.forecast.inventory.kpi.alertChip', 'ALERTA')}</span>
           </div>
           <p className="text-error text-xs font-bold flex items-center gap-1 mt-1">
@@ -176,7 +167,7 @@ const SaludInventario = () => {
           <span className="material-symbols-outlined">campaign</span>
         </div>
         <div>
-          <p className="text-foreground font-bold text-sm">{ui_labels?.alerts_title || t('bi.forecast.inventory.alertsTitle', 'Notificaciones')}</p>
+          <p className="text-foreground font-bold text-sm">{t('bi.forecast.inventory.alertsTitle', 'Notificaciones')}</p>
           <p className="text-on-surface-deep text-sm">{notificaciones || t('bi.forecast.inventory.noAlerts', 'Sin alertas críticas por el momento.')}</p>
         </div>
       </div>
@@ -187,13 +178,13 @@ const SaludInventario = () => {
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-surface-muted border-b border-border-subtle">
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{ui_labels?.table_headers?.producto || t('bi.sales.col.product', 'Producto')}</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{ui_labels?.table_headers?.stock_actual || t('bi.forecast.inventory.col.stock', 'Stock Actual')}</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{ui_labels?.table_headers?.venta_diaria || t('bi.forecast.inventory.col.dailySales', 'Venta Diaria')}</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{ui_labels?.table_headers?.pronostico || t('bi.forecast.inventory.col.forecast', 'Pronóstico')}</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{ui_labels?.table_headers?.dias_restantes || t('bi.forecast.inventory.col.daysLeft', 'Días')}</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{ui_labels?.table_headers?.pto_reorden || t('bi.forecast.inventory.col.reorder', 'Reorden')}</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{ui_labels?.table_headers?.nivel_riesgo || t('bi.forecast.inventory.col.risk', 'Riesgo')}</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{t('bi.sales.col.product', 'Producto')}</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{t('bi.forecast.inventory.col.stock', 'Stock Actual')}</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{t('bi.forecast.inventory.col.dailySales', 'Venta Diaria')}</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{t('bi.forecast.inventory.col.forecast', 'Pronóstico')}</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{t('bi.forecast.inventory.col.daysLeft', 'Días')}</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{t('bi.forecast.inventory.col.reorder', 'Reorden')}</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-deep">{t('bi.forecast.inventory.col.risk', 'Riesgo')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">

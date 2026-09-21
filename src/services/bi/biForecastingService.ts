@@ -174,24 +174,6 @@ const normalizeInventory = (payload, _params) => {
   return {
     updated_text: payload?.updated_text || "Actualizado recientemente",
     periodo_proyectado: formatPeriod(payload.forecast_period),
-    ui_labels: payload?.ui_labels || {
-      title: "Salud del Inventario y Pronóstico",
-      export_button: "Exportar Reporte",
-      alerts_title: "Notificaciones Urgentes",
-      details_button: "Ver Detalles",
-      unit_label: "Unidades",
-      global_label: "Global",
-      items_label: "Items",
-      table_headers: {
-        producto: "Producto",
-        stock_actual: "Stock Actual",
-        venta_diaria: "Venta Diaria Prom.",
-        pronostico: "Pronóstico Demanda",
-        dias_restantes: "Días Restantes",
-        pto_reorden: "Pto. Reorden",
-        nivel_riesgo: "Nivel de Riesgo"
-      }
-    },
     kpis: {
       stock_total: {
         valor: toNumber(summary?.total_current_stock),
@@ -227,8 +209,11 @@ const normalizeInventory = (payload, _params) => {
       riesgo: mapRiskLevel(item?.stockout_risk),
     })),
     paginacion: {
-      total: toNumber(summary?.total_products) || products.length,
+      total: toNumber(payload?.pagination?.total_items) || toNumber(summary?.total_products) || products.length,
       mostrando: products.length,
+      // paginación server-side (patrón T9): metadata del BE para el pager
+      page: toNumber(payload?.pagination?.page) || 1,
+      total_pages: toNumber(payload?.pagination?.total_pages) || 1,
     },
   }
 }
@@ -297,27 +282,6 @@ const normalizeSales = (payload, _params) => {
   }))
 
   return {
-    ui_labels: payload?.ui_labels || {
-      title: "Detalle de Pronóstico de Ventas",
-      model_badge: payload?.method === 'SEASONAL' ? 'Estacional' : 'Proyectado',
-      export_button: "Exportar Reporte",
-      recalculate_button: "Recalcular",
-      history_title: "Historial Reciente (6 meses)",
-      history_badge: "Datos Reales",
-      forecast_title: "Proyección (3 meses)",
-      forecast_badge: "IA Model",
-      seasonality_title: "Análisis de Estacionalidad",
-      peaks_label: "Picos de Demanda",
-      valleys_label: "Valles de Demanda",
-      factors_label: "Factores Estacionales por Mes",
-      footer_note: "* Las proyecciones consideran festividades nacionales y tendencias de consumo histórico.",
-      table_headers: {
-        periodo: "Periodo",
-        venta_real: "Venta Real (₲)",
-        variacion: "Variación",
-        venta_proyectada: "Venta Proyectada (₲)"
-      }
-    },
     periodo_proyectado: formatPeriod(payload.forecast_period),
     model_info: payload?.model_info || {
       granularidad: payload?.granularity || "MENSUAL",
@@ -377,32 +341,6 @@ const normalizeDemand = (payload, _params) => {
 
   return {
     periodo_proyectado: periodo,
-    ui_labels: payload?.ui_labels || {
-      title: "Pronóstico de Demanda de Unidades",
-      period_label: "Periodo proyectado:",
-      export_button: "Exportar Análisis Completo",
-      metrics: {
-        top_category: "Categoría de Mayor Crecimiento",
-        top_product: "Producto con Mayor Demanda Estimada"
-      },
-      tables: {
-        categories_title: "Desglose de Demanda por Categoría",
-        products_title: "Top Productos Proyectados",
-        view_all_button: "Ver todos los productos"
-      },
-      units_label: "unidades",
-      table_headers: {
-        categoria: "Categoría",
-        unidades_historicas: "Unidades Históricas",
-        unidades_proyectadas: "Unidades Proyectadas",
-        crecimiento: "Crecimiento (%)",
-        tendencia: "Tendencia",
-        confianza: "Confianza (%)",
-        producto: "Producto",
-        valor_estimado: "Valor Estimado (₲)",
-        nivel_confianza: "Nivel de Confianza"
-      }
-    },
     kpis: {
       categoria_crecimiento: {
         nombre: highestCategory?.category_name || 'N/A',
@@ -482,27 +420,6 @@ const normalizeRevenue = (payload, _params) => {
 
   return {
     periodo_rango: formatPeriod(payload.forecast_period) || payload?.periodo_rango || "Periodo no definido",
-    ui_labels: payload?.ui_labels || {
-      title: "Pronóstico de Ingresos y Escenarios Financieros",
-      export_button: "Exportar Informe",
-      scenarios_title: "Escenarios Proyectados",
-      monthly_table_title: "Proyección Mensual Detallada",
-      categories_table_title: "Desglose por Categoría",
-      total_label: "Total Consolidado",
-      recommended_badge: "Recomendado",
-      probability_label: "Prob.",
-      table_headers: {
-        mes: "Mes",
-        base: "Pronóstico Base (₲)",
-        inf: "Límite Inferior (₲)",
-        sup: "Límite Superior (₲)",
-        estado: "Estado",
-        categoria: "Categoría",
-        valor: "Ingreso Proyectado (₲)",
-        porcentaje: "% del Total",
-        crecimiento: "Crecimiento (%)"
-      }
-    },
     // El BE aún no provee scenarios (null en el contrato actual): fabricar
     // tarjetas en Gs. 0 "Prob. 0%" era invención (auditoría 2E).
     escenarios: (payload?.scenarios || []).length
