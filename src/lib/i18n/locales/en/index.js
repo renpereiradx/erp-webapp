@@ -17,6 +17,7 @@ import { purchasePaymentsMvp } from './purchasePaymentsMvp'
 import { party } from './party'
 import { fiscal } from './fiscal'
 import { businessPrefs } from './businessPrefs'
+import { licensing } from './licensing'
 import { printers } from './printers'
 import { shell } from './shell'
 import { es } from '../es/index'
@@ -46,6 +47,7 @@ export const en = {
   ...party,
   ...fiscal,
   ...businessPrefs,
+  ...licensing,
   ...printers,
   ...shell,
   ...brands,

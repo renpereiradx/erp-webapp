@@ -8,6 +8,12 @@ import authService from '../services/authService';
 import apiService from '../services/api';
 import userService from '../services/userService';
 import { persistPermissions, clearStoredPermissions } from '../utils/userPermissions';
+import {
+  clearStoredEntitlements,
+  persistEntitlements,
+  type Entitlements,
+} from '../utils/entitlements';
+import { DEMO_CONFIG, DEMO_ENTITLEMENTS } from '@/config/demoAuth';
 import { User } from '@/types';
 
 interface AuthContextType {
@@ -24,6 +30,16 @@ interface AuthContextType {
   initializeAuth: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
   hasAnyPermission: (...permissions: string[]) => boolean;
+  /** Entitlements de licenciamiento de la instalación (ADR-5); null = sin dato aún. */
+  entitlements: Entitlements | null;
+  /**
+   * Gate de módulo licenciado. Fail-open igual que hasPermission para el
+   * legacy: sin dato (`null`) el módulo se considera disponible — el
+   * enforcement real es server-side (403 MODULE_NOT_LICENSED).
+   */
+  hasEntitlement: (module: string) => boolean;
+  /** Re-lee /me y refresca el estado + espejo localStorage (revocación en caliente). */
+  refreshEntitlements: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,6 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [entitlements, setEntitlements] = useState<Entitlements | null>(null);
 
   const hasPermission = useCallback((permission: string): boolean => {
     if (!user) return false;
@@ -52,6 +69,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!user.permissions || permissions.length === 0) return false;
     return permissions.some(p => user.permissions!.includes(p));
   }, [user]);
+
+  // PLAN_BI_PACK_PREMIUM ADR-2: el entitlement NO tiene bypass por rol —
+  // el gating es a nivel de instalación; el enforcement real vive en el BE.
+  const hasEntitlement = useCallback((module: string): boolean => {
+    if (!entitlements) return true; // fail-open (sin dato aún / backend legacy)
+    return entitlements.modules.includes(module);
+  }, [entitlements]);
+
+  // Resolución de entitlements del login: respuesta real → demo → nada.
+  const resolveLoginEntitlements = useCallback((result: any): Entitlements | null => {
+    if (result?.entitlements) return result.entitlements;
+    if (DEMO_CONFIG.enabled) return DEMO_ENTITLEMENTS;
+    return null;
+  }, []);
 
   const initializeAuth = useCallback(async () => {
     try {
@@ -84,6 +115,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             });
             // Permisos para gateo no-React (stores/servicios), refrescados en cada init vía /me
             persistPermissions(userData.permissions);
+            // Entitlements de licenciamiento (ADR-5): /me es la fuente canónica
+            if (userData.entitlements) {
+              persistEntitlements(userData.entitlements);
+              setEntitlements(userData.entitlements);
+            }
           }
         } catch (e) {
           // Silent error: If token is invalid/expired, it's expected during init or refresh
@@ -121,6 +157,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setIsAuthenticated(true);
         // /me (abajo) es la fuente canónica; el login persiste lo inmediato
         persistPermissions(result.permissions || result.user?.permissions);
+        // Entitlements inmediatos del login (ADR-5); demo → pack completo fake
+        const loginEntitlements = resolveLoginEntitlements(result);
+        if (loginEntitlements) {
+          persistEntitlements(loginEntitlements);
+          setEntitlements(loginEntitlements);
+        }
         
         // Cargar datos completos del usuario desde /me
         try {
@@ -193,6 +235,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Esto previene que requests pendientes usen un token inválido
     apiService.clearToken();
     clearStoredPermissions();
+    clearStoredEntitlements();
+    setEntitlements(null);
 
     // Verificar que el token se limpió correctamente
     const remainingToken = apiService.getToken();
@@ -211,6 +255,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const clearError = () => setError(null);
+
+  // Revocación en caliente (ADR-6): re-lee /me y sincroniza estado + espejo.
+  // La consume el listener de api:module_not_licensed (App); el cambio de
+  // estado re-renderiza BiModuleRoute y expulsa al usuario de la ruta BI.
+  const refreshEntitlements = useCallback(async () => {
+    try {
+      const response = await userService.getMe();
+      if (response.success && response.data?.entitlements) {
+        persistEntitlements(response.data.entitlements);
+        setEntitlements(response.data.entitlements);
+      }
+    } catch {
+      // Silent: el espejo/estado actual se conserva (fail-open)
+    }
+  }, []);
 
   useEffect(() => {
     initializeAuth();
@@ -273,7 +332,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       clearError,
       initializeAuth,
       hasPermission,
-      hasAnyPermission
+      hasAnyPermission,
+      entitlements,
+      hasEntitlement,
+      refreshEntitlements
     }}>
       {children}
     </AuthContext.Provider>
@@ -286,4 +348,14 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+/**
+ * Gate de navegación del pack BI (PLAN_BI_PACK_PREMIUM F3). El grupo BI
+ * entero del sidebar y los bloques de ruta §2.2 cuelgan de este flag.
+ * Fail-open: sin entitlements cargados aún devuelve true.
+ */
+export const useBiPackEnabled = (): boolean => {
+  const { hasEntitlement } = useAuth();
+  return hasEntitlement('bi');
 };

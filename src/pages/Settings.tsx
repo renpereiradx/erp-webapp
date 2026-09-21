@@ -9,6 +9,7 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import {
+  KeyRound,
   Moon,
   Sun,
   User,
@@ -23,8 +24,7 @@ import {
   Scale,
   ArrowRightLeft,
   Printer,
-  SlidersHorizontal,
-} from 'lucide-react'
+  SlidersHorizontal, } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import KeyboardShortcuts from '@/components/ui/KeyboardShortcuts'
@@ -125,6 +125,16 @@ const businessPrefsRow: NavRow = {
   descKey: 'businessPrefs.generic.description',
   descFallback: 'Configuración global de este negocio.',
   href: '/configuracion/preferencias',
+}
+
+/** Fila licencia (PLAN_BI_PACK_PREMIUM F4): estado del pack contratado. */
+const licenseRow: NavRow = {
+  icon: KeyRound,
+  titleKey: 'licensing.card.title',
+  titleFallback: 'Licencia',
+  descKey: 'licensing.card.description',
+  descFallback: 'Edición y módulos contratados para esta instalación.',
+  href: '/configuracion/licencia',
 }
 
 /** Fila branches:switch (D.3): emparejamiento de terminal con sucursal. */
@@ -307,6 +317,8 @@ export default function SettingsPage() {
                   {hasPermission('branches:switch') && <NavCardRow row={terminalRow} />}
                   {hasPermission('branches:write') && <NavCardRow row={devicesRow} />}
                   {hasPermission('settings:write') && <NavCardRow row={businessPrefsRow} />}
+                  {/* PLAN_BI_PACK_PREMIUM F4: auth-only en el BE, fila sin gate */}
+                  <NavCardRow row={licenseRow} />
                 </div>
               </CardContent>
             </Card>

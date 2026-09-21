@@ -9,7 +9,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, useBiPackEnabled } from '@/contexts/AuthContext'
+import LicenseBanner from '@/components/license/LicenseBanner'
 import { useBranch } from '@/contexts/BranchContext'
 import { useI18n } from '@/lib/i18n'
 import {
@@ -34,6 +35,8 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   // useI18n vive en un módulo JS: afirmamos la forma de `t` en el borde
   const { t } = useI18n() as unknown as { t: TFn }
   const reservationsEnabled = useReservationsEnabled()
+  // PLAN_BI_PACK_PREMIUM F3: el grupo BI del sidebar es el pack licenciado.
+  const biPackEnabled = useBiPackEnabled()
   const { currentBranchId } = useBranch()
   const queryClient = useQueryClient()
   const prevBranchIdRef = useRef(currentBranchId)
@@ -80,11 +83,11 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   const navigation = useMemo(
     () =>
-      filterNavigationItems(buildNavigation(t, reservationsEnabled), {
+      filterNavigationItems(buildNavigation(t, reservationsEnabled, biPackEnabled), {
         hasPermission,
         hasAnyPermission,
       }),
-    [t, hasPermission, hasAnyPermission, reservationsEnabled],
+    [t, hasPermission, hasAnyPermission, reservationsEnabled, biPackEnabled],
   )
 
   const isActive = useCallback(
@@ -180,6 +183,8 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           navigation={navigation}
           reservationsEnabled={reservationsEnabled}
         />
+        {/* PLAN_BI_PACK_PREMIUM F4: aviso global de vencimiento del pack BI */}
+        <LicenseBanner />
         <main key={currentBranchId ?? 'global'} className="flex-1 overflow-y-auto bg-background p-md lg:p-lg custom-scrollbar">
           <div className="max-w-container-max mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
             {children}

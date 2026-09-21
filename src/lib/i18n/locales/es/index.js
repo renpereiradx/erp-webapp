@@ -31,6 +31,7 @@ import { receivables } from './receivables'
 import payables from './payables'
 import { fiscal } from './fiscal'
 import { businessPrefs } from './businessPrefs'
+import { licensing } from './licensing'
 import { printers } from './printers'
 import { shell } from './shell'
 import { transfers } from './transfers'
@@ -70,6 +71,7 @@ export const es = {
   payables,
   ...fiscal,
   ...businessPrefs,
+  ...licensing,
   ...printers,
   ...shell,
   ...transfers,

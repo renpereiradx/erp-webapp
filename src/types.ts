@@ -39,6 +39,8 @@ export interface User {
   active_branch?: number | null;
   allowed_branches?: number[];
   permissions?: string[]; // Formato: "recurso:acción"
+  /** Entitlements de licenciamiento (PLAN_BI_PACK_PREMIUM ADR-5); legacy BE no lo envía. */
+  entitlements?: { edition: string; modules: string[]; bi_expires_at: string | null };
 }
 
 export interface UserSession {

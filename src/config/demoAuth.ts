@@ -100,6 +100,14 @@ export const DEMO_CONFIG = {
   sessionDuration: 24 * 60 * 60 * 1000, // 24 horas en ms
 };
 
+// PLAN_BI_PACK_PREMIUM ADR-5: los demos muestran el catálogo completo,
+// incluido el pack BI — entitlements fake para el modo demo.
+export const DEMO_ENTITLEMENTS = {
+  edition: 'core+bi',
+  modules: ['bi'],
+  bi_expires_at: null,
+};
+
 // Debug log for environment mode
 if (import.meta.env.DEV) {
   console.log('🧪 [DemoAuth] VITE_USE_DEMO:', import.meta.env.VITE_USE_DEMO);

@@ -48,9 +48,19 @@ interface PermissionChecks {
  * Árbol de navegación del sidebar. Los textos se resuelven vía i18n; los
  * módulos gated por negocio (ej. reservas) no generan la entrada.
  */
-export const buildNavigation = (t: TFn, reservationsEnabled: boolean): NavigationItem[] => [
-  {
-    name: t('common.bi', 'Inteligencia de Negocios'),
+export const buildNavigation = (
+  t: TFn,
+  reservationsEnabled: boolean,
+  biEnabled: boolean = true,
+): NavigationItem[] => [
+  // PLAN_BI_PACK_PREMIUM F3: el grupo BI entero ES el pack licenciado — sin
+  // entitlement la entrada no existe (mismo patrón que el toggle de reservas).
+  // Carve-out ADR-3: los dashboards fiscales SIFEN son Core; sin pack migran
+  // a su grupo propio (más abajo) para no quedar sin entrada de nav.
+  ...(biEnabled
+    ? [
+        {
+          name: t('common.bi', 'Inteligencia de Negocios'),
     href: '#',
     icon: BarChart3,
     permission: 'analytics:read',
@@ -169,6 +179,24 @@ export const buildNavigation = (t: TFn, reservationsEnabled: boolean): Navigatio
       },
     ],
   },
+      ]
+    : []),
+  // Carve-out ADR-3 (PLAN_BI_PACK_PREMIUM): con pack los dashboards fiscales
+  // viven en Reportes Financieros (grupo BI); sin pack siguen navegables aquí.
+  ...(!biEnabled
+    ? [
+        {
+          name: t('nav.sifenFiscalGroup', 'Fiscal (SIFEN)'),
+          href: '#',
+          icon: Gauge,
+          permission: 'sifen:read',
+          children: [
+            { name: t('nav.sifenFiscalDashboard', 'Dashboard Fiscal SIFEN'), href: '/finance/sifen-ops', icon: Gauge },
+            { name: t('nav.sifenNumberingGaps', 'Saltos de numeración SIFEN'), href: '/finance/sifen-inutilizacion', icon: List },
+          ],
+        },
+      ]
+    : []),
   {
     name: t('common.commercial', 'Gestión Comercial'),
     href: '#',

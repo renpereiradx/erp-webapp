@@ -71,6 +71,7 @@ const AttributesPage = lazy(() => import('@/pages/AttributesPage').then((m) => (
 const PrintersPage = lazy(() => import('@/pages/PrintersPage'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const BusinessPreferencesPage = lazy(() => import('@/features/settings/components/BusinessPreferencesPage'))
+const LicenseStatusPage = lazy(() => import('@/features/settings/components/LicenseStatusPage'))
 const BranchManagement = lazy(() => import('@/pages/BranchManagement'))
 const TerminalPairing = lazy(() => import('@/features/branches/components/TerminalPairing'))
 const DevicesPage = lazy(() => import('@/pages/DevicesPage'))
@@ -197,31 +198,33 @@ const ReservationsModuleRoute = ({ children }: { children: React.ReactNode }) =>
   return <>{children}</>
 }
 
-// Componente interno que usa los hooks
-// PLAN_PEDIDOS_MOSTRADOR FASE 4: la landing del vendor puro es /pedidos.
-// "Vendor puro" = puede ver pedidos pero no crear/cobrar ventas
-// (counterorders:read sin sales:write). El resto aterriza en /dashboard.
-function HomeRedirect() {
-  const { hasPermission } = useAuth()
-  // PERFIL VENDEDOR v3: sin dashboard:read el usuario no aterriza en el
-  // dashboard (su sección de nav está gated por el mismo permiso).
-  if (!hasPermission('dashboard:read')) {
-    return <Navigate to='/pedidos' replace />
-  }
-  if (hasPermission('counterorders:read') && !hasPermission('sales:write')) {
-    return <Navigate to='/pedidos' replace />
-  }
-  return <Navigate to='/dashboard' replace />
-}
+// HomeRedirect y BiModuleRoute viven en components/auth (testables, F3);
+// BiPermissionGuard compone licencia (fuera) + permiso (dentro) — el mismo
+// orden que la cadena BE (RequireModule → RequireModulePermission).
+import HomeRedirect from '@/components/auth/HomeRedirect'
+import BiModuleRoute from '@/components/auth/BiModuleRoute'
+const BiPermissionGuard = ({
+  permission,
+  children,
+}: {
+  permission: string
+  children: React.ReactNode
+}) => (
+  <BiModuleRoute>
+    <PermissionGuard permission={permission}>{children}</PermissionGuard>
+  </BiModuleRoute>
+)
 
-/** Guard del módulo dashboard (dashboard:read; el sidebar ya lo gated). */
+/** Guard del módulo dashboard (dashboard:read + pack BI; el sidebar ya lo gated). */
 const DashboardRoute = ({ children }: { children: React.ReactNode }) => (
-  <PermissionGuard permission='dashboard:read'>{children}</PermissionGuard>
+  <BiPermissionGuard permission='dashboard:read'>{children}</BiPermissionGuard>
 )
 
 function AppContent() {
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading, refreshEntitlements } = useAuth()
+  const { t } = useI18n()
   const lastPartialToastRef = useRef(0)
+  const lastModuleToastRef = useRef(0)
 
   useEffect(() => {
     // Bootstrap: cache the backend default VAT rate for cart calculators
@@ -255,16 +258,38 @@ function AppContent() {
       });
     };
 
+    // PLAN_BI_PACK_PREMIUM ADR-6/ADR-7: revocación del pack en caliente.
+    // El dispatcher emite api:module_not_licensed (también para GET, que
+    // silencia api:forbidden); aquí refrescamos entitlements (/me) y avisamos:
+    // el cambio de estado hace que BiModuleRoute redirija fuera de la ruta BI.
+    const handleModuleNotLicensed = (e: any) => {
+      const now = Date.now()
+      if (now - lastModuleToastRef.current < 5000) return
+      lastModuleToastRef.current = now
+      void refreshEntitlements()
+      import('sonner').then(({ toast }) => {
+        toast.warning(
+          e.detail ||
+            t(
+              'licensing.moduleNotLocked',
+              'El módulo de Inteligencia de Negocios no está incluido en la licencia de esta instalación',
+            ),
+        );
+      });
+    };
+
     window.addEventListener('api:forbidden', handleForbidden);
     window.addEventListener('api:method_not_allowed', handleMethodNotAllowed);
     window.addEventListener('api:partial-data', handlePartialData);
+    window.addEventListener('api:module_not_licensed', handleModuleNotLicensed);
 
     return () => {
       window.removeEventListener('api:forbidden', handleForbidden);
       window.removeEventListener('api:method_not_allowed', handleMethodNotAllowed);
       window.removeEventListener('api:partial-data', handlePartialData);
+      window.removeEventListener('api:module_not_licensed', handleModuleNotLicensed);
     };
-  }, []);
+  }, [refreshEntitlements, t]);
 
   if (loading) {
     return (
@@ -325,40 +350,40 @@ function AppContent() {
                       {/* D3 (PLAN_ALINEACION_BI_FRONTEND): contenido CxC — mismo
                           guard receivables:read que /receivables (sin redirect). */}
                       <Route path='/dashboard/receivables' element={
-                        <PermissionGuard permission='receivables:read'>
+                        <BiPermissionGuard permission='receivables:read'>
                           <ReceivablesDashboard />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/dashboard/payables' element={<DashboardRoute><PayablesDashboard /></DashboardRoute>} />
                       <Route path='/payables/invoices' element={
-                        <PermissionGuard permission='payables:read'>
+                        <BiPermissionGuard permission='payables:read'>
                           <InvoicesMasterList />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/payables/detail/:id' element={
-                        <PermissionGuard permission='payables:read'>
+                        <BiPermissionGuard permission='payables:read'>
                           <InvoiceDetail />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/payables/cash-flow' element={
-                        <PermissionGuard permission='payables:read'>
+                        <BiPermissionGuard permission='payables:read'>
                           <CashFlowProjection />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/payables/aging-report' element={
-                        <PermissionGuard permission='payables:read'>
+                        <BiPermissionGuard permission='payables:read'>
                           <PayablesAgingReport />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/finance/analytical-cash-flow' element={
-                        <PermissionGuard permission='reports:read'>
+                        <BiPermissionGuard permission='reports:read'>
                           <CashFlowAnalysisDashboard />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/finance/tax-management' element={
-                        <PermissionGuard permission='reports:read'>
+                        <BiPermissionGuard permission='reports:read'>
                           <TaxManagementDashboard />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/finance/sifen-inutilizacion' element={
                         <PermissionGuard permission='sifen:read'>
@@ -371,138 +396,152 @@ function AppContent() {
                         </PermissionGuard>
                       } />
                       <Route path='/finance/profit-and-loss' element={
-                        <PermissionGuard permission='reports:read'>
+                        <BiPermissionGuard permission='reports:read'>
                           <ProfitAndLoss />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/finance/legal-books' element={
-                        <PermissionGuard permission='reports:read'>
+                        <BiPermissionGuard permission='reports:read'>
                           <LegalBooks />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       
                       {/* BI Forecasting Routes */}
                       <Route path='/bi/pronosticos/dashboard' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <DashboardPronosticos />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/bi/pronosticos/inventario' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <SaludInventario />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/bi/pronosticos/ventas' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <PronosticoVentas />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/bi/pronosticos/demanda' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <PronosticoDemanda />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/bi/pronosticos/ingresos' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <PronosticoIngresos />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       
                       {/* Profitability Analytics Module (Detailed) */}
-                      <Route path='/profitability/dashboard' element={<PermissionGuard permission="analytics:read"><ProfitabilityDashboard /></PermissionGuard>} />
-                      <Route path='/profitability/products' element={<PermissionGuard permission="analytics:read"><ProductProfitability /></PermissionGuard>} />
-                      <Route path='/profitability/customers' element={<PermissionGuard permission="analytics:read"><CustomerProfitability /></PermissionGuard>} />
-                      <Route path='/profitability/categories' element={<PermissionGuard permission="analytics:read"><CategoryProfitability /></PermissionGuard>} />
-                      <Route path='/profitability/trends' element={<PermissionGuard permission="analytics:read"><ProfitabilityTrends /></PermissionGuard>} />
-                      <Route path='/profitability/sellers' element={<PermissionGuard permission="analytics:read"><SellerProfitability /></PermissionGuard>} />
+                      <Route path='/profitability/dashboard' element={
+                        <BiPermissionGuard permission="analytics:read"><ProfitabilityDashboard /></BiPermissionGuard>
+                      } />
+                      <Route path='/profitability/products' element={
+                        <BiPermissionGuard permission="analytics:read"><ProductProfitability /></BiPermissionGuard>
+                      } />
+                      <Route path='/profitability/customers' element={
+                        <BiPermissionGuard permission="analytics:read"><CustomerProfitability /></BiPermissionGuard>
+                      } />
+                      <Route path='/profitability/categories' element={
+                        <BiPermissionGuard permission="analytics:read"><CategoryProfitability /></BiPermissionGuard>
+                      } />
+                      <Route path='/profitability/trends' element={
+                        <BiPermissionGuard permission="analytics:read"><ProfitabilityTrends /></BiPermissionGuard>
+                      } />
+                      <Route path='/profitability/sellers' element={
+                        <BiPermissionGuard permission="analytics:read"><SellerProfitability /></BiPermissionGuard>
+                      } />
 
                       <Route path='/receivables' element={
-                        <PermissionGuard permission='receivables:read'>
+                        <BiPermissionGuard permission='receivables:read'>
                           <ReceivablesDashboard />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/receivables/list' element={
-                        <PermissionGuard permission='receivables:read'>
+                        <BiPermissionGuard permission='receivables:read'>
                           <ReceivablesMasterList />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/receivables/detail/:id' element={
-                        <PermissionGuard permission='receivables:read'>
+                        <BiPermissionGuard permission='receivables:read'>
                           <ReceivableDetail />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/receivables/overdue' element={
-                        <PermissionGuard permission='receivables:read'>
+                        <BiPermissionGuard permission='receivables:read'>
                           <OverdueAccounts />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/receivables/client-profile/:clientId' element={
-                        <PermissionGuard permission='receivables:read'>
+                        <BiPermissionGuard permission='receivables:read'>
                           <ClientCreditProfile />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/receivables/aging-report' element={
-                        <PermissionGuard permission='receivables:read'>
+                        <BiPermissionGuard permission='receivables:read'>
                           <AgingReport />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/productos' element={<PermissionGuard permission="products:write"><Products /></PermissionGuard>} />
                       <Route path='/parties' element={<PermissionGuard anyOf={['parties:read', 'clients:read', 'suppliers:read']}><PartiesPage /></PermissionGuard>} />
                       <Route path='/payables/suppliers/:id/analysis' element={
-                        <PermissionGuard permission='payables:read'>
+                        <BiPermissionGuard permission='payables:read'>
                           <SupplierAnalysis />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/ventas' element={<PermissionGuard permission="sales:read"><SalesNew /></PermissionGuard>} />
                       
                       {/* Sales Analytics Routes */}
                       <Route path='/sales-analytics/dashboard' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <SalesAnalyticsDashboard />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/sales-analytics/products-categories' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <SalesAnalyticsProductsCategories />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/sales-analytics/insights' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <SalesAnalyticsInsights />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/sales-analytics/trends-velocity' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <SalesAnalyticsTrendsVelocity />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/sales-analytics/period-comparison' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <SalesAnalyticsPeriodComparison />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
-                      <Route path='/sales-analytics/discounts' element={<PermissionGuard permission="reports:read"><SalesAnalyticsDiscounts /></PermissionGuard>} />
+                      <Route path='/sales-analytics/discounts' element={
+                        <BiPermissionGuard permission="reports:read"><SalesAnalyticsDiscounts /></BiPermissionGuard>
+                      } />
 
                       {/* Inventory Analytics Routes */}
                       <Route path='/inventory-analytics/dashboard' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <InventoryDashboard />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/inventory-analytics/turnover-abc' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <InventoryTurnoverABC />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/inventory-analytics/stock-levels' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <StockLevelsReorder />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/inventory-analytics/risk' element={
-                        <PermissionGuard permission='analytics:read'>
+                        <BiPermissionGuard permission='analytics:read'>
                           <InventoryRisk />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
 
                       {/* Rutas con layout de tabs */}
@@ -721,27 +760,29 @@ function AppContent() {
                           <UnitConversionsPage />
                         </PermissionGuard>
                       } />
+                      {/* PLAN_BI_PACK_PREMIUM F4: estado de la licencia (Core, auth-only) */}
+                      <Route path='/configuracion/licencia' element={<LicenseStatusPage />} />
                       
                       {/* Auditoría */}
                       <Route path='/auditoria' element={
-                        <PermissionGuard permission='audit:read'>
+                        <BiPermissionGuard permission='audit:read'>
                           <AuditDashboard />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/auditoria/logs' element={
-                        <PermissionGuard permission='audit:read'>
+                        <BiPermissionGuard permission='audit:read'>
                           <AuditLogs />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/auditoria/logs/:id' element={
-                        <PermissionGuard permission='audit:read'>
+                        <BiPermissionGuard permission='audit:read'>
                           <AuditLogDetail />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
                       <Route path='/auditoria/usuarios/:id' element={
-                        <PermissionGuard permission='audit:read'>
+                        <BiPermissionGuard permission='audit:read'>
                           <AuditUserActivity />
-                        </PermissionGuard>
+                        </BiPermissionGuard>
                       } />
 
                       {/* Configuración Financiera */}

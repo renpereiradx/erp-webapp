@@ -242,7 +242,25 @@ class BusinessManagementAPI {
         // auxiliares 403 mostraban el toast como si hubiera fallado).
         const isReadMethod =
           !options.method || options.method === 'GET' || options.method === 'HEAD'
-        if (response.status === 403 && !isReadMethod && typeof window !== 'undefined') {
+        // PLAN_BI_PACK_PREMIUM ADR-7: el 403 de licencia es un evento propio.
+        // Llega TAMBIÉN por GET (que silencia api:forbidden) y no debe
+        // duplicar el toast de permisos. El listener en App refresca
+        // entitlements → BiModuleRoute expulsa de la ruta BI.
+        const licenseCode = errorData?.code || errorData?.error?.code;
+        if (
+          response.status === 403 &&
+          licenseCode === 'MODULE_NOT_LICENSED' &&
+          typeof window !== 'undefined'
+        ) {
+          const licenseMessage =
+            (typeof errorData?.error === 'string' && errorData.error) ||
+            errorData?.message ||
+            (errorData?.error && typeof errorData.error === 'object' && errorData.error.message) ||
+            'El módulo no está incluido en la licencia de esta instalación';
+          window.dispatchEvent(new CustomEvent('api:module_not_licensed', {
+            detail: licenseMessage
+          }));
+        } else if (response.status === 403 && !isReadMethod && typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('api:forbidden', {
             detail: errorData.message || 'Acceso denegado: No cuentas con los permisos necesarios.'
           }));
