@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useI18n } from '@/lib/i18n'
+import TablePagination from '@/components/ui/TablePagination'
 import { formatPYG } from '@/utils/currencyUtils'
 import type { OverdueAccount } from '../types'
 
@@ -10,11 +11,21 @@ import type { OverdueAccount } from '../types'
  * paginación con total falso ("de 142") y los botones de acción sin
  * handler. Sin fallback 'client_001': sin clientId no navega.
  */
-interface OverdueTableProps {
-  accounts?: OverdueAccount[]
+interface OverdueTablePagination {
+  page?: number
+  total_items?: number
+  total_pages?: number
 }
 
-const OverdueTable = ({ accounts = [] }: OverdueTableProps) => {
+interface OverdueTableProps {
+  accounts?: OverdueAccount[]
+  /** Metadata server-side de /receivables/overdue (regla ≤10 filas). */
+  pagination?: OverdueTablePagination
+  /** Callback de cambio de página; el pager refetcha vía el hook. */
+  onPageChange?: (page: number) => void
+}
+
+const OverdueTable = ({ accounts = [], pagination, onPageChange }: OverdueTableProps) => {
   const { t } = useI18n()
   const navigate = useNavigate()
   const safeAccounts = Array.isArray(accounts) ? accounts : []
@@ -135,12 +146,14 @@ const OverdueTable = ({ accounts = [] }: OverdueTableProps) => {
           </p>
         )}
 
-        {/* Conteo real (el legacy mostraba "de 142 resultados" fijo) */}
-        <div className="px-md py-sm border-t border-border-subtle bg-surface-muted">
-          <span className="text-label-caps uppercase text-on-surface-deep">
-            {t('bi.receivables.overdue.showing', 'Mostrando {n} cuentas', { n: safeAccounts.length })}
-          </span>
-        </div>
+        {/* Paginación server-side: totales reales del BE (el legacy mostraba
+            "de 142 resultados" fijo) */}
+        <TablePagination
+          page={pagination?.page ?? 1}
+          totalPages={pagination?.total_pages ?? 1}
+          totalItems={pagination?.total_items ?? safeAccounts.length}
+          onPageChange={(next) => onPageChange?.(next)}
+        />
       </div>
     </div>
   )

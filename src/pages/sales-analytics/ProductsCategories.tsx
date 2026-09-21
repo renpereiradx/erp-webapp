@@ -4,10 +4,9 @@ import {
   TrendingUp,
   TrendingDown,
   Star,
-  ChevronLeft,
-  ChevronRight,
   RefreshCcw
 } from 'lucide-react';
+import TablePagination from '@/components/ui/TablePagination';
 import salesAnalyticsService from '@/services/bi/salesAnalyticsService';
 // F1 (PLAN_ALINEACION_BI_FRONTEND): formato/paginación extraídos a domain
 import { clampPage, roundPct1 } from '@/domain/sales-analytics/format';
@@ -307,37 +306,13 @@ const ProductsCategories = () => {
               </tbody>
             </table>
           </div>
-          {/* Pagination */}
-          <div className="px-6 py-4 border-t border-border-subtle flex items-center justify-between font-mono">
-            <p className="text-xs text-on-surface-deep font-bold uppercase tracking-tighter">
-              {t('bi.sales.categories.pageOf', 'Página {page} de {total} ({items} items)', {
-                page: productsData.pagination?.page ?? 1,
-                total: productsData.pagination?.total_pages ?? 1,
-                items: productsData.pagination?.total_items ?? 0,
-              })}
-            </p>
-            <div className="flex gap-1">
-              <button
-                onClick={() => handlePageChange((productsData.pagination?.page ?? 1) - 1)}
-                disabled={(productsData.pagination?.page ?? 1) === 1}
-                aria-label={t('bi.sales.categories.aria.prevPage', 'Página anterior')}
-                className="w-8 h-8 flex items-center justify-center rounded-lg border border-border-subtle text-on-surface-deep disabled:opacity-50 hover:bg-surface-muted"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white text-xs font-black">
-                {productsData.pagination?.page ?? 1}
-              </button>
-              <button
-                onClick={() => handlePageChange((productsData.pagination?.page ?? 1) + 1)}
-                disabled={(productsData.pagination?.page ?? 1) === (productsData.pagination?.total_pages ?? 1)}
-                aria-label={t('bi.sales.categories.aria.nextPage', 'Página siguiente')}
-                className="w-8 h-8 flex items-center justify-center rounded-lg border border-border-subtle text-on-surface-deep hover:bg-surface-muted disabled:opacity-50"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
+          {/* Pagination (server-side, page_size 10) */}
+          <TablePagination
+            page={productsData.pagination?.page ?? 1}
+            totalPages={productsData.pagination?.total_pages ?? 1}
+            totalItems={productsData.pagination?.total_items ?? 0}
+            onPageChange={handlePageChange}
+          />
         </div>
     </div>
   );

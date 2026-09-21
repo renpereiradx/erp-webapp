@@ -15,7 +15,7 @@ import OverdueTable from '@/features/receivables/components/OverdueTable';
  */
 const OverdueAccounts = () => {
   const { t } = useI18n();
-  const { stats, accounts, loading, error, refresh } = useOverdueAccounts();
+  const { stats, accounts, pagination, loading, error, refresh, setPage } = useOverdueAccounts();
 
   return (
     <div className="min-h-screen bg-background">
@@ -63,7 +63,7 @@ const OverdueAccounts = () => {
               <OverdueKpiGrid stats={stats} />
             </section>
             <section className="mt-lg">
-              <OverdueTable accounts={accounts} />
+              <OverdueTable accounts={accounts} pagination={pagination} onPageChange={setPage} />
             </section>
           </>
         )}

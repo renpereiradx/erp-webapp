@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   Users,
@@ -6,12 +6,23 @@ import {
   RefreshCw,
   Star,
   Calendar,
-  TrendingUp,
-  TrendingDown
 } from 'lucide-react';
 import salesAnalyticsService from '@/services/bi/salesAnalyticsService';
 import { useI18n } from '@/lib/i18n';
 import { Link } from 'react-router-dom';
+import { formatPYG } from '@/utils/currencyUtils';
+import TablePagination from '@/components/ui/TablePagination';
+
+/**
+ * Insights de Clientes y Vendedores.
+ * Deuda ≤10 filas (VERIFICACION_POST_CIERRE 2026-09-21): ambas tablas
+ * paginan server-side (page_size 10, pager con conteo real del server);
+ * fuera la columna "Progreso de Meta" que renderizaba `target_progress`,
+ * un campo que el backend nunca envió (undefined% en prod), y el Intl
+ * local duplicado (formatPYG).
+ */
+
+const PAGE_SIZE = 10;
 
 /** Summary de GET /sales-analytics/by-customer. */
 interface CustomerSummary {
@@ -40,41 +51,62 @@ interface SellerRow {
   rank?: number
   total_sales?: number
   units_sold?: number
-  target_progress?: number
+}
+
+interface PaginationMeta {
+  page?: number
+  total_pages?: number
+  total_items?: number
+}
+
+interface CustomerPayload {
+  summary?: CustomerSummary
+  customers?: CustomerRow[]
+  pagination?: PaginationMeta
+}
+
+interface SellerPayload {
+  sellers?: SellerRow[]
+  pagination?: PaginationMeta
 }
 
 const CustomerSellerInsights = () => {
   const { t } = useI18n();
-  const [customerData, setCustomerData] = useState<{ summary?: CustomerSummary; customers?: CustomerRow[] } | null>(null);
-  const [sellerData, setSellerData] = useState<{ sellers?: SellerRow[] } | null>(null);
+  const [customerData, setCustomerData] = useState<CustomerPayload | null>(null);
+  const [sellerData, setSellerData] = useState<SellerPayload | null>(null);
+  const [customerPage, setCustomerPage] = useState(1);
+  const [sellerPage, setSellerPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchCustomers = async (page: number) => {
+    const res = await salesAnalyticsService.getByCustomer({ period: 'month', page, page_size: PAGE_SIZE });
+    if (res && res.success) setCustomerData(res.data);
+  };
+
+  const fetchSellers = async (page: number) => {
+    const res = await salesAnalyticsService.getBySeller({ period: 'month', page, page_size: PAGE_SIZE });
+    if (res && res.success) setSellerData(res.data);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const [custRes, sellerRes] = await Promise.all([
-          salesAnalyticsService.getByCustomer({ period: 'month' }),
-          salesAnalyticsService.getBySeller({ period: 'month' })
-        ]);
-
-        if (custRes && custRes.success) setCustomerData(custRes.data);
-        if (sellerRes && sellerRes.success) setSellerData(sellerRes.data);
+        await Promise.all([fetchCustomers(customerPage), fetchSellers(sellerPage)]);
       } catch (err: any) {
-        console.error("Error fetching insights data:", err);
+        console.error('Error fetching insights data:', err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
+    // Carga inicial (página 1 de cada tabla); los cambios de página se
+    // resuelven en los handlers sin spinner de pantalla completa.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const formatCurrency = (value: number | null | undefined) => {
-    return new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(value || 0);
-  };
 
   const getSegmentStyles = (segment?: string) => {
     switch(segment) {
@@ -82,6 +114,16 @@ const CustomerSellerInsights = () => {
       case 'PREMIUM': return 'bg-primary/10 text-primary';
       default: return 'bg-surface-subtle text-on-surface-deep';
     }
+  };
+
+  const handleCustomerPage = (page: number) => {
+    setCustomerPage(page);
+    fetchCustomers(page).catch((err) => console.error('Error fetching customer page:', err));
+  };
+
+  const handleSellerPage = (page: number) => {
+    setSellerPage(page);
+    fetchSellers(page).catch((err) => console.error('Error fetching seller page:', err));
   };
 
   if (loading) {
@@ -122,27 +164,27 @@ const CustomerSellerInsights = () => {
         {/* KPI Row */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <InsightKPICard
-            title="Total Clientes"
+            title={t('bi.insights.kpi.totalCustomers', 'Total Clientes')}
             value={customerData?.summary?.total_customers || 0}
             subtext={t('bi.insights.recurringNew', '{recurrentes} Recurrentes | {nuevos} Nuevos', { recurrentes: customerData?.summary?.returning_customers || 0, nuevos: customerData?.summary?.new_customers || 0 })}
             icon={<Users className="text-primary/60" size={24} />}
           />
           <InsightKPICard
-            title="Lifetime Value (LTV)"
-            value={formatCurrency(customerData?.summary?.average_lifetime_value)}
-            subtext="Promedio por cliente"
+            title={t('bi.insights.kpi.lifetimeValue', 'Lifetime Value (LTV)')}
+            value={formatPYG(customerData?.summary?.average_lifetime_value ?? 0)}
+            subtext={t('bi.insights.kpi.ltvHint', 'Promedio por cliente')}
             icon={<Wallet className="text-primary/60" size={24} />}
           />
           <InsightKPICard
-            title="Tasa de Retención"
+            title={t('bi.insights.kpi.retention', 'Tasa de Retención')}
             value={`${customerData?.summary?.customer_retention_rate || 0}%`}
-            subtext="Clientes que siguen comprando"
+            subtext={t('bi.insights.kpi.retentionHint', 'Clientes que siguen comprando')}
             icon={<RefreshCw className="text-primary/60" size={24} />}
           />
           <InsightKPICard
-            title="Venta Clientes Top"
-            value={formatCurrency(customerData?.summary?.top_customer_revenue)}
-            subtext="Mayor venta del período"
+            title={t('bi.insights.kpi.topCustomerSales', 'Venta Clientes Top')}
+            value={formatPYG(customerData?.summary?.top_customer_revenue ?? 0)}
+            subtext={t('bi.insights.kpi.topCustomerHint', 'Mayor venta del período')}
             icon={<Star className="text-primary/60" size={24} />}
           />
         </div>
@@ -179,7 +221,7 @@ const CustomerSellerInsights = () => {
                       <td className="px-6 py-4 text-center">
                         <span className="text-on-surface-deep capitalize font-bold text-xs">{(cust.frequency || '').toLowerCase()}</span>
                       </td>
-                      <td className="px-6 py-4 text-right font-black font-mono text-primary">{formatCurrency(cust.total_purchases)}</td>
+                      <td className="px-6 py-4 text-right font-black font-mono text-primary">{formatPYG(cust.total_purchases ?? 0)}</td>
                       <td className="px-6 py-4 text-right text-on-surface-deep font-mono text-xs font-bold">{cust.last_purchase ? new Date(cust.last_purchase).toLocaleDateString() : '—'}</td>
                     </tr>
                   ))}
@@ -191,6 +233,12 @@ const CustomerSellerInsights = () => {
                 </tbody>
               </table>
             </div>
+            <TablePagination
+              page={customerData?.pagination?.page ?? customerPage}
+              totalPages={customerData?.pagination?.total_pages ?? 1}
+              totalItems={customerData?.pagination?.total_items ?? 0}
+              onPageChange={handleCustomerPage}
+            />
           </div>
         </div>
 
@@ -207,7 +255,6 @@ const CustomerSellerInsights = () => {
                     <th className="px-6 py-4">{t('bi.insights.col.seller', 'Vendedor')}</th>
                     <th className="px-6 py-4 text-right">{t('bi.sales.kpi.totalSales', 'Ventas Totales')}</th>
                     <th className="px-6 py-4 text-right">{t('bi.insights.col.unitsSold', 'Unidades Vendidas')}</th>
-                    <th className="px-6 py-4">{t('bi.insights.col.targetProgress', 'Progreso de Meta')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-subtle">
@@ -224,26 +271,24 @@ const CustomerSellerInsights = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-right font-black font-mono text-primary">{formatCurrency(seller.total_sales)}</td>
+                      <td className="px-6 py-4 text-right font-black font-mono text-primary">{formatPYG(seller.total_sales ?? 0)}</td>
                       <td className="px-6 py-4 text-right font-mono font-bold text-on-surface-deep">{seller.units_sold} uds.</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-2 rounded-full bg-surface-muted overflow-hidden min-w-[100px] shadow-inner">
-                            <div className="h-full bg-primary transition-all duration-1000 ease-out" style={{ width: `${seller.target_progress}%` }}></div>
-                          </div>
-                          <span className="text-xs font-black font-mono w-10">{seller.target_progress}%</span>
-                        </div>
-                      </td>
                     </tr>
                   ))}
                   {(!sellerData?.sellers || sellerData.sellers.length === 0) && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-on-surface-deep font-medium italic text-xs uppercase tracking-widest">{t('bi.insights.emptySellers', 'Sin datos de vendedores disponibles')}</td>
+                      <td colSpan={3} className="px-6 py-8 text-center text-on-surface-deep font-medium italic text-xs uppercase tracking-widest">{t('bi.insights.emptySellers', 'Sin datos de vendedores disponibles')}</td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
+            <TablePagination
+              page={sellerData?.pagination?.page ?? sellerPage}
+              totalPages={sellerData?.pagination?.total_pages ?? 1}
+              totalItems={sellerData?.pagination?.total_items ?? 0}
+              onPageChange={handleSellerPage}
+            />
           </div>
         </div>
     </div>
@@ -268,7 +313,6 @@ const InsightKPICard = ({ title, value, growth, subtext, icon }: InsightKPICardP
     <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] uppercase font-black">
       {growth != null && (
         <span className={`flex items-center font-mono ${growth >= 0 ? 'text-success' : 'text-error'}`}>
-          {growth >= 0 ? <TrendingUp size={12} className="mr-1" /> : <TrendingDown size={12} className="mr-1" />}
           {growth >= 0 ? '+' : ''}{growth}%
         </span>
       )}
