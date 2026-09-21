@@ -1,12 +1,11 @@
 import React from 'react';
+import { useI18n } from '@/lib/i18n';
 
 export interface AlertItem {
   id: string;
   type: string;
   message: string;
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-  actionLabel?: string;
-  onAction?: () => void;
 }
 
 export interface AlertsPanelProps {
@@ -14,30 +13,31 @@ export interface AlertsPanelProps {
 }
 
 export const AlertsPanel: React.FC<AlertsPanelProps> = ({ alerts }) => {
+  const { t } = useI18n();
+
+  // H7: los botones de acción solo logueaban en dev — fuera; la alerta es
+  // informativa hasta que exista un endpoint de acción real.
   const getSeverityStyles = (severity: string) => {
     switch (severity) {
       case 'CRITICAL':
         return {
-          container: 'bg-error/10 dark:bg-rose-950/20 border-error text-rose-900 dark:text-rose-200',
+          container: 'bg-error/10 border-error text-error',
           icon: 'text-error',
           iconName: 'error',
-          btn: 'text-error'
         };
       case 'HIGH':
         return {
-          container: 'bg-warning/10 dark:bg-amber-950/20 border-amber-400 text-amber-900 dark:text-amber-200',
+          container: 'bg-warning/10 border-warning text-warning',
           icon: 'text-warning',
           iconName: 'report',
-          btn: 'text-warning'
         };
       case 'MEDIUM':
       case 'LOW':
       default:
         return {
-          container: 'bg-surface-muted dark:bg-surface-deep border-border-subtle text-foreground dark:text-slate-100',
+          container: 'bg-surface-muted border-border-subtle text-foreground',
           icon: 'text-on-surface-deep',
           iconName: 'info',
-          btn: 'text-primary'
         };
     }
   };
@@ -46,7 +46,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ alerts }) => {
     <div className="bg-surface p-6 rounded-lg border border-border-subtle h-full font-display">
       <h3 className="text-lg font-bold mb-5 flex items-center gap-2 uppercase tracking-tight">
         <span className="material-symbols-outlined text-error">warning</span>
-        Alertas Críticas
+        {t('bi.inventory.alerts.title', 'Alertas Críticas', {})}
       </h3>
       <div className="space-y-4">
         {alerts.map((alert) => {
@@ -57,20 +57,12 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ alerts }) => {
               <div className="flex-1">
                 <p className="text-sm font-bold font-mono">{alert.message}</p>
                 <p className="text-xs opacity-80 uppercase tracking-wide font-bold">{alert.type}</p>
-                {alert.actionLabel && (
-                  <button 
-                    onClick={alert.onAction}
-                    className={`mt-2 text-xs font-black underline uppercase tracking-tighter ${styles.btn}`}
-                  >
-                    {alert.actionLabel}
-                  </button>
-                )}
               </div>
             </div>
           );
         })}
         {alerts.length === 0 && (
-          <p className="text-sm text-on-surface-deep text-center py-8 italic">No hay alertas críticas en este momento.</p>
+          <p className="text-sm text-on-surface-deep text-center py-8 italic">{t('bi.inventory.alerts.empty', 'No hay alertas críticas en este momento.', {})}</p>
         )}
       </div>
     </div>

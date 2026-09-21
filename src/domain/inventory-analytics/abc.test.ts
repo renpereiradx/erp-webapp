@@ -16,16 +16,14 @@ describe('buildAbcItems', () => {
     expect(buildAbcItems(undefined, 1000)).toEqual([])
   })
 
-  it('3 clases con valor PYG sobre el total y descripciones del legado', () => {
+  it('3 clases con valor PYG sobre el total, sin labels UI (pureza T23: los textos viven en ABCSummary con i18n)', () => {
     const items = buildAbcItems(SUMMARY, 1000000)
     expect(items.map((i) => i.class)).toEqual(['A', 'B', 'C'])
     expect(items[0]).toEqual({
       class: 'A',
-      label: 'Clase A (Alta Rotación/Valor)',
       percentage: 80,
       count: 12,
       value: 'Gs. 800.000',
-      description: 'Productos que representan el 80% del valor total.',
     })
     expect(items[1].value).toBe('Gs. 150.000')
     expect(items[2].value).toBe('Gs. 50.000')

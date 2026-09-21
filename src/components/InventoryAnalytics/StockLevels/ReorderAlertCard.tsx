@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '@/lib/i18n';
 
 export interface ReorderAlertCardProps {
   count: number;
@@ -8,29 +9,31 @@ export interface ReorderAlertCardProps {
 }
 
 export const ReorderAlertCard: React.FC<ReorderAlertCardProps> = ({ count, cost, type, onClick }) => {
+  const { t } = useI18n();
+
   const getStyles = () => {
     switch (type) {
       case 'URGENT':
         return {
-          bg: 'bg-error/10 dark:bg-rose-950/20',
+          bg: 'bg-error/10',
           border: 'border-error',
-          text: 'text-rose-900 dark:text-rose-200',
+          text: 'text-error',
           accent: 'text-error',
           icon: 'error'
         };
       case 'HIGH':
         return {
-          bg: 'bg-warning/10 dark:bg-amber-950/20',
+          bg: 'bg-warning/10',
           border: 'border-warning',
-          text: 'text-warning dark:text-warning',
+          text: 'text-warning',
           accent: 'text-warning',
           icon: 'warning'
         };
       default:
         return {
-          bg: 'bg-surface-muted dark:bg-surface-deep',
+          bg: 'bg-surface-muted',
           border: 'border-border-subtle',
-          text: 'text-foreground dark:text-on-primary',
+          text: 'text-foreground',
           accent: 'text-primary',
           icon: 'info'
         };
@@ -43,19 +46,23 @@ export const ReorderAlertCard: React.FC<ReorderAlertCardProps> = ({ count, cost,
     <div className={`flex flex-col gap-3 rounded-xl p-6 border-l-4 shadow-sm font-display ${styles.bg} ${styles.border}`}>
       <div className="flex items-center justify-between">
         <p className={`text-sm font-bold uppercase tracking-wider ${styles.text}`}>
-          {type === 'URGENT' ? 'Necesidad Urgente de Reorden' : 'Reorden Sugerida'}
+          {type === 'URGENT'
+            ? t('bi.inventory.reorder.urgent', 'Necesidad Urgente de Reorden', {})
+            : t('bi.inventory.reorder.suggested', 'Reorden Sugerida', {})}
         </p>
         <span className={`material-symbols-outlined ${styles.accent}`}>{styles.icon}</span>
       </div>
       <div className="flex flex-col">
-        <p className="text-3xl font-black font-mono">{count} Productos</p>
-        <p className={`text-sm font-semibold font-mono ${styles.accent}`}>Costo estimado: {cost}</p>
+        <p className="text-3xl font-black font-mono">{t('bi.inventory.reorder.products', '{n} Productos', { n: count })}</p>
+        <p className={`text-sm font-semibold font-mono ${styles.accent}`}>
+          {t('bi.inventory.reorder.estimatedCost', 'Costo estimado: {cost}', { cost })}
+        </p>
       </div>
-      <button 
+      <button
         onClick={onClick}
         className={`mt-2 text-sm font-bold underline text-left ${styles.accent}`}
       >
-        Ver lista detallada
+        {t('bi.inventory.reorder.viewList', 'Ver lista detallada', {})}
       </button>
     </div>
   );

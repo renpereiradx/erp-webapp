@@ -105,4 +105,20 @@ describe('<InventoryTurnoverABC />', () => {
     // respuesta del backend: nunca debe aparecer un "+0%" ni "trending".
     expect(screen.queryByText(/\+0%/)).toBeNull();
   });
+
+  it('fallo del turnover muestra ErrorState; fallo del ABC degrada a gráfico vacío', async () => {
+    mocks.getTurnover.mockRejectedValue(new Error('timeout'));
+    mocks.getABC.mockResolvedValue(abcPayload);
+    render(<InventoryTurnoverABC />);
+
+    expect(await screen.findByText('No se pudo cargar el análisis de rotación y ABC')).toBeInTheDocument();
+
+    mocks.getTurnover.mockResolvedValue(turnoverPayload);
+    mocks.getABC.mockRejectedValue(new Error('boom'));
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId('error-retry'));
+
+    await waitFor(() => expect(screen.getByText('Tasa Promedio de Rotación')).toBeInTheDocument());
+    expect(screen.getByText(/No hay productos Clase A registrados/i)).toBeInTheDocument();
+  });
 });
