@@ -30,15 +30,19 @@ pnpm run build
 
 ### Production Deployment
 
+El despliegue productivo se orquesta desde el backend (compose canónico con perfiles
+`laptop`/`server`): ver `business_management/docker-compose.yml` y
+`business_management/docs/DEPLOYMENT_DOCKER.md`. La imagen del frontend
+(`erp-frontend:latest`) se construye desde este repo con `scripts/docker-build.ps1`
+o `docker build` (usa `.env.production`, donde `VITE_API_URL` se hornea al compilar).
+
 ```bash
-# 1. Validate configuration
-./validate-config.sh
+# Build de la imagen del frontend
+docker build -t erp-frontend:latest .
 
-# 2. Automated build and deploy
-./build-and-deploy.sh
-
-# 3. Or manually with Docker Compose
-docker-compose up --build -d
+# Stack completo desde business_management/
+#   docker compose --profile laptop up -d --build   (dev/laptop, :8081)
+#   docker compose --profile server up -d --build   (cliente, 80/443 + TLS)
 ```
 
 See [Frontend Deploy Guide](./docs/development/FRONTEND_DEPLOY_GUIDE.md) for detailed deployment instructions.
@@ -47,9 +51,6 @@ See [Frontend Deploy Guide](./docs/development/FRONTEND_DEPLOY_GUIDE.md) for det
 
 ### 🚀 Deployment & Production
 
-- **[Quick Start Deploy](./QUICKSTART_DEPLOY.md)** - Deploy en 3 comandos
-- **[Deployment Summary](./DEPLOYMENT_SUMMARY.md)** - Estrategia completa de deployment
-- **[Architecture Diagrams](./ARCHITECTURE_DIAGRAMS.md)** - Diagramas visuales de la arquitectura
 - **[Frontend Deploy Guide](./docs/development/FRONTEND_DEPLOY_GUIDE.md)** - Guía detallada de deployment
 
 ### 📚 Development & Architecture

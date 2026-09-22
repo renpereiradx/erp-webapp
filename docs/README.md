@@ -2,34 +2,28 @@
 
 ## 🚀 Deployment & Infrastructure
 
-La documentación de deployment está organizada y lista para producción:
-
-### Quick Start
-
-- **[QUICKSTART_DEPLOY.md](../QUICKSTART_DEPLOY.md)** - Deploy en 3 comandos
-- **[DEPLOYMENT_SUMMARY.md](../DEPLOYMENT_SUMMARY.md)** - Resumen completo de la estrategia
-- **[DEPLOYMENT_CHECKLIST.md](../DEPLOYMENT_CHECKLIST.md)** - Checklist de verificación
+El despliegue productivo se orquesta desde el **backend** (compose canónico con perfiles
+`laptop`/`server`): ver `business_management/docker-compose.yml`,
+`business_management/docs/DEPLOYMENT_DOCKER.md` y las guías de instalación en
+`docs/guides/` del wrapper (`erp-system/docs/guides/`).
 
 ### Guías Detalladas
 
 - **[FRONTEND_DEPLOY_GUIDE.md](./development/FRONTEND_DEPLOY_GUIDE.md)** - Guía completa de deployment
-- **[ARCHITECTURE_DIAGRAMS.md](../ARCHITECTURE_DIAGRAMS.md)** - Diagramas visuales de arquitectura
 
 ### Configuración
 
 Archivos clave en la raíz del proyecto:
 
 - `.env.development` - Configuración para desarrollo local
-- `.env.production` - Configuración para producción Docker
+- `.env.production` - Configuración para producción Docker (se hornea al build)
 - `.env.example` - Template documentado
-- `nginx.conf` - Configuración del proxy Nginx
+- `nginx.conf` - Configuración de Nginx (SPA + proxy `/api` del perfil server)
 - `Dockerfile` - Build multi-stage
-- `docker-compose.yml` - Orquestación de servicios
 
 ### Scripts
 
-- `validate-config.sh` - Validación de configuración
-- `build-and-deploy.sh` - Deployment automatizado
+- `scripts/docker-build.ps1` - Build de la imagen `erp-frontend:latest`
 
 ---
 
@@ -155,9 +149,8 @@ Documentación archivada
 
 ### Para Deployment
 
-1. Comienza con [QUICKSTART_DEPLOY.md](../QUICKSTART_DEPLOY.md)
-2. Lee [DEPLOYMENT_SUMMARY.md](../DEPLOYMENT_SUMMARY.md)
-3. Usa [DEPLOYMENT_CHECKLIST.md](../DEPLOYMENT_CHECKLIST.md) para verificar
+1. Revisa [development/FRONTEND_DEPLOY_GUIDE.md](./development/FRONTEND_DEPLOY_GUIDE.md)
+2. El stack completo se orquesta desde `business_management/` (compose con perfiles)
 
 ### Para Debugging
 
@@ -173,8 +166,7 @@ Para dudas o problemas:
 
 1. Busca en esta documentación
 2. Revisa los issues documentados
-3. Consulta los logs: `docker-compose logs -f`
-4. Ejecuta: `./validate-config.sh`
+3. Consulta los logs: `docker compose logs -f` (desde `business_management/`)
 
 ---
 
