@@ -18,7 +18,7 @@ Archivos clave en la raíz del proyecto:
 - `.env.development` - Configuración para desarrollo local
 - `.env.production` - Configuración para producción Docker (se hornea al build)
 - `.env.example` - Template documentado
-- `nginx.conf` - Configuración de Nginx (SPA + proxy `/api` del perfil server)
+- `nginx/` - Configuración de Nginx: `templates/default.conf.template` (HTTP, proxy `/api` configurable por entorno), `snippets/erp-app.conf` (SPA compartida), `tls.conf` (perfil server, la monta el compose)
 - `Dockerfile` - Build multi-stage
 
 ### Scripts

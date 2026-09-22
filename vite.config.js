@@ -79,11 +79,18 @@ export default defineConfig(({ mode }) => {
       'Last-Modified': 'false',
       'X-Content-Type-Options': 'nosniff',
       'Vary': 'Accept-Encoding, User-Agent'
+    },
+    // Proxy /api de origen único (RN-DEPLOY-001): disponible para probar el
+    // contrato productivo en dev. Dormant por defecto — .env.development usa
+    // VITE_API_URL=http://localhost:5050 (URL directa, CORS del backend para
+    // :5173); si un dev cambia a VITE_API_URL=/api, este proxy lo resuelve.
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5050',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api/, '')
+      }
     }
-    // F7.7: proxy /api eliminado — el frontend ahora usa URL directa al backend
-    // (VITE_API_URL=http://localhost:5050 en dev). El backend tiene CORS configurado
-    // para localhost:5173 (server/broker.go). Si se necesita reactivar el proxy,
-    // restaurar este bloque y volver a VITE_API_URL=/api.
   },
   build: {
     rollupOptions: {

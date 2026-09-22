@@ -19,9 +19,9 @@ if (-not (Test-Path "Dockerfile")) {
     exit 1
 }
 
-# Verificar que existe nginx.conf
-if (-not (Test-Path "nginx.conf")) {
-    Write-Host "Error: No se encontro nginx.conf" -ForegroundColor Red
+# Verificar que existe la configuracion de nginx (template renderizado por el entrypoint)
+if (-not (Test-Path "nginx/templates/default.conf.template")) {
+    Write-Host "Error: No se encontro nginx/templates/default.conf.template" -ForegroundColor Red
     exit 1
 }
 

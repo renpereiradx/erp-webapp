@@ -39,6 +39,7 @@ docker run -d `
     -p 8080:80 `
     -p 8443:443 `
     --add-host host.docker.internal:host-gateway `
+    -e ERP_API_UPSTREAM=http://host.docker.internal:5050 `
     -v "${PWD}\logs\nginx:/var/log/nginx" `
     --restart unless-stopped `
     erp-frontend:latest

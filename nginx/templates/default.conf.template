@@ -1,0 +1,41 @@
+# ============================================================================
+# ERP Vista Bar — nginx HTTP (perfil laptop / docker run standalone)
+# ============================================================================
+# Perfil server (TLS 443) NO usa este archivo: el compose monta nginx/tls.conf
+# sobre /etc/nginx/conf.d/default.conf (ver docker-compose.yml del backend).
+#
+# El upstream del proxy /api se inyecta por entorno (envsubst del entrypoint
+# oficial de nginx sobre *.template):
+#   - compose (laptop y server): http://backend:8080  (default)
+#   - preview standalone contra backend de dev en el host:
+#       docker run -e ERP_API_UPSTREAM=http://host.docker.internal:5050 ...
+#
+# Contrato HTTP (RN-DEPLOY-001): el navegador SIEMPRE habla /api del mismo
+# origen (VITE_API_URL=/api se hornea al compilar); el backend nunca recibe
+# el prefijo (proxy_pass con URI final elimina /api/).
+# ============================================================================
+
+# Upstream configurable en runtime; el Dockerfile fija el default de compose.
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    include /etc/nginx/snippets/erp-app.conf;
+
+    # Proxy inverso /api de origen único (D1 / RN-DEPLOY-001)
+    location /api/ {
+        proxy_pass ${ERP_API_UPSTREAM}/;
+
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+        client_max_body_size 50m;
+    }
+}

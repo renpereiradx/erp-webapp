@@ -43,14 +43,32 @@ FROM nginx:stable-alpine
 
 # Metadatos de la imagen
 LABEL maintainer="ERP Development Team"
-LABEL description="Frontend ERP - React + Vite + Nginx con proxy al backend"
-LABEL version="1.0.0"
+LABEL description="Frontend ERP - React + Vite + Nginx (SPA + proxy /api de origen unico)"
+LABEL version="2.0.0"
+
+# Upstream del proxy /api: el hostname del servicio `backend` en compose.
+# Se puede sobrescribir en runtime (-e ERP_API_UPSTREAM=...) porque el
+# entrypoint oficial de nginx renderiza el template con envsubst.
+ENV ERP_API_UPSTREAM=http://backend:8080
 
 # Copiar archivos construidos desde la etapa de build
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copiar configuración de Nginx con proxy al backend
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Snippet compartido de la SPA (incluido por el template HTTP y por tls.conf)
+COPY nginx/snippets /etc/nginx/snippets
+
+# Config TLS del perfil server: queda INERT en /etc/nginx/tls.conf; el compose
+# del perfil server la monta sobre /etc/nginx/conf.d/default.conf.
+COPY nginx/tls.conf /etc/nginx/tls.conf
+
+# Template HTTP (perfil laptop / docker run): el entrypoint oficial lo
+# renderiza (envsubst de ERP_API_UPSTREAM) a /etc/nginx/conf.d/default.conf.
+COPY nginx/templates /etc/nginx/templates
+
+# Directorio inerte para el perfil server: el compose redirige ahí la salida
+# del template (NGINX_ENVSUBST_OUTPUT_DIR) porque su default.conf es el mount
+# read-only de tls.conf y no debe sobrescribirse.
+RUN mkdir -p /etc/nginx/templates-rendered
 
 # Crear directorio para logs (opcional)
 RUN mkdir -p /var/log/nginx && \
