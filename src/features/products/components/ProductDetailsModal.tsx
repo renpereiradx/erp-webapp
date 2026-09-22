@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
-import { Edit, Package, Info, Layout, Activity, TrendingUp, CheckCircle2, AlertTriangle, ShieldCheck, Clock } from 'lucide-react';
+import { Edit, Package, Info, Layout, Activity, TrendingUp, CheckCircle2, AlertTriangle, ShieldCheck, Clock, ExternalLink, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -39,6 +40,7 @@ interface ProductDetailsModalProps {
  */
 export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }: ProductDetailsModalProps) {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const { hasPermission } = useAuth();
   const canWrite = hasPermission('products:write');
   // PLAN_CATALOGO_VENDEDOR 3.4: costo, margen y salud financiera solo con
@@ -146,6 +148,22 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
         testId="product-details-modal"
         footer={
           <div className="flex items-center justify-end gap-sm">
+            <Button
+              variant="secondary"
+              onClick={() => { onClose(); navigate(`/sales-analytics/products/buyers?product_id=${encodeURIComponent(productId ?? '')}`); }}
+              className="rounded-button"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              {t('bi.relational.action.buyers', 'Ver compradores')}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => { onClose(); navigate(`/purchase-analytics/products/suppliers?product_id=${encodeURIComponent(productId ?? '')}`); }}
+              className="rounded-button"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              {t('bi.relational.action.compareSuppliers', 'Comparar proveedores')}
+            </Button>
             <Button variant="secondary" onClick={onClose} className="rounded-button">
               {t('products.modal.action.cancel')}
             </Button>

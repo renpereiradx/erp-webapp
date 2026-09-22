@@ -89,6 +89,17 @@ export const buildNavigation = (
           { name: t('nav.trendsVelocity', 'Tendencias y Velocidad'), href: '/sales-analytics/trends-velocity', icon: Zap },
           { name: t('nav.periodComparison', 'Comparativa Períodos'), href: '/sales-analytics/period-comparison', icon: Activity },
           { name: t('nav.salesDiscounts', 'Descuentos'), href: '/sales-analytics/discounts', icon: Percent, permission: 'reports:read' },
+          { name: t('nav.relationalBuyers', 'Compradores por Producto'), href: '/sales-analytics/products/buyers', icon: UserCheck },
+          { name: t('nav.relationalCustomerTop', 'Productos por Cliente'), href: '/sales-analytics/customers/top-products', icon: ShoppingBag },
+        ],
+      },
+      {
+        name: t('nav.purchaseAnalytics', 'Analítica de Compras'),
+        href: '#',
+        icon: ShoppingCart,
+        children: [
+          { name: t('nav.relationalSupplierTop', 'Productos Suministrados'), href: '/purchase-analytics/suppliers/top-products', icon: Package },
+          { name: t('nav.relationalProductSuppliers', 'Comparar Proveedores'), href: '/purchase-analytics/products/suppliers', icon: Tags },
         ],
       },
       {

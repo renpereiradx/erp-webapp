@@ -120,6 +120,10 @@ const SalesAnalyticsInsights = lazy(() => import('@/pages/sales-analytics/Custom
 const SalesAnalyticsTrendsVelocity = lazy(() => import('@/pages/sales-analytics/TrendsVelocity'))
 const SalesAnalyticsPeriodComparison = lazy(() => import('@/pages/sales-analytics/PeriodComparison'))
 const SalesAnalyticsDiscounts = lazy(() => import('@/pages/sales-analytics/Discounts'))
+const ProductBuyersPage = lazy(() => import('@/pages/sales-analytics/ProductBuyersPage'))
+const CustomerTopProductsPage = lazy(() => import('@/pages/sales-analytics/CustomerTopProductsPage'))
+const SupplierTopProductsPage = lazy(() => import('@/pages/purchase-analytics/SupplierTopProductsPage'))
+const ProductSuppliersPage = lazy(() => import('@/pages/purchase-analytics/ProductSuppliersPage'))
 const InventoryTurnoverABC = lazy(() => import('@/pages/InventoryAnalytics/InventoryTurnoverABC'))
 const InventoryDashboard = lazy(() => import('@/pages/InventoryAnalytics/InventoryDashboard'))
 const StockLevelsReorder = lazy(() => import('@/pages/InventoryAnalytics/StockLevelsReorder'))
@@ -520,6 +524,29 @@ function AppContent() {
                       } />
                       <Route path='/sales-analytics/discounts' element={
                         <BiPermissionGuard permission="reports:read"><SalesAnalyticsDiscounts /></BiPermissionGuard>
+                      } />
+
+                      {/* Relational drill-downs (PLAN_STATS_RELACIONALES_BI,
+                          RF-BIPACK-021..024): producto <-> cliente <-> proveedor */}
+                      <Route path='/sales-analytics/products/buyers' element={
+                        <BiPermissionGuard permission='analytics:read'>
+                          <ProductBuyersPage />
+                        </BiPermissionGuard>
+                      } />
+                      <Route path='/sales-analytics/customers/top-products' element={
+                        <BiPermissionGuard permission='analytics:read'>
+                          <CustomerTopProductsPage />
+                        </BiPermissionGuard>
+                      } />
+                      <Route path='/purchase-analytics/suppliers/top-products' element={
+                        <BiPermissionGuard permission='analytics:read'>
+                          <SupplierTopProductsPage />
+                        </BiPermissionGuard>
+                      } />
+                      <Route path='/purchase-analytics/products/suppliers' element={
+                        <BiPermissionGuard permission='analytics:read'>
+                          <ProductSuppliersPage />
+                        </BiPermissionGuard>
                       } />
 
                       {/* Inventory Analytics Routes */}

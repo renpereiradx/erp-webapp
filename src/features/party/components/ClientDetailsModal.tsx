@@ -1,4 +1,4 @@
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, ShoppingBag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
@@ -58,17 +58,30 @@ const ClientDetailsContent = ({
           <Button variant="secondary" type="button" onClick={onClose}>
             {t('action.close', 'Cerrar')}
           </Button>
-          <Button
-            variant="primary"
-            type="button"
-            onClick={() => {
-              onClose();
-              navigate(`/receivables/client-profile/${client.id || client._key || 'CLI-001'}`);
-            }}
-          >
-            <ExternalLink className="size-4 mr-xs" />
-            {t('clients.details.risk_analysis', 'Análisis de Riesgo')}
-          </Button>
+          <div className="flex gap-sm">
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => {
+                onClose();
+                navigate(`/sales-analytics/customers/top-products?customer_id=${encodeURIComponent(client.id || client._key || '')}`);
+              }}
+            >
+              <ShoppingBag className="size-4 mr-xs" />
+              {t('bi.relational.action.customerTop', 'Productos que compra')}
+            </Button>
+            <Button
+              variant="primary"
+              type="button"
+              onClick={() => {
+                onClose();
+                navigate(`/receivables/client-profile/${client.id || client._key || 'CLI-001'}`);
+              }}
+            >
+              <ExternalLink className="size-4 mr-xs" />
+              {t('clients.details.risk_analysis', 'Análisis de Riesgo')}
+            </Button>
+          </div>
         </div>
       }
     >

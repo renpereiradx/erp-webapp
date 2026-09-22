@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import ProductDetailsModal from '../ProductDetailsModal';
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -52,7 +53,7 @@ const product = {
 
 describe('ProductDetailsModal', () => {
   it('muestra la card de Precio de Venta priorizando la unidad base', () => {
-    render(<ProductDetailsModal isOpen onClose={() => {}} product={product} />);
+    render(<MemoryRouter><ProductDetailsModal isOpen onClose={() => {}} product={product} /></MemoryRouter>);
 
     const section = screen.getByText('Precio de Venta').closest('div.space-y-md') as HTMLElement;
     expect(section).not.toBeNull();
@@ -63,7 +64,7 @@ describe('ProductDetailsModal', () => {
   });
 
   it('centra el overlay sobre el área de contenido vía --erp-content-inset', () => {
-    render(<ProductDetailsModal isOpen onClose={() => {}} product={product} />);
+    render(<MemoryRouter><ProductDetailsModal isOpen onClose={() => {}} product={product} /></MemoryRouter>);
 
     const overlay = document.querySelector(
       '[data-testid="product-details-modal-overlay"]',
@@ -74,11 +75,13 @@ describe('ProductDetailsModal', () => {
 
   it('no muestra la card de precio sin precios registrados', () => {
     render(
-      <ProductDetailsModal
-        isOpen
-        onClose={() => {}}
-        product={{ ...product, unit_prices: [] }}
-      />,
+      <MemoryRouter>
+        <ProductDetailsModal
+          isOpen
+          onClose={() => {}}
+          product={{ ...product, unit_prices: [] }}
+        />
+      </MemoryRouter>,
     );
 
     expect(screen.queryByText('Precio de Venta')).toBeNull();

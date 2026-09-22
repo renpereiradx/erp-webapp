@@ -64,4 +64,10 @@ export const shell = {
   'branches.location': 'Location',
   'branches.operations': 'Operations Branch',
   'branches.globalNotice': 'The change affects all modules',
+
+  'nav.relationalBuyers': 'Buyers by Product',
+  'nav.relationalCustomerTop': 'Products by Client',
+  'nav.purchaseAnalytics': 'Purchase Analytics',
+  'nav.relationalSupplierTop': 'Supplied Products',
+  'nav.relationalProductSuppliers': 'Compare Suppliers',
 }
