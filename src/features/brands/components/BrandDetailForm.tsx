@@ -108,7 +108,7 @@ export const BrandDetailForm: React.FC<BrandDetailFormProps> = ({
         </div>
 
         {/* Campos */}
-        <form id="brand-form" className="flex flex-col gap-md" onSubmit={handleSave}>
+        <form autoComplete="off" id="brand-form" className="flex flex-col gap-md" onSubmit={handleSave}>
           <div className="space-y-xs">
             <Label htmlFor="brand-name" className="text-body-md-bold text-foreground">
               {t('brands.form.name')} <span className="text-error">*</span>

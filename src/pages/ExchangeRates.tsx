@@ -511,7 +511,7 @@ export default function ExchangeRates() {
             </div>
           }
         >
-          <form id="exchange-rate-form" onSubmit={handleSave} className="space-y-md">
+          <form autoComplete="off" id="exchange-rate-form" onSubmit={handleSave} className="space-y-md">
             <div className="grid grid-cols-2 gap-md">
               <div className="space-y-xs">
                 <Label htmlFor="exchange-rate-currency" className="text-body-md-bold text-foreground">

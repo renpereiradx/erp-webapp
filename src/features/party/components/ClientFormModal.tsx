@@ -114,7 +114,7 @@ const ClientFormModal = ({ isOpen, onClose, client = null }: ClientFormModalProp
         </div>
       }
     >
-      <form id={FORM_ID} onSubmit={handleSubmit} className="space-y-md" noValidate>
+      <form autoComplete="off" id={FORM_ID} onSubmit={handleSubmit} className="space-y-md" noValidate>
         {/* Nombre y Apellido */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
           <div className="space-y-xs">

@@ -46,7 +46,7 @@ export function SecuritySettingsForm({ passwordForm, setPasswordForm, onSubmit }
         <KeyRound className="size-4 text-primary" />
         {t('profile.security_settings', 'Configuración de Seguridad')}
       </h3>
-      <form onSubmit={onSubmit} className="space-y-md">
+      <form autoComplete="off" onSubmit={onSubmit} className="space-y-md">
         <div className="space-y-xs">
           <Label htmlFor="profile-current-password" className="text-body-md-bold text-foreground">
             {t('profile.current_password', 'Contraseña Actual')}

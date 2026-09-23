@@ -105,7 +105,7 @@ export function CategoryDetailForm({
         ) : null}
       </div>
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-md">
+      <form autoComplete="off" onSubmit={onSubmit} className="flex flex-col gap-md">
         <div className="space-y-xs">
           <Label htmlFor="cat-name" className="text-body-md-bold text-foreground">
             {t('categories.field.name')}

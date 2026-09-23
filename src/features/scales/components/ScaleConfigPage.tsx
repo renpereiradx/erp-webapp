@@ -694,7 +694,7 @@ const ScaleConfigPage: React.FC = () => {
                 <X size={18} />
               </button>
             </header>
-            <form onSubmit={handleSaveScale} className="p-6 space-y-4">
+            <form autoComplete="off" onSubmit={handleSaveScale} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nombre del Dispositivo</label>
@@ -791,7 +791,7 @@ const ScaleConfigPage: React.FC = () => {
                 <X size={18} />
               </button>
             </header>
-            <form onSubmit={handleSaveFormat} className="p-6 space-y-4">
+            <form autoComplete="off" onSubmit={handleSaveFormat} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nombre del Formato</label>

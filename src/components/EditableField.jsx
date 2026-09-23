@@ -54,7 +54,7 @@ export default function EditableField({ value, label, type='text', name, onSave,
       )}
       {isEditing && (
         <div className="flex items-center gap-1">
-          <form onSubmit={(e) => { e.preventDefault(); commit(); }} className="flex items-center gap-1" data-testid={`editable-${name}-form`}>
+          <form autoComplete="off" onSubmit={(e) => { e.preventDefault(); commit(); }} className="flex items-center gap-1" data-testid={`editable-${name}-form`}>
             <input
               ref={inputRef}
               aria-label={resolvedLabel}

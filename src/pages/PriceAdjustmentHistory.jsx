@@ -357,7 +357,7 @@ const PriceAdjustmentHistory = () => {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500">
       {/* Filtros */}
-      <form className="bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle" onSubmit={handleSubmitFilters}>
+      <form autoComplete="off" className="bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle" onSubmit={handleSubmitFilters}>
         <div className="flex items-center gap-2 mb-6">
           <Filter size={18} className='text-primary' />
           <h3 className="text-sm font-black uppercase text-text-main tracking-widest">

@@ -117,7 +117,7 @@ export function TagEditor({
         ) : null}
       </div>
 
-      <form onSubmit={handleSave} className="flex-1 space-y-md">
+      <form autoComplete="off" onSubmit={handleSave} className="flex-1 space-y-md">
         <div className="space-y-xs">
           <Label htmlFor="tag-name" className="text-body-md-bold text-foreground">{t('attributes.editor.name')}</Label>
           <Input

@@ -218,7 +218,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
         }
       >
         <div id="product-form-container">
-          <form id="product-form" onSubmit={handleSubmit} className="space-y-md">
+          <form autoComplete="off" id="product-form" onSubmit={handleSubmit} className="space-y-md">
             {Object.keys(errors).length > 0 && (
               <div
                 className="flex items-start gap-sm rounded-md bg-error-container text-on-error-container p-md animate-in fade-in duration-150"

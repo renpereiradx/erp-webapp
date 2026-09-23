@@ -134,7 +134,7 @@ export default function CategoryDrawer({
       </div>
 
       <div className="flex-1 overflow-y-auto p-lg space-y-lg">
-        <form id="category-form" onSubmit={handleSubmit} className="space-y-md">
+        <form autoComplete="off" id="category-form" onSubmit={handleSubmit} className="space-y-md">
           <div className="space-y-xs">
             <Label htmlFor="category-name" className="text-label-caps uppercase text-on-surface-deep">
               {t('categories.field.name')}

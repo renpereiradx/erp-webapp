@@ -25,7 +25,7 @@ export function PersonalInfoForm({ userData, profileForm, setProfileForm, onSubm
         {t('profile.personal_info', 'Información Personal')}
       </h3>
       <div className="p-0">
-        <form onSubmit={onSubmit} className="space-y-md">
+        <form autoComplete="off" onSubmit={onSubmit} className="space-y-md">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
             <div className="space-y-xs">
               <label htmlFor="profile-first-name" className={labelClass}>

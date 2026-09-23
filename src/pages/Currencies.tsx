@@ -386,7 +386,7 @@ export default function Currencies() {
             </div>
           }
         >
-          <form id="currency-form" onSubmit={handleSave} className="space-y-md">
+          <form autoComplete="off" id="currency-form" onSubmit={handleSave} className="space-y-md">
             <div className="space-y-xs">
               <Label htmlFor="currency_name" className="text-body-md-bold text-foreground">
                 {t('currencies.field.name', 'Nombre')}

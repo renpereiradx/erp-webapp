@@ -54,7 +54,7 @@ export const OpenCashRegisterModal: React.FC<OpenCashRegisterModalProps> = ({ is
           <button onClick={onClose} className='text-text-secondary hover:text-text-main transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800'><XCircle className='w-6 h-6' /></button>
         </div>
         <div className='p-8 space-y-6'>
-          <form onSubmit={handleSubmit} className='space-y-6' id='open-cash-form'>
+          <form autoComplete="off" onSubmit={handleSubmit} className='space-y-6' id='open-cash-form'>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Nombre de la Caja</Label>
               <Input value={form.name} onChange={e => setForm(prev => ({...prev, name: e.target.value}))} placeholder='Ej: Caja Principal - Turno Mañana' className="rounded-xl border-border-subtle font-black h-11 focus:ring-2 focus:ring-primary/10" required />

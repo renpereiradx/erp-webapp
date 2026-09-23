@@ -79,7 +79,7 @@ export function OpenSessionForm({ hasActiveSession, isOpening, onOpen }: OpenSes
   const inputState = error ? 'error' : '';
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-md" noValidate>
+    <form autoComplete="off" onSubmit={handleSubmit} className="space-y-md" noValidate>
       {hasActiveSession && (
         <div className="p-md bg-warning/10 border border-warning/20 rounded-md flex gap-sm">
           <AlertCircle className="w-5 h-5 text-warning shrink-0" aria-hidden="true" />

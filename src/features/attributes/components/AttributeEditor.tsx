@@ -126,7 +126,7 @@ export function AttributeEditor({
         ) : null}
       </div>
 
-      <form onSubmit={handleSave} className="flex-1 space-y-md">
+      <form autoComplete="off" onSubmit={handleSave} className="flex-1 space-y-md">
         <div className="space-y-xs">
           <Label htmlFor="attr-name" className="text-body-md-bold text-foreground">
             {t('attributes.editor.name')}

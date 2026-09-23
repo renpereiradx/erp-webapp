@@ -135,7 +135,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <form autoComplete="off" onSubmit={handleSubmit} className="space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="space-y-5 lg:space-y-6">
         {/* Cliente con Autocomplete */}
         <div className="relative">

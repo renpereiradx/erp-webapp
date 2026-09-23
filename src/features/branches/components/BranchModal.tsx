@@ -273,7 +273,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
 
           {/* TAB: INFORMACIÓN GENERAL */}
           <TabsContent value="info" className="pt-6 animate-in fade-in duration-300">
-            <form id="branch-form" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <form autoComplete="off" id="branch-form" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-5">
                 <div className="space-y-2">
                   <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Código de Sucursal *</label>

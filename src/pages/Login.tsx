@@ -68,7 +68,7 @@ const Login = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-10 pt-4 space-y-6">
+          <form autoComplete="off" onSubmit={handleSubmit} className="p-10 pt-4 space-y-6">
             <div className="space-y-2">
               <label htmlFor="username" className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
                 {t('login.username_label', 'Email o Usuario')}
@@ -81,6 +81,7 @@ const Login = () => {
                   id="username"
                   name="username"
                   type="text"
+                  autoComplete="username"
                   value={formData.username}
                   onChange={handleChange}
                   className="block w-full pl-11 pr-4 h-11 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-[#106ebe] focus:border-transparent outline-none transition-all placeholder:text-slate-300 font-medium"
@@ -110,6 +111,7 @@ const Login = () => {
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
                   value={formData.password}
                   onChange={handleChange}
                   className="block w-full pl-11 pr-12 h-11 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-[#106ebe] focus:border-transparent outline-none transition-all placeholder:text-slate-300 font-medium"

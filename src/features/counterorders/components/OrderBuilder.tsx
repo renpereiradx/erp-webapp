@@ -359,7 +359,7 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-lg">
           {/* ── Productos: búsqueda + escáner + grilla ── */}
           <section className="space-y-md min-w-0" aria-label={t('counterorders.builder.products', 'Productos')}>
-            <form onSubmit={handleBarcode} className="flex gap-sm">
+            <form autoComplete="off" onSubmit={handleBarcode} className="flex gap-sm">
               <div className="relative flex-1">
                 <Barcode
                   className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-on-surface-deep pointer-events-none"

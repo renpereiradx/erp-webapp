@@ -277,7 +277,7 @@ export default function PaymentMethods() {
             </div>
           }
         >
-          <form id="payment-method-form" onSubmit={handleSubmit} className="space-y-md">
+          <form autoComplete="off" id="payment-method-form" onSubmit={handleSubmit} className="space-y-md">
             <div className="space-y-xs">
               <Label htmlFor="method_code" className="text-body-md-bold text-foreground">
                 {t('paymentMethods.form.code', 'Código del Método')}

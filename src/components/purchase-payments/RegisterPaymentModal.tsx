@@ -241,7 +241,7 @@ const RegisterPaymentModal: React.FC<RegisterPaymentModalProps> = ({ open, onOpe
       <DialogContent className='register-payment-modal w-[95vw] lg:!w-[1150px] lg:!max-w-[calc(95vw-288px)] p-0 overflow-hidden border border-border-subtle shadow-fluent-16 rounded-xl bg-background'>
         <DialogTitle className='sr-only'>{t('purchasePaymentsMvp.registerModal.title', 'Registrar nuevo pago')}</DialogTitle>
         <DialogDescription className='sr-only'>{t('purchasePaymentsMvp.registerModal.orderFallback', 'Seleccioná una orden con saldo pendiente para registrar el pago.')}</DialogDescription>
-        <form onSubmit={handleSubmit} className='flex flex-col md:flex-row h-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto md:overflow-hidden'>
+        <form autoComplete="off" onSubmit={handleSubmit} className='flex flex-col md:flex-row h-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto md:overflow-hidden'>
           {/* PANEL IZQUIERDO: RESUMEN OPERATIVO */}
           <div className='w-full md:w-[35%] bg-inverse-surface text-on-primary p-lg md:p-xl flex flex-col relative overflow-hidden border-b md:border-b-0 md:border-r border-on-primary/10'>
             <div className='relative z-10 flex flex-col h-full'>

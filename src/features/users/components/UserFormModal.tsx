@@ -175,7 +175,7 @@ export function UserFormModal({ user, open, onOpenChange, onSaved }: UserFormMod
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="p-lg space-y-lg max-h-[70vh] overflow-y-auto">
+          <form autoComplete="off" onSubmit={handleSubmit} className="p-lg space-y-lg max-h-[70vh] overflow-y-auto">
             <section className="space-y-md">
               <h3 className={sectionTitle}>
                 <UserIcon className="size-4 text-primary" />
@@ -285,6 +285,7 @@ export function UserFormModal({ user, open, onOpenChange, onSaved }: UserFormMod
                           <div className="relative">
                             <Input
                               type={showPassword ? 'text' : 'password'}
+                              autoComplete="new-password"
                               className={`${inputClass} pr-10`}
                               {...field}
                               value={field.value ?? ''}

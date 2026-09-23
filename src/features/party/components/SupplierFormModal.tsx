@@ -128,7 +128,7 @@ const SupplierFormModal = ({ isOpen, onClose, supplier = null }: SupplierFormMod
         </div>
       }
     >
-      <form id={FORM_ID} onSubmit={handleSubmit} className="space-y-md" noValidate>
+      <form autoComplete="off" id={FORM_ID} onSubmit={handleSubmit} className="space-y-md" noValidate>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
           <div className="space-y-xs">
             <Label htmlFor="supplier-name" className="text-body-md-bold text-foreground">

@@ -89,7 +89,7 @@ const PrinterDetailForm: React.FC<PrinterDetailFormProps> = ({
       </CardHeader>
 
       <CardContent className="p-md flex-1 overflow-auto">
-        <form className="space-y-md" onSubmit={handleSubmit}>
+        <form autoComplete="off" className="space-y-md" onSubmit={handleSubmit}>
           <div className="space-y-xs">
             <Label htmlFor="printer-name" className="text-body-md-bold text-foreground">{t('printers.form.name', 'Nombre')}</Label>
             <Input

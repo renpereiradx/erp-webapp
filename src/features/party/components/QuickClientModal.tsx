@@ -106,7 +106,7 @@ export function QuickClientModal({ isOpen, onClose, onCreated }: QuickClientModa
         </div>
       }
     >
-      <form
+      <form autoComplete="off"
         className="space-y-md"
         onSubmit={e => {
           e.preventDefault()

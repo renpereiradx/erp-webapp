@@ -223,7 +223,7 @@ const UnitConversionsPage = () => {
             <div className="px-6 py-4 border-b border-border-subtle">
               <h2 className="text-lg font-black uppercase tracking-tighter">Guardar Conversión</h2>
             </div>
-            <form onSubmit={handleSave} className="p-6 space-y-4">
+            <form autoComplete="off" onSubmit={handleSave} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Unidad Origen</label>

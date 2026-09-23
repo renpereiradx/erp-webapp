@@ -513,7 +513,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
       <DialogContent className='register-sale-payment-modal w-[95vw] lg:!w-[1100px] lg:!max-w-[calc(95vw-288px)] p-0 overflow-hidden border border-border-subtle shadow-fluent-16 rounded-xl bg-background'>
         <DialogTitle className='sr-only'>{t('sales.registerPaymentModal.dialogTitle', 'Registrar Cobro de Venta')}</DialogTitle>
         <DialogDescription className='sr-only'>{t('sales.registerPaymentModal.dialogDescription', 'Registre el cobro de la venta seleccionada.')}</DialogDescription>
-        <form className='flex flex-col md:flex-row h-full max-h-[95vh] md:max-h-[90vh] overflow-hidden' onSubmit={handleSubmit}>
+        <form autoComplete="off" className='flex flex-col md:flex-row h-full max-h-[95vh] md:max-h-[90vh] overflow-hidden' onSubmit={handleSubmit}>
           {/* PANEL IZQUIERDO: RESUMEN OPERATIVO */}
           <div className='w-full md:w-[32%] bg-inverse-surface text-on-primary p-lg flex flex-col relative overflow-hidden border-r border-on-primary/10'>
             <div className='relative z-10 flex flex-col h-full'>

@@ -102,7 +102,7 @@ export const MovementModal: React.FC<MovementModalProps> = ({ isOpen, onClose, o
           </div>
         </div>
         <div className='p-8 space-y-8'>
-          <form onSubmit={handleSubmit} className='space-y-8' id='movement-form'>
+          <form autoComplete="off" onSubmit={handleSubmit} className='space-y-8' id='movement-form'>
             <div className='space-y-3'>
               <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">
                 Tipo de Transacción

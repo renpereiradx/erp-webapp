@@ -413,7 +413,7 @@ const PriceAdjustmentDetail = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form autoComplete="off" onSubmit={handleSubmit} className="space-y-4">
               {variants.length > 0 && (
                 <div className='flex flex-col gap-1.5'>
                   <label className="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center justify-between">

@@ -68,7 +68,7 @@ export function CloseSessionForm({ session, isClosing, onCloseJourney, onCancel 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-md" noValidate>
+    <form autoComplete="off" onSubmit={handleSubmit} className="space-y-md" noValidate>
       <div className="p-md bg-surface-muted rounded-md flex flex-col sm:flex-row justify-between gap-md">
         <div>
           <p className="text-body-md-bold text-foreground">

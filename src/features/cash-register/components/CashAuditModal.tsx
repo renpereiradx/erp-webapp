@@ -107,7 +107,7 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
               <p className='text-[10px] font-black uppercase tracking-[0.2em] text-slate-400'>Cargando denominaciones...</p>
             </div>
           ) : (
-            <form id='audit-form' onSubmit={handleSubmit} className='space-y-10'>
+            <form autoComplete="off" id='audit-form' onSubmit={handleSubmit} className='space-y-10'>
               <div className='grid grid-cols-1 md:grid-cols-2 gap-12'>
                 <div className='space-y-6'>
                   <h4 className='text-[10px] font-black uppercase text-primary tracking-[0.3em] flex items-center gap-2 border-b border-primary/20 pb-2'>

@@ -105,7 +105,7 @@ const PriceAdjustmentNew = () => {
     <div className="flex flex-col gap-6 animate-in fade-in duration-500">
       {/* Barra de búsqueda */}
       <div className="bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle">
-        <form onSubmit={handleSearch} className="relative max-w-2xl">
+        <form autoComplete="off" onSubmit={handleSearch} className="relative max-w-2xl">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input
             type="search"

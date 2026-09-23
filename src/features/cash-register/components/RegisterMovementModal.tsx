@@ -130,7 +130,7 @@ export function RegisterMovementModal({ isOpen, onClose, onSubmit }: RegisterMov
         </div>
       }
     >
-      <form
+      <form autoComplete="off"
         id="register-movement-form"
         onSubmit={e => {
           e.preventDefault();

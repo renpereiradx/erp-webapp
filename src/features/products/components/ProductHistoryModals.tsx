@@ -398,7 +398,7 @@ export function ProductPriceAdjustmentDialog({ productId, productName, currentPr
         </div>
       }
     >
-      <form id="price-adjustment-form" onSubmit={handleSubmit} className="space-y-md">
+      <form autoComplete="off" id="price-adjustment-form" onSubmit={handleSubmit} className="space-y-md">
         {error && (
           <div className="p-sm bg-error-container text-on-error-container rounded-md text-body-md" role="alert">
             {error}
@@ -553,7 +553,7 @@ export function ProductCostAdjustmentDialog({ productId, productName, currentPri
         </div>
       }
     >
-      <form id="cost-adjustment-form" onSubmit={handleSubmit} className="space-y-md">
+      <form autoComplete="off" id="cost-adjustment-form" onSubmit={handleSubmit} className="space-y-md">
         {error && (
           <div className="p-sm bg-error-container text-on-error-container rounded-md text-body-md" role="alert">
             {error}

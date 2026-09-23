@@ -165,7 +165,7 @@ export const WalkInReservationForm = ({
   const estimatedTotal = hourlyRate * duration
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form autoComplete="off" onSubmit={handleSubmit} className="space-y-4">
       <div>
         <h3 className="text-title-md text-foreground">
           {t('sales.checkoutWizard.walkIn.title', 'Registrar uso de cancha (sin reserva)')}
