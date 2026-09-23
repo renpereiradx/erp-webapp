@@ -39,7 +39,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 }))
 
 vi.mock('@/contexts/BranchContext', () => ({
-  useBranch: () => ({ currentBranchId: 1 }),
+  useBranch: () => ({ currentBranchId: 1, allowedBranches: [1, 2] }),
 }))
 
 vi.mock('@/services/branchTransferService', () => ({
@@ -57,13 +57,19 @@ vi.mock('@/features/branches/services/branchService', () => ({
       branches: [
         { id: 1, name: 'Depósito Central', code: 'DEP', branch_type: 'WAREHOUSE', city: 'Asunción' },
         { id: 2, name: 'Sucursal Centro', code: 'CEN', branch_type: 'POINT_OF_SALE', city: 'Asunción' },
+        { id: 3, name: 'JUST STYLE', code: 'JS', branch_type: 'POINT_OF_SALE', city: 'Luque' },
       ],
     }),
     getUserBranches: vi.fn(),
   },
 }))
 
+vi.mock('@/features/catalog/sellableUnitSearch', () => ({
+  searchSellableUnitsFlat: vi.fn(),
+}))
+
 import { branchTransferService } from '@/services/branchTransferService'
+import { searchSellableUnitsFlat } from '@/features/catalog/sellableUnitSearch'
 import TransfersPage from '@/features/transfers/components/TransfersPage'
 import CreateTransferModal from '@/features/transfers/components/CreateTransferModal'
 import TransferDetailModal from '@/features/transfers/components/TransferDetailModal'
@@ -167,6 +173,12 @@ describe('TransfersPage — bandeja (F.4)', () => {
 describe('CreateTransferModal — creación (F.4/F.5)', () => {
   const baseProps = { open: true, onOpenChange: vi.fn(), sourceBranchId: 1 as number | null, sourceBranchName: 'Depósito Central' }
 
+  /** El destino es un SearchableDropdown: tipear dispara el filtro local (debounce 300ms). */
+  const pickDestination = async (user: ReturnType<typeof userEvent.setup>, term: string, name: RegExp) => {
+    await user.type(screen.getByLabelText('Sucursal de destino'), term)
+    await user.click(await screen.findByRole('button', { name }))
+  }
+
   it('renders preloaded items from the purchase CTA (F.5)', () => {
     renderWithProviders(
       <CreateTransferModal
@@ -190,8 +202,7 @@ describe('CreateTransferModal — creación (F.4/F.5)', () => {
 
     expect(screen.getByTestId('transfer-submit')).toBeDisabled()
 
-    await screen.findByText('Sucursal Centro')
-    await user.selectOptions(screen.getByLabelText('Sucursal de destino'), '2')
+    await pickDestination(user, 'Centro', /Sucursal Centro/)
     expect(screen.getByTestId('transfer-submit')).toBeEnabled()
 
     await user.click(screen.getByTestId('transfer-submit'))
@@ -206,6 +217,46 @@ describe('CreateTransferModal — creación (F.4/F.5)', () => {
     )
   })
 
+  it('offers only destination branches within allowed_branches (backend rejects the rest with 400)', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<CreateTransferModal {...baseProps} />)
+
+    // JUST STYLE (id 3) existe pero el usuario no la tiene en allowed_branches.
+    await user.type(screen.getByLabelText('Sucursal de destino'), 'JUST')
+    expect(await screen.findByText('Sin resultados')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /JUST STYLE/ })).not.toBeInTheDocument()
+  })
+
+  it('shows source-branch stock in the product search items and adds the picked unit', async () => {
+    const user = userEvent.setup()
+    vi.mocked(searchSellableUnitsFlat).mockResolvedValue([
+      {
+        id: 'P1',
+        name: 'Yerba 1kg',
+        variant_id: null,
+        variant_name: null,
+        sku: 'YER-01',
+        price: 15000,
+        stock: 12,
+        base_unit: 'unit',
+      },
+    ])
+    renderWithProviders(
+      <CreateTransferModal
+        {...baseProps}
+        initialDestinationId={2}
+      />,
+    )
+
+    await user.type(screen.getByLabelText('Agregar producto'), 'yerba')
+    expect(await screen.findByText('Stock: 12')).toBeInTheDocument()
+    expect(screen.getByText('SKU: YER-01')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Yerba 1kg/ }))
+    expect(screen.getByTestId('transfer-line-qty-P1')).toBeInTheDocument()
+    expect(searchSellableUnitsFlat).toHaveBeenCalledWith('yerba')
+  })
+
   it('stamps preloaded items with their source purchase id (F.6)', async () => {
     const user = userEvent.setup()
     const createTransfer = vi.mocked(branchTransferService.createTransfer).mockResolvedValue(transferPending)
@@ -218,8 +269,7 @@ describe('CreateTransferModal — creación (F.4/F.5)', () => {
       />,
     )
 
-    await screen.findByText('Sucursal Centro')
-    await user.selectOptions(screen.getByLabelText('Sucursal de destino'), '2')
+    await pickDestination(user, 'Centro', /Sucursal Centro/)
     await user.click(screen.getByTestId('transfer-submit'))
 
     await waitFor(() =>

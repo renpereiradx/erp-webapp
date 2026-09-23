@@ -18,6 +18,8 @@ export interface SearchableDropdownProps<T extends SearchableDropdownItem> {
   placeholder?: string;
   autoFocus?: boolean;
   inputRef?: React.RefObject<HTMLInputElement | null>;
+  /** id del input para asociarlo a un <label htmlFor> (accesibilidad). */
+  inputId?: string;
   renderItem?: (item: T, index: number, isHighlighted: boolean) => React.ReactNode;
   disabled?: boolean;
   className?: string;
@@ -49,6 +51,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
   placeholder = 'Buscar...',
   autoFocus = false,
   inputRef: externalInputRef,
+  inputId,
   renderItem,
   disabled = false,
   className = '',
@@ -209,6 +212,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
         />
         <Input
           ref={inputRef}
+          id={inputId}
           type="text"
           placeholder={placeholder}
           value={searchTerm}
@@ -239,7 +243,10 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
               const isHighlighted = index === highlightedIndex;
               return (
                 <button
-                  key={item.id ?? index}
+                  // La búsqueda plana (granularity=variant) devuelve varias
+                  // filas con el MISMO id de producto (una por variante): el
+                  // índice garantiza unicidad sin romper el resto de usos.
+                  key={`${item.id ?? 'row'}-${index}`}
                   type="button"
                   onClick={() => {
                     onSelect(item);

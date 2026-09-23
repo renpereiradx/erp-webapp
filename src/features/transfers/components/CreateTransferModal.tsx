@@ -5,15 +5,15 @@
 // Acepta ítems precargados desde el CTA post-compra (F.5).
 // ===========================================================================
 
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeftRight, ArrowRight, Loader2, PackageSearch, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeftRight, ArrowRight, Loader2, Trash2, X } from 'lucide-react'
 
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
+import { useBranch } from '@/contexts/BranchContext'
 import { branchService } from '@/features/branches/services/branchService'
-import { productService } from '@/services/productService'
-import type { Branch, CreateBranchTransferRequest, Product } from '@/types'
+import type { Branch, CreateBranchTransferRequest } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,6 +25,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { SearchableDropdown, type SearchableDropdownItem } from '@/components/ui/SearchableDropdown'
+import { searchSellableUnitsFlat, type SellableUnitOption } from '@/features/catalog/sellableUnitSearch'
 import { useCreateTransfer } from '../hooks/useBranchTransfers'
 import type { PreloadedTransferItem } from '../types'
 
@@ -47,6 +49,12 @@ interface CreateTransferModalProps {
   /** F.5: ítems precargados desde una compra. */
   initialItems?: PreloadedTransferItem[]
   initialDestinationId?: number | null
+}
+
+interface DestinationOption extends SearchableDropdownItem {
+  id: string
+  name: string
+  code?: string
 }
 
 const lineKey = (line: Pick<TransferLine, 'product_id' | 'variant_id'>) =>
@@ -73,19 +81,12 @@ const CreateTransferModal = ({
 }: CreateTransferModalProps) => {
   const { t } = useI18n()
   const { addToast } = useToast()
+  const { allowedBranches } = useBranch()
   const createMutation = useCreateTransfer()
 
   const [destinationId, setDestinationId] = useState<string>(initialDestinationId ? String(initialDestinationId) : '')
   const [lines, setLines] = useState<TransferLine[]>(() => linesFromPreloaded(initialItems || []))
   const [notes, setNotes] = useState('')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-
-  // Debounce del buscador (300 ms) para no golpear la API por tecla.
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300)
-    return () => clearTimeout(timer)
-  }, [searchTerm])
 
   const { data: branchesResponse } = useQuery({
     queryKey: ['branches-names'],
@@ -94,25 +95,37 @@ const CreateTransferModal = ({
   })
   const branches: Branch[] = (branchesResponse as { branches?: Branch[] })?.branches || []
 
-  const { data: searchResults, isFetching: searching } = useQuery({
-    queryKey: ['transfer-product-search', debouncedSearch],
-    queryFn: () => productService.search(debouncedSearch),
-    enabled: open && debouncedSearch.length >= 2,
-  })
-  const foundProducts: Product[] = Array.isArray(searchResults) ? searchResults : []
+  // El backend rechaza la transferencia si el usuario no tiene acceso a AMBAS
+  // sucursales (identity/service.go); sin este filtro el dropdown ofrecía
+  // destinos inaccesibles y el POST moría en 400. Sin datos de acceso se
+  // muestran todas (fail-open) — el backend sigue siendo la barrera.
+  const destinationOptions = useMemo<DestinationOption[]>(() => {
+    const accessible = allowedBranches.length > 0
+      ? branches.filter((b) => allowedBranches.includes(b.id))
+      : branches
+    return accessible
+      .filter((b) => String(b.id) !== String(sourceBranchId))
+      .map((b) => ({ id: String(b.id), name: b.name, code: b.code }))
+  }, [branches, allowedBranches, sourceBranchId])
 
-  const addLine = (product: Product, variantId?: string, variantName?: string) => {
+  const searchDestinations = async (term: string): Promise<DestinationOption[]> => {
+    const q = term.trim().toLowerCase()
+    if (!q) return []
+    return destinationOptions.filter(
+      (b) => b.name.toLowerCase().includes(q) || (b.code ?? '').toLowerCase().includes(q),
+    )
+  }
+
+  const addUnitLine = (unit: SellableUnitOption) => {
     const line: TransferLine = {
-      product_id: product.id,
-      variant_id: variantId,
-      product_name: variantName || product.name,
+      product_id: unit.id,
+      variant_id: unit.variant_id ?? undefined,
+      product_name: unit.variant_name ? `${unit.name} · ${unit.variant_name}` : unit.name,
       quantity: 1,
     }
-    setLines((prev) => {
-      const key = lineKey(line)
-      if (prev.some((existing) => lineKey(existing) === key)) return prev
-      return [...prev, line]
-    })
+    setLines((prev) =>
+      prev.some((existing) => lineKey(existing) === lineKey(line)) ? prev : [...prev, line],
+    )
   }
 
   const updateQuantity = (key: string, quantity: number) => {
@@ -185,63 +198,72 @@ const CreateTransferModal = ({
               </div>
             </div>
             <div className="space-y-xs">
-              <Label htmlFor="transfer-destination">{t('transfers.destination', 'Sucursal de destino')}</Label>
-              <select
-                id="transfer-destination"
-                value={destinationId}
-                onChange={(e) => setDestinationId(e.target.value)}
-                className="h-11 w-full rounded-md border border-border-subtle bg-surface px-md text-body-md text-foreground"
-              >
-                <option value="">{t('transfers.pickDestination', 'Seleccionar destino...')}</option>
-                {branches
-                  .filter((b) => String(b.id) !== String(sourceBranchId))
-                  .map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-              </select>
+              <Label htmlFor="transfer-destination-search">{t('transfers.destination', 'Sucursal de destino')}</Label>
+              {destinationId ? (
+                <div
+                  className="flex items-center justify-between gap-sm rounded-md border border-border-subtle bg-surface-muted p-sm"
+                  data-testid="transfer-destination-selected"
+                >
+                  <span className="min-w-0 truncate text-body-md-bold text-foreground">
+                    {destinationBranch?.name ?? (destinationId ? `#${destinationId}` : '')}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="size-8 shrink-0 p-0 text-on-surface-deep hover:text-error"
+                    aria-label={t('transfers.clearDestination', 'Quitar sucursal de destino')}
+                    data-testid="transfer-destination-clear"
+                    onClick={() => setDestinationId('')}
+                  >
+                    <X className="size-4" aria-hidden="true" />
+                  </Button>
+                </div>
+              ) : (
+                <SearchableDropdown<DestinationOption>
+                  inputId="transfer-destination-search"
+                  onSelect={(option) => setDestinationId(option.id)}
+                  onSearch={searchDestinations}
+                  placeholder={t('transfers.destinationSearchPlaceholder', 'Escribí nombre o código de la sucursal...')}
+                  minSearchLength={1}
+                  emptyMessage={t('transfers.noResults', 'Sin resultados')}
+                  renderItem={(option) => (
+                    <div className="py-0.5">
+                      <p className="truncate text-body-md-bold text-foreground">{option.name}</p>
+                      {option.code && <p className="text-body-sm text-on-surface-deep">{option.code}</p>}
+                    </div>
+                  )}
+                />
+              )}
             </div>
           </div>
 
           <div className="space-y-xs">
             <Label htmlFor="transfer-product-search">{t('transfers.addProduct', 'Agregar producto')}</Label>
-            <div className="relative">
-              <PackageSearch className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-deep" />
-              <Input
-                id="transfer-product-search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={t('transfers.searchPlaceholder', 'Buscar por nombre o código...')}
-                className="pl-10"
-              />
-            </div>
-            {debouncedSearch.length >= 2 && (
-              <ul className="max-h-40 overflow-y-auto rounded-md border border-border-subtle bg-surface shadow-whisper">
-                {searching && (
-                  <li className="flex items-center gap-xs p-sm text-body-sm text-on-surface-deep">
-                    <Loader2 className="size-4 animate-spin" /> {t('transfers.searching', 'Buscando...')}
-                  </li>
-                )}
-                {!searching && foundProducts.length === 0 && (
-                  <li className="p-sm text-body-sm text-on-surface-deep">
-                    {t('transfers.noResults', 'Sin resultados')}
-                  </li>
-                )}
-                {foundProducts.map((product) => (
-                  <li key={product.id}>
-                    <button
-                      type="button"
-                      className="flex w-full items-center justify-between gap-sm p-sm text-left hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-                      onClick={() => addLine(product)}
-                    >
-                      <span className="min-w-0 truncate text-body-md text-foreground">{product.name}</span>
-                      <Plus className="size-4 shrink-0 text-primary" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {/* Búsqueda plana compartida (granularity=variant): el stock que
+                muestran las filas es el de la sucursal activa (origen), vía
+                X-Branch-ID — mismo camino que presupuestos/requisiciones. */}
+            <SearchableDropdown<SellableUnitOption>
+              inputId="transfer-product-search"
+              onSelect={addUnitLine}
+              onSearch={searchSellableUnitsFlat}
+              placeholder={t('transfers.productSearchPlaceholder', 'Buscar producto por nombre, SKU o variante...')}
+              emptyMessage={t('transfers.noResults', 'Sin resultados')}
+              renderItem={(unit) => (
+                <div className="flex items-center gap-sm py-0.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-body-md-bold text-foreground">
+                      {unit.variant_name ? `${unit.name} · ${unit.variant_name}` : unit.name}
+                    </p>
+                    <p className="mt-0.5 flex items-center gap-sm text-body-sm text-on-surface-deep">
+                      {unit.sku && <span className="font-mono">SKU: {unit.sku}</span>}
+                      <span className={unit.stock > 0 ? 'font-bold text-success' : 'font-bold text-error'}>
+                        {t('transfers.stockLabel', 'Stock: {stock}', { stock: String(unit.stock) })}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              )}
+            />
           </div>
 
           <div className="space-y-xs">
