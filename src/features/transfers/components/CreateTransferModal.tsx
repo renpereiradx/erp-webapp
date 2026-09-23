@@ -11,6 +11,7 @@ import { ArrowLeftRight, ArrowRight, Loader2, Trash2 } from 'lucide-react'
 
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
+import { useAuth } from '@/contexts/AuthContext'
 import { useBranch } from '@/contexts/BranchContext'
 import { branchService } from '@/features/branches/services/branchService'
 import type { Branch, CreateBranchTransferRequest } from '@/types'
@@ -85,6 +86,7 @@ const CreateTransferModal = ({
 }: CreateTransferModalProps) => {
   const { t } = useI18n()
   const { addToast } = useToast()
+  const { user } = useAuth()
   const { allowedBranches } = useBranch()
   const createMutation = useCreateTransfer()
 
@@ -99,16 +101,17 @@ const CreateTransferModal = ({
   })
   const branches: Branch[] = (branchesResponse as { branches?: Branch[] })?.branches || []
 
-  // El backend rechaza la transferencia si el usuario no tiene acceso a AMBAS
-  // sucursales (identity/service.go); sin este filtro el select ofrecía
-  // destinos inaccesibles y el POST moría en 400. Sin datos de acceso se
-  // muestran todas (fail-open) — el backend sigue siendo la barrera.
+  // El backend exige acceso a AMBAS sucursales para usuarios escopados
+  // (identity/service.go); sin este filtro el select ofrecía destinos
+  // inaccesibles y el POST moría en 400. El ADMIN gestiona todas las
+  // sucursales de la instalación (bypass espejado en el backend), así que ve
+  // la lista completa aunque sus claims JWT sean de sesiones viejas.
+  const isAdminRole = user?.role_id === 'admin' || user?.role_id === 'F2VLso'
   const destinationOptions = useMemo(() => {
-    const accessible = allowedBranches.length > 0
-      ? branches.filter((b) => allowedBranches.includes(b.id))
-      : branches
+    const scoped = !isAdminRole && allowedBranches.length > 0
+    const accessible = scoped ? branches.filter((b) => allowedBranches.includes(b.id)) : branches
     return accessible.filter((b) => String(b.id) !== String(sourceBranchId))
-  }, [branches, allowedBranches, sourceBranchId])
+  }, [branches, allowedBranches, isAdminRole, sourceBranchId])
 
   const addUnitLine = (unit: SellableUnitOption) => {
     const line: TransferLine = {

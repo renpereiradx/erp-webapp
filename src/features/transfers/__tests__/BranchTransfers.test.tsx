@@ -24,6 +24,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const mockHasPermission = vi.fn<(permission: string) => boolean>()
+/** Rol del usuario mockeado; los tests lo mutan para cubrir admin/no-admin. */
+const mockUser = { role_id: 'F2VLso' }
 
 vi.mock('@/lib/i18n', () => ({
   useI18n: () => ({
@@ -35,7 +37,7 @@ vi.mock('@/lib/i18n', () => ({
 }))
 
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ hasPermission: (permission: string) => mockHasPermission(permission) }),
+  useAuth: () => ({ user: mockUser, hasPermission: (permission: string) => mockHasPermission(permission) }),
 }))
 
 vi.mock('@/contexts/BranchContext', () => ({
@@ -105,6 +107,7 @@ const renderWithProviders = (ui: React.ReactElement) => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockUser.role_id = 'F2VLso'
   mockHasPermission.mockImplementation((permission) => permission === 'transfers:read')
   getTransfers.mockResolvedValue({ transfers: [transferPending], total: 1, page: 1, page_size: 20 })
 })
@@ -223,13 +226,29 @@ describe('CreateTransferModal — creación (F.4/F.5)', () => {
     )
   })
 
-  it('offers only destination branches within allowed_branches (backend rejects the rest with 400)', async () => {
+  it('shows every branch to admins (backend mirrors the bypass) with source excluded', async () => {
     const user = userEvent.setup()
     renderWithProviders(<CreateTransferModal {...baseProps} />)
 
     await user.click(screen.getByLabelText('Sucursal de destino'))
 
-    // JUST STYLE (id 3) existe pero el usuario no la tiene en allowed_branches.
+    // Admin: todas las sucursales activas menos el origen (1).
+    const options = await screen.findAllByRole('option')
+    expect(options).toHaveLength(2)
+    expect(screen.getByRole('option', { name: 'JUST STYLE' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Depósito Central' })).not.toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+  })
+
+  it('filters destination branches by allowed_branches for scoped roles', async () => {
+    const user = userEvent.setup()
+    mockUser.role_id = 'VNDR01'
+    renderWithProviders(<CreateTransferModal {...baseProps} />)
+
+    await user.click(screen.getByLabelText('Sucursal de destino'))
+
+    // JUST STYLE (id 3) existe pero el rol escopado no la tiene en allowed_branches.
     const options = await screen.findAllByRole('option')
     expect(options).toHaveLength(1)
     expect(options[0]).toHaveTextContent('Sucursal Centro')
