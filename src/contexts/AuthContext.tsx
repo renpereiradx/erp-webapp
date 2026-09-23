@@ -102,7 +102,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             // Si el backend los devuelve aquí, los guardamos para los headers
             if (userData.role_id) localStorage.setItem('roleId', userData.role_id);
             if (userData.role_name) localStorage.setItem('roleName', userData.role_name);
-            if (userData.active_branch) localStorage.setItem('activeBranch', userData.active_branch.toString());
+            // El switch de sucursal es client-side: /me reporta la default del
+            // usuario, no la selección activa. Solo sembrar si no hay selección
+            // (pisarla revertiría la sucursal elegida en cada F5) y respetar la
+            // vista global ('branchView=global').
+            if (
+              userData.active_branch &&
+              localStorage.getItem('activeBranch') === null &&
+              localStorage.getItem('branchView') !== 'global'
+            ) {
+              localStorage.setItem('activeBranch', userData.active_branch.toString());
+            }
             if (userData.allowed_branches) localStorage.setItem('allowedBranches', JSON.stringify(userData.allowed_branches));
 
             setUser({
@@ -237,6 +247,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     clearStoredPermissions();
     clearStoredEntitlements();
     setEntitlements(null);
+    // La vista global es por sesión de usuario: sin esto, el siguiente login
+    // (p.ej. un vendedor tras un admin) heredaría 'branchView=global'.
+    localStorage.removeItem('branchView');
 
     // Verificar que el token se limpió correctamente
     const remainingToken = apiService.getToken();

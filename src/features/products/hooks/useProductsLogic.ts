@@ -6,6 +6,7 @@ import { useSearchFocusShortcut } from '@/hooks/useSearchFocusShortcut';
 import { telemetry } from '@/utils/telemetry';
 import { productService } from '@/services/productService';
 import { AdvancedProductSearchPayload, ProductSearchFacet } from '@/types';
+import { useBranch } from '@/contexts/BranchContext';
 
 export type ViewMode = 'paginated' | 'search';
 
@@ -94,6 +95,47 @@ export const useProductsLogic = () => {
       if (res && res.facets) setFacets(res.facets);
     }).catch(console.error);
   }, [fetchProductsPaginated, fetchCategories]);
+
+  // El stock es por sucursal: al cambiar la sucursal activa (switcher del
+  // header) hay que refethear la vista actual — el store ya vació sus cachés
+  // vía el evento 'branch:changed'. Sin esto, la página montada seguía
+  // mostrando el stock de la sucursal anterior.
+  const { currentBranchId } = useBranch();
+  const prevBranchRef = useRef<number | null | undefined>(undefined);
+  useEffect(() => {
+    if (prevBranchRef.current === undefined) {
+      prevBranchRef.current = currentBranchId ?? null;
+      return;
+    }
+    const nextBranch = currentBranchId ?? null;
+    if (prevBranchRef.current === nextBranch) return;
+    prevBranchRef.current = nextBranch;
+    telemetry.record('products.refetch.branch_changed', { branchId: nextBranch });
+
+    if (viewMode === 'search') {
+      if (Object.keys(advancedSearchPayload).length > 0 || localFilters.category !== 'all' || localFilters.status !== 'all') {
+        const payload: AdvancedProductSearchPayload = { ...advancedSearchPayload, search: searchTerm, page: 1, page_size: 10, granularity: 'variant' };
+        if (localFilters.category !== 'all' && !payload.category_id) payload.category_id = parseInt(localFilters.category);
+        setIsSearching(true);
+        productService.searchAdvanced(payload)
+          .then(res => {
+            setAdvancedProducts(res.products || []);
+            setAdvancedTotal(res.total_count || 0);
+          })
+          .catch(console.error)
+          .finally(() => setIsSearching(false));
+      } else if (searchTerm) {
+        searchProducts(1, 10, searchTerm);
+      } else {
+        fetchProductsPaginated(1, 10);
+      }
+    } else {
+      fetchProductsPaginated(1, 10);
+    }
+    // Solo reacciona al cambio de sucursal; el closure lee el resto del
+    // estado vigente al momento del cambio.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentBranchId]);
 
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 

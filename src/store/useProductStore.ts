@@ -2072,6 +2072,19 @@ if (typeof window !== 'undefined') {
     }
   })
 
+  // El stock es por sucursal: pageCache/searchCache anclan resultados a la
+  // sucursal con la que se fetcheó. BranchContext.changeBranch emite
+  // 'branch:changed'; sin esto, cambiar de sucursal seguiría mostrando el
+  // stock de la anterior durante el TTL de la caché (o hasta refetch forzado).
+  window.addEventListener('branch:changed', () => {
+    try {
+      useProductStore.setState({ pageCache: {}, searchCache: {} })
+      telemetry.record('products.cache.branch_invalidation')
+    } catch (e) {
+      console.warn('Error handling branch change:', e)
+    }
+  })
+
   // Expose store for debugging and test helpers
   try {
     ;(window as any).useProductStore = useProductStore

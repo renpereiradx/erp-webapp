@@ -10,6 +10,18 @@ vi.mock('@/hooks/useToast', () => ({
   useToast: () => ({ toasts: [], success, errorFrom, error: vi.fn(), removeToast: vi.fn() })
 }));
 
+// El hook de productos consume useBranch (stock por sucursal): mock en la
+// frontera para los tests de página que renderizan sin BranchProvider.
+vi.mock('@/contexts/BranchContext', () => ({
+  useBranch: () => ({
+    currentBranchId: 1,
+    allowedBranches: [1],
+    isGlobalView: false,
+    changeBranch: vi.fn(),
+    canViewGlobal: false,
+  }),
+}));
+
 // Spy de telemetry
 const recordSpy = vi.fn();
 vi.mock('@/utils/telemetry', () => ({

@@ -43,7 +43,17 @@ class BusinessManagementAPI {
             if (data.allowed_branches) {
               localStorage.setItem('allowedBranches', JSON.stringify(data.allowed_branches));
             }
-            if (data.active_branch !== undefined && data.active_branch !== null) {
+            // El switch de sucursal es client-side (BranchContext + X-Branch-ID):
+            // el backend sigue reportando la sucursal default del JWT y no sabe
+            // de la selección del usuario. Solo sembrar si no hay selección —
+            // pisarla revertiría la sucursal activa en cada refresh silencioso,
+            // y 'branchView=global' marca la vista global elegida (no sembrar).
+            if (
+              data.active_branch !== undefined &&
+              data.active_branch !== null &&
+              localStorage.getItem('activeBranch') === null &&
+              localStorage.getItem('branchView') !== 'global'
+            ) {
               localStorage.setItem('activeBranch', data.active_branch.toString());
             }
             

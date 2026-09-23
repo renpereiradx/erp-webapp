@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { decodeJWTPayload } from '@/utils/jwtUtils';
 import { readDeviceDefaultBranch } from '@/utils/deviceBranch';
@@ -18,6 +18,11 @@ export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [currentBranchId, setCurrentBranchId] = useState<number | null>(null);
   const [allowedBranches, setAllowedBranches] = useState<number[]>([]);
   const [canViewGlobal, setCanViewGlobal] = useState(false);
+  // El efecto se re-ejecuta en cada refresh de token/usuario: el anclaje por
+  // JWT/sucursal-única solo corresponde a la PRIMERA inicialización de la
+  // sesión — re-anclar después revertiría la vista global elegida (el admin
+  // guarda "sin sucursal" justamente quitando la key del localStorage).
+  const initializedRef = useRef(false);
 
   // Inicializar estado siguiendo la jerarquía de la guía
   useEffect(() => {
@@ -86,6 +91,13 @@ export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         if (savedBranchStillAllowed && savedBranchId !== null) {
           setCurrentBranchId(savedBranchId);
+        } else if (localStorage.getItem('branchView') === 'global') {
+          // Vista global persistida deliberadamente (ver changeBranch).
+          setCurrentBranchId(null);
+        } else if (initializedRef.current) {
+          // Re-ejecución con sesión ya inicializada: sin sucursal guardada es
+          // la vista global elegida deliberadamente — respetarla.
+          setCurrentBranchId(null);
         } else if (jwtBranchId !== null && jwtBranchId !== undefined) {
           setCurrentBranchId(jwtBranchId);
           localStorage.setItem('activeBranch', jwtBranchId.toString());
@@ -98,10 +110,12 @@ export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           setCurrentBranchId(null);
         }
       }
+      initializedRef.current = true;
     } else {
       setCurrentBranchId(null);
       setAllowedBranches([]);
       setCanViewGlobal(false);
+      initializedRef.current = false;
     }
   }, [isAuthenticated, user, token, hasPermission]);
 
@@ -109,10 +123,15 @@ export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setCurrentBranchId(branchId);
     if (branchId === null) {
       localStorage.removeItem('activeBranch');
+      // La vista global debe distinguirse de "sin selección aún" (login): sin
+      // este marcador, un refresh de token siembraría la sucursal default del
+      // JWT y revertiría la elección; con él, además sobrevive F5.
+      localStorage.setItem('branchView', 'global');
     } else {
       localStorage.setItem('activeBranch', branchId.toString());
+      localStorage.removeItem('branchView');
     }
-    
+
     // Notificar cambio para que otros componentes puedan reaccionar si no usan el context directamente
     window.dispatchEvent(new CustomEvent('branch:changed', { detail: { branchId } }));
   }, []);

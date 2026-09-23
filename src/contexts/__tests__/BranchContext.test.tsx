@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { render, screen, cleanup, waitFor } from '@testing-library/react'
+import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react'
 
 const authState = vi.hoisted(() => ({
   user: null as Record<string, unknown> | null,
@@ -21,12 +21,16 @@ const authState = vi.hoisted(() => ({
   hasPermission: (_permission: string): boolean => false,
 }))
 
+const jwtState = vi.hoisted(() => ({
+  payload: null as Record<string, unknown> | null,
+}))
+
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => authState,
 }))
 
 vi.mock('@/utils/jwtUtils', () => ({
-  decodeJWTPayload: () => null,
+  decodeJWTPayload: () => jwtState.payload,
 }))
 
 import { BranchProvider, useBranch } from '@/contexts/BranchContext'
@@ -37,6 +41,8 @@ function BranchProbe() {
     <div>
       <span data-testid="current-branch">{ctx.currentBranchId ?? 'none'}</span>
       <span data-testid="allowed">{ctx.allowedBranches.join(',')}</span>
+      <button data-testid="go-global" onClick={() => ctx.changeBranch(null)}>global</button>
+      <button data-testid="pick-3" onClick={() => ctx.changeBranch(3)}>sucursal 3</button>
     </div>
   )
 }
@@ -180,5 +186,88 @@ describe('BranchContext — terminal vinculada (D.4)', () => {
     await waitFor(() => {
       expect(screen.getByTestId('current-branch').textContent).toBe('3')
     })
+  })
+})
+
+describe('BranchContext — vista global persistente', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    jwtState.payload = null
+    authState.user = null
+    authState.token = null
+    authState.isAuthenticated = false
+    authState.hasPermission = (_permission: string) => false
+  })
+
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
+  it('marca la vista global y no re-ancla la sucursal del JWT al re-ejecutarse el efecto (refresh de token)', async () => {
+    jwtState.payload = { active_branch: 2, allowed_branches: [2, 3] }
+    authState.user = VENDOR_USER // allowed: [2, 3]
+    authState.token = 'tok-a'
+    authState.isAuthenticated = true
+
+    const { rerender } = renderProbe()
+
+    // Primera inicialización: ancla la sucursal del JWT.
+    await waitFor(() => {
+      expect(screen.getByTestId('current-branch').textContent).toBe('2')
+    })
+    expect(localStorage.getItem('activeBranch')).toBe('2')
+
+    // El usuario elige vista global.
+    fireEvent.click(screen.getByTestId('go-global'))
+    expect(screen.getByTestId('current-branch').textContent).toBe('none')
+    expect(localStorage.getItem('activeBranch')).toBeNull()
+    expect(localStorage.getItem('branchView')).toBe('global')
+
+    // Refresh silencioso: cambia el token → el efecto se re-ejecuta.
+    authState.token = 'tok-b'
+    rerender(
+      <BranchProvider>
+        <BranchProbe />
+      </BranchProvider>,
+    )
+
+    // Sin el guard, el efecto re-anclaría la sucursal 2 del JWT.
+    await waitFor(() => {
+      expect(screen.getByTestId('current-branch').textContent).toBe('none')
+    })
+    expect(localStorage.getItem('activeBranch')).toBeNull()
+  })
+
+  it('restaura la vista global tras un F5 (branchView persistido)', async () => {
+    localStorage.setItem('branchView', 'global')
+    jwtState.payload = { active_branch: 2, allowed_branches: [2, 3] }
+    authState.user = VENDOR_USER
+    authState.token = 'tok-a'
+    authState.isAuthenticated = true
+
+    renderProbe()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('current-branch').textContent).toBe('none')
+    })
+    expect(localStorage.getItem('activeBranch')).toBeNull()
+  })
+
+  it('elige una sucursal limpia el marcador de vista global', async () => {
+    localStorage.setItem('branchView', 'global')
+    authState.user = VENDOR_USER // allowed: [2, 3]
+    authState.isAuthenticated = true
+
+    renderProbe()
+    await waitFor(() => {
+      expect(screen.getByTestId('current-branch').textContent).toBe('none')
+    })
+
+    fireEvent.click(screen.getByTestId('pick-3'))
+
+    expect(screen.getByTestId('current-branch').textContent).toBe('3')
+    expect(localStorage.getItem('activeBranch')).toBe('3')
+    expect(localStorage.getItem('branchView')).toBeNull()
   })
 })

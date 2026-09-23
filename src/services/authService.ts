@@ -123,8 +123,17 @@ const authService = {
           localStorage.setItem('refreshToken', result.refresh_token);
         }
         
-        // Al refrescar, el backend recalcula sucursales
-        if (result.active_branch) localStorage.setItem('activeBranch', result.active_branch.toString());
+        // Al refrescar, el backend recalcula sucursales; pero el switch de
+        // sucursal es client-side — solo sembrar la default si el usuario no
+        // tiene selección propia ('branchView=global' = vista global elegida,
+        // tampoco se siembra).
+        if (
+          result.active_branch &&
+          localStorage.getItem('activeBranch') === null &&
+          localStorage.getItem('branchView') !== 'global'
+        ) {
+          localStorage.setItem('activeBranch', result.active_branch.toString());
+        }
         if (result.allowed_branches) localStorage.setItem('allowedBranches', JSON.stringify(result.allowed_branches));
       }
       
