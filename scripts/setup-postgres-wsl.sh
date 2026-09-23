@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # 1. Crear usuario dev_user
 echo -e "${YELLOW}1. Creando usuario dev_user...${NC}"
 sudo -u postgres psql -c "DROP USER IF EXISTS dev_user;"
-sudo -u postgres psql -c "CREATE USER dev_user WITH PASSWORD 'aDmin404942';"
+sudo -u postgres psql -c "CREATE USER dev_user WITH PASSWORD '${DEV_DB_PASSWORD:?export DEV_DB_PASSWORD primero}';"
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}[OK] Usuario dev_user creado${NC}"
@@ -55,7 +55,7 @@ echo ""
 
 # 4. Probar conexión
 echo -e "${YELLOW}4. Probando conexión...${NC}"
-PGPASSWORD='aDmin404942' psql -h localhost -U dev_user -d erp_db -c "SELECT version();" > /dev/null 2>&1
+PGPASSWORD="$DEV_DB_PASSWORD" psql -h localhost -U dev_user -d erp_db -c "SELECT version();" > /dev/null 2>&1
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}[OK] Conexión exitosa${NC}"
@@ -72,5 +72,5 @@ echo ""
 echo "Credenciales:"
 echo "  Base de datos: erp_db"
 echo "  Usuario:       dev_user"
-echo "  Password:      aDmin404942"
+echo "  Password:      (definida en DEV_DB_PASSWORD)"
 echo ""

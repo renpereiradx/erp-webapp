@@ -213,7 +213,7 @@ if ($isHealthy) {
     Write-Host ""
     Write-Host "🌐 Accede a la aplicación: http://localhost:8080" -ForegroundColor Cyan
     Write-Host "📧 Email: admin" -ForegroundColor Gray
-    Write-Host "🔑 Password: aDmin404942" -ForegroundColor Gray
+    Write-Host "🔑 Password: (ver .env local — rotada 2026-09-21)" -ForegroundColor Gray
 } else {
     Write-Host "⚠ Sistema no completamente operativo" -ForegroundColor Yellow
     Write-Host ""

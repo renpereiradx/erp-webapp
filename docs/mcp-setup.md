@@ -21,7 +21,7 @@ chmod +x toolbox
         "POSTGRES_PORT": "5432",
         "POSTGRES_DATABASE": "business_management",
         "POSTGRES_USER": "dev_user",
-        "POSTGRES_PASSWORD": "aDmin404942"
+        "POSTGRES_PASSWORD": "<TU_DB_PASSWORD-del-.env>"
       }
     }
   }
@@ -31,7 +31,7 @@ chmod +x toolbox
 ## 3. Probar
 
 ```bash
-POSTGRES_HOST=127.0.0.1 POSTGRES_PORT=5432 POSTGRES_DATABASE=business_management POSTGRES_USER=dev_user POSTGRES_PASSWORD=aDmin404942 ./toolbox --prebuilt postgres --stdio
+POSTGRES_HOST=127.0.0.1 POSTGRES_PORT=5432 POSTGRES_DATABASE=business_management POSTGRES_USER=dev_user POSTGRES_PASSWORD=<TU_DB_PASSWORD-del-.env> ./toolbox --prebuilt postgres --stdio
 ```
 
 ## 4. Reiniciar Claude Code

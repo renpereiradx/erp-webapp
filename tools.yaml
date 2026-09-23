@@ -10,7 +10,8 @@ toolset:
           port: 5432
           database: business_management
           user: dev_user
-          password: aDmin404942
+          # Password real en el .env local (ROTADO 2026-09-21; nunca al repo)
+          password: ${POSTGRES_PASSWORD}
       parameters:
         type: object
         properties:
