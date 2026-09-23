@@ -7,7 +7,7 @@
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeftRight, ArrowRight, Loader2, Trash2, X } from 'lucide-react'
+import { ArrowLeftRight, ArrowRight, Loader2, Trash2 } from 'lucide-react'
 
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
@@ -25,7 +25,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { SearchableDropdown, type SearchableDropdownItem } from '@/components/ui/SearchableDropdown'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
 import { searchSellableUnitsFlat, type SellableUnitOption } from '@/features/catalog/sellableUnitSearch'
 import { useCreateTransfer } from '../hooks/useBranchTransfers'
 import type { PreloadedTransferItem } from '../types'
@@ -35,6 +43,9 @@ interface TransferLine {
   variant_id?: string
   product_name: string
   quantity: number
+  /** Detalle para la tabla de ítems (desde la búsqueda plana; precargados no lo traen). */
+  sku?: string
+  stock?: number
   unit_cost?: number
   /** F.6: compra de la que proviene la línea (solo ítems precargados). */
   purchase_order_id?: number
@@ -51,15 +62,8 @@ interface CreateTransferModalProps {
   initialDestinationId?: number | null
 }
 
-interface DestinationOption extends SearchableDropdownItem {
-  id: string
-  name: string
-  code?: string
-}
-
 const lineKey = (line: Pick<TransferLine, 'product_id' | 'variant_id'>) =>
   `${line.product_id}::${line.variant_id ?? ''}`
-
 function linesFromPreloaded(items: PreloadedTransferItem[]): TransferLine[] {
   return items.map((item) => ({
     product_id: item.product_id,
@@ -96,25 +100,15 @@ const CreateTransferModal = ({
   const branches: Branch[] = (branchesResponse as { branches?: Branch[] })?.branches || []
 
   // El backend rechaza la transferencia si el usuario no tiene acceso a AMBAS
-  // sucursales (identity/service.go); sin este filtro el dropdown ofrecía
+  // sucursales (identity/service.go); sin este filtro el select ofrecía
   // destinos inaccesibles y el POST moría en 400. Sin datos de acceso se
   // muestran todas (fail-open) — el backend sigue siendo la barrera.
-  const destinationOptions = useMemo<DestinationOption[]>(() => {
+  const destinationOptions = useMemo(() => {
     const accessible = allowedBranches.length > 0
       ? branches.filter((b) => allowedBranches.includes(b.id))
       : branches
-    return accessible
-      .filter((b) => String(b.id) !== String(sourceBranchId))
-      .map((b) => ({ id: String(b.id), name: b.name, code: b.code }))
+    return accessible.filter((b) => String(b.id) !== String(sourceBranchId))
   }, [branches, allowedBranches, sourceBranchId])
-
-  const searchDestinations = async (term: string): Promise<DestinationOption[]> => {
-    const q = term.trim().toLowerCase()
-    if (!q) return []
-    return destinationOptions.filter(
-      (b) => b.name.toLowerCase().includes(q) || (b.code ?? '').toLowerCase().includes(q),
-    )
-  }
 
   const addUnitLine = (unit: SellableUnitOption) => {
     const line: TransferLine = {
@@ -122,6 +116,8 @@ const CreateTransferModal = ({
       variant_id: unit.variant_id ?? undefined,
       product_name: unit.variant_name ? `${unit.name} · ${unit.variant_name}` : unit.name,
       quantity: 1,
+      sku: unit.sku,
+      stock: unit.stock,
     }
     setLines((prev) =>
       prev.some((existing) => lineKey(existing) === lineKey(line)) ? prev : [...prev, line],
@@ -198,42 +194,23 @@ const CreateTransferModal = ({
               </div>
             </div>
             <div className="space-y-xs">
-              <Label htmlFor="transfer-destination-search">{t('transfers.destination', 'Sucursal de destino')}</Label>
-              {destinationId ? (
-                <div
-                  className="flex items-center justify-between gap-sm rounded-md border border-border-subtle bg-surface-muted p-sm"
-                  data-testid="transfer-destination-selected"
+              <Label htmlFor="transfer-destination">{t('transfers.destination', 'Sucursal de destino')}</Label>
+              <Select value={destinationId || undefined} onValueChange={setDestinationId}>
+                <SelectTrigger
+                  id="transfer-destination"
+                  data-testid="transfer-destination-trigger"
+                  className="h-11 w-full bg-surface border-border-subtle text-body-md text-foreground"
                 >
-                  <span className="min-w-0 truncate text-body-md-bold text-foreground">
-                    {destinationBranch?.name ?? (destinationId ? `#${destinationId}` : '')}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="size-8 shrink-0 p-0 text-on-surface-deep hover:text-error"
-                    aria-label={t('transfers.clearDestination', 'Quitar sucursal de destino')}
-                    data-testid="transfer-destination-clear"
-                    onClick={() => setDestinationId('')}
-                  >
-                    <X className="size-4" aria-hidden="true" />
-                  </Button>
-                </div>
-              ) : (
-                <SearchableDropdown<DestinationOption>
-                  inputId="transfer-destination-search"
-                  onSelect={(option) => setDestinationId(option.id)}
-                  onSearch={searchDestinations}
-                  placeholder={t('transfers.destinationSearchPlaceholder', 'Escribí nombre o código de la sucursal...')}
-                  minSearchLength={1}
-                  emptyMessage={t('transfers.noResults', 'Sin resultados')}
-                  renderItem={(option) => (
-                    <div className="py-0.5">
-                      <p className="truncate text-body-md-bold text-foreground">{option.name}</p>
-                      {option.code && <p className="text-body-sm text-on-surface-deep">{option.code}</p>}
-                    </div>
-                  )}
-                />
-              )}
+                  <SelectValue placeholder={t('transfers.pickDestination', 'Seleccionar destino...')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {destinationOptions.map((b) => (
+                    <SelectItem key={b.id} value={String(b.id)}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -273,34 +250,79 @@ const CreateTransferModal = ({
                 {t('transfers.emptyItems', 'Agregá al menos un producto para transferir.')}
               </p>
             ) : (
-              <ul className="divide-y divide-border-subtle rounded-md border border-border-subtle">
-                {lines.map((line) => {
-                  const key = lineKey(line)
-                  return (
-                    <li key={key} className="flex items-center justify-between gap-sm p-sm">
-                      <span className="min-w-0 flex-1 truncate text-body-md text-foreground">{line.product_name}</span>
-                      <Input
-                        type="number"
-                        min={1}
-                        data-testid={`transfer-line-qty-${line.product_id}`}
-                        value={line.quantity}
-                        onChange={(e) => updateQuantity(key, parseInt(e.target.value, 10) || 1)}
-                        aria-label={t('transfers.quantity', 'Cantidad de {name}', { name: line.product_name })}
-                        className="h-9 w-20"
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="size-8 p-0 text-on-surface-deep hover:text-error"
-                        aria-label={t('transfers.removeItem', 'Quitar {name}', { name: line.product_name })}
-                        onClick={() => removeLine(key)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </li>
-                  )
-                })}
-              </ul>
+              <div className="overflow-x-auto rounded-md bg-surface shadow-whisper">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-surface-muted hover:bg-surface-muted border-0">
+                      <TableHead className="text-label-caps uppercase text-on-surface-deep">
+                        {t('transfers.col.product', 'Producto')}
+                      </TableHead>
+                      <TableHead className="text-label-caps uppercase text-on-surface-deep">
+                        {t('transfers.col.sku', 'SKU')}
+                      </TableHead>
+                      <TableHead className="text-label-caps uppercase text-on-surface-deep text-right">
+                        {t('transfers.col.availableStock', 'Stock disp.')}
+                      </TableHead>
+                      <TableHead className="text-label-caps uppercase text-on-surface-deep text-right">
+                        {t('transfers.col.quantity', 'Cantidad')}
+                      </TableHead>
+                      <TableHead className="w-12" aria-label={t('transfers.col.actions', 'Acciones')} />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {lines.map((line) => {
+                      const key = lineKey(line)
+                      return (
+                        <TableRow
+                          key={key}
+                          className="hover:bg-surface-muted transition-colors duration-150"
+                          data-testid={`transfer-line-${line.product_id}`}
+                        >
+                          <TableCell className="max-w-56 text-body-md text-foreground">
+                            <span className="block truncate" title={line.product_name}>{line.product_name}</span>
+                          </TableCell>
+                          <TableCell className="max-w-40 text-data-mono font-data-mono text-on-surface-deep">
+                            <span className="block truncate" title={line.sku ?? ''}>
+                              {line.sku ?? '—'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-data-mono font-data-mono text-right">
+                            {line.stock !== undefined ? (
+                              <span className={line.stock > 0 ? 'text-success' : 'text-error'}>{line.stock}</span>
+                            ) : (
+                              '—'
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="ml-auto w-20">
+                              <Input
+                                type="number"
+                                min={1}
+                                data-testid={`transfer-line-qty-${line.product_id}`}
+                                value={line.quantity}
+                                onChange={(e) => updateQuantity(key, parseInt(e.target.value, 10) || 1)}
+                                aria-label={t('transfers.quantity', 'Cantidad de {name}', { name: line.product_name })}
+                                className="h-9"
+                              />
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="size-8 p-0 text-on-surface-deep hover:text-error"
+                              aria-label={t('transfers.removeItem', 'Quitar {name}', { name: line.product_name })}
+                              onClick={() => removeLine(key)}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </div>
 

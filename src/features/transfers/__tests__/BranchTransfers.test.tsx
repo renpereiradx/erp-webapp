@@ -17,7 +17,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, cleanup, waitFor } from '@testing-library/react'
+import { render, screen, cleanup, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
 import { MemoryRouter } from 'react-router-dom'
@@ -173,10 +173,16 @@ describe('TransfersPage — bandeja (F.4)', () => {
 describe('CreateTransferModal — creación (F.4/F.5)', () => {
   const baseProps = { open: true, onOpenChange: vi.fn(), sourceBranchId: 1 as number | null, sourceBranchName: 'Depósito Central' }
 
-  /** El destino es un SearchableDropdown: tipear dispara el filtro local (debounce 300ms). */
-  const pickDestination = async (user: ReturnType<typeof userEvent.setup>, term: string, name: RegExp) => {
-    await user.type(screen.getByLabelText('Sucursal de destino'), term)
-    await user.click(await screen.findByRole('button', { name }))
+  /**
+   * El destino es un Select de Radix: click en el trigger abre el listbox
+   * (portal), click en la opción selecciona. Requiere el polyfill de
+   * PointerEvent/captura de vitest.setup.ts.
+   */
+  const pickDestination = async (user: ReturnType<typeof userEvent.setup>) => {
+    const trigger = screen.getByLabelText('Sucursal de destino')
+    await user.click(trigger)
+    await user.click(await screen.findByRole('option', { name: 'Sucursal Centro' }))
+    await waitFor(() => expect(trigger).toHaveTextContent('Sucursal Centro'))
   }
 
   it('renders preloaded items from the purchase CTA (F.5)', () => {
@@ -202,7 +208,7 @@ describe('CreateTransferModal — creación (F.4/F.5)', () => {
 
     expect(screen.getByTestId('transfer-submit')).toBeDisabled()
 
-    await pickDestination(user, 'Centro', /Sucursal Centro/)
+    await pickDestination(user)
     expect(screen.getByTestId('transfer-submit')).toBeEnabled()
 
     await user.click(screen.getByTestId('transfer-submit'))
@@ -221,13 +227,18 @@ describe('CreateTransferModal — creación (F.4/F.5)', () => {
     const user = userEvent.setup()
     renderWithProviders(<CreateTransferModal {...baseProps} />)
 
+    await user.click(screen.getByLabelText('Sucursal de destino'))
+
     // JUST STYLE (id 3) existe pero el usuario no la tiene en allowed_branches.
-    await user.type(screen.getByLabelText('Sucursal de destino'), 'JUST')
-    expect(await screen.findByText('Sin resultados')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /JUST STYLE/ })).not.toBeInTheDocument()
+    const options = await screen.findAllByRole('option')
+    expect(options).toHaveLength(1)
+    expect(options[0]).toHaveTextContent('Sucursal Centro')
+    expect(screen.queryByRole('option', { name: 'JUST STYLE' })).not.toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
   })
 
-  it('shows source-branch stock in the product search items and adds the picked unit', async () => {
+  it('lists picked units in a data table with product details (name, SKU, source stock)', async () => {
     const user = userEvent.setup()
     vi.mocked(searchSellableUnitsFlat).mockResolvedValue([
       {
@@ -241,19 +252,18 @@ describe('CreateTransferModal — creación (F.4/F.5)', () => {
         base_unit: 'unit',
       },
     ])
-    renderWithProviders(
-      <CreateTransferModal
-        {...baseProps}
-        initialDestinationId={2}
-      />,
-    )
+    renderWithProviders(<CreateTransferModal {...baseProps} initialDestinationId={2} />)
 
     await user.type(screen.getByLabelText('Agregar producto'), 'yerba')
     expect(await screen.findByText('Stock: 12')).toBeInTheDocument()
-    expect(screen.getByText('SKU: YER-01')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /Yerba 1kg/ }))
-    expect(screen.getByTestId('transfer-line-qty-P1')).toBeInTheDocument()
+
+    const row = screen.getByTestId('transfer-line-P1')
+    expect(row).toHaveTextContent('Yerba 1kg')
+    expect(row).toHaveTextContent('YER-01')
+    expect(within(row).getByText('12')).toBeInTheDocument()
+    expect(screen.getByTestId('transfer-line-qty-P1')).toHaveValue(1)
     expect(searchSellableUnitsFlat).toHaveBeenCalledWith('yerba')
   })
 
@@ -269,7 +279,7 @@ describe('CreateTransferModal — creación (F.4/F.5)', () => {
       />,
     )
 
-    await pickDestination(user, 'Centro', /Sucursal Centro/)
+    await pickDestination(user)
     await user.click(screen.getByTestId('transfer-submit'))
 
     await waitFor(() =>

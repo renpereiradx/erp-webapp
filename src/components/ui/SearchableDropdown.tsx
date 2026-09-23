@@ -69,6 +69,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
   const [isSearching, setIsSearching] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const internalInputRef = useRef<HTMLInputElement>(null);
   const inputRef = externalInputRef || internalInputRef;
 
@@ -127,6 +128,23 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Navegación por teclado: mantiene la opción resaltada a la vista ajustando
+  // ÚNICAMENTE el scrollTop de la lista (scrollIntoView arrastraría también a
+  // los contenedores ancestros, p.ej. el cuerpo scrollable de un modal).
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || highlightedIndex < 0) return;
+    const item = list.querySelector<HTMLElement>(`button[data-index='${highlightedIndex}']`);
+    if (!item) return;
+    const listRect = list.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    if (itemRect.top < listRect.top) {
+      list.scrollTop -= listRect.top - itemRect.top;
+    } else if (itemRect.bottom > listRect.bottom) {
+      list.scrollTop += itemRect.bottom - listRect.bottom;
+    }
+  }, [highlightedIndex]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -232,6 +250,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
 
       {isOpen && items.length > 0 && (
         <div
+          ref={listRef}
           className={cn(
             'absolute z-50 w-full mt-1 bg-white border border-border-subtle rounded-xl shadow-fluent-16 overflow-x-hidden',
             'max-h-80 overflow-y-auto',
@@ -247,6 +266,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
                   // filas con el MISMO id de producto (una por variante): el
                   // índice garantiza unicidad sin romper el resto de usos.
                   key={`${item.id ?? 'row'}-${index}`}
+                  data-index={index}
                   type="button"
                   onClick={() => {
                     onSelect(item);

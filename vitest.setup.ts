@@ -11,6 +11,34 @@ if (typeof (globalThis as any).ResizeObserver === 'undefined') {
   };
 }
 
+// jsdom tampoco implementa PointerEvent ni la API de captura de puntero:
+// Radix Select abre su listbox vía pointerdown y llama hasPointerCapture/
+// setPointerCapture al gestionar el foco de las opciones. Sin este stub los
+// tests no pueden interactuar con ui/select.jsx (user-event cancela el
+// pointer si el entorno no declara soporte). scrollIntoView es null en jsdom
+// y lo invocan Select/DropdownMenu al resaltar opciones.
+if (typeof (globalThis as any).PointerEvent === 'undefined') {
+  (globalThis as any).PointerEvent = class PointerEvent extends MouseEvent {
+    pointerId: number;
+    pointerType: string;
+    isPrimary: boolean;
+    constructor(type: string, params: PointerEventInit = {}) {
+      super(type, params);
+      this.pointerId = params.pointerId ?? 1;
+      this.pointerType = params.pointerType ?? 'mouse';
+      this.isPrimary = params.isPrimary ?? true;
+    }
+  };
+}
+if (typeof Element !== 'undefined' && typeof Element.prototype.hasPointerCapture !== 'function') {
+  Element.prototype.hasPointerCapture = () => false;
+  Element.prototype.setPointerCapture = () => {};
+  Element.prototype.releasePointerCapture = () => {};
+}
+if (typeof Element !== 'undefined' && typeof Element.prototype.scrollIntoView !== 'function') {
+  Element.prototype.scrollIntoView = () => {};
+}
+
 // Worker stability: force a full GC between test files (setup runs once per file).
 // Without this, one fork accumulates several jsdom environments and OOMs on long runs
 // ("Worker exited unexpectedly"). Requires --expose-gc in poolOptions.forks.execArgv.
