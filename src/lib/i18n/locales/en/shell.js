@@ -50,7 +50,7 @@ export const shell = {
   'nav.collapseSidebar': 'Collapse menu',
   'nav.expandSidebar': 'Expand menu',
   'nav.openMenu': 'Open menu',
-  'nav.globalSearchPlaceholder': 'Search pages or commands (Ctrl+K)...',
+  'nav.globalSearchPlaceholder': 'Search pages or commands ({shortcut})...',
   'nav.profile': 'Profile',
   'nav.viewProfile': 'View profile',
 

@@ -64,6 +64,10 @@ abreviado aquí por el tamaño del cambio; no se justifica pase completo.
 - Retro-TSX/Feature-Sliced de páginas legacy tocadas (Clients, Suppliers,
   PurchasePayments, SalePayment): NO es parte de este plan; el toque fue mínimo
   (ref + hook + placeholder), sin refactor pesado.
-- El placeholder del buscador global del Header sigue hardcodeando "(Ctrl+K)"
-  en vez de `formatShortcut('general.globalSearch')` (§12.6): corregir cuando
-  se toque ese archivo.
+
+## Addendum (mismo día)
+
+- Placeholder del buscador global del Header corregido: consume
+  `formatShortcut('general.globalSearch')` del store vía `useGlobalSearch`
+  (expone `shortcutLabel`), locale con var `{shortcut}` (es+en). Si el usuario
+  personaliza el atajo en Ajustes, el placeholder lo refleja (§12.6).

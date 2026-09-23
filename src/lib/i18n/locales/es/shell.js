@@ -78,7 +78,7 @@ export const shell = {
   'nav.collapseSidebar': 'Colapsar menú',
   'nav.expandSidebar': 'Expandir menú',
   'nav.openMenu': 'Abrir menú',
-  'nav.globalSearchPlaceholder': 'Buscar páginas o comandos (Ctrl+K)...',
+  'nav.globalSearchPlaceholder': 'Buscar páginas o comandos ({shortcut})...',
   'nav.profile': 'Perfil',
   'nav.viewProfile': 'Ver perfil',
 

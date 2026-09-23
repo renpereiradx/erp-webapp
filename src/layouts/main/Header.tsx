@@ -39,6 +39,7 @@ export default function Header({
     inputRef,
     containerRef,
     resultsRef,
+    shortcutLabel,
     go,
   } = useGlobalSearch({ navigation, reservationsEnabled })
 
@@ -62,7 +63,7 @@ export default function Header({
             <input
               ref={inputRef}
               type="text"
-              placeholder={t('nav.globalSearchPlaceholder', 'Buscar páginas o comandos (Ctrl+K)...')}
+              placeholder={t('nav.globalSearchPlaceholder', 'Buscar páginas o comandos ({shortcut})...', { shortcut: shortcutLabel })}
               className="w-full pl-10 pr-md bg-surface-subtle border border-border-subtle rounded-input text-body-md text-foreground placeholder:text-on-surface-deep focus:bg-surface focus:ring-2 focus:ring-primary/20 outline-none transition-colors duration-150 h-9"
               value={term}
               onChange={(e) => {

@@ -19,6 +19,10 @@ export const useGlobalSearch = ({ navigation, reservationsEnabled }: UseGlobalSe
   const { t } = useI18n() as unknown as { t: TFn }
   const navigate = useNavigate()
   const matchesShortcut = useKeyboardShortcutsStore((s) => s.matchesShortcut)
+  const formatShortcut = useKeyboardShortcutsStore((s) => s.formatShortcut)
+  // Representación legible del atajo real (ej. "Ctrl + K"), configurable por el
+  // usuario: el placeholder del Header la consume (DESIGN.md §12.6).
+  const shortcutLabel = formatShortcut('general.globalSearch')
 
   const [term, setTerm] = useState('')
   const [isOpen, setIsOpen] = useState(false)
@@ -117,6 +121,7 @@ export const useGlobalSearch = ({ navigation, reservationsEnabled }: UseGlobalSe
     inputRef,
     containerRef,
     resultsRef,
+    shortcutLabel,
     go,
   }
 }
