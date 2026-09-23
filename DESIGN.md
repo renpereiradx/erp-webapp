@@ -668,6 +668,7 @@ export default function ProductsPage() {
 - [ ] Espaciado solo con tokens (`xs/sm/md/lg/xl`); cero valores arbitrarios redundantes.
 - [ ] Radios según tabla §5; sombras solo `whisper` / `fluent-*`.
 - [ ] Modal con `glass-acrylic` + `shadow-fluent-16` (o `EnhancedModal`).
+- [ ] Si la página tiene buscador: `F2` lo enfoca, el placeholder lo anuncia, y los atajos se desactivan con modales abiertos (§12).
 - [ ] Archivos nuevos en `.tsx`.
 - [ ] `pnpm lint` y `pnpm test` en verde.
 
@@ -682,3 +683,162 @@ export default function ProductsPage() {
 5. El estado nunca se comunica solo con color: color + icono o texto (§6.5).
 6. Modales: foco atrapado y cierre con `Escape` (Radix/EnhancedModal lo dan gratis; no lo rompas con `tabIndex` raros).
 7. Iconos de `lucide-react`, tamaño `w-4 h-4` (inline con texto) o `w-5 h-5` (solo icono).
+
+---
+
+## 12. Atajos de teclado: búsqueda y foco (convención cross-página)
+
+Implementaciones canónicas de referencia: el buscador global del menú
+(`src/layouts/main/useGlobalSearch.ts` + `Header.tsx`, Ctrl+K) y el POS de ventas
+(`src/features/sales/hooks/useSalesShortcuts.ts`, F2/F4/Alt+Q/Alt+X/Ctrl+Shift+H).
+Toda página nueva o migrada que tenga buscador DEBE seguir esta sección: el objetivo
+es que **F2 signifique exactamente lo mismo en todas las páginas de listado**.
+
+### 12.1 Mapa de teclas (cerrado — no improvisar ni reutilizar)
+
+| Tecla             | Significado                                                              | Registro                                     |
+|:------------------|:-------------------------------------------------------------------------|:---------------------------------------------|
+| `Ctrl+K`          | Buscador global del menú (navegación entre páginas). NUNCA búsqueda de página. | Configurable: `general.globalSearch`   |
+| `F2`              | Foco al **buscador principal** de la página (o del paso, si es wizard).  | Cableado en el hook (ver §12.4)              |
+| `F3`              | Foco al **buscador secundario/de entidad DENTRO de un modal o paso** (cliente en checkout, producto en modal de compra, proveedor en wizard de compras). | Cableado en el modal |
+| `F4`              | Acción de contexto de la página (limpiar carrito; monto exacto en cobro). Nunca "foco". | Cableado en el hook                    |
+| `Ctrl+G` (+ alias `F12`, `Ctrl+Enter`) | Acción principal: confirmar/avanzar wizard. Los alias son de compatibilidad. | Configurable: `sales.processSale` / `purchases.processPurchase` |
+| `Escape`          | **Solo cierra cosas**: modal, dropdown, buscador global. Nunca acción destructiva ni navegación. | Infra (Radix/EnhancedModal) + overlay activo |
+| `Enter`           | Submit del input/formulario enfocado (buscar, aplicar filtros). En wizards: acción principal si el foco está en un `<input>` de una línea (nunca `<textarea>`/`<select>`). | Native/onKeyDown del input |
+| `Alt+Q` / `Alt+X` | Editar cantidad / quitar el ítem activo de una lista (Alt no escribe texto: seguro con foco en input). | Cableado en el hook |
+| `Ctrl+Shift+H`    | Ir al historial del módulo.                                              | Configurable: `<módulo>.viewHistory`         |
+| `↑` `↓`           | Navegar resultados/dropdowns, SOLO si el foco NO está en un input.       | Cableado en el componente                    |
+
+**Regla de registro:** combinaciones con letras (Ctrl/Alt/Shift + letra) van SIEMPRE
+por `useKeyboardShortcutsStore` — alta en `DEFAULT_SHORTCUTS` + `categories` +
+`labelMap` de `KeyboardShortcuts.jsx` (Settings) en el mismo diff. Las teclas de
+función (F2–F12) van cableadas en el hook y este mapa es su registro.
+
+### 12.2 Regla de capas con modales (la más importante)
+
+Los listeners a nivel `document` disparan en **orden de registro**: la página se
+registró antes que el modal, así que `e.defaultPrevented` NO alcanza para
+desambiguar. El mecanismo real es el gating por estado:
+
+| Capa              | Qué registra                                     | Cuándo está activa                                    |
+|:------------------|:-------------------------------------------------|:------------------------------------------------------|
+| 0 — Global        | `Ctrl+K` (buscador del menú)                     | Siempre                                               |
+| 1 — Página        | `F2`, `F4`, `Alt+Q/X`, historial…                | Solo si **ningún** modal/wizard está abierto: `enabled: !anyModalOpen` |
+| 2 — Modal         | `F3`, acción principal, `Esc`, flechas del paso  | Solo mientras el modal está abierto (`active` / early-return si `!isOpen`) |
+
+Binarias:
+
+1. Todo hook de página expone `enabled` y la página lo cablea con la disyunción de
+   TODOS sus estados de modal abierto (patrón canónico: `enabled: !showCheckoutWizard && !isModalOpen` en `SalesNew.tsx`).
+2. Todo hook de modal solo registra listeners mientras el modal esté abierto
+   (early-return en el effect o montaje condicional).
+3. `Escape` pertenece a la capa más alta abierta. Los hooks de página **no registran
+   Esc** — eso lo dan gratis `EnhancedModal`/Radix Dialog.
+4. Primera línea de todo handler: `if (e.defaultPrevented) return` (cinturón
+   adicional al gating, no sustituto).
+
+### 12.3 Guards obligatorios de todo hook de atajos
+
+1. Primera línea del handler: `if (e.defaultPrevented) return`.
+2. `event.preventDefault()` siempre que se consume la tecla.
+3. `Enter`/flechas condicionales al target: desactivar si es `INPUT`/`TEXTAREA`/`SELECT`/`contentEditable` (en wizards, Enter-simple solo sobre `<input>` de una línea).
+4. Prohibido atajos de letra sin modificador (escribirían texto).
+5. Listener en `document`/`window` SIEMPRE con cleanup en el return del effect.
+
+### 12.4 Receta: página de listado (F2 → foco al buscador)
+
+Hook compartido único para todas las páginas de listado — `src/hooks/useSearchFocusShortcut.ts`:
+
+```tsx
+import { useEffect, type RefObject } from 'react'
+
+/**
+ * F2 → foco (y selección) del buscador principal de la página.
+ * `enabled` DEBE ser false mientras cualquier modal esté abierto (§12.2).
+ */
+export function useSearchFocusShortcut({ enabled, inputRef }: {
+  enabled: boolean
+  inputRef: RefObject<HTMLInputElement | null>
+}) {
+  useEffect(() => {
+    if (!enabled) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented) return
+      if (e.key === 'F2') {
+        e.preventDefault()
+        inputRef.current?.focus()
+        inputRef.current?.select()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [enabled, inputRef])
+}
+```
+
+Cableado en la página (ejemplo con los estados reales de `Products.tsx`):
+
+```tsx
+const searchInputRef = useRef<HTMLInputElement>(null)
+const anyModalOpen = isFormModalOpen || isDetailsModalOpen
+useSearchFocusShortcut({ enabled: !anyModalOpen, inputRef: searchInputRef })
+
+<ProductsFilters searchInputRef={searchInputRef}
+  placeholder={t('products.search.placeholder', 'Buscar por nombre o SKU (F2)...')} />
+```
+
+Ventas mantiene su hook rico (`useSalesShortcuts`, que además de F2 hace F4/Alt+Q/Alt+X);
+las páginas de listado simple usan SOLO el hook compartido. No dupliques.
+
+### 12.5 Receta: modal con buscador interno
+
+1. El buscador interno del modal se enfoca con `F3` (ref local al modal; patrón:
+   `modalProductSearchRef` en `PurchaseProductModal`, `supplierRef.focusSearch()` en el wizard de compras).
+2. Los listeners viven en el modal y solo se registran abierto.
+3. Wizards: reutilizar `useCheckoutShortcuts(active, handlers, shortcutId)` —
+   ya trae acción principal configurable, alias, Esc, F2/F3 y guards.
+4. **Discoverability obligatoria en wizards**: chips `kbd` visibles en el footer
+   (patrón `hints` de `PurchaseCheckoutWizard`). En modales simples, opcional.
+
+### 12.6 Discoverability
+
+1. El placeholder del buscador SIEMPRE anuncia el atajo — en UNA sola key i18n
+   (es + en) que incluya el sufijo, nunca concatenando
+   (`t('products.search.by_name_sku') + ' (F2)'` ❌ → key con "(F2)…" incluida ✅).
+2. Si el atajo es configurable, mostrar el valor real:
+   `formatShortcut('general.globalSearch')` — no hardcodear "Ctrl+K" en el texto.
+3. Un placeholder que promete un atajo que no existe es un bug (hoy: Productos
+   anuncia "(F2)" sin listener). Al tocar esa página, cerrarlo en el mismo diff.
+
+### 12.7 Estado de adopción (actualizado 2026-09-23)
+
+| Página                          | Hoy                                                                 | Objetivo                                                              |
+|:--------------------------------|:-------------------------------------------------------------------|:----------------------------------------------------------------------|
+| Menú / Header (buscador global) | ✅ Canónico (Ctrl+K, flechas, Enter, Esc, click-outside)            | —                                                                     |
+| Ventas POS (`SalesNew`)         | ✅ Canónico (F2/F4/Alt+Q/Alt+X/Ctrl+Shift+H + `enabled`)            | —                                                                     |
+| Compras (`Purchases`)           | ⚠️ Handler F12 inline en la página, sin gating por modal            | Mover al hook del feature con `enabled`; F2 al buscador del tab activo. Modal de producto (F3) ✅ y wizard ✅ ya cumplen |
+| Productos (`Products`)          | ⚠️ Placeholder promete "(F2)" pero NO hay listener (hint miente)    | `useSearchFocusShortcut` con `enabled: !isFormModalOpen && !isDetailsModalOpen` |
+| Clientes (`Clients`)            | ⚠️ Enter busca ✅, sin F2                                           | F2 + placeholder con pista; `enabled` con modales form/details        |
+| Proveedores (`Suppliers`)       | ⚠️ Enter busca ✅, sin F2                                           | Ídem Clientes                                                         |
+| Pagos de compras (`PurchasePayments`) | ⚠️ Enter aplica filtros ✅, sin F2                             | F2 al buscador de filtros                                             |
+| Cobros ventas (`SalePayment`)   | ❌ Sin atajos                                                       | F2 al buscador de ventas                                              |
+
+### 12.8 Anti-patrones de atajos
+
+| ❌ NUNCA | ✅ HAZ ESTO |
+|:---------|:-----------|
+| Listener `keydown` inline en la página | Hook (`useSearchFocusShortcut` / hook del feature) con `enabled` |
+| Atajos de página activos con un modal abierto | `enabled: !anyModalOpen` (§12.2) |
+| `Ctrl+K` para búsqueda de página | `F2`; `Ctrl+K` es solo del menú global |
+| Letra sin modificador como atajo | Prohibido (escribe texto); usar F-keys o Ctrl/Alt/Shift |
+| `Esc` para acciones que no sean cerrar | `Esc` solo cierra (modal/dropdown/overlay) |
+| Atajo de letra+modificador sin registro en el store | Alta en `DEFAULT_SHORTCUTS` + Settings en el mismo diff |
+| Placeholder con atajo hardcodeado siendo configurable | `formatShortcut(id)` dinámico |
+| Placeholder que promete un atajo inexistente | Implementar el atajo o quitar la pista — mismo diff |
+
+### 12.9 Tests (mínimos para todo hook de atajos)
+
+1. La tecla dispara la acción (ej. `focus` llamado en el input del ref mockeado).
+2. Con `enabled: false` (modal abierto) el atajo NO dispara.
+3. Un evento ya `defaultPrevented` no se procesa dos veces.
+4. Keys de placeholder nuevas existen en `locales/es` y `locales/en`.
