@@ -121,6 +121,8 @@ export const usePurchasesLogic = () => {
   const modalProductSearchRef = useRef<HTMLInputElement>(null)
   const productDropdownRef = useRef<HTMLDivElement>(null)
   const modalQuantityRef = useRef<HTMLInputElement>(null)
+  // Buscador del tab Historial: foco vía F2 (usePurchasesShortcuts, DESIGN.md §12).
+  const historySearchInputRef = useRef<HTMLInputElement>(null)
   const isSelectingProductRef = useRef<boolean>(false)
   const isSelectingSupplierRef = useRef<boolean>(false)
   const [activeProductIndex, setActiveProductIndex] = useState<number>(-1)
@@ -1159,6 +1161,7 @@ export const usePurchasesLogic = () => {
     handleSupplierSearchKeyDown,
     handleSupplierSelect,
     handleViewPurchase,
+    historySearchInputRef,
     isModalOpen,
     latestPurchaseResult,
     loading,

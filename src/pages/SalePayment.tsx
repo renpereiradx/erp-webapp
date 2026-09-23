@@ -56,6 +56,7 @@ import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModa
 import { useI18n } from '@/lib/i18n'
 import { useBranch } from '@/contexts/BranchContext'
 import { useToast } from '@/hooks/useToast'
+import { useSearchFocusShortcut } from '@/hooks/useSearchFocusShortcut'
 import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
 import { normalizeCurrencyCode } from '@/utils/currencyUtils'
@@ -466,6 +467,13 @@ const SalePayment = () => {
   const [showCancelPreview, setShowCancelPreview] = useState(false)
   const [cancelPreviewData, setCancelPreviewData] = useState<any>(null)
   const [isCancelling, setIsCancelling] = useState(false)
+
+  // F2 → foco al buscador de ventas (DESIGN.md §12); muere si hay un modal abierto.
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  useSearchFocusShortcut({
+    enabled: !(isPaymentModalOpen || showCancelPreview),
+    inputRef: searchInputRef,
+  })
 
   // Formatters memoizados
   const formatCurrency = useCallback(
@@ -1005,7 +1013,9 @@ const SalePayment = () => {
             <div className='relative w-full max-w-md'>
               <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground size-4' />
               <Input
-                placeholder={t('sales.cobros.search.placeholder', 'Buscar venta (ID o cliente)...')}
+                ref={searchInputRef}
+                aria-label={t('sales.cobros.search.label', 'Buscar ventas')}
+                placeholder={t('sales.cobros.search.placeholder', 'Buscar venta (ID o cliente) (F2)...')}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className='pl-9'

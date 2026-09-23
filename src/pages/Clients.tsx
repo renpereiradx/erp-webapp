@@ -1,9 +1,11 @@
+import { useRef } from 'react';
 import { Search, Plus, ChevronLeft, ChevronRight, RefreshCw, MoreVertical, User, Users } from 'lucide-react';
 import { useClientsView } from './useClientsView';
 import ClientFormModal from '@/features/party/components/ClientFormModal';
 import ClientDetailsModal from '@/features/party/components/ClientDetailsModal';
 import WithPermission from '@/components/auth/WithPermission';
 import ToastContainer from '@/components/ui/ToastContainer';
+import { useSearchFocusShortcut } from '@/hooks/useSearchFocusShortcut';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -45,6 +47,13 @@ const ClientsPage = () => {
 
   const showMinCharsHint = searchTerm.trim().length > 0 && searchTerm.trim().length < 3;
 
+  // F2 → foco al buscador (DESIGN.md §12); muere si hay un modal abierto.
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useSearchFocusShortcut({
+    enabled: !(isFormModalOpen || isDetailsModalOpen),
+    inputRef: searchInputRef,
+  });
+
   return (
     <div className="flex flex-col gap-lg">
 
@@ -53,8 +62,9 @@ const ClientsPage = () => {
         <div className="relative w-full max-w-sm flex-1">
           <Input
             type="search"
+            ref={searchInputRef}
             className="pl-9 h-9 bg-surface-muted border-transparent rounded-md focus:bg-background transition-colors"
-            placeholder={t('clients.search.placeholder', 'Buscar por nombre, documento o ID...')}
+            placeholder={t('clients.search.placeholder', 'Buscar por nombre, documento o ID (F2)...')}
             value={searchTerm}
             onChange={handleSearchChange}
             onKeyDown={handleSearchKeyDown}

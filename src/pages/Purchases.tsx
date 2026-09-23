@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { AlertCircle, History, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
@@ -6,6 +6,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import ToastContainer from '@/components/ui/ToastContainer'
 
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic'
+import { usePurchasesShortcuts } from '@/features/purchases/hooks/usePurchasesShortcuts'
 import { PurchaseProductModal } from '@/features/purchases/components/PurchaseProductModal'
 
 import { PurchaseCartTable } from '@/features/purchases/components/PurchaseCartTable'
@@ -34,16 +35,25 @@ const Purchases = () => {
   } | null>(null)
   const logic = usePurchasesLogic();
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (logic.activeTab === 'nueva-compra' && event.key === 'F12' && logic.purchaseItems.length > 0) {
-        event.preventDefault();
-        setShowCheckoutWizard(true);
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [logic.activeTab, logic.purchaseItems]);
+  // Atajos de página (DESIGN.md §12): F12 abre el wizard, F2 enfoca el buscador
+  // del Historial. Mueren si cualquier modal está abierto (§12.2); cada overlay
+  // (wizard, modal de producto, cancelación, confirmación, transferencia)
+  // registra los suyos propios mientras está abierto.
+  const handleOpenCheckoutWizard = useCallback(() => setShowCheckoutWizard(true), []);
+  usePurchasesShortcuts({
+    activeTab: logic.activeTab,
+    purchaseItemCount: logic.purchaseItems.length,
+    historySearchInputRef: logic.historySearchInputRef,
+    onOpenCheckoutWizard: handleOpenCheckoutWizard,
+    enabled: !(
+      showCheckoutWizard ||
+      transferPreload ||
+      logic.isModalOpen ||
+      logic.showCancelPreview ||
+      logic.showInstantPayment ||
+      logic.showConfirmationModal
+    ),
+  });
 
   const {
     activeTab,

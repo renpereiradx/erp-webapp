@@ -24,6 +24,8 @@ export const purchasePaymentsMvp = {
     'Buscar por ID de orden o proveedor...',
   'purchasePaymentsMvp.filters.search.hint':
     'Ingresá solo números (ID) o solo letras (nombre).',
+  'purchasePaymentsMvp.search.label': 'Buscar en resultados',
+  'purchasePaymentsMvp.search.placeholder': 'Buscar orden (ID o proveedor) (F2)...',
   'purchasePaymentsMvp.filters.supplier.label': 'Proveedor',
   'purchasePaymentsMvp.filters.supplier.placeholder': 'Selecciona un proveedor',
   'purchasePaymentsMvp.filters.supplier.all': 'Todos los proveedores',

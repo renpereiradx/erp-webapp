@@ -15,7 +15,7 @@ export const clients = {
   'clients.search': 'Buscar',
   'clients.search.db': 'Buscar en Base de Datos',
   'clients.search.label': 'Buscar clientes',
-  'clients.search.placeholder': 'Buscar por nombre, documento o ID...',
+  'clients.search.placeholder': 'Buscar por nombre, documento o ID (F2)...',
   'clients.search.min_chars': 'Escribe al menos 3 caracteres para buscar ({count}/3)',
   'clients.clear': 'Limpiar',
   'clients.filter.current_results_title': 'Filtrar Resultados Actuales',

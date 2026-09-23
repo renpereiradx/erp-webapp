@@ -812,16 +812,16 @@ las páginas de listado simple usan SOLO el hook compartido. No dupliques.
 
 ### 12.7 Estado de adopción (actualizado 2026-09-23)
 
-| Página                          | Hoy                                                                 | Objetivo                                                              |
-|:--------------------------------|:-------------------------------------------------------------------|:----------------------------------------------------------------------|
-| Menú / Header (buscador global) | ✅ Canónico (Ctrl+K, flechas, Enter, Esc, click-outside)            | —                                                                     |
-| Ventas POS (`SalesNew`)         | ✅ Canónico (F2/F4/Alt+Q/Alt+X/Ctrl+Shift+H + `enabled`)            | —                                                                     |
-| Compras (`Purchases`)           | ⚠️ Handler F12 inline en la página, sin gating por modal            | Mover al hook del feature con `enabled`; F2 al buscador del tab activo. Modal de producto (F3) ✅ y wizard ✅ ya cumplen |
-| Productos (`Products`)          | ⚠️ Placeholder promete "(F2)" pero NO hay listener (hint miente)    | `useSearchFocusShortcut` con `enabled: !isFormModalOpen && !isDetailsModalOpen` |
-| Clientes (`Clients`)            | ⚠️ Enter busca ✅, sin F2                                           | F2 + placeholder con pista; `enabled` con modales form/details        |
-| Proveedores (`Suppliers`)       | ⚠️ Enter busca ✅, sin F2                                           | Ídem Clientes                                                         |
-| Pagos de compras (`PurchasePayments`) | ⚠️ Enter aplica filtros ✅, sin F2                             | F2 al buscador de filtros                                             |
-| Cobros ventas (`SalePayment`)   | ❌ Sin atajos                                                       | F2 al buscador de ventas                                              |
+| Página                          | Estado                                                                 |
+|:--------------------------------|:-----------------------------------------------------------------------|
+| Menú / Header (buscador global) | ✅ Canónico (Ctrl+K, flechas, Enter, Esc, click-outside)               |
+| Ventas POS (`SalesNew`)         | ✅ Canónico (F2/F4/Alt+Q/Alt+X/Ctrl+Shift+H + `enabled`)               |
+| Compras (`Purchases`)           | ✅ `usePurchasesShortcuts`: F2 (Historial) + F12 con gating por modal; modal de producto (F3) y wizard ya cumplían |
+| Productos (`Products`)          | ✅ F2 vía `useSearchFocusShortcut` en `useProductsLogic`; placeholder con pista |
+| Clientes (`Clients`)            | ✅ F2 + Enter busca; gating con modales form/details                   |
+| Proveedores (`Suppliers`)       | ✅ F2 + Enter busca; gating con modales form/detalles/confirmación     |
+| Pagos de compras (`PurchasePayments`) | ✅ F2 al buscador de resultados; gating con modales pago/cancelación |
+| Cobros ventas (`SalePayment`)   | ✅ F2 al buscador de ventas; gating con modales cobro/anulación        |
 
 ### 12.8 Anti-patrones de atajos
 

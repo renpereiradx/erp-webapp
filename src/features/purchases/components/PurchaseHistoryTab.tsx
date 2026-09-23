@@ -28,6 +28,7 @@ export type PurchaseHistoryTabProps = Pick<
   ReturnType<typeof usePurchasesLogic>,
   | 'searchTerm'
   | 'setSearchTerm'
+  | 'historySearchInputRef'
   | 'handleFilter'
   | 'searchType'
   | 'setSearchType'
@@ -50,6 +51,7 @@ const headClass = 'text-label-caps uppercase text-on-surface-deep';
 export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
   searchTerm,
   setSearchTerm,
+  historySearchInputRef,
   handleFilter,
   searchType,
   setSearchType,
@@ -93,8 +95,9 @@ export const PurchaseHistoryTab: React.FC<PurchaseHistoryTabProps> = ({
               />
               <Input
                 type='text'
-                aria-label={t('purchases.search.placeholder', 'Buscar por proveedor o ID...')}
-                placeholder={t('purchases.search.placeholder', 'Buscar por proveedor o ID...')}
+                ref={historySearchInputRef}
+                aria-label={t('purchases.search.label', 'Buscar compras')}
+                placeholder={t('purchases.search.placeholder', 'Buscar por proveedor o ID (F2)...')}
                 className='pl-9 bg-surface'
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}

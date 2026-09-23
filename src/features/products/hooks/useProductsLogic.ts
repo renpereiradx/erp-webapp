@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import useProductStore from '@/store/useProductStore';
 import { ProductEnriched } from '@/domain/products/models';
 import { useToast } from '@/hooks/useToast';
+import { useSearchFocusShortcut } from '@/hooks/useSearchFocusShortcut';
 import { telemetry } from '@/utils/telemetry';
 import { productService } from '@/services/productService';
 import { AdvancedProductSearchPayload, ProductSearchFacet } from '@/types';
@@ -78,6 +79,12 @@ export const useProductsLogic = () => {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductEnriched | null>(null);
+
+  // F2 → foco al buscador (DESIGN.md §12); muere si hay un modal abierto.
+  useSearchFocusShortcut({
+    enabled: !(isFormModalOpen || isDetailsModalOpen),
+    inputRef: searchInputRef,
+  });
 
   useEffect(() => {
     fetchProductsPaginated(1, 10);

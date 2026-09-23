@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import RegisterPaymentModal from '@/components/purchase-payments/RegisterPaymentModal'
+import { useSearchFocusShortcut } from '@/hooks/useSearchFocusShortcut'
 import DataState from '@/components/ui/DataState'
 import ToastContainer from '@/components/ui/ToastContainer'
 import PageHeader from '@/components/ui/PageHeader'
@@ -118,6 +119,13 @@ const PurchasePaymentsPage = () => {
   const [cancelPreviewData, setCancelPreviewData] = React.useState<any>(null)
   const [isCancelling, setIsCancelling] = React.useState(false)
   const [localSearch, setLocalSearch] = React.useState('')
+
+  // F2 → foco al buscador de resultados (DESIGN.md §12); muere si hay un modal abierto.
+  const searchInputRef = React.useRef<HTMLInputElement>(null)
+  useSearchFocusShortcut({
+    enabled: !(isRegisterModalOpen || showCancelPreview),
+    inputRef: searchInputRef,
+  })
 
   const {
     orders, filters, loading, error, fetchOrders, applyFilters,
@@ -433,8 +441,9 @@ const PurchasePaymentsPage = () => {
             <div className='relative w-full max-w-md'>
               <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground size-4' aria-hidden='true' />
               <Input
+                ref={searchInputRef}
                 aria-label={t('purchasePaymentsMvp.search.label', 'Buscar en resultados')}
-                placeholder={t('purchasePaymentsMvp.search.placeholder', 'Buscar orden (ID o proveedor)...')}
+                placeholder={t('purchasePaymentsMvp.search.placeholder', 'Buscar orden (ID o proveedor) (F2)...')}
                 value={localSearch}
                 onChange={e => setLocalSearch(e.target.value)}
                 className='pl-9'

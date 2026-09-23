@@ -14,6 +14,8 @@ export const purchasePaymentsMvp = {
 
   // Filters
   'purchasePaymentsMvp.filters.search.placeholder': 'Search by order ID or supplier...',
+  'purchasePaymentsMvp.search.label': 'Search in results',
+  'purchasePaymentsMvp.search.placeholder': 'Search order (ID or supplier) (F2)...',
   'purchasePaymentsMvp.filters.status.all': 'All statuses',
   
   // Statuses

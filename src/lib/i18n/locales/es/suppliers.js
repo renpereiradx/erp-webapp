@@ -13,7 +13,7 @@ export const suppliers = {
 
   // Búsqueda
   'supplier.search.label': 'Buscar proveedores',
-  'supplier.search.placeholder': 'Buscar por nombre o ID...',
+  'supplier.search.placeholder': 'Buscar por nombre o ID (F2)...',
   'suppliers.search.placeholder': 'Buscar proveedor...',
   'supplier.search.error': 'No se pudo completar la búsqueda',
   'supplier.search.no_results': 'No se encontraron proveedores con ese criterio',

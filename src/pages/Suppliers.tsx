@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useRef } from 'react';
 import {
   Search,
   Filter,
@@ -43,6 +43,7 @@ import GenericSkeletonList from '@/components/ui/GenericSkeletonList';
 import EmptyState from '@/components/ui/EmptyState';
 import ErrorState from '@/components/ui/ErrorState';
 import ToastContainer from '@/components/ui/ToastContainer';
+import { useSearchFocusShortcut } from '@/hooks/useSearchFocusShortcut';
 
 interface SupplierRow {
   id?: string | number;
@@ -73,6 +74,14 @@ const SuppliersPage = () => {
   const authCtx = useContext(AuthContext);
   const canWrite = authCtx ? authCtx.hasAnyPermission('parties:write', 'suppliers:write') : false;
 
+  // F2 → foco al buscador (DESIGN.md §12); muere si hay un modal (form,
+  // detalles o confirmación pendiente) abierto.
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useSearchFocusShortcut({
+    enabled: !(isFormOpen || !!detailsSupplier || !!pendingAction.type),
+    inputRef: searchInputRef,
+  });
+
   return (
     <div className="flex flex-col gap-lg">
 
@@ -81,8 +90,9 @@ const SuppliersPage = () => {
         <div className="relative w-full max-w-sm flex-1">
           <Input
             type="search"
+            ref={searchInputRef}
             className="pl-9 h-9 bg-surface-muted border-transparent rounded-md focus:bg-background transition-colors"
-            placeholder={t('supplier.search.placeholder', 'Buscar por nombre o ID...')}
+            placeholder={t('supplier.search.placeholder', 'Buscar por nombre o ID (F2)...')}
             value={searchTerm}
             onChange={handleSearchChange}
             onKeyDown={handleSearchKeyDown}

@@ -86,7 +86,7 @@ export const products = {
   'products.page.subtitle': 'Administra, filtra y visualiza todos los productos del sistema.',
   'products.breadcrumb.home': 'Inicio',
   'products.breadcrumb.products': 'Productos',
-  'products.search.by_name_sku': 'Buscar productos por nombre o SKU',
+  'products.search.by_name_sku': 'Buscar productos por nombre o SKU (F2)...',
   'products.search.min_chars': 'Escribe al menos 3 caracteres',
   'products.action.filter': 'Filtrar',
   'products.action.export': 'Exportar',

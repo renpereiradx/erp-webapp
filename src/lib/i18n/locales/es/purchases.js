@@ -14,7 +14,8 @@ export const purchases = {
   'purchases.tab.list': 'Lista de Compras',
 
   // Búsqueda y filtros
-  'purchases.search.placeholder': 'Buscar por proveedor o ID...',
+  'purchases.search.label': 'Buscar compras',
+  'purchases.search.placeholder': 'Buscar por proveedor o ID (F2)...',
   'purchases.search.type': 'Tipo de búsqueda',
   'purchases.search.by_supplier': 'Proveedor',
   'purchases.search.by_date': 'Fecha',
