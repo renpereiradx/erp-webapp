@@ -8,7 +8,7 @@
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, FileText, Loader2, Truck } from 'lucide-react'
+import { ArrowLeftRight, ArrowRight, FileText, Loader2, Truck } from 'lucide-react'
 
 import { useI18n } from '@/lib/i18n'
 import { useAuth } from '@/contexts/AuthContext'
@@ -124,134 +124,145 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
 
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : closeModal())}>
-      <DialogContent className="sm:max-w-[680px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="gap-xs">
-          <DialogTitle className="text-title-md text-foreground">
-            {t('transfers.detailTitle', 'Transferencia {code}', { code: current?.transfer_code ?? '' })}
-          </DialogTitle>
-          <DialogDescription className="text-body-md text-on-surface-deep">
-            {current
-              ? `${current.source_branch_name ?? current.source_branch_id} → ${current.destination_branch_name ?? current.destination_branch_id}`
-              : ''}
-          </DialogDescription>
+      {/* DESIGN.md §6.6: mismo patrón que CreateTransferModal — padding/ancho propios
+          de la composición Radix, header/cuerpo/footer separados, cuerpo scrollable. */}
+      <DialogContent className="w-[calc(100%-3rem)] sm:max-w-[680px] max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-xl border-border-subtle bg-surface shadow-fluent-16">
+        <DialogHeader className="mb-0 shrink-0 space-y-xs border-b border-divider bg-surface-muted p-lg">
+          <div className="flex items-center gap-sm">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <ArrowLeftRight className="size-5" aria-hidden="true" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-title-md text-foreground">
+                {t('transfers.detailTitle', 'Transferencia {code}', { code: current?.transfer_code ?? '' })}
+              </DialogTitle>
+              <DialogDescription className="text-body-md text-on-surface-deep">
+                {current
+                  ? `${current.source_branch_name ?? current.source_branch_id} → ${current.destination_branch_name ?? current.destination_branch_id}`
+                  : ''}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        {isLoading ? (
-          <div className="flex justify-center p-lg">
-            <Loader2 className="size-6 animate-spin text-primary" />
-          </div>
-        ) : (
-          <div className="space-y-md">
-            <div className="flex flex-wrap items-center gap-sm">
-              <Badge variant={current?.status === 'RECEIVED' ? 'success' : current?.status === 'REJECTED' || current?.status === 'CANCELLED' ? 'destructive' : current?.status === 'PENDING' ? 'warning' : 'info'}>
-                {current?.status}
-              </Badge>
-              {current?.shipping_tracking_number && (
-                <span className="flex items-center gap-xs text-body-sm text-on-surface-deep">
-                  <Truck className="size-4" /> {current.shipping_tracking_number}
-                </span>
+        <div className="min-h-0 flex-1 overflow-y-auto p-lg">
+          {isLoading ? (
+            <div className="flex justify-center py-lg">
+              <Loader2 className="size-6 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-md">
+              <div className="flex flex-wrap items-center gap-sm">
+                <Badge variant={current?.status === 'RECEIVED' ? 'success' : current?.status === 'REJECTED' || current?.status === 'CANCELLED' ? 'destructive' : current?.status === 'PENDING' ? 'warning' : 'info'}>
+                  {current?.status}
+                </Badge>
+                {current?.shipping_tracking_number && (
+                  <span className="flex items-center gap-xs text-body-sm text-on-surface-deep">
+                    <Truck className="size-4" /> {current.shipping_tracking_number}
+                  </span>
+                )}
+                {current?.rejection_reason && (
+                  <span className="text-body-sm text-error">{current.rejection_reason}</span>
+                )}
+              </div>
+  
+              <ul className="divide-y divide-border-subtle rounded-md border border-border-subtle">
+                {items.map((item) => (
+                  <li key={item.id} className="flex items-center justify-between gap-sm p-sm">
+                    <span className="min-w-0 flex-1 truncate text-body-md text-foreground">
+                      {item.product_name || item.product_id}
+                    </span>
+                    <span className="text-body-sm-bold text-foreground">
+                      {t('transfers.requestedQty', '{qty} u.', { qty: String(item.quantity_requested) })}
+                    </span>
+                  </li>
+                ))}
+                {items.length === 0 && (
+                  <li className="p-sm text-body-sm text-on-surface-deep">
+                    {t('transfers.noItems', 'Sin ítems')}
+                  </li>
+                )}
+              </ul>
+  
+              {sourcePurchaseIds.length > 0 && (
+                <p className="flex flex-wrap items-center gap-xs text-body-sm text-on-surface-deep">
+                  <FileText className="size-4" aria-hidden="true" />
+                  {t('transfers.sourcePurchase', 'Compra de origen')}:
+                  {sourcePurchaseIds.map((id) => (
+                    <Link
+                      key={id}
+                      to="/compras"
+                      data-testid={`transfer-source-purchase-${id}`}
+                      aria-label={t('transfers.sourcePurchaseAria', 'Ver la compra de origen #{id} en el historial de compras', { id: String(id) })}
+                      className="text-body-sm-bold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded-sm"
+                    >
+                      #{id}
+                    </Link>
+                  ))}
+                </p>
               )}
-              {current?.rejection_reason && (
-                <span className="text-body-sm text-error">{current.rejection_reason}</span>
+  
+              {canWrite && actionMode === null && nextAction && (
+                <div className="flex flex-wrap items-center gap-sm">
+                  {nextAction === 'APPROVED' && (
+                    <>
+                      <Button data-testid='transfer-approve' onClick={() => applyStatus('APPROVED')} disabled={statusMutation.isPending}>
+                        {t('transfers.approve', 'Aprobar')}
+                      </Button>
+                      <Button variant="secondary" data-testid='transfer-reject' onClick={() => setActionMode('REJECTED')}>
+                        {t('transfers.reject', 'Rechazar')}
+                      </Button>
+                    </>
+                  )}
+                  {nextAction === 'SHIPPED' && (
+                    <Button data-testid='transfer-ship' onClick={() => setActionMode('SHIPPED')}>
+                      {t('transfers.ship', 'Despachar')}
+                    </Button>
+                  )}
+                  {nextAction === 'IN_TRANSIT' && (
+                    <Button data-testid='transfer-in-transit' onClick={() => applyStatus('IN_TRANSIT')} disabled={statusMutation.isPending}>
+                      {t('transfers.markInTransit', 'Marcar en tránsito')}
+                    </Button>
+                  )}
+                  {nextAction === 'RECEIVED' && (
+                    <Button data-testid='transfer-receive' onClick={() => applyStatus('RECEIVED')} disabled={statusMutation.isPending}>
+                      {t('transfers.receive', 'Recibir')}
+                    </Button>
+                  )}
+                </div>
+              )}
+  
+              {showActionForm && (
+                <div className="space-y-xs rounded-md border border-border-subtle bg-surface-muted p-md">
+                  <Label htmlFor="transfer-action-field">
+                    {actionMode === 'REJECTED'
+                      ? t('transfers.rejectionReason', 'Motivo del rechazo')
+                      : t('transfers.trackingNumber', 'Número de seguimiento')}
+                  </Label>
+                  <Input
+                    id="transfer-action-field"
+                    value={actionMode === 'REJECTED' ? reason : tracking}
+                    onChange={(e) => (actionMode === 'REJECTED' ? setReason(e.target.value) : setTracking(e.target.value))}
+                  />
+                  <div className="flex justify-end gap-sm pt-xs">
+                    <Button variant="ghost" onClick={() => setActionMode(null)}>
+                      {t('common.cancel', 'Cancelar')}
+                    </Button>
+                    <Button
+                      data-testid='transfer-action-confirm'
+                      onClick={handleConfirmAction}
+                      disabled={statusMutation.isPending || (actionMode === 'REJECTED' ? !reason.trim() : actionMode === 'SHIPPED' ? !tracking.trim() : false)}
+                    >
+                      {t('transfers.confirm', 'Confirmar')}
+                    </Button>
+                  </div>
+                </div>
               )}
             </div>
+          )}
+        </div>
 
-            <ul className="divide-y divide-border-subtle rounded-md border border-border-subtle">
-              {items.map((item) => (
-                <li key={item.id} className="flex items-center justify-between gap-sm p-sm">
-                  <span className="min-w-0 flex-1 truncate text-body-md text-foreground">
-                    {item.product_name || item.product_id}
-                  </span>
-                  <span className="text-body-sm-bold text-foreground">
-                    {t('transfers.requestedQty', '{qty} u.', { qty: String(item.quantity_requested) })}
-                  </span>
-                </li>
-              ))}
-              {items.length === 0 && (
-                <li className="p-sm text-body-sm text-on-surface-deep">
-                  {t('transfers.noItems', 'Sin ítems')}
-                </li>
-              )}
-            </ul>
-
-            {sourcePurchaseIds.length > 0 && (
-              <p className="flex flex-wrap items-center gap-xs text-body-sm text-on-surface-deep">
-                <FileText className="size-4" aria-hidden="true" />
-                {t('transfers.sourcePurchase', 'Compra de origen')}:
-                {sourcePurchaseIds.map((id) => (
-                  <Link
-                    key={id}
-                    to="/compras"
-                    data-testid={`transfer-source-purchase-${id}`}
-                    aria-label={t('transfers.sourcePurchaseAria', 'Ver la compra de origen #{id} en el historial de compras', { id: String(id) })}
-                    className="text-body-sm-bold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded-sm"
-                  >
-                    #{id}
-                  </Link>
-                ))}
-              </p>
-            )}
-
-            {canWrite && actionMode === null && nextAction && (
-              <div className="flex flex-wrap items-center gap-sm">
-                {nextAction === 'APPROVED' && (
-                  <>
-                    <Button data-testid='transfer-approve' onClick={() => applyStatus('APPROVED')} disabled={statusMutation.isPending}>
-                      {t('transfers.approve', 'Aprobar')}
-                    </Button>
-                    <Button variant="secondary" data-testid='transfer-reject' onClick={() => setActionMode('REJECTED')}>
-                      {t('transfers.reject', 'Rechazar')}
-                    </Button>
-                  </>
-                )}
-                {nextAction === 'SHIPPED' && (
-                  <Button data-testid='transfer-ship' onClick={() => setActionMode('SHIPPED')}>
-                    {t('transfers.ship', 'Despachar')}
-                  </Button>
-                )}
-                {nextAction === 'IN_TRANSIT' && (
-                  <Button data-testid='transfer-in-transit' onClick={() => applyStatus('IN_TRANSIT')} disabled={statusMutation.isPending}>
-                    {t('transfers.markInTransit', 'Marcar en tránsito')}
-                  </Button>
-                )}
-                {nextAction === 'RECEIVED' && (
-                  <Button data-testid='transfer-receive' onClick={() => applyStatus('RECEIVED')} disabled={statusMutation.isPending}>
-                    {t('transfers.receive', 'Recibir')}
-                  </Button>
-                )}
-              </div>
-            )}
-
-            {showActionForm && (
-              <div className="space-y-xs rounded-md border border-border-subtle bg-surface-muted p-md">
-                <Label htmlFor="transfer-action-field">
-                  {actionMode === 'REJECTED'
-                    ? t('transfers.rejectionReason', 'Motivo del rechazo')
-                    : t('transfers.trackingNumber', 'Número de seguimiento')}
-                </Label>
-                <Input
-                  id="transfer-action-field"
-                  value={actionMode === 'REJECTED' ? reason : tracking}
-                  onChange={(e) => (actionMode === 'REJECTED' ? setReason(e.target.value) : setTracking(e.target.value))}
-                />
-                <div className="flex justify-end gap-sm pt-xs">
-                  <Button variant="ghost" onClick={() => setActionMode(null)}>
-                    {t('common.cancel', 'Cancelar')}
-                  </Button>
-                  <Button
-                    data-testid='transfer-action-confirm'
-                    onClick={handleConfirmAction}
-                    disabled={statusMutation.isPending || (actionMode === 'REJECTED' ? !reason.trim() : actionMode === 'SHIPPED' ? !tracking.trim() : false)}
-                  >
-                    {t('transfers.confirm', 'Confirmar')}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        <DialogFooter className="flex items-center justify-between gap-sm">
+        <DialogFooter className="flex shrink-0 items-center justify-between gap-sm border-t border-divider p-lg pt-md">
           <span className="flex items-center gap-xs text-body-sm text-on-surface-deep">
             <ArrowRight className="size-4" />
             {t('transfers.flowHint', 'PENDING → APPROVED → SHIPPED → IN_TRANSIT → RECEIVED')}

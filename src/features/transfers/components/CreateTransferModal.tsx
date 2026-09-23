@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, Loader2, PackageSearch, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeftRight, ArrowRight, Loader2, PackageSearch, Plus, Trash2 } from 'lucide-react'
 
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
@@ -158,15 +158,25 @@ const CreateTransferModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[720px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="gap-xs">
-          <DialogTitle className="text-title-md text-foreground">{t('transfers.createTitle', 'Nueva Transferencia')}</DialogTitle>
-          <DialogDescription className="text-body-md text-on-surface-deep">
-            {t('transfers.createDescription', 'El stock sale de la sucursal activa y se recibe en la sucursal destino.')}
-          </DialogDescription>
+      {/* DESIGN.md §6.6: la clase base .radix-dialog__content no aporta padding ni
+          ancho — sin w-[...] el diálogo fijo se encoge al contenido y sin p-* todo
+          queda pegado a los bordes (header/cuerpo/footer separados, cuerpo scrollable). */}
+      <DialogContent className="w-[calc(100%-3rem)] sm:max-w-[720px] max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-xl border-border-subtle bg-surface shadow-fluent-16">
+        <DialogHeader className="mb-0 shrink-0 space-y-xs border-b border-divider bg-surface-muted p-lg">
+          <div className="flex items-center gap-sm">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <ArrowLeftRight className="size-5" aria-hidden="true" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-title-md text-foreground">{t('transfers.createTitle', 'Nueva Transferencia')}</DialogTitle>
+              <DialogDescription className="text-body-md text-on-surface-deep">
+                {t('transfers.createDescription', 'El stock sale de la sucursal activa y se recibe en la sucursal destino.')}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-md">
+        <div className="min-h-0 flex-1 space-y-md overflow-y-auto p-lg">
           <div className="grid grid-cols-1 gap-md sm:grid-cols-2">
             <div className="space-y-xs">
               <Label>{t('transfers.source', 'Sucursal de origen')}</Label>
@@ -290,7 +300,7 @@ const CreateTransferModal = ({
           )}
         </div>
 
-        <DialogFooter className="flex justify-end gap-sm">
+        <DialogFooter className="flex shrink-0 justify-end gap-sm border-t border-divider p-lg pt-md">
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
             {t('common.cancel', 'Cancelar')}
           </Button>
