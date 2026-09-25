@@ -79,5 +79,23 @@ export const transfers = {
   'transfers.confirm': 'Confirmar',
   'transfers.rejectionReason': 'Motivo del rechazo',
   'transfers.trackingNumber': 'Número de seguimiento',
+  'transfers.trackingPlaceholder': 'Se genera automáticamente (TRK-…). Opcional: tracking del transportista',
+  'transfers.trackingAutoHint': 'Si lo dejás vacío, el sistema genera la guía automáticamente al despachar.',
   'transfers.flowHint': 'PENDING → APPROVED → SHIPPED → IN_TRANSIT → RECEIVED',
+
+  // Ticket 80mm (guía de despacho)
+  'transfers.ticket.print': 'Imprimir',
+  'transfers.ticket.title': 'Ticket {code}',
+  'transfers.ticket.heading': 'TRANSFERENCIA',
+  'transfers.ticket.tracking': 'Guía: {tracking}',
+  'transfers.ticket.route': 'Ruta: {source} → {destination}',
+  'transfers.ticket.emitted': 'Emitida: {date}',
+  'transfers.ticket.shipped': 'Despachada: {date}',
+  'transfers.ticket.requestedBy': 'Solicitada por: {name}',
+  'transfers.ticket.col_item': 'ÍTEM',
+  'transfers.ticket.col_requested': 'SOLIC',
+  'transfers.ticket.col_shipped': 'ENV',
+  'transfers.ticket.notes': 'Nota: {notes}',
+  'transfers.ticket.footer': 'Presentá esta guía en la sucursal destino para recepcionar la transferencia.',
+  'transfers.ticket.empty': 'No hay transferencia para imprimir.',
 }

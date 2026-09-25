@@ -8,8 +8,10 @@
  *   destino, payload con source = sucursal activa; los ítems precargados
  *   llevan purchase_order_id (F.6).
  * - TransferDetailModal: acciones por estado (APPROVED/REJECTED en PENDING,
- *   SHIPPED con tracking, IN_TRANSIT, RECEIVED); REJECTED exige motivo;
- *   link a la compra de origen cuando los ítems la registran (F.6).
+ *   SHIPPED con tracking auto-generado por el backend y override manual
+ *   opcional, IN_TRANSIT, RECEIVED); REJECTED exige motivo; ticket 80mm
+ *   (guía + QR) imprimible cuando ya hay tracking; link a la compra de
+ *   origen cuando los ítems la registran (F.6).
  *
  * Mocks en la frontera: branchTransferService, branchService, AuthContext,
  * BranchContext e i18n (firma real, fallback español). lucide-react NO se
@@ -74,6 +76,11 @@ vi.mock('@/services/productService', () => ({
   productService: {
     getProductById: vi.fn(),
   },
+}))
+
+const printTicketMock = vi.fn()
+vi.mock('@/features/counterorders/utils/printTicket', () => ({
+  printTicketHtml: (...args: unknown[]) => printTicketMock(...args),
 }))
 
 import { branchTransferService } from '@/services/branchTransferService'
@@ -410,7 +417,7 @@ describe('TransferDetailModal — acciones del workflow (F.4)', () => {
     )
   })
 
-  it('maps SHIPPED action to a tracking-number requirement', async () => {
+  it('sends manual tracking for SHIPPED when provided (external carrier override)', async () => {
     const user = userEvent.setup()
     mockHasPermission.mockImplementation((permission) => permission === 'transfers:read' || permission === 'transfers:write')
     getTransferById.mockResolvedValue({
@@ -429,6 +436,52 @@ describe('TransferDetailModal — acciones del workflow (F.4)', () => {
         expect.objectContaining({ new_status: 'SHIPPED', shipping_tracking_number: 'TRK-99' }),
       ),
     )
+  })
+
+  it('dispatches SHIPPED without tracking when empty (backend auto-generates TRK-…)', async () => {
+    const user = userEvent.setup()
+    mockHasPermission.mockImplementation((permission) => permission === 'transfers:read' || permission === 'transfers:write')
+    getTransferById.mockResolvedValue({
+      transfer: { ...transferPending, status: 'APPROVED' },
+      items: [],
+    })
+    renderWithProviders(<TransferDetailModal transfer={{ ...transferPending, status: 'APPROVED' }} open onOpenChange={vi.fn()} />)
+
+    await user.click(await screen.findByTestId('transfer-ship'))
+    // Sin tipear: el confirmar ya no exige tracking (antes estaba deshabilitado).
+    const confirm = screen.getByTestId('transfer-action-confirm')
+    expect(confirm).toBeEnabled()
+    await user.click(confirm)
+
+    await waitFor(() =>
+      expect(updateTransferStatus).toHaveBeenCalledWith(
+        11,
+        expect.objectContaining({ new_status: 'SHIPPED' }),
+      ),
+    )
+    const payload = updateTransferStatus.mock.calls.at(-1)?.[1] as unknown as Record<string, unknown>
+    expect(payload).not.toHaveProperty('shipping_tracking_number')
+  })
+
+  it('shows the print-ticket action when the transfer already has tracking', async () => {
+    const user = userEvent.setup()
+    mockHasPermission.mockImplementation((permission) => permission === 'transfers:read' || permission === 'transfers:write')
+    getTransferById.mockResolvedValue({
+      transfer: { ...transferPending, status: 'SHIPPED', shipping_tracking_number: 'TRK-20260402-0001' },
+      items: [{ id: 1, transfer_id: 11, product_id: 'P1', quantity_requested: 5, product_name: 'Yerba 1kg' }],
+    })
+    renderWithProviders(<TransferDetailModal transfer={{ ...transferPending, status: 'SHIPPED', shipping_tracking_number: 'TRK-20260402-0001' }} open onOpenChange={vi.fn()} />)
+
+    await user.click(await screen.findByTestId('transfer-print-ticket'))
+
+    // El ticket 80mm muestra código, guía con QR e ítems.
+    const ticket = await screen.findByTestId('transfer-ticket')
+    expect(ticket).toBeInTheDocument()
+    expect(screen.getByTestId('transfer-ticket-qr')).toBeInTheDocument()
+    expect(within(ticket).getByText(/TRK-20260402-0001/)).toBeInTheDocument()
+
+    await user.click(screen.getByTestId('transfer-ticket-print'))
+    expect(printTicketMock).toHaveBeenCalled()
   })
 
   it('links items back to their source purchase and omits it for manual lines (F.6)', async () => {

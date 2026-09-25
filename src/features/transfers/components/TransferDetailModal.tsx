@@ -9,7 +9,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeftRight, ArrowRight, FileText, Loader2, Package, Truck } from 'lucide-react'
+import { ArrowLeftRight, ArrowRight, FileText, Loader2, Package, Printer, Truck } from 'lucide-react'
 
 import { useI18n } from '@/lib/i18n'
 import { useAuth } from '@/contexts/AuthContext'
@@ -31,6 +31,7 @@ import {
 import { branchService } from '@/features/branches/services/branchService'
 import { productService } from '@/services/productService'
 import { useTransferDetail, useTransferStatusChange } from '../hooks/useBranchTransfers'
+import TransferTicketModal from './TransferTicketModal'
 import type { BranchTransfer } from '../types'
 
 type TransferAction = 'APPROVED' | 'REJECTED' | 'SHIPPED' | 'IN_TRANSIT' | 'RECEIVED'
@@ -67,6 +68,7 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
   const [actionMode, setActionMode] = useState<TransferAction | null>(null)
   const [reason, setReason] = useState('')
   const [tracking, setTracking] = useState('')
+  const [isTicketOpen, setIsTicketOpen] = useState(false)
 
   const canWrite = hasPermission('transfers:write')
   const items: BranchTransferItem[] =
@@ -80,6 +82,7 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
     setActionMode(null)
     setReason('')
     setTracking('')
+    setIsTicketOpen(false)
     onOpenChange(false)
   }
 
@@ -106,8 +109,10 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
       return
     }
     if (actionMode === 'SHIPPED') {
-      if (!tracking.trim()) return
-      applyStatus('SHIPPED', { shipping_tracking_number: tracking.trim() })
+      // Tracking opcional: vacío → el backend autogenera TRK-<transfer_code>;
+      // con valor → se usa el tracking manual (transportista externo).
+      const trimmed = tracking.trim()
+      applyStatus('SHIPPED', trimmed ? { shipping_tracking_number: trimmed } : {})
       return
     }
     if (actionMode) applyStatus(actionMode)
@@ -179,6 +184,7 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
   const totalShipped = items.reduce((acc, i) => acc + (Number(i.quantity_shipped ?? i.quantity_requested) || 0), 0)
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : closeModal())}>
       {/* DESIGN.md §6.6: mismo patrón que CreateTransferModal — padding/ancho propios
           de la composición Radix, header/cuerpo/footer separados, cuerpo scrollable. */}
@@ -214,6 +220,17 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
                   <span className="flex items-center gap-xs text-body-sm text-on-surface-deep">
                     <Truck className="size-4" /> {current.shipping_tracking_number}
                   </span>
+                )}
+                {current?.shipping_tracking_number && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    data-testid="transfer-print-ticket"
+                    onClick={() => setIsTicketOpen(true)}
+                  >
+                    <Printer className="size-4" />
+                    {t('transfers.ticket.print', 'Imprimir')}
+                  </Button>
                 )}
                 {current?.rejection_reason && (
                   <span className="text-body-sm text-error">{current.rejection_reason}</span>
@@ -393,7 +410,13 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
                     id="transfer-action-field"
                     value={actionMode === 'REJECTED' ? reason : tracking}
                     onChange={(e) => (actionMode === 'REJECTED' ? setReason(e.target.value) : setTracking(e.target.value))}
+                    placeholder={actionMode === 'SHIPPED' ? t('transfers.trackingPlaceholder', 'Se genera automáticamente (TRK-…). Opcional: tracking del transportista') : undefined}
                   />
+                  {actionMode === 'SHIPPED' && (
+                    <p className="text-body-sm text-on-surface-deep">
+                      {t('transfers.trackingAutoHint', 'Si lo dejás vacío, el sistema genera la guía automáticamente al despachar.')}
+                    </p>
+                  )}
                   <div className="flex justify-end gap-sm pt-xs">
                     <Button variant="ghost" onClick={() => setActionMode(null)}>
                       {t('common.cancel', 'Cancelar')}
@@ -401,7 +424,7 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
                     <Button
                       data-testid='transfer-action-confirm'
                       onClick={handleConfirmAction}
-                      disabled={statusMutation.isPending || (actionMode === 'REJECTED' ? !reason.trim() : actionMode === 'SHIPPED' ? !tracking.trim() : false)}
+                      disabled={statusMutation.isPending || (actionMode === 'REJECTED' ? !reason.trim() : false)}
                     >
                       {t('transfers.confirm', 'Confirmar')}
                     </Button>
@@ -423,6 +446,17 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    {current && (
+      <TransferTicketModal
+        open={isTicketOpen}
+        onClose={() => setIsTicketOpen(false)}
+        transfer={current}
+        items={items}
+        sourceLabel={sourceLabel}
+        destinationLabel={destinationLabel}
+      />
+    )}
+    </>
   )
 }
 
