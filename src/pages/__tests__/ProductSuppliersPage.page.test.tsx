@@ -189,7 +189,7 @@ describe('ProductSuppliersPage', () => {
     });
   });
 
-  it('el picker plano muestra variante/SKU/stock/precio y elegir variante fetcha con variant_id', async () => {
+  it('el picker plano muestra variante + SKU y elegir variante fetcha con variant_id', async () => {
     mockProductService.searchAdvanced.mockResolvedValue({
       products: [
         {
@@ -212,12 +212,12 @@ describe('ProductSuppliersPage', () => {
       </MemoryRouter>,
     );
 
-    await userEvent.type(screen.getByLabelText('Buscar...'), 'adidas');
+    await userEvent.type(screen.getByPlaceholderText('Buscar...'), 'adidas');
     expect(await screen.findByText('Camiseta Adidas · Rojo M')).toBeInTheDocument();
-    expect(screen.getByText('Stock: 12 unit')).toBeInTheDocument();
-    expect(screen.getByText(/Gs\. 150\.000/)).toBeInTheDocument();
+    expect(screen.getByText('SKU: AD-R-M')).toBeInTheDocument();
+    expect(screen.queryByText(/Stock:/)).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('option', { name: /Camiseta Adidas · Rojo M/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Camiseta Adidas · Rojo M/ }));
     await waitFor(() => {
       expect(mockService.getProductSuppliers).toHaveBeenCalledWith(
         'PRD-1',

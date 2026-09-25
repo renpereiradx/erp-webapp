@@ -1,9 +1,9 @@
 // ===========================================================================
 // Mapper SellableUnitOption → EntityOption para los pickers de producto de
 // los drill-downs (búsqueda plana granularity=variant, mismo camino que
-// /ventas). Incluye la dedupe de display: cuando el nombre de la variante ya
-// embebe el nombre del producto ("CAMISETA ADIDAS - COLOR X"), no se repite
-// como "Producto · Variante".
+// /ventas). Ítems en contexto de analítica: nombre de variante con dedupe
+// (cuando ya embebe el nombre del producto) + SKU — sin precio/stock, que
+// son datos operativos de venta fuera de contexto aquí.
 // ===========================================================================
 
 import type { EntityOption } from './components/EntitySearchSelect';
@@ -18,11 +18,7 @@ export function sellableUnitToEntityOption(u: SellableUnitOption): EntityOption 
   return {
     id: u.id,
     label: composed,
-    sku: u.sku,
-    price: u.price,
-    stock: u.stock,
-    baseUnit: u.base_unit,
+    sub: u.sku ? `SKU: ${u.sku}` : undefined,
     variantId: u.variant_id ?? null,
-    variantName,
   };
 }

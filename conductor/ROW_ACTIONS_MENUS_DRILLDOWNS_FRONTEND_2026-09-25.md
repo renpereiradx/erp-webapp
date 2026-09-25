@@ -56,6 +56,29 @@ desplegable solo mostraba el nombre — muy pobre junto al patrón de /ventas.
   (URL + header + fetch filtrado). Gates: vitest 1150/1150, tsc 0, build ✓,
   lint:design ✓.
 
+## 3ª iteración (feedback owner): picker sobre el dropmenu compartido + nav por teclado
+
+El owner pidió alinear con **cómo lo maneja /ventas** (componente + navegación),
+NO copiar la información de venta (precio/stock quedan fuera de contexto en
+analítica). Cambios:
+
+- **`EntitySearchSelect` reescrito como wrapper del `SearchableDropdown`
+  compartido** (el de presupuestos/requisiciones/transferencias): hereda
+  debounce, `minSearchLength`, resaltado y **navegación por teclado**
+  (↑/↓ mueven el resaltado con auto-scroll, Enter elige, Escape cierra).
+  `EntityOption` simplificado a `{id, label, sub?, variantId?}`.
+- **Ítems en contexto:** nombre (· variante dedupeada) + SKU o documento —
+  sin precio/stock (info operativa de venta). Mapper
+  `sellableUnitToEntityOption` ajustado.
+- Pick de variante → `variant_id` se mantiene (incidental de la 2ª iteración,
+  el dueño no lo cuestionó y los 4 endpoints ya lo soportaban).
+- Verificado en vivo: dropmenu con ítems en contexto, resaltado navegado y
+  selección por Enter de una variante (URL `product_id`+`variant_id` y
+  encabezado). Gates: vitest 1150/1150, tsc 0, build ✓, lint:design ✓.
+  Nota: el teclado real no llega al panel IAB sin foco del SO — la prueba se
+  hizo despachando el KeyboardEvent dentro de la página (el handler del
+  componente compartido respondió); es la misma nav ya probada en producción.
+
 ## Verificación (1ª iteración)
 
 - Tests: 3 archivos de página ampliados — el menú abre con sus datos, el pivote navega

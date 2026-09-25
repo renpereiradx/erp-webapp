@@ -221,7 +221,7 @@ describe('ProductBuyersPage', () => {
     });
   });
 
-  it('el picker muestra filas planas informativas (variante, SKU, stock, precio)', async () => {
+  it('el picker muestra filas planas informativas (variante + SKU, sin datos de venta)', async () => {
     mockProductService.searchAdvanced.mockResolvedValue({
       products: [
         {
@@ -255,13 +255,12 @@ describe('ProductBuyersPage', () => {
       </MemoryRouter>,
     );
 
-    await userEvent.type(screen.getByLabelText('Buscar...'), 'adidas');
+    await userEvent.type(screen.getByPlaceholderText('Buscar...'), 'adidas');
     expect(await screen.findByText('Camiseta Adidas · Rojo M')).toBeInTheDocument();
     expect(screen.getByText('SKU: AD-R-M')).toBeInTheDocument();
-    expect(screen.getByText('Stock: 12 unit')).toBeInTheDocument();
-    expect(screen.getByText(/Gs\. 150\.000/)).toBeInTheDocument();
     expect(screen.getByText('Remera Lisa')).toBeInTheDocument();
-    expect(screen.getByText('Stock: 0 unit')).toBeInTheDocument();
+    expect(screen.queryByText(/Stock:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Gs\./)).not.toBeInTheDocument();
     expect(mockProductService.searchAdvanced).toHaveBeenCalledWith(
       expect.objectContaining({ search: 'adidas', granularity: 'variant' }),
     );
@@ -290,8 +289,8 @@ describe('ProductBuyersPage', () => {
       </MemoryRouter>,
     );
 
-    await userEvent.type(screen.getByLabelText('Buscar...'), 'adidas');
-    await userEvent.click(await screen.findByRole('option', { name: /Camiseta Adidas · Rojo M/ }));
+    await userEvent.type(screen.getByPlaceholderText('Buscar...'), 'adidas');
+    await userEvent.click(await screen.findByRole('button', { name: /Camiseta Adidas · Rojo M/ }));
     await waitFor(() => {
       expect(mockService.getProductBuyers).toHaveBeenCalledWith(
         'PRD-1',
@@ -323,8 +322,8 @@ describe('ProductBuyersPage', () => {
       </MemoryRouter>,
     );
 
-    await userEvent.type(screen.getByLabelText('Buscar...'), 'remera');
-    await userEvent.click(await screen.findByRole('option', { name: /Remera Lisa/ }));
+    await userEvent.type(screen.getByPlaceholderText('Buscar...'), 'remera');
+    await userEvent.click(await screen.findByRole('button', { name: /Remera Lisa/ }));
     await waitFor(() => {
       expect(mockService.getProductBuyers).toHaveBeenCalledWith(
         'PRD-2',
