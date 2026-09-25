@@ -274,16 +274,46 @@ describe('CreateTransferModal — creación (F.4/F.5)', () => {
     renderWithProviders(<CreateTransferModal {...baseProps} initialDestinationId={2} />)
 
     await user.type(screen.getByLabelText('Agregar producto'), 'yerba')
-    expect(await screen.findByText('Stock: 12')).toBeInTheDocument()
+    expect(await screen.findByText('Stock: 12 unit')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /Yerba 1kg/ }))
 
     const row = screen.getByTestId('transfer-line-P1')
     expect(row).toHaveTextContent('Yerba 1kg')
     expect(row).toHaveTextContent('YER-01')
-    expect(within(row).getByText('12')).toBeInTheDocument()
+    expect(within(row).getByText('12 unit')).toBeInTheDocument()
     expect(screen.getByTestId('transfer-line-qty-P1')).toHaveValue(1)
     expect(searchSellableUnitsFlat).toHaveBeenCalledWith('yerba')
+  })
+
+  it('accepts decimal quantities for weighable products (kg) — PLAN_UNITS', async () => {
+    const user = userEvent.setup()
+    vi.mocked(searchSellableUnitsFlat).mockResolvedValue([
+      {
+        id: 'PK',
+        name: 'Papas por kg',
+        variant_id: null,
+        variant_name: null,
+        sku: 'PAP-KG',
+        price: 5000,
+        stock: 40,
+        base_unit: 'kg',
+      },
+    ])
+    renderWithProviders(<CreateTransferModal {...baseProps} initialDestinationId={2} />)
+
+    await user.type(screen.getByLabelText('Agregar producto'), 'papas')
+    expect(await screen.findByText('Stock: 40 kg')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Papas por kg/ }))
+
+    const qty = screen.getByTestId('transfer-line-qty-PK')
+    expect(qty).toHaveAttribute('step', '0.01')
+    expect(qty).toHaveAttribute('min', '0.01')
+
+    await user.clear(qty)
+    await user.type(qty, '0.5')
+    expect(screen.getByTestId('transfer-line-qty-PK')).toHaveValue(0.5)
   })
 
   it('stamps preloaded items with their source purchase id (F.6)', async () => {

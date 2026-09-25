@@ -1,12 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  ArrowLeft, 
-  Save, 
-  Plus, 
-  Trash2, 
-  Search, 
-  User, 
-  Package, 
+import {
+  ArrowLeft,
+  Save,
+  Trash2,
+  User,
+  Package,
   Calculator,
   Calendar,
   AlertCircle,
@@ -16,36 +14,61 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/useToast';
 import { budgetService } from '@/services/budgetService';
 import { productService } from '@/services/productService';
-import { clientService } from '@/services/clientService';
-import { Client, CreateBudgetRequest, ProductOperationInfoResponse } from '@/types';
+import { CreateBudgetRequest } from '@/types';
 import { calculateSaleTotals } from '@/domain/sale/calculations/saleCalculator';
 import { resolveApplicableRateFraction } from '@/domain/tax/resolveApplicableRate';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SearchableDropdown, type SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
+import useClientStore from '@/store/useClientStore';
+import { searchSellableUnitsFlat, type SellableUnitOption } from '@/features/catalog/sellableUnitSearch';
+import { useI18n } from '@/lib/i18n';
 import { formatPYG } from '@/utils/currencyUtils';
 import ToastContainer from '@/components/ui/ToastContainer';
+
+/** Cliente normalizado por useClientStore (name/displayName garantizados). */
+interface BudgetClientOption extends SearchableDropdownItem {
+  displayName?: string;
+  document_id?: string;
+}
+
+/** Línea del presupuesto — keyed por producto+variante (pueden convivir). */
+interface BudgetItem {
+  key: string;
+  product_id: string;
+  variant_id?: string | null;
+  name: string;
+  sku?: string | null;
+  quantity: number;
+  unit_price: number;
+  /** Unidad base del producto (viaja en el payload de la línea). */
+  base_unit?: string;
+  /** Fracción IVA (0.10 / 0.05 / 0) resuelta del producto, informativo. */
+  tax_rate: number;
+}
+
+const unitKey = (productId: string, variantId?: string | null) =>
+  `${productId}|${variantId ?? 'base'}`;
 
 const BudgetCreate: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { t } = useI18n();
+  const searchClients = useClientStore((s) => s.searchClients);
 
   // --- Estado del Presupuesto ---
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [items, setItems] = useState<any[]>([]);
+  const [selectedClient, setSelectedClient] = useState<BudgetClientOption | null>(null);
+  const [items, setItems] = useState<BudgetItem[]>([]);
   const [notes, setNotes] = useState('');
   const [validUntil, setValidUntil] = useState(
     new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
 
   // --- Búsqueda de Productos ---
-  const [productSearch, setProductSearch] = useState('');
-  const [foundProducts, setFoundProducts] = useState<ProductOperationInfoResponse[]>([]);
-  const [isSearchingProduct, setIsSearchingProduct] = useState(false);
-
-  // --- Búsqueda de Clientes ---
-  const [clientSearch, setClientSearch] = useState('');
-  const [foundClients, setFoundClients] = useState<Client[]>([]);
-  const [isSearchingClient, setIsSearchingClient] = useState(false);
+  // Búsqueda plana (granularity=variant) — mismo camino que la página de
+  // /ventas: una fila por unidad vendible (variante + fila base), con precio
+  // (variante-primero) y stock propios, y matcheo por SKU/código de variante.
+  // La cadena legacy por-producto queda como fallback solo si el endpoint falla.
 
   // Totales calculados. Convención Paraguay (backend create_budget_order):
   // el precio de línea YA incluye IVA, el total es la suma de líneas sin IVA
@@ -61,67 +84,45 @@ const BudgetCreate: React.FC = () => {
     return { subtotal: result.subtotal, tax: result.tax_amount, total: result.total };
   }, [items]);
 
-  const handleSearchClient = async (term: string) => {
-    setClientSearch(term);
-    if (term.length < 3) {
-      setFoundClients([]);
+  const addItem = async (unit: SellableUnitOption) => {
+    const key = unitKey(unit.id, unit.variant_id);
+    if (items.some(i => i.key === key)) {
+      setItems(items.map(i => (i.key === key ? { ...i, quantity: i.quantity + 1 } : i)));
       return;
     }
-    setIsSearchingClient(true);
+    // La fila plana no viaja con tasa de IVA: se resuelve del producto
+    // (applicable_tax_rate) para el desglose informativo; el backend resuelve
+    // el tax_rate_id por jerarquía al guardar. Sin respuesta → default 10%.
+    let taxRate = resolveApplicableRateFraction(null);
     try {
-      const results = await clientService.searchByName(term);
-      setFoundClients(results || []);
+      const info = await productService.getInfo(unit.id);
+      taxRate = resolveApplicableRateFraction(info);
     } catch (error) {
-      console.error("Error searching client:", error);
-    } finally {
-      setIsSearchingClient(false);
+      console.warn('Could not resolve product tax rate, using default', error);
     }
-  };
-
-  const handleSearchProduct = async (term: string) => {
-    setProductSearch(term);
-    if (term.length < 2) {
-      setFoundProducts([]);
-      return;
-    }
-    setIsSearchingProduct(true);
-    try {
-      const results = await productService.searchInfo(term);
-      setFoundProducts(results || []);
-    } catch (error) {
-      console.error("Error searching product:", error);
-    } finally {
-      setIsSearchingProduct(false);
-    }
-  };
-
-  const addItem = (product: ProductOperationInfoResponse) => {
-    const existing = items.find(i => i.product_id === product.id);
-    if (existing) {
-      setItems(items.map(i => i.product_id === product.id ? { ...i, quantity: i.quantity + 1 } : i));
-    } else {
-      setItems([...items, {
-        product_id: product.id,
-        name: product.name,
+    setItems([
+      ...items,
+      {
+        key,
+        product_id: unit.id,
+        variant_id: unit.variant_id ?? null,
+        name: unit.variant_name ? `${unit.name} · ${unit.variant_name}` : unit.name,
+        sku: unit.sku ?? null,
         quantity: 1,
-        unit_price: product.price || 0,
-        // Tasa real del producto (resuelta por el backend en
-        // applicable_tax_rate) para desglosar el IVA incluido en el precio;
-        // el backend resuelve por jerarquía igual al crear el presupuesto.
-        tax_rate: resolveApplicableRateFraction(product)
-      }]);
-    }
-    setProductSearch('');
-    setFoundProducts([]);
+        unit_price: unit.price,
+        base_unit: unit.base_unit || 'unit',
+        tax_rate: taxRate,
+      },
+    ]);
   };
 
-  const removeItem = (id: string) => {
-    setItems(items.filter(i => i.product_id !== id));
+  const removeItem = (key: string) => {
+    setItems(items.filter(i => i.key !== key));
   };
 
-  const updateQuantity = (id: string, qty: number) => {
+  const updateQuantity = (key: string, qty: number) => {
     if (qty < 1) return;
-    setItems(items.map(i => i.product_id === id ? { ...i, quantity: qty } : i));
+    setItems(items.map(i => (i.key === key ? { ...i, quantity: qty } : i)));
   };
 
   const handleSave = async () => {
@@ -147,8 +148,15 @@ const BudgetCreate: React.FC = () => {
         },
         details: items.map(i => ({
           product_id: i.product_id,
+          // El backend hoy persiste a nivel producto (budget_order_details no
+          // tiene variant_id y el procedure ignora la clave); se envía para
+          // dejar el contrato listo y sin ambigüedad de precio por variante.
+          variant_id: i.variant_id ?? undefined,
           quantity: i.quantity,
-          unit: 'unit',
+          // Unidad real del producto: el procedure crea_budget_order persiste
+          // la unidad por línea y convert_budget_to_sale la propaga a la venta
+          // (mandar 'unit' fijo vendía kg como unidades — PLAN_UNITS_FRONTEND).
+          unit: i.base_unit || 'unit',
           unit_price: i.unit_price,
         })),
       };
@@ -187,58 +195,55 @@ const BudgetCreate: React.FC = () => {
         {/* Columna Izquierda: Datos y Productos */}
         <div className="lg:col-span-8 space-y-8">
           
-          {/* SECCIÓN 1: CLIENTE */}
-          <div className="bg-white rounded-xl border border-border-subtle shadow-fluent-2 overflow-hidden">
-            <div className="bg-[#f3f2f1]/50 border-b border-border-subtle px-6 py-4">
+          {/* SECCIÓN 1: CLIENTE — sin overflow-hidden: el dropdown del
+              buscador es absolute y se recortaría contra la tarjeta. Las
+              esquinas redondeadas del header van vía rounded-t-xl. */}
+          <div className="bg-white rounded-xl border border-border-subtle shadow-fluent-2">
+            <div className="bg-surface-muted border-b border-border-subtle px-6 py-4 rounded-t-xl">
               <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-500">
                 <User size={16} /> Identificación del Cliente
               </h3>
             </div>
             <div className="p-6">
               {!selectedClient ? (
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <Input 
-                    placeholder="Escribe el nombre o RUC del cliente para buscar..." 
-                    className="pl-10 h-12 text-sm bg-slate-50 border-border-subtle focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-                    value={clientSearch}
-                    onChange={(e) => handleSearchClient(e.target.value)}
-                  />
-                  {isSearchingClient && (
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 size-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                  )}
-                  {foundClients.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-border-subtle rounded-xl shadow-fluent-16 z-50 max-h-60 overflow-y-auto">
-                      {foundClients.map(c => (
-                        <div 
-                          key={c.id} 
-                          className="p-4 hover:bg-slate-50 cursor-pointer flex justify-between items-center border-b border-border-subtle last:border-0 transition-colors"
-                          onClick={() => {
-                            setSelectedClient(c);
-                            setFoundClients([]);
-                            setClientSearch('');
-                          }}
-                        >
-                          <div>
-                            <p className="font-bold text-sm text-text-main">{c.name} {c.last_name}</p>
-                            <p className="text-[11px] text-text-secondary font-semibold uppercase tracking-wider mt-0.5">{c.document_id || 'Sin documento'}</p>
-                          </div>
-                          <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                            <Plus size={16} />
-                          </div>
-                        </div>
-                      ))}
+                <SearchableDropdown<BudgetClientOption>
+                  onSelect={setSelectedClient}
+                  onSearch={async (term) => {
+                    // El store normaliza los clientes crudos del backend
+                    // (name/displayName garantizados, ítems sin id
+                    // descartados) — mismo camino que ClientStep/OrderBuilder.
+                    const clients = await searchClients(term);
+                    return clients.map((c: any) => ({
+                      ...c,
+                      id: String(c.id),
+                      name: String(c.displayName || c.name),
+                    }));
+                  }}
+                  placeholder={t('budgets.client.searchPlaceholder', 'Escribe el nombre o RUC del cliente para buscar...')}
+                  renderItem={(c) => (
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="size-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                        <User size={14} className="text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-text-main truncate">{c.displayName || c.name}</p>
+                        {c.document_id && (
+                          <p className="text-[11px] text-text-secondary font-semibold uppercase tracking-wider mt-0.5">{c.document_id}</p>
+                        )}
+                      </div>
                     </div>
                   )}
-                </div>
+                  emptyMessage={t('budgets.client.empty', 'No se encontraron clientes')}
+                  className="w-full"
+                />
               ) : (
-                <div className="flex items-center justify-between bg-[#f3f2f1] border border-border-subtle p-5 rounded-xl">
+                <div className="flex items-center justify-between bg-surface-muted border border-border-subtle p-5 rounded-xl">
                   <div className="flex items-center gap-5">
                     <div className="size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20">
-                      {selectedClient.name[0]}
+                      {(selectedClient.displayName || selectedClient.name || '?').charAt(0)}
                     </div>
                     <div>
-                      <p className="font-bold text-base text-text-main leading-none">{selectedClient.name} {selectedClient.last_name}</p>
+                      <p className="font-bold text-base text-text-main leading-none">{selectedClient.displayName || selectedClient.name}</p>
                       <p className="text-[11px] font-bold text-slate-500 mt-1.5 uppercase tracking-wider">{selectedClient.document_id || 'RUC: NO APLICA'}</p>
                     </div>
                   </div>
@@ -256,31 +261,32 @@ const BudgetCreate: React.FC = () => {
               <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-500">
                 <Package size={16} /> Detalle de la Oferta
               </h3>
-              <div className="relative w-full sm:w-72">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                <Input 
-                  placeholder="Buscar producto por nombre..." 
-                  className="pl-9 h-9 text-xs bg-white border-border-base focus:ring-2 focus:ring-primary/20 font-medium"
-                  value={productSearch}
-                  onChange={(e) => handleSearchProduct(e.target.value)}
-                />
-                {isSearchingProduct && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                )}
-                {foundProducts.length > 0 && (
-                   <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-border-subtle rounded-xl shadow-fluent-16 z-50 max-h-60 overflow-y-auto">
-                    {foundProducts.map(p => (
-                      <div 
-                        key={p.id} 
-                        className="p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center text-xs border-b border-border-subtle last:border-0 transition-colors"
-                        onClick={() => addItem(p)}
-                      >
-                        <span className="font-bold text-text-main">{p.name}</span>
-                        <span className="font-mono font-black text-primary">{formatPYG(p.price || 0)}</span>
+              <div className="w-full sm:w-72">
+                <SearchableDropdown<SellableUnitOption>
+                  onSelect={addItem}
+                  onSearch={searchSellableUnitsFlat}
+                  placeholder={t('products.search.sellable_placeholder', 'Buscar producto por nombre, SKU o variante...')}
+                  renderItem={(u) => (
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-text-main truncate">
+                          {u.variant_name ? `${u.name} · ${u.variant_name}` : u.name}
+                        </p>
+                        <p className="text-[11px] text-text-secondary font-mono mt-0.5 flex items-center gap-2">
+                          {u.sku && <span>SKU: {u.sku}</span>}
+                          <span className={u.stock > 0 ? 'text-success' : 'text-error'}>
+                            {t('products.search.stock_label', 'Stock: {stock} {unit}', { stock: u.stock, unit: u.base_unit || 'unit' })}
+                          </span>
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <span className="font-mono font-black text-primary text-xs shrink-0">
+                        {formatPYG(u.price)}
+                      </span>
+                    </div>
+                  )}
+                  emptyMessage={t('products.search.no_results', 'No se encontraron productos')}
+                  className="w-full"
+                />
               </div>
             </div>
             
@@ -307,15 +313,15 @@ const BudgetCreate: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-xs">
                       {items.map(item => (
-                        <tr key={item.product_id} className="group hover:bg-slate-50/50 transition-colors">
+                        <tr key={item.key} className="group hover:bg-slate-50/50 transition-colors">
                           <td className="py-4 px-6 text-center">
-                            <button onClick={() => removeItem(item.product_id)} className="text-slate-300 hover:text-error transition-colors">
+                            <button onClick={() => removeItem(item.key)} className="text-slate-300 hover:text-error transition-colors">
                               <Trash2 size={16} />
                             </button>
                           </td>
                           <td className="py-4 px-4">
                             <p className="font-bold text-sm text-text-main">{item.name}</p>
-                            <p className="text-[10px] text-text-secondary font-mono mt-0.5">ID: {item.product_id}</p>
+                            <p className="text-[10px] text-text-secondary font-mono mt-0.5">{item.sku ? `SKU: ${item.sku}` : `ID: ${item.product_id}`}</p>
                           </td>
                           <td className="py-4 px-4">
                             <div className="flex items-center justify-center">
@@ -324,7 +330,7 @@ const BudgetCreate: React.FC = () => {
                                 min="1"
                                 className="w-20 h-9 text-center font-mono font-bold text-sm bg-[#f3f2f1] border border-border-subtle rounded focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                                 value={item.quantity}
-                                onChange={(e) => updateQuantity(item.product_id, parseInt(e.target.value))}
+                                onChange={(e) => updateQuantity(item.key, parseInt(e.target.value))}
                               />
                             </div>
                           </td>

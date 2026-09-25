@@ -1822,6 +1822,10 @@ export interface CreateBudgetRequest {
   };
   details: Array<{
     product_id: string;
+    // Variante elegida (búsqueda plana). El backend hoy persiste a nivel
+    // producto (budget_order_details sin variant_id) y la ignora; viaja para
+    // dejar el contrato listo y sin ambigüedad de precio por variante.
+    variant_id?: string | null;
     quantity: number;
     unit?: string | null;
     unit_price?: number;
@@ -1873,6 +1877,10 @@ export interface CreatePurchaseRequisitionRequest {
   notes?: string;
   details: Array<{
     product_id: string;
+    // Variante elegida (búsqueda plana). El backend hoy persiste a nivel
+    // producto (purchase_requisition_details sin variant_id) y la ignora;
+    // viaja para dejar el contrato listo.
+    variant_id?: string | null;
     quantity: number;
     unit?: string;
     priority?: string;

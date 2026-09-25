@@ -312,6 +312,9 @@ const SalesNew: React.FC = () => {
   const [selectedModalProduct, setSelectedModalProduct] = useState<Record<string, unknown> | null>(null);
   const [modalQuantity, setModalQuantity] = useState<number | string>(1);
   const [modalUnit, setModalUnit] = useState<string>('unit');
+  // Precios registrados del producto del modal por unidad (unit_prices):
+  // alimenta el recálculo al cambiar unidad y el hint de unidad sin precio.
+  const [modalUnitPrices, setModalUnitPrices] = useState<Array<{ unit: string; price: number }>>([]);
   const [modalPrice, setModalPrice] = useState(0);
   const [modalDiscount, setModalDiscount] = useState(0);
   const [modalDiscountType, setModalDiscountType] = useState<'amount' | 'percent'>('amount');
@@ -1002,6 +1005,43 @@ const SalesNew: React.FC = () => {
     });
   };
 
+  // PLAN_UNITS_FRONTEND: precios por unidad del producto del modal, para
+  // recalcular el precio al cambiar la unidad de venta. Falla silenciosa:
+  // sin precios extra el flujo legacy se mantiene (hint de unidad sin precio).
+  useEffect(() => {
+    if (!isModalOpen || !selectedModalProduct?.id) {
+      setModalUnitPrices([]);
+      return;
+    }
+    let cancelled = false;
+    productService
+      .getProductUnitPrices(String(selectedModalProduct.id))
+      .then((rows) => {
+        if (cancelled) return;
+        // A nivel producto primero; si solo hay precios de variantes, se
+        // usan como referencia de la unidad.
+        const productLevel = rows.filter((r) => !r.variant_id);
+        const source = productLevel.length > 0 ? productLevel : rows;
+        setModalUnitPrices(source.map(({ unit, price }) => ({ unit, price })));
+      })
+      .catch(() => setModalUnitPrices([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [isModalOpen, selectedModalProduct?.id]);
+
+  const handleModalUnitChange = (unit: string) => {
+    setModalUnit(unit);
+    // Si la unidad tiene precio registrado, el precio base y final pasan a
+    // esa unidad (antes cambiar la unidad solo cambiaba la etiqueta y se
+    // vendía "2 box" al precio por kg — PLAN_UNITS_FRONTEND).
+    const unitPrice = modalUnitPrices.find((p) => p.unit === unit);
+    if (unitPrice) {
+      setModalPrice(unitPrice.price);
+      setModalDiscount(0);
+    }
+  };
+
   const handleOpenEditModal = (item: CartItem) => {
     setEditingItemId(item.id);
     setSelectedModalProduct({
@@ -1392,7 +1432,9 @@ const SalesNew: React.FC = () => {
 
         // Validar unit: no enviar "service" (no existe en DB), usar "hour" para reservas o el valor real
         const validUnit = item.unit && item.unit !== 'service' ? item.unit : 'hour';
-        detail.unit = validUnit;
+        // Los CHECKs SQL y los factores de conversión matchean exacto: 'KG'
+        // rompería el INSERT aunque visualmente parezca correcto.
+        detail.unit = String(validUnit).toLowerCase();
 
         // Incluir reserve_id cuando existe (sin condicionar por unit)
         if (item.reserve_id) {
@@ -1935,8 +1977,10 @@ const SalesNew: React.FC = () => {
       <main className="w-full">
         {activeTab === 'new-sale' && (
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-4 items-start">
-            {/* Productos Seleccionados (carrito) */}
-            <Card className="bg-surface rounded-md shadow-whisper border-0 p-lg min-w-0">
+            {/* Productos Seleccionados (carrito) — self-stretch: por defecto
+                iguala la altura del Resumen de Venta (la fila más alta);
+                cuando el carrito supera al resumen, manda el carrito. */}
+            <Card className="bg-surface rounded-md shadow-whisper border-0 p-lg min-w-0 self-stretch">
               <CardHeader className="p-0 pb-md">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <CardTitle className="text-title-md text-foreground flex items-center gap-2">
@@ -2073,7 +2117,8 @@ const SalesNew: React.FC = () => {
           quantity={modalQuantity}
           onQuantityChange={setModalQuantity}
           unit={modalUnit}
-          onUnitChange={setModalUnit}
+          onUnitChange={handleModalUnitChange}
+          unitPrices={modalUnitPrices}
           price={modalPrice}
           onPriceChange={(v) => {
             setModalPrice(v);

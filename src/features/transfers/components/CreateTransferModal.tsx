@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeftRight, ArrowRight, Loader2, Trash2 } from 'lucide-react'
 
+import { isDecimalUnit } from '@/constants/units'
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
 import { useAuth } from '@/contexts/AuthContext'
@@ -47,6 +48,8 @@ interface TransferLine {
   /** Detalle para la tabla de ítems (desde la búsqueda plana; precargados no lo traen). */
   sku?: string
   stock?: number
+  /** Unidad base del producto: habilita decimales (kg) en la cantidad. */
+  base_unit?: string
   unit_cost?: number
   /** F.6: compra de la que proviene la línea (solo ítems precargados). */
   purchase_order_id?: number
@@ -121,6 +124,7 @@ const CreateTransferModal = ({
       quantity: 1,
       sku: unit.sku,
       stock: unit.stock,
+      base_unit: unit.base_unit || 'unit',
     }
     setLines((prev) =>
       prev.some((existing) => lineKey(existing) === lineKey(line)) ? prev : [...prev, line],
@@ -128,8 +132,13 @@ const CreateTransferModal = ({
   }
 
   const updateQuantity = (key: string, quantity: number) => {
+    // Productos pesables (kg/l...) se transfieren con decimales; el parseInt
+    // + min=1 viejo hacía imposible mover 0,5 kg (PLAN_UNITS_FRONTEND). Sin
+    // clamp por tecla (arruinaría tipear "0.5"); el submit normaliza.
     setLines((prev) =>
-      prev.map((line) => (lineKey(line) === key ? { ...line, quantity: Math.max(1, quantity) } : line)),
+      prev.map((line) =>
+        lineKey(line) === key ? { ...line, quantity: Number.isFinite(quantity) ? quantity : 0 } : line,
+      ),
     )
   }
 
@@ -153,7 +162,10 @@ const CreateTransferModal = ({
       notes: notes.trim() || undefined,
       items: lines.map((line) => ({
         product_id: line.product_id,
-        quantity_requested: line.quantity,
+        // Normalización al enviar: pesables ≥ 0.01 con su valor, enteros ≥ 1.
+        quantity_requested: isDecimalUnit(line.base_unit || 'unit')
+          ? Math.max(0.01, line.quantity)
+          : Math.max(1, Math.round(line.quantity)),
         ...(line.variant_id ? { variant_id: line.variant_id } : {}),
         ...(line.unit_cost != null ? { unit_cost: line.unit_cost } : {}),
         ...(line.purchase_order_id != null ? { purchase_order_id: line.purchase_order_id } : {}),
@@ -237,7 +249,7 @@ const CreateTransferModal = ({
                     <p className="mt-0.5 flex items-center gap-sm text-body-sm text-on-surface-deep">
                       {unit.sku && <span className="font-mono">SKU: {unit.sku}</span>}
                       <span className={unit.stock > 0 ? 'font-bold text-success' : 'font-bold text-error'}>
-                        {t('transfers.stockLabel', 'Stock: {stock}', { stock: String(unit.stock) })}
+                        {t('transfers.stockLabel', 'Stock: {stock} {unit}', { stock: String(unit.stock), unit: unit.base_unit || 'unit' })}
                       </span>
                     </p>
                   </div>
@@ -291,7 +303,9 @@ const CreateTransferModal = ({
                           </TableCell>
                           <TableCell className="text-data-mono font-data-mono text-right">
                             {line.stock !== undefined ? (
-                              <span className={line.stock > 0 ? 'text-success' : 'text-error'}>{line.stock}</span>
+                              <span className={line.stock > 0 ? 'text-success' : 'text-error'}>
+                                {line.stock} {line.base_unit || 'unit'}
+                              </span>
                             ) : (
                               '—'
                             )}
@@ -300,10 +314,11 @@ const CreateTransferModal = ({
                             <div className="ml-auto w-20">
                               <Input
                                 type="number"
-                                min={1}
+                                min={isDecimalUnit(line.base_unit || 'unit') ? 0.01 : 1}
+                                step={isDecimalUnit(line.base_unit || 'unit') ? 0.01 : 1}
                                 data-testid={`transfer-line-qty-${line.product_id}`}
                                 value={line.quantity}
-                                onChange={(e) => updateQuantity(key, parseInt(e.target.value, 10) || 1)}
+                                onChange={(e) => updateQuantity(key, Number(e.target.value))}
                                 aria-label={t('transfers.quantity', 'Cantidad de {name}', { name: line.product_name })}
                                 className="h-9"
                               />

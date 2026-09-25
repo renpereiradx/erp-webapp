@@ -1,26 +1,29 @@
+/**
+ * Nueva Requisición (/logistica/requisiciones/nueva).
+ *
+ * Proveedor y productos usan el SearchableDropdown compartido: el proveedor
+ * viene normalizado del store de directorio (name/taxId garantizados) y los
+ * productos usan la búsqueda plana por unidad vendible (granularity=variant,
+ * helper compartido con presupuestos) — precio/stock propios por variante.
+ */
 import React, { useState } from 'react';
-import { 
-  ArrowLeft, 
-  Save, 
-  Trash2, 
-  Search, 
-  Package, 
+import {
+  ArrowLeft,
+  Save,
+  Trash2,
+  Package,
   Truck,
   X,
-  PlusCircle,
   Tags
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/useToast';
 import { useBranch } from '@/contexts/BranchContext';
 import { purchaseRequisitionService } from '@/services/purchaseRequisitionService';
-import { productService } from '@/services/productService';
 import { isDecimalUnit } from '@/constants/units';
-import supplierService from '@/services/supplierService';
-import { Product, CreatePurchaseRequisitionRequest, ProductEnriched } from '@/types';
+import { CreatePurchaseRequisitionRequest } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -29,69 +32,75 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableDropdown, type SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
+import useSupplierDirectoryStore from '@/store/useSupplierDirectoryStore';
+import { searchSellableUnitsFlat, type SellableUnitOption } from '@/features/catalog/sellableUnitSearch';
+import { useI18n } from '@/lib/i18n';
 import ToastContainer from '@/components/ui/ToastContainer';
+
+/** Proveedor normalizado por useSupplierDirectoryStore. */
+interface RequisitionSupplierOption extends SearchableDropdownItem {
+  displayName?: string;
+  tax_id?: string;
+}
+
+/** Línea de la requisición — keyed por producto+variante (pueden convivir). */
+interface RequisitionItem {
+  key: string;
+  product_id: string;
+  variant_id?: string | null;
+  name: string;
+  sku?: string | null;
+  base_unit: string;
+  quantity: number;
+  priority: string;
+  notes: string;
+}
+
+const unitKey = (productId: string, variantId?: string | null) =>
+  `${productId}|${variantId ?? 'base'}`;
 
 const PurchaseRequisitionCreate: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { t } = useI18n();
   const { currentBranchId } = useBranch();
+  const searchSuppliers = useSupplierDirectoryStore((s) => s.searchSuppliers);
 
   // --- Estado de la Requisición ---
-  const [selectedSupplier, setSelectedSupplier] = useState<any | null>(null);
-  const [items, setItems] = useState<any[]>([]);
+  const [selectedSupplier, setSelectedSupplier] = useState<RequisitionSupplierOption | null>(null);
+  const [items, setItems] = useState<RequisitionItem[]>([]);
   const [notes, setNotes] = useState('');
 
-  // --- Búsqueda de Productos ---
-  const [productSearch, setProductSearch] = useState('');
-  const [foundProducts, setFoundProducts] = useState<ProductEnriched[]>([]);
-  
-  // --- Búsqueda de Proveedores ---
-  const [supplierSearch, setSupplierSearch] = useState('');
-  const [foundSuppliers, setFoundSuppliers] = useState<any[]>([]);
-
-  const handleSearchSupplier = async (term: string) => {
-    setSupplierSearch(term);
-    if (term.length < 3) return;
-    try {
-      const results = await supplierService.searchByName(term);
-      setFoundSuppliers(results || []);
-    } catch (err) {}
-  };
-
-  const handleSearchProduct = async (term: string) => {
-    setProductSearch(term);
-    if (term.length < 2) return;
-    try {
-      const results = await productService.search(term);
-      setFoundProducts(results || []);
-    } catch (err) {}
-  };
-
-  const addItem = (product: Product) => {
-    const existing = items.find(i => i.product_id === product.id);
-    if (existing) {
-      setItems(items.map(i => i.product_id === product.id ? { ...i, quantity: i.quantity + 1 } : i));
-    } else {
-      const allowDecimal = isDecimalUnit(product.base_unit || 'unit');
-      setItems([...items, {
-        product_id: product.id,
-        name: product.name,
-        base_unit: product.base_unit || 'unit',
+  const addItem = (unit: SellableUnitOption) => {
+    const key = unitKey(unit.id, unit.variant_id);
+    if (items.some(i => i.key === key)) {
+      setItems(items.map(i => (i.key === key ? { ...i, quantity: i.quantity + 1 } : i)));
+      return;
+    }
+    const allowDecimal = isDecimalUnit(unit.base_unit || 'unit');
+    setItems([
+      ...items,
+      {
+        key,
+        product_id: unit.id,
+        variant_id: unit.variant_id ?? null,
+        name: unit.variant_name ? `${unit.name} · ${unit.variant_name}` : unit.name,
+        sku: unit.sku ?? null,
+        base_unit: unit.base_unit || 'unit',
         quantity: allowDecimal ? 0.01 : 1,
         priority: 'MEDIUM',
-        notes: ''
-      }]);
-    }
-    setProductSearch('');
-    setFoundProducts([]);
+        notes: '',
+      },
+    ]);
   };
 
-  const removeItem = (id: string) => {
-    setItems(items.filter(i => i.product_id !== id));
+  const removeItem = (key: string) => {
+    setItems(items.filter(i => i.key !== key));
   };
 
-  const updateItem = (id: string, field: string, value: any) => {
-    setItems(items.map(i => i.product_id === id ? { ...i, [field]: value } : i));
+  const updateItem = (key: string, field: string, value: any) => {
+    setItems(items.map(i => (i.key === key ? { ...i, [field]: value } : i)));
   };
 
   const handleSave = async () => {
@@ -107,7 +116,13 @@ const PurchaseRequisitionCreate: React.FC = () => {
         notes,
         details: items.map(i => ({
           product_id: i.product_id,
+          // El backend hoy persiste a nivel producto (la tabla de detalles no
+          // tiene variant_id y lo ignora); se envía para dejar el contrato listo.
+          variant_id: i.variant_id ?? undefined,
           quantity: i.quantity,
+          // El backend persiste la unidad (purchase_requisition_details.unit);
+          // sin ella la requisición de un producto por kg llegaba en "unidad".
+          unit: i.base_unit || 'unit',
           priority: i.priority,
           notes: i.notes
         }))
@@ -155,38 +170,32 @@ const PurchaseRequisitionCreate: React.FC = () => {
             </CardHeader>
             <CardContent className="p-6">
               {!selectedSupplier ? (
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <Input 
-                    placeholder="Buscar proveedor..." 
-                    className="pl-10 h-11 bg-slate-50 border-slate-200"
-                    value={supplierSearch}
-                    onChange={(e) => handleSearchSupplier(e.target.value)}
-                  />
-                  {foundSuppliers.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border-subtle rounded-xl shadow-fluent-16 z-50">
-                      {foundSuppliers.map(s => (
-                        <div 
-                          key={s.id} 
-                          className="p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center border-b last:border-0"
-                          onClick={() => {
-                            setSelectedSupplier(s);
-                            setFoundSuppliers([]);
-                            setSupplierSearch('');
-                          }}
-                        >
-                          <span className="font-bold text-sm">{s.name}</span>
-                          <PlusCircle size={16} className="text-primary" />
-                        </div>
-                      ))}
+                <SearchableDropdown<RequisitionSupplierOption>
+                  onSelect={setSelectedSupplier}
+                  onSearch={async (term) => {
+                    // El store normaliza (name garantizado aunque el backend
+                    // devuelva first_name) y matchea por ID numérico.
+                    return (await searchSuppliers(term)) as RequisitionSupplierOption[];
+                  }}
+                  placeholder={t('suppliers.search.placeholder', 'Buscar proveedor...')}
+                  renderItem={(s) => (
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm truncate">{s.displayName || s.name}</p>
+                        {s.tax_id && (
+                          <p className="text-[11px] text-text-secondary font-semibold uppercase tracking-wider mt-0.5">{s.tax_id}</p>
+                        )}
+                      </div>
                     </div>
                   )}
-                </div>
+                  emptyMessage={t('supplier.search.no_results', 'No se encontraron proveedores con ese criterio')}
+                  className="w-full"
+                />
               ) : (
                 <div className="flex items-center justify-between bg-slate-100 p-3 rounded-xl border">
                   <div className="flex items-center gap-3">
                     <Truck className="text-primary" size={20} />
-                    <span className="font-bold text-sm">{selectedSupplier.name}</span>
+                    <span className="font-bold text-sm">{selectedSupplier.displayName || selectedSupplier.name}</span>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => setSelectedSupplier(null)} className="h-8 w-8">
                     <X size={16} />
@@ -202,28 +211,34 @@ const PurchaseRequisitionCreate: React.FC = () => {
               <CardTitle className="text-sm font-black uppercase tracking-wider flex items-center gap-2 text-slate-500">
                 <Package size={16} /> Ítems Solicitados
               </CardTitle>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                <Input 
-                  placeholder="Añadir producto..." 
-                  className="pl-8 h-9 text-xs"
-                  value={productSearch}
-                  onChange={(e) => handleSearchProduct(e.target.value)}
-                />
-                {foundProducts.length > 0 && (
-                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border-subtle rounded-lg shadow-fluent-16 z-50 max-h-60 overflow-y-auto">
-                    {foundProducts.map(p => (
-                      <div 
-                        key={p.id} 
-                        className="p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center text-xs border-b last:border-0"
-                        onClick={() => addItem(p)}
-                      >
-                        <span className="font-bold">{p.name}</span>
-                        <Badge variant="outline" className="text-[9px]">{p.category_name}</Badge>
+              <div className="w-64">
+                <SearchableDropdown<SellableUnitOption>
+                  onSelect={addItem}
+                  onSearch={searchSellableUnitsFlat}
+                  placeholder={t('products.search.sellable_placeholder', 'Buscar producto por nombre, SKU o variante...')}
+                  renderItem={(u) => (
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm truncate">
+                          {u.variant_name ? `${u.name} · ${u.variant_name}` : u.name}
+                        </p>
+                        <p className="text-[11px] text-text-secondary font-mono mt-0.5 flex items-center gap-2">
+                          {u.sku && <span>SKU: {u.sku}</span>}
+                          <span className={u.stock > 0 ? 'text-success' : 'text-error'}>
+                            {t('products.search.stock_label', 'Stock: {stock} {unit}', { stock: u.stock, unit: u.base_unit || 'unit' })}
+                          </span>
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <span className="font-mono font-black text-primary text-xs shrink-0">
+                        {u.price > 0
+                          ? u.price.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 })
+                          : null}
+                      </span>
+                    </div>
+                  )}
+                  emptyMessage={t('products.search.no_results', 'No se encontraron productos')}
+                  className="w-full"
+                />
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -246,29 +261,29 @@ const PurchaseRequisitionCreate: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {items.map(item => (
-                        <tr key={item.product_id} className="group hover:bg-slate-50/50 transition-colors">
+                        <tr key={item.key} className="group hover:bg-slate-50/50 transition-colors">
                           <td className="py-4 px-6">
                             <p className="font-bold text-sm">{item.name}</p>
-                            <p className="text-[10px] text-slate-400 font-mono">{item.product_id}</p>
+                            <p className="text-[10px] text-slate-400 font-mono">{item.sku ? `SKU: ${item.sku}` : item.product_id}</p>
                           </td>
                           <td className="py-4 px-4">
-                            <Input 
-                              type="number" 
+                            <Input
+                              type="number"
                               className="w-20 mx-auto text-center font-bold h-9 border-none bg-slate-100 rounded-lg"
                               step={isDecimalUnit(item.base_unit || 'unit') ? "0.01" : "1"}
                               value={item.quantity}
-                              onChange={(e) => updateItem(item.product_id, 'quantity', e.target.value)}
+                              onChange={(e) => updateItem(item.key, 'quantity', e.target.value)}
                               onBlur={(e) => {
                                 let val = parseFloat(e.target.value) || 0;
                                 if (!isDecimalUnit(item.base_unit || 'unit')) val = Math.floor(val);
-                                updateItem(item.product_id, 'quantity', val);
+                                updateItem(item.key, 'quantity', val);
                               }}
                             />
                           </td>
                           <td className="py-4 px-4">
-                            <Select 
-                              value={item.priority} 
-                              onValueChange={(val) => updateItem(item.product_id, 'priority', val)}
+                            <Select
+                              value={item.priority}
+                              onValueChange={(val) => updateItem(item.key, 'priority', val)}
                             >
                               <SelectTrigger className="w-32 h-9 text-[10px] font-bold uppercase border-none bg-slate-100">
                                 <SelectValue />
@@ -281,15 +296,15 @@ const PurchaseRequisitionCreate: React.FC = () => {
                             </Select>
                           </td>
                           <td className="py-4 px-4">
-                             <Input 
-                                placeholder="Nota interna..." 
+                             <Input
+                                placeholder="Nota interna..."
                                 className="h-9 text-xs bg-transparent border-dashed border-slate-200"
                                 value={item.notes}
-                                onChange={(e) => updateItem(item.product_id, 'notes', e.target.value)}
+                                onChange={(e) => updateItem(item.key, 'notes', e.target.value)}
                              />
                           </td>
                           <td className="py-4 px-6 text-right">
-                            <button onClick={() => removeItem(item.product_id)} className="text-slate-300 hover:text-red-500">
+                            <button onClick={() => removeItem(item.key)} className="text-slate-300 hover:text-red-500">
                               <Trash2 size={16} />
                             </button>
                           </td>

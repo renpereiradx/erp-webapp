@@ -19,6 +19,10 @@ export const products = {
   'products.search.db': 'Search in Database',
   'products.search.placeholder': 'Search by name or ID...',
   'products.search.placeholder_id': 'Search by product ID...',
+  // Flat sellable-unit search (budgets/requisitions pickers)
+  'products.search.sellable_placeholder': 'Search product by name, SKU or variant...',
+  'products.search.stock_label': 'Stock: {stock} {unit}',
+  'products.search.no_results': 'No products found',
   'products.search.help1': 'You can search by name (e.g. "Puma") or by full ID (e.g. "bcYdWdKNR")',
   'products.search.help2': 'Auto-search: minimum {minChars} characters. Shortcut: "/" to focus.',
   'products.search.by_name_sku': 'Search products by name or SKU (F2)...',

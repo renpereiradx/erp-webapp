@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+import UnitSelect from '@/components/UnitSelect'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -627,24 +628,14 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   <Label htmlFor='purchase-modal-unit' className={labelClass}>
                     {t('purchases.product_modal.unit_label', 'Unidad')}
                   </Label>
-                  <Input
+                  <UnitSelect
                     id='purchase-modal-unit'
-                    type='text'
-                    list='allowed-units'
-                    className='bg-surface-muted text-body-md-bold'
                     value={modalUnit}
-                    onChange={e => setModalUnit(e.target.value)}
-                    placeholder={t('purchases.product_modal.unit_placeholder', 'Ej. kg, box, unit')}
+                    onChange={setModalUnit}
+                    ariaLabel={t('purchases.product_modal.unit_label', 'Unidad')}
+                    className='bg-surface-muted text-body-md-bold'
+                    extraUnits={[modalUnit]}
                   />
-                  <datalist id='allowed-units'>
-                    <option value='unit' />
-                    <option value='kg' />
-                    <option value='g' />
-                    <option value='l' />
-                    <option value='box' />
-                    <option value='pack' />
-                    <option value='dozen' />
-                  </datalist>
                   <p className='text-body-sm text-outline-fg'>
                     {t('purchases.product_modal.unit_hint', 'Medida de compra')}
                   </p>

@@ -33,7 +33,7 @@ export const transfers = {
   'transfers.pickDestination': 'Seleccionar destino...',
   'transfers.addProduct': 'Agregar producto',
   'transfers.productSearchPlaceholder': 'Buscar producto por nombre, SKU o variante...',
-  'transfers.stockLabel': 'Stock: {stock}',
+  'transfers.stockLabel': 'Stock: {stock} {unit}',
   'transfers.noResults': 'Sin resultados',
   'transfers.col.product': 'Producto',
   'transfers.col.sku': 'SKU',

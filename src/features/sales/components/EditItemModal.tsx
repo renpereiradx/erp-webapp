@@ -8,11 +8,12 @@
  * borrador y se calcula el resumen de línea para previsualizar el impacto.
  */
 import React, { useEffect, useMemo, useRef } from 'react';
-import { DollarSign, Lock, Percent } from 'lucide-react';
+import { AlertTriangle, DollarSign, Lock, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import EnhancedModal from '@/components/ui/EnhancedModal';
+import UnitSelect from '@/components/UnitSelect';
 import { formatCurrency } from '@/utils/currencyUtils';
 import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput';
 import { isDecimalUnit } from '@/constants/units';
@@ -29,6 +30,11 @@ interface EditItemModalProps {
   /** Precio base unitario (originalPrice) del producto. */
   baseUnitPrice: number;
   baseUnit: string;
+  /**
+   * Precios registrados del producto por unidad (products.unit_prices).
+   * Se usan para avisar cuando la unidad elegida no tiene precio propio.
+   */
+  unitPrices?: Array<{ unit: string; price: number }>;
   quantity: number | string;
   onQuantityChange: (v: number | string) => void;
   unit: string;
@@ -62,6 +68,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   productName,
   baseUnitPrice,
   baseUnit,
+  unitPrices,
   quantity,
   onQuantityChange,
   unit,
@@ -106,6 +113,14 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   const allowDecimal = isDecimalUnit(unit || baseUnit);
   const parsedQuantity = Math.max(0, Number(quantity ?? 1));
   const parsedDiscount = Number(discount) || 0;
+
+  // Unidad de venta distinta de la base y sin precio registrado: el precio
+  // mostrado NO corresponde a esa unidad (antes se vendía "2 box" al precio
+  // por kg sin ningún aviso — PLAN_UNITS_FRONTEND).
+  const unitLacksPrice =
+    !!unit &&
+    unit !== baseUnit &&
+    !(unitPrices || []).some((p) => p.unit === unit);
 
   const grossSubtotal = baseUnitPrice * parsedQuantity;
   const discountValue = useMemo(() => {
@@ -192,24 +207,26 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             <label htmlFor="edit-item-unit" className="text-body-md-bold text-foreground">
               {t('sales.editItem.unit', 'Unidad de Medida')}
             </label>
-            <Input
+            <UnitSelect
               id="edit-item-unit"
-              type="text"
-              list="sales-allowed-units"
               value={unit}
-              onChange={(e) => onUnitChange(e.target.value)}
-              className="h-10 text-body-md text-foreground"
+              onChange={onUnitChange}
+              ariaLabel={t('sales.editItem.unit', 'Unidad de Medida')}
+              className="h-10 text-body-md"
+              extraUnits={[baseUnit, unit]}
             />
-            <datalist id="sales-allowed-units">
-              <option value="unit" />
-              <option value="kg" />
-              <option value="g" />
-              <option value="l" />
-              <option value="box" />
-              <option value="pack" />
-              <option value="dozen" />
-              <option value="hour" />
-            </datalist>
+            {unitLacksPrice && (
+              <p
+                data-testid="unit-no-price-hint"
+                className="flex items-start gap-1.5 text-body-sm text-warning"
+              >
+                <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden />
+                {t(
+                  'sales.editItem.unitNoPrice',
+                  'Esta unidad no tiene precio registrado: el precio mostrado corresponde a otra unidad. Verifícalo antes de confirmar.'
+                )}
+              </p>
+            )}
           </div>
 
           <div className="space-y-xs">

@@ -4,6 +4,7 @@
  */
 
 import { common } from './common'
+import { unitConversions } from './unitConversions'
 import { products } from './products'
 import { categories } from './categories'
 import { brands } from './brands'
@@ -15,6 +16,7 @@ import { stockMovements } from './stockMovements'
 import { purchasePaymentsMvp } from './purchasePaymentsMvp'
 import { clients } from './clients'
 import { suppliers } from './suppliers'
+import { budgets } from './budgets'
 import { party } from './party'
 import { sales } from './sales'
 import { inventory } from './inventory'
@@ -56,6 +58,7 @@ export const es = {
   ...purchasePaymentsMvp,
   ...clients,
   ...suppliers,
+  ...budgets,
   ...party,
   ...sales,
   ...inventory,
@@ -79,4 +82,5 @@ export const es = {
   ...catalog,
   ...counterorders,
   ...other,
+  ...unitConversions,
 }

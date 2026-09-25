@@ -4,6 +4,7 @@
  */
 
 import { common } from './common'
+import { unitConversions } from './unitConversions'
 import { products } from './products'
 import { categories } from './categories'
 import { brands } from './brands'
@@ -15,6 +16,7 @@ import { dashboard } from './dashboard'
 import { receivables } from './receivables'
 import { purchasePaymentsMvp } from './purchasePaymentsMvp'
 import { party } from './party'
+import { budgets } from './budgets'
 import { fiscal } from './fiscal'
 import { businessPrefs } from './businessPrefs'
 import { licensing } from './licensing'
@@ -45,6 +47,7 @@ export const en = {
   ...receivables,
   ...purchasePaymentsMvp,
   ...party,
+  ...budgets,
   ...fiscal,
   ...businessPrefs,
   ...licensing,
@@ -60,4 +63,5 @@ export const en = {
   // - booking
   // - priceAdjustments
   // - other (login, dashboard, settings)
+  ...unitConversions,
 }

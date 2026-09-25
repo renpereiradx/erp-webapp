@@ -1,20 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/useToast';
+import { useI18n } from '@/lib/i18n';
 import { unitConversionsService, UnitConversion, UnitConversionTemplate } from '../services/unitConversionsService';
-import { Plus, Trash2, HelpCircle, PackageOpen, ChevronLeft } from 'lucide-react';
+import { Plus, Trash2, HelpCircle, PackageOpen, ChevronLeft, Globe, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { SearchableDropdown } from '@/components/ui/SearchableDropdown';
+import { searchSellableUnitsFlat, SellableUnitOption } from '@/features/catalog/sellableUnitSearch';
 
 const UnitConversionsPage = () => {
   const toast = useToast();
   const navigate = useNavigate();
 
+  const { t } = useI18n();
   const [conversions, setConversions] = useState<UnitConversion[]>([]);
   const [template, setTemplate] = useState<UnitConversionTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ from_unit: '', to_unit: '', factor: '' });
+  const [formData, setFormData] = useState<{
+    from_unit: string;
+    to_unit: string;
+    factor: string;
+    /** null = conversión global; id+nombre del producto elegido = específica. */
+    product_id: string | null;
+    product_name: string | null;
+  }>({ from_unit: '', to_unit: '', factor: '', product_id: null, product_name: null });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -55,7 +66,8 @@ const UnitConversionsPage = () => {
       await unitConversionsService.createOrUpdate({
         from_unit: formData.from_unit.toLowerCase().trim(),
         to_unit: formData.to_unit.toLowerCase().trim(),
-        factor: formData.factor
+        factor: formData.factor,
+        product_id: formData.product_id
       });
       
       toast.success('Conversión guardada exitosamente');
@@ -68,10 +80,13 @@ const UnitConversionsPage = () => {
     }
   };
 
-  const handleDelete = async (fromUnit: string, toUnit: string) => {
-    if (!window.confirm(`¿Estás seguro de eliminar la conversión ${fromUnit} → ${toUnit}?`)) return;
+  const handleDelete = async (conv: UnitConversion) => {
+    const scopeLabel = conv.product_id
+      ? t('unitConversions.specificFor', 'de {product}', { product: conv.product_id })
+      : t('unitConversions.globalScope', 'global');
+    if (!window.confirm(`${t('unitConversions.deleteConfirm', '¿Eliminar la conversión {from} → {to} ({scope})?', { from: conv.from_unit, to: conv.to_unit, scope: scopeLabel })}`)) return;
     try {
-      await unitConversionsService.delete(fromUnit, toUnit);
+      await unitConversionsService.delete(conv.from_unit, conv.to_unit, conv.product_id);
       toast.success('Conversión eliminada exitosamente');
       fetchData();
     } catch (error: any) {
@@ -80,11 +95,13 @@ const UnitConversionsPage = () => {
   };
 
   const loadFromTemplate = (tmpl: UnitConversionTemplate) => {
-    setFormData({
+    setFormData((prev) => ({
       from_unit: tmpl.from_unit,
       to_unit: tmpl.to_unit,
-      factor: tmpl.factor
-    });
+      factor: tmpl.factor,
+      product_id: prev.product_id,
+      product_name: prev.product_name
+    }));
     setIsModalOpen(true);
   };
 
@@ -109,7 +126,7 @@ const UnitConversionsPage = () => {
           </div>
           <button
             onClick={() => {
-              setFormData({ from_unit: '', to_unit: '', factor: '' });
+              setFormData({ from_unit: '', to_unit: '', factor: '', product_id: null, product_name: null });
               setIsModalOpen(true);
             }}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-bold text-sm shadow-sm hover:bg-primary-hover transition-colors"
@@ -131,30 +148,44 @@ const UnitConversionsPage = () => {
                     <tr className="bg-slate-50 text-[10px] font-black text-text-secondary uppercase tracking-widest border-b border-border-subtle">
                       <th className="px-6 py-3">Origen</th>
                       <th className="px-6 py-3">Destino</th>
+                      <th className="px-6 py-3">Alcance</th>
                       <th className="px-6 py-3">Factor</th>
                       <th className="px-6 py-3 text-right">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-subtle">
                     {loading ? (
-                      <tr><td colSpan={4} className="p-6 text-center text-text-secondary">Cargando...</td></tr>
+                      <tr><td colSpan={5} className="p-6 text-center text-text-secondary">Cargando...</td></tr>
                     ) : conversions.length === 0 ? (
-                      <tr><td colSpan={4} className="p-6 text-center text-text-secondary">No hay conversiones registradas. Usa la plantilla de la derecha para agregar.</td></tr>
+                      <tr><td colSpan={5} className="p-6 text-center text-text-secondary">No hay conversiones registradas. Usa la plantilla de la derecha para agregar.</td></tr>
                     ) : (
                       conversions.map(conv => (
-                        <tr key={`${conv.from_unit}-${conv.to_unit}`} className="hover:bg-slate-50/50 transition-colors">
+                        <tr key={`${conv.product_id ?? 'global'}-${conv.from_unit}-${conv.to_unit}`} className="hover:bg-slate-50/50 transition-colors">
                           <td className="px-6 py-4">
                             <span className="font-bold text-sm bg-slate-100 px-2 py-1 rounded-md border border-slate-200">{conv.from_unit}</span>
                           </td>
                           <td className="px-6 py-4">
                             <span className="font-bold text-sm bg-slate-100 px-2 py-1 rounded-md border border-slate-200">{conv.to_unit}</span>
                           </td>
+                          <td className="px-6 py-4">
+                            {conv.product_id ? (
+                              <span className="inline-flex items-center gap-1 text-xs font-bold text-primary" title={conv.product_id}>
+                                <Package size={12} aria-hidden />
+                                {t('unitConversions.productScope', 'Producto')}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-xs font-bold text-on-surface-deep">
+                                <Globe size={12} aria-hidden />
+                                {t('unitConversions.globalScope', 'global')}
+                              </span>
+                            )}
+                          </td>
                           <td className="px-6 py-4 font-mono font-bold text-sm text-primary">
                             1 {conv.from_unit} = {conv.factor} {conv.to_unit}
                           </td>
                           <td className="px-6 py-4 text-right">
                             <button
-                              onClick={() => handleDelete(conv.from_unit, conv.to_unit)}
+                              onClick={() => handleDelete(conv)}
                               className="text-slate-400 hover:text-error transition-colors p-1"
                               title="Eliminar"
                             >
@@ -181,6 +212,9 @@ const UnitConversionsPage = () => {
               </p>
               <p className="text-sm text-blue-900/80">
                 Los factores base (ej. kg a lb) están pre-cargados. Aquí debes registrar tus <b>empaques específicos</b> (cajas, bolsas).
+              </p>
+              <p className="text-sm text-on-surface-deep">
+                {t('unitConversions.precedenceHelp', 'Si registrás la conversión para un producto, ese factor gana a la global. El contenido de una caja depende del producto: preferí conversiones por producto.')}
               </p>
             </div>
 
@@ -224,6 +258,43 @@ const UnitConversionsPage = () => {
               <h2 className="text-lg font-black uppercase tracking-tighter">Guardar Conversión</h2>
             </div>
             <form autoComplete="off" onSubmit={handleSave} className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">
+                  {t('unitConversions.productOptional', 'Producto (opcional)')}
+                </label>
+                {formData.product_id ? (
+                  <div className="flex items-center justify-between gap-2 px-3 py-2 text-sm border border-border-subtle rounded-md bg-surface-muted">
+                    <span className="font-bold truncate" title={formData.product_id ?? ''}>
+                      {formData.product_name || formData.product_id}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, product_id: null, product_name: null }))}
+                      className="text-text-secondary hover:text-error text-xs font-bold uppercase tracking-widest shrink-0"
+                    >
+                      {t('unitConversions.makeGlobal', 'Usar global')}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <SearchableDropdown<SellableUnitOption>
+                      onSelect={(u) => setFormData((prev) => ({ ...prev, product_id: u.id, product_name: u.name }))}
+                      onSearch={searchSellableUnitsFlat}
+                      placeholder={t('unitConversions.productSearchPlaceholder', 'Dejar vacío = conversión global; buscá un producto para hacerla específica...')}
+                      emptyMessage={t('unitConversions.noResults', 'Sin resultados')}
+                      renderItem={(u) => (
+                        <div className="flex items-center gap-2 py-0.5">
+                          <span className="truncate text-sm font-bold">{u.name}</span>
+                          {u.sku && <span className="font-mono text-xs text-text-secondary">SKU: {u.sku}</span>}
+                        </div>
+                      )}
+                    />
+                    <p className="text-xs text-text-secondary">
+                      {t('unitConversions.specificBeatsGlobal', 'La conversión del producto gana a la global para ese producto.')}
+                    </p>
+                  </>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Unidad Origen</label>
@@ -264,6 +335,12 @@ const UnitConversionsPage = () => {
                   />
                 </div>
               </div>
+
+              <p className="text-xs text-text-secondary">
+                {formData.product_id
+                  ? t('unitConversions.willSaveSpecific', 'Se guardará como conversión específica de {product}.', { product: formData.product_name || formData.product_id || '' })
+                  : t('unitConversions.willSaveGlobal', 'Se guardará como conversión GLOBAL: aplicará a todos los productos con esas unidades.')}
+              </p>
 
               <div className="pt-4 flex items-center justify-end gap-3">
                 <button

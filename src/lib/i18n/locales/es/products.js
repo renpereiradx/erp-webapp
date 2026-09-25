@@ -20,6 +20,10 @@ export const products = {
   'products.search.db': 'Buscar en Base de Datos',
   'products.search.placeholder': 'Buscar por nombre o ID...',
   'products.search.placeholder_id': 'Buscar por ID de producto...',
+  // Búsqueda plana de unidades vendibles (pickers de presupuestos/requisiciones)
+  'products.search.sellable_placeholder': 'Buscar producto por nombre, SKU o variante...',
+  'products.search.stock_label': 'Stock: {stock} {unit}',
+  'products.search.no_results': 'No se encontraron productos',
   'products.search.help1': 'Puedes buscar por nombre (ej: "Puma") o por ID completo (ej: "bcYdWdKNR")',
   'products.search.help2': 'Búsqueda automática: mínimo {minChars} caracteres. Atajo: "/" para enfocar.',
 
