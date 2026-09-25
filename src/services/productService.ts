@@ -11,8 +11,7 @@ import {
   ProductOperationInfoResponse, 
   Category, 
   Stock,
-  CreateStockRequest,
-  UnitConversion
+  CreateStockRequest
 } from '@/types';
 
 /**
@@ -400,32 +399,29 @@ export const productService = {
   },
 
 
-  // =================== CONVERSIONES DE UNIDAD (v1.0.0) ===================
+  // ============ PRECIOS POR UNIDAD (unit_prices del producto) ============
+  // Fuente para recalcular el precio al cambiar la unidad de venta en el
+  // POS (PLAN_UNITS_FRONTEND). GET /products/{id}/units devuelve las filas
+  // de products.unit_prices: {unit, price_per_unit, variant_id?}.
 
-  async getUnitConversions(): Promise<UnitConversion[]> {
+  async getProductUnitPrices(productId: string): Promise<Array<{ unit: string; price: number; variant_id?: string | null }>> {
     try {
-      const response = await apiClient.getUnitConversions();
-      return response.data || [];
+      const response: any = await apiClient.get(`/products/${productId}/units`);
+      const raw = response?.data?.data || response?.data || response;
+      const rows = Array.isArray(raw) ? raw : [];
+      return rows
+        .map((r: any) => ({
+          unit: String(r.unit || 'unit'),
+          price: Number(r.price_per_unit ?? r.price ?? 0),
+          variant_id: r.variant_id ?? null,
+        }))
+        .filter((r: { unit: string; price: number }) => r.price > 0);
     } catch (error: any) {
-      throw toApiError(error, 'Error al obtener conversiones de unidad');
+      // El picker sigue siendo usable sin precios extra: solo la unidad base.
+      console.warn('Could not fetch product unit prices', error);
+      return [];
     }
   },
-
-  async createUnitConversion(data: Omit<UnitConversion, 'created_at' | 'updated_at'>): Promise<UnitConversion> {
-    try {
-      return await apiClient.createUnitConversion(data);
-    } catch (error: any) {
-      throw toApiError(error, 'Error al crear/actualizar conversión de unidad');
-    }
-  },
-
-  async deleteUnitConversion(fromUnit: string, toUnit: string): Promise<{ message: string }> {
-    try {
-      return await apiClient.deleteUnitConversion(fromUnit, toUnit);
-    } catch (error: any) {
-      throw toApiError(error, 'Error al eliminar conversión de unidad');
-    }
-  }
 };
 
 export default productService;
