@@ -9,10 +9,21 @@
  * Debajo, el historial de eventos de inutilización con su estado.
  */
 import React, { useState } from 'react';
-import { Ban, FileWarning, Loader2, RefreshCw, Search } from 'lucide-react';
+import { Ban, FileWarning, RefreshCw, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import PageHeader from '@/components/ui/PageHeader';
+import EmptyState from '@/components/ui/EmptyState';
+import ErrorState from '@/components/ui/ErrorState';
 import { useI18n } from '@/lib/i18n';
 import { useSkippedNumbers, type SkippedDocType } from '@/features/fiscal/hooks/useSkippedNumbers';
 import InutilizeRangeModal from '@/features/fiscal/components/InutilizeRangeModal';
@@ -41,197 +52,230 @@ const SkippedNumbersPage: React.FC = () => {
   const rangeCountTotal = hook.ranges.reduce((acc, r) => acc + (r.hasta - r.desde + 1), 0);
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight text-text-main flex items-center gap-3">
-          <span className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-            <FileWarning size={20} />
-          </span>
-          {t('fiscal.skipped.title', 'Saltos de numeración')}
-        </h1>
-        <p className="text-sm text-text-secondary mt-1">{t('fiscal.skipped.subtitle', 'Números sin DE emitido ni evento de inutilización')}</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl space-y-lg">
+        <PageHeader
+          breadcrumb={t('nav.sifenFiscalGroup', 'Fiscal (SIFEN)')}
+          title={t('fiscal.skipped.title', 'Saltos de numeración')}
+          subtitle={t('fiscal.skipped.subtitle', 'Números sin DE emitido ni evento de inutilización')}
+        />
 
-      {/* Filtros */}
-      <Card className="rounded-xl border-border-subtle shadow-fluent-2">
-        <CardContent className="p-5">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary">{t('fiscal.skipped.branch', 'Sucursal')}</label>
-              <select
-                className="w-full h-11 px-3 border border-slate-200 rounded-md bg-white text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none hover:bg-slate-50 transition-colors"
-                value={hook.branchId ?? ''}
-                onChange={(e) => hook.setBranchId(e.target.value ? Number(e.target.value) : null)}
-                disabled={hook.branchesLoading}
-              >
-                <option value="">—</option>
-                {hook.branches.map(b => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary">{t('fiscal.skipped.documentType', 'Tipo de documento')}</label>
-              <select
-                className="w-full h-11 px-3 border border-slate-200 rounded-md bg-white text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none hover:bg-slate-50 transition-colors"
-                value={hook.documentType}
-                onChange={(e) => hook.setDocumentType(e.target.value as SkippedDocType)}
-              >
-                {FISCAL_DOC_TYPES.map(d => (
-                  <option key={d.docType} value={d.docType}>{t(d.i18nKey)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary">{t('fiscal.skipped.timbrado', 'Timbrado')}</label>
-              <select
-                className="w-full h-11 px-3 border border-slate-200 rounded-md bg-white text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none hover:bg-slate-50 transition-colors disabled:bg-slate-50"
-                value={hook.timbradoNum}
-                onChange={(e) => hook.setTimbradoNum(e.target.value)}
-                disabled={hook.branchId === null}
-              >
-                <option value="">—</option>
-                {hook.timbrados.map(c => (
-                  <option key={c.id} value={c.timbrado}>
-                    {c.timbrado} · {c.establishment_code}-{c.expedition_point}-{c.serie || 'AA'}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-end">
+        {/* Filtros */}
+        <Card className="rounded-md bg-surface border-0 shadow-whisper">
+          <CardContent className="p-lg">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-md items-end">
+              <div className="space-y-xs">
+                <Label htmlFor="skipped-branch" className="text-body-sm-bold text-on-surface-deep">
+                  {t('fiscal.skipped.branch', 'Sucursal')}
+                </Label>
+                <Select
+                  value={hook.branchId === null ? 'none' : String(hook.branchId)}
+                  onValueChange={(val: string) => hook.setBranchId(val === 'none' ? null : Number(val))}
+                >
+                  <SelectTrigger id="skipped-branch" className="w-full" disabled={hook.branchesLoading}>
+                    <SelectValue placeholder={t('fiscal.skipped.branch', 'Sucursal')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">—</SelectItem>
+                    {hook.branches.map(b => (
+                      <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-xs">
+                <Label htmlFor="skipped-doc-type" className="text-body-sm-bold text-on-surface-deep">
+                  {t('fiscal.skipped.documentType', 'Tipo de documento')}
+                </Label>
+                <Select value={hook.documentType} onValueChange={(val: string) => hook.setDocumentType(val as SkippedDocType)}>
+                  <SelectTrigger id="skipped-doc-type" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FISCAL_DOC_TYPES.map(d => (
+                      <SelectItem key={d.docType} value={d.docType}>{t(d.i18nKey)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-xs">
+                <Label htmlFor="skipped-timbrado" className="text-body-sm-bold text-on-surface-deep">
+                  {t('fiscal.skipped.timbrado', 'Timbrado')}
+                </Label>
+                <Select
+                  value={hook.timbradoNum === '' ? 'none' : hook.timbradoNum}
+                  onValueChange={(val: string) => hook.setTimbradoNum(val === 'none' ? '' : val)}
+                  disabled={hook.branchId === null}
+                >
+                  <SelectTrigger id="skipped-timbrado" className="w-full">
+                    <SelectValue placeholder="—" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">—</SelectItem>
+                    {hook.timbrados.map(c => (
+                      <SelectItem key={c.id} value={c.timbrado}>
+                        <span className="text-data-mono font-data-mono">{c.timbrado}</span> · {c.establishment_code}-{c.expedition_point}-{c.serie || 'AA'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Button
-                className="w-full h-11 bg-primary hover:bg-primary-hover text-white font-bold uppercase text-xs tracking-widest shadow-sm"
+                variant="primary"
                 onClick={hook.consultar}
                 disabled={!hook.hasSelection || hook.skippedLoading}
               >
-                {hook.skippedLoading ? <Loader2 size={14} className="animate-spin mr-1.5" /> : <Search size={14} className="mr-1.5" />}
+                <Search className="size-4" aria-hidden="true" />
                 {t('fiscal.skipped.load', 'Consultar saltos')}
               </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Rangos de saltos */}
-      <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b border-border-subtle p-6">
-          <CardTitle className="text-base font-black tracking-tight uppercase">{t('fiscal.skipped.title', 'Saltos de numeración')}</CardTitle>
-          <CardDescription className="text-[10px] font-bold uppercase tracking-widest">
-            {hook.skippedLoading
-              ? '…'
-              : hook.ranges.length > 0
-                ? t('fiscal.skipped.ranges', '{count} número(s) en {ranges} rango(s)', { count: String(rangeCountTotal), ranges: String(hook.ranges.length) })
-                : ''}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          {hook.skippedLoading ? (
-            <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-primary size-8" /></div>
-          ) : !hook.hasSelection || hook.skipped === null ? (
-            <div className="py-12 text-center text-text-secondary font-bold italic uppercase text-[10px] tracking-widest">
-              {t('fiscal.skipped.loadHint', 'Seleccioná sucursal, tipo y timbrado y consultá los saltos')}
-            </div>
-          ) : hook.ranges.length === 0 ? (
-            <div className="py-12 text-center text-text-secondary font-bold italic uppercase text-[10px] tracking-widest">
-              {t('fiscal.skipped.empty', 'Sin saltos de numeración para la selección')}
-            </div>
-          ) : (
-            <div className="divide-y divide-border-subtle">
-              {hook.ranges.map((r, i) => (
-                <div key={i} className="flex items-center justify-between gap-3 p-4 hover:bg-slate-50/50 transition-colors">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="size-9 rounded-lg bg-error/10 text-error flex items-center justify-center shrink-0">
-                      <Ban size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-mono text-sm font-bold text-text-main">{formatRangePadded(r)}</p>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">
-                        {t('fiscal.skipped.col.numbers', 'Números')}: {r.hasta - r.desde + 1}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-9 text-xs font-bold gap-1.5 text-error border-error/30 hover:bg-error hover:text-white shrink-0"
-                    onClick={() => setTargetRange(r)}
-                  >
-                    <Ban size={13} /> {t('fiscal.skipped.inutilize', 'Inutilizar rango')}
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Historial de inutilizaciones */}
-      <Card className="rounded-xl border-border-subtle shadow-fluent-2 overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b border-border-subtle p-6 flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle className="text-base font-black tracking-tight uppercase">{t('fiscal.skipped.history', 'Inutilizaciones recientes')}</CardTitle>
-            <CardDescription className="text-[10px] font-bold uppercase tracking-widest">
-              {hook.branchId !== null ? hook.documentType : ''}
+        {/* Rangos de saltos */}
+        <Card className="rounded-md bg-surface border-0 shadow-whisper overflow-hidden">
+          <CardHeader className="px-lg py-md bg-surface-muted border-b border-border-subtle space-y-0">
+            <CardTitle className="text-title-md text-foreground">{t('fiscal.skipped.title', 'Saltos de numeración')}</CardTitle>
+            <CardDescription className="text-body-md text-on-surface-deep">
+              {hook.skippedLoading
+                ? '…'
+                : hook.ranges.length > 0
+                  ? t('fiscal.skipped.ranges', '{count} número(s) en {ranges} rango(s)', { count: String(rangeCountTotal), ranges: String(hook.ranges.length) })
+                  : ''}
             </CardDescription>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20 bg-primary/5 hover:bg-primary hover:text-white transition-all"
-            onClick={hook.retryPending}
-            disabled={hook.retrying || hook.branchId === null}
-          >
-            {hook.retrying ? <Loader2 size={12} className="animate-spin mr-1" /> : <RefreshCw size={12} className="mr-1" />}
-            {t('fiscal.skipped.retry', 'Reintentar pendientes')}
-          </Button>
-        </CardHeader>
-        <CardContent className="p-0">
-          {hook.inutilizacionesLoading ? (
-            <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-primary size-8" /></div>
-          ) : hook.inutilizaciones.length === 0 ? (
-            <div className="py-12 text-center text-text-secondary font-bold italic uppercase text-[10px] tracking-widest">
-              {t('fiscal.skipped.historyEmpty', 'Sin eventos de inutilización')}
-            </div>
-          ) : (
-            <div className="divide-y divide-border-subtle">
-              {hook.inutilizaciones.map((inu: InutilizacionPublic) => (
-                <div key={inu.id} className="p-4 hover:bg-slate-50/50 transition-colors space-y-1.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-mono text-sm font-bold text-text-main">
-                      {inu.establecimiento}-{inu.punto_expedicion}-{inu.serie} · {formatRangePadded({ desde: inu.desde, hasta: inu.hasta })}
-                    </p>
-                    <Badge variant={inutilizeStateBadge(inu.estado)} dot>
-                      {t(`fiscal.inutilize.states.${inu.estado}`, inu.estado)}
-                    </Badge>
+          </CardHeader>
+          <CardContent className="p-0">
+            {hook.skippedLoading ? (
+              <div className="p-lg space-y-md" aria-busy="true">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-14 bg-surface-muted rounded-md animate-pulse" />
+                ))}
+              </div>
+            ) : !hook.hasSelection || hook.skipped === null ? (
+              <EmptyState
+                variant="instruction"
+                icon={Search}
+                title={t('fiscal.skipped.loadHint', 'Seleccioná sucursal, tipo y timbrado y consultá los saltos')}
+              />
+            ) : hook.ranges.length === 0 ? (
+              <EmptyState
+                icon={FileWarning}
+                title={t('fiscal.skipped.empty', 'Sin saltos de numeración para la selección')}
+              />
+            ) : (
+              <div className="divide-y divide-border-subtle">
+                {hook.ranges.map((r, i) => (
+                  <div key={i} className="flex items-center justify-between gap-md p-md hover:bg-surface-muted transition-colors duration-150">
+                    <div className="flex items-center gap-md min-w-0">
+                      <div className="size-9 rounded-md bg-error/10 text-error flex items-center justify-center shrink-0">
+                        <Ban className="size-4" aria-hidden="true" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-data-mono font-data-mono text-foreground">{formatRangePadded(r)}</p>
+                        <p className="text-label-caps uppercase text-on-surface-deep">
+                          {t('fiscal.skipped.col.numbers', 'Números')}: {r.hasta - r.desde + 1}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-error border-error/30 hover:bg-error hover:text-on-error shrink-0"
+                      onClick={() => setTargetRange(r)}
+                    >
+                      <Ban className="size-3.5" aria-hidden="true" /> {t('fiscal.skipped.inutilize', 'Inutilizar rango')}
+                    </Button>
                   </div>
-                  <p className="text-xs text-text-secondary line-clamp-2">{inu.motivo}</p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-bold uppercase tracking-widest text-text-secondary">
-                    <span>{t('fiscal.branch.timbrado', 'Número de Timbrado')}: {inu.timbrado_num}</span>
-                    <span>{new Date(inu.created_at).toLocaleString()}</span>
-                    {inu.codigo_respuesta && <span className="font-mono">{inu.codigo_respuesta}</span>}
-                    {inu.mensaje && <span className="normal-case tracking-normal">{inu.mensaje}</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      <InutilizeRangeModal
-        open={targetRange !== null}
-        onClose={() => setTargetRange(null)}
-        range={targetRange}
-        configLabel={configLabel}
-        isSubmitting={hook.inutilizando}
-        onSubmit={(motivo) => {
-          if (targetRange) {
-            hook.inutilizeRange({ motivo, desde: targetRange.desde, hasta: targetRange.hasta });
-          }
-          setTargetRange(null);
-        }}
-      />
+        {/* Historial de inutilizaciones */}
+        <Card className="rounded-md bg-surface border-0 shadow-whisper overflow-hidden">
+          <CardHeader className="px-lg py-md bg-surface-muted border-b border-border-subtle flex flex-row items-center justify-between space-y-0">
+            <div className="space-y-1">
+              <CardTitle className="text-title-md text-foreground">{t('fiscal.skipped.history', 'Inutilizaciones recientes')}</CardTitle>
+              <CardDescription className="text-body-md text-on-surface-deep">
+                {hook.branchId !== null ? hook.documentType : ''}
+              </CardDescription>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={hook.retryPending}
+              disabled={hook.retrying || hook.branchId === null}
+            >
+              <RefreshCw className={`size-3.5 ${hook.retrying ? 'animate-spin' : ''}`} aria-hidden="true" />
+              {t('fiscal.skipped.retry', 'Reintentar pendientes')}
+            </Button>
+          </CardHeader>
+          <CardContent className="p-0">
+            {hook.inutilizacionesLoading ? (
+              <div className="p-lg space-y-md" aria-busy="true">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-16 bg-surface-muted rounded-md animate-pulse" />
+                ))}
+              </div>
+            ) : hook.inutilizacionesError ? (
+              <div className="p-md">
+                <ErrorState
+                  title={t('fiscal.skipped.historyError', 'No se pudieron cargar las inutilizaciones')}
+                  onRetry={hook.refetchInutilizaciones}
+                />
+              </div>
+            ) : hook.inutilizaciones.length === 0 ? (
+              <EmptyState
+                icon={FileWarning}
+                title={t('fiscal.skipped.historyEmpty', 'Sin eventos de inutilización')}
+              />
+            ) : (
+              <div className="divide-y divide-border-subtle">
+                {hook.inutilizaciones.map((inu: InutilizacionPublic) => (
+                  <div key={inu.id} className="p-md hover:bg-surface-muted transition-colors duration-150 space-y-sm">
+                    <div className="flex items-center justify-between gap-md">
+                      <p className="text-data-mono font-data-mono text-foreground">
+                        {inu.establecimiento}-{inu.punto_expedicion}-{inu.serie} · {formatRangePadded({ desde: inu.desde, hasta: inu.hasta })}
+                      </p>
+                      <Badge variant={inutilizeStateBadge(inu.estado)} dot>
+                        {t(`fiscal.inutilize.states.${inu.estado}`, inu.estado)}
+                      </Badge>
+                    </div>
+                    <p className="text-body-md text-on-surface-deep line-clamp-2">{inu.motivo}</p>
+                    <div className="flex flex-wrap gap-x-md gap-y-xs text-body-sm text-on-surface-deep">
+                      <span>
+                        {t('fiscal.branch.timbrado', 'Número de Timbrado')}:{' '}
+                        <span className="text-data-mono font-data-mono">{inu.timbrado_num}</span>
+                      </span>
+                      <span className="text-data-mono font-data-mono">{new Date(inu.created_at).toLocaleString()}</span>
+                      {inu.codigo_respuesta && <span className="text-data-mono font-data-mono">{inu.codigo_respuesta}</span>}
+                      {inu.mensaje && <span>{inu.mensaje}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <InutilizeRangeModal
+          open={targetRange !== null}
+          onClose={() => setTargetRange(null)}
+          range={targetRange}
+          configLabel={configLabel}
+          isSubmitting={hook.inutilizando}
+          onSubmit={(motivo) => {
+            if (targetRange) {
+              hook.inutilizeRange({ motivo, desde: targetRange.desde, hasta: targetRange.hasta });
+            }
+            setTargetRange(null);
+          }}
+        />
+      </div>
     </div>
   );
 };

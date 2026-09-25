@@ -4,7 +4,7 @@
  * rango secuencial ≤ 1000 (validado por el backend).
  */
 import React, { useState } from 'react';
-import { Ban, Loader2 } from 'lucide-react';
+import { Ban } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { useI18n } from '@/lib/i18n';
 import type { NumberRange } from '@/domain/fiscal/ranges';
 import { rangeCount, isRangeWithinLimit, formatRangePadded } from '@/domain/fiscal/ranges';
@@ -57,81 +58,81 @@ const InutilizeRangeModal: React.FC<InutilizeRangeModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && !isSubmitting) reset(); }}>
-      <DialogContent className="max-w-md rounded-xl border-border-subtle shadow-fluent-64">
+      <DialogContent className="max-w-md rounded-xl border-border-subtle shadow-fluent-16">
         <DialogHeader className="text-center">
           <div className="mx-auto size-14 bg-error/10 text-error rounded-full flex items-center justify-center mb-2">
             <Ban size={28} />
           </div>
-          <DialogTitle className="text-lg font-black uppercase tracking-tight">
+          <DialogTitle className="text-foreground">
             {t('fiscal.inutilize.title', 'Inutilizar rango {range}', {
               range: range ? formatRangePadded(range) : '—',
             })}
           </DialogTitle>
-          <DialogDescription className="text-sm text-text-secondary">
+          <DialogDescription className="text-body-md text-on-surface-deep">
             {configLabel}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-md">
           {/* Resumen del rango */}
           {range && (
-            <div className="flex items-center justify-between rounded-xl border border-border-subtle bg-slate-50 p-3">
-              <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">
+            <div className="flex items-center justify-between gap-md rounded-md border border-border-subtle bg-surface-muted px-md py-sm">
+              <span className="text-label-caps uppercase text-on-surface-deep shrink-0">
                 {t('fiscal.skipped.col.numbers', 'Números')}
               </span>
-              <span className="font-mono text-sm font-bold text-text-main">{formatRangePadded(range)}</span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">
-                {t('fiscal.skipped.ranges', '{count} número(s) en {ranges} rango(s)', {
-                  count: String(rangeCount(range)),
-                  ranges: '1',
-                })}
+              <span className="text-data-mono font-data-mono text-foreground whitespace-nowrap">{formatRangePadded(range)}</span>
+              <span className="text-label-caps uppercase text-on-surface-deep shrink-0">
+                {t('fiscal.skipped.col.numbers', 'Números')}: {rangeCount(range)}
               </span>
             </div>
           )}
           {range && !valid && (
-            <p className="text-[11px] font-semibold text-error">
+            <p className="text-body-sm-bold text-error">
               {t('fiscal.inutilize.rangeTooBig', 'El rango excede el límite de 1000 números (MT §11.1.1). Partilo en rangos menores.')}
             </p>
           )}
 
           {/* Justificativa obligatoria */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase tracking-widest text-text-secondary">
+          <div className="space-y-sm">
+            <Label htmlFor="inutilize-motivo" className="text-body-sm-bold text-on-surface-deep">
               {t('fiscal.inutilize.reason', 'Justificativa (obligatoria)')} *
-            </label>
+            </Label>
             <Textarea
+              id="inutilize-motivo"
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
               placeholder={t('fiscal.inutilize.reasonPlaceholder', 'Motivo del evento de inutilización (5-500 caracteres)')}
               rows={3}
               minLength={5}
               maxLength={500}
-              className="text-sm"
+              className="text-body-md"
               autoFocus
             />
             {motivoTooShort && (
-              <p className="text-[11px] font-semibold text-error">
+              <p className="text-body-sm-bold text-error">
                 {t('fiscal.inutilize.reasonTooShort', 'La justificativa debe tener al menos 5 caracteres')}
               </p>
             )}
           </div>
         </div>
 
-        <DialogFooter className="gap-3 pt-2">
+        <DialogFooter className="gap-md pt-sm">
           <Button
-            variant="outline"
-            className="flex-1 font-bold uppercase text-[10px] tracking-widest"
+            variant="secondary"
+            className="flex-1"
             onClick={reset}
             disabled={isSubmitting}
           >
             {t('fiscal.cancel.keep', 'Volver')}
           </Button>
           <Button
-            className="flex-1 bg-error hover:bg-error/90 text-white font-bold uppercase text-[10px] tracking-widest shadow-fluent-4"
+            variant="destructive"
+            className="flex-1"
             onClick={handleConfirm}
-            disabled={isSubmitting || motivo.trim().length < 5 || !valid}
+            loading={isSubmitting}
+            disabled={motivo.trim().length < 5 || !valid}
           >
-            {isSubmitting ? <><Loader2 size={14} className="animate-spin mr-1.5" />{t('fiscal.inutilize.submitting', 'Inutilizando...')}</> : t('fiscal.inutilize.confirm', 'Inutilizar')}
+            {isSubmitting ? t('fiscal.inutilize.submitting', 'Inutilizando...') : t('fiscal.inutilize.confirm', 'Inutilizar')}
           </Button>
         </DialogFooter>
       </DialogContent>

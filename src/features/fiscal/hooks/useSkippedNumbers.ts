@@ -39,6 +39,9 @@ export interface UseSkippedNumbersState {
   /** Historial de inutilizaciones. */
   inutilizaciones: InutilizacionPublic[];
   inutilizacionesLoading: boolean;
+  /** Error del query de historial (§6.7: el vacío no debe enmascarar un 500). */
+  inutilizacionesError: unknown;
+  refetchInutilizaciones: () => void;
   inutilizando: boolean;
   inutilizeRange: (req: Omit<InutilizeRequest, 'branch_id' | 'document_type' | 'timbrado_num' | 'establecimiento' | 'punto_expedicion' | 'serie'>) => void;
   retrying: boolean;
@@ -166,6 +169,8 @@ export const useSkippedNumbers = (): UseSkippedNumbersState => {
     consultar,
     inutilizaciones: inuQuery.data ?? [],
     inutilizacionesLoading: inuQuery.isLoading,
+    inutilizacionesError: inuQuery.error,
+    refetchInutilizaciones: () => { inuQuery.refetch(); },
     inutilizando: inutilizeMutation.isPending,
     inutilizeRange: (req) => inutilizeMutation.mutate(req),
     retrying: retryMutation.isPending,

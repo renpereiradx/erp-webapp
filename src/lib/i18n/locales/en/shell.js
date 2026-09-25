@@ -38,6 +38,7 @@ export const shell = {
   'nav.myProfile': 'My Profile',
   'nav.sifenNumberingGaps': 'SIFEN Numbering Gaps',
   'nav.sifenFiscalDashboard': 'SIFEN Fiscal Dashboard',
+  'nav.sifenFiscalGroup': 'Fiscal (SIFEN)',
   'nav.legalBooks': 'Legal Books (Sales & Purchases)',
   'nav.profitAndLoss': 'Profit & Loss Statement',
   'nav.financialSummaryBI': 'Financial Summary BI',

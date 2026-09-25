@@ -134,6 +134,7 @@ export const fiscal = {
   'fiscal.skipped.retry': 'Retry pending',
   'fiscal.skipped.retried': 'Retry of pending voiding events started',
   'fiscal.skipped.retryError': 'Could not retry voiding events',
+  'fiscal.skipped.historyError': 'Could not load the inutilizations',
   'fiscal.inutilize.title': 'Void range {range}',
   'fiscal.inutilize.reason': 'Justification (required)',
   'fiscal.inutilize.reasonPlaceholder': 'Reason for the voiding event (5-500 characters)',

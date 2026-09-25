@@ -134,6 +134,7 @@ export const fiscal = {
   'fiscal.skipped.retry': 'Reintentar pendientes',
   'fiscal.skipped.retried': 'Reintento de inutilizaciones pendientes iniciado',
   'fiscal.skipped.retryError': 'No se pudo reintentar las inutilizaciones',
+  'fiscal.skipped.historyError': 'No se pudieron cargar las inutilizaciones',
   'fiscal.inutilize.title': 'Inutilizar rango {range}',
   'fiscal.inutilize.reason': 'Justificativa (obligatoria)',
   'fiscal.inutilize.reasonPlaceholder': 'Motivo del evento de inutilización (5-500 caracteres)',
