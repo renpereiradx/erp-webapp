@@ -70,7 +70,14 @@ vi.mock('@/features/catalog/sellableUnitSearch', () => ({
   searchSellableUnitsFlat: vi.fn(),
 }))
 
+vi.mock('@/services/productService', () => ({
+  productService: {
+    getProductById: vi.fn(),
+  },
+}))
+
 import { branchTransferService } from '@/services/branchTransferService'
+import { productService } from '@/services/productService'
 import { searchSellableUnitsFlat } from '@/features/catalog/sellableUnitSearch'
 import TransfersPage from '@/features/transfers/components/TransfersPage'
 import CreateTransferModal from '@/features/transfers/components/CreateTransferModal'
@@ -316,6 +323,33 @@ describe('CreateTransferModal — creación (F.4/F.5)', () => {
     expect(screen.getByTestId('transfer-line-qty-PK')).toHaveValue(0.5)
   })
 
+  it('blocks SERVICE products: badge shown, line never added (no stock)', async () => {
+    const user = userEvent.setup()
+    vi.mocked(searchSellableUnitsFlat).mockResolvedValue([
+      {
+        id: 'S1',
+        name: 'Mantenimiento de vitrina',
+        variant_id: null,
+        variant_name: null,
+        sku: 'SRV-01',
+        price: 50000,
+        stock: 0,
+        base_unit: 'unit',
+        product_type: 'SERVICE',
+      },
+    ])
+    renderWithProviders(<CreateTransferModal {...baseProps} initialDestinationId={2} />)
+
+    await user.type(screen.getByLabelText('Agregar producto'), 'mantenimiento')
+    expect(await screen.findByText('Servicio')).toBeInTheDocument()
+    expect(screen.getByText('Sin stock (servicio)')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Mantenimiento de vitrina/ }))
+
+    expect(screen.queryByTestId('transfer-line-S1')).not.toBeInTheDocument()
+    expect(screen.getByText('Agregá al menos un producto para transferir.')).toBeInTheDocument()
+  })
+
   it('stamps preloaded items with their source purchase id (F.6)', async () => {
     const user = userEvent.setup()
     const createTransfer = vi.mocked(branchTransferService.createTransfer).mockResolvedValue(transferPending)
@@ -422,5 +456,59 @@ describe('TransferDetailModal — acciones del workflow (F.4)', () => {
 
     await screen.findByText('Yerba 1kg')
     expect(screen.queryByText(/Compra de origen/)).not.toBeInTheDocument()
+  })
+
+  it('shows requested/approved/shipped/received quantities per item', async () => {
+    getTransferById.mockResolvedValue({
+      transfer: transferPending,
+      items: [
+        {
+          id: 1,
+          transfer_id: 11,
+          product_id: 'P1',
+          quantity_requested: 5,
+          quantity_approved: 4,
+          quantity_shipped: 4,
+          quantity_received: 3,
+          product_name: 'Yerba 1kg',
+        },
+      ],
+    })
+    renderWithProviders(<TransferDetailModal transfer={transferPending} open onOpenChange={vi.fn()} />)
+
+    expect(await screen.findByTestId('transfer-item-1')).toBeInTheDocument()
+    expect(screen.getByTestId('transfer-item-1-requested')).toHaveTextContent('5')
+    expect(screen.getByTestId('transfer-item-1-approved')).toHaveTextContent('4')
+    expect(screen.getByTestId('transfer-item-1-shipped')).toHaveTextContent('4')
+    expect(screen.getByTestId('transfer-item-1-received')).toHaveTextContent('3')
+  })
+
+  it('resolves the product name when the backend omits it (ID-only item)', async () => {
+    vi.mocked(productService.getProductById).mockResolvedValue({ name: 'Yerba 1kg' } as never)
+    getTransferById.mockResolvedValue({
+      transfer: transferPending,
+      items: [{ id: 7, transfer_id: 11, product_id: 'hc8ZjowDR', quantity_requested: 2, quantity_shipped: 2 }],
+    })
+    renderWithProviders(<TransferDetailModal transfer={transferPending} open onOpenChange={vi.fn()} />)
+
+    expect(await screen.findByText('Yerba 1kg')).toBeInTheDocument()
+    // El ID crudo sigue visible como segunda línea (trazabilidad).
+    expect(screen.getByText('hc8ZjowDR')).toBeInTheDocument()
+    expect(screen.getByTestId('transfer-item-7-shipped')).toHaveTextContent('2')
+    expect(productService.getProductById).toHaveBeenCalledWith('hc8ZjowDR')
+  })
+
+  it('shows branch names instead of raw ids in the route', async () => {
+    const withoutNames = { ...transferPending, source_branch_name: undefined, destination_branch_name: undefined }
+    getTransferById.mockResolvedValue({
+      transfer: withoutNames,
+      items: [{ id: 1, transfer_id: 11, product_id: 'P1', quantity_requested: 5, product_name: 'Yerba 1kg' }],
+    })
+    renderWithProviders(<TransferDetailModal transfer={withoutNames} open onOpenChange={vi.fn()} />)
+
+    // La ruta con nombres aparece en el subtítulo y en la ficha (mismo texto).
+    const routes = await screen.findAllByText('Depósito Central → Sucursal Centro')
+    expect(routes.length).toBeGreaterThanOrEqual(1)
+    expect(screen.queryByText('1 → 3')).not.toBeInTheDocument()
   })
 })

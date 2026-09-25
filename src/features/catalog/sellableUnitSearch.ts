@@ -19,6 +19,8 @@ export interface SellableUnitOption extends SearchableDropdownItem {
   price: number
   stock: number
   base_unit: string
+  /** PHYSICAL | SERVICE | PRODUCTION (el backend lo trae; el fallback legacy puede omitirlo → se asume PHYSICAL). */
+  product_type?: string | null
 }
 
 export function toSellableUnitOption(raw: Record<string, any>): SellableUnitOption {
@@ -34,6 +36,7 @@ export function toSellableUnitOption(raw: Record<string, any>): SellableUnitOpti
     price: Number(raw.current_price ?? raw.sale_price ?? raw.price ?? 0) || 0,
     stock: Number(raw.stock_quantity ?? raw.stock ?? 0) || 0,
     base_unit: String(raw.base_unit ?? raw.unit ?? 'unit'),
+    product_type: raw.product_type ?? null,
   }
 }
 

@@ -10,12 +10,14 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeftRight, ArrowRight, Loader2, Trash2 } from 'lucide-react'
 
 import { isDecimalUnit } from '@/constants/units'
+import { requiresStock } from '@/domain/products/sellability'
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
 import { useAuth } from '@/contexts/AuthContext'
 import { useBranch } from '@/contexts/BranchContext'
 import { branchService } from '@/features/branches/services/branchService'
 import type { Branch, CreateBranchTransferRequest } from '@/types'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -117,6 +119,12 @@ const CreateTransferModal = ({
   }, [branches, allowedBranches, isAdminRole, sourceBranchId])
 
   const addUnitLine = (unit: SellableUnitOption) => {
+    // Los servicios no manejan stock: no tiene sentido transferirlos entre
+    // sucursales (el workflow nunca mueve stock y ship/receive serían ficticios).
+    if (!requiresStock({ product_type: unit.product_type ?? null })) {
+      addToast(t('transfers.serviceNotTransferable', 'Los servicios no manejan stock y no se pueden transferir'), 'error')
+      return
+    }
     const line: TransferLine = {
       product_id: unit.id,
       variant_id: unit.variant_id ?? undefined,
@@ -240,21 +248,35 @@ const CreateTransferModal = ({
               onSearch={searchSellableUnitsFlat}
               placeholder={t('transfers.productSearchPlaceholder', 'Buscar producto por nombre, SKU o variante...')}
               emptyMessage={t('transfers.noResults', 'Sin resultados')}
-              renderItem={(unit) => (
-                <div className="flex items-center gap-sm py-0.5">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-body-md-bold text-foreground">
-                      {unit.variant_name ? `${unit.name} · ${unit.variant_name}` : unit.name}
-                    </p>
-                    <p className="mt-0.5 flex items-center gap-sm text-body-sm text-on-surface-deep">
-                      {unit.sku && <span className="font-mono">SKU: {unit.sku}</span>}
-                      <span className={unit.stock > 0 ? 'font-bold text-success' : 'font-bold text-error'}>
-                        {t('transfers.stockLabel', 'Stock: {stock} {unit}', { stock: String(unit.stock), unit: unit.base_unit || 'unit' })}
-                      </span>
-                    </p>
+              renderItem={(unit) => {
+                const isService = !requiresStock({ product_type: unit.product_type ?? null })
+                return (
+                  <div className="flex items-center gap-sm py-0.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="flex flex-wrap items-center gap-xs truncate text-body-md-bold text-foreground">
+                        <span className="truncate">{unit.variant_name ? `${unit.name} · ${unit.variant_name}` : unit.name}</span>
+                        {isService && (
+                          <Badge variant="secondary" size="sm" shape="square">
+                            {t('transfers.serviceBadge', 'Servicio')}
+                          </Badge>
+                        )}
+                      </p>
+                      <p className="mt-0.5 flex items-center gap-sm text-body-sm text-on-surface-deep">
+                        {unit.sku && <span className="font-mono">SKU: {unit.sku}</span>}
+                        {isService ? (
+                          <span className="font-bold">
+                            {t('transfers.serviceNoStock', 'Sin stock (servicio)')}
+                          </span>
+                        ) : (
+                          <span className={unit.stock > 0 ? 'font-bold text-success' : 'font-bold text-error'}>
+                            {t('transfers.stockLabel', 'Stock: {stock} {unit}', { stock: String(unit.stock), unit: unit.base_unit || 'unit' })}
+                          </span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )
+              }}
             />
           </div>
 
