@@ -4,6 +4,8 @@ import { formatPYG } from '@/utils/currencyUtils';
 import { formatDrilldownDate } from '@/domain/relational-analytics/normalize';
 import type { DrilldownColumn } from '@/domain/relational-analytics/types';
 import { parseSortParam } from '@/domain/relational-analytics/sort';
+import RowActionsMenu from './RowActionsMenu';
+import type { DrilldownRowMenu } from './RowActionsMenu';
 
 interface DrilldownTableProps<Row> {
   columns: readonly DrilldownColumn<Row>[];
@@ -11,6 +13,8 @@ interface DrilldownTableProps<Row> {
   rowKey: (row: Row) => string;
   sort?: string;
   onSort?: (field: string) => void;
+  /** menú informativo por fila (pivotes entre análisis + copiar dato); ausente → sin columna */
+  rowMenu?: (row: Row) => DrilldownRowMenu;
   emptyKey: string;
   emptyFallback: string;
 }
@@ -32,9 +36,10 @@ const renderCell = <Row,>(row: Row, col: DrilldownColumn<Row>) => {
 };
 
 /** Tabla genérica de drill-down: encabezados ordenables + estados de fila. */
-function DrilldownTable<Row>({ columns, rows, rowKey, sort, onSort, emptyKey, emptyFallback }: DrilldownTableProps<Row>) {
+function DrilldownTable<Row>({ columns, rows, rowKey, sort, onSort, rowMenu, emptyKey, emptyFallback }: DrilldownTableProps<Row>) {
   const { t } = useI18n();
   const active = parseSortParam(sort ?? '');
+  const columnCount = columns.length + (rowMenu ? 1 : 0);
 
   return (
     <div className="overflow-hidden rounded-lg border border-border-subtle bg-surface shadow-sm">
@@ -69,6 +74,11 @@ function DrilldownTable<Row>({ columns, rows, rowKey, sort, onSort, emptyKey, em
                   </th>
                 );
               })}
+              {rowMenu ? (
+                <th className="px-6 py-4 text-right">
+                  {t('bi.relational.col.actions', 'Acciones')}
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-border-subtle">
@@ -84,12 +94,17 @@ function DrilldownTable<Row>({ columns, rows, rowKey, sort, onSort, emptyKey, em
                     {renderCell(row, col)}
                   </td>
                 ))}
+                {rowMenu ? (
+                  <td className="px-6 py-4 text-right">
+                    <RowActionsMenu menu={rowMenu(row)} />
+                  </td>
+                ) : null}
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
                 <td
-                  colSpan={columns.length}
+                  colSpan={columnCount}
                   className="px-6 py-8 text-center text-on-surface-deep font-medium italic text-xs uppercase tracking-widest"
                 >
                   {t(emptyKey, emptyFallback)}

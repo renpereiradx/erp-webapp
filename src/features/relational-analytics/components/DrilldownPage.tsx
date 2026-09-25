@@ -8,10 +8,13 @@ import type { EntityOption } from './EntitySearchSelect';
 import { useDrilldownQuery } from '../hooks/useDrilldownQuery';
 import type { DrilldownFetcher } from '../hooks/useDrilldownQuery';
 import type { DrilldownColumn } from '@/domain/relational-analytics/types';
+import type { DrilldownRowMenu } from './RowActionsMenu';
 
 interface DrilldownPageProps<Row> {
   /** id de la entidad (query param de la ruta); ausente → selector */
   entityId?: string | null;
+  /** variante elegida en el picker (query param; solo productos) */
+  variantId?: string | null;
   titleKey: string;
   titleFallback: string;
   subtitleKey: string;
@@ -24,9 +27,13 @@ interface DrilldownPageProps<Row> {
   fetcher: DrilldownFetcher<Row>;
   /** búsqueda para el selector (producto/cliente/proveedor) */
   searchEntity?: (term: string) => Promise<EntityOption[]>;
-  onEntityPicked?: (id: string) => void;
+  onEntityPicked?: (id: string, option: EntityOption) => void;
+  /** mínimo de caracteres para buscar (búsqueda plana de productos: 3) */
+  minSearchChars?: number;
   /** banner opcional (ej. meta excluded_other_currency del endpoint #4) */
   renderMetaBanner?: (view: { excludedOtherCurrency: number }) => ReactNode;
+  /** menú informativo por fila (pivotes entre análisis + copiar dato); ausente → sin columna */
+  rowMenu?: (row: Row) => DrilldownRowMenu;
   emptyKey: string;
   emptyFallback: string;
   testId?: string;
@@ -39,6 +46,7 @@ interface DrilldownPageProps<Row> {
  */
 function DrilldownPage<Row>({
   entityId,
+  variantId,
   titleKey,
   titleFallback,
   subtitleKey,
@@ -51,13 +59,15 @@ function DrilldownPage<Row>({
   fetcher,
   searchEntity,
   onEntityPicked,
+  minSearchChars,
   renderMetaBanner,
+  rowMenu,
   emptyKey,
   emptyFallback,
   testId,
 }: DrilldownPageProps<Row>) {
   const { t } = useI18n();
-  const query = useDrilldownQuery<Row>({ id: entityId ?? undefined, fetcher, defaultSort });
+  const query = useDrilldownQuery<Row>({ id: entityId ?? undefined, fetcher, defaultSort, variantId });
   const searchPlaceholder = t(entityLabelKey, entityLabelFallback);
 
   if (!entityId) {
@@ -72,7 +82,7 @@ function DrilldownPage<Row>({
             {t('bi.relational.pick.prompt', 'Elegí {entity} para ver el detalle', { entity: searchPlaceholder })}
           </p>
           {searchEntity && onEntityPicked ? (
-            <EntitySearchSelect search={searchEntity} onPick={onEntityPicked} />
+            <EntitySearchSelect search={searchEntity} onPick={onEntityPicked} minChars={minSearchChars} />
           ) : null}
         </div>
       </div>
@@ -87,6 +97,7 @@ function DrilldownPage<Row>({
           <p className="text-on-surface-deep text-sm font-medium">{t(subtitleKey, subtitleFallback)}</p>
           <p className="font-mono text-[10px] font-black uppercase tracking-widest text-on-surface-deep">
             {searchPlaceholder}: {entityId}
+            {variantId ? ` · ${t('bi.relational.entity.variant', 'Variante')}: ${variantId}` : ''}
           </p>
         </div>
         <button
@@ -170,6 +181,7 @@ function DrilldownPage<Row>({
             rowKey={rowKey}
             sort={query.sort}
             onSort={query.toggleSort}
+            rowMenu={rowMenu}
             emptyKey={emptyKey}
             emptyFallback={emptyFallback}
           />

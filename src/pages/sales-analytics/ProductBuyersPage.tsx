@@ -1,10 +1,16 @@
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Copy, ShoppingCart } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
+import { formatPYG } from '@/utils/currencyUtils';
 import DrilldownPage from '@/features/relational-analytics/components/DrilldownPage';
+import type { DrilldownRowAction, DrilldownRowMenu } from '@/features/relational-analytics/components/RowActionsMenu';
+import type { EntityOption } from '@/features/relational-analytics/components/EntitySearchSelect';
+import { useRowCopyValue } from '@/features/relational-analytics/hooks/useRowCopyValue';
+import { searchSellableUnitsFlat } from '@/features/catalog/sellableUnitSearch';
+import { sellableUnitToEntityOption } from '@/features/relational-analytics/sellableUnitOption';
 import type { DrilldownColumn } from '@/domain/relational-analytics/types';
 import type { ProductBuyerRow } from '@/domain/relational-analytics/types';
 import { relationalAnalyticsService } from '@/services/bi/relationalAnalyticsService';
-import { productService } from '@/services/productService';
-import type { EntityOption } from '@/features/relational-analytics/components/EntitySearchSelect';
 
 /**
  * #1 RF-BIPACK-021 — Compradores de un producto (drill-down relacional).
@@ -22,29 +28,58 @@ const columns: DrilldownColumn<ProductBuyerRow>[] = [
   { key: 'last_purchase_at', labelKey: 'bi.relational.col.lastPurchase', labelFallback: 'Última Compra', format: 'date', align: 'right', sortable: true },
 ];
 
+/**
+ * Búsqueda plana (granularity=variant, mismo camino que /ventas): una fila
+ * por variante con SKU/stock/precio propios; elegir una variante filtra el
+ * drill-down por variant_id (soportado por el endpoint).
+ */
 const searchProducts = async (term: string): Promise<EntityOption[]> => {
-  const results = await productService.search(term);
-  return (results ?? [])
-    .map((p): EntityOption => {
-      // La búsqueda devuelve enriquecidos legacy/planos: los campos
-      // product_id/product_name/sku son fallbacks opcionales.
-      const row = p as unknown as { product_id?: string; id?: string; name?: string; product_name?: string; sku?: string };
-      return {
-        id: String(row.product_id ?? row.id ?? ''),
-        label: String(row.name ?? row.product_name ?? row.id ?? ''),
-        sub: row.sku ? String(row.sku) : undefined,
-      };
-    })
-    .filter((opt) => opt.id);
+  const units = await searchSellableUnitsFlat(term);
+  return units.map(sellableUnitToEntityOption);
 };
 
 const ProductBuyersPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const productId = searchParams.get('product_id');
+  const variantId = searchParams.get('variant_id');
+  const navigate = useNavigate();
+  const { t } = useI18n();
+  const copyValue = useRowCopyValue();
+
+  // Menú por fila: pivote al carrito del cliente + copiar documento.
+  const buildRowMenu = (row: ProductBuyerRow): DrilldownRowMenu => ({
+    title: row.client_name,
+    subtitle: row.client_doc ? t('bi.relational.menu.docLabel', 'Doc: {doc}', { doc: row.client_doc }) : undefined,
+    actions: [
+      {
+        id: 'customer-top',
+        label: t('bi.relational.action.customerTop', 'Productos que compra'),
+        description: t('bi.relational.menu.summary', '{units} uds. · {purchases} compras · {total}', {
+          units: row.units,
+          purchases: row.purchases,
+          total: formatPYG(row.total),
+        }),
+        icon: ShoppingCart,
+        onSelect: () => navigate(`/sales-analytics/customers/top-products?customer_id=${encodeURIComponent(row.client_id)}`),
+      },
+      ...(row.client_doc
+        ? [
+            {
+              id: 'copy-doc',
+              label: t('bi.relational.action.copyDoc', 'Copiar documento'),
+              description: row.client_doc,
+              icon: Copy,
+              onSelect: () => void copyValue(row.client_doc),
+            } satisfies DrilldownRowAction,
+          ]
+        : []),
+    ],
+  });
 
   return (
     <DrilldownPage<ProductBuyerRow>
       entityId={productId}
+      variantId={variantId}
       titleKey="bi.relational.buyers.title"
       titleFallback="Compradores del Producto"
       subtitleKey="bi.relational.buyers.subtitle"
@@ -56,7 +91,11 @@ const ProductBuyersPage = () => {
       defaultSort="-total"
       fetcher={(id, params) => relationalAnalyticsService.getProductBuyers(id, params)}
       searchEntity={searchProducts}
-      onEntityPicked={(id) => setSearchParams({ product_id: id })}
+      onEntityPicked={(id, opt) =>
+        setSearchParams(opt.variantId ? { product_id: id, variant_id: opt.variantId } : { product_id: id })
+      }
+      minSearchChars={3}
+      rowMenu={buildRowMenu}
       emptyKey="bi.relational.buyers.empty"
       emptyFallback="Sin compradores para este producto con los filtros aplicados"
       testId="product-buyers-page"

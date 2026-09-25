@@ -54,8 +54,10 @@ export function useDrilldownQuery<Row>(options: {
   fetcher: DrilldownFetcher<Row>;
   defaultSort: string;
   pageSize?: number;
+  /** filtro opcional por variante (picker de productos con variantes) */
+  variantId?: string | null;
 }): DrilldownQuery<Row> {
-  const { id, fetcher, defaultSort, pageSize = PAGE_SIZE } = options;
+  const { id, fetcher, defaultSort, pageSize = PAGE_SIZE, variantId } = options;
 
   const [qDraft, setQDraft] = useState('');
   const [qApplied, setQApplied] = useState('');
@@ -78,8 +80,9 @@ export function useDrilldownQuery<Row>(options: {
       page_size: pageSize,
       date_from: dateFrom || undefined,
       date_to: dateTo || undefined,
+      variant_id: variantId || undefined,
     }),
-    [qApplied, sort, page, pageSize, dateFrom, dateTo],
+    [qApplied, sort, page, pageSize, dateFrom, dateTo, variantId],
   );
   const paramsKey = `${id ?? ''}|${JSON.stringify(params)}|${refreshKey}`;
 
