@@ -92,6 +92,7 @@ export const suppliers = {
 
   // Detalles del proveedor
   'supplier.details.title': 'Detalle del proveedor',
+  'supplier.details.id': 'ID',
   'supplier.details.status': 'Estado',
   'supplier.details.name': 'Nombre',
   'supplier.details.taxId': 'RFC / Tax ID',

@@ -13,28 +13,23 @@ import { useI18n } from '@/lib/i18n';
 const MODAL_VARIANTS = {
   default: {
     icon: null,
-    iconColor: '',
-    borderColor: 'border-border'
+    iconColor: ''
   },
   success: {
     icon: CheckCircle,
-    iconColor: 'text-green-600',
-    borderColor: 'border-green-200'
+    iconColor: 'text-green-600'
   },
   warning: {
     icon: AlertTriangle,
-    iconColor: 'text-yellow-600',
-    borderColor: 'border-yellow-200'
+    iconColor: 'text-yellow-600'
   },
   error: {
     icon: AlertCircle,
-    iconColor: 'text-red-600',
-    borderColor: 'border-red-200'
+    iconColor: 'text-red-600'
   },
   info: {
     icon: Info,
-    iconColor: 'text-blue-600',
-    borderColor: 'border-blue-200'
+    iconColor: 'text-blue-600'
   }
 };
 
@@ -126,12 +121,14 @@ const EnhancedModal = ({
     }
   };
 
+  // DESIGN.md §5/§6.6: modal = rounded-xl + shadow-fluent-16 + glass-acrylic.
+  // flex-col + min-h-0 en el contenido hace que el scroll funcione con el
+  // footer anclado abajo (sin flex, el footer se recorta con max-h).
   const getModalStyles = () => `
     transform transition-all duration-300 ease-out
     ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}
-    bg-card text-card-foreground border rounded-lg shadow-sm
-    ${variantConfig.borderColor}
-    shadow-2xl backdrop-blur-sm
+    glass-acrylic text-foreground rounded-xl shadow-fluent-16
+    flex flex-col
   `;
 
   const getOverlayStyles = () => `
@@ -168,7 +165,7 @@ const EnhancedModal = ({
       >
         {/* Header */}
         <div className={`
-          flex items-center justify-between p-6 pb-4
+          flex items-center justify-between p-lg pb-md shrink-0
           ${headerClassName}
         `}>
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -182,13 +179,13 @@ const EnhancedModal = ({
               {title && (
                 <h2
                   id={`${testId}-title`}
-                  className="text-lg font-semibold text-foreground truncate"
+                  className="text-title-md text-foreground truncate"
                 >
                   {title}
                 </h2>
               )}
               {subtitle && (
-                <p className="text-sm text-muted-foreground mt-1 truncate">
+                <p className="text-body-md text-on-surface-deep mt-1 truncate">
                   {subtitle}
                 </p>
               )}
@@ -211,7 +208,7 @@ const EnhancedModal = ({
 
         {/* Content */}
         <div className={`
-          px-6 flex-1 overflow-y-auto
+          px-lg pb-md flex-1 min-h-0 overflow-y-auto
           ${contentClassName}
         `}>
           {loading ? (
@@ -229,7 +226,7 @@ const EnhancedModal = ({
         {/* Footer */}
         {footer && (
           <div className={`
-            px-6 py-4 mt-6 border-t border-border
+            px-lg py-md border-t border-border-subtle shrink-0
             ${footerClassName}
           `}>
             {footer}

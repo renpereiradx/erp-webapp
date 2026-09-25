@@ -93,7 +93,7 @@ const SupplierDetailsContent = ({
       }
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-        <DetailField label="ID" value={supplier.id ?? '-'} mono />
+        <DetailField label={t('supplier.details.id', 'ID')} value={supplier.id ?? '-'} mono />
         <DetailField label={t('supplier.details.status', 'Estado')}>
           <Badge variant={isActive ? 'success' : 'secondary'} size="sm" className="gap-xs w-max">
             <span

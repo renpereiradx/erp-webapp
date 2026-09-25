@@ -52,16 +52,17 @@ const ClientDetailsContent = ({
       isOpen
       onClose={onClose}
       title={t('clients.modal.title.details', 'Detalles del Cliente')}
-      size="md"
+      size="lg"
       footer={
-        <div className="flex justify-between gap-sm">
-          <Button variant="secondary" type="button" onClick={onClose}>
+        <div className="flex flex-wrap justify-between gap-sm">
+          <Button variant="secondary" type="button" onClick={onClose} className="whitespace-nowrap">
             {t('action.close', 'Cerrar')}
           </Button>
-          <div className="flex gap-sm">
+          <div className="flex flex-wrap gap-sm">
             <Button
               variant="secondary"
               type="button"
+              className="whitespace-nowrap"
               onClick={() => {
                 onClose();
                 navigate(`/sales-analytics/customers/top-products?customer_id=${encodeURIComponent(client.id || client._key || '')}`);
@@ -73,6 +74,7 @@ const ClientDetailsContent = ({
             <Button
               variant="primary"
               type="button"
+              className="whitespace-nowrap"
               onClick={() => {
                 onClose();
                 navigate(`/receivables/client-profile/${client.id || client._key || 'CLI-001'}`);

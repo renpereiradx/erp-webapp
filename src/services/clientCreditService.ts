@@ -70,17 +70,18 @@ export interface AccountPaymentResult {
 
 export const clientCreditService = {
   async getCredit(clientId: string): Promise<ClientCredit> {
-    const response = await apiClient.get(`/clients/${clientId}/credit`);
+    // Rutas del BE: subrouter /api/v1/clients (ver internal/party/http/routes.go).
+    const response = await apiClient.get(`/api/v1/clients/${clientId}/credit`);
     return response as unknown as ClientCredit;
   },
 
   async getAging(params: { branch_id?: number; as_of?: string } = {}): Promise<ClientCredit['by_currency']> {
-    const response = await apiClient.get('/clients/credit/aging', { params });
+    const response = await apiClient.get('/api/v1/clients/credit/aging', { params });
     return (response as unknown as { data: ClientCredit['by_currency'] })?.data ?? [];
   },
 
   async registerAccountPayment(clientId: string, input: RegisterAccountPaymentInput): Promise<AccountPaymentResult> {
-    const response = await apiClient.post(`/clients/${clientId}/account-payments`, input);
+    const response = await apiClient.post(`/api/v1/clients/${clientId}/account-payments`, input);
     return response as unknown as AccountPaymentResult;
   },
 };
