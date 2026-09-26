@@ -50,3 +50,34 @@
    los textos NUEVOS usan t() y tokens. Migración full = tarea propia.
 3. Doble expresión de stock ("X cajas / Y kg") en pickers: requiere exponer
    conversión+stock por unidad en la búsqueda plana (backend).
+
+## Addendum — fix originalPrice unit-aware + derivación por factor (2026-09-26, auditoría UOM)
+
+**Hallazgos que motiva:**
+1. `modalDisplay.price` (el "Precio Base Unit." del modal y el `originalPrice` del carrito)
+   no seguía a la unidad: al editar un ítem y cambiar a una unidad CON precio registrado, el
+   preview mostraba el subtotal con el precio de la unidad base y al confirmar el flujo lo
+   trataba como modificación de precio → exigía razón obligatoria para una venta normal y
+   el `sale_price` enviado activaba el gate `sales:apply_discount` en el backend (un
+   vendedor sin el permiso no podía vender en unidad ≠ base).
+2. Con unidad SIN precio registrado, el POS no derivaba nada: la pantalla mostraba el total
+   con el precio base y el backend cobraba su derivación (pantalla ≠ cobro). El fix BE
+   (migración 20260926164457) corrigió la fórmula; este addendum alinea el FE.
+
+**Cambios:**
+- `src/domain/units/resolveUnitFactor.ts` (nuevo, +tests): cascada
+  específico-directo → específico-inverso → global-directo → global-inverso, calcando
+  `convert_units_for_product` (SQL) y `findConversionFactor` (Go).
+- `SalesNew`: fetchea `/unit-conversions` al abrir el modal (fail-silent); nuevo
+  `resolveModalUnitOriginalPrice(unit)` = precio registrado → ese; si no, base × factor
+  (misma fórmula que el SQL); si no hay conversión → precio base + `matchesUnit=false`.
+  Alimenta el "Precio Base Unit.", el diff de descuento `onPriceChange`, el
+  `originalPrice` de `handleConfirmAdd` y `handleModalUnitChange` (ahora el precio sigue a
+  la unidad SIEMPRE — antes solo con precio registrado, y volver a la base mantenía el
+  precio de la caja).
+- `EditItemModal`: el hint pasa a decidirse en el padre (`unitPriceUnavailable`): solo
+  queda true sin NI precio NI conversión — la venta será rechazada por NO_CONVERSION, el
+  texto nuevo lo dice. El prop `unitPrices` se elimina (solo lo usaba el hint).
+
+**Gates:** vitest 1175/1175 (9 casos nuevos de cascada + modal re-contratado), tsc 0,
+build, lint:design verdes.

@@ -41,6 +41,8 @@ import apiService from '@/services/api.ts';
 import { PaymentMethodService } from '@/services/paymentMethodService';
 import { CurrencyService } from '@/services/currencyService';
 import { productService } from '@/services/productService';
+import { unitConversionsService } from '@/features/unit-conversions/services/unitConversionsService';
+import { resolveUnitFactor, type UnitConversionRow } from '@/domain/units/resolveUnitFactor';
 import { VariantSelectorModal } from '@/features/sales/components/VariantSelectorModal';
 import { salePaymentService } from '@/services/salePaymentService';
 import { reservationService } from '@/services/reservationService';
@@ -315,6 +317,10 @@ const SalesNew: React.FC = () => {
   // Precios registrados del producto del modal por unidad (unit_prices):
   // alimenta el recálculo al cambiar unidad y el hint de unidad sin precio.
   const [modalUnitPrices, setModalUnitPrices] = useState<Array<{ unit: string; price: number }>>([]);
+  // Conversiones registradas (globales + específicas) para derivar el precio
+  // de una unidad sin precio exacto con la MISMA fórmula del backend
+  // (precio_unidad = precio_base × factor). null = no disponibles (fail-silent).
+  const [modalConversions, setModalConversions] = useState<UnitConversionRow[] | null>(null);
   const [modalPrice, setModalPrice] = useState(0);
   const [modalDiscount, setModalDiscount] = useState(0);
   const [modalDiscountType, setModalDiscountType] = useState<'amount' | 'percent'>('amount');
@@ -1030,16 +1036,60 @@ const SalesNew: React.FC = () => {
     };
   }, [isModalOpen, selectedModalProduct?.id]);
 
+  // Conversiones para derivar precios por unidad (fix auditoría UOM
+  // 2026-09-26): se fetchean al abrir el modal, fail-silencioso. Sin ellas el
+  // flujo degrada al anterior (precio de la unidad base + hint).
+  useEffect(() => {
+    if (!isModalOpen) return;
+    let cancelled = false;
+    unitConversionsService
+      .getAll()
+      .then((rows) => {
+        if (!cancelled) setModalConversions(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setModalConversions(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isModalOpen]);
+
+  // Precio original UNIT-AWARE (fix auditoría UOM 2026-09-26): el "precio
+  // base" del modal y el originalPrice del carrito deben corresponder a la
+  // unidad elegida — precio registrado → ese; si no, base × factor con la
+  // misma fórmula del SQL (process_sale_with_reserve deriva multiplicando);
+  // sin conversión → precio de la unidad base y matchesUnit=false (hint).
+  // Antes originalPrice quedaba congelado en la unidad base: vender en una
+  // unidad con precio registrado exigía razón de cambio de precio y el
+  // permiso sales:apply_discount para una venta normal.
+  function resolveModalUnitOriginalPrice(unit: string): { price: number; matchesUnit: boolean } {
+    if (!selectedModalProduct) return { price: 0, matchesUnit: false };
+    const display = getProductDisplay(selectedModalProduct);
+    const chosen = unit || display.base_unit;
+    const registered = modalUnitPrices.find((p) => p.unit === chosen);
+    if (registered) return { price: registered.price, matchesUnit: true };
+    const baseRegistered = modalUnitPrices.find((p) => p.unit === display.base_unit);
+    const basePrice = baseRegistered?.price ?? display.price;
+    if (chosen !== display.base_unit) {
+      const factor = resolveUnitFactor(modalConversions, display.id, display.base_unit, chosen);
+      if (factor != null) {
+        return { price: Number((basePrice * factor).toFixed(2)), matchesUnit: true };
+      }
+      return { price: basePrice, matchesUnit: false };
+    }
+    return { price: basePrice, matchesUnit: true };
+  }
+
   const handleModalUnitChange = (unit: string) => {
     setModalUnit(unit);
-    // Si la unidad tiene precio registrado, el precio base y final pasan a
-    // esa unidad (antes cambiar la unidad solo cambiaba la etiqueta y se
-    // vendía "2 box" al precio por kg — PLAN_UNITS_FRONTEND).
-    const unitPrice = modalUnitPrices.find((p) => p.unit === unit);
-    if (unitPrice) {
-      setModalPrice(unitPrice.price);
-      setModalDiscount(0);
-    }
+    // El precio sigue a la unidad (PLAN_UNITS_FRONTEND + fix 2026-09-26):
+    // precio registrado → ese; sin registro → derivado base × factor. Antes
+    // solo se movía con precio registrado y cambiar la unidad dejaba el
+    // precio de la unidad anterior (volver a la base mantenía el precio de
+    // la caja).
+    setModalPrice(resolveModalUnitOriginalPrice(unit).price);
+    setModalDiscount(0);
   };
 
   const handleOpenEditModal = (item: CartItem) => {
@@ -1099,7 +1149,10 @@ const SalesNew: React.FC = () => {
     }
 
     const productDisplay = getProductDisplay(selectedModalProduct);
-    const originalPrice = productDisplay.price;
+    // originalPrice unit-aware (fix UOM 2026-09-26): contra el precio de la
+    // unidad elegida, no el de la base — evita exigir razón de cambio de
+    // precio (y el permiso sales:apply_discount) al vender en caja/docena.
+    const originalPrice = resolveModalUnitOriginalPrice(modalUnit || productDisplay.base_unit).price;
     const allowDecimal = isDecimalUnit(modalUnit || productDisplay.base_unit);
     const minQty = allowDecimal ? 0.01 : 1;
     let parsedModalQuantity = Math.max(minQty, Number(modalQuantity) || minQty);
@@ -1913,6 +1966,12 @@ const SalesNew: React.FC = () => {
   };
 
   const modalDisplay = selectedModalProduct ? getProductDisplay(selectedModalProduct) : null;
+  // Precio original de la unidad elegida (registrado o derivado) — alimenta
+  // el "Precio Base Unit." del modal, el diff de descuento onPriceChange y el
+  // hint de unidad sin precio NI conversión.
+  const modalUnitOriginal = modalDisplay
+    ? resolveModalUnitOriginalPrice(modalUnit || modalDisplay.base_unit)
+    : null;
 
   return (
     <div className="flex flex-col gap-4 animate-in fade-in duration-200">
@@ -2112,19 +2171,20 @@ const SalesNew: React.FC = () => {
           onClose={() => setIsModalOpen(false)}
           editing={!!editingItemId}
           productName={modalDisplay.name}
-          baseUnitPrice={modalDisplay.price}
+          baseUnitPrice={(modalUnitOriginal ?? { price: modalDisplay.price }).price}
           baseUnit={modalDisplay.base_unit}
           quantity={modalQuantity}
           onQuantityChange={setModalQuantity}
           unit={modalUnit}
           onUnitChange={handleModalUnitChange}
-          unitPrices={modalUnitPrices}
+          unitPriceUnavailable={modalUnitOriginal ? !modalUnitOriginal.matchesUnit : undefined}
           price={modalPrice}
           onPriceChange={(v) => {
             setModalPrice(v);
-            const diff = modalDisplay.price - v;
+            const unitOriginalPrice = (modalUnitOriginal ?? { price: modalDisplay.price }).price;
+            const diff = unitOriginalPrice - v;
             if (modalDiscountType === 'percent') {
-              setModalDiscount(Number(((diff / modalDisplay.price) * 100).toFixed(2)));
+              setModalDiscount(Number(((diff / unitOriginalPrice) * 100).toFixed(2)));
             } else {
               setModalDiscount(diff);
             }

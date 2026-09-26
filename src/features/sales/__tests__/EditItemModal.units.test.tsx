@@ -2,11 +2,11 @@
  * PLAN_UNITS_FRONTEND — contrato UI del selector de unidades del POS.
  *
  * - El campo unidad es un Select del catálogo (antes texto libre con datalist).
- * - Unidad distinta de la base SIN precio registrado → hint de advertencia
- *   (antes se vendía "2 box" al precio por kg sin aviso).
- * - Unidad con precio registrado (unit_prices) → sin hint.
- *
- * i18n moqueado con la firma real (fallback español); lucide-react sin mock.
+ * - El hint de advertencia lo decide el PADRE vía `unitPriceUnavailable`
+ *   (fix auditoría UOM 2026-09-26): solo queda true cuando la unidad no tiene
+ *   NI precio registrado NI conversión derivable — antes bastaba la falta de
+ *   precio exacto porque el POS no derivaba por factor.
+ * - i18n moqueado con la firma real (fallback español); lucide-react sin mock.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -52,33 +52,27 @@ describe('EditItemModal — selector de unidades (PLAN_UNITS)', () => {
   beforeEach(() => vi.clearAllMocks())
   afterEach(() => cleanup())
 
-  it('muestra el hint cuando la unidad elegida no tiene precio registrado', () => {
+  it('muestra el hint cuando la unidad elegida no tiene precio ni conversión (flag del padre)', () => {
     render(
       <EditItemModal
-        {...buildProps({ unit: 'box', unitPrices: [{ unit: 'kg', price: 5000 }] })}
+        {...buildProps({ unit: 'box', unitPriceUnavailable: true })}
       />
     )
 
     expect(screen.getByTestId('unit-no-price-hint')).toBeInTheDocument()
   })
 
-  it('oculta el hint cuando la unidad elegida tiene precio registrado', () => {
+  it('oculta el hint cuando el padre resolvió el precio de la unidad (registrado o derivado)', () => {
     render(
       <EditItemModal
-        {...buildProps({
-          unit: 'box',
-          unitPrices: [
-            { unit: 'kg', price: 5000 },
-            { unit: 'box', price: 100000 },
-          ],
-        })}
+        {...buildProps({ unit: 'box', unitPriceUnavailable: false })}
       />
     )
 
     expect(screen.queryByTestId('unit-no-price-hint')).not.toBeInTheDocument()
   })
 
-  it('no muestra hint para la unidad base aunque no haya lista de precios', () => {
+  it('sin flag no muestra hint (unidad base siempre resuelta)', () => {
     render(<EditItemModal {...buildProps({ unit: 'kg' })} />)
 
     expect(screen.queryByTestId('unit-no-price-hint')).not.toBeInTheDocument()
@@ -89,10 +83,7 @@ describe('EditItemModal — selector de unidades (PLAN_UNITS)', () => {
     const onUnitChange = vi.fn()
     render(
       <EditItemModal
-        {...buildProps({
-          onUnitChange,
-          unitPrices: [{ unit: 'kg', price: 5000 }],
-        })}
+        {...buildProps({ onUnitChange })}
       />
     )
 

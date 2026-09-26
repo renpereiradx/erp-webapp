@@ -27,14 +27,18 @@ interface EditItemModalProps {
   /** true = editando ítem existente; false = confirmando adición. */
   editing: boolean;
   productName: string;
-  /** Precio base unitario (originalPrice) del producto. */
+  /**
+   * Precio base unitario (originalPrice) para la unidad elegida: registrado
+   * en unit_prices o derivado (base × factor). El padre lo calcula.
+   */
   baseUnitPrice: number;
   baseUnit: string;
   /**
-   * Precios registrados del producto por unidad (products.unit_prices).
-   * Se usan para avisar cuando la unidad elegida no tiene precio propio.
+   * true cuando el precio mostrado NO corresponde a la unidad elegida (sin
+   * precio registrado ni conversión derivable): se muestra el hint y la
+   * venta será rechazada por el backend hasta registrar la conversión.
    */
-  unitPrices?: Array<{ unit: string; price: number }>;
+  unitPriceUnavailable?: boolean;
   quantity: number | string;
   onQuantityChange: (v: number | string) => void;
   unit: string;
@@ -68,7 +72,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   productName,
   baseUnitPrice,
   baseUnit,
-  unitPrices,
+  unitPriceUnavailable,
   quantity,
   onQuantityChange,
   unit,
@@ -114,13 +118,10 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   const parsedQuantity = Math.max(0, Number(quantity ?? 1));
   const parsedDiscount = Number(discount) || 0;
 
-  // Unidad de venta distinta de la base y sin precio registrado: el precio
-  // mostrado NO corresponde a esa unidad (antes se vendía "2 box" al precio
-  // por kg sin ningún aviso — PLAN_UNITS_FRONTEND).
-  const unitLacksPrice =
-    !!unit &&
-    unit !== baseUnit &&
-    !(unitPrices || []).some((p) => p.unit === unit);
+  // El padre resuelve si el precio corresponde a la unidad (registrado o
+  // derivado por factor); este flag solo queda true cuando no hay NI precio
+  // NI conversión — el backend rechazaría la venta (NO_CONVERSION).
+  const unitLacksPrice = !!unitPriceUnavailable;
 
   const grossSubtotal = baseUnitPrice * parsedQuantity;
   const discountValue = useMemo(() => {
@@ -223,7 +224,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden />
                 {t(
                   'sales.editItem.unitNoPrice',
-                  'Esta unidad no tiene precio registrado: el precio mostrado corresponde a otra unidad. Verifícalo antes de confirmar.'
+                  'Esta unidad no tiene precio ni conversión registrada: el precio mostrado corresponde a otra unidad y la venta será rechazada hasta registrar la conversión.'
                 )}
               </p>
             )}

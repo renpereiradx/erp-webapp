@@ -15,5 +15,5 @@ export const unitConversions = {
   'unitConversions.globalScope': 'global',
   'unitConversions.specificFor': 'de {product}',
   'unitConversions.deleteConfirm': '¿Eliminar la conversión {from} → {to} ({scope})?',
-  'sales.editItem.unitNoPrice': 'Esta unidad no tiene precio registrado: el precio mostrado corresponde a otra unidad. Verifícalo antes de confirmar.',
+  'sales.editItem.unitNoPrice': 'Esta unidad no tiene precio ni conversión registrada: el precio mostrado corresponde a otra unidad y la venta será rechazada hasta registrar la conversión.',
 }
