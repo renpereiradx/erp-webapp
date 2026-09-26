@@ -44,7 +44,10 @@ export function UsersTable({
   const headClass = 'text-label-caps uppercase text-on-surface-deep';
 
   return (
-    <Table>
+    // table-fixed + anchos explícitos: USUARIO (sin ancho) absorbe el resto y
+    // trunca con ellipsis; ROL/ESTADO/ÚLTIMA/acciones quedan fijas y el ⋮
+    // siempre visible sin scroll horizontal en desktop.
+    <Table className="table-fixed">
       <TableHeader>
         <TableRow className="bg-surface-muted hover:bg-surface-muted border-0">
           <TableHead className="w-12 px-md text-center">
@@ -56,15 +59,21 @@ export function UsersTable({
             />
           </TableHead>
           <TableHead className={`py-3 px-md ${headClass}`}>{t('users.table.user', 'Usuario')}</TableHead>
-          <TableHead className={`py-3 px-md ${headClass}`}>{t('users.table.role', 'Rol')}</TableHead>
-          <TableHead className={`py-3 px-md ${headClass}`}>{t('users.table.status', 'Estado')}</TableHead>
-          <TableHead className={`py-3 px-md ${headClass}`}>{t('users.table.lastActive', 'Última actividad')}</TableHead>
+          <TableHead className={`w-40 py-3 px-md ${headClass}`}>{t('users.table.role', 'Rol')}</TableHead>
+          <TableHead className={`w-32 py-3 px-md ${headClass}`}>{t('users.table.status', 'Estado')}</TableHead>
+          <TableHead className={`w-32 py-3 px-md ${headClass}`}>{t('users.table.lastActive', 'Última actividad')}</TableHead>
           <TableHead className="w-20 px-md" />
         </TableRow>
       </TableHeader>
       <TableBody>
         {users.map((user) => {
           const isSelected = selectedIds.includes(user.id);
+          // La columna USUARIO es fluida con truncate: con table-fixed absorbe
+          // el resto del ancho y los usernames/emails largos (sin puntos de
+          // corte) se elipsan en vez de estirar la tabla y sacar la columna
+          // de acciones del viewport. `title` conserva el texto completo.
+          const displayName = getUserDisplayName(user);
+          const subline = `${getUserFullName(user) && user.username ? `@${user.username} · ` : ''}${user.email ?? ''}`;
           return (
             <TableRow
               key={user.id}
@@ -80,18 +89,15 @@ export function UsersTable({
               </TableCell>
               <TableCell className="py-3 px-md">
                 <div className="flex items-center gap-sm">
-                  <Avatar className="inline-flex size-10 overflow-hidden rounded-full">
+                  <Avatar className="inline-flex size-10 shrink-0 overflow-hidden rounded-full">
                     {user.avatar_url && <AvatarImage src={user.avatar_url} />}
                     <AvatarFallback className="bg-primary/10 text-primary text-body-sm-bold">
                       {getUserInitials(user)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-body-md-bold text-foreground truncate">{getUserDisplayName(user)}</span>
-                    <span className="text-body-sm text-on-surface-deep truncate">
-                      {getUserFullName(user) && user.username ? `@${user.username} · ` : ''}
-                      {user.email}
-                    </span>
+                  <div className="flex min-w-0 flex-col">
+                    <span title={displayName} className="text-body-md-bold text-foreground truncate">{displayName}</span>
+                    <span title={subline} className="text-body-sm text-on-surface-deep truncate">{subline}</span>
                   </div>
                 </div>
               </TableCell>
@@ -123,7 +129,7 @@ export function UsersTable({
                   {formatDateOrFallback(user.last_login_at, t('users.lastActiveNever', 'Nunca'))}
                 </span>
               </TableCell>
-              <TableCell className="py-3 px-md text-right">
+              <TableCell className="whitespace-nowrap py-3 px-md text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" aria-label={t('users.table.actions', 'Acciones')}>
