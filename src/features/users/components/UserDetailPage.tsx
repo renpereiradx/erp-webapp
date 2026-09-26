@@ -183,7 +183,8 @@ export function UserDetailPage() {
                 <ShieldCheck className="size-4 text-primary" />
                 {t('users.rolesPermissions', 'Roles y Permisos')}
               </h3>
-              <Button variant="ghost" size="sm" onClick={() => setIsRolesOpen(true)}>
+              <Button variant="secondary" size="sm" onClick={() => setIsRolesOpen(true)}>
+                <ShieldCheck className="size-4 mr-sm" />
                 {t('users.actions.manageRoles', 'Gestionar Roles')}
               </Button>
             </div>

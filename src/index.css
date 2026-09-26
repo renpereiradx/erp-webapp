@@ -460,6 +460,130 @@
   }
 }
 
+/* =============================================================================
+   SHEET PRIMITIVES (ui/sheet.jsx + sidebar móvil)
+   Fix: .sheet-overlay / .sheet-content-* / .sheet-close son referenciados por
+   los primitives Radix del Sheet pero nunca se definieron en ningún
+   stylesheet importado. Sin esto el sheet se monta pero renderiza IN-FLOW al
+   final del DOM (invisible, fuera de pantalla) — la misma clase de bug que
+   .radix-dialog__* de arriba (hallazgo: el panel "Gestionar Roles" no
+   mostraba nada pese a que GET /roles devolvía 200 con los 9 roles).
+   Tokens semánticos (flip con .dark), consistente con DESIGN.md §6.6.
+   ============================================================================= */
+@layer components {
+  .sheet-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background-color: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: dialog-fade-in 200ms ease-out;
+  }
+
+  .sheet-content {
+    position: fixed;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-fluent-16);
+    outline: none;
+  }
+  .sheet-content--right {
+    top: 0;
+    right: 0;
+    height: 100vh;
+    height: 100dvh;
+    width: min(28rem, 100vw);
+    border-left: 1px solid var(--color-border-subtle);
+    animation: sheet-in-right 220ms ease-out;
+  }
+  .sheet-content--left {
+    top: 0;
+    left: 0;
+    height: 100vh;
+    height: 100dvh;
+    width: min(28rem, 100vw);
+    border-right: 1px solid var(--color-border-subtle);
+    animation: sheet-in-left 220ms ease-out;
+  }
+  .sheet-content--top {
+    top: 0;
+    left: 0;
+    right: 0;
+    max-height: min(32rem, 100dvh);
+    border-bottom: 1px solid var(--color-border-subtle);
+    animation: sheet-in-top 220ms ease-out;
+  }
+  .sheet-content--bottom {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: min(32rem, 100dvh);
+    border-top: 1px solid var(--color-border-subtle);
+    animation: sheet-in-bottom 220ms ease-out;
+  }
+
+  .sheet-close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    color: var(--color-on-surface-deep);
+    opacity: 0.7;
+    transition: opacity 150ms, background-color 150ms;
+  }
+  .sheet-close:hover {
+    opacity: 1;
+    background-color: var(--color-surface-muted);
+  }
+
+  .sheet-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sheet-title {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 700;
+    color: var(--color-foreground);
+  }
+  .sheet-description {
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--color-on-surface-deep);
+  }
+  .sheet-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+}
+
+@keyframes sheet-in-right {
+  from { opacity: 0; transform: translateX(2rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes sheet-in-left {
+  from { opacity: 0; transform: translateX(-2rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes sheet-in-top {
+  from { opacity: 0; transform: translateY(-2rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes sheet-in-bottom {
+  from { opacity: 0; transform: translateY(2rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes dialog-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
