@@ -237,9 +237,14 @@ const BranchManagement: React.FC = () => {
                   <TableCell className="py-5 px-6 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="size-8 p-0 rounded-full hover:bg-slate-200">
-                          <MoreHorizontal size={16} />
-                        </Button>
+                        <button
+                          type="button"
+                          aria-label={t('common.actions', 'Acciones')}
+                          title={t('common.actions', 'Acciones')}
+                          className="inline-flex size-9 items-center justify-center rounded-full border border-border-subtle bg-surface text-on-surface-deep shadow-sm transition-colors hover:bg-surface-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        >
+                          <MoreHorizontal size={18} aria-hidden="true" className="shrink-0" />
+                        </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56 font-display rounded-xl shadow-fluent-lg">
                         <DropdownMenuItem onClick={() => handleEdit(branch, 'general')} className="gap-2 py-2.5 cursor-pointer">
