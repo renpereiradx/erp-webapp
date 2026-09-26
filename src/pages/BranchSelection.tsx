@@ -151,7 +151,30 @@ const BranchSelection = () => {
               </button>
             ))
           ) : (
-            !loading && !canViewGlobal && (
+            !loading && (canViewGlobal ? (
+              // Instalación sin sucursales todavía (ej: limpia antes de cargar
+              // las reales): el admin entra en vista global y las crea desde
+              // Configuración → Sucursales. Sin esta salida la página es un
+              // callejón sin salida (solo logout).
+              <div className="col-span-full py-20 text-center bg-surface rounded-xl border border-border-subtle shadow-fluent-2 flex flex-col items-center justify-center gap-5">
+                <div className="w-16 h-16 bg-surface-muted rounded-full flex items-center justify-center">
+                  <Building2 size={32} className="text-on-surface-deep" />
+                </div>
+                <h3 className="text-xl font-bold text-text-main tracking-tight">
+                  {t('branchSelection.noBranchesYetTitle', 'No hay sucursales creadas todavía')}
+                </h3>
+                <p className="text-text-secondary text-sm font-medium max-w-md">
+                  {t('branchSelection.noBranchesYetHint', 'Podés entrar en vista global y crear la sucursal del negocio en Configuración → Sucursales.')}
+                </p>
+                <button
+                  onClick={() => handleSelectBranch(null)}
+                  className="flex items-center gap-2 px-6 h-12 bg-primary text-white text-xs font-black uppercase tracking-widest rounded-lg shadow-fluent-8 hover:opacity-90 active:scale-[0.98] transition-all"
+                >
+                  <span>{t('branchSelection.continueGlobal', 'Continuar en vista global')}</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            ) : (
               <div className="col-span-full py-20 text-center bg-white rounded-xl border border-border-subtle shadow-fluent-2 flex flex-col items-center justify-center">
                 <div className="w-16 h-16 bg-[#f3f2f1] rounded-full flex items-center justify-center mb-6">
                   <Building2 size={32} className="text-slate-400" />
@@ -163,7 +186,7 @@ const BranchSelection = () => {
                   {t('branchSelection.noBranchesHint', 'Contacta a un administrador para que te otorgue acceso a un punto de venta.')}
                 </p>
               </div>
-            )
+            ))
           )}
         </div>
 

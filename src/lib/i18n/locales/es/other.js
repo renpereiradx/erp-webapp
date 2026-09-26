@@ -99,6 +99,9 @@ export const other = {
   'branchSelection.connect': 'Conectarse',
   'branchSelection.noBranchesTitle': 'No tienes sucursales asignadas',
   'branchSelection.noBranchesHint': 'Contacta a un administrador para que te otorgue acceso a un punto de venta.',
+  'branchSelection.noBranchesYetTitle': 'No hay sucursales creadas todavía',
+  'branchSelection.noBranchesYetHint': 'Podés entrar en vista global y crear la sucursal del negocio en Configuración → Sucursales.',
+  'branchSelection.continueGlobal': 'Continuar en vista global',
   'branchSelection.securityActive': 'Security Active',
   'branchSelection.syncedToCloud': 'Synced to Cloud',
 
