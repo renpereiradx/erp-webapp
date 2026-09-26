@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Check, Eye, Lock, Search, X } from 'lucide-react';
 
 import { useI18n } from '@/lib/i18n';
+import { useAuth } from '@/contexts/AuthContext';
 import useUserStore from '@/store/useUserStore';
 import { toast } from 'sonner';
 import {
@@ -32,6 +33,7 @@ interface UsersStoreSlice {
   fetchRoles: () => Promise<void>;
   assignRole: (userId: string, roleId: string) => Promise<{ success: boolean; error?: string; code?: string }>;
   removeRole: (userId: string, roleId: string) => Promise<{ success: boolean; error?: string; code?: string }>;
+  replaceRole: (userId: string, roleId: string) => Promise<{ success: boolean; error?: string; code?: string }>;
 }
 
 function roleDescription(role: Role, t: TFn): string {
@@ -44,10 +46,11 @@ function roleDescription(role: Role, t: TFn): string {
   return t('users.roles.standardFull', 'Acceso operativo estándar.');
 }
 
-/** Right-side sheet to assign/remove roles of a user (roles apply immediately). */
+/** Right-side sheet to assign/remove/replace roles of a user (changes apply immediately). */
 export function ManageRolesPanel({ user, open, onOpenChange }: ManageRolesPanelProps) {
   const { t } = useI18n() as unknown as { t: TFn };
-  const { roles, fetchRoles, assignRole, removeRole } = useUserStore() as UsersStoreSlice;
+  const { user: currentUser } = useAuth() as { user: { id?: string } | null };
+  const { roles, fetchRoles, assignRole, removeRole, replaceRole } = useUserStore() as UsersStoreSlice;
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -76,6 +79,8 @@ export function ManageRolesPanel({ user, open, onOpenChange }: ManageRolesPanelP
   if (!user) return null;
 
   const isLastRole = userRoleIds.length <= 1;
+  const currentRoleName = activeRoles[0]?.name ?? t('users.roles.currentRole', 'rol actual');
+  const isSelf = currentUser?.id != null && currentUser.id === user.id;
 
   const handleToggle = async (roleId: string, assigned: boolean) => {
     if (assigned) {
@@ -105,11 +110,39 @@ export function ManageRolesPanel({ user, open, onOpenChange }: ManageRolesPanelP
     }
   };
 
+  // Mono-role change: swap the user's current role for another one in a
+  // single atomic call (PUT). Removing first is impossible (last-role
+  // protection) and assigning first is rejected (409), so replace is the
+  // only way to "cambiar rol".
+  const handleReplace = async (role: Role) => {
+    if (!user) return;
+    const displayName =
+      `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim() || user.username || user.email;
+    const message = t(
+      'users.roles.confirmReplace',
+      'Cambiar el rol de {name} de {oldRole} a {newRole}? Aplica de inmediato.',
+      { name: displayName, oldRole: currentRoleName, newRole: role.name },
+    );
+    const fullMessage = isSelf
+      ? `${message} ${t('users.roles.confirmReplaceSelf', 'Atención: es tu propio usuario. Si continuás, tu acceso cambia de inmediato.')}`
+      : message;
+    if (!window.confirm(fullMessage)) return;
+    const result = await replaceRole(user.id, role.id);
+    if (result.success) {
+      toast.success(t('users.roles.replaceSuccess', 'Rol actualizado correctamente.'));
+    } else {
+      toast.error(result.error || t('users.errors.replaceRoleFailed', 'No se pudo cambiar el rol.'));
+    }
+  };
+
   const sectionTitle = 'text-label-caps uppercase text-on-surface-deep';
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="bg-surface p-0 flex flex-col">
+      {/* El primitive inyecta su propio botón Close absoluto: se oculta porque
+          el panel ya trae X en el header + Cerrar en el footer (precedente:
+          sidebar móvil). */}
+      <SheetContent side="right" className="bg-surface p-0 flex flex-col [&>button]:hidden">
         <SheetHeader className="p-lg pb-md border-b border-divider space-y-xs">
           <div className="flex items-start justify-between gap-md">
             <div className="space-y-xs">
@@ -210,11 +243,17 @@ export function ManageRolesPanel({ user, open, onOpenChange }: ManageRolesPanelP
                       <p className="text-body-md-bold text-foreground">{role.name}</p>
                       <p className="text-body-sm text-on-surface-deep">{roleDescription(role, t)}</p>
                     </div>
-                    <Switch
-                      checked={false}
-                      aria-label={`${t('users.actions.assign', 'Asignar')} ${role.name}`}
-                      onCheckedChange={() => void handleToggle(role.id, false)}
-                    />
+                    {userRoleIds.length === 0 ? (
+                      <Switch
+                        checked={false}
+                        aria-label={`${t('users.actions.assign', 'Asignar')} ${role.name}`}
+                        onCheckedChange={() => void handleToggle(role.id, false)}
+                      />
+                    ) : (
+                      <Button variant="secondary" size="sm" onClick={() => void handleReplace(role)}>
+                        {t('users.actions.useRole', 'Usar este rol')}
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>

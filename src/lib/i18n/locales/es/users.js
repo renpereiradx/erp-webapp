@@ -116,6 +116,7 @@ export const users = {
   'users.errors.cannotRemoveLastRole': 'El usuario debe tener al menos un rol.',
   'users.errors.singleRoleOnly': 'El usuario ya tiene un rol asignado; el sistema opera con un solo rol por usuario. Remueva el rol actual antes de asignar uno nuevo.',
   'users.errors.assignRoleFailed': 'No se pudo asignar el rol.',
+  'users.errors.replaceRoleFailed': 'No se pudo cambiar el rol.',
 
   // Encabezado y página
   'users.description': 'Administra accesos, roles y seguridad de la plataforma.',
@@ -170,6 +171,11 @@ export const users = {
   'users.roles.permission.securitySSO': 'Configura seguridad y proveedores SSO',
   'users.roles.saveChanges': 'Guardar Cambios',
   'users.roles.allAssigned': 'Todos los roles ya están asignados.',
+  'users.actions.useRole': 'Usar este rol',
+  'users.roles.currentRole': 'rol actual',
+  'users.roles.confirmReplace': 'Cambiar el rol de {name} de {oldRole} a {newRole}? Aplica de inmediato.',
+  'users.roles.confirmReplaceSelf': 'Atención: es tu propio usuario. Si continuás, tu acceso cambia de inmediato.',
+  'users.roles.replaceSuccess': 'Rol actualizado correctamente.',
 
   // Sucursales del usuario (D.2 — PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES)
   'users.form.branches.title': 'Sucursales Asignadas',

@@ -318,6 +318,25 @@ export const userService = {
   },
 
   /**
+   * Reemplazar el rol de un usuario (cambio mono-rol atómico:
+   * PUT /api/v1/users/{id}/roles). A diferencia de assignRole, funciona
+   * aunque el usuario ya tenga un rol asignado.
+   */
+  replaceRole: async (userId: string, roleId: string): Promise<SuccessResponse> => {
+    if (DEMO_CONFIG.enabled) {
+      return { success: true, message: 'Rol actualizado (Modo Demo)' };
+    }
+
+    try {
+        const response = await api.put(`${BASE_URL}/${userId}/roles`, { role_id: roleId });
+        return response;
+    } catch (error) {
+        console.error(`Error replacing role of user ${userId} with ${roleId}:`, error);
+        throw error;
+    }
+  },
+
+  /**
    * Eliminar rol de usuario
    */
   removeRole: async (userId: string, roleId: string): Promise<SuccessResponse> => {

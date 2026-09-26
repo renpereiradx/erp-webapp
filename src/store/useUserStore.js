@@ -226,6 +226,20 @@ const useUserStore = create((set, get) => ({
     } catch (error) {
       return { success: false, error: error.message };
     }
+  },
+
+  replaceRole: async (userId, roleId) => {
+    try {
+      const response = await userService.replaceRole(userId, roleId);
+      if (response && response.success) {
+        await get().fetchUserById(userId);
+        return { success: true };
+      }
+      return { success: false, error: response?.error?.message || 'Error replacing role', code: response?.error?.code };
+    } catch (error) {
+      // ApiError carries the backend error code so the UI can map it.
+      return { success: false, error: error.message, code: error.code };
+    }
   }
 
 
