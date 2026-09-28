@@ -28,6 +28,8 @@ interface SalesCartGridProps {
    */
   activeItemId?: string | null;
   onActiveItemChange?: (id: string | null) => void;
+  /** Acción del empty state (foco al buscador, F2). Opcional: sin ella no hay botón. */
+  onEmptyAction?: () => void;
 }
 
 const ShortcutHint = ({ keys }: { keys: string }) => (
@@ -59,6 +61,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
   getItemLineTotal,
   activeItemId,
   onActiveItemChange,
+  onEmptyAction,
 }) => {
   const { t } = useI18n();
 
@@ -77,6 +80,8 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
       icon={ShoppingCart}
       title={t('sales.cart.empty', 'Carrito vacío')}
       description={t('sales.cart.emptyHint', 'Buscá un producto arriba para agregarlo (F2 foco en búsqueda).')}
+      actionLabel={t('sales.cart.emptyAction', 'Buscar producto (F2)')}
+      onAction={onEmptyAction}
       size="medium"
       variant="instruction"
       data-testid="sales-cart-empty"
@@ -94,27 +99,27 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
             <Table className="table-fixed">
               <TableHeader className="bg-surface-muted">
                 <TableRow className="hover:bg-surface-muted">
-                  <TableHead className="w-24 px-3 text-label-caps uppercase text-on-surface-deep">
+                  <TableHead className="w-24 px-sm py-sm text-label-caps uppercase text-on-surface-deep">
                     {t('sales.cart.col.id', 'ID')}
                   </TableHead>
-                  <TableHead className="px-3 text-label-caps uppercase text-on-surface-deep">
+                  <TableHead className="px-sm py-sm text-label-caps uppercase text-on-surface-deep">
                     {t('sales.cart.col.product', 'Producto')}
                   </TableHead>
-                  <TableHead className="w-[88px] px-3 text-label-caps uppercase text-on-surface-deep text-right">
+                  <TableHead className="w-[88px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
                     {t('sales.cart.col.qty', 'Cant.')}
                   </TableHead>
-                  <TableHead className="w-[120px] px-3 text-label-caps uppercase text-on-surface-deep text-right">
+                  <TableHead className="w-[120px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
                     {t('sales.cart.col.price', 'Precio')}
                   </TableHead>
                   {hasDiscounts && (
-                    <TableHead className="w-[96px] px-3 text-label-caps uppercase text-on-surface-deep text-right">
+                    <TableHead className="w-[96px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
                       {t('sales.cart.col.discount', 'Desc.')}
                     </TableHead>
                   )}
-                  <TableHead className="w-[128px] px-3 text-label-caps uppercase text-on-surface-deep text-right">
+                  <TableHead className="w-[128px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
                     {t('sales.cart.col.total', 'Total')}
                   </TableHead>
-                  <TableHead className="w-[84px] px-3">
+                  <TableHead className="w-[84px] px-sm py-sm">
                     <span className="sr-only">{t('sales.cart.col.actions', 'Acciones')}</span>
                   </TableHead>
                 </TableRow>
@@ -134,14 +139,14 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                       activeItemId === item.id && !item.isFromPendingSale && 'bg-primary-container/20',
                     )}
                   >
-                    <TableCell className="px-3 text-body-md text-outline-fg font-data-mono align-top">
+                    <TableCell className="px-sm py-sm text-body-md text-outline-fg font-data-mono align-top">
                       {/* IDs largos (SALE-/product ids) desbordan la celda fija
                           y pintan encima de la columna Producto: truncar. */}
                       <div className="truncate" title={String(item.productId || '-')}>
                         {item.productId || '-'}
                       </div>
                     </TableCell>
-                    <TableCell className="px-3 text-body-md-bold text-foreground align-top">
+                    <TableCell className="px-sm py-sm text-body-md-bold text-foreground align-top">
                       <div className="flex items-start gap-2">
                         {item.isFromPendingSale && (
                           <Badge variant="secondary" size="sm">
@@ -161,25 +166,25 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="px-3 text-right align-top whitespace-nowrap">
+                    <TableCell className="px-sm py-sm text-right align-top whitespace-nowrap">
                       <span className="font-data-mono text-body-md text-foreground">
                         {formatNumber(item.quantity)}
                       </span>{' '}
                       <span className="text-body-sm text-outline-fg">{item.unit}</span>
                       <ShortcutHint keys="Alt+Q" />
                     </TableCell>
-                    <TableCell className="px-3 text-right text-body-md text-on-surface-deep font-data-mono align-top whitespace-nowrap">
+                    <TableCell className="px-sm py-sm text-right text-body-md text-on-surface-deep font-data-mono align-top whitespace-nowrap">
                       {formatCurrency(getItemBaseUnitPrice(item))}
                     </TableCell>
                     {hasDiscounts && (
-                      <TableCell className="px-3 text-right text-body-md text-error font-data-mono align-top whitespace-nowrap">
+                      <TableCell className="px-sm py-sm text-right text-body-md text-error font-data-mono align-top whitespace-nowrap">
                         -{formatCurrency(getItemLineDiscount(item))}
                       </TableCell>
                     )}
-                    <TableCell className="px-3 text-right font-data-mono text-body-md-bold text-foreground align-top whitespace-nowrap">
+                    <TableCell className="px-sm py-sm text-right font-data-mono text-body-md-bold text-foreground align-top whitespace-nowrap">
                       {formatCurrency(getItemLineTotal(item))}
                     </TableCell>
-                    <TableCell className="px-3 text-right align-top whitespace-nowrap">
+                    <TableCell className="px-sm py-sm text-right align-top whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost"
@@ -220,7 +225,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
           items.map((item) => (
             <div
               key={item.id}
-              className={cn('py-4 space-y-3 px-2 transition-colors duration-150', item.isFromPendingSale && 'bg-surface-subtle')}
+              className={cn('py-md space-y-sm px-sm transition-colors duration-150', item.isFromPendingSale && 'bg-surface-subtle')}
             >
               <div className="flex justify-between items-start gap-4">
                 <div className="min-w-0">
@@ -268,7 +273,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 bg-surface-subtle p-3 rounded-md">
+              <div className="grid grid-cols-3 gap-sm bg-surface-subtle p-md rounded-md">
                 <div>
                   <p className="text-label-caps text-on-surface-deep mb-0.5">{t('sales.cart.col.qty', 'Cant.')}</p>
                   <p className="text-body-md-bold font-data-mono text-foreground">

@@ -513,6 +513,7 @@ export const sales = {
   'sales.cart.title': 'Productos Seleccionados',
   'sales.cart.empty': 'Carrito vacío',
   'sales.cart.emptyHint': 'Buscá un producto arriba para agregarlo (F2 foco en búsqueda).',
+  'sales.cart.emptyAction': 'Buscar producto (F2)',
   'sales.cart.unitLabel': 'Unidad',
   'sales.cart.unitPrice': 'Unitario',
   'sales.cart.lineTotal': 'Total Línea',

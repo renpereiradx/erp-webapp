@@ -22,6 +22,8 @@ import {
   ClipboardX,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/ui/PageHeader';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
 import useSaleStore from '@/store/useSaleStore';
@@ -1974,68 +1976,58 @@ const SalesNew: React.FC = () => {
     : null;
 
   return (
-    <div className="flex flex-col gap-4 animate-in fade-in duration-200">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-l-4 border-primary pl-4 py-1">
-        <div className="flex items-center gap-3">
-          <div className="size-10 bg-primary rounded-md flex items-center justify-center text-on-primary shadow-whisper">
-            <ShoppingCart size={20} aria-hidden="true" />
-          </div>
-          <div>
-            <h1 className="text-headline-lg text-foreground leading-none mb-0.5">
-              {t('sales.title', 'Punto de Venta')}
-            </h1>
-            <p className="text-body-md text-on-surface-deep hidden sm:block">
-              {t('sales.subtitle', 'Facturación y registro de operaciones')}
-            </p>
-          </div>
-        </div>
-        <nav className="flex items-center gap-2" aria-label={t('sales.navAria', 'Secciones de ventas')}>
-          {[
-            // FASE 4 (PLAN_PEDIDOS_MOSTRADOR v3): sin sales:write no hay
-            // "Nueva Venta" — el vendor entra directo al Historial.
-            ...(canWrite
-              ? [{ id: 'new-sale' as const, label: t('sales.tab.new', 'Nueva Venta'), icon: Plus, badge: undefined as number | undefined }]
-              : []),
-            { id: 'history' as const, label: t('sales.tab.history', 'Historial'), icon: History, badge: undefined as number | undefined },
-            ...(canCancelSale
-              ? [{
-                  id: 'cancellations' as const,
-                  label: t('sales.tab.cancellations', 'Anulaciones'),
-                  icon: ClipboardX,
-                  badge: cancellationRequests.pendingCount,
-                }]
-              : []),
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              aria-current={activeTab === tab.id ? 'page' : undefined}
-              className={cn(
-                'flex items-center justify-center gap-1.5 px-4 h-10 rounded-button text-body-sm-bold uppercase transition-colors duration-150',
-                activeTab === tab.id
-                  ? 'bg-primary text-on-primary'
-                  : 'bg-surface text-on-surface-deep border border-border-subtle hover:text-foreground',
-              )}
-            >
-              <tab.icon size={16} aria-hidden="true" />
-              <span>{tab.label}</span>
-              {tab.badge != null && tab.badge > 0 && (
-                <span
-                  className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-error text-on-error text-body-sm-bold font-data-mono"
-                  data-testid="cancellations-tab-badge"
-                >
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </nav>
-      </header>
+    <div className="flex flex-col gap-md animate-in fade-in duration-200">
+      <PageHeader
+        title={t('sales.title', 'Punto de Venta')}
+        subtitle={t('sales.subtitle', 'Facturación y registro de operaciones')}
+        actions={
+          <nav className="flex items-center gap-sm" aria-label={t('sales.navAria', 'Secciones de ventas')}>
+            {[
+              // FASE 4 (PLAN_PEDIDOS_MOSTRADOR v3): sin sales:write no hay
+              // "Nueva Venta" — el vendor entra directo al Historial.
+              ...(canWrite
+                ? [{ id: 'new-sale' as const, label: t('sales.tab.new', 'Nueva Venta'), icon: Plus, badge: undefined as number | undefined }]
+                : []),
+              { id: 'history' as const, label: t('sales.tab.history', 'Historial'), icon: History, badge: undefined as number | undefined },
+              ...(canCancelSale
+                ? [{
+                    id: 'cancellations' as const,
+                    label: t('sales.tab.cancellations', 'Anulaciones'),
+                    icon: ClipboardX,
+                    badge: cancellationRequests.pendingCount,
+                  }]
+                : []),
+            ].map((tab) => (
+              <Button
+                key={tab.id}
+                type="button"
+                variant="filter"
+                onClick={() => setActiveTab(tab.id)}
+                aria-current={activeTab === tab.id ? 'page' : undefined}
+                className={cn(
+                  'h-10 px-4 text-body-sm-bold uppercase',
+                  activeTab === tab.id && 'border-primary text-primary',
+                )}
+              >
+                <tab.icon size={16} aria-hidden="true" />
+                <span>{tab.label}</span>
+                {tab.badge != null && tab.badge > 0 && (
+                  <span
+                    className="ml-xs inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-error text-on-error text-body-sm-bold font-data-mono"
+                    data-testid="cancellations-tab-badge"
+                  >
+                    {tab.badge}
+                  </span>
+                )}
+              </Button>
+            ))}
+          </nav>
+        }
+      />
 
       <main className="w-full">
         {activeTab === 'new-sale' && (
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-gutter items-start">
             {/* Productos Seleccionados (carrito) — self-stretch: por defecto
                 iguala la altura del Resumen de Venta (la fila más alta);
                 cuando el carrito supera al resumen, manda el carrito. */}
@@ -2055,7 +2047,7 @@ const SalesNew: React.FC = () => {
                   </p>
                 </div>
               </CardHeader>
-              <CardContent className="p-0 space-y-4">
+              <CardContent className="p-0 space-y-md">
                 <ProductSearchPanel
                   searchTerm={productSearchTerm}
                   onSearchTermChange={(v) => {
@@ -2089,6 +2081,7 @@ const SalesNew: React.FC = () => {
                 <SalesCartGrid
                   items={filteredItems}
                   onEditItem={handleOpenEditModal}
+                  onEmptyAction={() => productSearchInputRef.current?.focus()}
                   onRemoveItem={(id) => {
                     setItems((prev) => prev.filter((i) => i.id !== id));
                     if (activeCartItemId === id) setActiveCartItemId(null);

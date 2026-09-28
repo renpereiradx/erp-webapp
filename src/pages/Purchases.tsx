@@ -149,7 +149,7 @@ const Purchases = () => {
         )}
 
         {activeTab === 'nueva-compra' && (
-          <div className='space-y-lg'>
+          <div className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-gutter items-start'>
             <PurchaseCartTable {...logic} />
             <PurchaseTotalsCard {...logic} onCheckout={() => setShowCheckoutWizard(true)} />
           </div>

@@ -261,6 +261,7 @@ export const purchases = {
   'purchases.cart.remove_item': 'Quitar artículo de la orden',
 
   // Totales de la orden
+  'purchases.totals.title': 'Resumen de Compra',
   'purchases.totals.items': 'Artículos Totales',
   'purchases.totals.total': 'Total Compra',
   'purchases.totals.vatIncluded': 'Liquidación IVA (Incluido)',

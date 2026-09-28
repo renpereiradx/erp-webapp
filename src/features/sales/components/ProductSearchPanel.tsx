@@ -131,7 +131,7 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
           )}
           value={searchTerm}
           onChange={(e) => onSearchTermChange(e.target.value)}
-          className="pl-9 h-11 text-body-md border-divider focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-sm"
+          className="pl-9 h-11 text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-input"
           aria-label={t('sales.search.placeholder', 'Buscar producto por código, nombre o código de barras')}
         />
       </div>

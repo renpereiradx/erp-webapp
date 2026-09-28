@@ -86,13 +86,13 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
 
       <CardContent className="p-0 flex-1 flex flex-col">
         {itemsCount === 0 && (
-          <MessageBar intent="info" className="mb-4">
+          <MessageBar intent="info" className="mb-md">
             {t('sales.new.summary.emptyCart', 'Agrega productos al carrito para continuar.')}
           </MessageBar>
         )}
 
         {branchMismatchWarning && (
-          <MessageBar intent="warning" className="mb-4">
+          <MessageBar intent="warning" className="mb-md">
             {t(
               'sales.new.summary.branchWarning',
               'Estás modificando una venta pendiente originada en otra sucursal. Los productos que añadas descontarán inventario de la sucursal origen.',
@@ -101,9 +101,9 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
         )}
 
         {/* Totales */}
-        <div className="space-y-2">
+        <div className="space-y-sm">
           {pendingTotal !== null ? (
-            <div className="space-y-1.5 mb-3 bg-surface-muted p-3 rounded-md">
+            <div className="space-y-sm mb-sm bg-surface-muted p-md rounded-md">
               <div className="flex justify-between text-body-md text-on-surface-deep">
                 <span>{t('sales.new.summary.previousSale', 'Venta Procesada (Anterior)')}</span>
                 <span className="font-data-mono">{formatCurrency(pendingTotal)}</span>
@@ -112,21 +112,21 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
                 <span>{t('sales.new.summary.newItems', 'Nuevos Ítems')}</span>
                 <span className="font-data-mono">{formatCurrency(newTotal)}</span>
               </div>
-              <div className="border-t border-divider my-1" />
-              <div className="flex justify-between text-body-md pt-1">
+              <div className="border-t border-divider my-xs" />
+              <div className="flex justify-between text-body-md pt-xs">
                 <span className="text-on-surface-deep">{t('sales.new.summary.combinedSubtotal', 'Subtotal Combinado')}</span>
                 <span className="font-data-mono font-bold text-foreground">{formatCurrency(subtotal)}</span>
               </div>
             </div>
           ) : (
-            <div className="flex justify-between text-body-md mb-2">
+            <div className="flex justify-between text-body-md mb-sm">
               <span className="text-on-surface-deep">{t('sales.new.summary.subtotal', 'Subtotal')}</span>
               <span className="font-data-mono text-foreground">{formatCurrency(subtotal)}</span>
             </div>
           )}
 
           {/* Desglose de IVA por tasa (dinámico) */}
-          <div className="space-y-1 py-2 border-y border-divider border-dashed">
+          <div className="space-y-xs py-sm border-y border-divider border-dashed">
             {taxBuckets.map((bucket) => (
               <div key={bucket.percent} className="flex justify-between text-label-caps text-on-surface-deep uppercase">
                 <span>{t('sales.summary.vatLine', 'Liquidación IVA {pct}%', { pct: bucket.percent })}</span>
@@ -148,7 +148,7 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
         </div>
 
         {/* TOTAL destacado (jerarquía máxima del panel) */}
-        <div className="pt-4 mt-4 border-t border-divider flex justify-between items-end">
+        <div className="pt-md mt-md border-t border-divider flex justify-between items-end">
           <span className="text-label-caps text-on-surface-deep uppercase">
             {t('sales.new.summary.total', 'Total')}
           </span>
@@ -162,7 +162,7 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
 
         {/* Precio Final de Venta (solo venta simple) */}
         {canEditFinalPrice && (
-          <div className="p-3 bg-surface-muted rounded-md border border-border-subtle space-y-2 mt-6">
+          <div className="p-md bg-surface-muted rounded-md border border-border-subtle space-y-sm mt-lg">
             <label
               htmlFor="final-sale-price"
               className="text-label-caps text-on-surface-deep uppercase flex items-center gap-1.5"
@@ -188,13 +188,13 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
                 }}
                 onBlur={() => setFinalPriceDraft(null)}
                 disabled={itemsCount === 0}
-                className="h-11 pl-4 pr-16 text-body-lg font-data-mono text-primary border-divider bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-sm"
+                className="h-11 pl-4 pr-16 text-body-lg font-data-mono text-primary border-divider bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-input"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-label-caps text-outline-fg uppercase pointer-events-none">
                 {t('sales.new.summary.editable', 'Editable')}
               </div>
             </div>
-            <p className="text-body-sm text-on-surface-deep px-1 leading-tight">
+            <p className="text-body-sm text-on-surface-deep px-xs leading-tight">
               {t(
                 'sales.new.summary.finalPriceHint',
                 'Este monto ajusta proporcionalmente todos los precios en el carrito.',
@@ -204,7 +204,7 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
         )}
 
         {/* Acciones */}
-        <div className="flex flex-col justify-end gap-2 pt-6 mt-auto">
+        <div className="flex flex-col justify-end gap-sm pt-lg mt-auto">
           <Button
             variant={mergeSaleId ? 'warning' : 'primary'}
             onClick={onCheckout}

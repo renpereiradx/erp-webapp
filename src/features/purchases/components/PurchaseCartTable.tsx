@@ -38,7 +38,7 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
           </p>
         </div>
         <Button
-          variant='primary'
+          variant='secondary'
           onClick={() => setIsModalOpen(true)}
           disabled={!canWrite}
           className='w-full sm:w-auto'

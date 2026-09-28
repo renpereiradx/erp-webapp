@@ -1,4 +1,5 @@
 import React from 'react';
+import { Receipt } from 'lucide-react';
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
@@ -38,8 +39,15 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
   const totalItems = purchaseItems.reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <section className='bg-surface rounded-md shadow-whisper border-0 p-lg'>
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-lg'>
+    <section className='bg-surface rounded-md shadow-whisper border-0 p-lg flex flex-col'>
+      <div className='pb-md'>
+        <h2 className='text-title-md text-foreground flex items-center gap-sm'>
+          <Receipt size={18} className='text-primary' aria-hidden='true' />
+          {t('purchases.totals.title', 'Resumen de Compra')}
+        </h2>
+      </div>
+
+      <div className='flex flex-col gap-md'>
         <div className='space-y-sm'>
           <div className='flex justify-between items-center text-body-md'>
             <span className='text-on-surface-deep'>
@@ -59,7 +67,7 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
           </div>
 
           {/* Liquidación IVA Breakdown (por tasa, dinámico) */}
-          <div className='pt-sm space-y-1 border-t border-border-subtle'>
+          <div className='pt-sm space-y-xs border-t border-border-subtle'>
             <p className='text-label-caps uppercase text-outline-fg'>
               {t('purchases.totals.vatIncluded', 'Liquidación IVA (Incluido)')}
             </p>
@@ -93,7 +101,7 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
               {formatCurrency(expectedSale)}
             </span>
           </div>
-          <div className='h-px bg-divider my-1'></div>
+          <div className='h-px bg-divider my-xs'></div>
           <div className='flex justify-between items-center text-body-md'>
             <span className='text-body-md-bold text-foreground'>
               {t('purchases.totals.projected_profit', 'Ganancia Proyectada')}
@@ -112,10 +120,11 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
             </div>
           </div>
         </div>
-        <div className='flex flex-col gap-md justify-end'>
+        <div className='flex flex-col gap-sm justify-end pt-md mt-auto'>
           <Button
             variant='primary'
             size='lg'
+            block
             onClick={onCheckout}
             disabled={purchaseItems.length === 0 || loading || !canWrite}
           >
@@ -126,6 +135,7 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
           <Button
             variant='secondary'
             size='lg'
+            block
             onClick={() => {
               if (confirm(t('purchases.totals.clear_confirm', '¿Borrar toda la orden?'))) {
                 setPurchaseItems([]);
