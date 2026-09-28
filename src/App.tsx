@@ -23,7 +23,7 @@ import { useI18n } from '@/lib/i18n'
 // página y recharts cae a un vendor chunk aparte (manualChunks).
 // D4 (PLAN_ALINEACION_BI_FRONTEND 2026-09-18): /dashboard también es lazy —
 // su import eager arrastraba recharts al chunk inicial.
-import { lazy, Suspense, useEffect, useRef } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 
 // --- Lazy: una chunk por página/feature ---
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
@@ -72,6 +72,9 @@ const PrintersPage = lazy(() => import('@/pages/PrintersPage'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const BusinessPreferencesPage = lazy(() => import('@/features/settings/components/BusinessPreferencesPage'))
 const LicenseStatusPage = lazy(() => import('@/features/settings/components/LicenseStatusPage'))
+// REQ_BIPACK v2.0: pantalla full-screen de licencia requerida (bloqueo total
+// por trial agotado sin licencia). Se monta FUERA del Router (early-return).
+const LicenseRequiredGate = lazy(() => import('@/components/license/LicenseRequiredGate'))
 const BranchManagement = lazy(() => import('@/pages/BranchManagement'))
 const TerminalPairing = lazy(() => import('@/features/branches/components/TerminalPairing'))
 const DevicesPage = lazy(() => import('@/pages/DevicesPage'))
@@ -229,6 +232,11 @@ function AppContent() {
   const { t } = useI18n()
   const lastPartialToastRef = useRef(0)
   const lastModuleToastRef = useRef(0)
+  // REQ_BIPACK v2.0: bloqueo total por licencia vencida. Cualquier 403
+  // LICENSE_EXPIRED (dispatch del cliente API) swaps the whole app for the
+  // license gate; se sale de él instalando una licencia (reload interno del
+  // gate) o con un refresh manual del navegador.
+  const [licenseBlocked, setLicenseBlocked] = useState(false)
 
   useEffect(() => {
     // Bootstrap: cache the backend default VAT rate for cart calculators
@@ -266,6 +274,7 @@ function AppContent() {
     // El dispatcher emite api:module_not_licensed (también para GET, que
     // silencia api:forbidden); aquí refrescamos entitlements (/me) y avisamos:
     // el cambio de estado hace que BiModuleRoute redirija fuera de la ruta BI.
+    const handleLicenseExpired = () => setLicenseBlocked(true);
     const handleModuleNotLicensed = (e: any) => {
       const now = Date.now()
       if (now - lastModuleToastRef.current < 5000) return
@@ -286,12 +295,14 @@ function AppContent() {
     window.addEventListener('api:method_not_allowed', handleMethodNotAllowed);
     window.addEventListener('api:partial-data', handlePartialData);
     window.addEventListener('api:module_not_licensed', handleModuleNotLicensed);
+    window.addEventListener('api:license_expired', handleLicenseExpired);
 
     return () => {
       window.removeEventListener('api:forbidden', handleForbidden);
       window.removeEventListener('api:method_not_allowed', handleMethodNotAllowed);
       window.removeEventListener('api:partial-data', handlePartialData);
       window.removeEventListener('api:module_not_licensed', handleModuleNotLicensed);
+      window.removeEventListener('api:license_expired', handleLicenseExpired);
     };
   }, [refreshEntitlements, t]);
 
@@ -300,6 +311,18 @@ function AppContent() {
       <div className='min-h-screen flex items-center justify-center bg-background text-foreground'>
         <div className='text-lg'>Inicializando aplicación...</div>
       </div>
+    )
+  }
+
+  // REQ_BIPACK v2.0: bloqueo total — la app completa se reemplaza por el
+  // gate de licencia (fuera del Router: no hay navegación que preserve).
+  if (licenseBlocked) {
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          <LicenseRequiredGate />
+        </Suspense>
+      </ErrorBoundary>
     )
   }
 

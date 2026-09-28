@@ -256,8 +256,24 @@ class BusinessManagementAPI {
         // Llega TAMBIÉN por GET (que silencia api:forbidden) y no debe
         // duplicar el toast de permisos. El listener en App refresca
         // entitlements → BiModuleRoute expulsa de la ruta BI.
+        // REQ_BIPACK v2.0: el bloqueo total por licencia vencida (trial
+        // agotado sin licencia) es un evento propio y va ANTES del de módulo:
+        // App reemplaza la app completa por la pantalla de licencia
+        // requerida; nada de toasts ni fallbacks de pantalla.
         const licenseCode = errorData?.code || errorData?.error?.code;
         if (
+          response.status === 403 &&
+          licenseCode === 'LICENSE_EXPIRED' &&
+          typeof window !== 'undefined'
+        ) {
+          const licenseMessage =
+            (typeof errorData?.error === 'string' && errorData.error) ||
+            errorData?.message ||
+            'El período de evaluación finalizó: se requiere cargar una licencia válida';
+          window.dispatchEvent(new CustomEvent('api:license_expired', {
+            detail: licenseMessage
+          }));
+        } else if (
           response.status === 403 &&
           licenseCode === 'MODULE_NOT_LICENSED' &&
           typeof window !== 'undefined'

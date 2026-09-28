@@ -21,6 +21,21 @@ function bannerFor(license: LicenseSnapshot): {
   vars?: Record<string, unknown>
 } | null {
   if (!license.enforcing) return null
+  // REQ_BIPACK v2.0: evaluación activa (sin licencia válida) — aviso cuando
+  // quedan ≤30 días. El estado bloqueado (trial agotado) no llega aquí: el
+  // gate full-screen reemplaza toda la app.
+  if (license.mode === 'trial') {
+    if (license.days_remaining >= 0 && license.days_remaining <= EXPIRY_WARNING_DAYS) {
+      return {
+        tone: 'warning',
+        key: 'licensing.banner.trial',
+        fallback:
+          'Período de evaluación: quedan {days} días. Al finalizar se requiere cargar una licencia para seguir usando el sistema.',
+        vars: { days: license.days_remaining },
+      }
+    }
+    return null
+  }
   switch (license.status) {
     case 'expired':
       return {

@@ -32,6 +32,15 @@ const STATUS_BADGE_VARIANT: Record<LicenseStatus, 'secondary' | 'destructive'> =
   invalid: 'destructive',
 }
 
+// REQ_BIPACK v2.0: el modo efectivo de la instalación (licenciada / en
+// evaluación / bloqueada) tiene su propio badge; el status del archivo se
+// muestra igual para diagnóstico.
+const MODE_BADGE: Record<string, { label: string; fallback: string; variant: 'secondary' | 'destructive' }> = {
+  licensed: { label: 'licensing.card.mode.licensed', fallback: 'Licenciada', variant: 'secondary' },
+  trial: { label: 'licensing.card.mode.trial', fallback: 'En evaluación', variant: 'secondary' },
+  expired: { label: 'licensing.card.mode.expired', fallback: 'Bloqueada', variant: 'destructive' },
+}
+
 function statusLabelKey(status: LicenseStatus): string {
   return `licensing.card.status.${status}`
 }
@@ -102,6 +111,13 @@ export default function LicenseStatusPage() {
             )}
             {license && (
               <div className="divide-y divide-x-0 divide-border-subtle">
+                {license.mode && MODE_BADGE[license.mode] && (
+                  <Row label={t('licensing.card.mode', 'Estado de la instalación')}>
+                    <Badge variant={MODE_BADGE[license.mode].variant}>
+                      {t(MODE_BADGE[license.mode].label, MODE_BADGE[license.mode].fallback)}
+                    </Badge>
+                  </Row>
+                )}
                 <Row label={t('licensing.card.edition', 'Edición')}>
                   <span className="font-mono">{license.edition || '—'}</span>
                 </Row>
@@ -123,7 +139,19 @@ export default function LicenseStatusPage() {
                     </Badge>
                   </span>
                 </Row>
-                {license.enforcing && license.status === 'active' && license.days_remaining >= 0 && (
+                {license.mode === 'trial' && license.trial_ends_at && (
+                  <Row label={t('licensing.card.trialEnds', 'Fin de la evaluación')}>
+                    <span className="inline-flex items-center gap-sm">
+                      {formatExpiresAt(license.trial_ends_at, t)}
+                      <Badge variant={license.days_remaining <= 30 ? 'destructive' : 'secondary'}>
+                        {t('licensing.card.daysRemaining', 'Quedan {days} días', {
+                          days: license.days_remaining,
+                        })}
+                      </Badge>
+                    </span>
+                  </Row>
+                )}
+                {license.enforcing && license.mode === 'licensed' && license.status === 'active' && license.days_remaining >= 0 && (
                   <Row
                     label={t('licensing.card.daysRemaining', 'Quedan {days} días', {
                       days: license.days_remaining,

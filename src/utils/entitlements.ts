@@ -17,6 +17,10 @@ export interface Entitlements {
   edition: string
   modules: string[]
   bi_expires_at: string | null
+  /** v2.0 (aditivo): licensed | trial | expired — qué gobierna la instalación. */
+  mode?: 'licensed' | 'trial' | 'expired'
+  /** v2.0 (aditivo): fin de la ventana de evaluación (solo en modo trial). */
+  trial_ends_at?: string | null
 }
 
 /** Proyección de una instalación sin packs (ERP Core puro). */

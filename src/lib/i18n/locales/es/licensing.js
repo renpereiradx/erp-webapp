@@ -35,4 +35,34 @@ export const licensing = {
   'licensing.card.status.invalid': 'Licencia inválida',
   'licensing.card.loadError': 'No se pudo cargar el estado de la licencia',
   'licensing.card.expiredDate': 'Vencida el {date}',
+
+  // Estado de la instalación y trial (REQ_BIPACK v2.0)
+  'licensing.card.mode': 'Estado de la instalación',
+  'licensing.card.mode.licensed': 'Licenciada',
+  'licensing.card.mode.trial': 'En evaluación',
+  'licensing.card.mode.expired': 'Bloqueada',
+  'licensing.card.trialEnds': 'Fin de la evaluación',
+
+  // Banner de evaluación (REQ_BIPACK v2.0)
+  'licensing.banner.trial':
+    'Período de evaluación: quedan {days} días. Al finalizar se requiere cargar una licencia para seguir usando el sistema.',
+
+  // Gate full-screen de licencia requerida (REQ_BIPACK v2.0)
+  'licensing.gate.title': 'Licencia requerida',
+  'licensing.gate.description':
+    'El período de evaluación de esta instalación finalizó y no hay licencia activa. Cargue el archivo de licencia entregado por su proveedor para volver a usar el sistema.',
+  'licensing.gate.loading': 'Consultando estado de la licencia…',
+  'licensing.gate.needLogin': 'Inicie sesión para cargar la licencia de la instalación.',
+  'licensing.gate.login': 'Iniciar sesión',
+  'licensing.gate.statusError': 'No se pudo consultar el estado de la licencia.',
+  'licensing.gate.retry': 'Actualizar estado',
+  'licensing.gate.statusTitle': 'Estado de la licencia',
+  'licensing.gate.blocked': 'Sistema bloqueado',
+  'licensing.gate.trialEnded': 'Evaluación finalizada',
+  'licensing.gate.dateLabel': '{date} (UTC)',
+  'licensing.gate.upload': 'Cargar licencia',
+  'licensing.gate.uploading': 'Verificando licencia…',
+  'licensing.gate.uploadHint': 'Seleccione el archivo license.json firmado por su proveedor.',
+  'licensing.gate.invalid': 'La licencia no pudo instalarse: {reason}',
+  'licensing.gate.invalidReason': 'archivo no válido',
 }

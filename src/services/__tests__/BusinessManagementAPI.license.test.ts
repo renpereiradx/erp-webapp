@@ -71,3 +71,60 @@ describe('BusinessManagementAPI — 403 de licencia (api:module_not_licensed)', 
     expect(licenseEvents).toEqual(['sin pack'])
   })
 })
+
+// REQ_BIPACK v2.0: el bloqueo total (trial agotado sin licencia) responde 403
+// LICENSE_EXPIRED en TODA ruta no-rescate y es un evento propio distinto del
+// de módulo — App reemplaza la app completa por el gate de licencia.
+describe('BusinessManagementAPI — 403 de bloqueo total (api:license_expired)', () => {
+  const client = new BusinessManagementAPI({ baseUrl: 'http://test' })
+  const expiredEvents: string[] = []
+  const moduleEvents: string[] = []
+  const forbiddenEvents: string[] = []
+  const expiredListener = (e: Event) => expiredEvents.push((e as CustomEvent).detail as string)
+  const moduleListener = (e: Event) => moduleEvents.push((e as CustomEvent).detail as string)
+  const forbiddenListener = (e: Event) => forbiddenEvents.push((e as CustomEvent).detail as string)
+
+  beforeEach(() => {
+    expiredEvents.length = 0
+    moduleEvents.length = 0
+    forbiddenEvents.length = 0
+    window.addEventListener('api:license_expired', expiredListener)
+    window.addEventListener('api:module_not_licensed', moduleListener)
+    window.addEventListener('api:forbidden', forbiddenListener)
+  })
+
+  afterEach(() => {
+    window.removeEventListener('api:license_expired', expiredListener)
+    window.removeEventListener('api:module_not_licensed', moduleListener)
+    window.removeEventListener('api:forbidden', forbiddenListener)
+    vi.unstubAllGlobals()
+  })
+
+  it('GET 403 LICENSE_EXPIRED: dispara el evento de bloqueo, no el de módulo', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        json403({
+          error: 'El período de evaluación finalizó y no hay licencia activa: cargue una licencia válida para seguir usando el sistema',
+          code: 'LICENSE_EXPIRED',
+        }),
+      ),
+    )
+
+    await expect(client.get('/api/v1/users/me')).rejects.toMatchObject({ status: 403 })
+    expect(expiredEvents).toHaveLength(1)
+    expect(moduleEvents).toEqual([])
+    expect(forbiddenEvents).toEqual([])
+  })
+
+  it('POST 403 LICENSE_EXPIRED: tampoco duplica api:forbidden', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(json403({ error: 'bloqueado', code: 'LICENSE_EXPIRED' })),
+    )
+
+    await expect(client.post('/sale/', {})).rejects.toMatchObject({ status: 403 })
+    expect(expiredEvents).toEqual(['bloqueado'])
+    expect(forbiddenEvents).toEqual([])
+  })
+})
