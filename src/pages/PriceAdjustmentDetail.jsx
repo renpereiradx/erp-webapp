@@ -1,18 +1,38 @@
 /**
  * Página de Detalle y Ajuste de Precio - Patrón MVP
- * Formulario para ajustar el precio de un producto seleccionado
- * Siguiendo Fluent Design System 2
+ * Formulario para ajustar el precio de un producto seleccionado.
+ * Alineada a DESIGN.md: tokens semánticos, componentes ui/, Label+htmlFor,
+ * estados loading/empty/error (§6.7) y formateo dinámico de miles en el
+ * input de precio vía moneyInput (§6.4: 6000 → 6.000).
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, TrendingUp, TrendingDown, RefreshCw, X, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import GenericSkeletonList from '@/components/ui/GenericSkeletonList';
+import EmptyState from '@/components/ui/EmptyState';
+import ErrorState from '@/components/ui/ErrorState';
+import PageHeader from '@/components/ui/PageHeader';
 import { useI18n } from '@/lib/i18n';
 import usePriceAdjustmentNewStore from '@/store/usePriceAdjustmentNewStore';
 import { priceAdjustmentService } from '@/services/priceAdjustmentService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { variantService } from '@/services/variantService';
 import { getGroupedUnitOptions, getUnitLabel } from '@/constants/units';
+import { formatPYG } from '@/utils/currencyUtils';
+import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput';
 import useAuthStore from '@/store/useAuthStore';
 
 // Las variantes enriquecidas (/products/{id}/variants) exponen `id`, no
@@ -40,9 +60,14 @@ const getMostRecentUnit = (unitList) => {
 
 // Valores de unidad del catálogo compartido (una sola vez). Se usa para no perder
 // el valor actual en el <select> si una unidad viene fuera del catálogo (legacy).
+const UNIT_GROUPS = getGroupedUnitOptions();
 const CATALOG_UNIT_VALUES = new Set(
-  getGroupedUnitOptions().flatMap(g => g.options.map(o => o.value))
+  UNIT_GROUPS.flatMap(g => g.options.map(o => o.value))
 );
+
+// Selects nativos estilizados con la misma convención que <Input> (§6.4)
+const SELECT_CLASSES =
+  'w-full h-10 rounded-md border border-border-subtle bg-surface px-3 text-body-md text-foreground focus:ring-2 focus:ring-primary outline-none cursor-pointer disabled:opacity-60';
 
 const PriceAdjustmentDetail = () => {
   const { t } = useI18n();
@@ -271,11 +296,9 @@ const PriceAdjustmentDetail = () => {
     return Object.keys(errors).length === 0;
   };
 
-  // Manejar cambio en campos del formulario
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  // Setear un campo del formulario y limpiar su error de validación
+  const setFieldValue = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Limpiar error del campo cuando el usuario escribe
     if (formErrors[name]) {
       setFormErrors(prev => {
         const newErrors = { ...prev };
@@ -283,6 +306,11 @@ const PriceAdjustmentDetail = () => {
         return newErrors;
       });
     }
+  };
+
+  // Manejar cambio en campos del formulario
+  const handleChange = (e) => {
+    setFieldValue(e.target.name, e.target.value);
   };
 
   // Manejar envío del formulario
@@ -350,142 +378,166 @@ const PriceAdjustmentDetail = () => {
     ?? (selectedVariant ? (selectedVariant.current_price ?? selectedVariant.price) : (product.current_price ?? product.price))
     ?? 0;
 
-  const isFormValid = formData.new_price && formData.reason.trim().length >= 10 && Object.keys(formErrors).length === 0;
+  const isFormValid =
+    formData.new_price &&
+    parseFloat(formData.new_price) > 0 &&
+    formData.reason.trim().length >= 10 &&
+    Object.keys(formErrors).length === 0;
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
-      <header className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
-        <div className='flex items-center gap-4'>
-          <button
-            onClick={() => navigate('/ajustes-precios')}
-            className="p-2 text-text-secondary hover:bg-slate-100 rounded-lg transition-colors"
-            aria-label={t('action.back', 'Volver')}
-          >
-            <ArrowLeft size={20} strokeWidth={2} />
-          </button>
-          <div className='flex flex-col gap-1 border-l-4 border-primary pl-4'>
-            <h1 className="text-2xl font-black text-text-main tracking-tighter uppercase leading-tight">
-              {product.product_name || product.name}
-            </h1>
-            <p className='text-xs font-mono text-primary font-bold uppercase tracking-widest'>
-              ID: {product.product_id || product.id}
-            </p>
-          </div>
+    <div className="flex flex-col gap-lg animate-in fade-in">
+      {/* Encabezado: volver + título canónico (§6.8) */}
+      <div className="flex items-start gap-md">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/ajustes-precios')}
+          aria-label={t('action.back', 'Volver')}
+          className="shrink-0"
+        >
+          <ArrowLeft className="w-5 h-5" strokeWidth={2} />
+        </Button>
+        <div className="flex-1 min-w-0">
+          <PageHeader
+            title={product.product_name || product.name}
+            subtitle={t('priceAdjustmentDetail.subtitle', 'Modifica el precio de venta y registra el motivo del cambio')}
+          />
         </div>
-      </header>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-lg">
         {/* Columna izquierda - Precio actual y formulario */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
+        <div className="lg:col-span-5 flex flex-col gap-lg">
           {/* Card de precio actual */}
-          <div className="bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle flex items-center justify-between overflow-hidden">
-            <div className='flex-1 min-w-0'>
-              <p className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1'>
+          <section className="bg-surface rounded-md shadow-whisper border-0 p-lg flex items-start justify-between gap-md">
+            <div className="flex-1 min-w-0">
+              <p className="text-label-caps uppercase text-on-surface-deep">
                 {t('priceAdjustmentDetail.currentPrice', 'Precio Actual')}
               </p>
-              <h2 className='text-3xl font-black text-text-main break-words'>
-                PYG {currentPrice.toLocaleString('es-PY')}
-                <span className='text-base font-bold text-text-secondary'>{' / '}{getUnitLabel(formData.unit)}</span>
-              </h2>
+              <p className="mt-xs text-headline-lg text-foreground font-data-mono break-words">
+                {formatPYG(currentPrice)}
+                <span className="text-title-md text-on-surface-deep">
+                  {' / '}{getUnitLabel(formData.unit)}
+                </span>
+              </p>
+              <p className="mt-xs text-data-mono font-data-mono text-on-surface-deep">
+                ID: {product.product_id || product.id}
+              </p>
             </div>
-            <div className='shrink-0 size-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center'>
-              <TrendingUp size={24} />
+            <div
+              className="shrink-0 size-12 bg-primary/10 text-primary rounded-md flex items-center justify-center"
+              aria-hidden="true"
+            >
+              <TrendingUp className="w-5 h-5" />
             </div>
-          </div>
+          </section>
 
           {/* Formulario de ajuste */}
-          <div className="bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden">
-            <h2 className='text-sm font-black uppercase text-text-main tracking-widest mb-6 border-b border-slate-100 pb-3'>
+          <section className="bg-surface rounded-md shadow-whisper border-0 p-lg">
+            <h2 className="text-title-md text-foreground">
               {t('priceAdjustmentDetail.formTitle', 'Registrar Nuevo Ajuste')}
             </h2>
 
             {error && (
-              <div className='mb-6 p-4 bg-error/10 border-l-4 border-error rounded-r-lg flex items-center justify-between'>
-                <p className='text-xs text-error font-bold'>
-                  {error.message || error}
-                </p>
+              <div
+                className="mt-md p-md bg-error-container text-on-error-container rounded-md flex items-start justify-between gap-md"
+                role="alert"
+              >
+                <p className="text-body-md">{error.message || error}</p>
                 <button
+                  type="button"
                   onClick={clearError}
-                  className='text-error hover:text-red-700 transition-colors'
+                  aria-label={t('common.close', 'Cerrar')}
+                  className="shrink-0 hover:opacity-70 transition-opacity"
                 >
-                  <X size={16} />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             )}
 
-            <form autoComplete="off" onSubmit={handleSubmit} className="space-y-4">
+            <form autoComplete="off" onSubmit={handleSubmit} className="mt-md space-y-md">
               {variants.length > 0 && (
-                <div className='flex flex-col gap-1.5'>
-                  <label className="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center justify-between">
-                    <span>{t('priceAdjustmentDetail.field.variant', 'Variante a Ajustar (Opcional)')}</span>
-                    <span className='text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-bold'>NUEVO</span>
-                  </label>
+                <div className="space-y-xs">
+                  <div className="flex items-center justify-between gap-sm">
+                    <Label htmlFor="variant-select" className="text-body-md-bold text-foreground">
+                      {t('priceAdjustmentDetail.field.variant', 'Variante a Ajustar (Opcional)')}
+                    </Label>
+                    <Badge variant="warning">
+                      {t('priceAdjustmentDetail.field.variant.newBadge', 'Nuevo')}
+                    </Badge>
+                  </div>
                   <select
+                    id="variant-select"
                     value={selectedVariantId}
                     onChange={(e) => setSelectedVariantId(e.target.value)}
-                    className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                    className={SELECT_CLASSES}
                   >
                     <option value="">{t('priceAdjustmentDetail.variant.base', 'Producto Principal (General)')}</option>
                     {variants.map(v => (
                       <option key={getVariantId(v)} value={getVariantId(v)}>
-                        {v.variant_name} {v.sku ? `(${v.sku})` : ''} - PYG {(getUnitPriceFor(v.unit_prices, formData.unit) ?? v.current_price ?? v.price ?? 0).toLocaleString('es-PY')}
+                        {v.variant_name} {v.sku ? `(${v.sku})` : ''} — {formatPYG(getUnitPriceFor(v.unit_prices, formData.unit) ?? v.current_price ?? v.price ?? 0)}
                       </option>
                     ))}
                   </select>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className='flex flex-col gap-1.5'>
-                  <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
+                {/* Input de precio: formateo dinámico de miles — 6000 → 6.000 (§6.4) */}
+                <div className="space-y-xs">
+                  <Label htmlFor="new_price" className="text-body-md-bold text-foreground">
                     {t('priceAdjustmentDetail.field.newPrice', 'Nuevo Precio (PYG)')}
-                  </label>
-                  <input
+                  </Label>
+                  <Input
+                    id="new_price"
                     name="new_price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.new_price}
-                    onChange={handleChange}
-                    placeholder="ej. 25000"
-                    className={`h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-bold ${formErrors.new_price ? 'border-error ring-1 ring-error' : ''}`}
+                    type="text"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    value={formatNumberInput(formData.new_price)}
+                    onChange={(e) => setFieldValue('new_price', parseNumberInput(e.target.value))}
+                    placeholder={t('priceAdjustmentDetail.field.newPrice.placeholder', 'ej. 25.000')}
+                    state={formErrors.new_price ? 'error' : ''}
+                    className="font-data-mono"
                   />
                   {formErrors.new_price && (
-                    <p className="text-error text-[10px] font-bold uppercase">{formErrors.new_price}</p>
+                    <p className="text-body-md text-error">{formErrors.new_price}</p>
                   )}
                 </div>
 
-                <div className='flex flex-col gap-1.5'>
-                  <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">
+                <div className="space-y-xs">
+                  <Label htmlFor="unit" className="text-body-md-bold text-foreground">
                     {t('priceAdjustmentDetail.field.unit', 'Unidad')}
-                  </label>
+                  </Label>
                   <select
+                    id="unit"
                     name="unit"
                     value={formData.unit}
                     onChange={handleChange}
-                    className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                    className={SELECT_CLASSES}
                   >
                     {!CATALOG_UNIT_VALUES.has(formData.unit) && (
                       <option value={formData.unit}>{formData.unit}</option>
                     )}
-                    {getGroupedUnitOptions().map(group => (
-                      <optgroup key={group.label} label={group.label} className="font-black uppercase text-[10px]">
-                        {group.options.map(opt => <option key={opt.value} value={opt.value} className="font-bold">{opt.label}</option>)}
+                    {UNIT_GROUPS.map(group => (
+                      <optgroup key={group.label} label={group.label}>
+                        {group.options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                       </optgroup>
                     ))}
                   </select>
                 </div>
               </div>
 
-              <div className='flex flex-col gap-1.5'>
-                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">
+              <div className="space-y-xs">
+                <Label htmlFor="reasonTemplate" className="text-body-md-bold text-foreground">
                   {t('priceAdjustmentDetail.field.reasonTemplate', 'Plantilla de Razón')}
-                </label>
+                </Label>
                 <select
+                  id="reasonTemplate"
                   name="reasonTemplate"
                   value={formData.reasonTemplate}
                   onChange={(e) => handleReasonTemplateChange(e.target.value)}
-                  className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className={SELECT_CLASSES}
                 >
                   {reasonTemplates.map((template) => (
                     <option key={template.value} value={template.value}>
@@ -495,186 +547,208 @@ const PriceAdjustmentDetail = () => {
                 </select>
               </div>
 
-              <div className='flex flex-col gap-1.5'>
-                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center justify-between">
-                  {t('priceAdjustmentDetail.field.reason', 'Razón del Ajuste')}
-                  <span className='text-[9px] px-1.5 py-0.5 rounded bg-slate-100'>
+              <div className="space-y-xs">
+                <div className="flex items-center justify-between gap-sm">
+                  <Label htmlFor="reason" className="text-body-md-bold text-foreground">
+                    {t('priceAdjustmentDetail.field.reason', 'Razón del Ajuste')}
+                  </Label>
+                  <Badge variant="secondary">
                     {formData.reasonTemplate === 'CUSTOM'
                       ? t('priceAdjustmentDetail.field.reason.hintCustom', 'Personalizada')
                       : t('priceAdjustmentDetail.field.reason.hintAuto', 'Automática')}
-                  </span>
-                </label>
+                  </Badge>
+                </div>
                 {formData.reasonTemplate === 'CUSTOM' ? (
                   <>
-                    <textarea
+                    <Textarea
+                      id="reason"
                       name="reason"
                       value={formData.reason}
                       onChange={handleChange}
                       rows={3}
                       maxLength={500}
-                      className={`p-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all ${formErrors.reason ? 'border-error ring-1 ring-error' : ''}`}
+                      aria-invalid={!!formErrors.reason}
                       placeholder={t('priceAdjustmentDetail.field.reason.placeholder', 'Escriba la razón personalizada...')}
                     />
-                    <p className="text-right text-[9px] text-slate-400 font-bold uppercase">
+                    <p className="text-right text-body-sm-bold text-on-surface-deep">
                       {formData.reason.length}/500 {t('priceAdjustmentDetail.field.reason.characters', 'caracteres')}
                     </p>
                   </>
                 ) : (
-                  <div className="p-3 bg-slate-50 border border-border-subtle rounded-lg text-sm text-text-secondary italic min-h-[80px]">
+                  <div className="p-md bg-surface-muted border border-border-subtle rounded-md text-body-md text-on-surface-deep italic min-h-20">
                     {formData.reason || t('priceAdjustmentDetail.field.reason.selectTemplate', 'Seleccione una plantilla arriba')}
                   </div>
                 )}
                 {formErrors.reason && (
-                  <p className="text-error text-[10px] font-bold uppercase">{formErrors.reason}</p>
+                  <p className="text-body-md text-error">{formErrors.reason}</p>
                 )}
               </div>
 
-              <div className='flex flex-col gap-1.5'>
-                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">
+              <div className="space-y-xs">
+                <Label htmlFor="approved_by" className="text-body-md-bold text-foreground">
                   {t('priceAdjustmentDetail.field.approvedBy', 'Aprobado por (Opcional)')}
-                </label>
-                <input
+                </Label>
+                <Input
+                  id="approved_by"
                   name="approved_by"
                   type="text"
+                  autoComplete="off"
                   value={formData.approved_by}
                   onChange={handleChange}
-                  placeholder="ej. Juan Pérez (Gerente)"
-                  className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  placeholder={t('priceAdjustmentDetail.field.approvedBy.placeholder', 'ej. Juan Pérez (Gerente)')}
                 />
               </div>
 
-              <div className='flex flex-col gap-1.5'>
-                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">
+              <div className="space-y-xs">
+                <Label htmlFor="metadata" className="text-body-md-bold text-foreground">
                   {t('priceAdjustmentDetail.field.metadata', 'Metadata Adicional (JSON)')}
-                </label>
-                <textarea
+                </Label>
+                <Textarea
+                  id="metadata"
                   name="metadata"
                   value={formData.metadata}
                   onChange={handleChange}
                   rows={2}
-                  className={`p-3 border border-border-subtle rounded-lg bg-white text-xs font-mono focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all ${formErrors.metadata ? 'border-error ring-1 ring-error' : ''}`}
+                  aria-invalid={!!formErrors.metadata}
+                  className="font-data-mono"
                   placeholder='{ "source": "market_analysis" }'
                 />
                 {formErrors.metadata && (
-                  <p className="text-error text-[10px] font-bold uppercase">{formErrors.metadata}</p>
+                  <p className="text-body-md text-error">{formErrors.metadata}</p>
                 )}
               </div>
 
               <Button
                 type="submit"
+                variant="primary"
+                size="lg"
                 disabled={!isFormValid || creating}
-                className="w-full h-12 bg-primary text-white text-xs font-black uppercase rounded shadow-sm hover:bg-primary-hover active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                className="w-full"
               >
-                {creating ? <RefreshCw className='animate-spin' size={16} /> : null}
+                {creating && <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />}
                 {creating
                   ? t('priceAdjustmentDetail.action.saving', 'Guardando...')
                   : t('priceAdjustmentDetail.action.submit', 'Registrar Cambio')
                 }
               </Button>
             </form>
-          </div>
+          </section>
         </div>
 
         {/* Columna derecha - Historial de ajustes */}
         <div className="lg:col-span-7">
-          <div className="bg-white rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden h-full flex flex-col">
-            <div className='px-6 py-4 border-b border-border-subtle flex justify-between items-center bg-[#fafafa]'>
-              <h3 className='text-[13px] font-bold text-gray-700 uppercase tracking-widest'>
+          <section className="bg-surface rounded-md shadow-whisper border-0 overflow-hidden h-full flex flex-col">
+            <div className="px-lg py-md border-b border-divider flex justify-between items-center bg-surface-muted">
+              <h3 className="text-title-md text-foreground">
                 {t('priceAdjustmentDetail.historyTitle', 'Historial de Ajustes')}
               </h3>
-              <Info size={16} className='text-slate-400' />
+              <Info className="w-4 h-4 text-on-surface-deep" aria-hidden="true" />
             </div>
 
-            <div className="flex-1 overflow-auto custom-scrollbar">
+            <div className="flex-1 overflow-auto">
               {loadingHistory ? (
-                <div className="py-20 flex flex-col items-center gap-3">
-                  <RefreshCw className="animate-spin text-primary" size={32} />
-                  <p className='text-xs font-bold text-slate-400 uppercase tracking-widest'>Cargando historial...</p>
+                <div className="p-lg">
+                  <GenericSkeletonList count={5} />
                 </div>
               ) : historyError ? (
-                <div className="p-12 text-center text-error italic text-sm">{historyError}</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead className="bg-gray-50/50 border-b border-border-subtle text-[11px] font-black uppercase text-slate-500 tracking-wider sticky top-0 z-10">
-                      <tr>
-                        <th className="py-3 px-6 text-center">{t('priceAdjustmentDetail.table.date', 'Fecha')}</th>
-                        <th className="py-3 px-4 text-center">{t('priceAdjustmentDetail.table.prices', 'Precios')}</th>
-                        <th className="py-3 px-4 text-center">{t('priceAdjustmentDetail.table.change', 'Cambio')}</th>
-                        <th className="py-3 px-4">{t('priceAdjustmentDetail.table.reason', 'Razón')}</th>
-                        <th className="py-3 px-6 text-right"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50 text-xs">
-                      {history.length === 0 ? (
-                        <tr>
-                          <td colSpan="5" className="py-20 text-center italic text-slate-400">
-                            {t('priceAdjustmentDetail.history.empty', 'No hay historial de ajustes')}
-                          </td>
-                        </tr>
-                      ) : (
-                        history.map((adj) => {
-                          const changePercent = adj.old_value > 0
-                            ? ((adj.value_change / adj.old_value) * 100).toFixed(1)
-                            : 0;
-                          const isIncrease = adj.value_change > 0;
-
-                          return (
-                            <tr key={adj.adjustment_id} className="hover:bg-slate-50 transition-colors">
-                              <td className="py-4 px-6 text-center">
-                                <span className='font-medium block'>
-                                  {new Date(adj.adjustment_date).toLocaleDateString('es-PY')}
-                                </span>
-                                <span className='text-[9px] text-slate-400 font-bold uppercase'>
-                                  {new Date(adj.adjustment_date).toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                              </td>
-                              <td className="py-4 px-4 text-center">
-                                <div className='flex flex-col items-center gap-0.5'>
-                                  <span className='text-slate-400 line-through'>
-                                    PYG {adj.old_value.toLocaleString('es-PY')}
-                                  </span>
-                                  <span className='font-black text-text-main'>
-                                    PYG {adj.new_value.toLocaleString('es-PY')}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="py-4 px-4 text-center">
-                                <div className={`flex items-center justify-center gap-1 font-black ${isIncrease ? 'text-success' : 'text-error'}`}>
-                                  {isIncrease ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                                  {isIncrease ? '+' : ''}{changePercent}%
-                                </div>
-                              </td>
-                              <td className="py-4 px-4 max-w-[200px]">
-                                {adj.variant_id && (
-                                  <p className='text-[9px] font-black uppercase text-primary tracking-wider truncate'>
-                                    {variants.find(v => getVariantId(v) === adj.variant_id)?.variant_name || adj.variant_id}
-                                  </p>
-                                )}
-                                <p className='truncate italic text-slate-500' title={adj.reason}>
-                                  {adj.reason}
-                                </p>
-                              </td>
-                              <td className="py-4 px-6 text-right">
-                                <button
-                                  className="px-3 py-1 bg-white border border-border-subtle rounded text-[9px] font-black uppercase tracking-widest hover:bg-slate-100 transition-colors"
-                                  onClick={() => navigate(`/ajustes-precios/historial/${adj.adjustment_id}`, {
-                                    state: { adjustment: adj, product }
-                                  })}
-                                >
-                                  {t('priceAdjustmentDetail.action.viewDetails', 'Detalles')}
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
+                <div className="p-lg">
+                  <ErrorState
+                    title={t('priceAdjustmentDetail.history.error', 'Error al cargar historial')}
+                    message={historyError}
+                    onRetry={loadHistory}
+                  />
                 </div>
+              ) : history.length === 0 ? (
+                <EmptyState
+                  icon={Info}
+                  title={t('priceAdjustmentDetail.history.empty', 'No hay historial de ajustes')}
+                />
+              ) : (
+                <Table>
+                  <TableHeader className="sticky top-0 z-10 bg-surface-muted">
+                    <TableRow className="bg-surface-muted hover:bg-surface-muted border-0">
+                      <TableHead className="text-label-caps uppercase text-on-surface-deep text-center">
+                        {t('priceAdjustmentDetail.table.date', 'Fecha')}
+                      </TableHead>
+                      <TableHead className="text-label-caps uppercase text-on-surface-deep text-center">
+                        {t('priceAdjustmentDetail.table.prices', 'Precios')}
+                      </TableHead>
+                      <TableHead className="text-label-caps uppercase text-on-surface-deep text-center">
+                        {t('priceAdjustmentDetail.table.change', 'Cambio')}
+                      </TableHead>
+                      <TableHead className="text-label-caps uppercase text-on-surface-deep">
+                        {t('priceAdjustmentDetail.table.reason', 'Razón')}
+                      </TableHead>
+                      <TableHead className="text-label-caps uppercase text-on-surface-deep text-right">
+                        <span className="sr-only">{t('priceAdjustmentDetail.table.actions', 'Acciones')}</span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {history.map((adj) => {
+                      const changePercent = adj.old_value > 0
+                        ? ((adj.value_change / adj.old_value) * 100).toFixed(1)
+                        : 0;
+                      const isIncrease = adj.value_change > 0;
+
+                      return (
+                        <TableRow
+                          key={adj.adjustment_id}
+                          className="hover:bg-surface-muted transition-colors duration-150"
+                        >
+                          <TableCell className="text-center">
+                            <span className="block text-data-mono font-data-mono text-foreground">
+                              {new Date(adj.adjustment_date).toLocaleDateString('es-PY')}
+                            </span>
+                            <span className="block text-body-sm-bold text-on-surface-deep">
+                              {new Date(adj.adjustment_date).toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex flex-col items-center gap-xs">
+                              <span className="text-data-mono font-data-mono text-on-surface-deep line-through">
+                                {formatPYG(adj.old_value)}
+                              </span>
+                              <span className="text-data-mono font-data-mono text-foreground">
+                                {formatPYG(adj.new_value)}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className={`flex items-center justify-center gap-xs text-body-sm-bold font-data-mono ${isIncrease ? 'text-success' : 'text-error'}`}>
+                              {isIncrease ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                              {isIncrease ? '+' : ''}{changePercent}%
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-[200px]">
+                            {adj.variant_id && (
+                              <p className="text-body-sm-bold text-primary truncate">
+                                {variants.find(v => getVariantId(v) === adj.variant_id)?.variant_name || adj.variant_id}
+                              </p>
+                            )}
+                            <p className="text-body-md text-on-surface-deep italic truncate" title={adj.reason}>
+                              {adj.reason}
+                            </p>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => navigate(`/ajustes-precios/historial/${adj.adjustment_id}`, {
+                                state: { adjustment: adj, product }
+                              })}
+                            >
+                              {t('priceAdjustmentDetail.action.viewDetails', 'Ver Detalles')}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               )}
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </div>

@@ -40,11 +40,12 @@ export const priceAdjustments = {
     'Administra los precios de tus productos y consulta el historial de cambios',
   'priceAdjustment.tabs.newAdjustment': 'Nuevo Ajuste',
   'priceAdjustment.tabs.history': 'Historial Global',
+  'priceAdjustment.layout.navLabel': 'Secciones de ajustes de precios',
 
   // Nuevo Ajuste - Búsqueda y selección de productos
   'priceAdjustmentNew.title': 'Búsqueda y Selección de Productos',
   'priceAdjustmentNew.search.placeholder':
-    'Buscar por nombre o ID de producto...',
+    'Buscar por nombre o ID de producto... (F2)',
   'priceAdjustmentNew.search.hint': 'Escribe al menos 4 caracteres para buscar',
   'priceAdjustmentNew.loading': 'Cargando productos...',
   'priceAdjustmentNew.action.retry': 'Reintentar',
@@ -66,10 +67,15 @@ export const priceAdjustments = {
 
   // Detalle - Ajuste de precio para un producto
   'priceAdjustmentDetail.title': 'Ajuste de Precio para',
+  'priceAdjustmentDetail.subtitle':
+    'Modifica el precio de venta y registra el motivo del cambio',
+  'priceAdjustmentDetail.field.variant.newBadge': 'Nuevo',
+  'priceAdjustmentDetail.field.approvedBy.placeholder': 'ej. Juan Pérez (Gerente)',
+  'priceAdjustmentDetail.action.close': 'Cerrar',
   'priceAdjustmentDetail.currentPrice': 'Precio Actual',
   'priceAdjustmentDetail.formTitle': 'Registrar Nuevo Ajuste',
-  'priceAdjustmentDetail.field.newPrice': 'Nuevo Precio ($)',
-  'priceAdjustmentDetail.field.newPrice.placeholder': 'ej., 21.50',
+  'priceAdjustmentDetail.field.newPrice': 'Nuevo Precio (PYG)',
+  'priceAdjustmentDetail.field.newPrice.placeholder': 'ej. 25.000',
   'priceAdjustmentDetail.field.unit': 'Unidad de Medida',
   'priceAdjustmentDetail.field.reasonTemplate': 'Plantilla de Razón',
   'priceAdjustmentDetail.field.reason': 'Razón del Ajuste',

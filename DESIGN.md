@@ -182,6 +182,7 @@ construye con peso tipográfico y tono de superficie, no con bordes ni sombras f
 8. **SIEMPRE** cubre los 3 estados de datos: loading, empty, error (receta §6.7).
 9. **NUNCA** uses gradientes, sombras pesadas (`shadow-xl`, `shadow-2xl`), ni animaciones > 300ms.
 10. **SIEMPRE** espaciado con tokens (`p-md`, `gap-lg`, `space-y-md`). Nunca valores arbitrarios (`p-[13px]`) si existe token.
+11. **SIEMPRE** que un input reciba dígitos numéricos (precios, montos, importes), formatea los miles **mientras se escribe** con el par `formatNumberInput` / `parseNumberInput` de `src/domain/shared/moneyInput.ts`: el usuario teclea `6000` y ve `6.000` (convención es-PY: punto = miles, coma = decimales). Nunca un `type="number"` crudo para montos: `type="text"` + `inputMode="decimal"` (receta §6.4).
 
 ---
 
@@ -463,6 +464,30 @@ Reglas:
 - Validación con **Zod** (ver `src/features/products/` como referencia).
 - Botones del form: alineados a la derecha, `secondary` + `primary`, separados con `gap-sm`.
 
+**Inputs numéricos / money — formateo dinámico de miles (OBLIGATORIO):**
+
+Todo input que reciba dígitos numéricos formatea los miles **mientras se escribe**
+con el par de `src/domain/shared/moneyInput.ts`. El usuario teclea `6000` y ve
+`6.000` (es-PY: punto = miles, coma = decimales; `1234,5` → `1.234,5`). El estado
+guarda SIEMPRE el valor canónico sin separadores:
+
+```jsx
+import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput'
+
+<Input
+  type="text" inputMode="decimal"   // NUNCA type="number" para montos
+  value={formatNumberInput(formData.new_price)}
+  onChange={(e) => setFieldValue('new_price', parseNumberInput(e.target.value))}
+/>
+// El usuario teclea 6000 → ve "6.000". El estado guarda el canónico "6000".
+```
+
+Reglas:
+
+- Display por `formatNumberInput` (recibe el canónico del estado); parseo por `parseNumberInput` (elimina los puntos de miles, coma → punto decimal).
+- Los puntos son SIEMPRE agrupador de miles al parsear — borrar sobre `12.345` remueve dígitos de forma monótona (`12.34` → `12.3`), sin ambigüedad.
+- Cantidad con decimales de verdad (peso, metros) puede quedar en input numérico plano; dinero/montos SIEMPRE formateados con este par.
+
 ### 6.5 Badge / estado
 
 ```jsx
@@ -634,6 +659,7 @@ export default function ProductsPage() {
 | Archivo nuevo `.jsx` | `.tsx` |
 | Animaciones > 300ms, `animate-bounce` | `transition-colors duration-150` / `animate-in fade-in` |
 | Lógica de cálculo en el componente | `src/domain/<feature>/` |
+| Input de monto en crudo (`type="number"`: el usuario teclea `6000` y ve `6000`) | Par `formatNumberInput`/`parseNumberInput` (`moneyInput.ts`): ve `6.000` |
 
 ---
 
@@ -645,6 +671,7 @@ export default function ProductsPage() {
 | ¿Qué color de texto? | `text-foreground`. ¿Secundario/metadata? `text-on-surface-deep`. |
 | ¿Qué tamaño de texto? | `text-body-md`. ¿Título de página? `text-headline-lg`. ¿Título de card? `text-title-md`. |
 | ¿Es un número/fecha/ID? | `text-data-mono font-data-mono`. En tabla, además `text-right`. |
+| ¿Input de dinero/monto? | Par `formatNumberInput`/`parseNumberInput` (`moneyInput.ts`): teclear `6000` muestra `6.000`. Nunca `type="number"`. |
 | ¿Qué botón? | Acción principal → `primary`. Cancelar → `secondary`. Navegación → `ghost`/`link`. Borrar → `destructive`. |
 | ¿Qué espaciado? | `md` (16px). ¿Card? padding `lg` (24px). ¿Entre secciones? `xl` (48px). |
 | ¿Qué radio? | `rounded-md`. ¿Botón? `rounded-button`. ¿Modal? `rounded-xl`. ¿Badge? `rounded-full`. |
@@ -663,6 +690,7 @@ export default function ProductsPage() {
 - [ ] Cero clases genéricas de color (`gray`, `slate`, `blue-500`...) en código nuevo.
 - [ ] Todos los textos visibles pasan por `t()` de `useI18n()`.
 - [ ] Números, importes, fechas e IDs con `text-data-mono font-data-mono`.
+- [ ] Inputs numéricos/monetarios con formateo dinámico de miles vía `moneyInput` (§6.4): teclear `6000` muestra `6.000`.
 - [ ] 1 solo `variant="primary"` por vista.
 - [ ] Estados loading / empty / error cubiertos (§6.7).
 - [ ] Espaciado solo con tokens (`xs/sm/md/lg/xl`); cero valores arbitrarios redundantes.
@@ -822,6 +850,7 @@ las páginas de listado simple usan SOLO el hook compartido. No dupliques.
 | Proveedores (`Suppliers`)       | ✅ F2 + Enter busca; gating con modales form/detalles/confirmación     |
 | Pagos de compras (`PurchasePayments`) | ✅ F2 al buscador de resultados; gating con modales pago/cancelación |
 | Cobros ventas (`SalePayment`)   | ✅ F2 al buscador de ventas; gating con modales cobro/anulación        |
+| Ajustes de precios (`PriceAdjustmentNew`) | ✅ F2 vía `useSearchFocusShortcut`; placeholder con pista      |
 
 ### 12.8 Anti-patrones de atajos
 

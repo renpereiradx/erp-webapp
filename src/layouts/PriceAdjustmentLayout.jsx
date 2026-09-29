@@ -3,6 +3,8 @@
  * Incluye sistema de tabs para navegar entre:
  * - Nuevo Ajuste (búsqueda y selección de productos)
  * - Historial Global (historial de todos los ajustes)
+ * Alineado a DESIGN.md: escala tipográfica semántica, tokens de color,
+ * sin clases genéricas (§1, §3, §8).
  */
 
 import React from 'react';
@@ -28,30 +30,33 @@ const PriceAdjustmentLayout = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
-      {/* Header with Tabs */}
-      <header className='flex flex-col gap-6'>
-        <div className='flex flex-col gap-1 border-l-4 border-primary pl-4'>
-          <h1 className='text-2xl font-black text-text-main tracking-tighter uppercase'>
-            Ajuste de Precios
+    <div className="flex flex-col animate-in fade-in">
+      {/* Header con tabs */}
+      <header className="flex flex-col gap-md">
+        <div>
+          <h1 className="text-headline-lg text-foreground">
+            {t('priceAdjustment.layout.title', 'Ajuste de Precios')}
           </h1>
-          <p className='text-text-secondary text-xs font-medium uppercase tracking-widest'>
+          <p className="mt-xs text-body-md text-on-surface-deep">
             {t('priceAdjustment.layout.description', 'Gestión de precios y seguimiento de cambios')}
           </p>
         </div>
 
         {/* Sistema de tabs */}
-        <nav className="flex border-b border-border-subtle" aria-label="Price adjustment sections">
+        <nav
+          className="flex border-b border-divider"
+          aria-label={t('priceAdjustment.layout.navLabel', 'Secciones de ajustes de precios')}
+        >
           {tabs.map((tab) => (
             <NavLink
               key={tab.id}
               to={tab.path}
               end={tab.exact}
               className={({ isActive }) =>
-                `px-6 py-3 text-sm font-bold transition-all border-b-2 uppercase tracking-widest ${
-                  isActive 
-                    ? 'border-primary text-primary bg-primary/5' 
-                    : 'border-transparent text-text-secondary hover:text-text-main hover:bg-slate-50'
+                `px-md py-sm text-body-sm-bold border-b-2 -mb-px transition-colors duration-150 ${
+                  isActive
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-on-surface-deep hover:text-foreground'
                 }`
               }
             >
@@ -62,7 +67,7 @@ const PriceAdjustmentLayout = () => {
       </header>
 
       {/* Contenido de la tab activa */}
-      <div className="min-h-0">
+      <div className="mt-lg min-h-0">
         <Outlet />
       </div>
     </div>

@@ -1,15 +1,33 @@
 /**
  * Página de Ajuste de Precios Nuevo - Patrón MVP
- * Búsqueda y selección de productos para ajuste de precios
- * Siguiendo Fluent Design System 2
+ * Búsqueda y selección de unidades vendibles (filas planas) para ajuste
+ * de precios. Alineada a DESIGN.md: tokens semánticos, componentes ui/,
+ * estados loading/empty/error (§6.7), F2 al buscador (§12.4).
  */
 
-import React, { useState, useEffect } from 'react';
-import { Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Loader2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import usePriceAdjustmentNewStore from '@/store/usePriceAdjustmentNewStore';
 import { useNavigate } from 'react-router-dom';
 import { getProductBaseUnitPrice } from '@/utils/productUtils';
+import { formatPYG } from '@/utils/currencyUtils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import TablePagination from '@/components/ui/TablePagination';
+import GenericSkeletonList from '@/components/ui/GenericSkeletonList';
+import EmptyState from '@/components/ui/EmptyState';
+import ErrorState from '@/components/ui/ErrorState';
+import { useSearchFocusShortcut } from '@/hooks/useSearchFocusShortcut';
 
 const PriceAdjustmentNew = () => {
   const { t } = useI18n();
@@ -31,6 +49,10 @@ const PriceAdjustmentNew = () => {
 
   // Estado local para el input de búsqueda
   const [localSearchTerm, setLocalSearchTerm] = useState('');
+  const searchInputRef = useRef(null);
+
+  // F2 → foco al buscador de la página (§12.4; sin modales: enabled fijo)
+  useSearchFocusShortcut({ enabled: true, inputRef: searchInputRef });
 
   // Cargar productos inicialmente (sin búsqueda)
   useEffect(() => {
@@ -88,162 +110,132 @@ const PriceAdjustmentNew = () => {
     navigate('/ajustes-precios/detalle', { state: { selectedProduct: product } });
   };
 
-  // Manejar paginación
-  const handlePreviousPage = () => {
-    if (pagination.page > 1) {
-      changePage(pagination.page - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (pagination.page < pagination.total_pages) {
-      changePage(pagination.page + 1);
-    }
+  // Reintentar tras un error de carga (§6.7: onRetry)
+  const handleRetry = () => {
+    clearError();
+    searchProducts(searchTerm, pagination.page, pagination.page_size);
   };
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+    <div className="flex flex-col gap-lg animate-in fade-in">
       {/* Barra de búsqueda */}
-      <div className="bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle">
+      <section className="bg-surface rounded-md shadow-whisper border-0 p-lg">
         <form autoComplete="off" onSubmit={handleSearch} className="relative max-w-2xl">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <input
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-deep w-5 h-5"
+            aria-hidden="true"
+          />
+          <Input
+            ref={searchInputRef}
             type="search"
-            placeholder={t('priceAdjustmentNew.search.placeholder', 'Buscar por nombre o ID de producto...')}
+            placeholder={t('priceAdjustmentNew.search.placeholder', 'Buscar por nombre o ID de producto... (F2)')}
             value={localSearchTerm}
             onChange={handleInputChange}
-            className="w-full pl-12 pr-4 h-12 border border-border-subtle rounded-xl text-sm bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all shadow-sm"
+            size="lg"
+            className="pl-12"
           />
-          {loading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-primary" size={20} />}
+          {loading && (
+            <Loader2
+              className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-primary w-5 h-5"
+              aria-hidden="true"
+            />
+          )}
         </form>
         {/* Mensaje de ayuda para búsqueda */}
         {localSearchTerm.length > 0 && localSearchTerm.length < 4 && (
-          <div className="mt-2 text-[10px] font-bold text-amber-600 uppercase tracking-widest flex items-center gap-1">
-            <span className='text-sm'>💡</span> {t('priceAdjustmentNew.search.hint', 'Escribe al menos 4 caracteres para buscar')} ({localSearchTerm.length}/4)
-          </div>
+          <p className="mt-sm text-body-sm-bold text-warning flex items-center gap-xs">
+            {t('priceAdjustmentNew.search.hint', 'Escribe al menos 4 caracteres para buscar')} ({localSearchTerm.length}/4)
+          </p>
         )}
-      </div>
+      </section>
 
-      {/* Mensaje de error si existe */}
+      {/* Mensaje de error si existe (§6.7: ErrorState con onRetry) */}
       {error && (
-        <div className="p-4 bg-error/10 border-l-4 border-error rounded-r-lg flex items-center justify-between">
-          <p className="text-sm text-error font-bold">{error}</p>
-          <button
-            onClick={() => {
-              clearError();
-              searchProducts(searchTerm, pagination.page, pagination.page_size);
-            }}
-            className="px-4 py-1.5 bg-error text-white text-[10px] font-black uppercase rounded hover:bg-red-700 transition-all"
-          >
-            {t('priceAdjustmentNew.action.retry', 'Reintentar')}
-          </button>
-        </div>
+        <ErrorState
+          title={t('priceAdjustmentNew.error.title', 'Error al cargar productos')}
+          message={error}
+          onRetry={handleRetry}
+        />
       )}
 
       {/* Tabla de productos */}
-      <div className="bg-white rounded-xl shadow-fluent-shadow border border-border-subtle overflow-hidden">
-        <div className='overflow-x-auto'>
-          <table className="w-full text-left">
-            <thead className="bg-gray-50/50 border-b border-border-subtle text-[13px] font-semibold text-gray-700">
-              <tr>
-                <th className="py-4 px-6">
-                  {t('priceAdjustmentNew.table.name', 'Nombre del Producto')}
-                </th>
-                <th className="py-4 px-4">
-                  {t('priceAdjustmentNew.table.id', 'ID del Producto')}
-                </th>
-                <th className="py-4 px-4">
-                  {t('priceAdjustmentNew.table.price', 'Precio Actual')}
-                </th>
-                <th className="py-4 px-6 text-right"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 text-sm text-text-main">
-              {loading && products.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="py-20 text-center italic text-slate-400">
-                    <div className='flex flex-col items-center gap-3'>
-                      <Loader2 size={32} className='animate-spin text-primary' />
-                      {t('priceAdjustmentNew.loading', 'Cargando productos...')}
-                    </div>
-                  </td>
-                </tr>
-              ) : products.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="py-20 text-center text-slate-400 opacity-50 italic">
-                    <div className='flex flex-col items-center gap-2'>
-                      <Search size={48} />
-                      {t('priceAdjustmentNew.empty.title', 'No se encontraron productos')}
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                products.map((product) => (
-                  <tr key={`${product.product_id || product.id}-${product.variant_id || 'base'}`} className="hover:bg-gray-50 transition-colors group">
-                    <td className="py-4 px-6 font-bold text-text-main">
+      <section className="bg-surface rounded-md shadow-whisper border-0 overflow-hidden">
+        {loading && products.length === 0 ? (
+          <div className="p-lg">
+            <GenericSkeletonList count={5} />
+          </div>
+        ) : !loading && products.length === 0 ? (
+          <EmptyState
+            icon={Search}
+            title={t('priceAdjustmentNew.empty.title', 'Sin resultados')}
+            description={t('priceAdjustmentNew.empty.message', 'No se encontraron productos')}
+          />
+        ) : (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-surface-muted hover:bg-surface-muted border-0">
+                  <TableHead className="text-label-caps uppercase text-on-surface-deep">
+                    {t('priceAdjustmentNew.table.name', 'Nombre del Producto')}
+                  </TableHead>
+                  <TableHead className="text-label-caps uppercase text-on-surface-deep">
+                    {t('priceAdjustmentNew.table.id', 'ID del Producto')}
+                  </TableHead>
+                  <TableHead className="text-label-caps uppercase text-on-surface-deep text-right">
+                    {t('priceAdjustmentNew.table.price', 'Precio Actual')}
+                  </TableHead>
+                  <TableHead className="text-label-caps uppercase text-on-surface-deep text-right">
+                    <span className="sr-only">{t('priceAdjustmentNew.table.actions', 'Acción')}</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {products.map((product) => (
+                  <TableRow
+                    key={`${product.product_id || product.id}-${product.variant_id || 'base'}`}
+                    className="hover:bg-surface-muted transition-colors duration-150"
+                  >
+                    <TableCell className="text-body-md text-foreground">
                       {/* Fila plana: la variante es la unidad ajustable; se
                           indica su producto padre (owner request 2026-09-14). */}
                       {product.variant_name || product.product_name || product.name || t('field.no_name', 'Sin nombre')}
                       {product.variant_id && (
-                        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-primary/10 text-primary align-middle">
+                        <Badge variant="secondary" className="ml-sm align-middle">
                           {t('priceAdjustmentNew.table.parent_of', 'Producto padre: {name}', { name: product.product_name || product.name })}
-                        </span>
+                        </Badge>
                       )}
                       {product.sku && (
-                        <span className="block font-mono text-[11px] font-normal text-on-surface-deep mt-0.5">{product.sku}</span>
+                        <span className="block text-data-mono font-data-mono text-on-surface-deep mt-xs">
+                          {product.sku}
+                        </span>
                       )}
-                    </td>
-                    <td className="py-4 px-4 font-mono text-xs text-primary font-bold">
+                    </TableCell>
+                    <TableCell className="text-data-mono font-data-mono text-on-surface-deep">
                       {product.sku || product.product_id || product.id}
-                    </td>
-                    <td className="py-4 px-4 font-black">
-                      PYG {(getProductBaseUnitPrice(product) ?? product.current_price ?? product.price ?? 0).toLocaleString('es-PY')}
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        onClick={() => handleSelectProduct(product)}
-                        className="px-4 py-2 bg-primary text-white text-[10px] font-black uppercase rounded shadow-sm hover:bg-primary-hover active:scale-[0.98] transition-all"
-                      >
+                    </TableCell>
+                    <TableCell className="text-data-mono font-data-mono text-right text-foreground">
+                      {formatPYG(getProductBaseUnitPrice(product) ?? product.current_price ?? product.price ?? 0)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="secondary" size="sm" onClick={() => handleSelectProduct(product)}>
                         {t('priceAdjustmentNew.action.select', 'Seleccionar')}
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
 
-        {/* Paginación */}
-        {products.length > 0 && (
-          <div className='px-6 py-4 border-t border-border-subtle flex flex-col md:flex-row justify-between items-center gap-4 bg-[#fafafa]'>
-            <div className='text-[13px] text-gray-500 font-medium'>
-              {t('priceAdjustmentNew.pagination.showing', 'Mostrando')} <span className="font-bold text-text-main">{((pagination.page - 1) * pagination.page_size) + 1}</span> a <span className="font-bold text-text-main">{Math.min(pagination.page * pagination.page_size, pagination.total)}</span> de <span className="font-bold text-text-main">{pagination.total}</span> resultados
-            </div>
-            <div className='flex items-center gap-3'>
-              <button
-                onClick={handlePreviousPage}
-                disabled={pagination.page <= 1}
-                className="flex items-center gap-1 px-3 py-1.5 border border-border-subtle rounded-lg text-xs font-bold uppercase text-text-secondary hover:bg-white hover:text-text-main disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-              >
-                <ChevronLeft size={16} />
-                {t('priceAdjustmentNew.pagination.previous', 'Anterior')}
-              </button>
-              <div className='text-sm font-bold text-primary'>
-                {pagination.page} / {pagination.total_pages}
-              </div>
-              <button
-                onClick={handleNextPage}
-                disabled={pagination.page >= pagination.total_pages}
-                className="flex items-center gap-1 px-3 py-1.5 border border-border-subtle rounded-lg text-xs font-bold uppercase text-text-secondary hover:bg-white hover:text-text-main disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-              >
-                {t('priceAdjustmentNew.pagination.next', 'Siguiente')}
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
+            {/* Paginación server-side real */}
+            <TablePagination
+              page={pagination.page}
+              totalPages={pagination.total_pages}
+              totalItems={pagination.total}
+              onPageChange={changePage}
+            />
+          </>
         )}
-      </div>
+      </section>
     </div>
   );
 };
