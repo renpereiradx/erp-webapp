@@ -90,24 +90,59 @@ const EnhancedModal = ({
       modalElement.focus();
     }
 
-    // Handle escape key
-    const handleEscape = (e) => {
+    // Focusables del modal (botones, inputs, selects, links, tabindex>=0).
+    // Sin filtro de visibilidad: offsetParent/getClientRects son siempre
+    // vacíos en jsdom y los consumidores actuales no montan focusables ocultos.
+    const getFocusableElements = () => {
+      if (!modalRef.current) return [];
+      return Array.from(
+        modalRef.current.querySelectorAll(
+          'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+    };
+
+    // Teclado: Escape cierra; Tab queda atrapado dentro del modal (focus
+    // trap) para que la navegación por teclado no "escape" al fondo.
+    const handleKeyDown = (e) => {
       if (closeOnEscape && e.key === 'Escape') {
         // El modal consumió el Escape: cortar la propagación hacia window para
         // que los atajos globales (ej. useCheckoutShortcuts: Esc = volver/cerrar
         // el wizard) no se disparen también al cerrar un modal apilado.
         e.stopPropagation();
         onCloseRef.current?.();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        const focusables = getFocusableElements();
+        if (focusables.length === 0) return;
+        const active = document.activeElement;
+        if (!modalRef.current.contains(active)) {
+          // El foco quedó fuera (atajo externo): devolverlo al modal.
+          e.preventDefault();
+          focusables[0].focus();
+          return;
+        }
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', handleKeyDown);
 
     // Prevent body scroll
     document.body.style.overflow = 'hidden';
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
 
       // Restore focus
@@ -148,7 +183,10 @@ const EnhancedModal = ({
       // Centra el modal sobre el área de contenido (excluye el sidebar).
       // MainLayout expone --erp-content-inset según el ancho real del menú;
       // fuera del layout (login, etc.) vale 0px y se centra en todo el viewport.
-      style={{ left: 'var(--erp-content-inset, 0px)' }}
+      // Un modal apilado sobre un full-screen (ej. wizard de checkout) puede
+      // cubrir TODA la pantalla pasando [--erp-overlay-inset:0px] en
+      // overlayClassName (QuickClientModal).
+      style={{ left: 'var(--erp-overlay-inset, var(--erp-content-inset, 0px))' }}
       onClick={handleOverlayClick}
       data-testid={`${testId}-overlay`}
       role="dialog"

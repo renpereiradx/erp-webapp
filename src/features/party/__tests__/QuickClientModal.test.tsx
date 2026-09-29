@@ -41,12 +41,25 @@ describe('QuickClientModal', () => {
     vi.clearAllMocks()
   })
 
-  it('apila el overlay por encima del wizard de checkout (clase !z-[200])', () => {
+  it('apila el overlay sobre el wizard (clase !z-[200]) y cubre toda la pantalla', () => {
     renderModal()
     // El wizard de venta usa overlay z-[150]; sin el fix el overlay queda en
     // z-50. La clase es el contrato de stacking (jsdom no aplica Tailwind,
     // así que se aserta su presencia, no el computed style).
-    expect(screen.getByTestId('quick-client-modal-overlay').className).toContain('!z-[200]')
+    const overlay = screen.getByTestId('quick-client-modal-overlay')
+    expect(overlay.className).toContain('!z-[200]')
+    // Blur/backdrop full-screen: la var de inset en 0 anula el offset del
+    // sidebar que EnhancedModal aplica por defecto.
+    expect(overlay.className).toContain('[--erp-overlay-inset:0px]')
+  })
+
+  it('enfoca el primer campo (Nombre) al abrir', async () => {
+    renderModal()
+    // EnhancedModal enfoca el contenedor en su propio efecto; el modal
+    // re-enfoca el input con un tick de 60ms.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByLabelText(/Nombre/i)),
+    )
   })
 
   it('crea el cliente y notifica onCreated con el cliente normalizado', async () => {

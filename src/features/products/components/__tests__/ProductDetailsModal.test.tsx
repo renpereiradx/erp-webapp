@@ -70,7 +70,9 @@ describe('ProductDetailsModal', () => {
       '[data-testid="product-details-modal-overlay"]',
     ) as HTMLElement;
     expect(overlay).not.toBeNull();
-    expect(overlay.style.left).toBe('var(--erp-content-inset, 0px)');
+    // Cadena con fallback: sin --erp-overlay-inset (full-screen opt-in de los
+    // modales apilados), el offset sigue viniendo de --erp-content-inset.
+    expect(overlay.style.left).toBe('var(--erp-overlay-inset, var(--erp-content-inset, 0px))');
   });
 
   it('no muestra la card de precio sin precios registrados', () => {

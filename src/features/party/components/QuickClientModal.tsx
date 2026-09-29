@@ -6,7 +6,7 @@
  * devuelve el party al padre vía `onCreated` para autoseleccionarlo en el
  * wizard sin salir del POS.
  */
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { UserPlus } from 'lucide-react'
 import EnhancedModal from '@/components/ui/EnhancedModal'
 import { Button } from '@/components/ui/button'
@@ -38,6 +38,16 @@ export function QuickClientModal({ isOpen, onClose, onCreated }: QuickClientModa
   const [form, setForm] = useState<QuickClientForm>(EMPTY_FORM)
   const [errors, setErrors] = useState<QuickClientErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const firstNameRef = useRef<HTMLInputElement>(null)
+
+  // Focus inicial en el primer campo: EnhancedModal enfoca el contenedor al
+  // abrir (efecto del padre, corre después del autoFocus del input y se lo
+  // roba), así que re-enfocamos con un tick (patrón 60ms del wizard).
+  useEffect(() => {
+    if (!isOpen) return
+    const timer = setTimeout(() => firstNameRef.current?.focus(), 60)
+    return () => clearTimeout(timer)
+  }, [isOpen])
 
   const handleChange = (field: keyof QuickClientForm) => (value: string) => {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -96,7 +106,9 @@ export function QuickClientModal({ isOpen, onClose, onCreated }: QuickClientModa
       // Se abre apilado dentro del wizard de checkout (overlay z-[150]):
       // sin esto el modal monta DETRÁS y "Nuevo cliente" parece muerto.
       // 200 > wizard, < toasts (1000) y < VariantSelectorModal (1200).
-      overlayClassName="!z-[200]"
+      // [--erp-overlay-inset:0px] cubre toda la pantalla (el wizard de abajo
+      // ya es full-screen): el blur no deja la franja del sidebar sin tocar.
+      overlayClassName="!z-[200] [--erp-overlay-inset:0px]"
       footer={
         <div className="flex justify-end gap-sm">
           <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
@@ -123,13 +135,13 @@ export function QuickClientModal({ isOpen, onClose, onCreated }: QuickClientModa
               {t('party.quick_client.field.first_name', 'Nombre')} *
             </Label>
             <Input
+              ref={firstNameRef}
               id="qc-first-name"
               type="text"
               value={form.first_name}
               onChange={e => handleChange('first_name')(e.target.value)}
               state={errors.first_name ? 'error' : ''}
               placeholder={t('party.quick_client.placeholder.first_name', 'Ingrese el nombre')}
-              autoFocus
             />
             {errors.first_name && <p className="text-body-sm-bold text-error">{t(errors.first_name)}</p>}
           </div>
