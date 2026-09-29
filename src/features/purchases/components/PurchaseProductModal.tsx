@@ -785,8 +785,9 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     </span>
                   </div>
 
-                  {/* Total Compra */}
-                  <div className='flex justify-between items-center py-2 border-b border-border-subtle'>
+                  {/* Total Compra (costo de la línea; la rentabilidad se revisa
+                      en el detalle de la compra, no en el alta) */}
+                  <div className='flex justify-between items-center pt-2'>
                     <span className='text-body-md text-on-surface-deep'>
                       {t('purchases.totals.total', 'Total Compra')}
                     </span>
@@ -795,44 +796,6 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                         (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0),
                       )}
                     </span>
-                  </div>
-
-                  {/* Total Venta Esperado */}
-                  <div className='flex justify-between items-center py-2 border-b border-border-subtle'>
-                    <span className='text-body-md text-on-surface-deep'>
-                      {t('purchases.totals.expected_sale', 'Venta Esperada')}
-                    </span>
-                    <span className='text-body-md font-data-mono text-primary'>
-                      {formatCurrency(
-                        (Number(modalQuantity) || 0) * effectiveSalePrice,
-                      )}
-                    </span>
-                  </div>
-
-                  {/* Ganancia Esperada */}
-                  <div className='flex justify-between items-center pt-2'>
-                    <span className='text-body-md-bold text-foreground'>
-                      {t('purchases.product_modal.expected_profit', 'Ganancia Esperada')}
-                    </span>
-                    <div className='text-right'>
-                      <span
-                        className={cn(
-                          'text-title-md font-data-mono text-data-mono',
-                          (Number(modalQuantity) || 0) * effectiveSalePrice - (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0) >= 0 ? 'text-success' : 'text-error'
-                        )}
-                      >
-                        {formatCurrency(
-                          (Number(modalQuantity) || 0) * effectiveSalePrice -
-                            (Number(modalQuantity) || 0) * (Number(modalUnitPrice) || 0),
-                        )}
-                      </span>
-                      {(Number(modalQuantity) || 0) > 0 &&
-                        (Number(modalUnitPrice) || 0) > 0 && (
-                          <span className='ml-1.5 text-body-sm text-success'>
-                            (+{effectiveProfitPct.toFixed(1)}%)
-                          </span>
-                        )}
-                    </div>
                   </div>
                 </div>
               </div>

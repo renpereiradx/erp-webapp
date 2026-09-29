@@ -24,8 +24,10 @@ interface UsePurchasesShortcutsProps {
  *   de la lista; en Nueva Compra es el buscador de productos del carrito
  *   (seleccionar un resultado abre el modal de detalles, F3 = su buscador
  *   interno).
- * - F12 → abrir el wizard de checkout (alias legado del atajo principal
- *   `purchases.processPurchase` que usa el wizard una vez abierto).
+ * - F12 → acción principal contextual: con el carrito vacío enfoca el
+ *   buscador de productos (lo siguiente lógico es agregar ítems); con
+ *   productos cargados abre el wizard de checkout ("Comprar (F12)", alias
+ *   legado de `purchases.processPurchase`).
  */
 export const usePurchasesShortcuts = ({
   activeTab,
@@ -57,8 +59,13 @@ export const usePurchasesShortcuts = ({
       }
 
       if (event.key === 'F12') {
-        if (activeTab !== 'nueva-compra' || purchaseItemCount === 0) return
+        if (activeTab !== 'nueva-compra') return
         event.preventDefault()
+        if (purchaseItemCount === 0) {
+          cartProductSearchRef?.current?.focus()
+          cartProductSearchRef?.current?.select()
+          return
+        }
         onOpenCheckoutWizard()
       }
     }
