@@ -86,6 +86,8 @@ export const purchasePaymentsMvp = {
   'purchasePaymentsMvp.detail.products.headers.priceWithoutTax': 'Price w/o VAT',
   'purchasePaymentsMvp.detail.products.headers.tax': 'VAT',
   'purchasePaymentsMvp.detail.products.headers.salePrice': 'Sale Price',
+  'purchasePaymentsMvp.detail.products.expectedSale': 'Expected sale',
+  'purchasePaymentsMvp.detail.products.expectedProfit': 'Expected profit',
   'purchasePaymentsMvp.detail.products.headers.total': 'Total',
   'purchasePaymentsMvp.detail.history.title': 'Payment History',
   'purchasePaymentsMvp.detail.history.subtitle': 'Treasury records',

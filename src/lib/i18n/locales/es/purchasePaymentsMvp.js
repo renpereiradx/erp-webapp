@@ -323,6 +323,8 @@ export const purchasePaymentsMvp = {
   'purchasePaymentsMvp.detail.products.headers.priceWithoutTax': 'Precio s/IVA',
   'purchasePaymentsMvp.detail.products.headers.tax': 'IVA',
   'purchasePaymentsMvp.detail.products.headers.salePrice': 'Precio Venta',
+  'purchasePaymentsMvp.detail.products.expectedSale': 'Venta esperada',
+  'purchasePaymentsMvp.detail.products.expectedProfit': 'Ganancia esperada',
   'purchasePaymentsMvp.detail.history.subtitle': 'Registros de tesorería',
   'purchasePaymentsMvp.detail.history.entryTitle': 'Pago Realizado',
 

@@ -189,6 +189,24 @@ const PurchasePaymentDetailPage = () => {
   const balanceDue = typedOrder.pendingAmount ?? 0
   const paymentProgress = typedOrder.paymentProgressPercent ?? 0
 
+  // Rentabilidad planificada de la orden (misma aritmética que el alta de
+  // compras): venta esperada = Σ(precio venta × cantidad); ganancia = venta
+  // esperada − costo con IVA. Solo se muestra si la orden trae precios de venta.
+  const expectedSale = (typedOrder.items ?? []).reduce(
+    (s, i) => s + (Number(i.salePrice ?? i.sale_price) || 0) * (Number(i.quantity) || 0),
+    0,
+  )
+  const orderCost = (typedOrder.items ?? []).reduce(
+    (s, i) => s + (Number(i.total_line_with_tax ?? i.total) || 0),
+    0,
+  )
+  const expectedProfit = expectedSale - orderCost
+  const expectedProfitPct =
+    orderCost > 0 && expectedSale > 0
+      ? ((expectedSale / orderCost - 1) * 100).toFixed(1)
+      : null
+  const hasSalePlan = expectedSale > 0
+
   const isPaid = ['completed', 'paid'].includes(typedOrder.status?.toLowerCase() || '')
   const isCancelled = typedOrder.status?.toLowerCase() === 'cancelled'
 
@@ -301,8 +319,8 @@ const PurchasePaymentDetailPage = () => {
                       </TableHeader>
                       <TableBody>
                         {typedOrder.items.map((item: OrderItem, idx: number) => {
-                          const unitPriceWoTax = item.unit_price_without_tax ?? item.unitPrice
-                          const taxAmount = item.tax_amount ?? 0
+                          const unitPriceWoTax = item.unitPriceWithoutTax ?? item.unit_price_without_tax ?? item.unitPrice
+                          const taxAmount = item.taxAmount ?? item.tax_amount ?? 0
                           const lineTotal = item.total_line_with_tax ?? item.total
                           return (
                             <TableRow key={idx} className='hover:bg-surface-muted transition-colors duration-150'>
@@ -351,8 +369,8 @@ const PurchasePaymentDetailPage = () => {
                   </div>
                   <div className='md:hidden divide-y divide-border-subtle'>
                     {typedOrder.items.map((item: OrderItem, idx: number) => {
-                      const unitPriceWoTax = item.unit_price_without_tax ?? item.unitPrice
-                      const taxAmount = item.tax_amount ?? 0
+                      const unitPriceWoTax = item.unitPriceWithoutTax ?? item.unit_price_without_tax ?? item.unitPrice
+                      const taxAmount = item.taxAmount ?? item.tax_amount ?? 0
                       const lineTotal = item.total_line_with_tax ?? item.total
                       return (
                         <div key={idx} className='p-lg space-y-md'>
@@ -388,7 +406,35 @@ const PurchasePaymentDetailPage = () => {
                   </div>
                 </>
               )}
-              <div className='bg-surface-muted p-lg flex justify-end items-center border-t border-border-subtle'>
+              <div className='bg-surface-muted p-lg border-t border-border-subtle flex flex-col items-end gap-2'>
+                {/* Rentabilidad planificada: solo órdenes con precios de venta guardados */}
+                {hasSalePlan && (
+                  <div className='w-full max-w-xs space-y-1.5'>
+                    <div className='flex justify-between items-center'>
+                      <p className='text-body-sm text-on-surface-deep'>
+                        {t('purchasePaymentsMvp.detail.products.expectedSale', 'Venta esperada')}
+                      </p>
+                      <p className='text-body-sm font-data-mono text-primary'>
+                        {currencyFormatter.format(expectedSale)}
+                      </p>
+                    </div>
+                    <div className='flex justify-between items-center'>
+                      <p className='text-body-sm-bold text-foreground'>
+                        {t('purchasePaymentsMvp.detail.products.expectedProfit', 'Ganancia esperada')}
+                      </p>
+                      <p
+                        className={`text-body-sm-bold font-data-mono ${expectedProfit >= 0 ? 'text-success' : 'text-error'}`}
+                      >
+                        {currencyFormatter.format(expectedProfit)}
+                        {expectedProfitPct && (
+                          <span className='ml-1 text-body-sm'>
+                            (+{expectedProfitPct}%)
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className='text-right'>
                   <p className='text-body-md text-on-surface-deep mb-0.5'>{t('purchasePaymentsMvp.detail.orderTotal', 'Total Orden')}</p>
                   <h3 className='text-title-md text-primary font-data-mono text-data-mono tracking-tight leading-none'>

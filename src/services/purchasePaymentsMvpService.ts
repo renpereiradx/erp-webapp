@@ -224,6 +224,9 @@ const normalizeItems = items => {
       // orden): base para analizar rentabilidad fuera del alta de compras.
       salePrice: toNumber(item.sale_price ?? item.salePrice ?? 0),
       profitPct: item.profit_pct ?? item.profitPct ?? null,
+      // Datos fiscales de la línea (órdenes viejas pueden no traerlos).
+      unitPriceWithoutTax: item.unit_price_without_tax ?? item.unitPriceWithoutTax ?? null,
+      taxAmount: item.tax_amount ?? item.taxAmount ?? null,
       total: roundCurrency(total),
       expDate: item.exp_date ?? item.expiry_date ?? null,
     }
