@@ -93,6 +93,10 @@ const EnhancedModal = ({
     // Handle escape key
     const handleEscape = (e) => {
       if (closeOnEscape && e.key === 'Escape') {
+        // El modal consumió el Escape: cortar la propagación hacia window para
+        // que los atajos globales (ej. useCheckoutShortcuts: Esc = volver/cerrar
+        // el wizard) no se disparen también al cerrar un modal apilado.
+        e.stopPropagation();
         onCloseRef.current?.();
       }
     };

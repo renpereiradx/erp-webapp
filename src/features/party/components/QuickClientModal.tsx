@@ -93,6 +93,10 @@ export function QuickClientModal({ isOpen, onClose, onCreated }: QuickClientModa
       subtitle={t('party.quick_client.subtitle', 'Datos mínimos para continuar la venta')}
       size="md"
       testId="quick-client-modal"
+      // Se abre apilado dentro del wizard de checkout (overlay z-[150]):
+      // sin esto el modal monta DETRÁS y "Nuevo cliente" parece muerto.
+      // 200 > wizard, < toasts (1000) y < VariantSelectorModal (1200).
+      overlayClassName="!z-[200]"
       footer={
         <div className="flex justify-end gap-sm">
           <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
