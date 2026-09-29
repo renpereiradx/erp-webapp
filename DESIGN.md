@@ -851,6 +851,7 @@ las páginas de listado simple usan SOLO el hook compartido. No dupliques.
 | Pagos de compras (`PurchasePayments`) | ✅ F2 al buscador de resultados; gating con modales pago/cancelación |
 | Cobros ventas (`SalePayment`)   | ✅ F2 al buscador de ventas; gating con modales cobro/anulación        |
 | Ajustes de precios (`PriceAdjustmentNew`) | ✅ F2 vía `useSearchFocusShortcut`; placeholder con pista      |
+| Ajustes de precios — Historial (`PriceAdjustmentHistory`) | ✅ F2 al buscador de producto; placeholder con pista           |
 
 ### 12.8 Anti-patrones de atajos
 

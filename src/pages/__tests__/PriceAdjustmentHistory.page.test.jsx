@@ -26,7 +26,7 @@ vi.mock('@/lib/i18n', () => {
       'priceAdjustmentHistory.title': 'Historial de Ajustes',
       'priceAdjustmentHistory.filters.title': 'Filtros de Búsqueda',
       'priceAdjustmentHistory.filters.product': 'Producto',
-      'priceAdjustmentHistory.filters.productPlaceholder': 'Buscar por nombre o SKU',
+      'priceAdjustmentHistory.filters.productPlaceholder': 'Buscar por nombre o SKU (F2)',
       'priceAdjustmentHistory.filters.user': 'Usuario',
       'priceAdjustmentHistory.filters.userPlaceholder': 'Buscar por nombre o ID',
       'priceAdjustmentHistory.filters.unit': 'Unidad',
@@ -39,6 +39,8 @@ vi.mock('@/lib/i18n', () => {
       'priceAdjustmentHistory.filters.clear': 'Limpiar Filtros',
       'priceAdjustmentHistory.filters.dateRangeError': 'La fecha de inicio no puede ser mayor a la fecha de fin',
       'priceAdjustmentHistory.empty.title': 'No se encontraron resultados',
+      'priceAdjustmentHistory.empty.description':
+        'Prueba a cambiar o eliminar algunos filtros para encontrar lo que buscas.',
       'priceAdjustmentHistory.results.showing': 'Mostrando',
       'priceAdjustmentHistory.results.to': 'a',
       'priceAdjustmentHistory.results.of': 'de',
@@ -121,7 +123,7 @@ describe('PriceAdjustmentHistory Page', () => {
       expect(priceAdjustmentService.getByDateRange).toHaveBeenCalled();
     });
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar por nombre o SKU'), {
+    fireEvent.change(screen.getByPlaceholderText('Buscar por nombre o SKU (F2)'), {
       target: { value: 'banana' }
     });
 
@@ -180,7 +182,7 @@ describe('PriceAdjustmentHistory Page', () => {
       expect(priceAdjustmentService.getByDateRange).toHaveBeenCalledTimes(1);
     });
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar por nombre o SKU'), {
+    fireEvent.change(screen.getByPlaceholderText('Buscar por nombre o SKU (F2)'), {
       target: { value: 'banana' }
     });
     fireEvent.click(screen.getByText('Aplicar Filtros'));
@@ -197,5 +199,14 @@ describe('PriceAdjustmentHistory Page', () => {
         { user: '', unit: '', adjustment_type: '' }
       );
     });
+  });
+
+  it('F2 enfoca el buscador de producto de la página (§12.4)', async () => {
+    render(<PriceAdjustmentHistory />);
+
+    const search = screen.getByPlaceholderText('Buscar por nombre o SKU (F2)');
+    fireEvent.keyDown(document, { key: 'F2' });
+
+    expect(search).toBe(document.activeElement);
   });
 });

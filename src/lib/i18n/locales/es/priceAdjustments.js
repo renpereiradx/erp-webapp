@@ -171,7 +171,7 @@ export const priceAdjustments = {
   'priceAdjustmentHistory.filters.title': 'Filtros de Búsqueda',
   'priceAdjustmentHistory.filters.product': 'Producto',
   'priceAdjustmentHistory.filters.productPlaceholder':
-    'Buscar por nombre o SKU',
+    'Buscar por nombre o SKU (F2)',
   'priceAdjustmentHistory.filters.user': 'Usuario',
   'priceAdjustmentHistory.filters.userPlaceholder': 'Buscar por nombre o ID',
   'priceAdjustmentHistory.filters.unit': 'Unidad',
