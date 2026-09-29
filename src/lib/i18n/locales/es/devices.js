@@ -16,6 +16,10 @@ export const devices = {
   'devices.empty.description': 'Registrá una terminal y emparejala con su código desde Configuración → Terminal',
   'devices.error.load': 'No se pudieron cargar las terminales',
 
+  // RN-BIPACK-10: límite de terminales por sucursal según la edición
+  'devices.limit.notice':
+    'Edición sin pack Premium: cada sucursal puede operar 1 terminal activa. El pack Premium (BI) habilita terminales adicionales por sucursal.',
+
   // Listado
   'devices.list.searchPlaceholder': 'Buscar por nombre o código…',
   'devices.list.count': '{count} terminales',

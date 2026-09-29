@@ -29,6 +29,13 @@ vi.mock('@/hooks/useToast', () => ({
   useToast: () => ({ addToast: vi.fn() }),
 }))
 
+// RN-BIPACK-10: la página consulta el pack BI para el aviso de límite.
+// Mock en la frontera del módulo consumido; biEnabled configurable por test.
+const { biEnabledMock } = vi.hoisted(() => ({ biEnabledMock: vi.fn(() => true) }))
+vi.mock('@/contexts/AuthContext', () => ({
+  useBiPackEnabled: () => biEnabledMock(),
+}))
+
 vi.mock('@/features/devices/services/deviceService', () => ({
   deviceService: {
     list: vi.fn(),
@@ -81,12 +88,27 @@ const renderPage = () => {
 beforeEach(() => {
   vi.clearAllMocks()
   localStorage.clear()
+  biEnabledMock.mockReturnValue(true)
   listDevices.mockResolvedValue([deviceCaja1])
 })
 
 afterEach(() => cleanup())
 
 describe('DevicesPage — registro de terminales (FASE E)', () => {
+  it('sin pack BI muestra el aviso de límite de terminales por sucursal (RN-BIPACK-10)', async () => {
+    biEnabledMock.mockReturnValue(false)
+    renderPage()
+
+    expect(await screen.findByTestId('devices-limit-notice')).toHaveTextContent(/1 terminal activa/i)
+  })
+
+  it('con pack BI no muestra el aviso de límite', async () => {
+    renderPage()
+
+    await screen.findByTestId('device-row-5')
+    expect(screen.queryByTestId('devices-limit-notice')).toBeNull()
+  })
+
   it('lists devices with branch name and pairing code', async () => {
     renderPage()
 

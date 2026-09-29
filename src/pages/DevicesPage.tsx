@@ -16,6 +16,7 @@ import GenericSkeletonList from '@/components/ui/GenericSkeletonList';
 import EmptyState from '@/components/ui/EmptyState';
 import ErrorState from '@/components/ui/ErrorState';
 import { useI18n } from '@/lib/i18n';
+import { useBiPackEnabled } from '@/contexts/AuthContext';
 import { branchService } from '@/features/branches/services/branchService';
 import { useDevices } from '@/features/devices/hooks/useDevices';
 import DeviceList from '@/features/devices/components/DeviceList';
@@ -23,6 +24,7 @@ import DeviceDetailForm from '@/features/devices/components/DeviceDetailForm';
 
 export const DevicesPage: React.FC = () => {
   const { t } = useI18n();
+  const biPackEnabled = useBiPackEnabled();
   const {
     devices, totalDevices, isLoading, error, refetch,
     selectedId, selectedDevice,
@@ -64,6 +66,20 @@ export const DevicesPage: React.FC = () => {
           </Button>
         )}
       </div>
+
+      {/* RN-BIPACK-10: sin pack Premium la edición opera 1 terminal activa por
+          sucursal — aviso comercial visible antes de que el backend rechace. */}
+      {!biPackEnabled && (
+        <p
+          data-testid="devices-limit-notice"
+          className="text-sm rounded-lg border border-semantic-warning/40 bg-semantic-warning/10 text-semantic-warning px-md py-sm"
+        >
+          {t(
+            'devices.limit.notice',
+            'Edición sin pack Premium: cada sucursal puede operar 1 terminal activa. El pack Premium (BI) habilita terminales adicionales por sucursal.',
+          )}
+        </p>
+      )}
 
       {isLoading && <GenericSkeletonList count={4} data-testid="devices-skeleton" />}
 
