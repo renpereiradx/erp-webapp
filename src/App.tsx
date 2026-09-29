@@ -316,11 +316,15 @@ function AppContent() {
 
   // REQ_BIPACK v2.0: bloqueo total — la app completa se reemplaza por el
   // gate de licencia (fuera del Router: no hay navegación que preserve).
+  // aud Fix 8: onRecovered baja el flag cuando el sondeo del gate descubre
+  // que la instalación ya fue rescatada (otra pestaña / el proveedor), y el
+  // Toaster se monta también aquí para que los toasts del gate existan.
   if (licenseBlocked) {
     return (
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
-          <LicenseRequiredGate />
+          <Toaster position="top-right" richColors closeButton />
+          <LicenseRequiredGate onRecovered={() => setLicenseBlocked(false)} />
         </Suspense>
       </ErrorBoundary>
     )

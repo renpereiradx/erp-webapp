@@ -9,8 +9,10 @@
 // sin hooks de router ni react-query — fetch manual + window.location para
 // navegación. El upload envía el archivo textual tal cual lo entregó el
 // vendedor; la verificación de firma es server-side (PUT /api/v1/system/
-// license, auth-only). Al instalar una licencia válida el sistema se
-// desbloquea en caliente y un reload reinicia la app limpia.
+// license, permiso license:write — aud Fix 2). Al instalar una licencia
+// válida el sistema se desbloquea en caliente y un reload reinicia la app
+// limpia; un sondeo de 30s también desmonta el gate si el rescate llegó por
+// otra vía (aud Fix 8).
 //
 // Design: DESIGN.md (glass-acrylic de gate, rounded-xl, shadow-fluent-16) ·
 // i18n: useI18n() (ES/EN) · Sin strings hardcoded.
@@ -43,20 +45,31 @@ export interface LicenseRequiredGateProps {
    * inyectan un spy para no depender de window.location.
    */
   onInstalled?: () => void
+  /**
+   * Se dispara cuando un refresco descubre que la instalación ya NO está
+   * bloqueada (la licencia se instaló por otra vía: otra pestaña, el
+   * proveedor, o el botón de actualizar). aud Fix 8: sin esto, la pestaña
+   * quedaba clavada en el gate hasta un F5 manual.
+   */
+  onRecovered?: () => void
 }
+
+const RECOVERY_POLL_MS = 30_000
 
 function formatDate(value: string | null, t: TFn): string {
   if (!value) return '—'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
+  // timeZone UTC explícito: el trial_ends_at viene del backend en UTC y el
+  // claim "(UTC)" del label debe ser cierto (aud Fix 8).
   return t(
     'licensing.gate.dateLabel',
     '{date} (UTC)',
-    { date: date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) },
+    { date: date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) },
   )
 }
 
-export default function LicenseRequiredGate({ onInstalled }: LicenseRequiredGateProps) {
+export default function LicenseRequiredGate({ onInstalled, onRecovered }: LicenseRequiredGateProps) {
   const { t } = useI18n() as unknown as { t: TFn }
   const [snapshot, setSnapshot] = useState<LicenseSnapshot | null>(null)
   const [loading, setLoading] = useState(true)
@@ -65,6 +78,7 @@ export default function LicenseRequiredGate({ onInstalled }: LicenseRequiredGate
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const recoveredRef = useRef(false)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -73,6 +87,12 @@ export default function LicenseRequiredGate({ onInstalled }: LicenseRequiredGate
       const status = await licenseService.getStatus()
       setSnapshot(status)
       setUnauthorized(false)
+      // aud Fix 8: alguien rescató la instalación por otra vía — desmontar
+      // el gate en lugar de esperar un reload manual.
+      if (!status.blocked && status.mode !== 'expired' && !recoveredRef.current) {
+        recoveredRef.current = true
+        onRecovered?.()
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         setUnauthorized(true)
@@ -82,11 +102,28 @@ export default function LicenseRequiredGate({ onInstalled }: LicenseRequiredGate
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [onRecovered])
 
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  // aud Fix 8: sondeo liviano — la instalación puede desbloquearse afuera
+  // (otra pestaña, el proveedor por teléfono con el propio gate).
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      void licenseService
+        .getStatus()
+        .then((status) => {
+          if (!status.blocked && status.mode !== 'expired' && !recoveredRef.current) {
+            recoveredRef.current = true
+            onRecovered?.()
+          }
+        })
+        .catch(() => {})
+    }, RECOVERY_POLL_MS)
+    return () => window.clearInterval(timer)
+  }, [onRecovered])
 
   const handleFileSelected = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,10 +221,19 @@ export default function LicenseRequiredGate({ onInstalled }: LicenseRequiredGate
                 <span className='text-body-md-bold text-foreground'>
                   {t('licensing.gate.statusTitle', 'Estado de la licencia')}
                 </span>
-                <Badge variant='destructive'>
-                  <ShieldAlert size={12} className='mr-1' aria-hidden />
-                  {t('licensing.gate.blocked', 'Sistema bloqueado')}
-                </Badge>
+                {/* aud Fix 8: el badge refleja el snapshot, no un estado fijo —
+                    entre el rescate y el desmontaje del gate dice la verdad. */}
+                {snapshot.blocked ? (
+                  <Badge variant='destructive'>
+                    <ShieldAlert size={12} className='mr-1' aria-hidden />
+                    {t('licensing.gate.blocked', 'Sistema bloqueado')}
+                  </Badge>
+                ) : (
+                  <Badge variant='secondary'>
+                    <KeyRound size={12} className='mr-1' aria-hidden />
+                    {t('licensing.gate.unblocked', 'Sistema activo')}
+                  </Badge>
+                )}
               </div>
               {snapshot.trial_ends_at && (
                 <div className='flex items-center justify-between gap-md p-md'>
@@ -207,6 +253,14 @@ export default function LicenseRequiredGate({ onInstalled }: LicenseRequiredGate
                   <span className='text-body-sm text-on-surface-deep'>{snapshot.customer}</span>
                 </div>
               )}
+              {/* aud Fix 8: refresco manual visible también con estado sano —
+                  si la licencia llegó por otra vía, esto desmonta el gate. */}
+              <div className='flex justify-end p-sm'>
+                <Button variant='ghost' size='sm' onClick={() => void refresh()}>
+                  <RefreshCw size={14} aria-hidden />
+                  {t('licensing.gate.retry', 'Actualizar estado')}
+                </Button>
+              </div>
             </div>
 
             <div className='mt-lg flex flex-col items-center gap-sm'>

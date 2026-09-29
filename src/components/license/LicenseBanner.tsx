@@ -22,9 +22,19 @@ function bannerFor(license: LicenseSnapshot): {
 } | null {
   if (!license.enforcing) return null
   // REQ_BIPACK v2.0: evaluación activa (sin licencia válida) — aviso cuando
-  // quedan ≤30 días. El estado bloqueado (trial agotado) no llega aquí: el
-  // gate full-screen reemplaza toda la app.
+  // quedan ≤30 días. Con la ventana ya vencida (días negativos: dentro de la
+  // gracia o a punto de bloquear) el aviso sube a danger: el gate salta al
+  // primer 403, pero esta es la última explicación visible antes de él (aud
+  // Fix 8).
   if (license.mode === 'trial') {
+    if (license.days_remaining < 0) {
+      return {
+        tone: 'danger',
+        key: 'licensing.banner.trialOver',
+        fallback:
+          'El período de evaluación finalizó: cargue una licencia para seguir usando el sistema. Contacte a su proveedor.',
+      }
+    }
     if (license.days_remaining >= 0 && license.days_remaining <= EXPIRY_WARNING_DAYS) {
       return {
         tone: 'warning',
@@ -36,6 +46,8 @@ function bannerFor(license: LicenseSnapshot): {
     }
     return null
   }
+  // aud Fix 4: licencia firmada vencida → Core sigue operativo, solo el pack
+  // BI se apaga (mode core); el copy de status=expired lo explica.
   switch (license.status) {
     case 'expired':
       return {

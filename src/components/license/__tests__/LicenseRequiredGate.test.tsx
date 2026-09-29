@@ -35,7 +35,8 @@ const blockedSnapshot = (over: Partial<LicenseSnapshot> = {}): LicenseSnapshot =
   ...over,
 })
 
-const renderGate = (props?: { onInstalled?: () => void }) => render(<LicenseRequiredGate {...props} />)
+const renderGate = (props?: { onInstalled?: () => void; onRecovered?: () => void }) =>
+  render(<LicenseRequiredGate {...props} />)
 
 describe('LicenseRequiredGate', () => {
   beforeEach(() => {
@@ -108,5 +109,23 @@ describe('LicenseRequiredGate', () => {
     getStatus.mockResolvedValue(blockedSnapshot())
     await userEvent.click(retry)
     expect(await screen.findByRole('button', { name: /cargar licencia/i })).toBeInTheDocument()
+  })
+
+  // aud Fix 8: el rescate puede llegar por otra vía (otra pestaña, el
+  // proveedor). Un refresco que encuentra la instalación desbloqueada
+  // dispara onRecovered en lugar de esperar un F5 manual.
+  it('refresco que encuentra la instalación desbloqueada dispara onRecovered', async () => {
+    const onRecovered = vi.fn()
+    getStatus.mockResolvedValueOnce(blockedSnapshot())
+    renderGate({ onRecovered })
+    await screen.findByText(/sistema bloqueado/i)
+    expect(onRecovered).not.toHaveBeenCalled()
+
+    // El botón "Actualizar estado" trae un snapshot ya rescatado.
+    getStatus.mockResolvedValueOnce(
+      blockedSnapshot({ status: 'active', mode: 'licensed', blocked: false }),
+    )
+    await userEvent.click(screen.getByRole('button', { name: /actualizar estado/i }))
+    await waitFor(() => expect(onRecovered).toHaveBeenCalledTimes(1))
   })
 })

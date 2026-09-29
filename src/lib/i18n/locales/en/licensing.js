@@ -39,12 +39,24 @@ export const licensing = {
   'licensing.card.mode': 'Installation state',
   'licensing.card.mode.licensed': 'Licensed',
   'licensing.card.mode.trial': 'Evaluating',
+  'licensing.card.mode.core': 'License expired (Core active)',
   'licensing.card.mode.expired': 'Locked',
   'licensing.card.trialEnds': 'Evaluation ends',
 
   // Evaluation banner (REQ_BIPACK v2.0)
   'licensing.banner.trial':
     'Evaluation period: {days} days remaining. A license must be loaded to keep using the system after it ends.',
+  'licensing.banner.trialOver':
+    'The evaluation period has ended: load a license to keep using the system. Contact your vendor.',
+
+  // Web license install (v2.0 audit Fix 5)
+  'licensing.install.button': 'Install license…',
+  'licensing.install.uploading': 'Verifying license…',
+  'licensing.install.success': 'License installed: {edition}',
+  'licensing.install.installed': 'License active.',
+  'licensing.install.error': 'The license could not be installed: {reason}',
+  'licensing.install.hint':
+    'Select the license.json file provided by your vendor: it applies immediately.',
 
   // Full-screen license-required gate (REQ_BIPACK v2.0)
   'licensing.gate.title': 'License required',
@@ -57,6 +69,7 @@ export const licensing = {
   'licensing.gate.retry': 'Refresh status',
   'licensing.gate.statusTitle': 'License status',
   'licensing.gate.blocked': 'System locked',
+  'licensing.gate.unblocked': 'System active',
   'licensing.gate.trialEnded': 'Evaluation ended',
   'licensing.gate.dateLabel': '{date} (UTC)',
   'licensing.gate.upload': 'Load license',

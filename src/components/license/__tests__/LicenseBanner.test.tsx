@@ -84,10 +84,31 @@ describe('LicenseBanner', () => {
     expect(banner.textContent).toContain('evaluación')
   })
 
-  it('sin licencia y sin modo trial (backend legacy / fail-open): no muestra banner', async () => {
+  // aud Fix 8: ventana ya vencida en gracia (días negativos, pre-gate) →
+  // aviso crítico, no silencio.
+  it('evaluación vencida (días negativos): banner crítico de fin de evaluación', async () => {
+    getStatus.mockResolvedValue(snapshot({ mode: 'trial', status: 'none', expires_at: null, days_remaining: -1 }))
+    renderBanner()
+    const banner = await screen.findByRole('status')
+    expect(banner.textContent).toContain('finalizó')
+  })
+
+  // aud Fix 8: el test anterior esperaba null con status=active + 10 días —
+  // exactamente lo contrario del comportamiento real (≤30 días avisa). Sin
+  // `mode` (backend legacy) el banner sigue decidiendo por `status`.
+  it('sin mode (backend legacy): status=active con ≤30 días sigue avisando el vencimiento', async () => {
     getStatus.mockResolvedValue(snapshot({ status: 'active', mode: undefined, days_remaining: 10 }))
     renderBanner()
-    expect(await screen.queryByRole('status')).toBeNull()
+    const banner = await screen.findByRole('status')
+    expect(banner.textContent).toContain('10')
+  })
+
+  // aud Fix 4: licencia firmada vencida (mode core) — Core activo, pack BI
+  // apagado: el copy de status=expired lo explica.
+  it('licencia vencida con Core activo (mode core): banner crítico del pack BI', async () => {
+    getStatus.mockResolvedValue(snapshot({ status: 'expired', mode: 'core', days_remaining: -40 }))
+    renderBanner()
+    expect((await screen.findByRole('status')).textContent).toContain('deshabilitado')
   })
 })
 

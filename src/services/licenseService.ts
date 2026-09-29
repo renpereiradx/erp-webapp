@@ -14,8 +14,8 @@ export type LicenseStatus =
   | 'none'
   | 'invalid';
 
-/** Qué gobierna la instalación ahora (v2.0): licencia válida, evaluación o bloqueo. */
-export type LicenseMode = 'licensed' | 'trial' | 'expired';
+/** Qué gobierna la instalación ahora (v2.0): licencia válida, evaluación, licencia vencida con Core activo o bloqueo. */
+export type LicenseMode = 'licensed' | 'trial' | 'core' | 'expired';
 
 export interface LicenseSnapshot {
   status: LicenseStatus;
