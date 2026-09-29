@@ -6,6 +6,8 @@ interface UsePurchasesShortcutsProps {
   purchaseItemCount: number
   /** Ref del buscador del tab Historial (propiedad de usePurchasesLogic). */
   historySearchInputRef: RefObject<HTMLInputElement | null>
+  /** Ref del buscador de productos del carrito (tab Nueva Compra, F2). */
+  cartProductSearchRef?: RefObject<HTMLInputElement | null>
   /** F12: abrir el wizard de checkout (misma acción que "Finalizar compra"). */
   onOpenCheckoutWizard: () => void
   /**
@@ -18,9 +20,10 @@ interface UsePurchasesShortcutsProps {
 
 /**
  * Atajos de la página de Compras (DESIGN.md §12):
- * - F2 → foco al buscador del tab activo. Solo el tab Historial tiene buscador
- *   a nivel página; en Nueva Compra la búsqueda vive dentro del modal de
- *   producto (F3), así que F2 no hace nada allí.
+ * - F2 → foco al buscador principal del tab activo: en Historial es el filtro
+ *   de la lista; en Nueva Compra es el buscador de productos del carrito
+ *   (seleccionar un resultado abre el modal de detalles, F3 = su buscador
+ *   interno).
  * - F12 → abrir el wizard de checkout (alias legado del atajo principal
  *   `purchases.processPurchase` que usa el wizard una vez abierto).
  */
@@ -28,6 +31,7 @@ export const usePurchasesShortcuts = ({
   activeTab,
   purchaseItemCount,
   historySearchInputRef,
+  cartProductSearchRef,
   onOpenCheckoutWizard,
   enabled = true,
 }: UsePurchasesShortcutsProps) => {
@@ -37,10 +41,18 @@ export const usePurchasesShortcuts = ({
       if (event.defaultPrevented) return
 
       if (event.key === 'F2') {
-        if (activeTab !== 'historial') return
-        event.preventDefault()
-        historySearchInputRef.current?.focus()
-        historySearchInputRef.current?.select()
+        if (activeTab === 'historial') {
+          event.preventDefault()
+          historySearchInputRef.current?.focus()
+          historySearchInputRef.current?.select()
+          return
+        }
+        if (activeTab === 'nueva-compra') {
+          event.preventDefault()
+          cartProductSearchRef?.current?.focus()
+          cartProductSearchRef?.current?.select()
+          return
+        }
         return
       }
 
@@ -52,5 +64,5 @@ export const usePurchasesShortcuts = ({
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [activeTab, purchaseItemCount, historySearchInputRef, onOpenCheckoutWizard, enabled])
+  }, [activeTab, purchaseItemCount, historySearchInputRef, cartProductSearchRef, onOpenCheckoutWizard, enabled])
 }

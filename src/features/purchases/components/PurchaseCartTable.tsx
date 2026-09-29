@@ -1,10 +1,11 @@
 import React from 'react';
-import { Plus, Package, X } from 'lucide-react';
+import { Package, X } from 'lucide-react';
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic';
 import { useI18n } from '@/lib/i18n';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
+import { PurchaseProductSearchInput } from './PurchaseProductSearchInput';
 
 export type PurchaseCartTableProps = Pick<
   ReturnType<typeof usePurchasesLogic>,
@@ -13,6 +14,20 @@ export type PurchaseCartTableProps = Pick<
   | 'canWrite'
   | 'handleEditItem'
   | 'setPurchaseItems'
+  | 'isModalOpen'
+  | 'modalProductSearch'
+  | 'setModalProductSearch'
+  | 'searchingProducts'
+  | 'showProductDropdown'
+  | 'setShowProductDropdown'
+  | 'filteredModalProducts'
+  | 'productDropdownRef'
+  | 'cartProductSearchRef'
+  | 'activeProductIndex'
+  | 'setActiveProductIndex'
+  | 'handleModalProductSearchKeyDown'
+  | 'handleProductSelect'
+  | 'getProductName'
 >;
 
 const headClass = 'text-label-caps uppercase text-on-surface-deep';
@@ -23,8 +38,29 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
   canWrite,
   handleEditItem,
   setPurchaseItems,
+  isModalOpen,
+  modalProductSearch,
+  setModalProductSearch,
+  searchingProducts,
+  showProductDropdown,
+  setShowProductDropdown,
+  filteredModalProducts,
+  productDropdownRef,
+  cartProductSearchRef,
+  activeProductIndex,
+  setActiveProductIndex,
+  handleModalProductSearchKeyDown,
+  handleProductSelect,
+  getProductName,
 }) => {
   const { t } = useI18n();
+
+  // Seleccionar desde el dropmenu del carrito precarga el producto y abre el
+  // modal de detalles (cantidad, costo y estrategia de precio).
+  const handleSelectAndOpen = async (product: any) => {
+    await handleProductSelect(product);
+    setIsModalOpen(true);
+  };
 
   return (
     <section className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden'>
@@ -37,22 +73,33 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
             {t('purchases.cart.subtitle', 'Artículos a ingresar al inventario')}
           </p>
         </div>
-        <Button
-          variant='secondary'
-          onClick={() => setIsModalOpen(true)}
-          disabled={!canWrite}
-          className='w-full sm:w-auto'
-        >
-          <Plus size={16} className='mr-2' aria-hidden='true' />
-          {t('purchases.cart.add_item', 'Agregar Artículo')}
-        </Button>
+        <div className='w-full sm:w-96 shrink-0'>
+          <PurchaseProductSearchInput
+            id='purchase-cart-product-search'
+            search={modalProductSearch}
+            onSearchChange={setModalProductSearch}
+            inputRef={cartProductSearchRef}
+            dropdownRef={productDropdownRef}
+            results={filteredModalProducts}
+            searching={searchingProducts}
+            open={showProductDropdown && !isModalOpen}
+            onOpenChange={setShowProductDropdown}
+            activeIndex={activeProductIndex}
+            onActiveIndexChange={setActiveProductIndex}
+            onKeyDown={handleModalProductSearchKeyDown}
+            onSelect={handleSelectAndOpen}
+            getProductName={getProductName}
+            placeholder={t('purchases.cart.search_placeholder', 'Buscar producto por SKU, nombre o código de barras... (F2)')}
+            inputClassName='bg-surface'
+            disabled={!canWrite}
+          />
+        </div>
       </div>
 
       <div className='overflow-x-auto'>
-        <Table className='min-w-[800px]'>
+        <Table className='min-w-[720px]'>
           <TableHeader className='bg-surface-muted'>
             <TableRow className='hover:bg-surface-muted border-0'>
-              <TableHead className={`${headClass} px-md py-md`}>{t('purchases.cart.id_sku', 'ID / SKU')}</TableHead>
               <TableHead className={`${headClass} px-md py-md`}>{t('purchases.cart.product', 'Producto')}</TableHead>
               <TableHead className={`${headClass} px-md py-md text-center`}>{t('purchases.form.quantity', 'Cant.')}</TableHead>
               <TableHead className={`${headClass} px-md py-md text-right`}>{t('purchases.form.unit_price', 'Costo Unit.')}</TableHead>
@@ -65,7 +112,7 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
           <TableBody>
             {purchaseItems.length === 0 ? (
               <TableRow className='hover:bg-transparent border-0'>
-                <TableCell colSpan={8} className='py-xl'>
+                <TableCell colSpan={7} className='py-xl'>
                   <div className='flex flex-col items-center justify-center gap-sm text-on-surface-deep'>
                     <div className='size-16 rounded-full bg-surface-muted flex items-center justify-center'>
                       <Package size={28} strokeWidth={1.5} className='text-outline-fg' aria-hidden='true' />
@@ -74,7 +121,7 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
                       {t('purchases.form.no_products', 'No hay artículos seleccionados')}
                     </p>
                     <p className='text-body-sm text-on-surface-deep'>
-                      {t('purchases.cart.empty_hint', 'Haz clic en "Agregar Artículo" para comenzar')}
+                      {t('purchases.cart.empty_hint', 'Buscá un producto para agregarlo a la orden')}
                     </p>
                   </div>
                 </TableCell>
@@ -86,17 +133,6 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
                   className='hover:bg-surface-muted transition-colors duration-150 group/row cursor-pointer'
                   onDoubleClick={() => handleEditItem(item)}
                 >
-                  <td className='px-md py-md align-top'>
-                    <div className='text-body-sm font-data-mono text-data-mono text-on-surface-deep'>
-                      #{item.product_id}
-                    </div>
-                    {/* Si hay variante, mostrar su SKU; si no, el SKU del producto */}
-                    {(item.variant_sku || item.sku) && item.sku !== '-' && (
-                      <div className='text-body-sm font-data-mono text-outline-fg mt-0.5'>
-                        {item.variant_sku || item.sku}
-                      </div>
-                    )}
-                  </td>
                   <td className='px-md py-md align-top'>
                     <div className='text-body-md-bold text-foreground group-hover/row:text-primary transition-colors duration-150'>
                       {item.name}

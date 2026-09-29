@@ -45,6 +45,20 @@ export const party = {
   'party.quick_client.error.document_id': 'Document number is required',
   'party.quick_client.error.generic': 'Error registering the client',
 
+  // Quick supplier registration (purchase wizard)
+  'party.quick_supplier.title': 'Quick supplier registration',
+  'party.quick_supplier.subtitle': 'Minimal data to continue the purchase',
+  'party.quick_supplier.action': 'New supplier',
+  'party.quick_supplier.field.name': 'Supplier name',
+  'party.quick_supplier.field.taxId': 'Tax ID / RUC',
+  'party.quick_supplier.field.phone': 'Phone (optional)',
+  'party.quick_supplier.placeholder.name': 'e.g. Pacific Distributions',
+  'party.quick_supplier.placeholder.taxId': 'e.g. 80012345-6',
+  'party.quick_supplier.placeholder.phone': 'e.g. +595 981 123 456',
+  'party.quick_supplier.submit': 'Register supplier',
+  'party.quick_supplier.processing': 'Registering...',
+  'party.quick_supplier.error.generic': 'Error registering the supplier',
+
   // Document types (backend whitelist, uppercase)
   'party.document_type.CI': 'National ID (CI)',
   'party.document_type.RUC': 'RUC',

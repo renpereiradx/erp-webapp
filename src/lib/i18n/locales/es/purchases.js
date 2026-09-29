@@ -253,10 +253,9 @@ export const purchases = {
   // Carrito de la orden
   'purchases.cart.title': 'Productos en la Orden',
   'purchases.cart.subtitle': 'Artículos a ingresar al inventario',
-  'purchases.cart.add_item': 'Agregar Artículo',
-  'purchases.cart.id_sku': 'ID / SKU',
   'purchases.cart.product': 'Producto',
-  'purchases.cart.empty_hint': 'Haz clic en "Agregar Artículo" para comenzar',
+  'purchases.cart.search_placeholder': 'Buscar producto por SKU, nombre o código de barras... (F2)',
+  'purchases.cart.empty_hint': 'Buscá un producto para agregarlo a la orden',
   'purchases.cart.unit': 'Unidad',
   'purchases.cart.remove_item': 'Quitar artículo de la orden',
 

@@ -45,6 +45,20 @@ export const party = {
   'party.quick_client.error.document_id': 'El número de documento es requerido',
   'party.quick_client.error.generic': 'Error al registrar el cliente',
 
+  // Registro rápido de proveedor (wizard de compras)
+  'party.quick_supplier.title': 'Registro rápido de proveedor',
+  'party.quick_supplier.subtitle': 'Datos mínimos para continuar la compra',
+  'party.quick_supplier.action': 'Nuevo proveedor',
+  'party.quick_supplier.field.name': 'Nombre del proveedor',
+  'party.quick_supplier.field.taxId': 'RUC / Tax ID',
+  'party.quick_supplier.field.phone': 'Teléfono (opcional)',
+  'party.quick_supplier.placeholder.name': 'Ej. Distribuciones del Pacífico',
+  'party.quick_supplier.placeholder.taxId': 'Ej. 80012345-6',
+  'party.quick_supplier.placeholder.phone': 'Ej: 0981 123 456',
+  'party.quick_supplier.submit': 'Registrar proveedor',
+  'party.quick_supplier.processing': 'Registrando...',
+  'party.quick_supplier.error.generic': 'Error al registrar el proveedor',
+
   // Tipos de documento (whitelist del backend, en mayúsculas)
   'party.document_type.CI': 'Cédula de Identidad',
   'party.document_type.RUC': 'RUC',

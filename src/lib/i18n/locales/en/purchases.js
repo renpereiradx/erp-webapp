@@ -210,10 +210,9 @@ export const purchases = {
   // Order cart
   'purchases.cart.title': 'Products in the Order',
   'purchases.cart.subtitle': 'Items to be added to inventory',
-  'purchases.cart.add_item': 'Add Item',
-  'purchases.cart.id_sku': 'ID / SKU',
   'purchases.cart.product': 'Product',
-  'purchases.cart.empty_hint': 'Click "Add Item" to get started',
+  'purchases.cart.search_placeholder': 'Search product by SKU, name or barcode... (F2)',
+  'purchases.cart.empty_hint': 'Search for a product to add it to the order',
   'purchases.cart.unit': 'Unit',
   'purchases.cart.remove_item': 'Remove item from order',
 

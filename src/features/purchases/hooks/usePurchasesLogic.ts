@@ -119,6 +119,9 @@ export const usePurchasesLogic = () => {
   const [purchaseItems, setPurchaseItems] = useState<any[]>([])
   const [purchaseNotes, setPurchaseNotes] = useState<string>('')
   const modalProductSearchRef = useRef<HTMLInputElement>(null)
+  // Buscador de productos del encabezado del carrito (entrada principal; F2).
+  // El estado de búsqueda es compartido con el buscador interno del modal.
+  const cartProductSearchRef = useRef<HTMLInputElement>(null)
   const productDropdownRef = useRef<HTMLDivElement>(null)
   const modalQuantityRef = useRef<HTMLInputElement>(null)
   // Buscador del tab Historial: foco vía F2 (usePurchasesShortcuts, DESIGN.md §12).
@@ -460,11 +463,14 @@ export const usePurchasesLogic = () => {
       ) {
         setShowSupplierDropdown(false)
       }
+      // El dropdown de productos puede vivir en el carrito o en el modal:
+      // cerrar si el click cae fuera del dropdown Y de cualquiera de los dos
+      // inputs (refs null-safe según cuál superficie esté montada).
       if (
         productDropdownRef.current &&
         !productDropdownRef.current.contains(event.target as Node) &&
-        modalProductSearchRef.current &&
-        !modalProductSearchRef.current.contains(event.target as Node)
+        !cartProductSearchRef.current?.contains(event.target as Node) &&
+        !modalProductSearchRef.current?.contains(event.target as Node)
       ) {
         setShowProductDropdown(false)
       }
@@ -478,7 +484,14 @@ export const usePurchasesLogic = () => {
   useEffect(() => {
     if (isModalOpen) {
       setTimeout(() => {
-        modalProductSearchRef.current?.focus()
+        // El modal siempre abre con producto precargado (selección desde el
+        // carrito o edición de ítem): el foco va directo a Cantidad. Sin
+        // producto, al buscador interno.
+        if (modalSelectedProduct) {
+          modalQuantityRef.current?.focus()
+        } else {
+          modalProductSearchRef.current?.focus()
+        }
       }, 50)
     }
   }, [isModalOpen])
@@ -645,6 +658,10 @@ export const usePurchasesLogic = () => {
       );
       setModalSelectedProduct(normalizedProduct);
       setModalProductSearch(normalizedProduct.name || '');
+      // Sin resultados pendientes: al montar el modal, Radix enfoca el buscador
+      // interno (onFocus abre el dropdown) y los resultados viejos de la búsqueda
+      // previa volverían a pintarse tapando la tarjeta del producto.
+      setModalProductResults([]);
       setShowProductDropdown(false);
       setModalUnit(normalizedProduct.unit || 'unit');
 
@@ -1134,6 +1151,7 @@ export const usePurchasesLogic = () => {
     activeTab,
     canWrite,
     cancelPreviewData,
+    cartProductSearchRef,
     createdOrderData,
     currencies,
     editingItemId,

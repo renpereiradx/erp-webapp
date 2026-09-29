@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Check, Package, X } from 'lucide-react'
+import { Check, Package, X } from 'lucide-react'
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic'
 import { useI18n } from '@/lib/i18n'
 import { formatCurrency } from '@/utils/currencyUtils'
@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { PurchaseProductSearchInput } from './PurchaseProductSearchInput'
 
 export type PurchaseProductModalProps = ReturnType<typeof usePurchasesLogic>
 
@@ -169,142 +170,53 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
             {/* Column 1: Product Search, Selection & Basic Info */}
             <div className='space-y-md'>
               {/* Product Search */}
-              <div className='space-y-xs'>
-                <Label htmlFor='purchase-product-search' className={labelClass}>
-                  {t('purchases.product_modal.search_label', 'Buscar Producto')}
-                </Label>
-                <div className='relative'>
-                  <Search
-                    className='absolute left-3 top-1/2 -translate-y-1/2 text-outline-fg'
-                    size={16}
-                    aria-hidden='true'
-                  />
-                  <input
-                    ref={modalProductSearchRef}
-                    id='purchase-product-search'
-                    autoFocus
-                    type='text'
-                    className='w-full pl-9 pr-9 py-2.5 bg-surface-muted border border-border-subtle rounded-input text-body-md text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors duration-150'
-                    placeholder={t('purchases.product_modal.search_placeholder', 'Buscar por SKU, EAN o Nombre...')}
-                    value={modalProductSearch}
-                    onChange={e => setModalProductSearch(e.target.value)}
-                    onKeyDown={handleModalProductSearchKeyDown}
-                    onFocus={() => setShowProductDropdown(true)}
-                  />
-                  {searchingProducts && (
-                    <div className='absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin' aria-hidden='true' />
-                  )}
-
-                  {showProductDropdown &&
-                    filteredModalProducts.length > 0 && (
-                      <div
-                        ref={productDropdownRef}
-                        className='absolute top-full left-0 right-0 mt-1 bg-surface rounded-md shadow-fluent-8 border border-border-subtle overflow-hidden z-50 max-h-[220px] overflow-y-auto py-1'
-                        role='listbox'
-                      >
-                        {filteredModalProducts.map((p, index) => {
-                          const isActive = activeProductIndex === index
-
-                          return (
-                            <div
-                              key={p.variant_id || p.id || p.product_id}
-                              data-product-index={index}
-                              role='option'
-                              aria-selected={isActive}
-                              className={cn(
-                                'relative px-md py-2.5 cursor-pointer flex justify-between items-center transition-colors duration-150',
-                                index < filteredModalProducts.length - 1 && 'border-b border-border-subtle',
-                                isActive
-                                  ? 'bg-primary/5 ring-1 ring-inset ring-primary'
-                                  : 'hover:bg-surface-muted'
-                              )}
-                              onMouseEnter={() =>
-                                setActiveProductIndex(index)
-                              }
-                              onClick={() => handleProductSelect(p)}
-                            >
-                              {isActive && (
-                                <span
-                                  className='absolute left-0 top-1 bottom-1 w-1 rounded-r-sm bg-primary'
-                                  aria-hidden='true'
-                                />
-                              )}
-                              <div className='min-w-0 flex-1'>
-                                <div
-                                  className={cn(
-                                    'text-body-md-bold truncate',
-                                    isActive ? 'text-primary' : 'text-foreground'
-                                  )}
-                                >
-                                  {/* Fila plana: "Producto · Variante" cuando la unidad es una variante */}
-                                  {p.variant_name
-                                    ? `${getProductName(p)} · ${p.variant_name}`
-                                    : getProductName(p)}
-                                </div>
-                                <div className='flex flex-wrap gap-1.5 mt-0.5 items-center'>
-                                  <span className='text-body-sm font-data-mono text-outline-fg'>
-                                    {p.sku || `ID: ${p.id || p.product_id || '-'}`}
-                                  </span>
-                                  {/* Fila base de un producto con variantes */}
-                                  {p.is_base_row && (
-                                    <Badge variant='secondary' size='sm'>
-                                      {t('purchases.product_modal.base_row', 'Producto base')}
-                                    </Badge>
-                                  )}
-                                  {/* Indicador de variantes (solo filas sin variante resuelta) */}
-                                  {!p.variant_id && ((p.has_variant || p.has_variants) || (Array.isArray(p.variants) && p.variants.length > 0)) && (
-                                    <Badge variant='info' size='sm'>
-                                      {t('purchases.product_modal.variants_badge', 'Variantes')}
-                                    </Badge>
-                                  )}
-                                  {/* Marca */}
-                                  {p.brand_name && (
-                                    <Badge variant='secondary' size='sm'>
-                                      {p.brand_name}
-                                    </Badge>
-                                  )}
-                                  {/* Tags (máx 2, color dinámico del dato) */}
-                                  {Array.isArray(p.tags) && p.tags.slice(0, 2).map((tag: any) => (
-                                    <span
-                                      key={tag.id}
-                                      className='inline-flex items-center px-1.5 py-0.5 rounded-xs text-body-sm-bold text-on-primary'
-                                      style={tag.color ? { backgroundColor: tag.color } : undefined}
-                                    >
-                                      {tag.name}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                              <div className='text-right shrink-0 ml-3'>
-                                <div
-                                  className={cn(
-                                    'text-body-sm font-data-mono',
-                                    (p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0) > 0 ? 'text-success' : 'text-error'
-                                  )}
-                                >
-                                  {t('purchases.product_modal.stock_label', 'Stock:')}{' '}
-                                  {p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0}
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-                </div>
-              </div>
+              <PurchaseProductSearchInput
+                id='purchase-product-search'
+                label={t('purchases.product_modal.search_label', 'Buscar Producto')}
+                placeholder={t('purchases.product_modal.search_placeholder', 'Buscar por SKU, EAN o Nombre...')}
+                search={modalProductSearch}
+                onSearchChange={setModalProductSearch}
+                inputRef={modalProductSearchRef}
+                dropdownRef={productDropdownRef}
+                results={filteredModalProducts}
+                searching={searchingProducts}
+                open={showProductDropdown}
+                onOpenChange={setShowProductDropdown}
+                activeIndex={activeProductIndex}
+                onActiveIndexChange={setActiveProductIndex}
+                onKeyDown={handleModalProductSearchKeyDown}
+                onSelect={handleProductSelect}
+                getProductName={getProductName}
+              />
 
               {/* Selected Product Card */}
               {modalSelectedProduct ? (
                 <>
                   <div className='p-md bg-primary/5 border border-primary/20 rounded-md'>
                     <div className='flex items-start gap-md'>
-                      <div className='size-10 bg-primary rounded-md flex items-center justify-center text-on-primary text-title-md shrink-0'>
-                        {(
-                          modalSelectedProduct.name ||
-                          modalSelectedProduct.product_name ||
-                          '?'
-                        )?.charAt(0)}
+                      {/* ID bajo el icono: libera la grilla de detalles para los
+                          datos económicos (costo/venta/unidad) sin el ruido del
+                          identificador entre medio. */}
+                      <div className='shrink-0 flex flex-col items-center gap-1 min-w-0'>
+                        <div className='size-10 bg-primary rounded-md flex items-center justify-center text-on-primary text-title-md'>
+                          {(
+                            modalSelectedProduct.name ||
+                            modalSelectedProduct.product_name ||
+                            '?'
+                          )?.charAt(0)}
+                        </div>
+                        <span
+                          className='text-body-sm font-data-mono text-outline-fg max-w-24 truncate'
+                          title={String(
+                            modalSelectedProduct.id ||
+                              modalSelectedProduct.product_id ||
+                              '-',
+                          )}
+                        >
+                          {modalSelectedProduct.id ||
+                            modalSelectedProduct.product_id ||
+                            '-'}
+                        </span>
                       </div>
                       <div className='min-w-0 flex-1'>
                         <div className='flex items-start justify-between gap-2 flex-wrap'>
@@ -348,15 +260,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                             )}
                           </div>
                         )}
-                        <div className='grid grid-cols-4 gap-2 mt-2'>
-                          <div>
-                            <p className={labelClass}>ID</p>
-                            <p className='text-body-sm text-on-surface-deep font-data-mono'>
-                              {modalSelectedProduct.id ||
-                                modalSelectedProduct.product_id ||
-                                '-'}
-                            </p>
-                          </div>
+                        <div className='grid grid-cols-3 gap-2 mt-2'>
                           <div>
                             <p className={labelClass}>
                               {t('purchases.product_modal.last_cost', 'Últ. Costo')}
