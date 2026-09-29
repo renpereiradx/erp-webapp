@@ -707,7 +707,13 @@ export const usePurchasesLogic = () => {
     }
   };
 
-  const handleModalProductSearchKeyDown = event => {
+  // options.afterSelect: el carrito abre el modal de detalles después de
+  // seleccionar (aplica tanto al click como a Enter); el buscador interno del
+  // modal no lo pasa (seleccionar dentro del modal no debe reabrirlo).
+  const handleModalProductSearchKeyDown = (
+    event,
+    options?: { afterSelect?: () => void },
+  ) => {
     if (!filteredModalProducts.length) {
       return
     }
@@ -736,7 +742,9 @@ export const usePurchasesLogic = () => {
       activeProductIndex >= 0
     ) {
       event.preventDefault()
-      handleProductSelect(filteredModalProducts[activeProductIndex])
+      void handleProductSelect(filteredModalProducts[activeProductIndex]).then(
+        () => options?.afterSelect?.(),
+      )
       return
     }
 

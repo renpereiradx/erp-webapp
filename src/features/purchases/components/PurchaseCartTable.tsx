@@ -56,10 +56,17 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
   const { t } = useI18n();
 
   // Seleccionar desde el dropmenu del carrito precarga el producto y abre el
-  // modal de detalles (cantidad, costo y estrategia de precio).
+  // modal de detalles (cantidad, costo y estrategia de precio). afterSelect
+  // cubre el camino por teclado: Enter en el input también abre el modal.
   const handleSelectAndOpen = async (product: any) => {
     await handleProductSelect(product);
     setIsModalOpen(true);
+  };
+
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    handleModalProductSearchKeyDown(event, {
+      afterSelect: () => setIsModalOpen(true),
+    });
   };
 
   return (
@@ -86,7 +93,7 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
             onOpenChange={setShowProductDropdown}
             activeIndex={activeProductIndex}
             onActiveIndexChange={setActiveProductIndex}
-            onKeyDown={handleModalProductSearchKeyDown}
+            onKeyDown={handleSearchKeyDown}
             onSelect={handleSelectAndOpen}
             getProductName={getProductName}
             placeholder={t('purchases.cart.search_placeholder', 'Buscar producto por SKU, nombre o código de barras... (F2)')}
