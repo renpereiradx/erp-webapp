@@ -41,8 +41,6 @@ export const party = {
   'party.quick_client.processing': 'Registering...',
   'party.quick_client.error.first_name': 'First name is required',
   'party.quick_client.error.last_name': 'Last name is required',
-  'party.quick_client.error.document_type': 'Document type is required',
-  'party.quick_client.error.document_id': 'Document number is required',
   'party.quick_client.error.generic': 'Error registering the client',
 
   // Quick supplier registration (purchase wizard)

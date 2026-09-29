@@ -8,7 +8,9 @@ import { normalizeDocumentType } from './identity';
 export const clientFormSchema = z.object({
   name: z.string().min(1, 'clients.modal.error.name_required'),
   last_name: z.string().min(1, 'clients.modal.error.last_name_required'),
-  document_id: z.string().min(1, 'clients.modal.error.document_required'),
+  // Documento opcional: backend y DB lo aceptan vacío (clientes de consumo
+  // final sin cédula a mano).
+  document_id: z.string(),
   document_type: z.string(),
   contact: z.string(),
   nationality: z.string(),
@@ -85,18 +87,18 @@ export const normalizeClientForForm = (client?: ClientInput | null): ClientFormV
 };
 
 /**
- * Payload para la API. Los campos extendidos (document_type, nationality,
- * address_*) solo se envían con valor: en create el backend los valida, y en
- * update nil = dejar sin cambiar.
+ * Payload para la API. Los campos extendidos (document_type, document_id,
+ * nationality, address_*) solo se envían con valor: en create el backend los
+ * valida, y en update nil = dejar sin cambiar.
  */
 export const buildClientPayload = (values: ClientFormValues): Record<string, unknown> => {
   const payload: Record<string, unknown> = {
     name: values.name.trim(),
     last_name: values.last_name.trim(),
-    document_id: values.document_id.trim(),
     contact: values.contact.trim() || undefined,
   };
 
+  if (values.document_id.trim()) payload.document_id = values.document_id.trim();
   if (values.document_type) payload.document_type = values.document_type;
   if (values.nationality) payload.nationality = values.nationality;
 

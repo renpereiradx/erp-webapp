@@ -41,8 +41,6 @@ export const party = {
   'party.quick_client.processing': 'Registrando...',
   'party.quick_client.error.first_name': 'El nombre es requerido',
   'party.quick_client.error.last_name': 'El apellido es requerido',
-  'party.quick_client.error.document_type': 'El tipo de documento es requerido',
-  'party.quick_client.error.document_id': 'El número de documento es requerido',
   'party.quick_client.error.generic': 'Error al registrar el cliente',
 
   // Registro rápido de proveedor (wizard de compras)

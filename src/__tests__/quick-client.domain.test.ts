@@ -17,7 +17,7 @@ describe('domain/party/quickClient — validateQuickClient', () => {
     expect(validateQuickClient(validForm)).toEqual({})
   })
 
-  it('marca nombre, apellido, tipo y número de documento como requeridos', () => {
+  it('marca nombre y apellido como requeridos; el documento es opcional', () => {
     const errors = validateQuickClient({
       first_name: '',
       last_name: '  ',
@@ -27,8 +27,15 @@ describe('domain/party/quickClient — validateQuickClient', () => {
     })
     expect(errors.first_name).toBe('party.quick_client.error.first_name')
     expect(errors.last_name).toBe('party.quick_client.error.last_name')
-    expect(errors.document_type).toBe('party.quick_client.error.document_type')
-    expect(errors.document_id).toBe('party.quick_client.error.document_id')
+    // Documento opcional: backend y DB lo aceptan vacío (consumo final).
+    expect(errors.document_type).toBeUndefined()
+    expect(errors.document_id).toBeUndefined()
+  })
+
+  it('acepta el formulario sin documento (tipo y número vacíos)', () => {
+    expect(
+      validateQuickClient({ ...validForm, document_type: '', document_id: '' }),
+    ).toEqual({})
   })
 
   it('ignora espacios en los campos de texto', () => {
@@ -38,7 +45,8 @@ describe('domain/party/quickClient — validateQuickClient', () => {
       document_id: ' ',
     })
     expect(errors.first_name).toBeDefined()
-    expect(errors.document_id).toBeDefined()
+    // Documento en blanco = sin documento: no es error.
+    expect(errors.document_id).toBeUndefined()
   })
 
   it('el teléfono es opcional', () => {

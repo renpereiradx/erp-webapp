@@ -16,12 +16,14 @@ export interface QuickClientForm {
 export interface QuickClientErrors {
   first_name?: string
   last_name?: string
-  document_type?: string
-  document_id?: string
   [key: string]: string | undefined
 }
 
-/** Campos mínimos para registrar un cliente desde el checkout de venta. */
+/**
+ * Campos mínimos para registrar un cliente desde el checkout de venta.
+ * El documento (tipo + número) es OPCIONAL: el backend y la DB lo aceptan
+ * vacío (clientes de consumo final sin cédula a mano).
+ */
 export function validateQuickClient(form: QuickClientForm): QuickClientErrors {
   const errors: QuickClientErrors = {}
 
@@ -30,12 +32,6 @@ export function validateQuickClient(form: QuickClientForm): QuickClientErrors {
   }
   if (!form.last_name?.trim()) {
     errors.last_name = 'party.quick_client.error.last_name'
-  }
-  if (!form.document_type) {
-    errors.document_type = 'party.quick_client.error.document_type'
-  }
-  if (!form.document_id?.trim()) {
-    errors.document_id = 'party.quick_client.error.document_id'
   }
 
   return errors

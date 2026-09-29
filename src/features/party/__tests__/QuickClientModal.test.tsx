@@ -84,6 +84,24 @@ describe('QuickClientModal', () => {
     })
   })
 
+  it('el documento es opcional: sin número el payload no lleva campos de documento', async () => {
+    const created = { id: 'P2', first_name: 'Sin', last_name: 'Documento' }
+    storeMock.createClient.mockResolvedValueOnce({ success: true, data: created })
+
+    const { onCreated } = renderModal()
+
+    fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: 'Sin' } })
+    fireEvent.change(screen.getByLabelText(/Apellido/i), { target: { value: 'Documento' } })
+    fireEvent.click(screen.getByRole('button', { name: /Registrar cliente/i }))
+
+    await waitFor(() => expect(onCreated).toHaveBeenCalledTimes(1))
+    const payload = storeMock.createClient.mock.calls[0][0] as Record<string, string>
+    expect(payload.first_name).toBe('Sin')
+    expect(payload.last_name).toBe('Documento')
+    expect(payload).not.toHaveProperty('document_id')
+    expect(payload).not.toHaveProperty('document_type')
+  })
+
   it('Escape cierra el modal sin crear cliente', () => {
     const { onClose } = renderModal()
     fireEvent.keyDown(document, { key: 'Escape' })

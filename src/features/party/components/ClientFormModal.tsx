@@ -162,20 +162,17 @@ const ClientFormModal = ({ isOpen, onClose, client = null }: ClientFormModalProp
           />
           <div className="space-y-xs">
             <Label htmlFor="client-document-id" className="text-body-md-bold text-foreground">
-              {t('clients.modal.field.document', 'Documento de Identidad')}{' '}
-              <span className="text-error">*</span>
+              {t('clients.modal.field.document', 'Documento de Identidad')}
             </Label>
             <Input
               id="client-document-id"
               name="document_id"
               type="text"
-              state={fieldErrors.document_id ? 'error' : ''}
               value={formData.document_id}
               onChange={handleChange}
               disabled={isSubmitting}
               placeholder={t('clients.modal.placeholder.document', 'CI, RUC, etc.')}
             />
-            {renderError('document_id', 'El documento es requerido')}
           </div>
         </div>
 

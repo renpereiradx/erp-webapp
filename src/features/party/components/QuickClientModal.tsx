@@ -1,10 +1,10 @@
 /**
  * QuickClientModal — registro rápido de cliente desde el checkout de venta.
  *
- * Solo campos mínimos (nombre, apellido, tipo y número de documento, teléfono
- * opcional); el resto se completa después desde el directorio. Al crear
- * devuelve el party al padre vía `onCreated` para autoseleccionarlo en el
- * wizard sin salir del POS.
+ * Solo campos mínimos (nombre y apellido obligatorios; documento y teléfono
+ * opcionales — backend/DB los aceptan vacíos); el resto se completa después
+ * desde el directorio. Al crear devuelve el party al padre vía `onCreated`
+ * para autoseleccionarlo en el wizard sin salir del POS.
  */
 import { useEffect, useRef, useState } from 'react'
 import { UserPlus } from 'lucide-react'
@@ -67,12 +67,16 @@ export function QuickClientModal({ isOpen, onClose, onCreated }: QuickClientModa
     setErrors({})
 
     try {
-      const payload = {
+      const payload: Record<string, string> = {
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
-        document_type: form.document_type,
-        document_id: form.document_id.trim(),
         ...(form.phone.trim() ? { phone: form.phone.trim() } : {}),
+      }
+      // Documento opcional: si no hay número, el tipo tampoco viaja (un tipo
+      // sin número sería basura en el party).
+      if (form.document_id.trim()) {
+        payload.document_type = form.document_type
+        payload.document_id = form.document_id.trim()
       }
       const result = await createClient(payload)
       if (result.success) {
@@ -167,22 +171,19 @@ export function QuickClientModal({ isOpen, onClose, onCreated }: QuickClientModa
             id="qc-document-type"
             value={form.document_type}
             onChange={handleChange('document_type')}
-            error={errors.document_type ? t(errors.document_type) : undefined}
           />
 
           <div className="space-y-xs">
             <Label htmlFor="qc-document-id" className="text-label-caps uppercase text-on-surface-deep">
-              {t('party.quick_client.field.document_id', 'Número de documento')} *
+              {t('party.quick_client.field.document_id', 'Número de documento')}
             </Label>
             <Input
               id="qc-document-id"
               type="text"
               value={form.document_id}
               onChange={e => handleChange('document_id')(e.target.value)}
-              state={errors.document_id ? 'error' : ''}
               placeholder={t('party.quick_client.placeholder.document_id', 'Ej: 1234567')}
             />
-            {errors.document_id && <p className="text-body-sm-bold text-error">{t(errors.document_id)}</p>}
           </div>
         </div>
 

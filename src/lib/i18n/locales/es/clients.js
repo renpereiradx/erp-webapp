@@ -102,7 +102,6 @@ export const clients = {
   'clients.modal.hint.contact': 'Opcional. Puede incluir teléfono, email o cualquier información de contacto.',
   'clients.modal.error.name_required': 'El nombre es requerido',
   'clients.modal.error.last_name_required': 'El apellido es requerido',
-  'clients.modal.error.document_required': 'El documento es requerido',
   'clients.modal.error.generic': 'Error al guardar el cliente',
   'clients.modal.success.save': 'Cliente guardado exitosamente',
   'clients.modal.success.update': 'Cliente actualizado exitosamente',
