@@ -295,6 +295,7 @@ const PurchasePaymentDetailPage = () => {
                           <TableHead className={`${headClass} text-center`}>{t('purchasePaymentsMvp.detail.products.headers.quantity', 'Cantidad')}</TableHead>
                           <TableHead className={`${headClass} text-right`}>{t('purchasePaymentsMvp.detail.products.headers.priceWithoutTax', 'Precio s/IVA')}</TableHead>
                           <TableHead className={`${headClass} text-right`}>{t('purchasePaymentsMvp.detail.products.headers.tax', 'IVA')}</TableHead>
+                          <TableHead className={`${headClass} text-right`}>{t('purchasePaymentsMvp.detail.products.headers.salePrice', 'Precio Venta')}</TableHead>
                           <TableHead className={`${headClass} text-right px-lg`}>{t('purchasePaymentsMvp.detail.products.headers.total', 'Total')}</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -324,6 +325,21 @@ const PurchasePaymentDetailPage = () => {
                               <TableCell className='text-right text-data-mono font-data-mono text-outline-fg'>
                                 {taxAmount > 0 ? currencyFormatter.format(taxAmount ?? 0) : '-'}
                               </TableCell>
+                              <TableCell className='text-right'>
+                                {/* Precio de venta planificado de la línea + margen; órdenes viejas pueden no traerlo */}
+                                {(item as any).salePrice || (item as any).sale_price ? (
+                                  <div className='text-data-mono font-data-mono text-success'>
+                                    {currencyFormatter.format((item as any).salePrice ?? (item as any).sale_price ?? 0)}
+                                    {((item as any).profitPct ?? (item as any).profit_pct) != null && (
+                                      <span className='text-body-sm ml-1'>
+                                        (+{(item as any).profitPct ?? (item as any).profit_pct}%)
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className='text-data-mono font-data-mono text-outline-fg'>-</span>
+                                )}
+                              </TableCell>
                               <TableCell className='text-right text-data-mono font-data-mono text-primary px-lg'>
                                 {currencyFormatter.format(lineTotal ?? 0)}
                               </TableCell>
@@ -352,6 +368,14 @@ const PurchasePaymentDetailPage = () => {
                             <div className='space-y-1 text-right'>
                               <p className='text-label-caps uppercase text-outline-fg'>{t('purchasePaymentsMvp.detail.products.headers.tax', 'IVA')}</p>
                               <p className='text-data-mono font-data-mono text-on-surface-deep'>{taxAmount > 0 ? currencyFormatter.format(taxAmount ?? 0) : '-'}</p>
+                            </div>
+                            <div className='space-y-1'>
+                              <p className='text-label-caps uppercase text-outline-fg'>{t('purchasePaymentsMvp.detail.products.headers.salePrice', 'Precio Venta')}</p>
+                              <p className='text-data-mono font-data-mono text-success'>
+                                {(item as any).salePrice || (item as any).sale_price
+                                  ? currencyFormatter.format((item as any).salePrice ?? (item as any).sale_price ?? 0)
+                                  : '-'}
+                              </p>
                             </div>
                             <div className='col-span-2 pt-sm border-t border-border-subtle mt-1 flex justify-between items-center'>
                               <span className='text-label-caps uppercase text-on-surface-deep'>{t('purchasePaymentsMvp.detail.products.headers.total', 'Total')}</span>

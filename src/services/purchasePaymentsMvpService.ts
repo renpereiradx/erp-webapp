@@ -220,6 +220,10 @@ const normalizeItems = items => {
       name: item.product_name ?? item.name ?? 'Producto',
       quantity,
       unitPrice: roundCurrency(unitPrice),
+      // Precio de venta planificado y margen de la línea (metadata de la
+      // orden): base para analizar rentabilidad fuera del alta de compras.
+      salePrice: toNumber(item.sale_price ?? item.salePrice ?? 0),
+      profitPct: item.profit_pct ?? item.profitPct ?? null,
       total: roundCurrency(total),
       expDate: item.exp_date ?? item.expiry_date ?? null,
     }

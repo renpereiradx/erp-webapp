@@ -104,7 +104,7 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
       </div>
 
       <div className='overflow-x-auto'>
-        <Table className='min-w-[720px]'>
+        <Table className='min-w-[640px]'>
           <TableHeader className='bg-surface-muted'>
             <TableRow className='hover:bg-surface-muted border-0'>
               <TableHead className={`${headClass} px-md py-md`}>{t('purchases.cart.product', 'Producto')}</TableHead>
@@ -112,14 +112,13 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
               <TableHead className={`${headClass} px-md py-md text-right`}>{t('purchases.form.unit_price', 'Costo Unit.')}</TableHead>
               <TableHead className={`${headClass} px-md py-md text-right`}>{t('purchases.form.profit_margin', 'Margen')}</TableHead>
               <TableHead className={`${headClass} px-md py-md text-right`}>{t('purchases.form.subtotal', 'Subtotal')}</TableHead>
-              <TableHead className={`${headClass} px-md py-md text-right`}>{t('purchases.modal.sale_price', 'Venta Esp.')}</TableHead>
               <TableHead className='px-md py-md w-12' aria-hidden='true'></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {purchaseItems.length === 0 ? (
               <TableRow className='hover:bg-transparent border-0'>
-                <TableCell colSpan={7} className='py-xl'>
+                <TableCell colSpan={6} className='py-xl'>
                   <div className='flex flex-col items-center justify-center gap-sm text-on-surface-deep'>
                     <div className='size-16 rounded-full bg-surface-muted flex items-center justify-center'>
                       <Package size={28} strokeWidth={1.5} className='text-outline-fg' aria-hidden='true' />
@@ -195,14 +194,6 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
                   </td>
                   <td className='px-md py-md text-right text-data-mono font-data-mono text-foreground'>
                     {formatCurrency(item.unit_price * item.quantity)}
-                  </td>
-                  <td className='px-md py-md text-right'>
-                    <div className='text-data-mono font-data-mono text-primary'>
-                      {formatCurrency(item.sale_price * item.quantity)}
-                    </div>
-                    <div className='text-body-sm text-success'>
-                      +{formatCurrency((item.sale_price - item.unit_price) * item.quantity)}
-                    </div>
                   </td>
                   <td className='px-md py-md text-right'>
                     <Button

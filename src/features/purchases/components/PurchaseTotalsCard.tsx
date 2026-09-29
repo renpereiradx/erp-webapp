@@ -30,12 +30,6 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
 }) => {
   const { t } = useI18n();
 
-  // Valores derivados para presentación (misma aritmética de siempre).
-  const totalCost = purchaseItems.reduce((s, i) => s + i.quantity * i.unit_price, 0);
-  const expectedSale = purchaseItems.reduce((s, i) => s + i.quantity * i.sale_price, 0);
-  const projectedProfit = expectedSale - totalCost;
-  const profitPct =
-    totalCost > 0 ? ((expectedSale / totalCost - 1) * 100).toFixed(1) : null;
   const totalItems = purchaseItems.reduce((s, i) => s + i.quantity, 0);
 
   return (
@@ -91,33 +85,6 @@ export const PurchaseTotalsCard: React.FC<PurchaseTotalsCardProps> = ({
                 </span>
               </div>
             )}
-          </div>
-
-          <div className='flex justify-between items-center text-body-md'>
-            <span className='text-on-surface-deep'>
-              {t('purchases.totals.expected_sale', 'Venta Esperada')}
-            </span>
-            <span className='text-data-mono font-data-mono text-primary'>
-              {formatCurrency(expectedSale)}
-            </span>
-          </div>
-          <div className='h-px bg-divider my-xs'></div>
-          <div className='flex justify-between items-center text-body-md'>
-            <span className='text-body-md-bold text-foreground'>
-              {t('purchases.totals.projected_profit', 'Ganancia Proyectada')}
-            </span>
-            <div className='text-right'>
-              <span
-                className={`text-title-md text-data-mono font-data-mono ${projectedProfit >= 0 ? 'text-success' : 'text-error'}`}
-              >
-                {formatCurrency(projectedProfit)}
-              </span>
-              {profitPct && totalCost > 0 && (
-                <span className='ml-1.5 text-body-sm text-success'>
-                  (+{profitPct}%)
-                </span>
-              )}
-            </div>
           </div>
         </div>
         <div className='flex flex-col gap-sm justify-end pt-md mt-auto'>
