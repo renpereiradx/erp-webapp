@@ -7,11 +7,9 @@
  * acá solo se presentan. El único botón primary de la vista es Cobrar.
  */
 import React from 'react';
-import { DollarSign } from 'lucide-react';
+import { AlertTriangle, DollarSign, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageBar } from '@/components/ui/MessageBar';
 import { formatCurrency } from '@/utils/currencyUtils';
 import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput';
 import { useI18n } from '@/lib/i18n';
@@ -76,28 +74,43 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
   const [finalPriceDraft, setFinalPriceDraft] = React.useState<string | null>(null);
 
   return (
-    <Card className="bg-surface rounded-md shadow-whisper border-0 p-lg flex flex-col">
-      <CardHeader className="p-0 pb-md">
-        <CardTitle className="text-title-md text-foreground flex items-center gap-2">
+    // Section plano (patrón PurchaseTotalsCard): el Card legacy de shadcn
+    // pierde los overrides (cn sin tailwind-merge) y dejaba rounded-xl + p-6
+    // residual → radio de modal y doble padding.
+    <section className="bg-surface rounded-md shadow-whisper border-0 p-lg flex flex-col">
+      <div className="pb-md">
+        <h2 className="text-title-md text-foreground flex items-center gap-sm">
           <DollarSign size={18} className="text-primary" aria-hidden="true" />
           {t('sales.new.summary.title', 'Resumen de Venta')}
-        </CardTitle>
-      </CardHeader>
+        </h2>
+      </div>
 
-      <CardContent className="p-0 flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col">
         {itemsCount === 0 && (
-          <MessageBar intent="info" className="mb-md">
-            {t('sales.new.summary.emptyCart', 'Agrega productos al carrito para continuar.')}
-          </MessageBar>
+          <div
+            role="status"
+            className="mb-md p-md bg-surface-muted text-on-surface-deep rounded-md border border-border-subtle flex items-center gap-sm"
+          >
+            <Info size={16} className="shrink-0" aria-hidden="true" />
+            <p className="text-body-md">
+              {t('sales.new.summary.emptyCart', 'Agrega productos al carrito para continuar.')}
+            </p>
+          </div>
         )}
 
         {branchMismatchWarning && (
-          <MessageBar intent="warning" className="mb-md">
-            {t(
-              'sales.new.summary.branchWarning',
-              'Estás modificando una venta pendiente originada en otra sucursal. Los productos que añadas descontarán inventario de la sucursal origen.',
-            )}
-          </MessageBar>
+          <div
+            role="alert"
+            className="mb-md p-md bg-warning/10 text-foreground rounded-md border border-warning/20 flex items-center gap-sm"
+          >
+            <AlertTriangle size={16} className="shrink-0 text-warning" aria-hidden="true" />
+            <p className="text-body-md">
+              {t(
+                'sales.new.summary.branchWarning',
+                'Estás modificando una venta pendiente originada en otra sucursal. Los productos que añadas descontarán inventario de la sucursal origen.',
+              )}
+            </p>
+          </div>
         )}
 
         {/* Totales */}
@@ -222,7 +235,7 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
             {t('sales.new.summary.clear', 'Limpiar Carrito (F4)')}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 };

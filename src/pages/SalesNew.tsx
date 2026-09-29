@@ -21,9 +21,7 @@ import {
   ShoppingCart,
   ClipboardX,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/ui/PageHeader';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
 import useSaleStore from '@/store/useSaleStore';
@@ -1976,12 +1974,17 @@ const SalesNew: React.FC = () => {
     : null;
 
   return (
-    <div className="flex flex-col gap-md animate-in fade-in duration-200">
+    <div className="flex flex-col gap-lg animate-in fade-in duration-200">
       <PageHeader
+        breadcrumb={t('sales.title', 'Ventas')}
         title={t('sales.title', 'Punto de Venta')}
         subtitle={t('sales.subtitle', 'Facturación y registro de operaciones')}
         actions={
-          <nav className="flex items-center gap-sm" aria-label={t('sales.navAria', 'Secciones de ventas')}>
+          <div
+            role="tablist"
+            aria-label={t('sales.navAria', 'Secciones de ventas')}
+            className="flex items-center gap-1 p-1 bg-surface-muted rounded-button border border-border-subtle"
+          >
             {[
               // FASE 4 (PLAN_PEDIDOS_MOSTRADOR v3): sin sales:write no hay
               // "Nueva Venta" — el vendor entra directo al Historial.
@@ -1998,30 +2001,32 @@ const SalesNew: React.FC = () => {
                   }]
                 : []),
             ].map((tab) => (
-              <Button
+              <button
                 key={tab.id}
                 type="button"
-                variant="filter"
+                role="tab"
+                aria-selected={activeTab === tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                aria-current={activeTab === tab.id ? 'page' : undefined}
                 className={cn(
-                  'h-10 px-4 text-body-sm-bold uppercase',
-                  activeTab === tab.id && 'border-primary text-primary',
+                  'flex items-center gap-sm px-lg py-2 rounded-sm text-body-sm-bold transition-colors duration-150 cursor-pointer',
+                  activeTab === tab.id
+                    ? 'bg-surface text-primary shadow-fluent-2'
+                    : 'text-on-surface-deep hover:text-foreground',
                 )}
               >
                 <tab.icon size={16} aria-hidden="true" />
                 <span>{tab.label}</span>
                 {tab.badge != null && tab.badge > 0 && (
                   <span
-                    className="ml-xs inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-error text-on-error text-body-sm-bold font-data-mono"
+                    className="ml-xs inline-flex items-center justify-center min-w-5 h-5 px-sm rounded-full bg-error text-on-error text-body-sm-bold font-data-mono"
                     data-testid="cancellations-tab-badge"
                   >
                     {tab.badge}
                   </span>
                 )}
-              </Button>
+              </button>
             ))}
-          </nav>
+          </div>
         }
       />
 
@@ -2030,24 +2035,25 @@ const SalesNew: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-gutter items-start">
             {/* Productos Seleccionados (carrito) — self-stretch: por defecto
                 iguala la altura del Resumen de Venta (la fila más alta);
-                cuando el carrito supera al resumen, manda el carrito. */}
-            <Card className="bg-surface rounded-md shadow-whisper border-0 p-lg min-w-0 self-stretch">
-              <CardHeader className="p-0 pb-md">
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <CardTitle className="text-title-md text-foreground flex items-center gap-2">
-                    <ShoppingCart size={18} className="text-primary" aria-hidden="true" />
-                    {t('sales.cart.title', 'Productos Seleccionados')}
-                  </CardTitle>
-                  <p className="hidden sm:flex items-center gap-2 text-body-sm font-data-mono text-outline-fg">
-                    <span>[F2] {t('sales.hints.search', 'Buscar')}</span>
-                    <span aria-hidden="true">·</span>
-                    <span>[F12] {t('sales.hints.checkout', 'Cobrar')}</span>
-                    <span aria-hidden="true">·</span>
-                    <span>[F4] {t('sales.hints.clear', 'Limpiar')}</span>
-                  </p>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0 space-y-md">
+                cuando el carrito supera al resumen, manda el carrito.
+                Section plano (patrón PurchaseTotalsCard): el Card legacy de
+                shadcn pierde los overrides (cn sin tailwind-merge) y dejaba
+                rounded-xl + p-6 residual → radio de modal y doble padding. */}
+            <section className="bg-surface rounded-md shadow-whisper border-0 p-lg min-w-0 self-stretch">
+              <div className="pb-md flex items-center justify-between gap-sm flex-wrap">
+                <h2 className="text-title-md text-foreground flex items-center gap-sm">
+                  <ShoppingCart size={18} className="text-primary" aria-hidden="true" />
+                  {t('sales.cart.title', 'Productos Seleccionados')}
+                </h2>
+                <p className="hidden sm:flex items-center gap-sm text-body-sm font-data-mono text-outline-fg">
+                  <span>[F2] {t('sales.hints.search', 'Buscar')}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>[F12] {t('sales.hints.checkout', 'Cobrar')}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>[F4] {t('sales.hints.clear', 'Limpiar')}</span>
+                </p>
+              </div>
+              <div className="space-y-md">
                 <ProductSearchPanel
                   searchTerm={productSearchTerm}
                   onSearchTermChange={(v) => {
@@ -2092,8 +2098,8 @@ const SalesNew: React.FC = () => {
                   activeItemId={activeCartItemId}
                   onActiveItemChange={setActiveCartItemId}
                 />
-              </CardContent>
-            </Card>
+              </div>
+            </section>
 
             <CheckoutSummaryPanel
               itemsCount={items.length}
