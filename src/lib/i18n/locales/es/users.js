@@ -134,6 +134,7 @@ export const users = {
   // Filtros
   'users.filter.roleAll': 'Todos los roles',
   'users.filter.statusAll': 'Todos los estados',
+  'users.filter.roleWithCount': '{{name}}, {{count}} usuarios',
 
   // Acciones en bloque
   'users.bulk.activate': 'Activar',

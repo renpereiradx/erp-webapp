@@ -75,8 +75,21 @@ export function UsersToolbar({
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {roles.map((role) => (
-                <DropdownMenuItem key={role.id} onClick={() => onFiltersChange({ role_id: role.id })}>
-                  {role.name}
+                <DropdownMenuItem
+                  key={role.id}
+                  onClick={() => onFiltersChange({ role_id: role.id })}
+                  aria-label={t('users.filter.roleWithCount', '{{name}}, {{count}} usuarios', {
+                    name: role.name,
+                    count: role.users_count ?? 0,
+                  })}
+                >
+                  <span>{role.name}</span>
+                  <span
+                    data-testid={`role-count-${role.id}`}
+                    className="ml-auto text-body-sm text-outline tabular-nums"
+                  >
+                    {role.users_count ?? 0}
+                  </span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

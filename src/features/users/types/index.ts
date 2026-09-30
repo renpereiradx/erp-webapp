@@ -8,6 +8,8 @@ export type TFn = (key: string, defaultValue?: string, vars?: Record<string, unk
 export interface Role {
   id: string;
   name: string;
+  /** Active, non-deleted users holding the role (GET /api/v1/roles users_count). */
+  users_count?: number;
 }
 
 export interface UsersFilters {
