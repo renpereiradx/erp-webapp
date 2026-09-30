@@ -797,7 +797,7 @@ es que **F2 signifique exactamente lo mismo en todas las páginas de listado**.
 | `F2`              | Foco al **buscador principal** de la página (o del paso, si es wizard).  | Cableado en el hook (ver §12.4)              |
 | `F3`              | Foco al **buscador secundario/de entidad DENTRO de un modal o paso** (cliente en checkout, producto en modal de compra, proveedor en wizard de compras). | Cableado en el modal |
 | `F4`              | Acción de contexto de la página (limpiar carrito; monto exacto en cobro). Nunca "foco". | Cableado en el hook                    |
-| `Ctrl+G` (+ alias `F12`, `Ctrl+Enter`) | Acción principal: confirmar/avanzar wizard. Los alias son de compatibilidad. | Configurable: `sales.processSale` / `purchases.processPurchase` |
+| `Ctrl+G` (+ alias `F12`, `Ctrl+Enter`) | Acción principal: confirmar/avanzar wizard. En Compras, la misma tecla configurable recorre el flujo: en `nueva-compra` abre el modal de agregar producto y dentro del modal confirma la línea. Los alias son de compatibilidad. | Configurable: `sales.processSale` / `purchases.processPurchase` |
 | `Escape`          | **Solo cierra cosas**: modal, dropdown, buscador global. Nunca acción destructiva ni navegación. | Infra (Radix/EnhancedModal) + overlay activo |
 | `Enter`           | Submit del input/formulario enfocado (buscar, aplicar filtros). En wizards: acción principal si el foco está en un `<input>` de una línea (nunca `<textarea>`/`<select>`). | Native/onKeyDown del input |
 | `Alt+Q` / `Alt+X` | Editar cantidad / quitar el ítem activo de una lista (Alt no escribe texto: seguro con foco en input). | Cableado en el hook |
@@ -911,7 +911,7 @@ las páginas de listado simple usan SOLO el hook compartido. No dupliques.
 |:--------------------------------|:-----------------------------------------------------------------------|
 | Menú / Header (buscador global) | ✅ Canónico (Ctrl+K, flechas, Enter, Esc, click-outside)               |
 | Ventas POS (`SalesNew`)         | ✅ Canónico (F2/F4/Alt+Q/Alt+X/Ctrl+Shift+H + `enabled`)               |
-| Compras (`Purchases`)           | ✅ `usePurchasesShortcuts`: F2 (Historial) + F12 con gating por modal; modal de producto (F3) y wizard ya cumplían |
+| Compras (`Purchases`)           | ✅ `usePurchasesShortcuts`: F2 (Historial) + Ctrl+G abre el modal de producto (Nueva Compra, configurable `purchases.processPurchase`) + F12 con gating por modal; modal de producto (F3, Ctrl+G confirma con hints kbd en footer) y wizard ya cumplían |
 | Productos (`Products`)          | ✅ F2 vía `useSearchFocusShortcut` en `useProductsLogic`; placeholder con pista |
 | Clientes (`Clients`)            | ✅ F2 + Enter busca; gating con modales form/details                   |
 | Proveedores (`Suppliers`)       | ✅ F2 + Enter busca; gating con modales form/detalles/confirmación     |

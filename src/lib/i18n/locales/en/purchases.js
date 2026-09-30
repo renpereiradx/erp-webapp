@@ -212,6 +212,7 @@ export const purchases = {
   'purchases.cart.product': 'Product',
   'purchases.cart.search_placeholder': 'Search product by SKU or name... (F2/F12)',
   'purchases.cart.empty_hint': 'Search for a product to add it to the order',
+  'purchases.cart.empty_hint_shortcut': 'opens the add-product form',
   'purchases.cart.unit': 'Unit',
   'purchases.cart.remove_item': 'Remove item from order',
 
@@ -307,6 +308,10 @@ export const purchases = {
   'purchases.product_modal.select_generic': 'Select Generic Product',
   'purchases.product_modal.save': 'Save Changes',
   'purchases.product_modal.add_to_order': 'Add to Order',
+  'purchases.product_modal.hints.add': 'Add',
+  'purchases.product_modal.hints.save': 'Save',
+  'purchases.product_modal.hints.search': 'Search',
+  'purchases.product_modal.hints.close': 'Close',
 
   // Wizard: alignment extras
   'purchases.checkoutWizard.title': 'Complete Purchase',

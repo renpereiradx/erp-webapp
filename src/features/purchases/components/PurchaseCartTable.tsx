@@ -6,6 +6,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
 import { PurchaseProductSearchInput } from './PurchaseProductSearchInput';
+import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore';
 
 export type PurchaseCartTableProps = Pick<
   ReturnType<typeof usePurchasesLogic>,
@@ -54,6 +55,9 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
   getProductName,
 }) => {
   const { t } = useI18n();
+  // Discoverability del atajo principal (§12.6): mostrar el valor real
+  // configurado, nunca "Ctrl+G" hardcodeado.
+  const primaryLabel = useKeyboardShortcutsStore((s) => s.formatShortcut)('purchases.processPurchase');
 
   // Seleccionar desde el dropmenu del carrito precarga el producto y abre el
   // modal de detalles (cantidad, costo y estrategia de precio). afterSelect
@@ -128,6 +132,14 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
                     </p>
                     <p className='text-body-sm text-on-surface-deep'>
                       {t('purchases.cart.empty_hint', 'Buscá un producto para agregarlo a la orden')}
+                    </p>
+                    <p className='flex items-center gap-1.5 text-body-sm text-on-surface-deep'>
+                      <kbd className='font-data-mono px-1.5 py-0.5 rounded-xs border border-divider bg-surface text-foreground text-body-sm-bold leading-none'>
+                        {primaryLabel}
+                      </kbd>
+                      <span>
+                        {t('purchases.cart.empty_hint_shortcut', 'abre el formulario para agregar productos')}
+                      </span>
                     </p>
                   </div>
                 </TableCell>

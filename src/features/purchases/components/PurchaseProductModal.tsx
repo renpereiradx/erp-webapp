@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Check, Package, X } from 'lucide-react'
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic'
 import { useI18n } from '@/lib/i18n'
@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { PurchaseProductSearchInput } from './PurchaseProductSearchInput'
+import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 
 export type PurchaseProductModalProps = ReturnType<typeof usePurchasesLogic>
 
@@ -70,6 +71,12 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
   } = props
 
   const { t } = useI18n()
+  // Acción principal configurable (§12.1): purchases.processPurchase (Ctrl+G
+  // por defecto) — la misma tecla que abre este modal desde la página
+  // confirma la línea aquí; F12/Ctrl+Enter quedan como alias.
+  const matchesShortcut = useKeyboardShortcutsStore((s) => s.matchesShortcut)
+  const formatShortcut = useKeyboardShortcutsStore((s) => s.formatShortcut)
+  const primaryLabel = formatShortcut('purchases.processPurchase')
   const [variants, setVariants] = useState<ProductVariant[]>([])
   const [loadingVariants, setLoadingVariants] = useState(false)
   const [partialSelectedAttrs, setPartialSelectedAttrs] = useState<Record<string, string>>({})
@@ -108,6 +115,14 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
         ((modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && modalVariantId === undefined)
       );
 
+      // Acción principal configurable (Ctrl+G por defecto).
+      if (matchesShortcut('purchases.processPurchase', e)) {
+        e.preventDefault();
+        if (isConfirmValid) {
+          handleConfirmAddProduct();
+        }
+        return;
+      }
       if (e.key === 'F12' || (e.key === 'Enter' && e.ctrlKey)) {
         e.preventDefault();
         if (isConfirmValid) {
@@ -128,8 +143,26 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
     modalUnitPrice,
     modalVariantId,
     variants,
-    handleConfirmAddProduct
+    handleConfirmAddProduct,
+    matchesShortcut
   ]);
+
+  // Discoverability (§12.5.4): fila de hints kbd como los footers del wizard.
+  // ANTES del early return de isModalOpen — Rules of Hooks: el orden de hooks
+  // no puede depender de si el modal está abierto o no.
+  const hints = useMemo<Array<{ kbd: string; label: string }>>(
+    () => [
+      {
+        kbd: primaryLabel,
+        label: editingItemId
+          ? t('purchases.product_modal.hints.save', 'Guardar')
+          : t('purchases.product_modal.hints.add', 'Agregar'),
+      },
+      { kbd: 'F3', label: t('purchases.product_modal.hints.search', 'Buscar') },
+      { kbd: 'Esc', label: t('purchases.product_modal.hints.close', 'Cerrar') },
+    ],
+    [primaryLabel, editingItemId, t],
+  )
 
   if (!isModalOpen) return null
 
@@ -813,27 +846,42 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
         </div>
 
         {/* Footer */}
-        <footer className='px-lg py-md border-t border-divider bg-surface-muted flex justify-end items-center gap-md shrink-0'>
-          <Button variant='secondary' onClick={() => setIsModalOpen(false)}>
-            {t('common.cancel', 'Cancelar')}
-          </Button>
-          <Button variant='ghost' onClick={() => setModalVariantId(null)}>
-            {t('purchases.product_modal.select_generic', 'Seleccionar Producto Genérico')}
-          </Button>
-          <Button
-            variant='primary'
-            onClick={handleConfirmAddProduct}
-            disabled={
-              !modalSelectedProduct ||
-              modalQuantity === '' || Number(modalQuantity) <= 0 ||
-              modalUnitPrice === '' ||
-              (hasVariants && modalVariantId === undefined)
-            }
-          >
-            {editingItemId
-              ? t('purchases.product_modal.save', 'Guardar Cambios')
-              : t('purchases.product_modal.add_to_order', 'Agregar a la Orden')}
-          </Button>
+        <footer className='px-lg py-md border-t border-divider bg-surface-muted shrink-0 space-y-2'>
+          {/* Hints de teclado (patrón wizard, DESIGN.md §6/§12) */}
+          <div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm text-on-surface-deep'>
+            {hints.map((h, i) => (
+              <span key={i} className='inline-flex items-center gap-1'>
+                <kbd className='font-data-mono px-1.5 py-0.5 rounded-xs border border-divider bg-surface text-foreground text-body-sm-bold leading-none'>
+                  {h.kbd}
+                </kbd>
+                <span>{h.label}</span>
+              </span>
+            ))}
+          </div>
+          <div className='flex justify-end items-center gap-md'>
+            <Button variant='secondary' onClick={() => setIsModalOpen(false)}>
+              {t('common.cancel', 'Cancelar')}
+            </Button>
+            <Button variant='ghost' onClick={() => setModalVariantId(null)}>
+              {t('purchases.product_modal.select_generic', 'Seleccionar Producto Genérico')}
+            </Button>
+            <Button
+              variant='primary'
+              onClick={handleConfirmAddProduct}
+              data-testid='purchase-modal-confirm'
+              disabled={
+                !modalSelectedProduct ||
+                modalQuantity === '' || Number(modalQuantity) <= 0 ||
+                modalUnitPrice === '' ||
+                (hasVariants && modalVariantId === undefined)
+              }
+            >
+              {editingItemId
+                ? t('purchases.product_modal.save', 'Guardar Cambios')
+                : t('purchases.product_modal.add_to_order', 'Agregar a la Orden')}
+              <span className='ml-2 text-body-sm font-data-mono opacity-80'>({primaryLabel})</span>
+            </Button>
+          </div>
         </footer>
       </DialogContent>
     </Dialog>

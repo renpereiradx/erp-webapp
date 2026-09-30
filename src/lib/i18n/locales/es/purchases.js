@@ -255,6 +255,7 @@ export const purchases = {
   'purchases.cart.product': 'Producto',
   'purchases.cart.search_placeholder': 'Buscar producto por SKU o nombre... (F2/F12)',
   'purchases.cart.empty_hint': 'Buscá un producto para agregarlo a la orden',
+  'purchases.cart.empty_hint_shortcut': 'abre el formulario para agregar productos',
   'purchases.cart.unit': 'Unidad',
   'purchases.cart.remove_item': 'Quitar artículo de la orden',
 
@@ -357,6 +358,10 @@ export const purchases = {
   'purchases.product_modal.select_generic': 'Seleccionar Producto Genérico',
   'purchases.product_modal.save': 'Guardar Cambios',
   'purchases.product_modal.add_to_order': 'Agregar a la Orden',
+  'purchases.product_modal.hints.add': 'Agregar',
+  'purchases.product_modal.hints.save': 'Guardar',
+  'purchases.product_modal.hints.search': 'Buscar',
+  'purchases.product_modal.hints.close': 'Cerrar',
 
   // Wizard: extras de alineación
   'purchases.checkoutWizard.stepsAria': 'Pasos del checkout',
