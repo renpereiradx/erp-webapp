@@ -46,6 +46,7 @@ import {
 } from '@/features/sales/registerSelection'
 import { normalizeCurrencyCode, formatPYG } from '@/utils/currencyUtils'
 import { round2, computeForeignDue } from '@/domain/sale/calculations/foreignPayment'
+import { formatNumberInput, parseNumberInput, parseQuantityInput } from '@/domain/shared/moneyInput'
 
 const DEFAULT_CURRENCY_CODE = 'PYG'
 
@@ -167,16 +168,18 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
     return formatter.format(Number(value || 0))
   }, [lang])
 
+  // Formato de miles es-PY vía el par canónico moneyInput (DESIGN.md §6.4):
+  // display con formatNumberInput, estado canónico con parseNumberInput.
+  // Estos wrappers conservan los nombres legacy del modal; los valores que
+  // circulan son enteros PYG, donde ambos pares coinciden.
   const formatNumberWithDots = useCallback(value => {
-    if (!value) return ''
-    const numericValue = value.toString().replace(/\D/g, '')
-    if (!numericValue) return ''
-    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+    if (value === null || value === undefined) return ''
+    return formatNumberInput(String(value))
   }, [])
 
   const parseNumberWithDots = useCallback(value => {
-    if (!value) return ''
-    return value.toString().replace(/\./g, '')
+    if (value === null || value === undefined) return ''
+    return parseNumberInput(String(value))
   }, [])
 
   const loadData = useCallback(async () => {
@@ -231,10 +234,13 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
   const selectedCurrencyCode = normalizeCurrencyCode(selectedCurrency?.code || selectedCurrency?.currency_code)
   // Cobro en divisa activo cuando la moneda elegida difiere de la del documento.
   const isForeign = !!selectedCurrency && selectedCurrencyCode !== docCurrencyCode
+  // La tasa vive en estado canónico (punto = decimal JS): la precarga del
+  // servicio la setea directa y el input la parsea vía parseNumberInput.
   const rate = useMemo(() => Number(exchangeRate) || 0, [exchangeRate])
-  // En divisa el input admite decimales (number); en base mantiene el formato
-  // con puntos de miles del input legado.
-  const foreignReceived = useMemo(() => Number(amountReceived) || 0, [amountReceived])
+  // En divisa el input admite decimales (texto + inputMode decimal, §6.4);
+  // en base mantiene el formato con puntos de miles del par moneyInput.
+  // parseQuantityInput: punto Y coma son separadores decimales (sin agrupar).
+  const foreignReceived = useMemo(() => Number(parseQuantityInput(String(amountReceived ?? ''))) || 0, [amountReceived])
   const baseNumericReceived = useMemo(() => (
     isForeign && rate > 0
       ? round2(foreignReceived * rate)
@@ -510,7 +516,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className='register-sale-payment-modal w-[95vw] lg:!w-[1100px] lg:!max-w-[calc(95vw-288px)] p-0 overflow-hidden border border-border-subtle shadow-fluent-16 rounded-xl bg-background'>
+      <DialogContent className='register-sale-payment-modal w-[95vw] max-w-5xl p-0 overflow-hidden border border-border-subtle shadow-fluent-16 rounded-xl bg-background'>
         <DialogTitle className='sr-only'>{t('sales.registerPaymentModal.dialogTitle', 'Registrar Cobro de Venta')}</DialogTitle>
         <DialogDescription className='sr-only'>{t('sales.registerPaymentModal.dialogDescription', 'Registre el cobro de la venta seleccionada.')}</DialogDescription>
         <form autoComplete="off" className='flex flex-col md:flex-row h-full max-h-[95vh] md:max-h-[90vh] overflow-hidden' onSubmit={handleSubmit}>
@@ -519,14 +525,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
             <div className='relative z-10 flex flex-col h-full'>
               <header className='mb-xl'>
                 <div className='size-12 bg-primary rounded-md flex items-center justify-center text-on-primary mb-lg shadow-fluent-2'>
-                  <Building size={24} />
+                  <Building className='w-6 h-6' />
                 </div>
-                <h2 className='text-headline-lg font-black tracking-tighter uppercase leading-none mb-md'>
+                <h2 className='text-headline-lg mb-md'>
                   {t('sales.registerPaymentModal.state', 'Estado de')} <br />
                   <span className='text-primary'>{t('sales.registerPaymentModal.collection', 'Cobro')}</span>
                 </h2>
                 <div className='inline-flex items-center gap-sm px-md py-xs bg-on-primary/5 border border-on-primary/10 rounded-full text-body-sm-bold text-on-primary/60 uppercase'>
-                  <Receipt size={12} className='text-primary' /> {t('sales.registerPaymentModal.saleLabel', 'Venta #{id}', { id: sale?.id || sale?.sale_id || '---' })}
+                  <Receipt className='w-4 h-4 text-primary' /> {t('sales.registerPaymentModal.saleLabel', 'Venta #{id}', { id: sale?.id || sale?.sale_id || '---' })}
                 </div>
               </header>
 
@@ -536,14 +542,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                 <div className='relative pl-lg border-l-2 border-on-primary/10'>
                   <div className='absolute -left-[9px] top-0 size-4 rounded-full bg-inverse-surface border-2 border-on-primary/20' />
                   <p className='text-label-caps uppercase text-on-primary/40 mb-xs'>{t('sales.registerPaymentModal.initialBalance', 'Saldo Inicial')}</p>
-                  <p className='text-headline-lg font-black text-on-primary font-data-mono text-data-mono'>{balanceDueLabel || formatLocalizedCurrency(0)}</p>
+                  <p className='text-headline-lg text-on-primary font-data-mono text-data-mono'>{balanceDueLabel || formatLocalizedCurrency(0)}</p>
                 </div>
 
                 {/* 2. Operación (Barra de progreso integrada) */}
                 <div className='bg-on-primary/5 backdrop-blur-md rounded-md p-lg border border-on-primary/10 shadow-fluent-2'>
                   <div className='flex justify-between items-center mb-md'>
                     <p className='text-label-caps uppercase text-primary'>{t('sales.registerPaymentModal.applyingPayment', 'Aplicando Pago')}</p>
-                    <span className='text-body-sm-bold font-black text-on-primary bg-primary/20 px-sm py-0.5 rounded-full'>
+                    <span className='text-body-sm-bold text-on-primary bg-primary/20 px-sm py-0.5 rounded-full'>
                       {appliedPercent}%
                     </span>
                   </div>
@@ -555,7 +561,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                   </div>
                   <div className='flex items-center gap-md'>
                     <div className='size-8 rounded-full bg-on-primary/10 flex items-center justify-center text-on-primary/60'>
-                      <User size={14} />
+                      <User className='w-4 h-4' />
                     </div>
                     <div className='min-w-0'>
                       <p className='text-label-caps uppercase text-on-primary/30'>{t('sales.registerPaymentModal.client', 'Cliente')}</p>
@@ -569,7 +575,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                   <div className='absolute -left-[9px] top-0 size-4 rounded-full bg-primary' />
                   <p className='text-label-caps uppercase text-primary mb-xs'>{t('sales.registerPaymentModal.newBalance', 'Nuevo Saldo')}</p>
                   <p className={cn(
-                    "text-headline-lg font-black font-data-mono text-data-mono tracking-tighter",
+                    "text-headline-lg font-data-mono text-data-mono",
                     projectedBalance <= 0 ? "text-success" : "text-on-primary"
                   )}>
                     {formatLocalizedCurrency(projectedBalance)}
@@ -587,7 +593,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
               <div className='bg-surface rounded-md border border-border-subtle shadow-whisper overflow-hidden'>
                 <div className='px-lg py-md border-b border-border-subtle bg-surface-muted flex items-center gap-md'>
                   <div className='size-7 bg-primary/10 rounded-md flex items-center justify-center text-primary'>
-                    <Coins size={16} />
+                    <Coins className='w-4 h-4' />
                   </div>
                   <h3 className='text-label-caps uppercase text-foreground'>{t('sales.registerPaymentModal.fundsOrigin', 'Origen de Fondos')}</h3>
                 </div>
@@ -596,13 +602,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                     {/* Monto Recibido - Principal (en la divisa de cobro) */}
                     <div className='md:col-span-7 space-y-sm'>
                       <div className='flex justify-between items-center gap-sm'>
-                        <Label htmlFor='payment-amount-received' className='text-label-caps uppercase text-muted-foreground'>
+                        <Label htmlFor='payment-amount-received' className='text-label-caps uppercase text-on-surface-deep'>
                           {isForeign
                             ? t('sales.registerPaymentModal.amountReceivedForeign', 'Importe Entregado ({currency})', { currency: selectedCurrencyCode })
                             : t('sales.registerPaymentModal.amountReceived', 'Importe Entregado')}
                         </Label>
-                        <button
+                        <Button
                           type='button'
+                          variant='link'
                           onClick={() => {
                             const balanceDue = getNormalizedBalanceDue(sale.balance_due, sale.currency)
                             if (balanceDue === null) return
@@ -617,26 +624,25 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                             }
                             userEditedAmountToApply.current = false
                           }}
-                          className='text-label-caps uppercase text-primary hover:underline'
+                          className='text-label-caps uppercase shrink-0'
                         >
                           {t('sales.registerPaymentModal.coverFull', 'Cubrir Saldo Total')}
-                        </button>
+                        </Button>
                       </div>
                       <div className='relative group'>
-                        <div className='absolute left-md top-1/2 -translate-y-1/2 text-muted-foreground font-data-mono text-data-mono'>
+                        <div className='absolute left-md top-1/2 -translate-y-1/2 text-on-surface-deep font-data-mono text-data-mono'>
                           {isForeign ? selectedCurrencyCode : '₲'}
                         </div>
                         <Input
                           id='payment-amount-received'
-                          type={isForeign ? 'number' : 'text'}
-                          inputMode={isForeign ? 'decimal' : 'numeric'}
-                          step={isForeign ? '0.01' : undefined}
+                          type='text'
+                          inputMode='decimal'
                           min='0'
                           state={validationErrors.amountReceived ? 'error' : ''}
                           value={amountReceived}
                           onChange={e => {
                             if (isForeign) {
-                              const numeric = Number(e.target.value) || 0
+                              const numeric = Number(parseQuantityInput(e.target.value)) || 0
                               setAmountReceived(e.target.value)
                               if (!userEditedAmountToApply.current) {
                                 const balanceDue = getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 0
@@ -660,7 +666,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                         <p className='text-body-md text-error'>{validationErrors.amountReceived}</p>
                       )}
                       {isForeign && (
-                        <p className='text-body-sm-bold text-muted-foreground font-data-mono'>
+                        <p className='text-body-sm-bold text-on-surface-deep font-data-mono'>
                           {t('sales.registerPaymentModal.baseEquivalent', 'Equivale a {amount} (el saldo se salda en {base})', {
                             amount: formatLocalizedCurrency(baseNumericReceived, docCurrencyCode),
                             base: docCurrencyCode,
@@ -671,13 +677,13 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
 
                     {/* Divisa de cobro */}
                     <div className='md:col-span-5 space-y-sm'>
-                      <Label htmlFor='payment-currency' className='text-label-caps uppercase text-muted-foreground'>
+                      <Label htmlFor='payment-currency' className='text-label-caps uppercase text-on-surface-deep'>
                         {t('sales.registerPaymentModal.currencyLabel', 'Divisa de cobro')}
                       </Label>
                       <Select value={currencyValue} onValueChange={handleCurrencyChange}>
                         <SelectTrigger
                           id='payment-currency'
-                          className='rounded-input border-border-subtle bg-surface-muted text-body-md-bold data-[placeholder]:text-muted-foreground'
+                          className='rounded-input border-border-subtle bg-surface-muted text-body-md-bold data-[placeholder]:text-on-surface-deep'
                         >
                           <SelectValue placeholder={t('sales.registerPaymentModal.select', 'Seleccionar...')}>
                             {selectedCurrencyLabel}
@@ -696,32 +702,32 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                   {isForeign && (
                     <div className='grid grid-cols-2 gap-lg p-md bg-primary/5 rounded-md border border-primary/10 animate-in fade-in zoom-in-95 duration-150'>
                       <div className='space-y-xs'>
-                        <Label htmlFor='payment-exchange-rate' className='text-label-caps uppercase text-primary/60'>
+                        <Label htmlFor='payment-exchange-rate' className='text-label-caps uppercase text-primary'>
                           {t('sales.registerPaymentModal.exchangeRate', 'Tasa de Cambio')}
                         </Label>
                         <Input
                           id='payment-exchange-rate'
-                          type='number'
-                          step='any'
+                          type='text'
+                          inputMode='decimal'
                           min='0'
-                          value={exchangeRate}
-                          onChange={e => setExchangeRate(e.target.value)}
+                          value={formatNumberInput(exchangeRate)}
+                          onChange={e => setExchangeRate(parseNumberInput(e.target.value))}
                           className='rounded-input bg-surface border-primary/20 font-data-mono text-data-mono'
                         />
-                        <p className='text-body-sm-bold text-muted-foreground'>
+                        <p className='text-body-sm-bold text-on-surface-deep'>
                           {t('sales.registerPaymentModal.exchangeRateHint', '1 {currency} = ? {base}. Precargada del día; ajustala si tu cotización es otra.', {
                             currency: selectedCurrencyCode, base: docCurrencyCode,
                           })}
                         </p>
                         {validationErrors.exchangeRate && (
                           <p className='flex items-center gap-xs text-label-caps uppercase text-error'>
-                            <AlertCircle size={13} className='shrink-0' />
+                            <AlertCircle className='w-4 h-4 shrink-0' />
                             <span>{validationErrors.exchangeRate}</span>
                           </p>
                         )}
                       </div>
                       <div className='space-y-xs'>
-                        <label className='text-label-caps uppercase text-primary/60'>
+                        <label className='text-label-caps uppercase text-primary'>
                           {t('sales.registerPaymentModal.foreignDueLabel', 'A cobrar ({currency})', { currency: selectedCurrencyCode })}
                         </label>
                         <div className='h-10 flex items-center px-md rounded-md bg-surface border border-primary/20 font-data-mono text-data-mono text-primary'>
@@ -729,7 +735,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                             ? formatLocalizedCurrency(calculatedForeignDue, selectedCurrencyCode)
                             : t('sales.registerPaymentModal.ratePending', 'Cargá la tasa para ver el equivalente')}
                         </div>
-                        <p className='text-body-sm-bold text-muted-foreground'>
+                        <p className='text-body-sm-bold text-on-surface-deep'>
                           {t('sales.registerPaymentModal.foreignDueHint', 'Equivalente del saldo calculado con la tasa. El vuelto se entrega en {base}.', { base: docCurrencyCode })}
                         </p>
                       </div>
@@ -742,17 +748,17 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
               <div className='bg-surface rounded-md border border-border-subtle shadow-whisper overflow-hidden'>
                 <div className='px-lg py-md border-b border-border-subtle bg-surface-muted flex items-center gap-md'>
                   <div className='size-7 bg-primary/10 rounded-md flex items-center justify-center text-primary'>
-                    <Building size={16} />
+                    <Building className='w-4 h-4' />
                   </div>
                   <h3 className='text-label-caps uppercase text-foreground'>{t('sales.registerPaymentModal.register', 'Registro Contable')}</h3>
                 </div>
                 <div className='p-lg grid grid-cols-1 md:grid-cols-2 gap-lg'>
                   <div className='space-y-sm'>
-                    <Label htmlFor='payment-method' className='text-label-caps uppercase text-muted-foreground'>{t('sales.registerPaymentModal.paymentMethod', 'Método de Pago')}</Label>
+                    <Label htmlFor='payment-method' className='text-label-caps uppercase text-on-surface-deep'>{t('sales.registerPaymentModal.paymentMethod', 'Método de Pago')}</Label>
                     <Select value={effectivePaymentMethodId} onValueChange={setPaymentMethodId}>
                       <SelectTrigger
                         id='payment-method'
-                        className='rounded-input border-border-subtle bg-surface-muted text-body-md-bold data-[placeholder]:text-muted-foreground'
+                        className='rounded-input border-border-subtle bg-surface-muted text-body-md-bold data-[placeholder]:text-on-surface-deep'
                       >
                         <SelectValue placeholder={t('sales.registerPaymentModal.select', 'Seleccionar...')}>
                           {selectedMethodLabel}
@@ -766,11 +772,11 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                     </Select>
                   </div>
                   <div className='space-y-sm'>
-                    <Label htmlFor='payment-cash-register' className='text-label-caps uppercase text-muted-foreground'>{t('sales.registerPaymentModal.cashRegister', 'Caja Operativa')}</Label>
+                    <Label htmlFor='payment-cash-register' className='text-label-caps uppercase text-on-surface-deep'>{t('sales.registerPaymentModal.cashRegister', 'Caja Operativa')}</Label>
                     <Select value={cashRegisterValue} onValueChange={setCashRegisterId}>
                       <SelectTrigger
                         id='payment-cash-register'
-                        className='rounded-input border-border-subtle bg-surface-muted text-body-md-bold data-[placeholder]:text-muted-foreground'
+                        className='rounded-input border-border-subtle bg-surface-muted text-body-md-bold data-[placeholder]:text-on-surface-deep'
                       >
                         <SelectValue placeholder={t('sales.registerPaymentModal.cashRegister.placeholder', 'Seleccionar caja...')}>
                           {selectedCashRegisterOption ? (
@@ -778,7 +784,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                               <span className='truncate'>{selectedCashRegisterOption.label}</span>
                               <span className={cn(
                                 'shrink-0 text-body-sm-bold',
-                                selectedCashRegisterOption.selectable ? 'text-success' : 'text-muted-foreground'
+                                selectedCashRegisterOption.selectable ? 'text-success' : 'text-on-surface-deep'
                               )}>
                                 {selectedCashRegisterOption.selectable
                                   ? t('sales.registerPaymentModal.cashRegister.open', 'Abierta')
@@ -794,7 +800,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                             <div className='flex flex-col gap-xs pr-6'>
                               <div className='flex items-center gap-sm'>
                                 <span className='text-body-md-bold text-foreground'>{opt.label}</span>
-                                <span className={cn('text-body-sm-bold', opt.selectable ? 'text-success' : 'text-muted-foreground')}>
+                                <span className={cn('text-body-sm-bold', opt.selectable ? 'text-success' : 'text-on-surface-deep')}>
                                   {opt.selectable
                                     ? t('sales.registerPaymentModal.cashRegister.open', 'Abierta')
                                     : t('sales.registerPaymentModal.cashRegister.otherBranch', 'Otra sucursal')}
@@ -803,10 +809,10 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                               {(opt.balanceLabel || opt.meta) && (
                                 <div className='flex items-center gap-sm'>
                                   {opt.balanceLabel && (
-                                    <span className='text-data-mono font-data-mono text-muted-foreground'>{opt.balanceLabel}</span>
+                                    <span className='text-data-mono font-data-mono text-on-surface-deep'>{opt.balanceLabel}</span>
                                   )}
                                   {opt.meta && (
-                                    <span className='text-body-sm text-muted-foreground'>{opt.meta}</span>
+                                    <span className='text-body-sm text-on-surface-deep'>{opt.meta}</span>
                                   )}
                                 </div>
                               )}
@@ -818,9 +824,9 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                     {cashRegisterHint && (
                       <p className={cn(
                         'flex items-start gap-xs text-label-caps uppercase mt-xs',
-                        !hasSelectableRegisters ? 'text-warning' : 'text-muted-foreground'
+                        !hasSelectableRegisters ? 'text-warning' : 'text-on-surface-deep'
                       )}>
-                        <AlertCircle size={13} className='mt-[1px] shrink-0' />
+                        <AlertCircle className='w-4 h-4 mt-[1px] shrink-0' />
                         <span>{cashRegisterHint}</span>
                       </p>
                     )}
@@ -833,14 +839,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                 <div className='px-lg py-md border-b border-primary/10 bg-primary/5 flex items-center justify-between'>
                   <div className='flex items-center gap-md'>
                     <div className='size-7 bg-primary rounded-md flex items-center justify-center text-on-primary'>
-                      <ArrowUpRight size={16} />
+                      <ArrowUpRight className='w-4 h-4' />
                     </div>
                     <h3 className='text-label-caps uppercase text-primary'>{t('sales.registerPaymentModal.summary', 'Resumen de Aplicación')}</h3>
                   </div>
                 </div>
                 <div className='p-lg grid grid-cols-1 md:grid-cols-2 gap-lg'>
                   <div className='space-y-sm'>
-                    <Label htmlFor='payment-amount-to-apply' className='text-label-caps uppercase text-muted-foreground'>
+                    <Label htmlFor='payment-amount-to-apply' className='text-label-caps uppercase text-on-surface-deep'>
                       {t('sales.registerPaymentModal.amountToApplyLabel', 'Monto a Aplicar a la Venta ({currency})', { currency: docCurrencyCode })}
                     </Label>
                     <Input
@@ -860,15 +866,15 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
                     )}
                   </div>
                   <div className='space-y-sm'>
-                    <Label className='text-label-caps uppercase text-muted-foreground'>
+                    <Label className='text-label-caps uppercase text-on-surface-deep'>
                       {t('sales.registerPaymentModal.changeLabel', 'Vuelto a Entregar')}
                       {isForeign && (
-                        <span className='ml-xs normal-case font-bold text-muted-foreground'>
+                        <span className='ml-xs normal-case font-bold text-on-surface-deep'>
                           {t('sales.registerPaymentModal.changeInDoc', '(en {base})', { base: docCurrencyCode })}
                         </span>
                       )}
                     </Label>
-                    <div className='h-12 flex items-center px-md bg-success/10 text-success font-black rounded-md border border-success/20 text-xl font-data-mono text-data-mono'>
+                    <div className='h-12 flex items-center px-md bg-success/10 text-success rounded-md border border-success/20 text-title-md font-data-mono text-data-mono'>
                       {formatLocalizedCurrency(change, sale?.currency)}
                     </div>
                   </div>
@@ -877,7 +883,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
 
               {/* OBSERVACIONES */}
               <div className='space-y-xs px-xs'>
-                <Label htmlFor='payment-notes' className='text-label-caps uppercase text-muted-foreground'>{t('sales.registerPaymentModal.notes.label', 'Notas del Operador')}</Label>
+                <Label htmlFor='payment-notes' className='text-label-caps uppercase text-on-surface-deep'>{t('sales.registerPaymentModal.notes.label', 'Notas del Operador')}</Label>
                 <Textarea
                   id='payment-notes'
                   value={notes}
@@ -889,9 +895,9 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
               </div>
 
               {formError && (
-                <div className='p-md bg-error-container text-error rounded-md flex items-center gap-md animate-in fade-in duration-150'>
-                  <AlertCircle className="text-error" size={20} />
-                  <span className='text-label-caps uppercase tracking-tight'>{formError}</span>
+                <div className='p-md bg-error-container text-on-error-container rounded-md flex items-center gap-md animate-in fade-in duration-150'>
+                  <AlertCircle className="w-5 h-5 shrink-0" aria-hidden='true' />
+                  <span className='text-body-md'>{formError}</span>
                 </div>
               )}
             </div>
@@ -899,7 +905,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
             <footer className='mt-lg flex flex-col sm:flex-row gap-md pt-lg border-t border-border-subtle'>
               <Button
                 type='button'
-                variant='outline'
+                variant='secondary'
                 onClick={() => handleDialogChange(false)}
                 className='sm:flex-1'
               >
@@ -907,13 +913,14 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }: Regist
               </Button>
               <Button
                 type='submit'
+                variant='primary'
                 disabled={isSubmitDisabled}
-                className='sm:flex-2'
+                className='sm:flex-1'
               >
                 {isSubmitting ? (
-                  <div className='flex items-center gap-sm'><Loader2 size={18} className='animate-spin' /> {t('sales.registerPaymentModal.loading', 'Procesando...')}</div>
+                  <div className='flex items-center gap-sm'><Loader2 className='w-5 h-5 animate-spin' /> {t('sales.registerPaymentModal.loading', 'Procesando...')}</div>
                 ) : (
-                  <div className='flex items-center gap-sm'><CheckCircle2 size={18} /> {t('sales.cobros.action.payment', 'Registrar Cobro')}</div>
+                  <div className='flex items-center gap-sm'><CheckCircle2 className='w-5 h-5' /> {t('sales.cobros.action.payment', 'Registrar Cobro')}</div>
                 )}
               </Button>
             </footer>

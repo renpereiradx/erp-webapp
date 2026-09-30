@@ -9,7 +9,6 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState, type Component
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import {
-  RefreshCw,
   Search,
   CreditCard,
   User,
@@ -23,10 +22,13 @@ import {
   Eye,
   List,
   Ban,
+  Package,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import PageHeader from '@/components/ui/PageHeader'
 import {
   Select,
   SelectContent,
@@ -60,27 +62,12 @@ import { useSearchFocusShortcut } from '@/hooks/useSearchFocusShortcut'
 import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
 import { normalizeCurrencyCode } from '@/utils/currencyUtils'
-
-// ── Tipos (forma normalizada que consume la vista) ──────────────────────────
-interface SaleRow {
-  id: string | number
-  date: string
-  client_name?: string
-  client?: { document_id?: string | number } | null
-  client_document_id?: string | number
-  status: string
-  total_amount: number
-  total_paid: number
-  balance_due: number
-  payment_progress: number
-  [key: string]: any
-}
-
-// ── Helpers de presentación (sin lógica de negocio) ─────────────────────────
-const formatDocumentId = (value: string | number | null | undefined): string => {
-  if (!value) return ''
-  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-}
+import {
+  formatDocumentId,
+  normalizeSaleRow,
+  normalizeStatusFilterForApi,
+  type SaleRow,
+} from '@/domain/sale/cobros'
 
 const currencyFormatter = (lang: string, currency: string) => {
   const code = normalizeCurrencyCode(currency)
@@ -96,50 +83,6 @@ const dateFormatterFactory = (lang: string) =>
   new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'es-PY', {
     dateStyle: 'medium',
   })
-
-const normalizeStatusFilterForApi = (status: string): string | undefined => {
-  if (!status || status === 'all') return undefined
-
-  const normalized = status.toString().trim().toUpperCase()
-  const map: Record<string, string> = {
-    PENDING: 'PENDING',
-    PENDING_PAYMENT: 'PENDING',
-    PARTIAL: 'PARTIAL',
-    PARTIAL_PAYMENT: 'PARTIAL',
-    PAID: 'PAID',
-    COMPLETED: 'PAID',
-    CANCELLED: 'CANCELLED',
-    CANCELED: 'CANCELLED',
-  }
-
-  return map[normalized] || normalized
-}
-
-const normalizeSaleStatus = (sale: Record<string, any>): string => {
-  const rawStatus =
-    sale?.payment_status || sale?.status || sale?.sale_status || ''
-  const normalizedRaw = rawStatus.toString().trim().toUpperCase()
-
-  const normalizedFromRaw: Record<string, string> = {
-    PENDING: 'PENDING',
-    PENDING_PAYMENT: 'PENDING',
-    PARTIAL: 'PARTIAL',
-    PARTIAL_PAYMENT: 'PARTIAL',
-    PAID: 'PAID',
-    COMPLETED: 'PAID',
-    CANCELLED: 'CANCELLED',
-    CANCELED: 'CANCELLED',
-  }
-
-  if (normalizedFromRaw[normalizedRaw]) return normalizedFromRaw[normalizedRaw]
-
-  const balanceDue = Number(sale?.remaining_amount ?? sale?.balance_due) || 0
-  const totalPaid = Number(sale?.paid_amount ?? sale?.total_paid) || 0
-
-  if (balanceDue <= 0) return 'PAID'
-  if (totalPaid > 0) return 'PARTIAL'
-  return 'PENDING'
-}
 
 // ── Fila memoizada (desktop) ────────────────────────────────────────────────
 interface SaleRowProps {
@@ -179,13 +122,13 @@ const SaleRow = memo(({
             {sale.client_name}
           </span>
           {(sale.client?.document_id || sale.client_document_id) && (
-            <span className='text-body-sm-bold text-muted-foreground'>
+            <span className='text-body-sm-bold text-on-surface-deep'>
               {t('sales.cobros.client.cid', { id: formatDocumentId(sale.client?.document_id || sale.client_document_id) })}
             </span>
           )}
         </div>
       </TableCell>
-      <TableCell className='text-body-md text-muted-foreground'>
+      <TableCell className='text-data-mono font-data-mono text-on-surface-deep'>
         {formatDate(sale.date)}
       </TableCell>
       <TableCell className='text-center'>
@@ -208,7 +151,7 @@ const SaleRow = memo(({
               }}
             />
           </div>
-          <span className='font-data-mono text-data-mono text-muted-foreground'>
+          <span className='font-data-mono text-data-mono text-on-surface-deep'>
             {Math.round(sale.payment_progress || 0)}%
           </span>
         </div>
@@ -231,8 +174,9 @@ const SaleRow = memo(({
               }}
               className='h-8 w-8 p-0 text-primary hover:bg-primary/10 hover:text-primary rounded-full'
               title={t('sales.cobros.action.payment', 'Registrar Cobro')}
+              aria-label={t('sales.cobros.action.payment', 'Registrar Cobro')}
             >
-              <CreditCard size={16} />
+              <CreditCard className='w-4 h-4' />
             </Button>
           )}
           <DropdownMenu>
@@ -242,8 +186,9 @@ const SaleRow = memo(({
                 size='sm'
                 className='h-8 w-8 p-0 hover:bg-surface-muted rounded-full'
                 onClick={e => e.stopPropagation()}
+                aria-label={t('sales.cobros.table.actions', 'Acciones')}
               >
-                <MoreVertical size={16} className='text-muted-foreground' />
+                <MoreVertical className='w-4 h-4 text-on-surface-deep' />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -254,14 +199,14 @@ const SaleRow = memo(({
                 onClick={() => onDetails(sale.id)}
                 className='gap-2 py-2 text-body-md rounded'
               >
-                <Eye size={16} />
+                <Eye className='w-4 h-4' />
                 {t('sales.cobros.action.details', 'Ver Detalles')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onHistory(sale.id)}
                 className='gap-2 py-2 text-body-md rounded'
               >
-                <List size={16} />
+                <List className='w-4 h-4' />
                 {t('sales.cobros.action.history', 'Historial de Cobros')}
               </DropdownMenuItem>
               {sale.status !== 'CANCELLED' && (
@@ -269,7 +214,7 @@ const SaleRow = memo(({
                   onClick={() => onCancel(sale)}
                   className='gap-2 py-2 text-body-md rounded text-error'
                 >
-                  <Ban size={16} />
+                  <Ban className='w-4 h-4' />
                   {t('sales.cobros.action.cancel', 'Anular Venta')}
                 </DropdownMenuItem>
               )}
@@ -303,17 +248,17 @@ const SaleCard = memo(({
       : 0
 
   return (
-    <div className='p-md space-y-md transition-colors border-b border-divider'>
+    <div className='p-md space-y-md transition-colors border-b border-border-subtle'>
       <div className='flex items-center justify-between' onClick={() => onDetails(sale.id)}>
         <div className='flex items-center gap-sm'>
-          <div className='size-8 rounded-full bg-surface-muted flex items-center justify-center text-muted-foreground'>
-            <User size={14} />
+          <div className='size-8 rounded-full bg-surface-muted flex items-center justify-center text-on-surface-deep'>
+            <User className='w-4 h-4' />
           </div>
           <div className='flex flex-col'>
             <span className='text-body-md-bold text-foreground'>
               {sale.client_name}
             </span>
-            <span className='font-data-mono text-data-mono text-muted-foreground'>
+            <span className='font-data-mono text-data-mono text-on-surface-deep'>
               #{sale.id}
             </span>
           </div>
@@ -323,15 +268,15 @@ const SaleCard = memo(({
 
       <div className='grid grid-cols-2 gap-x-4 gap-y-sm' onClick={() => onDetails(sale.id)}>
         <div>
-          <p className='text-label-caps uppercase text-muted-foreground mb-xs'>
+          <p className='text-label-caps uppercase text-on-surface-deep mb-xs'>
             {t('sales.cobros.table.date', 'Fecha')}
           </p>
-          <p className='text-body-md text-muted-foreground'>
+          <p className='text-data-mono font-data-mono text-on-surface-deep'>
             {formatDate(sale.date)}
           </p>
         </div>
         <div className='text-right'>
-          <p className='text-label-caps uppercase text-muted-foreground mb-xs'>
+          <p className='text-label-caps uppercase text-on-surface-deep mb-xs'>
             {t('sales.cobros.table.total', 'Total')}
           </p>
           <p className='font-data-mono text-data-mono text-foreground'>
@@ -341,7 +286,7 @@ const SaleCard = memo(({
 
         <div className='col-span-2 space-y-sm'>
           <div className='flex justify-between items-end'>
-            <p className='text-label-caps uppercase text-muted-foreground'>
+            <p className='text-label-caps uppercase text-on-surface-deep'>
               {t('sales.cobros.card.progress', 'Progreso de Cobro')}
             </p>
             <p className='font-data-mono text-data-mono text-error'>
@@ -366,32 +311,33 @@ const SaleCard = memo(({
             onClick={() => onPayment(sale)}
             className='flex-1 h-9 text-body-sm-bold'
           >
-            <CreditCard size={14} className='mr-1.5' />
+            <CreditCard className='w-4 h-4 mr-1.5' />
             {t('sales.cobros.action.payment', 'Registrar Cobro')}
           </Button>
         )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              variant='outline'
+              variant='secondary'
               size='sm'
-              className='h-9 px-3 text-body-sm-bold text-muted-foreground'
+              className='h-9 px-3 text-body-sm-bold text-on-surface-deep'
+              aria-label={t('action.more', 'Más opciones')}
             >
-              {t('action.more', 'Más opciones')} <MoreVertical size={14} className='ml-1 text-muted-foreground' />
+              {t('action.more', 'Más opciones')} <MoreVertical className='w-4 h-4 ml-1 text-on-surface-deep' />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end' className='w-48 p-1'>
             <DropdownMenuItem onClick={() => onDetails(sale.id)} className='gap-2 text-body-md'>
-              <Eye size={14} />
+              <Eye className='w-4 h-4' />
               {t('sales.cobros.action.details', 'Ver Detalles')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onHistory(sale.id)} className='gap-2 text-body-md'>
-              <List size={14} />
+              <List className='w-4 h-4' />
               {t('sales.cobros.action.history', 'Historial de Cobros')}
             </DropdownMenuItem>
             {sale.status !== 'CANCELLED' && (
               <DropdownMenuItem onClick={() => onCancel(sale)} className='gap-2 text-body-md text-error'>
-                <Ban size={14} />
+                <Ban className='w-4 h-4' />
                 {t('sales.cobros.action.cancel', 'Anular Venta')}
               </DropdownMenuItem>
             )}
@@ -407,7 +353,7 @@ SaleCard.displayName = 'SaleCard'
 // ── Configuración de KPIs (estático; solo cambia la clase semántica) ──────────
 interface KpiConfig {
   label: string
-  icon: ComponentType<{ size?: number; className?: string }>
+  icon: ComponentType<{ className?: string }>
   valueClass: string
 }
 
@@ -468,12 +414,17 @@ const SalePayment = () => {
   const [cancelPreviewData, setCancelPreviewData] = useState<any>(null)
   const [isCancelling, setIsCancelling] = useState(false)
 
-  // F2 → foco al buscador de ventas (DESIGN.md §12); muere si hay un modal abierto.
-  const searchInputRef = useRef<HTMLInputElement>(null)
+  // F2 → foco al filtro de cliente (buscador principal de la página,
+  // DESIGN.md §12); muere si hay un modal abierto. Al cargar, el foco cae
+  // en el mismo input para empezar a filtrar sin clic.
+  const clientFilterRef = useRef<HTMLInputElement>(null)
   useSearchFocusShortcut({
     enabled: !(isPaymentModalOpen || showCancelPreview),
-    inputRef: searchInputRef,
+    inputRef: clientFilterRef,
   })
+  useEffect(() => {
+    clientFilterRef.current?.focus()
+  }, [])
 
   // Formatters memoizados
   const formatCurrency = useCallback(
@@ -533,45 +484,7 @@ const SalePayment = () => {
       }
 
       const normalizedData: SaleRow[] = (result?.data || [])
-        .map((item: any) => {
-          const sale = item.sale || item
-          const totalPaid = Number(sale.paid_amount ?? sale.total_paid ?? sale.amount_paid) || 0
-          const rawTotal = Number(sale.total_amount) || Number(sale.total) || 0
-          const rawBalance =
-            (sale.remaining_amount !== undefined && sale.remaining_amount !== null)
-              ? Number(sale.remaining_amount)
-              : (sale.balance_due !== undefined && sale.balance_due !== null)
-                ? Number(sale.balance_due)
-                : null
-
-          let finalTotal = rawTotal
-          let finalBalance =
-            rawBalance !== null ? rawBalance : Math.max(0, rawTotal - totalPaid)
-
-          const status = normalizeSaleStatus({ ...sale, total_paid: totalPaid, balance_due: finalBalance })
-
-          if (status === 'PAID' || status === 'CANCELLED') finalBalance = 0
-
-          let paymentProgress =
-            finalTotal > 0 ? ((finalTotal - finalBalance) / finalTotal) * 100 : 0
-          if (status === 'CANCELLED') paymentProgress = 0
-
-          return {
-            ...sale,
-            id: sale.sale_id || sale.id,
-            status: status,
-            date: sale.sale_date || sale.issue_date || sale.date,
-            client_name:
-              sale.client_name ||
-              sale.client?.name ||
-              (item.client && item.client.name) ||
-              'Ocasional',
-            total_amount: finalTotal,
-            total_paid: totalPaid,
-            balance_due: finalBalance,
-            payment_progress: paymentProgress,
-          }
-        })
+        .map((item: any) => normalizeSaleRow(item))
         .sort((a: SaleRow, b: SaleRow) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
       const paginationData = result?.pagination
@@ -846,7 +759,7 @@ const SalePayment = () => {
       cfg: {
         label: t('sales.cobros.kpi.cancelledSales', 'Ventas Anuladas'),
         icon: Ban,
-        valueClass: 'text-muted-foreground',
+        valueClass: 'text-on-surface-deep',
       },
       count: filteredSales.filter(s => s.status === 'CANCELLED').length,
       amount: filteredSales.reduce(
@@ -858,25 +771,12 @@ const SalePayment = () => {
 
   return (
     <div className='min-h-screen bg-background'>
-      <div className='mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl space-y-xl'>
-        {/* Header */}
-        <header className='flex flex-col gap-2 border-l-4 border-primary pl-4'>
-          <h1 className='text-headline-lg text-foreground tracking-tight leading-none'>
-            {t('sales.cobros.page.title', 'Cobros de Ventas')}
-          </h1>
-          <p className='text-body-md text-muted-foreground'>
-            {t('sales.cobros.page.subtitle', 'Gestión centralizada de cobros')}
-          </p>
-          <div className='mt-sm'>
-            <Button variant='outline' size='sm' onClick={handleRefresh} className='h-9'>
-              <RefreshCw
-                size={14}
-                className={`mr-2 ${isLoading ? 'animate-spin' : ''}`}
-              />
-              {t('sales.cobros.action.sync', 'Sincronizar')}
-            </Button>
-          </div>
-        </header>
+      <div className='mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl space-y-lg animate-in fade-in duration-150'>
+        <PageHeader
+          breadcrumb={t('sales.title', 'Ventas')}
+          title={t('sales.cobros.page.title', 'Cobros de Ventas')}
+          subtitle={t('sales.cobros.page.subtitle', 'Gestión centralizada de cobros')}
+        />
 
         {/* KPI Cards */}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md'>
@@ -887,17 +787,17 @@ const SalePayment = () => {
             >
               <div className='flex items-center justify-between'>
                 <div className='p-sm bg-surface-muted rounded-md'>
-                  <cfg.icon size={20} className={cfg.valueClass} />
+                  <cfg.icon className={`w-5 h-5 ${cfg.valueClass}`} />
                 </div>
                 <Badge variant='secondary' size='sm'>
                   {t('sales.cobros.kpi.operations', { count })}
                 </Badge>
               </div>
               <div>
-                <p className='text-label-caps uppercase text-muted-foreground leading-none mb-sm'>
+                <p className='text-label-caps uppercase text-on-surface-deep mb-sm'>
                   {cfg.label}
                 </p>
-                <h2 className='text-title-md font-data-mono text-data-mono text-foreground tracking-tight'>
+                <h2 className='text-title-md font-data-mono text-data-mono text-foreground'>
                   {formatCurrency(amount)}
                 </h2>
               </div>
@@ -910,13 +810,15 @@ const SalePayment = () => {
           <div className='flex flex-col xl:flex-row items-end gap-md'>
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md flex-1 w-full'>
               <div className='space-y-xs min-w-0'>
-                <label className='text-body-sm-bold text-muted-foreground mb-xs block'>
+                <Label htmlFor='cobros-filter-client' className='text-body-sm-bold text-on-surface-deep mb-xs'>
                   {t('sales.cobros.filter.client', 'Cliente')}
-                </label>
+                </Label>
                 <div className='relative'>
-                  <User className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground size-4' />
+                  <User className='absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-deep w-4 h-4' />
                   <Input
-                    placeholder={t('sales.cobros.filter.clientPlaceholder', 'Filtrar cliente...')}
+                    id='cobros-filter-client'
+                    ref={clientFilterRef}
+                    placeholder={t('sales.cobros.filter.clientPlaceholder', 'Filtrar cliente... (F2)')}
                     value={selectedClientName}
                     onChange={e => setSelectedClientName(e.target.value)}
                     className='pl-10 min-w-0 w-full'
@@ -925,11 +827,11 @@ const SalePayment = () => {
               </div>
 
               <div className='space-y-xs min-w-0'>
-                <label className='text-body-sm-bold text-muted-foreground mb-xs block'>
+                <Label htmlFor='cobros-filter-status' className='text-body-sm-bold text-on-surface-deep mb-xs'>
                   {t('sales.cobros.filter.status', 'Estado')}
-                </label>
+                </Label>
                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                  <SelectTrigger className='min-w-0 w-full'>
+                  <SelectTrigger id='cobros-filter-status' className='min-w-0 w-full'>
                     <SelectValue placeholder={t('sales.cobros.filter.status', 'Estado')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -953,10 +855,11 @@ const SalePayment = () => {
               </div>
 
               <div className='space-y-xs min-w-0'>
-                <label className='text-body-sm-bold text-muted-foreground mb-xs block'>
+                <Label htmlFor='cobros-filter-from' className='text-body-sm-bold text-on-surface-deep mb-xs'>
                   {t('sales.cobros.filter.from', 'Desde')}
-                </label>
+                </Label>
                 <Input
+                  id='cobros-filter-from'
                   type='date'
                   value={dateRange.start_date}
                   onChange={e =>
@@ -970,10 +873,11 @@ const SalePayment = () => {
               </div>
 
               <div className='space-y-xs min-w-0'>
-                <label className='text-body-sm-bold text-muted-foreground mb-xs block'>
+                <Label htmlFor='cobros-filter-to' className='text-body-sm-bold text-on-surface-deep mb-xs'>
                   {t('sales.cobros.filter.to', 'Hasta')}
-                </label>
+                </Label>
                 <Input
+                  id='cobros-filter-to'
                   type='date'
                   value={dateRange.end_date}
                   onChange={e =>
@@ -993,11 +897,11 @@ const SalePayment = () => {
                 onClick={applyFilters}
                 className='flex-1 xl:flex-none'
               >
-                <Filter size={16} className='mr-1.5' />
+                <Filter className='w-4 h-4 mr-1.5' />
                 {t('sales.cobros.action.filter', 'Filtrar')}
               </Button>
               <Button
-                variant='outline'
+                variant='secondary'
                 onClick={handleClearFilters}
                 className='min-w-24'
               >
@@ -1007,63 +911,55 @@ const SalePayment = () => {
           </div>
         </section>
 
-        {/* Table Container */}
+        {/* Table Container — card con tabla (§6.3): toolbar + tabla full-bleed */}
         <section className='bg-surface rounded-md border border-border-subtle shadow-whisper overflow-hidden'>
           <div className='p-md border-b border-border-subtle bg-surface flex justify-between items-center gap-md'>
             <div className='relative w-full max-w-md'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground size-4' />
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-deep w-4 h-4' />
               <Input
-                ref={searchInputRef}
+                id='cobros-search'
                 aria-label={t('sales.cobros.search.label', 'Buscar ventas')}
-                placeholder={t('sales.cobros.search.placeholder', 'Buscar venta (ID o cliente) (F2)...')}
+                placeholder={t('sales.cobros.search.placeholder', 'Buscar en resultados (ID o cliente)...')}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className='pl-9'
+                className='pl-9 bg-surface'
               />
             </div>
-            <div className='text-label-caps uppercase text-muted-foreground bg-surface-muted border border-border-subtle px-sm py-xs rounded-md whitespace-nowrap tabular-nums'>
+            <div className='text-label-caps uppercase text-on-surface-deep bg-surface-muted border border-border-subtle px-sm py-xs rounded-md whitespace-nowrap tabular-nums'>
               {t('sales.cobros.results', { count: displaySales.length })}
             </div>
           </div>
 
           {/* Estados de datos */}
           {isLoading && displaySales.length === 0 ? (
-            <GenericSkeletonList count={6} lineHeight={44} data-testid='cobros-loading' />
-          ) : displaySales.length === 0 ? (
-            <DataState
-              variant='empty'
-              title={t('sales.cobros.empty.title', 'Sin resultados')}
-              description={t(
-                'sales.cobros.empty.description',
-                'No se encontraron ventas con los filtros seleccionados.',
-              )}
-              testId='cobros-empty'
-            />
+            <div className='p-lg'>
+              <GenericSkeletonList count={6} lineHeight={44} data-testid='cobros-loading' />
+            </div>
           ) : (
             <>
               <div className='hidden lg:block overflow-x-auto'>
                 <Table className='min-w-[1000px]'>
                   <TableHeader>
                     <TableRow className='bg-surface-muted hover:bg-surface-muted border-b border-border-subtle'>
-                      <TableHead className='text-label-caps uppercase text-muted-foreground'>
+                      <TableHead className='text-label-caps uppercase text-on-surface-deep'>
                         {t('sales.cobros.table.id', 'ID')}
                       </TableHead>
-                      <TableHead className='text-label-caps uppercase text-muted-foreground'>
+                      <TableHead className='text-label-caps uppercase text-on-surface-deep'>
                         {t('sales.cobros.table.client', 'Cliente')}
                       </TableHead>
-                      <TableHead className='text-label-caps uppercase text-muted-foreground'>
+                      <TableHead className='text-label-caps uppercase text-on-surface-deep'>
                         {t('sales.cobros.table.date', 'Fecha')}
                       </TableHead>
-                      <TableHead className='text-label-caps uppercase text-muted-foreground text-center'>
+                      <TableHead className='text-label-caps uppercase text-on-surface-deep text-center'>
                         {t('sales.cobros.table.status', 'Estado')}
                       </TableHead>
-                      <TableHead className='text-label-caps uppercase text-muted-foreground text-right'>
+                      <TableHead className='text-label-caps uppercase text-on-surface-deep text-right'>
                         {t('sales.cobros.table.progress', 'Progreso')}
                       </TableHead>
-                      <TableHead className='text-label-caps uppercase text-muted-foreground text-right'>
+                      <TableHead className='text-label-caps uppercase text-on-surface-deep text-right'>
                         {t('sales.cobros.table.total', 'Total')}
                       </TableHead>
-                      <TableHead className='text-label-caps uppercase text-muted-foreground text-right'>
+                      <TableHead className='text-label-caps uppercase text-on-surface-deep text-right'>
                         {t('sales.cobros.table.balance', 'Pendiente')}
                       </TableHead>
                       <TableHead className='w-16 text-right'>
@@ -1074,40 +970,84 @@ const SalePayment = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {displaySales.map(sale => (
-                      <SaleRow
-                        key={sale.id}
-                        sale={sale}
-                        formatDate={formatDate}
-                        formatCurrency={formatCurrency}
-                        onPayment={handleOpenPayment}
-                        onCancel={handleCancelSale}
-                        onDetails={handleDetails}
-                        onHistory={handleHistory}
-                        getStatusBadge={getStatusBadge}
-                        t={t}
-                      />
-                    ))}
+                    {displaySales.length === 0 ? (
+                      <TableRow className='hover:bg-transparent border-0'>
+                        <TableCell colSpan={8} className='py-xl' data-testid='cobros-empty'>
+                          <div className='flex flex-col items-center justify-center gap-sm text-on-surface-deep'>
+                            <div className='size-16 rounded-full bg-surface-muted flex items-center justify-center'>
+                              <Package size={28} strokeWidth={1.5} className='text-on-surface-deep' aria-hidden='true' />
+                            </div>
+                            <p className='text-body-md-bold text-foreground'>
+                              {t('sales.cobros.empty.title', 'Sin resultados')}
+                            </p>
+                            <p className='text-body-md text-on-surface-deep'>
+                              {t(
+                                'sales.cobros.empty.description',
+                                'No se encontraron ventas con los filtros seleccionados.',
+                              )}
+                            </p>
+                            <Button variant='secondary' size='sm' onClick={handleClearFilters}>
+                              {t('sales.cobros.empty.action', 'Limpiar filtros')}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      displaySales.map(sale => (
+                        <SaleRow
+                          key={sale.id}
+                          sale={sale}
+                          formatDate={formatDate}
+                          formatCurrency={formatCurrency}
+                          onPayment={handleOpenPayment}
+                          onCancel={handleCancelSale}
+                          onDetails={handleDetails}
+                          onHistory={handleHistory}
+                          getStatusBadge={getStatusBadge}
+                          t={t}
+                        />
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
 
               {/* Mobile Card View */}
               <div className='lg:hidden divide-y divide-border-subtle'>
-                {displaySales.map(sale => (
-                  <SaleCard
-                    key={sale.id}
-                    sale={sale}
-                    formatDate={formatDate}
-                    formatCurrency={formatCurrency}
-                    onPayment={handleOpenPayment}
-                    onCancel={handleCancelSale}
-                    onDetails={handleDetails}
-                    onHistory={handleHistory}
-                    getStatusBadge={getStatusBadge}
-                    t={t}
-                  />
-                ))}
+                {displaySales.length === 0 ? (
+                  <div className='flex flex-col items-center justify-center gap-sm py-xl text-on-surface-deep' data-testid='cobros-empty-mobile'>
+                    <div className='size-16 rounded-full bg-surface-muted flex items-center justify-center'>
+                      <Package size={28} strokeWidth={1.5} className='text-on-surface-deep' aria-hidden='true' />
+                    </div>
+                    <p className='text-body-md-bold text-foreground'>
+                      {t('sales.cobros.empty.title', 'Sin resultados')}
+                    </p>
+                    <p className='text-body-md text-on-surface-deep'>
+                      {t(
+                        'sales.cobros.empty.description',
+                        'No se encontraron ventas con los filtros seleccionados.',
+                      )}
+                    </p>
+                    <Button variant='secondary' size='sm' onClick={handleClearFilters}>
+                      {t('sales.cobros.empty.action', 'Limpiar filtros')}
+                    </Button>
+                  </div>
+                ) : (
+                  displaySales.map(sale => (
+                    <SaleCard
+                      key={sale.id}
+                      sale={sale}
+                      formatDate={formatDate}
+                      formatCurrency={formatCurrency}
+                      onPayment={handleOpenPayment}
+                      onCancel={handleCancelSale}
+                      onDetails={handleDetails}
+                      onHistory={handleHistory}
+                      getStatusBadge={getStatusBadge}
+                      t={t}
+                    />
+                  ))
+                )}
               </div>
             </>
           )}
@@ -1115,14 +1055,14 @@ const SalePayment = () => {
           {/* Pagination Footer */}
           {pagination.total_records > localPageSize && (
             <div className='p-md border-t border-border-subtle bg-surface-muted flex flex-col sm:flex-row items-center justify-between gap-md'>
-              <div className='text-label-caps uppercase text-muted-foreground tabular-nums'>
+              <div className='text-label-caps uppercase text-on-surface-deep tabular-nums'>
                 {t('sales.cobros.pagination.showing', {
                   from: (localPage - 1) * localPageSize + 1,
                   to: Math.min(localPage * localPageSize, pagination.total_records),
                   total: pagination.total_records,
                 })}
                 {pagination.total_pages > 1 && (
-                  <span className='ml-2 text-muted-foreground'>
+                  <span className='ml-2 text-on-surface-deep'>
                     {t('sales.cobros.pagination.serverPage', {
                       page: pagination.page,
                       totalPages: pagination.total_pages,
@@ -1132,7 +1072,7 @@ const SalePayment = () => {
               </div>
               <div className='flex items-center gap-sm'>
                 <Button
-                  variant='outline'
+                  variant='secondary'
                   size='sm'
                   disabled={(localPage === 1 && pagination.page === 1) || isLoading}
                   onClick={() => {
@@ -1145,7 +1085,7 @@ const SalePayment = () => {
                   }}
                   className='text-label-caps uppercase'
                 >
-                  <ChevronLeft size={14} className='mr-1' />
+                  <ChevronLeft className='w-4 h-4 mr-1' />
                   {t('sales.cobros.pagination.previous', 'Anterior')}
                 </Button>
 
@@ -1154,7 +1094,7 @@ const SalePayment = () => {
                 </span>
 
                 <Button
-                  variant='outline'
+                  variant='secondary'
                   size='sm'
                   disabled={(localPage * localPageSize >= rawSales.length && pagination.page >= pagination.total_pages) || isLoading}
                   onClick={() => {
@@ -1167,7 +1107,7 @@ const SalePayment = () => {
                   className='text-label-caps uppercase'
                 >
                   {t('sales.cobros.pagination.next', 'Siguiente')}
-                  <ChevronRight size={14} className='ml-1' />
+                  <ChevronRight className='w-4 h-4 ml-1' />
                 </Button>
               </div>
             </div>
@@ -1195,7 +1135,7 @@ const SalePayment = () => {
           footer={
             <div className='flex flex-col-reverse sm:flex-row gap-sm'>
               <Button
-                variant='outline'
+                variant='secondary'
                 className='flex-1'
                 onClick={() => setShowCancelPreview(false)}
               >
@@ -1215,7 +1155,7 @@ const SalePayment = () => {
           }
         >
           <div className='space-y-md'>
-            <p className='text-body-md text-muted-foreground'>
+            <p className='text-body-md text-on-surface-deep'>
               {t('sales.cobros.cancel.message', 'Esta acción revertirá los cobros y devolverá el stock. Cliente:')}{' '}
               <span className='text-body-md-bold text-error'>
                 {saleToCancel?.client_name}

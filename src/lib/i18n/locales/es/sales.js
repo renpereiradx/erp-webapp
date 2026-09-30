@@ -606,7 +606,6 @@ export const sales = {
   'sales.cancelSale.confirm': 'Sí, Anular',
 
   // Historial
-  'sales.status.paid': 'Pagada',
   'sales.history.quickSearch': 'Búsqueda rápida',
   'sales.history.searchPlaceholder': 'Cliente o #Venta',
   'sales.history.from': 'Desde',
@@ -646,7 +645,7 @@ export const sales = {
   'sales.cobros.action.history': 'Historial de Cobros',
   'sales.cobros.action.cancel': 'Anular Venta',
   'sales.cobros.filter.client': 'Cliente',
-  'sales.cobros.filter.clientPlaceholder': 'Filtrar cliente...',
+  'sales.cobros.filter.clientPlaceholder': 'Filtrar cliente... (F2)',
   'sales.cobros.filter.status': 'Estado',
   'sales.cobros.filter.from': 'Desde',
   'sales.cobros.filter.to': 'Hasta',
@@ -664,7 +663,7 @@ export const sales = {
   'sales.cobros.kpi.cancelledSales': 'Ventas Anuladas',
   'sales.cobros.kpi.operations': '{count} OP',
   'sales.cobros.search.label': 'Buscar ventas',
-  'sales.cobros.search.placeholder': 'Buscar venta (ID o cliente) (F2)...',
+  'sales.cobros.search.placeholder': 'Buscar en resultados (ID o cliente)...',
   'sales.cobros.results': '{count} Resultados',
   'sales.cobros.table.id': 'ID',
   'sales.cobros.table.client': 'Cliente',
@@ -679,6 +678,7 @@ export const sales = {
   'sales.cobros.empty.title': 'Sin resultados',
   'sales.cobros.empty.description':
     'No se encontraron ventas con los filtros seleccionados.',
+  'sales.cobros.empty.action': 'Limpiar filtros',
   'sales.cobros.error.title': 'Error al cargar',
   'sales.cobros.error.load': 'Error al cargar los cobros de ventas.',
   'sales.cobros.pagination.showing':
