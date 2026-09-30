@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { useBranch } from '@/contexts/BranchContext'
 import { useReservationsEnabled } from '@/store/useBusinessConfigStore'
 import { saleService } from '@/services/saleService'
-import { formatCurrency } from '@/utils/currencyUtils'
+import { formatCurrency, formatNumber } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import { computeForeignDue } from '@/domain/sale/calculations/foreignPayment'
@@ -248,6 +248,10 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     return saleService.calculateLocalTotals(items)
   }, [items])
 
+  // Unidades totales del carrito: badge "líneas · unidades" del panel derecho
+  // (mismo formato que el wizard de compras).
+  const totalUnits = items.reduce((s, i) => s + (Number(i.quantity) || 0), 0)
+
   const baseCurrency = currencies.find((c) => c.is_base || c.is_base_currency)
   const baseCurrencyCode = baseCurrency?.code || 'PYG'
   const selectedCurrency = currencies.find((c) => String(c.id) === String(currencyId))
@@ -379,6 +383,32 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
     payment: t('sales.checkoutWizard.step.payment', 'Pago'),
     collection: t('sales.checkoutWizard.step.collection', 'Cobro'),
   }
+
+  // Hints de teclado visibles en el footer (discoverability, patrón del wizard
+  // de compras §6.9). Base común + específicos del paso actual.
+  const hints = useMemo<Array<{ kbd: string; label: string }>>(() => {
+    const base: Array<{ kbd: string; label: string }> = [
+      {
+        kbd: primaryLabel,
+        label: isLastStep
+          ? t('sales.checkoutWizard.hints.confirm', 'Confirmar')
+          : t('sales.checkoutWizard.hints.next', 'Avanzar'),
+      },
+      { kbd: t('sales.checkoutWizard.hints.enterKey', 'Enter'), label: t('sales.checkoutWizard.hints.advance', 'Avanzar') },
+      { kbd: 'Esc', label: t('sales.checkoutWizard.hints.back', 'Volver') },
+      { kbd: 'F2', label: t('sales.checkoutWizard.hints.focus', 'Foco') },
+    ]
+    if (currentStep === 'client') {
+      base.push({ kbd: 'F3', label: t('sales.checkoutWizard.hints.searchClient', 'Buscar cliente') })
+    }
+    if (currentStep === 'pending') {
+      base.push({ kbd: '↑↓', label: t('sales.checkoutWizard.hints.navigate', 'Navegar') })
+    }
+    if (currentStep === 'payment') {
+      base.push({ kbd: '[1..9]', label: t('sales.checkoutWizard.hints.method', 'Método de pago') })
+    }
+    return base
+  }, [primaryLabel, isLastStep, currentStep, t])
 
   if (!isOpen) return null
 
@@ -554,47 +584,60 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
             )}
           </div>
 
-          {/* Footer con acciones */}
-          <div className="px-6 py-4 border-t border-divider bg-surface-muted flex items-center gap-2">
-            <Button
-              variant="ghost"
-              onClick={handleBack}
-              disabled={isProcessingSale}
-              className="h-12 px-4 text-on-surface-deep hover:bg-surface-subtle"
-            >
-              <ChevronLeft size={16} className="mr-1" aria-hidden="true" />
-              {t('sales.checkoutWizard.action.back', 'Volver')}
-            </Button>
-            <div className="flex-1" />
-            {isLastStep && (
+          {/* Footer con acciones (patrón §6.9: hints de teclado + botones) */}
+          <div className="px-6 py-4 border-t border-divider bg-surface-muted space-y-3">
+            {/* Hints de teclado */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm text-on-surface-deep">
+              {hints.map((h, i) => (
+                <span key={i} className="inline-flex items-center gap-1">
+                  <kbd className="font-data-mono px-1.5 py-0.5 rounded-xs border border-divider bg-surface text-foreground text-body-sm-bold leading-none">
+                    {h.kbd}
+                  </kbd>
+                  <span>{h.label}</span>
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
               <Button
-                variant="outline"
-                onClick={onLeavePending}
+                variant="ghost"
+                onClick={handleBack}
                 disabled={isProcessingSale}
-                className="h-12 px-4"
+                className="h-12 px-4 text-on-surface-deep hover:bg-surface-subtle"
               >
-                {t('sales.checkoutWizard.action.leavePending', 'Dejar pendiente')}
+                <ChevronLeft size={16} className="mr-1" aria-hidden="true" />
+                {t('sales.checkoutWizard.action.back', 'Volver')}
               </Button>
-            )}
-            <Button
-              variant="primary"
-              onClick={handlePrimary}
-              disabled={isProcessingSale || !isStepValid()}
-              className="h-12 px-6"
-              data-testid="wizard-primary-action"
-            >
-              {isProcessingSale ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                  {t('sales.checkoutWizard.action.processing', 'Procesando...')}
-                </>
-              ) : (
-                <>
-                  {primaryActionLabel}
-                  <span className="ml-2 text-body-sm font-data-mono opacity-80">({primaryLabel})</span>
-                </>
+              <div className="flex-1" />
+              {isLastStep && (
+                <Button
+                  variant="outline"
+                  onClick={onLeavePending}
+                  disabled={isProcessingSale}
+                  className="h-12 px-4"
+                >
+                  {t('sales.checkoutWizard.action.leavePending', 'Dejar pendiente')}
+                </Button>
               )}
-            </Button>
+              <Button
+                variant="primary"
+                onClick={handlePrimary}
+                disabled={isProcessingSale || !isStepValid()}
+                className="h-12 px-6"
+                data-testid="wizard-primary-action"
+              >
+                {isProcessingSale ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                    {t('sales.checkoutWizard.action.processing', 'Procesando...')}
+                  </>
+                ) : (
+                  <>
+                    {primaryActionLabel}
+                    <span className="ml-2 text-body-sm font-data-mono opacity-80">({primaryLabel})</span>
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -602,14 +645,14 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
         <div className="md:w-[360px] flex flex-col bg-surface border-t md:border-t-0 md:border-l border-divider min-h-0">
           <div className="px-5 py-4 border-b border-divider flex items-center justify-between">
             <p className="text-title-md text-foreground">
-              {t('sales.checkoutWizard.cartReview', 'Cart Review')}
+              {t('sales.checkoutWizard.cart', 'Carrito')}
             </p>
             <Badge variant="secondary" size="sm" className="font-data-mono">
-              {items.length}
+              {items.length} · {formatNumber(totalUnits)}
             </Badge>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2" role="list" aria-label={t('sales.checkoutWizard.cartReview', 'Cart Review')}>
+          <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2" role="list" aria-label={t('sales.checkoutWizard.cart', 'Carrito')}>
             {items.length === 0 ? (
               <p className="text-center py-8 text-body-md text-on-surface-deep">
                 {t('sales.checkoutWizard.cartEmpty', 'El carrito está vacío')}

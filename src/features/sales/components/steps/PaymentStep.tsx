@@ -9,7 +9,7 @@
  * mano. El monto recibido en divisa se carga en el paso de Cobro.
  */
 import { forwardRef, useImperativeHandle, useEffect, useMemo, useRef } from 'react'
-import { Banknote, CreditCard, DollarSign, Landmark, Wallet } from 'lucide-react'
+import { CreditCard, DollarSign } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -18,11 +18,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import { PaymentMethodGrid } from '@/components/checkout/PaymentMethodGrid'
 import { ExchangeRateService } from '@/services/exchangeRateService'
 import { computeForeignDue } from '@/domain/sale/calculations/foreignPayment'
 import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput'
 import { formatCurrency } from '@/utils/currencyUtils'
-import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 
 export interface PaymentStepRef {
@@ -41,15 +41,6 @@ interface PaymentStepProps {
   setExchangeRate: (v: string) => void
   /** Total del carrito en moneda base: se usa para el equivalente en divisa. */
   totalAmount: number
-}
-
-/** Icono del método según su nombre (efectivo/tarjeta/transferencia/otro). */
-const paymentMethodIcon = (name: string) => {
-  const n = (name || '').toLowerCase()
-  if (n.includes('efectivo') || n.includes('cash')) return Banknote
-  if (n.includes('transfer')) return Landmark
-  if (n.includes('tarjeta') || n.includes('credit') || n.includes('debit') || n.includes('card')) return CreditCard
-  return Wallet
 }
 
 export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
@@ -80,32 +71,6 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
       () => (isMultiCurrency ? computeForeignDue(totalAmount, rate) : 0),
       [isMultiCurrency, totalAmount, rate],
     )
-
-    // Hotkeys [1..9] del mockup POS: elegir método de pago sin mouse. Solo
-    // mientras el paso está montado y el foco NO está en un campo de texto.
-    useEffect(() => {
-      const onKeyDown = (e: KeyboardEvent) => {
-        if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return
-        const target = e.target as HTMLElement | null
-        if (
-          target &&
-          (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)
-        ) {
-          return
-        }
-        // Un dropdown abierto (ej. Select de moneda) consume el teclado: no
-        // cambiar de método mientras el operador navega opciones.
-        if (target?.closest?.('[role="listbox"],[role="option"],[data-radix-popper-content-wrapper]')) return
-        const digit = Number(e.key)
-        if (!Number.isInteger(digit) || digit < 1 || digit > 9) return
-        const method = paymentMethods[digit - 1]
-        if (!method) return
-        e.preventDefault()
-        setPaymentMethodId(Number(method.id))
-      }
-      window.addEventListener('keydown', onKeyDown)
-      return () => window.removeEventListener('keydown', onKeyDown)
-    }, [paymentMethods, setPaymentMethodId])
 
     useImperativeHandle(ref, () => ({
       focus: () => firstInputRef.current?.focus(),
@@ -141,38 +106,13 @@ export const PaymentStep = forwardRef<PaymentStepRef, PaymentStepProps>(
               {t('sales.checkoutWizard.payment.method', 'Método de pago')}
             </span>
           </div>
-          <div
-            className="grid grid-cols-2 sm:grid-cols-3 gap-3"
-            role="radiogroup"
-            aria-labelledby="wizard-payment-method-label"
-          >
-            {paymentMethods.map((method, idx) => {
-              const selected = Number(method.id) === Number(paymentMethodId)
-              const Icon = paymentMethodIcon(method.name || method.description)
-              return (
-                <button
-                  key={method.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  ref={idx === 0 ? firstInputRef : undefined}
-                  onClick={() => setPaymentMethodId(Number(method.id))}
-                  className={cn(
-                    'flex flex-col items-center justify-center gap-2 p-4 rounded-md border-2 transition-colors duration-150 min-h-[76px]',
-                    selected
-                      ? 'border-primary bg-primary-container/40'
-                      : 'border-divider bg-surface hover:border-primary/50 hover:bg-surface-muted',
-                  )}
-                >
-                  <Icon size={24} className={selected ? 'text-primary' : 'text-on-surface-deep'} aria-hidden="true" />
-                  <span className="text-body-sm-bold text-foreground text-center leading-tight">
-                    <span className="font-data-mono text-on-surface-deep">[{idx + 1}]</span>{' '}
-                    {method.name || method.description}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+          <PaymentMethodGrid
+            methods={paymentMethods}
+            selectedId={String(paymentMethodId ?? '')}
+            onSelect={(id) => setPaymentMethodId(Number(id))}
+            labelledbyId="wizard-payment-method-label"
+            firstButtonRef={firstInputRef}
+          />
         </div>
 
         <div className="space-y-2">

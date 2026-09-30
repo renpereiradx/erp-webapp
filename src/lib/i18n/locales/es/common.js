@@ -11,6 +11,9 @@ export const common = {
   'validation.stock.invalid': 'Stock inválido',
   'validation.stock.invalid.short': 'Inválido',
 
+  // Checkout compartido (PaymentMethodGrid)
+  'checkout.paymentMethodsEmpty': 'No hay métodos de pago disponibles',
+
   // Campos comunes
   'field.name': 'Nombre',
   'field.price': 'Precio',

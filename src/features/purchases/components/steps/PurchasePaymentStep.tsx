@@ -1,9 +1,10 @@
 /**
  * PurchasePaymentStep — paso 2 del PurchaseCheckoutWizard.
  *
- * Selección de método de pago, moneda y notas de la compra. Agrupa los tres
- * campos en un solo paso para mantener el wizard ágil (las notas no ameritan
- * un paso separado).
+ * Selección de método de pago (grilla de tarjetas con hotkeys [1..9], el
+ * patrón canónico compartido con el wizard de ventas vía PaymentMethodGrid),
+ * moneda y notas de la compra. Agrupa los tres campos en un solo paso para
+ * mantener el wizard ágil (las notas no ameritan un paso separado).
  */
 import { forwardRef, useImperativeHandle, useRef } from 'react'
 import { CreditCard, DollarSign, StickyNote } from 'lucide-react'
@@ -14,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { PaymentMethodGrid } from '@/components/checkout/PaymentMethodGrid'
 import { useI18n } from '@/lib/i18n'
 
 export interface PurchasePaymentStepRef {
@@ -58,55 +60,45 @@ export const PurchasePaymentStep = forwardRef<PurchasePaymentStepRef, PurchasePa
 
     return (
       <div className="space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <CreditCard size={18} className="text-primary" />
-              <label className="text-label-caps text-on-surface-deep" htmlFor="wizard-purchase-method">
-                {t('purchases.checkoutWizard.payment.method', 'Método de pago')}
-              </label>
-            </div>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger
-                id="wizard-purchase-method"
-                ref={methodRef}
-                className="w-full h-11 bg-surface border-divider focus:ring-primary focus:border-primary"
-              >
-                <SelectValue placeholder={t('purchases.checkoutWizard.payment.method', 'Método de pago')} />
-              </SelectTrigger>
-              <SelectContent>
-                {paymentMethods.map((method) => (
-                  <SelectItem key={method.id} value={String(method.id)}>
-                    {getPaymentMethodLabel(method)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <CreditCard size={18} className="text-primary" aria-hidden="true" />
+            <span className="text-label-caps text-on-surface-deep" id="wizard-purchase-method-label">
+              {t('purchases.checkoutWizard.payment.method', 'Método de pago')}
+            </span>
           </div>
+          <PaymentMethodGrid
+            methods={paymentMethods}
+            selectedId={paymentMethod}
+            onSelect={setPaymentMethod}
+            labelFor={getPaymentMethodLabel}
+            labelledbyId="wizard-purchase-method-label"
+            firstButtonRef={methodRef}
+          />
+        </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <DollarSign size={18} className="text-primary" />
-              <label className="text-label-caps text-on-surface-deep" htmlFor="wizard-purchase-currency">
-                {t('purchases.checkoutWizard.payment.currency', 'Moneda')}
-              </label>
-            </div>
-            <Select value={paymentCurrency} onValueChange={setPaymentCurrency}>
-              <SelectTrigger
-                id="wizard-purchase-currency"
-                className="w-full h-11 bg-surface border-divider focus:ring-primary focus:border-primary"
-              >
-                <SelectValue placeholder={t('purchases.checkoutWizard.payment.currency', 'Moneda')} />
-              </SelectTrigger>
-              <SelectContent>
-                {currencies.map((currency) => (
-                  <SelectItem key={currency.id} value={currency.code || currency.currency_code}>
-                    {currency.code || currency.currency_code} - {getCurrencyLabel(currency)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <DollarSign size={18} className="text-primary" aria-hidden="true" />
+            <label className="text-label-caps text-on-surface-deep" htmlFor="wizard-purchase-currency">
+              {t('purchases.checkoutWizard.payment.currency', 'Moneda')}
+            </label>
           </div>
+          <Select value={paymentCurrency} onValueChange={setPaymentCurrency}>
+            <SelectTrigger
+              id="wizard-purchase-currency"
+              className="w-full h-11 bg-surface border-divider focus:ring-primary focus:border-primary"
+            >
+              <SelectValue placeholder={t('purchases.checkoutWizard.payment.currency', 'Moneda')} />
+            </SelectTrigger>
+            <SelectContent>
+              {currencies.map((currency) => (
+                <SelectItem key={currency.id} value={currency.code || currency.currency_code}>
+                  {currency.code || currency.currency_code} - {getCurrencyLabel(currency)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Notas de la compra */}

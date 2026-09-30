@@ -647,6 +647,17 @@ Reglas:
 - Toda página de feature usa `PageHeader`. No construyas `<h1>` artesanales.
 - La acción primaria de la página vive en `actions` (y es el único `primary` de la vista).
 
+### 6.9 Wizard de checkout (Concretar Venta / Concretar Compra)
+
+Anatomía compartida — los wizards de concreción son GEMELOS: mismos estilos, misma estructura, distinto dominio. Referencias vivas: `SaleCheckoutWizard` y `PurchaseCheckoutWizard`.
+
+- **Shell**: overlay `fixed inset-0 bg-foreground/40 backdrop-blur-md`; panel `max-w-5xl rounded-xl shadow-fluent-16` en split: pasos (`flex-1`) | panel derecho de carrito (`md:w-[360px]`).
+- **Header**: icono en `bg-primary-container` + título + subtítulo; chips de pasos numerados (activo `bg-primary text-on-primary`, completado `text-success`, resto `bg-surface-subtle`).
+- **Footer de pasos: SIEMPRE fila de hints** `<kbd>` (discoverability, §12): atajo principal configurable + `Enter` + `Esc` + `F2`, más los específicos del paso (`F3` búsqueda, `↑↓` navegación, `[1..9]` método). Debajo, botones: `Volver` (ghost) a la izquierda; acción primaria a la derecha con el atajo entre paréntesis.
+- **Selección de método de pago: SIEMPRE grilla de tarjetas** (`PaymentMethodGrid`, `src/components/checkout/`) con hotkeys `[1..9]` y semántica `radiogroup` — NUNCA un `Select`. Apto para ambos wizards.
+- **Panel derecho (carrito)**: título + badge `"{líneas} · {unidades}"`; filas de ítems (nombre bold, `qty × precio` en mono); footer de totales sobre `bg-surface-muted` con el total en `text-headline-lg-mobile text-primary`.
+- Los datos específicos del dominio viven en el paso que corresponda (compras: sucursal de carga + notas; ventas: tasa de cambio multi-moneda). Un wizard = un propósito.
+
 ---
 
 ## 7. Plantilla de página de listado estándar
