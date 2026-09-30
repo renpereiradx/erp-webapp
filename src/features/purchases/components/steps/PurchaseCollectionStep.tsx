@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cashRegisterService } from '@/services/cashRegisterService'
 import { formatCurrency } from '@/utils/currencyUtils'
+import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput'
 import { useI18n } from '@/lib/i18n'
 
 export interface PurchaseCollectionStepRef {
@@ -163,11 +164,10 @@ export const PurchaseCollectionStep = forwardRef<
           <Input
             ref={amountRef}
             id="wizard-purchase-amount"
-            type="number"
-            min="0"
-            step="1"
-            value={amountPaid}
-            onChange={(e) => setAmountPaid(e.target.value)}
+            type="text"
+            inputMode="numeric"
+            value={formatNumberInput(amountPaid)}
+            onChange={(e) => setAmountPaid(parseNumberInput(e.target.value))}
             className="h-14 text-title-md font-data-mono text-data-mono px-4"
             placeholder="0"
           />

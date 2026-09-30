@@ -3,6 +3,7 @@ import { Check, Package, X } from 'lucide-react'
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic'
 import { useI18n } from '@/lib/i18n'
 import { formatCurrency } from '@/utils/currencyUtils'
+import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput'
 import { variantService } from '@/services/variantService'
 import { ProductVariant } from '@/types'
 import {
@@ -518,10 +519,11 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   <Input
                     ref={modalQuantityRef}
                     id='purchase-modal-quantity'
-                    type='number'
+                    type='text'
+                    inputMode='decimal'
                     className='bg-surface-muted text-body-md-bold'
-                    value={modalQuantity}
-                    onChange={e => setModalQuantity(e.target.value)}
+                    value={formatNumberInput(modalQuantity)}
+                    onChange={e => setModalQuantity(parseNumberInput(e.target.value))}
                     placeholder='0'
                   />
                   <p className='text-body-sm text-outline-fg'>
@@ -550,11 +552,12 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   </Label>
                   <Input
                     id='purchase-modal-cost'
-                    type='number'
+                    type='text'
+                    inputMode='numeric'
                     className='bg-surface-muted text-body-md-bold'
-                    value={modalUnitPrice}
-                    onChange={e => setModalUnitPrice(e.target.value)}
-                    placeholder='0.00'
+                    value={formatNumberInput(modalUnitPrice)}
+                    onChange={e => setModalUnitPrice(parseNumberInput(e.target.value))}
+                    placeholder='0'
                   />
                   <p className='text-body-sm text-outline-fg truncate' title={t('purchases.product_modal.cost_hint', 'Precio por unidad')}>
                     {t('purchases.product_modal.cost_hint', 'Precio por unidad')}
@@ -684,7 +687,8 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   <div className='relative'>
                     <Input
                       id='purchase-modal-margin'
-                      type='number'
+                      type='text'
+                      inputMode='decimal'
                       className={cn(
                         'bg-surface-muted text-body-md-bold pr-8',
                         pricingMode !== 'margin'
@@ -692,13 +696,15 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                           : 'text-success'
                       )}
                       value={
-                        pricingMode === 'margin'
-                          ? modalProfitPct
-                          : effectiveProfitPct.toFixed(1)
+                        formatNumberInput(
+                          pricingMode === 'margin'
+                            ? modalProfitPct
+                            : effectiveProfitPct.toFixed(1)
+                        )
                       }
                       onChange={e =>
                         pricingMode === 'margin' &&
-                        setModalProfitPct(Number(e.target.value))
+                        setModalProfitPct(Number(parseNumberInput(e.target.value)) || 0)
                       }
                       readOnly={pricingMode !== 'margin'}
                     />
@@ -720,7 +726,8 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   </Label>
                   <Input
                     id='purchase-modal-sale-price'
-                    type='number'
+                    type='text'
+                    inputMode='numeric'
                     className={cn(
                       'bg-surface-muted text-body-md-bold',
                       pricingMode !== 'sale_price'
@@ -728,13 +735,15 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                         : 'text-primary'
                     )}
                     value={
-                      pricingMode === 'sale_price'
-                        ? modalSalePrice
-                        : effectiveSalePrice.toFixed(0)
+                      formatNumberInput(
+                        pricingMode === 'sale_price'
+                          ? modalSalePrice
+                          : effectiveSalePrice.toFixed(0)
+                      )
                     }
                     onChange={e =>
                       pricingMode === 'sale_price' &&
-                      setModalSalePrice(Number(e.target.value))
+                      setModalSalePrice(Number(parseNumberInput(e.target.value)) || 0)
                     }
                     readOnly={pricingMode !== 'sale_price'}
                   />
@@ -780,7 +789,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                       {t('purchases.product_modal.line_subtotal', 'Subtotal Línea')}
                     </span>
                     <span className='text-body-sm font-data-mono text-outline-fg'>
-                      {modalQuantity || 0} ×{' '}
+                      {formatNumberInput(modalQuantity) || 0} ×{' '}
                       {formatCurrency(modalUnitPrice || 0)}
                     </span>
                   </div>

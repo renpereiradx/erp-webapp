@@ -20,7 +20,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { ShoppingCart, CheckCircle2, ChevronLeft, ChevronRight, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { formatCurrency } from '@/utils/currencyUtils'
+import { formatCurrency, formatNumber } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import { useCheckoutShortcuts } from '@/features/sales/hooks/useCheckoutShortcuts';
@@ -424,7 +424,7 @@ export const PurchaseCheckoutWizard = ({
               {t('purchases.checkoutWizard.cart', 'Orden')}
             </p>
             <Badge variant="secondary" size="sm" className="font-data-mono">
-              {purchaseItems.length} · {itemCount}
+              {purchaseItems.length} · {formatNumber(itemCount)}
             </Badge>
           </div>
 
@@ -445,7 +445,7 @@ export const PurchaseCheckoutWizard = ({
                       {item.product_name || item.name || item.product_id}
                     </p>
                     <p className="text-body-sm text-on-surface-deep font-data-mono">
-                      {item.quantity} {item.unit} × {formatCurrency(Number(item.unit_price) || 0, paymentCurrency)}
+                      {formatNumber(Number(item.quantity) || 0)} {item.unit} × {formatCurrency(Number(item.unit_price) || 0, paymentCurrency)}
                     </p>
                   </div>
                   <p className="text-body-md-bold font-data-mono text-foreground shrink-0">

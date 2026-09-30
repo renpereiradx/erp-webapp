@@ -11,7 +11,7 @@
  * (domain/party/supplierForm) para que la validación y el contrato de API no
  * se divergan entre el alta rápida y el alta desde el directorio.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Building } from 'lucide-react'
 import EnhancedModal from '@/components/ui/EnhancedModal'
 import { Button } from '@/components/ui/button'
@@ -61,6 +61,16 @@ export function QuickSupplierModal({ isOpen, onClose, onCreated }: QuickSupplier
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const nameRef = useRef<HTMLInputElement>(null)
+
+  // Focus inicial en el primer campo: EnhancedModal enfoca el contenedor al
+  // abrir (efecto del padre, corre después del autoFocus del input y se lo
+  // roba), así que re-enfocamos con un tick (patrón 60ms del wizard).
+  useEffect(() => {
+    if (!isOpen) return
+    const timer = setTimeout(() => nameRef.current?.focus(), 60)
+    return () => clearTimeout(timer)
+  }, [isOpen])
 
   // Reinicializar el formulario cada vez que se abre.
   useEffect(() => {
@@ -137,7 +147,9 @@ export function QuickSupplierModal({ isOpen, onClose, onCreated }: QuickSupplier
       // Se abre apilado dentro del wizard de checkout (overlay z-[150]):
       // sin esto el modal monta DETRÁS y "Nuevo proveedor" parece muerto.
       // 200 > wizard, < toasts (1000) y < VariantSelectorModal (1200).
-      overlayClassName="!z-[200]"
+      // [--erp-overlay-inset:0px] cubre toda la pantalla (el wizard de abajo
+      // ya es full-screen): el blur no deja la franja del sidebar sin tocar.
+      overlayClassName="!z-[200] [--erp-overlay-inset:0px]"
       footer={
         <div className="flex justify-end gap-sm">
           <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
@@ -171,6 +183,7 @@ export function QuickSupplierModal({ isOpen, onClose, onCreated }: QuickSupplier
             <span className="text-error">*</span>
           </Label>
           <Input
+            ref={nameRef}
             id="qs-name"
             name="name"
             type="text"
@@ -179,7 +192,6 @@ export function QuickSupplierModal({ isOpen, onClose, onCreated }: QuickSupplier
             onChange={handleChange}
             disabled={isSubmitting}
             placeholder={t('party.quick_supplier.placeholder.name', 'Ej. Distribuciones del Pacífico')}
-            autoFocus
           />
           {renderError('name', 'El nombre es obligatorio')}
         </div>
