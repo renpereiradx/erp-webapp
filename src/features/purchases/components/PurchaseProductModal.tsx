@@ -71,12 +71,13 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
   } = props
 
   const { t } = useI18n()
-  // Acción principal configurable (§12.1): purchases.processPurchase (Ctrl+G
-  // por defecto) — la misma tecla que abre este modal desde la página
-  // confirma la línea aquí; F12/Ctrl+Enter quedan como alias.
+  // Acción principal configurable (§12.1): `purchases.addProduct` (Ctrl+A por
+  // defecto, entrada del store pensada para esta acción y sin otros
+  // consumidores) confirma la línea dentro del modal; F12/Ctrl+Enter quedan
+  // como alias de compatibilidad.
   const matchesShortcut = useKeyboardShortcutsStore((s) => s.matchesShortcut)
   const formatShortcut = useKeyboardShortcutsStore((s) => s.formatShortcut)
-  const primaryLabel = formatShortcut('purchases.processPurchase')
+  const primaryLabel = formatShortcut('purchases.addProduct')
   const [variants, setVariants] = useState<ProductVariant[]>([])
   const [loadingVariants, setLoadingVariants] = useState(false)
   const [partialSelectedAttrs, setPartialSelectedAttrs] = useState<Record<string, string>>({})
@@ -115,12 +116,12 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
         ((modalSelectedProduct?.has_variant || modalSelectedProduct?.has_variants || variants.length > 0) && modalVariantId === undefined)
       );
 
-      // Acción principal configurable (Ctrl+G por defecto).
-      if (matchesShortcut('purchases.processPurchase', e)) {
+      // Acción principal configurable (Ctrl+A por defecto): SOLO se consume
+      // con la línea válida — inválida, el evento pasa sin preventDefault y
+      // Ctrl+A conserva el select-all nativo dentro de los inputs.
+      if (isConfirmValid && matchesShortcut('purchases.addProduct', e)) {
         e.preventDefault();
-        if (isConfirmValid) {
-          handleConfirmAddProduct();
-        }
+        handleConfirmAddProduct();
         return;
       }
       if (e.key === 'F12' || (e.key === 'Enter' && e.ctrlKey)) {

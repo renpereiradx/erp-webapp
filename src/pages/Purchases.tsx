@@ -37,10 +37,9 @@ const Purchases = () => {
 
   // Atajos de página (DESIGN.md §12): F12 abre el wizard; F2 enfoca el
   // buscador principal del tab (productos del carrito en Nueva Compra,
-  // filtro de la lista en Historial); Ctrl+G abre el modal de agregar
-  // producto. Mueren si cualquier modal está abierto (§12.2); cada overlay
-  // (wizard, modal de producto, cancelación, confirmación, transferencia)
-  // registra los suyos propios mientras está abierto.
+  // filtro de la lista en Historial). Mueren si cualquier modal está abierto
+  // (§12.2); cada overlay (wizard, modal de producto, cancelación,
+  // confirmación, transferencia) registra los suyos propios mientras está abierto.
   const handleOpenCheckoutWizard = useCallback(() => setShowCheckoutWizard(true), []);
   usePurchasesShortcuts({
     activeTab: logic.activeTab,
@@ -48,7 +47,6 @@ const Purchases = () => {
     historySearchInputRef: logic.historySearchInputRef,
     cartProductSearchRef: logic.cartProductSearchRef,
     onOpenCheckoutWizard: handleOpenCheckoutWizard,
-    onOpenAddProductModal: logic.handleOpenAddProductModal,
     enabled: !(
       showCheckoutWizard ||
       transferPreload ||

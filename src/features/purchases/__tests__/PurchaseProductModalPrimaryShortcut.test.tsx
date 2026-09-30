@@ -1,12 +1,13 @@
 /**
  * PurchaseProductModal — acción principal configurable (DESIGN.md §12.1).
  *
- * Ctrl+G (`purchases.processPurchase`, store REAL con defaults) confirma la
- * línea "Agregar a la Orden", igual que los alias F12/Ctrl+Enter. Con la
- * línea inválida (sin producto, cantidad o costo) la tecla se consume pero
- * NO confirma — mismo comportamiento silencioso que tenían los alias.
- * El botón primario anuncia el atajo configurado "(Ctrl + G)" y el footer
- * muestra la fila de hints kbd (patrón wizard, §12.5.4).
+ * Ctrl+A (`purchases.addProduct`, store REAL con defaults — la entrada del
+ * store pensada para esta acción, sin otros consumidores) confirma la línea
+ * "Agregar a la Orden", igual que los alias F12/Ctrl+Enter. Con la línea
+ * inválida el atajo NO se consume: el evento pasa y Ctrl+A conserva el
+ * select-all nativo dentro de los inputs. El botón primario anuncia el
+ * atajo configurado "(Ctrl + A)" y el footer muestra la fila de hints kbd
+ * (patrón wizard, §12.5.4).
  */
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
@@ -86,33 +87,37 @@ const renderModal = (harness: HarnessProps = {}) => {
 }
 
 const pressKey = (init: KeyboardEventInit) => {
-  window.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }))
+  const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init })
+  window.dispatchEvent(event)
+  return event
 }
 
 afterEach(cleanup)
 
-describe('PurchaseProductModal — acción principal (Ctrl+G)', () => {
+describe('PurchaseProductModal — acción principal (Ctrl+A)', () => {
   const validProduct = { id: 1, name: 'PAPA KG PY', variants: [] }
 
-  it('Ctrl+G con línea válida confirma "Agregar a la Orden"', () => {
+  it('Ctrl+A con línea válida confirma "Agregar a la Orden"', () => {
     const { onConfirm } = renderModal({
       selectedProduct: validProduct,
       quantity: '2',
       unitPrice: '100',
     })
-    pressKey({ key: 'g', ctrlKey: true })
+    const event = pressKey({ key: 'a', ctrlKey: true })
     expect(onConfirm).toHaveBeenCalledTimes(1)
+    expect(event.defaultPrevented).toBe(true)
   })
 
-  it('Ctrl+G sin producto no confirma (inválido: se consume sin acción)', () => {
+  it('Ctrl+A con línea inválida NO confirma NI consume la tecla (select-all nativo intacto)', () => {
     const { onConfirm } = renderModal({ quantity: '2', unitPrice: '100' })
-    pressKey({ key: 'g', ctrlKey: true })
+    const event = pressKey({ key: 'a', ctrlKey: true })
     expect(onConfirm).not.toHaveBeenCalled()
+    expect(event.defaultPrevented).toBe(false)
   })
 
-  it('Ctrl+G sin cantidad no confirma', () => {
+  it('Ctrl+A sin cantidad no confirma', () => {
     const { onConfirm } = renderModal({ selectedProduct: validProduct, unitPrice: '100' })
-    pressKey({ key: 'g', ctrlKey: true })
+    pressKey({ key: 'a', ctrlKey: true })
     expect(onConfirm).not.toHaveBeenCalled()
   })
 
@@ -139,9 +144,9 @@ describe('PurchaseProductModal — acción principal (Ctrl+G)', () => {
   it('el botón primario anuncia el atajo configurado y el footer muestra hints kbd', () => {
     renderModal({ selectedProduct: validProduct, quantity: '2', unitPrice: '100' })
     const confirm = screen.getByTestId('purchase-modal-confirm')
-    expect(confirm.textContent).toContain('(Ctrl + G)')
-    // Fila de hints: F3 = buscador interno, Esc = cerrar.
     expect(confirm.textContent).toContain('Agregar a la Orden')
+    expect(confirm.textContent).toContain('(Ctrl + A)')
+    // Fila de hints: F3 = buscador interno, Esc = cerrar.
     expect(screen.getByText('Buscar')).toBeInTheDocument()
     expect(screen.getByText('Cerrar')).toBeInTheDocument()
   })

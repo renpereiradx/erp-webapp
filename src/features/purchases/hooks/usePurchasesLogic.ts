@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useI18n } from '@/lib/i18n'
 import useDashboardStore from '@/store/useDashboardStore'
@@ -496,6 +496,16 @@ export const usePurchasesLogic = () => {
     }
   }, [isModalOpen])
 
+  // Default focus: al cargar la página (o volver al tab Nueva Compra) el
+  // cursor queda en el buscador de productos — la acción principal de la
+  // pantalla, sin pedir nada. F2 lo recupera si se pierde; con el input
+  // deshabilitado (sin permiso de escritura) focus() es no-op.
+  useEffect(() => {
+    if (activeTab === 'nueva-compra') {
+      cartProductSearchRef.current?.focus()
+    }
+  }, [activeTab, cartProductSearchRef])
+
   useEffect(() => {
     if (isSelectingProductRef.current) {
       isSelectingProductRef.current = false
@@ -813,30 +823,6 @@ export const usePurchasesLogic = () => {
     setModalProductSearch('')
     setModalPriceIncludesTax(true)
   }
-
-  // Ctrl+G (purchases.processPurchase, DESIGN.md §12.1): abre el modal de
-  // alta de artículo vacío, sin producto precargado — el efecto de apertura
-  // enfoca el buscador interno cuando modalSelectedProduct es null y el
-  // usuario busca/selecciona dentro del modal. Reset espejo de
-  // handleConfirmAddProduct (pricingMode/profitPct persisten a propósito:
-  // conservan la estrategia de margen entre agregados).
-  const handleOpenAddProductModal = useCallback(() => {
-    setEditingItemId(null)
-    setModalSelectedProduct(null)
-    setModalProductSearch('')
-    setModalProductResults([])
-    setShowProductDropdown(false)
-    setActiveProductIndex(-1)
-    setModalQuantity('')
-    setModalUnit('')
-    setModalUnitPrice('')
-    setModalVariantId(undefined)
-    setModalVariantName(undefined)
-    setModalSelectedVariant(undefined)
-    setModalTaxRateId(null)
-    setModalPriceIncludesTax(true)
-    setIsModalOpen(true)
-  }, [])
 
   const handleSavePurchase = async (): Promise<SavePurchaseResult> => {
     if (!selectedSupplier || purchaseItems.length === 0) return { success: false }
@@ -1206,7 +1192,6 @@ export const usePurchasesLogic = () => {
     handleInstantPaymentConfirm,
     handleLeavePurchasePending,
     handleModalProductSearchKeyDown,
-    handleOpenAddProductModal,
     handleProductSelect,
     handleSavePurchase,
     handleSupplierSearchKeyDown,

@@ -82,7 +82,10 @@ export const PurchaseProductSearchInput: React.FC<PurchaseProductSearchInputProp
           disabled={disabled}
           aria-label={placeholder}
           className={cn(
-            'w-full pl-9 pr-9 py-2.5 bg-surface-muted border border-border-subtle rounded-input text-body-md text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors duration-150',
+            // Blanco + borde divider (visible): bg-surface-muted con
+            // border-subtle se perdía dentro de contenedores claros
+            // (banda del carrito, superficie blanca del modal).
+            'w-full pl-9 pr-9 py-2.5 bg-surface border border-divider rounded-input text-body-md text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors duration-150',
             inputClassName,
           )}
           placeholder={placeholder}
