@@ -2038,9 +2038,11 @@ const SalesNew: React.FC = () => {
                 cuando el carrito supera al resumen, manda el carrito.
                 Section plano (patrón PurchaseTotalsCard): el Card legacy de
                 shadcn pierde los overrides (cn sin tailwind-merge) y dejaba
-                rounded-xl + p-6 residual → radio de modal y doble padding. */}
-            <section className="bg-surface rounded-md shadow-whisper border-0 p-lg min-w-0 self-stretch">
-              <div className="pb-md flex items-center justify-between gap-sm flex-wrap">
+                rounded-xl + p-6 residual → radio de modal y doble padding.
+                Anatomía "card con tabla" (DESIGN.md §6.3): banda de toolbar
+                muted + border-b divider, hermana del carrito de /compras. */}
+            <section className="bg-surface rounded-md shadow-whisper border-0 overflow-hidden min-w-0 self-stretch">
+              <div className="px-lg py-md bg-surface-muted border-b border-divider flex items-center justify-between gap-sm flex-wrap">
                 <h2 className="text-title-md text-foreground flex items-center gap-sm">
                   <ShoppingCart size={18} className="text-primary" aria-hidden="true" />
                   {t('sales.cart.title', 'Productos Seleccionados')}
@@ -2053,7 +2055,7 @@ const SalesNew: React.FC = () => {
                   <span>[F4] {t('sales.hints.clear', 'Limpiar')}</span>
                 </p>
               </div>
-              <div className="space-y-md">
+              <div className="p-lg pt-md space-y-md">
                 <ProductSearchPanel
                   searchTerm={productSearchTerm}
                   onSearchTermChange={(v) => {

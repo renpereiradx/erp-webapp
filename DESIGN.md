@@ -194,7 +194,7 @@ construye con peso tipográfico y tono de superficie, no con bordes ni sombras f
 |:----------|:------|:----|:------|
 | Fondo de página | `bg-background` | `#e9edf6` | SIEMPRE el lienzo base (más oscuro que `surface` para que las cards despeguen). Nunca blanco puro ni grises de Tailwind. |
 | Card, modal, panel principal | `bg-surface` | `#ffffff` | El contenido "flota" sobre el fondo. |
-| Sidebar, zona secundaria, header de tabla | `bg-surface-muted` | `#f1f3fc` | Separación sutil sin bordes. |
+| Sidebar, zona secundaria, header de tabla, toolbar de card | `bg-surface-muted` | `#f1f3fc` | Separación sutil sin bordes. "Toolbar de card" = banda de encabezado de una card con tabla (§6.3), con buscador/acciones. |
 | Hover de filas / estados sutiles | `bg-surface-muted` | `#f1f3fc` | Mismo token, contexto hover. |
 | Fondo de badge neutro / disabled | `bg-surface-subtle` | `#ebeef6` | — |
 | Zona inerte muy marcada | `bg-surface-subtle` | `#e5e8f1` | Uso raro. Si dudas, no lo uses. |
@@ -430,7 +430,61 @@ Reglas:
 - Header: `text-label-caps uppercase` sobre `bg-surface-muted`.
 - Hover de fila: `hover:bg-surface-muted` con `duration-150`. NADA más (ni scale, ni sombra).
 - La tabla vive dentro de un contenedor `rounded-md shadow-whisper`; la tabla en sí no lleva sombra.
-- Vacía: NO renderices una tabla sin filas; usa `EmptyState` (§6.7).
+- Vacía: en una tabla suelta, usa `EmptyState` (§6.7). En una **card con tabla** (anatomía de abajo), el empty state va DENTRO de la tabla como fila `colSpan`: la card se ve "armada" aunque no haya filas.
+
+**Card con tabla — anatomía canónica** (POS, carritos, toda card cuyo contenido principal es una tabla). Referencia viva: el carrito de `/compras` (`PurchaseCartTable`).
+
+```jsx
+<section className="bg-surface rounded-md shadow-whisper border-0 overflow-hidden">
+  {/* 1. Toolbar OPCIONAL: solo si el header lleva buscador o acciones */}
+  <div className="px-lg py-md bg-surface-muted border-b border-divider flex items-center justify-between gap-md">
+    <div>
+      <h2 className="text-title-md text-foreground">Productos en la orden</h2>
+      <p className="text-body-sm text-on-surface-deep mt-0.5">Subtítulo breve</p>
+    </div>
+    {/* buscador / acciones a la derecha */}
+  </div>
+
+  {/* 2. Tabla FULL-BLEED: pegada a los bordes de la card, sin recuadro interno */}
+  <Table className="min-w-[640px]">
+    <TableHeader className="bg-surface-muted">
+      <TableRow className="hover:bg-surface-muted border-0">
+        <TableHead className="text-label-caps uppercase text-on-surface-deep px-md py-md">Producto</TableHead>
+        <TableHead className="text-label-caps uppercase text-on-surface-deep px-md py-md text-right">Total</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {items.length === 0 ? (
+        // 3. Empty DENTRO de la tabla: icono en círculo muted + título + hint (+ acción)
+        <TableRow className="hover:bg-transparent border-0">
+          <TableCell colSpan={2} className="py-xl">
+            <div className="flex flex-col items-center justify-center gap-sm text-on-surface-deep">
+              <div className="size-16 rounded-full bg-surface-muted flex items-center justify-center">
+                <Package size={28} strokeWidth={1.5} className="text-outline-fg" aria-hidden="true" />
+              </div>
+              <p className="text-body-md-bold text-foreground">Sin registros</p>
+              <p className="text-body-sm text-on-surface-deep">Hint de qué hacer</p>
+            </div>
+          </TableCell>
+        </TableRow>
+      ) : (
+        items.map((item) => (
+          <TableRow key={item.id} className="hover:bg-surface-muted transition-colors duration-150">
+            {/* ...celdas... */}
+          </TableRow>
+        ))
+      )}
+    </TableBody>
+  </Table>
+</section>
+```
+
+Reglas de la anatomía:
+
+- **Una forma por card**: la tabla es full-bleed (pegada a los bordes) **o** la card entera lleva marco. PROHIBIDO el recuadro con borde alrededor de la tabla dentro de una card sin marco (doble marco implícito).
+- **Toolbar**: `bg-surface-muted` + `border-b border-divider` (§2.1). Sin toolbar, el título va directo sobre `bg-surface` (§6.2) — ambas válidas; la banda se usa cuando el header carga buscador/acciones.
+- **Empty dentro de la tabla**: icono en círculo `bg-surface-muted`, título bold, hint y acción si aplica. El `EmptyState` de §6.7 queda para tablas sueltas y vistas mobile sin tabla.
+- **Variante enmarcada** (solo listas de lectura / BI): card con `border border-border-subtle` (± `hover:shadow-fluent-8`), thead `bg-surface-muted` con su borde inferior, dentro. Sin toolbar. Referencia: `OverdueTable` (`/receivables/overdue`).
 
 ### 6.4 Formulario (Input + Label)
 
@@ -573,6 +627,7 @@ Reglas:
 - Loading: skeleton que imite la forma final (NUNCA un spinner centrado solo en páginas de datos).
 - Empty: SIEMPRE con acción sugerida (`actionLabel` + `onAction`) cuando el usuario puede crear contenido.
 - Error: SIEMPRE con `onRetry` si la operación es reintentable.
+- En una card con tabla (§6.3), el empty va DENTRO de la tabla (fila `colSpan`); este patrón de reemplazo total es para tablas sueltas, paneles sin card y vistas mobile.
 
 ### 6.8 Encabezado de página
 
@@ -652,7 +707,8 @@ export default function ProductsPage() {
 | `p-[13px]`, `mt-[7px]` | Token más cercano (`p-md`, `mt-sm`); si dudas, el mayor |
 | Números en `font-sans` dentro de tablas | `text-data-mono font-data-mono` |
 | Spinner solo en página de datos | `<GenericSkeletonList>` |
-| Tabla con 0 filas | `<EmptyState>` |
+| Tabla suelta con 0 filas | `<EmptyState>` (§6.7); en card con tabla, fila `colSpan` dentro (§6.3) |
+| Recuadro con borde alrededor de una tabla dentro de una card sin marco | Tabla full-bleed o card enmarcada — una forma por card (§6.3) |
 | `console.error` y nada en pantalla | `<ErrorState>` con `onRetry` |
 | 2+ botones `primary` en la misma vista | 1 primary; el resto `secondary`/`ghost` |
 | Texto de UI hardcoded en español/inglés | `t('clave')` con `useI18n()` |
@@ -692,7 +748,7 @@ export default function ProductsPage() {
 - [ ] Números, importes, fechas e IDs con `text-data-mono font-data-mono`.
 - [ ] Inputs numéricos/monetarios con formateo dinámico de miles vía `moneyInput` (§6.4): teclear `6000` muestra `6.000`.
 - [ ] 1 solo `variant="primary"` por vista.
-- [ ] Estados loading / empty / error cubiertos (§6.7).
+- [ ] Estados loading / empty / error cubiertos (§6.7; en card con tabla, §6.3).
 - [ ] Espaciado solo con tokens (`xs/sm/md/lg/xl`); cero valores arbitrarios redundantes.
 - [ ] Radios según tabla §5; sombras solo `whisper` / `fluent-*`.
 - [ ] Modal con `glass-acrylic` + `shadow-fluent-16` (o `EnhancedModal`).

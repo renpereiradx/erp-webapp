@@ -75,6 +75,8 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
     items.map((item) => [item.id, stockBadgeLabel(item, t as unknown as TFn)] as const),
   );
 
+  // Empty state solo para la vista mobile (cards, sin tabla). En desktop la
+  // tabla se renderiza siempre y el empty vive dentro (receta §6.3 DESIGN.md).
   const emptyState = (
     <EmptyState
       icon={ShoppingCart}
@@ -90,131 +92,154 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
 
   return (
     <div className="overflow-x-auto">
-      {/* Vista de tabla (desktop) */}
+      {/* Vista de tabla (desktop) — anatomía canónica "card con tabla"
+          (DESIGN.md §6.3): tabla full-bleed sin recuadro interno; el empty
+          state vive DENTRO de la tabla (fila colSpan) igual que el carrito
+          de /compras. El componente EmptyState queda para la vista mobile. */}
       <div className="hidden md:block">
-        {items.length === 0 ? (
-          emptyState
-        ) : (
-          <div className="rounded-md border border-border-subtle overflow-hidden">
-            <Table className="table-fixed">
-              <TableHeader className="bg-surface-muted">
-                <TableRow className="hover:bg-surface-muted">
-                  <TableHead className="w-24 px-sm py-sm text-label-caps uppercase text-on-surface-deep">
-                    {t('sales.cart.col.id', 'ID')}
-                  </TableHead>
-                  <TableHead className="px-sm py-sm text-label-caps uppercase text-on-surface-deep">
-                    {t('sales.cart.col.product', 'Producto')}
-                  </TableHead>
-                  <TableHead className="w-[88px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
-                    {t('sales.cart.col.qty', 'Cant.')}
-                  </TableHead>
-                  <TableHead className="w-[120px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
-                    {t('sales.cart.col.price', 'Precio')}
-                  </TableHead>
-                  {hasDiscounts && (
-                    <TableHead className="w-[96px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
-                      {t('sales.cart.col.discount', 'Desc.')}
-                    </TableHead>
-                  )}
-                  <TableHead className="w-[128px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
-                    {t('sales.cart.col.total', 'Total')}
-                  </TableHead>
-                  <TableHead className="w-[84px] px-sm py-sm">
-                    <span className="sr-only">{t('sales.cart.col.actions', 'Acciones')}</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((item) => (
-                  <TableRow
-                    key={item.id}
-                    tabIndex={-1}
-                    onMouseEnter={() => setActive(item.id)}
-                    onMouseLeave={() => setActive(null)}
-                    onFocus={() => setActive(item.id)}
-                    onBlur={() => setActive(null)}
-                    className={cn(
-                      'hover:bg-surface-muted transition-colors duration-150',
-                      item.isFromPendingSale && 'bg-surface-subtle',
-                      activeItemId === item.id && !item.isFromPendingSale && 'bg-primary-container/20',
-                    )}
+        <Table className="table-fixed">
+          <TableHeader className="bg-surface-muted">
+            <TableRow className="hover:bg-surface-muted border-0">
+              <TableHead className="w-24 px-sm py-sm text-label-caps uppercase text-on-surface-deep">
+                {t('sales.cart.col.id', 'ID')}
+              </TableHead>
+              <TableHead className="px-sm py-sm text-label-caps uppercase text-on-surface-deep">
+                {t('sales.cart.col.product', 'Producto')}
+              </TableHead>
+              <TableHead className="w-[88px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
+                {t('sales.cart.col.qty', 'Cant.')}
+              </TableHead>
+              <TableHead className="w-[120px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
+                {t('sales.cart.col.price', 'Precio')}
+              </TableHead>
+              {hasDiscounts && (
+                <TableHead className="w-[96px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
+                  {t('sales.cart.col.discount', 'Desc.')}
+                </TableHead>
+              )}
+              <TableHead className="w-[128px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
+                {t('sales.cart.col.total', 'Total')}
+              </TableHead>
+              <TableHead className="w-[84px] px-sm py-sm">
+                <span className="sr-only">{t('sales.cart.col.actions', 'Acciones')}</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.length === 0 ? (
+              <TableRow className="hover:bg-transparent border-0">
+                <TableCell colSpan={hasDiscounts ? 7 : 6} className="py-xl">
+                  <div
+                    className="flex flex-col items-center justify-center gap-sm text-on-surface-deep"
+                    data-testid="sales-cart-empty"
                   >
-                    <TableCell className="px-sm py-sm text-body-md text-outline-fg font-data-mono align-top">
-                      {/* IDs largos (SALE-/product ids) desbordan la celda fija
-                          y pintan encima de la columna Producto: truncar. */}
-                      <div className="truncate" title={String(item.productId || '-')}>
-                        {item.productId || '-'}
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-sm py-sm text-body-md-bold text-foreground align-top">
-                      <div className="flex items-start gap-2">
-                        {item.isFromPendingSale && (
-                          <Badge variant="secondary" size="sm">
-                            {t('sales.cart.processedBadge', 'Procesado')}
-                          </Badge>
-                        )}
-                        {stockLabels.get(item.id) && (
-                          <Badge variant="destructive" size="sm" data-testid={`sales-cart-stock-${item.id}`}>
-                            {stockLabels.get(item.id)}
-                          </Badge>
-                        )}
-                        <div className="min-w-0">
-                          <p className="truncate" title={item.name}>{item.name}</p>
-                          <p className="text-body-sm text-outline-fg font-normal mt-0.5">
-                            {t('sales.cart.unitLabel', 'Unidad')}: {item.unit}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-sm py-sm text-right align-top whitespace-nowrap">
-                      <span className="font-data-mono text-body-md text-foreground">
-                        {formatNumber(item.quantity)}
-                      </span>{' '}
-                      <span className="text-body-sm text-outline-fg">{item.unit}</span>
-                      <ShortcutHint keys="Alt+Q" />
-                    </TableCell>
-                    <TableCell className="px-sm py-sm text-right text-body-md text-on-surface-deep font-data-mono align-top whitespace-nowrap">
-                      {formatCurrency(getItemBaseUnitPrice(item))}
-                    </TableCell>
-                    {hasDiscounts && (
-                      <TableCell className="px-sm py-sm text-right text-body-md text-error font-data-mono align-top whitespace-nowrap">
-                        -{formatCurrency(getItemLineDiscount(item))}
-                      </TableCell>
+                    <div className="size-16 rounded-full bg-surface-muted flex items-center justify-center">
+                      <ShoppingCart size={28} strokeWidth={1.5} className="text-outline-fg" aria-hidden="true" />
+                    </div>
+                    <p className="text-body-md-bold text-foreground">
+                      {t('sales.cart.empty', 'Carrito vacío')}
+                    </p>
+                    <p className="text-body-sm text-on-surface-deep">
+                      {t('sales.cart.emptyHint', 'Buscá un producto arriba para agregarlo (F2 foco en búsqueda).')}
+                    </p>
+                    {onEmptyAction && (
+                      <Button variant="secondary" size="sm" onClick={onEmptyAction} data-testid="empty-action">
+                        {t('sales.cart.emptyAction', 'Buscar producto (F2)')}
+                      </Button>
                     )}
-                    <TableCell className="px-sm py-sm text-right font-data-mono text-body-md-bold text-foreground align-top whitespace-nowrap">
-                      {formatCurrency(getItemLineTotal(item))}
-                    </TableCell>
-                    <TableCell className="px-sm py-sm text-right align-top whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEditItem(item)}
-                          disabled={item.isFromPendingSale}
-                          aria-label={t('sales.cart.editAria', 'Editar producto')}
-                          className="size-8 text-outline-fg hover:text-primary hover:bg-primary-container rounded-button"
-                        >
-                          <MoreVertical size={14} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onRemoveItem(item.id)}
-                          disabled={item.isFromPendingSale}
-                          aria-label={t('sales.cart.removeAria', 'Quitar producto')}
-                          className="size-8 text-outline-fg hover:text-error hover:bg-error-container rounded-button"
-                        >
-                          <X size={14} />
-                        </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              items.map((item) => (
+                <TableRow
+                  key={item.id}
+                  tabIndex={-1}
+                  onMouseEnter={() => setActive(item.id)}
+                  onMouseLeave={() => setActive(null)}
+                  onFocus={() => setActive(item.id)}
+                  onBlur={() => setActive(null)}
+                  className={cn(
+                    'hover:bg-surface-muted transition-colors duration-150',
+                    item.isFromPendingSale && 'bg-surface-subtle',
+                    activeItemId === item.id && !item.isFromPendingSale && 'bg-primary-container/20',
+                  )}
+                >
+                  <TableCell className="px-sm py-sm text-body-md text-outline-fg font-data-mono align-top">
+                    {/* IDs largos (SALE-/product ids) desbordan la celda fija
+                        y pintan encima de la columna Producto: truncar. */}
+                    <div className="truncate" title={String(item.productId || '-')}>
+                      {item.productId || '-'}
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-sm py-sm text-body-md-bold text-foreground align-top">
+                    <div className="flex items-start gap-2">
+                      {item.isFromPendingSale && (
+                        <Badge variant="secondary" size="sm">
+                          {t('sales.cart.processedBadge', 'Procesado')}
+                        </Badge>
+                      )}
+                      {stockLabels.get(item.id) && (
+                        <Badge variant="destructive" size="sm" data-testid={`sales-cart-stock-${item.id}`}>
+                          {stockLabels.get(item.id)}
+                        </Badge>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate" title={item.name}>{item.name}</p>
+                        <p className="text-body-sm text-outline-fg font-normal mt-0.5">
+                          {t('sales.cart.unitLabel', 'Unidad')}: {item.unit}
+                        </p>
                       </div>
-                      <ShortcutHint keys="Alt+X" />
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-sm py-sm text-right align-top whitespace-nowrap">
+                    <span className="font-data-mono text-body-md text-foreground">
+                      {formatNumber(item.quantity)}
+                    </span>{' '}
+                    <span className="text-body-sm text-outline-fg">{item.unit}</span>
+                    <ShortcutHint keys="Alt+Q" />
+                  </TableCell>
+                  <TableCell className="px-sm py-sm text-right text-body-md text-on-surface-deep font-data-mono align-top whitespace-nowrap">
+                    {formatCurrency(getItemBaseUnitPrice(item))}
+                  </TableCell>
+                  {hasDiscounts && (
+                    <TableCell className="px-sm py-sm text-right text-body-md text-error font-data-mono align-top whitespace-nowrap">
+                      -{formatCurrency(getItemLineDiscount(item))}
                     </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+                  )}
+                  <TableCell className="px-sm py-sm text-right font-data-mono text-body-md-bold text-foreground align-top whitespace-nowrap">
+                    {formatCurrency(getItemLineTotal(item))}
+                  </TableCell>
+                  <TableCell className="px-sm py-sm text-right align-top whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEditItem(item)}
+                        disabled={item.isFromPendingSale}
+                        aria-label={t('sales.cart.editAria', 'Editar producto')}
+                        className="size-8 text-outline-fg hover:text-primary hover:bg-primary-container rounded-button"
+                      >
+                        <MoreVertical size={14} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onRemoveItem(item.id)}
+                        disabled={item.isFromPendingSale}
+                        aria-label={t('sales.cart.removeAria', 'Quitar producto')}
+                        className="size-8 text-outline-fg hover:text-error hover:bg-error-container rounded-button"
+                      >
+                        <X size={14} />
+                      </Button>
+                    </div>
+                    <ShortcutHint keys="Alt+X" />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Vista de tarjetas (mobile) */}
