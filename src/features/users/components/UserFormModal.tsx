@@ -1,14 +1,11 @@
 import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Eye, EyeOff, ExternalLink, Lock, Mail, Phone, Shield, Star, User as UserIcon } from 'lucide-react';
+import { Building2, Eye, EyeOff, ExternalLink, Lock, Mail, Phone, Shield, User as UserIcon } from 'lucide-react';
 
 import { useI18n } from '@/lib/i18n';
 import useUserStore from '@/store/useUserStore';
-import { branchService } from '@/features/branches/services/branchService';
-import type { Branch, UserBranchAccess } from '@/types';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -39,6 +36,8 @@ import type { User } from '@/types';
 
 import { emptyUserForm, getUserFormSchema } from '../schemas/userForm.schema';
 import type { UserFormMode, UserFormValues } from '../schemas/userForm.schema';
+import { useUserBranchAccess } from '../hooks/useUserBranchAccess';
+import { UserBranchAccessList } from './UserBranchAccessList';
 import type { Role, TFn } from '../types';
 
 interface UserFormModalProps {
@@ -75,25 +74,11 @@ export function UserFormModal({ user, open, onOpenChange, onSaved }: UserFormMod
   // D.2 (PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES): sección de solo lectura con
   // las sucursales asignadas. La asignación se administra únicamente desde
   // Configuración → Sucursales (fuente de verdad única); acá solo se informa.
-  const { data: accessResponse, isLoading: loadingAccess } = useQuery({
-    queryKey: ['user-branches', user?.id],
-    queryFn: () => branchService.getUserBranches(user!.id),
-    enabled: open && isEdit && Boolean(user?.id),
-  });
-  const userAccessList: UserBranchAccess[] =
-    (accessResponse as { access?: UserBranchAccess[] })?.access ||
-    (accessResponse as unknown as { data?: UserBranchAccess[] })?.data ||
-    [];
-
-  const { data: branchesResponse } = useQuery({
-    queryKey: ['branches-names'],
-    queryFn: () => branchService.getBranches({ page_size: 100 }),
-    enabled: open && isEdit && Boolean(user?.id),
-    staleTime: 1000 * 60 * 5,
-  });
-  const branchNameById = new Map<number, string>(
-    ((branchesResponse as { branches?: Branch[] })?.branches || []).map((b) => [b.id, b.name]),
-  );
+  const {
+    items: userAccessList,
+    branches: userBranchList,
+    isLoading: loadingAccess,
+  } = useUserBranchAccess(isEdit ? user?.id : undefined, open);
 
   useEffect(() => {
     if (!open) return;
@@ -351,42 +336,18 @@ export function UserFormModal({ user, open, onOpenChange, onSaved }: UserFormMod
               <section className="space-y-md">
                 <h3 className={sectionTitle}>
                   <Building2 className="size-4 text-primary" />
-                  {t('users.form.branches.title', 'Sucursales Asignadas')}
+                  {t('users.branches.title', 'Sucursales Asignadas')}
                 </h3>
                 {loadingAccess ? (
                   <p className="text-body-sm text-on-surface-deep">
-                    {t('users.form.branches.loading', 'Cargando sucursales...')}
+                    {t('users.branches.loading', 'Cargando sucursales...')}
                   </p>
                 ) : userAccessList.length === 0 ? (
                   <p className="text-body-sm text-on-surface-deep">
-                    {t('users.form.branches.empty', 'Sin sucursales asignadas.')}
+                    {t('users.branches.empty', 'Sin sucursales asignadas.')}
                   </p>
                 ) : (
-                  <ul className="rounded-md border border-divider divide-y divide-divider overflow-hidden">
-                    {userAccessList.map((acc) => (
-                      <li
-                        key={acc.id}
-                        className="flex items-center justify-between gap-sm bg-surface px-md py-sm"
-                      >
-                        <span className="flex min-w-0 items-center gap-sm text-body-md text-foreground">
-                          <Building2 className="size-4 shrink-0 text-on-surface-deep" />
-                          <span className="truncate">
-                            {branchNameById.get(acc.branch_id) ||
-                              t('branches.withId', 'Sucursal {{id}}', { id: acc.branch_id })}
-                          </span>
-                        </span>
-                        <span className="flex shrink-0 items-center gap-xs">
-                          {acc.is_default_branch && (
-                            <span className="flex items-center gap-xs rounded-sm bg-primary/10 px-xs py-0.5 text-label-caps uppercase text-primary">
-                              <Star className="size-3" />
-                              {t('users.form.branches.default', 'Por defecto')}
-                            </span>
-                          )}
-                          <span className="text-body-sm text-on-surface-deep">{acc.access_type}</span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                  <UserBranchAccessList items={userAccessList} branches={userBranchList} />
                 )}
                 <button
                   type="button"
@@ -394,7 +355,7 @@ export function UserFormModal({ user, open, onOpenChange, onSaved }: UserFormMod
                   className="flex items-center gap-xs rounded-sm text-body-sm-bold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
                 >
                   <ExternalLink className="size-4" />
-                  {t('users.form.branches.manageLink', 'Administrar accesos en Configuración → Sucursales')}
+                  {t('users.branches.manageLink', 'Administrar accesos en Configuración → Sucursales')}
                 </button>
               </section>
             )}

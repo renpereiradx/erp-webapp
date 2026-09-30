@@ -178,11 +178,19 @@ export const users = {
   'users.roles.confirmReplaceSelf': 'Atención: es tu propio usuario. Si continuás, tu acceso cambia de inmediato.',
   'users.roles.replaceSuccess': 'Rol actualizado correctamente.',
 
-  // Sucursales del usuario (D.2 — PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES)
-  'users.form.branches.title': 'Sucursales Asignadas',
-  'users.form.branches.loading': 'Cargando sucursales...',
-  'users.form.branches.empty': 'Sin sucursales asignadas.',
-  'users.form.branches.default': 'Por defecto',
-  'users.form.branches.manageLink': 'Administrar accesos en Configuración → Sucursales',
+  // Nota de creación (la asignación de sucursales se administra solo en Sucursales)
   'users.form.branches.createNote': 'Al crear el usuario se le otorga acceso automático a la sucursal principal. Los accesos se ajustan luego en Configuración → Sucursales.',
+
+  // Sucursales asignadas (card del detalle + lista compartida; D.2 — PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES)
+  'users.branches.title': 'Sucursales Asignadas',
+  'users.branches.loading': 'Cargando sucursales...',
+  'users.branches.empty': 'Sin sucursales asignadas.',
+  'users.branches.emptyHint': 'Este usuario todavía no tiene acceso a ninguna sucursal.',
+  'users.branches.manageLink': 'Administrar accesos en Configuración → Sucursales',
+  'users.branches.default': 'Por defecto',
+  'users.branches.accessFull': 'Acceso total',
+  'users.branches.accessLimited': 'Solo transacciones',
+  'users.branches.accessReadOnly': 'Solo lectura',
+  'users.branches.error': 'No se pudieron cargar las sucursales asignadas.',
+  'users.branches.retry': 'Reintentar',
 }

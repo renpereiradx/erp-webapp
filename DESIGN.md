@@ -658,6 +658,21 @@ Anatomía compartida — los wizards de concreción son GEMELOS: mismos estilos,
 - **Panel derecho (carrito)**: título + badge `"{líneas} · {unidades}"`; filas de ítems (nombre bold, `qty × precio` en mono); footer de totales sobre `bg-surface-muted` con el total en `text-headline-lg-mobile text-primary`.
 - Los datos específicos del dominio viven en el paso que corresponda (compras: sucursal de carga + notas; ventas: tasa de cambio multi-moneda). Un wizard = un propósito.
 
+### 6.10 Modal de configuración con pestañas (guardado por contexto)
+
+Anatomía para modales con pestañas donde cada pestaña gestiona **un recurso distinto** (datos generales / configuración / permisos). Referencia viva: `BranchModal` (`src/features/branches/components/BranchModal.tsx`).
+
+- **Cada pestaña = su propio ciclo de guardado.** NUNCA un botón "Guardar" global visible en todas las pestañas cuando solo persiste una: el footer es **contextual a la pestaña activa**.
+- **Tabs controladas**: `value`/`onValueChange` en estado del modal — el footer y los indicadores necesitan conocer la pestaña activa.
+- **Footer por tipo de pestaña** (jerarquía §6.1):
+  - Pestaña de formulario → `[secondary Cancelar] … [primary Guardar]`.
+  - Pestaña de acciones inmediatas (por fila, ya persistidas) → hint *"Los cambios de esta sección se aplican de inmediato"* a la izquierda + `[secondary Cerrar]`. Sin botón Guardar (no hay nada que guardar).
+- **Formulario sucio**: punto indicador (`size-1.5 rounded-full bg-warning` + texto `sr-only`) en el trigger del tab; cambiar de pestaña o cerrar con cambios sin guardar exige confirmación. El confirm es un **`AlertDialog` anidado** en el stack de capas de Radix (`z-[1200]`, precedente `CategoryManagementModal`) — un `EnhancedModal` apilado queda bloqueado por el pointer-events lock del `Dialog`. "Descartar" revierte el formulario al snapshot de apertura.
+- Al guardar con éxito se actualiza el snapshot: el indicador de sucio se limpia y cerrar ya no pregunta.
+- Las mutaciones de una pestaña invalidan también las queries de las vistas que muestran el mismo recurso en otro contexto (ej. accesos ↔ card "Sucursales Asignadas" del detalle de usuario).
+
+**Anti-patrón:** footer único con Guardar siempre visible que persiste en silencio una pestaña distinta a la que el usuario está mirando.
+
 ---
 
 ## 7. Plantilla de página de listado estándar

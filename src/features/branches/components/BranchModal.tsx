@@ -45,13 +45,25 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Building2, Plus, Trash2, ShieldCheck, Receipt, UserPlus, Loader2, Star } from 'lucide-react';
+import { Building2, Plus, Trash2, ShieldCheck, Receipt, UserPlus, Loader2, Star, Info } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
+type BranchTab = 'info' | 'fiscal' | 'access';
 
 interface BranchModalProps {
   isOpen: boolean;
   onClose: () => void;
   branch: Branch | null;
-  initialTab?: 'info' | 'fiscal' | 'access';
+  initialTab?: BranchTab;
 }
 
 const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, initialTab = 'info' }) => {
@@ -63,6 +75,26 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
   // --- ESTADOS DE UI ---
   const [showAddFiscal, setShowAddFiscal] = useState(false);
   const [showAddAccess, setShowAddAccess] = useState(false);
+  // Tabs controladas: el footer es contextual a la pestaña activa (DESIGN §6.10).
+  const [activeTab, setActiveTab] = useState<BranchTab>(initialTab);
+  // Snapshot de apertura del form "info": base del dirty tracking. Guardar lo
+  // actualiza; descartar revierte a él. Inicia con la misma forma que formData
+  // para que el primer render no cuente como "sucio" antes del effect.
+  const [formSnapshot, setFormSnapshot] = useState<Partial<CreateBranchRequest>>({
+    code: '',
+    name: '',
+    branch_type: 'POINT_OF_SALE',
+    legal_name: '',
+    trade_name: '',
+    ruc: '',
+    address: '',
+    city: '',
+    phone: '',
+    email: '',
+    is_warehouse: false,
+  });
+  // Acción pendiente bloqueada por cambios sin guardar ('tab' | 'close').
+  const [pendingNav, setPendingNav] = useState<{ kind: 'tab'; tab: BranchTab } | { kind: 'close' } | null>(null);
 
   // Formulario Información General
   const [formData, setFormData] = useState<Partial<CreateBranchRequest>>({
@@ -101,26 +133,60 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
   });
 
   useEffect(() => {
-    if (branch) {
-      setFormData(branch);
-    } else {
-      setFormData({
-        code: '',
-        name: '',
-        branch_type: 'POINT_OF_SALE',
-        legal_name: '',
-        trade_name: '',
-        ruc: '',
-        address: '',
-        city: '',
-        phone: '',
-        email: '',
-        is_warehouse: false,
-      });
-    }
+    const next: Partial<CreateBranchRequest> = branch
+      ? { ...branch }
+      : {
+          code: '',
+          name: '',
+          branch_type: 'POINT_OF_SALE',
+          legal_name: '',
+          trade_name: '',
+          ruc: '',
+          address: '',
+          city: '',
+          phone: '',
+          email: '',
+          is_warehouse: false,
+        };
+    setFormData(next);
+    setFormSnapshot(next);
     setShowAddFiscal(false);
     setShowAddAccess(false);
-  }, [branch, isOpen]);
+    setActiveTab(initialTab);
+    setPendingNav(null);
+  }, [branch, isOpen, initialTab]);
+
+  // Dirty tracking del tab "info" (único tab con form): activa el punto
+  // indicador y la guardia de descarte al cambiar de tab o cerrar.
+  const isInfoDirty = useMemo(
+    () => JSON.stringify(formData) !== JSON.stringify(formSnapshot),
+    [formData, formSnapshot],
+  );
+
+  const discardAndContinue = () => {
+    setFormData(formSnapshot);
+    if (pendingNav?.kind === 'tab') setActiveTab(pendingNav.tab);
+    else onClose();
+    setPendingNav(null);
+  };
+
+  const requestClose = () => {
+    if (isInfoDirty) {
+      setPendingNav({ kind: 'close' });
+      return;
+    }
+    onClose();
+  };
+
+  const handleTabChange = (next: string) => {
+    const tab = next as BranchTab;
+    if (tab === activeTab) return;
+    if (isInfoDirty) {
+      setPendingNav({ kind: 'tab', tab });
+      return;
+    }
+    setActiveTab(tab);
+  };
 
   // --- QUERIES PARA CONFIG FISCAL Y ACCESOS ---
   const { data: fiscalConfigs, isLoading: loadingFiscal } = useQuery({
@@ -143,13 +209,18 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
       }
       return branchService.createBranch(data as CreateBranchRequest);
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['branches'] });
-      addToast('Sucursal guardada exitosamente', 'success');
+      // La card "Sucursales Asignadas" del detalle de usuario lista nombres de
+      // sucursal: mantenerla fresca tras crear/editar.
+      queryClient.invalidateQueries({ queryKey: ['user-branches'] });
+      addToast(t('branches.modal.saved', 'Sucursal guardada exitosamente'), 'success');
+      // El estado guardado pasa a ser la nueva base del dirty tracking.
+      setFormSnapshot({ ...(variables as Partial<CreateBranchRequest>) });
       if (!isEditing) onClose();
     },
     onError: (error: any) => {
-      addToast(error.message || 'Error al guardar la sucursal', 'error');
+      addToast(error.message || t('branches.modal.saveError', 'Error al guardar la sucursal'), 'error');
     }
   });
 
@@ -157,6 +228,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
     mutationFn: (data: GrantBranchAccessRequest) => branchService.grantAccess(branch!.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branch-access', branch?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-branches'] });
       addToast('Acceso otorgado correctamente', 'success');
       setShowAddAccess(false);
       setAccessForm({ user_id: '', access_type: 'FULL', is_default_branch: false });
@@ -171,6 +243,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
     mutationFn: (userId: string) => branchService.updateAccess(branch!.id, userId, { is_default_branch: true }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branch-access', branch?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-branches'] });
       addToast(t('branchAccess.setDefaultSuccess', 'Sucursal por defecto actualizada'), 'success');
     },
     onError: (error: any) => addToast(error.message || t('branchAccess.setDefaultError', 'Error al marcar sucursal por defecto'), 'error')
@@ -213,6 +286,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
     mutationFn: (userId: string) => branchService.revokeAccess(branch!.id, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branch-access', branch?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-branches'] });
       addToast('Acceso revocado correctamente', 'success');
     }
   });
@@ -244,39 +318,50 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.code) {
-      addToast('Nombre y código son requeridos', 'warning');
+      addToast(t('branches.modal.requiredFields', 'Nombre y código son requeridos'), 'warning');
       return;
     }
     saveMutation.mutate(formData as CreateBranchRequest);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open && pendingNav === null) requestClose(); }}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col font-display p-0 gap-0 border-none shadow-fluent-64">
         <DialogHeader className="p-6 sm:p-8 pb-4 border-b bg-white">
           <DialogTitle className="text-2xl font-black flex items-center gap-3 text-text-main">
             <div className="size-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
               <Building2 size={20} />
             </div>
-            {isEditing ? `Gestionar: ${branch.name}` : 'Nueva Sucursal'}
+            {isEditing
+              ? t('branches.modal.titleEdit', 'Gestionar: {name}', { name: branch.name })
+              : t('branches.modal.titleNew', 'Nueva Sucursal')}
           </DialogTitle>
           <DialogDescription className="text-text-secondary mt-1.5 text-sm font-medium">
-            {isEditing ? 'Administre la información general, configuración fiscal y permisos de usuario para esta sucursal.' : 'Complete los campos obligatorios para registrar una nueva sucursal en el sistema.'}
+            {isEditing
+              ? t('branches.modal.descriptionEdit', 'Administre la información general, configuración fiscal y permisos de usuario para esta sucursal.')
+              : t('branches.modal.descriptionNew', 'Complete los campos obligatorios para registrar una nueva sucursal en el sistema.')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 pt-4">
 
-        <Tabs defaultValue={initialTab} className="mt-2">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-lg">
-            <TabsTrigger value="info" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs py-2 rounded-md">
-              Información General
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-2">
+          <TabsList className="grid w-full grid-cols-3 bg-surface-muted p-1 rounded-lg border border-border-subtle">
+            <TabsTrigger value="info" className="data-[state=active]:bg-surface data-[state=active]:shadow-sm text-body-sm-bold py-2 rounded-md">
+              {t('branches.modal.tabInfo', 'Información General')}
+              {isInfoDirty && (
+                <>
+                  <span aria-hidden="true" className="size-1.5 rounded-full bg-warning" />
+                  <span className="sr-only">{t('branches.modal.unsavedDot', 'Cambios sin guardar')}</span>
+                </>
+              )}
             </TabsTrigger>
-            <TabsTrigger value="fiscal" disabled={!isEditing} className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs py-2 rounded-md">
-              Config. Fiscal
+            <TabsTrigger value="fiscal" disabled={!isEditing} className="data-[state=active]:bg-surface data-[state=active]:shadow-sm text-body-sm-bold py-2 rounded-md">
+              {t('branches.modal.tabFiscal', 'Config. Fiscal')}
             </TabsTrigger>
-            <TabsTrigger value="access" disabled={!isEditing} className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-xs py-2 rounded-md">
-              Accesos
+            <TabsTrigger value="access" disabled={!isEditing} className="data-[state=active]:bg-surface data-[state=active]:shadow-sm text-body-sm-bold py-2 rounded-md">
+              {t('branches.modal.tabAccess', 'Accesos')}
             </TabsTrigger>
           </TabsList>
 
@@ -766,19 +851,62 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
         </Tabs>
         </div>
 
-        <DialogFooter className="p-6 sm:p-8 bg-[#f3f2f1]/50 border-t gap-3">
-          <Button variant="ghost" onClick={onClose} className="text-sm h-11 px-6 font-bold text-slate-600">Cancelar</Button>
-          <Button 
-            type="submit" 
-            form="branch-form" 
-            disabled={saveMutation.isPending}
-            className="bg-primary hover:bg-primary-hover text-white text-sm h-11 px-8 font-bold shadow-lg shadow-primary/20"
-          >
-            {saveMutation.isPending ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Crear Sucursal'}
-          </Button>
-        </DialogFooter>
+        {/* Footer contextual a la pestaña activa (DESIGN §6.10): el form "info"
+            guarda explícito; fiscal/accesos son acciones inmediatas por fila. */}
+        {activeTab === 'info' ? (
+          <DialogFooter className="p-lg bg-surface-muted border-t border-divider gap-sm">
+            <Button variant="secondary" onClick={requestClose} className="h-11 px-6 text-body-md-bold">
+              {t('branches.modal.cancel', 'Cancelar')}
+            </Button>
+            <Button
+              type="submit"
+              form="branch-form"
+              variant="primary"
+              loading={saveMutation.isPending}
+              className="h-11 px-8 text-body-md-bold"
+            >
+              {isEditing ? t('branches.modal.save', 'Guardar Cambios') : t('branches.modal.create', 'Crear Sucursal')}
+            </Button>
+          </DialogFooter>
+        ) : (
+          <DialogFooter className="p-lg bg-surface-muted border-t border-divider gap-md flex items-center justify-between">
+            <p className="text-body-sm text-on-surface-deep flex items-center gap-xs min-w-0">
+              <Info className="size-4 shrink-0 text-primary" aria-hidden="true" />
+              {t('branches.modal.immediateHint', 'Los cambios de esta sección se aplican de inmediato.')}
+            </p>
+            <Button variant="secondary" onClick={requestClose} className="h-11 px-6 text-body-md-bold shrink-0">
+              {t('branches.modal.close', 'Cerrar')}
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
+
+    {/* Guardia de cambios sin guardar: AlertDialog anidado en el stack de
+        capas de Radix (patrón CategoryManagementModal, z-[1200]) — un
+        EnhancedModal apilado quedaría bloqueado por el pointer-events lock
+        del Dialog. Descartar revierte al snapshot de apertura. */}
+    <AlertDialog open={pendingNav !== null} onOpenChange={(open) => { if (!open) setPendingNav(null); }}>
+      <AlertDialogContent className="z-[1200]">
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('branches.modal.unsavedTitle', 'Cambios sin guardar')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t('branches.modal.unsavedDescription', 'Hay cambios sin guardar en Información General. Si continúa, se perderán.')}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel asChild>
+            <Button variant="secondary">{t('branches.modal.unsavedCancel', 'Seguir editando')}</Button>
+          </AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <Button variant="destructive" onClick={discardAndContinue}>
+              {t('branches.modal.unsavedConfirm', 'Descartar cambios')}
+            </Button>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
 

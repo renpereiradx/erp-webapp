@@ -40,6 +40,7 @@ import { transfers } from './transfers'
 import { devices } from './devices'
 import { catalog } from './catalog'
 import { counterorders } from './counterorders'
+import { branches } from './branches'
 
 /**
  * Diccionario completo de traducciones en español
@@ -81,6 +82,7 @@ export const es = {
   ...devices,
   ...catalog,
   ...counterorders,
+  ...branches,
   ...other,
   ...unitConversions,
 }

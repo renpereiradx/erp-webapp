@@ -23,6 +23,7 @@ import { formatDateOrFallback, getRoleBadgeTone } from '@/domain/users/userDispl
 
 import { useUserDetail } from '../hooks/useUserDetail';
 import { ManageRolesPanel } from './ManageRolesPanel';
+import { UserBranchesCard } from './UserBranchesCard';
 import { UserFormModal } from './UserFormModal';
 
 const PageHeaderX = PageHeader as unknown as React.FC<{
@@ -216,6 +217,8 @@ export function UserDetailPage() {
               </div>
             </div>
           </div>
+
+          <UserBranchesCard userId={user.id} />
 
           <div className="bg-surface rounded-md shadow-whisper border-0 p-lg">
             <h3 className="text-label-caps uppercase text-on-surface-deep flex items-center gap-sm mb-md">
