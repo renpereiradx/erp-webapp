@@ -3,7 +3,7 @@ import { Check, Package, X } from 'lucide-react'
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic'
 import { useI18n } from '@/lib/i18n'
 import { formatCurrency } from '@/utils/currencyUtils'
-import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput'
+import { formatNumberInput, parseNumberInput, parseQuantityInput, formatQuantityInput } from '@/domain/shared/moneyInput'
 import { variantService } from '@/services/variantService'
 import { ProductVariant } from '@/types'
 import {
@@ -522,8 +522,8 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     type='text'
                     inputMode='decimal'
                     className='bg-surface-muted text-body-md-bold'
-                    value={formatNumberInput(modalQuantity)}
-                    onChange={e => setModalQuantity(parseNumberInput(e.target.value))}
+                    value={formatQuantityInput(modalQuantity)}
+                    onChange={e => setModalQuantity(parseQuantityInput(e.target.value))}
                     placeholder='0'
                   />
                   <p className='text-body-sm text-outline-fg'>
@@ -789,7 +789,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                       {t('purchases.product_modal.line_subtotal', 'Subtotal Línea')}
                     </span>
                     <span className='text-body-sm font-data-mono text-outline-fg'>
-                      {formatNumberInput(modalQuantity) || 0} ×{' '}
+                      {formatQuantityInput(modalQuantity) || 0} ×{' '}
                       {formatCurrency(modalUnitPrice || 0)}
                     </span>
                   </div>

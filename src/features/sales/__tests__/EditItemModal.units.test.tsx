@@ -96,4 +96,23 @@ describe('EditItemModal — selector de unidades (PLAN_UNITS)', () => {
 
     await waitFor(() => expect(onUnitChange).toHaveBeenCalledWith('box'))
   })
+
+  it('kg: tipear "1.5" con punto es decimal, NO se corrompe a "15"', async () => {
+    const user = userEvent.setup()
+    const onQuantityChange = vi.fn()
+    render(
+      <EditItemModal
+        {...buildProps({ unit: 'kg', onQuantityChange })}
+      />
+    )
+
+    const qty = screen.getByLabelText('Cantidad') as HTMLInputElement
+    await user.clear(qty)
+    await user.type(qty, '1.5')
+
+    // El draft conserva el separador final ("1.") para que el punto no
+    // desaparezca a mitad de tipeo y el valor final sea 1.5.
+    expect(onQuantityChange).toHaveBeenLastCalledWith('1.5')
+    expect(qty.value).toBe('1.5')
+  })
 })

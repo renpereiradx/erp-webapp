@@ -3,6 +3,8 @@ import {
   parseNumberInput,
   formatNumberInput,
   onNumberInputChange,
+  parseQuantityInput,
+  formatQuantityInput,
 } from './moneyInput';
 
 describe('parseNumberInput', () => {
@@ -61,6 +63,70 @@ describe('formatNumberInput', () => {
 describe('onNumberInputChange', () => {
   it('is just parseNumberInput', () => {
     expect(onNumberInputChange('1.050.690')).toBe('1050690');
+  });
+});
+
+describe('parseQuantityInput (kg/m: punto Y coma son decimales, sin miles)', () => {
+  it('dot is a decimal separator, NOT grouping ("1.5" stays 1.5)', () => {
+    expect(parseQuantityInput('1.5')).toBe('1.5');
+    expect(parseQuantityInput('2.25')).toBe('2.25');
+  });
+
+  it('comma is a decimal separator too (es-PY keyboard)', () => {
+    expect(parseQuantityInput('1,5')).toBe('1.5');
+    expect(parseQuantityInput('0,01')).toBe('0.01');
+  });
+
+  it('keeps the trailing separator while typing (the "1.5" vs "15" guard)', () => {
+    // typing sequence for "1.5": each keystroke must keep the dot alive
+    expect(parseQuantityInput('1')).toBe('1');
+    expect(parseQuantityInput('1.')).toBe('1.');
+    expect(parseQuantityInput('1.5')).toBe('1.5');
+  });
+
+  it('extra separators collapse into the first decimal dot', () => {
+    expect(parseQuantityInput('1.5.2')).toBe('1.52');
+    expect(parseQuantityInput('1,5,2')).toBe('1.52');
+  });
+
+  it('strips signs, letters and symbols (paste tolerance)', () => {
+    expect(parseQuantityInput('-3')).toBe('3');
+    expect(parseQuantityInput('5 kg')).toBe('5');
+  });
+
+  it('empty stays empty', () => {
+    expect(parseQuantityInput('')).toBe('');
+    expect(parseQuantityInput('abc')).toBe('');
+  });
+});
+
+describe('formatQuantityInput', () => {
+  it('renders the comma decimal without grouping (cart table convention)', () => {
+    expect(formatQuantityInput('1.5')).toBe('1,5');
+    expect(formatQuantityInput(2.5)).toBe('2,5');
+    expect(formatQuantityInput(1500)).toBe('1500');
+  });
+
+  it('renders the trailing separator so the typed dot survives the round-trip', () => {
+    expect(formatQuantityInput('1.')).toBe('1,');
+    expect(formatQuantityInput('1.,')).toBe('1,');
+  });
+
+  it('empty/invalid yields empty string (not 0)', () => {
+    expect(formatQuantityInput('')).toBe('');
+    expect(formatQuantityInput(null)).toBe('');
+    expect(formatQuantityInput(undefined)).toBe('');
+  });
+
+  it('normalizes lone decimals and strips leading zeros', () => {
+    expect(formatQuantityInput('.5')).toBe('0,5');
+    expect(formatQuantityInput('02.5')).toBe('2,5');
+  });
+
+  it('round-trip: format → parse → same canonical', () => {
+    for (const n of ['1.5', '0.01', '15', '1234.56']) {
+      expect(parseQuantityInput(formatQuantityInput(n))).toBe(n);
+    }
   });
 });
 

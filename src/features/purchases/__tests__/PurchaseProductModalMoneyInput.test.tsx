@@ -137,6 +137,22 @@ describe('PurchaseProductModal — formateo de inputs numéricos', () => {
     expect(spies.setModalQuantity).toHaveBeenLastCalledWith('3.5')
   })
 
+  it('cantidad: el punto tecleado es decimal, NO agrupador ("1.5" ≠ 15)', () => {
+    const spies = renderModal()
+    const qty = screen.getByLabelText(/Cantidad/i) as HTMLInputElement
+
+    // Secuencia de tecleo real: "1" → "1." → "1.5". El separador final debe
+    // sobrevivir al round-trip controlado mientras se tipea.
+    fireEvent.change(qty, { target: { value: '1' } })
+    expect(qty.value).toBe('1')
+    fireEvent.change(qty, { target: { value: '1.' } })
+    expect(qty.value).toBe('1,')
+    fireEvent.change(qty, { target: { value: '1.5' } })
+
+    expect(qty.value).toBe('1,5')
+    expect(spies.setModalQuantity).toHaveBeenLastCalledWith('1.5')
+  })
+
   it('precio de venta (modo fijo): muestra agrupado y reporta número', () => {
     const spies = renderModal({ pricingMode: 'sale_price', initialSalePrice: 5000 })
     const price = screen.getByLabelText(/Precio de Venta/i) as HTMLInputElement

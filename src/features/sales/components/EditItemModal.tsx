@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import EnhancedModal from '@/components/ui/EnhancedModal';
 import UnitSelect from '@/components/UnitSelect';
 import { formatCurrency } from '@/utils/currencyUtils';
-import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput';
+import { formatNumberInput, parseNumberInput, parseQuantityInput } from '@/domain/shared/moneyInput';
 import { isDecimalUnit } from '@/constants/units';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
@@ -187,11 +187,16 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             <Input
               id="edit-item-quantity"
               ref={quantityRef}
-              type={allowDecimal ? 'number' : 'text'}
+              type="text"
               inputMode={allowDecimal ? 'decimal' : 'numeric'}
               value={qtyDraft !== null ? qtyDraft : formatNumberInput(quantity)}
               onChange={(e) => {
-                const canonical = parseNumberInput(e.target.value);
+                // Cantidad fraccionada (kg): el punto tecleado es decimal, NO
+                // agrupador de miles — "1.5" debe quedar 1.5, no corromperse a
+                // "15". Unidades enteras conservan la convención de moneyInput.
+                const canonical = allowDecimal
+                  ? parseQuantityInput(e.target.value)
+                  : parseNumberInput(e.target.value);
                 setQtyDraft(canonical);
                 const parsed = Number(canonical);
                 if (canonical !== '' && Number.isFinite(parsed)) {
@@ -199,8 +204,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                 }
               }}
               onBlur={() => setQtyDraft(null)}
-              min={allowDecimal ? '0.01' : '1'}
-              step={allowDecimal ? '0.01' : '1'}
               className="h-10 text-body-md font-data-mono text-foreground"
             />
           </div>

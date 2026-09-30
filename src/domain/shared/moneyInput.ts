@@ -76,3 +76,52 @@ export function formatNumberInput(value: string | number | null | undefined): st
 export function onNumberInputChange(raw: string): string {
   return parseNumberInput(raw);
 }
+
+/**
+ * Quantity variant (kg, m, unidades fraccionadas): NO thousands grouping and
+ * BOTH dot and comma are decimal separators. Operators type "1.5" or "1,5"
+ * for one and a half — dots can NEVER be grouping here, or "1.5" would
+ * corrupt into "15". A formatted es-PY paste ("1.234,5") is out of contract
+ * for quantities: type plain digits and one separator.
+ *
+ * The canonical state keeps the JS dot decimal; a single TRAILING separator
+ * is preserved ("1." stays "1.") so the separator does not vanish mid-typing
+ * and turn "1.5" into "15" keystroke by keystroke. Numbers parse fine
+ * (Number("1.") === 1), so live totals stay correct while typing.
+ */
+export function parseQuantityInput(raw: string): string {
+  if (!raw) return '';
+  let s = raw.replace(/[^0-9.,]/g, ''); // no sign: quantities are >= 0
+  s = s.replace(/,/g, '.'); // comma is a decimal separator too
+  const firstDot = s.indexOf('.');
+  if (firstDot !== -1) {
+    // keep the first dot as THE decimal separator, drop the rest
+    s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
+  }
+  return s;
+}
+
+/**
+ * Display counterpart of parseQuantityInput: canonical value → es-PY text
+ * with COMMA decimal (matches the cart tables, "2,5 kg") and no grouping.
+ * Unlike formatNumberInput it renders the trailing separator ("1." → "1,")
+ * so the typed decimal survives the controlled round-trip while typing.
+ */
+export function formatQuantityInput(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return '';
+  const str = String(value).trim();
+  if (str === '') return '';
+
+  const canonical = str.match(/^(\d*)(?:\.(\d*))?$/);
+  if (!canonical || (canonical[1] === '' && canonical[2] === undefined)) {
+    // Not canonical (e.g. pasted): re-parse and format once.
+    const reparsed = parseQuantityInput(str);
+    if (reparsed === str) return '';
+    return formatQuantityInput(reparsed);
+  }
+  const [, intRaw, decRaw] = canonical;
+  const intPart =
+    intRaw === '' ? (decRaw === undefined ? '' : '0') : intRaw.replace(/^0+(?=\d)/, '');
+  const dec = decRaw !== undefined ? `,${decRaw}` : '';
+  return `${intPart}${dec}`;
+}
