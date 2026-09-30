@@ -11,6 +11,7 @@ import { EditItemModal } from '@/features/sales/components/EditItemModal';
 import { CancelSaleModal } from '@/features/sales/components/CancelSaleModal';
 import { RequestCancellationModal } from '@/features/sales/components/RequestCancellationModal';
 import { CancellationRequestsPanel } from '@/features/sales/components/CancellationRequestsPanel';
+import { SaleSuccessPrintModal } from '@/features/sales/components/SaleSuccessPrintModal';
 import { useCancellationRequests } from '@/features/sales/hooks/useCancellationRequests';
 import { PRICE_CHANGE_REASONS } from '@/features/sales/constants/priceChangeReasons';
 import type { CollectionData } from '@/features/sales/components/steps/CollectionStep';
@@ -342,6 +343,8 @@ const SalesNew: React.FC = () => {
   // + modales de pendientes/reservas). Un solo Stepper: Cliente → Pendientes →
   // Reservas → Pago → Cobro, con carrito siempre visible.
   const [showCheckoutWizard, setShowCheckoutWizard] = useState(false);
+  // Venta del comprobante post-cobro (SaleSuccessPrintModal); null = cerrado.
+  const [receiptSaleId, setReceiptSaleId] = useState<string | null>(null);
 
   const [pendingReservations, setPendingReservations] = useState<any[]>([]);
   const [selectedResIds, setSelectedResIds] = useState<Set<number>>(new Set());
@@ -1722,6 +1725,9 @@ const SalesNew: React.FC = () => {
         if (counterOrderFlow.hasClaimedOrder()) {
           await counterOrderFlow.convertAfterCheckout(checkoutSaleId);
         }
+        // Comprobante en caja: con cobro registrado (completo o parcial) se
+        // ofrece imprimir sin ir al detalle. "Dejar pendiente" NO lo abre.
+        if (checkoutSaleId) setReceiptSaleId(checkoutSaleId);
         resetSaleState();
       } catch (e: any) {
         const norm = toApiError(e);
@@ -2305,6 +2311,8 @@ const SalesNew: React.FC = () => {
           }}
         />
       )}
+
+      <SaleSuccessPrintModal saleId={receiptSaleId} onClose={() => setReceiptSaleId(null)} />
 
       <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
     </div>

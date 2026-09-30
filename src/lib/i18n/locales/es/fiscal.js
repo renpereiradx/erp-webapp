@@ -65,6 +65,8 @@ export const fiscal = {
   'fiscal.panel.title': 'Facturación Electrónica SIFEN',
   'fiscal.panel.notFiscal.title': 'Venta sin documento fiscal',
   'fiscal.panel.notFiscal.subtitle': 'La sucursal no tiene emisión SIFEN activada (D3)',
+  'fiscal.panel.notFiscal.printTicket': 'Imprimir ticket',
+  'fiscal.panel.notFiscal.downloadPdf': 'Descargar comprobante',
   'fiscal.panel.error': 'No se pudo cargar el estado fiscal',
   'fiscal.panel.cdc': 'CDC',
   'fiscal.panel.protocol': 'Protocolo',

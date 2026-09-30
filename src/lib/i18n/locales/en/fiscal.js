@@ -65,6 +65,8 @@ export const fiscal = {
   'fiscal.panel.title': 'SIFEN Electronic Invoicing',
   'fiscal.panel.notFiscal.title': 'Sale without fiscal document',
   'fiscal.panel.notFiscal.subtitle': 'This branch does not have SIFEN emission enabled (D3)',
+  'fiscal.panel.notFiscal.printTicket': 'Print ticket',
+  'fiscal.panel.notFiscal.downloadPdf': 'Download receipt',
   'fiscal.panel.error': 'Could not load fiscal status',
   'fiscal.panel.cdc': 'CDC',
   'fiscal.panel.protocol': 'Protocol',

@@ -31,6 +31,7 @@ import { saleService } from '@/services/saleService'
 import { clientService } from '@/services/clientService'
 import { useToast } from '@/hooks/useToast'
 import { normalizeCurrencyCode } from '@/utils/currencyUtils'
+import { printHtml } from '@/lib/printHtml'
 
 const SalesPaymentHistory = () => {
   const { saleId } = useParams()
@@ -145,7 +146,69 @@ const SalesPaymentHistory = () => {
   }, [loadData])
 
   const handlePrint = () => {
-    window.print()
+    // Imprime SOLO el reporte (iframe aislado, src/lib/printHtml): el
+    // window.print() previo mandaba la SPA entera a la impresora.
+    const esc = s =>
+      String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+    const th = label => `<th style="text-align:left;padding:6px 10px;border-bottom:2px solid #000;font-size:12px;">${label}</th>`
+    const td = (content, bold = false) =>
+      `<td style="padding:6px 10px;border-bottom:1px solid #ccc;font-size:12px;${bold ? 'font-weight:700;' : ''}">${content}</td>`
+
+    const summaryRow = (label, value, color = '#000') =>
+      `<tr><td style="padding:4px 0;font-size:13px;color:#444;">${label}</td><td style="padding:4px 0;font-size:13px;text-align:right;font-weight:700;color:${color};">${value}</td></tr>`
+
+    const paymentRows = normalizedPayments
+      .map(
+        p => `<tr>
+          ${td(esc(formatDate(p.date)))}
+          ${td(esc(formatCurrency(p.amount)), true)}
+          ${td(p.change > 0 ? esc(formatCurrency(p.change)) : '—')}
+          ${td(esc(p.method))}
+          ${td(esc(p.reference))}
+          ${td(esc(p.user))}
+          ${td(esc(p.notes))}
+        </tr>`,
+      )
+      .join('')
+
+    printHtml({
+      title: t('sales.paymentHistory.print.docTitle', 'Historial de Cobros — Venta #{id}', { id: String(sale.id ?? '') }),
+      body: `
+        <h1 style="font-size:18px;margin:0 0 4px;">${t('sales.paymentHistory.print.title', 'Historial de Cobros')}</h1>
+        <p style="margin:0 0 16px;font-size:12px;color:#444;">
+          ${t('sales.paymentHistory.print.subtitle', 'Venta #{id} • {client}', {
+            id: String(sale.id ?? ''),
+            client: sale.client_name || t('sales.paymentHistory.print.walkInClient', 'Cliente Ocasional'),
+          })}
+          ${sale.date ? ` · ${esc(formatDate(sale.date))}` : ''}
+        </p>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+          <tbody>
+            ${summaryRow(t('sales.paymentHistory.print.total', 'Total Venta'), esc(formatCurrency(totalAmount)))}
+            ${summaryRow(t('sales.paymentHistory.print.paid', 'Cobrado'), esc(formatCurrency(paidAmount)), '#166534')}
+            ${summaryRow(t('sales.paymentHistory.print.balance', 'Saldo Restante'), esc(formatCurrency(balanceDue)), balanceDue > 0 ? '#b91c1c' : '#000')}
+            ${summaryRow(t('sales.paymentHistory.print.status', 'Estado'), esc(sale.status || '—'))}
+          </tbody>
+        </table>
+        ${
+          paymentRows
+            ? `<table style="width:100%;border-collapse:collapse;">
+                <thead><tr>
+                  ${th(t('sales.paymentHistory.print.date', 'Fecha'))}
+                  ${th(t('sales.paymentHistory.print.amount', 'Monto'))}
+                  ${th(t('sales.paymentHistory.print.change', 'Vuelto'))}
+                  ${th(t('sales.paymentHistory.print.method', 'Método'))}
+                  ${th(t('sales.paymentHistory.print.reference', 'Referencia'))}
+                  ${th(t('sales.paymentHistory.print.cashier', 'Cajero'))}
+                  ${th(t('sales.paymentHistory.print.notes', 'Notas'))}
+                </tr></thead>
+                <tbody>${paymentRows}</tbody>
+              </table>`
+            : `<p style="font-size:12px;color:#666;">${t('sales.paymentHistory.print.noPayments', 'Esta venta aún no tiene cobros asociados.')}</p>`
+        }
+        <p style="margin-top:24px;font-size:10px;color:#999;">${t('sales.paymentHistory.print.footer', 'Reporte generado por el ERP')}</p>
+      `,
+    })
   }
 
   const handleDownload = () => {

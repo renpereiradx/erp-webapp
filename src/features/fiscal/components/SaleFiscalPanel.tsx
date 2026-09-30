@@ -58,9 +58,13 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
   }
 
   if (isNotFiscal) {
+    // Venta no fiscal: el comprobante igual existe (ticket térmico + PDF no
+    // fiscal del contexto documents) — se ofrecen las acciones de impresión
+    // con los mismos gates que el branch fiscal (documents:read + RECEIPT).
+    const noPrinterTitle = t('fiscal.panel.noPrinter', 'Sin impresora configurada: registrala en Configuración → Impresoras');
     return (
       <Card className="rounded-xl border-border-subtle shadow-fluent-2">
-        <CardContent className="p-8 space-y-3">
+        <CardContent className="p-8 space-y-4">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500"><Receipt size={20} /></div>
             <div>
@@ -68,6 +72,33 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
               <p className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">{t('fiscal.panel.notFiscal.subtitle', 'La sucursal no tiene emisión SIFEN activada (D3)')}</p>
             </div>
           </div>
+          {canUseDocuments && (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-xs font-bold gap-1.5"
+                onClick={() => { void downloadPdf(); }}
+                disabled={downloading}
+                data-testid="notfiscal-download-pdf"
+              >
+                {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                {t('fiscal.panel.notFiscal.downloadPdf', 'Descargar comprobante')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-xs font-bold gap-1.5"
+                onClick={() => { void reprintTicket(); }}
+                disabled={reprinting || printConfigured === false}
+                title={printConfigured === false ? noPrinterTitle : undefined}
+                data-testid="notfiscal-print-ticket"
+              >
+                {reprinting ? <Loader2 size={14} className="animate-spin" /> : <Printer size={14} />}
+                {t('fiscal.panel.notFiscal.printTicket', 'Imprimir ticket')}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
