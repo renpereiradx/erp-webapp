@@ -166,7 +166,7 @@ export function CatalogBoard() {
           {/* Estados de datos (DESIGN.md §6.7) */}
           {unitsQuery.isLoading && (
             <div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md"
               aria-busy="true"
             >
               {Array.from({ length: CATALOG_PAGE_SIZE }).map((_, index) => (
@@ -199,7 +199,9 @@ export function CatalogBoard() {
               <p className="text-body-sm text-on-surface-deep" data-testid="catalog-count">
                 {t('catalog.count', '{total} productos', { total })}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md">
+              {/* Máximo 3 columnas: cards más anchas = mejor legibilidad
+                  del contenido (nombre compuesto, SKU, precio y stock). */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
                 {units.map(unit => (
                   <CatalogCard key={unit.variant_id ?? unit.id} unit={unit} />
                 ))}

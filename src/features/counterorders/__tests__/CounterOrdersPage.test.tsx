@@ -4,7 +4,7 @@
 // i18n (firma real t(key, fallback, vars)) y módulos pesados del builder.
 // ===========================================================================
 
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
@@ -66,23 +66,17 @@ vi.mock('@/services/counterOrderService', () => ({
   },
 }))
 
-// Módulos pesados del builder: el modal cerrado no participa en estos tests.
-// El catálogo plano es controlable por test (grilla de unidades vendibles).
-const catalogMock = vi.hoisted(() => ({
-  units: [] as Array<Record<string, unknown>>,
-}))
-vi.mock('@/features/catalog/hooks/useCatalogProducts', () => ({
-  useCatalogProducts: () => ({
-    data: { products: [], total: 0, page: 1, totalPages: 1 },
-    isLoading: false,
-  }),
-  useCatalogSellableUnits: () => ({
-    data: { products: catalogMock.units, total: catalogMock.units.length, page: 1, totalPages: 1 },
-    isLoading: false,
-  }),
-}))
-vi.mock('@/features/catalog/hooks/useDebouncedValue', () => ({
-  useDebouncedValue: (value: unknown) => value,
+// Módulos pesados de la página: QuickClientModal no participa en estos tests.
+// El picker de productos del builder busca vía productService (frontera real
+// del helper fetchCatalogSellableUnits): el mock devuelve filas crudas tal
+// cual las emite granularity=variant.
+vi.mock('@/services/productService', () => ({
+  productService: {
+    searchAdvanced: vi.fn(),
+    searchInfo: vi.fn(),
+    getById: vi.fn(),
+    getAll: vi.fn(),
+  },
 }))
 vi.mock('@/features/party/components/QuickClientModal', () => ({
   default: () => null,
@@ -108,11 +102,13 @@ vi.mock('@/services/clientService', () => ({
 import { CounterOrdersPage } from '../components/CounterOrdersPage'
 import { counterOrderService } from '@/services/counterOrderService'
 import { clientService } from '@/services/clientService'
+import { productService } from '@/services/productService'
 
 const listMock = vi.mocked(counterOrderService.list)
 const cancelMock = vi.mocked(counterOrderService.cancel)
 const claimMock = vi.mocked(counterOrderService.claim)
 const searchByNameMock = vi.mocked(clientService.searchByName)
+const searchAdvancedMock = vi.mocked(productService.searchAdvanced)
 
 const orderOpen = {
   id: 'CO-1',
@@ -160,7 +156,6 @@ const renderPage = () => {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  catalogMock.units = []
   mockHasPermission.mockImplementation(p => p === 'counterorders:read' || p === 'counterorders:write')
   listMock.mockResolvedValue({
     data: [orderOpen, orderClaimed],
@@ -313,8 +308,8 @@ describe('CounterOrdersPage — bandeja', () => {
   })
 })
 
-describe('OrderBuilder — picker plano de unidades vendibles', () => {
-  // Filas tal cual las emite granularity=variant: fila base primero y
+describe('OrderBuilder — dropmenu de unidades vendibles + carrito en tabla', () => {
+  // Filas crudas tal cual las emite granularity=variant: fila base primero y
   // variantes después, cada una con precio/stock propio (sin N+1).
   const baseRow = {
     id: 'PROD-CAM',
@@ -351,12 +346,34 @@ describe('OrderBuilder — picker plano de unidades vendibles', () => {
     stock_status: 'out_of_stock',
   }
 
-  it('cada fila plana muestra el stock y precio de SU unidad (sin N+1 de variantes)', async () => {
-    catalogMock.units = [baseRow, negroRow, verdeRow]
-    renderPage()
-    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
+  const mockUnits = (rows: unknown[]) => {
+    searchAdvancedMock.mockResolvedValue({
+      products: rows,
+      total_count: rows.length,
+      page: 1,
+      page_size: 12,
+      total_pages: 1,
+    } as never)
+  }
 
-    const negro = screen.getByTestId('counterorder-pick-VAR-NEGRO')
+  const openBuilder = async () => {
+    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
+  }
+
+  const typeProductSearch = async (term: string) => {
+    await userEvent.type(
+      screen.getByPlaceholderText('Buscar producto por nombre o código…'),
+      term,
+    )
+  }
+
+  it('cada fila del dropmenu muestra el stock y precio de SU unidad (sin N+1 de variantes)', async () => {
+    mockUnits([baseRow, negroRow, verdeRow])
+    renderPage()
+    await openBuilder()
+    await typeProductSearch('cam')
+
+    const negro = await screen.findByTestId('counterorder-pick-VAR-NEGRO')
     expect(negro).toHaveTextContent('CAMISETA ADIDAS · NEGRO M')
     expect(negro).toHaveTextContent('CC2Y5J-NEGRO-M')
     expect(negro).toHaveTextContent('Stock: 5')
@@ -368,48 +385,69 @@ describe('OrderBuilder — picker plano de unidades vendibles', () => {
     const base = screen.getByTestId('counterorder-pick-PROD-CAM')
     expect(base).toHaveTextContent('Producto base')
     expect(base).toHaveTextContent('Stock: 44')
+
+    // La búsqueda usa el camino plano compartido con /ventas.
+    expect(searchAdvancedMock).toHaveBeenCalledWith(
+      expect.objectContaining({ search: 'cam', granularity: 'variant' }),
+    )
   })
 
-  it('agrega la variante y el producto base como líneas distintas', async () => {
-    catalogMock.units = [baseRow, negroRow]
+  it('agrega la variante y el producto base como líneas distintas de la tabla', async () => {
+    mockUnits([baseRow, negroRow])
     renderPage()
-    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
+    await openBuilder()
 
-    await userEvent.click(screen.getByTestId('counterorder-add-PROD-CAM'))
-    const lines = screen.getByTestId('counterorder-builder-lines')
-    expect(lines).toHaveTextContent('CAMISETA ADIDAS')
+    await typeProductSearch('cam')
+    await userEvent.click(await screen.findByTestId('counterorder-pick-VAR-NEGRO'))
+    expect(screen.getByTestId('counterorder-builder-lines')).toHaveTextContent(
+      'CAMISETA ADIDAS · NEGRO M',
+    )
 
-    await userEvent.click(await screen.findByTestId('counterorder-add-VAR-NEGRO'))
-    expect(lines).toHaveTextContent('CAMISETA ADIDAS · NEGRO M')
+    // Tras agregar, el dropmenu se cierra y limpia el término: re-buscar para
+    // la segunda línea.
+    await typeProductSearch('cam')
+    await userEvent.click(await screen.findByTestId('counterorder-pick-PROD-CAM'))
+    expect(screen.getByTestId('counterorder-builder-lines')).toHaveTextContent('CAMISETA ADIDAS')
     expect(screen.getByTestId('counterorder-builder-units')).toHaveTextContent('2 unidades')
   })
 
-  it('los productos sin variante conservan su botón Agregar directo', async () => {
-    catalogMock.units = [{ ...baseRow, id: 'PROD-SIMPLE', has_variant: false, variant_count: 0, is_base_row: false }]
+  it('un producto sin variantes se agrega con click en su fila', async () => {
+    mockUnits([
+      { ...baseRow, id: 'PROD-SIMPLE', has_variant: false, variant_count: 0, is_base_row: false },
+    ])
     renderPage()
-    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
-    await userEvent.click(await screen.findByTestId('counterorder-add-PROD-SIMPLE'))
+    await openBuilder()
+    await typeProductSearch('sim')
+    await userEvent.click(await screen.findByTestId('counterorder-pick-PROD-SIMPLE'))
     expect(screen.getByTestId('counterorder-builder-lines')).toHaveTextContent('CAMISETA ADIDAS')
   })
 
-  it('densidad: una sola tarjeta muestra las variantes extras tras "+n variantes más"', async () => {
-    const manyVariants = ['V1', 'V2', 'V3', 'V4'].map((v, i) => ({
-      ...baseRow,
-      variant_id: `VAR-${v}`,
-      is_base_row: false,
-      variant_name: `COLOR ${v}`,
-      sku: `SKU-${v}`,
-      stock_quantity: i + 1,
-      stock_status: 'in_stock',
-    }))
-    catalogMock.units = [baseRow, ...manyVariants]
+  // §6.3: el carrito es una tabla de datos (como la de /ventas) con el empty
+  // DENTRO de la tabla, y los controles de cantidad siguen operativos.
+  it('carrito §6.3: columnas, empty dentro de la tabla y control de cantidad', async () => {
+    mockUnits([
+      { ...baseRow, id: 'PROD-SIMPLE', has_variant: false, variant_count: 0, is_base_row: false },
+    ])
     renderPage()
-    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
+    await openBuilder()
 
-    // Cap: base + 3 variantes visibles; la 4ta queda tras el CTA.
-    expect(screen.queryByTestId('counterorder-pick-VAR-V4')).not.toBeInTheDocument()
-    await userEvent.click(screen.getByTestId('counterorder-pick-more-PROD-CAM'))
-    expect(await screen.findByTestId('counterorder-pick-VAR-V4')).toBeInTheDocument()
+    expect(screen.getByTestId('counterorder-builder-empty')).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Producto' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Cant.' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Total est.' })).toBeInTheDocument()
+
+    await typeProductSearch('sim')
+    await userEvent.click(await screen.findByTestId('counterorder-pick-PROD-SIMPLE'))
+    expect(screen.queryByTestId('counterorder-builder-empty')).not.toBeInTheDocument()
+
+    // jsdom renderiza la vista mobile también (las clases md: no aplican):
+    // los controles se buscan dentro del tbody de la tabla.
+    await userEvent.click(
+      within(screen.getByTestId('counterorder-builder-lines')).getByRole('button', {
+        name: 'Sumar',
+      }),
+    )
+    expect(screen.getByTestId('counterorder-builder-units')).toHaveTextContent('2 unidades')
   })
 
   it('el dropdown de cliente muestra nombre + apellido (displayName, no solo primer nombre)', async () => {
@@ -419,7 +457,7 @@ describe('OrderBuilder — picker plano de unidades vendibles', () => {
       { id: 'client-1', first_name: 'Fernando', last_name: 'Maciel' },
     ] as unknown as Awaited<ReturnType<typeof clientService.searchByName>>)
     renderPage()
-    await userEvent.click(await screen.findByTestId('counterorders-new-button'))
+    await openBuilder()
 
     const input = screen.getByPlaceholderText('Buscar cliente por nombre…')
     await userEvent.type(input, 'fer')

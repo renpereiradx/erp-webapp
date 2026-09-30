@@ -89,33 +89,41 @@ export function useCatalogProducts(search: string, filters: CatalogFilters, page
 }
 
 /**
- * Modo plano (granularity "variant", PLAN_BUSQUEDA_VARIANTES_PLANAS F2): una
- * fila por unidad vendible — variantes activas + fila base + productos sin
- * variantes. El término también matchea SKU/barcode/nombre de variante, y
- * cada fila trae precio y stock propios (sin N+1 de variantes).
+ * Fetch del modo plano (granularity "variant", PLAN_BUSQUEDA_VARIANTES_PLANAS
+ * F2): una fila por unidad vendible — variantes activas + fila base +
+ * productos sin variantes. El término también matchea SKU/barcode/nombre de
+ * variante, y cada fila trae precio y stock propios (sin N+1 de variantes).
+ * Exportado para pickers que no usan react-query (el dropmenu del builder de
+ * pedidos busca vía onSearch del SearchableDropdown).
  */
+export async function fetchCatalogSellableUnits(
+  search: string,
+  filters: CatalogFilters,
+  page: number,
+): Promise<SellableUnitsPageData> {
+  const response = (await productService.searchAdvanced({
+    search: search || undefined,
+    category_id: filters.categoryId ?? undefined,
+    brand_ids: filters.brandIds.length > 0 ? filters.brandIds : undefined,
+    in_stock_only: filters.inStockOnly || undefined,
+    sort_by: filters.sortBy,
+    page,
+    page_size: CATALOG_PAGE_SIZE,
+    granularity: 'variant',
+  })) as RawAdvancedSearchResponse
+
+  return {
+    products: (response?.products ?? []).map(toCatalogSellableUnit),
+    total: response?.total_count ?? 0,
+    page: response?.page ?? page,
+    totalPages: response?.total_pages ?? 0,
+  }
+}
+
 export function useCatalogSellableUnits(search: string, filters: CatalogFilters, page: number) {
   return useQuery({
     queryKey: ['catalog', 'units', search, filters, page],
-    queryFn: async (): Promise<SellableUnitsPageData> => {
-      const response = (await productService.searchAdvanced({
-        search: search || undefined,
-        category_id: filters.categoryId ?? undefined,
-        brand_ids: filters.brandIds.length > 0 ? filters.brandIds : undefined,
-        in_stock_only: filters.inStockOnly || undefined,
-        sort_by: filters.sortBy,
-        page,
-        page_size: CATALOG_PAGE_SIZE,
-        granularity: 'variant',
-      })) as RawAdvancedSearchResponse
-
-      return {
-        products: (response?.products ?? []).map(toCatalogSellableUnit),
-        total: response?.total_count ?? 0,
-        page: response?.page ?? page,
-        totalPages: response?.total_pages ?? 0,
-      }
-    },
+    queryFn: () => fetchCatalogSellableUnits(search, filters, page),
     placeholderData: previous => previous,
   })
 }

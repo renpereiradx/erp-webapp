@@ -1,9 +1,17 @@
-import { memo, useCallback, useEffect, useMemo, useState, Fragment } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
 import { Barcode, Minus, Plus, ShoppingCart, Trash2, UserPlus } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SearchableDropdown, type SearchableDropdownItem } from '@/components/ui/SearchableDropdown'
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table'
 import EnhancedModal from '@/components/ui/EnhancedModal'
 import { useToast } from '@/hooks/useToast'
 import { useBranch } from '@/contexts/BranchContext'
@@ -11,8 +19,7 @@ import useClientStore from '@/store/useClientStore'
 import QuickClientModal from '@/features/party/components/QuickClientModal'
 import { saleService } from '@/services/saleService'
 import { formatCurrency } from '@/utils/currencyUtils'
-import { useCatalogSellableUnits } from '@/features/catalog/hooks/useCatalogProducts'
-import { useDebouncedValue } from '@/features/catalog/hooks/useDebouncedValue'
+import { fetchCatalogSellableUnits } from '@/features/catalog/hooks/useCatalogProducts'
 import { DEFAULT_CATALOG_FILTERS, type CatalogSellableUnit } from '@/features/catalog/types'
 import { cn } from '@/lib/utils'
 import { useCreateCounterOrder, useUpdateCounterOrder } from '../hooks/useCounterOrders'
@@ -24,6 +31,8 @@ import type { CounterOrderDetail } from '../types'
 // PLAN_BUSQUEDA_VARIANTES_PLANAS F3). Carrito del vendedor: busca unidades
 // vendibles (granularity=variant — cada fila ya resuelve producto+variante),
 // escanea códigos de barra, asocia cliente, guarda el pedido OPEN.
+// Búsqueda y carrito siguen el patrón de /ventas: input + dropmenu de
+// resultados y tabla de datos §6.3 (DESIGN.md).
 // ===========================================================================
 
 interface OrderBuilderProps {
@@ -41,33 +50,41 @@ interface ClientDropdownItem extends SearchableDropdownItem {
   name: string
 }
 
-/** Densidad (PLAN_BUSQUEDA_VARIANTES_PLANAS §3.6): además de la fila base se
- * muestran como máximo esta cantidad de variantes por producto; el resto
- * queda tras el CTA "+n variantes más". */
-const MAX_VARIANT_ROWS_PER_PRODUCT = 3
+/** Fila del dropmenu de productos: unidad vendible con los campos que la
+ * fila muestra (nombre compuesto, SKU, P.V.P., stock propio). */
+interface ProductPickItem extends SearchableDropdownItem {
+  id: string
+  name: string
+  variant_id?: string | null
+  variant_name?: string | null
+  sku?: string
+  is_base_row: boolean
+  current_price?: number | null
+  stock_quantity?: number | null
+  stock_status: string
+  base_unit?: string | null
+}
 
-/** Agrupa filas adyacentes por producto (el backend ordena por nombre, con
- * la fila base primero y variantes por display_order, así que un producto
- * nunca aparece en dos grupos). */
-function groupAdjacentUnits(units: CatalogSellableUnit[]): CatalogSellableUnit[][] {
-  const groups: CatalogSellableUnit[][] = []
-  for (const unit of units) {
-    const last = groups[groups.length - 1]
-    if (last && last[0].id === unit.id) last.push(unit)
-    else groups.push([unit])
+function toPickItem(unit: CatalogSellableUnit): ProductPickItem {
+  return {
+    id: unit.id,
+    name: unit.name,
+    variant_id: unit.variant_id ?? null,
+    variant_name: unit.variant_name ?? null,
+    // SearchableDropdownItem tipa sku como string (los null vienen como undefined).
+    sku: unit.sku ?? undefined,
+    is_base_row: unit.is_base_row,
+    current_price: unit.current_price ?? null,
+    stock_quantity: unit.stock_quantity ?? null,
+    stock_status: unit.stock_status,
+    base_unit: unit.base_unit ?? null,
   }
-  return groups
 }
 
-/** Tarjeta plana de unidad vendible (memoizada: la grilla re-renderiza en
- * cada tecla de búsqueda). La fila ya resuelve la variante: nombre compuesto
- * "Producto · Variante", chip de SKU, precio efectivo y stock propio. */
-interface ProductPickCardProps {
-  unit: CatalogSellableUnit
-  onAdd: (unit: CatalogSellableUnit) => void
-}
-
-const ProductPickCard = memo(function ProductPickCard({ unit, onAdd }: ProductPickCardProps) {
+/** Fila del dropmenu de unidades vendibles (memoizada: el listbox re-renderiza
+ * en cada flecha de navegación). El click lo maneja el botón contenedor del
+ * SearchableDropdown; acá solo se pinta el contenido. */
+const ProductPickRow = memo(function ProductPickRow({ unit }: { unit: ProductPickItem }) {
   const { t } = useI18n()
   const label = unit.variant_name ? `${unit.name} · ${unit.variant_name}` : unit.name
   const stock = unit.stock_quantity ?? null
@@ -76,30 +93,30 @@ const ProductPickCard = memo(function ProductPickCard({ unit, onAdd }: ProductPi
     stock == null || stock <= 0
       ? t('counterorders.builder.out_of_stock', 'Sin stock')
       : `${t('counterorders.builder.stock', 'Stock')}: ${stock}`
-  // La fila base comparte id con sus variantes: el testid usa variant_id.
-  const testId = unit.variant_id ?? unit.id
 
   return (
-    <article
-      data-testid={`counterorder-pick-${testId}`}
-      className="bg-surface rounded-md shadow-whisper border border-border-subtle p-sm flex flex-col gap-xs"
+    <div
+      data-testid={`counterorder-pick-${unit.variant_id ?? unit.id}`}
+      className="flex items-center justify-between gap-sm min-w-0"
     >
-      <div className="flex items-start gap-xs">
-        <p className="text-body-sm-bold text-foreground min-w-0 truncate flex-1" title={label}>
-          {label}
-        </p>
-        {unit.is_base_row && (
-          <span className="shrink-0 rounded-sm bg-surface-muted px-xs py-0.5 text-label-caps uppercase text-on-surface-deep">
-            {t('counterorders.builder.base_product', 'Producto base')}
+      <div className="min-w-0 flex flex-col gap-0.5">
+        <div className="flex items-center gap-xs min-w-0">
+          <p className="text-body-sm-bold text-foreground truncate uppercase" title={label}>
+            {label}
+          </p>
+          {unit.is_base_row && (
+            <span className="shrink-0 rounded-sm bg-surface-muted px-xs py-0.5 text-label-caps uppercase text-on-surface-deep">
+              {t('counterorders.builder.base_product', 'Producto base')}
+            </span>
+          )}
+        </div>
+        {unit.sku && (
+          <span className="font-data-mono text-label-caps uppercase text-on-surface-deep truncate" title={unit.sku}>
+            {unit.sku}
           </span>
         )}
       </div>
-      {unit.sku && (
-        <span className="font-data-mono text-label-caps uppercase text-on-surface-deep truncate" title={unit.sku}>
-          {unit.sku}
-        </span>
-      )}
-      <div className="flex items-center justify-between gap-sm">
+      <div className="shrink-0 flex flex-col items-end gap-0.5">
         <span className="font-data-mono text-body-sm text-primary whitespace-nowrap">
           {unit.current_price != null ? formatCurrency(unit.current_price) : '—'}
         </span>
@@ -112,19 +129,7 @@ const ProductPickCard = memo(function ProductPickCard({ unit, onAdd }: ProductPi
           {stockLabel}
         </span>
       </div>
-      {/* Un pedido admite productos sin stock (§5.2): el stock se valida
-          hard al procesar la venta; acá es solo warning informativo. */}
-      <Button
-        variant="default"
-        size="sm"
-        data-testid={`counterorder-add-${testId}`}
-        onClick={() => onAdd(unit)}
-        aria-label={`${t('counterorders.builder.add', 'Agregar')} ${label}`}
-      >
-        <Plus className="size-4" aria-hidden="true" />
-        {t('counterorders.builder.add', 'Agregar')}
-      </Button>
-    </article>
+    </div>
   )
 })
 
@@ -135,23 +140,9 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
   const searchClients = useClientStore(state => state.searchClients)
 
   const cart = useOrderCart()
-  const [searchTerm, setSearchTerm] = useState('')
   const [barcode, setBarcode] = useState('')
   const [quickClientOpen, setQuickClientOpen] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
-  /** Productos con variantes expandidas más allá del cap de densidad. */
-  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(() => new Set())
-
-  const debouncedSearch = useDebouncedValue(searchTerm.trim(), 350)
-  const catalogQuery = useCatalogSellableUnits(
-    open ? debouncedSearch : '',
-    DEFAULT_CATALOG_FILTERS,
-    1,
-  )
-  const unitGroups = useMemo(
-    () => groupAdjacentUnits(catalogQuery.data?.products ?? []),
-    [catalogQuery.data],
-  )
 
   const createMutation = useCreateCounterOrder()
   const updateMutation = useUpdateCounterOrder()
@@ -179,13 +170,25 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
       cart.setClient({ id: editingOrder.client_id, name: editingOrder.client_name })
       cart.setNotes(editingOrder.notes ?? '')
     }
-    setSearchTerm('')
     setBarcode('')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, mode, editingOrder])
 
+  // Dropmenu de productos (mismo camino plano que /ventas): la búsqueda vive
+  // dentro del SearchableDropdown (debounce + ↑↓/Enter/Esc); acá solo se
+  // resuelve la página de unidades vendibles.
+  const handleProductSearch = useCallback(
+    async (term: string): Promise<ProductPickItem[]> => {
+      const page = await fetchCatalogSellableUnits(term, DEFAULT_CATALOG_FILTERS, 1)
+      return page.products.map(toPickItem)
+    },
+    [],
+  )
+
+  // Un pedido admite productos sin stock (§5.2): el stock se valida hard al
+  // procesar la venta; en el dropmenu es solo warning informativo.
   const handleAddUnit = useCallback(
-    (unit: CatalogSellableUnit) => {
+    (unit: ProductPickItem) => {
       cart.addProduct({
         productId: unit.id,
         // La línea distingue base de variante: el backend solo guarda
@@ -200,15 +203,6 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
     },
     [cart],
   )
-
-  const toggleProductExpanded = useCallback((productId: string) => {
-    setExpandedProducts(prev => {
-      const next = new Set(prev)
-      if (next.has(productId)) next.delete(productId)
-      else next.add(productId)
-      return next
-    })
-  }, [])
 
   const handleBarcode = useCallback(
     async (event: React.FormEvent) => {
@@ -311,9 +305,9 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
     onClose()
   }, [cart.lines.length, onClose])
 
-  const searchPlaceholder = useMemo(
-    () => t('counterorders.builder.search_placeholder', 'Buscar producto por nombre o código…'),
-    [t],
+  const searchPlaceholder = t(
+    'counterorders.builder.search_placeholder',
+    'Buscar producto por nombre o código…',
   )
 
   const canSave = cart.client !== null && cart.lines.length > 0 && !saving
@@ -357,7 +351,7 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
         }
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-lg">
-          {/* ── Productos: búsqueda + escáner + grilla ── */}
+          {/* ── Productos: búsqueda (input + dropmenu) + escáner ── */}
           <section className="space-y-md min-w-0" aria-label={t('counterorders.builder.products', 'Productos')}>
             <form autoComplete="off" onSubmit={handleBarcode} className="flex gap-sm">
               <div className="relative flex-1">
@@ -378,59 +372,17 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
               </Button>
             </form>
 
-            <Input
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+            {/* Dropmenu de resultados (patrón /ventas): cada fila es una
+                unidad vendible y el click la agrega al carrito. */}
+            <SearchableDropdown<ProductPickItem>
+              onSelect={handleAddUnit}
+              onSearch={handleProductSearch}
               placeholder={searchPlaceholder}
-              data-testid="counterorder-builder-search"
+              minSearchLength={2}
+              debounceMs={350}
+              emptyMessage={t('counterorders.builder.no_results', 'Sin resultados para la búsqueda.')}
+              renderItem={unit => <ProductPickRow unit={unit} />}
             />
-
-            {catalogQuery.isLoading && (
-              <p className="text-body-sm text-on-surface-deep animate-pulse">
-                {t('counterorders.builder.searching', 'Buscando productos…')}
-              </p>
-            )}
-            {catalogQuery.data && catalogQuery.data.products.length === 0 && debouncedSearch && (
-              <p className="text-body-sm text-on-surface-deep">
-                {t('counterorders.builder.no_products', 'Sin resultados para "{term}".', {
-                  term: debouncedSearch,
-                })}
-              </p>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm overflow-y-auto max-h-[45vh] pr-1">
-              {unitGroups.map(group => {
-                const productId = group[0].id
-                const expanded = expandedProducts.has(productId)
-                const visible =
-                  expanded || group.length <= MAX_VARIANT_ROWS_PER_PRODUCT + 1
-                    ? group
-                    : [group[0], ...group.slice(1, MAX_VARIANT_ROWS_PER_PRODUCT + 1)]
-                const hidden = group.length - visible.length
-                return (
-                  <Fragment key={productId}>
-                    {visible.map(unit => (
-                      <ProductPickCard
-                        key={unit.variant_id ?? unit.id}
-                        unit={unit}
-                        onAdd={handleAddUnit}
-                      />
-                    ))}
-                    {hidden > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => toggleProductExpanded(productId)}
-                        className="col-span-full text-left text-body-sm text-primary hover:underline px-xs"
-                        data-testid={`counterorder-pick-more-${productId}`}
-                      >
-                        {t('counterorders.builder.more_variants', '+{count} variantes más', {
-                          count: hidden,
-                        })}
-                      </button>
-                    )}
-                  </Fragment>
-                )
-              })}
-            </div>
           </section>
 
           {/* ── Carrito + cliente + notas ── */}
@@ -463,71 +415,206 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
               </div>
             </div>
 
-            {cart.lines.length === 0 ? (
-              <p className="text-body-sm text-on-surface-deep" data-testid="counterorder-builder-empty">
-                {t('counterorders.builder.empty_cart', 'Agregá productos con la búsqueda o el escáner.')}
-              </p>
-            ) : (
-              <ul className="space-y-sm overflow-y-auto max-h-[40vh]" data-testid="counterorder-builder-lines">
-                {cart.lines.map(line => (
-                  <li
-                    key={line.key}
-                    data-testid={`counterorder-line-${line.key}`}
-                    className="bg-surface-muted rounded-sm p-sm space-y-xs"
-                  >
-                    <div className="flex items-start justify-between gap-sm">
-                      <p className="text-body-sm-bold text-foreground min-w-0 truncate">{line.name}</p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-error shrink-0"
-                        onClick={() => cart.removeProduct(line.key)}
-                        aria-label={`${t('counterorders.builder.remove', 'Quitar')} ${line.name}`}
-                      >
-                        <Trash2 className="size-4" aria-hidden="true" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-sm">
-                      <div className="flex items-center gap-xs">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => cart.changeQuantity(line.key, line.quantity - 1)}
-                          aria-label={t('counterorders.builder.decrease', 'Restar')}
+            {/* Carrito §6.3 (DESIGN.md): card con tabla full-bleed; el empty
+                vive DENTRO de la tabla (fila colSpan), como el carrito de
+                /ventas. En mobile cae a cards (misma partición del POS). */}
+            <div className="rounded-md bg-surface shadow-whisper border border-border-subtle overflow-hidden">
+              <div className="hidden md:block overflow-y-auto max-h-[38vh]">
+                <Table className="table-fixed">
+                  <TableHeader className="bg-surface-muted">
+                    <TableRow className="hover:bg-surface-muted border-0">
+                      <TableHead className="px-sm py-sm text-label-caps uppercase text-on-surface-deep">
+                        {t('counterorders.builder.col.product', 'Producto')}
+                      </TableHead>
+                      <TableHead className="w-[132px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-center">
+                        {t('counterorders.builder.col.qty', 'Cant.')}
+                      </TableHead>
+                      <TableHead className="w-[110px] px-sm py-sm text-label-caps uppercase text-on-surface-deep text-right">
+                        {t('counterorders.builder.col.total', 'Total est.')}
+                      </TableHead>
+                      <TableHead className="w-[48px] px-sm py-sm">
+                        <span className="sr-only">
+                          {t('counterorders.builder.col.actions', 'Acciones')}
+                        </span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody data-testid="counterorder-builder-lines">
+                    {cart.lines.length === 0 ? (
+                      <TableRow className="hover:bg-transparent border-0">
+                        <TableCell colSpan={4} className="py-xl">
+                          <div
+                            className="flex flex-col items-center justify-center gap-sm text-on-surface-deep"
+                            data-testid="counterorder-builder-empty"
+                          >
+                            <div className="size-16 rounded-full bg-surface-muted flex items-center justify-center">
+                              <ShoppingCart
+                                size={28}
+                                strokeWidth={1.5}
+                                className="text-outline-fg"
+                                aria-hidden="true"
+                              />
+                            </div>
+                            <p className="text-body-md-bold text-foreground">
+                              {t('counterorders.builder.empty_cart_title', 'Carrito vacío')}
+                            </p>
+                            <p className="text-body-sm text-on-surface-deep">
+                              {t(
+                                'counterorders.builder.empty_cart',
+                                'Agregá productos con la búsqueda o el escáner.',
+                              )}
+                            </p>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      cart.lines.map(line => (
+                        <TableRow
+                          key={line.key}
+                          data-testid={`counterorder-line-${line.key}`}
+                          className="hover:bg-surface-muted transition-colors duration-150"
                         >
-                          <Minus className="size-3.5" aria-hidden="true" />
-                        </Button>
-                        <Input
-                          type="number"
-                          min={1}
-                          value={line.quantity}
-                          onChange={e => cart.changeQuantity(line.key, Number(e.target.value))}
-                          className="w-20 text-center"
-                          aria-label={t('counterorders.builder.quantity', 'Cantidad')}
-                        />
+                          <TableCell className="px-sm py-sm align-top min-w-0">
+                            <p className="text-body-sm-bold text-foreground truncate" title={line.name}>
+                              {line.name}
+                            </p>
+                            <p
+                              className="text-label-caps uppercase text-on-surface-deep mt-0.5 truncate whitespace-nowrap"
+                              title={line.unit}
+                            >
+                              {line.unit}
+                            </p>
+                            {line.notes != null && (
+                              <p className="text-body-sm text-on-surface-deep mt-0.5">{line.notes}</p>
+                            )}
+                          </TableCell>
+                          <TableCell className="px-sm py-sm align-top">
+                            <div className="flex items-center justify-center gap-xs">
+                              <Button
+                                variant="secondary"
+                                size="icon"
+                                className="size-7 shrink-0"
+                                onClick={() => cart.changeQuantity(line.key, line.quantity - 1)}
+                                aria-label={t('counterorders.builder.decrease', 'Restar')}
+                              >
+                                <Minus className="size-3.5" aria-hidden="true" />
+                              </Button>
+                              <Input
+                                type="number"
+                                min={1}
+                                value={line.quantity}
+                                onChange={e => cart.changeQuantity(line.key, Number(e.target.value))}
+                                className="w-12 h-8 text-center px-0"
+                                aria-label={t('counterorders.builder.quantity', 'Cantidad')}
+                              />
+                              <Button
+                                variant="secondary"
+                                size="icon"
+                                className="size-7 shrink-0"
+                                onClick={() => cart.changeQuantity(line.key, line.quantity + 1)}
+                                aria-label={t('counterorders.builder.increase', 'Sumar')}
+                              >
+                                <Plus className="size-3.5" aria-hidden="true" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-sm py-sm text-right text-body-sm-bold font-data-mono text-foreground align-top whitespace-nowrap">
+                            {line.price_hint != null
+                              ? formatCurrency(line.price_hint * line.quantity)
+                              : '—'}
+                          </TableCell>
+                          <TableCell className="px-sm py-sm text-right align-top">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-outline-fg hover:text-error hover:bg-error-container rounded-button"
+                              onClick={() => cart.removeProduct(line.key)}
+                              aria-label={`${t('counterorders.builder.remove', 'Quitar')} ${line.name}`}
+                            >
+                              <Trash2 className="size-4" aria-hidden="true" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile: cards */}
+              <div className="md:hidden divide-y divide-divider">
+                {cart.lines.length === 0 ? (
+                  <div className="py-lg px-md text-center text-body-sm text-on-surface-deep">
+                    {t(
+                      'counterorders.builder.empty_cart',
+                      'Agregá productos con la búsqueda o el escáner.',
+                    )}
+                  </div>
+                ) : (
+                  cart.lines.map(line => (
+                    <div key={line.key} className="py-md px-md space-y-sm">
+                      <div className="flex items-start justify-between gap-sm">
+                        <div className="min-w-0">
+                          <p className="text-body-sm-bold text-foreground truncate" title={line.name}>
+                            {line.name}
+                          </p>
+                          <p className="text-label-caps uppercase text-on-surface-deep mt-0.5">
+                            {line.unit}
+                          </p>
+                        </div>
                         <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => cart.changeQuantity(line.key, line.quantity + 1)}
-                          aria-label={t('counterorders.builder.increase', 'Sumar')}
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-error shrink-0"
+                          onClick={() => cart.removeProduct(line.key)}
+                          aria-label={`${t('counterorders.builder.remove', 'Quitar')} ${line.name}`}
                         >
-                          <Plus className="size-3.5" aria-hidden="true" />
+                          <Trash2 className="size-4" aria-hidden="true" />
                         </Button>
                       </div>
-                      <span className="text-label-caps uppercase text-on-surface-deep">{line.unit}</span>
-                      {line.price_hint != null && (
-                        <span className="font-data-mono text-body-sm text-on-surface-deep ml-auto">
-                          ≈ {formatCurrency(line.price_hint * line.quantity)}
-                        </span>
+                      <div className="flex items-center justify-between gap-sm">
+                        <div className="flex items-center gap-xs">
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            className="size-7"
+                            onClick={() => cart.changeQuantity(line.key, line.quantity - 1)}
+                            aria-label={t('counterorders.builder.decrease', 'Restar')}
+                          >
+                            <Minus className="size-3.5" aria-hidden="true" />
+                          </Button>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={line.quantity}
+                            onChange={e => cart.changeQuantity(line.key, Number(e.target.value))}
+                            className="w-14 h-8 text-center"
+                            aria-label={t('counterorders.builder.quantity', 'Cantidad')}
+                          />
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            className="size-7"
+                            onClick={() => cart.changeQuantity(line.key, line.quantity + 1)}
+                            aria-label={t('counterorders.builder.increase', 'Sumar')}
+                          >
+                            <Plus className="size-3.5" aria-hidden="true" />
+                          </Button>
+                        </div>
+                        {line.price_hint != null && (
+                          <span className="font-data-mono text-body-sm text-on-surface-deep">
+                            ≈ {formatCurrency(line.price_hint * line.quantity)}
+                          </span>
+                        )}
+                      </div>
+                      {line.notes != null && (
+                        <p className="text-body-sm text-on-surface-deep">{line.notes}</p>
                       )}
                     </div>
-                    {line.notes != null && (
-                      <p className="text-body-sm text-on-surface-deep">{line.notes}</p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+                  ))
+                )}
+              </div>
+            </div>
 
             <label className="block space-y-xs">
               <span className="text-label-caps uppercase text-on-surface-deep">
