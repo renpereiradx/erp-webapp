@@ -1,14 +1,16 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ClipboardList } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import { useAuth } from '@/contexts/AuthContext'
 import { useBranch } from '@/contexts/BranchContext'
 import PageHeader from '@/components/ui/PageHeader'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/useToast'
+import { useSearchFocusShortcut } from '@/hooks/useSearchFocusShortcut'
 import { useDebouncedValue } from '@/features/catalog/hooks/useDebouncedValue'
 import { counterOrderService } from '@/services/counterOrderService'
 import {
@@ -64,6 +66,13 @@ export function CounterOrdersPage() {
   const [editingDetail, setEditingDetail] = useState<CounterOrderDetail | null>(null)
   const [builderOpen, setBuilderOpen] = useState(false)
   const [cancelling, setCancelling] = useState<CounterOrderSummary | null>(null)
+
+  // §12.4: F2 → buscador principal. Inactivo mientras CUALQUIER modal esté
+  // abierto (§12.2 — gating por estado, no defaultPrevented).
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const anyModalOpen =
+    builderOpen || viewingId !== null || ticketOrder !== null || cancelling !== null
+  useSearchFocusShortcut({ enabled: !anyModalOpen, inputRef: searchInputRef })
 
   const query = useCounterOrders({
     status,
@@ -170,63 +179,28 @@ export function CounterOrdersPage() {
   const isAdmin = user?.role_id === 'F2VLso'
 
   return (
-    <div className="p-lg space-y-lg max-w-7xl mx-auto" data-testid="counterorders-page">
+    <div
+      className="mx-auto w-full max-w-container-max flex flex-col gap-lg animate-in fade-in duration-150"
+      data-testid="counterorders-page"
+    >
       <PageHeader
         title={t('counterorders.title', 'Pedidos')}
         subtitle={t(
           'counterorders.subtitle',
           'Pedidos de mostrador: el vendedor arma el carrito, la caja lo cobra.',
         )}
+        actions={
+          // §6.8: la acción primaria de la página vive en el header.
+          <Button variant="primary" onClick={handleNew} data-testid="counterorders-new-button">
+            <Plus className="size-4" aria-hidden="true" />
+            {t('counterorders.board.new_order', 'Nuevo pedido')}
+          </Button>
+        }
       />
 
       {/* FASE 5: métricas solo para analítica de gestión (reports:read). El
           gate vive acá para que el query no se dispare sin permiso. */}
       {hasPermission('reports:read') && <CounterOrdersMetricsPanel />}
-
-      <div className="flex flex-col md:flex-row md:items-center gap-sm md:justify-between">
-        <SegmentedControl
-          options={STATUS_OPTIONS.map(opt => ({
-            value: opt.value,
-            label: t(opt.labelKey, opt.fallback),
-          }))}
-          value={status}
-          onChange={value => {
-            setStatus(value as CounterOrderStatusFilter)
-            setPage(1)
-          }}
-        />
-        <div className="flex items-center gap-sm flex-wrap">
-          <Input
-            type="search"
-            value={search}
-            onChange={e => {
-              setSearch(e.target.value)
-              setPage(1)
-            }}
-            placeholder={t('counterorders.board.search_placeholder', 'Buscar por código o cliente…')}
-            className="md:w-64"
-            data-testid="counterorders-search"
-          />
-          {hasPermission('branches:switch') && (
-            <label className="flex items-center gap-xs text-body-sm text-on-surface-deep">
-              <input
-                type="checkbox"
-                checked={allBranches}
-                onChange={e => {
-                  setAllBranches(e.target.checked)
-                  setPage(1)
-                }}
-                data-testid="counterorders-all-branches"
-              />
-              {t('counterorders.board.all_branches', 'Ver todas las sucursales')}
-            </label>
-          )}
-          <Button variant="default" onClick={handleNew} data-testid="counterorders-new-button">
-            <ClipboardList className="size-4" aria-hidden="true" />
-            {t('counterorders.board.new_order', 'Nuevo pedido')}
-          </Button>
-        </div>
-      </div>
 
       <OrdersBoard
         orders={query.data?.orders ?? []}
@@ -241,6 +215,58 @@ export function CounterOrdersPage() {
         onCancel={setCancelling}
         onRelease={handleRelease}
         onProcess={handleProcess}
+        onNew={handleNew}
+        toolbar={
+          <>
+            <SegmentedControl
+              options={STATUS_OPTIONS.map(opt => ({
+                value: opt.value,
+                label: t(opt.labelKey, opt.fallback),
+              }))}
+              value={status}
+              aria-label={t('counterorders.board.filter_label', 'Filtrar por estado')}
+              onChange={value => {
+                setStatus(value as CounterOrderStatusFilter)
+                setPage(1)
+              }}
+            />
+            <div className="flex items-center gap-md flex-wrap">
+              <Input
+                type="search"
+                ref={searchInputRef}
+                value={search}
+                onChange={e => {
+                  setSearch(e.target.value)
+                  setPage(1)
+                }}
+                placeholder={t(
+                  'counterorders.board.search_placeholder',
+                  'Buscar por código o cliente (F2)…',
+                )}
+                className="w-full sm:w-64"
+                aria-label={t('counterorders.board.search_label', 'Buscar pedidos')}
+                data-testid="counterorders-search"
+              />
+              {hasPermission('branches:switch') && (
+                <label
+                  htmlFor="counterorders-all-branches"
+                  className="flex items-center gap-xs text-body-sm text-on-surface-deep cursor-pointer select-none"
+                >
+                  <Checkbox
+                    id="counterorders-all-branches"
+                    checked={allBranches}
+                    onCheckedChange={checked => {
+                      setAllBranches(checked === true)
+                      setPage(1)
+                    }}
+                    data-testid="counterorders-all-branches"
+                  />
+                  {t('counterorders.board.all_branches', 'Ver todas las sucursales')}
+                </label>
+              )}
+            </div>
+          </>
+        }
       />
 
       {query.data?.pagination && query.data.pagination.total_pages > 1 && (

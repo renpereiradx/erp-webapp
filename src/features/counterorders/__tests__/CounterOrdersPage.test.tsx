@@ -4,7 +4,7 @@
 // i18n (firma real t(key, fallback, vars)) y módulos pesados del builder.
 // ===========================================================================
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
@@ -276,6 +276,40 @@ describe('CounterOrdersPage — bandeja', () => {
     renderPage()
     await screen.findByTestId('counterorder-row-CO-1')
     expect(screen.queryByTestId('counterorders-all-branches')).not.toBeInTheDocument()
+  })
+
+  // §6.3: el empty vive DENTRO de la card con tabla (fila colSpan), no en un
+  // bloque suelto — y ofrece la acción de crear (§6.7).
+  it('bandeja vacía: empty dentro de la card con acción "Nuevo pedido"', async () => {
+    listMock.mockResolvedValue({
+      data: [],
+      pagination: {
+        page: 1,
+        page_size: 20,
+        total_records: 0,
+        total_pages: 1,
+        has_next: false,
+        has_previous: false,
+      },
+    })
+    renderPage()
+    expect(await screen.findByTestId('counterorders-board')).toBeInTheDocument()
+    expect(await screen.findByText('Sin pedidos')).toBeInTheDocument()
+    expect(await screen.findByTestId('counterorders-empty-new')).toBeInTheDocument()
+    expect(screen.queryByTestId('counterorders-skeleton')).not.toBeInTheDocument()
+  })
+
+  // §12.4/§12.2: F2 enfoca el buscador principal; con un modal abierto el
+  // atajo de página se desactiva (gating por estado).
+  it('F2 enfoca el buscador y queda inactivo con el builder abierto', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    const search = await screen.findByTestId('counterorders-search')
+    fireEvent.keyDown(document, { key: 'F2' })
+    expect(search).toHaveFocus()
+    await user.click(screen.getByTestId('counterorders-new-button'))
+    fireEvent.keyDown(document, { key: 'F2' })
+    expect(search).not.toHaveFocus()
   })
 })
 

@@ -61,8 +61,8 @@ describe('CounterOrdersMetricsPanel — FASE 5', () => {
     expect(await screen.findByTestId('counterorder-metrics-created-value')).toHaveTextContent('8')
     expect(metricsMock).toHaveBeenCalledWith(30)
     expect(screen.getByTestId('counterorder-metrics-converted-value')).toHaveTextContent('5')
-    expect(screen.getByTestId('counterorder-metrics-rate-value')).toHaveTextContent('62.5%')
-    expect(screen.getByTestId('counterorder-metrics-avg-time-value')).toHaveTextContent('12.5 min')
+    expect(screen.getByTestId('counterorder-metrics-rate-value')).toHaveTextContent('62,5%')
+    expect(screen.getByTestId('counterorder-metrics-avg-time-value')).toHaveTextContent('12,5 min')
     expect(screen.getByTestId('counterorder-metrics-active-value')).toHaveTextContent('1')
     expect(screen.getByTestId('counterorder-metrics-lost-value')).toHaveTextContent('1 / 1')
   })
@@ -73,5 +73,37 @@ describe('CounterOrdersMetricsPanel — FASE 5', () => {
     await screen.findByTestId('counterorder-metrics-created-value')
     await user.click(screen.getByRole('tab', { name: '7 d' }))
     await waitFor(() => expect(metricsMock).toHaveBeenLastCalledWith(7))
+  })
+
+  // Formato es-PY (decimal coma) y minutos→horas a partir de 2 h: los valores
+  // crudos del backend (1422.7) no llegan tal cual al usuario.
+  it('formatea el tiempo medio en horas cuando supera las 2 h y los números en es-PY', async () => {
+    metricsMock.mockResolvedValue({
+      ...metricsResponse,
+      avg_minutes_to_convert: 1422.7,
+      conversion_rate: 80,
+    })
+    renderPanel()
+    expect(await screen.findByTestId('counterorder-metrics-avg-time-value')).toHaveTextContent(
+      '23,7 h',
+    )
+    expect(screen.getByTestId('counterorder-metrics-rate-value')).toHaveTextContent('80%')
+  })
+
+  it('mientras carga muestra skeleton con la forma de las cards (no texto pulsante)', async () => {
+    metricsMock.mockReturnValue(new Promise(() => {}))
+    renderPanel()
+    const skeleton = await screen.findByTestId('counterorder-metrics-loading')
+    expect(skeleton.children.length).toBe(6)
+    expect(screen.queryByTestId('counterorder-metrics-created')).not.toBeInTheDocument()
+  })
+
+  it('si la consulta falla muestra error con reintento (§6.7)', async () => {
+    metricsMock.mockRejectedValue(new Error('network down'))
+    renderPanel()
+    expect(
+      await screen.findByText('No se pudieron cargar las métricas'),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('error-retry')).toBeInTheDocument()
   })
 })
