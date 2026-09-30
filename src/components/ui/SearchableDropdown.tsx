@@ -32,7 +32,12 @@ export interface SearchableDropdownProps<T extends SearchableDropdownItem> {
   renderEmpty?: () => React.ReactNode;
 }
 
-function useDebounce<T>(value: T, delay: number): T {
+/** Debounce local. Expone el setter para resetear el valor retenido: al
+ * seleccionar un ítem el término se limpia, y si el usuario reescribe EL
+ * MISMO término antes de que el timer flushee el '', transicionar
+ * debounced 'x' → 'x' es un bail-out de React (sin re-render ni efecto) y
+ * la búsqueda nunca se dispara. */
+function useDebounce<T>(value: T, delay: number): [T, React.Dispatch<React.SetStateAction<T>>] {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
@@ -42,7 +47,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return () => clearTimeout(handler);
   }, [value, delay]);
 
-  return debouncedValue;
+  return [debouncedValue, setDebouncedValue];
 }
 
 export function SearchableDropdown<T extends SearchableDropdownItem>({
@@ -73,7 +78,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
   const internalInputRef = useRef<HTMLInputElement>(null);
   const inputRef = externalInputRef || internalInputRef;
 
-  const debouncedSearchTerm = useDebounce(searchTerm, debounceMs);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useDebounce(searchTerm, debounceMs);
   const onSearchRef = useRef(onSearch);
   onSearchRef.current = onSearch;
 
@@ -171,6 +176,9 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
           if (highlightedIndex >= 0 && highlightedIndex < items.length) {
             onSelect(items[highlightedIndex]);
             setSearchTerm('');
+            // Resetear también el valor retenido: sin esto, reescribir el
+            // mismo término es un no-op para el debounce (bail-out).
+            setDebouncedSearchTerm('');
             setIsOpen(false);
             setHighlightedIndex(-1);
           }
@@ -178,6 +186,10 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
         case 'Escape':
           setIsOpen(false);
           setHighlightedIndex(-1);
+          // El dropdown consumió el Escape (cerró SOLO la lista): cortar la
+          // burbuja para que el modal contenedor (EnhancedModal escucha
+          // Escape a nivel document/window) no se cierre también.
+          event.stopPropagation();
           break;
       }
     },
@@ -271,6 +283,9 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
                   onClick={() => {
                     onSelect(item);
                     setSearchTerm('');
+                    // Mismo reset que el Enter: reescribir el mismo término
+                    // debe re-buscar (ver useDebounce arriba).
+                    setDebouncedSearchTerm('');
                     setIsOpen(false);
                     setHighlightedIndex(-1);
                   }}

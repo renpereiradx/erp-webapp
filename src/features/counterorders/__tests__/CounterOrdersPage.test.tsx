@@ -362,7 +362,7 @@ describe('OrderBuilder — dropmenu de unidades vendibles + carrito en tabla', (
 
   const typeProductSearch = async (term: string) => {
     await userEvent.type(
-      screen.getByPlaceholderText('Buscar producto por nombre o código…'),
+      screen.getByPlaceholderText('Buscar producto por nombre o código… (F3)'),
       term,
     )
   }
@@ -465,5 +465,88 @@ describe('OrderBuilder — dropmenu de unidades vendibles + carrito en tabla', (
     expect(
       await screen.findByRole('button', { name: 'Fernando Maciel' }, { timeout: 2500 }),
     ).toBeInTheDocument()
+  })
+
+  // ── Navegación por teclado (§12.5: modal con buscador interno) ──
+
+  it('abre con el foco en el escáner de código de barras', async () => {
+    renderPage()
+    await openBuilder()
+    // El autofoco corre en un tick posterior al focus del contenedor del modal.
+    await waitFor(() =>
+      expect(screen.getByTestId('counterorder-builder-barcode')).toHaveFocus(),
+    )
+  })
+
+  it('F3 enfoca el buscador de productos (desde cualquier campo del modal)', async () => {
+    renderPage()
+    await openBuilder()
+    await screen.findByTestId('counterorder-builder-barcode')
+
+    fireEvent.keyDown(window, { key: 'F3' })
+    expect(
+      screen.getByPlaceholderText('Buscar producto por nombre o código… (F3)'),
+    ).toHaveFocus()
+
+    // También desde otro input (cliente).
+    await userEvent.click(screen.getByPlaceholderText('Buscar cliente por nombre…'))
+    fireEvent.keyDown(window, { key: 'F3' })
+    expect(
+      screen.getByPlaceholderText('Buscar producto por nombre o código… (F3)'),
+    ).toHaveFocus()
+  })
+
+  it('tras agregar una fila del dropmenu el foco vuelve al buscador', async () => {
+    mockUnits([baseRow, negroRow])
+    renderPage()
+    await openBuilder()
+    await typeProductSearch('cam')
+    await userEvent.click(await screen.findByTestId('counterorder-pick-VAR-NEGRO'))
+
+    expect(screen.getByTestId('counterorder-builder-lines')).toHaveTextContent(
+      'CAMISETA ADIDAS · NEGRO M',
+    )
+    expect(
+      screen.getByPlaceholderText('Buscar producto por nombre o código… (F3)'),
+    ).toHaveFocus()
+  })
+
+  it('↑/↓ en un input de cantidad mueve el foco entre líneas del carrito', async () => {
+    mockUnits([baseRow, negroRow])
+    renderPage()
+    await openBuilder()
+    await typeProductSearch('cam')
+    await userEvent.click(await screen.findByTestId('counterorder-pick-VAR-NEGRO'))
+    await typeProductSearch('cam')
+    await userEvent.click(await screen.findByTestId('counterorder-pick-PROD-CAM'))
+
+    // jsdom renderiza ambas vistas: los inputs de la tabla desktop viven en
+    // el tbody (la vista mobile es la misma línea sin el testid del tbody).
+    const qtyInputs = within(screen.getByTestId('counterorder-builder-lines')).getAllByRole(
+      'spinbutton',
+    )
+    expect(qtyInputs).toHaveLength(2)
+    qtyInputs[0].focus()
+    fireEvent.keyDown(qtyInputs[0], { key: 'ArrowDown' })
+    expect(qtyInputs[1]).toHaveFocus()
+    fireEvent.keyDown(qtyInputs[1], { key: 'ArrowUp' })
+    expect(qtyInputs[0]).toHaveFocus()
+  })
+
+  it('Esc con el dropmenu abierto cierra solo la lista, no el modal', async () => {
+    mockUnits([baseRow, negroRow])
+    renderPage()
+    await openBuilder()
+    await typeProductSearch('cam')
+    expect(await screen.findByTestId('counterorder-pick-VAR-NEGRO')).toBeInTheDocument()
+
+    fireEvent.keyDown(
+      screen.getByPlaceholderText('Buscar producto por nombre o código… (F3)'),
+      { key: 'Escape' },
+    )
+    // El dropdown se cerró...
+    expect(screen.queryByTestId('counterorder-pick-VAR-NEGRO')).not.toBeInTheDocument()
+    // ...pero el modal sigue abierto.
+    expect(screen.getByTestId('counterorder-builder')).toBeInTheDocument()
   })
 })

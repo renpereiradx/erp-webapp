@@ -919,7 +919,7 @@ las páginas de listado simple usan SOLO el hook compartido. No dupliques.
 | Cobros ventas (`SalePayment`)   | ✅ F2 + foco inicial al filtro de cliente (buscador principal); gating con modales cobro/anulación |
 | Ajustes de precios (`PriceAdjustmentNew`) | ✅ F2 vía `useSearchFocusShortcut`; placeholder con pista      |
 | Ajustes de precios — Historial (`PriceAdjustmentHistory`) | ✅ F2 al buscador de producto; placeholder con pista           |
-| Pedidos de mostrador (`CounterOrdersPage`) | ✅ F2 vía `useSearchFocusShortcut` (buscador en la banda de la card, §6.3); gating con builder/detalle/ticket/cancelación |
+| Pedidos de mostrador (`CounterOrdersPage`) | ✅ F2 vía `useSearchFocusShortcut` (buscador en la banda de la card, §6.3); gating con builder/detalle/ticket/cancelación. Builder: autofoco al escáner, F3 al buscador de productos, el foco vuelve al buscador tras agregar del dropmenu, ↑↓ mueve el foco entre cantidades del carrito, hints kbd en footer |
 
 ### 12.8 Anti-patrones de atajos
 

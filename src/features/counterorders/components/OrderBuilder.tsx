@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Barcode, Minus, Plus, ShoppingCart, Trash2, UserPlus } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
@@ -143,6 +143,10 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
   const [barcode, setBarcode] = useState('')
   const [quickClientOpen, setQuickClientOpen] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
+  /** Escáner: recibe el autofoco al abrir y el foco tras cada scan. */
+  const barcodeRef = useRef<HTMLInputElement>(null)
+  /** Buscador de productos: F3 (§12.5) + foco tras agregar del dropmenu. */
+  const productSearchRef = useRef<HTMLInputElement>(null)
 
   const createMutation = useCreateCounterOrder()
   const updateMutation = useUpdateCounterOrder()
@@ -174,6 +178,28 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, mode, editingOrder])
 
+  // Autofoco al escáner (§12.5: el primer campo recibe el foco; el tick
+  // gana la carrera contra el focus() del contenedor de EnhancedModal).
+  useEffect(() => {
+    if (!open) return
+    const timer = setTimeout(() => barcodeRef.current?.focus(), 60)
+    return () => clearTimeout(timer)
+  }, [open])
+
+  // F3 enfoca el buscador de productos (§12.5: listeners del modal, solo
+  // registrados mientras está abierto).
+  useEffect(() => {
+    if (!open) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'F3') {
+        event.preventDefault()
+        productSearchRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [open])
+
   // Dropmenu de productos (mismo camino plano que /ventas): la búsqueda vive
   // dentro del SearchableDropdown (debounce + ↑↓/Enter/Esc); acá solo se
   // resuelve la página de unidades vendibles.
@@ -200,8 +226,36 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
         priceHint: unit.current_price,
         stockHint: unit.stock_quantity,
       })
+      // Flujo de carga rápida: tras elegir una fila (con click el foco quedó
+      // en el listbox), volver al buscador para la siguiente unidad.
+      productSearchRef.current?.focus()
     },
     [cart],
+  )
+
+  // ↑/↓ dentro de un input de cantidad mueve el foco a la línea anterior /
+  // siguiente del carrito (las dos vistas comparten data-qty-input).
+  const moveQtyFocus = useCallback((current: EventTarget | null, delta: 1 | -1) => {
+    const inputs = document.querySelectorAll<HTMLInputElement>('input[data-qty-input]')
+    const index = current instanceof HTMLInputElement ? Array.from(inputs).indexOf(current) : -1
+    const next = index >= 0 ? inputs[index + delta] : undefined
+    if (next) {
+      next.focus()
+      next.select()
+    }
+  }, [])
+
+  const handleQtyNavKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        moveQtyFocus(event.target, 1)
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        moveQtyFocus(event.target, -1)
+      }
+    },
+    [moveQtyFocus],
   )
 
   const handleBarcode = useCallback(
@@ -307,7 +361,17 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
 
   const searchPlaceholder = t(
     'counterorders.builder.search_placeholder',
-    'Buscar producto por nombre o código…',
+    'Buscar producto por nombre o código… (F3)',
+  )
+
+  // Discoverability (§12.5.4): hints kbd en el footer, patrón wizard de
+  // compras. Antes del return — Rules of Hooks.
+  const kbdHints = useMemo<Array<{ kbd: string; label: string }>>(
+    () => [
+      { kbd: 'F3', label: t('counterorders.builder.hints.search', 'Buscar') },
+      { kbd: '↑↓', label: t('counterorders.builder.hints.qty_nav', 'Cantidades') },
+    ],
+    [t],
   )
 
   const canSave = cart.client !== null && cart.lines.length > 0 && !saving
@@ -328,9 +392,21 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
         testId="counterorder-builder"
         footer={
           <div className="flex justify-between items-center gap-sm w-full">
-            <span className="text-body-sm text-on-surface-deep" data-testid="counterorder-builder-units">
-              {t('counterorders.builder.units', '{count} unidades', { count: cart.units })}
-            </span>
+            <div className="flex items-center gap-md min-w-0">
+              <span className="text-body-sm text-on-surface-deep" data-testid="counterorder-builder-units">
+                {t('counterorders.builder.units', '{count} unidades', { count: cart.units })}
+              </span>
+              <div className="hidden md:flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm text-on-surface-deep">
+                {kbdHints.map(hint => (
+                  <span key={hint.kbd} className="inline-flex items-center gap-1">
+                    <kbd className="font-data-mono px-1.5 py-0.5 rounded-xs border border-divider bg-surface text-foreground text-body-sm-bold leading-none">
+                      {hint.kbd}
+                    </kbd>
+                    <span>{hint.label}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
             <div className="flex justify-end gap-sm">
               <Button variant="secondary" onClick={handleRequestClose} disabled={saving}>
                 {t('common.cancel', 'Cancelar')}
@@ -360,6 +436,7 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
                   aria-hidden="true"
                 />
                 <Input
+                  ref={barcodeRef}
                   value={barcode}
                   onChange={e => setBarcode(e.target.value)}
                   placeholder={t('counterorders.builder.barcode_placeholder', 'Escanear código de barras…')}
@@ -377,6 +454,7 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
             <SearchableDropdown<ProductPickItem>
               onSelect={handleAddUnit}
               onSearch={handleProductSearch}
+              inputRef={productSearchRef}
               placeholder={searchPlaceholder}
               minSearchLength={2}
               debounceMs={350}
@@ -504,6 +582,8 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
                                 min={1}
                                 value={line.quantity}
                                 onChange={e => cart.changeQuantity(line.key, Number(e.target.value))}
+                                onKeyDown={handleQtyNavKeyDown}
+                                data-qty-input
                                 className="w-12 h-8 text-center px-0"
                                 aria-label={t('counterorders.builder.quantity', 'Cantidad')}
                               />
@@ -588,6 +668,8 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
                             min={1}
                             value={line.quantity}
                             onChange={e => cart.changeQuantity(line.key, Number(e.target.value))}
+                            onKeyDown={handleQtyNavKeyDown}
+                            data-qty-input
                             className="w-14 h-8 text-center"
                             aria-label={t('counterorders.builder.quantity', 'Cantidad')}
                           />
