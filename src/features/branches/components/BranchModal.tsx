@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { 
   Branch, 
@@ -7,8 +7,10 @@ import {
   BranchFiscalConfig, 
   UserBranchAccess,
   GrantBranchAccessRequest,
-  CreateBranchFiscalConfigRequest
+  CreateBranchFiscalConfigRequest,
+  User
 } from '@/types';
+import { getUserDisplayName, getUserInitials, getRoleBadgeTone } from '@/domain/users/userDisplay';
 import { branchService } from '@/features/branches/services/branchService';
 import { userService } from '@/services/userService';
 import { useToast } from '@/hooks/useToast';
@@ -231,6 +233,13 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
     enabled: isOpen && isEditing
   });
   const users = (usersResponse as any)?.users || usersResponse?.data || [];
+
+  // user_branch_access solo trae user_id; cruzamos contra el listado de
+  // usuarios ya cargado para el selector y mostramos nombre/usuario/rol.
+  const usersById = useMemo(
+    () => new Map<string, User>((users as User[]).map((u) => [u.id, u])),
+    [users],
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -665,9 +674,45 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                   <TableBody className="divide-y divide-slate-100">
                     {((accessList as any)?.access || accessList?.data || []).map((acc: UserBranchAccess) => (
                       <TableRow key={acc.id} className="text-sm hover:bg-slate-50/50 transition-colors">
-                        <TableCell className="py-4 px-4 font-bold text-slate-700 flex items-center gap-3">
-                           <div className="size-8 rounded-full bg-slate-200 flex items-center justify-center text-xs text-slate-600">{acc.user_id.substring(0,2).toUpperCase()}</div>
-                           <span className="font-mono text-xs">{acc.user_id}</span>
+                        <TableCell className="py-4 px-4">
+                          {(() => {
+                            const accessUser = usersById.get(acc.user_id);
+                            const handle = accessUser?.username ? `@${accessUser.username}` : accessUser?.email || '';
+                            return (
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                                  {accessUser ? getUserInitials(accessUser) : acc.user_id.substring(0, 2).toUpperCase()}
+                                </div>
+                                <div className="flex min-w-0 flex-col">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="font-bold text-foreground text-sm truncate">
+                                      {accessUser ? getUserDisplayName(accessUser) : acc.user_id}
+                                    </span>
+                                    {(accessUser?.roles ?? []).map((role) => (
+                                      <Badge
+                                        key={role.id}
+                                        variant={getRoleBadgeTone(role) === 'primary' ? 'default' : 'secondary'}
+                                        size="sm"
+                                      >
+                                        {role.name}
+                                      </Badge>
+                                    ))}
+                                    {accessUser && accessUser.status !== 'active' && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-surface-subtle text-on-surface-deep">
+                                        <span className="size-1.5 rounded-full bg-outline" />
+                                        {t('users.status.inactive', 'Inactivo')}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-on-surface-deep truncate">
+                                    {handle}
+                                    {handle ? ' · ' : ''}
+                                    <span className="font-mono">{acc.user_id}</span>
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell className="py-4 px-4">
                           <div className="flex items-center gap-2 flex-wrap">
