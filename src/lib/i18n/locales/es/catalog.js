@@ -15,6 +15,8 @@ export const catalog = {
   'catalog.filter.brand': 'Marca',
   'catalog.filter.sort': 'Ordenar',
   'catalog.filter.all': 'Todas',
+  'catalog.filter.all_categories': 'Todas las categorías',
+  'catalog.filter.all_brands': 'Todas las marcas',
   'catalog.filter.in_stock': 'Solo con stock',
   'catalog.sort.name_asc': 'Nombre (A-Z)',
   'catalog.sort.price_asc': 'Precio (menor a mayor)',

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Package, Search, SlidersHorizontal } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Package, Search } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import PageHeader from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -73,9 +73,11 @@ export function CatalogBoard() {
         />
 
         <section className="mt-lg space-y-md" aria-label={t('catalog.title', 'Catálogo')}>
-          {/* Toolbar: búsqueda + filtros */}
-          <div className="flex flex-col gap-md lg:flex-row lg:items-center">
-            <div className="relative flex-1">
+          {/* Toolbar: búsqueda + filtros. Los anchos fijos van en wrappers:
+              cn() no tiene tailwind-merge y w-[Npx] sobre SelectTrigger
+              pierde contra el w-full de su base. */}
+          <div className="flex flex-col gap-md xl:flex-row xl:items-center">
+            <div className="relative flex-1 min-w-0">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-deep pointer-events-none"
                 aria-hidden="true"
@@ -95,64 +97,73 @@ export function CatalogBoard() {
             </div>
 
             <div className="flex flex-wrap items-center gap-sm">
-              <SlidersHorizontal className="w-4 h-4 text-on-surface-deep" aria-hidden="true" />
-              <Select
-                value={filters.categoryId != null ? String(filters.categoryId) : 'all'}
-                onValueChange={value =>
-                  updateFilters({ categoryId: value === 'all' ? null : Number(value) })
-                }
-              >
-                <SelectTrigger className="w-[180px]" aria-label={t('catalog.filter.category', 'Categoría')}>
-                  <SelectValue placeholder={t('catalog.filter.category', 'Categoría')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('catalog.filter.all', 'Todas')}</SelectItem>
-                  {categoryOptions.map((category: any) => (
-                    <SelectItem key={category.id} value={String(category.id)}>
-                      {category.name}
+              <div className="w-full sm:w-[190px]">
+                <Select
+                  value={filters.categoryId != null ? String(filters.categoryId) : 'all'}
+                  onValueChange={value =>
+                    updateFilters({ categoryId: value === 'all' ? null : Number(value) })
+                  }
+                >
+                  <SelectTrigger className="w-full" aria-label={t('catalog.filter.category', 'Categoría')}>
+                    <SelectValue placeholder={t('catalog.filter.category', 'Categoría')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t('catalog.filter.all_categories', 'Todas las categorías')}
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    {categoryOptions.map((category: any) => (
+                      <SelectItem key={category.id} value={String(category.id)}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select
-                value={
-                  filters.brandIds.length === 1 ? String(filters.brandIds[0]) : 'all'
-                }
-                onValueChange={value =>
-                  updateFilters({ brandIds: value === 'all' ? [] : [Number(value)] })
-                }
-              >
-                <SelectTrigger className="w-[160px]" aria-label={t('catalog.filter.brand', 'Marca')}>
-                  <SelectValue placeholder={t('catalog.filter.brand', 'Marca')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('catalog.filter.all', 'Todas')}</SelectItem>
-                  {brandOptions.map((brand: any) => (
-                    <SelectItem key={brand.id} value={String(brand.id)}>
-                      {brand.name}
+              <div className="w-full sm:w-[170px]">
+                <Select
+                  value={
+                    filters.brandIds.length === 1 ? String(filters.brandIds[0]) : 'all'
+                  }
+                  onValueChange={value =>
+                    updateFilters({ brandIds: value === 'all' ? [] : [Number(value)] })
+                  }
+                >
+                  <SelectTrigger className="w-full" aria-label={t('catalog.filter.brand', 'Marca')}>
+                    <SelectValue placeholder={t('catalog.filter.brand', 'Marca')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t('catalog.filter.all_brands', 'Todas las marcas')}
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    {brandOptions.map((brand: any) => (
+                      <SelectItem key={brand.id} value={String(brand.id)}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select
-                value={filters.sortBy}
-                onValueChange={value => updateFilters({ sortBy: value as CatalogSortOption })}
-              >
-                <SelectTrigger className="w-[170px]" aria-label={t('catalog.filter.sort', 'Ordenar')}>
-                  <SelectValue placeholder={t('catalog.filter.sort', 'Ordenar')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {SORT_OPTIONS.map(option => (
-                    <SelectItem key={option} value={option}>
-                      {t(`catalog.sort.${option}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="w-full sm:w-[170px]">
+                <Select
+                  value={filters.sortBy}
+                  onValueChange={value => updateFilters({ sortBy: value as CatalogSortOption })}
+                >
+                  <SelectTrigger className="w-full" aria-label={t('catalog.filter.sort', 'Ordenar')}>
+                    <SelectValue placeholder={t('catalog.filter.sort', 'Ordenar')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map(option => (
+                      <SelectItem key={option} value={option}>
+                        {t(`catalog.sort.${option}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <label className="flex items-center gap-xs text-body-sm text-foreground cursor-pointer">
+              <label className="flex items-center gap-xs text-body-sm text-foreground cursor-pointer whitespace-nowrap">
                 <Checkbox
                   checked={filters.inStockOnly}
                   onCheckedChange={checked => updateFilters({ inStockOnly: checked === true })}
