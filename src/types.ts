@@ -1803,6 +1803,7 @@ export interface BudgetItem {
   discount_percent?: number;
   notes?: string;
   product_name?: string; // JOIN
+  product_barcode?: string; // JOIN (fallback del código mostrado en detalle)
 }
 
 /**
