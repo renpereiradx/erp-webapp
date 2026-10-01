@@ -800,7 +800,7 @@ export default function ProductsPage() {
 
 Implementaciones canónicas de referencia: el buscador global del menú
 (`src/layouts/main/useGlobalSearch.ts` + `Header.tsx`, Ctrl+K) y el POS de ventas
-(`src/features/sales/hooks/useSalesShortcuts.ts`, F2/F4/Alt+Q/Alt+X/Ctrl+Shift+H).
+(`src/features/sales/hooks/useSalesShortcuts.ts`, F2/F4/↑↓/Alt+Q/Alt+X/Ctrl+Shift+H).
 Toda página nueva o migrada que tenga buscador DEBE seguir esta sección: el objetivo
 es que **F2 signifique exactamente lo mismo en todas las páginas de listado**.
 
@@ -815,9 +815,9 @@ es que **F2 signifique exactamente lo mismo en todas las páginas de listado**.
 | `Ctrl+G` (+ alias `F12`, `Ctrl+Enter`) | Acción principal: confirmar/avanzar wizard. Los alias son de compatibilidad. | Configurable: `sales.processSale` / `purchases.processPurchase` |
 | `Escape`          | **Solo cierra cosas**: modal, dropdown, buscador global. Nunca acción destructiva ni navegación. | Infra (Radix/EnhancedModal) + overlay activo |
 | `Enter`           | Submit del input/formulario enfocado (buscar, aplicar filtros). En wizards: acción principal si el foco está en un `<input>` de una línea (nunca `<textarea>`/`<select>`). | Native/onKeyDown del input |
-| `Alt+Q` / `Alt+X` | Editar cantidad / quitar el ítem activo de una lista (Alt no escribe texto: seguro con foco en input). | Cableado en el hook |
+| `Alt+Q` / `Alt+X` | Editar detalles / quitar el ítem seleccionado de una lista (modal de edición: cantidad, unidad, precio, descuento). Alt no escribe texto: seguro con foco en input. | Cableado en el hook |
 | `Ctrl+Shift+H`    | Ir al historial del módulo.                                              | Configurable: `<módulo>.viewHistory`         |
-| `↑` `↓`           | Navegar resultados/dropdowns, SOLO si el foco NO está en un input.       | Cableado en el componente                    |
+| `↑` `↓`           | Navegar resultados/dropdowns y filas del carrito del POS (selección persistente), SOLO si el foco NO está en un input. | Cableado en el componente                    |
 
 **Regla de registro:** combinaciones con letras (Ctrl/Alt/Shift + letra) van SIEMPRE
 por `useKeyboardShortcutsStore` — alta en `DEFAULT_SHORTCUTS` + `categories` +
@@ -925,7 +925,7 @@ las páginas de listado simple usan SOLO el hook compartido. No dupliques.
 | Página                          | Estado                                                                 |
 |:--------------------------------|:-----------------------------------------------------------------------|
 | Menú / Header (buscador global) | ✅ Canónico (Ctrl+K, flechas, Enter, Esc, click-outside)               |
-| Ventas POS (`SalesNew`)         | ✅ Canónico (F2/F4/Alt+Q/Alt+X/Ctrl+Shift+H + `enabled`)               |
+| Ventas POS (`SalesNew`)         | ✅ Canónico (F2/F4/Alt+Q/Alt+X/Ctrl+Shift+H + `enabled` con TODOS los modales). ↑↓ navega el carrito (solo filas accionables, selección persistente que el hover mueve pero no limpia); Alt+X deja la selección en la fila vecina; hints `[↑↓] Navegar · [Alt+Q] Editar` en la banda de la card |
 | Compras (`Purchases`)           | ✅ `usePurchasesShortcuts`: F2 (Historial/Nueva Compra) + F12 con gating por modal; buscador del carrito con foco por defecto al cargar. Modal de producto: F3 buscador, confirmación configurable `purchases.addProduct` (Ctrl+A, solo con línea válida — inválida no consume la tecla y Ctrl+A conserva el select-all) con hints kbd en footer; wizard ya cumplía |
 | Productos (`Products`)          | ✅ F2 vía `useSearchFocusShortcut` en `useProductsLogic`; placeholder con pista |
 | Clientes (`Clients`)            | ✅ F2 + Enter busca; gating con modales form/details                   |

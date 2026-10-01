@@ -1120,8 +1120,45 @@ const SalesNew: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // Atajos globales del POS (F2/F4/Alt+Q/Alt+X/Ctrl+Shift+H). Va después de
-  // handleOpenEditModal porque los callbacks de fila activa lo referencian.
+  // Selección del carrito por teclado (↑/↓, convención §12.1): recorre solo
+  // filas accionables — los ítems de ventas procesadas no se editan ni quitan
+  // y nunca se resaltan. Sin selección, ↓ entra por la primera y ↑ por la
+  // última; con selección, clamp en los bordes (sin wrap: predecible en POS).
+  const handleNavigateCart = useCallback(
+    (direction: 1 | -1) => {
+      const actionable = items.filter((i) => !i.isFromPendingSale);
+      if (actionable.length === 0) return;
+      const currentIndex = actionable.findIndex((i) => i.id === activeCartItemId);
+      const nextIndex =
+        currentIndex === -1
+          ? direction === 1
+            ? 0
+            : actionable.length - 1
+          : Math.max(0, Math.min(actionable.length - 1, currentIndex + direction));
+      setActiveCartItemId(actionable[nextIndex].id);
+    },
+    [items, activeCartItemId],
+  );
+
+  // Quitar ítem (click en × o Alt+X): el vecino de la fila eliminada hereda
+  // la selección (el que ocupa su índice, o el anterior si era la última) —
+  // borrar varias filas seguidas con Alt+X no requiere re-navegar.
+  const handleRemoveItem = useCallback(
+    (id: string) => {
+      const item = items.find((i) => i.id === id);
+      if (!item || item.isFromPendingSale) return;
+      const actionable = items.filter((i) => !i.isFromPendingSale);
+      const index = actionable.findIndex((i) => i.id === id);
+      const survivors = actionable.filter((i) => i.id !== id);
+      const neighbor = survivors[Math.min(index, survivors.length - 1)] ?? null;
+      setItems((prev) => prev.filter((i) => i.id !== id));
+      setActiveCartItemId(neighbor ? neighbor.id : null);
+    },
+    [items],
+  );
+
+  // Atajos globales del POS (F2/F4/↑↓/Alt+Q/Alt+X/Ctrl+Shift+H). Va después
+  // de handleOpenEditModal porque los callbacks de fila activa lo referencian.
   useSalesShortcuts({
     activeTab,
     productSearchInputRef,
@@ -1133,16 +1170,13 @@ const SalesNew: React.FC = () => {
       if (item && !item.isFromPendingSale) handleOpenEditModal(item);
     }, [activeCartItemId, items]),
     onRemoveActiveItem: useCallback(() => {
-      if (!activeCartItemId) return;
-      const item = items.find((i) => i.id === activeCartItemId);
-      if (item && !item.isFromPendingSale) {
-        setItems((prev) => prev.filter((i) => i.id !== activeCartItemId));
-        setActiveCartItemId(null);
-      }
-    }, [activeCartItemId, items]),
-    // El wizard de checkout vive encima: limpiar/editar el carrito por teclado
-    // en ese estado corrompería la venta en curso.
-    enabled: !showCheckoutWizard && !isModalOpen,
+      if (activeCartItemId) handleRemoveItem(activeCartItemId);
+    }, [activeCartItemId, handleRemoveItem]),
+    onNavigateCart: handleNavigateCart,
+    // Capa página (§12.2): la disyunción de TODOS los modales de este tab —
+    // el wizard de checkout y los modales viven encima: editar/quitar filas
+    // por teclado en ese estado corrompería la venta en curso.
+    enabled: !showCheckoutWizard && !isModalOpen && !variantSelectorProduct,
   });
 
   const handleConfirmAdd = () => {
@@ -2056,6 +2090,10 @@ const SalesNew: React.FC = () => {
                 <p className="hidden sm:flex items-center gap-sm text-body-sm font-data-mono text-outline-fg">
                   <span>[F2] {t('sales.hints.search', 'Buscar')}</span>
                   <span aria-hidden="true">·</span>
+                  <span>[↑↓] {t('sales.hints.navigate', 'Navegar')}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>[Alt+Q] {t('sales.hints.edit', 'Editar')}</span>
+                  <span aria-hidden="true">·</span>
                   <span>[F12] {t('sales.hints.checkout', 'Cobrar')}</span>
                   <span aria-hidden="true">·</span>
                   <span>[F4] {t('sales.hints.clear', 'Limpiar')}</span>
@@ -2096,10 +2134,7 @@ const SalesNew: React.FC = () => {
                   items={filteredItems}
                   onEditItem={handleOpenEditModal}
                   onEmptyAction={() => productSearchInputRef.current?.focus()}
-                  onRemoveItem={(id) => {
-                    setItems((prev) => prev.filter((i) => i.id !== id));
-                    if (activeCartItemId === id) setActiveCartItemId(null);
-                  }}
+                  onRemoveItem={handleRemoveItem}
                   getItemBaseUnitPrice={getItemBaseUnitPrice}
                   getItemLineDiscount={getItemLineDiscount}
                   getItemLineTotal={getItemLineTotal}

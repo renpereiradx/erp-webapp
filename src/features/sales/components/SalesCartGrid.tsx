@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { MoreVertical, X, ShoppingCart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,8 +23,10 @@ interface SalesCartGridProps {
   getItemLineDiscount: (item: any) => number;
   getItemLineTotal: (item: any) => number;
   /**
-   * Ítem "activo" (fila en hover/foco): los atajos globales Alt+Q (editar
-   * cantidad) y Alt+X (quitar) operan sobre él. El padre guarda el id.
+   * Ítem seleccionado (fila bajo el mouse o elegida con ↑/↓): los atajos
+   * globales Alt+Q (editar detalles) y Alt+X (quitar) operan sobre él y la
+   * fila se resalta. La selección es PERSISTENTE: no se limpia al salir con
+   * el mouse — el padre guarda el id.
    */
   activeItemId?: string | null;
   onActiveItemChange?: (id: string | null) => void;
@@ -66,6 +68,17 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
   const { t } = useI18n();
 
   const setActive = (id: string | null) => onActiveItemChange?.(id);
+  // La fila seleccionada por teclado (↑/↓) puede quedar fuera del viewport
+  // cuando el carrito desborda: llevarla a la vista (scrollIntoView no existe
+  // en jsdom → optional call).
+  const desktopTableRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!activeItemId) return;
+    const row = desktopTableRef.current?.querySelector<HTMLElement>(
+      `[data-cart-row="${activeItemId}"]`,
+    );
+    row?.scrollIntoView?.({ block: 'nearest' });
+  }, [activeItemId]);
   // La columna Desc. solo se muestra cuando hay descuentos: en el caso común
   // (sin descuentos) libera ancho para el nombre del producto en el POS.
   const hasDiscounts = items.some((item) => getItemLineDiscount(item) > 0);
@@ -96,7 +109,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
           (DESIGN.md §6.3): tabla full-bleed sin recuadro interno; el empty
           state vive DENTRO de la tabla (fila colSpan) igual que el carrito
           de /compras. El componente EmptyState queda para la vista mobile. */}
-      <div className="hidden md:block">
+      <div ref={desktopTableRef} className="hidden md:block">
         <Table className="table-fixed">
           <TableHeader className="bg-surface-muted">
             <TableRow className="hover:bg-surface-muted border-0">
@@ -155,10 +168,12 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                 <TableRow
                   key={item.id}
                   tabIndex={-1}
+                  data-testid={`sales-cart-row-${item.id}`}
+                  data-cart-row={item.id}
+                  // Selección PERSISTENTE: el hover/foco la mueve pero jamás
+                  // la limpia — Alt+Q/Alt+X siempre tienen un ítem seleccionado.
                   onMouseEnter={() => setActive(item.id)}
-                  onMouseLeave={() => setActive(null)}
                   onFocus={() => setActive(item.id)}
-                  onBlur={() => setActive(null)}
                   className={cn(
                     'hover:bg-surface-muted transition-colors duration-150',
                     item.isFromPendingSale && 'bg-surface-subtle',

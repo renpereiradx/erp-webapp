@@ -7,10 +7,16 @@ interface UseSalesShortcutsProps {
   onClearCart?: () => void;
   /** Ctrl+Shift+H (sales.viewHistory): ir al Historial de ventas. */
   onGoToHistory?: () => void;
-  /** Alt+Q: editar cantidad del ítem activo del carrito (fila en hover/foco). */
+  /** Alt+Q: editar detalles del ítem seleccionado del carrito. */
   onEditActiveItem?: () => void;
-  /** Alt+X: quitar el ítem activo del carrito (fila en hover/foco). */
+  /** Alt+X: quitar el ítem seleccionado del carrito. */
   onRemoveActiveItem?: () => void;
+  /**
+   * ↑/↓: mover la selección del carrito a la fila siguiente/anterior
+   * (convención §12.1: flechas solo con el foco FUERA de inputs — el
+   * buscador de productos maneja las suyas para su dropdown).
+   */
+  onNavigateCart?: (direction: 1 | -1) => void;
   /**
    * Corta todos los atajos (excepto nada): el wizard de checkout se abre sobre
    * la página y limpiar el carrito o editar filas por teclado en ese estado
@@ -19,12 +25,24 @@ interface UseSalesShortcutsProps {
   enabled?: boolean;
 }
 
+/** §12.3.3: los inputs se llevan las flechas para sí (escribir/mover caret). */
+const isTypingTarget = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) return false;
+  return (
+    target.tagName === 'INPUT' ||
+    target.tagName === 'TEXTAREA' ||
+    target.tagName === 'SELECT' ||
+    target.isContentEditable
+  );
+};
+
 /**
  * Atajos de la vista POS (solo tab "Nueva Venta"):
  * - F2 → foco al buscador de productos.
  * - F4 → limpiar carrito.
  * - Ctrl+Shift+H → Historial (atajo `sales.viewHistory` del store global).
- * - Alt+Q / Alt+X → editar cantidad / quitar el ítem activo del carrito.
+ * - ↑/↓ → navegar las filas del carrito (selección persistente).
+ * - Alt+Q / Alt+X → editar detalles / quitar el ítem seleccionado del carrito.
  */
 export const useSalesShortcuts = ({
   activeTab,
@@ -33,6 +51,7 @@ export const useSalesShortcuts = ({
   onGoToHistory,
   onEditActiveItem,
   onRemoveActiveItem,
+  onNavigateCart,
   enabled = true,
 }: UseSalesShortcutsProps) => {
   useEffect(() => {
@@ -49,6 +68,13 @@ export const useSalesShortcuts = ({
       if (event.key === 'F4') {
         event.preventDefault();
         onClearCart?.();
+        return;
+      }
+
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        if (isTypingTarget(event.target)) return;
+        event.preventDefault();
+        onNavigateCart?.(event.key === 'ArrowDown' ? 1 : -1);
         return;
       }
 
@@ -74,5 +100,5 @@ export const useSalesShortcuts = ({
 
     document.addEventListener('keydown', handleGlobalKeyDown);
     return () => document.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [activeTab, enabled, productSearchInputRef, onClearCart, onGoToHistory, onEditActiveItem, onRemoveActiveItem]);
+  }, [activeTab, enabled, productSearchInputRef, onClearCart, onGoToHistory, onEditActiveItem, onRemoveActiveItem, onNavigateCart]);
 };

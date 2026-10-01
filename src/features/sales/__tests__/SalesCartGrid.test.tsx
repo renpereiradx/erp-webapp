@@ -4,7 +4,7 @@
 // no alcanza, la fila lo marca antes del error del checkout. i18n mockeado.
 // ===========================================================================
 
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/i18n', () => ({
@@ -65,5 +65,37 @@ describe('SalesCartGrid — badge de stock (FASE 5)', () => {
     )
     expect(screen.queryByTestId('sales-cart-stock-item-1')).not.toBeInTheDocument()
     expect(screen.queryByTestId('sales-cart-stock-item-2')).not.toBeInTheDocument()
+  })
+})
+
+describe('SalesCartGrid — selección persistente (navegación ↑↓ del POS)', () => {
+  // La selección alimenta Alt+Q/Alt+X: salir de la fila con el mouse NO la
+  // limpia (los atajos siempre tienen un ítem al que operar).
+  it('mouse enter selecciona la fila y mouse leave NO la limpia', () => {
+    const onActiveItemChange = vi.fn()
+    render(
+      <SalesCartGrid
+        items={[baseItem]}
+        {...noopProps}
+        activeItemId="item-1"
+        onActiveItemChange={onActiveItemChange}
+      />,
+    )
+    const row = screen.getByTestId('sales-cart-row-item-1')
+    fireEvent.mouseEnter(row)
+    expect(onActiveItemChange).toHaveBeenLastCalledWith('item-1')
+    fireEvent.mouseLeave(row)
+    expect(onActiveItemChange).not.toHaveBeenCalledWith(null)
+  })
+
+  it('filas accionables y de ventas procesadas exponen testid para ↑↓', () => {
+    render(
+      <SalesCartGrid
+        items={[baseItem, { ...baseItem, id: 'item-2', productId: 'P2', name: 'Procesada', isFromPendingSale: true }]}
+        {...noopProps}
+      />,
+    )
+    expect(screen.getByTestId('sales-cart-row-item-1')).toBeInTheDocument()
+    expect(screen.getByTestId('sales-cart-row-item-2')).toBeInTheDocument()
   })
 })
