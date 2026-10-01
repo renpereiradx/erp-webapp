@@ -128,7 +128,7 @@ const PurchaseRequisitionDetailView: React.FC = () => {
                       <tr key={item.id} className="text-sm hover:bg-slate-50/30 transition-colors">
                          <td className="py-4 px-6">
                             <p className="font-bold text-text-main">{item.product_name}</p>
-                            <p className="text-[10px] text-slate-400 font-mono">{item.product_id}</p>
+                            <p className="text-[10px] text-slate-400 font-mono">{item.product_sku || item.product_id}</p>
                          </td>
                          <td className="py-4 px-4 text-center font-black text-slate-700">
                             {item.quantity} {item.unit || 'uds'}

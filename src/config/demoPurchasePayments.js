@@ -31,8 +31,8 @@ export const DEMO_PURCHASE_ORDERS = [
       }
     ],
     products: [
-      { id: 1, product_name: 'Resma Papel A4', quantity: 100, unit_price: 35000, total_price: 3500000 },
-      { id: 2, product_name: 'Tóner HP 85A', quantity: 5, unit_price: 300000, total_price: 1500000 }
+      { id: 1, product_sku: 'PAP-A4-0500', product_name: 'Resma Papel A4', quantity: 100, unit_price: 35000, total_price: 3500000 },
+      { id: 2, product_sku: 'TON-HP-085A', product_name: 'Tóner HP 85A', quantity: 5, unit_price: 300000, total_price: 1500000 }
     ]
   },
   {

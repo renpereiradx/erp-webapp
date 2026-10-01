@@ -407,7 +407,7 @@ export function MovementForm() {
         {draft && (
           <div className="space-y-md">
             <div className="rounded-input bg-surface-muted border border-border-subtle p-3">
-              <p className="text-data-mono text-primary font-bold text-body-sm-bold uppercase">{draft.product.id}</p>
+              <p className="text-data-mono text-primary font-bold text-body-sm-bold uppercase">{draft.product.sku || draft.product.id}</p>
               <h3 className="text-body-md-bold text-foreground">{draft.product.name}</h3>
             </div>
 

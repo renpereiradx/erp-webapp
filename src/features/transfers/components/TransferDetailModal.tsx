@@ -311,8 +311,8 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
                                 </span>
                               </span>
                               <span className="mt-0.5 block break-all text-data-mono font-data-mono text-on-surface-deep" title={item.variant_id ? `${item.product_id} · ${item.variant_id}` : item.product_id}>
-                                {item.product_id}
-                                {item.variant_id ? ` · ${item.variant_id}` : ''}
+                                {item.product_sku || item.product_id}
+                                {item.variant_sku ? ` · ${item.variant_sku}` : item.variant_id ? ` · ${item.variant_id}` : ''}
                               </span>
                               {item.notes && (
                                 <span className="mt-0.5 block break-words whitespace-normal text-body-sm text-on-surface-deep" title={item.notes}>

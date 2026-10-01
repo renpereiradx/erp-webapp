@@ -82,6 +82,7 @@ const DETAIL_RESPONSE = {
       budget_order_id: 'BUD-1790186',
       product_id: 'Cc2y5JnvR',
       product_name: 'CAMISETA ADIDAS',
+      product_sku: 'ADI-CAM-001',
       product_barcode: '7574015002311',
       quantity: 1,
       unit_price: 70000,
@@ -126,10 +127,10 @@ describe('BudgetDetail (página)', () => {
     expect(screen.queryByText('Producto ID: Cc2y5JnvR')).not.toBeInTheDocument()
   })
 
-  it('la línea de código prefiere el código de barras sobre el id interno', async () => {
+  it('la línea de código prefiere el sku universal sobre barcode/id', async () => {
     renderPage()
 
-    await waitFor(() => expect(screen.getByText('Cód: 7574015002311')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Cód: ADI-CAM-001')).toBeInTheDocument())
   })
 
   it('cae al fallback "Producto ID: <id>" cuando la línea no trae nombre', async () => {

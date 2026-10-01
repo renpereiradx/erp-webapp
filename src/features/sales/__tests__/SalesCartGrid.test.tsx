@@ -68,6 +68,19 @@ describe('SalesCartGrid — badge de stock (FASE 5)', () => {
   })
 })
 
+describe('SalesCartGrid — columna SKU universal (ANALYSIS_UUID_SKU_PRODUCTS F3)', () => {
+  it('muestra el sku de la unidad vendible y el header SKU', () => {
+    render(<SalesCartGrid items={[{ ...baseItem, sku: 'COC-2L' }]} {...noopProps} />)
+    expect(screen.getByText('SKU')).toBeInTheDocument()
+    expect(screen.getAllByText('COC-2L').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('sin sku (venta pendiente vieja) cae al id de producto', () => {
+    render(<SalesCartGrid items={[baseItem]} {...noopProps} />)
+    expect(screen.getAllByText('PROD-1').length).toBeGreaterThanOrEqual(1)
+  })
+})
+
 describe('SalesCartGrid — selección persistente (navegación ↑↓ del POS)', () => {
   // La selección alimenta Alt+Q/Alt+X: salir de la fila con el mouse NO la
   // limpia (los atajos siempre tienen un ítem al que operar).

@@ -141,7 +141,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
         isOpen={isOpen}
         onClose={onClose}
         title={productName}
-        subtitle={`${t('products.details.product_id')}: ${productId || 'N/A'}`}
+        subtitle={`${t('products.details.sku', 'SKU')}: ${product?.sku || productId || 'N/A'}`}
         variant="default"
         size="xl"
         className="rounded-xl flex flex-col"

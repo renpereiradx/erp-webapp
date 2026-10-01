@@ -143,6 +143,8 @@ export interface Category {
 export interface Product {
   id: string;
   name: string;
+  /** SKU universal de producto (backend lo genera si no viene explícito). */
+  sku?: string;
   code?: string;
   barcode?: string | null;
   state?: boolean;
@@ -1559,6 +1561,8 @@ export interface BranchTransferItem {
   id: number;
   transfer_id: number;
   product_id: string;
+  product_sku?: string; // JOIN detalle: SKU universal
+  variant_sku?: string; // JOIN detalle: SKU de la variante
   variant_id?: string;
   quantity_requested: number;
   quantity_approved?: number;
@@ -1803,6 +1807,7 @@ export interface BudgetItem {
   discount_percent?: number;
   notes?: string;
   product_name?: string; // JOIN
+  product_sku?: string; // JOIN: SKU universal del producto
   product_barcode?: string; // JOIN (fallback del código mostrado en detalle)
 }
 
@@ -1865,6 +1870,7 @@ export interface PurchaseRequisitionDetail {
   purchase_requisition_id: string;
   product_id: string;
   product_name: string;
+  product_sku?: string; // JOIN: SKU universal del producto
   quantity: number;
   unit?: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
@@ -2332,6 +2338,7 @@ export interface LabelData {
 export interface ScaleCatalogItem {
   scale_code: string;
   product_id: string;
+  product_sku?: string; // SKU universal del producto
   product_name: string;
   price_per_unit: string; // decimal string
   unit: string;

@@ -114,7 +114,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
               {product.name || product.product_name}
             </h2>
             <p className="text-body-sm text-outline-fg font-data-mono mt-1.5 uppercase tracking-wider">
-              ID: {product.id}
+              SKU: {product.sku || product.id}
             </p>
 
             <div className="mt-6 space-y-4">

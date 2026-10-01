@@ -185,7 +185,7 @@ const BudgetDetail: React.FC = () => {
                       <tr key={item.id} className="text-sm">
                          <td className="py-4 px-6">
                             <p className="font-bold text-text-main">{item.product_name || 'Producto ID: ' + item.product_id}</p>
-                            <p className="text-[10px] text-slate-400 font-mono">Cód: {item.product_barcode || item.product_id}</p>
+                            <p className="text-[10px] text-slate-400 font-mono">Cód: {item.product_sku || item.product_barcode || item.product_id}</p>
                          </td>
                          <td className="py-4 px-4 text-center font-bold text-slate-600">
                             {item.quantity}

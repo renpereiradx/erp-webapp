@@ -542,6 +542,21 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
                       {renderErrorText(errors.barcode)}
                     </div>
 
+                    {/* SKU universal (editable; vacío = autogenerado) */}
+                    <div className="space-y-xs">
+                      <Label htmlFor="product-sku" className={labelClass}>{t('products.modal.field.sku', 'SKU')}</Label>
+                      <Input
+                        id="product-sku"
+                        name="sku"
+                        value={formData.sku}
+                        onChange={handleChange}
+                        placeholder={t('products.modal.placeholder.sku', 'Automático si se deja vacío')}
+                        className="text-data-mono font-data-mono"
+                        autoComplete="off"
+                      />
+                      {renderErrorText(errors.sku)}
+                    </div>
+
                     {/* Unidad de Medida */}
                     <div className="space-y-xs">
                       <Label className={labelClass}>

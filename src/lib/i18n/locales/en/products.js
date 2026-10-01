@@ -138,6 +138,8 @@ export const products = {
   'products.modal.section.general_info': 'General Information',
   'products.modal.section.classification': 'Classification & Taxes',
   'products.modal.section.codes': 'Codes, Measures & Inventory',
+  'products.modal.field.sku': 'SKU',
+  'products.modal.placeholder.sku': 'Automatic if left blank',
   'products.modal.field.unit_of_measure': 'Unit of Measure',
   'products.modal.field.scale_code': 'Scale Code',
   'products.modal.field.scale_code_hint': 'Short code for EAN-13 scales (1-5 digits)',
@@ -159,6 +161,7 @@ export const products = {
   'products.modal.completeness.progress': 'In progress',
 
   // Details modal
+  'products.details.sku': 'SKU',
   'products.details.table.variant_tag': 'Variant',
   'products.details.table.validity': 'Effective',
   'products.details.table.actions': 'Actions',

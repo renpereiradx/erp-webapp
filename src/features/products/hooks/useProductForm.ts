@@ -10,6 +10,7 @@ export const baseProductSchema = z.object({
   productType: z.enum(['PHYSICAL', 'SERVICE', 'PRODUCTION']),
   description: z.string().min(1, 'La descripción es requerida'),
   barcode: z.string().optional(),
+  sku: z.string().optional(),
   brand_id: z.string().optional(),
   origin: z.string().optional(),
   base_unit: z.string().default('unit'),
@@ -83,6 +84,7 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
     productType: 'PHYSICAL',
     description: '',
     barcode: '',
+    sku: '',
     brand_id: '',
     origin: '',
     base_unit: 'unit',
@@ -152,6 +154,7 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
           productType: product.product_type || 'PHYSICAL',
           description: product.description || '',
           barcode: product.barcode || '',
+          sku: product.sku || '',
           brand_id: product.brand_id?.toString() || '',
           origin: product.origin || '',
           base_unit: product.base_unit || 'unit',
@@ -163,7 +166,7 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
       } else {
         setFormData({
           name: '', category: '', productType: 'PHYSICAL', description: '',
-          barcode: '', brand_id: '', origin: '', base_unit: 'unit', tax_rate_id: '',
+          barcode: '', sku: '', brand_id: '', origin: '', base_unit: 'unit', tax_rate_id: '',
           is_variable_measure: false, is_bookable: false, scale_code: '',
         });
       }
@@ -223,6 +226,9 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
         description: formData.description.trim(),
         product_type: formData.productType,
         barcode: formData.barcode?.trim() || undefined,
+        // SKU universal: vacío en creación = el backend genera uno desde el
+        // nombre; en edición, ausente = sin cambio.
+        sku: formData.sku?.trim() || undefined,
         brand_id: formData.brand_id ? parseInt(formData.brand_id) : undefined,
         origin: formData.origin || undefined,
         base_unit: formData.base_unit || 'unit',

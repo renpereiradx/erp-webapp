@@ -127,6 +127,7 @@ export const DEMO_PRODUCT_DATA = [
   {
     id: 'PROD_001',
     product_id: 'PROD_001',
+    sku: 'LAP-DEL-0015',
     product_name: 'Laptop Dell Inspiron 15',
     name: 'Laptop Dell Inspiron 15',
     description: 'Laptop de alto rendimiento para uso profesional. Procesador i7, 16GB RAM, 512GB SSD. Pantalla Full HD de 15.6 pulgadas con recubrimiento antirreflejo.',
@@ -164,6 +165,7 @@ export const DEMO_PRODUCT_DATA = [
   {
     id: 'PROD_002',
     product_id: 'PROD_002',
+    sku: 'ACE-MOB-5W30',
     product_name: 'Aceite de Motor Sintético 5W-30',
     name: 'Aceite de Motor Sintético 5W-30',
     description: 'Lubricante 100% sintético diseñado para proporcionar una limpieza excepcional y protección contra el desgaste.',
@@ -201,6 +203,7 @@ export const DEMO_PRODUCT_DATA = [
   {
     id: 'PROD_003',
     product_id: 'PROD_003',
+    sku: 'MOU-LOG-0055',
     product_name: 'Mantenimiento Preventivo A',
     name: 'Mantenimiento Preventivo A',
     description: 'Servicio de revisión general que incluye limpieza, ajuste de componentes básicos y reporte de estado técnico.',
@@ -236,6 +239,7 @@ export const DEMO_PRODUCT_DATA = [
   {
     id: 'PROD_004',
     product_id: 'PROD_004',
+    sku: 'TEC-MEC-0087',
     product_name: 'Cámara Web 4K Ultra HD',
     name: 'Cámara Web 4K Ultra HD',
     description: 'Cámara web profesional con resolución 4K, micrófono dual con cancelación de ruido y enfoque automático rápido.',
@@ -1569,7 +1573,8 @@ export const DEMO_SALE_ITEMS_DATA = [
   {
     id: 1,
     sale_id: 1,
-    product_id: 1,
+    product_id: 'DEMO-PROD-1',
+    product_sku: 'LAP-DEL-0015',
     product_name: 'Laptop Dell Inspiron',
     quantity: 2,
     unit_price: 1225.0,
@@ -1578,7 +1583,8 @@ export const DEMO_SALE_ITEMS_DATA = [
   {
     id: 2,
     sale_id: 2,
-    product_id: 2,
+    product_id: 'DEMO-PROD-2',
+    product_sku: 'MOU-LOG-0055',
     product_name: 'Mouse Inalámbrico',
     quantity: 5,
     unit_price: 350.0,
@@ -1587,7 +1593,8 @@ export const DEMO_SALE_ITEMS_DATA = [
   {
     id: 3,
     sale_id: 2,
-    product_id: 3,
+    product_id: 'DEMO-PROD-3',
+    product_sku: 'TEC-MEC-0087',
     product_name: 'Teclado Mecánico',
     quantity: 1,
     unit_price: 100.0,
@@ -1596,7 +1603,8 @@ export const DEMO_SALE_ITEMS_DATA = [
   {
     id: 4,
     sale_id: 3,
-    product_id: 4,
+    product_id: 'DEMO-PROD-4',
+    product_sku: 'MON-SAM-0024',
     product_name: 'Monitor 24"',
     quantity: 4,
     unit_price: 800.0,
@@ -1605,7 +1613,8 @@ export const DEMO_SALE_ITEMS_DATA = [
   {
     id: 5,
     sale_id: 4,
-    product_id: 5,
+    product_id: 'DEMO-PROD-5',
+    product_sku: 'AUR-JBL-0500',
     product_name: 'Auriculares',
     quantity: 3,
     unit_price: 250.0,
@@ -1614,7 +1623,8 @@ export const DEMO_SALE_ITEMS_DATA = [
   {
     id: 6,
     sale_id: 5,
-    product_id: 1,
+    product_id: 'DEMO-PROD-1',
+    product_sku: 'LAP-DEL-0015',
     product_name: 'Laptop Dell Inspiron',
     quantity: 4,
     unit_price: 1225.0,
@@ -1623,7 +1633,8 @@ export const DEMO_SALE_ITEMS_DATA = [
   {
     id: 7,
     sale_id: 5,
-    product_id: 6,
+    product_id: 'DEMO-PROD-6',
+    product_sku: 'CAB-HDM-0040',
     product_name: 'Cable HDMI',
     quantity: 10,
     unit_price: 50.0,

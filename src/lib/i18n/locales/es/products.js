@@ -133,6 +133,7 @@ export const products = {
   'products.modal.field.bookableHint': 'Se vende por franja horaria en la agenda',
   'products.modal.field.description': 'Descripción',
   'products.modal.field.barcode': 'Código de Barras',
+  'products.modal.field.sku': 'SKU',
   'products.modal.field.brand': 'Marca',
   'products.modal.field.origin': 'Origen',
   'products.modal.placeholder.product_name': 'ej., Mouse Inalámbrico Ergonómico',
@@ -140,6 +141,7 @@ export const products = {
   'products.modal.placeholder.price': 'ej., 49.99',
   'products.modal.placeholder.description': 'Ingresa una descripción detallada del producto...',
   'products.modal.placeholder.barcode': 'Ingresa código de barras',
+  'products.modal.placeholder.sku': 'Automático si se deja vacío',
   'products.modal.placeholder.brand': 'Ingresa nombre de marca',
   'products.modal.placeholder.origin': 'Selecciona origen',
   'products.modal.helper.barcode': 'Máximo 50 caracteres',
@@ -172,6 +174,7 @@ export const products = {
 
   // Detalles del producto
   'products.details.product_id': 'ID de Producto',
+  'products.details.sku': 'SKU',
   'products.details.section.general_info': 'Información General',
   'products.details.section.unit_prices': 'Precios por Unidad',
   'products.details.section.cost_summary': 'Resumen de Costos',

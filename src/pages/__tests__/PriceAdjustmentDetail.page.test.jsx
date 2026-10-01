@@ -35,6 +35,7 @@ vi.mock('@/services/variantService', () => ({
 
 const productFixture = {
   product_id: 'p1',
+  sku: 'COC-2L',
   product_name: 'Coca Cola 2L',
   base_unit: 'unit',
   current_price: 5000,
@@ -77,7 +78,7 @@ describe('PriceAdjustmentDetail Page', () => {
 
     expect(screen.getByRole('heading', { name: 'Coca Cola 2L' })).toBeInTheDocument();
     expect(screen.getByText('Gs. 5.000')).toBeInTheDocument();
-    expect(screen.getByText('ID: p1')).toBeInTheDocument();
+    expect(screen.getByText('SKU: COC-2L')).toBeInTheDocument();
   });
 
   it('formatea miles dinámicamente mientras se escribe: 6000 → 6.000 (§6.4)', async () => {

@@ -530,7 +530,7 @@ export const sales = {
   'sales.cart.processedBadge': 'Procesado',
   'sales.cart.editAria': 'Editar producto',
   'sales.cart.removeAria': 'Quitar producto',
-  'sales.cart.col.id': 'ID',
+  'sales.cart.col.id': 'SKU',
   'sales.cart.col.product': 'Producto',
   'sales.cart.col.qty': 'Cant.',
   'sales.cart.col.price': 'Precio',

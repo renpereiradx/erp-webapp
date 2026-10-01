@@ -115,8 +115,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
             {product.name}
           </div>
           <div className="text-sm text-slate-500 flex items-center gap-2">
-            <span>ID: {product.id}</span>
-            {product.sku && <span>SKU: {product.sku}</span>}
+            <span>SKU: {product.sku && product.sku !== '-' ? product.sku : product.id}</span>
             {product.barcode && <span>Cod: {product.barcode}</span>}
             {product.stock !== undefined && (
               <span className={product.stock > 0 ? 'text-success' : 'text-error'}>
@@ -151,8 +150,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
                 {displayProduct.name}
               </div>
               <div className="text-sm text-green-700">
-                ID: {displayProduct.id}
-                {displayProduct.sku && ` | SKU: ${displayProduct.sku}`}
+                SKU: {displayProduct.sku && displayProduct.sku !== '-' ? displayProduct.sku : displayProduct.id}
               </div>
             </div>
           </div>

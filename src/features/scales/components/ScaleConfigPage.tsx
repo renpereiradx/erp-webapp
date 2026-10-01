@@ -661,7 +661,7 @@ const ScaleConfigPage: React.FC = () => {
                     <tr className="bg-slate-50 dark:bg-slate-800 border-b border-border-subtle text-[11px] font-black uppercase text-slate-400 tracking-wider">
                       <th className="p-4">Código de Balanza</th>
                       <th className="p-4">Producto</th>
-                      <th className="p-4">ID del Sistema</th>
+                      <th className="p-4">SKU</th>
                       <th className="p-4">Precio / Unidad</th>
                       <th className="p-4">Unidad Base</th>
                     </tr>
@@ -671,7 +671,7 @@ const ScaleConfigPage: React.FC = () => {
                       <tr key={item.product_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
                         <td className="p-4 font-mono font-bold text-xs text-primary">{item.scale_code || 'S/C'}</td>
                         <td className="p-4 font-bold text-text-main">{item.product_name}</td>
-                        <td className="p-4 font-mono text-xs text-text-secondary">{item.product_id}</td>
+                        <td className="p-4 font-mono text-xs text-text-secondary" title={item.product_id}>{item.product_sku || item.product_id}</td>
                         <td className="p-4 font-mono font-semibold text-text-main">Gs. {item.price_per_unit} / {item.unit}</td>
                         <td className="p-4 text-text-secondary font-medium uppercase text-xs">{item.base_unit}</td>
                       </tr>

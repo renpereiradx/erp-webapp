@@ -60,6 +60,8 @@ import type { CounterOrderSummary } from '@/features/counterorders/types';
 interface CartItem {
   id: string;
   productId: string;
+  /** SKU de la unidad vendible (variante o producto base). */
+  sku?: string;
   name: string;
   quantity: number;
   price: number;
@@ -736,6 +738,7 @@ const SalesNew: React.FC = () => {
     const newItem: CartItem = {
       id: finalVariantId ? `${product.id}-${finalVariantId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` : `${product.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       productId: product.id,
+      sku: product.sku && product.sku !== '-' ? product.sku : undefined,
       name: finalVariantName ? `${product.name} - ${finalVariantName}` : product.name,
       variantId: finalVariantId,
       variantName: finalVariantName,

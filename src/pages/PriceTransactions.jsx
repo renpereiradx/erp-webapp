@@ -413,7 +413,7 @@ const PriceTransactionsPage = () => {
                         {selectedProduct.name || selectedProduct.product_name}
                       </h4>
                       <p className="text-sm text-blue-700">
-                        ID: {selectedProduct.id || selectedProduct.product_id}
+                        SKU: {selectedProduct.sku || selectedProduct.id || selectedProduct.product_id}
                       </p>
                       {selectedProduct.price && (
                         <p className="text-sm text-blue-700">

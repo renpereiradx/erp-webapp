@@ -114,7 +114,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
           <TableHeader className="bg-surface-muted">
             <TableRow className="hover:bg-surface-muted border-0">
               <TableHead className="w-24 px-sm py-sm text-label-caps uppercase text-on-surface-deep">
-                {t('sales.cart.col.id', 'ID')}
+                {t('sales.cart.col.id', 'SKU')}
               </TableHead>
               <TableHead className="px-sm py-sm text-label-caps uppercase text-on-surface-deep">
                 {t('sales.cart.col.product', 'Producto')}
@@ -181,10 +181,11 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                   )}
                 >
                   <TableCell className="px-sm py-sm text-body-md text-outline-fg font-data-mono align-top">
-                    {/* IDs largos (SALE-/product ids) desbordan la celda fija
-                        y pintan encima de la columna Producto: truncar. */}
-                    <div className="truncate" title={String(item.productId || '-')}>
-                      {item.productId || '-'}
+                    {/* SKUs largos desbordan la celda fija y pintan encima de
+                        la columna Producto: truncar. Sin sku (ítems de venta
+                        pendiente vieja) cae al id de producto. */}
+                    <div className="truncate" title={String(item.sku || item.productId || '-')}>
+                      {item.sku || item.productId || '-'}
                     </div>
                   </TableCell>
                   <TableCell className="px-sm py-sm text-body-md-bold text-foreground align-top">

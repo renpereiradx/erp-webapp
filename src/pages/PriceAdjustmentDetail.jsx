@@ -421,7 +421,7 @@ const PriceAdjustmentDetail = () => {
                 </span>
               </p>
               <p className="mt-xs text-data-mono font-data-mono text-on-surface-deep">
-                ID: {product.product_id || product.id}
+                SKU: {product.sku || product.product_id || product.id}
               </p>
             </div>
             <div
