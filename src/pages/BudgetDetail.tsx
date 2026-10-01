@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 import { 
   ArrowLeft, 
   Printer, 
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/useToast';
+import { useI18n } from '@/lib/i18n';
 import { budgetService } from '@/services/budgetService';
 import { Budget, BudgetItem, UpdateBudgetStatusRequest } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -22,14 +24,20 @@ import { Badge } from '@/components/ui/badge';
 import { formatPYG } from '@/utils/currencyUtils';
 import DataState from '@/components/ui/DataState';
 import ToastContainer from '@/components/ui/ToastContainer';
+import { BudgetPrintModal } from '@/features/budgets/components/BudgetPrintModal';
+import { useBudgetDocuments } from '@/features/budgets/hooks/useBudgetDocuments';
 
 const BudgetDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { addToast } = useToast();
+  const { t } = useI18n();
 
   const [data, setData] = useState<{ budget: Budget; items: BudgetItem[] } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Presupuesto para el modal de comprobante post-aprobación; null = cerrado.
+  const [printModalBudget, setPrintModalBudget] = useState<{ id: string; total_amount: number; valid_until?: string | null } | null>(null);
+  const budgetDocs = useBudgetDocuments();
 
   const fetchDetail = async () => {
     if (!id) return;
@@ -51,8 +59,17 @@ const BudgetDetail: React.FC = () => {
   const handleStatusChange = async (newStatus: UpdateBudgetStatusRequest['status']) => {
     if (!id) return;
     try {
-      await budgetService.updateBudgetStatus(id, { status: newStatus });
+      const updated = await budgetService.updateBudgetStatus(id, { status: newStatus });
       addToast(`Estado actualizado a ${newStatus}`, 'success');
+      // Comprobante en el momento (espejo del checkout de ventas): al aprobar
+      // se ofrece imprimir/PDF sin volver a buscar el presupuesto.
+      if (newStatus === 'APPROVED') {
+        setPrintModalBudget({
+          id,
+          total_amount: Number(updated?.total_amount ?? data?.budget.total_amount ?? 0),
+          valid_until: updated?.valid_until ?? data?.budget.valid_until ?? null,
+        });
+      }
       fetchDetail();
     } catch (error: any) {
       addToast(error.message, 'error');
@@ -102,11 +119,32 @@ const BudgetDetail: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="font-bold border-border-base">
-            <Printer size={18} className="mr-2" /> Imprimir
+          <Button
+            variant="outline"
+            className="font-bold border-border-base"
+            onClick={() => { void budgetDocs.print(id!); }}
+            disabled={!budgetDocs.canUseDocuments || budgetDocs.printing || budgetDocs.printConfigured === false}
+            title={budgetDocs.printConfigured === false
+              ? t('budgets.print.noPrinter', 'Sin impresora configurada: registrala en Configuración → Impresoras')
+              : undefined}
+            data-testid="budget-detail-print"
+          >
+            {budgetDocs.printing
+              ? <Loader2 size={18} className="mr-2 animate-spin" />
+              : <Printer size={18} className="mr-2" />}
+            Imprimir
           </Button>
-          <Button variant="outline" className="font-bold border-border-base">
-            <Download size={18} className="mr-2" /> PDF
+          <Button
+            variant="outline"
+            className="font-bold border-border-base"
+            onClick={() => { void budgetDocs.downloadPdf(id!); }}
+            disabled={!budgetDocs.canUseDocuments || budgetDocs.downloading}
+            data-testid="budget-detail-pdf"
+          >
+            {budgetDocs.downloading
+              ? <Loader2 size={18} className="mr-2 animate-spin" />
+              : <Download size={18} className="mr-2" />}
+            PDF
           </Button>
           
           {budget.status === 'PENDING' && (
@@ -247,6 +285,7 @@ const BudgetDetail: React.FC = () => {
            </div>
         </div>
       </div>
+      <BudgetPrintModal budget={printModalBudget} onClose={() => setPrintModalBudget(null)} />
     </div>
   );
 };

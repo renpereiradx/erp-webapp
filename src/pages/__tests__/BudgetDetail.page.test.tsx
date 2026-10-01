@@ -13,7 +13,9 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import BudgetDetail from '../BudgetDetail'
 
 vi.mock('@/services/budgetService', () => ({
@@ -21,7 +23,28 @@ vi.mock('@/services/budgetService', () => ({
     getBudgetById: vi.fn(),
     updateBudgetStatus: vi.fn(),
     convertToSale: vi.fn(),
+    printTicket: vi.fn(),
+    downloadPdf: vi.fn(),
   },
+}))
+
+// Impresión de presupuestos (PLAN impresión presupuestos): /printers para el
+// gate de RECEIPT y documents:read para las acciones.
+vi.mock('@/features/printers/services/printersService', () => ({
+  printersService: { list: vi.fn().mockResolvedValue([{
+    id: 1, branch_id: null, name: 'Caja 1', purpose: 'RECEIPT', connection: 'NETWORK',
+    host: '192.168.1.50', port: 9100, width_mm: 80, chars_per_line: 48,
+    code_page: 'CP858', kick_drawer: false, is_default: true, is_active: true,
+  }]) },
+}))
+
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ hasPermission: (p: string) => p === 'documents:read' }),
+}))
+
+vi.mock('@/features/budgets/components/BudgetPrintModal', () => ({
+  BudgetPrintModal: ({ budget }: { budget: { id: string } | null }) =>
+    budget ? <div data-testid="budget-print-modal-stub" /> : null,
 }))
 
 vi.mock('@/hooks/useToast', () => ({
@@ -76,13 +99,17 @@ const DETAIL_RESPONSE = {
   ],
 }
 
+// QueryClientProvider: la página usa useBudgetDocuments (react-query) para
+// el gate de impresora desde el plan de impresión de presupuestos.
 const renderPage = () =>
   render(
-    <MemoryRouter initialEntries={['/comercial/presupuestos/BUD-1790186']}>
-      <Routes>
-        <Route path='/comercial/presupuestos/:id' element={<BudgetDetail />} />
-      </Routes>
-    </MemoryRouter>
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter initialEntries={['/comercial/presupuestos/BUD-1790186']}>
+        <Routes>
+          <Route path='/comercial/presupuestos/:id' element={<BudgetDetail />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
   )
 
 describe('BudgetDetail (página)', () => {
@@ -110,5 +137,54 @@ describe('BudgetDetail (página)', () => {
 
     await waitFor(() => expect(screen.getByText('Producto ID: Rzox17DgQ')).toBeInTheDocument())
     expect(screen.getByText('Cód: Rzox17DgQ')).toBeInTheDocument()
+  })
+})
+
+describe('BudgetDetail — impresión y PDF (PLAN impresión presupuestos)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getBudgetByIdMock.mockResolvedValue(DETAIL_RESPONSE)
+  })
+
+  it('"Imprimir" imprime el ticket del presupuesto vía documents', async () => {
+    const user = userEvent.setup()
+    vi.mocked(budgetService.printTicket).mockResolvedValue({
+      success: true, sale_id: 'BUD-1', printer: 'Caja 1', printer_host: 'x', reprint_count: 0,
+    })
+    renderPage()
+
+    const printBtn = await screen.findByTestId('budget-detail-print')
+    await waitFor(() => expect(printBtn).toBeEnabled())
+    await user.click(printBtn)
+    await waitFor(() => expect(budgetService.printTicket).toHaveBeenCalledWith('BUD-1790186'))
+  })
+
+  it('"PDF" descarga el comprobante vía documents', async () => {
+    const user = userEvent.setup()
+    vi.mocked(budgetService.downloadPdf).mockResolvedValue({
+      blob: new Blob(['%PDF']), filename: 'presupuesto_BUD-1.pdf',
+    })
+    renderPage()
+
+    const pdfBtn = await screen.findByTestId('budget-detail-pdf')
+    await waitFor(() => expect(pdfBtn).toBeEnabled())
+    await user.click(pdfBtn)
+    await waitFor(() => expect(budgetService.downloadPdf).toHaveBeenCalledWith('BUD-1790186'))
+  })
+
+  it('Aprobar Presupuesto abre el modal de comprobante con el presupuesto aprobado', async () => {
+    const user = userEvent.setup()
+    vi.mocked(budgetService.updateBudgetStatus).mockResolvedValue({
+      ...DETAIL_RESPONSE.budget,
+      status: 'APPROVED',
+    } as typeof DETAIL_RESPONSE.budget)
+    renderPage()
+
+    const approveBtn = await screen.findByRole('button', { name: /Aprobar Presupuesto/i })
+    await user.click(approveBtn)
+    await waitFor(() =>
+      expect(budgetService.updateBudgetStatus).toHaveBeenCalledWith('BUD-1790186', { status: 'APPROVED' }),
+    )
+    await waitFor(() => expect(screen.getByTestId('budget-print-modal-stub')).toBeInTheDocument())
   })
 })

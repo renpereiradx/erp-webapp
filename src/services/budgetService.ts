@@ -132,7 +132,63 @@ export const budgetService = {
       });
       throw error;
     }
+  },
+
+  /**
+   * Imprime el ticket del presupuesto en la impresora RECEIPT default del
+   * branch (documents: POST /api/v1/documents/budgets/{id}/ticket/print).
+   * Sin impresora configurada el backend responde 404 — la impresión es
+   * opcional: el modal consulta /api/v1/printers para deshabilitar antes.
+   */
+  async printTicket(id: string): Promise<BudgetTicketPrintResult> {
+    const startTime = Date.now();
+    try {
+      const response = await apiClient.post(
+        `/api/v1/documents/budgets/${encodeURIComponent(id)}/ticket/print`
+      ) as BudgetTicketPrintResult;
+      telemetry.record('budget.service.print_ticket', { duration: Date.now() - startTime });
+      return response;
+    } catch (error: any) {
+      telemetry.record('budget.service.error', {
+        duration: Date.now() - startTime,
+        operation: 'printTicket',
+        error: error.message
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Descarga el PDF del presupuesto (documents: GET .../comprobante.pdf)
+   * como blob autenticado — window.open no puede enviar el JWT.
+   */
+  async downloadPdf(id: string): Promise<{ blob: Blob; filename: string }> {
+    const startTime = Date.now();
+    try {
+      const result = await apiClient.getBlob(
+        `/api/v1/documents/budgets/${encodeURIComponent(id)}/comprobante.pdf`
+      );
+      telemetry.record('budget.service.download_pdf', { duration: Date.now() - startTime });
+      return { blob: result.blob, filename: result.filename || `presupuesto_${id}.pdf` };
+    } catch (error: any) {
+      telemetry.record('budget.service.error', {
+        duration: Date.now() - startTime,
+        operation: 'downloadPdf',
+        error: error.message
+      });
+      throw error;
+    }
   }
 };
+
+/** Respuesta del backend al imprimir el ticket de un presupuesto. */
+export interface BudgetTicketPrintResult {
+  success: boolean;
+  sale_id: string;
+  printer: string;
+  printer_host: string;
+  reprint_count: number;
+  message?: string;
+}
 
 export default budgetService;

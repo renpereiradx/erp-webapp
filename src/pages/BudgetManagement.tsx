@@ -8,8 +8,7 @@ import {
   CheckCircle2, 
   XCircle, 
   Clock, 
-  AlertCircle,
-  Printer
+  AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
@@ -38,6 +37,7 @@ import {
 import { formatPYG } from '@/utils/currencyUtils';
 import DataState from '@/components/ui/DataState';
 import ToastContainer from '@/components/ui/ToastContainer';
+import { useBudgetDocuments } from '@/features/budgets/hooks/useBudgetDocuments';
 
 /**
  * BudgetManagement - Interfaz para gestión de cotizaciones y presupuestos (Fluent 2.0)
@@ -48,6 +48,7 @@ const BudgetManagement: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const { currentBranchId } = useBranch();
+  const budgetDocs = useBudgetDocuments();
   
   // Estados de datos
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -169,10 +170,6 @@ const BudgetManagement: React.FC = () => {
             
             <div className="h-8 w-px bg-border-base hidden md:block"></div>
 
-            <Button variant="outline" size="sm" className="bg-white border border-border-base text-[10px] font-bold uppercase rounded hover:bg-slate-50 transition-all px-4 py-1.5 h-auto">
-                <Printer size={14} className="mr-1.5" />
-                Imprimir
-            </Button>
             <Button 
                 className="bg-primary hover:bg-primary-hover text-white text-[10px] font-bold uppercase rounded shadow-sm transition-all px-5 py-2 h-auto"
                 onClick={() => navigate('/comercial/presupuestos/nuevo')}
@@ -240,7 +237,11 @@ const BudgetManagement: React.FC = () => {
                         <DropdownMenuItem className="gap-3 text-xs font-bold text-text-main hover:bg-slate-50 rounded-lg cursor-pointer" onClick={() => navigate(`/comercial/presupuestos/${budget.id}`)}>
                           <span className="material-symbols-outlined text-lg text-text-secondary">search</span> Ver Detalle
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-3 text-xs font-bold text-text-main hover:bg-slate-50 rounded-lg cursor-pointer">
+                        <DropdownMenuItem
+                          className="gap-3 text-xs font-bold text-text-main hover:bg-surface-subtle rounded-lg cursor-pointer"
+                          onClick={() => { void budgetDocs.downloadPdf(budget.id); }}
+                          data-testid={`budget-row-pdf-${budget.id}`}
+                        >
                           <span className="material-symbols-outlined text-lg text-text-secondary">print</span> Imprimir PDF
                         </DropdownMenuItem>
                         {budget.status === 'APPROVED' && (
