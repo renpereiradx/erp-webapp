@@ -554,6 +554,7 @@ export const sales = {
 
   // Hints de atajos del POS
   'sales.hints.search': 'Buscar',
+  'sales.hints.cart': 'Carrito',
   'sales.hints.navigate': 'Navegar',
   'sales.hints.edit': 'Editar',
   'sales.hints.checkout': 'Cobrar',

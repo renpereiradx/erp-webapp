@@ -12,6 +12,12 @@ interface UseSalesShortcutsProps {
   /** Alt+X: quitar el ítem seleccionado del carrito. */
   onRemoveActiveItem?: () => void;
   /**
+   * F8: puerta de entrada a la navegación del carrito (espejo de F2 con el
+   * buscador) — selecciona y enfoca el ítem activo o la primera fila; desde
+   * ahí ↑/↓ navegan y Alt+Q/Alt+X accionan. F8 es seguro con foco en input.
+   */
+  onFocusCart?: () => void;
+  /**
    * ↑/↓: mover la selección del carrito a la fila siguiente/anterior
    * (convención §12.1: flechas solo con el foco FUERA de inputs — el
    * buscador de productos maneja las suyas para su dropdown).
@@ -39,6 +45,7 @@ const isTypingTarget = (target: EventTarget | null): boolean => {
 /**
  * Atajos de la vista POS (solo tab "Nueva Venta"):
  * - F2 → foco al buscador de productos.
+ * - F8 → foco al carrito (fila seleccionada o la primera).
  * - F4 → limpiar carrito.
  * - Ctrl+Shift+H → Historial (atajo `sales.viewHistory` del store global).
  * - ↑/↓ → navegar las filas del carrito (selección persistente).
@@ -51,6 +58,7 @@ export const useSalesShortcuts = ({
   onGoToHistory,
   onEditActiveItem,
   onRemoveActiveItem,
+  onFocusCart,
   onNavigateCart,
   enabled = true,
 }: UseSalesShortcutsProps) => {
@@ -68,6 +76,12 @@ export const useSalesShortcuts = ({
       if (event.key === 'F4') {
         event.preventDefault();
         onClearCart?.();
+        return;
+      }
+
+      if (event.key === 'F8') {
+        event.preventDefault();
+        onFocusCart?.();
         return;
       }
 
@@ -100,5 +114,5 @@ export const useSalesShortcuts = ({
 
     document.addEventListener('keydown', handleGlobalKeyDown);
     return () => document.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [activeTab, enabled, productSearchInputRef, onClearCart, onGoToHistory, onEditActiveItem, onRemoveActiveItem, onNavigateCart]);
+  }, [activeTab, enabled, productSearchInputRef, onClearCart, onGoToHistory, onEditActiveItem, onRemoveActiveItem, onFocusCart, onNavigateCart]);
 };

@@ -1157,13 +1157,32 @@ const SalesNew: React.FC = () => {
     [items],
   );
 
-  // Atajos globales del POS (F2/F4/↑↓/Alt+Q/Alt+X/Ctrl+Shift+H). Va después
+  // F8: puerta de entrada a la navegación del carrito (espejo de F2 con el
+  // buscador): selecciona y enfoca el ítem ya seleccionado o la primera fila
+  // accionable — desde ahí ↑/↓ navegan. Con carrito vacío devuelve el foco al
+  // buscador. Las filas ya están renderizadas: el focus es inmediato y el
+  // cambio de selección dispara el scrollIntoView del grid.
+  const handleFocusCart = useCallback(() => {
+    const actionable = items.filter((i) => !i.isFromPendingSale);
+    if (actionable.length === 0) {
+      productSearchInputRef.current?.focus();
+      return;
+    }
+    const target = actionable.find((i) => i.id === activeCartItemId) ?? actionable[0];
+    setShowProductDropdown(false);
+    setProductHighlightedIndex(-1);
+    setActiveCartItemId(target.id);
+    document.querySelector<HTMLElement>(`[data-cart-row="${target.id}"]`)?.focus();
+  }, [items, activeCartItemId]);
+
+  // Atajos globales del POS (F2/F4/F8/↑↓/Alt+Q/Alt+X/Ctrl+Shift+H). Va después
   // de handleOpenEditModal porque los callbacks de fila activa lo referencian.
   useSalesShortcuts({
     activeTab,
     productSearchInputRef,
     onClearCart: handleClearCart,
     onGoToHistory: handleGoToHistory,
+    onFocusCart: handleFocusCart,
     onEditActiveItem: useCallback(() => {
       if (!activeCartItemId) return;
       const item = items.find((i) => i.id === activeCartItemId);
@@ -2089,6 +2108,8 @@ const SalesNew: React.FC = () => {
                 </h2>
                 <p className="hidden sm:flex items-center gap-sm text-body-sm font-data-mono text-outline-fg">
                   <span>[F2] {t('sales.hints.search', 'Buscar')}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>[F8] {t('sales.hints.cart', 'Carrito')}</span>
                   <span aria-hidden="true">·</span>
                   <span>[↑↓] {t('sales.hints.navigate', 'Navegar')}</span>
                   <span aria-hidden="true">·</span>

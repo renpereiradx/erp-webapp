@@ -26,6 +26,7 @@ describe('useSalesShortcuts', () => {
   const onGoToHistory = vi.fn()
   const onEditActiveItem = vi.fn()
   const onRemoveActiveItem = vi.fn()
+  const onFocusCart = vi.fn()
   const onNavigateCart = vi.fn()
 
   const setup = (overrides: Record<string, unknown> = {}) => {
@@ -37,6 +38,7 @@ describe('useSalesShortcuts', () => {
         onGoToHistory,
         onEditActiveItem,
         onRemoveActiveItem,
+        onFocusCart,
         onNavigateCart,
         enabled: true,
         ...overrides,
@@ -83,6 +85,13 @@ describe('useSalesShortcuts', () => {
     expect(onRemoveActiveItem).toHaveBeenCalledTimes(1)
   })
 
+  it('F8 enfoca el carrito (espejo de F2, seguro con foco en el buscador)', () => {
+    setup()
+    pressKey({ key: 'F8' }, searchRef.current!)
+    expect(onFocusCart).toHaveBeenCalledTimes(1)
+    expect(onNavigateCart).not.toHaveBeenCalled()
+  })
+
   it('↓ navega hacia adelante y ↑ hacia atrás (foco fuera de inputs)', () => {
     setup()
     pressKey({ key: 'ArrowDown' })
@@ -103,9 +112,11 @@ describe('useSalesShortcuts', () => {
     setup({ enabled: false })
     const event = pressKey({ key: 'ArrowDown' })
     pressKey({ key: 'F4' })
+    pressKey({ key: 'F8' })
     pressKey({ key: 'q', altKey: true })
     expect(onNavigateCart).not.toHaveBeenCalled()
     expect(onClearCart).not.toHaveBeenCalled()
+    expect(onFocusCart).not.toHaveBeenCalled()
     expect(onEditActiveItem).not.toHaveBeenCalled()
     expect(event.defaultPrevented).toBe(false)
   })
