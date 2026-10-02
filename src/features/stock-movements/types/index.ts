@@ -84,7 +84,10 @@ export interface RegisterMovementPayload {
   product_id: string;
   variant_id?: string;
   transaction_type: TransactionType;
+  /** Delta expresado en `unit` (base si no viaja): el backend convierte a base. */
   quantity_change: number;
+  /** Unidad en la que el usuario expresó la cantidad (omitted = base). */
+  unit?: string;
   unit_price?: number;
   reference_type?: ReferenceType;
   reference_id?: number | string;

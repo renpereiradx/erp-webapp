@@ -22,6 +22,9 @@ import type { StockTransaction } from '@/features/stock-movements/types';
 export interface MovementRow {
   form: MovementFormValues;
   currentStock: number;
+  /** Factor form.unit→base (resolveUnitFactor; 1 = base). Requerido cuando
+   * form.unit es distinta de la base: sin factor el backend rechazaría. */
+  unitFactor?: number;
 }
 
 export function useStockMovements() {
@@ -38,9 +41,11 @@ export function useStockMovements() {
    */
   const registerBatch = useCallback(
     async (rows: MovementRow[]): Promise<StockTransaction[]> => {
-      const payloads = rows.map(({ form, currentStock }) => {
+      const payloads = rows.map(({ form, currentStock, unitFactor }) => {
         const parsed = movementFormSchema.parse(form);
-        return buildPayloadFromForm(parsed, currentStock, operator);
+        const unitContext =
+          form.unit && unitFactor != null ? { unit: form.unit, unitFactor } : undefined;
+        return buildPayloadFromForm(parsed, currentStock, operator, unitContext);
       });
       const created = (await store.registerMovement(payloads)) as StockTransaction[];
       const productIds = [...new Set(payloads.map((p) => p.product_id))];

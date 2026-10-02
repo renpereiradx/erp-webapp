@@ -72,6 +72,12 @@ vi.mock('@/features/catalog/sellableUnitSearch', () => ({
   searchSellableUnitsFlat: vi.fn(),
 }))
 
+/** Filas de GET /unit-conversions controlables por test (PLAN_UNITS_V2 F4). */
+const mockConversions = vi.hoisted(() => ({ rows: [] as Array<Record<string, unknown>> }))
+vi.mock('@/features/unit-conversions/services/unitConversionsService', () => ({
+  unitConversionsService: { getAll: vi.fn(() => Promise.resolve(mockConversions.rows)) },
+}))
+
 vi.mock('@/services/productService', () => ({
   productService: {
     getProductById: vi.fn(),
@@ -563,5 +569,70 @@ describe('TransferDetailModal — acciones del workflow (F.4)', () => {
     const routes = await screen.findAllByText('Depósito Central → Sucursal Centro')
     expect(routes.length).toBeGreaterThanOrEqual(1)
     expect(screen.queryByText('1 → 3')).not.toBeInTheDocument()
+  })
+})
+
+describe('CreateTransferModal — unidad por fila (PLAN_UNITS_V2_COMPLETACION F4)', () => {
+  const baseProps = { open: true, onOpenChange: vi.fn(), sourceBranchId: 1 as number | null, sourceBranchName: 'Depósito Central' }
+
+  const pickDestination = async (user: ReturnType<typeof userEvent.setup>) => {
+    const trigger = screen.getByLabelText('Sucursal de destino')
+    await user.click(trigger)
+    await user.click(await screen.findByRole('option', { name: 'Sucursal Centro' }))
+    await waitFor(() => expect(trigger).toHaveTextContent('Sucursal Centro'))
+  }
+
+  afterEach(() => {
+    mockConversions.rows = []
+  })
+
+  it('elegir unidad ≠ base muestra el hint del factor y el payload lleva unit', async () => {
+    mockConversions.rows = [{ from_unit: 'box', to_unit: 'kg', factor: 10, product_id: null }]
+    const user = userEvent.setup()
+    const createTransfer = vi.mocked(branchTransferService.createTransfer).mockResolvedValue(transferPending)
+    renderWithProviders(
+      <CreateTransferModal
+        {...baseProps}
+        initialItems={[{ product_id: 'PK', product_name: 'Yerba kg', quantity: 2, base_unit: 'kg' }]}
+      />,
+    )
+
+    await pickDestination(user)
+    await user.click(screen.getByRole('combobox', { name: 'Unidad de Yerba kg' }))
+    await user.click(await screen.findByRole('option', { name: 'Caja' }))
+
+    expect(await screen.findByTestId('transfer-unit-hint-PK')).toHaveTextContent('1 Caja = 10 Kilogramo (kg)')
+
+    // Cambiar de unidad resetea la cantidad (evita arrastrar un valor de otra
+    // unidad): se carga 2 DESPUÉS de elegir Caja.
+    await user.clear(screen.getByTestId('transfer-line-qty-PK'))
+    await user.type(screen.getByTestId('transfer-line-qty-PK'), '2')
+
+    await user.click(screen.getByTestId('transfer-submit'))
+    await waitFor(() => expect(createTransfer).toHaveBeenCalled())
+    const [payload] = createTransfer.mock.calls[0]
+    expect(payload.items[0].unit).toBe('box')
+    expect(payload.items[0].quantity_requested).toBe(2)
+  })
+
+  it('unidad sin conversión bloquea el envío con toast (ni un POST)', async () => {
+    mockConversions.rows = []
+    const user = userEvent.setup()
+    const createTransfer = vi.mocked(branchTransferService.createTransfer).mockResolvedValue(transferPending)
+    renderWithProviders(
+      <CreateTransferModal
+        {...baseProps}
+        initialItems={[{ product_id: 'PK', product_name: 'Yerba kg', quantity: 2, base_unit: 'kg' }]}
+      />,
+    )
+
+    await pickDestination(user)
+    await user.click(screen.getByRole('combobox', { name: 'Unidad de Yerba kg' }))
+    await user.click(await screen.findByRole('option', { name: 'Caja' }))
+
+    expect(await screen.findByTestId('transfer-unit-no-conversion-PK')).toBeInTheDocument()
+
+    await user.click(screen.getByTestId('transfer-submit'))
+    expect(createTransfer).not.toHaveBeenCalled()
   })
 })

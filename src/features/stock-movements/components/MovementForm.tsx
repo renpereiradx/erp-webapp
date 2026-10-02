@@ -17,6 +17,9 @@ import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import UnitSelect from '@/components/UnitSelect';
+import { unitConversionsService } from '@/features/unit-conversions/services/unitConversionsService';
+import { resolveUnitFactor, type UnitConversionRow } from '@/domain/units/resolveUnitFactor';
 import {
   Table,
   TableHeader,
@@ -53,6 +56,8 @@ interface MovementRowUI {
   selectedVariantId: string;
   mode: 'target' | 'delta';
   value: string;
+  /** Unidad elegida para la cantidad (default = base del producto). */
+  unit: string;
   reasonCategory: ReasonCategory;
   reason: string;
 }
@@ -66,9 +71,15 @@ function rowSelectedVariant(row: MovementRowUI): ProductVariant | null {
   return row.variants.find((v) => v.id === row.selectedVariantId) ?? null;
 }
 
-function rowIsDecimal(product?: CatalogProduct): boolean {
-  const unit = product?.base_unit?.toLowerCase();
-  return unit ? isDecimalUnit(unit) : false;
+function rowBaseUnit(row: MovementRowUI): string {
+  return row.product.base_unit?.toLowerCase() || 'unit';
+}
+
+/** Factor unidad→base de la fila (1 si ya es base; null si no hay conversión). */
+function rowUnitFactor(row: MovementRowUI, conversions: UnitConversionRow[] | null): number | null {
+  const base = rowBaseUnit(row);
+  if (!row.unit || row.unit === base) return 1;
+  return resolveUnitFactor(conversions, row.product.id, row.unit, base);
 }
 
 export function MovementForm() {
@@ -78,6 +89,25 @@ export function MovementForm() {
   const [rows, setRows] = useState<MovementRowUI[]>([]);
   const [showSearch, setShowSearch] = useState(false);
   const [approval, setApproval] = useState<string>('operator');
+
+  // Conversiones (PLAN_UNITS_V2_COMPLETACION F4): fetcheadas una vez al
+  // montar, fail-silencioso (sin ellas el selector cae a hint de error y el
+  // backend es la última defensa). Mismo camino que SalesNew/PurchaseProductModal.
+  const [conversions, setConversions] = useState<UnitConversionRow[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    unitConversionsService
+      .getAll()
+      .then((items) => {
+        if (!cancelled) setConversions(items as UnitConversionRow[]);
+      })
+      .catch(() => {
+        if (!cancelled) setConversions(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Modal de edición
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -130,6 +160,7 @@ export function MovementForm() {
         selectedVariantId,
         mode: 'target',
         value: '',
+        unit: product.base_unit?.toLowerCase() || 'unit',
         reasonCategory: 'INVENTORY_COUNT',
         reason: '',
       };
@@ -153,6 +184,8 @@ export function MovementForm() {
 
   const saveEdit = () => {
     if (editingIndex === null || !draft) return;
+    // Unidad sin conversión: sin factor ni el backend podría aplicarla.
+    if (rowUnitFactor(draft, conversions) === null) return;
     setRow(editingIndex, { ...draft });
     closeEdit();
   };
@@ -162,15 +195,19 @@ export function MovementForm() {
     if (editingIndex === index) closeEdit();
   };
 
+  // Resultado SIEMPRE en base: la cantidad se convierte con el factor de la
+  // fila (unit→base). Sin factor y unidad ≠ base → null (bloquea guardar).
   const resultingStockFor = useMemo(
     () => (row: MovementRowUI): number | null => {
+      const factor = rowUnitFactor(row, conversions);
+      if (factor === null) return null;
       const current = rowCurrentStock(row);
       const parsed = parseFloat(row.value);
       if (!Number.isFinite(parsed)) return null;
-      if (row.mode === 'target') return Number(parsed.toFixed(4));
-      return Number((current + parsed).toFixed(4));
+      if (row.mode === 'target') return Number((parsed * factor).toFixed(4));
+      return Number((current + parsed * factor).toFixed(4));
     },
-    [],
+    [conversions],
   );
 
   const handleSubmit = async () => {
@@ -192,18 +229,30 @@ export function MovementForm() {
         toast.error(t('stockMovements.errors.delta_nonzero', 'La diferencia no puede ser 0'));
         return;
       }
+      const factor = rowUnitFactor(row, conversions);
+      const base = rowBaseUnit(row);
+      if (row.unit !== base && factor === null) {
+        toast.error(
+          t('stockMovements.errors.unit_no_conversion', 'Sin conversión de {unit} a {base}', {
+            unit: getUnitLabel(row.unit),
+            base: getUnitLabel(base),
+          }),
+        );
+        return;
+      }
       const form: MovementFormValues = {
         product_id: row.product.id,
         variant_id: row.selectedVariantId || undefined,
         mode: row.mode,
         targetStock: row.mode === 'target' ? value : undefined,
         delta: row.mode === 'delta' ? value : undefined,
+        unit: row.unit !== base ? row.unit : undefined,
         reasonCategory: row.reasonCategory,
         reason: row.reason.trim() || undefined,
         approvalLevel: approval,
         notes: undefined,
       };
-      entries.push({ form, currentStock: current });
+      entries.push({ form, currentStock: current, unitFactor: factor ?? undefined });
     }
 
     try {
@@ -285,6 +334,7 @@ export function MovementForm() {
                 const current = rowCurrentStock(row);
                 const result = resultingStockFor(row);
                 const unit = row.product.base_unit ? getUnitLabel(row.product.base_unit) : '';
+                const rowUnit = getUnitLabel(row.unit);
                 const variant = rowSelectedVariant(row);
                 return (
                   <TableRow
@@ -320,7 +370,7 @@ export function MovementForm() {
                     </TableCell>
                     <TableCell className="text-right font-data-mono text-foreground">
                       {row.mode === 'target' ? '→ ' : 'Δ '}
-                      {formatNumber(Number(row.value) || 0)}
+                      {formatNumber(Number(row.value) || 0)} {rowUnit}
                     </TableCell>
                     <TableCell className={`text-right font-data-mono font-bold ${(result ?? 0) >= current ? 'text-success' : 'text-error'}`}>
                       {result === null ? '—' : formatNumber(result)}
@@ -456,6 +506,41 @@ export function MovementForm() {
               </div>
             </div>
 
+            <div className="space-y-xs">
+              <Label className="text-body-md-bold text-foreground">
+                {t('stockMovements.form.unit', 'Unidad de la cantidad')}
+              </Label>
+              <UnitSelect
+                value={draft.unit}
+                onChange={(u) => setDraft({ ...draft, unit: u, value: '' })}
+                ariaLabel={t('stockMovements.form.unit', 'Unidad de la cantidad')}
+              />
+              {(() => {
+                const base = rowBaseUnit(draft);
+                if (draft.unit === base) return null;
+                const factor = rowUnitFactor(draft, conversions);
+                if (factor === null) {
+                  return (
+                    <p className="text-body-sm-bold text-error" data-testid="movement-unit-no-conversion">
+                      {t('stockMovements.form.unitNoConversion', 'Sin conversión de {unit} a {base}', {
+                        unit: getUnitLabel(draft.unit),
+                        base: getUnitLabel(base),
+                      })}
+                    </p>
+                  );
+                }
+                return (
+                  <p className="text-body-sm text-muted-foreground" data-testid="movement-unit-hint">
+                    {t('stockMovements.form.unitConversionHint', '1 {unit} = {factor} {base}', {
+                      unit: getUnitLabel(draft.unit),
+                      factor: formatNumber(factor),
+                      base: getUnitLabel(base),
+                    })}
+                  </p>
+                );
+              })()}
+            </div>
+
             <div className="grid grid-cols-2 gap-md">
               <div className="space-y-xs">
                 <Label htmlFor="edit-value" className="text-body-md-bold text-foreground">
@@ -466,9 +551,9 @@ export function MovementForm() {
                 <Input
                   id="edit-value"
                   type="number"
-                  step={rowIsDecimal(draft.product) ? '0.01' : '1'}
+                  step={isDecimalUnit(draft.unit) ? '0.01' : '1'}
                   className="font-data-mono"
-                  placeholder={draft.mode === 'target' ? `0 ${getUnitLabel(draft.product.base_unit || '')}` : '+/−'}
+                  placeholder={draft.mode === 'target' ? `0 ${getUnitLabel(draft.unit)}` : '+/−'}
                   value={draft.value}
                   onChange={(e) => setDraft({ ...draft, value: e.target.value })}
                 />
@@ -480,7 +565,7 @@ export function MovementForm() {
                 <div className="h-10 px-3 flex items-center rounded-input border border-border-subtle bg-surface-muted text-body-md font-data-mono">
                   {(() => {
                     const r = resultingStockFor(draft);
-                    return r === null ? '—' : `${formatNumber(r)} ${getUnitLabel(draft.product.base_unit || '')}`;
+                    return r === null ? '—' : `${formatNumber(r)} ${getUnitLabel(rowBaseUnit(draft))}`;
                   })()}
                 </div>
               </div>

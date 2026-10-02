@@ -87,6 +87,8 @@ export const movementFormSchema = z
     mode: z.enum(['target', 'delta']),
     targetStock: z.number().optional(),
     delta: z.number().optional(),
+    /** Unidad elegida para la cantidad (omitted = base_unit del producto). */
+    unit: z.string().optional(),
     reasonCategory: z.string().min(1),
     reason: z.string().max(280).optional(),
     approvalLevel: z.string().optional(),
@@ -109,30 +111,43 @@ export type MovementFormValues = z.infer<typeof movementFormSchema>;
 
 /**
  * Construye el payload listo para POST /stock-transactions/ a partir del formulario.
- * @param currentStock stock actual (del producto o variante seleccionada).
+ * @param currentStock stock actual EN BASE (del producto o variante seleccionada).
  * @param operator identificador del usuario (para auditoría).
+ * @param unitContext unidad elegida por el usuario + factor unit→base
+ *   (resolveUnitFactor del mismo valor que usará el backend; 1 = base).
+ *   Con unidad ≠ base, el delta viaja en ESA unidad y el backend convierte
+ *   (register_stock_movement p_unit, PLAN_UNITS_V2_COMPLETACION F4).
  */
 export function buildPayloadFromForm(
   form: MovementFormValues,
   currentStock: number,
   operator: string,
+  unitContext?: { unit: string; unitFactor: number },
 ): RegisterMovementPayload {
+  const useUnit =
+    unitContext != null && unitContext.unit !== '' && unitContext.unitFactor > 0;
+  // Cantidad actual expresada en la unidad elegida (base ÷ factor).
+  const currentInUnit = useUnit ? currentStock / unitContext.unitFactor : currentStock;
+
   const delta =
     form.mode === 'target'
-      ? computeDelta(currentStock, Number(form.targetStock))
+      ? computeDelta(currentInUnit, Number(form.targetStock))
       : Number(form.delta);
 
   const { transaction_type, reference_type } = inferMovementTypes(
     form.reasonCategory as ReasonCategory,
   );
 
-  const newStock = Number((currentStock + delta).toFixed(4));
+  // El stock del ledger SIEMPRE queda en base: delta(en unidad) × factor.
+  const deltaInBase = useUnit ? delta * unitContext.unitFactor : delta;
+  const newStock = Number((currentStock + deltaInBase).toFixed(4));
 
   return {
     product_id: form.product_id,
     variant_id: form.variant_id,
     transaction_type,
     quantity_change: delta,
+    unit: useUnit ? unitContext.unit : undefined,
     reference_type,
     reason: form.reason?.trim() ? form.reason.trim() : form.reasonCategory,
     metadata: buildMovementMetadata({

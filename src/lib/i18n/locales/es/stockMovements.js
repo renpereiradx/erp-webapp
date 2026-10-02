@@ -46,6 +46,9 @@ export const stockMovements = {
       targetStock: 'Stock objetivo',
       delta: 'Diferencia (+/−)',
       resultingStock: 'Stock resultante',
+      unit: 'Unidad de la cantidad',
+      unitConversionHint: '1 {unit} = {factor} {base}',
+      unitNoConversion: 'Sin conversión de {unit} a {base}',
       reasonCategory: 'Categoría de motivo',
       approvalLevel: 'Nivel de aprobación',
       approval: {
@@ -105,6 +108,7 @@ export const stockMovements = {
       target_invalid: 'Ingresá un stock objetivo válido (≥ 0)',
       delta_nonzero: 'La diferencia no puede ser 0',
       register_failed: 'No se pudo registrar el movimiento',
+      unit_no_conversion: 'Sin conversión de {unit} a {base}: registrala en Conversiones de unidades',
     },
 
     history: {

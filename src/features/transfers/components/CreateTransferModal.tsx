@@ -9,8 +9,11 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeftRight, ArrowRight, Loader2, Trash2 } from 'lucide-react'
 
-import { isDecimalUnit } from '@/constants/units'
+import { getUnitLabel, isDecimalUnit } from '@/constants/units'
 import { requiresStock } from '@/domain/products/sellability'
+import { resolveUnitFactor, type UnitConversionRow } from '@/domain/units/resolveUnitFactor'
+import UnitSelect from '@/components/UnitSelect'
+import { unitConversionsService } from '@/features/unit-conversions/services/unitConversionsService'
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
 import { useAuth } from '@/contexts/AuthContext'
@@ -50,8 +53,10 @@ interface TransferLine {
   /** Detalle para la tabla de ítems (desde la búsqueda plana; precargados no lo traen). */
   sku?: string
   stock?: number
-  /** Unidad base del producto: habilita decimales (kg) en la cantidad. */
+  /** Unidad base del producto: default del selector y unidad del stock mostrado. */
   base_unit?: string
+  /** Unidad elegida para la cantidad (PLAN_UNITS_V2_COMPLETACION F4; undefined = base). */
+  unit?: string
   unit_cost?: number
   /** F.6: compra de la que proviene la línea (solo ítems precargados). */
   purchase_order_id?: number
@@ -76,6 +81,7 @@ function linesFromPreloaded(items: PreloadedTransferItem[]): TransferLine[] {
     variant_id: item.variant_id,
     product_name: item.product_name || item.product_id,
     quantity: item.quantity,
+    base_unit: item.base_unit,
     unit_cost: item.unit_cost,
     purchase_order_id: item.purchase_order_id,
   }))
@@ -106,6 +112,28 @@ const CreateTransferModal = ({
   })
   const branches: Branch[] = (branchesResponse as { branches?: Branch[] })?.branches || []
 
+  // Conversiones (PLAN_UNITS_V2_COMPLETACION F4): para el hint del factor y la
+  // validación preventiva de la unidad elegida por fila. Fail-silencioso: sin
+  // conversiones, unidad ≠ base muestra error y bloquea el envío (el backend
+  // rechazaría con NO_CONVERSION en el SHIP).
+  const { data: conversions } = useQuery({
+    queryKey: ['unit-conversions'],
+    queryFn: () => unitConversionsService.getAll(),
+    enabled: open,
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+    meta: { silent: true },
+  })
+  const conversionRows = (conversions as UnitConversionRow[] | undefined) ?? null
+
+  const lineBaseUnit = (line: TransferLine) => line.base_unit?.toLowerCase() || 'unit'
+  const lineUnitFactor = (line: TransferLine): number | null => {
+    const base = lineBaseUnit(line)
+    const unit = line.unit || base
+    if (unit === base) return 1
+    return resolveUnitFactor(conversionRows, line.product_id, unit, base)
+  }
+
   // El backend exige acceso a AMBAS sucursales para usuarios escopados
   // (identity/service.go); sin este filtro el select ofrecía destinos
   // inaccesibles y el POST moría en 400. El ADMIN gestiona todas las
@@ -133,6 +161,7 @@ const CreateTransferModal = ({
       sku: unit.sku,
       stock: unit.stock,
       base_unit: unit.base_unit || 'unit',
+      unit: unit.base_unit?.toLowerCase() || 'unit',
     }
     setLines((prev) =>
       prev.some((existing) => lineKey(existing) === lineKey(line)) ? prev : [...prev, line],
@@ -150,6 +179,12 @@ const CreateTransferModal = ({
     )
   }
 
+  const setLineUnit = (key: string, unit: string) => {
+    setLines((prev) =>
+      prev.map((line) => (lineKey(line) === key ? { ...line, unit, quantity: 1 } : line)),
+    )
+  }
+
   const removeLine = (key: string) => {
     setLines((prev) => prev.filter((line) => lineKey(line) !== key))
   }
@@ -164,20 +199,41 @@ const CreateTransferModal = ({
 
   const handleSubmit = () => {
     if (sourceBranchId === null || !destinationBranch) return
+    // Unidad sin conversión: el backend rechazaría el SHIP con NO_CONVERSION a
+    // mitad del workflow; se bloquea acá con mensaje accionable.
+    for (const line of lines) {
+      const base = lineBaseUnit(line)
+      if ((line.unit || base) !== base && lineUnitFactor(line) === null) {
+        addToast(
+          t('transfers.unitNoConversion', 'Sin conversión de {unit} a {base}', {
+            unit: getUnitLabel(line.unit || base),
+            base: getUnitLabel(base),
+          }),
+          'error',
+        )
+        return
+      }
+    }
     const payload: CreateBranchTransferRequest = {
       source_branch_id: sourceBranchId,
       destination_branch_id: destinationBranch.id,
       notes: notes.trim() || undefined,
-      items: lines.map((line) => ({
-        product_id: line.product_id,
-        // Normalización al enviar: pesables ≥ 0.01 con su valor, enteros ≥ 1.
-        quantity_requested: isDecimalUnit(line.base_unit || 'unit')
-          ? Math.max(0.01, line.quantity)
-          : Math.max(1, Math.round(line.quantity)),
-        ...(line.variant_id ? { variant_id: line.variant_id } : {}),
-        ...(line.unit_cost != null ? { unit_cost: line.unit_cost } : {}),
-        ...(line.purchase_order_id != null ? { purchase_order_id: line.purchase_order_id } : {}),
-      })),
+      items: lines.map((line) => {
+        const base = lineBaseUnit(line)
+        const unit = line.unit || base
+        return {
+          product_id: line.product_id,
+          // Normalización al enviar: pesables ≥ 0.01 con su valor, enteros ≥ 1
+          // (gating por la unidad ELEGIDA, no por la base).
+          quantity_requested: isDecimalUnit(unit)
+            ? Math.max(0.01, line.quantity)
+            : Math.max(1, Math.round(line.quantity)),
+          ...(unit !== base ? { unit } : {}),
+          ...(line.variant_id ? { variant_id: line.variant_id } : {}),
+          ...(line.unit_cost != null ? { unit_cost: line.unit_cost } : {}),
+          ...(line.purchase_order_id != null ? { purchase_order_id: line.purchase_order_id } : {}),
+        }
+      }),
     }
     createMutation.mutate(payload, {
       onSuccess: () => {
@@ -303,6 +359,9 @@ const CreateTransferModal = ({
                       <TableHead className="text-label-caps uppercase text-on-surface-deep text-right">
                         {t('transfers.col.quantity', 'Cantidad')}
                       </TableHead>
+                      <TableHead className="text-label-caps uppercase text-on-surface-deep">
+                        {t('transfers.col.unit', 'Unidad')}
+                      </TableHead>
                       <TableHead className="w-12" aria-label={t('transfers.col.actions', 'Acciones')} />
                     </TableRow>
                   </TableHeader>
@@ -336,14 +395,51 @@ const CreateTransferModal = ({
                             <div className="ml-auto w-20">
                               <Input
                                 type="number"
-                                min={isDecimalUnit(line.base_unit || 'unit') ? 0.01 : 1}
-                                step={isDecimalUnit(line.base_unit || 'unit') ? 0.01 : 1}
+                                min={isDecimalUnit(line.unit || lineBaseUnit(line)) ? 0.01 : 1}
+                                step={isDecimalUnit(line.unit || lineBaseUnit(line)) ? 0.01 : 1}
                                 data-testid={`transfer-line-qty-${line.product_id}`}
                                 value={line.quantity}
                                 onChange={(e) => updateQuantity(key, Number(e.target.value))}
                                 aria-label={t('transfers.quantity', 'Cantidad de {name}', { name: line.product_name })}
                                 className="h-9"
                               />
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col gap-0.5">
+                              <UnitSelect
+                                value={line.unit || lineBaseUnit(line)}
+                                onChange={(u) => setLineUnit(key, u)}
+                                className="h-9 w-32"
+                                ariaLabel={t('transfers.unitAria', 'Unidad de {name}', { name: line.product_name })}
+                              />
+                              {(() => {
+                                const base = lineBaseUnit(line)
+                                const unit = line.unit || base
+                                if (unit === base) return null
+                                const factor = lineUnitFactor(line)
+                                if (factor === null) {
+                                  return (
+                                    <span
+                                      className="text-body-sm font-bold text-error"
+                                      data-testid={`transfer-unit-no-conversion-${line.product_id}`}
+                                    >
+                                      {t('transfers.unitNoConversionShort', 'Sin conversión a {base}', {
+                                        base: getUnitLabel(base),
+                                      })}
+                                    </span>
+                                  )
+                                }
+                                return (
+                                  <span className="text-body-sm text-on-surface-deep" data-testid={`transfer-unit-hint-${line.product_id}`}>
+                                    {t('transfers.unitConversionHint', '1 {unit} = {factor} {base}', {
+                                      unit: getUnitLabel(unit),
+                                      factor: factor,
+                                      base: getUnitLabel(base),
+                                    })}
+                                  </span>
+                                )
+                              })()}
                             </div>
                           </TableCell>
                           <TableCell className="text-right">

@@ -27,6 +27,8 @@ export interface PreloadedTransferItem {
   variant_id?: string
   product_name?: string
   quantity: number
+  /** Unidad base del producto: default del selector por fila (F4). */
+  base_unit?: string
   unit_cost?: number
   /** F.6: compra de la que proviene el ítem, para trazabilidad. */
   purchase_order_id?: number

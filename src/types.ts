@@ -1564,6 +1564,8 @@ export interface BranchTransferItem {
   product_sku?: string; // JOIN detalle: SKU universal
   variant_sku?: string; // JOIN detalle: SKU de la variante
   variant_id?: string;
+  /** Unidad de TODAS las quantity_* del ítem (undefined = base_unit). */
+  unit?: string;
   quantity_requested: number;
   quantity_approved?: number;
   quantity_shipped?: number;
@@ -1582,6 +1584,8 @@ export interface CreateBranchTransferRequest {
   items: Array<{
     product_id: string;
     variant_id?: string;
+    /** Unidad de quantity_requested (omitida = base_unit; el backend convierte). */
+    unit?: string;
     quantity_requested: number;
     unit_cost?: number;
     notes?: string;

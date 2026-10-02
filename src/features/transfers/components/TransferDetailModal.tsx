@@ -322,6 +322,9 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
                             </TableCell>
                             <TableCell data-testid={`transfer-item-${item.id}-requested`} className="text-data-mono font-data-mono text-right text-foreground">
                               {String(item.quantity_requested)}
+                              {item.unit && (
+                                <span className="ml-1 text-body-sm text-on-surface-deep">{item.unit}</span>
+                              )}
                             </TableCell>
                             <TableCell data-testid={`transfer-item-${item.id}-approved`} className="text-data-mono font-data-mono text-right text-foreground">
                               {item.quantity_approved ?? '—'}
