@@ -43,7 +43,8 @@ import { PaymentMethodService } from '@/services/paymentMethodService';
 import { CurrencyService } from '@/services/currencyService';
 import { productService } from '@/services/productService';
 import { unitConversionsService } from '@/features/unit-conversions/services/unitConversionsService';
-import { resolveUnitFactor, type UnitConversionRow } from '@/domain/units/resolveUnitFactor';
+import { deriveUnitPrice } from '@/domain/units/deriveUnitPrice';
+import type { UnitConversionRow } from '@/domain/units/resolveUnitFactor';
 import { VariantSelectorModal } from '@/features/sales/components/VariantSelectorModal';
 import { salePaymentService } from '@/services/salePaymentService';
 import { reservationService } from '@/services/reservationService';
@@ -1069,22 +1070,26 @@ const SalesNew: React.FC = () => {
   // Antes originalPrice quedaba congelado en la unidad base: vender en una
   // unidad con precio registrado exigía razón de cambio de precio y el
   // permiso sales:apply_discount para una venta normal.
+  // FIX 2026-10-02 (PLAN_UNITS_V2_COMPLETACION F1.3a): la derivación estaba
+  // INVERTIDA — multiplicaba por el factor base→elegido (1 ton = 0.001× el kg
+  // en vez de 1000×; el mismo bug "417 vs 60.000" corregido en SQL el
+  // 09-26). Ahora delega en el dominio (deriveUnitPrice), que replica la
+  // fórmula del SQL: base × convert(1, elegida, base).
   function resolveModalUnitOriginalPrice(unit: string): { price: number; matchesUnit: boolean } {
     if (!selectedModalProduct) return { price: 0, matchesUnit: false };
     const display = getProductDisplay(selectedModalProduct);
     const chosen = unit || display.base_unit;
     const registered = modalUnitPrices.find((p) => p.unit === chosen);
-    if (registered) return { price: registered.price, matchesUnit: true };
     const baseRegistered = modalUnitPrices.find((p) => p.unit === display.base_unit);
     const basePrice = baseRegistered?.price ?? display.price;
-    if (chosen !== display.base_unit) {
-      const factor = resolveUnitFactor(modalConversions, display.id, display.base_unit, chosen);
-      if (factor != null) {
-        return { price: Number((basePrice * factor).toFixed(2)), matchesUnit: true };
-      }
-      return { price: basePrice, matchesUnit: false };
-    }
-    return { price: basePrice, matchesUnit: true };
+    return deriveUnitPrice({
+      chosenUnit: chosen,
+      baseUnit: display.base_unit,
+      basePrice,
+      registeredPrice: registered?.price,
+      conversions: modalConversions,
+      productId: display.id,
+    });
   }
 
   const handleModalUnitChange = (unit: string) => {
