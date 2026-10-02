@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import useProductStore from '@/store/useProductStore';
 import { ProductEnriched } from '@/domain/products/models';
 import { useToast } from '@/hooks/useToast';
+import { useI18n } from '@/lib/i18n';
 import { useSearchFocusShortcut } from '@/hooks/useSearchFocusShortcut';
 import { telemetry } from '@/utils/telemetry';
 import { productService } from '@/services/productService';
@@ -10,8 +11,14 @@ import { useBranch } from '@/contexts/BranchContext';
 
 export type ViewMode = 'paginated' | 'search';
 
-export const useProductsLogic = () => {
-  const toast = useToast();
+export const useProductsLogic = (externalToast?: ReturnType<typeof useToast>) => {
+  // Instancia de toast compartida: la página (Products.tsx) crea una única
+  // instancia y la inyecta aquí y en los modales, porque useToast() guarda
+  // estado local por instancia y solo la renderizada en el ToastContainer
+  // de la página es visible. Sin inyección se usa una propia (tests, reuso).
+  const fallbackToast = useToast();
+  const toast = externalToast ?? fallbackToast;
+  const { t } = useI18n();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Zustand store
@@ -19,6 +26,7 @@ export const useProductsLogic = () => {
     products: storeProducts,
     loading,
     error,
+    lastErrorCode,
     totalProducts,
     currentPage,
     totalPages,
@@ -55,12 +63,20 @@ export const useProductsLogic = () => {
   useEffect(() => {
     if (error && error !== lastErrorRef.current) {
       telemetry.record('products.error.store', { message: error });
-      errorFrom(error);
+      // El store expone el error como string + código por separado: se
+      // reconstruye el objeto para que el toast conserve el mensaje real,
+      // el código y las acciones (reintentar/diagnóstico). Pasar el string
+      // directo a errorFrom mostraría el fallback genérico (toApiError
+      // ignora strings).
+      errorFrom(
+        { message: error, code: lastErrorCode ?? undefined },
+        { fallback: error },
+      );
       lastErrorRef.current = error;
     } else if (!error) {
       lastErrorRef.current = null;
     }
-  }, [error, errorFrom]);
+  }, [error, lastErrorCode, errorFrom]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -93,7 +109,13 @@ export const useProductsLogic = () => {
     // Pre-cargar facetas
     productService.getSearchFacets().then(res => {
       if (res && res.facets) setFacets(res.facets);
-    }).catch(console.error);
+    }).catch((err: unknown) => {
+      errorFrom(err, {
+        fallback: t('products.toast.facets_error', 'No se pudieron cargar los filtros de búsqueda'),
+      });
+    });
+    // errorFrom/t solo cambian con el idioma: no re-disparar la carga.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchProductsPaginated, fetchCategories]);
 
   // El stock es por sucursal: al cambiar la sucursal activa (switcher del
@@ -122,7 +144,11 @@ export const useProductsLogic = () => {
             setAdvancedProducts(res.products || []);
             setAdvancedTotal(res.total_count || 0);
           })
-          .catch(console.error)
+          .catch((err: unknown) => {
+            errorFrom(err, {
+              fallback: t('products.toast.advanced_search_error', 'No se pudo completar la búsqueda avanzada'),
+            });
+          })
           .finally(() => setIsSearching(false));
       } else if (searchTerm) {
         searchProducts(1, 10, searchTerm);
@@ -201,7 +227,11 @@ export const useProductsLogic = () => {
           setIsSearching(true);
           productService.searchAdvanced(payload)
             .then(res => { setAdvancedProducts(res.products || []); setAdvancedTotal(res.total_count || 0); })
-            .catch(console.error)
+            .catch((err: unknown) => {
+              errorFrom(err, {
+                fallback: t('products.toast.advanced_search_error', 'No se pudo completar la búsqueda avanzada'),
+              });
+            })
             .finally(() => setIsSearching(false));
         } else {
           searchProducts(currentPage - 1, 10, searchTerm);
@@ -223,7 +253,11 @@ export const useProductsLogic = () => {
           setIsSearching(true);
           productService.searchAdvanced(payload)
             .then(res => { setAdvancedProducts(res.products || []); setAdvancedTotal(res.total_count || 0); })
-            .catch(console.error)
+            .catch((err: unknown) => {
+              errorFrom(err, {
+                fallback: t('products.toast.advanced_search_error', 'No se pudo completar la búsqueda avanzada'),
+              });
+            })
             .finally(() => setIsSearching(false));
         } else {
           searchProducts(currentPage + 1, 10, searchTerm);
@@ -256,7 +290,11 @@ export const useProductsLogic = () => {
           setAdvancedProducts(res.products || []);
           setAdvancedTotal(res.total_count || 0);
         })
-        .catch(console.error)
+        .catch((err: unknown) => {
+          errorFrom(err, {
+            fallback: t('products.toast.advanced_search_error', 'No se pudo completar la búsqueda avanzada'),
+          });
+        })
         .finally(() => setIsSearching(false));
     } else if (viewMode === 'paginated') {
       fetchProductsPaginated(1, 10);
@@ -317,7 +355,9 @@ export const useProductsLogic = () => {
       // con el modelo de dominio (state no-opcional).
       return (await productService.getById(productId)) as unknown as ProductEnriched;
     } catch (err) {
-      console.error('Error resolving enriched product for modal', err);
+      errorFrom(err, {
+        fallback: t('products.toast.detail_error', 'No se pudo cargar el detalle del producto'),
+      });
       return product; // degradación: abrir con la fila tal cual
     }
   };

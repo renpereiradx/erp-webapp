@@ -6,8 +6,10 @@ import { X, Check, Plus, Loader2, Tags } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
-export function ProductTagsManager({ productId, categoryId, disabled = false }: { productId: string | number | undefined; categoryId?: number; disabled?: boolean }) {
-  const toast = useToast();
+export function ProductTagsManager({ productId, categoryId, disabled = false, toast: externalToast }: { productId: string | number | undefined; categoryId?: number; disabled?: boolean; toast?: ReturnType<typeof useToast> }) {
+  const fallbackToast = useToast();
+  const toast = externalToast ?? fallbackToast;
+  const { errorFrom } = toast;
   const { t } = useI18n();
   const [allTags, setAllTags] = useState<any[]>([]);
   const [productTags, setProductTags] = useState<any[]>([]);
@@ -40,8 +42,7 @@ export function ProductTagsManager({ productId, categoryId, disabled = false }: 
           setProductTags(normalizedProductTags);
         }
       } catch (error) {
-        console.error(error);
-        if (!ignore) toast.error(t('products.tags.error.load'));
+        if (!ignore) errorFrom(error, { fallback: t('products.tags.error.load') });
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -89,7 +90,7 @@ export function ProductTagsManager({ productId, categoryId, disabled = false }: 
       await tagService.removeFromProduct(productId.toString(), tagId);
       setProductTags(prev => prev.filter(pt => pt.id !== tagId));
     } catch (error) {
-      toast.error(t('products.tags.error.remove'));
+      errorFrom(error, { fallback: t('products.tags.error.remove') });
     }
   };
 

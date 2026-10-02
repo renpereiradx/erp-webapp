@@ -487,4 +487,23 @@ export const products = {
   'products.attributes.value_for': 'Valor para {name}',
   'products.attributes.action.save_title': 'Guardar atributo individual',
   'products.attributes.loading': 'Cargando atributos descriptivos...',
+
+  // Toasts (estados de la API)
+  'products.toast.created': 'Producto creado exitosamente',
+  'products.toast.updated': 'Producto actualizado exitosamente',
+  'products.toast.deleted': 'Producto eliminado exitosamente',
+  'products.toast.save_error': 'No se pudo guardar el producto',
+  'products.toast.delete_error': 'No se pudo eliminar el producto',
+  'products.toast.load_error': 'No se pudieron cargar los productos',
+  'products.toast.advanced_search_error': 'No se pudo completar la búsqueda avanzada',
+  'products.toast.facets_error': 'No se pudieron cargar los filtros de búsqueda',
+  'products.toast.detail_error': 'No se pudo cargar el detalle del producto',
+  'products.toast.tax_rates_error': 'No se pudieron cargar los impuestos',
+  'products.toast.brands_error': 'No se pudieron cargar las marcas',
+  'products.toast.categories_error': 'No se pudieron cargar las categorías',
+  'products.toast.brand_error': 'No se pudo crear la marca',
+  'products.toast.variants_error': 'No se pudieron cargar las variantes del producto',
+  'products.variants.toast.created': 'Variante creada exitosamente',
+  'products.variants.toast.create_error': 'No se pudo crear la variante',
+  'products.variants.toast.attributes_error': 'No se pudieron cargar los atributos de variante',
 }

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { variantService } from '@/services/variantService';
 import { attributeService } from '@/services/attributeService';
 import { useToast } from '@/hooks/useToast';
+import { useI18n } from '@/lib/i18n';
 import { useBranch } from '@/contexts/BranchContext';
 
 interface VariantFormModalProps {
@@ -17,6 +18,8 @@ export function VariantFormModal({ productId, isOpen, onClose, onSuccess }: Vari
   const [loading, setLoading] = useState(false);
   const { currentBranchId } = useBranch();
   const toast = useToast();
+  const { errorFrom } = toast;
+  const { t } = useI18n();
 
   const [formData, setFormData] = useState({
     sku: '',
@@ -43,7 +46,9 @@ export function VariantFormModal({ productId, isOpen, onClose, onSuccess }: Vari
         }
       } catch (err) {
         if (!ignore) {
-           console.error("No se pudieron cargar atributos dinámicos", err);
+           errorFrom(err, {
+             fallback: t('products.variants.toast.attributes_error', 'No se pudieron cargar los atributos de variante'),
+           });
         }
       } finally {
         if (!ignore) setLoadingAttributes(false);
@@ -65,7 +70,7 @@ export function VariantFormModal({ productId, isOpen, onClose, onSuccess }: Vari
     const hasCustomAttributes = customAttributes.some(a => a.key.trim() !== '' && a.value.trim() !== '');
 
     if (!hasDynamicValues && !hasCustomAttributes) {
-      toast.error('Debe especificar al menos un atributo para la variante');
+      toast.error(t('products.variants.alert.attribute_required', 'Debe especificar al menos un atributo para la variante'));
       return;
     }
 
@@ -86,12 +91,12 @@ export function VariantFormModal({ productId, isOpen, onClose, onSuccess }: Vari
 
       if (formData.initial_stock || formData.initial_price) {
         if (!currentBranchId) {
-          toast.error('Debe seleccionar una sucursal activa para establecer stock o precio inicial.');
+          toast.error(t('products.variants.alert.branch_required', 'Debe seleccionar una sucursal activa para establecer stock o precio inicial.'));
           setLoading(false);
           return;
         }
         if (!formData.initial_price) {
-          toast.error('Debe especificar el precio inicial para poder registrar el stock inicial en la sucursal.');
+          toast.error(t('products.variants.alert.price_required', 'Debe especificar el precio inicial para poder registrar el stock inicial en la sucursal.'));
           setLoading(false);
           return;
         }
@@ -105,10 +110,12 @@ export function VariantFormModal({ productId, isOpen, onClose, onSuccess }: Vari
       }
 
       await variantService.createVariant(productId, payload);
-      toast.success('Variante creada exitosamente');
+      toast.success(t('products.variants.toast.created', 'Variante creada exitosamente'));
       onSuccess();
     } catch (error: any) {
-      toast.error(error.message || 'Error al crear la variante');
+      errorFrom(error, {
+        fallback: t('products.variants.toast.create_error', 'No se pudo crear la variante'),
+      });
     } finally {
       setLoading(false);
     }

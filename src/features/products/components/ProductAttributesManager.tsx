@@ -22,10 +22,14 @@ import { cn } from '@/lib/utils';
 interface ProductAttributesManagerProps {
   productId: string;
   categoryId?: string | number;
+  toast?: ReturnType<typeof useToast>;
 }
 
-export function ProductAttributesManager({ productId, categoryId }: ProductAttributesManagerProps) {
+export function ProductAttributesManager({ productId, categoryId, toast: externalToast }: ProductAttributesManagerProps) {
   const { t } = useI18n();
+  const fallbackToast = useToast();
+  const toast = externalToast ?? fallbackToast;
+  const { errorFrom } = toast;
   const [attributesDef, setAttributesDef] = useState<any[]>([]);
   const [productValues, setProductValues] = useState<Record<string, any>>({});
   const [savingId, setSavingId] = useState<number | null>(null);
@@ -55,11 +59,13 @@ export function ProductAttributesManager({ productId, categoryId }: ProductAttri
         setApiCategories(Array.isArray(cats) ? cats : (cats?.data || []));
       })
       .catch(err => {
-        console.error("Error al cargar categorías de la API en la ficha técnica:", err);
+        errorFrom(err, {
+          fallback: t('products.toast.categories_error', 'No se pudieron cargar las categorías'),
+        });
       });
+    // errorFrom/t solo cambian con el idioma: no re-disparar la carga.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const toast = useToast();
 
   const loadData = async (ignore: boolean = false) => {
     setLoading(true);
@@ -95,8 +101,9 @@ export function ProductAttributesManager({ productId, categoryId }: ProductAttri
       }
     } catch (err) {
       if (!ignore) {
-        console.error("Error loading attributes", err);
-        toast.error(t('products.attributes.error.load'));
+        errorFrom(err, {
+          fallback: t('products.attributes.error.load'),
+        });
       }
     } finally {
       if (!ignore) setLoading(false);
@@ -133,8 +140,9 @@ export function ProductAttributesManager({ productId, categoryId }: ProductAttri
       await attributeService.assignProductAttribute(productId, attr.id || attr.attribute_id, payload);
       toast.success(t('products.attributes.saved', { name: attr.name }));
     } catch (err) {
-      console.error(err);
-      toast.error(t('products.attributes.error.save', { name: attr.name }));
+      errorFrom(err, {
+        fallback: t('products.attributes.error.save', { name: attr.name }),
+      });
     } finally {
       setSavingId(null);
     }
@@ -183,7 +191,9 @@ export function ProductAttributesManager({ productId, categoryId }: ProductAttri
       setNewDefOptions([]);
       await loadData();
     } catch (err: any) {
-      toast.error(err.message || t('products.attributes.error.create'));
+      errorFrom(err, {
+        fallback: t('products.attributes.error.create'),
+      });
     } finally {
       setCreatingDefLoader(false);
     }

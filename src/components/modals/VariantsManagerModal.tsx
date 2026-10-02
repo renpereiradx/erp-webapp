@@ -3,6 +3,7 @@ import { Package, Layers } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import EnhancedModal from '@/components/ui/EnhancedModal';
+import { useToast } from '@/hooks/useToast';
 import { ProductVariantsManager } from '@/features/products/components/ProductVariantsManager';
 import { ProductAttributesManager } from '@/features/products/components/ProductAttributesManager';
 import { ProductTagsManager } from '@/features/products/components/ProductTagsManager';
@@ -11,12 +12,15 @@ interface VariantsManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: any;
+  toast?: ReturnType<typeof useToast>;
 }
 
 type ManagerTab = 'variants' | 'attributes';
 
-export const VariantsManagerModal: React.FC<VariantsManagerModalProps> = ({ isOpen, onClose, product }) => {
+export const VariantsManagerModal: React.FC<VariantsManagerModalProps> = ({ isOpen, onClose, product, toast: externalToast }) => {
   const { t } = useI18n();
+  const fallbackToast = useToast();
+  const toast = externalToast ?? fallbackToast;
   const [activeTab, setActiveTab] = useState<ManagerTab>('variants');
 
   if (!isOpen) return null;
@@ -103,7 +107,7 @@ export const VariantsManagerModal: React.FC<VariantsManagerModalProps> = ({ isOp
 
       {activeTab === 'variants' && (
         <div role="tabpanel">
-          <ProductVariantsManager productId={productId} categoryId={categoryId} />
+          <ProductVariantsManager productId={productId} categoryId={categoryId} toast={toast} />
         </div>
       )}
 
@@ -115,7 +119,7 @@ export const VariantsManagerModal: React.FC<VariantsManagerModalProps> = ({ isOp
               <Package className="w-5 h-5 text-primary" />
               <h3 className="text-title-md text-foreground">{t('products.tags.section_title', 'Etiquetas del Producto')}</h3>
             </div>
-            <ProductTagsManager productId={productId} categoryId={categoryId} />
+            <ProductTagsManager productId={productId} categoryId={categoryId} toast={toast} />
             <p className="text-body-sm-bold text-on-surface-deep mt-sm uppercase">
               {t('products.tags.hint', 'Agregue etiquetas rápidas para filtros y catálogos (Ej. "Nuevo", "Oferta", "Destacado").')}
             </p>
@@ -127,7 +131,7 @@ export const VariantsManagerModal: React.FC<VariantsManagerModalProps> = ({ isOp
               <Layers className="w-5 h-5 text-primary" />
               <h3 className="text-title-md text-foreground">{t('products.attributes.section_title', 'Atributos Descriptivos')}</h3>
             </div>
-            <ProductAttributesManager productId={productId} categoryId={categoryId} />
+            <ProductAttributesManager productId={productId} categoryId={categoryId} toast={toast} />
           </div>
         </div>
       )}

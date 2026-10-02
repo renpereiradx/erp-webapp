@@ -3,6 +3,7 @@ import { z } from 'zod';
 import useProductStore from '@/store/useProductStore';
 import useCategoryStore from '@/store/useCategoryStore';
 import { useToast } from '@/hooks/useToast';
+import { useI18n } from '@/lib/i18n';
 
 export const baseProductSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
@@ -70,12 +71,20 @@ interface UseProductFormProps {
   product: any | null;
   isOpen: boolean;
   onClose: () => void;
+  // Instancia compartida de la página (ver useProductsLogic): solo la
+  // renderizada en el ToastContainer es visible.
+  toast?: ReturnType<typeof useToast>;
 }
 
-export function useProductForm({ product, isOpen, onClose }: UseProductFormProps) {
+export function useProductForm({ product, isOpen, onClose, toast: externalToast }: UseProductFormProps) {
   const { createProduct, updateProduct, deleteProduct } = useProductStore();
   const { categories, loading: loadingCategories, fetchCategories } = useCategoryStore();
-  const toast = useToast();
+  const fallbackToast = useToast();
+  const toast = externalToast ?? fallbackToast;
+  // Métodos estables (no el objeto `toast`, cuya identidad cambia con cada
+  // notificación y provocaría refetch en bucle en los efectos de abajo).
+  const { errorFrom, success } = toast;
+  const { t } = useI18n();
   const isEditMode = product !== null;
 
   const [formData, setFormData] = useState<ProductFormData>({
@@ -116,12 +125,16 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
         else setTaxRates([]);
       }
     } catch (error) {
-      console.error('Error loading tax rates:', error);
-      if (!ignore) setTaxRates([]);
+      if (!ignore) {
+        setTaxRates([]);
+        errorFrom(error, {
+          fallback: t('products.toast.tax_rates_error', 'No se pudieron cargar los impuestos'),
+        });
+      }
     } finally {
       if (!ignore) setLoadingTaxRates(false);
     }
-  }, []);
+  }, [errorFrom, t]);
 
   const loadBrands = useCallback(async (ignore = false) => {
     setLoadingBrands(true);
@@ -132,17 +145,28 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
         setBrands(Array.isArray(response) ? response : []);
       }
     } catch (error) {
-      if (!ignore) setBrands([]);
+      if (!ignore) {
+        setBrands([]);
+        errorFrom(error, {
+          fallback: t('products.toast.brands_error', 'No se pudieron cargar las marcas'),
+        });
+      }
     } finally {
       if (!ignore) setLoadingBrands(false);
     }
-  }, []);
+  }, [errorFrom, t]);
 
   useEffect(() => {
     let ignore = false;
     if (isOpen) {
       if (categories.length === 0) {
-        fetchCategories().catch(() => {});
+        fetchCategories().catch((error: unknown) => {
+          if (!ignore) {
+            errorFrom(error, {
+              fallback: t('products.toast.categories_error', 'No se pudieron cargar las categorías'),
+            });
+          }
+        });
       }
       loadTaxRates(ignore);
       loadBrands(ignore);
@@ -246,16 +270,17 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
       if (isEditMode) {
         const { base_unit, ...updateData } = productData;
         await updateProduct(productId, updateData);
-        toast.success('Producto actualizado exitosamente');
+        success(t('products.toast.updated', 'Producto actualizado exitosamente'));
       } else {
         await createProduct(productData);
-        toast.success('Producto creado exitosamente');
+        success(t('products.toast.created', 'Producto creado exitosamente'));
       }
       
       onClose();
     } catch (error: any) {
-      console.error(error);
-      toast.error(error?.message || 'Error al guardar el producto');
+      errorFrom(error, {
+        fallback: t('products.toast.save_error', 'No se pudo guardar el producto'),
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -267,12 +292,13 @@ export function useProductForm({ product, isOpen, onClose }: UseProductFormProps
     try {
       const productId = product?.product_id || product?.id;
       await deleteProduct(productId);
-      toast.success('Producto eliminado exitosamente');
+      success(t('products.toast.deleted', 'Producto eliminado exitosamente'));
       setShowDeleteConfirm(false);
       onClose();
     } catch (error: any) {
-      console.error(error);
-      toast.error(error?.message || 'Error al eliminar el producto');
+      errorFrom(error, {
+        fallback: t('products.toast.delete_error', 'No se pudo eliminar el producto'),
+      });
     } finally {
       setIsDeleting(false);
     }

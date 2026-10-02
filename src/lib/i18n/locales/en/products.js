@@ -330,4 +330,23 @@ export const products = {
   'products.attributes.value_for': 'Value for {name}',
   'products.attributes.action.save_title': 'Save individual attribute',
   'products.attributes.loading': 'Loading descriptive attributes...',
+
+  // Toasts (API states)
+  'products.toast.created': 'Product created successfully',
+  'products.toast.updated': 'Product updated successfully',
+  'products.toast.deleted': 'Product deleted successfully',
+  'products.toast.save_error': 'Could not save the product',
+  'products.toast.delete_error': 'Could not delete the product',
+  'products.toast.load_error': 'Could not load products',
+  'products.toast.advanced_search_error': 'Could not complete the advanced search',
+  'products.toast.facets_error': 'Could not load search filters',
+  'products.toast.detail_error': 'Could not load the product details',
+  'products.toast.tax_rates_error': 'Could not load taxes',
+  'products.toast.brands_error': 'Could not load brands',
+  'products.toast.categories_error': 'Could not load categories',
+  'products.toast.brand_error': 'Could not create the brand',
+  'products.toast.variants_error': 'Could not load product variants',
+  'products.variants.toast.created': 'Variant created successfully',
+  'products.variants.toast.create_error': 'Could not create the variant',
+  'products.variants.toast.attributes_error': 'Could not load variant attributes',
 }

@@ -14,6 +14,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import EnhancedModal from '@/components/ui/EnhancedModal';
+import { useToast } from '@/hooks/useToast';
 import { ProductOperationInfoResponse, ProductVariant } from '@/types';
 import { variantService } from '@/services/variantService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,14 +33,18 @@ interface ProductDetailsModalProps {
   onClose: () => void;
   product: ProductOperationInfoResponse | any;
   onEdit?: (product: any) => void;
+  toast?: ReturnType<typeof useToast>;
 }
 
 /**
  * ProductDetailsModal Component
  * Construido sobre EnhancedModal siguiendo DESIGN.md (§6.3, §6.6)
  */
-export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }: ProductDetailsModalProps) {
+export default function ProductDetailsModal({ isOpen, onClose, product, onEdit, toast: externalToast }: ProductDetailsModalProps) {
   const { t } = useI18n();
+  const fallbackToast = useToast();
+  const toast = externalToast ?? fallbackToast;
+  const { errorFrom } = toast;
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
   const canWrite = hasPermission('products:write');
@@ -73,9 +78,15 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
       const activeBranch = localStorage.getItem('activeBranch') ? parseInt(localStorage.getItem('activeBranch') as string) : undefined;
       variantService.getEnrichedVariants(currentProductId, activeBranch, true)
         .then(setVariants)
-        .catch(console.error)
+        .catch((err: unknown) => {
+          errorFrom(err, {
+            fallback: t('products.toast.variants_error', 'No se pudieron cargar las variantes del producto'),
+          });
+        })
         .finally(() => setLoadingVariants(false));
     }
+    // errorFrom/t solo cambian con el idioma: no re-disparar la carga.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentProductId]);
 
   if (!isOpen || !product) return null;
@@ -644,6 +655,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
           isOpen={isVariantsManagerOpen}
           onClose={() => setIsVariantsManagerOpen(false)}
           product={product}
+          toast={toast}
         />
       )}
     </>

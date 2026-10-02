@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { CategoryManagementModal } from '@/features/categories'
+import { useToast } from '@/hooks/useToast';
 import { useProductForm } from '../hooks/useProductForm';
 
 /**
@@ -41,12 +42,16 @@ interface ProductFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   product?: any | null;
+  toast?: ReturnType<typeof useToast>;
 }
 
 type FormTab = 'basic' | 'details' | 'measure'
 
-export default function ProductFormModal({ isOpen, onClose, product = null }: ProductFormModalProps) {
+export default function ProductFormModal({ isOpen, onClose, product = null, toast: externalToast }: ProductFormModalProps) {
   const { t } = useI18n()
+  const fallbackToast = useToast();
+  const toast = externalToast ?? fallbackToast;
+  const { errorFrom } = toast;
   const [activeTab, setActiveTab] = useState<FormTab>('basic')
 
   const {
@@ -74,7 +79,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
     handleSubmit,
     handleDelete,
     loadBrands
-  } = useProductForm({ product, isOpen, onClose });
+  } = useProductForm({ product, isOpen, onClose, toast });
 
   const handleAddBrand = async () => {
     const name = window.prompt(t('products.modal.prompt.new_brand', 'Ingrese el nombre de la nueva marca:'));
@@ -87,7 +92,9 @@ export default function ProductFormModal({ isOpen, onClose, product = null }: Pr
         setFormData(prev => ({ ...prev, brand_id: newBrand.id.toString() }));
       }
     } catch (error) {
-      console.error(error);
+      errorFrom(error, {
+        fallback: t('products.toast.brand_error', 'No se pudo crear la marca'),
+      });
     }
   };
 

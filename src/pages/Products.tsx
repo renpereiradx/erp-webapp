@@ -14,8 +14,13 @@ import {
   ProductDetailsModal,
 } from '@/features/products';
 import ToastContainer from '@/components/ui/ToastContainer';
+import { useToast } from '@/hooks/useToast';
 
 const Products = () => {
+  // Única instancia de toast de la página: se inyecta en el hook y los
+  // modales porque useToast() es estado local por instancia y solo esta
+  // (renderizada en el ToastContainer de abajo) es visible.
+  const pageToast = useToast();
   const {
     // State
     products,
@@ -58,7 +63,7 @@ const Products = () => {
     setAdvancedSearchPayload,
     advancedProducts,
     advancedTotal,
-  } = useProductsLogic();
+  } = useProductsLogic(pageToast);
 
   const isAdvancedSearchActive = viewMode === 'search' && (
     Object.keys(advancedSearchPayload).length > 0 ||
@@ -135,6 +140,7 @@ const Products = () => {
         isOpen={isFormModalOpen}
         onClose={handleCloseFormModal}
         product={selectedProduct}
+        toast={pageToast}
       />
 
       <ProductDetailsModal
@@ -142,6 +148,7 @@ const Products = () => {
         onClose={handleCloseDetailsModal}
         product={selectedProduct}
         onEdit={handleEditFromDetails}
+        toast={pageToast}
       />
 
       {/* Toast Notifications */}

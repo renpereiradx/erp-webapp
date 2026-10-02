@@ -16,18 +16,22 @@ import {
 } from '@/components/ui/table';
 import { Package, Plus, Pencil, AlertTriangle, Search } from 'lucide-react';
 import { formatCurrency } from '@/utils/currencyUtils';
+import { useToast } from '@/hooks/useToast';
 
 interface ProductVariantsManagerProps {
   productId: string;
   categoryId?: string | number;
   compact?: boolean;
+  toast?: ReturnType<typeof useToast>;
 }
 
 const tableHeadClass = 'text-label-caps uppercase text-on-surface-deep bg-surface-muted';
 const dataChipClass = 'bg-surface-subtle text-on-surface-deep rounded-xs px-1.5 py-0.5 text-body-sm-bold';
 
-export function ProductVariantsManager({ productId, categoryId }: ProductVariantsManagerProps) {
+export function ProductVariantsManager({ productId, categoryId, toast: externalToast }: ProductVariantsManagerProps) {
   const { t } = useI18n();
+  const fallbackToast = useToast();
+  const toast = externalToast ?? fallbackToast;
   const { variants, searchTerm, setSearchTerm, toggleVariantStatus, createVariant, editVariant, setActiveProductId, loading } = useVariants();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [variantToEdit, setVariantToEdit] = useState<any>(null);
@@ -45,7 +49,7 @@ export function ProductVariantsManager({ productId, categoryId }: ProductVariant
 
   const handleCreate = () => {
     if (!productId) {
-      alert(t('products.variants.save_first_text'));
+      toast.warning(t('products.variants.save_first_text'));
       return;
     }
     setVariantToEdit(null);
