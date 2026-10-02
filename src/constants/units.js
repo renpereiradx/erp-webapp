@@ -34,6 +34,7 @@ export const UNIT_CONFIGS = {
   meter: { value: 'meter', label: 'Metro (m)', category: 'length', allow_decimals: true, step: 0.01, min: 0.01, examples: ['1.5', '2.75', '10.0'] },
   cm: { value: 'cm', label: 'Centímetro (cm)', category: 'length', allow_decimals: true, step: 0.1, min: 0.1, examples: ['10.5', '25.0', '50.5'] },
   sqm: { value: 'sqm', label: 'Metro cuadrado (m²)', category: 'area', allow_decimals: true, step: 0.01, min: 0.01, examples: ['1.5', '2.25', '10.0'] },
+  sqft: { value: 'sqft', label: 'Pie cuadrado (ft²)', category: 'area', allow_decimals: true, step: 0.01, min: 0.01, examples: ['10.5', '100.0'] },
   roll: { value: 'roll', label: 'Rollo', category: 'length', allow_decimals: false, step: 1, min: 1, examples: ['1', '2', '5'] },
 
   // Servicios

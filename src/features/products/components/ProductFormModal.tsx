@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useI18n } from '@/lib/i18n'
-import { getGroupedUnitOptions } from '@/constants/units'
+import UnitSelect from '@/components/UnitSelect'
 import {
   Trash2,
   AlertTriangle,
@@ -23,9 +23,7 @@ import EnhancedModal from '@/components/ui/EnhancedModal'
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -574,35 +572,18 @@ export default function ProductFormModal({ isOpen, onClose, product = null, toas
                           </span>
                         )}
                       </Label>
-                      <Select
-                        value={formData.base_unit || undefined}
-                        onValueChange={v => {
+                      {/* Fuente única de unidades (PLAN_UNITS_V2_COMPLETACION F3.3):
+                          mismo selector que ventas/compras, hidratado de GET /units. */}
+                      <UnitSelect
+                        value={formData.base_unit || ''}
+                        onChange={v => {
                           setFormData(prev => ({ ...prev, base_unit: v }));
                           setErrors(prev => ({ ...prev, base_unit: undefined }));
                         }}
                         disabled={isEditMode}
-                      >
-                        <SelectTrigger
-                          className={cn('rounded-input', errors.base_unit && 'border-error')}
-                          aria-label={t('products.modal.field.unit_of_measure', 'Unidad de Medida')}
-                        >
-                          <SelectValue placeholder={t('products.modal.field.unit_of_measure', 'Unidad de Medida')} />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-md shadow-fluent-8 max-h-64">
-                          {getGroupedUnitOptions().map(group => (
-                            <SelectGroup key={group.label}>
-                              <SelectLabel className="text-label-caps uppercase text-on-surface-deep">
-                                {group.label}
-                              </SelectLabel>
-                              {group.options.map(opt => (
-                                <SelectItem key={opt.value} value={opt.value} className="text-body-md">
-                                  {opt.label}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        className={cn('rounded-input', errors.base_unit && 'border-error')}
+                        ariaLabel={t('products.modal.field.unit_of_measure', 'Unidad de Medida')}
+                      />
                       {renderErrorText(errors.base_unit)}
                     </div>
                   </div>

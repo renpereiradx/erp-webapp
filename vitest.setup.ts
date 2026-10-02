@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 import '@testing-library/jest-dom';
 
 // jsdom no implementa ResizeObserver: primitivas Radix que miden su trigger
@@ -84,3 +86,15 @@ try {
 } catch (e) {
   // ignore in non-test environments
 }
+
+// UnitSelect (PLAN_UNITS_V2_COMPLETACION F3.2) hidrata el catálogo canónico
+// desde unitsService al montar. En jsdom no hay backend: mock global
+// fail-silent — getCatalog resuelve vacío y el componente cae al catálogo
+// local de src/constants/units.js. Los tests que necesiten filas del
+// backend re-moquean '@/services/unitsService' localmente.
+vi.mock('@/services/unitsService', () => ({
+  unitsService: {
+    getCached: () => null,
+    getCatalog: () => Promise.resolve([]),
+  },
+}));

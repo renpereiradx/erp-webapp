@@ -37,7 +37,7 @@ export const productSchema = baseProductSchema.superRefine((data, ctx) => {
       });
     }
 
-    const validMeasurableUnits = ['kg', 'g', 'lb', 'oz', 'l', 'ml', 'gal', 'meter', 'cm', 'sqm', 'sqft'];
+    const validMeasurableUnits = ['kg', 'g', 'lb', 'oz', 'ton', 'l', 'ml', 'gal', 'meter', 'cm', 'sqm', 'sqft'];
     if (!validMeasurableUnits.includes(data.base_unit)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

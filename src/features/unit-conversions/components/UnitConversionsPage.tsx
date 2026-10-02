@@ -6,6 +6,7 @@ import { Plus, Trash2, HelpCircle, PackageOpen, ChevronLeft, Globe, Package } fr
 import { useNavigate } from 'react-router-dom';
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown';
 import { searchSellableUnitsFlat, SellableUnitOption } from '@/features/catalog/sellableUnitSearch';
+import UnitSelect from '@/components/UnitSelect';
 
 const UnitConversionsPage = () => {
   const toast = useToast();
@@ -42,7 +43,7 @@ const UnitConversionsPage = () => {
       setConversions(convData);
       setTemplate(tempData);
     } catch (error: any) {
-      toast.error(error?.message || 'Error al cargar conversiones');
+      toast.error(error?.message || t('unitConversions.errorLoad', 'Error al cargar conversiones'));
     } finally {
       setLoading(false);
     }
@@ -53,13 +54,13 @@ const UnitConversionsPage = () => {
     try {
       setIsSubmitting(true);
       if (!formData.from_unit || !formData.to_unit || !formData.factor) {
-        toast.error('Todos los campos son requeridos');
+        toast.error(t('unitConversions.allFieldsRequired', 'Todos los campos son requeridos'));
         return;
       }
       
       const factorNum = Number(formData.factor);
       if (isNaN(factorNum) || factorNum <= 0) {
-        toast.error('El factor debe ser un número mayor a 0');
+        toast.error(t('unitConversions.factorPositive', 'El factor debe ser un número mayor a 0'));
         return;
       }
 
@@ -70,11 +71,11 @@ const UnitConversionsPage = () => {
         product_id: formData.product_id
       });
       
-      toast.success('Conversión guardada exitosamente');
+      toast.success(t('unitConversions.savedOk', 'Conversión guardada exitosamente'));
       setIsModalOpen(false);
       fetchData();
     } catch (error: any) {
-      toast.error(error?.message || 'Error al guardar la conversión');
+      toast.error(error?.message || t('unitConversions.errorSave', 'Error al guardar la conversión'));
     } finally {
       setIsSubmitting(false);
     }
@@ -87,10 +88,10 @@ const UnitConversionsPage = () => {
     if (!window.confirm(`${t('unitConversions.deleteConfirm', '¿Eliminar la conversión {from} → {to} ({scope})?', { from: conv.from_unit, to: conv.to_unit, scope: scopeLabel })}`)) return;
     try {
       await unitConversionsService.delete(conv.from_unit, conv.to_unit, conv.product_id);
-      toast.success('Conversión eliminada exitosamente');
+      toast.success(t('unitConversions.deletedOk', 'Conversión eliminada exitosamente'));
       fetchData();
     } catch (error: any) {
-      toast.error(error?.message || 'Error al eliminar la conversión');
+      toast.error(error?.message || t('unitConversions.errorDelete', 'Error al eliminar la conversión'));
     }
   };
 
@@ -112,16 +113,16 @@ const UnitConversionsPage = () => {
           onClick={() => navigate('/configuracion')}
           className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors text-sm font-bold uppercase tracking-wider"
         >
-          <ChevronLeft size={16} /> Volver a Configuración
+          <ChevronLeft size={16} /> {t('unitConversions.backToSettings', 'Volver a Configuración')}
         </button>
 
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-l-4 border-primary pl-4 mb-8">
           <div>
             <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">
-              Conversiones de Unidad
+              {t('unitConversions.title', 'Conversiones de Unidad')}
             </h1>
             <p className="text-text-secondary text-sm font-medium mt-2">
-              Gestiona factores de conversión para ventas y compras multiformato
+              {t('unitConversions.subtitle', 'Gestiona factores de conversión para ventas y compras multiformato')}
             </p>
           </div>
           <button
@@ -132,7 +133,7 @@ const UnitConversionsPage = () => {
             className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-bold text-sm shadow-sm hover:bg-primary-hover transition-colors"
           >
             <Plus size={18} />
-            NUEVA CONVERSIÓN
+            {t('unitConversions.newConversion', 'Nueva Conversión')}
           </button>
         </header>
 
@@ -140,24 +141,24 @@ const UnitConversionsPage = () => {
           <div className="lg:col-span-2 space-y-4">
             <div className="bg-white rounded-xl shadow-sm border border-border-subtle overflow-hidden">
               <div className="px-6 py-4 border-b border-border-subtle bg-slate-50">
-                <h2 className="text-sm font-black text-text-main uppercase tracking-widest">Conversiones Activas</h2>
+                <h2 className="text-sm font-black text-text-main uppercase tracking-widest">{t('unitConversions.activeConversions', 'Conversiones Activas')}</h2>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-slate-50 text-[10px] font-black text-text-secondary uppercase tracking-widest border-b border-border-subtle">
-                      <th className="px-6 py-3">Origen</th>
-                      <th className="px-6 py-3">Destino</th>
-                      <th className="px-6 py-3">Alcance</th>
-                      <th className="px-6 py-3">Factor</th>
-                      <th className="px-6 py-3 text-right">Acciones</th>
+                      <th className="px-6 py-3">{t('unitConversions.colFrom', 'Origen')}</th>
+                      <th className="px-6 py-3">{t('unitConversions.colTo', 'Destino')}</th>
+                      <th className="px-6 py-3">{t('unitConversions.colScope', 'Alcance')}</th>
+                      <th className="px-6 py-3">{t('unitConversions.colFactor', 'Factor')}</th>
+                      <th className="px-6 py-3 text-right">{t('unitConversions.colActions', 'Acciones')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-subtle">
                     {loading ? (
-                      <tr><td colSpan={5} className="p-6 text-center text-text-secondary">Cargando...</td></tr>
+                      <tr><td colSpan={5} className="p-6 text-center text-text-secondary">{t('unitConversions.loading', 'Cargando...')}</td></tr>
                     ) : conversions.length === 0 ? (
-                      <tr><td colSpan={5} className="p-6 text-center text-text-secondary">No hay conversiones registradas. Usa la plantilla de la derecha para agregar.</td></tr>
+                      <tr><td colSpan={5} className="p-6 text-center text-text-secondary">{t('unitConversions.emptyTable', 'No hay conversiones registradas. Usa la plantilla de la derecha para agregar.')}</td></tr>
                     ) : (
                       conversions.map(conv => (
                         <tr key={`${conv.product_id ?? 'global'}-${conv.from_unit}-${conv.to_unit}`} className="hover:bg-slate-50/50 transition-colors">
@@ -187,7 +188,7 @@ const UnitConversionsPage = () => {
                             <button
                               onClick={() => handleDelete(conv)}
                               className="text-slate-400 hover:text-error transition-colors p-1"
-                              title="Eliminar"
+                              title={t('unitConversions.delete', 'Eliminar')}
                             >
                               <Trash2 size={16} />
                             </button>
@@ -205,13 +206,13 @@ const UnitConversionsPage = () => {
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-3 text-blue-800">
                 <HelpCircle size={20} />
-                <h3 className="font-black uppercase tracking-wider text-sm">¿Cómo funciona?</h3>
+                <h3 className="font-black uppercase tracking-wider text-sm">{t('unitConversions.howItWorksTitle', '¿Cómo funciona?')}</h3>
               </div>
               <p className="text-sm text-blue-900/80 mb-2">
-                Las transacciones (compras y ventas) que usen unidades de empaque se <b>rechazarán</b> si no existe un factor de conversión.
+                {t('unitConversions.howItWorksPackaging', 'Las transacciones (compras y ventas) que usen unidades de empaque se rechazarán si no existe un factor de conversión.')}
               </p>
               <p className="text-sm text-blue-900/80">
-                Los factores base (ej. kg a lb) están pre-cargados. Aquí debes registrar tus <b>empaques específicos</b> (cajas, bolsas).
+                {t('unitConversions.howItWorksBaseFactors', 'Los factores base (ej. kg a lb) están pre-cargados. Aquí debes registrar tus empaques específicos (cajas, bolsas).')}
               </p>
               <p className="text-sm text-on-surface-deep">
                 {t('unitConversions.precedenceHelp', 'Si registrás la conversión para un producto, ese factor gana a la global. El contenido de una caja depende del producto: preferí conversiones por producto.')}
@@ -222,12 +223,12 @@ const UnitConversionsPage = () => {
               <div className="px-5 py-4 border-b border-border-subtle bg-amber-50/50">
                 <div className="flex items-center gap-2 text-amber-600">
                   <PackageOpen size={18} />
-                  <h2 className="text-sm font-black uppercase tracking-widest">Plantilla de Empaque</h2>
+                  <h2 className="text-sm font-black uppercase tracking-widest">{t('unitConversions.templateTitle', 'Plantilla de Empaque')}</h2>
                 </div>
               </div>
               <div className="p-4 space-y-3">
                 {template.length === 0 && !loading && (
-                  <p className="text-xs text-text-secondary">No se pudo cargar la plantilla.</p>
+                  <p className="text-xs text-text-secondary">{t('unitConversions.templateLoadError', 'No se pudo cargar la plantilla.')}</p>
                 )}
                 {template.map((tmpl, i) => (
                   <div key={i} className="flex flex-col gap-2 p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-amber-200 transition-colors">
@@ -240,7 +241,7 @@ const UnitConversionsPage = () => {
                         onClick={() => loadFromTemplate(tmpl)}
                         className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline"
                       >
-                        Usar Plantilla
+                        {t('unitConversions.useTemplate', 'Usar Plantilla')}
                       </button>
                     </div>
                   </div>
@@ -255,7 +256,7 @@ const UnitConversionsPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-border-subtle">
-              <h2 className="text-lg font-black uppercase tracking-tighter">Guardar Conversión</h2>
+              <h2 className="text-lg font-black uppercase tracking-tighter">{t('unitConversions.saveTitle', 'Guardar Conversión')}</h2>
             </div>
             <form autoComplete="off" onSubmit={handleSave} className="p-6 space-y-4">
               <div className="space-y-1">
@@ -296,31 +297,34 @@ const UnitConversionsPage = () => {
                 )}
               </div>
               <div className="grid grid-cols-2 gap-4">
+                {/* Selector del catálogo (PLAN_UNITS_V2_COMPLETACION F3.4): fin del
+                    texto libre — las conversiones referencian unidades del catálogo
+                    canónico; extraUnits preserva valores legacy ya registrados. */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Unidad Origen</label>
-                  <input
-                    type="text"
-                    required
+                  <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">
+                    {t('unitConversions.fromUnit', 'Unidad Origen')}
+                  </label>
+                  <UnitSelect
                     value={formData.from_unit}
-                    onChange={e => setFormData({ ...formData, from_unit: e.target.value })}
-                    placeholder="ej: box"
-                    className="w-full px-3 py-2 text-sm border border-border-subtle rounded-md focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    onChange={v => setFormData({ ...formData, from_unit: v })}
+                    ariaLabel={t('unitConversions.fromUnit', 'Unidad Origen')}
+                    extraUnits={[formData.from_unit]}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Unidad Destino</label>
-                  <input
-                    type="text"
-                    required
+                  <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">
+                    {t('unitConversions.toUnit', 'Unidad Destino')}
+                  </label>
+                  <UnitSelect
                     value={formData.to_unit}
-                    onChange={e => setFormData({ ...formData, to_unit: e.target.value })}
-                    placeholder="ej: kg"
-                    className="w-full px-3 py-2 text-sm border border-border-subtle rounded-md focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    onChange={v => setFormData({ ...formData, to_unit: v })}
+                    ariaLabel={t('unitConversions.toUnit', 'Unidad Destino')}
+                    extraUnits={[formData.to_unit]}
                   />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Factor de Conversión</label>
+                <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">{t('unitConversions.factorLabel', 'Factor de Conversión')}</label>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-slate-400">=</span>
                   <input
@@ -330,7 +334,7 @@ const UnitConversionsPage = () => {
                     step="any"
                     value={formData.factor}
                     onChange={e => setFormData({ ...formData, factor: e.target.value })}
-                    placeholder="Cantidad de destino por cada origen"
+                    placeholder={t('unitConversions.factorPlaceholder', 'Cantidad de destino por cada origen')}
                     className="flex-1 px-3 py-2 text-sm border border-border-subtle rounded-md focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                   />
                 </div>
@@ -348,14 +352,14 @@ const UnitConversionsPage = () => {
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 text-sm font-bold text-text-secondary hover:text-text-main uppercase tracking-widest"
                 >
-                  Cancelar
+                  {t('common.cancel', 'Cancelar')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-4 py-2 bg-primary text-white text-sm font-bold uppercase tracking-widest rounded-lg shadow-sm hover:bg-primary-hover disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Guardando...' : 'Guardar'}
+                  {isSubmitting ? t('unitConversions.saving', 'Guardando...') : t('unitConversions.save', 'Guardar')}
                 </button>
               </div>
             </form>
