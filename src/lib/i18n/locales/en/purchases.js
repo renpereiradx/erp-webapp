@@ -284,6 +284,7 @@ export const purchases = {
   'purchases.product_modal.quantity_hint': 'Units to purchase',
   'purchases.product_modal.unit_placeholder': 'E.g. kg, box, unit',
   'purchases.product_modal.unit_hint': 'Purchase measure',
+  'purchases.product_modal.unit_no_conversion': 'No cost or conversion registered for this unit: reception will be rejected.',
   'purchases.product_modal.cost': 'Unit Cost',
   'purchases.product_modal.cost_hint': 'Price per unit',
   'purchases.product_modal.tax_source_product': 'Product-specific tax',

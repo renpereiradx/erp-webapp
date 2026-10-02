@@ -334,6 +334,7 @@ export const purchases = {
   'purchases.product_modal.quantity_hint': 'Unidades a comprar',
   'purchases.product_modal.unit_placeholder': 'Ej. kg, box, unit',
   'purchases.product_modal.unit_hint': 'Medida de compra',
+  'purchases.product_modal.unit_no_conversion': 'Sin costo ni conversión registrada para esta unidad: la recepción será rechazada.',
   'purchases.product_modal.cost': 'Costo Unit.',
   'purchases.product_modal.cost_hint': 'Precio por unidad',
   'purchases.product_modal.tax_source_product': 'Impuesto específico del producto',

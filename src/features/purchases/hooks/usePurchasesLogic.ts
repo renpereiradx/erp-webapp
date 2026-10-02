@@ -20,6 +20,10 @@ import {
 } from '@/services/purchasePaymentsMvpService'
 import { useToast } from '@/hooks/useToast'
 import { calculatePurchaseSalePriceGs, calculateProfitMargin } from '@/domain/purchase/pricing/purchasePricingPolicy'
+import { deriveUnitPrice } from '@/domain/units/deriveUnitPrice'
+import { resolveUnitFactor, type UnitConversionRow } from '@/domain/units/resolveUnitFactor'
+import { isDecimalUnit } from '@/constants/units'
+import { unitConversionsService } from '@/features/unit-conversions/services/unitConversionsService'
 import { PurchaseWithFullDetails } from '@/types'
 import { useBranch } from '@/contexts/BranchContext'
 
@@ -106,6 +110,12 @@ export const usePurchasesLogic = () => {
   const [modalQuantity, setModalQuantity] = useState<string | number>('')
   const [modalUnit, setModalUnit] = useState<string>('unit')
   const [modalUnitPrice, setModalUnitPrice] = useState<string | number>('')
+  // Conversiones + costos por unidad (PLAN_UNITS_V2_COMPLETACION F1.3b):
+  // alimentan el recálculo del costo al cambiar la unidad del modal y el
+  // hint preventivo de unidad sin conversión. null = conversiones no
+  // disponibles (fetch falló: fail-silent, igual que SalesNew).
+  const [modalConversions, setModalConversions] = useState<UnitConversionRow[] | null>(null)
+  const [modalUnitCosts, setModalUnitCosts] = useState<Array<{ unit: string; cost: number }>>([])
   const [modalProfitPct, setModalProfitPct] = useState<number>(30)
   const [modalSalePrice, setModalSalePrice] = useState<number>(0)
   const [pricingMode, setPricingMode] = useState<string>('margin')
@@ -243,6 +253,26 @@ export const usePurchasesLogic = () => {
     }
     setActiveProductIndex(0)
   }, [showProductDropdown, filteredModalProducts])
+
+  // Conversiones registradas (globales + específicas) para derivar el costo
+  // por unidad con la MISMA fórmula del backend (PLAN_UNITS_V2 F1.3b). Se
+  // fetchean al abrir el modal, fail-silencioso — sin ellas el flujo degrada
+  // a costo base y hint (igual que SalesNew).
+  useEffect(() => {
+    if (!isModalOpen) return
+    let cancelled = false
+    unitConversionsService
+      .getAll()
+      .then(rows => {
+        if (!cancelled) setModalConversions(rows as UnitConversionRow[])
+      })
+      .catch(() => {
+        if (!cancelled) setModalConversions(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [isModalOpen])
 
   useEffect(() => {
     if (
@@ -675,6 +705,15 @@ export const usePurchasesLogic = () => {
       setShowProductDropdown(false);
       setModalUnit(normalizedProduct.unit || 'unit');
 
+      // Costos por unidad del producto (unit_costs_summary del GET de compra):
+      // alimentan el recálculo del costo al cambiar la unidad. Nivel producto
+      // (el resumen no viene por variante); last_cost=0 = sin registro.
+      setModalUnitCosts(
+        (fullProduct.unit_costs_summary || [])
+          .map((uc: any) => ({ unit: String(uc.unit || ''), cost: Number(uc.last_cost || 0) }))
+          .filter((uc: { unit: string; cost: number }) => uc.unit && uc.cost > 0),
+      );
+
       // Costo prefill de la UNIDAD: current_cost de la fila (variante-primero,
       // products:cost-gated server-side) con fallback al costo del padre.
       const cost = Number(p.current_cost || 0) || normalizedProduct.cost_price || 0;
@@ -716,6 +755,41 @@ export const usePurchasesLogic = () => {
       setSearchingProducts(false);
     }
   };
+
+  // El costo sigue a la unidad (PLAN_UNITS_V2_COMPLETACION F1.3b): costo
+  // registrado de la unidad (unit_costs) → ese; sin registro → base × factor
+  // con la fórmula del SQL (deriveUnitPrice, dirección elegida→base). Antes
+  // quedaba el costo de la unidad anterior y el margen heredaba ese costo
+  // sin aviso.
+  const handleModalUnitChange = (unit: string) => {
+    setModalUnit(unit);
+    const productId = modalSelectedProduct?.id || modalSelectedProduct?.product_id || null;
+    const baseUnit = modalSelectedProduct?.base_unit || modalSelectedProduct?.unit || 'unit';
+    const baseCost =
+      modalUnitCosts.find(c => c.unit === baseUnit)?.cost ??
+      Number(modalSelectedProduct?.cost_price || 0);
+    const { price } = deriveUnitPrice({
+      chosenUnit: unit,
+      baseUnit,
+      basePrice: baseCost,
+      registeredPrice: modalUnitCosts.find(c => c.unit === unit)?.cost,
+      conversions: modalConversions,
+      productId: productId != null ? String(productId) : null,
+    });
+    setModalUnitPrice(price);
+  };
+
+  // Hint preventivo (F1.3b): unidad distinta de la base sin NI costo
+  // registrado NI conversión → la recepción será rechazada (NO_CONVERSION).
+  const modalUnitConversionHint = useMemo(() => {
+    if (!modalSelectedProduct) return false;
+    const baseUnit = modalSelectedProduct.base_unit || modalSelectedProduct.unit || 'unit';
+    const chosen = modalUnit || baseUnit;
+    if (chosen === baseUnit) return false;
+    if (modalUnitCosts.some(c => c.unit === chosen)) return false;
+    const productId = String(modalSelectedProduct.id || modalSelectedProduct.product_id || '');
+    return resolveUnitFactor(modalConversions, productId, chosen, baseUnit) == null;
+  }, [modalSelectedProduct, modalUnit, modalUnitCosts, modalConversions]);
 
   // options.afterSelect: el carrito abre el modal de detalles después de
   // seleccionar (aplica tanto al click como a Enter); el buscador interno del
@@ -766,12 +840,18 @@ export const usePurchasesLogic = () => {
 
   const handleConfirmAddProduct = () => {
     if (!modalSelectedProduct || modalQuantity === '' || Number(modalQuantity) <= 0 || modalUnitPrice === '') return
+    // Gating de decimales (PLAN_UNITS_V2 F1.3b): solo unidades pesables
+    // aceptan fracción; en unidades enteras se trunca como el resto del
+    // sistema (mismo criterio que el POS).
+    const allowDecimal = isDecimalUnit(modalUnit || modalSelectedProduct?.base_unit || 'unit')
+    const confirmedQuantity = allowDecimal ? Number(modalQuantity) : Math.floor(Number(modalQuantity))
+    if (!(confirmedQuantity > 0)) return
     const productId = modalSelectedProduct.id || modalSelectedProduct.product_id
     const itemData = {
       product_id: productId,
       name: modalSelectedProduct.name || modalSelectedProduct.product_name,
       sku: modalSelectedProduct.sku || '-',
-      quantity: Number(modalQuantity),
+      quantity: confirmedQuantity,
       unit_price: Number(modalUnitPrice),
       unit: modalUnit || 'unit',
       profit_pct: pricingMode === 'margin' ? Number(modalProfitPct) : effectiveProfitPct,
@@ -815,6 +895,7 @@ export const usePurchasesLogic = () => {
     setModalQuantity('')
     setModalUnit('')
     setModalUnitPrice('')
+    setModalUnitCosts([])
     setModalVariantId(undefined)
     setModalVariantName(undefined)
     setModalSelectedVariant(undefined)
@@ -1113,6 +1194,12 @@ export const usePurchasesLogic = () => {
         ...fullProduct,
         ...prev // keep edited values prioritized
       }));
+      // Costos por unidad para el recálculo al cambiar unidad en edición.
+      setModalUnitCosts(
+        (fullProduct.unit_costs_summary || [])
+          .map((uc: any) => ({ unit: String(uc.unit || ''), cost: Number(uc.last_cost || 0) }))
+          .filter((uc: { unit: string; cost: number }) => uc.unit && uc.cost > 0),
+      );
     } catch (e) {
       console.warn("Could not fetch full product data for edit mode", e);
     }
@@ -1212,6 +1299,8 @@ export const usePurchasesLogic = () => {
     modalTaxRateId,
     modalUnit,
     modalUnitPrice,
+    modalUnitConversionHint,
+    handleModalUnitChange,
     modalVariantId,
     setModalVariantId,
     modalVariantName,

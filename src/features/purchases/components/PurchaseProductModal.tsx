@@ -46,7 +46,6 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
     modalQuantity,
     setModalQuantity,
     modalUnit,
-    setModalUnit,
     modalUnitPrice,
     setModalUnitPrice,
     modalTaxRateId,
@@ -64,6 +63,8 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
     setModalSalePrice,
     effectiveSalePrice,
     handleConfirmAddProduct,
+    handleModalUnitChange,
+    modalUnitConversionHint,
     modalVariantId,
     setModalVariantId,
     setModalVariantName,
@@ -571,7 +572,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   <UnitSelect
                     id='purchase-modal-unit'
                     value={modalUnit}
-                    onChange={setModalUnit}
+                    onChange={handleModalUnitChange}
                     ariaLabel={t('purchases.product_modal.unit_label', 'Unidad')}
                     className='bg-surface-muted text-body-md-bold'
                     extraUnits={[modalUnit]}
@@ -579,6 +580,20 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                   <p className='text-body-sm text-outline-fg'>
                     {t('purchases.product_modal.unit_hint', 'Medida de compra')}
                   </p>
+                  {/* Hint preventivo (PLAN_UNITS_V2 F1.3b): unidad sin NI costo
+                      registrado NI conversión — la recepción será rechazada
+                      (NO_CONVERSION) si se confirma así. */}
+                  {modalUnitConversionHint && (
+                    <p
+                      className='text-body-sm text-warning flex items-start gap-1'
+                      data-testid='purchase-modal-unit-no-conversion'
+                    >
+                      {t(
+                        'purchases.product_modal.unit_no_conversion',
+                        'Sin costo ni conversión registrada para esta unidad: la recepción será rechazada.',
+                      )}
+                    </p>
+                  )}
                 </div>
                 <div className='space-y-1.5'>
                   <Label htmlFor='purchase-modal-cost' className={labelClass}>
