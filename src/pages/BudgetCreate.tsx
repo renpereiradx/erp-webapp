@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { SearchableDropdown, type SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
 import useClientStore from '@/store/useClientStore';
 import { searchSellableUnitsFlat, type SellableUnitOption } from '@/features/catalog/sellableUnitSearch';
+import { isDecimalUnit } from '@/constants/units';
 import { useI18n } from '@/lib/i18n';
 import { formatPYG } from '@/utils/currencyUtils';
 import ToastContainer from '@/components/ui/ToastContainer';
@@ -120,8 +121,12 @@ const BudgetCreate: React.FC = () => {
     setItems(items.filter(i => i.key !== key));
   };
 
+  // Decimales solo para unidades pesables (PLAN_UNITS_V2_COMPLETACION F2.1,
+  // mismo gating que requisiciones): 0,5 kg es presupuestable; una caja, no.
   const updateQuantity = (key: string, qty: number) => {
-    if (qty < 1) return;
+    const item = items.find(i => i.key === key);
+    const min = item && isDecimalUnit(item.base_unit || 'unit') ? 0.01 : 1;
+    if (qty < min) return;
     setItems(items.map(i => (i.key === key ? { ...i, quantity: qty } : i)));
   };
 
@@ -327,10 +332,16 @@ const BudgetCreate: React.FC = () => {
                             <div className="flex items-center justify-center">
                               <input 
                                 type="number" 
-                                min="1"
+                                min={isDecimalUnit(item.base_unit || 'unit') ? '0.01' : '1'}
+                                step={isDecimalUnit(item.base_unit || 'unit') ? '0.01' : '1'}
                                 className="w-20 h-9 text-center font-mono font-bold text-sm bg-[#f3f2f1] border border-border-subtle rounded focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                                 value={item.quantity}
-                                onChange={(e) => updateQuantity(item.key, parseInt(e.target.value))}
+                                onChange={(e) => updateQuantity(item.key, parseFloat(e.target.value))}
+                                onBlur={(e) => {
+                                  let val = parseFloat(e.target.value) || 0;
+                                  if (!isDecimalUnit(item.base_unit || 'unit')) val = Math.floor(val);
+                                  updateQuantity(item.key, val);
+                                }}
                               />
                             </div>
                           </td>
