@@ -129,6 +129,41 @@ export const categories = {
   'categories.tax.toast.apply_error': 'Error applying tax classification to the category',
   'categories.tax.toast.load_codes_error': 'Error loading SIFEN codes',
 
+  // VAT rate CRUD (create/edit modal + row actions)
+  'categories.tax.table.actions': 'Actions',
+  'categories.tax.table.empty_description':
+    'Create the first VAT rate to assign it to categories and products.',
+  'categories.tax.badge_default_system': 'Default',
+  'categories.tax.status_inactive': 'Inactive',
+  'categories.tax.status_expired': 'Expired',
+  'categories.tax.form.create_action': 'New Rate',
+  'categories.tax.form.create_title': 'New VAT Rate',
+  'categories.tax.form.edit_title': 'Edit Rate: {name}',
+  'categories.tax.form.name': 'Tax Name',
+  'categories.tax.form.rate': 'Rate (%)',
+  'categories.tax.form.code': 'Code',
+  'categories.tax.form.code_placeholder': 'Select code...',
+  'categories.tax.form.code_none': 'No code',
+  'categories.tax.form.start': 'Effective From',
+  'categories.tax.form.end': 'Effective Until (optional)',
+  'categories.tax.form.active': 'Active',
+  'categories.tax.form.default': 'System default',
+  'categories.tax.form.default_hint':
+    'Last resort of the VAT resolution cascade when nothing else applies.',
+  'categories.tax.form.error.code': 'Code is required to create a rate',
+  'categories.tax.form.error.rate': 'Enter a valid percentage (e.g. 10)',
+  'categories.tax.form.toast.created': 'Rate "{name}" created',
+  'categories.tax.form.toast.updated': 'Rate "{name}" updated',
+  'categories.tax.form.toast.save_error': 'Error saving the rate',
+  'categories.tax.toast.activated': 'Rate "{name}" activated',
+  'categories.tax.toast.deactivated': 'Rate "{name}" deactivated',
+  'categories.tax.toast.cannot_deactivate_default':
+    'The system default rate cannot be deactivated: mark another rate as default first',
+  'categories.tax.toast.toggle_error': 'Error changing the rate status',
+  'categories.tax.action.edit': 'Edit rate {name}',
+  'categories.tax.action.deactivate': 'Deactivate rate {name}',
+  'categories.tax.action.activate': 'Activate rate {name}',
+
   // Per-category attributes manager (drawer / modal)
   'categories.attributesPanel.title': 'Category Attributes',
   'categories.attributesPanel.subtitle':

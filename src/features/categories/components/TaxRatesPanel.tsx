@@ -1,5 +1,17 @@
 import { useState } from 'react'
-import { BadgeCheck, Bolt, FolderOpen, Info, Loader2, ReceiptText, TriangleAlert } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  BadgeCheck,
+  Bolt,
+  FolderOpen,
+  Info,
+  Loader2,
+  Pencil,
+  Plus,
+  Power,
+  ReceiptText,
+  TriangleAlert,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,17 +35,28 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useI18n } from '@/lib/i18n'
+import useTaxRateStore from '@/store/useTaxRateStore'
 
 import type { Category } from '../types'
 import { useSifenClassification } from '../hooks/useSifenClassification'
+import TaxRateFormModal, { type TaxRateRecord } from './TaxRateFormModal'
 
 interface TaxRatesPanelProps {
   selectedCategory?: Category | null
 }
 
+const isExpired = (rate: any): boolean => {
+  if (!rate?.effective_end) return false
+  return String(rate.effective_end).slice(0, 10) < new Date().toISOString().slice(0, 10)
+}
+
 export function TaxRatesPanel({ selectedCategory }: TaxRatesPanelProps) {
   const { t } = useI18n()
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [isRateFormOpen, setIsRateFormOpen] = useState(false)
+  const [editingRate, setEditingRate] = useState<TaxRateRecord | null>(null)
+  const [togglingId, setTogglingId] = useState<number | null>(null)
+  const { updateTaxRate } = useTaxRateStore()
 
   const {
     taxRates,
@@ -51,6 +74,56 @@ export function TaxRatesPanel({ selectedCategory }: TaxRatesPanelProps) {
   const handleAutoClassify = async () => {
     setShowConfirmModal(false)
     await autoClassify()
+  }
+
+  const handleEditRate = (rate: any) => {
+    setEditingRate(rate as TaxRateRecord)
+    setIsRateFormOpen(true)
+  }
+
+  const handleCreateRate = () => {
+    setEditingRate(null)
+    setIsRateFormOpen(true)
+  }
+
+  // Alterna is_active vía PUT completo (el backend hace soft delete con
+  // DELETE, pero reactivar requiere el PUT). La default del sistema no se
+  // desactiva: la cascada de resolución quedaría sin último recurso.
+  const handleToggleActive = async (rate: any) => {
+    if (togglingId !== null) return
+    if (rate.is_default && rate.is_active) {
+      toast.error(t('categories.tax.toast.cannot_deactivate_default'))
+      return
+    }
+    setTogglingId(rate.id)
+    try {
+      await updateTaxRate(rate.id, {
+        tax_name: rate.tax_name || rate.name,
+        code: rate.code || '',
+        rate: rate.rate,
+        country: rate.country || 'PY',
+        jurisdiction_type: rate.jurisdiction_type || 'NACIONAL',
+        operation_type: rate.operation_type || 'NACIONAL',
+        description: rate.description || '',
+        effective_start: rate.effective_start,
+        effective_end: rate.effective_end || '',
+        is_default: rate.is_default,
+        is_active: !rate.is_active,
+      })
+      toast.success(
+        rate.is_active
+          ? t('categories.tax.toast.deactivated', { name: rate.tax_name || rate.name })
+          : t('categories.tax.toast.activated', { name: rate.tax_name || rate.name }),
+      )
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.error ||
+          error?.message ||
+          t('categories.tax.toast.toggle_error'),
+      )
+    } finally {
+      setTogglingId(null)
+    }
   }
 
   return (
@@ -160,9 +233,20 @@ export function TaxRatesPanel({ selectedCategory }: TaxRatesPanelProps) {
       )}
 
       {/* Lista general de tasas de IVA */}
-      <h3 className="text-body-sm-bold uppercase text-on-surface-deep mb-sm">
-        {t('categories.tax.rates_title')}
-      </h3>
+      <div className="flex items-center justify-between gap-sm mb-sm">
+        <h3 className="text-body-sm-bold uppercase text-on-surface-deep">
+          {t('categories.tax.rates_title')}
+        </h3>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={handleCreateRate}
+        >
+          <Plus className="w-4 h-4 mr-xs" />
+          {t('categories.tax.form.create_action')}
+        </Button>
+      </div>
 
       {loading ? (
         <GenericSkeletonList count={4} data-testid="tax-rates-loading" />
@@ -172,6 +256,8 @@ export function TaxRatesPanel({ selectedCategory }: TaxRatesPanelProps) {
           size="small"
           title={t('categories.tax.table.empty')}
           description={t('categories.tax.table.empty_description')}
+          actionLabel={t('categories.tax.form.create_action')}
+          onAction={handleCreateRate}
         />
       ) : (
         <div className="rounded-md bg-surface shadow-whisper overflow-hidden border border-border-subtle overflow-x-auto">
@@ -182,12 +268,14 @@ export function TaxRatesPanel({ selectedCategory }: TaxRatesPanelProps) {
                 <TableHead className="text-label-caps uppercase text-on-surface-deep">{t('categories.tax.table.name')}</TableHead>
                 <TableHead className="text-label-caps uppercase text-on-surface-deep text-right">{t('categories.tax.table.rate')}</TableHead>
                 <TableHead className="text-label-caps uppercase text-on-surface-deep text-right">{t('categories.tax.table.status')}</TableHead>
+                <TableHead className="text-label-caps uppercase text-on-surface-deep text-right">{t('categories.tax.table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {taxRates.map((rate: any) => {
                 const isActiveRate =
                   !!selectedCategory && rate.id === selectedCategory.default_tax_rate_id
+                const expired = isExpired(rate)
                 return (
                   <TableRow
                     key={rate.id}
@@ -199,6 +287,12 @@ export function TaxRatesPanel({ selectedCategory }: TaxRatesPanelProps) {
                     <TableCell className="text-body-md text-foreground">
                       <span className="flex items-center gap-sm">
                         {rate.tax_name || rate.name}
+                        {rate.is_default ? (
+                          <Badge variant="info">
+                            <BadgeCheck className="w-3 h-3 mr-xs" />
+                            {t('categories.tax.badge_default_system')}
+                          </Badge>
+                        ) : null}
                         {isActiveRate ? (
                           <Badge variant="secondary">
                             <BadgeCheck className="w-3 h-3 mr-xs" />
@@ -211,11 +305,42 @@ export function TaxRatesPanel({ selectedCategory }: TaxRatesPanelProps) {
                       {rate.rate}%
                     </TableCell>
                     <TableCell className="text-right">
-                      <Badge variant={rate.rate === 0 ? 'secondary' : 'success'}>
-                        {rate.rate === 0
-                          ? t('categories.tax.status_exempt')
-                          : t('categories.tax.status_taxed')}
-                      </Badge>
+                      {!rate.is_active ? (
+                        <Badge variant="warning">{t('categories.tax.status_inactive')}</Badge>
+                      ) : expired ? (
+                        <Badge variant="warning">{t('categories.tax.status_expired')}</Badge>
+                      ) : rate.rate === 0 ? (
+                        <Badge variant="secondary">{t('categories.tax.status_exempt')}</Badge>
+                      ) : (
+                        <Badge variant="success">{t('categories.tax.status_taxed')}</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-xs">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={t('categories.tax.action.edit', { name: rate.tax_name || rate.name })}
+                          onClick={() => handleEditRate(rate)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={
+                            rate.is_active
+                              ? t('categories.tax.action.deactivate', { name: rate.tax_name || rate.name })
+                              : t('categories.tax.action.activate', { name: rate.tax_name || rate.name })
+                          }
+                          onClick={() => handleToggleActive(rate)}
+                          loading={togglingId === rate.id}
+                        >
+                          <Power className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )
@@ -266,6 +391,13 @@ export function TaxRatesPanel({ selectedCategory }: TaxRatesPanelProps) {
           {t('categories.tax.confirm.warning')}
         </p>
       </EnhancedModal>
+
+      {/* ABM de tasas de IVA (crear / editar) */}
+      <TaxRateFormModal
+        isOpen={isRateFormOpen}
+        onClose={() => setIsRateFormOpen(false)}
+        rate={editingRate}
+      />
     </div>
   )
 }

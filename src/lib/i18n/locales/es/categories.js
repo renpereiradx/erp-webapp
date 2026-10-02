@@ -132,6 +132,41 @@ export const categories = {
   'categories.tax.toast.apply_error': 'Error al aplicar clasificación fiscal a la categoría',
   'categories.tax.toast.load_codes_error': 'Error al cargar códigos SIFEN',
 
+  // ABM de tasas de IVA (modal crear/editar + acciones de fila)
+  'categories.tax.table.actions': 'Acciones',
+  'categories.tax.table.empty_description':
+    'Crea la primera tasa de IVA para poder asignarla a categorías y productos.',
+  'categories.tax.badge_default_system': 'Predeterminada',
+  'categories.tax.status_inactive': 'Inactiva',
+  'categories.tax.status_expired': 'Vencida',
+  'categories.tax.form.create_action': 'Nueva Tasa',
+  'categories.tax.form.create_title': 'Nueva Tasa de IVA',
+  'categories.tax.form.edit_title': 'Editar Tasa: {name}',
+  'categories.tax.form.name': 'Nombre del Impuesto',
+  'categories.tax.form.rate': 'Tasa (%)',
+  'categories.tax.form.code': 'Código',
+  'categories.tax.form.code_placeholder': 'Seleccionar código...',
+  'categories.tax.form.code_none': 'Sin código',
+  'categories.tax.form.start': 'Vigente Desde',
+  'categories.tax.form.end': 'Vigente Hasta (opcional)',
+  'categories.tax.form.active': 'Activa',
+  'categories.tax.form.default': 'Predeterminada del sistema',
+  'categories.tax.form.default_hint':
+    'Último recurso de la cascada de resolución de IVA cuando nada más aplica.',
+  'categories.tax.form.error.code': 'El código es obligatorio para crear una tasa',
+  'categories.tax.form.error.rate': 'Ingresa un porcentaje válido (ej. 10)',
+  'categories.tax.form.toast.created': 'Tasa "{name}" creada',
+  'categories.tax.form.toast.updated': 'Tasa "{name}" actualizada',
+  'categories.tax.form.toast.save_error': 'Error al guardar la tasa',
+  'categories.tax.toast.activated': 'Tasa "{name}" activada',
+  'categories.tax.toast.deactivated': 'Tasa "{name}" desactivada',
+  'categories.tax.toast.cannot_deactivate_default':
+    'La tasa predeterminada del sistema no puede desactivarse: marca otra como predeterminada primero',
+  'categories.tax.toast.toggle_error': 'Error al cambiar el estado de la tasa',
+  'categories.tax.action.edit': 'Editar tasa {name}',
+  'categories.tax.action.deactivate': 'Desactivar tasa {name}',
+  'categories.tax.action.activate': 'Activar tasa {name}',
+
   // Gestor de atributos por categoría (drawer / modal)
   'categories.attributesPanel.title': 'Atributos de la Categoría',
   'categories.attributesPanel.subtitle':
