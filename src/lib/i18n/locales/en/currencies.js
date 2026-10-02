@@ -89,6 +89,16 @@ export const currencies = {
   'currencies.error.delete': 'Error deleting currency',
   'currencies.error.generic': 'An unexpected error occurred',
 
+  // Toasts (API states)
+  'currencies.toast.created': 'Currency created successfully',
+  'currencies.toast.updated': 'Currency updated successfully',
+  'currencies.toast.save_error': 'Could not save the currency',
+  'currencies.toast.load_error': 'Could not load currencies',
+  'currencies.toast.refresh_success': 'Currency list refreshed',
+  'currencies.toast.refresh_error': 'Could not refresh the currency list',
+  'currencies.toast.export_success': 'Currencies exported successfully',
+  'currencies.toast.export_empty': 'No currencies to export',
+
   // Results
   'currencies.results': 'Showing {count} of {total} results',
 

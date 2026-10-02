@@ -96,6 +96,16 @@ export const currencies = {
   'currencies.error.delete': 'Error al eliminar la moneda',
   'currencies.error.generic': 'Ha ocurrido un error inesperado',
 
+  // Toasts (estados de la API)
+  'currencies.toast.created': 'Moneda creada exitosamente',
+  'currencies.toast.updated': 'Moneda actualizada exitosamente',
+  'currencies.toast.save_error': 'No se pudo guardar la moneda',
+  'currencies.toast.load_error': 'No se pudieron cargar las monedas',
+  'currencies.toast.refresh_success': 'Listado de monedas actualizado',
+  'currencies.toast.refresh_error': 'No se pudo actualizar el listado de monedas',
+  'currencies.toast.export_success': 'Monedas exportadas correctamente',
+  'currencies.toast.export_empty': 'No hay monedas para exportar',
+
   // Resultados
   'currencies.results': 'Mostrando {count} de {total} resultados',
 

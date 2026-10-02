@@ -5,7 +5,7 @@
 // i18n: useI18n() (ES/EN)
 // ===========================================================================
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useI18n } from '@/lib/i18n'
 import { Plus, Pencil, RefreshCw, Download, Coins } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -23,6 +23,9 @@ import {
 import GenericSkeletonList from '@/components/ui/GenericSkeletonList'
 import DataState from '@/components/ui/DataState'
 import EnhancedModal from '@/components/ui/EnhancedModal'
+import ToastContainer from '@/components/ui/ToastContainer'
+import { useToast } from '@/hooks/useToast'
+import { telemetry } from '@/utils/telemetry'
 import useCurrencyStore from '@/store/useCurrencyStore'
 
 interface CurrencyRow {
@@ -56,6 +59,7 @@ const getFlagUrl = (code?: string) => {
  */
 export default function Currencies() {
   const { t } = useI18n()
+  const { toasts, success, errorFrom, warning, removeToast } = useToast()
   const {
     currencies,
     loading: currenciesLoading,
@@ -71,6 +75,7 @@ export default function Currencies() {
   const [modalOpen, setModalOpen] = useState(false)
   const [selected, setSelected] = useState<CurrencyRow | null>(null)
   const [saving, setSaving] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   const [form, setForm] = useState({
     currency_name: '',
@@ -83,9 +88,27 @@ export default function Currencies() {
   const filtered = getFilteredCurrencies()
   const baseCurrency = currencies.find((c: CurrencyRow) => c.is_base_currency)
 
+  // Carga inicial con feedback de error vía toast (el store propaga el error).
   useEffect(() => {
-    fetchCurrencies()
+    fetchCurrencies().catch((err: unknown) => {
+      errorFrom(err, {
+        fallback: t('currencies.toast.load_error', 'No se pudieron cargar las monedas'),
+      })
+    })
+    // fetchCurrencies es estable (zustand); errorFrom solo cambia con el idioma.
+    // No re-disparar la carga al cambiar idioma ni al aparecer toasts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchCurrencies])
+
+  // Telemetría ante error del store (mismo contrato que Clients/Suppliers).
+  // El toast ya se emite en cada acción (carga/refresh/guardado) con el
+  // objeto de error completo (código + correlationId + retry); aquí solo
+  // se registra para observabilidad.
+  useEffect(() => {
+    if (storeError) {
+      telemetry.record('currencies.error.store', { message: storeError })
+    }
+  }, [storeError])
 
   const openCreate = () => {
     setSelected(null)
@@ -116,6 +139,20 @@ export default function Currencies() {
     setSelected(null)
   }
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true)
+    try {
+      await fetchCurrencies()
+      success(t('currencies.toast.refresh_success', 'Listado de monedas actualizado'))
+    } catch (err: unknown) {
+      errorFrom(err, {
+        fallback: t('currencies.toast.refresh_error', 'No se pudo actualizar el listado de monedas'),
+      })
+    } finally {
+      setRefreshing(false)
+    }
+  }, [fetchCurrencies, success, errorFrom, t])
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -129,20 +166,28 @@ export default function Currencies() {
       }
       if (selected?.id) {
         await updateCurrency(selected.id, payload)
+        success(t('currencies.toast.updated', 'Moneda actualizada exitosamente'))
       } else {
         await createCurrency(payload)
+        success(t('currencies.toast.created', 'Moneda creada exitosamente'))
       }
       closeModal()
-    } catch (err: any) {
-      // eslint-disable-next-line no-console
-      console.error('Error saving currency', err)
+    } catch (err: unknown) {
+      errorFrom(err, {
+        fallback: t('currencies.toast.save_error', 'No se pudo guardar la moneda'),
+      })
     } finally {
       setSaving(false)
     }
   }
 
   const handleExport = () => {
-    const csvContent = [
+    if (filtered.length === 0) {
+      warning(t('currencies.toast.export_empty', 'No hay monedas para exportar'))
+      return
+    }
+    try {
+      const csvContent = [
       [
         t('currencies.table.code'),
         t('currencies.table.name'),
@@ -167,7 +212,20 @@ export default function Currencies() {
     const link = document.createElement('a')
     link.href = url
     link.download = `monedas_${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(link)
     link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+    success(
+      t('currencies.toast.export_success', 'Monedas exportadas correctamente ({count})', {
+        count: filtered.length,
+      })
+    )
+    } catch (err: unknown) {
+      errorFrom(err, {
+        fallback: t('currencies.error.generic', 'Ha ocurrido un error inesperado'),
+      })
+    }
   }
 
   const formatCurrencyValue = (value: number | null | undefined, currency: CurrencyRow) => {
@@ -237,8 +295,8 @@ export default function Currencies() {
                 <Coins className="w-4 h-4" />
               </span>
             </div>
-            <Button variant="ghost" size="icon" onClick={fetchCurrencies} aria-label={t('currencies.action.refresh', 'Actualizar Datos')}>
-              <RefreshCw className="w-4 h-4" />
+            <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={currenciesLoading || refreshing} aria-label={t('currencies.action.refresh', 'Actualizar Datos')}>
+              <RefreshCw className={`w-4 h-4 ${refreshing || currenciesLoading ? 'animate-spin' : ''}`} />
             </Button>
             <Button variant="ghost" size="icon" onClick={handleExport} aria-label={t('currencies.action.export', 'Exportar')}>
               <Download className="w-4 h-4" />
@@ -254,7 +312,7 @@ export default function Currencies() {
             variant="error"
             title={t('currencies.error.load', 'Error al cargar las monedas')}
             message={storeError}
-            onRetry={fetchCurrencies}
+            onRetry={handleRefresh}
             testId="currencies-error"
           />
         ) : filtered.length === 0 ? (
@@ -457,6 +515,8 @@ export default function Currencies() {
             </div>
           </form>
         </EnhancedModal>
+
+        <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
       </div>
     </div>
   )
