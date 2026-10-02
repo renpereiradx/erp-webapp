@@ -59,24 +59,35 @@ export const useProductsLogic = (externalToast?: ReturnType<typeof useToast>) =>
 
   const { errorFrom } = toast;
   const lastErrorRef = useRef<string | null>(null);
+  // Errores ya notificados en el episodio actual (misma llave mensaje+código).
+  // La página recarga la lista en mount/refresh/cierre de modal/cambio de
+  // sucursal: sin esto, un backend caído apila un toast idéntico por cada
+  // recarga. Se limpia al recuperarse (error null + sin carga en curso),
+  // así un fallo nuevo tras un éxito vuelve a avisar.
+  const toastedErrorsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (error && error !== lastErrorRef.current) {
+    if (error) {
+      if (error === lastErrorRef.current) return;
+      lastErrorRef.current = error;
       telemetry.record('products.error.store', { message: error });
       // El store expone el error como string + código por separado: se
       // reconstruye el objeto para que el toast conserve el mensaje real,
       // el código y las acciones (reintentar/diagnóstico). Pasar el string
       // directo a errorFrom mostraría el fallback genérico (toApiError
       // ignora strings).
+      const key = `${lastErrorCode ?? 'UNKNOWN'}::${error}`;
+      if (toastedErrorsRef.current.has(key)) return;
+      toastedErrorsRef.current.add(key);
       errorFrom(
         { message: error, code: lastErrorCode ?? undefined },
         { fallback: error },
       );
-      lastErrorRef.current = error;
-    } else if (!error) {
+    } else {
       lastErrorRef.current = null;
+      if (!loading) toastedErrorsRef.current.clear();
     }
-  }, [error, lastErrorCode, errorFrom]);
+  }, [error, loading, lastErrorCode, errorFrom]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

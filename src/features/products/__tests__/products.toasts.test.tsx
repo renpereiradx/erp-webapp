@@ -110,6 +110,7 @@ describe('Products — instancia única de toast', () => {
     vi.clearAllMocks();
     mockProductStoreState.error = null;
     mockProductStoreState.lastErrorCode = null;
+    mockProductStoreState.loading = false;
     mockProductStoreState.createProduct.mockResolvedValue({ id: 'new' });
     mockProductStoreState.updateProduct.mockResolvedValue({ id: 'updated' });
   });
@@ -131,6 +132,64 @@ describe('Products — instancia única de toast', () => {
       { message: 'Fallo API', code: 'NETWORK' },
       { fallback: 'Fallo API' },
     );
+  });
+
+  it('no apila toasts idénticos cuando la recarga vuelve a fallar (mismo episodio)', () => {
+    mockProductStoreState.error = 'Fallo API';
+    mockProductStoreState.lastErrorCode = 'INTERNAL';
+    mockProductStoreState.loading = false;
+    const injected = makeInjectedToast();
+
+    // Mount: falla → un toast.
+    const { rerender } = renderHook(() => useProductsLogic(injected as any));
+    expect(injected.errorFrom).toHaveBeenCalledTimes(1);
+
+    // Cierre de modal → refresh: limpia el error y empieza a cargar.
+    mockProductStoreState.error = null;
+    mockProductStoreState.loading = true;
+    rerender();
+    expect(injected.errorFrom).toHaveBeenCalledTimes(1);
+
+    // El refresh vuelve a fallar con el mismo error → sin toast nuevo
+    // (el panel DataState ya muestra el error de forma persistente).
+    mockProductStoreState.error = 'Fallo API';
+    mockProductStoreState.loading = false;
+    rerender();
+    expect(injected.errorFrom).toHaveBeenCalledTimes(1);
+  });
+
+  it('tras recuperarse, el mismo error vuelve a avisar', () => {
+    mockProductStoreState.error = 'Fallo API';
+    mockProductStoreState.lastErrorCode = 'INTERNAL';
+    mockProductStoreState.loading = false;
+    const injected = makeInjectedToast();
+
+    const { rerender } = renderHook(() => useProductsLogic(injected as any));
+    expect(injected.errorFrom).toHaveBeenCalledTimes(1);
+
+    // Carga exitosa: se limpia el episodio.
+    mockProductStoreState.error = null;
+    mockProductStoreState.loading = false;
+    rerender();
+
+    // Falla de nuevo → avisa otra vez.
+    mockProductStoreState.error = 'Fallo API';
+    rerender();
+    expect(injected.errorFrom).toHaveBeenCalledTimes(2);
+  });
+
+  it('un error distinto sí avisa aunque otro ya se haya mostrado', () => {
+    mockProductStoreState.error = 'Fallo API';
+    mockProductStoreState.lastErrorCode = 'INTERNAL';
+    mockProductStoreState.loading = false;
+    const injected = makeInjectedToast();
+
+    const { rerender } = renderHook(() => useProductsLogic(injected as any));
+    expect(injected.errorFrom).toHaveBeenCalledTimes(1);
+
+    mockProductStoreState.error = 'Otro fallo';
+    rerender();
+    expect(injected.errorFrom).toHaveBeenCalledTimes(2);
   });
 
   it('crear producto emite success en la instancia inyectada (visible en la página)', async () => {
