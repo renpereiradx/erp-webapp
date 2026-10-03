@@ -50,6 +50,14 @@ const REASON_CATEGORIES: ReasonCategory[] = [
 
 const APPROVAL_LEVELS = ['operator', 'supervisor', 'manager', 'admin'] as const;
 
+/**
+ * Unidades enteras: sin decimales — mismo gating que compras/presupuestos.
+ * Se trunca HACIA CERO (Math.trunc): nunca mueve más stock del tipeado,
+ * tampoco en deltas negativos (-1,5 → -1, no -2).
+ */
+const truncateForUnit = (value: number, unit: string): number =>
+  isDecimalUnit(unit) ? value : Math.trunc(value);
+
 interface MovementRowUI {
   product: CatalogProduct;
   variants: ProductVariant[];
@@ -186,7 +194,13 @@ export function MovementForm() {
     if (editingIndex === null || !draft) return;
     // Unidad sin conversión: sin factor ni el backend podría aplicarla.
     if (rowUnitFactor(draft, conversions) === null) return;
-    setRow(editingIndex, { ...draft });
+    const parsed = parseFloat(draft.value);
+    const truncated = Number.isFinite(parsed) ? truncateForUnit(parsed, draft.unit) : null;
+    // 0,5 en unidad entera NO se persiste como 0 (pérdida silenciosa): se guarda
+    // tal cual y el submit lo rechaza con el mensaje de unidad entera.
+    const value =
+      truncated !== null && !(parsed !== 0 && truncated === 0) ? String(truncated) : draft.value;
+    setRow(editingIndex, { ...draft, value });
     closeEdit();
   };
 
@@ -225,7 +239,16 @@ export function MovementForm() {
         toast.error(t('stockMovements.errors.target_invalid', 'Ingresá un valor de stock válido'));
         return;
       }
-      if (row.mode === 'delta' && value === 0) {
+      const qty = truncateForUnit(value, row.unit);
+      if (value !== 0 && qty === 0) {
+        toast.error(
+          t('stockMovements.errors.integer_unit_zero', 'La cantidad en {unit} no puede quedar en 0', {
+            unit: getUnitLabel(row.unit),
+          }),
+        );
+        return;
+      }
+      if (row.mode === 'delta' && qty === 0) {
         toast.error(t('stockMovements.errors.delta_nonzero', 'La diferencia no puede ser 0'));
         return;
       }
@@ -244,8 +267,8 @@ export function MovementForm() {
         product_id: row.product.id,
         variant_id: row.selectedVariantId || undefined,
         mode: row.mode,
-        targetStock: row.mode === 'target' ? value : undefined,
-        delta: row.mode === 'delta' ? value : undefined,
+        targetStock: row.mode === 'target' ? qty : undefined,
+        delta: row.mode === 'delta' ? qty : undefined,
         unit: row.unit !== base ? row.unit : undefined,
         reasonCategory: row.reasonCategory,
         reason: row.reason.trim() || undefined,

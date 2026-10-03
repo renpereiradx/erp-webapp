@@ -109,6 +109,7 @@ export const stockMovements = {
       delta_nonzero: 'La diferencia no puede ser 0',
       register_failed: 'No se pudo registrar el movimiento',
       unit_no_conversion: 'Sin conversión de {unit} a {base}: registrala en Conversiones de unidades',
+      integer_unit_zero: 'La cantidad en {unit} no puede quedar en 0 (unidad entera)',
     },
 
     history: {

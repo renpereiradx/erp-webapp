@@ -139,4 +139,40 @@ describe('MovementForm — unidad por fila (PLAN_UNITS_V2 F4)', () => {
     expect(rows[0].unitFactor).toBe(10)
     expect(rows[0].currentStock).toBe(50)
   })
+
+  it('1,5 en unidad entera se trunca a 1 al guardar (auditoría A3)', async () => {
+    mocks.getAll.mockResolvedValue([{ from_unit: 'box', to_unit: 'kg', factor: 10, product_id: null }])
+    const user = renderForm()
+    await addRowAndOpenEdit(user)
+
+    await user.click(screen.getByRole('combobox', { name: 'Unidad de la cantidad' }))
+    await user.click(await screen.findByRole('option', { name: 'Caja' }))
+    await user.type(screen.getByLabelText('Stock objetivo'), '1.5')
+    await user.click(screen.getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(screen.queryByText('Editar movimiento')).not.toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: /Registrar movimiento/ }))
+
+    await waitFor(() => expect(mocks.registerBatch).toHaveBeenCalledTimes(1))
+    const [rows] = mocks.registerBatch.mock.calls[0]
+    expect(rows[0].form.targetStock).toBe(1)
+  })
+
+  it('0,5 en unidad entera bloquea el registro (no se pierde silenciosamente)', async () => {
+    mocks.getAll.mockResolvedValue([{ from_unit: 'box', to_unit: 'kg', factor: 10, product_id: null }])
+    const user = renderForm()
+    await addRowAndOpenEdit(user)
+
+    await user.click(screen.getByRole('combobox', { name: 'Unidad de la cantidad' }))
+    await user.click(await screen.findByRole('option', { name: 'Caja' }))
+    await user.type(screen.getByLabelText('Stock objetivo'), '0.5')
+    await user.click(screen.getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(screen.queryByText('Editar movimiento')).not.toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: /Registrar movimiento/ }))
+
+    // Bloqueado por la guardia de unidad entera: nada viaja al hook
+    // (mismo patrón que el bloqueo por sin-conversión de transferencias).
+    expect(mocks.registerBatch).not.toHaveBeenCalled()
+  })
 })
