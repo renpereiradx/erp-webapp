@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { formatPYG } from '@/utils/currencyUtils';
-import { formatDrilldownDate } from '@/domain/relational-analytics/normalize';
+import { formatDrilldownDate, formatDrilldownUnits } from '@/domain/relational-analytics/normalize';
 import type { DrilldownColumn } from '@/domain/relational-analytics/types';
 import { parseSortParam } from '@/domain/relational-analytics/sort';
 import RowActionsMenu from './RowActionsMenu';
@@ -24,8 +24,12 @@ const renderCell = <Row,>(row: Row, col: DrilldownColumn<Row>) => {
   switch (col.format) {
     case 'money':
       return formatPYG(Number(value ?? 0));
-    case 'units':
-      return `${Number(value ?? 0).toLocaleString()} uds.`;
+    case 'units': {
+      // F5: unidades normalizadas a la base del producto — con base_unit la
+      // UOM es real (p.ej. "40 kg"); sin ella, el fallback "N uds.".
+      const baseUnit = (row as Record<string, unknown>).base_unit;
+      return formatDrilldownUnits(value as number, baseUnit as string | null | undefined);
+    }
     case 'number':
       return Number(value ?? 0).toLocaleString();
     case 'date':

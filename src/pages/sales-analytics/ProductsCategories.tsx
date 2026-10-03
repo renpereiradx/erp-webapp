@@ -230,7 +230,7 @@ const ProductsCategories = () => {
             <div className="py-6 font-mono">
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-surface/10 p-3 rounded-lg border border-white/10">
-                  <p className="text-white/60 text-[10px] uppercase font-black">{t('bi.sales.col.units', 'Unidades')}</p>
+                  <p className="text-white/60 text-[10px] uppercase font-black">{t('bi.sales.col.unitsBase', 'Uds. (base)')}</p>
                   <p className="text-xl font-black">{categoriesData.categories?.[0]?.units_sold || 0}</p>
                 </div>
                 <div className="bg-surface/10 p-3 rounded-lg border border-white/10">

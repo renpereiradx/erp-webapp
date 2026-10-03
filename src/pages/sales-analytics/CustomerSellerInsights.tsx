@@ -254,7 +254,7 @@ const CustomerSellerInsights = () => {
                   <tr>
                     <th className="px-6 py-4">{t('bi.insights.col.seller', 'Vendedor')}</th>
                     <th className="px-6 py-4 text-right">{t('bi.sales.kpi.totalSales', 'Ventas Totales')}</th>
-                    <th className="px-6 py-4 text-right">{t('bi.insights.col.unitsSold', 'Unidades Vendidas')}</th>
+                    <th className="px-6 py-4 text-right">{t('bi.insights.col.unitsSoldBase', 'Unidades Vendidas (base)')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-subtle">
@@ -272,7 +272,7 @@ const CustomerSellerInsights = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right font-black font-mono text-primary">{formatPYG(seller.total_sales ?? 0)}</td>
-                      <td className="px-6 py-4 text-right font-mono font-bold text-on-surface-deep">{seller.units_sold} uds.</td>
+                      <td className="px-6 py-4 text-right font-mono font-bold text-on-surface-deep">{seller.units_sold}</td>
                     </tr>
                   ))}
                   {(!sellerData?.sellers || sellerData.sellers.length === 0) && (

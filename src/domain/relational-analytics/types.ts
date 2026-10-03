@@ -13,6 +13,8 @@ export interface ProductBuyerRow {
   total: number;
   avg_unit_price: number;
   last_purchase_at: string;
+  /** unidad base del producto (F5): las units vienen normalizadas a ella */
+  base_unit?: string | null;
 }
 
 export interface ProductSalesRow {
@@ -24,6 +26,8 @@ export interface ProductSalesRow {
   total: number;
   avg_unit_price: number;
   last_purchase_at: string;
+  /** unidad base del producto (F5): las units vienen normalizadas a ella */
+  base_unit?: string | null;
 }
 
 export interface ProductSupplierRow {
@@ -37,6 +41,8 @@ export interface ProductSupplierRow {
   units: number;
   purchases: number;
   last_purchase_at: string;
+  /** unidad base del producto (F5): las units vienen normalizadas a ella */
+  base_unit?: string | null;
 }
 
 /** Respuesta congelada del contrato: {rows, total, page, page_size}. */

@@ -31,6 +31,15 @@ export const normalizeResponse = <Row>(
   };
 };
 
+/**
+ * Cantidad normalizada a base + UOM (F5): "40 kg" cuando la fila trae
+ * base_unit; el fallback histórico es el contador genérico "N uds.".
+ */
+export const formatDrilldownUnits = (units: number | null | undefined, baseUnit?: string | null): string => {
+  const qty = Number(units ?? 0).toLocaleString();
+  return baseUnit ? `${qty} ${baseUnit}` : `${qty} uds.`;
+};
+
 /** Fecha ISO del contrato → fecha local (día). Vacío/inválido → '—'. */
 export const formatDrilldownDate = (value?: string | null): string => {
   if (!value) return '—';

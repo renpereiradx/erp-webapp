@@ -9,6 +9,7 @@ import type { DrilldownColumn, ProductSalesRow } from '@/domain/relational-analy
 import { relationalAnalyticsService } from '@/services/bi/relationalAnalyticsService';
 import supplierService from '@/services/supplierService';
 import type { EntityOption } from '@/features/relational-analytics/components/EntitySearchSelect';
+import { formatDrilldownUnits } from '@/domain/relational-analytics/normalize';
 
 /**
  * #3 RF-BIPACK-023 — Productos más comprados a un proveedor
@@ -60,7 +61,7 @@ const SupplierTopProductsPage = () => {
         id: 'buyers',
         label: t('bi.relational.action.buyers', 'Ver compradores'),
         description: t('bi.relational.menu.summary', '{units} uds. · {purchases} compras · {total}', {
-          units: row.units,
+          units: formatDrilldownUnits(row.units, row.base_unit),
           purchases: row.purchases,
           total: formatPYG(row.total),
         }),

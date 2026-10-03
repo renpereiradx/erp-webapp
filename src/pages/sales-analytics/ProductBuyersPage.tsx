@@ -11,6 +11,7 @@ import { sellableUnitToEntityOption } from '@/features/relational-analytics/sell
 import type { DrilldownColumn } from '@/domain/relational-analytics/types';
 import type { ProductBuyerRow } from '@/domain/relational-analytics/types';
 import { relationalAnalyticsService } from '@/services/bi/relationalAnalyticsService';
+import { formatDrilldownUnits } from '@/domain/relational-analytics/normalize';
 
 /**
  * #1 RF-BIPACK-021 — Compradores de un producto (drill-down relacional).
@@ -55,7 +56,7 @@ const ProductBuyersPage = () => {
         id: 'customer-top',
         label: t('bi.relational.action.customerTop', 'Productos que compra'),
         description: t('bi.relational.menu.summary', '{units} uds. · {purchases} compras · {total}', {
-          units: row.units,
+          units: formatDrilldownUnits(row.units, row.base_unit),
           purchases: row.purchases,
           total: formatPYG(row.total),
         }),

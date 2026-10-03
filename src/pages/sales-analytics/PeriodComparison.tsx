@@ -298,7 +298,7 @@ const PeriodComparison = () => {
               absDiff={compareData.differences?.transactions_change ?? 0}
             />
             <CompareKPICard
-              title={t('bi.insights.col.unitsSold', 'Unidades Vendidas')}
+              title={t('bi.insights.col.unitsSoldBase', 'Unidades Vendidas (base)')}
               value={compareData.period_1?.total_units ?? 0}
               prevValue={compareData.period_2?.total_units ?? 0}
               diff={compareData.differences?.units_change_pct}

@@ -65,6 +65,29 @@ const topProductsEnvelope = {
   },
 };
 
+// F5: fila con base_unit — la celda de unidades muestra la UOM real ("40 kg").
+const topProductsKgEnvelope = {
+  success: true,
+  data: {
+    rows: [
+      {
+        product_id: 'PRD-KG',
+        product_name: 'PAPA KG PY',
+        product_sku: 'SKU-PAPA',
+        purchases: 2,
+        units: 40,
+        total: 15_000,
+        avg_unit_price: 6_000,
+        last_purchase_at: '2026-09-25T11:00:00Z',
+        base_unit: 'kg',
+      },
+    ],
+    total: 1,
+    page: 1,
+    page_size: 10,
+  },
+};
+
 const buyersEnvelope = {
   success: true,
   data: {
@@ -146,6 +169,22 @@ describe('CustomerTopProductsPage', () => {
     expect(screen.getByText('SKU-COCA-2L')).toBeInTheDocument();
     expect(screen.getByText('60 uds.')).toBeInTheDocument();
     expect(screen.getByText('Página 1 de 1 (4 items)')).toBeInTheDocument();
+  });
+
+  it('F5: renderiza la UOM base_unit en la celda de unidades y en el menú de fila', async () => {
+    mockService.getCustomerTopProducts.mockResolvedValue(topProductsKgEnvelope);
+    render(
+      <MemoryRouter initialEntries={['/sales-analytics/customers/top-products?customer_id=CLI-1']}>
+        <CustomerTopProductsPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('PAPA KG PY')).toBeInTheDocument();
+    expect(screen.getByText('40 kg')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByTestId('drilldown-row-actions'));
+    const menu = await screen.findByTestId('drilldown-row-menu');
+    expect(within(menu).getByText(/40 kg · 2 compras/)).toBeInTheDocument();
   });
 
   it('sin customer_id muestra el selector de cliente y no fetcha', async () => {

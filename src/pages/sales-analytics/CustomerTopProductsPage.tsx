@@ -9,6 +9,7 @@ import type { DrilldownColumn, ProductSalesRow } from '@/domain/relational-analy
 import { relationalAnalyticsService } from '@/services/bi/relationalAnalyticsService';
 import { clientService } from '@/services/clientService';
 import type { EntityOption } from '@/features/relational-analytics/components/EntitySearchSelect';
+import { formatDrilldownUnits } from '@/domain/relational-analytics/normalize';
 
 /**
  * #2 RF-BIPACK-022 — Productos que más compra un cliente.
@@ -52,7 +53,7 @@ const CustomerTopProductsPage = () => {
         id: 'buyers',
         label: t('bi.relational.action.buyers', 'Ver compradores'),
         description: t('bi.relational.menu.summary', '{units} uds. · {purchases} compras · {total}', {
-          units: row.units,
+          units: formatDrilldownUnits(row.units, row.base_unit),
           purchases: row.purchases,
           total: formatPYG(row.total),
         }),
