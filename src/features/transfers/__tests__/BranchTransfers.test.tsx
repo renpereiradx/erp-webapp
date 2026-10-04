@@ -635,4 +635,54 @@ describe('CreateTransferModal — unidad por fila (PLAN_UNITS_V2_COMPLETACION F4
     await user.click(screen.getByTestId('transfer-submit'))
     expect(createTransfer).not.toHaveBeenCalled()
   })
+
+  // A4: el round silencioso movía MÁS stock del tipeado (0.5→1); la política
+  // del sistema es trunc hacia cero y bloqueo si la cantidad no sobrevive.
+  it('cantidad 0,5 en unidad entera bloquea el envío (sin round-up ni POST)', async () => {
+    mockConversions.rows = [{ from_unit: 'box', to_unit: 'kg', factor: 10, product_id: null }]
+    const user = userEvent.setup()
+    const createTransfer = vi.mocked(branchTransferService.createTransfer).mockResolvedValue(transferPending)
+    renderWithProviders(
+      <CreateTransferModal
+        {...baseProps}
+        initialItems={[{ product_id: 'PK', product_name: 'Yerba kg', quantity: 0.5, base_unit: 'kg' }]}
+      />,
+    )
+
+    await pickDestination(user)
+    await user.click(screen.getByRole('combobox', { name: 'Unidad de Yerba kg' }))
+    await user.click(await screen.findByRole('option', { name: 'Caja' }))
+
+    // Cambiar de unidad resetea la cantidad: 0,5 se carga DESPUÉS de elegir Caja.
+    await user.clear(screen.getByTestId('transfer-line-qty-PK'))
+    await user.type(screen.getByTestId('transfer-line-qty-PK'), '0.5')
+
+    await user.click(screen.getByTestId('transfer-submit'))
+    expect(createTransfer).not.toHaveBeenCalled()
+  })
+
+  it('cantidad 1,6 en unidad entera se trunca a 1 en el payload (nunca más del tipeado)', async () => {
+    mockConversions.rows = [{ from_unit: 'box', to_unit: 'kg', factor: 10, product_id: null }]
+    const user = userEvent.setup()
+    const createTransfer = vi.mocked(branchTransferService.createTransfer).mockResolvedValue(transferPending)
+    renderWithProviders(
+      <CreateTransferModal
+        {...baseProps}
+        initialItems={[{ product_id: 'PK', product_name: 'Yerba kg', quantity: 1.6, base_unit: 'kg' }]}
+      />,
+    )
+
+    await pickDestination(user)
+    await user.click(screen.getByRole('combobox', { name: 'Unidad de Yerba kg' }))
+    await user.click(await screen.findByRole('option', { name: 'Caja' }))
+
+    // Cambiar de unidad resetea la cantidad: 1,6 se carga DESPUÉS de elegir Caja.
+    await user.clear(screen.getByTestId('transfer-line-qty-PK'))
+    await user.type(screen.getByTestId('transfer-line-qty-PK'), '1.6')
+
+    await user.click(screen.getByTestId('transfer-submit'))
+    await waitFor(() => expect(createTransfer).toHaveBeenCalled())
+    const [payload] = createTransfer.mock.calls[0]
+    expect(payload.items[0].quantity_requested).toBe(1)
+  })
 })

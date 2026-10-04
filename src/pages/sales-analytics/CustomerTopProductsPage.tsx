@@ -52,7 +52,7 @@ const CustomerTopProductsPage = () => {
       {
         id: 'buyers',
         label: t('bi.relational.action.buyers', 'Ver compradores'),
-        description: t('bi.relational.menu.summary', '{units} uds. · {purchases} compras · {total}', {
+        description: t('bi.relational.menu.summary', '{units} · {purchases} compras · {total}', {
           units: formatDrilldownUnits(row.units, row.base_unit),
           purchases: row.purchases,
           total: formatPYG(row.total),

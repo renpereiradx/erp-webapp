@@ -199,16 +199,31 @@ const CreateTransferModal = ({
 
   const handleSubmit = () => {
     if (sourceBranchId === null || !destinationBranch) return
-    // Unidad sin conversión: el backend rechazaría el SHIP con NO_CONVERSION a
-    // mitad del workflow; se bloquea acá con mensaje accionable.
     for (const line of lines) {
       const base = lineBaseUnit(line)
-      if ((line.unit || base) !== base && lineUnitFactor(line) === null) {
+      const unit = line.unit || base
+      // Unidad sin conversión: el backend rechazaría el SHIP con NO_CONVERSION
+      // a mitad del workflow; se bloquea acá con mensaje accionable.
+      if (unit !== base && lineUnitFactor(line) === null) {
         addToast(
           t('transfers.unitNoConversion', 'Sin conversión de {unit} a {base}', {
-            unit: getUnitLabel(line.unit || base),
+            unit: getUnitLabel(unit),
             base: getUnitLabel(base),
           }),
+          'error',
+        )
+        return
+      }
+      // A4: en unidad entera, 0.5 truncado a 0 no se pierde silenciosamente —
+      // se bloquea; y el round de 0.4→1 movía MÁS stock del tipeado (la
+      // política del sistema es trunc hacia cero).
+      if (!isDecimalUnit(unit) && Math.trunc(line.quantity) < 1) {
+        addToast(
+          t(
+            'transfers.quantityIntegerRequired',
+            'Cantidad inválida en {unit}: {qty} no es un entero ≥ 1 (usá la unidad base para decimales)',
+            { unit: getUnitLabel(unit), qty: String(line.quantity) },
+          ),
           'error',
         )
         return
@@ -223,11 +238,12 @@ const CreateTransferModal = ({
         const unit = line.unit || base
         return {
           product_id: line.product_id,
-          // Normalización al enviar: pesables ≥ 0.01 con su valor, enteros ≥ 1
-          // (gating por la unidad ELEGIDA, no por la base).
+          // Normalización al enviar (A4): pesables ≥ 0.01 con su valor; enteras
+          // trunc hacia cero — nunca más stock del tipeado (gating por la
+          // unidad ELEGIDA, no por la base).
           quantity_requested: isDecimalUnit(unit)
             ? Math.max(0.01, line.quantity)
-            : Math.max(1, Math.round(line.quantity)),
+            : Math.max(1, Math.trunc(line.quantity)),
           ...(unit !== base ? { unit } : {}),
           ...(line.variant_id ? { variant_id: line.variant_id } : {}),
           ...(line.unit_cost != null ? { unit_cost: line.unit_cost } : {}),

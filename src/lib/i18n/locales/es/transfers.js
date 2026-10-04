@@ -47,6 +47,7 @@ export const transfers = {
   'transfers.unitConversionHint': '1 {unit} = {factor} {base}',
   'transfers.unitNoConversion': 'Sin conversión de {unit} a {base}: registrala en Conversiones de unidades',
   'transfers.unitNoConversionShort': 'Sin conversión a {base}',
+  'transfers.quantityIntegerRequired': 'Cantidad inválida en {unit}: {qty} no es un entero ≥ 1 (usá la unidad base para decimales)',
   'transfers.col.actions': 'Acciones',
   'transfers.items': 'Ítems ({count})',
   'transfers.emptyItems': 'Agregá al menos un producto para transferir.',

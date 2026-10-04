@@ -230,4 +230,54 @@ describe('usePurchasesLogic — cambio de unidad en el modal (PLAN_UNITS_V2)', (
 
     expect(result.current.purchaseItems).toHaveLength(0)
   })
+
+  // A8: la sugerencia de precio de venta (costo×1.3) sigue al costo de la
+  // unidad — solo mientras siga siendo sugerencia.
+  it('sugerencia ×1.3 sigue al costo al cambiar unidad (5.000→6.500, 100.000→130.000)', async () => {
+    const { result } = renderPurchasesHook()
+    await selectProduct(result)
+    expect(result.current.modalSalePrice).toBe(6500) // 5.000 × 1.3
+
+    await act(async () => {
+      result.current.handleModalUnitChange('box')
+    })
+
+    expect(result.current.modalSalePrice).toBe(130000) // 100.000 × 1.3
+  })
+
+  it('precio tipeado por el usuario NO se pisa al cambiar unidad', async () => {
+    const { result } = renderPurchasesHook()
+    await selectProduct(result)
+
+    await act(async () => {
+      result.current.handleModalSalePriceChange(999999)
+    })
+    await act(async () => {
+      result.current.handleModalUnitChange('box')
+    })
+
+    expect(result.current.modalUnitPrice).toBe(100000) // el costo sí siguió
+    expect(result.current.modalSalePrice).toBe(999999)
+  })
+
+  it('línea en edición: precio comprometido sobrevive al cambio de unidad', async () => {
+    const { result } = renderPurchasesHook()
+    await selectProduct(result)
+    await act(async () => {
+      result.current.handleConfirmAddProduct()
+    })
+    serviceMocks.getForPurchase.mockResolvedValue(PRODUCT)
+
+    await act(async () => {
+      await result.current.handleEditItem({
+        ...result.current.purchaseItems[0],
+        sale_price: 7777,
+      })
+    })
+    await act(async () => {
+      result.current.handleModalUnitChange('box')
+    })
+
+    expect(result.current.modalSalePrice).toBe(7777)
+  })
 })

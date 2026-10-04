@@ -55,7 +55,7 @@ const ProductBuyersPage = () => {
       {
         id: 'customer-top',
         label: t('bi.relational.action.customerTop', 'Productos que compra'),
-        description: t('bi.relational.menu.summary', '{units} uds. · {purchases} compras · {total}', {
+        description: t('bi.relational.menu.summary', '{units} · {purchases} compras · {total}', {
           units: formatDrilldownUnits(row.units, row.base_unit),
           purchases: row.purchases,
           total: formatPYG(row.total),

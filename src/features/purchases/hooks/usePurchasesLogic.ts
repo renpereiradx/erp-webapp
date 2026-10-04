@@ -118,6 +118,10 @@ export const usePurchasesLogic = () => {
   const [modalUnitCosts, setModalUnitCosts] = useState<Array<{ unit: string; cost: number }>>([])
   const [modalProfitPct, setModalProfitPct] = useState<number>(30)
   const [modalSalePrice, setModalSalePrice] = useState<number>(0)
+  // A8: false = modalSalePrice es la SUGERENCIA ×1.3 del costo vigente (sigue
+  // a la unidad al cambiarla); true = el usuario tipeó su precio o la línea
+  // viene de una edición (precio comprometido — no se pisa).
+  const [modalSalePriceTouched, setModalSalePriceTouched] = useState<boolean>(false)
   const [pricingMode, setPricingMode] = useState<string>('margin')
   const [modalTaxRateId, setModalTaxRateId] = useState<number | null>(null)
   const [modalTaxRatePercent, setModalTaxRatePercent] = useState<number>(0)
@@ -719,7 +723,9 @@ export const usePurchasesLogic = () => {
       const cost = Number(p.current_cost || 0) || normalizedProduct.cost_price || 0;
       setModalUnitPrice(cost);
       
-      // Default pricing: cost * (1 + 0.3)
+      // Default pricing: cost * (1 + 0.3) — es una SUGERENCIA nueva (A8):
+      // vuelve a seguir a la unidad hasta que el usuario tipee la suya.
+      setModalSalePriceTouched(false);
       setModalSalePrice(Math.ceil((cost * 1.3) / 50) * 50);
 
       // Tasa resuelta por el backend (applicable_tax_rate) — helper único de
@@ -777,6 +783,18 @@ export const usePurchasesLogic = () => {
       productId: productId != null ? String(productId) : null,
     });
     setModalUnitPrice(price);
+    // A8: la sugerencia ×1.3 sigue al costo de la unidad nueva — solo mientras
+    // siga siendo sugerencia; un precio tipeado/comprometido no se pisa.
+    if (!modalSalePriceTouched) {
+      setModalSalePrice(Math.ceil((price * 1.3) / 50) * 50);
+    }
+  };
+
+  // onChange del input de precio de venta: desde que el usuario tipea, el
+  // valor deja de ser una sugerencia (A8) y la unidad deja de re-derivalo.
+  const handleModalSalePriceChange = (value: number) => {
+    setModalSalePriceTouched(true);
+    setModalSalePrice(value);
   };
 
   // Hint preventivo (F1.3b): unidad distinta de la base sin NI costo
@@ -1182,6 +1200,8 @@ export const usePurchasesLogic = () => {
     setModalQuantity(item.quantity)
     setModalUnitPrice(item.unit_price)
     setModalProfitPct(item.profit_pct)
+    // A8: precio comprometido de la línea — la unidad NO lo re-deriva.
+    setModalSalePriceTouched(true)
     setModalSalePrice(item.sale_price)
     setPricingMode(item.pricing_mode)
     setModalTaxRateId(item.tax_rate_id)
@@ -1279,6 +1299,7 @@ export const usePurchasesLogic = () => {
     handleInstantPaymentConfirm,
     handleLeavePurchasePending,
     handleModalProductSearchKeyDown,
+    handleModalSalePriceChange,
     handleProductSelect,
     handleSavePurchase,
     handleSupplierSearchKeyDown,

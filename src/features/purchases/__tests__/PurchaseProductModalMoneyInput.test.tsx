@@ -73,6 +73,7 @@ const renderModal = (harness: HarnessProps = {}) => {
     setModalUnitPrice: vi.fn(),
     setModalProfitPct: vi.fn(),
     setModalSalePrice: vi.fn(),
+    handleModalSalePriceChange: vi.fn(),
   }
 
   const Harness = () => {
@@ -84,6 +85,14 @@ const renderModal = (harness: HarnessProps = {}) => {
     const track = <T,>(spy: (v: T) => void, setter: (v: T) => void) => (v: T) => {
       spy(v)
       setter(v)
+    }
+
+    // Mismo contrato que usePurchasesLogic (A8): el modal ya no recibe el
+    // setter crudo del precio, sino el handler que marca touched y setea.
+    const handleModalSalePriceChange = (v: number) => {
+      spies.handleModalSalePriceChange(v)
+      spies.setModalSalePrice(v)
+      setModalSalePrice(v)
     }
 
     return (
@@ -99,7 +108,7 @@ const renderModal = (harness: HarnessProps = {}) => {
         modalProfitPct={modalProfitPct}
         setModalProfitPct={track(spies.setModalProfitPct, setModalProfitPct)}
         modalSalePrice={modalSalePrice}
-        setModalSalePrice={track(spies.setModalSalePrice, setModalSalePrice)}
+        handleModalSalePriceChange={handleModalSalePriceChange}
       />
     )
   }

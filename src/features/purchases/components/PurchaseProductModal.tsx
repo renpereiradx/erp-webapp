@@ -60,7 +60,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
     setModalProfitPct,
     effectiveProfitPct,
     modalSalePrice,
-    setModalSalePrice,
+    handleModalSalePriceChange,
     effectiveSalePrice,
     handleConfirmAddProduct,
     handleModalUnitChange,
@@ -792,7 +792,7 @@ export const PurchaseProductModal: React.FC<PurchaseProductModalProps> = (props)
                     }
                     onChange={e =>
                       pricingMode === 'sale_price' &&
-                      setModalSalePrice(Number(parseNumberInput(e.target.value)) || 0)
+                      handleModalSalePriceChange(Number(parseNumberInput(e.target.value)) || 0)
                     }
                     readOnly={pricingMode !== 'sale_price'}
                   />
