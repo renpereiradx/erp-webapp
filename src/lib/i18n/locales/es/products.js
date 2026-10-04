@@ -241,7 +241,6 @@ export const products = {
   'products.tabs.description': 'Descripción',
   'products.tabs.price': 'Precios',
   'products.tabs.stock': 'Stock',
-  'products.tabs.manufacturing': 'Manufactura',
   'products.info_general': 'Información General',
   'products.description_info': 'Información de Descripción',
   'products.description_heading': 'Descripción del Producto',
