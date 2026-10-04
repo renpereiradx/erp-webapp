@@ -5,6 +5,7 @@
 
 import { common } from './common'
 import { unitConversions } from './unitConversions'
+import { manufacturing } from './manufacturing'
 import { products } from './products'
 import { categories } from './categories'
 import { brands } from './brands'
@@ -48,6 +49,7 @@ import { branches } from './branches'
  */
 export const es = {
   ...common,
+  ...manufacturing,
   ...products,
   ...categories,
   ...brands,

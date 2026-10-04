@@ -5,6 +5,7 @@
 
 import { common } from './common'
 import { unitConversions } from './unitConversions'
+import { manufacturing } from './manufacturing'
 import { products } from './products'
 import { categories } from './categories'
 import { brands } from './brands'
@@ -38,6 +39,7 @@ export const en = {
   ...es,
   // Override with English translations where available
   ...common,
+  ...manufacturing,
   ...products,
   ...categories,
   ...purchases,

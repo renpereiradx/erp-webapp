@@ -79,6 +79,7 @@ const BranchManagement = lazy(() => import('@/pages/BranchManagement'))
 const TerminalPairing = lazy(() => import('@/features/branches/components/TerminalPairing'))
 const DevicesPage = lazy(() => import('@/pages/DevicesPage'))
 const TransfersPage = lazy(() => import('@/features/transfers/components/TransfersPage'))
+const Manufacturing = lazy(() => import('@/pages/Manufacturing'))
 const CatalogBoard = lazy(() => import('@/features/catalog').then((m) => ({ default: m.CatalogBoard })))
 const UserManagementList = lazy(() => import('@/pages/UserManagementList.tsx'))
 const UserDetailedProfile = lazy(() => import('@/pages/UserDetailedProfile.tsx'))
@@ -662,6 +663,16 @@ function AppContent() {
                         element={
                           <PermissionGuard permission='transfers:read'>
                             <TransfersPage />
+                          </PermissionGuard>
+                        }
+                      />
+
+                      {/* PLAN_UNITS_V2 F6.2: manufactura (insumos, recetas, producción) */}
+                      <Route
+                        path='/manufactura'
+                        element={
+                          <PermissionGuard permission='manufacturing:read'>
+                            <Manufacturing />
                           </PermissionGuard>
                         }
                       />

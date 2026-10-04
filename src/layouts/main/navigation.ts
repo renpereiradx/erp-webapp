@@ -7,6 +7,7 @@ import {
   BarChart,
   BarChart3,
   BookOpen,
+  Factory,
   Building2,
   Calendar,
   CircleDollarSign,
@@ -306,6 +307,12 @@ export const buildNavigation = (
         href: '/transferencias',
         icon: ArrowLeftRight,
         permission: 'transfers:read',
+      },
+      {
+        name: t('manufacturing.nav', 'Manufactura'),
+        href: '/manufactura',
+        icon: Factory,
+        permission: 'manufacturing:read',
       },
       {
         name: t('productAdjustments.title', 'Ajustes de Producto'),
