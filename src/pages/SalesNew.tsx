@@ -48,6 +48,8 @@ import type { UnitConversionRow } from '@/domain/units/resolveUnitFactor';
 import { VariantSelectorModal } from '@/features/sales/components/VariantSelectorModal';
 import { salePaymentService } from '@/services/salePaymentService';
 import { reservationService } from '@/services/reservationService';
+import { useReservationsEnabled } from '@/store/useBusinessConfigStore';
+import { replacePlainCourtItem } from '@/domain/sale/walkInCart';
 import type { WalkInSpec } from '@/features/sales/components/steps/WalkInReservationForm';
 import { useI18n } from '@/lib/i18n';
 import { toApiError } from '@/utils/ApiError';
@@ -351,6 +353,32 @@ const SalesNew: React.FC = () => {
 
   const [pendingReservations, setPendingReservations] = useState<any[]>([]);
   const [selectedResIds, setSelectedResIds] = useState<Set<number>>(new Set());
+
+  // PLAN_RESERVAS_V2 F4/F5: el módulo de reservas habilita abrir el wizard
+  // con carrito vacío (walk-in) y el guard de canchas sin franja horaria.
+  const reservationsEnabled = useReservationsEnabled();
+  // Ids de productos reservables (GET /products/service-courts): el guard de
+  // checkout bloquea vender una cancha como línea pelada (sin reserva). Se
+  // carga solo si el módulo está activo; sin lista (fail-open) no hay guard.
+  const bookableProductIds = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!reservationsEnabled) return;
+    let cancelled = false;
+    reservationService
+      .getProducts()
+      .then((list: unknown) => {
+        if (cancelled || !Array.isArray(list)) return;
+        bookableProductIds.current = new Set(
+          (list as Array<Record<string, unknown>>).map((p) => String(p.id || p.product_id)),
+        );
+      })
+      .catch(() => {
+        /* fail-open: sin lista de canchas no se aplica el guard */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reservationsEnabled]);
 
   const [productSearchResults, setProductSearchResults] = useState<ProductDisplay[]>([]);
   const [showProductDropdown, setShowProductDropdown] = useState(false);
@@ -1369,7 +1397,11 @@ const SalesNew: React.FC = () => {
     // El cliente se selecciona dentro del SaleCheckoutWizard (ClientStep,
     // paso 1). No gatear acá: si no hay cliente, el wizard abre igual y
     // handleSelectClient parchea pendingSaleData.client_id al elegirlo.
-    if (items.length === 0) {
+    // PLAN_RESERVAS_V2 F4: con el módulo de reservas activo el wizard abre
+    // TAMBIÉN con carrito vacío (elegir cliente + registrar reserva walk-in
+    // sin pasar por /gestion-agenda); el gate real de "nada para cobrar"
+    // vive en el paso Pago y en onConfirmWizard/onLeavePendingWizard.
+    if (items.length === 0 && !reservationsEnabled) {
       productSearchInputRef.current?.focus();
       return;
     }
@@ -1621,11 +1653,43 @@ const SalesNew: React.FC = () => {
   const baseCurrencyId =
     currencies.find((c: any) => c.is_base || c.is_base_currency)?.id ?? 1;
 
+  // PLAN_RESERVAS_V2 F4/F5: gates de confirmación compartidos por el cobro y
+  // "Dejar pendiente". null = ok para procesar. (1) El wizard puede abrir con
+  // carrito vacío para registrar un walk-in, pero no se confirma una venta
+  // sin ítems — toda reserva agrega su línea al carrito. (2) Una cancha
+  // reservable vendida como línea pelada (sin franja horaria) queda fuera de
+  // la agenda: se exige registrarla como reserva desde el paso Reservas.
+  const checkoutBlockReason = useCallback((): string | null => {
+    if (items.length === 0) {
+      return t(
+        'sales.checkoutWizard.emptyCartBlocked',
+        'El carrito está vacío: registrá el uso de la cancha en el paso Reservas o volvé para agregar productos.',
+      );
+    }
+    const plainBookable = items.find(
+      (i) => !i.reserve_id && !i.isFromPendingSale && !i.isFromCounterOrder
+        && bookableProductIds.current.has(String(i.productId)),
+    );
+    if (plainBookable) {
+      return t(
+        'sales.checkoutWizard.bookableNeedsSlot',
+        '{name} se vende por franja horaria: registrá su uso en el paso Reservas (o quitá la línea) para cobrar.',
+        { name: plainBookable.name },
+      );
+    }
+    return null;
+  }, [items, t]);
+
   // onConfirmWizard: confirma el cobro. Si hay currentSaleId (modo merge),
   // agrega los productos nuevos (addProductsToSale) y procesa el pago. Si no,
   // usa el checkout POS atómico (venta + pago en una transacción).
   const onConfirmWizard = useCallback(
     async (collection: CollectionData) => {
+      const blockReason = checkoutBlockReason();
+      if (blockReason) {
+        toast.error(blockReason);
+        return;
+      }
       setIsProcessingSale(true);
       // Venta resultante del checkout (para marcar el pedido CONVERTED).
       let checkoutSaleId = '';
@@ -1842,11 +1906,16 @@ const SalesNew: React.FC = () => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentSaleId, items, activeSale, pendingSaleData, paymentMethodId, currencyId, currencies, t, buildNewSaleData],
+    [currentSaleId, items, activeSale, pendingSaleData, paymentMethodId, currencyId, currencies, t, buildNewSaleData, checkoutBlockReason],
   );
 
   // onLeavePendingWizard: persiste la venta sin cobrar (venta a crédito/asíncrono).
   const onLeavePendingWizard = useCallback(async () => {
+    const blockReason = checkoutBlockReason();
+    if (blockReason) {
+      toast.error(blockReason);
+      return;
+    }
     setIsProcessingSale(true);
     let checkoutSaleId = '';
     try {
@@ -1896,7 +1965,7 @@ const SalesNew: React.FC = () => {
     } finally {
       setIsProcessingSale(false);
     }
-  }, [currentSaleId, items, pendingSaleData, createSale, buildNewSaleData, buildAddProductsPayload, activeSale]);
+  }, [currentSaleId, items, pendingSaleData, createSale, buildNewSaleData, buildAddProductsPayload, activeSale, checkoutBlockReason]);
 
   // ─── Walk-in: registrar uso de cancha desde el wizard ──────────────────────
   // Flujo: cliente usó la cancha sin reserva previa y quiere pagar. Crea la
@@ -1949,7 +2018,9 @@ const SalesNew: React.FC = () => {
       }
 
       // 3. Ítem al carrito (misma convención que las reservas confirmadas:
-      // quantity 1 × total de la reserva, unit "hour").
+      // quantity 1 × total de la reserva, unit "hour"). PLAN_RESERVAS_V2 F5:
+      // si la cancha estaba como línea pelada (buscador, sin franja), la
+      // línea se CONVIERTE en la de reserva en vez de duplicarse.
       const item: CartItem = {
         id: `RES-${reserveId}-${Date.now()}`,
         productId: spec.productId,
@@ -1965,7 +2036,7 @@ const SalesNew: React.FC = () => {
         unit: 'hour',
         reserve_id: reserveId,
       };
-      setItems(prev => [...prev, item]);
+      setItems(prev => replacePlainCourtItem(prev, item, spec.productId));
       toast.success(
         t('sales.checkoutWizard.walkIn.registered', 'Uso de cancha registrado (reserva #{id})', { id: reserveId }),
       );
@@ -2192,6 +2263,7 @@ const SalesNew: React.FC = () => {
               isProcessingSale={isProcessingSale}
               canWrite={canWrite}
               mergeSaleId={currentSaleId}
+              allowEmptyCart={reservationsEnabled}
             />
           </div>
         )}

@@ -42,6 +42,13 @@ interface CheckoutSummaryPanelProps {
   canWrite: boolean;
   /** Modo merge: actualiza la venta pendiente en vez de cobrar una nueva. */
   mergeSaleId: string | null;
+  /**
+   * PLAN_RESERVAS_V2 F4: con carrito vacío, "Cobrar" abre el wizard para
+   * elegir cliente y registrar la reserva de cancha (walk-in) si el módulo
+   * de reservas está activo. Sin él, el botón queda deshabilitado como
+   * siempre.
+   */
+  allowEmptyCart?: boolean;
 }
 
 export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
@@ -63,6 +70,7 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
   isProcessingSale,
   canWrite,
   mergeSaleId,
+  allowEmptyCart = false,
 }) => {
   const { t } = useI18n();
   // Draft del input de Precio Final: mientras se tipea, el valor visible es
@@ -93,7 +101,12 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
           >
             <Info size={16} className="shrink-0" aria-hidden="true" />
             <p className="text-body-md">
-              {t('sales.new.summary.emptyCart', 'Agrega productos al carrito para continuar.')}
+              {allowEmptyCart
+                ? t(
+                    'sales.new.summary.emptyCartReservations',
+                    'Carrito vacío: presioná Cobrar para elegir cliente y registrar la reserva de la cancha en el asistente.',
+                  )
+                : t('sales.new.summary.emptyCart', 'Agrega productos al carrito para continuar.')}
             </p>
           </div>
         )}
@@ -221,7 +234,7 @@ export const CheckoutSummaryPanel: React.FC<CheckoutSummaryPanelProps> = ({
           <Button
             variant={mergeSaleId ? 'warning' : 'primary'}
             onClick={onCheckout}
-            disabled={isProcessingSale || itemsCount === 0 || !canWrite}
+            disabled={isProcessingSale || (itemsCount === 0 && !allowEmptyCart) || !canWrite}
             className="w-full h-12 text-body-sm-bold rounded-button uppercase tracking-widest"
             data-testid="sales-checkout-button"
           >

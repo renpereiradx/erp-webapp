@@ -285,6 +285,10 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
       case 'reservations':
         return true // omitir es válido
       case 'payment':
+        // PLAN_RESERVAS_V2 F4: el wizard puede ABRIRSE con carrito vacío (para
+        // registrar una reserva walk-in en el paso Reservas), pero no se
+        // confirma nada sin ítems — toda reserva agrega su línea al carrito.
+        if (items.length === 0) return false
         // Con divisa de cobro elegida, la tasa es obligatoria: sin ella el
         // cobro caería silenciosamente a moneda base y el pago llegaría al
         // backend sin currency_id (registrando guaraníes que eran dólares).
@@ -539,6 +543,23 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                 setExchangeRate={setExchangeRate}
                 totalAmount={totals.total}
               />
+            )}
+
+            {/* PLAN_RESERVAS_V2 F4: el wizard abrió con carrito vacío y no se
+                registró ningún uso — guiar de vuelta en vez de cobrar Gs. 0. */}
+            {currentStep === 'payment' && items.length === 0 && (
+              <div
+                role="status"
+                className="mt-4 rounded-md bg-surface-muted border border-divider p-3 text-sm text-on-surface-deep flex items-center gap-2 animate-in fade-in"
+              >
+                <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>
+                  {t(
+                    'sales.checkoutWizard.paymentStep.emptyCart',
+                    'No hay ítems para cobrar. Volvé al paso Reservas para registrar el uso de una cancha, o agregá productos al carrito.',
+                  )}
+                </span>
+              </div>
             )}
             {currentStep === 'collection' && (
               <CollectionStep

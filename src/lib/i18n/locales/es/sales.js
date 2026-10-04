@@ -342,6 +342,14 @@ export const sales = {
   'sales.checkoutWizard.subtitle': 'Revisá y cobrá en una sola operación',
   'sales.checkoutWizard.cart': 'Carrito',
   'sales.checkoutWizard.cartEmpty': 'El carrito está vacío',
+  // PLAN_RESERVAS_V2 F4/F5: wizard con carrito vacío (walk-in) y guard de
+  // cancha sin franja horaria.
+  'sales.checkoutWizard.emptyCartBlocked':
+    'El carrito está vacío: registrá el uso de la cancha en el paso Reservas o volvé para agregar productos.',
+  'sales.checkoutWizard.paymentStep.emptyCart':
+    'No hay ítems para cobrar. Volvé al paso Reservas para registrar el uso de una cancha, o agregá productos al carrito.',
+  'sales.checkoutWizard.bookableNeedsSlot':
+    '{name} se vende por franja horaria: registrá su uso en el paso Reservas (o quitá la línea) para cobrar.',
   'sales.checkoutWizard.subtotal': 'Subtotal',
   'sales.checkoutWizard.discount': 'Descuento',
   'sales.checkoutWizard.tax': 'Impuestos',
@@ -562,6 +570,8 @@ export const sales = {
 
   // Resumen de checkout (panel derecho)
   'sales.new.summary.emptyCart': 'Agrega productos al carrito para continuar.',
+  'sales.new.summary.emptyCartReservations':
+    'Carrito vacío: presioná Cobrar para elegir cliente y registrar la reserva de la cancha en el asistente.',
   'sales.new.summary.branchWarning':
     'Estás modificando una venta pendiente originada en otra sucursal. Los productos que añadas descontarán inventario de la sucursal origen.',
   'sales.new.summary.previousSale': 'Venta Procesada (Anterior)',
