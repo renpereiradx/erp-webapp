@@ -239,15 +239,21 @@ function AppContent() {
   // gate) o con un refresh manual del navegador.
   const [licenseBlocked, setLicenseBlocked] = useState(false)
 
+  // Bootstrap de la tasa IVA default del backend (GET /tax_rate/default) para
+  // las calculadoras del carrito. SOLO con la sesión restaurada: sin este
+  // gate el fetch disparaba 401 en el login screen (sin token) y al recargar
+  // con el access token expirado (el intento corría antes de que /me
+  // refrescara la sesión). Fire-and-forget; las calculadoras usan el fallback
+  // offline (IVA 10%) hasta que resuelve.
   useEffect(() => {
-    // Bootstrap: cache the backend default VAT rate for cart calculators
-    // (GET /tax_rate/default). Fire-and-forget; calculators fall back to
-    // the offline default (10%) until it resolves.
+    if (loading || !isAuthenticated) return;
     const taxStore = useTaxRateStore.getState()
     if (!taxStore.defaultTaxRate) {
       taxStore.fetchDefaultTaxRate().catch(() => {})
     }
+  }, [isAuthenticated, loading]);
 
+  useEffect(() => {
     const handleForbidden = (e: any) => {
       import('sonner').then(({ toast }) => {
         toast.error(e.detail || 'Acceso denegado: No cuentas con los permisos necesarios.');

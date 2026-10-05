@@ -31,7 +31,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, logout, hasPermission, hasAnyPermission } = useAuth()
+  const { user, logout, hasPermission, hasAnyPermission, loading: authLoading } = useAuth()
   // useI18n vive en un módulo JS: afirmamos la forma de `t` en el borde
   const { t } = useI18n() as unknown as { t: TFn }
   const reservationsEnabled = useReservationsEnabled()
@@ -42,15 +42,19 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const prevBranchIdRef = useRef(currentBranchId)
 
   // Bootstrap de configuración del negocio (post-login). El layout es el
-  // shell autenticado: aquí es seguro llamar a GET /settings. Fail-open
-  // (D-SR-5): si falla, los gates conservan el default `true`.
+  // shell autenticado: aquí es seguro llamar a GET /settings. Se espera el
+  // restore de sesión (authLoading): al recargar con access token expirado,
+  // /me lo refresca antes de que loading baje — disparar antes era un 401
+  // seguro en el primer intento. Fail-open (D-SR-5): si falla, los gates
+  // conservan el default `true`.
   const fetchSettings = useBusinessConfigStore((s) => s.fetchSettings)
   const configLoaded = useBusinessConfigStore((s) => s.loaded)
   useEffect(() => {
+    if (authLoading) return;
     if (!configLoaded) {
       fetchSettings().catch(() => {})
     }
-  }, [configLoaded, fetchSettings])
+  }, [authLoading, configLoaded, fetchSettings])
 
   // Al cambiar la sucursal se fuerza la recarga del área main: se limpia la
   // caché de react-query y el key de <main> remonta el árbol de la página,
