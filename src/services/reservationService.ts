@@ -17,10 +17,25 @@ export const reservationService = {
   // ==========================================
   
   manageReserve: async (data: ManageReserveRequest) => {
-    return apiClient.makeRequest('/reserve/manage', {
+    const response = await apiClient.makeRequest('/reserve/manage', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+    // El backend envuelve el resultado del SQL en { Data: {...} } (struct Go
+    // ReserveResponse sin json tag → clave capitalizada). Des-envolver acá,
+    // en la frontera del servicio: los callers leen success/reserve_id/error
+    // directamente (antes el walk-in veía el envoltorio sin reserve_id y
+    // fallaba SIEMPRE aunque el backend hubiera creado la reserva).
+    if (
+      response &&
+      typeof response === 'object' &&
+      !Array.isArray(response) &&
+      response.Data &&
+      typeof response.Data === 'object'
+    ) {
+      return response.Data;
+    }
+    return response;
   },
 
   getAvailableSchedules: async (productId: string, date: string, duration: number, branchId?: number) => {
