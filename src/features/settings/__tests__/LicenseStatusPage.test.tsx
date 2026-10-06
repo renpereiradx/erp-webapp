@@ -67,6 +67,25 @@ describe('LicenseStatusPage', () => {
     expect(screen.getByText('Fin de la evaluación')).toBeInTheDocument()
   })
 
+  it('licencia activa perpetua: "No vence" y sin fila de días restantes (days 0 no es vencimiento)', async () => {
+    hasPermission.mockReturnValue(false)
+    getStatus.mockResolvedValue(
+      snapshot({
+        status: 'active',
+        mode: 'licensed',
+        edition: 'core+bi',
+        customer: 'Just Style',
+        modules: ['bi'],
+        expires_at: null,
+        days_remaining: 0,
+      }),
+    )
+    renderPage()
+
+    expect(await screen.findByText(/No vence/)).toBeInTheDocument()
+    expect(screen.queryByText(/Quedan 0 días/)).toBeNull()
+  })
+
   it('mode core (aud Fix 4): licencia vencida con Core activo', async () => {
     hasPermission.mockReturnValue(false)
     getStatus.mockResolvedValue(snapshot({ mode: 'core', status: 'expired' }))

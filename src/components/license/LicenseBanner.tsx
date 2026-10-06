@@ -64,6 +64,9 @@ function bannerFor(license: LicenseSnapshot): {
           'La licencia del pack BI está vencida; período de gracia activo. Contacte a su proveedor para renovar.',
       }
     case 'active':
+      // Perpetua (expires_at null): el backend reporta days_remaining 0 al no
+      // haber fecha que restar — sin vencimiento no hay nada que avisar.
+      if (!license.expires_at) return null
       if (license.days_remaining >= 0 && license.days_remaining <= EXPIRY_WARNING_DAYS) {
         return {
           tone: 'warning',

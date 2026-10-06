@@ -44,6 +44,12 @@ describe('LicenseBanner', () => {
     expect(await screen.queryByRole('status')).toBeNull()
   })
 
+  it('licencia perpetua (expires_at null): days 0 del backend no es vencimiento — sin banner', async () => {
+    getStatus.mockResolvedValue(snapshot({ expires_at: null, days_remaining: 0 }))
+    renderBanner()
+    expect(await screen.queryByRole('status')).toBeNull()
+  })
+
   it('licencia por vencer (≤30 días): banner con días restantes', async () => {
     getStatus.mockResolvedValue(snapshot({ days_remaining: 12 }))
     renderBanner()

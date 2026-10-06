@@ -212,7 +212,7 @@ export default function LicenseStatusPage() {
                     </span>
                   </Row>
                 )}
-                {license.enforcing && license.mode === 'licensed' && license.status === 'active' && license.days_remaining >= 0 && (
+                {license.enforcing && license.mode === 'licensed' && license.status === 'active' && license.expires_at && license.days_remaining >= 0 && (
                   <Row
                     label={t('licensing.card.daysRemaining', 'Quedan {days} días', {
                       days: license.days_remaining,
