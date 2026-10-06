@@ -44,20 +44,26 @@ export function toSellableUnitOption(raw: Record<string, any>): SellableUnitOpti
  * Plana primero (granularity=variant); la cadena legacy por-producto queda
  * como fallback SOLO si el endpoint falla — una búsqueda vacía no degrada a
  * filas por-producto (mismo criterio que el breaker de useProductStore).
+ * Opciones en objeto (no posicional): como `onSearch` del dropmenu compartido
+ * el 2º argumento es el AbortSignal (convención §13).
  */
 export async function searchSellableUnitsFlat(
   term: string,
-  pageSize = 15,
+  options: { pageSize?: number; signal?: AbortSignal } = {},
 ): Promise<SellableUnitOption[]> {
+  const { pageSize = 15, signal } = options
   const trimmed = term.trim()
   if (trimmed.length < 3) return []
   try {
-    const response = await productService.searchAdvanced({
-      search: trimmed,
-      granularity: 'variant',
-      page: 1,
-      page_size: pageSize,
-    })
+    const response = await productService.searchAdvanced(
+      {
+        search: trimmed,
+        granularity: 'variant',
+        page: 1,
+        page_size: pageSize,
+      },
+      { signal },
+    )
     const raw = (response as any)?.products
     return (Array.isArray(raw) ? raw : [])
       .filter((p: Record<string, any>) => p.state !== false)

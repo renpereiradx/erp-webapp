@@ -1,162 +1,124 @@
-import { useState, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { productService } from '@/services/productService';
-import { resolveApplicableRateFraction } from '@/domain/tax/resolveApplicableRate';
-import { getDefaultVatPercent } from '@/store/useTaxRateStore';
-import type { ProductEnriched } from '@/types';
+import { toApiError } from '@/utils/ApiError';
 
-export interface ProductSearchResult {
-  id: string;
-  name: string;
-  sku: string;
-  barcode?: string;
-  price: number;
-  stock: number;
-  base_unit: string;
-  taxRate: number;
-  [key: string]: unknown;
-}
+/**
+ * Hook canónico de búsqueda de productos (convención DESIGN.md §13):
+ * debounce + AbortController por término + guard de respuesta vieja.
+ *
+ * Cualquier superficie que busque productos con `searchAdvanced` debe usar
+ * este hook en lugar de armar su propio setTimeout — antes de él, /ventas,
+ * /compras y stock-movements tenían cada uno su propia receta sin abort y
+ * una respuesta lenta de un prefijo podía pisar los resultados del término
+ * completo (race condition con WiFi de cliente).
+ */
+
+/**
+ * Fila plana devuelta por searchAdvanced (granularity=variant): cada fila es
+ * una unidad vendible y la forma exacta depende del backend — las
+ * superficies consumen los campos que necesitan (id, name, sku,
+ * variant_id, stock_quantity, ...).
+ */
+export type ProductSearchRow = Record<string, unknown> & {
+  id?: string | number;
+  name?: string;
+  sku?: string | null;
+  state?: boolean;
+};
 
 interface UseProductSearchOptions {
+  /** ms entre la última tecla y el request. Convención §13: 300. */
   debounceMs?: number;
+  /** mínimo de caracteres para disparar el request. Convención §13: 2. */
   minSearchLength?: number;
-  maxResults?: number;
+  /** page_size del request. Convención §13: 20 en dropdowns. */
+  pageSize?: number;
+  granularity?: 'variant' | 'units' | 'product';
 }
 
 interface UseProductSearchReturn {
-  items: ProductSearchResult[];
-  isLoading: boolean;
-  error: string | null;
-  search: (term: string) => Promise<void>;
+  /** Filas de la última búsqueda exitosa (filas inactivas ya filtradas). */
+  results: ProductSearchRow[];
+  isSearching: boolean;
+  /** Agenda la búsqueda del término con debounce. Seguro en cada tecla. */
+  search: (term: string) => void;
+  /** Aborta lo pendiente y vacía resultados. */
   clear: () => void;
-  searchByBarcode: (barcode: string) => Promise<ProductSearchResult | null>;
 }
 
-const getProductDisplay = (product: any): ProductSearchResult => {
-  // Tasa resuelta por el backend (applicable_tax_rate) — fallback a la tasa
-  // default del sistema solo si el producto no expone ninguna (0 = EXENTO).
-  const normalizedTaxRate = resolveApplicableRateFraction(
-    product,
-    getDefaultVatPercent(),
-  );
-
-  const price = 
-    product.sale_price ||
-    product.price ||
-    product.unit_price ||
-    (Array.isArray(product.unit_prices) && (product.unit_prices[0] as Record<string, unknown>)?.price_per_unit) ||
-    0;
-
-  return {
-    id: String(product.id || product.product_id || ''),
-    name: String(product.name || product.product_name || ''),
-    sku: String(product.sku || product.barcode || product.code || '-'),
-    barcode: product.barcode ? String(product.barcode) : undefined,
-    price: Number(price) || 0,
-    stock: Number(product.stock_quantity || product.stock || product.quantity || 0),
-    base_unit: String(product.base_unit || product.unit || 'unit'),
-    taxRate: normalizedTaxRate,
-  };
-};
-
 export function useProductSearch(options: UseProductSearchOptions = {}): UseProductSearchReturn {
-  const { minSearchLength = 3, maxResults = 50 } = options;
-  
-  const [items, setItems] = useState<ProductSearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const { debounceMs = 300, minSearchLength = 2, pageSize = 20, granularity = 'variant' } = options;
 
-  const search = useCallback(async (term: string) => {
-    const trimmedTerm = term.trim();
-    
-    if (trimmedTerm.length < minSearchLength) {
-      setItems([]);
-      setError(null);
-      return;
+  const [results, setResults] = useState<ProductSearchRow[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const controllerRef = useRef<AbortController | null>(null);
+  // Guard de respuesta vieja además del abort — cinturón y tirantes: el abort
+  // evita el request, el seq descarta la respuesta si igual llegó (p. ej. una
+  // petición cuyo abort compitió con el write de la respuesta).
+  const seqRef = useRef(0);
+
+  const cancelPending = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
     }
-
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const results = await productService.search(trimmedTerm, {
-        signal: abortController.signal,
-      });
-
-      if (abortController.signal.aborted) {
-        return;
-      }
-
-      const productsArray = Array.isArray(results) ? results : results ? [results] : [];
-      
-      const filteredProducts = productsArray
-        .filter((p: ProductEnriched) => p.state !== false)
-        .slice(0, maxResults)
-        .map((p: ProductEnriched) => getProductDisplay(p));
-
-      setItems(filteredProducts);
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
-      setError('Error al buscar productos');
-      setItems([]);
-    } finally {
-      if (!abortController.signal.aborted) {
-        setIsLoading(false);
-      }
-    }
-  }, [minSearchLength, maxResults]);
+    controllerRef.current?.abort();
+    controllerRef.current = null;
+  }, []);
 
   const clear = useCallback(() => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    setItems([]);
-    setError(null);
-    setIsLoading(false);
-  }, []);
+    cancelPending();
+    seqRef.current += 1; // invalida cualquier respuesta en vuelo
+    setResults([]);
+    setIsSearching(false);
+  }, [cancelPending]);
 
-  const searchByBarcode = useCallback(async (barcode: string): Promise<ProductSearchResult | null> => {
-    if (!barcode.trim()) {
-      return null;
-    }
+  const search = useCallback(
+    (term: string) => {
+      const trimmed = term.trim();
+      cancelPending();
 
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await productService.getProductByBarcode(barcode);
-      const product = Array.isArray(result) ? result[0] : result;
-      
-      if (product) {
-        return getProductDisplay(product);
+      if (trimmed.length < minSearchLength) {
+        seqRef.current += 1;
+        setResults([]);
+        setIsSearching(false);
+        return;
       }
-      return null;
-    } catch (err) {
-      setError('Error al buscar por código de barras');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
-  return {
-    items,
-    isLoading,
-    error,
-    search,
-    clear,
-    searchByBarcode,
-  };
+      setIsSearching(true);
+      timerRef.current = setTimeout(async () => {
+        const seq = ++seqRef.current;
+        const controller = new AbortController();
+        controllerRef.current = controller;
+        try {
+          const response = await productService.searchAdvanced(
+            { search: trimmed, granularity, page: 1, page_size: pageSize },
+            { signal: controller.signal },
+          );
+          const raw = (response as { products?: unknown })?.products;
+          const rows = Array.isArray(raw) ? (raw as ProductSearchRow[]) : [];
+          if (seq !== seqRef.current || controller.signal.aborted) return;
+          setResults(rows.filter((p) => p.state !== false));
+        } catch (err) {
+          if (controller.signal.aborted || (err instanceof Error && err.name === 'AbortError')) return;
+          console.error(toApiError(err, 'search_error'));
+          if (seq === seqRef.current) setResults([]);
+        } finally {
+          if (seq === seqRef.current && !controller.signal.aborted) {
+            setIsSearching(false);
+          }
+        }
+      }, debounceMs);
+    },
+    [cancelPending, debounceMs, granularity, minSearchLength, pageSize],
+  );
+
+  // Abort de lo pendiente al desmontar (el closure captura las refs).
+  useEffect(() => cancelPending, [cancelPending]);
+
+  return { results, isSearching, search, clear };
 }
 
 export default useProductSearch;

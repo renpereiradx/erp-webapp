@@ -26,7 +26,7 @@ import type { SupplyEnriched } from '../types'
 
 /** Picker de productos: SOLO tipo PRODUCTION (artículos fabricados). */
 async function searchProductionProducts(term: string): Promise<SellableUnitOption[]> {
-  const rows = await searchSellableUnitsFlat(term, 30)
+  const rows = await searchSellableUnitsFlat(term, { pageSize: 30 })
   return rows.filter((r) => r.product_type === 'PRODUCTION')
 }
 

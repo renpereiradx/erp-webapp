@@ -92,6 +92,13 @@ beforeEach(() => {
   });
 });
 
+
+// HighlightText (§13) parte el label en span+mark: el texto completo vive
+// en el elemento más profundo que lo contiene íntegro (no en un hijo solo).
+const hasFullText = (text: string) => (_: string, element: Element | null) =>
+  element?.textContent === text &&
+  !Array.from(element.children).some((child) => child.textContent === text)
+
 describe('ProductSuppliersPage', () => {
   it('fetcha con el sort default del contrato (+last_unit_price)', async () => {
     render(
@@ -213,7 +220,7 @@ describe('ProductSuppliersPage', () => {
     );
 
     await userEvent.type(screen.getByPlaceholderText('Buscar...'), 'adidas');
-    expect(await screen.findByText('Camiseta Adidas · Rojo M')).toBeInTheDocument();
+    expect(await screen.findByText(hasFullText('Camiseta Adidas · Rojo M'))).toBeInTheDocument();
     expect(screen.getByText('SKU: AD-R-M')).toBeInTheDocument();
     expect(screen.queryByText(/Stock:/)).not.toBeInTheDocument();
 

@@ -57,7 +57,7 @@ export function CounterOrdersPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [allBranches, setAllBranches] = useState(false)
-  const debouncedSearch = useDebouncedValue(search.trim(), 350)
+  const debouncedSearch = useDebouncedValue(search.trim(), 300)
 
   const [viewingId, setViewingId] = useState<string | null>(null)
   // FASE 5: pedido del que se muestra el ticket imprimible (null = cerrado).

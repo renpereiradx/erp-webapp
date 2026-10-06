@@ -1,5 +1,6 @@
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown';
 import type { SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
+import { HighlightText } from '@/components/ui/HighlightText';
 import { useI18n } from '@/lib/i18n';
 
 export interface EntityOption {
@@ -14,8 +15,12 @@ export interface EntityOption {
 type DropdownItem = SearchableDropdownItem & EntityOption;
 
 interface EntitySearchSelectProps {
-  /** búsqueda del servicio correspondiente (producto/cliente/proveedor) */
-  search: (term: string) => Promise<EntityOption[]>;
+  /**
+   * búsqueda del servicio correspondiente (producto/cliente/proveedor).
+   * El signal es opt-in (convención §13): el dropdown lo aborta al
+   * re-tipear; los services que no lo aceptan lo ignoran.
+   */
+  search: (term: string, ctx?: { signal?: AbortSignal }) => Promise<EntityOption[]>;
   /** el segundo argumento llega completo para pickers que necesitan la variante */
   onPick: (id: string, option: EntityOption) => void;
   placeholderFallback?: string;
@@ -35,8 +40,11 @@ function EntitySearchSelect({ search, onPick, placeholderFallback, minChars = 2,
   const { t } = useI18n();
   const placeholder = t('bi.relational.pick.searchPlaceholder', placeholderFallback ?? 'Buscar...');
 
-  const onSearch = async (term: string): Promise<DropdownItem[]> => {
-    const results = await search(term);
+  const onSearch = async (
+    term: string,
+    ctx?: { signal?: AbortSignal },
+  ): Promise<DropdownItem[]> => {
+    const results = await search(term, ctx);
     return results.map((opt) => ({ ...opt, name: opt.label }));
   };
 
@@ -48,10 +56,16 @@ function EntitySearchSelect({ search, onPick, placeholderFallback, minChars = 2,
         minSearchLength={minChars}
         placeholder={placeholder}
         emptyMessage={t('bi.relational.pick.noResults', 'Sin resultados')}
-        renderItem={(opt) => (
+        renderItem={(opt, _index, _isHighlighted, searchTerm) => (
           <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate text-sm font-bold text-foreground">{opt.label}</span>
-            {opt.sub ? <span className="font-mono text-[11px] text-on-surface-deep">{opt.sub}</span> : null}
+            <span className="truncate text-sm font-bold text-foreground">
+              <HighlightText text={opt.label} term={searchTerm} />
+            </span>
+            {opt.sub ? (
+              <span className="font-mono text-[11px] text-on-surface-deep">
+                <HighlightText text={opt.sub} term={searchTerm} />
+              </span>
+            ) : null}
           </span>
         )}
       />

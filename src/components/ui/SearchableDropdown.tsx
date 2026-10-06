@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from './input';
+import { HighlightText } from './HighlightText';
 
 export interface SearchableDropdownItem {
   id: string;
@@ -12,15 +13,32 @@ export interface SearchableDropdownItem {
   [key: string]: unknown;
 }
 
+export interface SearchableDropdownSearchCtx {
+  /**
+   * AbortController del término en curso: el dropdown lo aborta al
+   * re-tipear. Opt-in (convención §13) — los consumidores que quieran
+   * abortar el HTTP de verdad lo reenvían al service; los que no, siguen
+   * compilando sin cambios (la respuesta vieja igual se descarta).
+   */
+  signal?: AbortSignal;
+}
+
 export interface SearchableDropdownProps<T extends SearchableDropdownItem> {
   onSelect: (item: T) => void;
-  onSearch: (term: string) => Promise<T[]>;
+  /** ctx con `{ signal }` opt-in (convención §13, ver SearchableDropdownSearchCtx). */
+  onSearch: (term: string, ctx?: SearchableDropdownSearchCtx) => Promise<T[]>;
   placeholder?: string;
   autoFocus?: boolean;
   inputRef?: React.RefObject<HTMLInputElement | null>;
   /** id del input para asociarlo a un <label htmlFor> (accesibilidad). */
   inputId?: string;
-  renderItem?: (item: T, index: number, isHighlighted: boolean) => React.ReactNode;
+  /** `searchTerm` como 4º argumento para resaltar con HighlightText (§13). */
+  renderItem?: (
+    item: T,
+    index: number,
+    isHighlighted: boolean,
+    searchTerm: string,
+  ) => React.ReactNode;
   disabled?: boolean;
   className?: string;
   searchInputClassName?: string;
@@ -99,7 +117,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
 
       setIsSearching(true);
       try {
-        const results = await onSearchRef.current(debouncedSearchTerm);
+        const results = await onSearchRef.current(debouncedSearchTerm, { signal: controller.signal });
         if (!controller.signal.aborted) {
           setItems(results);
           setHighlightedIndex(results.length > 0 ? 0 : -1);
@@ -197,11 +215,17 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
   );
 
   const defaultRenderItem = useCallback(
-    (item: T, _index: number, _isHighlighted: boolean) => (
+    (item: T, _index: number, _isHighlighted: boolean, searchTerm: string) => (
       <div className="flex items-center justify-between">
-        <div>
-          <p className="font-bold text-sm">{item.name}</p>
-          {item.sku && <p className="text-xs text-slate-500">SKU: {item.sku}</p>}
+        <div className="min-w-0">
+          <p className="font-bold text-sm truncate">
+            <HighlightText text={item.name} term={searchTerm} />
+          </p>
+          {item.sku && (
+            <p className="text-xs text-muted-foreground">
+              SKU: <HighlightText text={item.sku} term={searchTerm} />
+            </p>
+          )}
         </div>
         {item.price !== undefined && (
           <div className="text-right">
@@ -280,6 +304,12 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
                   key={`${item.id ?? 'row'}-${index}`}
                   data-index={index}
                   type="button"
+                  // Nombre accesible desde los DATOS, no del contenido: el
+                  // highlight (HighlightText) parte el texto en <mark>/<span>
+                  // y dom-accessibility-api inserta separadores entre hermanos,
+                  // corruption del nombre si el término matchea a mitad de
+                  // palabra o dentro del SKU (§13).
+                  aria-label={item.sku ? `${item.name} (SKU: ${item.sku})` : item.name}
                   onClick={() => {
                     onSelect(item);
                     setSearchTerm('');
@@ -299,8 +329,8 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
                 >
                   <div className="flex-1 min-w-0">
                     {renderItem
-                      ? renderItem(item, index, isHighlighted)
-                      : defaultRenderItem(item, index, isHighlighted)}
+                      ? renderItem(item, index, isHighlighted, searchTerm)
+                      : defaultRenderItem(item, index, isHighlighted, searchTerm)}
                   </div>
                 </button>
               );

@@ -92,6 +92,13 @@ beforeEach(() => {
   mockService.getProductBuyers.mockResolvedValue(buyersEnvelope);
   mockService.getCustomerTopProducts.mockResolvedValue(topProductsEnvelope);
 });
+
+// HighlightText (§13) parte el label en span+mark: el texto completo vive
+// en el elemento más profundo que lo contiene íntegro (no en un hijo solo).
+const hasFullText = (text: string) => (_: string, element: Element | null) =>
+  element?.textContent === text &&
+  !Array.from(element.children).some((child) => child.textContent === text)
+
 describe('ProductBuyersPage', () => {
   it('sin product_id muestra el selector de producto y no fetcha', async () => {
     render(
@@ -256,13 +263,14 @@ describe('ProductBuyersPage', () => {
     );
 
     await userEvent.type(screen.getByPlaceholderText('Buscar...'), 'adidas');
-    expect(await screen.findByText('Camiseta Adidas · Rojo M')).toBeInTheDocument();
+    expect(await screen.findByText(hasFullText('Camiseta Adidas · Rojo M'))).toBeInTheDocument();
     expect(screen.getByText('SKU: AD-R-M')).toBeInTheDocument();
     expect(screen.getByText('Remera Lisa')).toBeInTheDocument();
     expect(screen.queryByText(/Stock:/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Gs\./)).not.toBeInTheDocument();
     expect(mockProductService.searchAdvanced).toHaveBeenCalledWith(
       expect.objectContaining({ search: 'adidas', granularity: 'variant' }),
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
   });
 

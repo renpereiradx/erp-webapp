@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
  * golpear la búsqueda avanzada en cada tecla. (Copia tipada del patrón de
  * features/products/hooks/useDebouncedValue, autocontenida en el feature.)
  */
-export function useDebouncedValue<T>(value: T, delayMs = 350): T {
+export function useDebouncedValue<T>(value: T, delayMs = 300): T {
   const [debounced, setDebounced] = useState(value)
 
   useEffect(() => {

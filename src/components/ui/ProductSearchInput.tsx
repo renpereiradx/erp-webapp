@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Package, X } from 'lucide-react';
 import { Button } from './button';
 import { SearchableDropdown, SearchableDropdownItem } from './SearchableDropdown';
+import { HighlightText } from './HighlightText';
 import { productService } from '@/services/productService';
 import type { ProductEnriched } from '@/types';
 
@@ -44,7 +45,7 @@ const getProductDisplay = (product: any): ProductSearchResult => {
     }
   }
 
-  const price = 
+  const price =
     product.sale_price ||
     product.price ||
     product.unit_price ||
@@ -62,6 +63,11 @@ const getProductDisplay = (product: any): ProductSearchResult => {
   };
 };
 
+/**
+ * Buscador de producto reutilizable sobre el dropmenu compartido. Convención
+ * §13: el dropdown pasa su AbortController por término y acá se reenvía al
+ * service — re-tipear aborta el HTTP en vuelo (antes no había abort).
+ */
 const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
   onProductSelect,
   placeholder = 'Buscar producto por ID, nombre o código de barras...',
@@ -86,14 +92,17 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
     if (onClear) onClear();
   }, [onClear]);
 
-  const handleSearch = useCallback(async (term: string): Promise<SearchableDropdownItem[]> => {
+  const handleSearch = useCallback(async (
+    term: string,
+    ctx?: { signal?: AbortSignal },
+  ): Promise<SearchableDropdownItem[]> => {
     const trimmedTerm = term.trim();
-    if (trimmedTerm.length < 3) return [];
-    
+    if (trimmedTerm.length < 2) return [];
+
     try {
-      const results = await productService.search(trimmedTerm);
+      const results = await productService.search(trimmedTerm, { signal: ctx?.signal });
       const productsArray = Array.isArray(results) ? results : results ? [results] : [];
-      
+
       const filteredProducts = productsArray
         .filter((p: ProductEnriched) => p.state !== false)
         .slice(0, 50)
@@ -105,17 +114,19 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
     }
   }, []);
 
-  const renderItem = useCallback((item: SearchableDropdownItem, _index: number, _isHighlighted: boolean) => {
+  const renderItem = useCallback((item: SearchableDropdownItem, _index: number, _isHighlighted: boolean, searchTerm: string) => {
     const product = item as unknown as ProductSearchResult;
     return (
       <div className="flex items-center gap-3">
         <Package className="w-5 h-5 text-primary shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="font-medium truncate">
-            {product.name}
+            <HighlightText text={product.name} term={searchTerm} />
           </div>
           <div className="text-sm text-slate-500 flex items-center gap-2">
-            <span>SKU: {product.sku && product.sku !== '-' ? product.sku : product.id}</span>
+            <span>
+              SKU: <HighlightText text={product.sku && product.sku !== '-' ? product.sku : product.id} term={searchTerm} />
+            </span>
             {product.barcode && <span>Cod: {product.barcode}</span>}
             {product.stock !== undefined && (
               <span className={product.stock > 0 ? 'text-success' : 'text-error'}>
@@ -170,6 +181,7 @@ const ProductSearchInput: React.FC<ProductSearchInputProps> = ({
         placeholder={placeholder}
         autoFocus={autoFocus}
         renderItem={renderItem}
+        minSearchLength={2}
         emptyMessage="No se encontraron productos"
         className="w-full"
       />

@@ -303,7 +303,7 @@ describe('CreateTransferModal — creación (F.4/F.5)', () => {
     expect(row).toHaveTextContent('YER-01')
     expect(within(row).getByText('12 unit')).toBeInTheDocument()
     expect(screen.getByTestId('transfer-line-qty-P1')).toHaveValue(1)
-    expect(searchSellableUnitsFlat).toHaveBeenCalledWith('yerba')
+    expect(searchSellableUnitsFlat).toHaveBeenCalledWith('yerba', expect.objectContaining({ signal: expect.any(AbortSignal) }))
   })
 
   it('accepts decimal quantities for weighable products (kg) — PLAN_UNITS', async () => {

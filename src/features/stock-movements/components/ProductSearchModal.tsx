@@ -13,9 +13,9 @@ import { useI18n } from '@/lib/i18n';
 import EnhancedModal from '@/components/ui/EnhancedModal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { productService } from '@/services/productService';
+import { HighlightText } from '@/components/ui/HighlightText';
+import { useProductSearch } from '@/hooks/useProductSearch';
 import { formatNumber } from '@/utils/currencyUtils';
-import { toApiError } from '@/utils/ApiError';
 
 /**
  * Forma mínima de la unidad vendible del catálogo tal como la usa este feature.
@@ -44,59 +44,38 @@ interface Props {
 export function ProductSearchModal({ open, onClose, onSelect }: Props) {
   const { t } = useI18n();
   const [term, setTerm] = useState('');
-  const [results, setResults] = useState<CatalogProduct[]>([]);
-  const [loading, setLoading] = useState(false);
   const [highlight, setHighlight] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Búsqueda con debounce
+  // Búsqueda canónica (DESIGN.md §13): debounce+abort+guard en el hook —
+  // antes solo había un flag `cancelled`, sin abort del HTTP en vuelo.
+  const { results: searchRows, isSearching: loading, search: runSearch, clear: clearSearch } =
+    useProductSearch({ pageSize: 20 });
+
+  const filtered = useMemo(
+    () => searchRows.filter((p) => p.is_active !== false) as unknown as CatalogProduct[],
+    [searchRows],
+  );
+
   useEffect(() => {
     if (!open) return;
-    const trimmed = term.trim();
-    if (trimmed.length < 2) {
-      setResults([]);
+    if (term.trim().length < 2) {
+      clearSearch();
       return;
     }
-    let cancelled = false;
-    setLoading(true);
-    const id = setTimeout(async () => {
-      try {
-        const response = await productService.searchAdvanced({
-          search: trimmed,
-          granularity: 'variant',
-          page: 1,
-          page_size: 20,
-        });
-        const raw = Array.isArray(response?.products) ? response.products : [];
-        const arr = (raw as CatalogProduct[]).filter(
-          (p) => p.state !== false && p.is_active !== false,
-        );
-        if (!cancelled) setResults(arr);
-      } catch (e) {
-        if (!cancelled) {
-          console.error(toApiError(e, 'search_error'));
-          setResults([]);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }, 300);
-    return () => {
-      cancelled = true;
-      clearTimeout(id);
-    };
-  }, [term, open]);
+    runSearch(term);
+  }, [term, open, runSearch, clearSearch]);
 
   // Reset al abrir/cerrar
   useEffect(() => {
     if (open) {
       setTerm('');
-      setResults([]);
+      clearSearch();
       setHighlight(-1);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }, [open]);
+  }, [open, clearSearch]);
 
   // Scroll al item resaltado
   useEffect(() => {
@@ -105,8 +84,6 @@ export function ProductSearchModal({ open, onClose, onSelect }: Props) {
       el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [highlight]);
-
-  const filtered = useMemo(() => results, [results]);
 
   const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const n = filtered.length;
@@ -190,13 +167,23 @@ export function ProductSearchModal({ open, onClose, onSelect }: Props) {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
                       <p className={`text-data-mono font-data-mono font-bold uppercase ${highlight === index ? 'text-on-primary/80' : 'text-primary'}`}>
-                        {product.sku || product.id}
+                        <HighlightText
+                          text={String(product.sku || product.id)}
+                          term={term}
+                          markClassName={highlight === index ? 'bg-on-primary/20' : undefined}
+                        />
                       </p>
                       <p className={`text-body-sm-bold uppercase ${highlight === index ? 'text-on-primary/90' : 'text-muted-foreground'}`}>
                         {t('stockMovements.search.stock', 'Stock')}: {formatNumber(product.stock_quantity || 0)}
                       </p>
                     </div>
-                    <h4 className="text-body-md-bold leading-tight truncate">{label}</h4>
+                    <h4 className="text-body-md-bold leading-tight truncate">
+                      <HighlightText
+                        text={label}
+                        term={term}
+                        markClassName={highlight === index ? 'bg-on-primary/20' : undefined}
+                      />
+                    </h4>
                     {/* Indicación del producto padre en filas de variante */}
                     {product.variant_id && (
                       <p className={`text-body-sm uppercase tracking-wide ${highlight === index ? 'text-on-primary/70' : 'text-muted-foreground'}`}>

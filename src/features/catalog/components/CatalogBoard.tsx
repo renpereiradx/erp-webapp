@@ -41,7 +41,7 @@ export function CatalogBoard() {
   const [filters, setFilters] = useState<CatalogFilters>(DEFAULT_CATALOG_FILTERS)
   const [page, setPage] = useState(1)
 
-  const debouncedSearch = useDebouncedValue(searchTerm.trim(), 350)
+  const debouncedSearch = useDebouncedValue(searchTerm.trim(), 300)
   const { categories, brands } = useCatalogFacets()
   const unitsQuery = useCatalogSellableUnits(debouncedSearch, filters, page)
 

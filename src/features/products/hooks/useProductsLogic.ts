@@ -187,7 +187,9 @@ export const useProductsLogic = (externalToast?: ReturnType<typeof useToast>) =>
         return;
       }
 
-      if (trimmedTerm.length < 3) {
+      // Convención §13 (DESIGN.md): mínimo 2 caracteres en todas las
+      // superficies de búsqueda de productos (antes 3, único outlier).
+      if (trimmedTerm.length < 2) {
         setIsSearching(false);
         return;
       }
@@ -208,10 +210,11 @@ export const useProductsLogic = (externalToast?: ReturnType<typeof useToast>) =>
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
-    
+
+    // Convención §13: debounce 300ms (antes 500, único outlier).
     debounceTimeoutRef.current = setTimeout(() => {
       performSearch(value);
-    }, 500);
+    }, 300);
   };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -221,7 +224,7 @@ export const useProductsLogic = (externalToast?: ReturnType<typeof useToast>) =>
         clearTimeout(debounceTimeoutRef.current);
       }
       const value = searchTerm.trim();
-      if (value.length >= 3) {
+      if (value.length >= 2) {
         performSearch(value);
       }
     }

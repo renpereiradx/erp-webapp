@@ -13,6 +13,7 @@
 import React from 'react'
 import { Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { HighlightText } from '@/components/ui/HighlightText'
 import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
@@ -136,14 +137,24 @@ export const PurchaseProductSearchInput: React.FC<PurchaseProductSearchInputProp
                         isActive ? 'text-primary' : 'text-foreground'
                       )}
                     >
-                      {/* Fila plana: "Producto · Variante" cuando la unidad es una variante */}
-                      {p.variant_name
-                        ? `${getProductName(p)} · ${p.variant_name}`
-                        : getProductName(p)}
+                      {/* Fila plana: "Producto · Variante" cuando la unidad es una variante.
+                          HighlightText (§13): el usuario ve por qué la fila apareció. */}
+                      {p.variant_name ? (
+                        <>
+                          <HighlightText text={getProductName(p)} term={search} />
+                          {' · '}
+                          <HighlightText text={p.variant_name} term={search} />
+                        </>
+                      ) : (
+                        <HighlightText text={getProductName(p)} term={search} />
+                      )}
                     </div>
                     <div className='flex flex-wrap gap-1.5 mt-0.5 items-center'>
                       <span className='text-body-sm font-data-mono text-outline-fg'>
-                        {p.sku || `ID: ${p.id || p.product_id || '-'}`}
+                        <HighlightText
+                          text={p.sku || `ID: ${p.id || p.product_id || '-'}`}
+                          term={search}
+                        />
                       </span>
                       {/* Fila base de un producto con variantes */}
                       {p.is_base_row && (

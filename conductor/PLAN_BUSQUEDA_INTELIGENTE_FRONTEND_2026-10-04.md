@@ -1,6 +1,7 @@
 # PLAN_BUSQUEDA_INTELIGENTE_FRONTEND — Robustez, resaltado y convención de búsqueda
 
-**Fecha:** 2026-10-04 · **Estado: PROPUESTO** (pendiente de aprobación del owner; sin código escrito)
+**Fecha:** 2026-10-04 · **Estado: EJECUTADO** (2026-10-05, con aprobación del owner; ver
+"Resultado de ejecución" al final — 3 desviaciones documentadas)
 **Scope:** Frontend React (`erp-webapp`). El BE tiene su propio plan
 (`business_management/conductor/PLAN_BUSQUEDA_INTELIGENTE_BACKEND_2026-10-04.md`).
 **Sin dependencia dura**: el contract de `searchAdvanced` no cambia en el BE (solo el
@@ -138,3 +139,60 @@ Problemas concretos:
 
 Al cerrar y verificar el hito (conjunto con el plan BE): tag **MINOR** `v1.1.0` en
 AMBOS repos + `"version"` de `package.json` sincronizada, según AGENTS.md.
+
+---
+
+## Resultado de ejecución (2026-10-05)
+
+Implementado G1–G4 completo. Gates: `tsc` 0 errores · `vitest` **1446/1446** (1433 del
+baseline + 13 nuevos: 6 del hook, 7 de HighlightText) · `pnpm build` verde ·
+`pnpm lint:design` verde. Smoke de navegador (dev-JWT real, backend :5050 + Vite):
+
+- **/ventas**: "PAPA" → 2 filas (PAPA BR, PAPA KG PY) con nombre, SKU, precio, stock y
+  `<mark>PAPA</mark>` en ambas.
+- **/compras** (buscador del carrito): "PAPA" → 2 filas con SKU/stock y highlight.
+- **/productos**: búsqueda con **2 caracteres** ("PA") dispara resultados en vivo
+  (antes 3).
+- **/catalogo**: carga idéntico (regresión cero).
+
+### Desviaciones del plan (decididas durante la ejecución)
+
+1. **`ProductSearchInput.tsx` NO se borró** — la verificación previa al DELETE encontró
+   **1 consumidor** (`PriceTransactions.jsx:20`, página legacy de ajustes de precios) que
+   el diagnóstico del 10-04 dio por inexistente. En lugar de borrarlo se reescribió sobre
+   el contrato nuevo: recibe el `signal` del dropmenu, mínimo 2 caracteres y highlight en
+   su `renderItem`. Su consumidor no se tocó.
+2. **El opt-in de `SearchableDropdown` es `onSearch(term, ctx?: { signal })`, no
+   `(term, signal)`** — la forma objeto evita el conflicto de contravarianza con los
+   services que exponen `(term, options)` (p. ej. `searchSellableUnitsFlat`, cuyo 2º
+   parámetro era `pageSize`: pasarle el signal crudo habría roto el runtime, lo cazó
+   `tsc`). `EntitySearchSelect` y los wrappers de drill-down reenvían el ctx.
+3. **A11y del highlight**: `dom-accessibility-api` (el motor de nombres accesibles que
+   usan los tests) inserta separadores entre elementos hermanos — un `<mark>` a mitad de
+   palabra o dentro de un SKU corrompía el nombre accesible de la fila ("Fer nando
+   Maciel"). Los botones de fila de `SearchableDropdown` llevan ahora `aria-label`
+   construido desde los DATOS (`name (SKU: sku)`), inmune al split visual.
+
+### Notas de implementación
+
+- El guard de respuesta vieja del hook es `seq` + `signal.aborted` (cinturón y
+  tirantes como pedía el plan); el spinner (`isSearching`) se prende al llamar
+  `search()` (incluye la ventana de debounce).
+- Compras tenía **500ms** reales de debounce (el diagnóstico decía 300): unificado a
+  300 vía default del hook. El spinner de "cargando detalle del producto seleccionado"
+  quedó como estado propio (`fetchingSelectedProduct`) desacoplado del spinner de
+  búsqueda.
+- `/compras` usa `pageSize: 10` y /ventas `15` (excepción declarada en DESIGN §13.1,
+  densidad de sus dropdowns); el resto usa el default 20.
+- **Deuda declarada** (§13.3 de DESIGN.md): /productos sigue con `page_size=100` +
+  paginación client-side (grilla, no dropdown) — pasarla a server-side queda como
+  ajuste posterior.
+- Tests ajustados al contrato nuevo (6 aserciones en 5 archivos): los mocks del service
+  ahora reciben `(payload, { signal })`, y dos tests que matcheaban texto partido por el
+  `<mark>` usan un matcher de textContent hoja.
+
+### Versionado
+
+El tag MINOR `v1.1.0` queda **pendiente** hasta cerrar el plan BE asociado
+(`PLAN_BUSQUEDA_INTELIGENTE_BACKEND_2026-10-04.md`, orden por relevancia), tal como
+define este plan ("conjunto con el plan BE").

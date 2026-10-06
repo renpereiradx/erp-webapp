@@ -166,6 +166,8 @@ describe('BudgetCreate (nuevo presupuesto)', () => {
     // dropdown mostraba solo productos a nivel padre, sin stock y a Gs. 0.
     expect(searchAdvancedMock).toHaveBeenCalledWith(
       expect.objectContaining({ search: 'adid', granularity: 'variant' }),
+      // Convención §13: searchSellableUnitsFlat ahora reenvía el ctx con signal
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     )
     expect(screen.getByText('CAMISETA ADIDAS · Rojo / M')).toBeInTheDocument()
     expect(screen.getByText('CAMISETA ADIDAS · Azul / S')).toBeInTheDocument()

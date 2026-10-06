@@ -956,3 +956,54 @@ las páginas de listado simple usan SOLO el hook compartido. No dupliques.
 2. Con `enabled: false` (modal abierto) el atajo NO dispara.
 3. Un evento ya `defaultPrevented` no se procesa dos veces.
 4. Keys de placeholder nuevas existen en `locales/es` y `locales/en`.
+
+---
+
+## 13. Búsqueda de productos: debounce, abort y resaltado (convención cross-superficie)
+
+El ERP busca productos en muchas superficies (POS de ventas, compras, stock,
+catálogo, picker de analítica, ajustes de precios). Cada una solía tener su
+propia receta de debounce/mínimos y varias no cancelaban el HTTP en vuelo:
+con WiFi de cliente, la respuesta de un prefijo ("cem") podía llegar DESPUÉS
+que la del término completo ("cemento") y pisar los resultados correctos.
+
+**Implementación canónica:** hook `src/hooks/useProductSearch.ts` — debounce +
+`AbortController` por término + guard de secuencia (descarta la respuesta si
+igual llegó). Cualquier superficie NUEVA que busque productos con
+`searchAdvanced` debe usar ese hook, no armar su propio `setTimeout`.
+
+### 13.1 Parámetros únicos (cerrados)
+
+| Parámetro                | Valor | Nota |
+|:--------------------------|:------|:-----|
+| Debounce                  | **300 ms** | /catalogo y pedidos vía `useDebouncedValue(·, 300)`; POS/compras/stock vía el hook canónico |
+| Mínimo de caracteres      | **2** | Antes /productos y /ventas pedían 3 (únicos outliers, unificados) |
+| `page_size` en dropdowns  | **20** | POS usa 15 y compras 10 por densidad de su dropdown — aceptado como excepción declarada |
+| Abort del request previo  | **Obligatorio** | Hook canónico, o `signal` opt-in de `SearchableDropdown.onSearch(term, signal)` |
+| Resaltado del término     | **Obligatorio** | `<HighlightText text={…} term={searchTerm} />` en nombre Y SKU — el usuario debe VER por qué la fila apareció |
+| SKU siempre visible       | **Sí** | En cada fila de resultado |
+
+### 13.2 Piezas canónicas
+
+| Pieza | Dónde | Para qué |
+|:------|:------|:---------|
+| `useProductSearch({ debounceMs, minSearchLength, pageSize, granularity })` | `src/hooks/useProductSearch.ts` | Superficies con dropdown propio (POS, compras, stock). Devuelve `{ results, isSearching, search(term), clear() }` |
+| `SearchableDropdown.onSearch(term, { signal })` | `src/components/ui/SearchableDropdown.tsx` | Superficies sobre el dropmenu compartido: ctx con `signal` opt-in, aborta el HTTP de verdad; la respuesta vieja se descarta igual |
+| `HighlightText` | `src/components/ui/HighlightText.tsx` | Resaltado por partición de índices (case-insensitive, sin regex sobre input del usuario, sin `dangerouslySetInnerHTML`). El renderer por defecto del dropmenu ya resalta nombre y SKU |
+| `renderItem(item, index, isHighlighted, searchTerm)` | `SearchableDropdown` | 4º argumento con el término actual para resaltar en renderers propios |
+
+### 13.3 Estado de adopción (2026-10-05)
+
+| Superficie | Búsqueda | Abort | Resaltado |
+|:-----------|:---------|:------|:----------|
+| POS ventas (`SalesNew` → `ProductSearchPanel`) | ✅ hook canónico | ✅ | ✅ nombre + SKU |
+| Compras (`usePurchasesLogic` → `PurchaseProductSearchInput`) | ✅ hook canónico | ✅ | ✅ nombre (+variante) + SKU |
+| Stock — modal (`ProductSearchModal`) | ✅ hook canónico | ✅ | ✅ nombre + SKU |
+| Catálogo (`CatalogBoard`) | react-query (cache+dedupe propios) | ✅ nativo | n/a (grilla, no dropdown) |
+| Picker analítica (`EntitySearchSelect`) | `SearchableDropdown` | ✅ signal | ✅ nombre + SKU/doc |
+| Ajustes de precios (`ProductSearchInput`) | `SearchableDropdown` | ✅ signal | ✅ nombre + SKU |
+| /productos (grilla paginada, `useProductsLogic`) | store propio ps=100 | store | n/a (grilla) |
+
+Deuda declarada: /productos busca con `page_size=100` y pagina client-side su
+grilla (no dropdown) — alinearla a la convención exige pasar a paginación
+server-side; queda como ajuste posterior, no bloquea §13.

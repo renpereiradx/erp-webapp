@@ -13,6 +13,7 @@ import React from 'react';
 import { Layers, Search, ShoppingCart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { HighlightText } from '@/components/ui/HighlightText';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
 import { isDecimalUnit } from '@/constants/units';
 import { cn } from '@/lib/utils';
@@ -185,10 +186,10 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
                       <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                         <div className="flex items-center gap-2 min-w-0">
                           <p className="text-body-md-bold text-foreground truncate leading-none uppercase">
-                            {product.displayName ?? product.name}
+                            <HighlightText text={product.displayName ?? product.name} term={searchTerm} />
                           </p>
                           <Badge variant="secondary" size="sm" className="font-data-mono shrink-0">
-                            #{product.sku}
+                            #<HighlightText text={product.sku} term={searchTerm} />
                           </Badge>
                         </div>
                         <div className="flex items-center gap-3">

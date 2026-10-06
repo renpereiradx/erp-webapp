@@ -34,6 +34,7 @@ import {
 import { isBlockedByStock } from '@/domain/products/sellability';
 import { getDefaultVatPercent } from '@/store/useTaxRateStore';
 import { useToast } from '@/hooks/useToast';
+import { useProductSearch } from '@/hooks/useProductSearch';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBranch } from '@/contexts/BranchContext';
 import saleService from '@/services/saleService';
@@ -380,7 +381,14 @@ const SalesNew: React.FC = () => {
     };
   }, [reservationsEnabled]);
 
-  const [productSearchResults, setProductSearchResults] = useState<ProductDisplay[]>([]);
+  // Búsqueda canónica (DESIGN.md §13): debounce+abort+guard en useProductSearch.
+  // Los resultados previos siguen visibles mientras llega la respuesta nueva.
+  const { results: productSearchRows, search: runProductSearch, clear: clearProductSearch } =
+    useProductSearch({ pageSize: 15 });
+  const productSearchResults = useMemo<ProductDisplay[]>(
+    () => productSearchRows.map(getUnitDisplay),
+    [productSearchRows],
+  );
   const [showProductDropdown, setShowProductDropdown] = useState(false);
   const [productHighlightedIndex, setProductHighlightedIndex] = useState(-1);
   const [productSearchTerm, setProductSearchTerm] = useState('');
@@ -582,40 +590,24 @@ const SalesNew: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const searchTimeout = setTimeout(async () => {
-      const term = productSearchTerm.trim();
-      if (term.length >= 3) {
-        try {
-          // Búsqueda plana (granularity=variant): el término matchea también
-          // SKU/barcode/nombre de variante y cada fila trae precio/stock
-          // propio — sin segundo paso de selección de variante.
-          const response = await productService.searchAdvanced({
-            search: term || undefined,
-            granularity: 'variant',
-            page: 1,
-            page_size: 15,
-          });
-          const raw = (response as any)?.products;
-          const allResults: Record<string, unknown>[] = Array.isArray(raw) ? raw : [];
-          const displayResults = allResults
-            .filter(p => p.state !== false)
-            .slice(0, 15)
-            .map(p => getUnitDisplay(p));
-          setProductSearchResults(displayResults);
-          setShowProductDropdown(true);
-          setProductHighlightedIndex(displayResults.length > 0 ? 0 : -1);
-        } catch (error) {
-          console.error('Error searching products:', error);
-          setProductSearchResults([]);
-        }
-      } else {
-        setProductSearchResults([]);
-        setShowProductDropdown(false);
-        setProductHighlightedIndex(-1);
-      }
-    }, 300);
-    return () => clearTimeout(searchTimeout);
-  }, [productSearchTerm]);
+    const term = productSearchTerm.trim();
+    if (term.length < 2) {
+      clearProductSearch();
+      setShowProductDropdown(false);
+      setProductHighlightedIndex(-1);
+      return;
+    }
+    // Búsqueda plana (granularity=variant): el término matchea también
+    // SKU/barcode/nombre de variante y cada fila trae precio/stock
+    // propio — sin segundo paso de selección de variante.
+    runProductSearch(term);
+    setShowProductDropdown(true);
+  }, [productSearchTerm, runProductSearch, clearProductSearch]);
+
+  // Al llegar resultados nuevos (o vaciarse), el highlight vuelve al primero.
+  useEffect(() => {
+    setProductHighlightedIndex(productSearchResults.length > 0 ? 0 : -1);
+  }, [productSearchResults]);
 
   useEffect(() => {
     if (activeTab === 'new-sale' && productSearchInputRef.current) {

@@ -34,8 +34,11 @@ const columns: DrilldownColumn<ProductBuyerRow>[] = [
  * por variante con SKU/stock/precio propios; elegir una variante filtra el
  * drill-down por variant_id (soportado por el endpoint).
  */
-const searchProducts = async (term: string): Promise<EntityOption[]> => {
-  const units = await searchSellableUnitsFlat(term);
+const searchProducts = async (
+  term: string,
+  ctx?: { signal?: AbortSignal },
+): Promise<EntityOption[]> => {
+  const units = await searchSellableUnitsFlat(term, ctx);
   return units.map(sellableUnitToEntityOption);
 };
 

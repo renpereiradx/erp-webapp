@@ -19,6 +19,7 @@ import {
   purchasePaymentsMvpService,
 } from '@/services/purchasePaymentsMvpService'
 import { useToast } from '@/hooks/useToast'
+import { useProductSearch } from '@/hooks/useProductSearch'
 import { calculatePurchaseSalePriceGs, calculateProfitMargin } from '@/domain/purchase/pricing/purchasePricingPolicy'
 import { deriveUnitPrice } from '@/domain/units/deriveUnitPrice'
 import { resolveUnitFactor, type UnitConversionRow } from '@/domain/units/resolveUnitFactor'
@@ -103,9 +104,22 @@ export const usePurchasesLogic = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [modalProductSearch, setModalProductSearch] = useState<string>('')
-  const [modalProductResults, setModalProductResults] = useState<any[]>([])
   const [modalSelectedProduct, setModalSelectedProduct] = useState<any>(null)
-  const [searchingProducts, setSearchingProducts] = useState<boolean>(false)
+  // Búsqueda canónica de productos (DESIGN.md §13): debounce, abort del HTTP
+  // en vuelo y guard de respuesta vieja viven en useProductSearch — antes el
+  // modal tenía su propio setTimeout sin abort (race condition con WiFi de
+  // cliente). pageSize 10: dropdown compacto del modal de compra.
+  const {
+    results: modalProductSearchRows,
+    isSearching: searchLoadingProducts,
+    search: runModalProductSearch,
+    clear: clearModalProductSearch,
+  } = useProductSearch({ pageSize: 10 })
+  // Spinner del fetch del producto completo al seleccionar una fila (detalle
+  // de compra); independiente del spinner de búsqueda del hook.
+  const [fetchingSelectedProduct, setFetchingSelectedProduct] = useState<boolean>(false)
+  const searchingProducts = searchLoadingProducts || fetchingSelectedProduct
+  const modalProductResults = modalProductSearchRows as any[]
   const [showProductDropdown, setShowProductDropdown] = useState<boolean>(false)
   const [modalQuantity, setModalQuantity] = useState<string | number>('')
   const [modalUnit, setModalUnit] = useState<string>('unit')
@@ -545,37 +559,18 @@ export const usePurchasesLogic = () => {
       isSelectingProductRef.current = false
       return
     }
-    if (!modalProductSearch.trim() || modalProductSearch.trim().length < 2) {
-      setModalProductResults([])
+    if (modalProductSearch.trim().length < 2) {
+      clearModalProductSearch()
       setShowProductDropdown(false)
       return
     }
-    const timer = setTimeout(async () => {
-      setSearchingProducts(true)
-      setShowProductDropdown(true)
-      try {
-        // Búsqueda plana (granularity=variant, PLAN_BUSQUEDA_VARIANTES_PLANAS
-        // F6): cada fila es una unidad vendible — el término matchea también
-        // SKU/barcode de variante y la fila trae stock/costo propio.
-        const res = await productService.searchAdvanced({
-          search: modalProductSearch.trim(),
-          granularity: 'variant',
-          page: 1,
-          page_size: 10,
-        })
-        const raw = (res as any)?.products
-        setModalProductResults(
-          (Array.isArray(raw) ? raw : []).filter(p => p.state !== false),
-        )
-      } catch (err) {
-        console.error('Error searching products:', err)
-        setModalProductResults([])
-      } finally {
-        setSearchingProducts(false)
-      }
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [modalProductSearch])
+    setShowProductDropdown(true)
+    // Búsqueda plana (granularity=variant, PLAN_BUSQUEDA_VARIANTES_PLANAS
+    // F6): cada fila es una unidad vendible — el término matchea también
+    // SKU/barcode de variante y la fila trae stock/costo propio. El debounce
+    // (300ms, §13) y el abort del request anterior van dentro del hook.
+    runModalProductSearch(modalProductSearch)
+  }, [modalProductSearch, runModalProductSearch, clearModalProductSearch])
 
   // Pricing Derivations
   const effectiveSalePrice = useMemo(() => {
@@ -664,7 +659,7 @@ export const usePurchasesLogic = () => {
     isSelectingProductRef.current = true;
 
     try {
-      setSearchingProducts(true);
+      setFetchingSelectedProduct(true);
       const fullProduct = await productService.getForPurchase(productId) as any;
 
       const normalizedProduct = {
@@ -705,7 +700,7 @@ export const usePurchasesLogic = () => {
       // Sin resultados pendientes: al montar el modal, Radix enfoca el buscador
       // interno (onFocus abre el dropdown) y los resultados viejos de la búsqueda
       // previa volverían a pintarse tapando la tarjeta del producto.
-      setModalProductResults([]);
+      clearModalProductSearch();
       setShowProductDropdown(false);
       setModalUnit(normalizedProduct.unit || 'unit');
 
@@ -758,7 +753,7 @@ export const usePurchasesLogic = () => {
         variant: 'destructive',
       });
     } finally {
-      setSearchingProducts(false);
+      setFetchingSelectedProduct(false);
     }
   };
 
