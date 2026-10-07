@@ -103,7 +103,7 @@ export function AdminSessionsPage() {
     <div className="space-y-lg animate-in fade-in duration-300">
       <PageHeaderX
         title={t('sessions.title', 'Control Global de Sesiones')}
-        subtitle={t('sessions.subtitle', 'Monitoreo y gestión en tiempo real de sesiones activas en todo el ecosistema ERP.')}
+        subtitle={t('sessions.subtitle', 'Monitoreo y gestión en tiempo real de sesiones activas en todo el sistema.')}
       />
 
       {/* Metrics */}

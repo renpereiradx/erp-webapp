@@ -29,9 +29,9 @@ function BrandMark() {
         <span className="material-symbols-outlined text-xl font-bold">architecture</span>
       </div>
       <div onClick={() => navigate('/dashboard')} className="cursor-pointer whitespace-nowrap">
-        <h1 className="text-title-md tracking-tighter uppercase leading-none text-foreground">ERP System</h1>
+        <h1 className="text-title-md tracking-tighter uppercase leading-none text-foreground">Gestión Comercial</h1>
         <p className="text-label-caps uppercase text-on-surface-deep leading-none mt-xs">
-          {t('nav.brandTagline', 'Fluent ERP')} · <SystemVersionBadge />
+          {t('nav.brandTagline', 'Sistema integral')} · <SystemVersionBadge />
         </p>
       </div>
     </div>

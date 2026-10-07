@@ -28,7 +28,7 @@ const CashFlowAnalysisDashboard = () => {
   const { cashFlow, loading, error, fetchCashFlow } = useCashFlowReport()
 
   useEffect(() => {
-    document.title = 'Flujo de Efectivo Analítico | ERP System'
+    document.title = 'Flujo de Efectivo Analítico | Sistema de Gestión'
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 

@@ -160,7 +160,7 @@ const Login = () => {
         </section>
 
         <p className="mt-lg text-center text-label-caps uppercase text-on-surface-deep">
-          &copy; {new Date().getFullYear()} &bull; {t('login.footer.brand', 'ERP System')} &bull;{' '}
+          &copy; {new Date().getFullYear()} &bull; {t('login.footer.brand', 'Sistema de Gestión Comercial')} &bull;{' '}
           {/* PLAN_VERSION_UI_FRONTEND: pre-auth también muestra la versión (/version es sin auth). */}
           <SystemVersionBadge />
         </p>

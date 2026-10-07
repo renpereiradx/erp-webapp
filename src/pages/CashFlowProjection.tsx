@@ -33,7 +33,7 @@ const CashFlowProjection = () => {
   } = useCashFlow();
 
   useEffect(() => {
-    document.title = 'Proyección de Pagos y Flujo | ERP System'; // título de pestaña: intencionalmente fuera de i18n
+    document.title = 'Proyección de Pagos y Flujo | Sistema de Gestión'; // título de pestaña: intencionalmente fuera de i18n
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 

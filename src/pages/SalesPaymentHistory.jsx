@@ -206,7 +206,7 @@ const SalesPaymentHistory = () => {
               </table>`
             : `<p style="font-size:12px;color:#666;">${t('sales.paymentHistory.print.noPayments', 'Esta venta aún no tiene cobros asociados.')}</p>`
         }
-        <p style="margin-top:24px;font-size:10px;color:#999;">${t('sales.paymentHistory.print.footer', 'Reporte generado por el ERP')}</p>
+        <p style="margin-top:24px;font-size:10px;color:#999;">${t('sales.paymentHistory.print.footer', 'Reporte generado por el sistema de gestión')}</p>
       `,
     })
   }

@@ -22,7 +22,7 @@ const ProfitAndLoss = () => {
   const { loading, incomeStatement, error, fetchIncomeStatement } = useIncomeStatement();
 
   useEffect(() => {
-    document.title = t('bi.pnl.docTitle', 'Estado de Resultados | ERP System', {});
+    document.title = t('bi.pnl.docTitle', 'Estado de Resultados | Sistema de Gestión', {});
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [t]);
 

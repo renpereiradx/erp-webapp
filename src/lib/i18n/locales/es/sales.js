@@ -799,5 +799,5 @@ export const sales = {
   'sales.paymentHistory.print.cashier': 'Cajero',
   'sales.paymentHistory.print.notes': 'Notas',
   'sales.paymentHistory.print.noPayments': 'Esta venta aún no tiene cobros asociados.',
-  'sales.paymentHistory.print.footer': 'Reporte generado por el ERP',
+  'sales.paymentHistory.print.footer': 'Reporte generado por el sistema de gestión',
 }

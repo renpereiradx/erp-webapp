@@ -29,7 +29,7 @@ export const other = {
   'login.no_account': '¿No tienes cuenta?',
   'login.register': 'Regístrate',
   'login.footer.rights': 'Todos los derechos reservados.',
-  'login.footer.brand': 'ERP System',
+  'login.footer.brand': 'Sistema de Gestión Comercial',
   'login.validation.username.required': 'El email o usuario es requerido',
   'login.validation.username.min': 'Debe tener al menos 3 caracteres',
   'login.validation.password.required': 'La contraseña es requerida',
@@ -77,7 +77,7 @@ export const other = {
   'settings.conversions.title': 'Conversiones de Unidad',
   'settings.conversions.desc': 'Factores de conversión entre unidades de medida',
   // PLAN_VERSION_UI_FRONTEND: el literal de versión vive en SystemVersionBadge.
-  'settings.footer.brand': 'ERP Business Intelligence',
+  'settings.footer.brand': 'Sistema de Gestión Comercial',
   'settings.footer.copyright': '© {year} Corporación Industrial • Paraguay Compliance',
 
   // Navigation

@@ -25,7 +25,7 @@ const PayablesDashboard = () => {
   const [suppliersPagination, setSuppliersPagination] = useState({ page: 1, pageSize: 5 });
 
   useEffect(() => {
-    document.title = t('bi.payables.dashboard.docTitle', 'Resumen de Cuentas por Pagar | ERP System', {});
+    document.title = t('bi.payables.dashboard.docTitle', 'Resumen de Cuentas por Pagar | Sistema de Gestión', {});
     window.scrollTo({ top: 0, behavior: 'smooth' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

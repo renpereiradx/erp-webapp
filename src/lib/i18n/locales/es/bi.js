@@ -618,7 +618,7 @@ export const bi = {
   'bi.payables.agingSummary.title': 'Resumen de Antigüedad (Aging)',
   'bi.payables.agingSummary.total': 'Deuda Total',
   'bi.payables.breadcrumb': 'Finanzas',
-  'bi.payables.dashboard.docTitle': 'Resumen de Cuentas por Pagar | ERP System',
+  'bi.payables.dashboard.docTitle': 'Resumen de Cuentas por Pagar | Sistema de Gestión',
   'bi.payables.dashboard.errorTitle': 'No se pudo cargar el dashboard de CxP',
   'bi.payables.dashboard.lastUpdate': 'Última actualización',
   'bi.payables.dashboard.title': 'Resumen de Cuentas por Pagar',

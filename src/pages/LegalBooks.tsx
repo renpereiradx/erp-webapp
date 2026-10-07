@@ -156,7 +156,7 @@ const LegalBooks: React.FC = () => {
   } = useFinancialReports() as UseFinancialReportsLegacy;
 
   useEffect(() => {
-    document.title = t('fiscal.legalBooks.title', 'Libros Legales') + ' | ERP System'
+    document.title = t('fiscal.legalBooks.title', 'Libros Legales') + ' | Sistema de Gestión'
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [t])
 

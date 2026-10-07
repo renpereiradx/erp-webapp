@@ -25,7 +25,7 @@ const TaxManagementDashboard = () => {
   const error = vatError || taxError;
 
   useEffect(() => {
-    document.title = 'Gestión de IVA | ERP System'
+    document.title = 'Gestión de IVA | Sistema de Gestión'
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 

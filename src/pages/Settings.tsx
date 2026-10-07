@@ -342,7 +342,7 @@ export default function SettingsPage() {
             <Info size={14} />
             {/* PLAN_VERSION_UI_FRONTEND: la versión la muestra SystemVersionBadge, no un literal. */}
             <span className="text-label-caps uppercase">
-              {t('settings.footer.brand', 'ERP Business Intelligence')} · <SystemVersionBadge />
+              {t('settings.footer.brand', 'Sistema de Gestión Comercial')} · <SystemVersionBadge />
             </span>
           </div>
           <p className="text-body-sm text-on-surface-deep">

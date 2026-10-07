@@ -61,7 +61,7 @@ describe('CashFlowProjection (página)', () => {
     expect(await screen.findByText('Calendario de Pagos Pendientes')).toBeInTheDocument();
     expect(screen.getByText('Ratio de Cobertura')).toBeInTheDocument();
     expect(screen.getByText('BodyTech')).toBeInTheDocument();
-    expect(document.title).toBe('Proyección de Pagos y Flujo | ERP System');
+    expect(document.title).toBe('Proyección de Pagos y Flujo | Sistema de Gestión');
   });
 
   it('selector de período 30/60/90 delega en setPeriod', async () => {

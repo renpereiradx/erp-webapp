@@ -618,7 +618,7 @@ export const bi = {
   'bi.payables.agingSummary.title': 'Aging Summary',
   'bi.payables.agingSummary.total': 'Total Debt',
   'bi.payables.breadcrumb': 'Finance',
-  'bi.payables.dashboard.docTitle': 'Accounts Payable Overview | ERP System',
+  'bi.payables.dashboard.docTitle': 'Accounts Payable Overview | Business Management',
   'bi.payables.dashboard.errorTitle': 'Failed to load the AP dashboard',
   'bi.payables.dashboard.lastUpdate': 'Last update',
   'bi.payables.dashboard.title': 'Accounts Payable Overview',

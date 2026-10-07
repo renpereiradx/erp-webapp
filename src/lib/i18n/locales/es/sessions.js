@@ -7,7 +7,7 @@ export const sessions = {
   // Encabezado
   'sessions.title': 'Control Global de Sesiones',
   'sessions.subtitle':
-    'Monitoreo y gestión en tiempo real de sesiones activas en todo el ecosistema ERP.',
+    'Monitoreo y gestión en tiempo real de sesiones activas en todo el sistema.',
 
   // Métricas
   'sessions.metrics.active': 'Sesiones activas',

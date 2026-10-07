@@ -7,7 +7,7 @@ export const shell = {
   // Navegación lateral
   'nav.mainMenu': 'Menú Principal',
   // PLAN_VERSION_UI_FRONTEND: el tagline ya NO lleva versión — la muestra SystemVersionBadge.
-  'nav.brandTagline': 'Fluent ERP',
+  'nav.brandTagline': 'Sistema integral',
   'nav.salesAnalytics': 'Analítica de Ventas',
   'nav.executiveDashboard': 'Dashboard Ejecutivo',
   'nav.productsCategories': 'Productos y Categorías',
