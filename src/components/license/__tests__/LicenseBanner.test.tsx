@@ -75,18 +75,18 @@ describe('LicenseBanner', () => {
     expect(await screen.queryByRole('status')).toBeNull()
   })
 
-  // REQ_BIPACK v2.0: evaluación activa (modo trial) — aviso con ≤30 días.
-  it('evaluación activa lejana (>30 días): no muestra banner', async () => {
-    getStatus.mockResolvedValue(snapshot({ mode: 'trial', status: 'none', expires_at: null, days_remaining: 80 }))
+  // REQ_BIPACK v2.3: evaluación activa (modo trial, 30 días) — aviso con ≤10.
+  it('evaluación activa lejana (>10 días): no muestra banner', async () => {
+    getStatus.mockResolvedValue(snapshot({ mode: 'trial', status: 'none', expires_at: null, days_remaining: 15 }))
     renderBanner()
     expect(await screen.queryByRole('status')).toBeNull()
   })
 
-  it('evaluación por terminar (≤30 días): banner con días restantes', async () => {
-    getStatus.mockResolvedValue(snapshot({ mode: 'trial', status: 'none', expires_at: null, days_remaining: 21 }))
+  it('evaluación por terminar (≤10 días): banner con días restantes', async () => {
+    getStatus.mockResolvedValue(snapshot({ mode: 'trial', status: 'none', expires_at: null, days_remaining: 8 }))
     renderBanner()
     const banner = await screen.findByRole('status')
-    expect(banner.textContent).toContain('21')
+    expect(banner.textContent).toContain('8')
     expect(banner.textContent).toContain('evaluación')
   })
 

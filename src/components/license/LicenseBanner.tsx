@@ -1,9 +1,9 @@
 // ===========================================================================
-// LicenseBanner — PLAN_BI_PACK_PREMIUM F4 (ADR-4). Aviso global de vencimiento
-// del pack BI: ≤30 días restantes, gracia activa o licencia vencida. Solo
-// aplica con enforcement ON (en dev fail-open no hay nada que avisar).
-// Se monta en MainLayout, sobre el contenido. Consulta /system/license
-// (auth-only) con staleTime de 5 min.
+// LicenseBanner — PLAN_BI_PACK_PREMIUM F4 (ADR-4). Aviso global de vencimiento:
+// evaluación con ≤10 días restantes, licencia firmada con ≤30, gracia activa
+// o licencia vencida. Solo aplica con enforcement ON (en dev fail-open no hay
+// nada que avisar). Se monta en MainLayout, sobre el contenido. Consulta
+// /system/license (auth-only) con staleTime de 5 min.
 // ===========================================================================
 
 import { useQuery } from '@tanstack/react-query'
@@ -11,7 +11,12 @@ import { AlertTriangle } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import { licenseService, type LicenseSnapshot } from '@/services/licenseService'
 
+// Licencias firmadas (típicamente anuales): aviso en el último mes.
 const EXPIRY_WARNING_DAYS = 30
+// Evaluación (30 días, RN-BIPACK-08 v2.3): aviso en el tercio final — con el
+// umbral de licencias (30) el banner sería permanente durante TODA la
+// evaluación.
+const TRIAL_WARNING_DAYS = 10
 
 /** Null = no mostrar banner (todo en orden, o nada que avisar). */
 function bannerFor(license: LicenseSnapshot): {
@@ -21,8 +26,8 @@ function bannerFor(license: LicenseSnapshot): {
   vars?: Record<string, unknown>
 } | null {
   if (!license.enforcing) return null
-  // REQ_BIPACK v2.0: evaluación activa (sin licencia válida) — aviso cuando
-  // quedan ≤30 días. Con la ventana ya vencida (días negativos: dentro de la
+  // REQ_BIPACK v2.3: evaluación activa (sin licencia válida) — aviso cuando
+  // quedan ≤10 días. Con la ventana ya vencida (días negativos: dentro de la
   // gracia o a punto de bloquear) el aviso sube a danger: el gate salta al
   // primer 403, pero esta es la última explicación visible antes de él (aud
   // Fix 8).
@@ -35,7 +40,7 @@ function bannerFor(license: LicenseSnapshot): {
           'El período de evaluación finalizó: cargue una licencia para seguir usando el sistema. Contacte a su proveedor.',
       }
     }
-    if (license.days_remaining >= 0 && license.days_remaining <= EXPIRY_WARNING_DAYS) {
+    if (license.days_remaining >= 0 && license.days_remaining <= TRIAL_WARNING_DAYS) {
       return {
         tone: 'warning',
         key: 'licensing.banner.trial',

@@ -1,7 +1,7 @@
 // ===========================================================================
 // LicenseRequiredGate — REQ_BIPACK v2.0. Pantalla full-screen que reemplaza
 // TODA la app cuando la instalación está bloqueada: el período de evaluación
-// (90 días desde el primer arranque) terminó y no hay licencia válida. El
+// (30 días desde el primer arranque) terminó y no hay licencia válida. El
 // backend solo responde login/logout/refresh y /system/license (ver + PUT),
 // así que esta pantalla ofrece exactamente eso: estado + carga de licencia.
 //
