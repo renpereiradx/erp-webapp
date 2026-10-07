@@ -29,6 +29,7 @@ export const other = {
   'login.no_account': '¿No tienes cuenta?',
   'login.register': 'Regístrate',
   'login.footer.rights': 'Todos los derechos reservados.',
+  'login.footer.brand': 'ERP System',
   'login.validation.username.required': 'El email o usuario es requerido',
   'login.validation.username.min': 'Debe tener al menos 3 caracteres',
   'login.validation.password.required': 'La contraseña es requerida',

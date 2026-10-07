@@ -23,6 +23,7 @@ import { businessPrefs } from './businessPrefs'
 import { licensing } from './licensing'
 import { printers } from './printers'
 import { shell } from './shell'
+import { other } from './other'
 import { es } from '../es/index'
 
 /**
@@ -57,6 +58,7 @@ export const en = {
   ...shell,
   ...brands,
   ...attributes,
+  ...other,
   // TODO: Add English translations for new modules:
   // - clients
   // - suppliers
@@ -64,6 +66,5 @@ export const en = {
   // - inventory
   // - booking
   // - priceAdjustments
-  // - other (login, dashboard, settings)
   ...unitConversions,
 }
