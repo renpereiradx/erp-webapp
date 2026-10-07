@@ -6,6 +6,7 @@ import {
   buildPayloadFromForm,
   movementFormSchema,
 } from '@/domain/stock/movements';
+import { FE_APP_VERSION } from '@/domain/version/feVersion';
 import type { MovementFormValues } from '@/domain/stock/movements';
 
 describe('stock movements domain', () => {
@@ -78,7 +79,8 @@ describe('stock movements domain', () => {
         notes: 'conteo',
       });
       expect(m.source).toBe('stock_movements_ui');
-      expect(m.system_version).toBe('4.3.0-frontend');
+      // PLAN_VERSION_UI_FRONTEND: el payload deriva de package.json, no un literal propio.
+      expect(m.system_version).toBe(`${FE_APP_VERSION}-frontend`);
       expect(m.operator).toBe('jperez');
       expect(m.previous_stock).toBe(10);
       expect(m.new_stock).toBe(12);

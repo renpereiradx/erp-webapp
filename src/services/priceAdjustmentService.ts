@@ -5,6 +5,7 @@
 
 import { apiService as apiClient } from '@/services/api';
 import { telemetry } from '@/utils/telemetry';
+import { FE_APP_VERSION } from '@/domain/version/feVersion';
 
 // Helper function to transform API data to frontend format
 const transformAdjustmentData = (adjustments) => {
@@ -82,7 +83,7 @@ export const priceAdjustmentService = {
           reason: adjustmentData.reason,
           metadata: {
             source: 'manual_price_adjustment',
-            system_version: '2.1.0-frontend',
+            system_version: `${FE_APP_VERSION}-frontend`,
             adjustment_type: adjustmentData.adjustment_type || adjustmentData.reason_category || 'COST_CHANGE',
             change_type: adjustmentData.new_price > (adjustmentData.old_price || 0) ? 'increase' : 'decrease',
             old_price: adjustmentData.old_price,

@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import { fileURLToPath, URL } from 'node:url'
 import { configDefaults } from 'vitest/config'
+import pkg from './package.json'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -13,7 +14,12 @@ export default defineConfig(({ mode }) => {
   return {
   // Add cache busting with timestamp + random
   define: {
-    __CACHE_BUST__: JSON.stringify(`${Date.now()}-${Math.random().toString(36)}`)
+    __CACHE_BUST__: JSON.stringify(`${Date.now()}-${Math.random().toString(36)}`),
+    // PLAN_VERSION_UI_FRONTEND: versión del sistema para SystemVersionBadge.
+    // Fuente única: package.json (sincronizado con el tag en cada release —
+    // regla §Versionado del wrapper). Prohibido otro literal de versión en src/
+    // (guard version-literal en lint:design).
+    __APP_VERSION__: JSON.stringify(pkg.version)
   },
   plugins: [
     react({

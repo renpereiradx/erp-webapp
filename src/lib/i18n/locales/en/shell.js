@@ -6,6 +6,8 @@
 export const shell = {
   // Sidebar navigation
   'nav.mainMenu': 'Main Menu',
+  // PLAN_VERSION_UI_FRONTEND: the tagline no longer carries a version — SystemVersionBadge shows it.
+  'nav.brandTagline': 'Fluent ERP',
   'nav.salesAnalytics': 'Sales Analytics',
   'nav.executiveDashboard': 'Executive Dashboard',
   'nav.productsCategories': 'Products & Categories',

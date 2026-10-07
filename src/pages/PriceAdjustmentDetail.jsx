@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, TrendingUp, TrendingDown, RefreshCw, X, Info } from 'lucide-react';
+import { FE_APP_VERSION } from '@/domain/version/feVersion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -347,7 +348,7 @@ const PriceAdjustmentDetail = () => {
           currentOldPrice > 0
             ? ((newPrice - currentOldPrice) / currentOldPrice) * 100
             : 0,
-        system_version: '2.1.0-frontend',
+        system_version: `${FE_APP_VERSION}-frontend`,
         notes: formData.reason.trim(),
         approved_by: formData.approved_by || undefined,
         unit: formData.unit.toLowerCase(),

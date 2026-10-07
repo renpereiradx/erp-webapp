@@ -27,6 +27,7 @@ import {
   SlidersHorizontal, } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { SystemVersionBadge } from '@/components/SystemVersionBadge'
 import KeyboardShortcuts from '@/components/ui/KeyboardShortcuts'
 
 interface NavRow {
@@ -339,7 +340,10 @@ export default function SettingsPage() {
         <footer className="mt-xl flex flex-col items-center gap-xs border-t border-border-subtle pt-lg">
           <div className="flex items-center gap-xs text-on-surface-deep">
             <Info size={14} />
-            <span className="text-label-caps uppercase">{t('settings.footer.version', 'ERP Business Intelligence v1.2.0')}</span>
+            {/* PLAN_VERSION_UI_FRONTEND: la versión la muestra SystemVersionBadge, no un literal. */}
+            <span className="text-label-caps uppercase">
+              {t('settings.footer.brand', 'ERP Business Intelligence')} · <SystemVersionBadge />
+            </span>
           </div>
           <p className="text-body-sm text-on-surface-deep">
             {t('settings.footer.copyright', '© {year} Corporación Industrial • Paraguay Compliance', {

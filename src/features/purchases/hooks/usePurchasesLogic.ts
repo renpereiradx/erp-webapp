@@ -27,6 +27,7 @@ import { isDecimalUnit } from '@/constants/units'
 import { unitConversionsService } from '@/features/unit-conversions/services/unitConversionsService'
 import { PurchaseWithFullDetails } from '@/types'
 import { useBranch } from '@/contexts/BranchContext'
+import { FE_APP_VERSION } from '@/domain/version/feVersion'
 
 /**
  * Resuelve el id del usuario operador de forma robusta: primero el store
@@ -952,7 +953,7 @@ export const usePurchasesLogic = () => {
         auto_update_prices: true,
         metadata: {
           purchase_notes: purchaseNotes,
-          system_version: '1.1.0-frontend',
+          system_version: `${FE_APP_VERSION}-frontend`,
           operator_id: user?.id || user?.user_id
         },
       }

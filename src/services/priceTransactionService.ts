@@ -5,6 +5,7 @@
 
 import { apiService as apiClient } from '@/services/api';
 import { telemetry } from '@/utils/telemetry';
+import { FE_APP_VERSION } from '@/domain/version/feVersion';
 
 // Helper para hacer peticiones con reintentos
 const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
@@ -85,7 +86,7 @@ export const priceTransactionService = {
             ...transactionData.metadata,
             source: 'web_ui',
             created_by: 'current_user',
-            system_version: '1.0.0-frontend'
+            system_version: `${FE_APP_VERSION}-frontend`
           }
         });
       });

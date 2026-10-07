@@ -9,6 +9,7 @@
  */
 
 import { z } from 'zod';
+import { FE_APP_VERSION } from '../version/feVersion';
 import type {
   ReasonCategory,
   ReferenceType,
@@ -68,7 +69,7 @@ export function buildMovementMetadata(input: {
   return {
     source: 'stock_movements_ui',
     timestamp: new Date().toISOString(),
-    system_version: '4.3.0-frontend',
+    system_version: `${FE_APP_VERSION}-frontend`,
     operator: input.operator,
     reason_category: input.reasonCategory,
     adjustment_type: input.reasonCategory,

@@ -42,6 +42,7 @@ import { devices } from './devices'
 import { catalog } from './catalog'
 import { counterorders } from './counterorders'
 import { branches } from './branches'
+import { version } from './version'
 
 /**
  * Diccionario completo de traducciones en español
@@ -87,4 +88,5 @@ export const es = {
   ...branches,
   ...other,
   ...unitConversions,
+  ...version,
 }

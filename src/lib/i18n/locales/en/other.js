@@ -5,6 +5,7 @@
  */
 
 export const other = {
+  'settings.footer.brand': 'ERP Business Intelligence',
   'login.footer.brand': 'ERP System',
   'login.validation.username.required': 'Email or username is required',
   'login.validation.username.min': 'Must be at least 3 characters',

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBranch } from '@/contexts/BranchContext';
 import { useI18n } from '@/lib/i18n';
+import { SystemVersionBadge } from '@/components/SystemVersionBadge';
 import { branchService } from '@/features/branches/services/branchService';
 import { Branch } from '@/types';
 import { Building2, ArrowRight, Loader2, LogOut } from 'lucide-react';
@@ -192,7 +193,8 @@ const BranchSelection = () => {
 
         <div className="mt-12 pt-8 border-t border-border-subtle flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">
-            ERP Webapp &bull; Core Engine v2.0.4
+            {/* PLAN_VERSION_UI_FRONTEND: la versión la muestra SystemVersionBadge (antes "v2.0.4" literal). */}
+            ERP Webapp &bull; Core Engine <SystemVersionBadge />
           </p>
           <div className="flex gap-6 opacity-60">
             <div className="flex items-center gap-1.5">

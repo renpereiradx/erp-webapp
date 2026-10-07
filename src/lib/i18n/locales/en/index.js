@@ -24,6 +24,7 @@ import { licensing } from './licensing'
 import { printers } from './printers'
 import { shell } from './shell'
 import { other } from './other'
+import { version } from './version'
 import { es } from '../es/index'
 
 /**
@@ -67,4 +68,5 @@ export const en = {
   // - booking
   // - priceAdjustments
   ...unitConversions,
+  ...version,
 }

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Menu, SlidersHorizontal, X } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
+import { SystemVersionBadge } from '@/components/SystemVersionBadge'
 import type { User } from '@/types'
 import type { NavigationItem } from './types'
 import NavList from './NavList'
@@ -16,9 +17,12 @@ interface SidebarProps {
   user: User | null
 }
 
-/** Marca del shell (logo + título), compartida por desktop y mobile */
+/** Marca del shell (logo + título), compartida por desktop y mobile.
+ *  PLAN_VERSION_UI_FRONTEND: la versión la muestra SystemVersionBadge (dato
+ *  real de __APP_VERSION__ / GET /version) — prohibido un literal aquí. */
 function BrandMark() {
   const navigate = useNavigate()
+  const { t } = useI18n()
   return (
     <div className="flex items-center gap-sm overflow-hidden">
       <div className="size-9 min-w-[36px] bg-primary rounded-sm flex items-center justify-center text-on-primary">
@@ -26,7 +30,9 @@ function BrandMark() {
       </div>
       <div onClick={() => navigate('/dashboard')} className="cursor-pointer whitespace-nowrap">
         <h1 className="text-title-md tracking-tighter uppercase leading-none text-foreground">ERP System</h1>
-        <p className="text-label-caps uppercase text-on-surface-deep leading-none mt-xs">Fluent ERP v2.0</p>
+        <p className="text-label-caps uppercase text-on-surface-deep leading-none mt-xs">
+          {t('nav.brandTagline', 'Fluent ERP')} · <SystemVersionBadge />
+        </p>
       </div>
     </div>
   )

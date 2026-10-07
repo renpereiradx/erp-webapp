@@ -76,7 +76,8 @@ export const other = {
   'settings.scales.desc': 'Configuración de balanzas y impresión de etiquetas',
   'settings.conversions.title': 'Conversiones de Unidad',
   'settings.conversions.desc': 'Factores de conversión entre unidades de medida',
-  'settings.footer.version': 'ERP Business Intelligence v1.2.0',
+  // PLAN_VERSION_UI_FRONTEND: el literal de versión vive en SystemVersionBadge.
+  'settings.footer.brand': 'ERP Business Intelligence',
   'settings.footer.copyright': '© {year} Corporación Industrial • Paraguay Compliance',
 
   // Navigation
