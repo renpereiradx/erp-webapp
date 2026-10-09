@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { CategoryManagementModal } from '@/features/categories'
+import BrandCreateModal from '@/features/brands/components/BrandCreateModal'
 import { useToast } from '@/hooks/useToast';
 import { useProductForm } from '../hooks/useProductForm';
 
@@ -49,8 +50,8 @@ export default function ProductFormModal({ isOpen, onClose, product = null, toas
   const { t } = useI18n()
   const fallbackToast = useToast();
   const toast = externalToast ?? fallbackToast;
-  const { errorFrom } = toast;
   const [activeTab, setActiveTab] = useState<FormTab>('basic')
+  const [isBrandCreateOpen, setIsBrandCreateOpen] = useState(false)
 
   const {
     formData,
@@ -79,20 +80,13 @@ export default function ProductFormModal({ isOpen, onClose, product = null, toas
     loadBrands
   } = useProductForm({ product, isOpen, onClose, toast });
 
-  const handleAddBrand = async () => {
-    const name = window.prompt(t('products.modal.prompt.new_brand', 'Ingrese el nombre de la nueva marca:'));
-    if (!name?.trim()) return;
-    try {
-      const { brandService } = await import('@/services/brandService');
-      const newBrand = await brandService.create({ name: name.trim() });
-      await loadBrands();
-      if (newBrand?.id) {
-        setFormData(prev => ({ ...prev, brand_id: newBrand.id.toString() }));
-      }
-    } catch (error) {
-      errorFrom(error, {
-        fallback: t('products.toast.brand_error', 'No se pudo crear la marca'),
-      });
+  // Alta rápida de marca: BrandCreateModal crea y devuelve la marca; aquí se
+  // refresca la lista del select y queda autoseleccionada en el formulario.
+  const handleBrandCreated = async (created: { id: string | number; name: string }) => {
+    setIsBrandCreateOpen(false);
+    await loadBrands();
+    if (created?.id) {
+      setFormData(prev => ({ ...prev, brand_id: created.id.toString() }));
     }
   };
 
@@ -301,8 +295,12 @@ export default function ProductFormModal({ isOpen, onClose, product = null, toas
                         {t('products.modal.field.category')} <span className="text-error">*</span>
                       </Label>
                       <Select
-                        value={formData.category || undefined}
+                        value={formData.category || ''}
                         onValueChange={v => {
+                          // '' = clear de Radix (placeholder): nunca es una
+                          // selección real del usuario, se ignora para que una
+                          // emisión espuria no deshaga la autoselección del alta.
+                          if (!v) return;
                           setFormData(prev => ({ ...prev, category: v }));
                           setErrors(prev => ({ ...prev, category: undefined }));
                         }}
@@ -477,14 +475,19 @@ export default function ProductFormModal({ isOpen, onClose, product = null, toas
                     <div className="space-y-xs">
                       <div className="flex justify-between items-center">
                         <Label className={labelClass}>{t('products.modal.field.brand')}</Label>
-                        <Button type="button" variant="link" size="sm" onClick={handleAddBrand} className="text-body-sm-bold">
+                        <Button type="button" variant="link" size="sm" onClick={() => setIsBrandCreateOpen(true)} className="text-body-sm-bold">
                           <Plus className="w-4 h-4 mr-1" />
                           {t('products.modal.action.new_brand', '+ Nueva')}
                         </Button>
                       </div>
                       <Select
-                        value={formData.brand_id || undefined}
+                        value={formData.brand_id || ''}
                         onValueChange={v => {
+                          // Siempre controlado ('' = sin selección): el flip
+                          // uncontrolled→controlled (value undefined) hace que
+                          // Radix emita onValueChange espurio y deshaga la
+                          // autoselección de handleBrandCreated.
+                          if (!v) return;
                           setFormData(prev => ({ ...prev, brand_id: v }));
                           setErrors(prev => ({ ...prev, brand_id: undefined }));
                         }}
@@ -717,6 +720,12 @@ export default function ProductFormModal({ isOpen, onClose, product = null, toas
         onClose={closeCategoryManager}
         onCreated={handleCategoryCreated}
         onDeleted={handleCategoryDeleted}
+      />
+
+      <BrandCreateModal
+        isOpen={isBrandCreateOpen}
+        onClose={() => setIsBrandCreateOpen(false)}
+        onCreated={handleBrandCreated}
       />
     </>
   )

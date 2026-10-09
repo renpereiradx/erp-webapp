@@ -32,6 +32,20 @@ export const brands = {
   'brands.form.delete': 'Eliminar marca',
   'brands.logo_alt': 'Logo de la marca',
 
+  // Alta rápida desde el formulario de productos (BrandCreateModal)
+  'brands.quickCreate.title': 'Nueva marca',
+  'brands.quickCreate.subtitle': 'Se creará y quedará seleccionada en el producto',
+  'brands.quickCreate.field.name': 'Nombre de la marca',
+  'brands.quickCreate.placeholder.name': 'Ej. Logitech',
+  'brands.quickCreate.field.description': 'Descripción (opcional)',
+  'brands.quickCreate.placeholder.description': 'Ej. Periféricos y accesorios',
+  'brands.quickCreate.submit': 'Crear marca',
+  'brands.quickCreate.processing': 'Creando...',
+  'brands.quickCreate.error.generic': 'No se pudo crear la marca',
+  'brands.quickCreate.error.name_required': 'El nombre de la marca es obligatorio',
+  'brands.quickCreate.error.name_too_long': 'La marca no puede exceder 150 caracteres',
+  'brands.quickCreate.error.description_too_long': 'La descripción no puede exceder 500 caracteres',
+
   'brands.delete.title': 'Eliminar marca',
   'brands.delete.description':
     '¿Estás seguro de que deseas eliminar la marca "{name}"? Esta acción no se puede deshacer.',

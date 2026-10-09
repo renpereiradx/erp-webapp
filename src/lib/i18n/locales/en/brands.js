@@ -32,6 +32,20 @@ export const brands = {
   'brands.form.delete': 'Delete brand',
   'brands.logo_alt': 'Brand logo',
 
+  // Quick create from the product form (BrandCreateModal)
+  'brands.quickCreate.title': 'New Brand',
+  'brands.quickCreate.subtitle': 'It will be created and selected on the product',
+  'brands.quickCreate.field.name': 'Brand Name',
+  'brands.quickCreate.placeholder.name': 'E.g. Logitech',
+  'brands.quickCreate.field.description': 'Description (optional)',
+  'brands.quickCreate.placeholder.description': 'E.g. Peripherals and accessories',
+  'brands.quickCreate.submit': 'Create brand',
+  'brands.quickCreate.processing': 'Creating...',
+  'brands.quickCreate.error.generic': 'Could not create the brand',
+  'brands.quickCreate.error.name_required': 'Brand name is required',
+  'brands.quickCreate.error.name_too_long': 'Brand cannot exceed 150 characters',
+  'brands.quickCreate.error.description_too_long': 'Description cannot exceed 500 characters',
+
   'brands.delete.title': 'Delete brand',
   'brands.delete.description':
     'Are you sure you want to delete the brand "{name}"? This action cannot be undone.',

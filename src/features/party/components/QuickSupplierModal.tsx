@@ -25,7 +25,7 @@ import {
   EMPTY_SUPPLIER_FORM,
   type SupplierFormValues,
 } from '@/domain/party/supplierForm'
-import { zodFieldErrors } from '@/domain/party/zodErrors'
+import { zodFieldErrors } from '@/domain/shared/zodErrors'
 
 interface QuickSupplierModalProps {
   isOpen: boolean

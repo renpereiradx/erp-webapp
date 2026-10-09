@@ -15,7 +15,7 @@ import {
   type ClientFormValues,
   type ClientInput,
 } from '@/domain/party/clientForm';
-import { zodFieldErrors } from '@/domain/party/zodErrors';
+import { zodFieldErrors } from '@/domain/shared/zodErrors';
 
 interface ClientFormModalProps {
   isOpen: boolean;

@@ -14,7 +14,7 @@ import {
   type SupplierFormValues,
   type SupplierInput,
 } from '@/domain/party/supplierForm';
-import { zodFieldErrors } from '@/domain/party/zodErrors';
+import { zodFieldErrors } from '@/domain/shared/zodErrors';
 
 interface SupplierFormModalProps {
   isOpen: boolean;
