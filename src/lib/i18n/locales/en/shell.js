@@ -8,6 +8,8 @@ export const shell = {
   'nav.mainMenu': 'Main Menu',
   // PLAN_VERSION_UI_FRONTEND: the tagline no longer carries a version — SystemVersionBadge shows it.
   'nav.brandTagline': 'Management system',
+  // Vendor brand (docs/sales/GUIA_VENTAS.md §1) — proper name, not translated.
+  'nav.brandName': 'Code Dynamic',
   'nav.salesAnalytics': 'Sales Analytics',
   'nav.executiveDashboard': 'Executive Dashboard',
   'nav.productsCategories': 'Products & Categories',

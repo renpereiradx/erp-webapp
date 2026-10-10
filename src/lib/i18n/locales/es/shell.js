@@ -8,6 +8,8 @@ export const shell = {
   'nav.mainMenu': 'Menú Principal',
   // PLAN_VERSION_UI_FRONTEND: el tagline ya NO lleva versión — la muestra SystemVersionBadge.
   'nav.brandTagline': 'Sistema integral',
+  // Marca del proveedor (docs/sales/GUIA_VENTAS.md §1) — nombre propio, sin traducción.
+  'nav.brandName': 'Code Dynamic',
   'nav.salesAnalytics': 'Analítica de Ventas',
   'nav.executiveDashboard': 'Dashboard Ejecutivo',
   'nav.productsCategories': 'Productos y Categorías',

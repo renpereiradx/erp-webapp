@@ -17,6 +17,16 @@ interface SidebarProps {
   user: User | null
 }
 
+/** Monograma Code Dynamic — mismos paths que public/favicon.svg (hereda currentColor). */
+function BrandMonogram() {
+  return (
+    <svg viewBox="0 0 64 64" className="size-6" aria-hidden="true">
+      <path d="M 30.71 22.81 A 12 12 0 1 0 30.71 41.19" fill="none" stroke="currentColor" strokeWidth="9" strokeLinecap="round" />
+      <path d="M 38.5 16.5 h 3.5 a 15.5 15.5 0 0 1 0 31 h -3.5 Z" fill="currentColor" />
+    </svg>
+  )
+}
+
 /** Marca del shell (logo + título), compartida por desktop y mobile.
  *  PLAN_VERSION_UI_FRONTEND: la versión la muestra SystemVersionBadge (dato
  *  real de __APP_VERSION__ / GET /version) — prohibido un literal aquí. */
@@ -26,11 +36,11 @@ function BrandMark() {
   return (
     <div className="flex items-center gap-sm overflow-hidden">
       <div className="size-9 min-w-[36px] bg-primary rounded-sm flex items-center justify-center text-on-primary">
-        <span className="material-symbols-outlined text-xl font-bold">architecture</span>
+        <BrandMonogram />
       </div>
       <div onClick={() => navigate('/dashboard')} className="cursor-pointer whitespace-nowrap">
-        <h1 className="text-title-md tracking-tighter uppercase leading-none text-foreground">Gestión Comercial</h1>
-        <p className="text-label-caps uppercase text-on-surface-deep leading-none mt-xs">
+        <h1 className="text-title-md tracking-tighter uppercase leading-none text-foreground">{t('nav.brandName', 'Code Dynamic')}</h1>
+        <p className="text-label-caps uppercase tracking-tighter text-on-surface-deep leading-none mt-xs">
           {t('nav.brandTagline', 'Sistema integral')} · <SystemVersionBadge />
         </p>
       </div>
