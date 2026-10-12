@@ -356,4 +356,13 @@ export const purchases = {
   'purchases.checkoutWizard.hints.searchSupplier': 'Search supplier',
   'purchases.checkoutWizard.hints.navigate': 'Navigate',
   'purchases.checkoutWizard.hints.exactAmount': 'Exact amount',
+  'purchases.draft.badge': 'Active draft',
+  'purchases.draft.badgeCount': '{count} unsaved item(s) · saved in this browser',
+  'purchases.draft.discard': 'Discard draft',
+  'purchases.draft.exitTitle': 'Leave Purchases?',
+  'purchases.draft.exitMessage':
+    'There are {count} unsaved item(s). You can save the cart as a draft to finish it later.',
+  'purchases.draft.exitSave': 'Save and leave',
+  'purchases.draft.exitDiscard': 'Leave without saving',
+  'purchases.draft.exitStay': 'Keep editing',
 }

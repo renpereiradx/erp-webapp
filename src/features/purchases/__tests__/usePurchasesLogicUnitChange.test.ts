@@ -15,6 +15,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { usePurchasesLogic } from '../hooks/usePurchasesLogic'
+import { usePurchasesCartDraftStore } from '@/store/usePurchasesCartDraftStore'
 
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }))
 vi.mock('@/lib/i18n', () => ({
@@ -113,6 +114,10 @@ const selectProduct = async (result: { current: any }) => {
 describe('usePurchasesLogic — cambio de unidad en el modal (PLAN_UNITS_V2)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // El hook persiste el carrito (write-through del borrador): sin reset,
+    // el ítem confirmado por un test se restaura en el montaje del siguiente.
+    usePurchasesCartDraftStore.setState({ userId: null, data: null, savedAt: null })
+    localStorage.clear()
   })
   afterEach(() => {
     vi.restoreAllMocks()

@@ -4,6 +4,12 @@ import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import PageHeader from '@/components/ui/PageHeader'
 import ToastContainer from '@/components/ui/ToastContainer'
+import EnhancedModal from '@/components/ui/EnhancedModal'
+import { Button } from '@/components/ui/button'
+
+import { useNavigationGuard } from '@/hooks/useNavigationGuard'
+import { usePurchasesCartDraftStore } from '@/store/usePurchasesCartDraftStore'
+import { currentUserId } from '@/utils/currentUserId'
 
 import { usePurchasesLogic } from '@/features/purchases/hooks/usePurchasesLogic'
 import { usePurchasesShortcuts } from '@/features/purchases/hooks/usePurchasesShortcuts'
@@ -63,7 +69,23 @@ const Purchases = () => {
     paymentMethods,
     setActiveTab,
     toast,
+    purchaseItems,
+    selectedSupplier,
+    discardCartDraft,
   } = logic
+
+  // Guard de salida: sólo con ítems sin guardar en el carrito. El borrador
+  // (ítems + proveedor + notas) ya persiste por write-through desde
+  // usePurchasesLogic; acá sólo se bloquea la navegación y se ofrece descartar.
+  const { pending, confirm, cancel } = useNavigationGuard(purchaseItems.length > 0)
+
+  /** "Salir sin guardar": limpiar el borrador SÍNCRONamente (al confirmar la
+   * navegación el componente se desmonta y el write-through ya no corre). */
+  const handleExitDiscard = useCallback(() => {
+    usePurchasesCartDraftStore.getState().clearDraft(currentUserId())
+    discardCartDraft()
+    confirm()
+  }, [discardCartDraft, confirm])
 
   // onConfirmWizard: crea la orden de compra y luego procesa el pago.
   // Flujo de 2 llamadas (create → pay); si el pago falla, la orden queda creada.
@@ -151,10 +173,30 @@ const Purchases = () => {
         )}
 
         {activeTab === 'nueva-compra' && (
-          <div className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-gutter items-start'>
-            <PurchaseCartTable {...logic} />
-            <PurchaseTotalsCard {...logic} onCheckout={() => setShowCheckoutWizard(true)} />
-          </div>
+          <>
+            {/* Badge de borrador restaurado (sólo cuando esta instancia arrancó de storage) */}
+            {logic.isDraftRestored && (purchaseItems.length > 0 || selectedSupplier) && (
+              <div
+                data-testid="purchases-cart-draft-badge"
+                className="flex items-center justify-between gap-3 rounded-input border border-border-subtle bg-surface-muted px-3 py-2"
+              >
+                <p className="text-body-sm-bold text-muted-foreground">
+                  <span className="text-foreground">{t('purchases.draft.badge', 'Borrador activo')}</span>
+                  {' · '}
+                  {t('purchases.draft.badgeCount', '{count} ítem(s) sin guardar · se guarda en este navegador', {
+                    count: purchaseItems.length,
+                  })}
+                </p>
+                <Button variant="ghost" onClick={discardCartDraft}>
+                  {t('purchases.draft.discard', 'Descartar borrador')}
+                </Button>
+              </div>
+            )}
+            <div className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-gutter items-start'>
+              <PurchaseCartTable {...logic} />
+              <PurchaseTotalsCard {...logic} onCheckout={() => setShowCheckoutWizard(true)} />
+            </div>
+          </>
         )}
 
         {activeTab === 'historial' && (
@@ -228,6 +270,37 @@ const Purchases = () => {
         loading={logic.loading}
         error={error}
       />
+
+      {/* Diálogo de salida con ítems sin guardar (guard de navegación) */}
+      <EnhancedModal
+        isOpen={pending !== null}
+        onClose={cancel}
+        title={t('purchases.draft.exitTitle', '¿Salir de Compras?')}
+        variant="warning"
+        size="sm"
+        testId="purchases-cart-exit-dialog"
+        footer={
+          <div className="flex flex-wrap justify-end gap-sm">
+            <Button variant="secondary" onClick={cancel}>
+              {t('purchases.draft.exitStay', 'Seguir editando')}
+            </Button>
+            <Button variant="destructive" onClick={handleExitDiscard}>
+              {t('purchases.draft.exitDiscard', 'Salir sin guardar')}
+            </Button>
+            <Button variant="primary" onClick={confirm}>
+              {t('purchases.draft.exitSave', 'Guardar y salir')}
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-body-md text-foreground">
+          {t(
+            'purchases.draft.exitMessage',
+            'Hay {count} ítem(s) sin guardar. Podés guardar el carrito como borrador para terminarlo después.',
+            { count: purchaseItems.length },
+          )}
+        </p>
+      </EnhancedModal>
 
       <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
     </div>

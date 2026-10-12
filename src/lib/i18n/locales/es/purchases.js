@@ -375,4 +375,13 @@ export const purchases = {
   'purchases.checkoutWizard.hints.searchSupplier': 'Buscar proveedor',
   'purchases.checkoutWizard.hints.navigate': 'Navegar',
   'purchases.checkoutWizard.hints.exactAmount': 'Monto exacto',
+  'purchases.draft.badge': 'Borrador activo',
+  'purchases.draft.badgeCount': '{count} ítem(s) sin guardar · se guarda en este navegador',
+  'purchases.draft.discard': 'Descartar borrador',
+  'purchases.draft.exitTitle': '¿Salir de Compras?',
+  'purchases.draft.exitMessage':
+    'Hay {count} ítem(s) sin guardar. Podés guardar el carrito como borrador para terminarlo después.',
+  'purchases.draft.exitSave': 'Guardar y salir',
+  'purchases.draft.exitDiscard': 'Salir sin guardar',
+  'purchases.draft.exitStay': 'Seguir editando',
 }

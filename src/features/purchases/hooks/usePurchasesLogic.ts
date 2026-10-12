@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useI18n } from '@/lib/i18n'
 import useDashboardStore from '@/store/useDashboardStore'
 import useAuthStore from '@/store/useAuthStore'
+import { usePurchasesCartDraftStore } from '@/store/usePurchasesCartDraftStore'
+import { currentUserId } from '@/utils/currentUserId'
 import { useAuth } from '@/contexts/AuthContext'
 import supplierService from '@/services/supplierService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
@@ -30,25 +32,13 @@ import { useBranch } from '@/contexts/BranchContext'
 import { FE_APP_VERSION } from '@/domain/version/feVersion'
 
 /**
- * Resuelve el id del usuario operador de forma robusta: primero el store
- * (login fresco) y como fallback el claim `user_id` del JWT persistido
- * (cubre recargas, donde useAuthStore.user queda sin id).
+ * user_id para el payload de compra: resuelve vía el helper compartido
+ * (auth store → JWT) conservando la semántica previa del fallback local
+ * (sin sesión resuelta = undefined, no el sentinel del helper).
  */
 const getCurrentUserId = (): string | undefined => {
-  const storeUser = useAuthStore.getState().user as any
-  if (storeUser?.id) return String(storeUser.id)
-  if (storeUser?.user_id) return String(storeUser.user_id)
-  try {
-    const token = localStorage.getItem('authToken')
-    if (!token) return undefined
-    const part = token.split('.')[1]
-    if (!part) return undefined
-    const padded = part + '='.repeat((4 - (part.length % 4)) % 4)
-    const payload = JSON.parse(atob(padded.replace(/-/g, '+').replace(/_/g, '/')))
-    return payload.user_id
-  } catch {
-    return undefined
-  }
+  const id = currentUserId()
+  return id === 'frontend_operator' ? undefined : id
 }
 
 /**
@@ -86,10 +76,28 @@ export const usePurchasesLogic = () => {
   const [endDate, setEndDate] = useState<string>('')
   const [searchType, setSearchType] = useState<string>('date')
 
+  // ─── Borrador del carrito (persistido, por operador) ─────────────────────
+  // Misma pieza que /ventas y /movimientos-stock: el carrito de compra sobrevive
+  // navegaciones internas, refresh y cierre de pestaña hasta que la orden se
+  // guarda o se descarta. El dueño del borrador es estable por montaje (vive en
+  // localStorage).
+  const draftOwnerId = useMemo(() => currentUserId(), [])
+  // Snapshot inicial capturado UNA vez: alimenta los inicializadores perezosos.
+  const [initialDraft] = useState(
+    () => usePurchasesCartDraftStore.getState().getDraftFor(currentUserId()),
+  )
+  /** ¿Esta instancia arrancó desde un borrador persistido? (badge informativo). */
+  const restoredRef = useRef(
+    initialDraft != null && (initialDraft.items.length > 0 || initialDraft.supplier != null),
+  )
+
   // Supplier States
-  const [supplierSearch, setSupplierSearch] = useState<string>('')
+  const [supplierSearch, setSupplierSearch] = useState<string>(() => {
+    if (!initialDraft?.supplier) return ''
+    return String(initialDraft.supplier.first_name || initialDraft.supplier.name || '')
+  })
   const [supplierResults, setSupplierResults] = useState<any[]>([])
-  const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
+  const [selectedSupplier, setSelectedSupplier] = useState<any>(() => initialDraft?.supplier ?? null)
   const [searchingSuppliers, setSearchingSuppliers] = useState<boolean>(false)
   const [activeSupplierIndex, setActiveSupplierIndex] = useState<number>(-1)
   const [showSupplierDropdown, setShowSupplierDropdown] = useState<boolean>(false)
@@ -145,8 +153,21 @@ export const usePurchasesLogic = () => {
   const [modalVariantName, setModalVariantName] = useState<string | undefined>()
   const [modalSelectedVariant, setModalSelectedVariant] = useState<any | undefined>()
   const [taxRates, setTaxRates] = useState<any[]>([])
-  const [purchaseItems, setPurchaseItems] = useState<any[]>([])
-  const [purchaseNotes, setPurchaseNotes] = useState<string>('')
+  const [purchaseItems, setPurchaseItems] = useState<any[]>(() => initialDraft?.items ?? [])
+  const [purchaseNotes, setPurchaseNotes] = useState<string>(() => initialDraft?.notes ?? '')
+
+  // Write-through del borrador. Con sesión sin resolver (sentinel) no se toca:
+  // evita re-atribuir el borrador de otro operador. Todo reset del flujo (orden
+  // creada, descarte del badge) pasa por acá: el snapshot vacío limpia el
+  // storage sin puntos extra de limpieza.
+  useEffect(() => {
+    if (!draftOwnerId || draftOwnerId === 'frontend_operator') return
+    usePurchasesCartDraftStore.getState().saveDraft(draftOwnerId, {
+      items: purchaseItems,
+      supplier: selectedSupplier,
+      notes: purchaseNotes,
+    })
+  }, [draftOwnerId, purchaseItems, selectedSupplier, purchaseNotes])
   const modalProductSearchRef = useRef<HTMLInputElement>(null)
   // Buscador de productos del encabezado del carrito (entrada principal; F2).
   // El estado de búsqueda es compartido con el buscador interno del modal.
@@ -156,7 +177,10 @@ export const usePurchasesLogic = () => {
   // Buscador del tab Historial: foco vía F2 (usePurchasesShortcuts, DESIGN.md §12).
   const historySearchInputRef = useRef<HTMLInputElement>(null)
   const isSelectingProductRef = useRef<boolean>(false)
-  const isSelectingSupplierRef = useRef<boolean>(false)
+  // true al montar si el borrador restauró proveedor: la primera corrida del
+  // efecto de búsqueda consume el flag y NO dispara la búsqueda con el nombre
+  // restaurado (mismo bypass que handleSupplierSelect).
+  const isSelectingSupplierRef = useRef<boolean>(initialDraft?.supplier != null)
   const [activeProductIndex, setActiveProductIndex] = useState<number>(-1)
 
   // UI Support States
@@ -1265,6 +1289,16 @@ export const usePurchasesLogic = () => {
     handleFilter()
   }
 
+  /** "Descartar borrador" del badge: limpia carrito + proveedor + notas; el
+   * write-through persiste el snapshot vacío y borra el storage. */
+  const discardCartDraft = useCallback(() => {
+    restoredRef.current = false
+    setPurchaseItems([])
+    setSelectedSupplier(null)
+    setSupplierSearch('')
+    setPurchaseNotes('')
+  }, [])
+
 
   return {
     activeProductIndex,
@@ -1275,6 +1309,7 @@ export const usePurchasesLogic = () => {
     cartProductSearchRef,
     createdOrderData,
     currencies,
+    discardCartDraft,
     editingItemId,
     effectiveProfitPct,
     effectiveSalePrice,
@@ -1302,6 +1337,7 @@ export const usePurchasesLogic = () => {
     handleSupplierSelect,
     handleViewPurchase,
     historySearchInputRef,
+    isDraftRestored: restoredRef.current,
     isModalOpen,
     latestPurchaseResult,
     loading,
