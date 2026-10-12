@@ -24,9 +24,14 @@ import {
 } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 import { cn } from '@/lib/utils';
-import { SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
 import useSaleStore from '@/store/useSaleStore';
 import useDashboardStore from '@/store/useDashboardStore';
+import { useNavigationGuard } from '@/hooks/useNavigationGuard';
+import { useSalesCartDraftStore } from '@/store/useSalesCartDraftStore';
+import { currentUserId } from '@/utils/currentUserId';
+import EnhancedModal from '@/components/ui/EnhancedModal';
+import { Button } from '@/components/ui/button';
+import type { CartItem, Client } from '@/features/sales/types/cart';
 import {
   resolveApplicableRateFraction,
   coerceTaxRateFraction,
@@ -60,43 +65,6 @@ import ToastContainer from '@/components/ui/ToastContainer';
 import { useCounterOrderCheckout } from '@/features/counterorders/hooks/useCounterOrderCheckout';
 import { useClientActiveCounterOrders } from '@/features/counterorders/hooks/useCounterOrders';
 import type { CounterOrderSummary } from '@/features/counterorders/types';
-
-interface CartItem {
-  id: string;
-  productId: string;
-  /** SKU de la unidad vendible (variante o producto base). */
-  sku?: string;
-  name: string;
-  quantity: number;
-  price: number;
-  originalPrice: number;
-  stock?: number;
-  discount: number;
-  discountType: 'amount' | 'percent';
-  discountInput: number;
-  discountReason: string;
-  taxRate: number;
-  unit: string;
-  isFromPendingSale?: boolean;
-  detailId?: string;
-  reserve_id?: number;  // ID numerico de la reserva si aplica
-  variantId?: string | null;
-  variantName?: string;
-  // Ítem cargado desde un pedido de mostrador (PLAN_PEDIDOS_MOSTRADOR FASE 3):
-  // se marca para poder liberarlo del carrito si el pedido se libera.
-  isFromCounterOrder?: boolean;
-  counterOrderId?: string;
-  counterOrderCode?: string;
-}
-
-interface Client extends SearchableDropdownItem {
-  id: string;
-  name: string;
-  lastName?: string;
-  displayName?: string;
-  document_id?: string;
-  email?: string;
-}
 
 interface ProductDisplay {
   id: string;
@@ -273,10 +241,31 @@ const SalesNew: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'new-sale' | 'history' | 'cancellations'>(initialTab);
 
-  const [items, setItems] = useState<CartItem[]>([]);
+  // ─── Borrador del carrito (persistido, por operador) ──────────────────────
+  // Misma pieza que /movimientos-stock: el carrito sobrevive navegaciones
+  // internas, refresh y cierre de pestaña hasta cobrarse o descartarse. El
+  // dueño del borrador es estable por montaje (vive en localStorage).
+  const draftOwnerId = useMemo(() => currentUserId(), []);
+  // Snapshot inicial capturado UNA vez: alimenta los inicializadores perezosos.
+  const [initialDraft] = useState(() =>
+    useSalesCartDraftStore.getState().getDraftFor(currentUserId()),
+  );
+  /** ¿Esta instancia arrancó desde un borrador persistido? (badge informativo). */
+  const restoredRef = useRef(
+    initialDraft != null && (initialDraft.items.length > 0 || initialDraft.client != null),
+  );
+
+  const [items, setItems] = useState<CartItem[]>(() => {
+    if (!initialDraft) return [];
+    // Los ítems de pedidos de mostrador NO se restauran: el claim vive en
+    // memoria y muere con la navegación, y el pedido sigue OPEN en /pedidos
+    // con sus ítems (recuperables desde ahí) — restaurarlos sin claim
+    // duplicaría la venta al cobrar.
+    return initialDraft.items.filter((i) => !i.isFromCounterOrder);
+  });
   const [variantSelectorProduct, setVariantSelectorProduct] = useState<ProductDisplay | null>(null);
   const [variantSelectorQuantity, setVariantSelectorQuantity] = useState<number>(1);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(() => initialDraft?.client ?? null);
   // Ítem "activo" del carrito (fila en hover/foco): lo consumen Alt+Q/Alt+X.
   const [activeCartItemId, setActiveCartItemId] = useState<string | null>(null);
   // Error del último fetch de historial (para DataState error + reintentar).
@@ -342,9 +331,13 @@ const SalesNew: React.FC = () => {
   // se envía como createSale por separado (venta a crédito/asíncrono).
   const [pendingSaleData, setPendingSaleData] = useState<any | null>(null);
 
-  const [currentSaleId, setCurrentSaleId] = useState<string | null>(null);
+  const [currentSaleId, setCurrentSaleId] = useState<string | null>(() => initialDraft?.saleId ?? null);
   const [activeSales, setActiveSales] = useState<any[]>([]);
-  const [activeSale, setActiveSale] = useState<any | null>(null);
+  // Venta en modo merge restaurada: alcanza con la branch para addProductsToSale
+  // y el aviso de mismatch (el resto del objeto sale se re-fetcha al continuar).
+  const [activeSale, setActiveSale] = useState<any | null>(() =>
+    initialDraft?.saleId ? { branch_id: initialDraft.saleBranchId ?? undefined } : null,
+  );
   // Wizard de concreción unificado (reemplaza CheckoutModal + InstantPaymentDialog
   // + modales de pendientes/reservas). Un solo Stepper: Cliente → Pendientes →
   // Reservas → Pago → Cobro, con carrito siempre visible.
@@ -354,6 +347,43 @@ const SalesNew: React.FC = () => {
 
   const [pendingReservations, setPendingReservations] = useState<any[]>([]);
   const [selectedResIds, setSelectedResIds] = useState<Set<number>>(new Set());
+
+  // Write-through del borrador. Con sesión sin resolver (sentinel) no se toca:
+  // evita re-atribuir el borrador de otro operador. Todo reset del flujo de
+  // venta (cobro, dejar pendiente, F4) pasa por acá: el snapshot vacío limpia
+  // el storage sin puntos extra de limpieza.
+  useEffect(() => {
+    if (!draftOwnerId || draftOwnerId === 'frontend_operator') return;
+    useSalesCartDraftStore.getState().saveDraft(draftOwnerId, {
+      items,
+      client: selectedClient,
+      saleId: currentSaleId,
+      saleBranchId: (activeSale as { branch_id?: number } | null)?.branch_id ?? null,
+    });
+  }, [draftOwnerId, items, selectedClient, currentSaleId, activeSale]);
+
+  // Guard de salida: sólo con productos sin cobrar en el carrito.
+  const { pending, confirm, cancel } = useNavigationGuard(items.length > 0);
+
+  /** "Descartar borrador" del badge: limpia carrito + contexto + persistencia. */
+  const discardCartDraft = useCallback(() => {
+    restoredRef.current = false;
+    setItems([]);
+    setSelectedClient(null);
+    setCurrentSaleId(null);
+    setActiveSale(null);
+  }, []);
+
+  /** "Salir sin guardar": limpiar el borrador SÍNCRONamente (al confirmar la
+   * navegación el componente se desmonta y el write-through ya no corre). */
+  const handleExitDiscard = useCallback(() => {
+    useSalesCartDraftStore.getState().clearDraft(draftOwnerId);
+    setItems([]);
+    setSelectedClient(null);
+    setCurrentSaleId(null);
+    setActiveSale(null);
+    confirm();
+  }, [draftOwnerId, confirm]);
 
   // PLAN_RESERVAS_V2 F4/F5: el módulo de reservas habilita abrir el wizard
   // con carrito vacío (walk-in) y el guard de canchas sin franja horaria.
@@ -2162,7 +2192,26 @@ const SalesNew: React.FC = () => {
 
       <main className="w-full">
         {activeTab === 'new-sale' && (
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-gutter items-start">
+          <>
+            {/* Badge de borrador restaurado (sólo cuando esta instancia arrancó de storage) */}
+            {restoredRef.current && (items.length > 0 || selectedClient) && (
+              <div
+                data-testid="sales-cart-draft-badge"
+                className="flex items-center justify-between gap-3 rounded-input border border-border-subtle bg-surface-muted px-3 py-2"
+              >
+                <p className="text-body-sm-bold text-muted-foreground">
+                  <span className="text-foreground">{t('sales.draft.badge', 'Borrador activo')}</span>
+                  {' · '}
+                  {t('sales.draft.badgeCount', '{count} producto(s) sin cobrar · se guarda en este navegador', {
+                    count: items.length,
+                  })}
+                </p>
+                <Button variant="ghost" onClick={discardCartDraft}>
+                  {t('sales.draft.discard', 'Descartar borrador')}
+                </Button>
+              </div>
+            )}
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-gutter items-start">
             {/* Productos Seleccionados (carrito) — self-stretch: por defecto
                 iguala la altura del Resumen de Venta (la fila más alta);
                 cuando el carrito supera al resumen, manda el carrito.
@@ -2257,7 +2306,8 @@ const SalesNew: React.FC = () => {
               mergeSaleId={currentSaleId}
               allowEmptyCart={reservationsEnabled}
             />
-          </div>
+            </div>
+          </>
         )}
 
         {activeTab === 'history' && (
@@ -2441,6 +2491,37 @@ const SalesNew: React.FC = () => {
       )}
 
       <SaleSuccessPrintModal saleId={receiptSaleId} onClose={() => setReceiptSaleId(null)} />
+
+      {/* Diálogo de salida con productos sin cobrar (guard de navegación) */}
+      <EnhancedModal
+        isOpen={pending !== null}
+        onClose={cancel}
+        title={t('sales.draft.exitTitle', '¿Salir de Ventas?')}
+        variant="warning"
+        size="sm"
+        testId="sales-cart-exit-dialog"
+        footer={
+          <div className="flex flex-wrap justify-end gap-sm">
+            <Button variant="secondary" onClick={cancel}>
+              {t('sales.draft.exitStay', 'Seguir vendiendo')}
+            </Button>
+            <Button variant="destructive" onClick={handleExitDiscard}>
+              {t('sales.draft.exitDiscard', 'Salir sin guardar')}
+            </Button>
+            <Button variant="primary" onClick={confirm}>
+              {t('sales.draft.exitSave', 'Guardar y salir')}
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-body-md text-foreground">
+          {t(
+            'sales.draft.exitMessage',
+            'Hay {count} producto(s) sin cobrar. Podés guardar el carrito como borrador para terminarlo después.',
+            { count: items.length },
+          )}
+        </p>
+      </EnhancedModal>
 
       <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
     </div>

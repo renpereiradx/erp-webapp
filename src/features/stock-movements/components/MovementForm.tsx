@@ -37,7 +37,7 @@ import EnhancedModal from '@/components/ui/EnhancedModal';
 import { formatNumber } from '@/utils/currencyUtils';
 import { getUnitLabel, isDecimalUnit } from '@/constants/units';
 import type { ProductVariant } from '@/types';
-import useAuthStore from '@/store/useAuthStore';
+import { currentUserId } from '@/utils/currentUserId';
 import { useStockMovementsDraftStore } from '@/store/useStockMovementsDraftStore';
 import { useNavigationGuard } from '@/hooks/useNavigationGuard';
 import { useStockMovements, type MovementRow } from '../hooks/useStockMovements';
@@ -86,35 +86,17 @@ function rowUnitFactor(row: MovementRowUI, conversions: UnitConversionRow[] | nu
   return resolveUnitFactor(conversions, row.product.id, row.unit, base);
 }
 
-/** Operador sin hooks: usable en el inicializador perezoso del estado. Orden de
- * resolución: user del auth store y, si no (AuthContext no lo sincroniza), el
- * claim user_id del JWT vivo en localStorage. Sin sesión resuelta, el sentinel. */
-const currentOperatorId = (): string => {
-  const u = useAuthStore.getState().user;
-  const fromStore = u?.id || u?.user_id;
-  if (fromStore) return fromStore;
-  try {
-    const token = localStorage.getItem('authToken');
-    const payload = token
-      ? JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
-      : null;
-    return payload?.user_id || 'frontend_operator';
-  } catch {
-    return 'frontend_operator';
-  }
-};
-
 export function MovementForm() {
   const { t } = useI18n();
   const { registerBatch, loading, error, clearError } = useStockMovements();
   const saveDraft = useStockMovementsDraftStore((s) => s.saveDraft);
   /** Dueño del borrador, estable por montaje (vive en localStorage, no cambia en sesión). */
-  const draftOwnerId = useMemo(() => currentOperatorId(), []);
+  const draftOwnerId = useMemo(() => currentUserId(), []);
 
   // Borrador: la cola se restaura al montar si pertenece al operador actual
   // (inicializador perezoso, antes del primer render) y se persiste en cada cambio.
   const [rows, setRows] = useState<MovementRowUI[]>(() =>
-    useStockMovementsDraftStore.getState().getDraftFor(currentOperatorId()),
+    useStockMovementsDraftStore.getState().getDraftFor(currentUserId()),
   );
   /** ¿Esta instancia arrancó desde un borrador persistido? (badge informativo). */
   const restoredRef = useRef(rows.length > 0);

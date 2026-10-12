@@ -489,6 +489,17 @@ export const sales = {
   'sales.tab.history': 'Historial',
   'sales.tab.cancellations': 'Anulaciones',
 
+  // ─── Borrador del carrito (guard de salida, igual que /movimientos-stock) ─
+  'sales.draft.badge': 'Borrador activo',
+  'sales.draft.badgeCount': '{count} producto(s) sin cobrar · se guarda en este navegador',
+  'sales.draft.discard': 'Descartar borrador',
+  'sales.draft.exitTitle': '¿Salir de Ventas?',
+  'sales.draft.exitMessage':
+    'Hay {count} producto(s) sin cobrar. Podés guardar el carrito como borrador para terminarlo después.',
+  'sales.draft.exitSave': 'Guardar y salir',
+  'sales.draft.exitDiscard': 'Salir sin guardar',
+  'sales.draft.exitStay': 'Seguir vendiendo',
+
   // ─── Solicitudes de anulación (FASE C, PLAN_VENDOR_ROLE) ─────────────────
   'sales.cancellation.requestTitle': 'Solicitar Anulación #{id}',
   'sales.cancellation.requestWarning':
