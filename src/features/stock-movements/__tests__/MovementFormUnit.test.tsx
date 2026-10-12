@@ -29,8 +29,15 @@ const mocks = vi.hoisted(() => {
 })
 
 vi.mock('@/lib/i18n', () => ({
+  // Firma real (i18n/index.js): t(key, fallback?, vars?) aceptando t(key, vars).
   useI18n: () => ({
-    t: (key: string, fallback?: string, vars?: Record<string, unknown>) => {
+    t: (
+      key: string,
+      fallbackOrVars?: string | Record<string, unknown>,
+      maybeVars?: Record<string, unknown>,
+    ) => {
+      const fallback = typeof fallbackOrVars === 'string' ? fallbackOrVars : undefined
+      const vars = typeof fallbackOrVars === 'string' ? maybeVars : fallbackOrVars
       if (!fallback) return key
       return fallback.replace(/\{(\w+)\}/g, (_, k: string) => String(vars?.[k] ?? `{${k}}`))
     },

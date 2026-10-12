@@ -8,9 +8,14 @@
  *    TABLA de items y se abre el MODAL de edición para cargar variante/modo/valor/motivo.
  *  - Cada fila se puede editar (modal) o quitar.
  *  - "Registrar movimiento(s)" envía todas las filas en un solo POST.
+ *
+ * Borrador: la cola se persiste (write-through) en useStockMovementsDraftStore y se
+ * restaura al montar, así el trabajo sobrevive a navegaciones, refresh y cierre de
+ * pestaña. Con filas sin registrar, useNavigationGuard intercepta la salida y ofrece
+ * Guardar y salir / Salir sin guardar / Seguir editando.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Package, Search, Trash2, Send, Plus, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
@@ -32,9 +37,12 @@ import EnhancedModal from '@/components/ui/EnhancedModal';
 import { formatNumber } from '@/utils/currencyUtils';
 import { getUnitLabel, isDecimalUnit } from '@/constants/units';
 import type { ProductVariant } from '@/types';
+import useAuthStore from '@/store/useAuthStore';
+import { useStockMovementsDraftStore } from '@/store/useStockMovementsDraftStore';
+import { useNavigationGuard } from '@/hooks/useNavigationGuard';
 import { useStockMovements, type MovementRow } from '../hooks/useStockMovements';
 import type { MovementFormValues } from '@/domain/stock/movements';
-import type { ReasonCategory } from '../types';
+import type { MovementRowUI, ReasonCategory } from '../types';
 import { ProductSearchModal, type CatalogProduct } from './ProductSearchModal';
 
 const REASON_CATEGORIES: ReasonCategory[] = [
@@ -58,18 +66,6 @@ const APPROVAL_LEVELS = ['operator', 'supervisor', 'manager', 'admin'] as const;
 const truncateForUnit = (value: number, unit: string): number =>
   isDecimalUnit(unit) ? value : Math.trunc(value);
 
-interface MovementRowUI {
-  product: CatalogProduct;
-  variants: ProductVariant[];
-  selectedVariantId: string;
-  mode: 'target' | 'delta';
-  value: string;
-  /** Unidad elegida para la cantidad (default = base del producto). */
-  unit: string;
-  reasonCategory: ReasonCategory;
-  reason: string;
-}
-
 function rowCurrentStock(row: MovementRowUI): number {
   const variant = row.variants.find((v) => v.id === row.selectedVariantId);
   return variant ? (variant.stock_quantity ?? 0) : (row.product.stock_quantity ?? 0);
@@ -90,13 +86,50 @@ function rowUnitFactor(row: MovementRowUI, conversions: UnitConversionRow[] | nu
   return resolveUnitFactor(conversions, row.product.id, row.unit, base);
 }
 
+/** Operador sin hooks: usable en el inicializador perezoso del estado. Orden de
+ * resolución: user del auth store y, si no (AuthContext no lo sincroniza), el
+ * claim user_id del JWT vivo en localStorage. Sin sesión resuelta, el sentinel. */
+const currentOperatorId = (): string => {
+  const u = useAuthStore.getState().user;
+  const fromStore = u?.id || u?.user_id;
+  if (fromStore) return fromStore;
+  try {
+    const token = localStorage.getItem('authToken');
+    const payload = token
+      ? JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+      : null;
+    return payload?.user_id || 'frontend_operator';
+  } catch {
+    return 'frontend_operator';
+  }
+};
+
 export function MovementForm() {
   const { t } = useI18n();
   const { registerBatch, loading, error, clearError } = useStockMovements();
+  const saveDraft = useStockMovementsDraftStore((s) => s.saveDraft);
+  /** Dueño del borrador, estable por montaje (vive en localStorage, no cambia en sesión). */
+  const draftOwnerId = useMemo(() => currentOperatorId(), []);
 
-  const [rows, setRows] = useState<MovementRowUI[]>([]);
+  // Borrador: la cola se restaura al montar si pertenece al operador actual
+  // (inicializador perezoso, antes del primer render) y se persiste en cada cambio.
+  const [rows, setRows] = useState<MovementRowUI[]>(() =>
+    useStockMovementsDraftStore.getState().getDraftFor(currentOperatorId()),
+  );
+  /** ¿Esta instancia arrancó desde un borrador persistido? (badge informativo). */
+  const restoredRef = useRef(rows.length > 0);
   const [showSearch, setShowSearch] = useState(false);
   const [approval, setApproval] = useState<string>('operator');
+
+  // Write-through del borrador. Con sesión sin resolver (sentinel) no se toca:
+  // evita re-atribuir el borrador de otro operador.
+  useEffect(() => {
+    if (!draftOwnerId || draftOwnerId === 'frontend_operator') return;
+    saveDraft(draftOwnerId, rows);
+  }, [draftOwnerId, rows, saveDraft]);
+
+  // Guard de salida: sólo con filas sin registrar.
+  const { pending, confirm, cancel } = useNavigationGuard(rows.length > 0);
 
   // Conversiones (PLAN_UNITS_V2_COMPLETACION F4): fetcheadas una vez al
   // montar, fail-silencioso (sin ellas el selector cae a hint de error y el
@@ -209,6 +242,20 @@ export function MovementForm() {
     if (editingIndex === index) closeEdit();
   };
 
+  /** "Descartar borrador" del badge: limpia cola + persistencia. */
+  const discardDraft = () => {
+    restoredRef.current = false;
+    setRows([]);
+  };
+
+  /** "Salir sin guardar": limpiar el borrador SÍNCRONamente (al confirmar la
+   * navegación el componente se desmonta y el write-through ya no corre). */
+  const handleExitDiscard = () => {
+    useStockMovementsDraftStore.getState().clearDraft(draftOwnerId);
+    setRows([]);
+    confirm();
+  };
+
   // Resultado SIEMPRE en base: la cantidad se convierte con el factor de la
   // fila (unit→base). Sin factor y unidad ≠ base → null (bloquea guardar).
   const resultingStockFor = useMemo(
@@ -311,6 +358,25 @@ export function MovementForm() {
           {t('stockMovements.form.search', 'Agregar producto')}
         </Button>
       </div>
+
+      {/* Badge de borrador restaurado (sólo cuando esta instancia arrancó de storage) */}
+      {restoredRef.current && rows.length > 0 && (
+        <div
+          data-testid="stock-movements-draft-badge"
+          className="flex items-center justify-between gap-3 rounded-input border border-border-subtle bg-surface-muted px-3 py-2"
+        >
+          <p className="text-body-sm-bold text-muted-foreground">
+            <span className="text-foreground">{t('stockMovements.draft.badge', 'Borrador activo')}</span>
+            {' · '}
+            {t('stockMovements.draft.badgeCount', '{count} fila(s) sin registrar · se guarda en este navegador', {
+              count: rows.length,
+            })}
+          </p>
+          <Button variant="ghost" onClick={discardDraft}>
+            {t('stockMovements.draft.discard', 'Descartar borrador')}
+          </Button>
+        </div>
+      )}
 
       {/* Tabla de items */}
       <div className="rounded-md bg-surface shadow-whisper border border-border-subtle overflow-hidden">
@@ -633,6 +699,37 @@ export function MovementForm() {
         onClose={() => setShowSearch(false)}
         onSelect={handleSelectProduct}
       />
+
+      {/* Diálogo de salida con filas sin registrar (guard de navegación) */}
+      <EnhancedModal
+        isOpen={pending !== null}
+        onClose={cancel}
+        title={t('stockMovements.draft.exitTitle', '¿Salir de Movimientos de Stock?')}
+        variant="warning"
+        size="sm"
+        testId="stock-movements-exit-dialog"
+        footer={
+          <div className="flex flex-wrap justify-end gap-sm">
+            <Button variant="secondary" onClick={cancel}>
+              {t('stockMovements.draft.exitStay', 'Seguir editando')}
+            </Button>
+            <Button variant="destructive" onClick={handleExitDiscard}>
+              {t('stockMovements.draft.exitDiscard', 'Salir sin guardar')}
+            </Button>
+            <Button variant="primary" onClick={confirm}>
+              {t('stockMovements.draft.exitSave', 'Guardar y salir')}
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-body-md text-foreground">
+          {t(
+            'stockMovements.draft.exitMessage',
+            'Hay {count} fila(s) sin registrar. Podés guardarlas como borrador para terminarlas después.',
+            { count: rows.length },
+          )}
+        </p>
+      </EnhancedModal>
     </div>
   );
 }

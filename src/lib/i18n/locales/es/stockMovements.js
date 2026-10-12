@@ -91,6 +91,18 @@ export const stockMovements = {
     success: 'Movimiento registrado',
     batchCount: '{count} movimiento(s) registrado(s).',
 
+    draft: {
+      badge: 'Borrador activo',
+      badgeCount: '{count} fila(s) sin registrar · se guarda en este navegador',
+      discard: 'Descartar borrador',
+      exitTitle: '¿Salir de Movimientos de Stock?',
+      exitMessage:
+        'Hay {count} fila(s) sin registrar. Podés guardarlas como borrador para terminarlas después.',
+      exitSave: 'Guardar y salir',
+      exitDiscard: 'Salir sin guardar',
+      exitStay: 'Seguir editando',
+    },
+
     queue: {
       product: 'Producto',
       adjustment: 'Ajuste',

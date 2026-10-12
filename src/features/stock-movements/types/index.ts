@@ -7,6 +7,10 @@
  * `/stock-transactions/*`. No consume `/manual_adjustment/*` ni `/inventory/*`.
  */
 
+import type { ProductVariant } from '@/types';
+// Import de tipo únicamente: la forma plana del buscador es el "producto" de la fila.
+import type { CatalogProduct } from '../components/ProductSearchModal';
+
 export type TransactionType =
   | 'PURCHASE'
   | 'SALE'
@@ -106,3 +110,16 @@ export type ReasonCategory =
   | 'LOSS'
   | 'FOUND'
   | 'INITIAL_COUNT';
+
+/** Fila de la cola de ajustes del MovementForm (estado de UI). */
+export interface MovementRowUI {
+  product: CatalogProduct;
+  variants: ProductVariant[];
+  selectedVariantId: string;
+  mode: 'target' | 'delta';
+  value: string;
+  /** Unidad elegida para la cantidad (default = base del producto). */
+  unit: string;
+  reasonCategory: ReasonCategory;
+  reason: string;
+}
