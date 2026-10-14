@@ -92,14 +92,9 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
             disabled={!canWrite}
           />
         </div>
-        <div className='min-w-0'>
-          <h2 className='text-title-md text-foreground'>
-            {t('purchases.cart.title', 'Productos en la Orden')}
-          </h2>
-          <p className='text-body-sm text-on-surface-deep mt-0.5'>
-            {t('purchases.cart.subtitle', 'Artículos a ingresar al inventario')}
-          </p>
-        </div>
+        <h2 className='text-title-md text-foreground min-w-0 sm:ml-auto sm:text-right'>
+          {t('purchases.cart.title', 'Productos en la Orden')}
+        </h2>
       </div>
 
       <div className='overflow-x-auto'>

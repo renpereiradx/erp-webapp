@@ -2219,7 +2219,7 @@ const SalesNew: React.FC = () => {
                 rounded-xl + p-6 residual → radio de modal y doble padding.
                 Anatomía "card con tabla" (DESIGN.md §6.3): banda de toolbar
                 muted + border-b divider con el buscador PRIMERO y el título
-                después; tabla full-bleed sin wrapper de padding. */}
+                anclado a la derecha; tabla full-bleed sin wrapper de padding. */}
             <section className="bg-surface rounded-md shadow-whisper border-0 overflow-hidden min-w-0 self-stretch">
               <div className="px-lg py-md bg-surface-muted border-b border-divider flex flex-col sm:flex-row sm:items-center gap-sm md:gap-md flex-wrap">
                 <div className="w-full sm:w-80 shrink-0">
@@ -2253,11 +2253,7 @@ const SalesNew: React.FC = () => {
                     getQuantityInCart={getQuantityInCart}
                   />
                 </div>
-                <h2 className="text-title-md text-foreground flex items-center gap-sm min-w-0">
-                  <ShoppingCart size={18} className="text-primary shrink-0" aria-hidden="true" />
-                  {t('sales.cart.title', 'Productos Seleccionados')}
-                </h2>
-                <p className="hidden lg:flex items-center gap-sm text-body-sm font-data-mono text-outline-fg ml-auto">
+                <p className="hidden lg:flex items-center gap-sm text-body-sm font-data-mono text-outline-fg">
                   <span>[F2] {t('sales.hints.search', 'Buscar')}</span>
                   <span aria-hidden="true">·</span>
                   <span>[F8] {t('sales.hints.cart', 'Carrito')}</span>
@@ -2270,6 +2266,10 @@ const SalesNew: React.FC = () => {
                   <span aria-hidden="true">·</span>
                   <span>[F4] {t('sales.hints.clear', 'Limpiar')}</span>
                 </p>
+                <h2 className="text-title-md text-foreground flex items-center gap-sm min-w-0 sm:ml-auto sm:text-right">
+                  <ShoppingCart size={18} className="text-primary shrink-0" aria-hidden="true" />
+                  {t('sales.cart.title', 'Productos Seleccionados')}
+                </h2>
               </div>
               {/* Tabla full-bleed (§6.3): pegada a los bordes de la card,
                   sin wrapper de padding (el margen interno era el recuadro
