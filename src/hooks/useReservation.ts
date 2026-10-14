@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ScheduleSlot, ProductScheduleConfig } from '../domain/reservation';
+import { useI18n } from '@/lib/i18n';
+import { ScheduleSlot, ProductScheduleConfig, ManageReserveRequest, ReserveAction } from '../domain/reservation';
 import { reservationService } from '../services/reservationService';
 
 export const useReservation = (initialProductId?: string) => {
+  const { t } = useI18n();
   const [productId, setProductId] = useState(productIdFromUrl() || initialProductId || '');
   // 🔧 FIX: Usar fecha local en formato YYYY-MM-DD para evitar desfase de un día (ISO usa UTC)
-  const [targetDate, setTargetDate] = useState(new Date().toLocaleDateString('en-CA'));
+  const [targetDate, setTargetDate] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [slots, setSlots] = useState<ScheduleSlot[]>([]);
   const [config, setConfig] = useState<ProductScheduleConfig | null>(null);
   const [products, setProducts] = useState<any[]>([]);
@@ -21,7 +23,7 @@ export const useReservation = (initialProductId?: string) => {
     try {
       const productList = await reservationService.getProducts();
       setProducts(productList || []);
-      
+
       // Si no tenemos productId y hay productos disponibles, seleccionamos el primero
       if (!productId && productList && productList.length > 0) {
         setProductId(productList[0].id || productList[0].product_id);
@@ -33,30 +35,37 @@ export const useReservation = (initialProductId?: string) => {
 
   const fetchSchedules = useCallback(async () => {
     if (!productId) return;
-    
+
     setLoading(true);
     setError(null);
     try {
-      const data = await reservationService.getSchedulesForProductAndDate(productId, targetDate);
-      setSlots(data || []);
-      
-      try {
-        const configData = await reservationService.getProductConfig(productId);
-        setConfig(configData);
-      } catch (configErr) {
-        console.warn('No se pudo cargar la configuración del producto', configErr);
+      // Horarios y configuración son lecturas independientes: van en paralelo.
+      const [data, configResult] = await Promise.allSettled([
+        reservationService.getSchedulesForProductAndDate(productId, targetDate),
+        reservationService.getProductConfig(productId),
+      ]);
+
+      if (configResult.status === 'fulfilled') {
+        setConfig(configResult.value);
+      } else {
+        console.warn('No se pudo cargar la configuración del producto', configResult.reason);
       }
-    } catch (err: any) {
+
+      if (data.status === 'fulfilled') {
+        setSlots(data.value || []);
+        return;
+      }
+
       setSlots([]); // Limpiar slots si hay error
       // Si es un 500, asumimos que no están generados
-      const msg = err.message?.includes('500') 
-        ? 'No hay horarios generados para este recurso en la fecha seleccionada.' 
-        : 'Error al cargar horarios';
+      const msg = data.reason?.message?.includes('500')
+        ? t('reservations.errors.noSchedules')
+        : t('reservations.errors.loadSchedules');
       setError(msg);
     } finally {
       setLoading(false);
     }
-  }, [productId, targetDate]);
+  }, [productId, targetDate, t]);
 
   useEffect(() => {
     fetchInitialData();
@@ -70,10 +79,6 @@ export const useReservation = (initialProductId?: string) => {
     return await reservationService.searchClients(name);
   };
 
-  const getInitialClients = async () => {
-    return await reservationService.getInitialClients();
-  };
-
   const handleGenerateToday = async () => {
     if (!productId) return;
     try {
@@ -81,7 +86,7 @@ export const useReservation = (initialProductId?: string) => {
       await reservationService.generateSchedules({ target_date: targetDate, product_ids: [productId] });
       await fetchSchedules();
     } catch (err) {
-      setError('Error al generar horarios');
+      setError(t('reservations.errors.generate'));
       throw err;
     }
   };
@@ -96,9 +101,26 @@ export const useReservation = (initialProductId?: string) => {
       });
       await fetchSchedules();
     } catch (err) {
-      setError('Error al actualizar configuración');
+      setError(t('reservations.errors.config'));
       throw err;
     }
+  };
+
+  const buildBranchPayload = () => {
+    const branchIdStr = localStorage.getItem('activeBranch');
+    const branchId = branchIdStr ? parseInt(branchIdStr, 10) : undefined;
+    return { product_id: productId, branch_id: branchId };
+  };
+
+  // manage_reserve envuelve el resultado en {Data}: unwrap compartido por acción.
+  const extractReserveResult = (res: any) => res?.data ?? res;
+
+  const manageReserveAction = async (action: ReserveAction, payload: Omit<ManageReserveRequest, 'action'>, fallbackError: string) => {
+    const res = await reservationService.manageReserve({ action, ...payload });
+    const data = extractReserveResult(res);
+    if (data?.success === false) throw new Error(data.error || fallbackError);
+    if (res?.success === false) throw new Error(res.error || fallbackError);
+    await fetchSchedules();
   };
 
   const createReservation = async (clientId: string, startTime: string, duration: number) => {
@@ -107,25 +129,18 @@ export const useReservation = (initialProductId?: string) => {
         throw new Error('Faltan datos requeridos para la reserva');
       }
 
-      const branchIdStr = localStorage.getItem('activeBranch');
-      const branchId = branchIdStr ? parseInt(branchIdStr, 10) : undefined;
-
-      const payload: any = {
-        action: 'CREATE',
-        product_id: productId,
-        client_id: clientId,
-        start_time: startTime,
-        duration: Number(duration) || 1,
-        branch_id: branchId,
-      };
-
-      const res = await reservationService.manageReserve(payload);
-      if (res?.data?.success === false) throw new Error(res.data.error || 'Error al crear reserva');
-      if (res?.success === false) throw new Error(res.error || 'Error al crear reserva');
-      
-      await fetchSchedules();
+      await manageReserveAction(
+        'CREATE',
+        {
+          client_id: clientId,
+          start_time: startTime,
+          duration: Number(duration) || 1,
+          ...buildBranchPayload(),
+        },
+        t('reservations.errors.create'),
+      );
     } catch (err: any) {
-      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Error al crear reserva';
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || t('reservations.errors.create');
       setError(msg);
       throw new Error(msg);
     }
@@ -135,23 +150,13 @@ export const useReservation = (initialProductId?: string) => {
     try {
       if (!reserveId) throw new Error('ID de reserva no válido');
 
-      const branchIdStr = localStorage.getItem('activeBranch');
-      const branchId = branchIdStr ? parseInt(branchIdStr, 10) : undefined;
-
-      const payload: any = {
-        action: 'CONFIRM',
-        reserve_id: reserveId,
-        product_id: productId,
-        branch_id: branchId,
-      };
-
-      const res = await reservationService.manageReserve(payload);
-      if (res?.data?.success === false) throw new Error(res.data.error || 'Error al confirmar reserva');
-      if (res?.success === false) throw new Error(res.error || 'Error al confirmar reserva');
-      
-      await fetchSchedules();
+      await manageReserveAction(
+        'CONFIRM',
+        { reserve_id: reserveId, ...buildBranchPayload() },
+        t('reservations.errors.confirm'),
+      );
     } catch (err: any) {
-      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Error al confirmar reserva';
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || t('reservations.errors.confirm');
       setError(msg);
       throw new Error(msg);
     }
@@ -161,23 +166,13 @@ export const useReservation = (initialProductId?: string) => {
     try {
       if (!reserveId) throw new Error('ID de reserva no válido');
 
-      const branchIdStr = localStorage.getItem('activeBranch');
-      const branchId = branchIdStr ? parseInt(branchIdStr, 10) : undefined;
-
-      const payload: any = {
-        action: 'CANCEL',
-        reserve_id: reserveId,
-        product_id: productId,
-        branch_id: branchId,
-      };
-
-      const res = await reservationService.manageReserve(payload);
-      if (res?.data?.success === false) throw new Error(res.data.error || 'Error al cancelar reserva');
-      if (res?.success === false) throw new Error(res.error || 'Error al cancelar reserva');
-      
-      await fetchSchedules();
+      await manageReserveAction(
+        'CANCEL',
+        { reserve_id: reserveId, ...buildBranchPayload() },
+        t('reservations.errors.cancel'),
+      );
     } catch (err: any) {
-      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Error al cancelar reserva';
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || t('reservations.errors.cancel');
       setError(msg);
       throw new Error(msg);
     }
@@ -197,7 +192,6 @@ export const useReservation = (initialProductId?: string) => {
     confirmReservation,
     cancelReservation,
     searchClients,
-    getInitialClients,
     products,
     updateConfig,
     refresh: fetchSchedules,

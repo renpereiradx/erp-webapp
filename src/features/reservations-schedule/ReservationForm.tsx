@@ -1,9 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useI18n } from '@/lib/i18n';
+import { X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import SearchableDropdown, { SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
+import { HighlightText } from '@/components/ui/HighlightText';
+import { formatPYG } from '@/utils/currencyUtils';
 
 interface ReservationType {
   id: string;
-  name: string;
-  description?: string;
+  labelKey: string;
 }
 
 interface ProductPricing {
@@ -11,6 +26,10 @@ interface ProductPricing {
   lighting_fee?: number;
   min_duration?: number;
   max_duration?: number;
+}
+
+interface SelectedClient extends SearchableDropdownItem {
+  document_id?: string;
 }
 
 interface ReservationFormProps {
@@ -21,23 +40,24 @@ interface ReservationFormProps {
   onSubmit: (clientId: string, startTime: string, duration: number, reservationType?: string) => Promise<void>;
   onSearchClients: (name: string) => Promise<any[]>;
   onDurationChange?: (duration: number) => void;
+  onCancel: () => void;
 }
 
-export const ReservationForm: React.FC<ReservationFormProps> = ({ 
-  selectedSlot, 
+export const ReservationForm: React.FC<ReservationFormProps> = ({
+  selectedSlot,
   productPricing,
   maxAvailableDuration,
   reservationTypes = [],
-  onSubmit, 
+  onSubmit,
   onSearchClients,
-  onDurationChange 
+  onDurationChange,
+  onCancel,
 }) => {
+  const { t } = useI18n();
   const [clientId, setClientId] = useState('');
-  const [clientSearch, setClientSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [selectedClient, setSelectedClient] = useState<SelectedClient | null>(null);
   const [duration, setDuration] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
   const [startTime, setStartTime] = useState(selectedSlot || '');
   const [selectedReservationType, setSelectedReservationType] = useState<string>('');
 
@@ -63,27 +83,23 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   const calculatedLightingFee = duration > 1.5 ? lightingFee : 0;
   const total = (baseRate * duration) + calculatedLightingFee;
 
-  const handleSearch = async (val: string) => {
-    setClientSearch(val);
-    if (val.length < 3) {
-      setSearchResults([]);
-      return;
-    }
-    setIsSearching(true);
-    try {
-      const results = await onSearchClients(val);
-      setSearchResults(results || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSearching(false);
-    }
+  const searchClients = async (term: string): Promise<SelectedClient[]> => {
+    const results = (await onSearchClients(term)) || [];
+    return results.map((c: any) => ({
+      id: String(c.id),
+      name: `${c.name || ''} ${c.last_name || ''}`.trim(),
+      document_id: c.document_id,
+    }));
   };
 
-  const selectClient = (client: any) => {
+  const selectClient = (client: SelectedClient) => {
+    setSelectedClient(client);
     setClientId(client.id);
-    setClientSearch(`${client.name} ${client.last_name}`);
-    setSearchResults([]);
+  };
+
+  const clearClient = () => {
+    setSelectedClient(null);
+    setClientId('');
   };
 
   const handleDurationChange = (val: number) => {
@@ -102,7 +118,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
       const isoTime = new Date(d).toISOString().split('.')[0] + 'Z';
       await onSubmit(clientId, isoTime, duration, selectedReservationType);
       setClientId('');
-      setClientSearch('');
+      setSelectedClient(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -129,146 +145,154 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
     }
   };
 
-  const formatCurrency = (value: number) => {
-    if (value === 0) return 'Gs. 0';
-    return `Gs. ${value.toLocaleString()}`;
-  };
-
   return (
-    <form autoComplete="off" onSubmit={handleSubmit} className="space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="space-y-5 lg:space-y-6">
-        {/* Cliente con Autocomplete */}
-        <div className="relative">
-          <label className="block text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Cliente / Socio</label>
-          <div className="relative">
-            <input 
-              value={clientSearch}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full bg-slate-50 border-none rounded-xl py-4 pl-12 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold text-slate-700" 
-              placeholder="Buscar por nombre o ID..."
-              type="text" 
-            />
-            <span className="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">person_search</span>
-            {isSearching && <div className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-blue-400"><span className="material-icons-round">sync</span></div>}
-          </div>
-          
-          {/* Resultados de búsqueda */}
-          {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 w-full bg-white mt-2 rounded-xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in zoom-in-95 duration-200">
-              {searchResults.map((client) => (
-                <div 
-                  key={client.id}
-                  onClick={() => selectClient(client)}
-                  className="p-4 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-none flex items-center gap-3 transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
-                    {client.name?.[0]}{client.last_name?.[0]}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">{client.name} {client.last_name}</p>
-                    <p className="text-[10px] font-mono text-slate-400">ID: {client.id} | {client.document_id}</p>
-                  </div>
-                </div>
-              ))}
+    <form autoComplete="off" onSubmit={handleSubmit} className="space-y-md">
+      {/* Cliente con buscador compartido */}
+      <div className="space-y-xs">
+        <Label htmlFor="reservation-client" className="text-body-md-bold text-foreground">
+          {t('reservations.form.client')}
+        </Label>
+        {selectedClient ? (
+          <div className="flex items-center gap-sm">
+            <div className="flex min-w-0 items-center gap-xs rounded-full bg-primary-fixed py-1 pl-md pr-1">
+              <span className="truncate text-body-sm-bold text-on-primary-fixed">
+                {selectedClient.name}
+              </span>
+              <button
+                type="button"
+                onClick={clearClient}
+                aria-label={t('reservations.form.clearClient')}
+                className="flex size-5 shrink-0 items-center justify-center rounded-full hover:bg-primary-fixed-dim"
+              >
+                <X className="h-3 w-3 text-on-primary-fixed" />
+              </button>
             </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Hora Inicio</label>
-            <input 
-              type="datetime-local"
-              value={formatDateTimeForInput(startTime)}
-              onChange={(e) => {
-                setStartTime(e.target.value);
-              }}
-              className="w-full bg-slate-50 border-none rounded-xl py-4 px-4 font-mono text-blue-600 text-center text-sm font-bold focus:ring-2 focus:ring-blue-100 transition-all outline-none"
-            />
+            {selectedClient.document_id && (
+              <span className="text-data-mono font-data-mono text-body-sm text-on-surface-deep">
+                {selectedClient.document_id}
+              </span>
+            )}
           </div>
-          <div>
-            <label className="block text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Tipo de Turno</label>
-            <select 
-              value={selectedReservationType}
-              onChange={(e) => setSelectedReservationType(e.target.value)}
-              className="w-full bg-slate-50 border-none rounded-xl py-4 px-4 font-bold text-xs text-slate-700 focus:ring-2 focus:ring-blue-100 transition-all appearance-none cursor-pointer"
-            >
-              {reservationTypes.length > 0 ? (
-                reservationTypes.map((type) => (
-                  <option key={type.id} value={type.id}>{type.name}</option>
-                ))
-              ) : (
-                <option value="">Normal</option>
-              )}
-            </select>
-          </div>
-        </div>
-
-        <div className="bg-blue-50/30 p-5 lg:p-6 rounded-2xl border border-blue-100/50">
-          <div className="flex justify-between items-center mb-5">
-            <label className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest">Duración Estimada</label>
-            <span className={`font-mono font-black bg-white px-3 py-1 rounded-lg shadow-sm border ${
-              showDurationWarning ? 'border-red-300 text-red-600' : 'border-blue-100 text-blue-700'
-            }`}>
-              {duration} hr{duration > 1 ? 's' : ''}
-              {showDurationWarning && ` (máx ${maxAvailableDuration})`}
-            </span>
-          </div>
-          <input 
-            type="range" 
-            min={minDuration} 
-            max={effectiveMaxDuration} 
-            step="1" 
-            value={duration}
-            onChange={(e) => handleDurationChange(parseInt(e.target.value))}
-            className="w-full h-1.5 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600" 
+        ) : (
+          <SearchableDropdown<SelectedClient>
+            inputId="reservation-client"
+            onSearch={searchClients}
+            placeholder={t('reservations.form.clientPlaceholder')}
+            minSearchLength={2}
+            emptyMessage={t('reservations.form.clientEmpty')}
+            renderItem={(item, _index, _isHighlighted, searchTerm) => (
+              <div className="flex items-center justify-between gap-sm">
+                <HighlightText text={item.name} term={searchTerm} />
+                {item.document_id && (
+                  <span className="text-data-mono font-data-mono text-body-sm text-on-surface-deep">
+                    {item.document_id}
+                  </span>
+                )}
+              </div>
+            )}
+            onSelect={selectClient}
           />
-          <div className="flex justify-between mt-2 text-[9px] font-mono text-blue-300 font-bold uppercase tracking-tighter">
-            <span>{minDuration} hora</span>
-            <span>{effectiveMaxDuration} horas máx.</span>
-          </div>
-          {showDurationWarning && (
-            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
-              <p className="text-[10px] font-bold text-red-600">
-                ⚠️ No hay suficientes horarios disponibles para {duration} horas consecutivas.
-              </p>
-              <p className="text-[9px] text-red-500 mt-1">
-                Seleccione otro horario de inicio o reduzca la duración.
-              </p>
-            </div>
-          )}
-        </div>
+        )}
+      </div>
 
-        {/* Desglose de Precios */}
-        <div className="bg-slate-50/80 p-5 lg:p-6 rounded-2xl space-y-3 border border-slate-100">
-          <div className="flex justify-between text-xs">
-            <span className="text-slate-500 font-bold tracking-tight">Tarifa Base ({duration}h × {formatCurrency(baseRate)}/h)</span>
-            <span className="font-mono font-bold text-slate-700">{formatCurrency(baseRate * duration)}</span>
-          </div>
-          {calculatedLightingFee > 0 && (
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-500 font-bold tracking-tight">Recargo Iluminación</span>
-              <span className="font-mono font-bold text-slate-700">{formatCurrency(calculatedLightingFee)}</span>
-            </div>
-          )}
-          <div className="pt-3 border-t border-slate-200 flex justify-between items-baseline">
-            <span className="text-xs font-black text-slate-900 uppercase tracking-wider">Total a Pagar</span>
-            <span className="font-mono font-black text-blue-600 text-xl lg:text-2xl tracking-tighter">{formatCurrency(total)}</span>
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
+        <div className="space-y-xs">
+          <Label htmlFor="reservation-start" className="text-body-md-bold text-foreground">
+            {t('reservations.form.startTime')}
+          </Label>
+          <Input
+            id="reservation-start"
+            type="datetime-local"
+            value={formatDateTimeForInput(startTime)}
+            onChange={(e) => setStartTime(e.target.value)}
+          />
+        </div>
+        <div className="space-y-xs">
+          <Label htmlFor="reservation-type" className="text-body-md-bold text-foreground">
+            {t('reservations.form.type')}
+          </Label>
+          <Select value={selectedReservationType} onValueChange={setSelectedReservationType}>
+            <SelectTrigger id="reservation-type" className="rounded-input w-full" aria-label={t('reservations.form.type')}>
+              <SelectValue placeholder={t('reservations.form.type')} />
+            </SelectTrigger>
+            <SelectContent>
+              {reservationTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id} className="text-body-md">
+                  {t(type.labelKey)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="pt-2 lg:pt-4 space-y-4">
-        <button 
-          disabled={!startTime || !clientId || isSubmitting}
-          className="w-full bg-blue-600 py-4 rounded-2xl text-white font-black shadow-xl shadow-blue-600/20 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all transform hover:-translate-y-1 active:scale-[0.98]"
-        >
-          {isSubmitting ? 'Procesando...' : 'Confirmar Reserva'}
-        </button>
-        <div className="flex items-center gap-2 justify-center text-slate-400">
-          <span className="material-icons-round text-sm">shield</span>
-          <p className="text-[10px] font-bold uppercase tracking-tight">Garantía de disponibilidad activa</p>
+      {/* Duración */}
+      <div className="space-y-sm rounded-md bg-surface-muted p-md">
+        <div className="flex items-center justify-between">
+          <span className="text-label-caps uppercase text-on-surface-deep">
+            {t('reservations.form.duration')}
+          </span>
+          <span className={`rounded-input bg-surface px-sm py-xs text-data-mono font-data-mono text-body-md-bold ${showDurationWarning ? 'text-error' : 'text-primary'}`}>
+            {t('reservations.form.durationHours', '{n} h', { n: duration })}
+          </span>
         </div>
+        <Slider
+          className="w-full"
+          defaultValue={[duration]}
+          min={minDuration}
+          max={effectiveMaxDuration}
+          step={1}
+          value={[duration]}
+          onValueChange={(values: number[]) => handleDurationChange(values[0])}
+          aria-label={t('reservations.form.duration')}
+        />
+        <div className="flex justify-between text-body-sm-bold text-on-surface-deep">
+          <span>{t('reservations.form.durationHours', '{n} h', { n: minDuration })}</span>
+          <span>{t('reservations.form.durationMax', '{max} h máx.', { max: effectiveMaxDuration })}</span>
+        </div>
+        {showDurationWarning && (
+          <p className="rounded-input bg-error-container px-md py-sm text-body-sm-bold text-on-error-container">
+            {t('reservations.form.durationWarning', 'No hay suficientes horarios consecutivos libres para {max} h.', { max: maxAvailableDuration || 4 })}
+          </p>
+        )}
+      </div>
+
+      {/* Desglose de precios */}
+      <div className="space-y-sm rounded-md bg-surface-muted p-md">
+        <div className="flex items-center justify-between">
+          <span className="text-body-md text-on-surface-deep">
+            {t('reservations.form.rateLine', 'Tarifa base ({duration} h × {rate}/h)', {
+              duration,
+              rate: formatPYG(baseRate),
+            })}
+          </span>
+          <span className="text-data-mono font-data-mono text-body-md-bold text-foreground">
+            {formatPYG(baseRate * duration)}
+          </span>
+        </div>
+        {calculatedLightingFee > 0 && (
+          <div className="flex items-center justify-between">
+            <span className="text-body-md text-on-surface-deep">{t('reservations.form.lightingFee')}</span>
+            <span className="text-data-mono font-data-mono text-body-md-bold text-foreground">
+              {formatPYG(calculatedLightingFee)}
+            </span>
+          </div>
+        )}
+        <div className="flex items-baseline justify-between border-t border-divider pt-sm">
+          <span className="text-label-caps uppercase text-foreground">{t('reservations.form.total')}</span>
+          <span className="text-data-mono font-data-mono text-headline-lg-mobile text-primary">
+            {formatPYG(total)}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-sm pt-sm">
+        <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting}>
+          {t('common.cancel', 'Cancelar')}
+        </Button>
+        <Button type="submit" variant="primary" loading={isSubmitting} disabled={!startTime || !clientId}>
+          {t('reservations.form.confirm')}
+        </Button>
       </div>
     </form>
   );

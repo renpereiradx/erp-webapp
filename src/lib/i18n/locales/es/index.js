@@ -43,6 +43,7 @@ import { catalog } from './catalog'
 import { counterorders } from './counterorders'
 import { branches } from './branches'
 import { version } from './version'
+import { reservations } from './reservations'
 
 /**
  * Diccionario completo de traducciones en español
@@ -89,4 +90,5 @@ export const es = {
   ...other,
   ...unitConversions,
   ...version,
+  ...reservations,
 }

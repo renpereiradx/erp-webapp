@@ -1,4 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useI18n } from '@/lib/i18n';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ProductScheduleConfig } from '../../domain/reservation';
 
 interface ScheduleSettingsProps {
@@ -7,11 +19,12 @@ interface ScheduleSettingsProps {
 }
 
 export const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({ config, onSave }) => {
+  const { t } = useI18n();
   const [startHour, setStartHour] = useState(7);
   const [endHour, setEndHour] = useState(23);
   const [timezone, setTimezone] = useState('America/Asuncion');
   const [isActive, setIsActive] = useState(true);
-  const [isSaving, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (config) {
@@ -23,7 +36,7 @@ export const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({ config, onSa
   }, [config]);
 
   const handleSave = async () => {
-    setIsSubmitting(true);
+    setIsSaving(true);
     try {
       await onSave({
         start_hour: startHour,
@@ -32,70 +45,82 @@ export const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({ config, onSa
         is_active: isActive
       });
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
 
+  const hourInput = (id: string, label: string, value: number, setValue: (v: number) => void, min: number, max: number) => (
+    <div className="space-y-xs">
+      <Label htmlFor={id} className="text-body-md-bold text-foreground">{label}</Label>
+      <Input
+        id={id}
+        type="number"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => setValue(parseInt(e.target.value, 10) || 0)}
+        className="text-data-mono font-data-mono"
+      />
+    </div>
+  );
+
   return (
-    <section className="bg-white p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-        <div>
-          <h3 className="text-2xl font-black mb-1 tracking-tight text-slate-900">Ventana de Generación</h3>
-          <p className="text-slate-500 text-sm opacity-70">Define los parámetros operativos globales para este recurso.</p>
+    <section className="rounded-md bg-surface p-lg shadow-whisper">
+      <div className="mb-md flex flex-col gap-md sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-xs">
+          <h3 className="text-title-md text-foreground">{t('reservations.settings.title')}</h3>
+          <p className="text-body-md text-on-surface-deep">{t('reservations.settings.description')}</p>
         </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 flex-1 max-w-4xl">
-          <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-2">Hora Apertura</label>
-            <input 
-              type="number" 
-              min="0" max="23"
-              value={startHour}
-              onChange={(e) => setStartHour(parseInt(e.target.value))}
-              className="w-full bg-slate-50 border border-slate-100 rounded-xl font-mono text-sm py-3 px-4 focus:ring-2 focus:ring-blue-100" 
-            />
-          </div>
-          <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-2">Hora Cierre</label>
-            <input 
-              type="number" 
-              min="1" max="24"
-              value={endHour}
-              onChange={(e) => setEndHour(parseInt(e.target.value))}
-              className="w-full bg-slate-50 border border-slate-100 rounded-xl font-mono text-sm py-3 px-4 focus:ring-2 focus:ring-blue-100" 
-            />
-          </div>
-          <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mb-2">Zona Horaria</label>
-            <select 
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-100 rounded-xl text-sm py-3 px-4 font-semibold focus:ring-2 focus:ring-blue-100"
-            >
-              <option value="America/Asuncion">UTC-4 (PY)</option>
-              <option value="America/Bogota">UTC-5 (BOG/LIM)</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-3">
-            <div 
-              onClick={() => setIsActive(!isActive)}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                isActive ? 'bg-blue-600' : 'bg-slate-200'
-              }`}
-            >
-              <span className={`${isActive ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}></span>
-            </div>
-            <span className="font-bold text-sm text-slate-700">Recurso Activo</span>
-          </div>
+        <Button variant="secondary" onClick={handleSave} loading={isSaving}>
+          {t('reservations.settings.save')}
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-4">
+        {hourInput(
+          'schedule-start-hour',
+          t('reservations.settings.startHour'),
+          startHour,
+          setStartHour,
+          0,
+          23,
+        )}
+        {hourInput(
+          'schedule-end-hour',
+          t('reservations.settings.endHour'),
+          endHour,
+          setEndHour,
+          1,
+          24,
+        )}
+        <div className="space-y-xs">
+          <Label htmlFor="schedule-timezone" className="text-body-md-bold text-foreground">
+            {t('reservations.settings.timezone')}
+          </Label>
+          <Select value={timezone} onValueChange={setTimezone}>
+            <SelectTrigger id="schedule-timezone" className="rounded-input w-full" aria-label={t('reservations.settings.timezone')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="America/Asuncion" className="text-body-md">
+                {t('reservations.settings.tzPY')}
+              </SelectItem>
+              <SelectItem value="America/Bogota" className="text-body-md">
+                {t('reservations.settings.tzBOG')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        
-        <button 
-          onClick={handleSave}
-          disabled={isSaving}
-          className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold hover:bg-black transition-all shadow-lg shadow-slate-200 disabled:bg-slate-400"
-        >
-          {isSaving ? 'Guardando...' : 'Guardar Cambios'}
-        </button>
+        <div className="flex items-center justify-between gap-sm rounded-md border border-border-subtle px-md py-sm sm:justify-start sm:py-0">
+          <Label htmlFor="schedule-active" className="text-body-md-bold text-foreground">
+            {t('reservations.settings.active')}
+          </Label>
+          <Switch
+            id="schedule-active"
+            checked={isActive}
+            onCheckedChange={setIsActive}
+          />
+        </div>
       </div>
     </section>
   );

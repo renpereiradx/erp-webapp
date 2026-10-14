@@ -25,6 +25,7 @@ import { printers } from './printers'
 import { shell } from './shell'
 import { other } from './other'
 import { version } from './version'
+import { reservations } from './reservations'
 import { es } from '../es/index'
 
 /**
@@ -69,4 +70,5 @@ export const en = {
   // - priceAdjustments
   ...unitConversions,
   ...version,
+  ...reservations,
 }
