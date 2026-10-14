@@ -2218,14 +2218,46 @@ const SalesNew: React.FC = () => {
                 shadcn pierde los overrides (cn sin tailwind-merge) y dejaba
                 rounded-xl + p-6 residual → radio de modal y doble padding.
                 Anatomía "card con tabla" (DESIGN.md §6.3): banda de toolbar
-                muted + border-b divider, hermana del carrito de /compras. */}
+                muted + border-b divider con el buscador PRIMERO y el título
+                después; tabla full-bleed sin wrapper de padding. */}
             <section className="bg-surface rounded-md shadow-whisper border-0 overflow-hidden min-w-0 self-stretch">
-              <div className="px-lg py-md bg-surface-muted border-b border-divider flex items-center justify-between gap-sm flex-wrap">
-                <h2 className="text-title-md text-foreground flex items-center gap-sm">
-                  <ShoppingCart size={18} className="text-primary" aria-hidden="true" />
+              <div className="px-lg py-md bg-surface-muted border-b border-divider flex flex-col sm:flex-row sm:items-center gap-sm md:gap-md flex-wrap">
+                <div className="w-full sm:w-80 shrink-0">
+                  <ProductSearchPanel
+                    searchTerm={productSearchTerm}
+                    onSearchTermChange={(v) => {
+                      setProductSearchTerm(v);
+                      setSelectedProductQuantity(1);
+                    }}
+                    searchInputRef={productSearchInputRef}
+                    qtyInputRef={dropdownQuantityInputRef}
+                    results={productSearchResults}
+                    open={showProductDropdown}
+                    highlightedIndex={productHighlightedIndex}
+                    onHighlight={setProductHighlightedIndex}
+                    selectedQty={selectedProductQuantity}
+                    onSelectedQtyChange={setSelectedProductQuantity}
+                    onProductClick={(product, qty) => {
+                      const unit = product as ProductDisplay;
+                      addProductToCart(unit, qty, unit.variantId ?? null, unit.variantName);
+                      setProductSearchTerm('');
+                      setShowProductDropdown(false);
+                      setProductHighlightedIndex(-1);
+                      setSelectedProductQuantity(1);
+                      productSearchInputRef.current?.focus();
+                    }}
+                    onClose={() => {
+                      setShowProductDropdown(false);
+                      setProductHighlightedIndex(-1);
+                    }}
+                    getQuantityInCart={getQuantityInCart}
+                  />
+                </div>
+                <h2 className="text-title-md text-foreground flex items-center gap-sm min-w-0">
+                  <ShoppingCart size={18} className="text-primary shrink-0" aria-hidden="true" />
                   {t('sales.cart.title', 'Productos Seleccionados')}
                 </h2>
-                <p className="hidden sm:flex items-center gap-sm text-body-sm font-data-mono text-outline-fg">
+                <p className="hidden lg:flex items-center gap-sm text-body-sm font-data-mono text-outline-fg ml-auto">
                   <span>[F2] {t('sales.hints.search', 'Buscar')}</span>
                   <span aria-hidden="true">·</span>
                   <span>[F8] {t('sales.hints.cart', 'Carrito')}</span>
@@ -2239,49 +2271,20 @@ const SalesNew: React.FC = () => {
                   <span>[F4] {t('sales.hints.clear', 'Limpiar')}</span>
                 </p>
               </div>
-              <div className="p-lg pt-md space-y-md">
-                <ProductSearchPanel
-                  searchTerm={productSearchTerm}
-                  onSearchTermChange={(v) => {
-                    setProductSearchTerm(v);
-                    setSelectedProductQuantity(1);
-                  }}
-                  searchInputRef={productSearchInputRef}
-                  qtyInputRef={dropdownQuantityInputRef}
-                  results={productSearchResults}
-                  open={showProductDropdown}
-                  highlightedIndex={productHighlightedIndex}
-                  onHighlight={setProductHighlightedIndex}
-                  selectedQty={selectedProductQuantity}
-                  onSelectedQtyChange={setSelectedProductQuantity}
-                  onProductClick={(product, qty) => {
-                    const unit = product as ProductDisplay;
-                    addProductToCart(unit, qty, unit.variantId ?? null, unit.variantName);
-                    setProductSearchTerm('');
-                    setShowProductDropdown(false);
-                    setProductHighlightedIndex(-1);
-                    setSelectedProductQuantity(1);
-                    productSearchInputRef.current?.focus();
-                  }}
-                  onClose={() => {
-                    setShowProductDropdown(false);
-                    setProductHighlightedIndex(-1);
-                  }}
-                  getQuantityInCart={getQuantityInCart}
-                />
-
-                <SalesCartGrid
-                  items={filteredItems}
-                  onEditItem={handleOpenEditModal}
-                  onEmptyAction={() => productSearchInputRef.current?.focus()}
-                  onRemoveItem={handleRemoveItem}
-                  getItemBaseUnitPrice={getItemBaseUnitPrice}
-                  getItemLineDiscount={getItemLineDiscount}
-                  getItemLineTotal={getItemLineTotal}
-                  activeItemId={activeCartItemId}
-                  onActiveItemChange={setActiveCartItemId}
-                />
-              </div>
+              {/* Tabla full-bleed (§6.3): pegada a los bordes de la card,
+                  sin wrapper de padding (el margen interno era el recuadro
+                  implícito que la receta prohíbe). */}
+              <SalesCartGrid
+                items={filteredItems}
+                onEditItem={handleOpenEditModal}
+                onEmptyAction={() => productSearchInputRef.current?.focus()}
+                onRemoveItem={handleRemoveItem}
+                getItemBaseUnitPrice={getItemBaseUnitPrice}
+                getItemLineDiscount={getItemLineDiscount}
+                getItemLineTotal={getItemLineTotal}
+                activeItemId={activeCartItemId}
+                onActiveItemChange={setActiveCartItemId}
+              />
             </section>
 
             <CheckoutSummaryPanel

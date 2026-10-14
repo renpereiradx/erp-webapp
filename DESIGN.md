@@ -436,13 +436,18 @@ Reglas:
 
 ```jsx
 <section className="bg-surface rounded-md shadow-whisper border-0 overflow-hidden">
-  {/* 1. Toolbar OPCIONAL: solo si el header lleva buscador o acciones */}
-  <div className="px-lg py-md bg-surface-muted border-b border-divider flex items-center justify-between gap-md">
-    <div>
+  {/* 1. Toolbar OPCIONAL: solo si el header lleva buscador o acciones.
+      Orden fijo: BUSCADOR PRIMERO (izquierda), luego el título;
+      hints/acciones a la derecha. En mobile la banda apila (input full-width arriba). */}
+  <div className="px-lg py-md bg-surface-muted border-b border-divider flex flex-col sm:flex-row sm:items-center gap-md">
+    <div className="w-full sm:w-80 shrink-0">
+      {/* buscador — Input h-10 (default del sistema, §6.4) */}
+    </div>
+    <div className="min-w-0">
       <h2 className="text-title-md text-foreground">Productos en la orden</h2>
       <p className="text-body-sm text-on-surface-deep mt-0.5">Subtítulo breve</p>
     </div>
-    {/* buscador / acciones a la derecha */}
+    {/* hints / acciones con ml-auto a la derecha */}
   </div>
 
   {/* 2. Tabla FULL-BLEED: pegada a los bordes de la card, sin recuadro interno */}
@@ -482,7 +487,7 @@ Reglas:
 Reglas de la anatomía:
 
 - **Una forma por card**: la tabla es full-bleed (pegada a los bordes) **o** la card entera lleva marco. PROHIBIDO el recuadro con borde alrededor de la tabla dentro de una card sin marco (doble marco implícito).
-- **Toolbar**: `bg-surface-muted` + `border-b border-divider` (§2.1). Sin toolbar, el título va directo sobre `bg-surface` (§6.2) — ambas válidas; la banda se usa cuando el header carga buscador/acciones.
+- **Toolbar**: `bg-surface-muted` + `border-b border-divider` (§2.1). **Orden fijo: buscador primero** (`w-80 shrink-0`, altura `h-10`), después el bloque de texto; hints/acciones a la derecha con `ml-auto`. Sin toolbar, el título va directo sobre `bg-surface` (§6.2) — ambas válidas; la banda se usa cuando el header carga buscador/acciones.
 - **Empty dentro de la tabla**: icono en círculo `bg-surface-muted`, título bold, hint y acción si aplica. El `EmptyState` de §6.7 queda para tablas sueltas y vistas mobile sin tabla.
 - **Variante enmarcada** (solo listas de lectura / BI): card con `border border-border-subtle` (± `hover:shadow-fluent-8`), thead `bg-surface-muted` con su borde inferior, dentro. Sin toolbar. Referencia: `OverdueTable` (`/receivables/overdue`).
 
@@ -514,6 +519,7 @@ import { Button } from '@/components/ui/button'
 Reglas:
 
 - SIEMPRE `<Label htmlFor>` enlazado al `id` del input (accesibilidad, no opcional).
+- **Altura**: default `h-10` (la fija el componente `Input`); `sm` = `h-8` solo para inputs compactos. Los buscadores de bandas de carrito/toolbar usan `h-10` — NUNCA overrides `h-11`/`h-12` "porque se vea más grande": si un input necesita más presencia, es un problema del placeholder, no del alto.
 - Estado de error: prop `state="error"` en `<Input>` + mensaje con `text-error` debajo. Nunca solo borde rojo sin texto.
 - Validación con **Zod** (ver `src/features/products/` como referencia).
 - Botones del form: alineados a la derecha, `secondary` + `primary`, separados con `gap-sm`.

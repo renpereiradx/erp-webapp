@@ -71,16 +71,8 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
 
   return (
     <section className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden'>
-      <div className='px-lg py-md border-b border-divider flex flex-col sm:flex-row justify-between items-center bg-surface-muted gap-md'>
-        <div>
-          <h2 className='text-title-md text-foreground'>
-            {t('purchases.cart.title', 'Productos en la Orden')}
-          </h2>
-          <p className='text-body-sm text-on-surface-deep mt-0.5'>
-            {t('purchases.cart.subtitle', 'Artículos a ingresar al inventario')}
-          </p>
-        </div>
-        <div className='w-full sm:w-96 shrink-0'>
+      <div className='px-lg py-md border-b border-divider flex flex-col sm:flex-row sm:items-center bg-surface-muted gap-md'>
+        <div className='w-full sm:w-80 shrink-0'>
           <PurchaseProductSearchInput
             id='purchase-cart-product-search'
             search={modalProductSearch}
@@ -99,6 +91,14 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
             placeholder={t('purchases.cart.search_placeholder', 'Buscar producto por SKU, nombre o código de barras... (F2)')}
             disabled={!canWrite}
           />
+        </div>
+        <div className='min-w-0'>
+          <h2 className='text-title-md text-foreground'>
+            {t('purchases.cart.title', 'Productos en la Orden')}
+          </h2>
+          <p className='text-body-sm text-on-surface-deep mt-0.5'>
+            {t('purchases.cart.subtitle', 'Artículos a ingresar al inventario')}
+          </p>
         </div>
       </div>
 
