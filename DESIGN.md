@@ -279,7 +279,7 @@ Tokens de espaciado (útiles como `p-*`, `px-*`, `py-*`, `m-*`, `gap-*`, `space-
 
 ```jsx
 <div className="min-h-screen bg-background">
-  <div className="mx-auto w-full max-w-container-max px-md lg:px-lg">
+  <div className="w-full max-w-container-max px-md lg:px-lg">
     {/* contenido de página: secciones separadas con space-y-xl */}
   </div>
 </div>
@@ -287,7 +287,7 @@ Tokens de espaciado (útiles como `p-*`, `px-*`, `py-*`, `m-*`, `gap-*`, `space-
 
 Reglas:
 
-- Contenedor centrado: `max-w-container-max` (1440px). NUNCA páginas a ancho completo sin límite.
+- Contenedor anclado a la **izquierda** (pegado al sidebar): `max-w-container-max` (1440px). El centrado `mx-auto` del shell vive SOLO en `MainLayout` — y allá tampoco: MainLayout alinea a la izquierda. NUNCA páginas a ancho completo sin límite, NUNCA `mx-auto` en el contenedor de página (deja un hueco entre el menú y el contenido).
 - Márgenes de página: `px-md` (16px) en móvil, `lg:px-lg` (24px) en desktop.
 - Entre secciones de una página: `space-y-xl` (48px).
 - Dentro de una card: padding `p-lg` (24px); si es tabla densa o toolbar, `p-md` (16px).
@@ -696,7 +696,7 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
+      <div className="w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
           title={t('products.title')}
           subtitle={t('products.subtitle')}

@@ -189,8 +189,10 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         />
         {/* PLAN_BI_PACK_PREMIUM F4: aviso global de vencimiento del pack BI */}
         <LicenseBanner />
+        {/* Contenedor anclado a la IZQUIERDA (pegado al sidebar, DESIGN.md §4):
+            el mx-auto centrado dejaba un hueco entre el menú y el contenido. */}
         <main key={currentBranchId ?? 'global'} className="flex-1 overflow-y-auto bg-background p-md lg:p-lg custom-scrollbar">
-          <div className="max-w-container-max mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="max-w-container-max animate-in fade-in slide-in-from-bottom-4 duration-300">
             {children}
           </div>
         </main>
