@@ -13,7 +13,6 @@ import type { TFn } from '../types';
 const PageHeaderX = PageHeader as unknown as React.FC<{
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
-  breadcrumb?: string;
 }>;
 
 /** /configuracion/perfil — account, security and active sessions of the logged user. */
@@ -44,7 +43,6 @@ export function ProfilePage() {
   return (
     <div className="space-y-lg animate-in fade-in duration-300">
       <PageHeaderX
-        breadcrumb={t('nav.settings', 'Configuración')}
         title={t('profile.title', 'Mi Perfil y Seguridad')}
         subtitle={t(
           'profile.subtitle',

@@ -23,7 +23,6 @@ const AgingReport = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.receivables.breadcrumb', 'Cuentas por Cobrar', {})}
           title={t('bi.receivables.aging.pageTitle', 'Reporte de Antigüedad y Estadísticas', {})}
           subtitle={t('bi.receivables.aging.pageSubtitle', 'Análisis estratégico de cartera y recuperación', {})}
           actions={

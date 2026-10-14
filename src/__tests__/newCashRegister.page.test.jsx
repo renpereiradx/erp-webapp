@@ -68,7 +68,6 @@ describe('NewCashRegister Page', () => {
   it('should render page header and tabs without crashing', () => {
     renderPage();
 
-    expect(screen.getByText('Caja')).toBeInTheDocument();
     expect(screen.getByText('Jornada de caja')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Apertura de caja' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Cierre de caja' })).toBeInTheDocument();

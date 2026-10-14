@@ -126,7 +126,6 @@ const AuditUserActivity = () => {
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-500 max-w-7xl mx-auto w-full">
       <PageHeader
-        breadcrumb={t('bi.audit.user.breadcrumb', 'Auditoría de Usuarios', {})}
         title={activity.username || '—'}
         subtitle={`${t('bi.audit.user.userId', 'ID de usuario', {})}: ${activity.user_id ?? '—'}`}
       />

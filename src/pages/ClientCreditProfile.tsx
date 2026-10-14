@@ -25,7 +25,6 @@ const ClientCreditProfile = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.receivables.breadcrumb', 'Cuentas por Cobrar', {})}
           title={data?.client.name || t('bi.receivables.profile.title', 'Perfil de Crédito', {})}
           subtitle={data?.client.id ? `${t('bi.receivables.profile.clientId', 'ID de Cliente', {})} #${data.client.id}` : undefined}
           actions={

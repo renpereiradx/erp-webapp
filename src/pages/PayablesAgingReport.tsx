@@ -62,7 +62,6 @@ const PayablesAgingReport = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.payables.breadcrumb', 'Finanzas', {})}
           title={t('bi.payables.agingReport.title', 'Reporte de Antigüedad de Deuda', {})}
           subtitle={`${t('bi.payables.agingReport.asOf', 'Corte al', {})}: ${new Date().toLocaleDateString('es-PY', {
             day: 'numeric',

@@ -120,7 +120,6 @@ export default function NewCashRegister() {
 
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('cashRegister.title', 'Caja')}
           title={t('cashRegister.page.title', 'Jornada de caja')}
           subtitle={t(
             'cashRegister.page.subtitle',

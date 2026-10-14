@@ -773,7 +773,6 @@ const SalePayment = () => {
     <div className='min-h-screen bg-background'>
       <div className='mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl space-y-lg animate-in fade-in duration-150'>
         <PageHeader
-          breadcrumb={t('sales.title', 'Ventas')}
           title={t('sales.cobros.page.title', 'Cobros de Ventas')}
           subtitle={t('sales.cobros.page.subtitle', 'Gestión centralizada de cobros')}
         />

@@ -142,7 +142,6 @@ export default function LicenseStatusPage() {
   return (
     <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
       <PageHeader
-        breadcrumb={t('businessPrefs.breadcrumb', 'Configuración')}
         title={t('licensing.card.title', 'Licencia')}
         subtitle={t(
           'licensing.card.description',

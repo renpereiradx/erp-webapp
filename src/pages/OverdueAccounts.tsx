@@ -21,7 +21,6 @@ const OverdueAccounts = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.receivables.breadcrumb', 'Cuentas por Cobrar', {})}
           title={t('receivables.overdue.title', 'Cuentas Vencidas y Cobranzas', {})}
           subtitle={t('bi.receivables.overdue.subtitle', 'Gestión estratégica de deudas y tareas de recaudo', {})}
           actions={

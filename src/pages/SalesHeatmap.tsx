@@ -86,7 +86,6 @@ const SalesHeatmap = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.dashboard.breadcrumb', 'Dashboard', {})}
           title={t('bi.dashboard.heatmap.title', 'Mapa de Calor de Ventas por Hora', {})}
           subtitle={t('bi.dashboard.heatmap.subtitle', 'Visualizando picos de actividad e intensidad de ventas.', {})}
           actions={

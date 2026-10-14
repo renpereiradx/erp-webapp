@@ -110,7 +110,6 @@ export const StockLevelsReorder: React.FC = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.inventory.breadcrumb', 'Inventario', {})}
           title={t('bi.inventory.stock.title', 'Niveles de Stock y Reabastecimiento', {})}
           subtitle={t('bi.inventory.stock.subtitle', 'Gestión detallada de existencias y alertas de reposición.', {})}
           actions={

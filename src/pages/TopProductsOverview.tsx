@@ -92,7 +92,6 @@ const TopProductsOverview = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.dashboard.breadcrumb', 'Dashboard', {})}
           title={t('dashboard.dashboard.nav.topProducts', 'Rendimiento de Productos Top', {})}
           subtitle={`${getPeriodLabel(period)} | ${t('dashboard.dashboard.topProductsPanel.subtitle', 'Resumen de los SKUs con mejor desempeño', {})}`}
           actions={

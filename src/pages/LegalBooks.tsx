@@ -277,10 +277,6 @@ const LegalBooks: React.FC = () => {
     <div className='min-h-screen bg-background'>
       <div className='mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl space-y-lg'>
         <PageHeader
-          breadcrumb={[
-            { label: t('fiscal.legalBooks.breadcrumb.reports', 'Reportes') },
-            { label: t('fiscal.legalBooks.breadcrumb.compliance', 'Cumplimiento') },
-          ]}
           title={t('fiscal.legalBooks.title', 'Libros Legales')}
           subtitle={t('fiscal.legalBooks.subtitle', 'Ventas y Compras • Origen: {source}', {
             source: SOURCE_IS_DEMO

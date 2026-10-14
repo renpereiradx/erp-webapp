@@ -78,7 +78,6 @@ const CashFlowAnalysisDashboard = () => {
     <div className='flex-1 w-full bg-surface-muted text-foreground min-h-screen'>
       <main className='flex-1 p-6 lg:p-8 max-w-[1600px] mx-auto w-full space-y-8'>
         <PageHeader
-          breadcrumb='Contabilidad · Reportes'
           title='Flujo de Efectivo Analítico'
           subtitle='Vista consolidada de entradas, salidas y saldo diario, conectada al reporte financiero real.'
           actions={

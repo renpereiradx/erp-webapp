@@ -43,7 +43,6 @@ const InvoiceDetail = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.payables.breadcrumb', 'Finanzas', {})}
           title={invoice ? `${t('bi.payables.detail.title', 'Factura', {})} #${invoice.id}` : t('bi.payables.detail.title', 'Factura', {})}
           subtitle={invoice?.purchaseOrderId ? `${t('bi.payables.detail.orderId', 'ID Orden', {})}: ${invoice.purchaseOrderId}` : undefined}
           actions={

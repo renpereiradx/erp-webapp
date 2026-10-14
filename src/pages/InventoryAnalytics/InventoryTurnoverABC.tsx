@@ -113,7 +113,6 @@ export const InventoryTurnoverABC: React.FC = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.inventory.breadcrumb', 'Inventario', {})}
           title={t('bi.inventory.turnover.title', 'Análisis de Rotación y ABC', {})}
           subtitle={t('bi.inventory.turnover.subtitle', 'Análisis detallado de rotación por categoría y valorización ABC en Guaraníes (Gs.)', {})}
           actions={

@@ -213,7 +213,6 @@ const PurchasePaymentDetailPage = () => {
   return (
     <div className='mx-auto w-full max-w-container-max flex flex-col gap-lg animate-in fade-in duration-150'>
       <PageHeader
-        breadcrumb={t('purchasePaymentsMvp.title', 'Pagos de compras')}
         title={t('purchasePaymentsMvp.detail.title', 'Detalle de Compra')}
         subtitle={`${t('purchasePaymentsMvp.table.id', 'ID')} #${typedOrder.id} • ${typedOrder.issue_date ? new Date(typedOrder.issue_date).toLocaleDateString() : '-'}`}
         actions={

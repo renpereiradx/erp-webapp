@@ -149,7 +149,6 @@ export default function CashMovements() {
 
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('cashMovement.pageTitle', 'Movimientos de Caja')}
           title={t('cashMovement.pageTitle', 'Movimientos de Caja')}
           subtitle={
             <span className="inline-flex items-center gap-sm">

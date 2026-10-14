@@ -131,7 +131,6 @@ const Purchases = () => {
   return (
     <div className='mx-auto w-full max-w-container-max flex flex-col gap-lg animate-in fade-in duration-150'>
       <PageHeader
-        breadcrumb={t('purchases.title', 'Compras')}
         title={t('purchases.management.title', 'Gestión de Compras')}
         subtitle={t('purchases.management.subtitle', 'Abastecimiento y órdenes de compra a proveedores')}
         actions={

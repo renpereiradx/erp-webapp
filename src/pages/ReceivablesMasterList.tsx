@@ -31,7 +31,6 @@ const ReceivablesMasterList = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.receivables.breadcrumb', 'Cuentas por Cobrar', {})}
           title={t('receivables.master.title', 'Cuentas por Cobrar', {})}
           subtitle={t('bi.receivables.master.subtitle', 'Gestión masiva de pagos pendientes y recaudo', {})}
           actions={

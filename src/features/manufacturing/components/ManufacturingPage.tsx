@@ -19,7 +19,6 @@ export function ManufacturingPage() {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('manufacturing.breadcrumb')}
           title={t('manufacturing.title')}
           subtitle={t('manufacturing.subtitle')}
         />

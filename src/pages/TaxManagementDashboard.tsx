@@ -76,7 +76,6 @@ const TaxManagementDashboard = () => {
   return (
     <div className='flex-1 overflow-y-auto p-4 md:p-8 bg-surface-muted min-h-screen'>
       <PageHeader
-        breadcrumb='Finanzas'
         title='Gestión de IVA y Resumen Fiscal'
         subtitle={`Origen: ${SOURCE_IS_DEMO ? 'Demo' : 'API'}`}
       />

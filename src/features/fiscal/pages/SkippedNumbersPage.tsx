@@ -55,7 +55,6 @@ const SkippedNumbersPage: React.FC = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl space-y-lg">
         <PageHeader
-          breadcrumb={t('nav.sifenFiscalGroup', 'Fiscal (SIFEN)')}
           title={t('fiscal.skipped.title', 'Saltos de numeración')}
           subtitle={t('fiscal.skipped.subtitle', 'Números sin DE emitido ni evento de inutilización')}
         />

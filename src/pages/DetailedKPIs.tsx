@@ -96,7 +96,6 @@ const DetailedKPIs = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.dashboard.breadcrumb', 'Dashboard', {})}
           title={t('dashboard.dashboard.actions.viewDetails', 'Panel de KPIs Detallado', {})}
           subtitle={`${t('dashboard.dashboard.activity.lastUpdated', 'Última actualización:', {})} ${formatTimeInParaguayTimezone(lastUpdated)}`}
           actions={

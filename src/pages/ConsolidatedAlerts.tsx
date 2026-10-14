@@ -126,7 +126,6 @@ const ConsolidatedAlerts = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.dashboard.breadcrumb', 'Dashboard', {})}
           title={t('bi.dashboard.alerts.title', 'Alertas Consolidadas', {})}
           subtitle={`${t('bi.dashboard.alerts.monitoring', 'Monitoreo en tiempo real de eventos críticos del sistema.', {})} ${t('bi.dashboard.alerts.updated', 'Actualizado:', {})} ${formatTimeInParaguayTimezone(lastUpdated)}`}
           actions={

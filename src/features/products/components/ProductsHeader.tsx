@@ -18,7 +18,6 @@ export const ProductsHeader: React.FC<ProductsHeaderProps> = ({ onOpenCreateModa
 
   return (
     <PageHeader
-      breadcrumb={t('products.breadcrumb.inventory', 'Inventario')}
       title={t('products.page.title')}
       subtitle={t('products.page.subtitle')}
       actions={

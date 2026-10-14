@@ -67,7 +67,6 @@ export const InventoryRisk: React.FC = () => {
     <div className="min-h-screen flex flex-col font-display bg-background">
       <main className="flex-1 w-full max-w-container-max mx-auto px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.inventory.breadcrumb', 'Inventario', {})}
           title={t('bi.inventory.risk.title', 'Riesgos y Stock Muerto (Gs.)', {})}
           subtitle={t('bi.inventory.risk.subtitle', 'Monitoreo de capital inmovilizado y predicción de quiebres de stock basados en demanda actual.', {})}
           actions={

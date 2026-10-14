@@ -21,7 +21,6 @@ const PageHeaderX = PageHeader as unknown as React.FC<{
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
   actions?: React.ReactNode;
-  breadcrumb?: string;
 }>;
 const SkeletonList = GenericSkeletonList as unknown as React.FC<{ count?: number }>;
 const LoadErrorState = ErrorState as unknown as React.FC<{
@@ -64,7 +63,6 @@ export function UsersPage() {
   return (
     <div className="space-y-lg animate-in fade-in duration-300">
       <PageHeaderX
-        breadcrumb={t('nav.settings', 'Configuración')}
         title={t('users.title', 'Usuarios')}
         subtitle={t('users.description', 'Administra accesos, roles y seguridad de la plataforma.')}
         actions={

@@ -635,7 +635,6 @@ Reglas:
 import PageHeader from '@/components/ui/PageHeader'
 
 <PageHeader
-  breadcrumb={t('nav.catalog')}
   title={t('products.title')}
   subtitle={t('products.subtitle')}
   actions={<Button variant="primary">{t('products.new')}</Button>}
@@ -645,6 +644,8 @@ import PageHeader from '@/components/ui/PageHeader'
 Reglas:
 
 - Toda página de feature usa `PageHeader`. No construyas `<h1>` artesanales.
+- **Una sola línea de información**: título + descripción **al lado** del título (alineados a la baseline) en desktop; en mobile la descripción pasa por debajo (stack). El encabezado NO repite texto: es redundante un eyebrow/breadcrumb estático encima del título que nombre la misma sección — la sección ya vive en el sidebar.
+- `breadcrumb` es SOLO para navegación real de páginas de detalle: array con `href` al padre (ej. detalle de usuario → `/configuracion/usuarios`). Un `breadcrumb` string se ignora — no lo pases.
 - La acción primaria de la página vive en `actions` (y es el único `primary` de la vista).
 
 ### 6.9 Wizard de checkout (Concretar Venta / Concretar Compra)
@@ -694,7 +695,6 @@ export default function ProductsPage() {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('nav.catalog')}
           title={t('products.title')}
           subtitle={t('products.subtitle')}
           actions={<Button variant="primary">{t('products.new')}</Button>}

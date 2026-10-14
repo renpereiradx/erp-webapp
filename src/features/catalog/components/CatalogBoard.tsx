@@ -67,7 +67,6 @@ export function CatalogBoard() {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('common.commercial', 'Gestión Comercial')}
           title={t('catalog.title', 'Catálogo')}
           subtitle={t('catalog.subtitle', 'Consulta de productos y precios de venta.')}
         />

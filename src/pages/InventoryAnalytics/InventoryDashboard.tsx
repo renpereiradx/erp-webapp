@@ -77,7 +77,6 @@ export const InventoryDashboard: React.FC = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.inventory.breadcrumb', 'Inventario', {})}
           title={t('bi.inventory.dashboard.title', 'Dashboard de Inventario', {})}
           subtitle={t('bi.inventory.dashboard.subtitle', 'Vista analítica de existencias y KPIs financieros en Guaraníes.', {})}
           actions={

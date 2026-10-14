@@ -314,7 +314,6 @@ const PurchasePaymentsPage = () => {
     <div className='min-h-screen bg-background'>
       <div className='mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl space-y-lg animate-in fade-in duration-150'>
         <PageHeader
-          breadcrumb={t('purchasePaymentsMvp.title', 'Pagos de compras')}
           title={t('purchasePaymentsMvp.page.title', 'Pagos a Proveedores')}
           subtitle={t('purchasePaymentsMvp.page.subtitle', 'Gestión de saldos y vencimientos de facturas de compra')}
           actions={

@@ -57,7 +57,6 @@ const ProfitAndLoss = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.payables.breadcrumb', 'Finanzas', {})}
           title={t('bi.pnl.title', 'Estado de Resultados (P&L)', {})}
           subtitle={t('bi.pnl.subtitle', 'Periodo: mes actual vs periodo anterior', {})}
           actions={

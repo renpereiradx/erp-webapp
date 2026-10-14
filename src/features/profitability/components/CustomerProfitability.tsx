@@ -48,7 +48,6 @@ const CustomerProfitability = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.profitability.breadcrumb', 'Rentabilidad', {})}
           title={t('bi.profitability.customers.title', 'Cartera de Clientes', {})}
           subtitle={t(
             'bi.profitability.customers.subtitle',

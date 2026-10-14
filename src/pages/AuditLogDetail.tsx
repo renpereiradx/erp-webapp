@@ -104,7 +104,6 @@ export default function AuditLogDetail() {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('bi.audit.breadcrumb', 'Auditoría', {})}
           title={`${t('bi.audit.detail.title', 'Detalle de Evento', {})} #${log.id}`}
           actions={
             <button

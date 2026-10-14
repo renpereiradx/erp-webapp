@@ -43,7 +43,6 @@ export const BrandsPage: React.FC = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('nav.brands')}
           title={t('brands.title')}
           subtitle={t('brands.subtitle')}
           actions={

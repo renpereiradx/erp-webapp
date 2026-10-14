@@ -235,7 +235,6 @@ const FiscalOpsDashboard: React.FC = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl space-y-lg">
         <PageHeader
-          breadcrumb={t('nav.sifenFiscalGroup', 'Fiscal (SIFEN)')}
           title={t('fiscal.ops.title', 'Dashboard de ops fiscal')}
           subtitle={t('fiscal.ops.subtitle', 'Rechazos, ventana de envío (72 h) y caducidad de timbrados')}
           actions={

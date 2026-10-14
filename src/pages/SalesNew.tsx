@@ -2136,7 +2136,6 @@ const SalesNew: React.FC = () => {
   return (
     <div className="flex flex-col gap-lg animate-in fade-in duration-200">
       <PageHeader
-        breadcrumb={t('sales.title', 'Ventas')}
         title={t('sales.title', 'Punto de Venta')}
         subtitle={t('sales.subtitle', 'Facturación y registro de operaciones')}
         actions={

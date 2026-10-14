@@ -69,7 +69,6 @@ export default function CategoriesPage() {
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <PageHeader
-          breadcrumb={t('nav.categoriesTaxes')}
           title={t('categories.page.title')}
           subtitle={t('categories.page.subtitle')}
           actions={
