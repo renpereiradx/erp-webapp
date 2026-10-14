@@ -24,6 +24,7 @@ import { ReservationForm } from './ReservationForm';
 import { ReservationDetail } from './ReservationDetail';
 import { ScheduleSettings } from './ScheduleSettings';
 import { ScheduleSlot } from '../../domain/reservation';
+import { getMaxConsecutiveDuration } from '../../domain/reservation/slotAvailability';
 
 type PanelMode = 'closed' | 'new' | 'detail';
 
@@ -133,33 +134,8 @@ const ReservationDashboard: React.FC = () => {
     });
   };
 
-  // Calcular duración máxima permitida según slots consecutivos disponibles
-  const getMaxAvailableDuration = (startTime: string | null): number => {
-    if (!startTime || !slots.length) return productPricing.max_duration;
-
-    const sortedSlots = [...slots].sort(
-      (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
-    );
-
-    const selectedIndex = sortedSlots.findIndex(s => s.start_time === startTime);
-    if (selectedIndex === -1) return productPricing.max_duration;
-
-    let consecutiveAvailable = 1; // El slot seleccionado cuenta como 1
-
-    for (let i = selectedIndex + 1; i < sortedSlots.length; i++) {
-      const slot = sortedSlots[i];
-      const isAvailable = !slot.reserve && slot.status === 'AVAILABLE';
-      if (isAvailable) {
-        consecutiveAvailable++;
-      } else {
-        break; // Stop at first occupied slot
-      }
-    }
-
-    return Math.min(consecutiveAvailable, productPricing.max_duration);
-  };
-
-  const maxAvailableDuration = getMaxAvailableDuration(selectedSlot);
+  // Duración máxima desde el slot elegido (misma regla de dominio que usa el form).
+  const maxAvailableDuration = getMaxConsecutiveDuration(slots, selectedSlot, productPricing.max_duration);
 
   const handleNewReservation = () => {
     if (!selectedSlot) {
@@ -169,8 +145,7 @@ const ReservationDashboard: React.FC = () => {
       return;
     }
 
-    const maxDur = getMaxAvailableDuration(selectedSlot);
-    if (maxDur === 0) {
+    if (maxAvailableDuration === 0) {
       toast.error(t('reservations.toasts.slotUnavailableTitle'), {
         description: t('reservations.toasts.slotUnavailableDesc'),
       });
@@ -294,8 +269,8 @@ const ReservationDashboard: React.FC = () => {
         {panelMode === 'new' && (
           <ReservationForm
             selectedSlot={selectedSlot}
+            slots={slots}
             productPricing={productPricing}
-            maxAvailableDuration={maxAvailableDuration}
             reservationTypes={RESERVATION_TYPES}
             onSearchClients={searchClients}
             onDurationChange={setSelectedDuration}

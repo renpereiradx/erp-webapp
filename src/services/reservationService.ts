@@ -76,16 +76,25 @@ export const reservationService = {
       
       return slots.map((slot: any) => {
         // Nuevo formato API: usa is_available + reserve_id/reserved_by/reserve_status
-        // Formato legacy: usa status + reserve anidado
-        const hasReservation = slot.is_available === false || slot.reserve || slot.reserve_id;
+        // Formato legacy: usa status + reserve anidado.
+        // Un slot con reserva ANULADA vuelve a estar libre (el backend libera el
+        // slot: is_available=true) pero el API deja la huella reserve_status=
+        // CANCELLED: no debe tratarse como ocupado, sino nunca se puede
+        // re-reservar esa hora desde la UI.
+        const isCancelledTrace = (slot.reserve_status || slot.status || '').toUpperCase().startsWith('CANCEL');
+        const hasReservation =
+          slot.is_available === false ||
+          (Boolean(slot.reserve || slot.reserve_id) && !isCancelledTrace);
         const reserveData = slot.reserve || {};
-        
+
         return {
           id: slot.id,
           product_id: slot.product_id,
           start_time: slot.start_time,
           end_time: slot.end_time,
-          status: slot.reserve_status || slot.status || (slot.is_available ? 'AVAILABLE' : 'RESERVED'),
+          status: hasReservation
+            ? (slot.reserve_status || slot.status || 'RESERVED')
+            : (slot.is_available === false ? 'RESERVED' : (slot.status || 'AVAILABLE')),
           reserve: hasReservation ? {
             id: slot.reserve_id || reserveData.id,
             client_name: slot.reserved_by || reserveData.client_name || reserveData.user_name,

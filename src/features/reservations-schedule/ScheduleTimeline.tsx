@@ -4,6 +4,7 @@ import { Ban, Check, CheckCircle2, PlusCircle, ReceiptText, Star, TriangleAlert,
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScheduleSlot } from '../../domain/reservation';
+import { formatSlotTime } from '../../domain/reservation/timeFormat';
 
 interface ScheduleTimelineProps {
   slots: ScheduleSlot[];
@@ -102,21 +103,9 @@ const groupSlotsByReservation = (slots: ScheduleSlot[]): GroupedItem[] => {
   });
 };
 
-// ─── Formato de horas (UI pura, sin estado) ───
+// ─── Formato de horas: helpers compartidos en domain/reservation/timeFormat ───
 
-const formatTime = (timeStr: string): string => {
-  if (!timeStr) return '';
-  try {
-    const parts = timeStr.split('T');
-    if (parts.length >= 2) {
-      const timePart = parts[1].split(':');
-      return `${timePart[0]}:${timePart[1]}`;
-    }
-    return timeStr.substring(11, 16);
-  } catch {
-    return timeStr;
-  }
-};
+const formatTime = formatSlotTime;
 
 const formatTimeRange = (start: string, end: string): string =>
   `${formatTime(start)} - ${formatTime(end)}`;

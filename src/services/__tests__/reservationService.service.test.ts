@@ -70,3 +70,52 @@ describe('reservationService.manageReserve — unwrap del envelope {Data}', () =
     ).resolves.toBe(plain);
   });
 });
+
+describe('reservationService.getSchedulesForProductAndDate — normalización de slots', () => {
+  beforeEach(() => {
+    makeRequestMock.mockReset();
+  });
+
+  it('un slot con reserva ANULADA vuelve a ser reservable (la huella CANCELLED no lo bloquea)', async () => {
+    makeRequestMock.mockResolvedValue([
+      {
+        id: 1,
+        product_id: 'p1',
+        start_time: '2026-10-14T16:00:00Z',
+        end_time: '2026-10-14T17:00:00Z',
+        is_available: true,
+        reserve_id: 45,
+        reserve_status: 'CANCELLED',
+      },
+      {
+        id: 2,
+        product_id: 'p1',
+        start_time: '2026-10-14T18:00:00Z',
+        end_time: '2026-10-14T19:00:00Z',
+        is_available: false,
+        reserve_id: 47,
+        reserve_status: 'RESERVED',
+      },
+      {
+        id: 3,
+        product_id: 'p1',
+        start_time: '2026-10-14T19:00:00Z',
+        end_time: '2026-10-14T20:00:00Z',
+        is_available: true,
+      },
+    ]);
+
+    const slots = await reservationService.getSchedulesForProductAndDate('p1', '2026-10-14');
+
+    expect(slots).toHaveLength(3);
+    // Slot anulado: libre otra vez, sin reserve adjunta.
+    expect(slots[0].status).toBe('AVAILABLE');
+    expect(slots[0].reserve).toBeUndefined();
+    // Slot reservado activo: sigue ocupado con su reserve.
+    expect(slots[1].status).toBe('RESERVED');
+    expect(slots[1].reserve?.id).toBe(47);
+    // Slot libre sin huella: disponible.
+    expect(slots[2].status).toBe('AVAILABLE');
+    expect(slots[2].reserve).toBeUndefined();
+  });
+});

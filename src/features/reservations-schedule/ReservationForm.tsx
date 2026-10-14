@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import {
   Select,
   SelectContent,
@@ -15,6 +13,9 @@ import {
 import SearchableDropdown, { SearchableDropdownItem } from '@/components/ui/SearchableDropdown';
 import { HighlightText } from '@/components/ui/HighlightText';
 import { formatPYG } from '@/utils/currencyUtils';
+import { ScheduleSlot } from '../../domain/reservation';
+import { isSlotBookable, getMaxConsecutiveDuration } from '../../domain/reservation/slotAvailability';
+import { formatSlotTime, formatSlotRangeEnd } from '../../domain/reservation/timeFormat';
 
 interface ReservationType {
   id: string;
@@ -34,8 +35,9 @@ interface SelectedClient extends SearchableDropdownItem {
 
 interface ReservationFormProps {
   selectedSlot: string | null;
+  /** Slots del día: alimentan la tira de selección de rango horario. */
+  slots: ScheduleSlot[];
   productPricing: ProductPricing;
-  maxAvailableDuration?: number;
   reservationTypes?: ReservationType[];
   onSubmit: (clientId: string, startTime: string, duration: number, reservationType?: string) => Promise<void>;
   onSearchClients: (name: string) => Promise<any[]>;
@@ -45,8 +47,8 @@ interface ReservationFormProps {
 
 export const ReservationForm: React.FC<ReservationFormProps> = ({
   selectedSlot,
+  slots,
   productPricing,
-  maxAvailableDuration,
   reservationTypes = [],
   onSubmit,
   onSearchClients,
@@ -56,23 +58,22 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   const { t } = useI18n();
   const [clientId, setClientId] = useState('');
   const [selectedClient, setSelectedClient] = useState<SelectedClient | null>(null);
+  const [startTime, setStartTime] = useState(selectedSlot || '');
   const [duration, setDuration] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [startTime, setStartTime] = useState(selectedSlot || '');
   const [selectedReservationType, setSelectedReservationType] = useState<string>('');
 
   const baseRate = productPricing?.base_rate || 0;
   const lightingFee = productPricing?.lighting_fee || 0;
-  const minDuration = productPricing?.min_duration || 1;
   const productMaxDuration = productPricing?.max_duration || 4;
-  const effectiveMaxDuration = Math.min(maxAvailableDuration || productMaxDuration, productMaxDuration);
-  const showDurationWarning = duration > (maxAvailableDuration || 4);
 
-  useEffect(() => {
-    if (selectedSlot) {
-      setStartTime(selectedSlot);
-    }
-  }, [selectedSlot]);
+  const sortedSlots = useMemo(
+    () => [...slots].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()),
+    [slots],
+  );
+
+  // Horas consecutivas libres desde el inicio elegido: techo de los chips de duración.
+  const maxDuration = getMaxConsecutiveDuration(sortedSlots, startTime, productMaxDuration);
 
   useEffect(() => {
     if (reservationTypes.length > 0 && !selectedReservationType) {
@@ -80,8 +81,17 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
     }
   }, [reservationTypes, selectedReservationType]);
 
-  const calculatedLightingFee = duration > 1.5 ? lightingFee : 0;
-  const total = (baseRate * duration) + calculatedLightingFee;
+  const changeStartTime = (slotTime: string) => {
+    if (slotTime === startTime) return;
+    setStartTime(slotTime);
+    setDuration(1);
+    if (onDurationChange) onDurationChange(1);
+  };
+
+  const changeDuration = (val: number) => {
+    setDuration(val);
+    if (onDurationChange) onDurationChange(val);
+  };
 
   const searchClients = async (term: string): Promise<SelectedClient[]> => {
     const results = (await onSearchClients(term)) || [];
@@ -102,10 +112,8 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
     setClientId('');
   };
 
-  const handleDurationChange = (val: number) => {
-    setDuration(val);
-    if (onDurationChange) onDurationChange(val);
-  };
+  const calculatedLightingFee = duration > 1.5 ? lightingFee : 0;
+  const total = (baseRate * duration) + calculatedLightingFee;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,25 +132,57 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
     }
   };
 
-  const formatDateTimeForInput = (dateStr: string) => {
-    if (!dateStr) return '';
-    try {
-      // Si la fecha ya viene con T, la parseamos tal cual
-      // Si viene con espacio, lo cambiamos a T
-      let d = dateStr.replace(' ', 'T');
-      // Removemos la Z para que new Date lo interprete como hora local y no haga desfase
-      d = d.replace('Z', '');
-      const date = new Date(d);
-      if (isNaN(date.getTime())) return '';
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
-    } catch {
-      return '';
-    }
+  const renderSlotChip = (slot: ScheduleSlot) => {
+    const bookable = isSlotBookable(slot);
+    const isSelectedStart = slot.start_time === startTime;
+    const slotIndex = sortedSlots.findIndex(s => s.start_time === slot.start_time);
+    const startIndex = sortedSlots.findIndex(s => s.start_time === startTime);
+    const inRange = !isSelectedStart && startIndex !== -1 && slotIndex > startIndex && slotIndex < startIndex + duration;
+
+    const chipClass = isSelectedStart
+      ? 'bg-primary text-on-primary border-primary'
+      : inRange
+        ? 'bg-primary-fixed text-foreground border-primary'
+        : bookable
+          ? 'bg-surface text-foreground border-border-subtle hover:border-primary'
+          : 'bg-surface-subtle text-on-surface-deep border-border-subtle opacity-60 cursor-not-allowed';
+
+    return (
+      <button
+        key={slot.id || slot.start_time}
+        type="button"
+        disabled={!bookable}
+        onClick={() => changeStartTime(slot.start_time)}
+        aria-pressed={isSelectedStart}
+        className={`rounded-input border px-sm py-xs text-data-mono font-data-mono text-body-sm-bold transition-colors duration-150 ${chipClass}`}
+      >
+        {formatSlotTime(slot.start_time)}
+      </button>
+    );
+  };
+
+  const renderDurationChip = (hours: number) => {
+    const available = hours <= maxDuration;
+    const isSelected = duration === hours;
+
+    return (
+      <button
+        key={hours}
+        type="button"
+        disabled={!available}
+        onClick={() => changeDuration(hours)}
+        aria-pressed={isSelected}
+        className={`rounded-input border px-md py-xs text-data-mono font-data-mono text-body-sm-bold transition-colors duration-150 ${
+          isSelected
+            ? 'border-primary bg-primary-fixed text-foreground'
+            : available
+              ? 'border-border-subtle bg-surface text-foreground hover:border-primary'
+              : 'border-border-subtle bg-surface-subtle text-on-surface-deep opacity-60 cursor-not-allowed'
+        }`}
+      >
+        {t('reservations.form.durationHours', '{n} h', { n: hours })}
+      </button>
+    );
   };
 
   return (
@@ -195,66 +235,54 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
-        <div className="space-y-xs">
-          <Label htmlFor="reservation-start" className="text-body-md-bold text-foreground">
-            {t('reservations.form.startTime')}
-          </Label>
-          <Input
-            id="reservation-start"
-            type="datetime-local"
-            value={formatDateTimeForInput(startTime)}
-            onChange={(e) => setStartTime(e.target.value)}
-          />
-        </div>
-        <div className="space-y-xs">
-          <Label htmlFor="reservation-type" className="text-body-md-bold text-foreground">
-            {t('reservations.form.type')}
-          </Label>
-          <Select value={selectedReservationType} onValueChange={setSelectedReservationType}>
-            <SelectTrigger id="reservation-type" className="rounded-input w-full" aria-label={t('reservations.form.type')}>
-              <SelectValue placeholder={t('reservations.form.type')} />
-            </SelectTrigger>
-            <SelectContent>
-              {reservationTypes.map((type) => (
-                <SelectItem key={type.id} value={type.id} className="text-body-md">
-                  {t(type.labelKey)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Duración */}
+      {/* Rango horario: tira de horas del día + duración */}
       <div className="space-y-sm rounded-md bg-surface-muted p-md">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-sm">
+          <span className="text-label-caps uppercase text-on-surface-deep">
+            {t('reservations.form.schedule')}
+          </span>
+          {startTime && (
+            <span className="text-data-mono font-data-mono text-body-md-bold text-foreground">
+              {formatSlotTime(startTime)} → {formatSlotRangeEnd(startTime, duration)}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-xs">
+          {sortedSlots.length > 0 ? (
+            sortedSlots.map(renderSlotChip)
+          ) : (
+            <span className="text-body-sm text-on-surface-deep">{t('reservations.form.scheduleEmpty')}</span>
+          )}
+        </div>
+        <p className="text-body-sm text-on-surface-deep">{t('reservations.form.scheduleHint')}</p>
+
+        <div className="flex flex-wrap items-center gap-sm border-t border-divider pt-sm">
           <span className="text-label-caps uppercase text-on-surface-deep">
             {t('reservations.form.duration')}
           </span>
-          <span className={`rounded-input bg-surface px-sm py-xs text-data-mono font-data-mono text-body-md-bold ${showDurationWarning ? 'text-error' : 'text-primary'}`}>
-            {t('reservations.form.durationHours', '{n} h', { n: duration })}
-          </span>
+          <div className="flex flex-wrap gap-xs">
+            {Array.from({ length: productMaxDuration }, (_, i) => i + 1).map(renderDurationChip)}
+          </div>
         </div>
-        <Slider
-          className="w-full"
-          defaultValue={[duration]}
-          min={minDuration}
-          max={effectiveMaxDuration}
-          step={1}
-          value={[duration]}
-          onValueChange={(values: number[]) => handleDurationChange(values[0])}
-          aria-label={t('reservations.form.duration')}
-        />
-        <div className="flex justify-between text-body-sm-bold text-on-surface-deep">
-          <span>{t('reservations.form.durationHours', '{n} h', { n: minDuration })}</span>
-          <span>{t('reservations.form.durationMax', '{max} h máx.', { max: effectiveMaxDuration })}</span>
-        </div>
-        {showDurationWarning && (
-          <p className="rounded-input bg-error-container px-md py-sm text-body-sm-bold text-on-error-container">
-            {t('reservations.form.durationWarning', 'No hay suficientes horarios consecutivos libres para {max} h.', { max: maxAvailableDuration || 4 })}
-          </p>
-        )}
+      </div>
+
+      {/* Tipo de turno */}
+      <div className="space-y-xs">
+        <Label htmlFor="reservation-type" className="text-body-md-bold text-foreground">
+          {t('reservations.form.type')}
+        </Label>
+        <Select value={selectedReservationType} onValueChange={setSelectedReservationType}>
+          <SelectTrigger id="reservation-type" className="rounded-input w-full" aria-label={t('reservations.form.type')}>
+            <SelectValue placeholder={t('reservations.form.type')} />
+          </SelectTrigger>
+          <SelectContent>
+            {reservationTypes.map((type) => (
+              <SelectItem key={type.id} value={type.id} className="text-body-md">
+                {t(type.labelKey)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Desglose de precios */}
