@@ -1,7 +1,7 @@
 // ===========================================================================
 // Tipos del feature de terminales (FASE E —
 // PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES). Registro de terminales POS en
-// backend: cada terminal se empareja a una sucursal vía código.
+// backend: cada terminal se vincula a una sucursal vía código.
 // ===========================================================================
 
 export interface Device {
@@ -21,11 +21,11 @@ export interface DeviceInput {
   name: string
   branch_id: number
   is_active?: boolean
-  /** Solo edición: rota el código de emparejamiento. */
+  /** Solo edición: rota el código de vinculación. */
   regenerate_pairing_code?: boolean
 }
 
-/** Respuesta del emparejamiento: el binding queda del lado de esta terminal. */
+/** Respuesta de la vinculación: el binding queda del lado de esta terminal. */
 export interface PairedDevice {
   id: number
   name: string

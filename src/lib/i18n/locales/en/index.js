@@ -22,6 +22,7 @@ import { fiscal } from './fiscal'
 import { businessPrefs } from './businessPrefs'
 import { licensing } from './licensing'
 import { printers } from './printers'
+import { devices } from './devices'
 import { shell } from './shell'
 import { other } from './other'
 import { version } from './version'
@@ -57,6 +58,7 @@ export const en = {
   ...businessPrefs,
   ...licensing,
   ...printers,
+  ...devices,
   ...shell,
   ...brands,
   ...attributes,

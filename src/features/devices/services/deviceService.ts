@@ -5,7 +5,7 @@
  *   POST   /api/v1/devices        (alta; gating branches:write)
  *   PUT    /api/v1/devices/{id}   (patch parcial; gating branches:write)
  *   DELETE /api/v1/devices/{id}
- *   POST   /api/v1/devices/pair   (emparejamiento por código; solo auth)
+ *   POST   /api/v1/devices/pair   (vinculación por código; solo auth)
  *
  * Los errores del backend llegan tipados con mensaje en español — se muestra
  * directo en toast.
@@ -24,6 +24,11 @@ export const deviceService = {
     return Array.isArray(response) ? response : ((response as { devices?: Device[] })?.devices ?? []);
   },
 
+  /** Detalle de una terminal (gating branches:read; usado para re-sincronizar el binding local). */
+  async getById(id: number): Promise<Device> {
+    return apiClient.get(devicePath(id));
+  },
+
   async create(input: DeviceInput): Promise<Device> {
     return apiClient.post(BASE, input);
   },
@@ -36,7 +41,7 @@ export const deviceService = {
     await apiClient.delete(devicePath(id));
   },
 
-  /** Intercambia un código de emparejamiento por el binding de la terminal. */
+  /** Intercambia un código de vinculación por el binding de la terminal. */
   async pair(pairingCode: string): Promise<PairedDevice> {
     return apiClient.post(`${BASE}/pair`, { pairing_code: pairingCode });
   },

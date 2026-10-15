@@ -138,13 +138,13 @@ const licenseRow: NavRow = {
   href: '/configuracion/licencia',
 }
 
-/** Fila branches:switch (D.3): emparejamiento de terminal con sucursal. */
+/** Fila branches:switch (D.3): vinculación de este dispositivo con una sucursal. */
 const terminalRow: NavRow = {
   icon: MonitorSmartphone,
   titleKey: 'settings.terminal.title',
-  titleFallback: 'Terminal',
+  titleFallback: 'Este dispositivo',
   descKey: 'settings.terminal.desc',
-  descFallback: 'Vincula este dispositivo a una sucursal',
+  descFallback: 'Vinculá esta computadora o tablet a una sucursal',
   href: '/configuracion/terminal',
 }
 
@@ -154,7 +154,7 @@ const devicesRow: NavRow = {
   titleKey: 'settings.devices.title',
   titleFallback: 'Terminales',
   descKey: 'settings.devices.desc',
-  descFallback: 'Registro de terminales POS emparejadas a sucursal',
+  descFallback: 'Alta y administración de las terminales: sucursal y código de vinculación',
   href: '/configuracion/terminales',
 }
 

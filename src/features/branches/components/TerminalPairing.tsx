@@ -1,16 +1,22 @@
 // ===========================================================================
 // TerminalPairing (D.3 + FASE E — PLAN_VENDOR_ROLE_SUCURSALES_TERMINALES)
-// Emparejamiento de esta terminal (navegador) con una sucursal:
-//  - FASE E: registro en backend con código de emparejamiento → guarda
+// Vinculación de este dispositivo (navegador) con una sucursal:
+//  - FASE E: registro en backend con código de vinculación → guarda
 //    `device.id` (header X-Device-ID en cada request; el middleware resuelve
 //    la sucursal server-side) + `device.defaultBranch` como fallback.
 //  - Nivel 1 (fallback sin registro): guarda solo `device.defaultBranch`.
 // Los usuarios SIN `branches:switch` que operen desde aquí entran directo a
 // esa sucursal (resolución en BranchContext, D.4). Ruta:
 // /configuracion/terminal, gated con `branches:switch`.
+//
+// Con dispositivo registrado (PLAN_CLARIDAD_TERMINALES_ESTE_DISPOSITIVO):
+//  - D4: el selector de sucursal queda bloqueado — la sucursal registrada
+//    manda server-side (X-Device-ID) y el fallback local no puede contradecirla.
+//  - D5: el binding se re-sincroniza desde el servidor (nombre/sucursal
+//    frescos; un 404 marca el registro como eliminado).
 // ===========================================================================
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CheckCircle2, MonitorSmartphone, QrCode, Store, Unlink } from 'lucide-react'
 
@@ -31,10 +37,35 @@ const TerminalPairing = () => {
   const { t } = useI18n()
   const { addToast } = useToast()
 
-  const pairedBranchId = readDeviceDefaultBranch()
   const registeredDeviceId = readDeviceId()
   const [pairingCode, setPairingCode] = useState('')
   const [pairing, setPairing] = useState(false)
+
+  // D5: con dispositivo registrado, refrescar el binding desde el servidor
+  // (best-effort). Si el registro fue eliminado, el query falla con 404 y la
+  // UI avisa en vez de quedar "fantasma" para siempre.
+  const deviceQuery = useQuery({
+    queryKey: ['device', registeredDeviceId],
+    queryFn: () => deviceService.getById(registeredDeviceId as number),
+    enabled: registeredDeviceId !== null,
+    retry: false,
+    staleTime: 60_000,
+  })
+  const syncedDevice = deviceQuery.data
+
+  useEffect(() => {
+    if (syncedDevice && syncedDevice.branch_id !== null) {
+      // Mantiene el fallback de nivel 1 alineado con la sucursal del registro.
+      pairDeviceWithBranch(syncedDevice.branch_id)
+    }
+  }, [syncedDevice])
+
+  const staleRegistration =
+    registeredDeviceId !== null &&
+    deviceQuery.isError &&
+    (deviceQuery.error as { response?: { status?: number } } | null)?.response?.status === 404
+
+  const pairedBranchId = syncedDevice?.branch_id ?? readDeviceDefaultBranch()
 
   const { data: branchesResponse, isLoading } = useQuery({
     queryKey: ['branches-names'],
@@ -47,11 +78,16 @@ const TerminalPairing = () => {
     [branchesResponse],
   )
   const pairedBranch = branches.find((b) => b.id === pairedBranchId) || null
+  const isRegistered = registeredDeviceId !== null
+
+  const registeredLabel = syncedDevice
+    ? [syncedDevice.name, pairedBranch?.name].filter(Boolean).join(' · ')
+    : pairedBranch?.name
 
   const handlePair = (branch: Branch) => {
     pairDeviceWithBranch(branch.id)
     addToast(
-      t('terminal.pairSuccess', 'Terminal vinculada a {name}', { name: branch.name }),
+      t('terminal.pairSuccess', 'Dispositivo vinculado a {name}', { name: branch.name }),
       'success',
     )
   }
@@ -66,7 +102,7 @@ const TerminalPairing = () => {
       setPairingCode('')
       const branchName = branches.find((b) => b.id === device.branch_id)?.name || `#${device.branch_id}`
       addToast(
-        t('terminal.registerSuccess', 'Terminal registrada: {name} → {branch}', {
+        t('terminal.registerSuccess', 'Dispositivo registrado: {name} → {branch}', {
           name: device.name,
           branch: branchName,
         }),
@@ -74,7 +110,7 @@ const TerminalPairing = () => {
       )
     } catch (err) {
       const e = err as { response?: { data?: { message?: string } }; message?: string }
-      addToast(e?.response?.data?.message || e?.message || t('terminal.registerError', 'Código de emparejamiento inválido'), 'error')
+      addToast(e?.response?.data?.message || e?.message || t('terminal.registerError', 'Código de vinculación inválido'), 'error')
     } finally {
       setPairing(false)
     }
@@ -82,7 +118,7 @@ const TerminalPairing = () => {
 
   const handleUnpair = () => {
     clearPairedDevice()
-    addToast(t('terminal.unpairSuccess', 'Terminal desvinculada'), 'success')
+    addToast(t('terminal.unpairSuccess', 'Dispositivo desvinculado'), 'success')
   }
 
   return (
@@ -90,21 +126,21 @@ const TerminalPairing = () => {
       <div className="mx-auto w-full max-w-container-max px-md lg:px-lg pb-xl">
         <header className="mb-xl flex flex-col gap-1 border-l-4 border-primary pl-4">
           <h1 className="text-headline-lg-mobile md:text-headline-lg font-headline-md font-black uppercase leading-none tracking-tight text-foreground">
-            {t('terminal.title', 'Terminal')}
+            {t('terminal.title', 'Este dispositivo')}
           </h1>
           <p className="text-body-md text-muted-foreground">
             {t(
               'terminal.subtitle',
-              'Vincula este dispositivo a una sucursal para operar sin elegir sucursal en cada inicio.',
+              'Vinculá esta computadora o tablet a una sucursal para que quienes la usen entren directo, sin elegirla en cada inicio de sesión.',
             )}
           </p>
         </header>
 
         <div className="grid grid-cols-1 gap-lg lg:grid-cols-3">
-          {/* Estado del emparejamiento */}
+          {/* Estado de la vinculación */}
           <section className="flex flex-col gap-md" aria-labelledby="terminal-status">
             <h2 id="terminal-status" className="text-label-caps uppercase text-on-surface-deep">
-              {t('terminal.statusTitle', 'Estado de esta terminal')}
+              {t('terminal.statusTitle', 'Estado de este dispositivo')}
             </h2>
             <Card className="border-0 bg-surface p-lg shadow-whisper">
               <CardContent className="flex flex-col gap-sm p-0">
@@ -117,19 +153,19 @@ const TerminalPairing = () => {
                     <MonitorSmartphone className="size-5" />
                   </span>
                   <div className="min-w-0">
-                    {registeredDeviceId ? (
+                    {isRegistered ? (
                       <>
                         <Badge variant="success" className="mb-1">
-                          {t('terminal.registeredBadge', 'Registrada (#{id})', { id: String(registeredDeviceId) })}
+                          {t('terminal.registeredBadge', 'Registrado (#{id})', { id: String(registeredDeviceId) })}
                         </Badge>
                         <p className="truncate text-body-md-bold text-foreground">
-                          {pairedBranch?.name || t('terminal.unpairedHint', 'Esta terminal no tiene sucursal asignada.')}
+                          {registeredLabel || t('terminal.unpairedHint', 'Este dispositivo no está vinculado a ninguna sucursal.')}
                         </p>
                       </>
                     ) : pairedBranch ? (
                       <>
                         <Badge variant="success" className="mb-1">
-                          {t('terminal.pairedBadge', 'Vinculada')}
+                          {t('terminal.pairedBadge', 'Vinculado')}
                         </Badge>
                         <p className="truncate text-body-md-bold text-foreground">{pairedBranch.name}</p>
                       </>
@@ -139,37 +175,48 @@ const TerminalPairing = () => {
                           {t('terminal.unpairedBadge', 'Sin vincular')}
                         </Badge>
                         <p className="text-body-md text-on-surface-deep">
-                          {t('terminal.unpairedHint', 'Esta terminal no tiene sucursal asignada.')}
+                          {t('terminal.unpairedHint', 'Este dispositivo no está vinculado a ninguna sucursal.')}
                         </p>
                       </>
                     )}
                   </div>
                 </div>
+                {staleRegistration && (
+                  <p
+                    data-testid="terminal-stale-registration"
+                    className="rounded-md border border-semantic-warning/40 bg-semantic-warning/10 px-sm py-xs text-body-sm text-semantic-warning"
+                  >
+                    {t(
+                      'terminal.staleRegistration',
+                      'El registro de este dispositivo ya no existe (fue eliminado en Configuración → Terminales). Desvinculalo y volvé a registrarlo.',
+                    )}
+                  </p>
+                )}
                 {pairedBranch && (
                   <Button variant="secondary" onClick={handleUnpair} className="self-start">
                     <Unlink className="size-4" />
-                    {t('terminal.unpair', 'Desvincular terminal')}
+                    {t('terminal.unpair', 'Desvincular este dispositivo')}
                   </Button>
                 )}
                 <p className="text-body-sm text-on-surface-deep">
                   {t(
                     'terminal.effectHint',
-                    'Quienes operen desde aquí sin permiso de cambio de sucursal entrarán directo a la sucursal vinculada.',
+                    'Quienes operen desde este dispositivo sin permiso para cambiar de sucursal van a entrar directo a la sucursal vinculada.',
                   )}
                 </p>
               </CardContent>
             </Card>
 
-            {/* FASE E: registro de la terminal en backend vía código */}
+            {/* FASE E: registro de este dispositivo en backend vía código */}
             <Card className="border-0 bg-surface p-lg shadow-whisper">
               <CardContent className="flex flex-col gap-sm p-0">
                 <h3 className="text-label-caps uppercase text-on-surface-deep">
-                  {t('terminal.registerTitle', 'Registrar terminal')}
+                  {t('terminal.registerTitle', 'Registrar este dispositivo')}
                 </h3>
                 <p className="text-body-sm text-on-surface-deep">
                   {t(
                     'terminal.registerHint',
-                    'Ingresá el código de emparejamiento de una terminal registrada (Configuración → Terminales).',
+                    'Ingresá el código de vinculación de la terminal (se muestra en Configuración → Terminales).',
                   )}
                 </p>
                 <div className="flex gap-sm">
@@ -188,8 +235,8 @@ const TerminalPairing = () => {
                   <Button onClick={() => void handleRegister()} disabled={pairing || !pairingCode.trim()} data-testid="terminal-register">
                     <QrCode className="size-4" />
                     {pairing
-                      ? t('terminal.registering', 'Emparejando…')
-                      : t('terminal.register', 'Emparejar')}
+                      ? t('terminal.registering', 'Registrando…')
+                      : t('terminal.register', 'Registrar')}
                   </Button>
                 </div>
               </CardContent>
@@ -199,12 +246,25 @@ const TerminalPairing = () => {
           {/* Selector de sucursal */}
           <section className="flex flex-col gap-md lg:col-span-2" aria-labelledby="terminal-branches">
             <h2 id="terminal-branches" className="text-label-caps uppercase text-on-surface-deep">
-              {t('terminal.pickTitle', 'Elegir sucursal de la terminal')}
+              {t('terminal.pickTitle', 'Elegir sucursal de este dispositivo')}
             </h2>
+            {isRegistered ? (
+              /* D4: registrado → la sucursal se administra desde el registro */
+              <p data-testid="terminal-registered-lock" className="text-body-sm text-on-surface-deep">
+                {t(
+                  'terminal.registeredLockHint',
+                  'Este dispositivo ya está registrado: su sucursal se administra desde Configuración → Terminales. Para cambiarla desde acá, desvinculá y volvé a registrar el dispositivo.',
+                )}
+              </p>
+            ) : (
+              <p data-testid="terminal-local-hint" className="text-body-sm text-on-surface-deep">
+                {t('terminal.localHint', 'La vinculación sin código se guarda solo en este navegador.')}
+              </p>
+            )}
             {isLoading ? (
               <Card className="border-0 bg-surface p-lg shadow-whisper">
                 <p className="text-body-md text-on-surface-deep">
-                  {t('terminal.loading', 'Cargando sucursales...')}
+                  {t('terminal.loading', 'Cargando sucursales…')}
                 </p>
               </Card>
             ) : (
@@ -216,8 +276,10 @@ const TerminalPairing = () => {
                       key={branch.id}
                       type="button"
                       onClick={() => handlePair(branch)}
+                      disabled={isRegistered}
                       aria-pressed={isPaired}
-                      className={`group flex items-center justify-between gap-md rounded-md border p-md text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+                      aria-disabled={isRegistered}
+                      className={`group flex items-center justify-between gap-md rounded-md border p-md text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:cursor-not-allowed disabled:opacity-60 ${
                         isPaired
                           ? 'border-success bg-success/5'
                           : 'border-border-subtle bg-surface shadow-whisper hover:border-primary/40 hover:bg-surface-muted'

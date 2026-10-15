@@ -1,6 +1,6 @@
 /**
  * DeviceDetailForm — detalle del workspace de terminales. Alta/edición con
- * validación Zod (domain/devices), rotación de código de emparejamiento y
+ * validación Zod (domain/devices), rotación del código de vinculación y
  * baja con confirmación. Solo presentación: reglas en domain, estado en
  * useDevices (FASE E).
  */
@@ -136,7 +136,7 @@ const DeviceDetailForm: React.FC<DeviceDetailFormProps> = ({
 
           {!isNew && device && (
             <div className="space-y-xs rounded-md border border-border-subtle bg-surface-muted p-md">
-              <Label className="text-body-md-bold text-foreground">{t('devices.form.pairingCode', 'Código de emparejamiento')}</Label>
+              <Label className="text-body-md-bold text-foreground">{t('devices.form.pairingCode', 'Código de vinculación')}</Label>
               <div className="flex items-center justify-between gap-sm">
                 <span className="text-data-mono font-data-mono text-foreground" data-testid="device-pairing-code">
                   {device.pairing_code}
@@ -145,6 +145,9 @@ const DeviceDetailForm: React.FC<DeviceDetailFormProps> = ({
                   <Copy size={14} />
                 </Button>
               </div>
+              <p className="text-body-sm text-on-surface-deep" data-testid="device-pairing-hint">
+                {t('devices.form.pairingHint', 'En la computadora de la terminal: Configuración → Este dispositivo → Registrar.')}
+              </p>
               <label className="flex items-center gap-sm text-body-md text-foreground cursor-pointer pt-xs">
                 <Checkbox
                   className="shrink-0"
@@ -153,7 +156,7 @@ const DeviceDetailForm: React.FC<DeviceDetailFormProps> = ({
                 />
                 <span className="inline-flex items-center gap-xs">
                   <RefreshCw size={14} />
-                  {t('devices.form.regenerateCode', 'Rotar código al guardar')}
+                  {t('devices.form.regenerateCode', 'Generar un código nuevo al guardar')}
                 </span>
               </label>
             </div>

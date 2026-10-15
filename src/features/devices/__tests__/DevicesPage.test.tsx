@@ -118,6 +118,14 @@ describe('DevicesPage — registro de terminales (FASE E)', () => {
     expect(screen.getByText('ABCD2345')).toBeInTheDocument()
   })
 
+  it('shows the linking hint next to the pairing code in the detail', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByTestId('device-row-5'))
+    expect(await screen.findByTestId('device-pairing-hint')).toBeInTheDocument()
+  })
+
   it('creates a device from the detail form without sending a pairing code', async () => {
     const user = userEvent.setup()
     vi.mocked(deviceService.create).mockResolvedValue({ ...deviceCaja1, id: 6, name: 'Caja 2' })
@@ -158,7 +166,7 @@ describe('DevicesPage — registro de terminales (FASE E)', () => {
 
     await user.click(await screen.findByTestId('device-row-5'))
     await screen.findByTestId('device-pairing-code')
-    await user.click(screen.getByRole('checkbox', { name: /Rotar código al guardar/ }))
+    await user.click(screen.getByRole('checkbox', { name: /Generar un código nuevo al guardar/ }))
     await user.click(screen.getByRole('button', { name: 'Guardar' }))
 
     await waitFor(() =>

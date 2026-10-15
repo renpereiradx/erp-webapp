@@ -5,7 +5,7 @@
  * branches:write (alineado con el split por método del backend: lectura
  * branches:read, escritura branches:write).
  *
- * Cada terminal emparejada fuerza su sucursal server-side para usuarios sin
+ * Cada terminal registrada fuerza su sucursal server-side para usuarios sin
  * `branches:switch` (middleware X-Device-ID) y audita last_seen por request.
  */
 import React, { useMemo } from 'react';
@@ -57,7 +57,7 @@ export const DevicesPage: React.FC = () => {
             {t('devices.title', 'Terminales')}
           </h1>
           <p className="text-sm text-text-secondary mt-1">
-            {t('devices.subtitle', 'Terminales POS emparejadas a una sucursal vía código')}
+            {t('devices.subtitle', 'Registro de las terminales del negocio: sucursal y código de vinculación.')}
           </p>
         </div>
         {selectedId === null && (
@@ -99,7 +99,7 @@ export const DevicesPage: React.FC = () => {
               <EmptyState
                 icon={MonitorSmartphone}
                 title={t('devices.empty.title', 'Sin terminales registradas')}
-                description={t('devices.empty.description', 'Registrá una terminal y emparejala con su código desde Configuración → Terminal')}
+                description={t('devices.empty.description', 'Registrá una terminal y vinculá su código desde Configuración → Este dispositivo.')}
                 actionLabel={t('devices.empty.action', 'Nueva terminal')}
                 onAction={startCreate}
               />
