@@ -110,7 +110,9 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
           state vive DENTRO de la tabla (fila colSpan) igual que el carrito
           de /compras. El componente EmptyState queda para la vista mobile. */}
       <div ref={desktopTableRef} className="hidden md:block">
-        <Table className="table-fixed">
+        {/* min-w: bajo ese ancho las columnas fijas se pisan (PRODUCTO ∩
+            CANT.); el wrapper overflow-x-auto scrollea, igual que compras. */}
+        <Table className="table-fixed min-w-[640px]">
           <TableHeader className="bg-surface-muted">
             <TableRow className="hover:bg-surface-muted border-0">
               <TableHead className="w-24 px-sm py-sm text-label-caps uppercase text-on-surface-deep">

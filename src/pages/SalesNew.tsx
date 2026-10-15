@@ -2253,19 +2253,11 @@ const SalesNew: React.FC = () => {
                     getQuantityInCart={getQuantityInCart}
                   />
                 </div>
-                <p className="hidden lg:flex items-center gap-sm text-body-sm font-data-mono text-outline-fg">
-                  <span>[F2] {t('sales.hints.search', 'Buscar')}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>[F8] {t('sales.hints.cart', 'Carrito')}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>[↑↓] {t('sales.hints.navigate', 'Navegar')}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>[Alt+Q] {t('sales.hints.edit', 'Editar')}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>[F12] {t('sales.hints.checkout', 'Cobrar')}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>[F4] {t('sales.hints.clear', 'Limpiar')}</span>
-                </p>
+                {/* Sin línea de hints en la banda: no caben junto a input +
+                    título (la banda se partía en 3 filas y el título quedaba
+                    flotando). Cada atajo ya es descubrible en contexto: F2 en
+                    placeholder/empty state, F12 y F4 en los botones, Alt+Q y
+                    Alt+X como hints por fila dentro de la tabla. */}
                 <h2 className="text-title-md text-foreground flex items-center gap-sm min-w-0 sm:ml-auto sm:text-right">
                   <ShoppingCart size={18} className="text-primary shrink-0" aria-hidden="true" />
                   {t('sales.cart.title', 'Productos Seleccionados')}
