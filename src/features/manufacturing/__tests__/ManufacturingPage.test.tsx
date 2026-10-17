@@ -3,9 +3,11 @@
  *
  * - Shell: 3 pestañas + tabla de insumos con filas del servicio (mockeado en
  *   la frontera) y empty state armado dentro de la tabla (§6.3).
- * - Producción: picker de producto fabricado → UnitSelect con hint del factor
- *   (patrón F4) → payload unit lowercase + cantidad; 0,5 en unidad entera
- *   BLOQUEA (gating A3, nunca pérdida silenciosa).
+ * - Producción: la toolbar abre el modal de registro (picker de producto
+ *   fabricado → UnitSelect con hint del factor (patrón F4) → payload unit
+ *   lowercase + cantidad; 0,5 en unidad entera BLOQUEA (gating A3, nunca
+ *   pérdida silenciosa). El resumen fusiona producción + rentabilidad en una
+ *   sola tabla full-width (replan UI/UX 2026-10-17).
  *
  * Mocks: manufacturingService, unitConversionsService, searchSellableUnitsFlat
  * (fronteras de módulo), SearchableDropdown (componente pesado → botón que
@@ -19,6 +21,8 @@ import userEvent from '@testing-library/user-event'
 const mocks = vi.hoisted(() => ({
   supplies: [] as Array<Record<string, unknown>>,
   conversions: [] as Array<Record<string, unknown>>,
+  summary: [] as Array<Record<string, unknown>>,
+  profitability: [] as Array<Record<string, unknown>>,
   product: {
     id: 'PROD_EMPANADA',
     name: 'Empanada de jamón y queso',
@@ -76,8 +80,8 @@ vi.mock('@/services/manufacturingService', () => ({
         cost_details: [],
       }),
     ),
-    getProductionSummary: vi.fn(() => Promise.resolve([])),
-    getProfitability: vi.fn(() => Promise.resolve([])),
+    getProductionSummary: vi.fn(() => Promise.resolve(mocks.summary)),
+    getProfitability: vi.fn(() => Promise.resolve(mocks.profitability)),
   },
 }))
 
@@ -184,6 +188,7 @@ describe('ManufacturingPage — producción con unidades (F6.2)', () => {
 
   const gotoProduction = async (user: ReturnType<typeof userEvent.setup>) => {
     await user.click(screen.getByRole('tab', { name: 'Producción' }))
+    await user.click(await screen.findByTestId('production-new'))
     await user.click(await screen.findByTestId('mock-search'))
     expect(await screen.findByTestId('production-product-chosen')).toHaveTextContent(
       'Empanada de jamón y queso',
@@ -255,5 +260,70 @@ describe('ManufacturingPage — producción con unidades (F6.2)', () => {
     await user.click(screen.getByTestId('production-submit'))
 
     expect(mocks.registerProduction).not.toHaveBeenCalled()
+  })
+
+  it('el resumen fusiona producción y rentabilidad en una sola tabla', async () => {
+    mocks.summary = [
+      {
+        product_id: 'PROD_EMPANADA',
+        product_name: 'Empanada de jamón y queso',
+        product_type: 'PRODUCTION',
+        branch_id: 1,
+        total_batches: 1,
+        total_produced: 5,
+        total_production_cost: 2000,
+        avg_cost_per_unit: 400,
+        current_stock: 12,
+        produced_recently: true,
+      },
+    ]
+    mocks.profitability = [
+      {
+        product_id: 'PROD_EMPANADA',
+        product_name: 'Empanada de jamón y queso',
+        branch_id: 1,
+        total_produced: 5,
+        total_production_cost: 2000,
+        avg_production_cost_per_unit: 400,
+        sale_price_per_unit: 10400,
+        sale_unit: 'unit',
+        profit_margin_per_unit: 10000,
+        profit_margin_percentage: 2500,
+        current_stock: 12,
+        inventory_value: 124800,
+      },
+    ]
+    renderPage()
+
+    await userEvent.setup().click(screen.getByRole('tab', { name: 'Producción' }))
+
+    expect(await screen.findByText('Empanada de jamón y queso')).toBeInTheDocument()
+    expect(screen.getByText('Gs. 10.400')).toBeInTheDocument()
+    expect(screen.getByText('Gs. 10.000')).toBeInTheDocument()
+    expect(screen.getByText('Gs. 2.000')).toBeInTheDocument()
+  })
+
+  it('un producto solo en rentabilidad (sin lotes ni stock) igual aparece en el resumen', async () => {
+    mocks.profitability = [
+      {
+        product_id: 'PROD_SOLO_PRECIO',
+        product_name: 'Torta sin producción',
+        branch_id: null,
+        total_produced: 0,
+        total_production_cost: 0,
+        avg_production_cost_per_unit: 0,
+        sale_price_per_unit: 8000,
+        sale_unit: 'unit',
+        profit_margin_per_unit: 8000,
+        profit_margin_percentage: null,
+        current_stock: 0,
+        inventory_value: 0,
+      },
+    ]
+    renderPage()
+
+    await userEvent.setup().click(screen.getByRole('tab', { name: 'Producción' }))
+
+    expect(await screen.findByText('Torta sin producción')).toBeInTheDocument()
   })
 })
