@@ -64,6 +64,12 @@ inventariado y estable.
 > Alternativa (si el owner la pide): purga total incluyendo services/domain. Costo: reescribir el
 > contrato ya verificado; beneficio: cero herencia. Este plan asume la tabla de arriba.
 
+**Compatibilidad TS de lo conservado (verificado 2026-10-17):** los 10 servicios `services/bi/*`,
+los módulos `domain/*` de BI y `types/bi.ts` ya son `.ts` con tests `.ts` — cumplen la regla TS de
+AGENTS.md. Los pocos `.js` del módulo (`hooks/useFinancialReports.js`, `lib/i18n/loadBiNamespace.js`,
+`services/mocks/biForecastingMock.js`) se eliminan todos en F1: tras el teardown no queda ningún
+`.js`/`.jsx` en superficie BI.
+
 ## 3. F1 — Remoción completa (el sistema queda shippeable sin BI)
 
 ### 3.1 Rutas a eliminar en `src/App.tsx` (~45)
@@ -152,7 +158,31 @@ botones de módulos Core, después los grupos analíticos puros, pronósticos al
 | F10 | Auditoría | `/auditoria`, `/auditoria/logs`, `/auditoria/logs/:id`, `/auditoria/usuarios/:id` | audit `Auditoria-*.md`; `/api/v1/audit/*` |
 | F11 | Pronósticos | `/bi/pronosticos/{dashboard,inventario,ventas,demanda,ingresos}` — SIEMPRE contra `/forecast/*` real, **sin fallback mock** (biForecastingService pierde el branch demo en F1) | audit `Pronosticos-*`; decidir con owner si el label "(IA)" se mantiene (el BE es estadístico, no IA) |
 
-**Cada fase cierra con:** pantalla(s) TSX feature-sliced (`features/<g>/{components,hooks,types}`) ·
+**Plantilla arquitectónica obligatoria por grupo (AGENTS.md: TypeScript + Feature-Sliced + dominio puro).**
+Cada fase re-implementa su grupo con esta estructura — no es opcional:
+
+```
+src/features/<grupo>/          ← p.ej. features/bi-dashboard, features/sales-analytics
+├── components/                ← SOLO UI pura (Radix UI + Fluent 2): sin fetch, sin cálculo, sin reglas
+├── hooks/                     ← orquestación: react-query sobre services/bi/*, estado de UI, atajos
+└── types/                     ← tipos TS del feature (payloads ya tipados en services/bi/* + types/bi.ts)
+
+src/domain/<grupo>/            ← lógica pura: derivaciones, formatos, sorting, umbrales de riesgo
+│                                sin imports de React, sin side effects, tests colocados (*.test.ts)
+src/pages/<Grupo>/*.tsx        ← página delgada: layout + composición del feature (§6.3 DESIGN.md)
+```
+
+- **TODO archivo nuevo es `.ts`/`.tsx`** — regla AGENTS.md, sin excepciones (regla §5.8 con gate).
+- **HTTP solo en `services/bi/*`** (frontera del módulo — también frontera de mock en tests,
+  PLAN_TEST_DESIGN §2); hooks llaman servicios, componentes reciben props.
+- **Dirección de dependencias**: `pages → features → (domain, services)`; un feature NO importa
+  componentes de otro feature — lo compartido va a `src/components/` (como hoy `components/ui/`).
+- **Estado**: global solo si es compartido entre grupos (el `useDashboardStore` nuevo nace `.ts`
+  en `src/store/`, zustand); el resto vive en hooks del feature con react-query + `useState`.
+- Dominio nuevo (cálculos que hoy no existen) se agrega a `domain/<grupo>/` CON test en el mismo
+  diff — prohibido derivar cifras dentro de componentes.
+
+**Cada fase cierra con:** estructura según plantilla de arriba (TS estricto + FSD) ·
 todo dato renderizado proviene de endpoint (cero literales de cifras/metas/claims) · i18n keys es+en
 en el mismo diff · page test + hooks tests según `PLAN_TEST_DESIGN_FRONTEND.md` · nav/link checklist
 fila(s) re-activadas · `vitest`/`tsc`/`build`/`lint:design` verde · smoke vivo en `pnpm dev:api`
@@ -173,7 +203,9 @@ aplicada con criterio (sin reporte en conductor salvo pedido).
 6. **Estados honestos**: loading/error/empty explícitos; nunca ceros silenciosos.
 7. **DESIGN.md primero**: leer antes de maquetar; patrones §6.3 (card con tabla), Fluent 2,
    glass-mica/acrylic en modales, atajos §12 si aplica buscador.
-8. **Botones accionables o no existen**: si no hay handler/endpoint, no se renderiza.
+8. **TypeScript sin excepciones (AGENTS.md)**: todo archivo nuevo `.ts`/`.tsx`. Gate por fase:
+   `git diff --name-only --diff-filter=A main..HEAD -- src/ | grep -E '\.(js|jsx)$'` → vacío.
+9. **Botones accionables o no existen**: si no hay handler/endpoint, no se renderiza.
 
 ## 6. Riesgos y mitigaciones
 
