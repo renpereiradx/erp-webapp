@@ -329,10 +329,24 @@ aplicada con criterio (sin reporte en conductor salvo pedido).
   `bi-pack-routes.test.tsx` (HomeRedirect → `/dashboard` con pack/permiso; BiModuleRoute igual)
   y `BranchSelection.page.test.tsx` (dashboard con pack, pedidos sin pack).
 
+### Pase UX — Operación del negocio (post-smoke)
+
+- La grilla de 5 KPI cards dentro de una card de media página se reemplazó por un **ledger**:
+  icono tonal + label/hint a la izquierda, cifra completa a la derecha. A 1440 px las cards
+  quedaban de ~90 px y los montos (`Gs. 13.377.100`, `Gs. 6.414.250`) se partían en dos líneas.
+- Hints pasaron a formato `Label: valor` (`Cajas abiertas: 1`, `Cuentas vencidas: 1`,
+  `Vence esta semana: Gs. 0`) para evitar plurales falsos como "1 cajas abiertas".
+- En mobile el valor baja a una línea propia debajo del hint (grid de 2 columnas), sin recortar
+  montos; en `sm+` vuelve a la columna derecha.
+- `DashboardSection` gana `min-w-0`: una tabla ancha (Trends) fijaba el min-content del grid item
+  y recortaba la card hermana en mobile.
+- Test de componente `OperationsPanel.test.tsx` (5 filas, valores completos, hints y semántica
+  `dl`/`dt`/`dd`).
+
 ### Gates
 
 - `npx tsc --noEmit`: 0 errores.
-- `npx vitest --run`: 199 archivos / 1441 tests OK.
+- `npx vitest --run`: 200 archivos / 1444 tests OK.
 - `pnpm build`: OK (chunks lazy por página: `DashboardPage`, `DashboardKpisPage`,
   `SalesHeatmapPage`, `AlertsPage`, `TopProductsPage`).
 - `pnpm lint:design -- --base dev`: OK (código nuevo limpio; legacy fuera del diff no bloquea).

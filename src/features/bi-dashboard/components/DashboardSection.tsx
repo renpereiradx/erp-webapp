@@ -23,7 +23,9 @@ export const DashboardSection = ({
   className,
   testId,
 }: DashboardSectionProps) => (
-  <section className={cn('rounded-md bg-surface p-lg shadow-whisper', className)} data-testid={testId}>
+  // min-w-0: una tabla ancha (Trends) no debe fijar el min-content del grid
+  // item y recortar la card hermana en mobile.
+  <section className={cn('min-w-0 rounded-md bg-surface p-lg shadow-whisper', className)} data-testid={testId}>
     <header className="mb-md flex flex-col gap-xs sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
         <h2 className="text-title-md text-foreground">{title}</h2>
