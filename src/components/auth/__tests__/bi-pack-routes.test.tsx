@@ -1,8 +1,7 @@
 /**
- * PLAN_REBUILD_BI_UI_FRONTEND F1 — HomeRedirect aterriza en /pedidos para
- * todos los perfiles mientras no existan rutas BI. F2 restaura /dashboard y
- * la regla de entitlement (ADR-6). BiModuleRoute es infraestructura Core del
- * pack y se conserva para F2+.
+ * PLAN_REBUILD_BI_UI_FRONTEND F2 — con la landing BI re-implementada,
+ * HomeRedirect vuelve a respetar dashboard:read + pack BI (ADR-6) y el
+ * vendor puro sigue aterrizando en /pedidos.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
@@ -29,21 +28,22 @@ const renderAt = (ui: React.ReactElement) =>
     <MemoryRouter initialEntries={['/']}>
       <Routes>
         <Route path='/' element={ui} />
+        <Route path='/dashboard' element={<div>LANDING_DASHBOARD</div>} />
         <Route path='/pedidos' element={<div>LANDING_PEDIDOS</div>} />
       </Routes>
     </MemoryRouter>,
   )
 
-describe('HomeRedirect (F1 teardown window)', () => {
+describe('HomeRedirect (F2 — landing BI restaurada)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     authState.hasPermission.mockImplementation(() => true)
     authState.hasEntitlement.mockImplementation(() => true)
   })
 
-  it('admin con dashboard:read y pack BI → /pedidos', () => {
+  it('admin con dashboard:read y pack BI → /dashboard', () => {
     renderAt(<HomeRedirect />)
-    expect(screen.getByText('LANDING_PEDIDOS')).toBeTruthy()
+    expect(screen.getByText('LANDING_DASHBOARD')).toBeTruthy()
   })
 
   it('admin sin pack BI → /pedidos (ERP Core)', () => {
@@ -52,8 +52,16 @@ describe('HomeRedirect (F1 teardown window)', () => {
     expect(screen.getByText('LANDING_PEDIDOS')).toBeTruthy()
   })
 
-  it('vendedor sin dashboard:read → /pedidos', () => {
-    authState.hasPermission.mockImplementation(() => false)
+  it('usuario sin dashboard:read → /pedidos', () => {
+    authState.hasPermission.mockImplementation((p) => p !== 'dashboard:read')
+    renderAt(<HomeRedirect />)
+    expect(screen.getByText('LANDING_PEDIDOS')).toBeTruthy()
+  })
+
+  it('vendedor puro (counterorders:read sin sales:write) → /pedidos aunque tenga pack', () => {
+    authState.hasPermission.mockImplementation(
+      (p) => p === 'dashboard:read' || p === 'counterorders:read',
+    )
     renderAt(<HomeRedirect />)
     expect(screen.getByText('LANDING_PEDIDOS')).toBeTruthy()
   })

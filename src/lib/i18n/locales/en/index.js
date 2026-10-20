@@ -25,6 +25,7 @@ import { shell } from './shell'
 import { other } from './other'
 import { version } from './version'
 import { reservations } from './reservations'
+import { dashboard } from './dashboard'
 import { es } from '../es/index'
 
 /**
@@ -69,4 +70,5 @@ export const en = {
   ...unitConversions,
   ...version,
   ...reservations,
+  ...dashboard,
 }

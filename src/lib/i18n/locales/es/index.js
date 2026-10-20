@@ -41,6 +41,7 @@ import { counterorders } from './counterorders'
 import { branches } from './branches'
 import { version } from './version'
 import { reservations } from './reservations'
+import { dashboard } from './dashboard'
 
 /**
  * Diccionario completo de traducciones en español
@@ -85,4 +86,5 @@ export const es = {
   ...unitConversions,
   ...version,
   ...reservations,
+  ...dashboard,
 }

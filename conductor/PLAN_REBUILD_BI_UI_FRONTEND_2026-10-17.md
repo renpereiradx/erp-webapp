@@ -261,3 +261,95 @@ aplicada con criterio (sin reporte en conductor salvo pedido).
 - `pnpm lint:design`: OK (código nuevo limpio).
 - Smoke manual (login admin+pack → `/pedidos`, sidebar sin BI, SIFEN visible, modales y buscador
   sin BI): **pendiente de validación del owner** con `pnpm dev:api`.
+
+---
+
+## 9. Estado de ejecución — F2 Dashboard BI (2026-10-20)
+
+**Rama:** `feature/bi-ui-rebuild` (1 commit de F1 sobre `dev` = `82710c7`).
+
+### Ejecutado
+
+- **Rutas (5)** en `src/App.tsx`: `/dashboard`, `/dashboard/kpis`,
+  `/dashboard/sales-heatmap`, `/dashboard/alerts`, `/dashboard/top-products`, todas lazy y
+  envueltas en `DashboardRoute` = `BiModuleRoute` (pack) → `PermissionGuard(dashboard:read)`,
+  el mismo orden que la cadena BE (`RequireModule` → permiso de módulo).
+- **Feature `src/features/bi-dashboard/`** con la plantilla FSD: `components/` (solo UI pura),
+  `hooks/useDashboardQueries.ts` (react-query sobre `services/bi/dashboardService`) y barrel
+  público. Cero fetch/cálculo en componentes.
+- **Páginas delgadas** en `src/pages/dashboard/`: `DashboardPage`, `DashboardKpisPage`,
+  `SalesHeatmapPage`, `AlertsPage`, `TopProductsPage` (layout + composición).
+- **Dominio puro** en `src/domain/dashboard/`: `alerts.ts` y `heatmap.ts` re-escritos contra el
+  contrato real; `kpis.ts`, `trends.ts`, `topProducts.ts` nuevos; `shared.ts` endurecido
+  (`getTimeAgo` devuelve `''` con timestamp inválido en vez de "Invalid Date"). Todos con tests
+  colocados.
+- **`src/store/useDashboardStore.ts`** nuevo (`.ts`, zustand): solo estado de UI compartido
+  (`period`, `heatmapWeeks`). Los datos de servidor viven en react-query.
+- **Contrato tipado real** en `src/types/bi.ts` + `services/bi/dashboardService.ts`:
+  `DashboardSummary` anidado por área (no la forma plana legacy), 5 grupos de KPIs, trends,
+  alerts, top-products, heatmap y recent-activity; el servicio conserva el envelope
+  `{success,data,metadata}` para que el hook pueda leer `metadata.partial`. Sin fallback demo.
+- **Puntos de entrada §3.3 re-activados**: grupo nav `Inteligencia de Negocios` → subgrupo
+  `Dashboard` (5 hojas), HomeRedirect (`dashboard:read` + pack; vendor puro sigue en
+  `/pedidos`), BranchSelection (misma regla), marca del Sidebar, breadcrumb de Parties,
+  fallbacks de `PermissionGuard`/`RoleGuard`, redirect de reservas y 404 → `/dashboard`.
+- **i18n**: namespaces `dashboard` en `locales/{es,en}/dashboard.ts` (mismas claves, 116
+  estáticas verificadas) + `nav.*` BI en `shell.js` + `roleGuard.goDashboard` y 404 con
+  `notFound.backToDashboard`.
+
+### Decisiones de borde (documentadas)
+
+- **Alertas sin `action_url` en F2**: los destinos del catálogo BE son pantallas que aún no
+  existen (`/inventory-analytics/*` F5, `/profitability/*` F6, `/receivables/overdue` F7). Se
+  renderizan solo severidad/categoría/detalle; el botón "Gestionar" vuelve cuando su pantalla
+  destino exista (regla §5.9, sin affordances muertas).
+- **Tendencias**: el panel usa solo ventas, compras y ticket promedio. Se omiten
+  `gross_margin` (el BE lo calcula como ventas − compras, distinto del margen del summary que
+  usa COGS) y `customer_count` (el BE lo llena con la cantidad de ventas, no de clientes);
+  mostrarlos con el label del JSON sería una cifra engañosa.
+- **Top productos**: los totales del endpoint suman solo los N productos devueltos; la UI los
+  rotula "Ingresos del top" / "Utilidad del top" (no "totales del negocio"). Límite fijo 10,
+  sin paginación: el contrato devuelve un ranking, no un listado paginado.
+- **Heatmap**: grilla completa 0-23 h (el BE devuelve todas las horas; recortar a 8-21 ocultaba
+  datos), celdas con `sales_count` y tooltip/aria con `sales_total` en PYG. Se eliminó el
+  símbolo `$` y la intensidad pasó a niveles 0-3 (sin `$$`/`$$$`).
+- **Períodos honestos**: `week/month/year` del BE son semana/mes/año **calendario**
+  (`Period.Resolve`), no ventanas móviles; los labels dicen "Esta semana / Este mes / Este año"
+  en vez de "7D/30D".
+- **Filtros de alertas client-side** sobre el payload completo: los contadores del resumen del
+  servidor no cambian al filtrar y no se disparan refetch por cada chip.
+- Los dos módulos de locale nuevos son `.ts` (no `.js`) para cumplir el gate TS de AGENTS.md.
+
+### Tests
+
+- 5 page tests (`Dashboard`, `DashboardKpis`, `SalesHeatmap`, `Alerts`, `TopProducts`) + test de
+  hooks react-query + test del store + test de contrato del servicio + tests de dominio
+  (`alerts`, `heatmap`, `kpis`, `trends`, `topProducts`, `shared`).
+- Tests F1 ajustados: `navigation.bi-pack.test.ts` (grupo BI presente con pack y 5 rutas),
+  `bi-pack-routes.test.tsx` (HomeRedirect → `/dashboard` con pack/permiso; BiModuleRoute igual)
+  y `BranchSelection.page.test.tsx` (dashboard con pack, pedidos sin pack).
+
+### Gates
+
+- `npx tsc --noEmit`: 0 errores.
+- `npx vitest --run`: 199 archivos / 1441 tests OK.
+- `pnpm build`: OK (chunks lazy por página: `DashboardPage`, `DashboardKpisPage`,
+  `SalesHeatmapPage`, `AlertsPage`, `TopProductsPage`).
+- `pnpm lint:design -- --base dev`: OK (código nuevo limpio; legacy fuera del diff no bloquea).
+- `pnpm lint` (eslint): los archivos nuevos son `.ts/.tsx` y el config del repo solo matchea
+  `js/jsx`; el comando sigue fallando por 3 claves duplicadas preexistentes en
+  `categories.js` (es/en) y `cashMovement.js` (es), ajenas a esta fase.
+- Smoke vivo ejecutado contra el backend `:5050` + Vite `:5173` (`--mode api`), con JWT de dev
+  acuñado en memoria (admin `jJkV4F6HR`, rol `F2VLso`, entitlements `core+bi`):
+  - `/` aterriza en `/dashboard` (HomeRedirect con pack).
+  - Sidebar: grupo **INTELIGENCIA DE NEGOCIOS** con las 5 entradas del Dashboard y
+    **FISCAL (SIFEN)** como grupo Core.
+  - `/dashboard` muestra el summary real (ventas Gs. 1.475.500, compras Gs. 275.000, utilidad
+    bruta Gs. 530.500, inventario Gs. 13.377.100) — sin ceros falsos.
+  - `/dashboard/kpis`, `/sales-heatmap` (168 celdas, sin `$`), `/alerts` (2 alertas activas,
+    sin botones muertos) y `/top-products` (6 filas, tendencias sin flotantes crudos) renderizan.
+  - 0 errores de consola y 0 respuestas HTTP ≥400.
+  - Nota operativa: el rename de los locales `dashboard.js` → `.ts` requirió tocar los
+    `index.js` de i18n para que el Vite long-lived re-resolviera el módulo; un reinicio de
+    `pnpm dev:api` produce el mismo efecto.
+- Sin push: la rama queda con F1+F2 locales.

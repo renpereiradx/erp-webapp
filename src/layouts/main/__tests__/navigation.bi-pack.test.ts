@@ -1,7 +1,8 @@
 /**
- * PLAN_REBUILD_BI_UI_FRONTEND F1 — ventana de teardown: el grupo BI no existe
- * con ningún valor de biEnabled, y el carve-out SIFEN (ADR-3) queda siempre
- * navegable como grupo Core propio. F2-F11 re-activan sus grupos por fase.
+ * PLAN_REBUILD_BI_UI_FRONTEND F2 — el grupo BI vuelve a existir con el
+ * subgrupo Dashboard (5 rutas) cuando hay pack + analytics:read +
+ * dashboard:read. Sin pack, sin dashboard:read o sin hojas visibles, el
+ * padre se oculta. SIFEN sigue como grupo Core propio (ADR-3).
  */
 import { describe, it, expect } from 'vitest'
 import { buildNavigation, filterNavigationItems } from '../navigation'
@@ -23,7 +24,7 @@ const ADMIN_PERMS = [
 
 const checksFor = (perms: string[]) => ({
   hasPermission: (p: string) => perms.includes(p),
-  hasAnyPermission: (...ps: string[]) => ps.some(p => perms.includes(p)),
+  hasAnyPermission: (...ps: string[]) => ps.some((p) => perms.includes(p)),
 })
 
 const findByName = (items: NavigationItem[], name: string): NavigationItem | undefined => {
@@ -37,36 +38,43 @@ const findByName = (items: NavigationItem[], name: string): NavigationItem | und
   return undefined
 }
 
-describe('navigation — F1 sin pantallas BI (PLAN_REBUILD_BI_UI_FRONTEND)', () => {
-  it('admin: sin grupo BI ni Auditoría, SIFEN Core siempre navegable', () => {
+describe('navigation — F2 Dashboard BI re-activado', () => {
+  it('admin con pack: grupo BI con el subgrupo Dashboard y sus 5 rutas', () => {
     const tree = filterNavigationItems(buildNavigation(t, false, true), checksFor(ADMIN_PERMS))
 
-    expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()
-    expect(findByName(tree, 'Auditoría de Sistema')).toBeUndefined()
-    expect(findByName(tree, 'Dashboard')).toBeUndefined()
+    const bi = findByName(tree, 'Inteligencia de Negocios')
+    expect(bi).toBeDefined()
+    expect(bi?.children?.map((child) => child.name)).toEqual(['Dashboard'])
 
-    const fiscal = findByName(tree, 'Fiscal (SIFEN)')
-    expect(fiscal).toBeDefined()
-    expect(fiscal?.children?.map(c => c.href)).toEqual([
-      '/finance/sifen-ops',
-      '/finance/sifen-inutilizacion',
+    const dashboard = findByName(tree, 'Dashboard')
+    expect(dashboard?.children?.map((child) => child.href)).toEqual([
+      '/dashboard',
+      '/dashboard/kpis',
+      '/dashboard/sales-heatmap',
+      '/dashboard/alerts',
+      '/dashboard/top-products',
     ])
   })
 
-  it('el flag biEnabled no revive el grupo BI durante la ventana F1', () => {
-    for (const biEnabled of [true, false]) {
-      const tree = filterNavigationItems(
-        buildNavigation(t, false, biEnabled),
-        checksFor(ADMIN_PERMS),
-      )
-      expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()
-      expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
-    }
+  it('sin pack BI (biEnabled=false) el grupo no existe; SIFEN sigue como Core', () => {
+    const tree = filterNavigationItems(buildNavigation(t, false, false), checksFor(ADMIN_PERMS))
+
+    expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()
+    expect(findByName(tree, 'Dashboard')).toBeUndefined()
+    expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
   })
 
-  it('vendedor sin sifen:read: no ve SIFEN ni el grupo BI, sí Gestión Comercial', () => {
+  it('con analytics:read pero sin dashboard:read el grupo se oculta (sin hojas)', () => {
+    const perms = ADMIN_PERMS.filter((p) => p !== 'dashboard:read')
+    const tree = filterNavigationItems(buildNavigation(t, false, true), checksFor(perms))
+
+    expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()
+    expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
+  })
+
+  it('vendedor sin sifen:read: no ve BI ni SIFEN, sí Gestión Comercial', () => {
     const vendor = checksFor(['sales:read', 'sales:write', 'counterorders:read'])
-    const tree = filterNavigationItems(buildNavigation(t, false, false), vendor)
+    const tree = filterNavigationItems(buildNavigation(t, false, true), vendor)
 
     expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeUndefined()

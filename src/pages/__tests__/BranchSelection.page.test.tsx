@@ -33,6 +33,8 @@ const branchContext = {
 const authContext = {
   user: { first_name: 'Ada', last_name: 'Lovelace', role_id: 'F2VLso' },
   logout: vi.fn(),
+  hasPermission: vi.fn<(p: string) => boolean>(() => true),
+  hasEntitlement: vi.fn<(m: string) => boolean>(() => true),
 }
 
 vi.mock('@/lib/i18n', () => ({
@@ -66,6 +68,7 @@ const renderPage = () =>
     <MemoryRouter initialEntries={['/select-branch']}>
       <Routes>
         <Route path="/select-branch" element={<BranchSelection />} />
+        <Route path="/dashboard" element={<div>dashboard</div>} />
         <Route path="/pedidos" element={<div>pedidos</div>} />
       </Routes>
     </MemoryRouter>,
@@ -76,6 +79,8 @@ beforeEach(() => {
   branchContext.currentBranchId = null
   branchContext.allowedBranches = []
   branchContext.canViewGlobal = true
+  authContext.hasPermission.mockImplementation(() => true)
+  authContext.hasEntitlement.mockImplementation(() => true)
 })
 
 describe('BranchSelection', () => {
@@ -111,6 +116,21 @@ describe('BranchSelection', () => {
     await userEvent.click(card)
 
     expect(mockChangeBranch).toHaveBeenCalledWith(1)
+    expect(await screen.findByText('dashboard')).toBeInTheDocument()
+  })
+
+  it('sin pack BI: al elegir sucursal aterriza en /pedidos (ERP Core)', async () => {
+    authContext.hasEntitlement.mockImplementation(() => false)
+    branchContext.allowedBranches = [1]
+    getBranches.mockResolvedValue({
+      branches: [{ id: 1, code: 'MAIN', name: 'Sucursal Principal', address: null, city: 'Asunción' }],
+      total: 1,
+    })
+    renderPage()
+
+    const card = await screen.findByRole('button', { name: /sucursal principal/i })
+    await userEvent.click(card)
+
     expect(await screen.findByText('pedidos')).toBeInTheDocument()
   })
 })

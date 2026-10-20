@@ -1,6 +1,9 @@
 import {
   Activity,
+  AlertTriangle,
   ArrowLeftRight,
+  Award,
+  BarChart3,
   Building2,
   Calendar,
   CircleDollarSign,
@@ -11,7 +14,9 @@ import {
   DollarSign,
   FileText,
   Factory,
+  Flame,
   Gauge,
+  LayoutDashboard,
   List,
   Package,
   PlusCircle,
@@ -41,11 +46,57 @@ interface PermissionChecks {
 export const buildNavigation = (
   t: TFn,
   reservationsEnabled: boolean,
-  _biEnabled: boolean = true,
+  biEnabled: boolean = true,
 ): NavigationItem[] => [
-  // PLAN_REBUILD_BI_UI_FRONTEND F1: el grupo BI completo se eliminó en la
-  // ventana de teardown; cada fase F2-F11 re-activa su grupo con su pantalla.
-  // El parámetro biEnabled se conserva para la firma que reintroducirá F2.
+  // PLAN_REBUILD_BI_UI_FRONTEND F2: el grupo BI vuelve a existir únicamente
+  // con las pantallas ya re-implementadas (Dashboard). Las fases F3-F11
+  // agregan sus subgrupos; el padre aparece mientras tenga al menos una hoja
+  // visible (`filterNavigationItems`).
+  ...(biEnabled
+    ? [
+        {
+          name: t('nav.biGroup', 'Inteligencia de Negocios'),
+          href: '#',
+          icon: BarChart3,
+          permission: 'analytics:read',
+          children: [
+            {
+              name: t('nav.dashboardGroup', 'Dashboard'),
+              href: '#',
+              icon: LayoutDashboard,
+              permission: 'dashboard:read',
+              children: [
+                {
+                  name: t('nav.dashboardHome', 'Resumen Ejecutivo'),
+                  href: '/dashboard',
+                  icon: BarChart3,
+                },
+                {
+                  name: t('nav.dashboardKpis', 'KPIs y Rendimiento'),
+                  href: '/dashboard/kpis',
+                  icon: TrendingUp,
+                },
+                {
+                  name: t('nav.dashboardHeatmap', 'Análisis de Ventas'),
+                  href: '/dashboard/sales-heatmap',
+                  icon: Flame,
+                },
+                {
+                  name: t('nav.dashboardAlerts', 'Alertas de Negocio'),
+                  href: '/dashboard/alerts',
+                  icon: AlertTriangle,
+                },
+                {
+                  name: t('nav.dashboardTopProducts', 'Top de Productos'),
+                  href: '/dashboard/top-products',
+                  icon: Award,
+                },
+              ],
+            },
+          ],
+        },
+      ]
+    : []),
   // Carve-out ADR-3: los dashboards fiscales SIFEN son Core y siempre tienen
   // entrada propia, con o sin pack BI.
   {

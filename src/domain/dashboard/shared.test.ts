@@ -10,6 +10,10 @@ describe('getTimeAgo', () => {
     expect(getTimeAgo('', 'ahora', now)).toBe('')
   })
 
+  it('devuelve "" para un timestamp inválido (no "Invalid Date")', () => {
+    expect(getTimeAgo('no-es-fecha', 'ahora', now)).toBe('')
+  })
+
   it('devuelve la etiqueta "ahora" traducida bajo un minuto', () => {
     expect(getTimeAgo('2026-09-18T11:59:30', 'justo ahora', now)).toBe('justo ahora')
   })

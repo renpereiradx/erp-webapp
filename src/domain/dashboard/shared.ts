@@ -1,15 +1,13 @@
 /**
- * Shared pure helpers for the dashboard pages (Dashboard, DetailedKPIs).
- * Extracted from code duplicated inline in both pages
- * (PLAN_ALINEACION_BI_FRONTEND F1). No React, no i18n — the caller
- * translates the "now" label.
+ * Shared pure helpers for the dashboard pages (Resumen, KPIs, Alertas,
+ * Actividad). No React, no i18n — the caller translates the "now" label.
  */
 
 type Timestamp = string | number | Date | null | undefined
 
 /**
- * Relative-time label: '' for falsy timestamps, the translated "now" label
- * under a minute, then 'Xm' / 'Xh', falling back to the locale date string.
+ * Relative-time label: '' for falsy/invalid timestamps, the translated "now"
+ * label under a minute, then 'Xm' / 'Xh', falling back to the locale date string.
  */
 export const getTimeAgo = (
   timestamp: Timestamp,
@@ -18,6 +16,7 @@ export const getTimeAgo = (
 ): string => {
   if (!timestamp) return ''
   const date = new Date(timestamp)
+  if (Number.isNaN(date.getTime())) return ''
   const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
 
   if (diffInMinutes < 1) return nowLabel

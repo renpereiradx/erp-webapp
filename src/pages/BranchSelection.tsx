@@ -10,7 +10,7 @@ import { Building2, ArrowRight, Loader2, LogOut } from 'lucide-react';
 
 const BranchSelection = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, hasPermission, hasEntitlement } = useAuth();
   const { t } = useI18n();
   const { changeBranch, allowedBranches, canViewGlobal } = useBranch();
   
@@ -67,9 +67,11 @@ const BranchSelection = () => {
 
   const handleSelectBranch = (branchId: number | null) => {
     changeBranch(branchId);
-    // PLAN_REBUILD_BI_UI_FRONTEND F1: sin /dashboard en la ventana de
-    // teardown, todos los perfiles aterrizan en /pedidos (F2 lo restaura).
-    navigate('/pedidos');
+    // F2: el landing vuelve a ser el dashboard cuando el perfil tiene
+    // dashboard:read y la instalación tiene el pack BI (ADR-6); si no,
+    // /pedidos (ERP Core).
+    const canLandOnDashboard = hasPermission('dashboard:read') && hasEntitlement('bi');
+    navigate(canLandOnDashboard ? '/dashboard' : '/pedidos');
   };
 
   if (loading) {

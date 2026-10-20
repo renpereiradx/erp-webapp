@@ -26,6 +26,13 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 
 // --- Lazy: una chunk por página/feature ---
 const SalesNew = lazy(() => import('@/pages/SalesNew'))
+// PLAN_REBUILD_BI_UI_FRONTEND F2: pantallas del Dashboard BI (lazy, cada una
+// su chunk; sin recharts: heatmap/tablas se renderizan con el design system).
+const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'))
+const DashboardKpisPage = lazy(() => import('@/pages/dashboard/DashboardKpisPage'))
+const SalesHeatmapPage = lazy(() => import('@/pages/dashboard/SalesHeatmapPage'))
+const AlertasPage = lazy(() => import('@/pages/dashboard/AlertsPage'))
+const TopProductsPage = lazy(() => import('@/pages/dashboard/TopProductsPage'))
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import { CounterOrdersPage } from '@/features/counterorders'
@@ -130,7 +137,7 @@ const ProtectedRoute = ({ children }) => {
 }
 
 // Gate de ruta del módulo de reservas (PLAN_SERVICIOS_Y_RESERVAS_CONFIGURABLES
-// S3): con el toggle del negocio en off, /gestion-agenda redirige a /pedidos
+// S3): con el toggle del negocio en off, /gestion-agenda redirige a /dashboard
 // con un aviso. Fail-open (D-SR-5): solo un `false` explícito bloquea.
 const ReservationsModuleRoute = ({ children }: { children: React.ReactNode }) => {
   const { t } = useI18n()
@@ -149,16 +156,34 @@ const ReservationsModuleRoute = ({ children }: { children: React.ReactNode }) =>
   }, [reservationsEnabled, t])
 
   if (!reservationsEnabled) {
-    return <Navigate to='/pedidos' replace />
+    return <Navigate to='/dashboard' replace />
   }
   return <>{children}</>
 }
 
-// HomeRedirect vive en components/auth (testable, F3). Durante la ventana F1
-// del PLAN_REBUILD_BI_UI_FRONTEND aterriza siempre en /pedidos: no hay rutas
-// BI hasta que cada fase re-active su pantalla. BiModuleRoute (infra Core del
-// pack) se conserva en components/auth para F2+.
+// HomeRedirect y BiModuleRoute viven en components/auth (testables, F3).
+// F2: el grupo BI vuelve a tener landing; BiPermissionGuard compone licencia
+// (fuera) + permiso (dentro) — el mismo orden que la cadena BE
+// (RequireModule → RequireModulePermission).
 import HomeRedirect from '@/components/auth/HomeRedirect'
+import BiModuleRoute from '@/components/auth/BiModuleRoute'
+
+const BiPermissionGuard = ({
+  permission,
+  children,
+}: {
+  permission: string
+  children: React.ReactNode
+}) => (
+  <BiModuleRoute>
+    <PermissionGuard permission={permission}>{children}</PermissionGuard>
+  </BiModuleRoute>
+)
+
+/** Guard del módulo dashboard (dashboard:read + pack BI; el sidebar ya lo gated). */
+const DashboardRoute = ({ children }: { children: React.ReactNode }) => (
+  <BiPermissionGuard permission='dashboard:read'>{children}</BiPermissionGuard>
+)
 
 function AppContent() {
   const { isAuthenticated, loading, refreshEntitlements } = useAuth()
@@ -311,6 +336,13 @@ function AppContent() {
                         path='/'
                         element={<HomeRedirect />}
                       />
+                      {/* PLAN_REBUILD_BI_UI_FRONTEND F2 — Dashboard BI.
+                          Guard: pack BI (BiModuleRoute) + dashboard:read. */}
+                      <Route path='/dashboard' element={<DashboardRoute><DashboardPage /></DashboardRoute>} />
+                      <Route path='/dashboard/kpis' element={<DashboardRoute><DashboardKpisPage /></DashboardRoute>} />
+                      <Route path='/dashboard/sales-heatmap' element={<DashboardRoute><SalesHeatmapPage /></DashboardRoute>} />
+                      <Route path='/dashboard/alerts' element={<DashboardRoute><AlertasPage /></DashboardRoute>} />
+                      <Route path='/dashboard/top-products' element={<DashboardRoute><TopProductsPage /></DashboardRoute>} />
                       <Route path='/finance/sifen-inutilizacion' element={
                         <PermissionGuard permission='sifen:read'>
                           <SkippedNumbersPage />
@@ -626,13 +658,13 @@ function AppContent() {
                                 Error 404
                               </h2>
                               <p className='text-muted-foreground font-bold mb-4'>
-                                {t('notFound.message', 'Verifica la URL o regresa a los pedidos.')}
+                                {t('notFound.message', 'Verifica la URL o regresa al dashboard.')}
                               </p>
                               <Link
-                                to='/pedidos'
+                                to='/dashboard'
                                 className='inline-flex items-center px-6 py-3 bg-lime-400 text-black font-black uppercase tracking-wide border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all'
                               >
-                                {t('notFound.backToOrders', 'Ir a Pedidos')}
+                                {t('notFound.backToDashboard', 'Ir al Dashboard')}
                               </Link>
                             </div>
                           </div>

@@ -1,9 +1,15 @@
 /**
- * Pure logic for the consolidated alerts view (ConsolidatedAlerts page).
- * Extracted from pages/ConsolidatedAlerts.jsx (PLAN_ALINEACION_BI_FRONTEND F1).
- * Category labels are the legacy hardcoded Spanish strings — they move to
- * i18n keys when the page is migrated (FASE 5, decisión D6 del plan).
+ * Pure logic for the consolidated alerts view (`/dashboard/alerts`).
+ *
+ * Fuente: `GET /dashboard/alerts` → `DashboardAlerts`. El backend emite
+ * `severity` ∈ {critical, warning, info} y `category` ∈ {inventory,
+ * financial, sales}; `title`/`message` son datos del servidor (se renderizan
+ * tal cual) y las etiquetas de severidad/categoría se traducen en la UI.
+ *
+ * No React, no i18n, no fetch.
  */
+
+import type { AlertDetails } from '@/types/bi'
 
 export interface AlertLike {
   id: string | number
@@ -11,113 +17,109 @@ export interface AlertLike {
   category?: string | null
   title?: string | null
   message?: string | null
-  details?: Record<string, unknown> | null
+  details?: AlertDetails | null
   created_at?: string | null
   action_url?: string | null
 }
 
-/** Unique lowercase categories present in the alerts, alphabetically sorted. */
-export const getAvailableCategories = (
-  alerts: AlertLike[] | null | undefined,
-): string[] => {
+const SEVERITY_RANK: Record<string, number> = {
+  critical: 0,
+  error: 0, // alias legacy del backend
+  warning: 1,
+  info: 2,
+}
+
+const KNOWN_CATEGORIES = new Set(['inventory', 'financial', 'sales'])
+
+/** Clave i18n de severidad; `unknown` para valores no previstos. */
+export const getSeverityKey = (severity: string | null | undefined): string => {
+  const normalized = severity?.toLowerCase() ?? ''
+  if (normalized === 'error') return 'critical'
+  return normalized === 'critical' || normalized === 'warning' || normalized === 'info'
+    ? normalized
+    : 'unknown'
+}
+
+/** Clave i18n de categoría; las desconocidas caen a `other`. */
+export const getCategoryKey = (category: string | null | undefined): string => {
+  const normalized = category?.toLowerCase() ?? ''
+  return KNOWN_CATEGORIES.has(normalized) ? normalized : 'other'
+}
+
+/** Categorías presentes en el payload, alfabéticas y sin duplicados. */
+export const getAvailableCategories = (alerts: AlertLike[] | null | undefined): string[] => {
   if (!alerts) return []
-  const cats = new Set<string>()
-  alerts.forEach((a) => {
-    if (a.category) cats.add(a.category.toLowerCase())
-  })
-  return Array.from(cats).sort()
-}
-
-/** Material icon name for a category, matched by substring heuristics. */
-export const getCategoryIcon = (category: string | null | undefined): string => {
-  const cat = category?.toLowerCase() || ''
-  if (cat.includes('inv') || cat.includes('stock')) return 'inventory_2'
-  if (cat.includes('fin') || cat.includes('pay') || cat.includes('cash')) return 'payments'
-  if (cat.includes('sal') || cat.includes('order')) return 'shopping_cart'
-  if (cat.includes('sec') || cat.includes('auth')) return 'shield'
-  if (cat.includes('infra') || cat.includes('sys')) return 'dns'
-  if (cat.includes('client') || cat.includes('cust')) return 'groups'
-  return 'notifications'
-}
-
-/** Human label for a category, capitalizing the raw value as fallback. */
-export const getCategoryLabel = (category: string | null | undefined): string => {
-  const cat = category?.toLowerCase() || ''
-  if (cat.includes('inv') || cat.includes('stock')) return 'Inventario'
-  if (cat.includes('fin')) return 'Finanzas'
-  if (cat.includes('sal')) return 'Ventas'
-  if (cat.includes('sec')) return 'Seguridad'
-  if (cat.includes('infra')) return 'Infraestructura'
-  if (cat.includes('client') || cat.includes('cust')) return 'Clientes'
-
-  return category ? category.charAt(0).toUpperCase() + category.slice(1) : 'Sistema'
+  const categories = new Set<string>()
+  for (const alert of alerts) {
+    if (alert.category) categories.add(alert.category.toLowerCase())
+  }
+  return Array.from(categories).sort()
 }
 
 export interface AlertMetrics {
   total: number
   critical: number
-  inventory: number
-  sales: number
+  warning: number
+  info: number
 }
 
-/** Summary counters for the KPI cards; zeroed shape for missing alerts. */
+/** Conteos por severidad sobre el conjunto recibido. */
 export const getAlertMetrics = (alerts: AlertLike[] | null | undefined): AlertMetrics => {
-  if (!alerts) return { total: 0, critical: 0, inventory: 0, sales: 0 }
-  return {
-    total: alerts.length,
-    critical: alerts.filter((a) => a.severity === 'critical' || a.severity === 'error').length,
-    inventory: alerts.filter((a) => {
-      const c = a.category?.toLowerCase() || ''
-      return c.includes('inv') || c.includes('stock')
-    }).length,
-    sales: alerts.filter((a) => {
-      const c = a.category?.toLowerCase() || ''
-      return c.includes('sal') || c.includes('client') || c.includes('cust')
-    }).length,
+  const metrics: AlertMetrics = { total: 0, critical: 0, warning: 0, info: 0 }
+  if (!alerts) return metrics
+
+  for (const alert of alerts) {
+    metrics.total += 1
+    const key = getSeverityKey(alert.severity)
+    if (key === 'critical') metrics.critical += 1
+    else if (key === 'warning') metrics.warning += 1
+    else if (key === 'info') metrics.info += 1
   }
+  return metrics
+}
+
+/** Orden estable: críticas primero, luego advertencias, luego informativas. */
+export const sortAlertsBySeverity = <T extends AlertLike>(alerts: T[] | null | undefined): T[] => {
+  if (!alerts) return []
+  return [...alerts].sort(
+    (a, b) =>
+      (SEVERITY_RANK[a.severity?.toLowerCase() ?? ''] ?? 3) -
+      (SEVERITY_RANK[b.severity?.toLowerCase() ?? ''] ?? 3),
+  )
 }
 
 export interface AlertFilters {
-  severity: string
-  category: string
+  severity: 'all' | 'critical' | 'warning' | 'info'
+  category: 'all' | 'inventory' | 'financial' | 'sales'
   search: string
 }
 
-/** Combined severity + category + free-text (title/message/id) filter. */
-export const filterAlerts = (
-  alerts: AlertLike[] | null | undefined,
-  filters: AlertFilters,
-): AlertLike[] => {
-  if (!alerts) return []
-  let result = alerts
-
-  if (filters.severity !== 'all') {
-    result = result.filter(
-      (a) => a.severity === filters.severity || (filters.severity === 'critical' && a.severity === 'error'),
-    )
-  }
-
-  if (filters.category !== 'all') {
-    result = result.filter((a) => a.category?.toLowerCase().includes(filters.category.toLowerCase()))
-  }
-
-  if (filters.search) {
-    const query = filters.search.toLowerCase()
-    result = result.filter(
-      (a) =>
-        a.title?.toLowerCase().includes(query) ||
-        a.message?.toLowerCase().includes(query) ||
-        String(a.id).includes(query),
-    )
-  }
-
-  return result
+export const EMPTY_ALERT_FILTERS: AlertFilters = {
+  severity: 'all',
+  category: 'all',
+  search: '',
 }
 
-const FINANCIAL_DETAIL_KEYS = ['total', 'amount', 'revenue', 'profit', 'cost', 'price', 'balance', 'ticket']
+/** Filtro combinado severidad + categoría + texto (título/mensaje/id). */
+export const filterAlerts = <T extends AlertLike>(
+  alerts: T[] | null | undefined,
+  filters: AlertFilters,
+): T[] => {
+  if (!alerts) return []
+  const query = filters.search.trim().toLowerCase()
 
-/** Detail keys that render as PYG amounts in the expanded alert. */
-export const isFinancialDetailKey = (label: string): boolean => {
-  const lower = label.toLowerCase()
-  return FINANCIAL_DETAIL_KEYS.some((key) => lower.includes(key))
+  return alerts.filter((alert) => {
+    if (filters.severity !== 'all' && getSeverityKey(alert.severity) !== filters.severity) {
+      return false
+    }
+    if (filters.category !== 'all' && getCategoryKey(alert.category) !== filters.category) {
+      return false
+    }
+    if (!query) return true
+    return (
+      (alert.title?.toLowerCase().includes(query) ?? false) ||
+      (alert.message?.toLowerCase().includes(query) ?? false) ||
+      String(alert.id).toLowerCase().includes(query)
+    )
+  })
 }

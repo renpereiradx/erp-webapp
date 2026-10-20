@@ -1,98 +1,128 @@
 import { apiClient } from '../api';
 import { telemetry } from '../../utils/telemetry';
-import { BIParams, DashboardSummary, KPIData, SalesHeatmapData } from '../../types/bi';
+import type {
+  BIEnvelope,
+  DashboardAlerts,
+  DashboardKPIs,
+  DashboardPeriodParams,
+  DashboardSummary,
+  DashboardTrends,
+  RecentActivityResponse,
+  SalesHeatmapResponse,
+  TopProductSort,
+  TopProductsResponse,
+} from '../../types/bi';
 
 /**
- * Servicio para el Dashboard Ejecutivo (BI)
- * Soporta visión global (ADMIN) y visión por sucursal.
+ * Servicio del Dashboard Ejecutivo (BI).
+ *
+ * Contrato real del backend (`internal/analytics/http_dashboard.go`):
+ * `GET /dashboard/{summary,kpis,trends,alerts,top-products,sales-heatmap,
+ * recent-activity}`. Todos devuelven el envelope `{success, data, metadata}`;
+ * el servicio NO lo desenvuelve — el hook consume `response.data` y puede leer
+ * `metadata.partial` para avisar de datos parciales (T8/BR-4a).
+ *
+ * No hay fallback demo: si el endpoint falla, el error llega a la UI.
  */
+
+export interface TopProductsParams extends DashboardPeriodParams {
+  limit?: number;
+  sort_by?: TopProductSort;
+}
+
+export interface HeatmapParams {
+  weeks?: number;
+}
+
+export interface RecentActivityParams {
+  limit?: number;
+  /** El backend espera `types` como lista separada por comas. */
+  types?: string[];
+}
+
+export interface AlertFiltersParams {
+  severity?: string;
+  category?: string;
+}
+
+const recordError = (operation: string, error: unknown): void => {
+  const message = error instanceof Error ? error.message : String(error);
+  telemetry.record('bi.dashboard.error', { operation, error: message });
+};
+
 export const dashboardService = {
-  /**
-   * Obtiene el resumen ejecutivo del dashboard.
-   * Devuelve el envelope {success, data} tal como llega del BE — el tipo
-   * honesto es lo que permite al store desenvolver .data (fix NA-DB-1).
-   */
-  async getSummary(params: BIParams = {}): Promise<{ data: DashboardSummary }> {
+  /** Resumen ejecutivo del período (ventas, compras, margen, inventario…). */
+  async getSummary(params: DashboardPeriodParams = {}): Promise<BIEnvelope<DashboardSummary>> {
     try {
-      const response = await apiClient.get('/dashboard/summary', { params });
-      return response;
-    } catch (error: any) {
-      telemetry.record('bi.dashboard.error', { operation: 'getSummary', error: error.message });
+      return (await apiClient.get('/dashboard/summary', { params })) as BIEnvelope<DashboardSummary>;
+    } catch (error) {
+      recordError('getSummary', error);
       throw error;
     }
   },
 
-  /**
-   * Obtiene los indicadores clave de rendimiento (KPIs)
-   */
-  async getKPIs(params: BIParams = {}): Promise<{ data: KPIData[] }> {
+  /** Los 5 grupos de KPIs del período. */
+  async getKPIs(params: DashboardPeriodParams = {}): Promise<BIEnvelope<DashboardKPIs>> {
     try {
-      return await apiClient.get('/dashboard/kpis', { params });
-    } catch (error: any) {
-      console.error('Error fetching KPIs:', error);
+      return (await apiClient.get('/dashboard/kpis', { params })) as BIEnvelope<DashboardKPIs>;
+    } catch (error) {
+      recordError('getKPIs', error);
       throw error;
     }
   },
 
-  /**
-   * Obtiene las alertas consolidadas activas
-   */
-  async getAlerts(params: BIParams = {}): Promise<{ data: any[] }> {
+  /** Tendencias vs período anterior (5 métricas). */
+  async getTrends(params: DashboardPeriodParams = {}): Promise<BIEnvelope<DashboardTrends>> {
     try {
-      return await apiClient.get('/dashboard/alerts', { params });
-    } catch (error: any) {
-      console.error('Error fetching dashboard alerts:', error);
+      return (await apiClient.get('/dashboard/trends', { params })) as BIEnvelope<DashboardTrends>;
+    } catch (error) {
+      recordError('getTrends', error);
       throw error;
     }
   },
 
-  /**
-   * Obtiene los productos más vendidos (Top Products)
-   */
-  async getTopProducts(params: BIParams & { limit?: number; sort_by?: string } = {}): Promise<{ data: { products: any[]; total_revenue: number; total_profit: number } }> {
+  /** Alertas consolidadas activas; el backend soporta filtros pero la UI
+   *  filtra client-side para no perder los contadores del resumen. */
+  async getAlerts(params: AlertFiltersParams = {}): Promise<BIEnvelope<DashboardAlerts>> {
     try {
-      return await apiClient.get('/dashboard/top-products', { params });
-    } catch (error: any) {
-      console.error('Error fetching top products:', error);
+      return (await apiClient.get('/dashboard/alerts', { params })) as BIEnvelope<DashboardAlerts>;
+    } catch (error) {
+      recordError('getAlerts', error);
       throw error;
     }
   },
 
-  /**
-   * Obtiene el mapa de calor de ventas
-   */
-  async getSalesHeatmap(params: BIParams & { weeks?: number } = {}): Promise<{ data: SalesHeatmapData[] }> {
+  /** Top de productos; `sort_by` acepta revenue | quantity | profit. */
+  async getTopProducts(params: TopProductsParams = {}): Promise<BIEnvelope<TopProductsResponse>> {
     try {
-      return await apiClient.get('/dashboard/sales-heatmap', { params });
-    } catch (error: any) {
-      console.error('Error fetching sales heatmap:', error);
+      return (await apiClient.get('/dashboard/top-products', { params })) as BIEnvelope<TopProductsResponse>;
+    } catch (error) {
+      recordError('getTopProducts', error);
       throw error;
     }
   },
 
-  /**
-   * Obtiene las tendencias del negocio
-   */
-  async getTrends(params: BIParams = {}): Promise<{ data: any[] }> {
+  /** Mapa de calor día × hora de las últimas `weeks` semanas (default 4). */
+  async getSalesHeatmap(params: HeatmapParams = {}): Promise<BIEnvelope<SalesHeatmapResponse>> {
     try {
-      return await apiClient.get('/dashboard/trends', { params });
-    } catch (error: any) {
-      console.error('Error fetching dashboard trends:', error);
+      return (await apiClient.get('/dashboard/sales-heatmap', { params })) as BIEnvelope<SalesHeatmapResponse>;
+    } catch (error) {
+      recordError('getSalesHeatmap', error);
       throw error;
     }
   },
 
-  /**
-   * Obtiene la actividad reciente global o de sucursal
-   */
-  async getRecentActivity(params: { limit?: number; branch_id?: number } = {}): Promise<{ data: any[] }> {
+  /** Actividad reciente (ventas, compras, pagos, ajustes). */
+  async getRecentActivity(params: RecentActivityParams = {}): Promise<BIEnvelope<RecentActivityResponse>> {
     try {
-      return await apiClient.get('/dashboard/recent-activity', { params });
-    } catch (error: any) {
-      console.error('Error fetching recent activity:', error);
+      const { types, ...rest } = params;
+      const query = types && types.length > 0 ? { ...rest, types: types.join(',') } : rest;
+      return (await apiClient.get('/dashboard/recent-activity', { params: query })) as BIEnvelope<RecentActivityResponse>;
+    } catch (error) {
+      recordError('getRecentActivity', error);
       throw error;
     }
-  }
+  },
 };
 
 export default dashboardService;

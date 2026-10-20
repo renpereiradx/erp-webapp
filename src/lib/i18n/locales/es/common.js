@@ -205,5 +205,5 @@ export const common = {
   'roleGuard.message':
     'Lo sentimos, no tenés los permisos suficientes para acceder a esta sección. Esta funcionalidad está reservada para usuarios con rol:',
   'roleGuard.goBack': 'Regresar',
-  'roleGuard.goOrders': 'Ir a Pedidos',
+  'roleGuard.goDashboard': 'Ir al Dashboard',
 }

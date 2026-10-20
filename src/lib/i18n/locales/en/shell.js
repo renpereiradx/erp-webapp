@@ -6,11 +6,11 @@
 export const shell = {
   // Sidebar navigation
   'nav.mainMenu': 'Main Menu',
-  // 404 (F1 BI teardown: exit is /pedidos while /dashboard does not exist)
+  // 404 (F2: /dashboard exists again; the exit is the BI dashboard)
   'notFound.title': 'Page not found',
   'notFound.subtitle': 'The page you are looking for does not exist.',
-  'notFound.message': 'Check the URL or go back to orders.',
-  'notFound.backToOrders': 'Go to Orders',
+  'notFound.message': 'Check the URL or go back to the dashboard.',
+  'notFound.backToDashboard': 'Go to Dashboard',
   // PLAN_VERSION_UI_FRONTEND: the tagline no longer carries a version — SystemVersionBadge shows it.
   'nav.brandTagline': 'Management system',
   // Vendor brand (docs/sales/GUIA_VENTAS.md §1) — proper name, not translated.
@@ -30,6 +30,14 @@ export const shell = {
   'nav.sifenNumberingGaps': 'SIFEN Numbering Gaps',
   'nav.sifenFiscalDashboard': 'SIFEN Fiscal Dashboard',
   'nav.sifenFiscalGroup': 'Fiscal (SIFEN)',
+  // F2 — BI group re-activated with its first screen (Dashboard).
+  'nav.biGroup': 'Business Intelligence',
+  'nav.dashboardGroup': 'Dashboard',
+  'nav.dashboardHome': 'Executive Summary',
+  'nav.dashboardKpis': 'KPIs & Performance',
+  'nav.dashboardHeatmap': 'Sales Analysis',
+  'nav.dashboardAlerts': 'Business Alerts',
+  'nav.dashboardTopProducts': 'Top Products',
   'nav.collapseSidebar': 'Collapse menu',
   'nav.expandSidebar': 'Expand menu',
   'nav.openMenu': 'Open menu',

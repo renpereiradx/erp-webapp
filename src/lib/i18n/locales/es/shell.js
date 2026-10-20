@@ -6,11 +6,11 @@
 export const shell = {
   // Navegación lateral
   'nav.mainMenu': 'Menú Principal',
-  // 404 (F1 BI teardown: la salida es /pedidos mientras no exista /dashboard)
+  // 404 (F2: /dashboard vuelve a existir; la salida es el dashboard BI)
   'notFound.title': 'Página no encontrada',
   'notFound.subtitle': 'La página que buscas no existe.',
-  'notFound.message': 'Verifica la URL o regresa a los pedidos.',
-  'notFound.backToOrders': 'Ir a Pedidos',
+  'notFound.message': 'Verifica la URL o regresa al dashboard.',
+  'notFound.backToDashboard': 'Ir al Dashboard',
   // PLAN_VERSION_UI_FRONTEND: el tagline ya NO lleva versión — la muestra SystemVersionBadge.
   'nav.brandTagline': 'Sistema integral',
   // Marca del proveedor (docs/sales/GUIA_VENTAS.md §1) — nombre propio, sin traducción.
@@ -30,6 +30,14 @@ export const shell = {
   'nav.sifenNumberingGaps': 'Saltos de numeración SIFEN',
   'nav.sifenFiscalDashboard': 'Dashboard Fiscal SIFEN',
   'nav.sifenFiscalGroup': 'Fiscal (SIFEN)',
+  // F2 — grupo BI re-activado con su primera pantalla (Dashboard).
+  'nav.biGroup': 'Inteligencia de Negocios',
+  'nav.dashboardGroup': 'Dashboard',
+  'nav.dashboardHome': 'Resumen Ejecutivo',
+  'nav.dashboardKpis': 'KPIs y Rendimiento',
+  'nav.dashboardHeatmap': 'Análisis de Ventas',
+  'nav.dashboardAlerts': 'Alertas de Negocio',
+  'nav.dashboardTopProducts': 'Top de Productos',
   'nav.collapseSidebar': 'Colapsar menú',
   'nav.expandSidebar': 'Expandir menú',
   'nav.openMenu': 'Abrir menú',
