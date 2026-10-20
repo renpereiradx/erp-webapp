@@ -45,6 +45,13 @@ export const shell = {
   'nav.relationalCustomerTop': 'Productos por Cliente',
   'nav.relationalSupplierTop': 'Productos Suministrados',
   'nav.relationalProductSuppliers': 'Comparar Proveedores',
+  // F4 — Analítica de Ventas completa (6 pantallas del grupo).
+  'nav.salesDashboard': 'Dashboard de Ventas',
+  'nav.salesProductsCategories': 'Productos y Categorías',
+  'nav.salesInsights': 'Clientes y Vendedores',
+  'nav.salesTrendsVelocity': 'Tendencias y Velocidad',
+  'nav.salesPeriodComparison': 'Comparativa de Períodos',
+  'nav.salesDiscounts': 'Descuentos',
   'nav.collapseSidebar': 'Colapsar menú',
   'nav.expandSidebar': 'Expandir menú',
   'nav.openMenu': 'Abrir menú',

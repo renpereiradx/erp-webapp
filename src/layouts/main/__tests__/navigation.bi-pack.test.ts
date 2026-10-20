@@ -1,8 +1,9 @@
 /**
- * PLAN_REBUILD_BI_UI_FRONTEND F2/F3 — el grupo BI existe con Dashboard (5
- * rutas) + los drill-downs relacionales de Ventas/Compras cuando hay pack y
- * analytics:read. Sin pack o sin hojas visibles el padre se oculta. SIFEN
- * sigue como grupo Core propio (ADR-3).
+ * PLAN_REBUILD_BI_UI_FRONTEND F2/F3/F4 — el grupo BI existe con Dashboard (5
+ * rutas) + Analítica de Ventas (8 hojas: 6 de F4 + 2 drill-downs de F3) +
+ * drill-downs de Compras cuando hay pack y permisos BI. Sin pack o sin hojas
+ * visibles el padre se oculta (incluido el padre con gate anyOf). SIFEN sigue
+ * como grupo Core propio (ADR-3).
  */
 import { describe, it, expect } from 'vitest'
 import { buildNavigation, filterNavigationItems } from '../navigation'
@@ -38,8 +39,8 @@ const findByName = (items: NavigationItem[], name: string): NavigationItem | und
   return undefined
 }
 
-describe('navigation — Dashboard BI (F2) + drill-downs relacionales (F3)', () => {
-  it('admin con pack: Dashboard + los grupos de drill-downs con sus rutas', () => {
+describe('navigation — Dashboard BI (F2) + Analítica de Ventas (F4)', () => {
+  it('admin con pack: Dashboard + Analítica de Ventas completa + Compras', () => {
     const tree = filterNavigationItems(buildNavigation(t, false, true), checksFor(ADMIN_PERMS))
 
     const bi = findByName(tree, 'Inteligencia de Negocios')
@@ -61,6 +62,12 @@ describe('navigation — Dashboard BI (F2) + drill-downs relacionales (F3)', () 
 
     const sales = findByName(tree, 'Analítica de Ventas')
     expect(sales?.children?.map((child) => child.href)).toEqual([
+      '/sales-analytics/dashboard',
+      '/sales-analytics/products-categories',
+      '/sales-analytics/insights',
+      '/sales-analytics/trends-velocity',
+      '/sales-analytics/period-comparison',
+      '/sales-analytics/discounts',
       '/sales-analytics/products/buyers',
       '/sales-analytics/customers/top-products',
     ])
@@ -82,7 +89,7 @@ describe('navigation — Dashboard BI (F2) + drill-downs relacionales (F3)', () 
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
   })
 
-  it('con analytics:read sin dashboard:read: BI sigue visible por los drill-downs, sin Dashboard', () => {
+  it('con analytics:read sin dashboard:read: BI sigue visible por Ventas/Compras, sin Dashboard', () => {
     const perms = ADMIN_PERMS.filter((p) => p !== 'dashboard:read')
     const tree = filterNavigationItems(buildNavigation(t, false, true), checksFor(perms))
 
@@ -94,6 +101,42 @@ describe('navigation — Dashboard BI (F2) + drill-downs relacionales (F3)', () 
     ])
     expect(findByName(tree, 'Dashboard')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
+  })
+
+  it('con reports:read solo: se ve Descuentos y ninguna hoja con analytics:read', () => {
+    const tree = filterNavigationItems(
+      buildNavigation(t, false, true),
+      checksFor(['reports:read']),
+    )
+
+    const bi = findByName(tree, 'Inteligencia de Negocios')
+    expect(bi).toBeDefined()
+    expect(bi?.children?.map((child) => child.name)).toEqual(['Analítica de Ventas'])
+
+    const sales = findByName(tree, 'Analítica de Ventas')
+    expect(sales?.children?.map((child) => child.href)).toEqual([
+      '/sales-analytics/discounts',
+    ])
+  })
+
+  it('con un permiso BI sin hoja visible (payables:read): no queda un grupo vacío', () => {
+    const tree = filterNavigationItems(
+      buildNavigation(t, false, true),
+      checksFor(['payables:read']),
+    )
+
+    expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()
+  })
+
+  it('con dashboard:read solo: el grupo BI aparece por el gate anyOf padre', () => {
+    const tree = filterNavigationItems(
+      buildNavigation(t, false, true),
+      checksFor(['dashboard:read']),
+    )
+
+    const bi = findByName(tree, 'Inteligencia de Negocios')
+    expect(bi).toBeDefined()
+    expect(bi?.children?.map((child) => child.name)).toEqual(['Dashboard'])
   })
 
   it('vendedor sin sifen:read: no ve BI ni SIFEN, sí Gestión Comercial', () => {

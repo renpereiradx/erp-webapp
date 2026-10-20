@@ -1,0 +1,46 @@
+import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
+
+interface SectionCardProps {
+  title: string
+  description?: string
+  action?: ReactNode
+  children: ReactNode
+  className?: string
+  /** `data-testid` opcional para los page tests. */
+  testId?: string
+}
+
+/**
+ * Card de sección con título, descripción y acción opcional. Sin fetch ni
+ * cálculo: el contenido lo arma la página o un componente puro.
+ *
+ * Vive en `components/ui` porque la comparten las features BI (F2 Dashboard y
+ * F4 Analítica de Ventas): un feature no importa componentes de otro.
+ */
+export const SectionCard = ({
+  title,
+  description,
+  action,
+  children,
+  className,
+  testId,
+}: SectionCardProps) => (
+  // min-w-0: una tabla ancha no debe fijar el min-content del grid item y
+  // recortar la card hermana en mobile.
+  <section
+    className={cn('h-full min-w-0 rounded-md bg-surface p-lg shadow-whisper', className)}
+    data-testid={testId}
+  >
+    <header className="mb-md flex flex-col gap-xs sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        <h2 className="text-title-md text-foreground">{title}</h2>
+        {description ? <p className="text-body-md text-on-surface-deep">{description}</p> : null}
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
+    </header>
+    {children}
+  </section>
+)
+
+export default SectionCard

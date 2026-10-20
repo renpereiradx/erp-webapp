@@ -45,6 +45,13 @@ export const shell = {
   'nav.relationalCustomerTop': 'Products by Customer',
   'nav.relationalSupplierTop': 'Supplied Products',
   'nav.relationalProductSuppliers': 'Compare Suppliers',
+  // F4 — full Sales Analytics group (6 screens).
+  'nav.salesDashboard': 'Sales Dashboard',
+  'nav.salesProductsCategories': 'Products & Categories',
+  'nav.salesInsights': 'Customers & Sellers',
+  'nav.salesTrendsVelocity': 'Trends & Velocity',
+  'nav.salesPeriodComparison': 'Period Comparison',
+  'nav.salesDiscounts': 'Discounts',
   'nav.collapseSidebar': 'Collapse menu',
   'nav.expandSidebar': 'Expand menu',
   'nav.openMenu': 'Open menu',

@@ -19,6 +19,7 @@ import {
   LayoutDashboard,
   List,
   Package,
+  Percent,
   PlusCircle,
   Printer,
   Settings,
@@ -59,7 +60,17 @@ export const buildNavigation = (
           name: t('nav.biGroup', 'Inteligencia de Negocios'),
           href: '#',
           icon: BarChart3,
-          permission: 'analytics:read',
+          // anyOf: cada subgrupo BI tiene su permiso (dashboard, analytics,
+          // reports, receivables, payables, audit). Con uno solo alcanza para
+          // ver el grupo; las hojas se filtran una por una.
+          permissions: [
+            'dashboard:read',
+            'analytics:read',
+            'reports:read',
+            'receivables:read',
+            'payables:read',
+            'audit:read',
+          ],
           children: [
             {
               name: t('nav.dashboardGroup', 'Dashboard'),
@@ -94,23 +105,62 @@ export const buildNavigation = (
                 },
               ],
             },
-            // F3 — drill-downs relacionales. F4 completa la Analítica de
-            // Ventas; acá solo existen las pantallas ya re-implementadas.
+            // F4 — grupo completo de Analítica de Ventas. El permiso del padre
+            // es anyOf: descuentos usa reports:read (subrouter propio del BE) y
+            // el resto analytics:read; las hojas se filtran una por una.
             {
               name: t('nav.salesAnalytics', 'Analítica de Ventas'),
               href: '#',
               icon: UserCheck,
-              permission: 'analytics:read',
+              permissions: ['analytics:read', 'reports:read'],
               children: [
+                {
+                  name: t('nav.salesDashboard', 'Dashboard de Ventas'),
+                  href: '/sales-analytics/dashboard',
+                  icon: BarChart3,
+                  permission: 'analytics:read',
+                },
+                {
+                  name: t('nav.salesProductsCategories', 'Productos y Categorías'),
+                  href: '/sales-analytics/products-categories',
+                  icon: Package,
+                  permission: 'analytics:read',
+                },
+                {
+                  name: t('nav.salesInsights', 'Clientes y Vendedores'),
+                  href: '/sales-analytics/insights',
+                  icon: Users,
+                  permission: 'analytics:read',
+                },
+                {
+                  name: t('nav.salesTrendsVelocity', 'Tendencias y Velocidad'),
+                  href: '/sales-analytics/trends-velocity',
+                  icon: Gauge,
+                  permission: 'analytics:read',
+                },
+                {
+                  name: t('nav.salesPeriodComparison', 'Comparativa de Períodos'),
+                  href: '/sales-analytics/period-comparison',
+                  icon: ArrowLeftRight,
+                  permission: 'analytics:read',
+                },
+                {
+                  name: t('nav.salesDiscounts', 'Descuentos'),
+                  href: '/sales-analytics/discounts',
+                  icon: Percent,
+                  permission: 'reports:read',
+                },
                 {
                   name: t('nav.relationalBuyers', 'Compradores por Producto'),
                   href: '/sales-analytics/products/buyers',
                   icon: UserCheck,
+                  permission: 'analytics:read',
                 },
                 {
                   name: t('nav.relationalCustomerTop', 'Productos por Cliente'),
                   href: '/sales-analytics/customers/top-products',
                   icon: ShoppingBag,
+                  permission: 'analytics:read',
                 },
               ],
             },
@@ -358,8 +408,9 @@ export const buildNavigation = (
 ]
 
 /**
- * Filtra el árbol por permisos, inmutable: los padres con gate quedan solo si
- * les queda al menos un hijo; los padres sin gate se mantengan o no tengan hijos.
+ * Filtra el árbol por permisos, inmutable: los padres con gate (simple o anyOf)
+ * quedan solo si les queda al menos un hijo visible; los padres sin gate se
+ * mantienen aunque estén vacíos.
  */
 export const filterNavigationItems = (
   items: NavigationItem[],
@@ -371,6 +422,8 @@ export const filterNavigationItems = (
     if (!item.children) return [item]
 
     const children = filterNavigationItems(item.children, checks)
-    if (children.length === 0 && item.permission) return []
+    // Un padre gateado sin hojas visibles no debe renderizar un grupo vacío
+    // (p. ej. un rol con payables:read pero sin ninguna pantalla de CxP).
+    if (children.length === 0 && (item.permission || item.permissions?.length)) return []
     return [{ ...item, children }]
   })

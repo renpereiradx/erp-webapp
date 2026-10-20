@@ -38,6 +38,13 @@ const ProductBuyersPage = lazy(() => import('@/pages/sales-analytics/ProductBuye
 const CustomerTopProductsPage = lazy(() => import('@/pages/sales-analytics/CustomerTopProductsPage'))
 const SupplierTopProductsPage = lazy(() => import('@/pages/purchase-analytics/SupplierTopProductsPage'))
 const ProductSuppliersPage = lazy(() => import('@/pages/purchase-analytics/ProductSuppliersPage'))
+// PLAN_REBUILD_BI_UI_FRONTEND F4: Analítica de Ventas (6 pantallas lazy).
+const SalesDashboardPage = lazy(() => import('@/pages/sales-analytics/SalesDashboardPage'))
+const ProductsCategoriesPage = lazy(() => import('@/pages/sales-analytics/ProductsCategoriesPage'))
+const CustomerSellerInsightsPage = lazy(() => import('@/pages/sales-analytics/CustomerSellerInsightsPage'))
+const TrendsVelocityPage = lazy(() => import('@/pages/sales-analytics/TrendsVelocityPage'))
+const PeriodComparisonPage = lazy(() => import('@/pages/sales-analytics/PeriodComparisonPage'))
+const DiscountsPage = lazy(() => import('@/pages/sales-analytics/DiscountsPage'))
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import { CounterOrdersPage } from '@/features/counterorders'
@@ -196,6 +203,14 @@ const DashboardRoute = ({ children }: { children: React.ReactNode }) => (
  */
 const AnalyticsRoute = ({ children }: { children: React.ReactNode }) => (
   <BiPermissionGuard permission='analytics:read'>{children}</BiPermissionGuard>
+)
+
+/**
+ * F4 — el reporte de descuentos es la única ruta del grupo con otro permiso:
+ * el BE la registra con `biChain("reports:read", "discounts")`.
+ */
+const ReportsRoute = ({ children }: { children: React.ReactNode }) => (
+  <BiPermissionGuard permission='reports:read'>{children}</BiPermissionGuard>
 )
 
 function AppContent() {
@@ -364,6 +379,15 @@ function AppContent() {
                       <Route path='/sales-analytics/customers/top-products' element={<AnalyticsRoute><CustomerTopProductsPage /></AnalyticsRoute>} />
                       <Route path='/purchase-analytics/suppliers/top-products' element={<AnalyticsRoute><SupplierTopProductsPage /></AnalyticsRoute>} />
                       <Route path='/purchase-analytics/products/suppliers' element={<AnalyticsRoute><ProductSuppliersPage /></AnalyticsRoute>} />
+                      {/* PLAN_REBUILD_BI_UI_FRONTEND F4 — Analítica de Ventas.
+                          Cinco pantallas con analytics:read (misma cadena BE);
+                          descuentos con reports:read, como su subrouter. */}
+                      <Route path='/sales-analytics/dashboard' element={<AnalyticsRoute><SalesDashboardPage /></AnalyticsRoute>} />
+                      <Route path='/sales-analytics/products-categories' element={<AnalyticsRoute><ProductsCategoriesPage /></AnalyticsRoute>} />
+                      <Route path='/sales-analytics/insights' element={<AnalyticsRoute><CustomerSellerInsightsPage /></AnalyticsRoute>} />
+                      <Route path='/sales-analytics/trends-velocity' element={<AnalyticsRoute><TrendsVelocityPage /></AnalyticsRoute>} />
+                      <Route path='/sales-analytics/period-comparison' element={<AnalyticsRoute><PeriodComparisonPage /></AnalyticsRoute>} />
+                      <Route path='/sales-analytics/discounts' element={<ReportsRoute><DiscountsPage /></ReportsRoute>} />
                       <Route path='/finance/sifen-inutilizacion' element={
                         <PermissionGuard permission='sifen:read'>
                           <SkippedNumbersPage />

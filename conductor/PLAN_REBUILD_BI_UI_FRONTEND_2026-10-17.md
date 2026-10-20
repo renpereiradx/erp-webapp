@@ -550,3 +550,188 @@ aplicada con criterio (sin reporte en conductor salvo pedido).
 - Los agregados #1/#2/#3 no traen código de moneda: se formatean como PYG
   (moneda base de la instalación), igual que F2; #4 sí usa `currency`.
 - Sin push: F1+F2+F3 quedan locales en la rama.
+
+---
+
+## 12. Estado de ejecución — F4 Analítica de Ventas (2026-10-20)
+
+**Rama FE:** `feature/bi-ui-rebuild` (F1+F2+F3 sobre `dev` = `82710c7`).
+**Backend:** fix de agregados en `dev` (ver §12.2), sin cambio de contrato.
+
+### 12.1 Ejecutado
+
+- **Rutas (6)** en `src/App.tsx`, lazy, con los mismos guards que la cadena BE:
+  `/sales-analytics/{dashboard,products-categories,insights,trends-velocity,period-comparison}`
+  con `AnalyticsRoute` (`BiModuleRoute` → `analytics:read`) y
+  `/sales-analytics/discounts` con `ReportsRoute` (`BiModuleRoute` →
+  `reports:read`, el subrouter propio del BE).
+- **Feature `src/features/sales-analytics/`** con la plantilla FSD:
+  `components/` (UI pura), `hooks/` (react-query, período en URL, refresh),
+  `types/` y barrel público. Cero fetch/cálculo en componentes.
+- **Páginas delgadas** en `src/pages/sales-analytics/`:
+  `SalesDashboardPage`, `ProductsCategoriesPage`,
+  `CustomerSellerInsightsPage`, `TrendsVelocityPage`, `PeriodComparisonPage`
+  y `DiscountsPage`.
+- **Dominio puro** en `src/domain/sales-analytics/`: `format`, `periods`,
+  `kpis`, `trends`, `products`, `customers`, `velocity`, `comparison`,
+  `discounts` y `constants`, todos con tests colocados. Se conservaron
+  `roundPct1`/`clampPage` del plan anterior.
+- **Servicio tipado** `services/bi/salesAnalyticsService.ts`: contrato real
+  de 15 endpoints (`performance`, `dashboard`, `trends`, `by-category`,
+  `by-product`, `top-bottom-products`, `by-customer`, `by-seller`, `by-hour`,
+  `by-day-of-week`, `heatmap`, `velocity`, `compare`, `discounts`,
+  `discounts/summary`), limpieza de params y telemetría; sin fallback demo.
+- **Nav**: `Analítica de Ventas` pasa a 8 hojas (6 de F4 + 2 drill-downs de
+  F3). El padre usa `permissions` anyOf (`analytics:read` / `reports:read`) y
+  cada hoja declara su permiso; `filterNavigationItems` ahora descarta también
+  padres con gate anyOf sin hojas visibles (antes quedaba un grupo vacío).
+- **i18n**: namespace `salesAnalytics` en `locales/{es,en}` (mismas claves) +
+  `nav.sales*` en ambos shells + gate que escanea las claves estáticas usadas
+  en el código de F4 y verifica que existan en es/en.
+- **Compartido**: `SectionCard` (reemplaza al `DashboardSection` de F2),
+  `CardGridSkeleton`/`PanelSkeleton`/`TableSkeleton` (`DataSkeletons`) y
+  `BiPeriodSelector` se promovieron a `components/ui`/`components/bi`; F2
+  re-exporta sus wrappers con los `data-testid` intactos.
+- **Período del grupo**: vive en `?period=` (deep-link y navegación entre las
+  4 pantallas que lo usan), no en un store global. `week` se rotula
+  **“Últimos 7 días”** porque `/sales-analytics/*` usa `NewPeriodRolling`
+  (a diferencia del week calendario de F2).
+
+### 12.2 Bug del backend encontrado en el smoke (desviación documentada)
+
+El plan asumía BE congelado. El smoke en vivo descubrió una **duplicación de
+totales por join a detalles** en 4 queries de `internal/platform/postgres/
+analytics_sales_repo.go`: sumaban `sales_orders.total_amount` en la misma
+query que joinea `sales_order_details`, así que una orden multi-línea contaba
+su total una vez por línea.
+
+- Evidencia (octubre 2026): canónico `SUM(total_amount)` = **Gs. 1.475.500**
+  con 6 órdenes; las queries afectadas devolvían **Gs. 3.983.700** (8 filas
+  por join). `/sales-analytics/compare` y `/dashboard/summary` ya daban el
+  valor correcto, por eso el KPI y el mix de pagos no cuadraban entre sí.
+- Endpoints afectados: `performance`, `trends`, `velocity.overall` y
+  `dashboard.trends`. Se corrigieron separando el dinero a nivel de orden
+  (CTE sin join a detalles) de las unidades a nivel de línea (CTE con join) y
+  uniéndolos 1:1.
+- Test de regresión con BD real:
+  `internal/platform/postgres/analytics_sales_totals_test.go`
+  (`TestSalesAnalytics_AggregatesDoNotDuplicateMultiLineOrders`) exige que la
+  suma de la serie, el KPI, la velocidad y el dashboard igualen
+  `SUM(total_amount)` del período; skippea si la ventana no tiene órdenes
+  multi-línea.
+- **No cambia el contrato** (mismos campos/JSON, valores correctos). Sin este
+  fix, F4 mostraba ventas 2,7× y era imposible cumplir la regla §5.1.
+- Backend reiniciado en `:5050` con `CORS_ALLOWED_ORIGINS=http://localhost:5173,
+  http://localhost:3000` (el reinicio sin esa variable rompía el preflight).
+
+### 12.3 Decisiones de borde (documentadas)
+
+- **Crecimiento de KPIs**: se usa `performance?compare=true` (variación real
+  contra la ventana previa). Los `*_growth_pct` del dashboard consolidado no
+  se muestran: el repositorio no los calcula (viajaban en 0, el “+0%” que
+  marcó la auditoría). Si la ventana previa no tuvo base (`pct=0` con cambio
+  distinto de 0) no se muestra chip.
+- **Alertas del dashboard**: `/sales-analytics/dashboard.alerts` lo devuelve
+  siempre vacío (no se calcula); no se renderiza el panel.
+- **Serie de ventas**: sale de `/sales-analytics/trends` con granularidad
+  derivada del período (`today`→hourly, `year`→monthly, resto daily), no del
+  `trends` embebido en `/dashboard`, que corta a 30 días y sería engañoso en
+  “Este año”. El crecimiento del resumen se rotula “primera vs última fecha”
+  (es lo que calcula el BE, no la ventana previa).
+- **Sin heatmap en F4**: la landing de F2 ya tiene `/dashboard/sales-heatmap`;
+  acá se usan `/by-hour` y `/by-day-of-week`, que sí traen `peak_hour`/
+  `best_day` reales. Se eliminó la “hora pico 14:00” hardcodeada de la
+  pantalla vieja.
+- **Comparativa**: solo variaciones relativas (`change_pct`), nunca “pp”; el
+  `end_date` del payload es exclusivo, así que se muestra con el día inclusive
+  (`previousCalendarDay`). En modo período se avisa que la ventana actual
+  puede estar en curso (el BE compara contra una ventana previa de igual
+  duración, no contra el mes calendario anterior exacto). El modo custom usa
+  4 fechas con draft + “Comparar” y bloquea requests con rangos inválidos.
+- **Descuentos**: precios **unitarios** y descuento de **línea** se muestran
+  por separado; nunca se multiplica para reconstruir totales (origen de la
+  fila 100.000→105.690 de la auditoría). El contrato no trae `product_name`
+  (la vista solo guarda `product_id`): el id va como sublínea de la venta, sin
+  llamadas extra al catálogo. `data: null` de Go (slice nil) se trata como
+  lista vacía, no como envelope roto; solo `data` ausente es error. El
+  `metadata.end_date` del BE es el límite exclusivo: la UI muestra el rango
+  aplicado. Participación por grupo = total del grupo / total descontado.
+- **Productos**: sin columna SKU (el BE devuelve el id como `sku`), sin rank
+  (es rank por ventas aunque se ordene por margen) y sin crecimiento (`growth_pct`
+  no lo calcula el repo). El sort usa la whitelist real (`sales`, `units`,
+  `margin`, `name`, `last_sale`), server-side, con `aria-sort` y vuelta a
+  página 1 al cambiar de orden.
+- **Vendedores**: `rankings.by_*` del payload son copias de la página, no
+  rankings independientes; no se muestran. `target_progress`/`conversion_rate`
+  no vienen.
+- **Top categorías del dashboard**: el payload anidado no trae `percentage`;
+  se muestran ventas y transacciones (como sublínea), sin inventar share.
+- **Unidades**: `0` del BE (base qty no normalizada) se muestra `—`, no
+  “0 uds.” junto a un importe real. Aplica a series, categorías, productos y
+  rankings.
+- **Medios de pago**: `unknown` se rotula “Sin método registrado” y explica
+  que son ventas sin método asociado; nunca el código crudo.
+- **Paginación**: 10 filas por página (regla del proyecto) para productos,
+  clientes, vendedores y descuentos; totales y páginas salen del BE. El empty
+  state de tabla se renderiza fuera del `<table>` cuando no hay filas
+  (con 8-10 columnas el thead fijaba un min-width y dejaba el empty fuera del
+  viewport en mobile). Tablas anchas con hint “Deslizá la tabla…” en mobile.
+
+### 12.4 Tests
+
+- Dominio: `format`, `periods`, `kpis`, `trends`, `products`, `customers`,
+  `velocity`, `comparison`, `discounts` — 70+ casos (redondeo, rangos
+  inclusivos/exclusivos, slices nil, whitelist de sort, shares, sellout).
+- Servicio: contrato de rutas/params de los 15 métodos, limpieza de params y
+  error telemetrizado.
+- Hooks: params por endpoint (compare, granularidad, paginación, sort),
+  normalización de `null` de Go, `data:null` de descuentos como lista vacía,
+  comparación deshabilitada con rango inválido, período en URL.
+- Páginas: 6 tests (30 casos) con datos reales del contrato, estados, sort,
+  paginación, empty honesto y ausencia de claims fabricados (`$0`, “Live”,
+  “en tiempo real”, churn/meta, “14:00 - 15:00”, floats crudos, “pp”).
+- i18n: paridad es/en, sin strings vacíos, claves nav y **todas** las claves
+  estáticas usadas en el código de F4.
+- Nav: 8 hojas, anyOf del padre, hoja de descuentos solo con `reports:read`,
+  sin grupo vacío con permisos BI sin pantalla.
+
+### 12.5 Gates
+
+- `npx tsc --noEmit`: 0 errores.
+- `npx vitest --run`: **235 archivos / 1692 tests OK**.
+- `pnpm build`: OK; chunks lazy por página (`SalesDashboardPage`,
+  `ProductsCategoriesPage`, `CustomerSellerInsightsPage`,
+  `TrendsVelocityPage`, `PeriodComparisonPage`, `DiscountsPage`).
+- `pnpm lint:design -- --base dev`: OK (código nuevo limpio; 1108 legacy).
+- `pnpm lint`: 0 errores (132 warnings legacy, sin cambios).
+- Gate anti-fabricación §5.3: sin `mock`/`Math.random`/`sample`/`dummy` en
+  producción de F4 (solo el comentario “Sin fallback demo/mock” del servicio).
+- Gate TS: archivos nuevos de la fase solo `.ts`/`.tsx`.
+- Backend: `gofmt` limpio, `make build` OK,
+  `go test ./internal/platform/postgres ./internal/analytics/...` OK (incluye
+  el nuevo invariante). `go test ./...` sigue fallando en
+  `tests/integration` por el clúster efímero sin schema
+  (`relation "public.branches" does not exist`), condición preexistente
+  ajena a este cambio.
+- **Smoke vivo** (`:5050` + Vite `:5173` `--mode api`, JWT de dev admin
+  `jJkV4F6HR`, rol `F2VLso`, sesión 1379, entitlements core+bi):
+  **47/47 checks OK**, 0 errores de consola y 0 respuestas HTTP ≥400.
+  - Consistencia KPI = suma de la serie = mix de pagos = **Gs. 1.475.500**
+    (antes del fix: KPI/serie 3.983.700 vs mix 1.475.500).
+  - Las 6 pantallas renderizan con datos reales; sort asc/desc, paginación,
+    comparativa custom y rango inválido verificados.
+  - Descuentos con datos (01–14 sept 2026): línea `SALE-1789393146-771`,
+    Gs. 70.000 → 66.780, descuento de línea Gs. 3.220; empty honesto con el
+    rango default sin datos.
+  - Sidebar con las 8 hojas; 1440 y 390 px sin overflow del body.
+
+### 12.6 Pendiente / deuda declarada
+
+- `searchableRoutes` de las rutas BI sigue vacío hasta F7/F8/F9 (con
+  `requiredModule: 'bi'`).
+- El contrato de descuentos no trae nombre de producto ni de sucursal (solo
+  ids); se muestran como ids/sublíneas hasta que el BE los agregue.
+- El fix de agregados del BE es un commit separado en `dev`
+  (`business_management`), sin push.
+- Sin push: F1+F2+F3+F4 quedan locales en la rama FE.
+

@@ -1,6 +1,6 @@
-import SegmentedControl from '@/components/ui/SegmentedControl'
+import { BiPeriodSelector } from '@/components/bi/BiPeriodSelector'
 import { useI18n } from '@/lib/i18n'
-import { DASHBOARD_PERIODS, useDashboardStore } from '@/store/useDashboardStore'
+import { useDashboardStore } from '@/store/useDashboardStore'
 import type { DashboardPeriod } from '@/types/bi'
 
 // El BE resuelve semana/mes/año calendario (Period.Resolve), no ventanas
@@ -19,15 +19,16 @@ export const DashboardPeriodSelector = () => {
   const setPeriod = useDashboardStore((state) => state.setPeriod)
 
   return (
-    <SegmentedControl
-      options={DASHBOARD_PERIODS.map((value) => ({
-        value,
-        label: t(`dashboard.period.${value}`, PERIOD_FALLBACKS[value]),
-      }))}
+    <BiPeriodSelector
       value={period}
-      onChange={(value: string) => setPeriod(value as DashboardPeriod)}
-      aria-label={t('dashboard.period.label', 'Período')}
-      size="small"
+      onChange={setPeriod}
+      label={t('dashboard.period.label', 'Período')}
+      optionLabels={{
+        today: t('dashboard.period.today', PERIOD_FALLBACKS.today),
+        week: t('dashboard.period.week', PERIOD_FALLBACKS.week),
+        month: t('dashboard.period.month', PERIOD_FALLBACKS.month),
+        year: t('dashboard.period.year', PERIOD_FALLBACKS.year),
+      }}
     />
   )
 }

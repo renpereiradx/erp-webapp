@@ -43,6 +43,7 @@ import { version } from './version'
 import { reservations } from './reservations'
 import { dashboard } from './dashboard'
 import { relationalAnalytics } from './relationalAnalytics'
+import { salesAnalytics } from './salesAnalytics'
 
 /**
  * Diccionario completo de traducciones en español
@@ -89,4 +90,5 @@ export const es = {
   ...reservations,
   ...dashboard,
   ...relationalAnalytics,
+  ...salesAnalytics,
 }
