@@ -928,3 +928,264 @@ reinicio sin esa variable rompía el preflight; misma nota que F4).
   usarse: son relleno del payload, no métricas calculadas.
 - Sin pantalla de movimientos de stock ni pronóstico de inventario: fuera del
   alcance de F5 (F11 cubre `/forecast/*`).
+
+---
+
+## 14. Estado de ejecución — F6 Rentabilidad (2026-10-20)
+
+**Rama FE:** `feature/bi-ui-rebuild` (F1-F5 sobre `dev` = `82710c7`).
+**Backend:** fixes de agregados/sort/KPI en `dev` (ver §14.2), sin cambio de
+contrato JSON.
+
+### 14.1 Ejecutado
+
+- **Rutas (6)** en `src/App.tsx`, lazy y con `AnalyticsRoute` =
+  `BiModuleRoute` (pack) → `PermissionGuard(analytics:read)`, el mismo par que
+  `biChain("analytics:read", "profitability")` del BE:
+  `/profitability/{dashboard,products,customers,categories,trends,sellers}`.
+- **Feature `src/features/profitability/`** con la plantilla FSD:
+  `components/` (UI pura), `hooks/` (react-query + período/granularidad en URL),
+  `types/` y barrel público. Cero fetch/cálculo en componentes.
+- **Páginas delgadas** en `src/pages/profitability/`:
+  `ProfitabilityDashboardPage`, `ProductProfitabilityPage`,
+  `CustomerProfitabilityPage`, `CategoryProfitabilityPage`,
+  `ProfitabilityTrendsPage`, `SellerProfitabilityPage`.
+- **Dominio puro** en `src/domain/profitability/`: `format`, `periods`,
+  `constants`, `kpis`, `performance`, `products`, `customers`, `categories`,
+  `trends`, `sellers`, `alerts`, todos con tests colocados. Se conservó
+  `margins.ts` del plan anterior (tests incluidos), según §2.3.
+- **Servicio tipado** `services/bi/profitabilityService.ts`: contrato real de
+  los 6 endpoints consumidos (`dashboard`, `products`, `customers`,
+  `categories`, `trends`, `sellers`), limpieza de params y telemetría; sin
+  fallback demo. `/profitability/overview` no se consume (el dashboard
+  consolidado ya trae KPIs + crecimiento en una sola llamada).
+- **Tipos** en `types/bi.ts`: `ProfitabilityOverview`, `ProfitabilityDashboard`,
+  `ProductProfitabilityReport`, `CustomerProfitabilityReport`,
+  `CategoryProfitabilityReport`, `ProfitabilityTrendsReport`,
+  `SellerProfitabilityReport`, KPIs/alertas y paginación; los campos que el BE
+  nunca calcula quedan comentados en el contrato (`sku`, `low_profitable`,
+  `at_risk_customers`, `top_customers_pct`, `break_even_status`,
+  `operating_*`, `net_*`).
+- **Nav**: subgrupo `Rentabilidad` con 6 hojas y permiso `analytics:read` en el
+  padre. La marca del sidebar, HomeRedirect y guards se mantienen en
+  `/dashboard` (F2).
+- **i18n**: namespace `profitability` en `locales/{es,en}` (mismas claves,
+  verificadas por test) + `nav.profitability*` en ambos shells; fallbacks en
+  español para las etiquetas dinámicas (performance, segmento, granularidad,
+  dirección y alertas).
+- **Compartido**: se reusan `SectionCard`, `TableCard`, `QueryBoundary`,
+  `TableEmptyState`, `DataSkeletons`, `BiPeriodSelector`, `SegmentedControl` y
+  `TablePagination`. La tabla y el ledger KPI son locales del feature (mismo
+  criterio de F4/F5: un feature no importa componentes de otro).
+- **Alerta F2 re-activada**: `AlertCard` ahora enlaza "Gestionar" de margen
+  negativo a `/profitability/products` (el destino ya existe); el page test de
+  Alertas de F2 se amplió con ese caso. `/receivables/overdue` (F7) sigue
+  fuera de `ACTIONABLE_ALERT_ROUTES`.
+
+### 14.2 Bugs del backend encontrados en el smoke (desviación documentada)
+
+El plan asumía BE congelado. El smoke en vivo (y la lectura del SQL) descubrió
+cinco defectos en `analytics_profitability_repo.go`, todos con test de
+regresión contra BD real en `internal/platform/postgres/
+analytics_profitability_test.go`:
+
+1. **`sort_by=name` respondía 500**: el whitelist mapeaba a `p.name`, alias que
+   no existe en el SELECT externo (`ranked_products`). Se mapeó a
+   `product_name`. Test: `TestProfitability_ProductSortWhitelist` (recorre el
+   whitelist completo y verifica el orden ASC por nombre).
+2. **Resumen de productos/clientes subestimado**: el costo se sumaba sin
+   `COALESCE`; una línea sin costo registrado producía `gross_profit NULL` y
+   desaparecía del `SUM`, mientras la página la mostraba con costo 0. En dev,
+   `summary.total_profit` era **410.500** contra **530.500** del overview, y la
+   suma de contribuciones por fila daba **129 %**. Se aplicó el mismo
+   `COALESCE(...,0)` que usa el detalle. Tests:
+   `TestProfitability_ProductSummaryMatchesOverview` y
+   `TestProfitability_CustomerSummaryMatchesRows` (además exige contribución
+   total ≈ 100 % cuando todas las filas entran en una página).
+3. **Tendencias colapsaba el beneficio a 0**: `COALESCE(SUM(rev) - SUM(cost),0)`
+   anulaba el profit entero de un bucket con costo NULL (20 oct: ingresos
+   120.000 → beneficio 0, growth -100 %). Se separó en
+   `COALESCE(SUM(rev),0) - COALESCE(SUM(cost),0)`. Test:
+   `TestProfitability_TrendsSumMatchesOverview` (cada punto cumple
+   `gross = revenue - cost` y la serie suma el overview).
+4. **`profit_per_transaction` llevaba `profit_per_unit`** (132.625 en vez de
+   88.417). El dashboard ahora calcula `gross_profit / total_transactions`. Test:
+   `TestProfitability_DashboardProfitPerTransaction`.
+5. **`days_since_last_purchase` usaba `EXTRACT(DAY FROM NOW()-last_purchase)`**
+   (componente día del intervalo, no días totales). Se cambió a
+   `CURRENT_DATE - last_purchase::date`. Test:
+   `TestProfitability_CustomerDaysSinceLastPurchase`. La UI igualmente deriva
+   la antigüedad de `last_purchase` para no depender del reloj del servidor.
+
+Evidencia del smoke (dev, octubre 2026, sucursal 1): overview
+`revenue 1.475.500 / cost 945.000 / gross 530.500`; productos
+`total_profit 530.500` y contribuciones que suman 100 %; tendencia 20 oct con
+`gross_profit 120.000`; dashboard `profit_per_transaction 88.416,67`.
+
+El backend se reconstruyó y reinició en `:5050` con
+`CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000` (misma nota
+operativa que F4/F5).
+
+### 14.3 Decisiones de borde (documentadas)
+
+- **Períodos**: solo `today|week|month|year` (`quarter` da 400 en el BE). Todos
+  los endpoints usan `NewPeriodRolling`: `week` son los últimos 7 días
+  (label "Últimos 7 días"), `month`/`year` calendario y `today` el día. El
+  estado vive en `?period=` con default `month`.
+- **Dashboard**: se consume solo `/profitability/dashboard`; no se muestra
+  `break_even_status` (struct zero), ni "margen operativo/neto" (espejan el
+  bruto porque el BE no modela gastos operativos), ni `contribution_margin`
+  (es un monto, no un margen). `ROI` se rotula con su fórmula real
+  (beneficio bruto / costo), que es la misma del markup. `profit_per_transaction`
+  usa el valor corregido. Los KPIs de crecimiento son relativos contra la
+  ventana previa de igual duración; `margin_change` se muestra como porcentaje
+  con hint "puntos porcentuales".
+- **Alertas**: se descarta el `message` en español del servidor y se traduce
+  el `type` real (`LOW_MARGIN`, `DECLINING_PROFIT`, `UNPROFITABLE_PRODUCTS`,
+  `PROFIT_GROWTH`) mostrando `value` y `threshold` de la regla. Un tipo
+  desconocido no se renderiza.
+- **Productos**: sin columna SKU (el SQL devuelve `''`) y sin buscador (el
+  endpoint no lo acepta). Sort server-side con whitelist
+  `profit|margin|revenue|units|name` y `aria-sort`; `rank` no se muestra
+  porque es global por beneficio, no la posición de la página. `units_sold = 0`
+  con importes reales se muestra `—` (normalización de unidades). La
+  contribución se oculta si el beneficio total no es positivo. El margen global
+  del resumen se deriva ponderado (`profit/revenue`); `average_margin` del BE es
+  promedio simple y se rotula así. Top 5 / losers usan SELECTs propios con
+  `gross_margin_pct` en 0: el margen del panel se deriva de
+  `gross_profit/revenue`.
+- **Clientes**: orden fijo por beneficio, sin búsqueda ni sort (el endpoint no
+  los acepta). `customer_type` ("REGULAR" hardcodeado) no se muestra;
+  `top_customers` es page-scoped y `at_risk_customers`/`top_customers_pct`
+  nunca se calculan: no se renderizan. `average_customer_value` es **beneficio
+  promedio por cliente** (no ticket) y se rotula así. "Clientes sin beneficio"
+  se deriva de `total - rentables` (conteos reales). La antigüedad de la última
+  compra se deriva de `last_purchase`, no del campo del BE. El segmento
+  (PLATINUM ≥10 %, GOLD ≥5 %, SILVER ≥2 %, resto BRONZE) se documenta en la
+  descripción de la tabla.
+- **Categorías**: sin paginación ni sort; solo entran categorías con ventas
+  (INNER JOIN: los productos sin categoría quedan fuera). `contribution_pct` es
+  una copia de `profit_share`: se muestra una sola vez. El monto del "líder" no
+  está en el summary: los extremos se derivan de la primera/última fila real.
+  El margen promedio es simple (no ponderado) y se rotula.
+- **Tendencias**: granularidad diaria/semanal/mensual en `?granularity=`;
+  default por período (año → mensual, resto → diario), el mismo criterio del
+  dashboard. Semanal es la semana calendario de Postgres (lunes) y se rotula
+  "Semana del {fecha}". No se rellenan huecos: solo buckets con ventas. El BE
+  emite `label` en inglés (`to_char`) y no valida una granularidad inválida
+  (la ecoa): la UI valida y re-deriva las etiquetas de `date` en el locale de
+  la UI, en UTC porque son fechas date-only. Dirección (umbral ±5 %) y
+  crecimiento primera→última se re-derivan con las mismas reglas del BE para
+  localizar las fechas de los extremos; sin base positiva el crecimiento es
+  `—`, no 0 %.
+- **Vendedores**: sin paginación; `total_sales` es COUNT(DISTINCT orden) y los
+  montos se suman por línea: el fan-out T15 de la auditoría **no está presente**
+  (verificado: revenue de sellers = revenue del overview). La contribución se
+  oculta si el beneficio total no es positivo.
+- **Sesgos de costo/unidades del contrato** (se muestran con `—` cuando
+  corresponde, no se corrigen en FE): una línea sin costo registrado suma su
+  revenue completo al beneficio (costo 0 implícito), y las líneas cuya unidad
+  no convierte a la base quedan fuera de las unidades (`units_sold` 0 con
+  importe real). Las descripciones de cada pantalla lo explican.
+- **Errores silenciados del dashboard**: el BE hace `if err == nil` por
+  subconsulta y no expone `metadata.partial`; un fallo parcial se vería como
+  ceros. No es detectable desde el FE: deuda declarada.
+
+### 14.4 Tests
+
+- Dominio: `format`, `periods`, `kpis`, `performance`, `products`, `customers`,
+  `categories`, `trends`, `sellers`, `alerts` — 97 casos (incluye los 15 de
+  `margins.ts` conservado): redondeo, fechas date-only en UTC, fin exclusivo,
+  antigüedad derivada, disponibilidad de contribución, extremos, dirección,
+  umbrales y alertas desconocidas.
+- Servicio: rutas/params de los 6 métodos, defaults, limpieza de params y
+  error telemetrizado — 10 tests.
+- Hooks: params por endpoint (página/orden/granularidad), normalización de
+  slices nil, re-derivación del insight y granularidad pedida — 7 tests; URL
+  de período/granularidad (validación, defaults, escritura y limpieza) — 9
+  tests.
+- Páginas: Dashboard (KPIs, alertas traducidas, topes, serie, ausencia de
+  break-even/claims, empty, error), Productos (resumen, sort/paginación
+  server-side, contribución, unidades `—`, paneles, empty), Clientes
+  (resumen, segmento, antigüedad derivada, sin REGULAR/Pareto, paginación,
+  empty), Categorías (extremos y montos, participaciones, sin NaN, una sola
+  categoría, empty), Tendencias (default diario/mensual, labels derivados,
+  cambio a semanal, granularidad inválida, empty), Vendedores (resumen,
+  ranking, top, empty) — 30 tests.
+- i18n: paridad es/en, sin vacíos, claves nav y todas las claves estáticas de
+  F6 — 4 tests. Nav: 6 hojas de Rentabilidad con `analytics:read`, grupo
+  presente/ausente según pack y permisos — test de F2-F5 actualizado. Alertas:
+  "Gestionar" de margen negativo hacia `/profitability/products` — page test
+  de F2 actualizado.
+
+### 14.5 Gates
+
+- `npx tsc --noEmit`: 0 errores.
+- `npx vitest --run`: **268 archivos / 1916 tests OK** (un timeout flaky
+  preexistente de `CounterOrdersPage` bajo carga paralela pasó en aislamiento
+  y en la corrida limpia posterior).
+- `pnpm build`: OK; chunks lazy `ProfitabilityDashboardPage`,
+  `ProductProfitabilityPage`, `CustomerProfitabilityPage`,
+  `CategoryProfitabilityPage`, `ProfitabilityTrendsPage`,
+  `SellerProfitabilityPage` (+ `ProfitabilityBadge`, `TrendsTable`
+  compartidos).
+- `pnpm lint:design -- --base dev`: OK (código nuevo limpio; 1108 legacy).
+- `pnpm lint`: 0 errores (132 warnings legacy, sin cambios).
+- Gate anti-fabricación §5.3: sin `mock`/`Math.random`/`sample`/`dummy` en
+  producción de F6 (solo el comentario "Sin fallback demo/mock" del servicio).
+- Gate TS: archivos nuevos de la fase solo `.ts`/`.tsx` (0 `.js`/`.jsx`).
+- Backend: `gofmt` limpio, `make build` OK,
+  `go test ./internal/analytics/... ./internal/platform/postgres` OK (incluye
+  los 6 invariantes nuevos).
+- Auditoría `vercel-react-best-practices` aplicada con criterio: páginas
+  lazy, queries paralelas/deduplicadas por react-query, sin `useEffect` para
+  estado derivado (el insight se deriva en el hook/render), `ResizeObserver`
+  con deps primitivas en la tabla y sin componentes definidos dentro de
+  componentes. Excepción consciente: el barrel público del feature (plantilla
+  FSD del plan) en lugar de imports profundos.
+- **Smoke vivo** (`:5050` + Vite `:5173` `--mode api`, JWT de dev admin
+  `jJkV4F6HR`, rol `F2VLso`, sesión 1379, entitlements core+bi), 6 pantallas:
+  - Dashboard: ingresos Gs. 1.475.500, beneficio Gs. 530.500, margen 36 %,
+    ROI 56,1 %, beneficio/transacción Gs. 88.417, crecimiento +60,4 % /
+    +51,1 %, cambio de margen -2,2 pp; alerta real de crecimiento +51,1 %;
+    top productos/clientes/categorías y serie de 4 buckets.
+  - Productos: 6 productos, beneficio Gs. 530.500, margen global 36 %,
+    promedio simple 45,1 %, contribuciones 41,4 %/31,7 %/29,2 %/14,9 %/11,5 %/
+    0,6 % (suma 100 %); sort por nombre verificado en vivo; unidades sin
+    conversión en `—`.
+  - Clientes: 2 clientes, beneficio Gs. 530.500, promedio Gs. 265.250,
+    PLATINUM/GOLD por participación, antigüedad "Hoy"/"Hace 6 días" derivada.
+  - Categorías: 4 categorías, Electrónicos Gs. 300.000 (56,6 % del beneficio),
+    Alquiler Gs. 181.000 (34,1 %), Despensa Gs. 47.100 (8,9 %), Bebidas
+    Gs. 2.400 (0,45 %); extremos con monto (sin NaN).
+  - Tendencias: 4 buckets diarios (01/05/14/20 oct), ingresos Gs. 1.475.500,
+    beneficio Gs. 530.500, -65,4 % primera vs última, dirección "En baja",
+    margen promedio 63 %, margen más bajo 27,7 %; `?granularity=weekly` →
+    "Semana del 28 sept", 05, 12 y 19 oct.
+  - Vendedores: 1 vendedor, 6 órdenes, Gs. 1.475.500 de ingresos, Gs. 530.500
+    de beneficio, 100 % de participación.
+  - 0 errores de consola, 0 respuestas HTTP ≥400, `bodyOverflow=false` a
+    1440/1280/1024/390 px; sin `$`, sin NaN, sin "en tiempo real", "Live",
+    "objetivo", "Pareto" ni "punto de equilibrio"; sidebar con el grupo
+    Rentabilidad y sus 6 hojas.
+- Sin push: F1-F6 quedan locales en la rama FE; los fixes BE quedan locales en
+  `dev` (mismo criterio que F4/F5).
+
+### 14.6 Pendiente / deuda declarada
+
+- `searchableRoutes` de las rutas BI sigue vacío hasta F7/F8/F9 (con
+  `requiredModule: 'bi'`).
+- El dashboard no puede distinguir un fallo parcial de una cifra real: el BE
+  silencia los errores de sus subconsultas y no emite `metadata.partial`.
+- La política de costo del BE excluye del costo las líneas sin costo registrado
+  (su revenue sí suma), y las unidades sin conversión quedan fuera de
+  `units_sold`: los importes de beneficio pueden estar sobreestimados y las
+  unidades subestimadas. Se documenta en pantalla; corregirlo exige cambiar el
+  contrato de costos/unidades.
+- `/profitability/overview` y `/overview/date-range` no se consumen (el
+  dashboard consolidado los reemplaza); `OverviewWithComparison` sigue sin
+  handler.
+- El resumen de productos/clientes ya es consistente con el overview, pero el
+  dashboard sigue silenciando errores de subconsulta (ver arriba).
+- Sin pantalla de comparación custom de períodos para rentabilidad: fuera del
+  alcance de F6 (4 períodos estándar).

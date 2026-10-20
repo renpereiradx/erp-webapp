@@ -213,6 +213,47 @@ export const buildNavigation = (
                 },
               ],
             },
+            // F6 — grupo completo de Rentabilidad (6 pantallas). Todas usan
+            // `analytics:read`, igual que `biChain("analytics:read",
+            // "profitability")`.
+            {
+              name: t('nav.profitability', 'Rentabilidad'),
+              href: '#',
+              icon: Coins,
+              permission: 'analytics:read',
+              children: [
+                {
+                  name: t('nav.profitabilityDashboard', 'Dashboard de Rentabilidad'),
+                  href: '/profitability/dashboard',
+                  icon: LayoutDashboard,
+                },
+                {
+                  name: t('nav.profitabilityProducts', 'Productos'),
+                  href: '/profitability/products',
+                  icon: Package,
+                },
+                {
+                  name: t('nav.profitabilityCustomers', 'Clientes'),
+                  href: '/profitability/customers',
+                  icon: Users,
+                },
+                {
+                  name: t('nav.profitabilityCategories', 'Categorías'),
+                  href: '/profitability/categories',
+                  icon: Tags,
+                },
+                {
+                  name: t('nav.profitabilityTrends', 'Tendencias'),
+                  href: '/profitability/trends',
+                  icon: TrendingUp,
+                },
+                {
+                  name: t('nav.profitabilitySellers', 'Vendedores'),
+                  href: '/profitability/sellers',
+                  icon: Award,
+                },
+              ],
+            },
           ],
         },
       ]

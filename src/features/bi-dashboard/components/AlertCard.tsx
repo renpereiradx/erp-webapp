@@ -16,13 +16,16 @@ const CATEGORY_LABELS: Record<string, string> = {
 const MAX_PRODUCTS = 5
 
 /**
- * Rutas de alerta que YA existen en el router. F5 re-activa la de inventario
- * (`/inventory-analytics/stock-levels`); `/profitability/*` (F6) y
- * `/receivables/overdue` (F7) siguen fuera hasta que su pantalla exista. Un
- * botón "Gestionar" que cae en 404 es la affordance muerta de la auditoría
- * 2026-09.
+ * Rutas de alerta que YA existen en el router. F5 re-activó inventario
+ * (`/inventory-analytics/stock-levels`) y F6 el margen negativo
+ * (`/profitability/products`); `/receivables/overdue` (F7) sigue fuera hasta
+ * que su pantalla exista. Un botón "Gestionar" que cae en 404 es la
+ * affordance muerta de la auditoría 2026-09.
  */
-const ACTIONABLE_ALERT_ROUTES = new Set(['/inventory-analytics/stock-levels'])
+const ACTIONABLE_ALERT_ROUTES = new Set([
+  '/inventory-analytics/stock-levels',
+  '/profitability/products',
+])
 
 /**
  * Tarjeta de alerta. Título y mensaje son datos del servidor (no se traducen).

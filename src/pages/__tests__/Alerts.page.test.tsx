@@ -3,7 +3,7 @@
  * client-side y detalle real (count/total/products). Cierra las affordances
  * muertas de la auditoría 2026-09: sin "Marcar leído", "Silenciar" ni "Ver
  * Reporte"; "Gestionar" solo aparece para destinos que existen (F5 re-activó
- * el de stock-levels).
+ * stock-levels y F6 /profitability/products).
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
@@ -121,6 +121,34 @@ describe('AlertsPage (F2)', () => {
     expect(screen.getByText('Afectados: 13')).toBeInTheDocument()
     expect(screen.getByText('Saldo pendiente: Gs. 1.917.772')).toBeInTheDocument()
     expect(screen.getByText('CAMISETA ADIDAS')).toBeInTheDocument()
+  })
+
+  it('re-activa "Gestionar" de margen negativo hacia /profitability/products (F6)', async () => {
+    vi.mocked(dashboardService.getAlerts).mockResolvedValue(
+      envelope({
+        alerts: [
+          {
+            id: 'alert_negative_margin_1',
+            category: 'financial',
+            severity: 'warning',
+            title: 'Margen negativo',
+            message: '2 productos venden por debajo del costo',
+            details: { count: 2 },
+            action_url: '/profitability/products',
+            created_at: '2026-10-20T12:00:00Z',
+          },
+        ],
+        summary: {
+          total: 1,
+          by_severity: { warning: 1 },
+          by_category: { financial: 1 },
+        },
+      }) as never,
+    )
+    renderPage()
+
+    const link = await screen.findByRole('link', { name: 'Gestionar' })
+    expect(link).toHaveAttribute('href', '/profitability/products')
   })
 
   it('solo enlaza "Gestionar" cuando el destino existe (stock-levels de F5)', async () => {

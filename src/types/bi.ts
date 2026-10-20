@@ -1229,3 +1229,344 @@ export interface InventoryAnalyticsDashboard {
   abc_summary: ABCSummary;
   alerts: InventoryAlert[] | null;
 }
+
+// --- Rentabilidad (F6) ------------------------------------------------------
+
+/** Período devuelto por el BE (`ReportPeriod`); `end_date` es exclusivo. */
+export interface ProfitabilityReportPeriod {
+  start_date: string;
+  end_date: string;
+  type?: string;
+}
+
+export interface ProfitabilitySummary {
+  total_revenue: number;
+  total_cost: number;
+  gross_profit: number;
+  /** El BE no modela gastos operativos: espeja gross_profit. */
+  operating_expenses: number;
+  /** El BE no modela gastos operativos: espeja gross_profit. */
+  operating_profit: number;
+  /** El BE no modela gastos operativos: espeja gross_profit. */
+  net_profit: number;
+  total_transactions: number;
+  total_units_sold: number;
+  average_ticket: number;
+  profit_per_unit: number;
+}
+
+export interface ProfitabilityMargins {
+  gross_margin_pct: number;
+  /** = gross_margin_pct (sin gastos operativos). */
+  operating_margin_pct: number;
+  /** = gross_margin_pct (sin gastos operativos). */
+  net_margin_pct: number;
+  average_markup: number;
+  roi: number;
+  /** = gross_profit (no es un margen de contribución calculado). */
+  contribution_margin: number;
+}
+
+export interface ProfitabilityComparison {
+  previous_period: ProfitabilityReportPeriod;
+  revenue_change: number;
+  revenue_change_pct: number;
+  gross_profit_change: number;
+  gross_profit_change_pct: number;
+  net_profit_change: number;
+  net_profit_change_pct: number;
+  /** Diferencia en puntos porcentuales entre ambos márgenes brutos. */
+  margin_change: number;
+}
+
+export interface ProfitabilityOverview {
+  generated_at: string;
+  period: ProfitabilityReportPeriod;
+  summary: ProfitabilitySummary;
+  margins: ProfitabilityMargins;
+  comparison?: ProfitabilityComparison | null;
+}
+
+/** Whitelist real de `sort_by` de `/profitability/products`. */
+export type ProfitabilityProductSortBy =
+  | 'profit'
+  | 'margin'
+  | 'revenue'
+  | 'units'
+  | 'name';
+
+export interface ProfitabilitySortOrder {
+  by: ProfitabilityProductSortBy;
+  order: 'ASC' | 'DESC';
+}
+
+export interface ProfitabilityPageParams {
+  period?: DashboardPeriod;
+  page?: number;
+  page_size?: number;
+}
+
+export interface ProfitabilityProductParams extends ProfitabilityPageParams {
+  sort_by?: ProfitabilityProductSortBy;
+  sort_order?: 'ASC' | 'DESC';
+}
+
+export interface ProfitabilityGranularityParams {
+  period?: DashboardPeriod;
+  granularity?: ProfitabilityTrendGranularity;
+}
+
+export type ProfitabilityTrendGranularity = 'daily' | 'weekly' | 'monthly';
+
+export interface ProfitabilityReportPagination {
+  page: number;
+  page_size: number;
+  total_items: number;
+  total_pages: number;
+}
+
+/** Campos de `ProductDimension` que el reporte de productos embebe. */
+export interface ProfitabilityProductDimension {
+  brand_id?: number | null;
+  brand_name?: string | null;
+  tags?: string[] | null;
+}
+
+export interface ProductProfitabilityRow extends ProfitabilityProductDimension {
+  product_id: string;
+  product_name: string;
+  /** El SQL devuelve '' (no calcula SKU): no se muestra. */
+  sku: string;
+  category_id: string;
+  category_name: string;
+  units_sold: number;
+  revenue: number;
+  cost: number;
+  gross_profit: number;
+  gross_margin_pct: number;
+  average_price: number;
+  average_cost: number;
+  markup: number;
+  contribution_pct: number;
+  profit_per_unit: number;
+  /** Rank por beneficio, no por el orden solicitado. */
+  rank: number;
+  /** EXCELLENT | GOOD | AVERAGE | POOR | LOSS (umbrales 40/25/10/0). */
+  performance: string;
+}
+
+export interface ProductProfitabilitySummary {
+  total_products: number;
+  profitable_products: number;
+  unprofitable_products: number;
+  /** Promedio simple de los márgenes por producto, no un margen ponderado. */
+  average_margin: number;
+  total_profit: number;
+  total_revenue: number;
+}
+
+export interface ProductProfitabilityReport {
+  generated_at: string;
+  period: ProfitabilityReportPeriod;
+  summary: ProductProfitabilitySummary;
+  products: ProductProfitabilityRow[] | null;
+  top_profitable: ProductProfitabilityRow[] | null;
+  /** Nunca se completa. */
+  low_profitable: ProductProfitabilityRow[] | null;
+  losers: ProductProfitabilityRow[] | null;
+  pagination: ProfitabilityReportPagination;
+}
+
+export interface CustomerProfitabilityRow {
+  customer_id: string;
+  customer_name: string;
+  /** Constante 'REGULAR' en el SQL: no se muestra. */
+  customer_type: string;
+  total_purchases: number;
+  total_revenue: number;
+  total_cost: number;
+  gross_profit: number;
+  gross_margin_pct: number;
+  average_ticket: number;
+  average_profit_per_tx: number;
+  contribution_pct: number;
+  first_purchase: string;
+  last_purchase: string;
+  /** El SQL lo calculaba con EXTRACT(DAY): la UI lo deriva de last_purchase. */
+  days_since_last_purchase: number;
+  /** PLATINUM | GOLD | SILVER | BRONZE (participación sobre el beneficio). */
+  segment: string;
+  rank: number;
+}
+
+export interface CustomerProfitabilitySummary {
+  total_customers: number;
+  /** Igual a total_customers: el SQL los asigna en la misma línea. */
+  active_customers: number;
+  profitable_customers: number;
+  average_customer_value: number;
+  total_profit: number;
+  /** Nunca se calcula (viaja 0): no se muestra. */
+  top_customers_pct: number;
+}
+
+export interface CustomerProfitabilityReport {
+  generated_at: string;
+  period: ProfitabilityReportPeriod;
+  summary: CustomerProfitabilitySummary;
+  customers: CustomerProfitabilityRow[] | null;
+  /** Copia de las primeras 5 filas de la página, no un ranking aparte. */
+  top_customers: CustomerProfitabilityRow[] | null;
+  /** Nunca se completa. */
+  at_risk_customers: CustomerProfitabilityRow[] | null;
+  pagination: ProfitabilityReportPagination;
+}
+
+export interface CategoryProfitabilityRow {
+  category_id: string;
+  category_name: string;
+  product_count: number;
+  units_sold: number;
+  revenue: number;
+  cost: number;
+  gross_profit: number;
+  gross_margin_pct: number;
+  /** = profit_share (copia del SQL). */
+  contribution_pct: number;
+  average_markup: number;
+  revenue_share: number;
+  profit_share: number;
+  /** EXCELLENT | GOOD | AVERAGE | POOR (umbrales 40/25/10). */
+  performance: string;
+  rank: number;
+}
+
+export interface CategoryProfitabilitySummary {
+  total_categories: number;
+  most_profitable_id: string;
+  most_profitable_name: string;
+  least_profitable_id: string;
+  least_profitable_name: string;
+  /** Promedio simple de los márgenes por categoría. */
+  average_margin: number;
+  total_profit: number;
+}
+
+export interface CategoryProfitabilityReport {
+  generated_at: string;
+  period: ProfitabilityReportPeriod;
+  summary: CategoryProfitabilitySummary;
+  categories: CategoryProfitabilityRow[] | null;
+}
+
+export interface ProfitabilityTrendPoint {
+  date: string;
+  /** Etiqueta del servidor en inglés (to_char): la UI la deriva del `date`. */
+  label: string;
+  revenue: number;
+  cost: number;
+  gross_profit: number;
+  gross_margin_pct: number;
+  /** = gross_profit (sin gastos operativos). */
+  net_profit: number;
+  /** = gross_margin_pct (sin gastos operativos). */
+  net_margin_pct: number;
+  transactions: number;
+  units_sold: number;
+}
+
+export interface ProfitabilityTrendsSummary {
+  average_revenue: number;
+  average_profit: number;
+  /** Promedio simple de los márgenes de los puntos. */
+  average_margin: number;
+  /** Etiqueta del servidor en inglés; la UI re-deriva la fecha. */
+  highest_revenue_date: string;
+  highest_profit_date: string;
+  lowest_margin_date: string;
+  trend_direction: string;
+  growth_rate: number;
+}
+
+export interface ProfitabilityTrendsReport {
+  generated_at: string;
+  period: ProfitabilityReportPeriod;
+  granularity: string;
+  data_points: ProfitabilityTrendPoint[] | null;
+  summary: ProfitabilityTrendsSummary;
+}
+
+export interface SellerProfitabilityRow {
+  seller_id: string;
+  seller_name: string;
+  total_sales: number;
+  total_revenue: number;
+  total_cost: number;
+  gross_profit: number;
+  gross_margin_pct: number;
+  average_ticket: number;
+  contribution_pct: number;
+  rank: number;
+}
+
+export interface SellerProfitabilitySummary {
+  total_sellers: number;
+  total_profit: number;
+  average_profit_per_seller: number;
+  top_seller_id: string;
+  top_seller_name: string;
+}
+
+export interface SellerProfitabilityReport {
+  generated_at: string;
+  period: ProfitabilityReportPeriod;
+  summary: SellerProfitabilitySummary;
+  sellers: SellerProfitabilityRow[] | null;
+}
+
+export interface ProfitabilityKPIs {
+  total_revenue: number;
+  total_profit: number;
+  gross_margin_pct: number;
+  /** = gross_margin_pct (sin gastos operativos). */
+  net_margin_pct: number;
+  roi: number;
+  profit_per_transaction: number;
+  revenue_growth: number;
+  profit_growth: number;
+  /** Diferencia en puntos porcentuales contra la ventana previa. */
+  margin_change: number;
+}
+
+export interface ProfitabilityAlert {
+  /** LOW_MARGIN | DECLINING_PROFIT | UNPROFITABLE_PRODUCTS | PROFIT_GROWTH. */
+  type: string;
+  category: string;
+  /** Texto en español del servidor: la UI usa claves i18n por tipo. */
+  message: string;
+  value: number;
+  threshold: number;
+  severity: string;
+  product_id?: string;
+  product_name?: string;
+}
+
+export interface ProfitabilityDashboard {
+  generated_at: string;
+  period: ProfitabilityReportPeriod;
+  kpis: ProfitabilityKPIs;
+  top_products: ProductProfitabilityRow[] | null;
+  top_customers: CustomerProfitabilityRow[] | null;
+  top_categories: CategoryProfitabilityRow[] | null;
+  /** Últimos 7 puntos (o todos si hay menos). */
+  trends: ProfitabilityTrendPoint[] | null;
+  /** Nunca se completa (0/''): no se muestra. */
+  break_even_status: {
+    status: string;
+    revenue_above_break_even: number;
+    units_above_break_even: number;
+    days_to_break_even: number;
+    projected_month_end: number;
+  };
+  alerts: ProfitabilityAlert[] | null;
+}

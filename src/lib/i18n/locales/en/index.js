@@ -29,6 +29,7 @@ import { dashboard } from './dashboard'
 import { relationalAnalytics } from './relationalAnalytics'
 import { salesAnalytics } from './salesAnalytics'
 import { inventoryAnalytics } from './inventoryAnalytics'
+import { profitability } from './profitability'
 import { es } from '../es/index'
 
 /**
@@ -77,4 +78,5 @@ export const en = {
   ...relationalAnalytics,
   ...salesAnalytics,
   ...inventoryAnalytics,
+  ...profitability,
 }

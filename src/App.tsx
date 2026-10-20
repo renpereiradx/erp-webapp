@@ -50,6 +50,13 @@ const InventoryDashboardPage = lazy(() => import('@/pages/inventory-analytics/In
 const TurnoverAbcPage = lazy(() => import('@/pages/inventory-analytics/TurnoverAbcPage'))
 const StockLevelsPage = lazy(() => import('@/pages/inventory-analytics/StockLevelsPage'))
 const InventoryRiskPage = lazy(() => import('@/pages/inventory-analytics/InventoryRiskPage'))
+// PLAN_REBUILD_BI_UI_FRONTEND F6: Rentabilidad (6 pantallas lazy).
+const ProfitabilityDashboardPage = lazy(() => import('@/pages/profitability/ProfitabilityDashboardPage'))
+const ProductProfitabilityPage = lazy(() => import('@/pages/profitability/ProductProfitabilityPage'))
+const CustomerProfitabilityPage = lazy(() => import('@/pages/profitability/CustomerProfitabilityPage'))
+const CategoryProfitabilityPage = lazy(() => import('@/pages/profitability/CategoryProfitabilityPage'))
+const ProfitabilityTrendsPage = lazy(() => import('@/pages/profitability/ProfitabilityTrendsPage'))
+const SellerProfitabilityPage = lazy(() => import('@/pages/profitability/SellerProfitabilityPage'))
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import { CounterOrdersPage } from '@/features/counterorders'
@@ -400,6 +407,15 @@ function AppContent() {
                       <Route path='/inventory-analytics/turnover-abc' element={<AnalyticsRoute><TurnoverAbcPage /></AnalyticsRoute>} />
                       <Route path='/inventory-analytics/stock-levels' element={<AnalyticsRoute><StockLevelsPage /></AnalyticsRoute>} />
                       <Route path='/inventory-analytics/risk' element={<AnalyticsRoute><InventoryRiskPage /></AnalyticsRoute>} />
+                      {/* PLAN_REBUILD_BI_UI_FRONTEND F6 — Rentabilidad.
+                          Las 6 rutas comparten `analytics:read`, igual que
+                          `biChain("analytics:read", "profitability")`. */}
+                      <Route path='/profitability/dashboard' element={<AnalyticsRoute><ProfitabilityDashboardPage /></AnalyticsRoute>} />
+                      <Route path='/profitability/products' element={<AnalyticsRoute><ProductProfitabilityPage /></AnalyticsRoute>} />
+                      <Route path='/profitability/customers' element={<AnalyticsRoute><CustomerProfitabilityPage /></AnalyticsRoute>} />
+                      <Route path='/profitability/categories' element={<AnalyticsRoute><CategoryProfitabilityPage /></AnalyticsRoute>} />
+                      <Route path='/profitability/trends' element={<AnalyticsRoute><ProfitabilityTrendsPage /></AnalyticsRoute>} />
+                      <Route path='/profitability/sellers' element={<AnalyticsRoute><SellerProfitabilityPage /></AnalyticsRoute>} />
                       <Route path='/finance/sifen-inutilizacion' element={
                         <PermissionGuard permission='sifen:read'>
                           <SkippedNumbersPage />
