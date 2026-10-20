@@ -74,12 +74,15 @@ export const dashboard = {
       title: 'Actividad reciente',
       subtitle: 'Últimos movimientos registrados.',
       empty: 'Sin actividad reciente.',
+      emptyDescription: 'Los movimientos de ventas, compras y pagos van a aparecer acá.',
       now: 'ahora',
+      noAmount: 'Sin importe',
       types: {
         sale: 'Venta',
         purchase: 'Compra',
         payment: 'Pago',
         adjustment: 'Ajuste',
+        other: 'Otro',
       },
     },
     alerts: {

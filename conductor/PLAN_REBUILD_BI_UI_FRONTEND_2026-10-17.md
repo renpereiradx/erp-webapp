@@ -343,10 +343,25 @@ aplicada con criterio (sin reporte en conductor salvo pedido).
 - Test de componente `OperationsPanel.test.tsx` (5 filas, valores completos, hints y semántica
   `dl`/`dt`/`dd`).
 
+### Pase UX — Actividad reciente (post-smoke)
+
+- La fila pasa de 50/50 a `lg:grid-cols-5` con **Alertas 2/5 · Actividad 3/5**: las
+  descripciones de ventas/pagos son largas y necesitan más ancho que las 2 alertas.
+- `formatActorName` (dominio) colapsa repeticiones adyacentes: el BE manda
+  `first_name + last_name` y la UI mostraba "ADMINISTRADOR ADMINISTRADOR".
+- Descripción en `text-body-md-bold`; metadata compacta tipo · actor · tiempo en una sola
+  línea con `time[dateTime]`; icono tonal por tipo (venta/compra/pago/ajuste/otro).
+- Columna de importe estable: monto en `text-title-md` o `—` con `aria-label="Sin importe"`
+  cuando el movimiento no tiene monto.
+- Mobile: grilla de 2 columnas con el importe debajo de la metadata (sin robarle ancho a la
+  descripción); `sm+` restaura la columna derecha. Verificado a 390/1440 px: 6 filas, 0
+  overflow, sin actor duplicado y 0 errores de consola.
+- Tests: `domain/dashboard/activity.test.ts` y `ActivityPanel.test.tsx`.
+
 ### Gates
 
 - `npx tsc --noEmit`: 0 errores.
-- `npx vitest --run`: 200 archivos / 1444 tests OK.
+- `npx vitest --run`: 202 archivos / 1459 tests OK.
 - `pnpm build`: OK (chunks lazy por página: `DashboardPage`, `DashboardKpisPage`,
   `SalesHeatmapPage`, `AlertsPage`, `TopProductsPage`).
 - `pnpm lint:design -- --base dev`: OK (código nuevo limpio; legacy fuera del diff no bloquea).

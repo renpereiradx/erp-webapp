@@ -123,14 +123,18 @@ const DashboardPage = () => {
             </DashboardSection>
           </div>
 
-          <div className="grid gap-xl lg:grid-cols-2">
-            <AlertsPreview
-              alerts={alertsQuery.data?.alerts ?? []}
-              isLoading={alertsQuery.isLoading}
-              error={alertsQuery.error}
-              onRetry={() => void alertsQuery.refetch()}
-            />
-            {activitySection}
+          {/* Alerts 2/5 · Actividad 3/5: la actividad tiene descripciones
+              largas y necesita más ancho que las 2 alertas. */}
+          <div className="grid gap-xl lg:grid-cols-5">
+            <div className="min-w-0 lg:col-span-2">
+              <AlertsPreview
+                alerts={alertsQuery.data?.alerts ?? []}
+                isLoading={alertsQuery.isLoading}
+                error={alertsQuery.error}
+                onRetry={() => void alertsQuery.refetch()}
+              />
+            </div>
+            <div className="min-w-0 lg:col-span-3">{activitySection}</div>
           </div>
 
           <TopProductsPreview
