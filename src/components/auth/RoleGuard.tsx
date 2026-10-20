@@ -73,8 +73,8 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
             <Button variant="outline" onClick={() => navigate(-1)}>
               {t('roleGuard.goBack', 'Regresar')}
             </Button>
-            <Button onClick={() => navigate('/dashboard')}>
-              {t('roleGuard.goDashboard', 'Ir al Dashboard')}
+            <Button onClick={() => navigate('/pedidos')}>
+              {t('roleGuard.goOrders', 'Ir a Pedidos')}
             </Button>
           </div>
         </div>

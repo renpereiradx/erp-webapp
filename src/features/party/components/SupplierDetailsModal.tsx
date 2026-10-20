@@ -1,6 +1,4 @@
-import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
-import { ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import EnhancedModal from '@/components/ui/EnhancedModal';
@@ -32,8 +30,8 @@ const formatDateTime = (value?: string, locale = 'es-MX') => {
 };
 
 /**
- * Contenido interno: se monta SOLO con el modal abierto (sin hooks de Router,
- * pero el patrón mantiene el DOM liviano y el foco fresco por apertura).
+ * Contenido interno: se monta SOLO con el modal abierto (el patrón mantiene
+ * el DOM liviano y el foco fresco por apertura).
  */
 const SupplierDetailsContent = ({
   supplier,
@@ -43,7 +41,6 @@ const SupplierDetailsContent = ({
   onClose: () => void;
 }) => {
   const { t, lang } = useI18n();
-  const navigate = useNavigate();
   const contact = supplier.contact || {};
   const isActive = supplier.status !== false;
 
@@ -77,17 +74,6 @@ const SupplierDetailsContent = ({
         <div className="flex justify-center gap-sm">
           <Button variant="secondary" type="button" onClick={onClose}>
             {t('action.close', 'Cerrar')}
-          </Button>
-          <Button
-            variant="primary"
-            type="button"
-            onClick={() => {
-              onClose();
-              navigate(`/purchase-analytics/suppliers/top-products?supplier_id=${encodeURIComponent(supplier.id ?? '')}`);
-            }}
-          >
-            <ExternalLink className="size-4 mr-xs" />
-            {t('bi.relational.action.supplierTop', 'Productos suministrados')}
           </Button>
         </div>
       }

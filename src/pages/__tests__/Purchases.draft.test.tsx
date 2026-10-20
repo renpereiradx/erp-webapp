@@ -143,11 +143,6 @@ vi.mock('@/contexts/AuthContext', () => ({
 vi.mock('@/contexts/BranchContext', () => ({
   useBranch: () => ({ currentBranchId: 1 }),
 }))
-vi.mock('@/store/useDashboardStore', () => ({
-  default: (sel?: (s: Record<string, unknown>) => unknown) =>
-    sel ? sel({ fetchDashboardData: vi.fn() }) : { fetchDashboardData: vi.fn() },
-}))
-
 vi.mock('@/services/supplierService', () => ({
   default: { searchByName: vi.fn().mockResolvedValue([]) },
 }))

@@ -1,6 +1,8 @@
 /**
- * PLAN_BI_PACK_PREMIUM F3 — landing (ADR-6) y gate de ruta del pack BI, con
- * los tres perfiles del riesgo R7 del plan: admin+BI, admin sin BI, vendedor.
+ * PLAN_REBUILD_BI_UI_FRONTEND F1 — HomeRedirect aterriza en /pedidos para
+ * todos los perfiles mientras no existan rutas BI. F2 restaura /dashboard y
+ * la regla de entitlement (ADR-6). BiModuleRoute es infraestructura Core del
+ * pack y se conserva para F2+.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
@@ -27,41 +29,33 @@ const renderAt = (ui: React.ReactElement) =>
     <MemoryRouter initialEntries={['/']}>
       <Routes>
         <Route path='/' element={ui} />
-        <Route path='/dashboard' element={<div>LANDING_DASHBOARD</div>} />
         <Route path='/pedidos' element={<div>LANDING_PEDIDOS</div>} />
       </Routes>
     </MemoryRouter>,
   )
 
-describe('HomeRedirect (ADR-6)', () => {
+describe('HomeRedirect (F1 teardown window)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    authState.hasPermission.mockImplementation(
-      (p: string) => p === 'dashboard:read' || p === 'sales:write',
-    )
+    authState.hasPermission.mockImplementation(() => true)
     authState.hasEntitlement.mockImplementation(() => true)
   })
 
-  it('admin con dashboard:read y pack BI → /dashboard', () => {
+  it('admin con dashboard:read y pack BI → /pedidos', () => {
     renderAt(<HomeRedirect />)
-    expect(screen.getByText('LANDING_DASHBOARD')).toBeTruthy()
+    expect(screen.getByText('LANDING_PEDIDOS')).toBeTruthy()
   })
 
-  it('admin con dashboard:read pero SIN pack BI → /pedidos (ERP Core)', () => {
+  it('admin sin pack BI → /pedidos (ERP Core)', () => {
     authState.hasEntitlement.mockImplementation(() => false)
     renderAt(<HomeRedirect />)
     expect(screen.getByText('LANDING_PEDIDOS')).toBeTruthy()
   })
 
-  it('vendedor sin dashboard:read → /pedidos (aunque haya pack BI)', () => {
+  it('vendedor sin dashboard:read → /pedidos', () => {
     authState.hasPermission.mockImplementation(() => false)
     renderAt(<HomeRedirect />)
     expect(screen.getByText('LANDING_PEDIDOS')).toBeTruthy()
-  })
-
-  it('fail-open: sin entitlements cargados (hasEntitlement true) mantiene /dashboard', () => {
-    renderAt(<HomeRedirect />)
-    expect(screen.getByText('LANDING_DASHBOARD')).toBeTruthy()
   })
 })
 

@@ -1,29 +1,12 @@
 import {
   Settings,
-  User,
   Shield,
-  FileText,
-  Clock,
   CalendarCheck,
   TrendingUp,
-  PackagePlus,
   ClipboardList,
   History,
   PlusCircle,
   Users,
-  Flame,
-  AlertTriangle,
-  Award,
-  PieChart,
-  List,
-  Package,
-  UserCheck,
-  LayoutDashboard,
-  BarChart3,
-  SlidersHorizontal,
-  Activity,
-  Zap,
-  BarChart
 } from 'lucide-react'
 
 /**
@@ -31,42 +14,6 @@ import {
  * Estructura compatible con el sistema de navegación de MainLayout
  */
 export const distinctSearchableRoutes = [
-  // Cuentas por Cobrar (Receivables) - Detalle y Reportes específicos
-  {
-    name: 'Lista Maestra de Facturas (Cuentas por Cobrar)',
-    href: '/receivables/list',
-    icon: List,
-    category: 'Finanzas / Cobros'
-  },
-  {
-    name: 'Detalle de Factura e Historial de Pagos',
-    href: '/receivables/list',
-    icon: History,
-    category: 'Finanzas / Cobros'
-  },
-
-  // Cuentas por Pagar (Payables)
-  {
-    name: 'Lista Maestra de Facturas',
-    href: '/payables/invoices',
-    icon: FileText,
-    category: 'Finanzas / Cuentas por Pagar'
-  },
-
-  // Reportes y Gestión Fiscal
-  {
-    name: 'Gestión de IVA, Resumen Fiscal y Formulario 120',
-    href: '/finance/tax-management',
-    icon: FileText,
-    category: 'Finanzas / Impuestos'
-  },
-  {
-    name: 'Libros Legales de Ventas y Compras (Tax Compliance)',
-    href: '/finance/legal-books',
-    icon: FileText,
-    category: 'Finanzas / Impuestos'
-  },
-  
   // Gestión de Usuarios y Perfil
   {
     name: 'Mi Perfil y Seguridad',

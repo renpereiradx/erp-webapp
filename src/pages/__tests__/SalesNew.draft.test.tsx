@@ -174,11 +174,6 @@ vi.mock('@/store/useSaleStore', () => ({
   default: (sel?: (s: typeof saleStoreState) => unknown) =>
     sel ? sel(saleStoreState) : saleStoreState,
 }))
-vi.mock('@/store/useDashboardStore', () => ({
-  default: (sel?: (s: Record<string, unknown>) => unknown) =>
-    sel ? sel({ fetchDashboardData: vi.fn() }) : { fetchDashboardData: vi.fn() },
-}))
-
 vi.mock('@/services/saleService', () => ({
   default: {
     calculateLocalTotals: () => ({

@@ -33,7 +33,6 @@ const branchContext = {
 const authContext = {
   user: { first_name: 'Ada', last_name: 'Lovelace', role_id: 'F2VLso' },
   logout: vi.fn(),
-  hasPermission: (permission: string) => permission === 'dashboard:read',
 }
 
 vi.mock('@/lib/i18n', () => ({
@@ -67,7 +66,6 @@ const renderPage = () =>
     <MemoryRouter initialEntries={['/select-branch']}>
       <Routes>
         <Route path="/select-branch" element={<BranchSelection />} />
-        <Route path="/dashboard" element={<div>dashboard</div>} />
         <Route path="/pedidos" element={<div>pedidos</div>} />
       </Routes>
     </MemoryRouter>,
@@ -113,5 +111,6 @@ describe('BranchSelection', () => {
     await userEvent.click(card)
 
     expect(mockChangeBranch).toHaveBeenCalledWith(1)
+    expect(await screen.findByText('pedidos')).toBeInTheDocument()
   })
 })

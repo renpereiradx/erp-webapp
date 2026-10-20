@@ -1,13 +1,6 @@
 import {
   Activity,
-  Percent,
-  AlertTriangle,
   ArrowLeftRight,
-  Award,
-  BarChart,
-  BarChart3,
-  BookOpen,
-  Factory,
   Building2,
   Calendar,
   CircleDollarSign,
@@ -17,12 +10,10 @@ import {
   CreditCard,
   DollarSign,
   FileText,
-  Flame,
+  Factory,
   Gauge,
-  LayoutDashboard,
   List,
   Package,
-  PieChart,
   PlusCircle,
   Printer,
   Settings,
@@ -34,9 +25,7 @@ import {
   Tags,
   TrendingUp,
   User,
-  UserCheck,
   Users,
-  Zap,
 } from 'lucide-react'
 import type { NavigationItem, TFn } from './types'
 
@@ -52,163 +41,23 @@ interface PermissionChecks {
 export const buildNavigation = (
   t: TFn,
   reservationsEnabled: boolean,
-  biEnabled: boolean = true,
+  _biEnabled: boolean = true,
 ): NavigationItem[] => [
-  // PLAN_BI_PACK_PREMIUM F3: el grupo BI entero ES el pack licenciado — sin
-  // entitlement la entrada no existe (mismo patrón que el toggle de reservas).
-  // Carve-out ADR-3: los dashboards fiscales SIFEN son Core; sin pack migran
-  // a su grupo propio (más abajo) para no quedar sin entrada de nav.
-  ...(biEnabled
-    ? [
-        {
-          name: t('common.bi', 'Inteligencia de Negocios'),
+  // PLAN_REBUILD_BI_UI_FRONTEND F1: el grupo BI completo se eliminó en la
+  // ventana de teardown; cada fase F2-F11 re-activa su grupo con su pantalla.
+  // El parámetro biEnabled se conserva para la firma que reintroducirá F2.
+  // Carve-out ADR-3: los dashboards fiscales SIFEN son Core y siempre tienen
+  // entrada propia, con o sin pack BI.
+  {
+    name: t('nav.sifenFiscalGroup', 'Fiscal (SIFEN)'),
     href: '#',
-    icon: BarChart3,
-    permission: 'analytics:read',
+    icon: Gauge,
+    permission: 'sifen:read',
     children: [
-      {
-        name: t('common.dashboard', 'Dashboard'),
-        href: '#',
-        icon: LayoutDashboard,
-        permission: 'dashboard:read',
-        children: [
-          { name: t('common.home', 'Resumen Ejecutivo'), href: '/dashboard', icon: BarChart3 },
-          { name: t('dashboard.kpis', 'KPIs y Rendimiento'), href: '/dashboard/kpis', icon: TrendingUp },
-          { name: t('dashboard.heatmap', 'Análisis de Ventas'), href: '/dashboard/sales-heatmap', icon: Flame },
-          { name: t('dashboard.alerts', 'Alertas de Negocio'), href: '/dashboard/alerts', icon: AlertTriangle },
-          { name: t('dashboard.topProducts', 'Top de Productos'), href: '/dashboard/top-products', icon: Award },
-        ],
-      },
-      {
-        name: t('nav.salesAnalytics', 'Analítica de Ventas'),
-        href: '#',
-        icon: BarChart3,
-        children: [
-          { name: t('nav.executiveDashboard', 'Dashboard Ejecutivo'), href: '/sales-analytics/dashboard', icon: LayoutDashboard },
-          { name: t('nav.productsCategories', 'Productos y Categorías'), href: '/sales-analytics/products-categories', icon: PieChart },
-          { name: t('nav.insights', 'Insights Clientes/Vend.'), href: '/sales-analytics/insights', icon: Users },
-          { name: t('nav.trendsVelocity', 'Tendencias y Velocidad'), href: '/sales-analytics/trends-velocity', icon: Zap },
-          { name: t('nav.periodComparison', 'Comparativa Períodos'), href: '/sales-analytics/period-comparison', icon: Activity },
-          { name: t('nav.salesDiscounts', 'Descuentos'), href: '/sales-analytics/discounts', icon: Percent, permission: 'reports:read' },
-          { name: t('nav.relationalBuyers', 'Compradores por Producto'), href: '/sales-analytics/products/buyers', icon: UserCheck },
-          { name: t('nav.relationalCustomerTop', 'Productos por Cliente'), href: '/sales-analytics/customers/top-products', icon: ShoppingBag },
-        ],
-      },
-      {
-        name: t('nav.purchaseAnalytics', 'Analítica de Compras'),
-        href: '#',
-        icon: ShoppingCart,
-        children: [
-          { name: t('nav.relationalSupplierTop', 'Productos Suministrados'), href: '/purchase-analytics/suppliers/top-products', icon: Package },
-          { name: t('nav.relationalProductSuppliers', 'Comparar Proveedores'), href: '/purchase-analytics/products/suppliers', icon: Tags },
-        ],
-      },
-      {
-        name: t('nav.biForecasts', 'Pronósticos BI (IA)'),
-        href: '#',
-        icon: Zap,
-        children: [
-          { name: t('nav.forecastsDashboard', 'Dashboard de Pronósticos'), href: '/bi/pronosticos/dashboard', icon: LayoutDashboard },
-          { name: t('nav.inventoryHealth', 'Salud de Inventario'), href: '/bi/pronosticos/inventario', icon: Package },
-          { name: t('nav.salesForecast', 'Pronóstico de Ventas'), href: '/bi/pronosticos/ventas', icon: TrendingUp },
-          { name: t('nav.demandForecast', 'Pronóstico de Demanda'), href: '/bi/pronosticos/demanda', icon: BarChart3 },
-          { name: t('nav.revenueScenarios', 'Escenarios de Ingresos'), href: '/bi/pronosticos/ingresos', icon: BarChart },
-        ],
-      },
-      {
-        name: t('nav.profitabilityGroup', 'Analítica de Rentabilidad'),
-        href: '#',
-        icon: BarChart3,
-        children: [
-          { name: t('nav.executiveDashboard', 'Dashboard Ejecutivo'), href: '/profitability/dashboard', icon: LayoutDashboard },
-          { name: t('nav.profitabilityByProduct', 'Rentabilidad por Producto'), href: '/profitability/products', icon: BarChart3 },
-          { name: t('nav.profitabilityByCustomer', 'Rentabilidad por Cliente'), href: '/profitability/customers', icon: Users },
-          { name: t('nav.profitabilityByCategory', 'Rentabilidad por Categoría'), href: '/profitability/categories', icon: PieChart },
-          { name: t('nav.marginTrends', 'Tendencias de Margen'), href: '/profitability/trends', icon: Zap },
-          { name: t('nav.sellerPerformance', 'Desempeño por Vendedor'), href: '/profitability/sellers', icon: UserCheck },
-        ],
-      },
-      {
-        name: t('inventory.analytics', 'Analítica de Inventario'),
-        href: '#',
-        icon: Package,
-        permission: 'analytics:read',
-        children: [
-          { name: t('inventory.analytics.dashboard', 'Dashboard de Inventario'), href: '/inventory-analytics/dashboard', icon: LayoutDashboard },
-          { name: t('inventory.analytics.turnover_abc', 'Rotación y Análisis ABC'), href: '/inventory-analytics/turnover-abc', icon: BarChart3 },
-          { name: t('inventory.analytics.stock_levels', 'Niveles de Stock'), href: '/inventory-analytics/stock-levels', icon: List },
-          { name: t('inventory.analytics.risk', 'Riesgos y Stock Muerto'), href: '/inventory-analytics/risk', icon: AlertTriangle },
-        ],
-      },
-      {
-        name: t('receivables.title', 'Cuentas por Cobrar'),
-        href: '#',
-        icon: CreditCard,
-        permission: 'receivables:read',
-        children: [
-          { name: t('receivables.summary', 'Resumen'), href: '/receivables', icon: BarChart3 },
-          { name: t('receivables.list', 'Lista de Cuentas'), href: '/receivables/list', icon: List },
-          { name: t('receivables.overdue', 'Cuentas Vencidas'), href: '/receivables/overdue', icon: AlertTriangle },
-          { name: t('receivables.agingReport', 'Reporte de Antigüedad'), href: '/receivables/aging-report', icon: ClockIcon },
-        ],
-      },
-      {
-        name: t('payables.title', 'Cuentas por Pagar'),
-        href: '#',
-        icon: CircleDollarSign,
-        permission: 'payables:read',
-        children: [
-          { name: t('payables.summary', 'Resumen Ejecutivo'), href: '/dashboard/payables', icon: BarChart3 },
-          { name: t('payables.invoices', 'Lista Maestra de Facturas'), href: '/payables/invoices', icon: FileText },
-          { name: t('payables.cashFlow', 'Proyección de Pagos y Flujo'), href: '/payables/cash-flow', icon: TrendingUp },
-          { name: t('payables.agingReport', 'Reporte de Antigüedad'), href: '/payables/aging-report', icon: ClockIcon },
-        ],
-      },
-      {
-        name: t('nav.financialReports', 'Reportes Financieros'),
-        href: '#',
-        icon: FileText,
-        permission: 'reports:read',
-        children: [
-          { name: t('nav.financialSummaryBI', 'Resumen Financiero BI'), href: '/dashboard/financial-summary', icon: TrendingUp },
-          { name: t('nav.analyticalCashFlow', 'Flujo de Efectivo Analítico'), href: '/finance/analytical-cash-flow', icon: CircleDollarSign },
-          { name: t('nav.vatManagement', 'Gestión de IVA / Fiscal'), href: '/finance/tax-management', icon: FileText },
-          { name: t('nav.sifenNumberingGaps', 'Saltos de numeración SIFEN'), href: '/finance/sifen-inutilizacion', icon: List, permission: 'sifen:read' },
-          { name: t('nav.sifenFiscalDashboard', 'Dashboard Fiscal SIFEN'), href: '/finance/sifen-ops', icon: Gauge, permission: 'sifen:read' },
-          { name: t('nav.legalBooks', 'Libros Legales (Ventas y Compras)'), href: '/finance/legal-books', icon: BookOpen },
-          { name: t('nav.profitAndLoss', 'Estado de Resultados (P&L)'), href: '/finance/profit-and-loss', icon: BarChart3 },
-        ],
-      },
-      {
-        name: t('nav.systemAudit', 'Auditoría de Sistema'),
-        href: '#',
-        icon: Shield,
-        permission: 'audit:read',
-        children: [
-          { name: t('nav.auditDashboard', 'Dashboard de Auditoría'), href: '/auditoria', icon: LayoutDashboard },
-          { name: t('nav.auditLogs', 'Registro de Logs'), href: '/auditoria/logs', icon: List },
-        ],
-      },
+      { name: t('nav.sifenFiscalDashboard', 'Dashboard Fiscal SIFEN'), href: '/finance/sifen-ops', icon: Gauge },
+      { name: t('nav.sifenNumberingGaps', 'Saltos de numeración SIFEN'), href: '/finance/sifen-inutilizacion', icon: List },
     ],
   },
-      ]
-    : []),
-  // Carve-out ADR-3 (PLAN_BI_PACK_PREMIUM): con pack los dashboards fiscales
-  // viven en Reportes Financieros (grupo BI); sin pack siguen navegables aquí.
-  ...(!biEnabled
-    ? [
-        {
-          name: t('nav.sifenFiscalGroup', 'Fiscal (SIFEN)'),
-          href: '#',
-          icon: Gauge,
-          permission: 'sifen:read',
-          children: [
-            { name: t('nav.sifenFiscalDashboard', 'Dashboard Fiscal SIFEN'), href: '/finance/sifen-ops', icon: Gauge },
-            { name: t('nav.sifenNumberingGaps', 'Saltos de numeración SIFEN'), href: '/finance/sifen-inutilizacion', icon: List },
-          ],
-        },
-      ]
-    : []),
   {
     name: t('common.commercial', 'Gestión Comercial'),
     href: '#',

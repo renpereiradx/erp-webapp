@@ -8,6 +8,7 @@ import {
   Routes,
   Route,
   Navigate,
+  Link,
 } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
@@ -21,22 +22,14 @@ import { useI18n } from '@/lib/i18n'
 // de 3.3 MB para cualquier ruta. Quedan eager solo las landings (login,
 // selección de sucursal, pedidos) y los shells; el resto se divide por
 // página y recharts cae a un vendor chunk aparte (manualChunks).
-// D4 (PLAN_ALINEACION_BI_FRONTEND 2026-09-18): /dashboard también es lazy —
-// su import eager arrastraba recharts al chunk inicial.
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 
 // --- Lazy: una chunk por página/feature ---
-const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const SalesNew = lazy(() => import('@/pages/SalesNew'))
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import { CounterOrdersPage } from '@/features/counterorders'
 
-const FinancialSummaryDashboard = lazy(() => import('@/pages/FinancialSummaryDashboard'))
-const DetailedKPIs = lazy(() => import('@/pages/DetailedKPIs'))
-const SalesHeatmap = lazy(() => import('@/pages/SalesHeatmap'))
-const ConsolidatedAlerts = lazy(() => import('@/pages/ConsolidatedAlerts'))
-const TopProductsOverview = lazy(() => import('@/pages/TopProductsOverview'))
 const Products = lazy(() => import('@/pages/Products'))
 const PartiesPage = lazy(() => import('@/pages/PartiesPage'))
 const BudgetManagement = lazy(() => import('@/pages/BudgetManagement'))
@@ -84,54 +77,9 @@ const CatalogBoard = lazy(() => import('@/features/catalog').then((m) => ({ defa
 const UserManagementList = lazy(() => import('@/pages/UserManagementList.tsx'))
 const UserDetailedProfile = lazy(() => import('@/pages/UserDetailedProfile.tsx'))
 const MyProfileAndSecurity = lazy(() => import('@/pages/MyProfileAndSecurity.tsx'))
-const AuditDashboard = lazy(() => import('@/pages/AuditDashboard'))
-const AuditLogs = lazy(() => import('@/pages/AuditLogs'))
-const AuditLogDetail = lazy(() => import('@/pages/AuditLogDetail'))
-const AuditUserActivity = lazy(() => import('@/pages/AuditUserActivity.tsx'))
-const ReceivablesDashboard = lazy(() => import('@/pages/ReceivablesDashboard'))
-const PayablesDashboard = lazy(() => import('@/pages/PayablesDashboard'))
-const PayablesAgingReport = lazy(() => import('@/pages/PayablesAgingReport'))
-const ReceivablesMasterList = lazy(() => import('@/pages/ReceivablesMasterList'))
-const InvoicesMasterList = lazy(() => import('@/pages/InvoicesMasterList'))
-const InvoiceDetail = lazy(() => import('@/pages/InvoiceDetail'))
-const CashFlowProjection = lazy(() => import('@/pages/CashFlowProjection'))
-const CashFlowAnalysisDashboard = lazy(() => import('@/pages/CashFlowAnalysisDashboard'))
-const TaxManagementDashboard = lazy(() => import('@/pages/TaxManagementDashboard'))
 const SkippedNumbersPage = lazy(() => import('@/features/fiscal/pages/SkippedNumbersPage'))
 const FiscalOpsDashboard = lazy(() => import('@/features/fiscal/pages/FiscalOpsDashboard'))
-const SupplierAnalysis = lazy(() => import('@/pages/SupplierAnalysis'))
-const ReceivableDetail = lazy(() => import('@/pages/ReceivableDetail'))
-const OverdueAccounts = lazy(() => import('@/pages/OverdueAccounts'))
-const ClientCreditProfile = lazy(() => import('@/pages/ClientCreditProfile'))
-const AgingReport = lazy(() => import('@/pages/AgingReport'))
-const ProfitAndLoss = lazy(() => import('@/pages/ProfitAndLoss'))
-const LegalBooks = lazy(() => import('@/pages/LegalBooks'))
 const AdminSessionsDashboard = lazy(() => import('@/pages/AdminSessionsDashboard.tsx'))
-const ProfitabilityDashboard = lazy(() => import('@/features/profitability').then((m) => ({ default: m.ProfitabilityDashboard })))
-const ProductProfitability = lazy(() => import('@/features/profitability').then((m) => ({ default: m.ProductProfitability })))
-const CustomerProfitability = lazy(() => import('@/features/profitability').then((m) => ({ default: m.CustomerProfitability })))
-const CategoryProfitability = lazy(() => import('@/features/profitability').then((m) => ({ default: m.CategoryProfitability })))
-const ProfitabilityTrends = lazy(() => import('@/features/profitability').then((m) => ({ default: m.ProfitabilityTrends })))
-const SellerProfitability = lazy(() => import('@/features/profitability').then((m) => ({ default: m.SellerProfitability })))
-const DashboardPronosticos = lazy(() => import('@/features/bi-forecasting').then((m) => ({ default: m.DashboardPronosticos })))
-const SaludInventario = lazy(() => import('@/features/bi-forecasting').then((m) => ({ default: m.SaludInventario })))
-const PronosticoVentas = lazy(() => import('@/features/bi-forecasting').then((m) => ({ default: m.PronosticoVentas })))
-const PronosticoDemanda = lazy(() => import('@/features/bi-forecasting').then((m) => ({ default: m.PronosticoDemanda })))
-const PronosticoIngresos = lazy(() => import('@/features/bi-forecasting').then((m) => ({ default: m.PronosticoIngresos })))
-const SalesAnalyticsDashboard = lazy(() => import('@/pages/sales-analytics/Dashboard'))
-const SalesAnalyticsProductsCategories = lazy(() => import('@/pages/sales-analytics/ProductsCategories'))
-const SalesAnalyticsInsights = lazy(() => import('@/pages/sales-analytics/CustomerSellerInsights'))
-const SalesAnalyticsTrendsVelocity = lazy(() => import('@/pages/sales-analytics/TrendsVelocity'))
-const SalesAnalyticsPeriodComparison = lazy(() => import('@/pages/sales-analytics/PeriodComparison'))
-const SalesAnalyticsDiscounts = lazy(() => import('@/pages/sales-analytics/Discounts'))
-const ProductBuyersPage = lazy(() => import('@/pages/sales-analytics/ProductBuyersPage'))
-const CustomerTopProductsPage = lazy(() => import('@/pages/sales-analytics/CustomerTopProductsPage'))
-const SupplierTopProductsPage = lazy(() => import('@/pages/purchase-analytics/SupplierTopProductsPage'))
-const ProductSuppliersPage = lazy(() => import('@/pages/purchase-analytics/ProductSuppliersPage'))
-const InventoryTurnoverABC = lazy(() => import('@/pages/InventoryAnalytics/InventoryTurnoverABC'))
-const InventoryDashboard = lazy(() => import('@/pages/InventoryAnalytics/InventoryDashboard'))
-const StockLevelsReorder = lazy(() => import('@/pages/InventoryAnalytics/StockLevelsReorder'))
-const InventoryRisk = lazy(() => import('@/pages/InventoryAnalytics/InventoryRisk'))
 import { AuthProvider, useAuth } from '@/contexts/AuthContext.tsx'
 import { BranchProvider, useBranch } from '@/contexts/BranchContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
@@ -182,7 +130,7 @@ const ProtectedRoute = ({ children }) => {
 }
 
 // Gate de ruta del módulo de reservas (PLAN_SERVICIOS_Y_RESERVAS_CONFIGURABLES
-// S3): con el toggle del negocio en off, /gestion-agenda redirige al dashboard
+// S3): con el toggle del negocio en off, /gestion-agenda redirige a /pedidos
 // con un aviso. Fail-open (D-SR-5): solo un `false` explícito bloquea.
 const ReservationsModuleRoute = ({ children }: { children: React.ReactNode }) => {
   const { t } = useI18n()
@@ -201,32 +149,16 @@ const ReservationsModuleRoute = ({ children }: { children: React.ReactNode }) =>
   }, [reservationsEnabled, t])
 
   if (!reservationsEnabled) {
-    return <Navigate to='/dashboard' replace />
+    return <Navigate to='/pedidos' replace />
   }
   return <>{children}</>
 }
 
-// HomeRedirect y BiModuleRoute viven en components/auth (testables, F3);
-// BiPermissionGuard compone licencia (fuera) + permiso (dentro) — el mismo
-// orden que la cadena BE (RequireModule → RequireModulePermission).
+// HomeRedirect vive en components/auth (testable, F3). Durante la ventana F1
+// del PLAN_REBUILD_BI_UI_FRONTEND aterriza siempre en /pedidos: no hay rutas
+// BI hasta que cada fase re-active su pantalla. BiModuleRoute (infra Core del
+// pack) se conserva en components/auth para F2+.
 import HomeRedirect from '@/components/auth/HomeRedirect'
-import BiModuleRoute from '@/components/auth/BiModuleRoute'
-const BiPermissionGuard = ({
-  permission,
-  children,
-}: {
-  permission: string
-  children: React.ReactNode
-}) => (
-  <BiModuleRoute>
-    <PermissionGuard permission={permission}>{children}</PermissionGuard>
-  </BiModuleRoute>
-)
-
-/** Guard del módulo dashboard (dashboard:read + pack BI; el sidebar ya lo gated). */
-const DashboardRoute = ({ children }: { children: React.ReactNode }) => (
-  <BiPermissionGuard permission='dashboard:read'>{children}</BiPermissionGuard>
-)
 
 function AppContent() {
   const { isAuthenticated, loading, refreshEntitlements } = useAuth()
@@ -374,55 +306,11 @@ function AppContent() {
                     {/* H1: todas las rutas internas son lazy — fallback único */}
                     <Suspense fallback={<PageLoader />}>
                     <Routes>
-                      {/* Ruta por defecto - Dashboard */}
+                      {/* Ruta por defecto */}
                       <Route
                         path='/'
                         element={<HomeRedirect />}
                       />
-                      <Route path='/dashboard' element={<DashboardRoute><Dashboard /></DashboardRoute>} />
-                      <Route path='/dashboard/financial-summary' element={<DashboardRoute><FinancialSummaryDashboard /></DashboardRoute>} />
-                      <Route path='/dashboard/kpis' element={<DashboardRoute><DetailedKPIs /></DashboardRoute>} />
-                      <Route path='/dashboard/sales-heatmap' element={<DashboardRoute><SalesHeatmap /></DashboardRoute>} />
-                      <Route path='/dashboard/alerts' element={<DashboardRoute><ConsolidatedAlerts /></DashboardRoute>} />
-                      <Route path='/dashboard/top-products' element={<DashboardRoute><TopProductsOverview /></DashboardRoute>} />
-                      {/* D3 (PLAN_ALINEACION_BI_FRONTEND): contenido CxC — mismo
-                          guard receivables:read que /receivables (sin redirect). */}
-                      <Route path='/dashboard/receivables' element={
-                        <BiPermissionGuard permission='receivables:read'>
-                          <ReceivablesDashboard />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/dashboard/payables' element={<DashboardRoute><PayablesDashboard /></DashboardRoute>} />
-                      <Route path='/payables/invoices' element={
-                        <BiPermissionGuard permission='payables:read'>
-                          <InvoicesMasterList />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/payables/detail/:id' element={
-                        <BiPermissionGuard permission='payables:read'>
-                          <InvoiceDetail />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/payables/cash-flow' element={
-                        <BiPermissionGuard permission='payables:read'>
-                          <CashFlowProjection />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/payables/aging-report' element={
-                        <BiPermissionGuard permission='payables:read'>
-                          <PayablesAgingReport />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/finance/analytical-cash-flow' element={
-                        <BiPermissionGuard permission='reports:read'>
-                          <CashFlowAnalysisDashboard />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/finance/tax-management' element={
-                        <BiPermissionGuard permission='reports:read'>
-                          <TaxManagementDashboard />
-                        </BiPermissionGuard>
-                      } />
                       <Route path='/finance/sifen-inutilizacion' element={
                         <PermissionGuard permission='sifen:read'>
                           <SkippedNumbersPage />
@@ -433,178 +321,10 @@ function AppContent() {
                           <FiscalOpsDashboard />
                         </PermissionGuard>
                       } />
-                      <Route path='/finance/profit-and-loss' element={
-                        <BiPermissionGuard permission='reports:read'>
-                          <ProfitAndLoss />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/finance/legal-books' element={
-                        <BiPermissionGuard permission='reports:read'>
-                          <LegalBooks />
-                        </BiPermissionGuard>
-                      } />
-                      
-                      {/* BI Forecasting Routes */}
-                      <Route path='/bi/pronosticos/dashboard' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <DashboardPronosticos />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/bi/pronosticos/inventario' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <SaludInventario />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/bi/pronosticos/ventas' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <PronosticoVentas />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/bi/pronosticos/demanda' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <PronosticoDemanda />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/bi/pronosticos/ingresos' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <PronosticoIngresos />
-                        </BiPermissionGuard>
-                      } />
-                      
-                      {/* Profitability Analytics Module (Detailed) */}
-                      <Route path='/profitability/dashboard' element={
-                        <BiPermissionGuard permission="analytics:read"><ProfitabilityDashboard /></BiPermissionGuard>
-                      } />
-                      <Route path='/profitability/products' element={
-                        <BiPermissionGuard permission="analytics:read"><ProductProfitability /></BiPermissionGuard>
-                      } />
-                      <Route path='/profitability/customers' element={
-                        <BiPermissionGuard permission="analytics:read"><CustomerProfitability /></BiPermissionGuard>
-                      } />
-                      <Route path='/profitability/categories' element={
-                        <BiPermissionGuard permission="analytics:read"><CategoryProfitability /></BiPermissionGuard>
-                      } />
-                      <Route path='/profitability/trends' element={
-                        <BiPermissionGuard permission="analytics:read"><ProfitabilityTrends /></BiPermissionGuard>
-                      } />
-                      <Route path='/profitability/sellers' element={
-                        <BiPermissionGuard permission="analytics:read"><SellerProfitability /></BiPermissionGuard>
-                      } />
-
-                      <Route path='/receivables' element={
-                        <BiPermissionGuard permission='receivables:read'>
-                          <ReceivablesDashboard />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/receivables/list' element={
-                        <BiPermissionGuard permission='receivables:read'>
-                          <ReceivablesMasterList />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/receivables/detail/:id' element={
-                        <BiPermissionGuard permission='receivables:read'>
-                          <ReceivableDetail />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/receivables/overdue' element={
-                        <BiPermissionGuard permission='receivables:read'>
-                          <OverdueAccounts />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/receivables/client-profile/:clientId' element={
-                        <BiPermissionGuard permission='receivables:read'>
-                          <ClientCreditProfile />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/receivables/aging-report' element={
-                        <BiPermissionGuard permission='receivables:read'>
-                          <AgingReport />
-                        </BiPermissionGuard>
-                      } />
                       <Route path='/productos' element={<PermissionGuard permission="products:write"><Products /></PermissionGuard>} />
                       <Route path='/parties' element={<PermissionGuard anyOf={['parties:read', 'clients:read', 'suppliers:read']}><PartiesPage /></PermissionGuard>} />
-                      <Route path='/payables/suppliers/:id/analysis' element={
-                        <BiPermissionGuard permission='payables:read'>
-                          <SupplierAnalysis />
-                        </BiPermissionGuard>
-                      } />
                       <Route path='/ventas' element={<PermissionGuard permission="sales:read"><SalesNew /></PermissionGuard>} />
                       
-                      {/* Sales Analytics Routes */}
-                      <Route path='/sales-analytics/dashboard' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <SalesAnalyticsDashboard />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/sales-analytics/products-categories' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <SalesAnalyticsProductsCategories />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/sales-analytics/insights' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <SalesAnalyticsInsights />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/sales-analytics/trends-velocity' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <SalesAnalyticsTrendsVelocity />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/sales-analytics/period-comparison' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <SalesAnalyticsPeriodComparison />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/sales-analytics/discounts' element={
-                        <BiPermissionGuard permission="reports:read"><SalesAnalyticsDiscounts /></BiPermissionGuard>
-                      } />
-
-                      {/* Relational drill-downs (PLAN_STATS_RELACIONALES_BI,
-                          RF-BIPACK-021..024): producto <-> cliente <-> proveedor */}
-                      <Route path='/sales-analytics/products/buyers' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <ProductBuyersPage />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/sales-analytics/customers/top-products' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <CustomerTopProductsPage />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/purchase-analytics/suppliers/top-products' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <SupplierTopProductsPage />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/purchase-analytics/products/suppliers' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <ProductSuppliersPage />
-                        </BiPermissionGuard>
-                      } />
-
-                      {/* Inventory Analytics Routes */}
-                      <Route path='/inventory-analytics/dashboard' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <InventoryDashboard />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/inventory-analytics/turnover-abc' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <InventoryTurnoverABC />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/inventory-analytics/stock-levels' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <StockLevelsReorder />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/inventory-analytics/risk' element={
-                        <BiPermissionGuard permission='analytics:read'>
-                          <InventoryRisk />
-                        </BiPermissionGuard>
-                      } />
-
                       {/* Rutas con layout de tabs */}
                       <Route
                         path='/ajustes-precios'
@@ -834,27 +554,6 @@ function AppContent() {
                       {/* PLAN_BI_PACK_PREMIUM F4: estado de la licencia (Core, auth-only) */}
                       <Route path='/configuracion/licencia' element={<LicenseStatusPage />} />
                       
-                      {/* Auditoría */}
-                      <Route path='/auditoria' element={
-                        <BiPermissionGuard permission='audit:read'>
-                          <AuditDashboard />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/auditoria/logs' element={
-                        <BiPermissionGuard permission='audit:read'>
-                          <AuditLogs />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/auditoria/logs/:id' element={
-                        <BiPermissionGuard permission='audit:read'>
-                          <AuditLogDetail />
-                        </BiPermissionGuard>
-                      } />
-                      <Route path='/auditoria/usuarios/:id' element={
-                        <BiPermissionGuard permission='audit:read'>
-                          <AuditUserActivity />
-                        </BiPermissionGuard>
-                      } />
 
                       {/* Configuración Financiera */}
                       <Route
@@ -916,10 +615,10 @@ function AppContent() {
                           <div className='space-y-6'>
                             <div>
                               <h1 className='text-3xl font-black uppercase tracking-wide'>
-                                Página no encontrada
+                                {t('notFound.title', 'Página no encontrada')}
                               </h1>
                               <p className='text-lg font-bold text-muted-foreground uppercase tracking-wide'>
-                                La página que buscas no existe.
+                                {t('notFound.subtitle', 'La página que buscas no existe.')}
                               </p>
                             </div>
                             <div className='bg-card text-card-foreground border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 text-center'>
@@ -927,14 +626,14 @@ function AppContent() {
                                 Error 404
                               </h2>
                               <p className='text-muted-foreground font-bold mb-4'>
-                                Verifica la URL o regresa al dashboard.
+                                {t('notFound.message', 'Verifica la URL o regresa a los pedidos.')}
                               </p>
-                              <a
-                                href='/dashboard'
+                              <Link
+                                to='/pedidos'
                                 className='inline-flex items-center px-6 py-3 bg-lime-400 text-black font-black uppercase tracking-wide border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all'
                               >
-                                Ir al Dashboard
-                              </a>
+                                {t('notFound.backToOrders', 'Ir a Pedidos')}
+                              </Link>
                             </div>
                           </div>
                         }

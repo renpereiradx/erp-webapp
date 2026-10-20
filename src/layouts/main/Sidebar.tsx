@@ -38,7 +38,7 @@ function BrandMark() {
       <div className="size-9 min-w-[36px] bg-primary rounded-sm flex items-center justify-center text-on-primary">
         <BrandMonogram />
       </div>
-      <div onClick={() => navigate('/dashboard')} className="cursor-pointer whitespace-nowrap">
+      <div onClick={() => navigate('/pedidos')} className="cursor-pointer whitespace-nowrap">
         <h1 className="text-title-md tracking-tighter uppercase leading-none text-foreground">{t('nav.brandName', 'Code Dynamic')}</h1>
         <p className="text-label-caps uppercase tracking-tighter text-on-surface-deep leading-none mt-xs">
           {t('nav.brandTagline', 'Sistema integral')} · <SystemVersionBadge />

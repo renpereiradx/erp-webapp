@@ -30,13 +30,6 @@ vi.mock('@/store/useCashRegisterStore', () => ({
   useCashRegisterStore: (sel) => (typeof sel === 'function' ? sel(mockStoreState) : mockStoreState),
 }));
 
-vi.mock('@/store/useDashboardStore', () => ({
-  default: (sel) =>
-    typeof sel === 'function'
-      ? sel({ fetchDashboardData: vi.fn() })
-      : { fetchDashboardData: vi.fn() },
-}));
-
 // El componente usa los fallbacks en español de t(key, fallback)
 vi.mock('@/lib/i18n', () => ({
   useI18n: () => ({

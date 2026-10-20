@@ -1,5 +1,3 @@
-import { ExternalLink, ShoppingBag } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,9 +30,7 @@ const formatDateTime = (dateString?: string) => {
 };
 
 /**
- * Contenido interno: se monta SOLO con el modal abierto. Así el hook
- * useNavigate (que exige Router) no corre cuando el modal está cerrado y el
- * componente es seguro en pruebas/SSR sin Router.
+ * Contenido interno: se monta SOLO con el modal abierto.
  */
 const ClientDetailsContent = ({
   client,
@@ -44,7 +40,6 @@ const ClientDetailsContent = ({
   onClose: () => void;
 }) => {
   const { t, lang } = useI18n();
-  const navigate = useNavigate();
   const isActive = client.status !== false && client.status !== 'inactive';
 
   return (
@@ -58,32 +53,6 @@ const ClientDetailsContent = ({
           <Button variant="secondary" type="button" onClick={onClose} className="whitespace-nowrap">
             {t('action.close', 'Cerrar')}
           </Button>
-          <div className="flex flex-wrap gap-sm">
-            <Button
-              variant="secondary"
-              type="button"
-              className="whitespace-nowrap"
-              onClick={() => {
-                onClose();
-                navigate(`/sales-analytics/customers/top-products?customer_id=${encodeURIComponent(client.id || client._key || '')}`);
-              }}
-            >
-              <ShoppingBag className="size-4 mr-xs" />
-              {t('bi.relational.action.customerTop', 'Productos que compra')}
-            </Button>
-            <Button
-              variant="primary"
-              type="button"
-              className="whitespace-nowrap"
-              onClick={() => {
-                onClose();
-                navigate(`/receivables/client-profile/${client.id || client._key || 'CLI-001'}`);
-              }}
-            >
-              <ExternalLink className="size-4 mr-xs" />
-              {t('clients.details.risk_analysis', 'Análisis de Riesgo')}
-            </Button>
-          </div>
         </div>
       }
     >

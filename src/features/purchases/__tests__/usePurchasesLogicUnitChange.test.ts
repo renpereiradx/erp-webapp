@@ -28,9 +28,6 @@ vi.mock('@/store/useAuthStore', () => {
   useAuthStore.getState = () => ({ user: authState.user })
   return { default: useAuthStore }
 })
-vi.mock('@/store/useDashboardStore', () => ({
-  default: () => ({ fetchDashboardData: vi.fn() }),
-}))
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ hasPermission: () => true }),
 }))

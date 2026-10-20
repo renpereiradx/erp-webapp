@@ -45,7 +45,7 @@ const PartiesPage = () => {
       >
         <button
           type="button"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/pedidos')}
           className="cursor-pointer transition-colors duration-150 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xs"
         >
           {t('parties.breadcrumb.home', 'Inicio')}

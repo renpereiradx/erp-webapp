@@ -1,8 +1,7 @@
 /**
- * PLAN_BI_PACK_PREMIUM F3 — nav del pack BI con tres perfiles (riesgo R7 del
- * plan): admin con BI, admin sin BI (ERP Core) y vendedor. El grupo BI entero
- * es el pack licenciado; el carve-out SIFEN (ADR-3) mantiene los dashboards
- * fiscales navegables sin pack bajo el grupo "Fiscal (SIFEN)".
+ * PLAN_REBUILD_BI_UI_FRONTEND F1 — ventana de teardown: el grupo BI no existe
+ * con ningún valor de biEnabled, y el carve-out SIFEN (ADR-3) queda siempre
+ * navegable como grupo Core propio. F2-F11 re-activan sus grupos por fase.
  */
 import { describe, it, expect } from 'vitest'
 import { buildNavigation, filterNavigationItems } from '../navigation'
@@ -38,26 +37,14 @@ const findByName = (items: NavigationItem[], name: string): NavigationItem | und
   return undefined
 }
 
-describe('navigation — pack BI (PLAN_BI_PACK_PREMIUM)', () => {
-  it('admin con BI (biEnabled=true): grupo BI presente con Auditoría', () => {
+describe('navigation — F1 sin pantallas BI (PLAN_REBUILD_BI_UI_FRONTEND)', () => {
+  it('admin: sin grupo BI ni Auditoría, SIFEN Core siempre navegable', () => {
     const tree = filterNavigationItems(buildNavigation(t, false, true), checksFor(ADMIN_PERMS))
-
-    expect(findByName(tree, 'Inteligencia de Negocios')).toBeDefined()
-    expect(findByName(tree, 'Auditoría de Sistema')).toBeDefined()
-    // Con pack, SIFEN vive dentro de Reportes Financieros (como siempre).
-    const reportes = findByName(tree, 'Reportes Financieros')
-    expect(reportes?.children?.some(c => c.href === '/finance/sifen-ops')).toBe(true)
-    // Sin grupo Core duplicado de SIFEN.
-    expect(findByName(tree, 'Fiscal (SIFEN)')).toBeUndefined()
-  })
-
-  it('admin sin BI (biEnabled=false): grupo BI oculto, SIFEN Core sigue navegable', () => {
-    const tree = filterNavigationItems(buildNavigation(t, false, false), checksFor(ADMIN_PERMS))
 
     expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()
     expect(findByName(tree, 'Auditoría de Sistema')).toBeUndefined()
+    expect(findByName(tree, 'Dashboard')).toBeUndefined()
 
-    // Carve-out ADR-3: los dashboards fiscales son Core, migran a su grupo.
     const fiscal = findByName(tree, 'Fiscal (SIFEN)')
     expect(fiscal).toBeDefined()
     expect(fiscal?.children?.map(c => c.href)).toEqual([
@@ -66,17 +53,23 @@ describe('navigation — pack BI (PLAN_BI_PACK_PREMIUM)', () => {
     ])
   })
 
-  it('vendedor (sin perms BI): sin pack no aparece nada del grupo ni SIFEN', () => {
+  it('el flag biEnabled no revive el grupo BI durante la ventana F1', () => {
+    for (const biEnabled of [true, false]) {
+      const tree = filterNavigationItems(
+        buildNavigation(t, false, biEnabled),
+        checksFor(ADMIN_PERMS),
+      )
+      expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()
+      expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
+    }
+  })
+
+  it('vendedor sin sifen:read: no ve SIFEN ni el grupo BI, sí Gestión Comercial', () => {
     const vendor = checksFor(['sales:read', 'sales:write', 'counterorders:read'])
     const tree = filterNavigationItems(buildNavigation(t, false, false), vendor)
 
     expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeUndefined()
     expect(findByName(tree, 'Gestión Comercial')).toBeDefined()
-  })
-
-  it('default biEnabled=true preserva el comportamiento previo (compat callers)', () => {
-    const tree = filterNavigationItems(buildNavigation(t, false), checksFor(ADMIN_PERMS))
-    expect(findByName(tree, 'Inteligencia de Negocios')).toBeDefined()
   })
 })

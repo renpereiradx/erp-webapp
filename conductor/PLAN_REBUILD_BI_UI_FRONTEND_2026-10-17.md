@@ -224,3 +224,40 @@ aplicada con criterio (sin reporte en conductor salvo pedido).
 - REQ funcional: `docs/requirements/REQ_BIPACK_LICENCIAMIENTO_BI.md` (wrapper)
 - Superficie BE: `business_management/internal/analytics/http/routes.go` (12 grupos, ~150 GET)
 - Tests: `conductor/PLAN_TEST_DESIGN_FRONTEND.md` · Diseño: `DESIGN.md`
+
+---
+
+## 8. Estado de ejecución — F1 (2026-10-20)
+
+**Rama:** `feature/bi-ui-rebuild` · **Base:** `dev` = `82710c7` (sincronizada con `origin/dev`, 0/0).
+
+### Ejecutado
+
+- Rutas BI eliminadas de `src/App.tsx` (~45); SIFEN preservado con `PermissionGuard sifen:read`.
+- 174 archivos eliminados: páginas BI, features (`bi-forecasting`, `profitability`,
+  `relational-analytics`, `receivables`, `accounts-payable`, `cash-flow`, `financial-reports`),
+  `components/InventoryAnalytics/`, `store/useDashboardStore.ts`, `hooks/useFinancialReports.js`,
+  mocks BI y 35 tests (22 page tests + 12 feature tests + 1 store test).
+- Puntos de entrada §3.3 re-ubicados: HomeRedirect/BranchSelection/Sidebar/Partidas/guards/404 →
+  `/pedidos`; modales cliente/proveedor/producto sin botones BI; `searchableRoutes` sin rutas BI.
+- Nav: grupo BI eliminado con cualquier valor de `biEnabled`; SIFEN queda como grupo Core propio.
+- `biForecastingService` pierde el branch demo (`DEMO_CONFIG`/mocks) — solo `/forecast/*` real.
+- `domain/payables/dashboard.ts`: eliminado el fallback fabricado `#FAC-000` (test agregado).
+
+### Decisiones de borde (documentadas)
+
+- `src/types/inventoryAnalytics.ts` se eliminó: quedó sin consumidores al borrar la UI legacy.
+- Namespaces i18n `dashboard`, `receivables` y `payables` se eliminaron: solo los consumían
+  pantallas BI borradas; F2/F7/F8 los re-agregan por pantalla.
+- Las 3 keys de paginación que vivían en `bi.*` (`TablePagination`, componente ui compartido) se
+  movieron a `common.pagination.*` (es+en).
+- Plan estimaba 23 page tests; el repo tenía 22 (no existe test de `AuditLogDetail`/`Dashboard`).
+
+### Gates
+
+- `npx tsc --noEmit`: 0 errores.
+- `npx vitest --run`: 188 archivos / 1378 tests OK.
+- `pnpm build`: OK.
+- `pnpm lint:design`: OK (código nuevo limpio).
+- Smoke manual (login admin+pack → `/pedidos`, sidebar sin BI, SIFEN visible, modales y buscador
+  sin BI): **pendiente de validación del owner** con `pnpm dev:api`.

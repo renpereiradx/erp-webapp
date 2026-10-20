@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useI18n } from '@/lib/i18n'
-import useDashboardStore from '@/store/useDashboardStore'
 import useAuthStore from '@/store/useAuthStore'
 import { usePurchasesCartDraftStore } from '@/store/usePurchasesCartDraftStore'
 import { currentUserId } from '@/utils/currentUserId'
@@ -60,7 +59,6 @@ export const usePurchasesLogic = () => {
   const navigate = useNavigate()
   const { t } = useI18n()
   const toast = useToast()
-  const { fetchDashboardData } = useDashboardStore()
   const { user } = useAuthStore()
   const { hasPermission } = useAuth()
   const canWrite = hasPermission('purchases:write')
@@ -1046,7 +1044,6 @@ export const usePurchasesLogic = () => {
         // legacy (con su acción de pago) generaba un segundo modal redundante y
         // estado residual (showConfirmationModal pegado) entre compras. La
         // decisión de qué mostrar post-creación la toma el llamador.
-        fetchDashboardData()
         return { success: true, ...orderDataPayload }
       } else {
         // Manejar errores de validación (API v2.7) y NO_CONVERSION
@@ -1104,7 +1101,6 @@ export const usePurchasesLogic = () => {
               : o
           }),
         )
-        fetchDashboardData()
       } else {
         toast.error((result as any)?.error || (result as any)?.message || 'Error al anular orden de compra')
       }

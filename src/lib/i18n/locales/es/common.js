@@ -196,10 +196,14 @@ export const common = {
   'settings.shortcuts.general.close_modal': 'Cerrar modal',
   'settings.shortcuts.general.save': 'Guardar',
 
+  'common.pagination.pageOf': 'Página {page} de {total} ({items} items)',
+  'common.pagination.pagePrev': 'Página anterior',
+  'common.pagination.pageNext': 'Página siguiente',
+
   // RoleGuard (acceso restringido por rol)
   'roleGuard.title': 'Acceso Restringido',
   'roleGuard.message':
     'Lo sentimos, no tenés los permisos suficientes para acceder a esta sección. Esta funcionalidad está reservada para usuarios con rol:',
   'roleGuard.goBack': 'Regresar',
-  'roleGuard.goDashboard': 'Ir al Dashboard',
+  'roleGuard.goOrders': 'Ir a Pedidos',
 }

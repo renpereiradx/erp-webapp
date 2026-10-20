@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import GenericSkeletonList from '@/components/ui/GenericSkeletonList';
 import ErrorState from '@/components/ui/ErrorState';
 import ToastContainer from '@/components/ui/ToastContainer';
-import useDashboardStore from '@/store/useDashboardStore';
 import { useToast } from '@/hooks/useToast';
 import {
   CashRegisterStatusCard,
@@ -30,7 +29,6 @@ const SESSION_TABS: ReadonlyArray<{ id: SessionTab; labelKey: string; fallback: 
 export default function NewCashRegister() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const fetchDashboardData = useDashboardStore(state => state.fetchDashboardData);
   const { addToast, toasts, removeToast } = useToast();
 
   const {
@@ -53,7 +51,6 @@ export default function NewCashRegister() {
     try {
       await openCashRegister(input);
       addToast(t('cashRegister.success.opened', 'Caja registradora abierta exitosamente'), 'success');
-      fetchDashboardData();
       refreshActive();
     } catch (error) {
       setOpenError(
@@ -77,7 +74,6 @@ export default function NewCashRegister() {
     try {
       await closeCashRegister(activeCashRegister.id, input);
       addToast(t('cashRegister.success.closed', 'Caja registradora cerrada exitosamente'), 'success');
-      fetchDashboardData();
       setActiveTab('open');
       refreshActive();
     } catch (error) {

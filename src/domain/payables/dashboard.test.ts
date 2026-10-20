@@ -104,6 +104,16 @@ describe('buildUpcomingPayments', () => {
     expect(cards[0].date.day).toBe('20')
     expect(cards[1]).toMatchObject({ invoice: '#FAC-456', status: 'Programado', statusType: 'info' })
   })
+
+  it('sin purchase_order_id ni payable_id no inventa correlativo', () => {
+    const cards = buildUpcomingPayments([
+      {
+        date: '2026-10-01T12:00:00',
+        items: [{ supplier_name: 'Gamma', amount: 500, priority: 'LOW' }],
+      },
+    ])
+    expect(cards[0]).toMatchObject({ invoice: '-', id: undefined })
+  })
 })
 
 describe('buildSuppliersDebtRows', () => {

@@ -151,13 +151,19 @@ export const buildUpcomingPayments = (
       if (!item) return null
 
       const date = new Date(s.date as string)
+      // Sin purchase_order_id se deriva del payable_id real; nunca se inventa
+      // un correlativo (el viejo fallback '#FAC-000' era fabricado).
+      const payableSuffix = (item.payable_id || '').split('_')[1]
+      const invoice = item.purchase_order_id
+        ? `#${item.purchase_order_id}`
+        : payableSuffix
+          ? `#FAC-${payableSuffix}`
+          : '-'
       return {
         id: item.payable_id,
         date: { month: ES_MONTHS[date.getMonth()], day: date.getDate().toString() },
         vendor: item.supplier_name,
-        invoice: item.purchase_order_id
-          ? `#${item.purchase_order_id}`
-          : `#FAC-${(item.payable_id || '').split('_')[1] || '000'}`,
+        invoice,
         amount: item.amount,
         status: (item.priority === 'HIGH' || item.priority === 'URGENT' ? 'Urgente' : 'Programado') as PayablesPaymentCard['status'],
         statusType: (item.priority === 'HIGH' || item.priority === 'URGENT' ? 'danger' : 'info') as PayablesPaymentCard['statusType'],

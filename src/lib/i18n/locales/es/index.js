@@ -26,12 +26,9 @@ import { cashRegister } from './cashRegister'
 import { cashMovement } from './cashMovement'
 import { currencies } from './currencies'
 import { exchangeRates } from './exchangeRates'
-import { dashboard } from './dashboard'
 import { users } from './users'
 import { sessions } from './sessions'
 import { myProfile } from './my-profile'
-import { receivables } from './receivables'
-import payables from './payables'
 import { fiscal } from './fiscal'
 import { businessPrefs } from './businessPrefs'
 import { licensing } from './licensing'
@@ -71,12 +68,9 @@ export const es = {
   ...cashMovement,
   ...currencies,
   ...exchangeRates,
-  ...dashboard,
   ...users,
   ...sessions,
   ...myProfile,
-  ...receivables,
-  payables,
   ...fiscal,
   ...businessPrefs,
   ...licensing,

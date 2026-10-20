@@ -1,11 +1,3 @@
-import {
-  MOCK_DASHBOARD_PRONOSTICOS,
-  MOCK_SALUD_INVENTARIO,
-  MOCK_PRONOSTICO_VENTAS,
-  MOCK_PRONOSTICO_DEMANDA,
-  MOCK_PRONOSTICO_INGRESOS,
-} from '../mocks/biForecastingMock'
-import { DEMO_CONFIG } from '@/config/demoAuth'
 import { apiClient } from '@/services/api'
 import { formatPYG } from '@/utils/currencyUtils'
 
@@ -460,15 +452,7 @@ const normalizeRevenue = (payload, _params) => {
   }
 }
 
-const get = async (endpoint, mockData, normalizer, params = {}) => {
-  if (DEMO_CONFIG.enabled) {
-    const payload = mockData?.data ?? mockData
-    return Promise.resolve({
-      success: true,
-      data: normalizer(payload, params),
-    })
-  }
-
+const get = async (endpoint, normalizer, params = {}) => {
   const response = await apiClient.makeRequest(endpoint, {
     method: 'GET',
     params,
@@ -485,7 +469,8 @@ const get = async (endpoint, mockData, normalizer, params = {}) => {
 
 /**
  * Servicio para el sistema de Pronósticos BI.
- * Utiliza los mocks proporcionados en entorno de demostración.
+ * PLAN_REBUILD_BI_UI_FRONTEND F1: sin fallback demo — siempre contra la API
+ * real (/forecast/*); los pronósticos son algoritmos estadísticos del BE.
  */
 const biForecastingService = {
   /**
@@ -494,7 +479,6 @@ const biForecastingService = {
   getDashboard: (params = {}) => {
     return get(
       '/forecast/dashboard',
-      MOCK_DASHBOARD_PRONOSTICOS,
       normalizeDashboard,
       params
     )
@@ -504,28 +488,28 @@ const biForecastingService = {
    * Obtiene los datos para Salud de Inventario y Pronósticos
    */
   getSaludInventario: (params = {}) => {
-    return get('/forecast/inventory', MOCK_SALUD_INVENTARIO, normalizeInventory, params)
+    return get('/forecast/inventory', normalizeInventory, params)
   },
 
   /**
    * Obtiene los datos para Pronóstico de Ventas
    */
   getPronosticoVentas: (params = {}) => {
-    return get('/forecast/sales', MOCK_PRONOSTICO_VENTAS, normalizeSales, params)
+    return get('/forecast/sales', normalizeSales, params)
   },
 
   /**
    * Obtiene los datos para Pronóstico de Demanda
    */
   getPronosticoDemanda: (params = {}) => {
-    return get('/forecast/demand', MOCK_PRONOSTICO_DEMANDA, normalizeDemand, params)
+    return get('/forecast/demand', normalizeDemand, params)
   },
 
   /**
    * Obtiene los datos para Pronóstico de Ingresos y Escenarios
    */
   getPronosticoIngresos: (params = {}) => {
-    return get('/forecast/revenue', MOCK_PRONOSTICO_INGRESOS, normalizeRevenue, params)
+    return get('/forecast/revenue', normalizeRevenue, params)
   },
 }
 

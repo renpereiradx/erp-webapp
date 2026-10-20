@@ -13,8 +13,6 @@ import { attributes } from './attributes'
 import { purchases } from './purchases'
 import { currencies } from './currencies'
 import { exchangeRates } from './exchangeRates'
-import { dashboard } from './dashboard'
-import { receivables } from './receivables'
 import { purchasePaymentsMvp } from './purchasePaymentsMvp'
 import { party } from './party'
 import { budgets } from './budgets'
@@ -49,8 +47,6 @@ export const en = {
   ...purchases,
   ...currencies,
   ...exchangeRates,
-  ...dashboard,
-  ...receivables,
   ...purchasePaymentsMvp,
   ...party,
   ...budgets,

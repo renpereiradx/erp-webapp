@@ -27,7 +27,7 @@ const TablePagination = ({ page, totalPages, totalItems, onPageChange }: TablePa
   return (
     <div className="px-6 py-4 border-t border-border-subtle flex items-center justify-between font-mono">
       <p className="text-xs text-on-surface-deep font-bold uppercase tracking-tighter">
-        {t('bi.common.pageOf', 'Página {page} de {total} ({items} items)', {
+        {t('common.pagination.pageOf', 'Página {page} de {total} ({items} items)', {
           page: safePage,
           total: safeTotalPages,
           items: totalItems ?? 0,
@@ -37,7 +37,7 @@ const TablePagination = ({ page, totalPages, totalItems, onPageChange }: TablePa
         <button
           onClick={() => onPageChange(safePage - 1)}
           disabled={safePage === 1}
-          aria-label={t('bi.common.pagePrev', 'Página anterior')}
+          aria-label={t('common.pagination.pagePrev', 'Página anterior')}
           className="w-8 h-8 flex items-center justify-center rounded-lg border border-border-subtle text-on-surface-deep disabled:opacity-50 hover:bg-surface-muted"
         >
           <ChevronLeft size={16} />
@@ -48,7 +48,7 @@ const TablePagination = ({ page, totalPages, totalItems, onPageChange }: TablePa
         <button
           onClick={() => onPageChange(safePage + 1)}
           disabled={safePage === safeTotalPages}
-          aria-label={t('bi.common.pageNext', 'Página siguiente')}
+          aria-label={t('common.pagination.pageNext', 'Página siguiente')}
           className="w-8 h-8 flex items-center justify-center rounded-lg border border-border-subtle text-on-surface-deep hover:bg-surface-muted disabled:opacity-50"
         >
           <ChevronRight size={16} />

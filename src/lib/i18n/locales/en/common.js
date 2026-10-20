@@ -127,4 +127,12 @@ export const common = {
   // Reservations module (business-level toggle)
   'reservations.title': 'Schedule Management',
   'reservations.moduleDisabled': 'The reservations module is disabled for this business',
+
+  // RoleGuard fallback CTA (F1 BI teardown window: no /dashboard route)
+  'roleGuard.goOrders': 'Go to Orders',
+
+  // Shared pagination (moved out of the removed bi.* namespace)
+  'common.pagination.pageOf': 'Page {page} of {total} ({items} items)',
+  'common.pagination.pagePrev': 'Previous page',
+  'common.pagination.pageNext': 'Next page',
 }

@@ -25,7 +25,6 @@ import {
 import PageHeader from '@/components/ui/PageHeader';
 import { cn } from '@/lib/utils';
 import useSaleStore from '@/store/useSaleStore';
-import useDashboardStore from '@/store/useDashboardStore';
 import { useNavigationGuard } from '@/hooks/useNavigationGuard';
 import { useSalesCartDraftStore } from '@/store/useSalesCartDraftStore';
 import { currentUserId } from '@/utils/currentUserId';
@@ -273,8 +272,6 @@ const SalesNew: React.FC = () => {
 
   const handleClearCart = useCallback(() => setItems([]), []);
   const handleGoToHistory = useCallback(() => setActiveTab('history'), []);
-  // H2 (audit react): selector atómico (la acción es referencia estable)
-  const fetchDashboardData = useDashboardStore((s) => s.fetchDashboardData);
 
   const [searchTerm] = useState('');
   const [generalDiscount] = useState(0);
@@ -1485,7 +1482,6 @@ const SalesNew: React.FC = () => {
           setItems([]);
           setCurrentSaleId(null);
           setSelectedClient(null);
-          fetchDashboardData();
           handleHistoryFilter();
         } else {
           const errMsg = response?.error || 'No se pudieron agregar los productos a la venta';
@@ -2088,7 +2084,6 @@ const SalesNew: React.FC = () => {
     setActiveSale(null);
     setPendingReservations([]);
     setSelectedResIds(new Set());
-    fetchDashboardData();
   };
 
   // Cantidad de un producto ya agregada al carrito (stock virtual del dropdown).
