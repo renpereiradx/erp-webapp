@@ -44,7 +44,7 @@ export const OperationsPanel = ({ summary }: { summary: DashboardSummary }) => {
       value: formatPYG(summary.inventory.total_value),
       hint: t(
         'dashboard.summary.operations.inventoryHint',
-        'Bajo stock: {low} · Sin stock: {out}',
+        'Bajo: {low} · Agotado: {out}',
         {
           low: formatNumber(summary.inventory.low_stock_count, 0),
           out: formatNumber(summary.inventory.out_of_stock_count, 0),
@@ -77,7 +77,7 @@ export const OperationsPanel = ({ summary }: { summary: DashboardSummary }) => {
       tone: 'neutral',
       label: t('dashboard.summary.operations.payables', 'Cuentas por pagar'),
       value: formatPYG(summary.payables.total_pending),
-      hint: t('dashboard.summary.operations.payablesHint', 'Vence esta semana: {amount}', {
+      hint: t('dashboard.summary.operations.payablesHint', 'Esta semana: {amount}', {
         amount: formatPYG(summary.payables.due_this_week),
       }),
     },

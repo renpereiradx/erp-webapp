@@ -89,7 +89,9 @@ const DashboardPage = () => {
             </QueryBoundary>
           </section>
 
-          <div className="grid gap-xl lg:grid-cols-2">
+          {/* Trends y Operaciones 50/50 desde xl; en tablet se apilan para
+              que la lista de comparación y el ledger no se compriman. */}
+          <div className="grid gap-xl xl:grid-cols-2">
             <DashboardSection
               title={t('dashboard.trends.title', 'Comparación con el período anterior')}
               description={t('dashboard.trends.subtitle', 'Variación de ventas, compras y ticket.')}
@@ -108,7 +110,7 @@ const DashboardPage = () => {
 
             <DashboardSection
               title={t('dashboard.summary.operations.title', 'Operación del negocio')}
-              description={t('dashboard.summary.operations.subtitle', 'Inventario, caja, cobranzas y reservas.')}
+              description={t('dashboard.summary.operations.subtitle', 'Estado actual de inventario, caja, cobranzas y reservas.')}
               testId="dashboard-operations"
             >
               <QueryBoundary
@@ -116,7 +118,7 @@ const DashboardPage = () => {
                 error={summaryQuery.error}
                 errorTitle={errorTitle}
                 onRetry={() => void summaryQuery.refetch()}
-                skeleton={<CardGridSkeleton count={5} columns={5} />}
+                skeleton={<PanelSkeleton rows={5} />}
               >
                 {summary ? <OperationsPanel summary={summary} /> : null}
               </QueryBoundary>
@@ -125,8 +127,8 @@ const DashboardPage = () => {
 
           {/* Alerts 2/5 · Actividad 3/5: la actividad tiene descripciones
               largas y necesita más ancho que las 2 alertas. */}
-          <div className="grid gap-xl lg:grid-cols-5">
-            <div className="min-w-0 lg:col-span-2">
+          <div className="grid items-start gap-xl xl:grid-cols-5">
+            <div className="min-w-0 xl:col-span-2">
               <AlertsPreview
                 alerts={alertsQuery.data?.alerts ?? []}
                 isLoading={alertsQuery.isLoading}
@@ -134,7 +136,7 @@ const DashboardPage = () => {
                 onRetry={() => void alertsQuery.refetch()}
               />
             </div>
-            <div className="min-w-0 lg:col-span-3">{activitySection}</div>
+            <div className="min-w-0 xl:col-span-3">{activitySection}</div>
           </div>
 
           <TopProductsPreview

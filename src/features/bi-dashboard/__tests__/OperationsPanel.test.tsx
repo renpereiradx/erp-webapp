@@ -63,10 +63,10 @@ describe('OperationsPanel (F2 UX)', () => {
   it('usa hints label:valor (evita "1 cajas abiertas" y "1 cuentas vencidas")', () => {
     render(<OperationsPanel summary={SUMMARY} />)
 
-    expect(screen.getByText('Bajo stock: 5 · Sin stock: 1')).toBeInTheDocument()
+    expect(screen.getByText('Bajo: 5 · Agotado: 1')).toBeInTheDocument()
     expect(screen.getByText('Cajas abiertas: 1')).toBeInTheDocument()
     expect(screen.getByText('Cuentas vencidas: 13')).toBeInTheDocument()
-    expect(screen.getByText('Vence esta semana: Gs. 1.200.000')).toBeInTheDocument()
+    expect(screen.getByText('Esta semana: Gs. 1.200.000')).toBeInTheDocument()
     expect(screen.getByText('Por confirmar: 1')).toBeInTheDocument()
   })
 

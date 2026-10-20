@@ -14,7 +14,7 @@ export const SummaryCards = ({ summary, trends }: SummaryCardsProps) => {
   const { t } = useI18n()
 
   return (
-    <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-md sm:grid-cols-2 xl:grid-cols-4">
       <KpiCard
         icon={DollarSign}
         tone="primary"

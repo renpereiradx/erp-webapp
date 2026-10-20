@@ -335,7 +335,7 @@ aplicada con criterio (sin reporte en conductor salvo pedido).
   icono tonal + label/hint a la izquierda, cifra completa a la derecha. A 1440 px las cards
   quedaban de ~90 px y los montos (`Gs. 13.377.100`, `Gs. 6.414.250`) se partían en dos líneas.
 - Hints pasaron a formato `Label: valor` (`Cajas abiertas: 1`, `Cuentas vencidas: 1`,
-  `Vence esta semana: Gs. 0`) para evitar plurales falsos como "1 cajas abiertas".
+  `Esta semana: Gs. 0`) para evitar plurales falsos como "1 cajas abiertas".
 - En mobile el valor baja a una línea propia debajo del hint (grid de 2 columnas), sin recortar
   montos; en `sm+` vuelve a la columna derecha.
 - `DashboardSection` gana `min-w-0`: una tabla ancha (Trends) fijaba el min-content del grid item
@@ -345,7 +345,7 @@ aplicada con criterio (sin reporte en conductor salvo pedido).
 
 ### Pase UX — Actividad reciente (post-smoke)
 
-- La fila pasa de 50/50 a `lg:grid-cols-5` con **Alertas 2/5 · Actividad 3/5**: las
+- La fila pasa de 50/50 a `xl:grid-cols-5` con **Alertas 2/5 · Actividad 3/5**: las
   descripciones de ventas/pagos son largas y necesitan más ancho que las 2 alertas.
 - `formatActorName` (dominio) colapsa repeticiones adyacentes: el BE manda
   `first_name + last_name` y la UI mostraba "ADMINISTRADOR ADMINISTRADOR".
@@ -358,10 +358,28 @@ aplicada con criterio (sin reporte en conductor salvo pedido).
   overflow, sin actor duplicado y 0 errores de consola.
 - Tests: `domain/dashboard/activity.test.ts` y `ActivityPanel.test.tsx`.
 
+### Cierre de wraps (2026-10-20)
+
+- **Cards superiores**: el valor de `KpiCard` baja a `text-title-md` (20 px) y la grilla del
+  summary pasa a 2 columnas hasta `lg` y 4 desde `xl`. `Gs. 13.377.100` deja de partirse a
+  1280/1440 y las 4 cards no se comprimen en tablet.
+- **Comparación**: la tabla de 4 columnas se reemplaza por una lista de 3 métricas (label +
+  "Anterior" a la izquierda; cifra actual + variación a la derecha). El monto nunca se parte y
+  la card vuelve a 50/50 con Operación del negocio (`xl:grid-cols-2`).
+- **Operación del negocio**: hints acortados (`Bajo: 5 · Agotado: 1`, `Esta semana: Gs. 0`)
+  para que entren en una línea en la card de 50 % a 1280 px.
+- **Filas**: `DashboardSection` usa `h-full` para que las cards 50/50 igualen altura; la fila
+  Alertas/Actividad usa `items-start` para que Alertas no quede como una card vacía enorme.
+- **Breakpoints**: Trends/Operaciones se apilan hasta `xl`; Alertas/Actividad también, evitando
+  cards de 250 px en tablet.
+- Verificado a 1440/1280/1024/390 px: todos los montos en una línea, `bodyOverflow=false`,
+  hints de operaciones en una línea, 0 errores de consola.
+- Test de componente `TrendsPanel.test.tsx` (3 métricas, actual/anterior/variación, sin tabla).
+
 ### Gates
 
 - `npx tsc --noEmit`: 0 errores.
-- `npx vitest --run`: 202 archivos / 1459 tests OK.
+- `npx vitest --run`: 203 archivos / 1462 tests OK.
 - `pnpm build`: OK (chunks lazy por página: `DashboardPage`, `DashboardKpisPage`,
   `SalesHeatmapPage`, `AlertsPage`, `TopProductsPage`).
 - `pnpm lint:design -- --base dev`: OK (código nuevo limpio; legacy fuera del diff no bloquea).

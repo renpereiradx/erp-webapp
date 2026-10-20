@@ -65,14 +65,7 @@ export const KpiCard = ({
       ) : null}
     </div>
     <p className="text-label-caps uppercase text-on-surface-deep">{label}</p>
-    <p
-      className={cn(
-        'font-data-mono text-foreground',
-        compact ? 'text-title-md' : 'text-headline-lg-mobile',
-      )}
-    >
-      {value}
-    </p>
+    <p className="font-data-mono text-title-md text-foreground">{value}</p>
     {hint ? <p className="text-body-md text-on-surface-deep">{hint}</p> : null}
   </article>
 )
