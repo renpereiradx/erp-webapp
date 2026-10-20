@@ -293,20 +293,10 @@ export interface AgingReportItem {
   percentage: number;
 }
 
-export interface StockLevelItem {
-  product_id: string;
-  product_name: string;
-  current_stock: number;
-  reorder_point: number;
-  is_low_stock: boolean;
-}
-
-export interface InventoryTurnover {
-  product_id: string;
-  product_name: string;
-  turnover_rate: number;
-  days_in_stock: number;
-}
+// Los tipos legacy `StockLevelItem`/`InventoryTurnover` se eliminaron en F5:
+// describían una forma que ningún endpoint devolvía y quedaron sin consumidores
+// tras el teardown F1. El contrato real vive en la sección de Analítica de
+// Inventario al final del archivo.
 
 // --- Analítica de Ventas (F4) ----------------------------------------------
 //
@@ -814,4 +804,428 @@ export interface DiscountSummaryParams {
   end_date: string;
   group_by?: DiscountGroupBy;
   branch_id?: number;
+}
+
+// --- Analítica de Inventario (F5) -------------------------------------------
+//
+// Contrato REAL de `/inventory-analytics/*` (`business_management/models/
+// inventory_analytics.go` + `internal/analytics/http_inventory.go`). Envelope
+// `BIEnvelope<T>`. El grupo va detrás de `RequireModule('bi')` →
+// `analytics:read` en el backend.
+//
+// Campos que el BE NO completa y por eso la UI no muestra:
+//   - `InventoryStockStatus` es un conteo por umbrales que se superponen
+//     (`in_stock` > 5 incluye `overstock` > 15): no se grafica como torta.
+//   - `ProductStockLevel.min_stock/max_stock/reorder_point` son constantes
+//     (5/15/5) del SQL, no configuración real del producto.
+//   - `StockLevelsReport.summary.total_units/total_value/average_stock/
+//     median_stock` suman SOLO la página (o no se calculan): la UI los rotula
+//     "en esta página" o no los muestra.
+//   - `TurnoverMetrics.average_inventory` es el valor ACTUAL del stock a costo,
+//     no un promedio del período.
+//   - `ABCSummary.total_value`/`class_*_value` son ventas del período, no valor
+//     de inventario; `ABCProduct.turnover_rate` viaja siempre en 0 (el SELECT
+//     no lo calcula) y `sku` es el id del producto.
+//   - `DeadStockSummary.potential_loss` es `total_value * 0.3` hardcodeado;
+//     no es una pérdida medida y la UI no lo presenta como tal.
+//   - `ReorderSummary.average_lead_time_days` y `ReorderAnalysis.by_supplier`
+//     nunca se completan; `ReorderProduct.days_until_stockout` usa 999 como
+//     centinela de "sin ventas en 30 días".
+//   - `InventoryAnalyticsDashboard.kpis.value_change_pct/turnover_change_pct`,
+//     `.trends` y `.slow_movers` (turnover/days) son valores de relleno: solo
+//     se muestran los campos reales.
+
+export type InventoryStatusFilter =
+  | 'IN_STOCK'
+  | 'LOW_STOCK'
+  | 'OUT_OF_STOCK'
+  | 'OVERSTOCK';
+
+export type InventorySortBy = 'stock' | 'name' | 'value' | 'category' | 'days';
+
+export type InventorySortOrder = 'ASC' | 'DESC';
+
+export interface InventoryPeriodParams {
+  period?: DashboardPeriod;
+}
+
+export interface InventoryStockLevelsParams {
+  page?: number;
+  page_size?: number;
+  status?: InventoryStatusFilter;
+  sort_by?: InventorySortBy;
+  sort_order?: InventorySortOrder;
+  brand_id?: number;
+}
+
+export interface InventoryDeadStockParams {
+  days?: number;
+}
+
+export interface InventoryStockStatus {
+  in_stock: number;
+  low_stock: number;
+  out_of_stock: number;
+  overstock: number;
+  in_stock_pct: number;
+  low_stock_pct: number;
+  out_of_stock_pct: number;
+  overstock_pct: number;
+}
+
+export interface InventoryValuation {
+  total_cost_value: number;
+  total_retail_value: number;
+  potential_margin: number;
+  potential_margin_pct: number;
+  average_cost: number;
+  average_retail: number;
+}
+
+export interface InventoryTurnoverKPIs {
+  turnover_rate: number;
+  days_of_inventory: number;
+  stockout_rate: number;
+  fill_rate: number;
+}
+
+/** Alerta del `/overview` (el repo no las completa: viaja `[]`). */
+export interface InventoryAlert {
+  type: string;
+  product_id: string;
+  product_name: string;
+  message: string;
+  current_stock: number;
+  threshold?: number;
+  severity: string;
+}
+
+export interface InventoryOverview {
+  generated_at: string;
+  total_products: number;
+  total_units: number;
+  total_value: number;
+  total_cost: number;
+  potential_profit: number;
+  stock_status: InventoryStockStatus;
+  valuation: InventoryValuation;
+  turnover: InventoryTurnoverKPIs;
+  alerts: InventoryAlert[] | null;
+}
+
+// Stock levels ---------------------------------------------------------------
+
+export interface ProductStockLevel {
+  product_id: string;
+  product_name: string;
+  /** El repo devuelve el id del producto en este campo (no hay SKU real). */
+  sku: string;
+  category_name: string;
+  product_type: string;
+  current_stock: number;
+  min_stock: number;
+  max_stock: number;
+  reorder_point: number;
+  status: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' | 'OVERSTOCK' | string;
+  /** 999 = sin ventas en los últimos 30 días (centinela del SQL). */
+  days_of_stock: number;
+  unit_cost: number;
+  unit_price: number;
+  stock_value: number;
+  last_movement: string;
+  last_sale: string;
+  variant_id?: string | null;
+  variant_name?: string | null;
+  variant_sku?: string | null;
+  brand_id?: number | null;
+  brand_name?: string | null;
+  tags?: string[];
+}
+
+export interface StockLevelsSummary {
+  total_products: number;
+  /** Suma de la PÁGINA, no del filtro completo. */
+  total_units: number;
+  /** Suma de la PÁGINA, no del filtro completo. */
+  total_value: number;
+  average_stock: number;
+  median_stock: number;
+}
+
+export interface StockLevelsReport {
+  generated_at: string;
+  summary: StockLevelsSummary;
+  products: ProductStockLevel[] | null;
+  pagination: BIPaginationInfo;
+}
+
+// Turnover -------------------------------------------------------------------
+
+export interface CategoryTurnover {
+  category_id: string;
+  category_name: string;
+  turnover_rate: number;
+  days_of_inventory: number;
+  total_units: number;
+  total_value: number;
+  units_sold: number;
+  performance: 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'POOR' | string;
+}
+
+export interface ProductTurnover {
+  product_id: string;
+  product_name: string;
+  sku: string;
+  category_name: string;
+  product_type: string;
+  turnover_rate: number;
+  days_of_inventory: number;
+  current_stock: number;
+  units_sold: number;
+  /** El SQL escanea el stock actual, no un promedio. */
+  average_stock: number;
+  performance: 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'POOR' | string;
+}
+
+export interface TurnoverMetrics {
+  turnover_rate: number;
+  days_of_inventory: number;
+  /** Valor actual del stock a costo (nombre heredado del modelo). */
+  average_inventory: number;
+  cost_of_goods_sold: number;
+  inventory_efficiency: number;
+}
+
+export interface TurnoverTrendPoint {
+  date: string;
+  label: string;
+  turnover_rate: number;
+  inventory_value: number;
+  cost_of_goods_sold: number;
+}
+
+export interface TurnoverAnalysis {
+  period: BIReportPeriod;
+  overall: TurnoverMetrics;
+  by_category: CategoryTurnover[] | null;
+  by_product: ProductTurnover[] | null;
+  trends: TurnoverTrendPoint[] | null;
+}
+
+// ABC ------------------------------------------------------------------------
+
+export interface ABCSummary {
+  total_products: number;
+  /** Ventas del período (no valor de inventario). */
+  total_value: number;
+  class_a_count: number;
+  class_a_value: number;
+  class_a_value_pct: number;
+  class_b_count: number;
+  class_b_value: number;
+  class_b_value_pct: number;
+  class_c_count: number;
+  class_c_value: number;
+  class_c_value_pct: number;
+}
+
+export interface ABCProduct {
+  product_id: string;
+  product_name: string;
+  /** Id del producto (el repo no tiene SKU en esta consulta). */
+  sku: string;
+  category_name: string;
+  product_type: string;
+  class: 'A' | 'B' | 'C' | string;
+  total_sales: number;
+  sales_percentage: number;
+  cumulative_pct: number;
+  units_sold: number;
+  current_stock: number;
+  stock_value: number;
+  /** Siempre 0: el SELECT del repo no lo calcula. */
+  turnover_rate: number;
+  rank: number;
+}
+
+export interface ABCAnalysis {
+  generated_at: string;
+  period: BIReportPeriod;
+  summary: ABCSummary;
+  class_a: ABCProduct[] | null;
+  class_b: ABCProduct[] | null;
+  class_c: ABCProduct[] | null;
+}
+
+// Dead stock -----------------------------------------------------------------
+
+export interface DeadStockSummary {
+  total_products: number;
+  total_units: number;
+  total_value: number;
+  percentage_of_stock: number;
+  average_days_idle: number;
+  /** `total_value * 0.3` hardcodeado: la UI no lo muestra como pérdida. */
+  potential_loss: number;
+}
+
+export interface DeadStockProduct {
+  product_id: string;
+  product_name: string;
+  /** Id del producto. */
+  sku: string;
+  category_name: string;
+  product_type: string;
+  current_stock: number;
+  stock_value: number;
+  /** Si nunca se vendió, el BE usa la fecha de alta del producto. */
+  last_sale_date: string;
+  days_since_last_sale: number;
+  /** Si nunca se movió, el BE usa la fecha de alta del producto. */
+  last_movement_date: string;
+  days_since_movement: number;
+  /** Texto en español del BE; la UI deriva la recomendación con i18n. */
+  recommendation: string;
+}
+
+export interface CategoryDeadStock {
+  category_id: string;
+  category_name: string;
+  product_count: number;
+  total_units: number;
+  total_value: number;
+  percentage_of_category: number;
+}
+
+export interface DeadStockAnalysis {
+  generated_at: string;
+  summary: DeadStockSummary;
+  products: DeadStockProduct[] | null;
+  /** El repo no lo completa: viaja `null`/`[]`. */
+  by_category: CategoryDeadStock[] | null;
+  /** Textos en español del BE; la UI usa sus propias claves i18n. */
+  recommendations: string[] | null;
+}
+
+// Reorder --------------------------------------------------------------------
+
+export interface ReorderSummary {
+  total_needing_reorder: number;
+  urgent_count: number;
+  soon_count: number;
+  estimated_cost: number;
+  /** Nunca se completa (viaja 0). */
+  average_lead_time_days: number;
+}
+
+export interface ReorderProduct {
+  product_id: string;
+  product_name: string;
+  /** Id del producto. */
+  sku: string;
+  category_name: string;
+  product_type: string;
+  supplier_id?: string;
+  supplier_name?: string;
+  current_stock: number;
+  /** Constante 5 del SQL (no configuración real). */
+  min_stock: number;
+  /** Constante 5 del SQL. */
+  reorder_point: number;
+  /** Sugerencia del reporte: reponer hasta 10 unidades. */
+  reorder_quantity: number;
+  estimated_cost: number;
+  /** 999 = sin ventas en 30 días (centinela del SQL). */
+  days_until_stockout: number;
+  priority: 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW' | string;
+  last_order_date?: string;
+}
+
+export interface ReorderAnalysis {
+  generated_at: string;
+  summary: ReorderSummary;
+  urgent_reorders: ReorderProduct[] | null;
+  soon_reorders: ReorderProduct[] | null;
+  /** El repo no lo completa. */
+  by_supplier: unknown[] | null;
+}
+
+// Stock aging ----------------------------------------------------------------
+
+export interface StockAgingSummary {
+  total_products: number;
+  total_units: number;
+  total_value: number;
+  average_age_days: number;
+  old_stock_value: number;
+  old_stock_pct: number;
+}
+
+export interface StockAgingBucket {
+  label: string;
+  min_days: number;
+  max_days: number;
+  product_count: number;
+  total_units: number;
+  total_value: number;
+  percentage: number;
+}
+
+export interface StockAgingProduct {
+  product_id: string;
+  product_name: string;
+  sku: string;
+  category_name: string;
+  product_type: string;
+  current_stock: number;
+  stock_value: number;
+  age_days: number;
+  age_bucket: string;
+  last_received: string;
+  last_sold: string;
+}
+
+export interface StockAgingReport {
+  generated_at: string;
+  summary: StockAgingSummary;
+  buckets: StockAgingBucket[] | null;
+  products: StockAgingProduct[] | null;
+}
+
+// Inventory dashboard --------------------------------------------------------
+
+export interface InventoryKPIsDashboard {
+  total_value: number;
+  /** Nunca se completa. */
+  value_change_pct: number;
+  turnover_rate: number;
+  /** Nunca se completa. */
+  turnover_change_pct: number;
+  days_of_inventory: number;
+  stockout_rate: number;
+  fill_rate: number;
+  dead_stock_pct: number;
+}
+
+export interface InventoryTrendPoint {
+  date: string;
+  label: string;
+  total_value: number;
+  total_units: number;
+  turnover_rate: number;
+}
+
+export interface InventoryAnalyticsDashboard {
+  generated_at: string;
+  kpis: InventoryKPIsDashboard;
+  stock_status: InventoryStockStatus;
+  top_movers: ProductTurnover[] | null;
+  /** turnover_rate/days_of_inventory son relleno (0/999): no se muestran. */
+  slow_movers: ProductTurnover[] | null;
+  reorder_alerts: ReorderProduct[] | null;
+  dead_stock_value: number;
+  /** Nunca se completa. */
+  trends: InventoryTrendPoint[] | null;
+  abc_summary: ABCSummary;
+  alerts: InventoryAlert[] | null;
 }

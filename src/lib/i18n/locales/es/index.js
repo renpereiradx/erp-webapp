@@ -44,6 +44,7 @@ import { reservations } from './reservations'
 import { dashboard } from './dashboard'
 import { relationalAnalytics } from './relationalAnalytics'
 import { salesAnalytics } from './salesAnalytics'
+import { inventoryAnalytics } from './inventoryAnalytics'
 
 /**
  * Diccionario completo de traducciones en español
@@ -91,4 +92,5 @@ export const es = {
   ...dashboard,
   ...relationalAnalytics,
   ...salesAnalytics,
+  ...inventoryAnalytics,
 }

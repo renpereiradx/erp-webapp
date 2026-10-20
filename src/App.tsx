@@ -45,6 +45,11 @@ const CustomerSellerInsightsPage = lazy(() => import('@/pages/sales-analytics/Cu
 const TrendsVelocityPage = lazy(() => import('@/pages/sales-analytics/TrendsVelocityPage'))
 const PeriodComparisonPage = lazy(() => import('@/pages/sales-analytics/PeriodComparisonPage'))
 const DiscountsPage = lazy(() => import('@/pages/sales-analytics/DiscountsPage'))
+// PLAN_REBUILD_BI_UI_FRONTEND F5: Analítica de Inventario (4 pantallas lazy).
+const InventoryDashboardPage = lazy(() => import('@/pages/inventory-analytics/InventoryDashboardPage'))
+const TurnoverAbcPage = lazy(() => import('@/pages/inventory-analytics/TurnoverAbcPage'))
+const StockLevelsPage = lazy(() => import('@/pages/inventory-analytics/StockLevelsPage'))
+const InventoryRiskPage = lazy(() => import('@/pages/inventory-analytics/InventoryRiskPage'))
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import { CounterOrdersPage } from '@/features/counterorders'
@@ -388,6 +393,13 @@ function AppContent() {
                       <Route path='/sales-analytics/trends-velocity' element={<AnalyticsRoute><TrendsVelocityPage /></AnalyticsRoute>} />
                       <Route path='/sales-analytics/period-comparison' element={<AnalyticsRoute><PeriodComparisonPage /></AnalyticsRoute>} />
                       <Route path='/sales-analytics/discounts' element={<ReportsRoute><DiscountsPage /></ReportsRoute>} />
+                      {/* PLAN_REBUILD_BI_UI_FRONTEND F5 — Analítica de Inventario.
+                          Las 4 rutas comparten `analytics:read`, igual que
+                          `biChain("analytics:read", "inventory-analytics")`. */}
+                      <Route path='/inventory-analytics/dashboard' element={<AnalyticsRoute><InventoryDashboardPage /></AnalyticsRoute>} />
+                      <Route path='/inventory-analytics/turnover-abc' element={<AnalyticsRoute><TurnoverAbcPage /></AnalyticsRoute>} />
+                      <Route path='/inventory-analytics/stock-levels' element={<AnalyticsRoute><StockLevelsPage /></AnalyticsRoute>} />
+                      <Route path='/inventory-analytics/risk' element={<AnalyticsRoute><InventoryRiskPage /></AnalyticsRoute>} />
                       <Route path='/finance/sifen-inutilizacion' element={
                         <PermissionGuard permission='sifen:read'>
                           <SkippedNumbersPage />

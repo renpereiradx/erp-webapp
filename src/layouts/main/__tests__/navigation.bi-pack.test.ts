@@ -1,7 +1,8 @@
 /**
- * PLAN_REBUILD_BI_UI_FRONTEND F2/F3/F4 — el grupo BI existe con Dashboard (5
- * rutas) + Analítica de Ventas (8 hojas: 6 de F4 + 2 drill-downs de F3) +
- * drill-downs de Compras cuando hay pack y permisos BI. Sin pack o sin hojas
+ * PLAN_REBUILD_BI_UI_FRONTEND F2/F3/F4/F5 — el grupo BI existe con Dashboard
+ * (5 rutas) + Analítica de Ventas (8 hojas: 6 de F4 + 2 drill-downs de F3) +
+ * drill-downs de Compras + Analítica de Inventario (4 hojas de F5) cuando hay
+ * pack y permisos BI. Sin pack o sin hojas
  * visibles el padre se oculta (incluido el padre con gate anyOf). SIFEN sigue
  * como grupo Core propio (ADR-3).
  */
@@ -39,8 +40,8 @@ const findByName = (items: NavigationItem[], name: string): NavigationItem | und
   return undefined
 }
 
-describe('navigation — Dashboard BI (F2) + Analítica de Ventas (F4)', () => {
-  it('admin con pack: Dashboard + Analítica de Ventas completa + Compras', () => {
+describe('navigation — Dashboard BI (F2) + Ventas (F4) + Inventario (F5)', () => {
+  it('admin con pack: Dashboard + Analítica de Ventas + Compras + Inventario', () => {
     const tree = filterNavigationItems(buildNavigation(t, false, true), checksFor(ADMIN_PERMS))
 
     const bi = findByName(tree, 'Inteligencia de Negocios')
@@ -49,6 +50,7 @@ describe('navigation — Dashboard BI (F2) + Analítica de Ventas (F4)', () => {
       'Dashboard',
       'Analítica de Ventas',
       'Analítica de Compras',
+      'Analítica de Inventario',
     ])
 
     const dashboard = findByName(tree, 'Dashboard')
@@ -77,6 +79,14 @@ describe('navigation — Dashboard BI (F2) + Analítica de Ventas (F4)', () => {
       '/purchase-analytics/suppliers/top-products',
       '/purchase-analytics/products/suppliers',
     ])
+
+    const inventory = findByName(tree, 'Analítica de Inventario')
+    expect(inventory?.children?.map((child) => child.href)).toEqual([
+      '/inventory-analytics/dashboard',
+      '/inventory-analytics/turnover-abc',
+      '/inventory-analytics/stock-levels',
+      '/inventory-analytics/risk',
+    ])
   })
 
   it('sin pack BI (biEnabled=false) el grupo no existe; SIFEN sigue como Core', () => {
@@ -86,6 +96,7 @@ describe('navigation — Dashboard BI (F2) + Analítica de Ventas (F4)', () => {
     expect(findByName(tree, 'Dashboard')).toBeUndefined()
     expect(findByName(tree, 'Analítica de Ventas')).toBeUndefined()
     expect(findByName(tree, 'Analítica de Compras')).toBeUndefined()
+    expect(findByName(tree, 'Analítica de Inventario')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
   })
 
@@ -98,6 +109,7 @@ describe('navigation — Dashboard BI (F2) + Analítica de Ventas (F4)', () => {
     expect(bi?.children?.map((child) => child.name)).toEqual([
       'Analítica de Ventas',
       'Analítica de Compras',
+      'Analítica de Inventario',
     ])
     expect(findByName(tree, 'Dashboard')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()

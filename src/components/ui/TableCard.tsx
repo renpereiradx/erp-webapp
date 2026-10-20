@@ -13,7 +13,10 @@ interface TableCardProps {
 /**
  * Card cuyo contenido principal es una tabla: header con padding y tabla
  * full-bleed (DESIGN §6.3, anatomía "card con tabla"). El empty state va
- * dentro de la tabla como fila `colSpan`.
+ * dentro o fuera de la tabla como fila/estado explícito.
+ *
+ * Promovida a `components/ui` en F5 (la usan Analítica de Ventas F4 y
+ * Analítica de Inventario F5): un feature no importa componentes de otro.
  */
 export const TableCard = ({
   title,

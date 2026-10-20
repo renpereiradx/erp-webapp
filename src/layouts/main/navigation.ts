@@ -4,6 +4,7 @@ import {
   ArrowLeftRight,
   Award,
   BarChart3,
+  Boxes,
   Building2,
   Calendar,
   CircleDollarSign,
@@ -22,6 +23,7 @@ import {
   Percent,
   PlusCircle,
   Printer,
+  RefreshCw,
   Settings,
   Shield,
   ShoppingBag,
@@ -179,6 +181,35 @@ export const buildNavigation = (
                   name: t('nav.relationalProductSuppliers', 'Comparar Proveedores'),
                   href: '/purchase-analytics/products/suppliers',
                   icon: Tags,
+                },
+              ],
+            },
+            // F5 — grupo completo de Analítica de Inventario (4 pantallas).
+            {
+              name: t('nav.inventoryAnalytics', 'Analítica de Inventario'),
+              href: '#',
+              icon: Boxes,
+              permission: 'analytics:read',
+              children: [
+                {
+                  name: t('nav.inventoryDashboard', 'Dashboard de Inventario'),
+                  href: '/inventory-analytics/dashboard',
+                  icon: LayoutDashboard,
+                },
+                {
+                  name: t('nav.inventoryTurnoverAbc', 'Rotación y ABC'),
+                  href: '/inventory-analytics/turnover-abc',
+                  icon: RefreshCw,
+                },
+                {
+                  name: t('nav.inventoryStockLevels', 'Niveles de Stock'),
+                  href: '/inventory-analytics/stock-levels',
+                  icon: Boxes,
+                },
+                {
+                  name: t('nav.inventoryRisk', 'Riesgos y Stock Muerto'),
+                  href: '/inventory-analytics/risk',
+                  icon: AlertTriangle,
                 },
               ],
             },

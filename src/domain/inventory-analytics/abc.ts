@@ -1,45 +1,76 @@
 /**
- * ABC classification presentation for the inventory analytics dashboard.
- * Extracted from pages/InventoryAnalytics/InventoryDashboard.tsx:84-109
- * (PLAN_ALINEACION_BI_FRONTEND F1, decisión D5: pulido in situ).
+ * Clasificación ABC de inventario (F5).
  *
- * Pureza T23: sin labels UI — ABCSummary resuelve los textos por clase con
- * i18n (bi.inventory.abc.class*.label/desc).
+ * Contrato real: `/inventory-analytics/abc` clasifica por **ventas** del
+ * período (80 % acumulado = A, 95 % = B, resto C). Los valores `class_*_value`
+ * son ventas, no valor de inventario: la UI lo rotula "Ventas" y no re-deriva
+ * montos desde el total. `ABCProduct.sku` es el id del producto y
+ * `turnover_rate` viaja en 0 (el SELECT no lo calcula): no se muestran.
  */
-import { formatPYG } from '@/utils/currencyUtils'
+import type { ABCAnalysis, ABCProduct, ABCSummary } from '@/types/bi'
 
-export interface AbcSummaryLike {
-  class_a_value_pct?: number | null
-  class_b_value_pct?: number | null
-  class_c_value_pct?: number | null
-  class_a_count?: number | null
-  class_b_count?: number | null
-  class_c_count?: number | null
-  [key: string]: unknown
-}
+export type AbcClass = 'A' | 'B' | 'C'
 
-export interface AbcItemRow {
-  class: 'A' | 'B' | 'C'
-  percentage: number
+export const ABC_CLASSES: readonly AbcClass[] = ['A', 'B', 'C']
+
+export interface AbcClassRow {
+  class: AbcClass
   count: number
-  /** Formatted PYG share of the total inventory value. */
-  value: string
+  /** Ventas del período acumuladas por la clase. */
+  value: number
+  percentage: number
 }
 
-/** The three ABC rows of the dashboard, valuated over the given total. */
-export const buildAbcItems = (
-  abcSummary: AbcSummaryLike | null | undefined,
-  totalValue: number | null | undefined,
-): AbcItemRow[] => {
-  if (!abcSummary) return []
-  const total = totalValue || 0
-  const classes = [
-    { class: 'A' as const, percentage: abcSummary.class_a_value_pct ?? 0, count: abcSummary.class_a_count ?? 0 },
-    { class: 'B' as const, percentage: abcSummary.class_b_value_pct ?? 0, count: abcSummary.class_b_count ?? 0 },
-    { class: 'C' as const, percentage: abcSummary.class_c_value_pct ?? 0, count: abcSummary.class_c_count ?? 0 },
-  ]
-  return classes.map((c) => ({
-    ...c,
-    value: formatPYG((total * c.percentage) / 100),
-  }))
+const toNumber = (value: unknown): number => {
+  const numeric = Number(value)
+  return Number.isFinite(numeric) ? numeric : 0
 }
+
+/** Filas A/B/C con los campos del `summary` (sin reconstruir montos). */
+export const buildAbcClassRows = (summary: ABCSummary | null | undefined): AbcClassRow[] => {
+  if (!summary) return []
+  return [
+    {
+      class: 'A',
+      count: toNumber(summary.class_a_count),
+      value: toNumber(summary.class_a_value),
+      percentage: toNumber(summary.class_a_value_pct),
+    },
+    {
+      class: 'B',
+      count: toNumber(summary.class_b_count),
+      value: toNumber(summary.class_b_value),
+      percentage: toNumber(summary.class_b_value_pct),
+    },
+    {
+      class: 'C',
+      count: toNumber(summary.class_c_count),
+      value: toNumber(summary.class_c_value),
+      percentage: toNumber(summary.class_c_value_pct),
+    },
+  ]
+}
+
+/** Productos de una clase, sin `null` de Go y con la clase validada. */
+export const abcProductsForClass = (
+  analysis: ABCAnalysis | null | undefined,
+  abcClass: AbcClass,
+): ABCProduct[] => {
+  if (!analysis) return []
+  const rows =
+    abcClass === 'A'
+      ? analysis.class_a
+      : abcClass === 'B'
+        ? analysis.class_b
+        : analysis.class_c
+  return Array.isArray(rows) ? rows : []
+}
+
+/** Código de clase del BE normalizado; cualquier otro valor cae a C. */
+export const abcClassFromCode = (code: string | null | undefined): AbcClass => {
+  if (code === 'A' || code === 'B') return code
+  return 'C'
+}
+
+export const isAbcClass = (value: unknown): value is AbcClass =>
+  value === 'A' || value === 'B' || value === 'C'

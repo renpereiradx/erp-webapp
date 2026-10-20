@@ -52,6 +52,12 @@ export const shell = {
   'nav.salesTrendsVelocity': 'Trends & Velocity',
   'nav.salesPeriodComparison': 'Period Comparison',
   'nav.salesDiscounts': 'Discounts',
+  // F5 — full Inventory Analytics group (4 screens).
+  'nav.inventoryAnalytics': 'Inventory Analytics',
+  'nav.inventoryDashboard': 'Inventory Dashboard',
+  'nav.inventoryTurnoverAbc': 'Turnover & ABC',
+  'nav.inventoryStockLevels': 'Stock Levels',
+  'nav.inventoryRisk': 'Risk & Dead Stock',
   'nav.collapseSidebar': 'Collapse menu',
   'nav.expandSidebar': 'Expand menu',
   'nav.openMenu': 'Open menu',

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useI18n } from '@/lib/i18n'
 import { formatNumber, formatPYG } from '@/utils/currencyUtils'
 import { getCategoryKey } from '@/domain/dashboard/alerts'
@@ -15,13 +16,17 @@ const CATEGORY_LABELS: Record<string, string> = {
 const MAX_PRODUCTS = 5
 
 /**
+ * Rutas de alerta que YA existen en el router. F5 re-activa la de inventario
+ * (`/inventory-analytics/stock-levels`); `/profitability/*` (F6) y
+ * `/receivables/overdue` (F7) siguen fuera hasta que su pantalla exista. Un
+ * botón "Gestionar" que cae en 404 es la affordance muerta de la auditoría
+ * 2026-09.
+ */
+const ACTIONABLE_ALERT_ROUTES = new Set(['/inventory-analytics/stock-levels'])
+
+/**
  * Tarjeta de alerta. Título y mensaje son datos del servidor (no se traducen).
- *
- * F2: NO se renderiza el `action_url`. Sus destinos son pantallas BI que aún
- * no existen (`/inventory-analytics/*` F5, `/profitability/*` F6,
- * `/receivables/overdue` F7); un botón "Gestionar" que cae en 404 es
- * exactamente la affordance muerta que la auditoría 2026-09 marcó. Se
- * re-activa cuando cada pantalla destino exista.
+ * La acción "Gestionar" solo se renderiza si su destino existe.
  */
 export const AlertCard = ({ alert }: { alert: DashboardAlert }) => {
   const { t } = useI18n()
@@ -29,6 +34,8 @@ export const AlertCard = ({ alert }: { alert: DashboardAlert }) => {
   const products = alert.details?.products ?? []
   const visibleProducts = products.slice(0, MAX_PRODUCTS)
   const hiddenProducts = products.length - visibleProducts.length
+  const actionRoute =
+    alert.action_url && ACTIONABLE_ALERT_ROUTES.has(alert.action_url) ? alert.action_url : null
 
   return (
     <article
@@ -85,6 +92,17 @@ export const AlertCard = ({ alert }: { alert: DashboardAlert }) => {
               ) : null}
             </div>
           ) : null}
+        </div>
+      ) : null}
+
+      {actionRoute ? (
+        <div className="mt-sm">
+          <Link
+            to={actionRoute}
+            className="text-body-sm-bold text-primary hover:underline"
+          >
+            {t('dashboard.alerts.manage', 'Gestionar')}
+          </Link>
         </div>
       ) : null}
     </article>

@@ -111,6 +111,7 @@ export const dashboard = {
         search: 'Search alerts',
         searchPlaceholder: 'Search alerts (F2)…',
       },
+      manage: 'Manage',
       summary: {
         total: 'Active alerts',
         critical: 'Critical',

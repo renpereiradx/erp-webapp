@@ -735,3 +735,196 @@ su total una vez por línea.
   (`business_management`), sin push.
 - Sin push: F1+F2+F3+F4 quedan locales en la rama FE.
 
+
+---
+
+## 13. Estado de ejecución — F5 Analítica de Inventario (2026-10-20)
+
+**Rama FE:** `feature/bi-ui-rebuild` (F1+F2+F3+F4 sobre `dev` = `82710c7`).
+**Backend:** fix de sort en `dev` (ver §13.2), sin cambio de contrato.
+
+### 13.1 Ejecutado
+
+- **Rutas (4)** en `src/App.tsx`, lazy y con `AnalyticsRoute` =
+  `BiModuleRoute` (pack) → `PermissionGuard(analytics:read)`, el mismo par que
+  `biChain("analytics:read", "inventory-analytics")` del BE:
+  `/inventory-analytics/dashboard`, `/inventory-analytics/turnover-abc`,
+  `/inventory-analytics/stock-levels`, `/inventory-analytics/risk`.
+- **Feature `src/features/inventory-analytics/`** con la plantilla FSD:
+  `components/` (UI pura), `hooks/` (react-query + período en URL), `types/` y
+  barrel público. Cero fetch/cálculo en componentes.
+- **Páginas delgadas** en `src/pages/inventory-analytics/`:
+  `InventoryDashboardPage`, `TurnoverAbcPage`, `StockLevelsPage`,
+  `InventoryRiskPage`.
+- **Dominio puro** en `src/domain/inventory-analytics/`: `format`, `stock`,
+  `kpis`, `turnover`, `abc` (re-escrito), `reorder`, `deadStock`, `alerts`,
+  `aging`, `periods` y `constants`, todos con tests colocados.
+- **Servicio tipado** `services/bi/inventoryAnalyticsService.ts`: contrato real
+  de 8 endpoints (`overview`, `dashboard`, `stock-levels`, `turnover`, `abc`,
+  `dead-stock`, `reorder`, `aging`), limpieza de params y telemetría; sin
+  fallback demo. Se eliminaron `getForecast`/`getMovements` (F11 usa
+  `/forecast/*`; movimientos no está en el plan) y los tipos legacy
+  `StockLevelItem`/`InventoryTurnover` de `types/bi.ts` (sin consumidores).
+- **Nav**: subgrupo `Analítica de Inventario` con 4 hojas, permiso
+  `analytics:read` en todas (el padre BI ya usa anyOf). La marca del sidebar,
+  HomeRedirect y guards se mantienen en `/dashboard` (F2).
+- **i18n**: namespace `inventoryAnalytics` en `locales/{es,en}` (mismas claves,
+  verificadas por test) + `nav.inventory*` en ambos shells.
+- **Compartido**: `TableCard` se promovió de `features/sales-analytics` a
+  `components/ui/TableCard` (F4 re-exporta desde la ruta compartida); el
+  feature de inventario no importa componentes de Ventas.
+- **Alertas F2**: se re-activó "Gestionar" para
+  `/inventory-analytics/stock-levels` en `AlertCard` (destino ya existente).
+  `/profitability/*` (F6), `/receivables/overdue` (F7) y
+  `/comercial/presupuestos` siguen sin link; el page test de Alertas se ajustó.
+
+### 13.2 Bug del backend encontrado en el smoke (desviación documentada)
+
+`GET /inventory-analytics/stock-levels?sort_by=value` y `?sort_by=days`
+respondían **500** (`pq: column "stock_value"/"days_of_stock" does not exist`)
+en cualquier página/estado. El `validSortFields` del repo ofrecía
+`value → stock_value` y `days → days_of_stock`, pero el SELECT calculaba ambas
+expresiones **sin alias**. Se agregaron los alias (sin cambio de contrato JSON)
+y un test de regresión con BD real:
+`internal/platform/postgres/analytics_inventory_sort_test.go`
+(`TestInventoryAnalytics_StockLevelsSortFields`: recorre la whitelist completa
+y verifica orden DESC/ASC de `value` y `days`).
+El backend se reconstruyó y reinició en `:5050` con
+`CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000` (el
+reinicio sin esa variable rompía el preflight; misma nota que F4).
+
+### 13.3 Decisiones de borde (documentadas)
+
+- **Dashboard sin selector de período**: `/inventory-analytics/dashboard` y
+  `/overview` usan una ventana fija de 30 días (no aceptan `period`). Los
+  labels dicen "30 días"; no se ofrece un selector que el BE ignoraría.
+- **Estado del stock**: los cuatro umbrales del SQL se superponen
+  (`in_stock` > 5 incluye `overstock` > 15). No se dibuja una torta; se listan
+  conteos/porcentajes con la nota de superposición.
+- **Niveles de stock**: `summary.total_units/total_value` suman solo la página
+  (no el filtro completo): se rotulan "en esta página". `min_stock/max_stock/
+  reorder_point` son constantes 5/15/5 del SQL, no configuración del producto:
+  no se muestran por fila; los umbrales van en la descripción. No hay buscador
+  de texto porque el endpoint no lo acepta (filtrar solo la página sería una
+  mentira).
+- **Fechas con fallback**: el BE usa `created_at` si el producto nunca se
+  vendió/movió; la tabla de niveles lo aclara en la descripción y la de stock
+  muerto rotula "Última venta / alta" y "Último mov. / alta".
+- **Días 0 vs 999**: en niveles de stock/reposición `0` es real (quiebre
+  inmediato con stock 0 y demanda) y solo `999` es "sin ventas en 30 días". En
+  rotación `days_of_inventory <= 0` significa "sin costo de ventas en el
+  período" y se muestra `—` (no "0 días").
+- **Rotación**: `average_inventory` del contrato es el **valor actual del
+  stock a costo**, no un promedio del período: se rotula así. La nota explica
+  que los días se calculan con las ventas del período (los 2.839/3.822 días del
+  dev son reales, no un error de UI). `current_stock` es real; no se muestra
+  `average_stock` (el SQL escanea el stock actual, no un promedio).
+- **ABC**: se calcula sobre **ventas**, no sobre valor de inventario; montos
+  del `summary` sin re-derivar. `sku` es el id del producto y `turnover_rate`
+  viaja en 0 (el SELECT no lo calcula): no se muestran. El dashboard (30 días)
+  y la pantalla de rotación (período) pueden dar clases distintas porque usan
+  ventanas distintas; cada uno lo dice. El explorador abre la primera clase con
+  productos (en `week` puede haber solo clase C).
+- **Stock muerto**: no se muestra `potential_loss` (es `total_value * 0.3`
+  hardcodeado, no una pérdida medida) ni las recomendaciones en español del
+  BE; la recomendación por fila se deriva de los días reales con claves i18n
+  (mismos umbrales 120/180 del BE). Se sumó la antigüedad del stock
+  (`/aging`, no estaba en la pantalla vieja) con labels por `min_days/
+  max_days`, no por el texto español del servidor.
+- **Reposición**: `estimated_cost = 0` con pendientes se muestra `—` + hint
+  (costo unitario ausente), nunca "Gs. 0". La cantidad sugerida repone hasta
+  10 unidades (regla del reporte, explicitada). No se muestran
+  `average_lead_time_days` (viaja 0) ni `by_supplier` (no se completa).
+  `last_order_date` cero no se renderiza.
+- **Períodos**: `week` es rolling (últimos 7 días) en inventario
+  (`NewPeriodRolling`), `month`/`year` calendario y `today` el día calendario.
+  El valor vive en `?period=`.
+- **Scroll de tablas**: el hint "Deslizá la tabla…" aparece solo cuando la
+  tabla desborda su contenedor (ResizeObserver), no por breakpoint: a 1280 px
+  una tabla de 9-10 columnas scrollea aunque no sea mobile.
+
+### 13.4 Tests
+
+- Dominio: `format` (tasas < 0,01 con 4 decimales, días, fechas cero,
+  paginación), `stock` (estados, whitelist de sort, centinela 999 vs 0),
+  `kpis` (dashboard/turnover, days sin COGS), `turnover` (performance),
+  `abc` (summary/classes), `reorder` (prioridad, costo faltante, centinela),
+  `deadStock` (umbrales/recomendación, sin potential_loss), `aging` (tramos por
+  min/max), `alerts` (tipos/rutas existentes), `periods` — 43 casos.
+- Servicio: rutas/params de los 8 métodos, limpieza de params y error
+  telemetrizado — 7 tests.
+- Hooks: params por endpoint (página/estado/sort, período, días), normalización
+  de slices nil, error; período en URL — 14 tests.
+- Páginas: `InventoryDashboard` (KPIs/costos, estado, alertas + links, ABC,
+  movers, reposición, empty, error), `TurnoverAbc` (KPIs, nota de días,
+  performance, ABC tabs, clase por defecto no vacía, error de ABC sin tumbar
+  rotación), `StockLevels` (resumen page-scope, filtro/orden/paginación
+  server-side, costo faltante, centinela, empty, error), `InventoryRisk`
+  (umbrales, recomendaciones i18n, antigüedad, empty, error) — 18 tests.
+- i18n: paridad es/en, sin vacíos, claves nav y todas las claves estáticas de
+  F5 — 4 tests.
+- Nav: 4 hojas de inventario con `analytics:read`, grupo presente/ausente
+  según pack y permisos — test de F2-F4 actualizado.
+- Alertas: "Gestionar" solo con destino existente — page test F2 actualizado.
+
+### 13.5 Gates
+
+- `npx tsc --noEmit`: 0 errores.
+- `npx vitest --run`: **252 archivos / 1775 tests OK**.
+- `pnpm build`: OK; chunks lazy `InventoryDashboardPage`, `TurnoverAbcPage`,
+  `StockLevelsPage`, `InventoryRiskPage` (+ `InventoryKpiLedger`,
+  `InventoryRefreshButton` compartidos).
+- `pnpm lint:design -- --base dev`: OK (código nuevo limpio; 1108 legacy).
+- `pnpm lint`: 0 errores (132 warnings legacy, sin cambios).
+- Gate anti-fabricación §5.3: sin `mock`/`Math.random`/`sample`/`dummy` en
+  producción de F5 (solo el comentario "Sin fallback demo/mock" del servicio).
+- Gate TS: archivos nuevos de la fase solo `.ts`/`.tsx` (0 `.js`/`.jsx`).
+- Backend: `gofmt` limpio, `make build` OK,
+  `go test ./internal/platform/postgres ./internal/analytics/...` OK
+  (incluye el invariante de sort).
+- Auditoría `vercel-react-best-practices` aplicada con criterio: páginas lazy,
+  queries en paralelo/deduplicadas por react-query, `AbcExplorer` deriva la
+  clase activa sin `useEffect`, `InventoryTable` mide el overflow con
+  `ResizeObserver` (deps primitivas) y no hay componentes definidos dentro de
+  componentes. Excepción consciente: el barrel público del feature (plantilla
+  FSD del plan) en lugar de imports profundos.
+- **Smoke vivo** (`:5050` + Vite `:5173` `--mode api`, JWT de dev admin
+  `jJkV4F6HR`, rol `F2VLso`, entitlements core+bi): 4 pantallas con datos
+  reales, 0 errores de consola y 0 respuestas HTTP ≥400.
+  - Dashboard: valor Gs. 18.559.280 (costo Gs. 13.377.100), ganancia potencial
+    Gs. 5.182.180, rotación 0,11x, 277 días, quiebre 5,6 %, stock muerto
+    30,4 %; ABC 30 días A 3/Gs. 1.550.000/78,6 %, B 2/313.000/15,9 %,
+    C 13/107.965/5,5 %; 3 alertas con links a stock/riesgos; reposición 5 filas;
+    "Menor movimiento" vacío (el BE devuelve `[]`: empty honesto).
+  - Rotación/ABC (mes): 0,07x, 439 días, inventario a costo Gs. 13.377.100,
+    COGS Gs. 945.000; 3 categorías, 17 productos; ABC A 1/595.000/47,1 %,
+    B 1/455.000/36 %, C 16/214.500/17 %.
+  - `?period=week` (rolling): 0,0021x, 3.822 días, COGS Gs. 28.000; ABC clase C
+    18 productos (el explorador abre C, no la A vacía).
+  - Niveles: 18 productos, 10 filas server-side, 571 unidades y
+    Gs. 11.427.700 en la página; filtro Sin stock → 1 fila (0 días real);
+    sort por valor y días DESC/ASC verificado; reposición 6 (5 urgentes, 1 próximo),
+    Gs. 8.868.600, y una fila sin costo en `—`.
+  - Riesgos: 6 productos, 87 unidades, Gs. 4.062.700 (30,4 %), 282 días
+    promedio; umbral 120 recarga; antigüedad 5 tramos (promedio 140 días,
+    40,4 % > 90 d).
+  - Responsive 1440/1280/1024/390: `bodyOverflow=false`, tablas con scroll
+    interno y hint solo cuando desbordan; ABC como ledger en mobile.
+- Sin push: F1-F5 quedan locales en la rama FE; el fix BE queda local en
+  `dev` (mismo criterio que F4).
+
+### 13.6 Pendiente / deuda declarada
+
+- `searchableRoutes` de las rutas BI sigue vacío hasta F7/F8/F9 (con
+  `requiredModule: 'bi'`).
+- `AlertCard` solo linkea stock-levels; faltan F6/F7 y decidir
+  `/comercial/presupuestos` (Core, fuera del checklist del plan).
+- Los conteos de estado de stock se superponen por diseño del BE; si se quiere
+  un donut mutuamente excluyente hay que cambiar el contrato.
+- ABC clase C incluye productos sin ventas (stock > 0) con 0 %; es el SQL del
+  BE, no se filtra en el cliente.
+- `InventoryAnalyticsDashboard.trends`, `slow_movers.turnover_rate/
+  days_of_inventory` y `value_change_pct/turnover_change_pct` siguen sin
+  usarse: son relleno del payload, no métricas calculadas.
+- Sin pantalla de movimientos de stock ni pronóstico de inventario: fuera del
+  alcance de F5 (F11 cubre `/forecast/*`).

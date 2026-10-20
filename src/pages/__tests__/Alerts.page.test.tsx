@@ -1,8 +1,9 @@
 /**
  * AlertsPage (F2) — bandeja de `/dashboard/alerts`: severidades, filtros
  * client-side y detalle real (count/total/products). Cierra las affordances
- * muertas de la auditoría 2026-09: sin "Marcar leído", "Silenciar", "Ver
- * Reporte" ni "Gestionar" (sus destinos BI aún no existen).
+ * muertas de la auditoría 2026-09: sin "Marcar leído", "Silenciar" ni "Ver
+ * Reporte"; "Gestionar" solo aparece para destinos que existen (F5 re-activó
+ * el de stock-levels).
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
@@ -122,11 +123,15 @@ describe('AlertsPage (F2)', () => {
     expect(screen.getByText('CAMISETA ADIDAS')).toBeInTheDocument()
   })
 
-  it('no renderiza botones decorativos ni "Gestionar" (destino BI aún inexistente)', async () => {
+  it('solo enlaza "Gestionar" cuando el destino existe (stock-levels de F5)', async () => {
     renderPage()
     await screen.findByText('Stock agotado')
 
-    for (const name of [/marcar/i, /silenciar/i, /ver reporte/i, /gestionar/i, /actualizar datos/i]) {
+    const manageLinks = screen.getAllByRole('link', { name: 'Gestionar' })
+    expect(manageLinks).toHaveLength(1)
+    expect(manageLinks[0]).toHaveAttribute('href', '/inventory-analytics/stock-levels')
+
+    for (const name of [/marcar/i, /silenciar/i, /ver reporte/i, /actualizar datos/i]) {
       expect(screen.queryByRole('button', { name })).toBeNull()
       expect(screen.queryByRole('link', { name })).toBeNull()
     }

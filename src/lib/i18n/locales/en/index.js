@@ -28,6 +28,7 @@ import { reservations } from './reservations'
 import { dashboard } from './dashboard'
 import { relationalAnalytics } from './relationalAnalytics'
 import { salesAnalytics } from './salesAnalytics'
+import { inventoryAnalytics } from './inventoryAnalytics'
 import { es } from '../es/index'
 
 /**
@@ -75,4 +76,5 @@ export const en = {
   ...dashboard,
   ...relationalAnalytics,
   ...salesAnalytics,
+  ...inventoryAnalytics,
 }
