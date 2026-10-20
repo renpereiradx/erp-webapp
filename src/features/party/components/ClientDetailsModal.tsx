@@ -1,7 +1,9 @@
+import { ShoppingBag } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import EnhancedModal from '@/components/ui/EnhancedModal';
+import BiDrilldownButton from '@/components/bi/BiDrilldownButton';
 import DetailField from '@/features/party/components/DetailField';
 import CreditAccountSection from '@/features/party/components/CreditAccountSection';
 import { countryDisplayName } from '@/domain/party/identity';
@@ -41,6 +43,7 @@ const ClientDetailsContent = ({
 }) => {
   const { t, lang } = useI18n();
   const isActive = client.status !== false && client.status !== 'inactive';
+  const clientId = String(client.id ?? client._key ?? '');
 
   return (
     <EnhancedModal
@@ -49,7 +52,17 @@ const ClientDetailsContent = ({
       title={t('clients.modal.title.details', 'Detalles del Cliente')}
       size="lg"
       footer={
-        <div className="flex flex-wrap justify-between gap-sm">
+        <div className="flex flex-wrap items-center justify-end gap-sm">
+          {/* F3: drill-down a "Productos que compra" (se oculta sin pack BI). */}
+          {clientId ? (
+            <BiDrilldownButton
+              to={`/sales-analytics/customers/top-products?customer_id=${encodeURIComponent(clientId)}`}
+              label={t('relationalAnalytics.actions.customerTop', 'Productos que compra')}
+              icon={ShoppingBag}
+              onBeforeNavigate={onClose}
+              testId="client-details-bi-drilldown"
+            />
+          ) : null}
           <Button variant="secondary" type="button" onClick={onClose} className="whitespace-nowrap">
             {t('action.close', 'Cerrar')}
           </Button>

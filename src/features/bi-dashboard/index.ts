@@ -22,14 +22,11 @@ export { KpiValue } from './components/KpiValue'
 export { OperationsPanel } from './components/OperationsPanel'
 export { PanelSkeleton, CardGridSkeleton } from './components/Skeletons'
 export { PartialDataBanner } from './components/PartialDataBanner'
-export { QueryBoundary } from './components/QueryBoundary'
 export { SummaryCards } from './components/SummaryCards'
-export { TableEmptyState } from './components/TableEmptyState'
 export { TopProductsPreview } from './components/TopProductsPreview'
 export { TopProductsTable } from './components/TopProductsTable'
 export { TrendIndicator } from './components/TrendIndicator'
 export { TrendsPanel } from './components/TrendsPanel'
-export { getErrorMessage } from './utils'
 export {
   DASHBOARD_STALE_TIME,
   dashboardQueryKeys,

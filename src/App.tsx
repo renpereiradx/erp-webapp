@@ -33,6 +33,11 @@ const DashboardKpisPage = lazy(() => import('@/pages/dashboard/DashboardKpisPage
 const SalesHeatmapPage = lazy(() => import('@/pages/dashboard/SalesHeatmapPage'))
 const AlertasPage = lazy(() => import('@/pages/dashboard/AlertsPage'))
 const TopProductsPage = lazy(() => import('@/pages/dashboard/TopProductsPage'))
+// PLAN_REBUILD_BI_UI_FRONTEND F3: drill-downs relacionales (4 pantallas lazy).
+const ProductBuyersPage = lazy(() => import('@/pages/sales-analytics/ProductBuyersPage'))
+const CustomerTopProductsPage = lazy(() => import('@/pages/sales-analytics/CustomerTopProductsPage'))
+const SupplierTopProductsPage = lazy(() => import('@/pages/purchase-analytics/SupplierTopProductsPage'))
+const ProductSuppliersPage = lazy(() => import('@/pages/purchase-analytics/ProductSuppliersPage'))
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import { CounterOrdersPage } from '@/features/counterorders'
@@ -183,6 +188,14 @@ const BiPermissionGuard = ({
 /** Guard del módulo dashboard (dashboard:read + pack BI; el sidebar ya lo gated). */
 const DashboardRoute = ({ children }: { children: React.ReactNode }) => (
   <BiPermissionGuard permission='dashboard:read'>{children}</BiPermissionGuard>
+)
+
+/**
+ * F3 — los 4 drill-downs relacionales comparten la cadena BE
+ * `RequireModule('bi')` → `analytics:read` (`biChain("analytics:read", …)`).
+ */
+const AnalyticsRoute = ({ children }: { children: React.ReactNode }) => (
+  <BiPermissionGuard permission='analytics:read'>{children}</BiPermissionGuard>
 )
 
 function AppContent() {
@@ -343,6 +356,14 @@ function AppContent() {
                       <Route path='/dashboard/sales-heatmap' element={<DashboardRoute><SalesHeatmapPage /></DashboardRoute>} />
                       <Route path='/dashboard/alerts' element={<DashboardRoute><AlertasPage /></DashboardRoute>} />
                       <Route path='/dashboard/top-products' element={<DashboardRoute><TopProductsPage /></DashboardRoute>} />
+                      {/* PLAN_REBUILD_BI_UI_FRONTEND F3 — drill-downs relacionales.
+                          Guard: pack BI (BiModuleRoute) + analytics:read, el
+                          mismo par que la cadena BE de /sales-analytics y
+                          /purchase-analytics. La entidad viaja por query param. */}
+                      <Route path='/sales-analytics/products/buyers' element={<AnalyticsRoute><ProductBuyersPage /></AnalyticsRoute>} />
+                      <Route path='/sales-analytics/customers/top-products' element={<AnalyticsRoute><CustomerTopProductsPage /></AnalyticsRoute>} />
+                      <Route path='/purchase-analytics/suppliers/top-products' element={<AnalyticsRoute><SupplierTopProductsPage /></AnalyticsRoute>} />
+                      <Route path='/purchase-analytics/products/suppliers' element={<AnalyticsRoute><ProductSuppliersPage /></AnalyticsRoute>} />
                       <Route path='/finance/sifen-inutilizacion' element={
                         <PermissionGuard permission='sifen:read'>
                           <SkippedNumbersPage />

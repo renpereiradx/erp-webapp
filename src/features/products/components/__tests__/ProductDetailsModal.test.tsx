@@ -1,10 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProductDetailsModal from '../ProductDetailsModal';
+
+const biState = vi.hoisted(() => ({ enabled: true }));
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ hasPermission: () => true }),
+  useBiPackEnabled: () => biState.enabled,
 }));
 
 vi.mock('@/lib/i18n', () => ({
@@ -52,6 +55,10 @@ const product = {
 };
 
 describe('ProductDetailsModal', () => {
+  beforeEach(() => {
+    biState.enabled = true;
+  });
+
   it('muestra la card de Precio de Venta priorizando la unidad base', () => {
     render(<MemoryRouter><ProductDetailsModal isOpen onClose={() => {}} product={product} /></MemoryRouter>);
 
@@ -87,5 +94,39 @@ describe('ProductDetailsModal', () => {
     );
 
     expect(screen.queryByText('Precio de Venta')).toBeNull();
+  });
+
+  it('F3: los pivotes BI navegan al drill-down y cierran la ficha', () => {
+    const onClose = vi.fn();
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route
+            path='/'
+            element={<ProductDetailsModal isOpen onClose={onClose} product={product} />}
+          />
+          <Route
+            path='/sales-analytics/products/buyers'
+            element={<div>RUTA_COMPRADORES</div>}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByTestId('product-details-bi-buyers'));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('RUTA_COMPRADORES')).toBeTruthy();
+  });
+
+  it('F3: sin pack BI los pivotes no se renderizan', () => {
+    biState.enabled = false;
+    render(
+      <MemoryRouter>
+        <ProductDetailsModal isOpen onClose={() => {}} product={product} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByTestId('product-details-bi-buyers')).toBeNull();
+    expect(screen.queryByTestId('product-details-bi-suppliers')).toBeNull();
   });
 });

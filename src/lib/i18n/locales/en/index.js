@@ -26,6 +26,7 @@ import { other } from './other'
 import { version } from './version'
 import { reservations } from './reservations'
 import { dashboard } from './dashboard'
+import { relationalAnalytics } from './relationalAnalytics'
 import { es } from '../es/index'
 
 /**
@@ -71,4 +72,5 @@ export const en = {
   ...version,
   ...reservations,
   ...dashboard,
+  ...relationalAnalytics,
 }

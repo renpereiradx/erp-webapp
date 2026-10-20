@@ -30,3 +30,25 @@ describe('variantService.getStockSummary', () => {
     await expect(variantService.getStockSummary('p1')).rejects.toThrow('stock-summary 500')
   })
 })
+
+/**
+ * getVariantById: `/api/v1/variants/{id}` responde la variante directa (el
+ * handler no usa envelope). Devolver response.data daba undefined y la
+ * cabecera del drill-down F3 caía al id en vez del nombre de la variante.
+ */
+describe('variantService.getVariantById', () => {
+  it('devuelve la variante directa del body', async () => {
+    const variant = { id: 'VAR-1', variant_name: 'Rojo M', sku: 'AD-R-M' }
+    getMock.mockResolvedValue(variant)
+
+    await expect(variantService.getVariantById('VAR-1')).resolves.toEqual(variant)
+    expect(getMock).toHaveBeenCalledWith('/api/v1/variants/VAR-1')
+  })
+
+  it('tolera un envelope {data} si el endpoint cambia', async () => {
+    const variant = { id: 'VAR-1', variant_name: 'Rojo M', sku: 'AD-R-M' }
+    getMock.mockResolvedValue({ data: variant })
+
+    await expect(variantService.getVariantById('VAR-1')).resolves.toEqual(variant)
+  })
+})

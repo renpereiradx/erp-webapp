@@ -30,6 +30,7 @@ import {
   Tags,
   TrendingUp,
   User,
+  UserCheck,
   Users,
 } from 'lucide-react'
 import type { NavigationItem, TFn } from './types'
@@ -90,6 +91,44 @@ export const buildNavigation = (
                   name: t('nav.dashboardTopProducts', 'Top de Productos'),
                   href: '/dashboard/top-products',
                   icon: Award,
+                },
+              ],
+            },
+            // F3 — drill-downs relacionales. F4 completa la Analítica de
+            // Ventas; acá solo existen las pantallas ya re-implementadas.
+            {
+              name: t('nav.salesAnalytics', 'Analítica de Ventas'),
+              href: '#',
+              icon: UserCheck,
+              permission: 'analytics:read',
+              children: [
+                {
+                  name: t('nav.relationalBuyers', 'Compradores por Producto'),
+                  href: '/sales-analytics/products/buyers',
+                  icon: UserCheck,
+                },
+                {
+                  name: t('nav.relationalCustomerTop', 'Productos por Cliente'),
+                  href: '/sales-analytics/customers/top-products',
+                  icon: ShoppingBag,
+                },
+              ],
+            },
+            {
+              name: t('nav.purchaseAnalytics', 'Analítica de Compras'),
+              href: '#',
+              icon: ShoppingCart,
+              permission: 'analytics:read',
+              children: [
+                {
+                  name: t('nav.relationalSupplierTop', 'Productos Suministrados'),
+                  href: '/purchase-analytics/suppliers/top-products',
+                  icon: Package,
+                },
+                {
+                  name: t('nav.relationalProductSuppliers', 'Comparar Proveedores'),
+                  href: '/purchase-analytics/products/suppliers',
+                  icon: Tags,
                 },
               ],
             },

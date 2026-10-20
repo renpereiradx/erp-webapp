@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
 import { DollarSign, Package, Search, TrendingUp } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
+import { QueryBoundary } from '@/components/ui/QueryBoundary'
+import { TableEmptyState } from '@/components/ui/TableEmptyState'
 import { Input } from '@/components/ui/input'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import { useI18n } from '@/lib/i18n'
@@ -15,8 +17,6 @@ import {
   KpiCard,
   PanelSkeleton,
   PartialDataBanner,
-  QueryBoundary,
-  TableEmptyState,
   TopProductsTable,
   useDashboardTopProducts,
 } from '@/features/bi-dashboard'

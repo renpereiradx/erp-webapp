@@ -4,6 +4,15 @@
  * Descriptores puros: la tabla genérica del feature los renderiza.
  */
 
+/** Entidad que identifica el drill-down (query param de la ruta). */
+export type RelationalEntityKind = 'product' | 'client' | 'supplier';
+
+/**
+ * Endpoints con whitelist de sort propia en el BE (`ParseRelationalSort`):
+ * los dos primeros comparten el contrato de filas #2/#3 (top-products).
+ */
+export type RelationalEndpoint = 'product-buyers' | 'top-products' | 'product-suppliers';
+
 export interface ProductBuyerRow {
   client_id: string;
   client_name: string;
@@ -79,6 +88,15 @@ export interface DrilldownColumn<Row = Record<string, unknown>> {
   labelFallback: string;
   format: CellFormat;
   align: 'left' | 'right';
+  /** identificador secundario (documento/SKU/moneda): mono */
+  mono?: boolean;
+  /** identificador secundario: tono apagado, sin competir con la entidad */
+  muted?: boolean;
   /** si el campo participa del sort whitelist del endpoint */
   sortable?: boolean;
+  /**
+   * Campo de moneda de la fila (solo #4): cuando el endpoint declara la
+   * moneda base, los montos se formatean con ese código en vez de asumir PYG.
+   */
+  currencyKey?: keyof Row & string;
 }

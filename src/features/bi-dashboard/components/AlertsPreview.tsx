@@ -5,7 +5,7 @@ import { sortAlertsBySeverity } from '@/domain/dashboard/alerts'
 import type { DashboardAlert } from '@/types/bi'
 import { DashboardSection } from './DashboardSection'
 import { AlertCard } from './AlertCard'
-import { QueryBoundary } from './QueryBoundary'
+import { QueryBoundary } from '@/components/ui/QueryBoundary'
 import { PanelSkeleton } from './Skeletons'
 
 interface AlertsPreviewProps {

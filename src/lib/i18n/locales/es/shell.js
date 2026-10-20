@@ -38,6 +38,13 @@ export const shell = {
   'nav.dashboardHeatmap': 'Análisis de Ventas',
   'nav.dashboardAlerts': 'Alertas de Negocio',
   'nav.dashboardTopProducts': 'Top de Productos',
+  // F3 — drill-downs relacionales (grupos Ventas/Compras del pack BI).
+  'nav.salesAnalytics': 'Analítica de Ventas',
+  'nav.purchaseAnalytics': 'Analítica de Compras',
+  'nav.relationalBuyers': 'Compradores por Producto',
+  'nav.relationalCustomerTop': 'Productos por Cliente',
+  'nav.relationalSupplierTop': 'Productos Suministrados',
+  'nav.relationalProductSuppliers': 'Comparar Proveedores',
   'nav.collapseSidebar': 'Colapsar menú',
   'nav.expandSidebar': 'Expandir menú',
   'nav.openMenu': 'Abrir menú',

@@ -42,6 +42,7 @@ import { branches } from './branches'
 import { version } from './version'
 import { reservations } from './reservations'
 import { dashboard } from './dashboard'
+import { relationalAnalytics } from './relationalAnalytics'
 
 /**
  * Diccionario completo de traducciones en español
@@ -87,4 +88,5 @@ export const es = {
   ...version,
   ...reservations,
   ...dashboard,
+  ...relationalAnalytics,
 }

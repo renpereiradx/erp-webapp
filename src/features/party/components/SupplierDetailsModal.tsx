@@ -1,7 +1,9 @@
+import { Package } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import EnhancedModal from '@/components/ui/EnhancedModal';
+import BiDrilldownButton from '@/components/bi/BiDrilldownButton';
 import DetailField from '@/features/party/components/DetailField';
 import { countryDisplayName } from '@/domain/party/identity';
 import type { SupplierInput } from '@/domain/party/supplierForm';
@@ -43,6 +45,7 @@ const SupplierDetailsContent = ({
   const { t, lang } = useI18n();
   const contact = supplier.contact || {};
   const isActive = supplier.status !== false;
+  const supplierId = String(supplier.id ?? supplier._key ?? '');
 
   // Dirección estructurada (columnas address_*) con fallback al texto
   // legacy guardado en contact_info.address.
@@ -71,7 +74,17 @@ const SupplierDetailsContent = ({
       title={t('supplier.details.title', 'Detalle del proveedor')}
       size="md"
       footer={
-        <div className="flex justify-center gap-sm">
+        <div className="flex flex-wrap items-center justify-end gap-sm">
+          {/* F3: drill-down a "Productos suministrados" (se oculta sin pack BI). */}
+          {supplierId ? (
+            <BiDrilldownButton
+              to={`/purchase-analytics/suppliers/top-products?supplier_id=${encodeURIComponent(supplierId)}`}
+              label={t('relationalAnalytics.actions.supplierTop', 'Productos suministrados')}
+              icon={Package}
+              onBeforeNavigate={onClose}
+              testId="supplier-details-bi-drilldown"
+            />
+          ) : null}
           <Button variant="secondary" type="button" onClick={onClose}>
             {t('action.close', 'Cerrar')}
           </Button>

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { CircleDollarSign, LayoutGrid, Receipt } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
+import { QueryBoundary } from '@/components/ui/QueryBoundary'
 import { useI18n } from '@/lib/i18n'
 import { formatNumber, formatPYG } from '@/utils/currencyUtils'
 import { summarizeHeatmap } from '@/domain/dashboard/heatmap'
@@ -15,7 +16,6 @@ import {
   KpiCard,
   PanelSkeleton,
   PartialDataBanner,
-  QueryBoundary,
   useDashboardSalesHeatmap,
 } from '@/features/bi-dashboard'
 

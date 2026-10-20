@@ -38,6 +38,13 @@ export const shell = {
   'nav.dashboardHeatmap': 'Sales Analysis',
   'nav.dashboardAlerts': 'Business Alerts',
   'nav.dashboardTopProducts': 'Top Products',
+  // F3 — relational drill-downs (BI pack Sales/Purchases groups).
+  'nav.salesAnalytics': 'Sales Analytics',
+  'nav.purchaseAnalytics': 'Purchase Analytics',
+  'nav.relationalBuyers': 'Buyers by Product',
+  'nav.relationalCustomerTop': 'Products by Customer',
+  'nav.relationalSupplierTop': 'Supplied Products',
+  'nav.relationalProductSuppliers': 'Compare Suppliers',
   'nav.collapseSidebar': 'Collapse menu',
   'nav.expandSidebar': 'Expand menu',
   'nav.openMenu': 'Open menu',

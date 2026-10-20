@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { AlertTriangle, BellOff, BellRing, Info, ShieldAlert } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import EmptyState from '@/components/ui/EmptyState'
+import { QueryBoundary } from '@/components/ui/QueryBoundary'
 import { useI18n } from '@/lib/i18n'
 import { useSearchFocusShortcut } from '@/hooks/useSearchFocusShortcut'
 import {
@@ -20,7 +21,6 @@ import {
   KpiCard,
   PanelSkeleton,
   PartialDataBanner,
-  QueryBoundary,
   useDashboardAlerts,
 } from '@/features/bi-dashboard'
 

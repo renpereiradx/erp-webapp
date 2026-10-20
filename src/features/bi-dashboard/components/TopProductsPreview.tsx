@@ -5,7 +5,7 @@ import { formatNumber, formatPYG } from '@/utils/currencyUtils'
 import { getMarginTone } from '@/domain/dashboard/topProducts'
 import type { TopProduct } from '@/types/bi'
 import { DashboardSection } from './DashboardSection'
-import { QueryBoundary } from './QueryBoundary'
+import { QueryBoundary } from '@/components/ui/QueryBoundary'
 import { PanelSkeleton } from './Skeletons'
 
 interface TopProductsPreviewProps {

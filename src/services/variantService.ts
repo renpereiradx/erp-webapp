@@ -67,8 +67,11 @@ export const variantService = {
 
   getVariantById: async (id: string): Promise<ProductVariant> => {
     try {
+      // El handler de Go escribe la variante directa (sin wrapper): .data es
+      // undefined y rompía la resolución del nombre en la cabecera del
+      // drill-down. Se toleran ambas formas.
       const response = await apiClient.get(`/api/v1/variants/${id}`);
-      return response.data;
+      return response?.data ?? response;
     } catch (error) {
       console.error('Error fetching variant:', error);
       throw error;

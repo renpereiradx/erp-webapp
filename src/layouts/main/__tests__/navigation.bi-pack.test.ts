@@ -1,8 +1,8 @@
 /**
- * PLAN_REBUILD_BI_UI_FRONTEND F2 — el grupo BI vuelve a existir con el
- * subgrupo Dashboard (5 rutas) cuando hay pack + analytics:read +
- * dashboard:read. Sin pack, sin dashboard:read o sin hojas visibles, el
- * padre se oculta. SIFEN sigue como grupo Core propio (ADR-3).
+ * PLAN_REBUILD_BI_UI_FRONTEND F2/F3 — el grupo BI existe con Dashboard (5
+ * rutas) + los drill-downs relacionales de Ventas/Compras cuando hay pack y
+ * analytics:read. Sin pack o sin hojas visibles el padre se oculta. SIFEN
+ * sigue como grupo Core propio (ADR-3).
  */
 import { describe, it, expect } from 'vitest'
 import { buildNavigation, filterNavigationItems } from '../navigation'
@@ -38,13 +38,17 @@ const findByName = (items: NavigationItem[], name: string): NavigationItem | und
   return undefined
 }
 
-describe('navigation — F2 Dashboard BI re-activado', () => {
-  it('admin con pack: grupo BI con el subgrupo Dashboard y sus 5 rutas', () => {
+describe('navigation — Dashboard BI (F2) + drill-downs relacionales (F3)', () => {
+  it('admin con pack: Dashboard + los grupos de drill-downs con sus rutas', () => {
     const tree = filterNavigationItems(buildNavigation(t, false, true), checksFor(ADMIN_PERMS))
 
     const bi = findByName(tree, 'Inteligencia de Negocios')
     expect(bi).toBeDefined()
-    expect(bi?.children?.map((child) => child.name)).toEqual(['Dashboard'])
+    expect(bi?.children?.map((child) => child.name)).toEqual([
+      'Dashboard',
+      'Analítica de Ventas',
+      'Analítica de Compras',
+    ])
 
     const dashboard = findByName(tree, 'Dashboard')
     expect(dashboard?.children?.map((child) => child.href)).toEqual([
@@ -54,6 +58,18 @@ describe('navigation — F2 Dashboard BI re-activado', () => {
       '/dashboard/alerts',
       '/dashboard/top-products',
     ])
+
+    const sales = findByName(tree, 'Analítica de Ventas')
+    expect(sales?.children?.map((child) => child.href)).toEqual([
+      '/sales-analytics/products/buyers',
+      '/sales-analytics/customers/top-products',
+    ])
+
+    const purchases = findByName(tree, 'Analítica de Compras')
+    expect(purchases?.children?.map((child) => child.href)).toEqual([
+      '/purchase-analytics/suppliers/top-products',
+      '/purchase-analytics/products/suppliers',
+    ])
   })
 
   it('sin pack BI (biEnabled=false) el grupo no existe; SIFEN sigue como Core', () => {
@@ -61,14 +77,22 @@ describe('navigation — F2 Dashboard BI re-activado', () => {
 
     expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()
     expect(findByName(tree, 'Dashboard')).toBeUndefined()
+    expect(findByName(tree, 'Analítica de Ventas')).toBeUndefined()
+    expect(findByName(tree, 'Analítica de Compras')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
   })
 
-  it('con analytics:read pero sin dashboard:read el grupo se oculta (sin hojas)', () => {
+  it('con analytics:read sin dashboard:read: BI sigue visible por los drill-downs, sin Dashboard', () => {
     const perms = ADMIN_PERMS.filter((p) => p !== 'dashboard:read')
     const tree = filterNavigationItems(buildNavigation(t, false, true), checksFor(perms))
 
-    expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()
+    const bi = findByName(tree, 'Inteligencia de Negocios')
+    expect(bi).toBeDefined()
+    expect(bi?.children?.map((child) => child.name)).toEqual([
+      'Analítica de Ventas',
+      'Analítica de Compras',
+    ])
+    expect(findByName(tree, 'Dashboard')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
   })
 

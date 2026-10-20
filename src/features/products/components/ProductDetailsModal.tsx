@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/lib/i18n';
-import { Edit, Package, Info, Layout, Activity, TrendingUp, CheckCircle2, AlertTriangle, ShieldCheck, Clock } from 'lucide-react';
+import { Edit, Package, Info, Layout, Activity, TrendingUp, CheckCircle2, AlertTriangle, ShieldCheck, Clock, Users, ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +13,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import EnhancedModal from '@/components/ui/EnhancedModal';
+import BiDrilldownButton from '@/components/bi/BiDrilldownButton';
 import { useToast } from '@/hooks/useToast';
 import { ProductOperationInfoResponse, ProductVariant } from '@/types';
 import { variantService } from '@/services/variantService';
@@ -156,7 +157,26 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit, 
         className="rounded-xl flex flex-col"
         testId="product-details-modal"
         footer={
-          <div className="flex items-center justify-end gap-sm">
+          <div className="flex flex-wrap items-center justify-end gap-sm">
+            {/* F3: pivotes relacionales desde la ficha (se ocultan sin pack BI). */}
+            {productId ? (
+              <>
+                <BiDrilldownButton
+                  to={`/sales-analytics/products/buyers?product_id=${encodeURIComponent(String(productId))}`}
+                  label={t('relationalAnalytics.actions.buyers', 'Ver compradores')}
+                  icon={Users}
+                  onBeforeNavigate={onClose}
+                  testId="product-details-bi-buyers"
+                />
+                <BiDrilldownButton
+                  to={`/purchase-analytics/products/suppliers?product_id=${encodeURIComponent(String(productId))}`}
+                  label={t('relationalAnalytics.actions.compareSuppliers', 'Comparar proveedores')}
+                  icon={ArrowLeftRight}
+                  onBeforeNavigate={onClose}
+                  testId="product-details-bi-suppliers"
+                />
+              </>
+            ) : null}
             <Button variant="secondary" onClick={onClose} className="rounded-button">
               {t('products.modal.action.cancel')}
             </Button>

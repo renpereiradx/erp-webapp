@@ -400,3 +400,153 @@ aplicada con criterio (sin reporte en conductor salvo pedido).
     `index.js` de i18n para que el Vite long-lived re-resolviera el módulo; un reinicio de
     `pnpm dev:api` produce el mismo efecto.
 - Sin push: la rama queda con F1+F2 locales.
+
+---
+
+## 10. Estado de ejecución — F3 Drill-downs relacionales (2026-10-20)
+
+**Rama:** `feature/bi-ui-rebuild` (F1+F2 sobre `dev` = `82710c7`).
+
+### Ejecutado
+
+- **Rutas (4)** en `src/App.tsx`, lazy y con `AnalyticsRoute` =
+  `BiModuleRoute` (pack) → `PermissionGuard(analytics:read)`, el mismo par que
+  `biChain("analytics:read", …)` del BE:
+  `/sales-analytics/products/buyers`, `/sales-analytics/customers/top-products`,
+  `/purchase-analytics/suppliers/top-products`, `/purchase-analytics/products/suppliers`.
+- **Feature `src/features/relational-analytics/`** con la plantilla FSD:
+  `components/` (solo UI), `hooks/` (react-query + picker + copia), `types/` y
+  barrel público. Cero fetch/cálculo en componentes.
+- **Páginas delgadas** en `src/pages/sales-analytics/` (2) y
+  `src/pages/purchase-analytics/` (2): config de columnas, labels, menú por
+  fila y composición del `DrilldownScreen`.
+- **Dominio puro** en `src/domain/relational-analytics/`: whitelist de sort
+  espejo de `ParseRelationalSort` + `withSortableColumns`, validación de rango
+  de fechas, identidad de entidad (nombre/documento/SKU con fallback al id),
+  formateadores money/units/count/date. Todo con tests colocados.
+- **Servicio tipado** `services/bi/relationalAnalyticsService.ts`: 4 métodos
+  con `BIEnvelope<RelationalResponse<Row>>` (rows del contrato #1/#2/#3/#4),
+  limpieza de params y telemetría de error. Test de contrato de rutas/params.
+- **Puntos de entrada §3.3 re-activados**:
+  - Grupo nav BI: subgrupos `Analítica de Ventas` (Compradores por Producto,
+    Productos por Cliente) y `Analítica de Compras` (Productos Suministrados,
+    Comparar Proveedores), con `analytics:read`. F4 completa Ventas.
+  - #8 modal de cliente → Productos que compra.
+  - #10 modal de proveedor → Productos suministrados.
+  - #11 ficha de producto → Ver compradores + Comparar proveedores.
+  - Los 3 botones usan el componente compartido `components/bi/BiDrilldownButton`,
+    que se oculta sin pack BI o sin `analytics:read` (evita un botón que
+    termina en redirect). `searchableRoutes` sigue pendiente de F7/F8/F9.
+- **i18n**: namespace `relationalAnalytics` en `locales/{es,en}` + claves
+  `nav.*` de los dos subgrupos; test de paridad es/en y de claves nav.
+- **Compartido**: `QueryBoundary` y `TableEmptyState` se promovieron de
+  `features/bi-dashboard/` a `components/ui/` para que F3 no importe de otra
+  feature (F2 actualizado a la ruta compartida).
+- **Fix Core detectado en el smoke**: `variantService.getVariantById` devolvía
+  `response.data` sobre un endpoint que responde la variante directa (sin
+  envelope) → `undefined` y la cabecera caía al id. Ahora tolera ambas formas;
+  test agregado.
+
+### Decisiones de borde (documentadas)
+
+- **Insumos de auditoría**: la auditoría 2026-09 no tiene archivos para estos
+  4 drill-downs (se agregaron después del barrido). La verificación se hizo
+  contra el contrato §4 (`internal/analytics/relational.go`), el SQL de los
+  repos y los endpoints en vivo, más los tests de contrato del servicio.
+- **Nombres de entidad**: la URL solo lleva el id; la cabecera resuelve el
+  nombre contra el endpoint Core de la entidad (`/products/{id}`,
+  `/api/v1/clients/{id}`, `/api/v1/suppliers/{id}`) y cae al id si falla. La
+  query BI nunca depende de esa resolución (corren en paralelo).
+- **Sort**: las columnas ordenables se derivan de la whitelist del BE
+  (`withSortableColumns`), no se marcan a mano; un campo fuera de la lista
+  sería un 400. Defaults del BE visibles desde el primer render
+  (`-total`, `-units`, `+last_unit_price`).
+- **Envelope**: si `data` falta, la query falla y se muestra el error; nunca
+  una tabla vacía silenciosa. El mensaje visible es i18n; el error crudo queda
+  en telemetría.
+- **Filtros**: fecha server-side (aplican al elegirlas), texto con
+  draft/aplicado (Enter/Aplicar, F2 enfoca el buscador). Un rango `Desde >
+  Hasta` bloquea la query, muestra el aviso y oculta la tabla anterior.
+  Cambiar de entidad limpia filtros y página (nuevo análisis = estado limpio).
+- **Placeholder de paginación**: `keepPreviousData` solo dentro del mismo
+  scope (endpoint + entidad + variante); al cambiar de producto/cliente no se
+  muestran filas de la entidad anterior mientras carga.
+- **Unidades**: la UOM base se muestra real (`40 kg`, `1,5 kg`); los códigos
+  genéricos (`unit`/`unidad`) se rotulan `ud.`/`uds.` y `units <= 0` se
+  muestra `—`: el BE devuelve 0 cuando `sdBaseQty` no pudo normalizar, no una
+  venta de 0 unidades (había filas con importe real y "0 uds.").
+- **Fechas**: se formatean con el locale de la UI (`es-PY`/`en-US`), no con el
+  del navegador (en un navegador en inglés las fechas de una pantalla es
+  salían `5/22/2026`).
+- **#4 (proveedores por producto)**: los montos usan la `currency` que declara
+  cada fila; se eliminó la columna "Moneda" porque el símbolo ya está en cada
+  monto y liberaba ancho para las 8 columnas. El banner
+  `excluded_other_currency` sale del payload y solo aparece si el BE excluyó
+  compras en otra moneda. `last_unit_price` ordena ASC por defecto (D5: el
+  más barato primero).
+- **Menú por fila**: pivotes reales entre los 4 análisis + copiar
+  documento/SKU (clipboard con toast). Resúmenes en formato `Label: valor`
+  (`Compras: 3`) para no imprimir "1 compras"; el importe va primero para que
+  un truncado no se lleve la cifra principal.
+- **Picker**: producto con la búsqueda plana canónica (`granularity=variant`,
+  signal reenviado al HTTP); clientes/proveedores con `searchByName` (no
+  acepta signal — deuda Core preexistente; el dropdown descarta respuestas
+  viejas). "Cambiar" vuelve al picker conservando la ruta.
+- **Mobile**: buscador a ancho completo y aviso "Deslizá la tabla…" para la
+  tabla densa (scroll horizontal dentro de la card, sin overflow del body).
+
+### Tests
+
+- Dominio: `sort` (whitelist/defaults/columnas), `entity`, `filters`,
+  `normalize` (money/units/date/count) — 38 tests.
+- Servicios: contrato de los 4 endpoints + limpieza de params + error
+  telemetrizado; `variantService.getVariantById` (respuesta directa y envelope).
+- Feature: `useDrilldownQuery` (9), `useDrilldownEntity`, `useEntitySearch`,
+  `DrilldownTable` (formatos, aria-sort, empty, colSpan).
+- Páginas: `ProductBuyers` (11: picker, fetch, draft/aplicado, sort, empty,
+  rango inválido, error/retry, menú, copiar, variante/base),
+  `RelationalTopProducts` (6: #2/#3, UOM, costo, pivotes, picker cliente) y
+  `ProductSuppliers` (6: sort default, moneda, banner D3, menú, picker, cambiar).
+- Modales: `BiDrilldownButton` (gating + navegación), cliente, proveedor y
+  producto (botones BI + navegación + ocultamiento sin pack).
+
+### Gates
+
+- `npx tsc --noEmit`: 0 errores.
+- `npx vitest --run`: 217 archivos / 1556 tests OK.
+- `pnpm build`: OK (chunks lazy por página: `ProductBuyersPage`,
+  `CustomerTopProductsPage`, `SupplierTopProductsPage`, `ProductSuppliersPage`;
+  feature compartida en un chunk de ~20 kB).
+- `pnpm lint:design -- --base dev`: OK (código nuevo limpio).
+- `pnpm lint`: 0 errores (132 warnings legacy, sin cambios).
+- Gate anti-fabricación §5.3: sin `mock`/`Math.random`/`sample`/`dummy` en
+  código de producción de la fase; los únicos matches son `vi.mock` de tests
+  y props `placeholder` de los buscadores.
+- Gate TS: `git diff --name-only --diff-filter=A dev..HEAD -- src/ | grep -E
+  '\.(js|jsx)$'` → vacío (solo se agregaron `.ts`/`.tsx`). La variante
+  `main..HEAD` del §5.8 lista los `.js` legacy que ya venían en los 230
+  commits de `dev` anteriores a la rama, no archivos de esta fase.
+- **Smoke vivo** contra backend `:5050` + Vite `:5173` (`--mode api`) con JWT de
+  dev (`admin` `jJkV4F6HR`, rol `F2VLso`, sesión 1379):
+  - Los 4 endpoints responden 200 con datos reales; sort server-side verificado
+    en la UI (`-purchases`, `-last_unit_price`).
+  - 4 páginas renderizadas con contexto resuelto (producto/cliente/proveedor),
+    paginación real y 0 overflow del body a 1440/390 px.
+  - Sidebar: BI con Dashboard + Analítica de Ventas/Compras; FISCAL (SIFEN)
+    como grupo Core.
+  - Picker: búsqueda "coca" → 1 resultado → filas; F2 enfoca el buscador;
+    "Cambiar Producto" vuelve al picker.
+  - Variante: `?product_id=Cc2y5JnvR&variant_id=cY_Aif-vg` muestra el nombre de
+    la variante y filtra el request (`variant_id`).
+  - Modales: ficha de producto (2 botones), cliente y proveedor (1 botón cada
+    uno) navegan a su drill-down y cierran el modal. 0 errores de consola y 0
+    respuestas HTTP ≥400.
+
+### Pendiente / deuda declarada
+
+- `searchableRoutes` de las rutas BI sigue vacío hasta F7/F8/F9 (con
+  `requiredModule: 'bi'`).
+- `searchByName` de clientes/proveedores no acepta `AbortSignal` (deuda Core).
+- Los agregados #1/#2/#3 no traen código de moneda: se formatean como PYG
+  (moneda base de la instalación), igual que F2; #4 sí usa `currency`.
+- Sin push: F1+F2+F3 quedan locales en la rama.
