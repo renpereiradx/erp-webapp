@@ -437,14 +437,19 @@ Reglas:
 ```jsx
 <section className="bg-surface rounded-md shadow-whisper border-0 overflow-hidden">
   {/* 1. Toolbar OPCIONAL: solo si el header lleva buscador o acciones.
-      Orden fijo: BUSCADOR PRIMERO (izquierda), hints/acciones intermedias,
-      TÍTULO ANCLADO A LA DERECHA. En mobile la banda apila (input full-width arriba). */}
-  <div className="px-lg py-md bg-surface-muted border-b border-divider flex flex-col sm:flex-row sm:items-center gap-md">
-    <div className="w-full sm:w-80 shrink-0">
-      {/* buscador — Input h-10 (default del sistema, §6.4) */}
+      Fila 1: BUSCADOR PRIMERO (izquierda), TÍTULO ANCLADO A LA DERECHA.
+      Fila 2 (opcional): hints de teclado DEBAJO de ambos. En mobile apila. */}
+  <div className="px-lg py-md bg-surface-muted border-b border-divider flex flex-col gap-sm">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-sm md:gap-md flex-wrap">
+      <div className="w-full sm:w-80 shrink-0">
+        {/* buscador — Input h-10 (default del sistema, §6.4) */}
+      </div>
+      <h2 className="text-title-md text-foreground sm:ml-auto sm:text-right">Productos en la orden</h2>
     </div>
-    {/* hints / acciones intermedias opcionales */}
-    <h2 className="text-title-md text-foreground sm:ml-auto sm:text-right">Productos en la orden</h2>
+    {/* hints de teclado — solo teclas realmente cableadas (§12.1) */}
+    <p className="flex flex-wrap items-center gap-x-sm gap-y-1 text-body-sm font-data-mono text-outline-fg">
+      <span>[F2] Buscar</span><span aria-hidden="true">·</span><span>[F12] Concretar</span>
+    </p>
   </div>
 
   {/* 2. Tabla FULL-BLEED: pegada a los bordes de la card, sin recuadro interno */}
@@ -484,7 +489,7 @@ Reglas:
 Reglas de la anatomía:
 
 - **Una forma por card**: la tabla es full-bleed (pegada a los bordes) **o** la card entera lleva marco. PROHIBIDO el recuadro con borde alrededor de la tabla dentro de una card sin marco (doble marco implícito).
-- **Toolbar**: `bg-surface-muted` + `border-b border-divider` (§2.1). **Orden fijo: buscador primero** (`w-80 shrink-0`, altura `h-10`), hints/acciones intermedias opcionales y el **título anclado a la derecha** (`sm:ml-auto sm:text-right`). La banda NO lleva subtítulo — el título solo; el contexto extra vive en el placeholder del buscador. Sin toolbar, el título va directo sobre `bg-surface` (§6.2) — ambas válidas; la banda se usa cuando el header carga buscador/acciones.
+- **Toolbar**: `bg-surface-muted` + `border-b border-divider` (§2.1). **Fila 1: buscador primero** (`w-80 shrink-0`, altura `h-10`) y **título anclado a la derecha** (`sm:ml-auto sm:text-right`). Los hints de teclado van en una **SEGUNDA fila** debajo de ambos — NUNCA entre buscador y título (parten la banda en 3 filas y dejan el título flotando). Solo teclas realmente cableadas (§12.1). La banda NO lleva subtítulo — el contexto extra vive en el placeholder del buscador. Sin toolbar, el título va directo sobre `bg-surface` (§6.2) — ambas válidas; la banda se usa cuando el header carga buscador/acciones.
 - **Empty dentro de la tabla**: icono en círculo `bg-surface-muted`, título bold, hint y acción si aplica. El `EmptyState` de §6.7 queda para tablas sueltas y vistas mobile sin tabla.
 - **Variante enmarcada** (solo listas de lectura / BI): card con `border border-border-subtle` (± `hover:shadow-fluent-8`), thead `bg-surface-muted` con su borde inferior, dentro. Sin toolbar. Referencia: `OverdueTable` (`/receivables/overdue`).
 

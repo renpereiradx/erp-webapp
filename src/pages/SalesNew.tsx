@@ -2221,8 +2221,9 @@ const SalesNew: React.FC = () => {
                 muted + border-b divider con el buscador PRIMERO y el título
                 anclado a la derecha; tabla full-bleed sin wrapper de padding. */}
             <section className="bg-surface rounded-md shadow-whisper border-0 overflow-hidden min-w-0 self-stretch">
-              <div className="px-lg py-md bg-surface-muted border-b border-divider flex flex-col sm:flex-row sm:items-center gap-sm md:gap-md flex-wrap">
-                <div className="w-full sm:w-80 shrink-0">
+              <div className="px-lg py-md bg-surface-muted border-b border-divider flex flex-col gap-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-sm md:gap-md flex-wrap">
+                  <div className="w-full sm:w-80 shrink-0">
                   <ProductSearchPanel
                     searchTerm={productSearchTerm}
                     onSearchTermChange={(v) => {
@@ -2253,15 +2254,28 @@ const SalesNew: React.FC = () => {
                     getQuantityInCart={getQuantityInCart}
                   />
                 </div>
-                {/* Sin línea de hints en la banda: no caben junto a input +
-                    título (la banda se partía en 3 filas y el título quedaba
-                    flotando). Cada atajo ya es descubrible en contexto: F2 en
-                    placeholder/empty state, F12 y F4 en los botones, Alt+Q y
-                    Alt+X como hints por fila dentro de la tabla. */}
                 <h2 className="text-title-md text-foreground flex items-center gap-sm min-w-0 sm:ml-auto sm:text-right">
                   <ShoppingCart size={18} className="text-primary shrink-0" aria-hidden="true" />
                   {t('sales.cart.title', 'Productos Seleccionados')}
                 </h2>
+                </div>
+                {/* Hints de teclado en SEGUNDA fila (§6.3): debajo del
+                    buscador y el título. Entre ellos no caben (partían la
+                    banda en 3 filas y el título quedaba flotando). Cada
+                    atajo está cableado en el hook (§12.1). */}
+                <p className="flex flex-wrap items-center gap-x-sm gap-y-1 text-body-sm font-data-mono text-outline-fg">
+                  <span>[F2] {t('sales.hints.search', 'Buscar')}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>[F8] {t('sales.hints.cart', 'Carrito')}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>[↑↓] {t('sales.hints.navigate', 'Navegar')}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>[Alt+Q] {t('sales.hints.edit', 'Editar')}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>[F12] {t('sales.hints.checkout', 'Cobrar')}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>[F4] {t('sales.hints.clear', 'Limpiar')}</span>
+                </p>
               </div>
               {/* Tabla full-bleed (§6.3): pegada a los bordes de la card,
                   sin wrapper de padding (el margen interno era el recuadro

@@ -71,30 +71,41 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
 
   return (
     <section className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden'>
-      <div className='px-lg py-md border-b border-divider flex flex-col sm:flex-row sm:items-center bg-surface-muted gap-md'>
-        <div className='w-full sm:w-80 shrink-0'>
-          <PurchaseProductSearchInput
-            id='purchase-cart-product-search'
-            search={modalProductSearch}
-            onSearchChange={setModalProductSearch}
-            inputRef={cartProductSearchRef}
-            dropdownRef={productDropdownRef}
-            results={filteredModalProducts}
-            searching={searchingProducts}
-            open={showProductDropdown && !isModalOpen}
-            onOpenChange={setShowProductDropdown}
-            activeIndex={activeProductIndex}
-            onActiveIndexChange={setActiveProductIndex}
-            onKeyDown={handleSearchKeyDown}
-            onSelect={handleSelectAndOpen}
-            getProductName={getProductName}
-            placeholder={t('purchases.cart.search_placeholder', 'Buscar producto por SKU, nombre o código de barras... (F2)')}
-            disabled={!canWrite}
-          />
+      <div className='px-lg py-md border-b border-divider flex flex-col gap-sm bg-surface-muted'>
+        <div className='flex flex-col sm:flex-row sm:items-center gap-sm md:gap-md flex-wrap'>
+          <div className='w-full sm:w-80 shrink-0'>
+            <PurchaseProductSearchInput
+              id='purchase-cart-product-search'
+              search={modalProductSearch}
+              onSearchChange={setModalProductSearch}
+              inputRef={cartProductSearchRef}
+              dropdownRef={productDropdownRef}
+              results={filteredModalProducts}
+              searching={searchingProducts}
+              open={showProductDropdown && !isModalOpen}
+              onOpenChange={setShowProductDropdown}
+              activeIndex={activeProductIndex}
+              onActiveIndexChange={setActiveProductIndex}
+              onKeyDown={handleSearchKeyDown}
+              onSelect={handleSelectAndOpen}
+              getProductName={getProductName}
+              placeholder={t('purchases.cart.search_placeholder', 'Buscar producto por SKU, nombre o código de barras... (F2)')}
+              disabled={!canWrite}
+            />
+          </div>
+          <h2 className='text-title-md text-foreground min-w-0 sm:ml-auto sm:text-right'>
+            {t('purchases.cart.title', 'Productos en la Orden')}
+          </h2>
         </div>
-        <h2 className='text-title-md text-foreground min-w-0 sm:ml-auto sm:text-right'>
-          {t('purchases.cart.title', 'Productos en la Orden')}
-        </h2>
+        {/* Hints de teclado en SEGUNDA fila (§6.3), gemelos al carrito de
+            ventas: solo teclas realmente cableadas (§12.1). */}
+        <p className='flex flex-wrap items-center gap-x-sm gap-y-1 text-body-sm font-data-mono text-outline-fg'>
+          <span>[F2] {t('purchases.hints.search', 'Buscar')}</span>
+          <span aria-hidden='true'>·</span>
+          <span>[↑↓] {t('purchases.hints.navigate', 'Navegar')}</span>
+          <span aria-hidden='true'>·</span>
+          <span>[F12] {t('purchases.hints.checkout', 'Concretar')}</span>
+        </p>
       </div>
 
       <div className='overflow-x-auto'>

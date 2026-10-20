@@ -255,6 +255,9 @@ export const purchases = {
   'purchases.cart.product': 'Producto',
   'purchases.cart.search_placeholder': 'Buscar producto por SKU o nombre... (F2/F12)',
   'purchases.cart.empty_hint': 'Buscá un producto para agregarlo a la orden',
+  'purchases.hints.search': 'Buscar',
+  'purchases.hints.navigate': 'Navegar',
+  'purchases.hints.checkout': 'Concretar',
   'purchases.cart.unit': 'Unidad',
   'purchases.cart.remove_item': 'Quitar artículo de la orden',
 
