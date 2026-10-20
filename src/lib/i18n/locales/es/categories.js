@@ -112,8 +112,6 @@ export const categories = {
   'categories.tax.table.rate': 'Tasa',
   'categories.tax.table.status': 'Estado',
   'categories.tax.table.empty': 'No hay tasas de IVA configuradas.',
-  'categories.tax.table.empty_description':
-    'Las tasas de IVA se registran desde la configuración financiera.',
   'categories.tax.badge_default_cat': 'Default Cat.',
   'categories.tax.status_exempt': 'Exento',
   'categories.tax.status_taxed': 'Gravado',

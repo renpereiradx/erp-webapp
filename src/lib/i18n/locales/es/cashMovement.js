@@ -87,8 +87,6 @@ export const cashMovement = {
   'cashMovement.void.description':
     'Esta acción creará un movimiento de reversión. No se puede deshacer.',
   'cashMovement.void.reason': 'Razón de anulación',
-  'cashMovement.void.reasonPlaceholder':
-    'Ingrese la razón de la anulación (mínimo 5 caracteres)',
   'cashMovement.void.reasonRequired':
     'La razón debe tener al menos 5 caracteres',
   'cashMovement.void.confirm': 'Anular',

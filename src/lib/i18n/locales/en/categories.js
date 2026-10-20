@@ -111,7 +111,6 @@ export const categories = {
   'categories.tax.table.rate': 'Rate',
   'categories.tax.table.status': 'Status',
   'categories.tax.table.empty': 'No VAT rates configured.',
-  'categories.tax.table.empty_description': 'VAT rates are registered from the financial settings.',
   'categories.tax.badge_default_cat': 'Category Default',
   'categories.tax.status_exempt': 'Exempt',
   'categories.tax.status_taxed': 'Taxed',

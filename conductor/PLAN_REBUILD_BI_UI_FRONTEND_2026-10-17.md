@@ -383,9 +383,9 @@ aplicada con criterio (sin reporte en conductor salvo pedido).
 - `pnpm build`: OK (chunks lazy por página: `DashboardPage`, `DashboardKpisPage`,
   `SalesHeatmapPage`, `AlertsPage`, `TopProductsPage`).
 - `pnpm lint:design -- --base dev`: OK (código nuevo limpio; legacy fuera del diff no bloquea).
-- `pnpm lint` (eslint): los archivos nuevos son `.ts/.tsx` y el config del repo solo matchea
-  `js/jsx`; el comando sigue fallando por 3 claves duplicadas preexistentes en
-  `categories.js` (es/en) y `cashMovement.js` (es), ajenas a esta fase.
+- `pnpm lint` (eslint): **OK** (0 errores). Se eliminaron las 3 claves duplicadas muertas de
+  `categories.js` (es/en) y `cashMovement.js` (es) que eran los únicos errores; quedan 132
+  warnings legacy.
 - Smoke vivo ejecutado contra el backend `:5050` + Vite `:5173` (`--mode api`), con JWT de dev
   acuñado en memoria (admin `jJkV4F6HR`, rol `F2VLso`, entitlements `core+bi`):
   - `/` aterriza en `/dashboard` (HomeRedirect con pack).
