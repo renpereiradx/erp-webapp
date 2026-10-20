@@ -81,10 +81,14 @@ export const reservationService = {
         // slot: is_available=true) pero el API deja la huella reserve_status=
         // CANCELLED: no debe tratarse como ocupado, sino nunca se puede
         // re-reservar esa hora desde la UI.
+        // La huella CANCELLED veta la ocupación ENTERA: también cuando el API
+        // todavía manda is_available=false (slot trabado por el bug pre-fix de
+        // CANCEL no idempotente, migración 20261019215618) — si la única
+        // reserva sobre el slot está anulada, el slot está libre.
         const isCancelledTrace = (slot.reserve_status || slot.status || '').toUpperCase().startsWith('CANCEL');
         const hasReservation =
-          slot.is_available === false ||
-          (Boolean(slot.reserve || slot.reserve_id) && !isCancelledTrace);
+          (slot.is_available === false || Boolean(slot.reserve || slot.reserve_id)) &&
+          !isCancelledTrace;
         const reserveData = slot.reserve || {};
 
         return {
@@ -94,7 +98,7 @@ export const reservationService = {
           end_time: slot.end_time,
           status: hasReservation
             ? (slot.reserve_status || slot.status || 'RESERVED')
-            : (slot.is_available === false ? 'RESERVED' : (slot.status || 'AVAILABLE')),
+            : 'AVAILABLE',
           reserve: hasReservation ? {
             id: slot.reserve_id || reserveData.id,
             client_name: slot.reserved_by || reserveData.client_name || reserveData.user_name,

@@ -103,11 +103,23 @@ describe('reservationService.getSchedulesForProductAndDate — normalización de
         end_time: '2026-10-14T20:00:00Z',
         is_available: true,
       },
+      // Regresión fix 2026-10-19: slot trabado (is_available=false) cuya única
+      // reserva está CANCELLED — la huella veta la ocupación entera.
+      {
+        id: 4,
+        product_id: 'p1',
+        start_time: '2026-10-14T20:00:00Z',
+        end_time: '2026-10-14T21:00:00Z',
+        is_available: false,
+        reserve_id: 50,
+        reserved_by: 'RENE PEREIRA',
+        reserve_status: 'CANCELLED',
+      },
     ]);
 
     const slots = await reservationService.getSchedulesForProductAndDate('p1', '2026-10-14');
 
-    expect(slots).toHaveLength(3);
+    expect(slots).toHaveLength(4);
     // Slot anulado: libre otra vez, sin reserve adjunta.
     expect(slots[0].status).toBe('AVAILABLE');
     expect(slots[0].reserve).toBeUndefined();
@@ -117,5 +129,9 @@ describe('reservationService.getSchedulesForProductAndDate — normalización de
     // Slot libre sin huella: disponible.
     expect(slots[2].status).toBe('AVAILABLE');
     expect(slots[2].reserve).toBeUndefined();
+    // Slot trabado con huella CANCELLED: libre para la UI aunque el API diga
+    // is_available=false (bug de CANCEL no idempotente, pre-fix BE).
+    expect(slots[3].status).toBe('AVAILABLE');
+    expect(slots[3].reserve).toBeUndefined();
   });
 });

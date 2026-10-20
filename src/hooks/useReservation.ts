@@ -123,6 +123,10 @@ export const useReservation = (initialProductId?: string) => {
     await fetchSchedules();
   };
 
+  // Las acciones (create/confirm/cancel) NO escriben en `error`: ese estado
+  // renderiza el banner de fallo de CARGA ("No se pudieron cargar los
+  // horarios") y un error de acción bajo ese título confunde. El feedback de
+  // acción viven en los toasts del dashboard; acá solo se propaga el throw.
   const createReservation = async (clientId: string, startTime: string, duration: number) => {
     try {
       if (!productId || !clientId || !startTime) {
@@ -141,7 +145,6 @@ export const useReservation = (initialProductId?: string) => {
       );
     } catch (err: any) {
       const msg = err.response?.data?.error || err.response?.data?.message || err.message || t('reservations.errors.create');
-      setError(msg);
       throw new Error(msg);
     }
   };
@@ -157,7 +160,6 @@ export const useReservation = (initialProductId?: string) => {
       );
     } catch (err: any) {
       const msg = err.response?.data?.error || err.response?.data?.message || err.message || t('reservations.errors.confirm');
-      setError(msg);
       throw new Error(msg);
     }
   };
@@ -173,7 +175,6 @@ export const useReservation = (initialProductId?: string) => {
       );
     } catch (err: any) {
       const msg = err.response?.data?.error || err.response?.data?.message || err.message || t('reservations.errors.cancel');
-      setError(msg);
       throw new Error(msg);
     }
   };
