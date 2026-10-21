@@ -32,6 +32,7 @@ import { inventoryAnalytics } from './inventoryAnalytics'
 import { profitability } from './profitability'
 import { receivables } from './receivables'
 import { payables } from './payables'
+import { finance } from './finance'
 import { es } from '../es/index'
 
 /**
@@ -83,4 +84,5 @@ export const en = {
   ...profitability,
   ...receivables,
   ...payables,
+  ...finance,
 }

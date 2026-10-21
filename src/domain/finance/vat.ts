@@ -1,151 +1,156 @@
 /**
- * VAT (IVA) view model for TaxManagementDashboard: rate tables, monthly
- * merge/dedup/sort of the two breakdown sources and period deltas.
- * Extracted from the page's useMemo (PLAN_ALINEACION_BI_FRONTEND F1).
+ * IVA y resumen fiscal (F9) — vistas puras del contrato real.
+ *
+ * No se mezclan fuentes: `VatReport.monthly_breakdown` (IVA por mes calculado
+ * desde las vistas del libro) y `TaxSummary.monthly_detail` (IVA + retenciones)
+ * son tablas distintas, cada una con su propio origen. Tampoco se calculan
+ * variaciones contra un mes anterior que no fue consultado: los porcentajes
+ * que no existen no se muestran.
  */
-import { toNumber } from './cashFlow'
+import type { MonthlyTax, MonthlyVat, TaxSummary, VatReport } from '@/types/bi'
+import { isMissingDate, toNumberOrNull } from './format'
+import type { FinanceKpiValue } from './kpis'
 
-/** Percentage change between periods; 0 when there is no base. */
-export const pct = (current: number, prev: number): number => {
-  if (!prev) return 0
-  return ((current - prev) / prev) * 100
-}
-
-/** es-PY 'mmm yyyy' label; raw value (or '-') for invalid dates. */
-export const monthLabel = (dateLike: string | null | undefined): string => {
-  const date = new Date(dateLike as string)
-  if (Number.isNaN(date.getTime())) return dateLike || '-'
-  return date.toLocaleDateString('es-PY', {
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
-export interface VatReportLike {
-  sales_vat?: Record<string, unknown> | null
-  purchases_vat?: Record<string, unknown> | null
-  vat_balance?: Record<string, unknown> | null
-  monthly_breakdown?: Array<Record<string, unknown>> | null
-  [key: string]: unknown
-}
-
-export interface TaxSummaryLike {
-  monthly_detail?: Array<Record<string, unknown>> | null
-  total_tax_liability?: unknown
-  total_tax_credits?: unknown
-  net_tax_position?: unknown
-  [key: string]: unknown
-}
-
-export interface VatMonthlyRow {
-  month: string
-  debit: number
-  credit: number
-  net: number
-}
-
-export interface VatRateTable {
-  base10: number
-  iva10: number
-  base5: number
-  iva5: number
-  exempt: number
-  totalGross: number
-  totalVat: number
+export interface VatSectionView {
+  base10: number | null
+  vat10: number | null
+  base5: number | null
+  vat5: number | null
+  exempt: number | null
+  totalGross: number | null
+  totalVat: number | null
+  transactionCount: number | null
 }
 
 export interface VatView {
-  salesVat: VatRateTable
-  purchaseVat: VatRateTable
-  vatBalance: { debit: number; credit: number; payable: number; carryover: number }
-  taxTotals: { liability: number; credits: number; net: number }
-  monthlyRows: VatMonthlyRow[]
-  debitDelta: number
-  creditDelta: number
+  sales: VatSectionView
+  purchases: VatSectionView
+  debit: number | null
+  credit: number | null
+  payable: number | null
+  carryover: number | null
+  status: string
+  monthly: MonthlyVat[]
 }
 
-/**
- * Builds the VAT page view model. The monthly rows merge
- * vatReport.monthly_breakdown (net = `balance`) with
- * taxSummary.monthly_detail (net = `net_vat`), dedupe by month (summary
- * wins over report), sort ascending and keep the last 6 months; deltas
- * compare the last two rows.
- */
-export const buildVatView = (
-  vatReport: VatReportLike | null | undefined,
-  taxSummary: TaxSummaryLike | null | undefined,
-): VatView => {
-  const sales = vatReport?.sales_vat || {}
-  const purchases = vatReport?.purchases_vat || {}
-  const balance = vatReport?.vat_balance || {}
-  const summary = taxSummary || {}
-
-  const monthly: VatMonthlyRow[] = [
-    ...(Array.isArray(vatReport?.monthly_breakdown)
-      ? (vatReport.monthly_breakdown as Array<Record<string, unknown>>).map((item) => ({
-          month: item.month as string,
-          debit: toNumber(item.vat_debito),
-          credit: toNumber(item.vat_credito),
-          net: toNumber(item.balance),
-        }))
-      : []),
-    ...(Array.isArray(summary?.monthly_detail)
-      ? (summary.monthly_detail as Array<Record<string, unknown>>).map((item) => ({
-          month: item.month as string,
-          debit: toNumber(item.vat_debito),
-          credit: toNumber(item.vat_credito),
-          net: toNumber(item.net_vat),
-        }))
-      : []),
-  ]
-
-  const dedupedMonthly = monthly
-    .filter((item) => item.month)
-    .reduce<Record<string, VatMonthlyRow>>((acc, item) => {
-      acc[item.month] = item
-      return acc
-    }, {})
-
-  const rows = Object.values(dedupedMonthly)
-    .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
-    .slice(-6)
-
-  const current = rows[rows.length - 1]
-  const previous = rows[rows.length - 2]
+export const vatView = (report: VatReport | null | undefined): VatView | null => {
+  if (!report) return null
+  const sales = report.sales_vat
+  const purchases = report.purchases_vat
+  const balance = report.vat_balance
+  const monthly = (Array.isArray(report.monthly_breakdown) ? report.monthly_breakdown : [])
+    .filter((row) => !isMissingDate(row.month))
+    .slice()
+    .sort((a, b) => a.month.localeCompare(b.month))
 
   return {
-    salesVat: {
-      base10: toNumber(sales.gross_sales_10),
-      iva10: toNumber(sales.vat_10),
-      base5: toNumber(sales.gross_sales_5),
-      iva5: toNumber(sales.vat_5),
-      exempt: toNumber(sales.exempt_sales),
-      totalGross: toNumber(sales.total_gross_sales),
-      totalVat: toNumber(sales.total_vat_debito),
+    sales: {
+      base10: toNumberOrNull(sales?.gross_sales_10),
+      vat10: toNumberOrNull(sales?.vat_10),
+      base5: toNumberOrNull(sales?.gross_sales_5),
+      vat5: toNumberOrNull(sales?.vat_5),
+      exempt: toNumberOrNull(sales?.exempt_sales),
+      totalGross: toNumberOrNull(sales?.total_gross_sales),
+      totalVat: toNumberOrNull(sales?.total_vat_debito),
+      transactionCount: toNumberOrNull(sales?.transaction_count),
     },
-    purchaseVat: {
-      base10: toNumber(purchases.gross_purchases_10),
-      iva10: toNumber(purchases.vat_10),
-      base5: toNumber(purchases.gross_purchases_5),
-      iva5: toNumber(purchases.vat_5),
-      exempt: toNumber(purchases.exempt_purchases),
-      totalGross: toNumber(purchases.total_gross_purchases),
-      totalVat: toNumber(purchases.total_vat_credito),
+    purchases: {
+      base10: toNumberOrNull(purchases?.gross_purchases_10),
+      vat10: toNumberOrNull(purchases?.vat_10),
+      base5: toNumberOrNull(purchases?.gross_purchases_5),
+      vat5: toNumberOrNull(purchases?.vat_5),
+      exempt: toNumberOrNull(purchases?.exempt_purchases),
+      totalGross: toNumberOrNull(purchases?.total_gross_purchases),
+      totalVat: toNumberOrNull(purchases?.total_vat_credito),
+      transactionCount: toNumberOrNull(purchases?.transaction_count),
     },
-    vatBalance: {
-      debit: toNumber(balance.vat_debito),
-      credit: toNumber(balance.vat_credito),
-      payable: toNumber(balance.vat_payable),
-      carryover: toNumber(balance.credit_carryover),
-    },
-    taxTotals: {
-      liability: toNumber(summary.total_tax_liability),
-      credits: toNumber(summary.total_tax_credits),
-      net: toNumber(summary.net_tax_position),
-    },
-    monthlyRows: rows,
-    debitDelta: current && previous ? pct(current.debit, previous.debit) : 0,
-    creditDelta:
-      current && previous ? pct(current.credit, previous.credit) : 0,
+    debit: toNumberOrNull(balance?.vat_debito),
+    credit: toNumberOrNull(balance?.vat_credito),
+    payable: toNumberOrNull(balance?.vat_payable),
+    carryover: toNumberOrNull(balance?.credit_carryover),
+    status: balance?.status ?? '',
+    monthly,
   }
+}
+
+export type VatStatusKey = 'toPay' | 'credit' | 'balanced' | 'unknown'
+
+export const vatStatusKey = (status: string | null | undefined): VatStatusKey => {
+  switch ((status ?? '').toUpperCase()) {
+    case 'TO_PAY':
+      return 'toPay'
+    case 'CREDIT':
+      return 'credit'
+    case 'BALANCED':
+      return 'balanced'
+    default:
+      return 'unknown'
+  }
+}
+
+export type VatStatusTone = 'error' | 'success' | 'info' | 'neutral'
+
+export const VAT_STATUS_TONE: Record<VatStatusKey, VatStatusTone> = {
+  toPay: 'error',
+  credit: 'success',
+  balanced: 'info',
+  unknown: 'neutral',
+}
+
+/** KPIs del IVA: débito, crédito, saldo declarado y arrastre. */
+export const vatKpis = (view: VatView): FinanceKpiValue[] => [
+  { id: 'vatDebit', kind: 'money', value: view.debit },
+  { id: 'vatCredit', kind: 'money', value: view.credit },
+  { id: 'vatPayable', kind: 'money', value: view.payable },
+  { id: 'vatCarryover', kind: 'money', value: view.carryover },
+]
+
+export interface TaxSummaryView {
+  totalDebit: number | null
+  totalCredit: number | null
+  netVat: number | null
+  creditBalance: number | null
+  retainedByOthers: number | null
+  retainedToOthers: number | null
+  netRetentions: number | null
+  totalLiability: number | null
+  totalCredits: number | null
+  netTaxPosition: number | null
+  monthly: MonthlyTax[]
+}
+
+export const taxSummaryView = (
+  summary: TaxSummary | null | undefined,
+): TaxSummaryView | null => {
+  if (!summary) return null
+  const monthly = (Array.isArray(summary.monthly_detail) ? summary.monthly_detail : [])
+    .filter((row) => !isMissingDate(row.month))
+    .slice()
+    .sort((a, b) => a.month.localeCompare(b.month))
+  return {
+    totalDebit: toNumberOrNull(summary.vat_summary?.total_debito),
+    totalCredit: toNumberOrNull(summary.vat_summary?.total_credito),
+    netVat: toNumberOrNull(summary.vat_summary?.net_vat),
+    creditBalance: toNumberOrNull(summary.vat_summary?.credit_balance),
+    retainedByOthers: toNumberOrNull(summary.retentions_summary?.retained_by_others),
+    retainedToOthers: toNumberOrNull(summary.retentions_summary?.retained_to_others),
+    netRetentions: toNumberOrNull(summary.retentions_summary?.net_retentions),
+    totalLiability: toNumberOrNull(summary.total_tax_liability),
+    totalCredits: toNumberOrNull(summary.total_tax_credits),
+    netTaxPosition: toNumberOrNull(summary.net_tax_position),
+    monthly,
+  }
+}
+
+/** KPIs fiscales: obligación, créditos y posición neta + retenciones. */
+export const taxSummaryKpis = (view: TaxSummaryView): FinanceKpiValue[] => {
+  const kpis: FinanceKpiValue[] = [
+    { id: 'taxLiability', kind: 'money', value: view.totalLiability },
+    { id: 'taxCredits', kind: 'money', value: view.totalCredits },
+    { id: 'netTaxPosition', kind: 'money', value: view.netTaxPosition },
+  ]
+  if ((view.netRetentions ?? 0) !== 0) {
+    kpis.push({ id: 'netRetentions', kind: 'money', value: view.netRetentions })
+  }
+  return kpis
 }

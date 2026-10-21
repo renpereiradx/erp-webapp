@@ -128,7 +128,7 @@ Cada fila se ELIMINA en F1 y se RE-ACTIVA en la fase indicada (mismo diff que la
 | 9 | Botón "Análisis de Riesgo" (modal cliente) | `features/party/components/ClientDetailsModal.tsx:80` | eliminar botón | F7 |
 | 10 | Botón "Productos suministrados" (modal proveedor) | `features/party/components/SupplierDetailsModal.tsx:86` | eliminar botón | F3 |
 | 11 | Botones "Ver compradores" + "Comparar proveedores" (modal producto) | `features/products/components/ProductDetailsModal.tsx:164,172` | eliminar botones | F3 |
-| 12 | Rutas BI en buscador global sin gate | `config/searchableRoutes.js` (`/receivables/list`, `/payables/invoices`, `/finance/tax-management`, `/finance/legal-books`) | eliminar entradas | F7/F8/F9 **con** `requiredModule: 'bi'` + permiso de la cadena BE. F7 (`receivables:read`) y F8 (`payables:read`) hechos; `/finance/*` queda para F9 |
+| 12 | Rutas BI en buscador global sin gate | `config/searchableRoutes.js` (`/receivables/list`, `/payables/invoices`, `/finance/tax-management`, `/finance/legal-books`) | eliminar entradas | F7/F8/F9 **con** `requiredModule: 'bi'` + permiso de la cadena BE. F7 (`receivables:read`), F8 (`payables:read`) y F9 (`reports:read`) hechos |
 | 13 | Filtro `isDegradableBI` del buscador | `layouts/main/search.ts:36-88` | conservar (no-op sin ítems BI) | — |
 | 14 | Tabs internas pronósticos | `features/bi-forecasting/components/BIForecastingNav.tsx` | muere con la feature | F11 |
 | 15 | Cross-links internos BI (Dashboard→kpis/receivables/alerts, aging→detail, audit→usuarios, pivotes RowActionsMenu) | ver inventario por página | mueren con sus páginas | vuelven con cada pantalla |
@@ -1621,3 +1621,232 @@ con la API en vivo y el SQL del repo.
 - `searchableRoutes` reconoce solo `/payables/invoices`; los reportes
   financieros (`/finance/*`) siguen pendientes de F9.
 - Falta F9 (Reportes Financieros), F10 (Auditoría) y F11 (Pronósticos).
+
+---
+
+## 17. Estado de ejecución — F9 Reportes Financieros (2026-10-21)
+
+**Rama FE:** `feature/bi-ui-rebuild` (F1-F8 sobre `dev` = `82710c7`).
+**Backend:** dos fixes en `dev` (ver §17.2), sin cambio de contrato JSON.
+
+### 17.1 Ejecutado
+
+- **Rutas (5)** en `src/App.tsx`, lazy y con `ReportsRoute` =
+  `BiModuleRoute` (pack) → `PermissionGuard(reports:read)`, el mismo par que
+  `biChain("reports:read", "financial-reports")` y
+  `biChain("reports:read", "vat-prorrateo")`:
+  `/dashboard/financial-summary`, `/finance/profit-and-loss`,
+  `/finance/analytical-cash-flow`, `/finance/tax-management` y
+  `/finance/legal-books`.
+- **Feature `src/features/financial-reports/`** con la plantilla FSD:
+  `components/` (UI pura), `hooks/` (react-query + período en URL), `types/` y
+  barrel público. Cero fetch/cálculo en componentes.
+- **Páginas delgadas** en `src/pages/finance/`:
+  `FinancialSummaryPage`, `ProfitAndLossPage`, `AnalyticalCashFlowPage`,
+  `TaxManagementPage` y `LegalBooksPage`.
+- **Dominio puro** en `src/domain/finance/`: `format`, `reportPeriod`,
+  `kpis`, `incomeStatement`, `overview`, `cashFlow` (re-escrito), `vat`
+  (re-escrito), `prorrateo`, `ledgers`, `periods` y `constants`, todos con
+  tests colocados. Los view-models legacy (`buildCashFlowView`,
+  `buildVatView`) se retiraron: convertían `null` en 0, preferían el desglose
+  diario sobre los totales del BE y calculaban variaciones contra meses no
+  consultados.
+- **Servicio tipado** `services/bi/financialReportsService.ts`: contrato real
+  de los 10 métodos consumidos (`income-statement`, `cash-flow`, `vat`,
+  `tax-summary`, `overview`, `health-score`, libros de ventas/compras por
+  período y por date-range, historial y detalle de prorrateo), limpieza de
+  params y telemetría; sin fallback demo. Tipos nuevos en `types/bi.ts`
+  (`IncomeStatement`, `CashFlowStatement`, `VatReport`, `TaxSummary`,
+  `SalesLedger`, `PurchaseLedger`, `FinancialReportOverview`,
+  `FinancialHealthScore`, `ProrrateoPeriod/Detail`).
+- **Nav**: subgrupo `Reportes Financieros` con 4 hojas y permiso
+  `reports:read`; `Dashboard` gana la hoja `Resumen financiero`
+  (`/dashboard/financial-summary`, mismo permiso). SIFEN sigue como grupo Core
+  propio (ADR-3).
+- **i18n**: namespace `finance` en `locales/{es,en}` (295 claves, paridad
+  verificada) + `nav.finance*` en ambos shells; estados, ratings y tipos de
+  asignación traducidos con mapas de fallback (nunca el código crudo).
+- **Puntos de entrada §3.3 re-activados**:
+  - #12 `searchableRoutes`: `/finance/tax-management` y
+    `/finance/legal-books` vuelven con `requiredModule: 'bi'` +
+    `requiredPermission: 'reports:read'`.
+  - `FinancialSummaryPage` enlaza a P&L, flujo de caja, IVA y libros (links
+    reales); el detalle de prorrateo se carga al seleccionar un período.
+- **UX verificada en vivo**: los selectores de período y el botón de refresco
+  se envuelven en mobile (antes el botón quedaba cortado a 390 px); las tablas
+  mensuales de IVA y fiscal pasan a ancho completo (a 1440 se cortaban las
+  columnas de estado/obligación); en los libros, timbrado pasa a sublínea del
+  comprobante y la tabla entra completa a 1440 sin scroll interno.
+
+### 17.2 Bugs del backend encontrados en el smoke (desviación documentada)
+
+El plan asumía BE congelado para BI. El smoke y la lectura del SQL detectaron
+dos defectos, con test de regresión contra BD real:
+
+1. **Estado de flujo de caja no reconciliaba** (`analytics_financial_repo.go`).
+   El statement sumaba ventas por `payment_methods.method_code = 'cash'`
+   (NULL/desconocido → 0) y el desglose diario sumaba ventas por fecha de
+   venta: con la API llena, el statement mostraba Gs. 0 de cobros, caja al
+   cierre Gs. 62.260 y un desglose diario con Gs. 1.475.500 de entradas
+   (auditoría `FinReportes-CashFlowAnalitico`, "final incoherente").
+   - Se pasó todo a base CAJA: cobros de `transactions.sale_payments` y pagos
+     de `transactions.purchase_payments` por `payment_date`, con los mismos
+     filtros de estado que los paid joins (`NOT IN CANCELLED/REFUNDED`).
+     `cash_from_sales` = cobros de ventas del período;
+     `cash_from_receivables` = cobros de ventas anteriores (dev: 1.475.500 +
+     41.860).
+   - `getDailyCashFlow` usa la misma fuente, así que
+     `Σ daily.net_flow = net_cash_change`, `Σ daily.inflows = cobros`,
+     `último balance = ending_cash` y `ending = beginning + net`.
+   - Test: `TestFinancialReports_CashFlowReconcilesWithDailyBreakdown`
+     (`internal/platform/postgres/analytics_financial_test.go`).
+   - Evidencia dev (octubre 2026): caja inicial Gs. 337.260, cobros
+     Gs. 1.517.360, pagos Gs. 275.000, variación Gs. 1.242.360, cierre
+     Gs. 1.579.620; los 5 días del desglose suman exactamente lo mismo.
+2. **`/financial-reports/vat/monthly?year=2026` devolvía diciembre de 2025**.
+   El handler pasaba `month=0` (query sin `month`) y el repo resolvía
+   `time.Date(year, 0, …)` → mes 0 = diciembre del año anterior. Ahora, sin
+   mes o fuera de 1-12, se usa el mes calendario actual; sin año, el actual.
+   Tests: `http_financial_monthly_test.go` (default, valores explícitos y mes
+   inválido).
+
+El backend se reconstruyó y reinició en `:5050` con
+`CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000` (misma nota
+operativa que F4-F6).
+
+### 17.3 Decisiones de borde (documentadas)
+
+- **El overview no es contabilidad**: `expenses` son COMPRAS y
+  `net_income = revenue − purchases`. La UI los rotula "Compras" e
+  "Ingresos − compras" y aclara que no son gastos/utilidad contable. La
+  utilidad bruta real (COGS) vive en el P&L; el resumen no la duplica.
+- **P&L bruto**: el backend no modela gastos operativos, devoluciones ni
+  descuentos (0). Los KPIs/statement omiten gastos y devoluciones si son 0 y
+  muestran una nota; `resultado` se rotula "Resultado (utilidad bruta)", no
+  "utilidad neta". El inventario inicial y las devoluciones de compra tampoco
+  se muestran como ceros medidos.
+- **Flujo base caja**: la caja inicial es el saldo de cajas ABIERTAS, no un
+  saldo bancario; los cobros/pagos se reconocen por `payment_date`. Inversión,
+  financiación, gastos y salarios se omiten cuando el BE los deja en 0 porque
+  no los modela. Si el payload no reconciliara, la UI lo advierte y muestra
+  los importes reportados (no los re-deriva).
+- **IVA**: `vat.monthly_breakdown` y `taxSummary.monthly_detail` se muestran
+  como tablas separadas (no se mezclan ni se deduplican). Estados
+  `TO_PAY/CREDIT/BALANCED` traducidos. Las retenciones solo aparecen si son
+  distintas de 0.
+- **Prorrateo**: el historial puede venir `null` (instalación sin períodos):
+  empty honesto. El detalle se consulta al seleccionar un período y traduce la
+  asignación (`DIRECT/INDIRECT/EXEMPT`). El coeficiente 0-1 se muestra como %.
+- **Libros legales**: los totales del summary son del filtro completo; 10
+  comprobantes por página. Los campos fiscales vacíos (`invoice_number`,
+  `timbrado`, `cdc`, `fiscal_estado`) se muestran `—`/"Sin timbrado"/"No
+  fiscal", nunca ids inventados. Los filtros SIFEN solo viajan con un rango de
+  fechas completo (el endpoint por período no los acepta) y se avisa. Las
+  compras no tienen filtros SIFEN (no emiten DE).
+- **Health score**: se muestra el score/rating del BE y sus ratios reales
+  (liquidez, prueba ácida, margen ingresos − compras, capital de trabajo). El
+  margen se rotula con su base; no se presentan DSO/DPO/rotaciones (el repo
+  los deja en 0 porque no los calcula).
+- **CxC/CxP del overview**: el resumen usa solo órdenes en estado
+  PENDING/PARTIAL_PAYMENT; el módulo CxP incluye todas las no canceladas. El
+  hint lo aclara para que las cifras no se lean como el mismo universo.
+- **Legado retirado**: `domain/finance/cashFlow.ts` y `vat.ts` se reescribieron
+  (y sus tests reemplazados); `biServices.p0-methods.service.test.ts` se
+  eliminó porque su último sujeto (financialReportsService) tiene contrato
+  canónico nuevo en `financialReports.service.test.ts`. Los aliases legacy del
+  service (`getVATReport`, `getCashFlow` sin tipo, `getSalesLedgerDateRange`,
+  etc.) se retiraron junto a sus consumidores.
+
+### 17.4 Tests
+
+- Dominio: `format` (sub-unidad, `<0,1%`, fechas UTC vs locales, cero de Go),
+  `reportPeriod` (fin inclusivo), `kpis` (tipos, rating, score), `incomeStatement`
+  (ausencias, gastos modelados, comparación), `overview` (compras/resultado,
+  ratios sin DSO/DPO), `cashFlow` (orden diario, conciliación rota, KPIs,
+  actividades no modeladas), `vat` (fuentes separadas, estados, retenciones),
+  `prorrateo` (orden, coeficiente, estados/asignaciones, detalle), `ledgers`
+  (paginación defensiva, KPIs, campos fiscales) — 29 tests.
+- Servicio: rutas/params de 10 métodos, período vs date-range, filtros SIFEN,
+  rango incompleto, ids de prorrateo y error telemetrizado — 9 tests.
+- Hooks: params por endpoint, normalización de slices nil, fallo sin `data`,
+  selección de libro activo (no consulta el libro oculto), prorrateo
+  condicional — 10 tests; período en URL — 3 tests.
+- Páginas: Resumen (overview, P&L bruto, score, desgloses, error aislado, sin
+  utilidad neta), P&L (KPIs, statement, notas de gastos, costo, gastos
+  modelados), Flujo (KPIs, statement, desglose ordenado, conciliación,
+  advertencia, sin bancos), IVA (débito/crédito, resumen, ventas/compras,
+  mensuales, prorrateo + detalle, empty) y Libros (ventas, cambio a compras,
+  filtros/date-range, rango inválido/incompleto, sin `#FAC-`/`$`) — 33 tests.
+- i18n: paridad es/en, sin vacíos, claves nav y todas las claves estáticas de
+  F9 — 4 tests. Nav: 8 subgrupos BI, 4 hojas de Reportes Financieros y
+  `reports:read`; hoja de resumen bajo Dashboard; gate anyOf sin grupo vacío
+  (`audit:read` sigue sin hoja hasta F10). Buscador: gate
+  `requiredModule`/`requiredPermission` de las 2 rutas — 2 tests.
+- Backend: `TestFinancialReports_CashFlowReconcilesWithDailyBreakdown` y 3
+  tests del handler mensual de IVA.
+
+### 17.5 Gates
+
+- `npx tsc --noEmit`: 0 errores.
+- `npx vitest --run`: **316 archivos / 2099 tests OK**.
+- `pnpm build`: OK; chunks lazy `FinancialSummaryPage`, `ProfitAndLossPage`,
+  `AnalyticalCashFlowPage`, `TaxManagementPage`, `LegalBooksPage`.
+- `pnpm lint:design -- --base dev`: OK (código nuevo limpio; 1108 legacy).
+- `pnpm lint`: 0 errores (132 warnings legacy, sin cambios).
+- Gate anti-fabricación §5.3: en producción de F9 solo el comentario "Sin
+  fallback demo/mock" del servicio; el resto son `vi.mock` de tests.
+- Gate TS: archivos nuevos de la fase solo `.ts`/`.tsx` (0 `.js`/`.jsx`).
+- Backend: `gofmt` limpio, `make build` OK,
+  `go test ./internal/analytics ./internal/platform/postgres` OK (incluye los
+  nuevos invariantes). `go build ./...` sigue fallando en
+  `tests/integration` (`undefined: ensureEphemeralDatabase`), condición
+  preexistente ajena a este cambio.
+- Auditoría `vercel-react-best-practices` aplicada con criterio: páginas lazy,
+  queries por sección y en paralelo (el resumen dispara 3, el IVA 3), solo el
+  libro visible consulta (el hook oculto queda `enabled:false`), sin
+  `useEffect` para estado derivado (vistas, conciliación y KPIs se derivan en
+  render), `FinanceTable` con `ResizeObserver` de deps primitivas y sin
+  componentes definidos dentro de componentes. Excepción consciente: el
+  barrel público del feature (plantilla FSD del plan).
+- **Smoke vivo** (`:5050` + Vite `:5173`, JWT de dev con el `JWT_SECRET`
+  local, admin `jJkV4F6HR`, rol `F2VLso`, sucursal 1): **33/33 checks OK, 0
+  errores de consola, 0 page errors y 0 respuestas HTTP ≥400**.
+  - Resumen: ingresos Gs. 1.475.500, compras Gs. 275.000, ingresos−compras
+    Gs. 1.200.500, caja Gs. 337.260, CxC Gs. 315.250, CxP Gs. 3.110.450,
+    capital de trabajo Gs. 10.919.160; utilidad bruta Gs. 530.500 (36 %);
+    score 95 "Excelente", liquidez 4,51×, prueba ácida 0,21×; categorías y
+    "Sin método registrado".
+  - P&L: margen 36 %, resultado rotulado "(utilidad bruta)", sin KPI de
+    gastos y con la nota de gastos no modelados.
+  - Flujo: caja inicial Gs. 337.260, cobros Gs. 1.517.360 (1.475.500 del
+    período + 41.860 anteriores), pagos Gs. 275.000, variación Gs. 1.242.360,
+    cierre Gs. 1.579.620; 5 días en el desglose, sin advertencia de
+    conciliación.
+  - IVA: débito Gs. 88.682, crédito Gs. 25.000, a pagar Gs. 63.682; ventas y
+    compras desglosadas; tablas mensuales completas; prorrateo vacío honesto.
+  - Libros: ventas 6 comprobantes / Gs. 1.475.500, sin datos fiscales (No
+    fiscal/Sin timbrado) y cambio a compras con su endpoint.
+  - Sin `$`, "Live", "en tiempo real", "Powered", "Sincronizado" ni bancos;
+    `bodyOverflow=false` a 1440 y 390 px; header y tablas ya no se cortan.
+- Sin push: F1-F9 quedan locales en la rama FE; los fixes BE quedan locales en
+  `dev`.
+
+### 17.6 Pendiente / deuda declarada
+
+- Endpoints no consumidos por falta de pantalla en el plan: variantes
+  `*/date-range` de income-statement/cash-flow/vat/tax-summary (se usan los 4
+  períodos), `profit-margins*` (F6 cubre rentabilidad), `tax-summary/annual`
+  (el período `year` ya trae el detalle mensual), `compare-periods` (no hay
+  pantalla de comparación custom), `/vat/monthly` (el `monthly_breakdown` de
+  `/vat?period=year` cubre 12 meses) y `/vat-prorrateo/period` (se muestran
+  historial y detalles).
+- No hay pantalla de comparación custom de períodos ni exportación/impresión:
+  fuera del alcance de F9 (botones de exportar de la versión vieja eran
+  decorativos).
+- Los filtros SIFEN de los libros solo aplican al libro de ventas y con rango
+  completo; el endpoint por período no los acepta.
+- La caja inicial del flujo son cajas abiertas (no incluye cajas cerradas ni
+  bancos); un cambio de contrato que exponga saldos bancarios exige BE + UI.
+- El health score se calcula sobre el margen ingresos − compras del overview,
+  no sobre el margen bruto del P&L; se rotula para no confundirlos.
+- Falta F10 (Auditoría) y F11 (Pronósticos).

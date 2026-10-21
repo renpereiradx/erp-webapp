@@ -113,6 +113,14 @@ export const buildNavigation = (
                   icon: CreditCard,
                   permission: 'payables:read',
                 },
+                {
+                  // F9: resumen financiero; consume `/financial-reports/*`
+                  // (reports:read), no dashboard:read.
+                  name: t('nav.financeSummary', 'Resumen financiero'),
+                  href: '/dashboard/financial-summary',
+                  icon: FileText,
+                  permission: 'reports:read',
+                },
               ],
             },
             // F4 — grupo completo de Analítica de Ventas. El permiso del padre
@@ -323,6 +331,37 @@ export const buildNavigation = (
                   name: t('nav.payablesAging', 'Reporte de antigüedad'),
                   href: '/payables/aging-report',
                   icon: ClockIcon,
+                },
+              ],
+            },
+            // F9 — Reportes Financieros (4 hojas). Todas usan reports:read,
+            // igual que los subrouters `financial-reports` y `vat-prorrateo`.
+            // SIFEN queda como grupo Core propio (ADR-3).
+            {
+              name: t('nav.financialReportsGroup', 'Reportes Financieros'),
+              href: '#',
+              icon: FileText,
+              permission: 'reports:read',
+              children: [
+                {
+                  name: t('nav.financePnl', 'Estado de Resultados'),
+                  href: '/finance/profit-and-loss',
+                  icon: TrendingUp,
+                },
+                {
+                  name: t('nav.financeCashFlow', 'Flujo de caja'),
+                  href: '/finance/analytical-cash-flow',
+                  icon: Coins,
+                },
+                {
+                  name: t('nav.financeTax', 'Gestión de IVA'),
+                  href: '/finance/tax-management',
+                  icon: Percent,
+                },
+                {
+                  name: t('nav.financeLegalBooks', 'Libros legales'),
+                  href: '/finance/legal-books',
+                  icon: List,
                 },
               ],
             },

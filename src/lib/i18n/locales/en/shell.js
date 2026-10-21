@@ -78,6 +78,14 @@ export const shell = {
   'nav.payablesInvoices': 'Invoices payable',
   'nav.payablesCashFlow': 'Cash flow projection',
   'nav.payablesAging': 'Aging report',
+  'nav.financeSummary': 'Financial summary',
+  // F9 — Financial Reports (4 leaves; SIFEN stays in its Core group).
+  'nav.financialReportsGroup': 'Financial Reports',
+  'nav.financePnl': 'Income Statement',
+  'nav.financeCashFlow': 'Cash flow',
+  'nav.financeTax': 'VAT management',
+  'nav.financeLegalBooks': 'Legal books',
+
   'nav.collapseSidebar': 'Collapse menu',
   'nav.expandSidebar': 'Expand menu',
   'nav.openMenu': 'Open menu',

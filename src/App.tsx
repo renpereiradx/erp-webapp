@@ -71,6 +71,12 @@ const InvoiceDetailPage = lazy(() => import('@/pages/payables/InvoiceDetailPage'
 const CashFlowProjectionPage = lazy(() => import('@/pages/payables/CashFlowProjectionPage'))
 const PayablesAgingReportPage = lazy(() => import('@/pages/payables/PayablesAgingReportPage'))
 const SupplierAnalysisPage = lazy(() => import('@/pages/payables/SupplierAnalysisPage'))
+// PLAN_REBUILD_BI_UI_FRONTEND F9: Reportes Financieros (5 pantallas lazy).
+const FinancialSummaryPage = lazy(() => import('@/pages/finance/FinancialSummaryPage'))
+const ProfitAndLossPage = lazy(() => import('@/pages/finance/ProfitAndLossPage'))
+const AnalyticalCashFlowPage = lazy(() => import('@/pages/finance/AnalyticalCashFlowPage'))
+const TaxManagementPage = lazy(() => import('@/pages/finance/TaxManagementPage'))
+const LegalBooksPage = lazy(() => import('@/pages/finance/LegalBooksPage'))
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import { CounterOrdersPage } from '@/features/counterorders'
@@ -468,6 +474,15 @@ function AppContent() {
                       <Route path='/payables/cash-flow' element={<PayablesRoute><CashFlowProjectionPage /></PayablesRoute>} />
                       <Route path='/payables/aging-report' element={<PayablesRoute><PayablesAgingReportPage /></PayablesRoute>} />
                       <Route path='/payables/suppliers/:id/analysis' element={<PayablesRoute><SupplierAnalysisPage /></PayablesRoute>} />
+                      {/* PLAN_REBUILD_BI_UI_FRONTEND F9 — Reportes Financieros.
+                          Las 5 rutas consumen `/financial-reports/*` y
+                          `/vat-prorrateo/*`, gateados por el BE con
+                          `biChain("reports:read", …)`. */}
+                      <Route path='/dashboard/financial-summary' element={<ReportsRoute><FinancialSummaryPage /></ReportsRoute>} />
+                      <Route path='/finance/profit-and-loss' element={<ReportsRoute><ProfitAndLossPage /></ReportsRoute>} />
+                      <Route path='/finance/analytical-cash-flow' element={<ReportsRoute><AnalyticalCashFlowPage /></ReportsRoute>} />
+                      <Route path='/finance/tax-management' element={<ReportsRoute><TaxManagementPage /></ReportsRoute>} />
+                      <Route path='/finance/legal-books' element={<ReportsRoute><LegalBooksPage /></ReportsRoute>} />
                       <Route path='/finance/sifen-inutilizacion' element={
                         <PermissionGuard permission='sifen:read'>
                           <SkippedNumbersPage />

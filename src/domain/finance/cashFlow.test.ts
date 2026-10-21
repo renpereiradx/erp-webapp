@@ -1,158 +1,84 @@
 import { describe, expect, it } from 'vitest'
-import {
-  buildCashFlowView,
-  clampNumber,
-  formatSignedPYG,
-  getBalancePosition,
-  toDateLabel,
-  toNumber,
-} from './cashFlow'
+import { cashFlowKpis, cashFlowView, hasFinancingActivity, hasInvestingActivity } from './cashFlow'
+import type { CashFlowStatement } from '@/types/bi'
 
-describe('toNumber', () => {
-  it.each([
-    ['5', 5],
-    [5.7, 5.7],
-    ['abc', 0],
-    [null, 0],
-    [undefined, 0],
-    [Number.NaN, 0],
-    [Number.POSITIVE_INFINITY, 0],
-  ])('%s → %s', (value, expected) => {
-    expect(toNumber(value)).toBe(expected)
-  })
+const statement = (overrides: Partial<CashFlowStatement> = {}): CashFlowStatement => ({
+  period: { start_date: '2026-10-01', end_date: '2026-11-01' },
+  beginning_cash: 337260,
+  operating_activities: {
+    cash_from_sales: 1475500,
+    cash_from_receivables: 41860,
+    cash_paid_to_suppliers: 275000,
+    cash_paid_for_expenses: 0,
+    cash_paid_for_salaries: 0,
+    other_operating: 0,
+    net_operating_cash_flow: 1242360,
+  },
+  investing_activities: {
+    equipment_purchases: 0,
+    equipment_sales: 0,
+    other_investing: 0,
+    net_investing_cash_flow: 0,
+  },
+  financing_activities: {
+    loan_proceeds: 0,
+    loan_payments: 0,
+    owner_contributions: 0,
+    owner_withdrawals: 0,
+    other_financing: 0,
+    net_financing_cash_flow: 0,
+  },
+  ending_cash: 1579620,
+  net_cash_change: 1242360,
+  daily_breakdown: [
+    { date: '2026-10-14', inflows: 117260, outflows: 0, net_flow: 117260, balance: 1521020 },
+    { date: '2026-10-06', inflows: 0, outflows: 275000, net_flow: -275000, balance: 62260 },
+    { date: '2026-10-01', inflows: 1254100, outflows: 0, net_flow: 1254100, balance: 1591360 },
+    { date: '2026-10-05', inflows: 26000, outflows: 0, net_flow: 26000, balance: 1617360 },
+    { date: '2026-10-20', inflows: 120000, outflows: 0, net_flow: 120000, balance: 1579620 },
+  ],
+  ...overrides,
 })
 
-describe('clampNumber', () => {
-  it('satura en los límites', () => {
-    expect(clampNumber(5, 2, 100)).toBe(5)
-    expect(clampNumber(1, 2, 100)).toBe(2)
-    expect(clampNumber(150, 2, 100)).toBe(100)
-  })
-})
-
-describe('toDateLabel', () => {
-  it('formatea es-PY dd mmm', () => {
-    expect(toDateLabel('2026-09-18')).toContain('sep')
-  })
-
-  it('devuelve el valor crudo con fecha inválida; null cae al epoch del legado (new Date(null))', () => {
-    expect(toDateLabel('not-a-date')).toBe('not-a-date')
-    expect(toDateLabel(null)).toBe(
-      new Date(0).toLocaleDateString('es-PY', { day: '2-digit', month: 'short' }),
-    )
-    expect(toDateLabel('')).toBe('-')
-  })
-})
-
-describe('formatSignedPYG', () => {
-  it('prefija + solo a positivos', () => {
-    expect(formatSignedPYG(1000)).toBe('+Gs. 1.000')
-    expect(formatSignedPYG(0)).toBe('Gs. 0')
-    expect(formatSignedPYG(-500)).toBe('Gs. -500')
-  })
-})
-
-describe('buildCashFlowView', () => {
-  it('vista en ceros con payload vacío', () => {
-    const view = buildCashFlowView(null)
-    expect(view).toMatchObject({
-      beginningCash: 0,
-      endingCash: 0,
-      netCashChange: 0,
-      totalInflows: 0,
-      totalOutflows: 0,
-      operatingNet: 0,
-      dailyData: [],
-      maxBarValue: 1,
-    })
-    // -Math.abs(0) produce -0 (legado): numéricamente 0
-    expect(view.investingNet + 0).toBe(0)
-    expect(view.financingNet + 0).toBe(0)
-    expect(view.minBalance).toBe(0)
-    expect(view.maxBalance).toBe(0)
-    expect(view.operatingRows).toHaveLength(5)
-    expect(view.investingRows[0].concept).toBe('Compra de equipos')
+describe('finance/cashFlow', () => {
+  it('conserva los importes del payload y ordena el desglose diario', () => {
+    const view = cashFlowView(statement())!
+    expect(view.totalInflows).toBe(1517360)
+    expect(view.totalOutflows).toBe(275000)
+    expect(view.netCashChange).toBe(1242360)
+    expect(view.endingCash).toBe(1579620)
+    expect(view.daily.map((row) => row.date)).toEqual([
+      '2026-10-01',
+      '2026-10-05',
+      '2026-10-06',
+      '2026-10-14',
+      '2026-10-20',
+    ])
+    expect(view.dailyNet).toBe(1242360)
+    expect(view.reconciled).toBe(true)
+    expect(cashFlowView(null)).toBeNull()
   })
 
-  const SOURCE = {
-    beginning_cash: 1000,
-    operating_activities: {
-      cash_from_sales: 500,
-      cash_from_receivables: '300',
-      cash_paid_to_suppliers: 200,
-      cash_paid_for_expenses: 100,
-      cash_paid_for_salaries: 50,
-      net_operating_cash_flow: 0, // fuerza el cómputo por actividades
-    },
-    investing_activities: { equipment_purchases: 400 },
-    financing_activities: { loan_payments: 150 },
-    daily_breakdown: Array.from({ length: 9 }, (_, i) => ({
-      date: `2026-09-${10 + i}`,
-      inflows: 100 + i,
-      outflows: 50,
-      net_flow: 50 + i,
-      balance: 2000 + i,
-    })),
-  }
-
-  it('normaliza el desglose diario a las últimas 7 entradas', () => {
-    const view = buildCashFlowView(SOURCE)
-    expect(view.dailyData).toHaveLength(7)
-    expect(view.dailyData[0].date).toContain('sep') // 2026-09-11 recortado desde el 10
-    expect(view.dailyData[6].inflows).toBe(108)
+  it('marca una conciliación rota sin re-derivar las cifras', () => {
+    const view = cashFlowView(statement({ ending_cash: 62260 }))!
+    expect(view.reconciled).toBe(false)
+    expect(view.endingCash).toBe(62260)
   })
 
-  it('resuelve totales desde el diario cuando existe y cae a actividades si no', () => {
-    const view = buildCashFlowView(SOURCE)
-    const dailyInflows = view.dailyData.reduce((s, r) => s + r.inflows, 0)
-    expect(view.totalInflows).toBe(dailyInflows)
-
-    const withoutDaily = buildCashFlowView({ ...SOURCE, daily_breakdown: [] })
-    expect(withoutDaily.totalInflows).toBe(800) // 500 + 300
-    expect(withoutDaily.totalOutflows).toBe(900) // 200+100+50+400+150
+  it('no inventa actividades de inversión/financiación', () => {
+    const view = cashFlowView(statement())!
+    expect(hasInvestingActivity(view)).toBe(false)
+    expect(hasFinancingActivity(view)).toBe(false)
   })
 
-  it('net/ending caen a derivados cuando el BE no los reporta', () => {
-    const view = buildCashFlowView({ ...SOURCE, daily_breakdown: [] })
-    expect(view.netCashChange).toBe(800 - 900) // -100
-    expect(view.endingCash).toBe(1000 + (800 - 900)) // 900
-  })
-
-  it('nets por categoría: reportado si viene, si no computado con signo', () => {
-    const view = buildCashFlowView({ ...SOURCE, daily_breakdown: [] })
-    expect(view.operatingNet).toBe(800 - 350) // computado (campo reportado en 0)
-    expect(view.investingNet).toBe(-400) // -Math.abs
-    expect(view.financingNet).toBe(-150)
-
-    const reported = buildCashFlowView({
-      operating_activities: { net_operating_cash_flow: 999 },
-      investing_activities: { equipment_purchases: 10, net_investing_cash_flow: -10 },
-      financing_activities: { loan_payments: 5, net_financing_cash_flow: -5 },
-    })
-    expect(reported.operatingNet).toBe(999)
-    expect(reported.investingNet).toBe(-10)
-    expect(reported.financingNet).toBe(-5)
-  })
-
-  it('min/max de balance y maxBarValue (con piso 1)', () => {
-    const view = buildCashFlowView(SOURCE)
-    // slice(-7) recorta las 2 primeras filas (i=0,1): balances 2002..2008
-    expect(view.minBalance).toBe(2002)
-    expect(view.maxBalance).toBe(2008)
-    expect(view.maxBarValue).toBe(108)
-    expect(buildCashFlowView(null).maxBarValue).toBe(1)
-  })
-})
-
-describe('getBalancePosition', () => {
-  it('50 con rango plano', () => {
-    expect(getBalancePosition(7, 7, 7)).toBe(50)
-  })
-
-  it('clamp 5-95 dentro del rango', () => {
-    expect(getBalancePosition(2006, 2006, 2012)).toBe(5)
-    expect(getBalancePosition(2012, 2006, 2012)).toBe(95)
-    expect(getBalancePosition(2009, 2006, 2012)).toBe(50)
-    expect(getBalancePosition(0, 2006, 2012)).toBe(5)
+  it('arma los KPIs del flujo', () => {
+    const kpis = cashFlowKpis(cashFlowView(statement())!)
+    expect(kpis.map((kpi) => kpi.id)).toEqual([
+      'beginningCash',
+      'inflows',
+      'outflows',
+      'netCashChange',
+      'endingCash',
+    ])
   })
 })

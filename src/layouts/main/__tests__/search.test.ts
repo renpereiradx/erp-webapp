@@ -55,4 +55,16 @@ describe('search — gate de rutas BI (F7/F8)', () => {
   it('con pack pero sin payables:read no ofrece la lista de CxP', () => {
     expect(hrefs({ permissions: ['receivables:read'] })).not.toContain('/payables/invoices')
   })
+
+  it('con pack + reports:read ofrece las rutas de Reportes Financieros', () => {
+    const values = hrefs({ permissions: ['reports:read'] })
+    expect(values).toContain('/finance/tax-management')
+    expect(values).toContain('/finance/legal-books')
+  })
+
+  it('sin pack BI no ofrece las rutas de Reportes Financieros', () => {
+    const values = hrefs({ biEnabled: false, permissions: ['reports:read'] })
+    expect(values).not.toContain('/finance/tax-management')
+    expect(values).not.toContain('/finance/legal-books')
+  })
 })

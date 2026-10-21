@@ -38,6 +38,25 @@ export const distinctSearchableRoutes = [
     requiredPermission: 'payables:read'
   },
 
+  // Reportes Financieros (F9): dos rutas del grupo que no están en el primer
+  // nivel del sidebar. Mismo gate que la cadena BE (reports:read).
+  {
+    name: 'Gestión de IVA',
+    href: '/finance/tax-management',
+    icon: List,
+    category: 'Finanzas / Impuestos',
+    requiredModule: 'bi',
+    requiredPermission: 'reports:read'
+  },
+  {
+    name: 'Libros legales',
+    href: '/finance/legal-books',
+    icon: List,
+    category: 'Finanzas / Libros',
+    requiredModule: 'bi',
+    requiredPermission: 'reports:read'
+  },
+
   // Gestión de Usuarios y Perfil
   {
     name: 'Mi Perfil y Seguridad',

@@ -48,6 +48,7 @@ import { inventoryAnalytics } from './inventoryAnalytics'
 import { profitability } from './profitability'
 import { receivables } from './receivables'
 import { payables } from './payables'
+import { finance } from './finance'
 
 /**
  * Diccionario completo de traducciones en español
@@ -99,4 +100,5 @@ export const es = {
   ...profitability,
   ...receivables,
   ...payables,
+  ...finance,
 }

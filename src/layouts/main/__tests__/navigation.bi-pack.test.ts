@@ -3,7 +3,8 @@
  * (5 rutas) + Analítica de Ventas (8 hojas: 6 de F4 + 2 drill-downs de F3) +
  * drill-downs de Compras + Analítica de Inventario (4 hojas de F5) +
  * Rentabilidad (6 hojas de F6) + Cuentas por Cobrar (4 hojas de F7) +
- * Cuentas por Pagar (4 hojas de F8) cuando hay pack y permisos BI. Sin pack o sin hojas visibles el padre se oculta
+ * Cuentas por Pagar (4 hojas de F8) + Reportes Financieros (4 hojas de F9)
+ * cuando hay pack y permisos BI. Sin pack o sin hojas visibles el padre se oculta
  * (incluido el padre con gate anyOf). SIFEN sigue como grupo Core propio
  * (ADR-3).
  */
@@ -55,6 +56,7 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
       'Rentabilidad',
       'Cuentas por Cobrar',
       'Cuentas por Pagar',
+      'Reportes Financieros',
     ])
 
     const dashboard = findByName(tree, 'Dashboard')
@@ -65,6 +67,7 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
       '/dashboard/alerts',
       '/dashboard/top-products',
       '/dashboard/payables',
+      '/dashboard/financial-summary',
     ])
 
     const sales = findByName(tree, 'Analítica de Ventas')
@@ -121,6 +124,15 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
       '/payables/aging-report',
     ])
     expect(payables?.permission).toBe('payables:read')
+
+    const reports = findByName(tree, 'Reportes Financieros')
+    expect(reports?.children?.map((child) => child.href)).toEqual([
+      '/finance/profit-and-loss',
+      '/finance/analytical-cash-flow',
+      '/finance/tax-management',
+      '/finance/legal-books',
+    ])
+    expect(reports?.permission).toBe('reports:read')
   })
 
   it('sin pack BI (biEnabled=false) el grupo no existe; SIFEN sigue como Core', () => {
@@ -134,6 +146,7 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
     expect(findByName(tree, 'Rentabilidad')).toBeUndefined()
     expect(findByName(tree, 'Cuentas por Cobrar')).toBeUndefined()
     expect(findByName(tree, 'Cuentas por Pagar')).toBeUndefined()
+    expect(findByName(tree, 'Reportes Financieros')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
   })
 
@@ -150,6 +163,7 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
       'Rentabilidad',
       'Cuentas por Cobrar',
       'Cuentas por Pagar',
+      'Reportes Financieros',
     ])
     expect(findByName(tree, 'Dashboard')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
@@ -172,7 +186,7 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
     expect(findByName(tree, 'Dashboard')).toBeUndefined()
   })
 
-  it('con reports:read solo: se ve Descuentos y ninguna hoja con analytics:read', () => {
+  it('con reports:read solo: Descuentos y Reportes Financieros, sin analytics:read', () => {
     const tree = filterNavigationItems(
       buildNavigation(t, false, true),
       checksFor(['reports:read']),
@@ -180,12 +194,16 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
 
     const bi = findByName(tree, 'Inteligencia de Negocios')
     expect(bi).toBeDefined()
-    expect(bi?.children?.map((child) => child.name)).toEqual(['Analítica de Ventas'])
+    expect(bi?.children?.map((child) => child.name)).toEqual([
+      'Analítica de Ventas',
+      'Reportes Financieros',
+    ])
 
     const sales = findByName(tree, 'Analítica de Ventas')
     expect(sales?.children?.map((child) => child.href)).toEqual([
       '/sales-analytics/discounts',
     ])
+    expect(findByName(tree, 'Reportes Financieros')?.children).toHaveLength(4)
   })
 
   it('con un permiso BI sin hoja visible (audit:read, F10): no queda un grupo vacío', () => {

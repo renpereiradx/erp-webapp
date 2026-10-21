@@ -2041,3 +2041,426 @@ export interface PayablesPageParams {
   page?: number;
   page_size?: number;
 }
+
+// --- Reportes Financieros (F9) ----------------------------------------------
+//
+// Contrato REAL de `/financial-reports/*` y `/vat-prorrateo/*`
+// (`business_management/models/financial_reports.go`, `models/vat_prorrateo.go`
+// + `internal/analytics/http_financial.go` + `http_prorrateo.go` +
+// `internal/platform/postgres/analytics_financial_repo.go`). Envelope
+// `BIEnvelope<T>`.
+//
+// Semántica que la UI debe respetar (no "corregir" en el cliente):
+//  - `IncomeStatement` es un estado de resultado BRUTO: el backend no modela
+//    gastos operativos (`expenses.*` siempre 0, igual que returns/discounts);
+//    `operating_income` y `net_income` espejan `gross_profit`.
+//  - `CashFlowStatement` es base CAJA: cobros de `sale_payments` y pagos de
+//    `purchase_payments` por fecha de pago; `cash_from_sales` son cobros de
+//    ventas del período y `cash_from_receivables` cobros de ventas previas.
+//    `beginning_cash` es el saldo de cajas ABIERTAS.
+//  - `FinancialOverview.expenses` son COMPRAS del período (no gastos), y
+//    `net_income = revenue - purchases` (no utilidad contable).
+//  - `key_ratios.dso/dpo/inventory_turnover/asset_turnover` viajan en 0 porque
+//    el repo no los calcula: la UI no los muestra.
+
+export interface FinancialReportPeriod {
+  start_date: string;
+  end_date: string;
+  type?: string;
+}
+
+export interface ReportPaginationInfo {
+  page: number;
+  page_size: number;
+  total_items: number;
+  total_pages: number;
+}
+
+// Income statement -----------------------------------------------------------
+
+export interface IncomeCategoryRevenue {
+  category_id: string;
+  category_name: string;
+  amount: number;
+  percentage: number;
+}
+
+export interface IncomePaymentRevenue {
+  method: string;
+  amount: number;
+  percentage: number;
+}
+
+export interface IncomeRevenueSection {
+  gross_sales: number;
+  returns: number;
+  discounts: number;
+  net_sales: number;
+  by_category?: IncomeCategoryRevenue[] | null;
+  by_payment_method?: IncomePaymentRevenue[] | null;
+}
+
+export interface IncomeCostOfSalesSection {
+  beginning_inventory: number;
+  purchases: number;
+  purchase_returns: number;
+  ending_inventory: number;
+  cost_of_goods_sold: number;
+}
+
+export interface IncomeGrossProfitSection {
+  amount: number;
+  margin: number;
+  percentage: number;
+}
+
+export interface IncomeExpenseCategory {
+  category: string;
+  amount: number;
+  percentage: number;
+}
+
+export interface IncomeExpensesSection {
+  operating: number;
+  salaries: number;
+  rent: number;
+  utilities: number;
+  marketing: number;
+  other: number;
+  total: number;
+  by_category?: IncomeExpenseCategory[] | null;
+}
+
+export interface IncomeComparison {
+  previous_period: FinancialReportPeriod;
+  revenue_change: number;
+  revenue_change_pct: number;
+  expense_change: number;
+  expense_change_pct: number;
+  net_income_change: number;
+  net_income_change_pct: number;
+}
+
+export interface IncomeStatement {
+  period: FinancialReportPeriod;
+  revenue: IncomeRevenueSection;
+  cost_of_sales: IncomeCostOfSalesSection;
+  gross_profit: IncomeGrossProfitSection;
+  expenses: IncomeExpensesSection;
+  operating_income: number;
+  other_income: number;
+  other_expenses: number;
+  net_income: number;
+  comparison?: IncomeComparison | null;
+}
+
+// Cash flow statement --------------------------------------------------------
+
+export interface CashFlowOperatingSection {
+  cash_from_sales: number;
+  cash_from_receivables: number;
+  cash_paid_to_suppliers: number;
+  cash_paid_for_expenses: number;
+  cash_paid_for_salaries: number;
+  other_operating: number;
+  net_operating_cash_flow: number;
+}
+
+export interface CashFlowInvestingSection {
+  equipment_purchases: number;
+  equipment_sales: number;
+  other_investing: number;
+  net_investing_cash_flow: number;
+}
+
+export interface CashFlowFinancingSection {
+  loan_proceeds: number;
+  loan_payments: number;
+  owner_contributions: number;
+  owner_withdrawals: number;
+  other_financing: number;
+  net_financing_cash_flow: number;
+}
+
+export interface DailyCashFlow {
+  /** Fecha date-only serializada a medianoche UTC. */
+  date: string;
+  inflows: number;
+  outflows: number;
+  net_flow: number;
+  balance: number;
+}
+
+/** `GET /financial-reports/cash-flow` (base caja, ver cabecera). */
+export interface CashFlowStatement {
+  period: FinancialReportPeriod;
+  /** Saldo de cajas ABIERTAS al inicio (no un saldo bancario). */
+  beginning_cash: number;
+  operating_activities: CashFlowOperatingSection;
+  investing_activities: CashFlowInvestingSection;
+  financing_activities: CashFlowFinancingSection;
+  ending_cash: number;
+  net_cash_change: number;
+  daily_breakdown?: DailyCashFlow[] | null;
+}
+
+// VAT ------------------------------------------------------------------------
+
+export interface VatSalesSection {
+  gross_sales_10: number;
+  vat_10: number;
+  gross_sales_5: number;
+  vat_5: number;
+  exempt_sales: number;
+  total_gross_sales: number;
+  total_vat_debito: number;
+  transaction_count: number;
+}
+
+export interface VatPurchasesSection {
+  gross_purchases_10: number;
+  vat_10: number;
+  gross_purchases_5: number;
+  vat_5: number;
+  exempt_purchases: number;
+  total_gross_purchases: number;
+  total_vat_credito: number;
+  transaction_count: number;
+}
+
+export interface VatBalanceSection {
+  vat_debito: number;
+  vat_credito: number;
+  vat_payable: number;
+  credit_carryover: number;
+  /** TO_PAY, CREDIT o BALANCED. */
+  status: string;
+}
+
+export interface MonthlyVat {
+  /** Fecha date-only (primer día del mes) serializada a medianoche UTC. */
+  month: string;
+  vat_debito: number;
+  vat_credito: number;
+  balance: number;
+  status: string;
+}
+
+/** `GET /financial-reports/vat` y `/vat/monthly`. */
+export interface VatReport {
+  period: FinancialReportPeriod;
+  sales_vat: VatSalesSection;
+  purchases_vat: VatPurchasesSection;
+  vat_balance: VatBalanceSection;
+  monthly_breakdown?: MonthlyVat[] | null;
+}
+
+// Tax summary ----------------------------------------------------------------
+
+export interface VatTaxSummary {
+  total_debito: number;
+  total_credito: number;
+  net_vat: number;
+  credit_balance: number;
+}
+
+export interface RetentionsSummary {
+  retained_by_others: number;
+  retained_to_others: number;
+  net_retentions: number;
+}
+
+export interface MonthlyTax {
+  month: string;
+  vat_debito: number;
+  vat_credito: number;
+  net_vat: number;
+  retentions: number;
+  total_liability: number;
+}
+
+/** `GET /financial-reports/tax-summary`. */
+export interface TaxSummary {
+  period: FinancialReportPeriod;
+  vat_summary: VatTaxSummary;
+  retentions_summary?: RetentionsSummary | null;
+  total_tax_liability: number;
+  total_tax_credits: number;
+  net_tax_position: number;
+  monthly_detail?: MonthlyTax[] | null;
+}
+
+// Ledgers --------------------------------------------------------------------
+
+export interface SalesLedgerSummary {
+  total_transactions: number;
+  total_gross: number;
+  total_vat_10: number;
+  total_vat_5: number;
+  total_exempt: number;
+  total_net: number;
+}
+
+export interface SalesLedgerEntry {
+  date: string;
+  invoice_number: string;
+  timbrado: string;
+  client_ruc: string;
+  client_name: string;
+  gross_amount: number;
+  vat_10: number;
+  vat_5: number;
+  exempt: number;
+  net_amount: number;
+  payment_method: string;
+  payment_status: string;
+  /** CDC del DE SIFEN; vacío en ventas no fiscales. */
+  cdc?: string;
+  /** Estado del DE SIFEN; vacío en ventas no fiscales. */
+  fiscal_estado?: string;
+}
+
+export interface PurchaseLedgerSummary {
+  total_transactions: number;
+  total_gross: number;
+  total_vat_10: number;
+  total_vat_5: number;
+  total_exempt: number;
+  total_net: number;
+}
+
+export interface PurchaseLedgerEntry {
+  date: string;
+  invoice_number: string;
+  timbrado: string;
+  supplier_ruc: string;
+  supplier_name: string;
+  gross_amount: number;
+  vat_10: number;
+  vat_5: number;
+  exempt: number;
+  net_amount: number;
+  payment_status: string;
+  expense_category?: string;
+}
+
+/** `GET /financial-reports/sales-ledger` (período o date-range). */
+export interface SalesLedger {
+  period: FinancialReportPeriod;
+  summary: SalesLedgerSummary;
+  entries: SalesLedgerEntry[] | null;
+  pagination: ReportPaginationInfo;
+}
+
+/** `GET /financial-reports/purchase-ledger` (período o date-range). */
+export interface PurchaseLedger {
+  period: FinancialReportPeriod;
+  summary: PurchaseLedgerSummary;
+  entries: PurchaseLedgerEntry[] | null;
+  pagination: ReportPaginationInfo;
+}
+
+export interface SalesLedgerParams {
+  period?: DashboardPeriod;
+  page?: number;
+  page_size?: number;
+  /** Solo con date-range. `YYYY-MM-DD`; fin EXCLUSIVO? El BE parsea ambos. */
+  start_date?: string;
+  end_date?: string;
+  estado?: string;
+  cdc?: string;
+  timbrado?: string;
+}
+
+export interface PurchaseLedgerParams {
+  period?: DashboardPeriod;
+  page?: number;
+  page_size?: number;
+  start_date?: string;
+  end_date?: string;
+}
+
+// Financial overview + health score -----------------------------------------
+
+export interface FinancialRatios {
+  current_ratio: number;
+  quick_ratio: number;
+  gross_margin: number;
+  net_margin: number;
+  /** No calculados por el repo: viajan en 0 y no se muestran. */
+  dso: number;
+  dpo: number;
+  inventory_turnover: number;
+  asset_turnover: number;
+}
+
+export interface OverviewComparison {
+  previous_period: FinancialReportPeriod;
+  revenue_change: number;
+  revenue_change_pct: number;
+  expense_change: number;
+  expense_change_pct: number;
+  net_income_change: number;
+  net_income_change_pct: number;
+}
+
+/** `GET /financial-reports/overview`. `expenses` = compras del período. */
+export interface FinancialReportOverview {
+  period: FinancialReportPeriod;
+  revenue: number;
+  expenses: number;
+  net_income: number;
+  cash_position: number;
+  receivables: number;
+  payables: number;
+  working_capital: number;
+  key_ratios: FinancialRatios;
+  comparison?: OverviewComparison | null;
+}
+
+export interface FinancialHealthScore {
+  score: number;
+  /** EXCELLENT, GOOD, FAIR o POOR. */
+  rating: string;
+  current_ratio: number;
+  quick_ratio: number;
+  net_margin: number;
+  working_capital: number;
+  period_start: string;
+  period_end: string;
+}
+
+// VAT prorrateo --------------------------------------------------------------
+
+export type ProrrateoPeriodStatus = 'PENDING' | 'PROCESSED' | 'CLOSED' | 'CANCELLED';
+export type ProrrateoAllocationType = 'DIRECT' | 'INDIRECT' | 'EXEMPT';
+
+export interface ProrrateoPeriod {
+  id: number;
+  period_start: string;
+  period_end: string;
+  total_taxable_sales: number;
+  total_exempt_sales: number;
+  total_sales: number;
+  /** Coeficiente 0-1 de deducibilidad. */
+  deducibility_coefficient: number;
+  total_vat_credit: number;
+  deductible_vat_credit: number;
+  non_deductible_vat_credit: number;
+  status: ProrrateoPeriodStatus | string;
+  processed_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProrrateoDetail {
+  id: number;
+  prorrateo_period_id: number;
+  purchase_order_id: number;
+  original_vat_credit: number;
+  deductible_portion: number;
+  non_deductible_portion: number;
+  allocation_type: ProrrateoAllocationType | string;
+  notes?: string;
+  created_at: string;
+}

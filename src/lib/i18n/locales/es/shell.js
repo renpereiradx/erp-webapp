@@ -78,6 +78,14 @@ export const shell = {
   'nav.payablesInvoices': 'Facturas por pagar',
   'nav.payablesCashFlow': 'Proyección de flujo de caja',
   'nav.payablesAging': 'Reporte de antigüedad',
+  'nav.financeSummary': 'Resumen financiero',
+  // F9 — Reportes Financieros (4 hojas; SIFEN sigue en su grupo Core).
+  'nav.financialReportsGroup': 'Reportes Financieros',
+  'nav.financePnl': 'Estado de Resultados',
+  'nav.financeCashFlow': 'Flujo de caja',
+  'nav.financeTax': 'Gestión de IVA',
+  'nav.financeLegalBooks': 'Libros legales',
+
   'nav.collapseSidebar': 'Colapsar menú',
   'nav.expandSidebar': 'Expandir menú',
   'nav.openMenu': 'Abrir menú',
