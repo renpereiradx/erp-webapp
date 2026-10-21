@@ -1,183 +1,170 @@
-import { apiClient } from '../api';
-import { BIParams, FinancialOverview, AgingReportItem } from '../../types/bi';
-
 /**
- * Servicio de Cuentas por Pagar (BI - Payables)
- * Actualizado para compatibilidad con hooks existentes y nuevo estándar BI.
+ * Servicio de Cuentas por Pagar (BI, F8).
+ *
+ * Contrato real del backend (`models/payables.go` +
+ * `internal/analytics/http_payables.go` +
+ * `internal/platform/postgres/analytics_payables_repo.go`): envelope
+ * `{success, data, metadata}` en TODAS las respuestas. El servicio NO lo
+ * desenvuelve — el hook lee `data`.
+ *
+ * Gate del BE: `RequireModule('bi')` → `payables:read` para todo el grupo
+ * (`biChain("payables:read", "payables")`).
+ *
+ * Sin fallback demo/mock: si el endpoint falla, el error llega a la UI.
+ * Endpoints NO consumidos porque el plan no tiene pantalla que los use (no se
+ * agregan métodos muertos): `/payables/overdue` (el listado filtra por
+ * estado), `/payables/urgent` (idem por prioridad), `/payables/aging/summary`
+ * (overview y reporte la embeben), `/payables/reminders*`,
+ * `/payables/statistics/date-range` (solo 4 períodos estándar),
+ * `/payables/payment-capacity` (la cobertura se deriva de `/cash-flow`) y
+ * `/payables/supplier/{id}` (la ficha usa el listado filtrado por proveedor).
  */
-export const payablesService = {
-  /**
-   * Resumen general de cuentas por pagar (Nuevo Estándar)
-   */
-  async getOverview(params: BIParams = {}): Promise<FinancialOverview> {
-    try {
-      return await apiClient.get('/payables/overview', { params });
-    } catch (error: any) {
-      console.error('Error fetching payables overview:', error);
-      throw error;
-    }
-  },
+import { apiClient } from '../api';
+import { telemetry } from '../../utils/telemetry';
+import type {
+  BIEnvelope,
+  CashFlowProjection,
+  DashboardPeriod,
+  Payable,
+  PayablesAgingReport,
+  PayablesList,
+  PayablesListParams,
+  PayablesOverview,
+  PayablesPageParams,
+  PayablesStatistics,
+  PaymentCalendar,
+  SupplierAnalysis,
+  SupplierPayablesSummary,
+} from '../../types/bi';
 
-  /**
-   * @deprecated Alias de getOverview — usar el método canónico.
-   */
-  async getSummary(params: BIParams = {}): Promise<any> {
-    return this.getOverview(params);
-  },
+type QueryValue = string | number | boolean | null | undefined;
 
-  /**
-   * Lista de pagos urgentes
-   */
-  async getUrgent(params: BIParams = {}): Promise<{ data: any[] }> {
-    try {
-      return await apiClient.get('/payables/urgent', { params });
-    } catch (error: any) {
-      console.error('Error fetching urgent payables:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Reporte de antigüedad de deudas con proveedores
-   */
-  async getAgingReport(params: BIParams = {}): Promise<{ data: AgingReportItem[] }> {
-    try {
-      return await apiClient.get('/payables/aging/report', { params });
-    } catch (error: any) {
-      console.error('Error fetching payables aging report:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Lista paginada de facturas (GET /payables).
-   * El BE acepta `status` (enum), `supplier_id`, `search` (id/proveedor/RUC/
-   * CI), `priority` (URGENT/HIGH/MEDIUM/LOW), `start_date`/`end_date`
-   * (YYYY-MM-DD, end exclusivo), `page`/`page_size` (cap 100) y
-   * `sort_by`/`sort_order` (whitelist: due_date, date, amount, supplier,
-   * priority). Cierre ④ de la auditoría BI: el gap de contrato por el que la
-   * UI enviaba search/priority/fechas y el BE las ignoraba está resuelto.
-   */
-  async getPayables(filters: Record<string, any> = {}, pagination: Record<string, any> = {}): Promise<any> {
-    try {
-      const params: Record<string, any> = {
-        ...filters,
-        page: pagination.page,
-        page_size: pagination.page_size ?? pagination.pageSize,
-      };
-      // 'all' es sentinela de la UI: el enum del BE no lo acepta (devolvería 0 filas)
-      if (!params.status || params.status === 'all') delete params.status;
-      return await apiClient.get('/payables', { params });
-    } catch (error: any) {
-      console.error('Error fetching payables list:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Detalle de una factura por ID (GET /payables/{id}, 404 tipado post-T6)
-   */
-  async getPayableById(id: string): Promise<any> {
-    try {
-      return await apiClient.get(`/payables/${id}`);
-    } catch (error: any) {
-      console.error(`Error fetching payable ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Proveedores con mayor deuda (GET /payables/top-suppliers?limit=N)
-   */
-  async getTopSuppliers(limit = 10): Promise<any> {
-    try {
-      return await apiClient.get('/payables/top-suppliers', { params: { limit } });
-    } catch (error: any) {
-      console.error('Error fetching top suppliers:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Calendario de pagos próximos (GET /payables/schedule?days=N).
-   * Contrato: PaymentCalendar {start_date, end_date, total_due, schedule[]}.
-   */
-  async getSchedule(days = 30): Promise<any> {
-    try {
-      return await apiClient.get('/payables/schedule', { params: { days } });
-    } catch (error: any) {
-      console.error('Error fetching payment schedule:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Resumen de antigüedad por tramos (GET /payables/aging/summary)
-   */
-  async getAgingSummary(params: BIParams = {}): Promise<any> {
-    try {
-      return await apiClient.get('/payables/aging/summary', { params });
-    } catch (error: any) {
-      console.error('Error fetching payables aging summary:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Estadísticas por período (GET /payables/statistics?period=today|week|month|year)
-   */
-  async getStatistics(period = 'month'): Promise<any> {
-    try {
-      return await apiClient.get('/payables/statistics', { params: { period } });
-    } catch (error: any) {
-      console.error('Error fetching payables statistics:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Proyección de flujo de caja (GET /payables/cash-flow?days=N).
-   * Contrato: CashFlowProjection {period, expected_inflows, expected_outflows,
-   * net_cash_flow, cumulative_flow, projection_days[]}. Es la fuente REAL de
-   * la página de proyección — /financial-reports/cash-flow devuelve el
-   * estado contable (CashFlowStatement), otro contrato (audit 2A).
-   */
-  async getCashFlowProjection(days = 30): Promise<any> {
-    try {
-      return await apiClient.get('/payables/cash-flow', { params: { days } });
-    } catch (error: any) {
-      console.error('Error fetching cash flow projection:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Facturas de un proveedor (GET /payables/supplier/{id}).
-   * Contrato: SupplierPayables {total_pending, total_overdue, pending_count,
-   * credit_terms, payment_history, average_days_to_pay, oldest_debt,
-   * payables[]}.
-   */
-  async getSupplierPayables(supplierId: string): Promise<any> {
-    try {
-      return await apiClient.get(`/payables/supplier/${supplierId}`);
-    } catch (error: any) {
-      console.error(`Error fetching payables for supplier ${supplierId}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Análisis detallado de un proveedor
-   */
-  async getSupplierAnalysis(supplierId: string): Promise<{ success: boolean, data: any }> {
-    try {
-      const response = await apiClient.get(`/payables/supplier/${supplierId}/analysis`);
-      return { success: true, data: response.data || response };
-    } catch (error: any) {
-      console.error(`Error fetching analysis for supplier ${supplierId}:`, error);
-      throw error;
-    }
+/** Strip de undefined/null/'' — URLSearchParams no debe ver parámetros vacíos. */
+export const cleanPayablesParams = (params: object = {}): Record<string, string> => {
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(params) as Array<[string, QueryValue]>) {
+    if (value === undefined || value === null || value === '') continue;
+    out[key] = String(value);
   }
+  return out;
+};
+
+const recordError = (operation: string, error: unknown): void => {
+  const message = error instanceof Error ? error.message : String(error);
+  telemetry.record('bi.payables.error', { operation, error: message });
+};
+
+const get = async <T>(path: string, params: object = {}): Promise<BIEnvelope<T>> =>
+  (await apiClient.get(path, { params: cleanPayablesParams(params) })) as BIEnvelope<T>;
+
+const entityPath = (base: string, id: string): string =>
+  `${base}/${encodeURIComponent(id)}`;
+
+export const payablesService = {
+  /** Cartera actual (snapshot, sin período): totales, vencido y antigüedad. */
+  async getOverview(): Promise<BIEnvelope<PayablesOverview>> {
+    try {
+      return await get<PayablesOverview>('/payables/overview');
+    } catch (error) {
+      recordError('getOverview', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Lista maestra paginada. Whitelist de orden: `due_date|date|amount|
+   * supplier|priority`; los totales del `summary` son del set filtrado
+   * completo (ventanas del SQL), no de la página.
+   */
+  async getList(params: PayablesListParams = {}): Promise<BIEnvelope<PayablesList>> {
+    try {
+      return await get<PayablesList>('/payables', params);
+    } catch (error) {
+      recordError('getList', error);
+      throw error;
+    }
+  },
+
+  /** Detalle de una cuenta por pagar (404 tipado si no existe). */
+  async getById(id: string): Promise<BIEnvelope<Payable>> {
+    try {
+      return (await apiClient.get(entityPath('/payables', id))) as BIEnvelope<Payable>;
+    } catch (error) {
+      recordError('getById', error);
+      throw error;
+    }
+  },
+
+  /** Proveedores con mayor deuda a hoy (snapshot, ordenado por pendiente). */
+  async getTopSuppliers(limit = 5): Promise<BIEnvelope<SupplierPayablesSummary[]>> {
+    try {
+      return await get<SupplierPayablesSummary[]>('/payables/top-suppliers', { limit });
+    } catch (error) {
+      recordError('getTopSuppliers', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Calendario de pagos: vencimientos entre hoy y hoy+N días (el BE usa
+   * `order_date + 30 días` como vencimiento). El array llega sin ordenar.
+   */
+  async getSchedule(days = 30): Promise<BIEnvelope<PaymentCalendar>> {
+    try {
+      return await get<PaymentCalendar>('/payables/schedule', { days });
+    } catch (error) {
+      recordError('getSchedule', error);
+      throw error;
+    }
+  },
+
+  /** Reporte de antigüedad por proveedor (paginado, totales globales). */
+  async getAgingReport(params: PayablesPageParams = {}): Promise<BIEnvelope<PayablesAgingReport>> {
+    try {
+      return await get<PayablesAgingReport>('/payables/aging/report', params);
+    } catch (error) {
+      recordError('getAgingReport', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Estadísticas del período: comprado/pagado, tasa de pago, días hasta el
+   * primer pago y serie semanal. `top_suppliers` NO está acotado al período.
+   */
+  async getStatistics(period: DashboardPeriod = 'month'): Promise<BIEnvelope<PayablesStatistics>> {
+    try {
+      return await get<PayablesStatistics>('/payables/statistics', { period });
+    } catch (error) {
+      recordError('getStatistics', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Proyección de flujo de caja: cobros y pagos esperados por vencimiento
+   * (30 días desde la venta/compra) en los próximos N días.
+   */
+  async getCashFlowProjection(days = 30): Promise<BIEnvelope<CashFlowProjection>> {
+    try {
+      return await get<CashFlowProjection>('/payables/cash-flow', { days });
+    } catch (error) {
+      recordError('getCashFlowProjection', error);
+      throw error;
+    }
+  },
+
+  /** Análisis de un proveedor (saldo, peso sobre CxP, comportamiento). */
+  async getSupplierAnalysis(supplierId: string): Promise<BIEnvelope<SupplierAnalysis>> {
+    try {
+      return (await apiClient.get(
+        entityPath('/payables/supplier', supplierId) + '/analysis',
+      )) as BIEnvelope<SupplierAnalysis>;
+    } catch (error) {
+      recordError('getSupplierAnalysis', error);
+      throw error;
+    }
+  },
 };
 
 export default payablesService;

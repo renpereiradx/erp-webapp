@@ -105,6 +105,14 @@ export const buildNavigation = (
                   href: '/dashboard/top-products',
                   icon: Award,
                 },
+                {
+                  // F8: el resumen de CxP vive bajo /dashboard/payables, pero
+                  // consume `/payables/*`: su hoja declara payables:read.
+                  name: t('nav.dashboardPayables', 'Cartera de CxP'),
+                  href: '/dashboard/payables',
+                  icon: CreditCard,
+                  permission: 'payables:read',
+                },
               ],
             },
             // F4 — grupo completo de Analítica de Ventas. El permiso del padre
@@ -282,6 +290,38 @@ export const buildNavigation = (
                 {
                   name: t('nav.receivablesAging', 'Reporte de antigüedad'),
                   href: '/receivables/aging-report',
+                  icon: ClockIcon,
+                },
+              ],
+            },
+            // F8 — Cuentas por Pagar (4 hojas). El detalle de factura y el
+            // análisis de proveedor se alcanzan desde tablas y alertas; no
+            // duplican entradas. Permiso del BE:
+            // `biChain("payables:read", "payables")`.
+            {
+              name: t('nav.payablesGroup', 'Cuentas por Pagar'),
+              href: '#',
+              icon: Coins,
+              permission: 'payables:read',
+              children: [
+                {
+                  name: t('nav.payablesDashboard', 'Resumen de CxP'),
+                  href: '/dashboard/payables',
+                  icon: LayoutDashboard,
+                },
+                {
+                  name: t('nav.payablesInvoices', 'Facturas por pagar'),
+                  href: '/payables/invoices',
+                  icon: List,
+                },
+                {
+                  name: t('nav.payablesCashFlow', 'Proyección de flujo de caja'),
+                  href: '/payables/cash-flow',
+                  icon: Calendar,
+                },
+                {
+                  name: t('nav.payablesAging', 'Reporte de antigüedad'),
+                  href: '/payables/aging-report',
                   icon: ClockIcon,
                 },
               ],

@@ -280,18 +280,10 @@ export interface RecentActivityResponse {
 
 // --- Otros contextos BI (conservados para las fases F3-F11) -----------------
 
-export interface FinancialOverview {
-  total_amount: number;
-  overdue_amount: number;
-  pending_amount: number;
-  count: number;
-}
-
-export interface AgingReportItem {
-  range: '0-30' | '31-60' | '61-90' | '90+';
-  amount: number;
-  percentage: number;
-}
+// `FinancialOverview` y `AgingReportItem` se eliminaron en F8: describían una
+// forma que ningún endpoint de `/payables/*` devolvía y solo los consumía el
+// servicio legacy reescrito en esta fase. El contrato real vive en la sección
+// de Cuentas por Pagar al final del archivo.
 
 // Los tipos legacy `StockLevelItem`/`InventoryTurnover` se eliminaron en F5:
 // describían una forma que ningún endpoint devolvía y quedaron sin consumidores
@@ -1790,6 +1782,262 @@ export interface ReceivablesSortParams {
 
 /** Params de `/overdue`: solo pagina (el BE fija status y orden). */
 export interface ReceivablesPageParams {
+  page?: number;
+  page_size?: number;
+}
+
+// --- Cuentas por Pagar (F8) -------------------------------------------------
+//
+// Contrato REAL de `/payables/*` (`business_management/models/payables.go` +
+// `internal/analytics/http_payables.go` +
+// `internal/platform/postgres/analytics_payables_repo.go`). El envelope es
+// `BIEnvelope<T>`.
+//
+// Convenciones del backend que la UI debe decir en pantalla (no "corregir"):
+//  - el vencimiento NO es contractual: el repositorio usa
+//    `order_date + INTERVAL '30 days'` en todos los cálculos;
+//  - la antigüedad (`aging`) se mide desde la FECHA DE COMPRA (`NOW() -
+//    order_date`), no desde el vencimiento;
+//  - `days_until_due`/`days_overdue` son días calendario con piso 0;
+//  - `supplier_name` es `parties.first_name` (el repo no concatena apellido) y
+//    `supplier_contact` es el JSON crudo del partido.
+
+export type PayablesStatus = 'PENDING' | 'PARTIAL' | 'PAID' | 'OVERDUE';
+export type PayablesPriority = 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW';
+export type PayablesPaymentHistory = 'EXCELLENT' | 'GOOD' | 'REGULAR' | 'POOR';
+export type PayablesImportance = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface PayablesAgingBucket {
+  amount: number;
+  count: number;
+  percentage: number;
+}
+
+/** Buckets por antigüedad desde la compra: 0-30, 31-60, 61-90 y >90 días. */
+export interface PayablesAgingSummary {
+  current: PayablesAgingBucket;
+  days_30_60: PayablesAgingBucket;
+  days_60_90: PayablesAgingBucket;
+  over_90_days: PayablesAgingBucket;
+}
+
+/** `GET /payables/overview` (snapshot a hoy, sin período). */
+export interface PayablesOverview {
+  total_pending: number;
+  total_overdue: number;
+  total_count: number;
+  overdue_count: number;
+  due_this_week: number;
+  due_this_month: number;
+  /** Días desde la compra de las órdenes YA SALDADAS (no días hasta pagar). */
+  average_days_to_pay: number;
+  /** Pagado / facturado histórico sobre todas las órdenes no canceladas. */
+  payment_rate: number;
+  currency: string;
+  aging_summary: PayablesAgingSummary;
+}
+
+export interface SupplierPaymentRecord {
+  id: string;
+  amount: number;
+  payment_date: string;
+  payment_method: string;
+  reference?: string;
+  processed_by: string;
+}
+
+/** Cuenta por pagar individual (`GET /payables/{id}` y filas del listado). */
+export interface Payable {
+  id: string;
+  purchase_order_id: string;
+  supplier_id: string;
+  supplier_name: string;
+  supplier_contact?: string;
+  purchase_date: string;
+  /** Sintético del BE: `purchase_date + 30 días`. */
+  due_date: string;
+  original_amount: number;
+  paid_amount: number;
+  pending_amount: number;
+  days_until_due: number;
+  days_overdue: number;
+  status: PayablesStatus | string;
+  /** Calculada por el BE: URGENT si venció; luego por días hasta vencer. */
+  priority: PayablesPriority | string;
+  payment_history?: SupplierPaymentRecord[] | null;
+  currency: string;
+}
+
+export interface PayablesListSummary {
+  total_amount: number;
+  total_pending: number;
+  total_paid: number;
+  /** Filas de la página (no del set filtrado). */
+  item_count: number;
+}
+
+/** `GET /payables` — listado paginado con totales globales del filtro. */
+export interface PayablesList {
+  items: Payable[] | null;
+  pagination: BIPaginationInfo;
+  summary: PayablesListSummary;
+}
+
+export interface SupplierPayablesSummary {
+  supplier_id: string;
+  supplier_name: string;
+  total_pending: number;
+  total_overdue: number;
+  pending_count: number;
+  /** Derivado del % vencido de ESTE endpoint (no del historial de pagos). */
+  payment_history: PayablesPaymentHistory | string;
+}
+
+/** `GET /payables/supplier/{id}` (no consumido por las pantallas de F8). */
+export interface SupplierPayables extends SupplierPayablesSummary {
+  supplier_contact?: string;
+  oldest_debt: string;
+  /** Literal 30 del repositorio (no es una condición negociada). */
+  credit_terms: number;
+  average_days_to_pay: number;
+  payables?: Payable[] | null;
+}
+
+export interface PaymentScheduleItem {
+  payable_id: string;
+  supplier_name: string;
+  amount: number;
+  priority: PayablesPriority | string;
+  days_until_due: number;
+}
+
+export interface PaymentSchedule {
+  /** Fecha date-only `YYYY-MM-DD`. */
+  date: string;
+  /** Nombre del día en español que emite el BE (la UI lo deriva del locale). */
+  day_of_week: string;
+  total_due: number;
+  item_count: number;
+  items: PaymentScheduleItem[] | null;
+}
+
+/**
+ * `GET /payables/schedule?days=N`: solo vencimientos ENTRE hoy y hoy+N.
+ * El slice `schedule` sale de un map de Go: llega SIN ordenar.
+ */
+export interface PaymentCalendar {
+  start_date: string;
+  end_date: string;
+  total_due: number;
+  schedule: PaymentSchedule[] | null;
+}
+
+export interface CashFlowProjectionDay {
+  date: string;
+  inflows: number;
+  outflows: number;
+  net_flow: number;
+  cumulative_flow: number;
+}
+
+/**
+ * `GET /payables/cash-flow?days=N`. `expected_inflows` son cuentas por cobrar
+ * pendientes que vencen en la ventana y `expected_outflows` cuentas por pagar
+ * pendientes: no son saldos bancarios.
+ */
+export interface CashFlowProjection {
+  period: string;
+  expected_inflows: number;
+  expected_outflows: number;
+  net_cash_flow: number;
+  cumulative_flow: number;
+  projection_days: CashFlowProjectionDay[] | null;
+}
+
+export interface SupplierAgingDetail {
+  supplier_id: string;
+  supplier_name: string;
+  current: number;
+  days_30_60: number;
+  days_60_90: number;
+  over_90_days: number;
+  total: number;
+}
+
+/** `GET /payables/aging/report?page&page_size` (paginado por proveedor). */
+export interface PayablesAgingReport {
+  generated_at: string;
+  summary: PayablesAgingSummary;
+  by_supplier: SupplierAgingDetail[] | null;
+  /** Totales GLOBALES (ventanas del SQL), no de la página. */
+  total_amount: number;
+  total_suppliers: number;
+}
+
+/** Punto semanal de `statistics.payment_trend` (compras vs pagos). */
+export interface PaymentTrendPoint {
+  /** Fecha date-only (lunes de la semana). */
+  date: string;
+  purchased: number;
+  paid: number;
+  /** Acumulado compras − pagos calculado por el BE. */
+  balance: number;
+}
+
+/** `GET /payables/statistics` y `/statistics/date-range`. */
+export interface PayablesStatistics {
+  /** Rango aplicado "YYYY-MM-DD - YYYY-MM-DD" (fin EXCLUSIVO). */
+  period: string;
+  total_purchased: number;
+  total_paid: number;
+  /** Pagado / comprado del período (flujos). */
+  payment_rate: number;
+  /** Días desde la compra hasta el primer pago; sin pago cuenta hasta hoy. */
+  average_dpo: number;
+  /** Saldo vencido de las órdenes del período / total comprado del período. */
+  overdue_percentage: number;
+  /** Top proveedores del catálogo a HOY: el endpoint no lo acota al período. */
+  top_suppliers: SupplierPayablesSummary[] | null;
+  payment_trend: PaymentTrendPoint[] | null;
+}
+
+/** `GET /payables/supplier/{id}/analysis`. */
+export interface SupplierAnalysis {
+  supplier_id: string;
+  supplier_name: string;
+  total_pending: number;
+  total_overdue: number;
+  pending_count: number;
+  payment_history: PayablesPaymentHistory | string;
+  /** Promedio de días compra→pago de TODOS los pagos del proveedor. */
+  avg_days_to_pay: number;
+  /** Peso del saldo pendiente del proveedor sobre el total de CxP. */
+  share_percentage: number;
+  importance: PayablesImportance | string;
+  /** Literal 30 del repositorio. */
+  credit_terms: number;
+  oldest_debt: string;
+}
+
+/** Whitelist real de `sort_by` de `GET /payables` (T3). */
+export type PayablesSortBy = 'due_date' | 'date' | 'amount' | 'supplier' | 'priority';
+
+export interface PayablesListParams {
+  status?: PayablesStatus;
+  supplier_id?: string;
+  priority?: PayablesPriority;
+  search?: string;
+  /** `YYYY-MM-DD`; `end_date` es EXCLUSIVO en el BE (suma 1 día). */
+  start_date?: string;
+  end_date?: string;
+  page?: number;
+  page_size?: number;
+  sort_by?: PayablesSortBy;
+  sort_order?: 'ASC' | 'DESC';
+}
+
+/** Params de `/payables/aging/report`: solo pagina. */
+export interface PayablesPageParams {
   page?: number;
   page_size?: number;
 }

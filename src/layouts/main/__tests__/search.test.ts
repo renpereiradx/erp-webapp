@@ -1,7 +1,7 @@
 /**
- * F7 — el buscador global solo ofrece la lista de CxC con pack BI y
- * `receivables:read`: una entrada que expulsa al usuario es una affordance
- * muerta (misma regla que los botones de drill-down de F3).
+ * F7/F8 — el buscador global solo ofrece la lista de CxC con pack BI y
+ * `receivables:read`, y la de CxP con `payables:read`: una entrada que expulsa
+ * al usuario es una affordance muerta (misma regla que los drill-downs de F3).
  */
 import { describe, expect, it } from 'vitest'
 import { buildSearchableItems } from '../search'
@@ -23,7 +23,7 @@ const hrefs = (options: {
     (permission) => (options.permissions ?? []).includes(permission),
   ).map((item) => item.href)
 
-describe('search — gate de rutas BI (F7)', () => {
+describe('search — gate de rutas BI (F7/F8)', () => {
   it('con pack + receivables:read ofrece /receivables/list', () => {
     expect(hrefs({ permissions: ['receivables:read'] })).toContain('/receivables/list')
   })
@@ -40,5 +40,19 @@ describe('search — gate de rutas BI (F7)', () => {
 
   it('la entrada no se degrada como BI (categoría de finanzas)', () => {
     expect(hrefs({ permissions: ['receivables:read'] })).toContain('/receivables/list')
+  })
+
+  it('con pack + payables:read ofrece /payables/invoices', () => {
+    expect(hrefs({ permissions: ['payables:read'] })).toContain('/payables/invoices')
+  })
+
+  it('sin pack BI no ofrece la lista de CxP aunque tenga el permiso', () => {
+    expect(hrefs({ biEnabled: false, permissions: ['payables:read'] })).not.toContain(
+      '/payables/invoices',
+    )
+  })
+
+  it('con pack pero sin payables:read no ofrece la lista de CxP', () => {
+    expect(hrefs({ permissions: ['receivables:read'] })).not.toContain('/payables/invoices')
   })
 })

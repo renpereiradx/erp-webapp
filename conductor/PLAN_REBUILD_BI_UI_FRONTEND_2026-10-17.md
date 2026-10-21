@@ -128,7 +128,7 @@ Cada fila se ELIMINA en F1 y se RE-ACTIVA en la fase indicada (mismo diff que la
 | 9 | Botón "Análisis de Riesgo" (modal cliente) | `features/party/components/ClientDetailsModal.tsx:80` | eliminar botón | F7 |
 | 10 | Botón "Productos suministrados" (modal proveedor) | `features/party/components/SupplierDetailsModal.tsx:86` | eliminar botón | F3 |
 | 11 | Botones "Ver compradores" + "Comparar proveedores" (modal producto) | `features/products/components/ProductDetailsModal.tsx:164,172` | eliminar botones | F3 |
-| 12 | Rutas BI en buscador global sin gate | `config/searchableRoutes.js:34-68` (`/receivables/list`, `/payables/invoices`, `/finance/tax-management`, `/finance/legal-books`) | eliminar entradas | F7/F8/F9 **con** `requiredModule: 'bi'` (cierra el gap actual de gate) |
+| 12 | Rutas BI en buscador global sin gate | `config/searchableRoutes.js` (`/receivables/list`, `/payables/invoices`, `/finance/tax-management`, `/finance/legal-books`) | eliminar entradas | F7/F8/F9 **con** `requiredModule: 'bi'` + permiso de la cadena BE. F7 (`receivables:read`) y F8 (`payables:read`) hechos; `/finance/*` queda para F9 |
 | 13 | Filtro `isDegradableBI` del buscador | `layouts/main/search.ts:36-88` | conservar (no-op sin ítems BI) | — |
 | 14 | Tabs internas pronósticos | `features/bi-forecasting/components/BIForecastingNav.tsx` | muere con la feature | F11 |
 | 15 | Cross-links internos BI (Dashboard→kpis/receivables/alerts, aging→detail, audit→usuarios, pivotes RowActionsMenu) | ver inventario por página | mueren con sus páginas | vuelven con cada pantalla |
@@ -1417,3 +1417,207 @@ defecto nuevo en el smoke).
   riesgo se muestra como error de la sección de riesgo, no como "cliente no
   encontrado".
 - Sin push: F1-F7 quedan locales en la rama FE.
+
+---
+
+## 16. Estado de ejecución — F8 Cuentas por Pagar (2026-10-20)
+
+**Rama FE:** `feature/bi-ui-rebuild` (F1-F7 sobre `dev` = `82710c7`).
+**Backend:** sin cambios (`git status` limpio); contrato de `/payables/*` verificado
+con la API en vivo y el SQL del repo.
+
+### 16.1 Ejecutado
+
+- **Rutas (6)** en `src/App.tsx`, lazy y con `PayablesRoute` =
+  `BiModuleRoute` (pack) → `PermissionGuard(payables:read)`, el mismo par que
+  `biChain("payables:read", "payables")`:
+  `/dashboard/payables`, `/payables/invoices`, `/payables/detail/:id`,
+  `/payables/cash-flow`, `/payables/aging-report` y
+  `/payables/suppliers/:id/analysis`.
+- **Feature `src/features/payables/`** con la plantilla FSD:
+  `components/` (UI pura), `hooks/` (react-query + período en URL), `types/` y
+  barrel público. Cero fetch/cálculo en componentes.
+- **Páginas delgadas** en `src/pages/payables/`:
+  `PayablesDashboardPage`, `InvoicesMasterListPage`, `InvoiceDetailPage`,
+  `CashFlowProjectionPage`, `PayablesAgingReportPage` y
+  `SupplierAnalysisPage`.
+- **Dominio puro** en `src/domain/payables/`: `format`, `status`, `listing`,
+  `overview`, `aging` (re-escrito), `schedule`, `cashFlow`, `suppliers`,
+  `statistics`, `periods`, `constants` y `errors`, todos con tests colocados.
+- **Servicio tipado** `services/bi/payablesService.ts`: contrato real de los 9
+  endpoints consumidos (`overview`, listado, detalle, top-suppliers, schedule,
+  aging/report, statistics, cash-flow y supplier analysis), limpieza de params
+  y telemetría; sin fallback demo. Tipos nuevos en `types/bi.ts`
+  (`PayablesOverview`, `Payable`, `PayablesList`, `PaymentCalendar`,
+  `CashFlowProjection`, `PayablesAgingReport`, `PayablesStatistics`,
+  `SupplierAnalysis`, etc.).
+- **Nav**: subgrupo `Cuentas por Pagar` con 4 hojas (`/dashboard/payables`,
+  `/payables/invoices`, `/payables/cash-flow`, `/payables/aging-report`) y
+  permiso `payables:read`; `Dashboard` gana la hoja `Cartera de CxP`
+  (`/dashboard/payables`, mismo permiso). Detalle y análisis de proveedor no
+  duplican entradas: se alcanzan desde tablas.
+- **i18n**: namespace `payables` en `locales/{es,en}` (mismas claves,
+  verificadas por test) + `nav.payables*` y `nav.dashboardPayables` en ambos
+  shells. Las etiquetas dinámicas usan mapas de fallback en español, no el
+  código crudo del BE.
+- **Puntos de entrada §3.3 re-activados**:
+  - #12 `searchableRoutes`: `/payables/invoices` vuelve con
+    `requiredModule: 'bi'` y `requiredPermission: 'payables:read'`.
+  - Los links salen de los datos reales: proveedor → análisis, factura →
+    detalle, aging → análisis. Las alertas del dashboard no tienen destino de
+    CxP en `alert_routes.go`, así que no se agregó un botón muerto.
+- **Compartido**: `SectionCard`, `TableCard`, `QueryBoundary`,
+  `TableEmptyState`, `DataSkeletons`, `BiPeriodSelector`, `SegmentedControl` y
+  `TablePagination` se reusan. La tabla, el ledger KPI, los badges y el panel
+  de calendario son locales del feature (un feature no importa componentes de
+  otro).
+- **UX verificada en vivo (1440/390 px)**: tabla del listado sin scroll a
+  1440 (se quitó la columna "Acciones" redundante; el id ya linkea al
+  detalle), top de proveedores con conteo y comportamiento bajo el nombre,
+  selector de período dentro de la card (el título ya no se parte en 3
+  líneas).
+
+### 16.2 Contrato y hallazgos de datos (sin cambio de backend)
+
+- **Sobrepagos netean el overview**: `PayablesOverview.total_pending` suma
+  pendientes negativos de órdenes sobrepagadas. En dev el overview daba
+  **Gs. 6.014.250** mientras el listado y el aging daban **Gs. 6.414.250**
+  (diferencia exacta de Gs. 400.000): el "saldo pendiente" quedaba por debajo
+  del "saldo vencido". La UI usa el **total clasificado del aging** (que
+  coincide con el listado) y lo documenta en el hint. No se tocó el contrato.
+- **Vencimiento sintético**: todos los cálculos usan
+  `order_date + INTERVAL '30 days'` (overview, listado, detalle, calendario,
+  flujo, prioridad). La UI lo rotula "compra + 30 d" y el detalle aclara que
+  no es una condición del proveedor.
+- **Antigüedad desde la compra**: los tramos del aging se calculan con
+  `NOW() - order_date`, no con el vencimiento. Todas las pantallas lo dicen.
+- **`status` PAID nunca aparece** en `/payables`: el WHERE exige saldo. El
+  filtro ofrece solo PENDING/PARTIAL/OVERDUE y los tres se superponen.
+- **Calendario desordenado**: el slice sale de un `map` de Go; el dominio lo
+  ordena por fecha y los ítems por monto. Solo incluye vencimientos entre hoy
+  y hoy+N días (todo lo vencido queda fuera).
+- **Flujo de caja = vencimientos esperados**, no saldos bancarios:
+  `expected_inflows` son CxC pendientes y `expected_outflows` CxP pendientes
+  que vencen en la ventana. La cobertura se deriva (cobros ÷ pagos) con los
+  umbrales 80/100 del BE; sin pagos esperados se muestra `—`, no `0 %`. La
+  ventana tiene N+1 días (incluye hoy).
+- **Estadísticas**: `average_dpo` mide compra → primer pago y cuenta hasta hoy
+  si no hubo pago; `top_suppliers` del payload NO está acotado al período y
+  no se renderiza (el dashboard usa `/payables/top-suppliers`, snapshot a
+  hoy). La serie semanal descarta el bucket que arranca después del fin
+  exclusivo del rango (artefacto del `WITH RECURSIVE`) y muestra hasta 12
+  semanas desde el inicio.
+- **Reporte de aging**: pagina por proveedor con totales globales
+  (`total_amount`/`total_suppliers`); la suma de la página puede ser menor y
+  la UI lo avisa. Riesgo crítico = deuda >90 d; moderado = 61-90 d o >50 % en
+  31-60; mínimo = resto.
+- **Análisis de proveedor**: `credit_terms` es el literal 30 del repositorio
+  (no una condición negociada); `share_percentage` e `importance` son reales;
+  `avg_days_to_pay` promedia todos los pagos (`0` puede ser pago el mismo día
+  o ausencia de pagos; el contrato no expone el conteo). Las facturas se
+  listan con `/payables?supplier_id=` porque el endpoint de análisis no las
+  incluye.
+- **`payment_history` de top-suppliers** se deriva de la proporción vencida,
+  distinto del historial de la ficha; la card lo documenta.
+- **Precisión honesta**: un porcentaje real >0 que redondea a 0 se muestra
+  `<0,1%` (no `0 %`); los montos entre -1 y 1 Gs conservan 2 decimales.
+- **Legado retirado**: `domain/payables/dashboard.ts` y `statusLabels.ts`
+  (labels hardcodeados en español, factura `#FAC-` derivada y helpers de una
+  forma de payload que ya no existe) se eliminaron con sus tests; los tipos
+  `FinancialOverview`/`AgingReportItem` también (sin consumidores).
+
+### 16.3 Tests
+
+- Dominio: `format` (sub-unidad, `<0,1%`, fechas UTC vs locales, rango
+  exclusivo, `daysSince`), `status` (estados/prioridades/comportamientos/
+  importancias), `listing` (defaults, toggle de sort, aria-sort, rango
+  inválido, filtros activos), `overview` (KPIs de cartera/período/listado/
+  calendario/flujo/aging/proveedor y formateadores), `aging` (tramos,
+  remanente sin clasificar, riesgo, totales de página), `schedule` (orden de
+  días e ítems, aplanado, totales), `cashFlow` (días con movimiento, cobertura
+  nula sin pagos, umbrales, totales), `suppliers` (proporción vencida,
+  antigüedad), `statistics` (orden y descarte del bucket posterior), `errors`
+  — 41 casos.
+- Servicio: rutas/params de los 9 métodos, codificación de ids, limpieza de
+  params y error telemetrizado — 11 tests. El bloque legacy de CxP se retiró
+  de `biServices.p0-methods.service.test.ts` (contrato canónico nuevo).
+- Hooks: params por endpoint (estado/prioridad/texto/fechas/página/orden),
+  rango inválido sin request, normalización de slices nil, paginación derivada
+  del aging, ventanas (schedule/cash-flow), detalle y análisis — 10 tests;
+  período en URL (default, validación, escritura y limpieza) — 5 tests.
+- Páginas: Dashboard (cartera/aging/período/trend/top/calendario, error
+  aislado, sin claims), Lista (resumen, links, sort, filtros, texto, rango
+  inválido, empty, paginación, sin `#FAC-`/`$`), Detalle (montos, pagos, 404,
+  sin pagos, nota del vencimiento), Flujo (totales, cobertura, empty, ventana,
+  sin bancos/insights), Aging (totales, distribución, riesgo, paginación,
+  error con retry) y Proveedor (KPIs, comportamiento, condiciones, facturas,
+  404, sin límite de crédito/trends) — 33 tests.
+- i18n: paridad es/en, sin vacíos, claves nav y todas las claves estáticas de
+  F8 — 4 tests. Nav: 7 subgrupos BI con CxP, 4 hojas y `payables:read`; leaf
+  `Cartera de CxP`; gate anyOf sin grupo vacío (`audit:read` sigue sin hoja
+  hasta F10). Buscador: gate `requiredModule`/`requiredPermission` de
+  `/payables/invoices` — 3 tests.
+
+### 16.4 Gates
+
+- `npx tsc --noEmit`: 0 errores.
+- `npx vitest --run`: **301 archivos / 2044 tests OK**.
+- `pnpm build`: OK; chunks lazy `PayablesDashboardPage`,
+  `InvoicesMasterListPage`, `InvoiceDetailPage`, `CashFlowProjectionPage`,
+  `PayablesAgingReportPage` y `SupplierAnalysisPage`.
+- `pnpm lint:design -- --base dev`: OK (código nuevo limpio; 1108 legacy).
+- `pnpm lint`: 0 errores (132 warnings legacy, sin cambios).
+- Gate anti-fabricación §5.3: en producción de F8 solo el comentario "Sin
+  fallback demo/mock" del servicio; los demás matches son `vi.mock` de tests.
+- Gate TS: archivos nuevos de la fase solo `.ts`/`.tsx` (0 `.js`/`.jsx`).
+- Backend: sin cambios (`git status` limpio).
+- Auditoría `vercel-react-best-practices` aplicada con criterio: páginas
+  lazy, queries paralelas/deduplicadas por react-query (el dashboard dispara
+  4 en paralelo y cada card aísla su error), sin `useEffect` para estado
+  derivado (KPIs, aging, cobertura y riesgo se derivan en render),
+  `ResizeObserver` con deps primitivas en la tabla y sin componentes
+  definidos dentro de componentes. Excepción consciente: el barrel público
+  del feature (plantilla FSD del plan).
+- **Smoke vivo** (`:5050` + Vite `:5173`, JWT de dev acuñado con el
+  `JWT_SECRET` local, admin `jJkV4F6HR`, rol `F2VLso`, sucursal 1):
+  6 pantallas, **0 errores de consola, 0 page errors y 0 respuestas HTTP ≥400**.
+  - Cartera: pendiente/vencido Gs. 6.414.250, 18 cuentas (todas vencidas),
+    aging 31-60 Gs. 1.000 `<0,1 %`, 61-90 Gs. 2.903.800 (45,3 %), >90
+    Gs. 3.509.450 (54,7 %), tasa histórica 60,4 %, antigüedad media (saldadas)
+    127 d.
+  - Período mes: comprado/pagado Gs. 275.000, tasa 100 %, primer pago 0 d,
+    vencido 0 %; serie semanal 5 buckets (sin el 02 nov posterior al rango).
+  - Lista: 18 cuentas, 10 filas, 2 páginas, resumen pendiente Gs. 6.414.250;
+    sort por proveedor y filtro Vencidas verificados.
+  - Detalle `PO-2`: Protek PRO, Gs. 500.000 pendiente, 315 días vencidos,
+    sin pagos registrados, sin fecha de vencimiento contractual.
+  - Proveedor Protek PRO: Gs. 500.000 pendiente/vencido, participación 8,3 %,
+    importancia media (traducida), comportamiento excelente, plazo estándar
+    30 d, deuda más antigua 08 nov 2025 (hace 346 días), 1 factura pendiente.
+  - Aging: 4 proveedores, Gs. 6.414.250, riesgos crítico/moderado reales,
+    paginación de 4 ítems.
+  - Flujo: cobros/pagos Gs. 0 (sin vencimientos futuros), cobertura `—`,
+    empty honesto de días con movimiento, ventana de 31 días.
+  - Sin `$`, `Live`, "en tiempo real", "objetivo", `#FAC-`, bancos ni
+    "Insights"; `bodyOverflow=false` a 1440 y 390 px; tablas sin scroll
+    interno a 1440.
+- Sin push: F1-F8 quedan locales en la rama FE.
+
+### 16.5 Pendiente / deuda declarada
+
+- Endpoints no consumidos por falta de pantalla en el plan:
+  `/payables/overdue` y `/payables/urgent` (el listado filtra por
+  estado/prioridad), `/payables/aging/summary` (overview y reporte la
+  embeben), `/payables/reminders*`, `/payables/statistics/date-range` (solo 4
+  períodos estándar) y `/payables/payment-capacity` (la cobertura se deriva
+  del cash-flow). No se agregaron métodos muertos.
+- `/payables/supplier/{id}` no se consume: la ficha lista sus facturas con el
+  endpoint de listado filtrado (mismos campos y paginación real).
+- No hay pantalla de registro de pagos a proveedor ni comparación custom de
+  períodos: fuera del alcance de F8 (los pagos pertenecen a Compras).
+- `overview.total_pending` sigue neteando sobrepagos en el contrato; la UI lo
+  compensa con el total del aging y lo documenta. Cambiarlo exige tocar el
+  repo y el contrato.
+- `searchableRoutes` reconoce solo `/payables/invoices`; los reportes
+  financieros (`/finance/*`) siguen pendientes de F9.
+- Falta F9 (Reportes Financieros), F10 (Auditoría) y F11 (Pronósticos).

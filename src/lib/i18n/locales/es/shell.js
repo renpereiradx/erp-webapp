@@ -38,6 +38,7 @@ export const shell = {
   'nav.dashboardHeatmap': 'Análisis de Ventas',
   'nav.dashboardAlerts': 'Alertas de Negocio',
   'nav.dashboardTopProducts': 'Top de Productos',
+  'nav.dashboardPayables': 'Cartera de CxP',
   // F3 — drill-downs relacionales (grupos Ventas/Compras del pack BI).
   'nav.salesAnalytics': 'Analítica de Ventas',
   'nav.purchaseAnalytics': 'Analítica de Compras',
@@ -71,6 +72,12 @@ export const shell = {
   'nav.receivablesList': 'Lista de cuentas',
   'nav.receivablesOverdue': 'Cuentas vencidas',
   'nav.receivablesAging': 'Reporte de antigüedad',
+  // F8 — Cuentas por Pagar (4 hojas; detalle y proveedor no van al sidebar).
+  'nav.payablesGroup': 'Cuentas por Pagar',
+  'nav.payablesDashboard': 'Resumen de CxP',
+  'nav.payablesInvoices': 'Facturas por pagar',
+  'nav.payablesCashFlow': 'Proyección de flujo de caja',
+  'nav.payablesAging': 'Reporte de antigüedad',
   'nav.collapseSidebar': 'Colapsar menú',
   'nav.expandSidebar': 'Expandir menú',
   'nav.openMenu': 'Abrir menú',

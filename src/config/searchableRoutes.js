@@ -27,6 +27,17 @@ export const distinctSearchableRoutes = [
     requiredPermission: 'receivables:read'
   },
 
+  // Cuentas por Pagar (F8): mismo criterio que CxC — sin pack o sin
+  // payables:read la entrada no se ofrece (la ruta expulsaría).
+  {
+    name: 'Facturas por pagar',
+    href: '/payables/invoices',
+    icon: List,
+    category: 'Finanzas / Pagos',
+    requiredModule: 'bi',
+    requiredPermission: 'payables:read'
+  },
+
   // Gestión de Usuarios y Perfil
   {
     name: 'Mi Perfil y Seguridad',

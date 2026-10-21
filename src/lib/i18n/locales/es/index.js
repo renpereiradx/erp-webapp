@@ -47,6 +47,7 @@ import { salesAnalytics } from './salesAnalytics'
 import { inventoryAnalytics } from './inventoryAnalytics'
 import { profitability } from './profitability'
 import { receivables } from './receivables'
+import { payables } from './payables'
 
 /**
  * Diccionario completo de traducciones en español
@@ -97,4 +98,5 @@ export const es = {
   ...inventoryAnalytics,
   ...profitability,
   ...receivables,
+  ...payables,
 }

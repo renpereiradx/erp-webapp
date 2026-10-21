@@ -64,6 +64,13 @@ const ReceivableDetailPage = lazy(() => import('@/pages/receivables/ReceivableDe
 const OverdueReceivablesPage = lazy(() => import('@/pages/receivables/OverdueReceivablesPage'))
 const ClientCreditProfilePage = lazy(() => import('@/pages/receivables/ClientCreditProfilePage'))
 const ReceivablesAgingReportPage = lazy(() => import('@/pages/receivables/ReceivablesAgingReportPage'))
+// PLAN_REBUILD_BI_UI_FRONTEND F8: Cuentas por Pagar (6 pantallas lazy).
+const PayablesDashboardPage = lazy(() => import('@/pages/payables/PayablesDashboardPage'))
+const InvoicesMasterListPage = lazy(() => import('@/pages/payables/InvoicesMasterListPage'))
+const InvoiceDetailPage = lazy(() => import('@/pages/payables/InvoiceDetailPage'))
+const CashFlowProjectionPage = lazy(() => import('@/pages/payables/CashFlowProjectionPage'))
+const PayablesAgingReportPage = lazy(() => import('@/pages/payables/PayablesAgingReportPage'))
+const SupplierAnalysisPage = lazy(() => import('@/pages/payables/SupplierAnalysisPage'))
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import { CounterOrdersPage } from '@/features/counterorders'
@@ -239,6 +246,15 @@ const ReportsRoute = ({ children }: { children: React.ReactNode }) => (
  */
 const ReceivablesRoute = ({ children }: { children: React.ReactNode }) => (
   <BiPermissionGuard permission='receivables:read'>{children}</BiPermissionGuard>
+)
+
+/**
+ * F8 — las 6 pantallas de Cuentas por Pagar comparten la cadena BE
+ * `RequireModule('bi')` → `payables:read`
+ * (`biChain("payables:read", "payables")`).
+ */
+const PayablesRoute = ({ children }: { children: React.ReactNode }) => (
+  <BiPermissionGuard permission='payables:read'>{children}</BiPermissionGuard>
 )
 
 function AppContent() {
@@ -441,6 +457,17 @@ function AppContent() {
                       <Route path='/receivables/aging-report' element={<ReceivablesRoute><ReceivablesAgingReportPage /></ReceivablesRoute>} />
                       <Route path='/receivables/client-profile/:clientId' element={<ReceivablesRoute><ClientCreditProfilePage /></ReceivablesRoute>} />
                       <Route path='/receivables/detail/:id' element={<ReceivablesRoute><ReceivableDetailPage /></ReceivablesRoute>} />
+                      {/* PLAN_REBUILD_BI_UI_FRONTEND F8 — Cuentas por Pagar.
+                          Las 6 rutas comparten `payables:read`, igual que
+                          `biChain("payables:read", "payables")`. El resumen
+                          vive bajo /dashboard/payables pero se gatea con el
+                          permiso del contrato que consume. */}
+                      <Route path='/dashboard/payables' element={<PayablesRoute><PayablesDashboardPage /></PayablesRoute>} />
+                      <Route path='/payables/invoices' element={<PayablesRoute><InvoicesMasterListPage /></PayablesRoute>} />
+                      <Route path='/payables/detail/:id' element={<PayablesRoute><InvoiceDetailPage /></PayablesRoute>} />
+                      <Route path='/payables/cash-flow' element={<PayablesRoute><CashFlowProjectionPage /></PayablesRoute>} />
+                      <Route path='/payables/aging-report' element={<PayablesRoute><PayablesAgingReportPage /></PayablesRoute>} />
+                      <Route path='/payables/suppliers/:id/analysis' element={<PayablesRoute><SupplierAnalysisPage /></PayablesRoute>} />
                       <Route path='/finance/sifen-inutilizacion' element={
                         <PermissionGuard permission='sifen:read'>
                           <SkippedNumbersPage />

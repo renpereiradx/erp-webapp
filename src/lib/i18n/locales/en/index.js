@@ -31,6 +31,7 @@ import { salesAnalytics } from './salesAnalytics'
 import { inventoryAnalytics } from './inventoryAnalytics'
 import { profitability } from './profitability'
 import { receivables } from './receivables'
+import { payables } from './payables'
 import { es } from '../es/index'
 
 /**
@@ -81,4 +82,5 @@ export const en = {
   ...inventoryAnalytics,
   ...profitability,
   ...receivables,
+  ...payables,
 }

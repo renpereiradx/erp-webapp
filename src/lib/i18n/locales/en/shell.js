@@ -38,6 +38,7 @@ export const shell = {
   'nav.dashboardHeatmap': 'Sales Analysis',
   'nav.dashboardAlerts': 'Business Alerts',
   'nav.dashboardTopProducts': 'Top Products',
+  'nav.dashboardPayables': 'AP portfolio',
   // F3 — relational drill-downs (BI pack Sales/Purchases groups).
   'nav.salesAnalytics': 'Sales Analytics',
   'nav.purchaseAnalytics': 'Purchase Analytics',
@@ -71,6 +72,12 @@ export const shell = {
   'nav.receivablesList': 'Account list',
   'nav.receivablesOverdue': 'Overdue accounts',
   'nav.receivablesAging': 'Aging report',
+  // F8 — Accounts Payable (4 leaves; detail and supplier stay off-sidebar).
+  'nav.payablesGroup': 'Accounts Payable',
+  'nav.payablesDashboard': 'AP summary',
+  'nav.payablesInvoices': 'Invoices payable',
+  'nav.payablesCashFlow': 'Cash flow projection',
+  'nav.payablesAging': 'Aging report',
   'nav.collapseSidebar': 'Collapse menu',
   'nav.expandSidebar': 'Expand menu',
   'nav.openMenu': 'Open menu',
