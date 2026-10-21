@@ -77,6 +77,11 @@ const ProfitAndLossPage = lazy(() => import('@/pages/finance/ProfitAndLossPage')
 const AnalyticalCashFlowPage = lazy(() => import('@/pages/finance/AnalyticalCashFlowPage'))
 const TaxManagementPage = lazy(() => import('@/pages/finance/TaxManagementPage'))
 const LegalBooksPage = lazy(() => import('@/pages/finance/LegalBooksPage'))
+// PLAN_REBUILD_BI_UI_FRONTEND F10: Auditoría (4 pantallas lazy).
+const AuditDashboardPage = lazy(() => import('@/pages/audit/AuditDashboardPage'))
+const AuditLogsPage = lazy(() => import('@/pages/audit/AuditLogsPage'))
+const AuditLogDetailPage = lazy(() => import('@/pages/audit/AuditLogDetailPage'))
+const AuditUserActivityPage = lazy(() => import('@/pages/audit/AuditUserActivityPage'))
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import { CounterOrdersPage } from '@/features/counterorders'
@@ -261,6 +266,14 @@ const ReceivablesRoute = ({ children }: { children: React.ReactNode }) => (
  */
 const PayablesRoute = ({ children }: { children: React.ReactNode }) => (
   <BiPermissionGuard permission='payables:read'>{children}</BiPermissionGuard>
+)
+
+/**
+ * F10 — Auditoría. Las 4 pantallas comparten la cadena BE
+ * `RequireModule('bi')` → `audit:read` (`biChain("audit:read", "audit")`).
+ */
+const AuditRoute = ({ children }: { children: React.ReactNode }) => (
+  <BiPermissionGuard permission='audit:read'>{children}</BiPermissionGuard>
 )
 
 function AppContent() {
@@ -483,6 +496,14 @@ function AppContent() {
                       <Route path='/finance/analytical-cash-flow' element={<ReportsRoute><AnalyticalCashFlowPage /></ReportsRoute>} />
                       <Route path='/finance/tax-management' element={<ReportsRoute><TaxManagementPage /></ReportsRoute>} />
                       <Route path='/finance/legal-books' element={<ReportsRoute><LegalBooksPage /></ReportsRoute>} />
+                      {/* PLAN_REBUILD_BI_UI_FRONTEND F10 — Auditoría.
+                          Las 4 rutas usan `audit:read`, igual que
+                          `biChain("audit:read", "audit")`. Detalle y ficha de
+                          usuario se alcanzan desde el registro/dashboard. */}
+                      <Route path='/auditoria' element={<AuditRoute><AuditDashboardPage /></AuditRoute>} />
+                      <Route path='/auditoria/logs' element={<AuditRoute><AuditLogsPage /></AuditRoute>} />
+                      <Route path='/auditoria/logs/:id' element={<AuditRoute><AuditLogDetailPage /></AuditRoute>} />
+                      <Route path='/auditoria/usuarios/:id' element={<AuditRoute><AuditUserActivityPage /></AuditRoute>} />
                       <Route path='/finance/sifen-inutilizacion' element={
                         <PermissionGuard permission='sifen:read'>
                           <SkippedNumbersPage />

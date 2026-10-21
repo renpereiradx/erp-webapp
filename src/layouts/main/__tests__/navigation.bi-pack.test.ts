@@ -3,8 +3,8 @@
  * (5 rutas) + Analítica de Ventas (8 hojas: 6 de F4 + 2 drill-downs de F3) +
  * drill-downs de Compras + Analítica de Inventario (4 hojas de F5) +
  * Rentabilidad (6 hojas de F6) + Cuentas por Cobrar (4 hojas de F7) +
- * Cuentas por Pagar (4 hojas de F8) + Reportes Financieros (4 hojas de F9)
- * cuando hay pack y permisos BI. Sin pack o sin hojas visibles el padre se oculta
+ * Cuentas por Pagar (4 hojas de F8) + Reportes Financieros (4 hojas de F9) +
+ * Auditoría (2 hojas de F10) cuando hay pack y permisos BI. Sin pack o sin hojas visibles el padre se oculta
  * (incluido el padre con gate anyOf). SIFEN sigue como grupo Core propio
  * (ADR-3).
  */
@@ -57,6 +57,7 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
       'Cuentas por Cobrar',
       'Cuentas por Pagar',
       'Reportes Financieros',
+      'Auditoría',
     ])
 
     const dashboard = findByName(tree, 'Dashboard')
@@ -133,6 +134,13 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
       '/finance/legal-books',
     ])
     expect(reports?.permission).toBe('reports:read')
+
+    const audit = findByName(tree, 'Auditoría')
+    expect(audit?.children?.map((child) => child.href)).toEqual([
+      '/auditoria',
+      '/auditoria/logs',
+    ])
+    expect(audit?.permission).toBe('audit:read')
   })
 
   it('sin pack BI (biEnabled=false) el grupo no existe; SIFEN sigue como Core', () => {
@@ -147,6 +155,7 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
     expect(findByName(tree, 'Cuentas por Cobrar')).toBeUndefined()
     expect(findByName(tree, 'Cuentas por Pagar')).toBeUndefined()
     expect(findByName(tree, 'Reportes Financieros')).toBeUndefined()
+    expect(findByName(tree, 'Auditoría')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
   })
 
@@ -164,6 +173,7 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
       'Cuentas por Cobrar',
       'Cuentas por Pagar',
       'Reportes Financieros',
+      'Auditoría',
     ])
     expect(findByName(tree, 'Dashboard')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
@@ -206,10 +216,22 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
     expect(findByName(tree, 'Reportes Financieros')?.children).toHaveLength(4)
   })
 
-  it('con un permiso BI sin hoja visible (audit:read, F10): no queda un grupo vacío', () => {
+  it('con audit:read se ve solo el grupo Auditoría (F10)', () => {
     const tree = filterNavigationItems(
       buildNavigation(t, false, true),
       checksFor(['audit:read']),
+    )
+
+    const bi = findByName(tree, 'Inteligencia de Negocios')
+    expect(bi).toBeDefined()
+    expect(bi?.children?.map((child) => child.name)).toEqual(['Auditoría'])
+    expect(findByName(tree, 'Auditoría')?.children).toHaveLength(2)
+  })
+
+  it('con un permiso de otro módulo (users:read) no hay grupo BI vacío', () => {
+    const tree = filterNavigationItems(
+      buildNavigation(t, false, true),
+      checksFor(['users:read']),
     )
 
     expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()

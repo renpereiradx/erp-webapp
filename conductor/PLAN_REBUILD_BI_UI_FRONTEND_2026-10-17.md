@@ -1850,3 +1850,244 @@ operativa que F4-F6).
 - El health score se calcula sobre el margen ingresos − compras del overview,
   no sobre el margen bruto del P&L; se rotula para no confundirlos.
 - Falta F10 (Auditoría) y F11 (Pronósticos).
+
+---
+
+## 18. Estado de ejecución — F10 Auditoría (2026-10-21)
+
+**Rama FE:** `feature/bi-ui-rebuild` (F1-F9 sobre `dev` = `82710c7`).
+**Backend:** sin cambios (`git status` limpio en `business_management`); contrato de
+`/api/v1/audit/*` verificado con la API en vivo y el SQL de
+`internal/platform/postgres/audit_repo.go`.
+
+### 18.1 Ejecutado
+
+- **Rutas (4)** en `src/App.tsx`, lazy y con `AuditRoute` =
+  `BiModuleRoute` (pack) → `PermissionGuard(audit:read)`, el mismo par que
+  `biChain("audit:read", "audit")`: `/auditoria`, `/auditoria/logs`,
+  `/auditoria/logs/:id` y `/auditoria/usuarios/:id`.
+- **Feature `src/features/audit/`** con la plantilla FSD: `components/`
+  (16 componentes de UI pura), `hooks/` (`useAuditQueries`, `useAuditPeriod`,
+  `useAuditExport`), `types/` y barrel público. Cero fetch/cálculo en
+  componentes.
+- **Páginas delgadas** en `src/pages/audit/`: `AuditDashboardPage`,
+  `AuditLogsPage`, `AuditLogDetailPage` y `AuditUserActivityPage`.
+- **Dominio puro** en `src/domain/audit/`: `constants`, `errors`, `filters`,
+  `format`, `json`, `kpis`, `labels`, `periods` y `trends`, todos con tests
+  colocados. El vocabulario de categorías/acciones/niveles es el de
+  `models/audit.go` + `LEGACY` (backfill documentado); el resto se muestra
+  crudo.
+- **Servicio tipado** `services/bi/auditService.ts`: 5 métodos (`dashboard`,
+  `logs`, detalle, actividad de usuario y export), limpieza de params y
+  telemetría; sin fallback demo. Tipos nuevos en `types/bi.ts`
+  (`AuditLogEntry`, `AuditDashboard`, `AuditKPIs`, `AuditSecurityAlert`,
+  `AuditTrendPoint`, `AuditUserActivityReport`, `AuditLogsParams`, etc.).
+- **Nav**: noveno subgrupo BI `Auditoría` con 2 hojas (`/auditoria`,
+  `/auditoria/logs`) y permiso `audit:read`; el detalle y la ficha de usuario
+  se alcanzan desde tablas/alertas y no duplican entradas. Con esto
+  `audit:read` deja de ser un permiso BI sin hoja visible (deuda de F2/F8/F9).
+- **i18n**: namespace `audit` en `locales/{es,en}/audit.ts` (paridad es/en
+  verificada por test) + `nav.audit*` en ambos shells. Un código desconocido se
+  renderiza crudo: no existen claves `audit.*.unknown` a propósito.
+- **Puntos de entrada §3.3 re-activados** (#15, cross-links reales): el
+  dashboard linkea top de usuarios → ficha de actividad, últimos eventos →
+  detalle y "ver registro completo" → logs; las alertas de seguridad linkean
+  al usuario; el registro linkea timestamp (`#id`) → detalle y usuario →
+  actividad; el detalle linkea a la actividad; la ficha linkea cada evento a su
+  detalle. No se agregó `searchableRoutes`: la auditoría no estaba en la fila
+  #12 del plan.
+
+### 18.2 Contrato y datos reales (sin cambio de backend)
+
+- **Una sola query para el dashboard**: `/api/v1/audit/dashboard` ya embebe
+  KPIs, categorías, tipos de acción, top 5, recientes, tendencias, alertas y
+  errores. No se consumen `/summary*`, `/trends*` ni `/users/top` en paralelo
+  (serían los mismos agregados).
+- **Vocabulario libre**: `category`/`action`/`entity_type` son VARCHAR. La
+  migración `20260916183127_backfill_legacy_audits_to_audit_logs` inserta
+  `category = 'LEGACY'` y acciones como `INSERT`; en dev son 8.818 filas
+  LEGACY (la mayoría del histórico). La UI traduce lo conocido (incluido
+  `LEGACY` = "Histórico" e `INSERT` = "Alta (histórico)") y muestra el código
+  crudo cuando no lo conoce.
+- **Alertas de seguridad**: el SQL arma `message` en español; la UI traduce el
+  `type` (`FAILED_LOGINS`, `UNUSUAL_ACTIVITY`), el `severity`, el `count` y el
+  contexto (usuario/IP/fecha), sin mostrar ese texto. Las reglas (≥3 logins
+  fallidos por usuario/IP y ≥100 acciones en una hora) se explican en la card.
+- **Errores agrupados**: el `error_message` es dato real del productor; si
+  viene vacío se muestra "Sin mensaje" (el WHERE exige `IS NOT NULL`, pero el
+  productor puede guardar `''`).
+- **Actividad de usuario**: `sessions` y `security_events` nunca se completan
+  (el repo no los consulta) y no se renderizan. Un identificador inexistente
+  responde 200 con summary en cero y `username` vacío: la UI muestra un empty
+  honesto ("sin actividad en el período") y cae al id de la ruta en el título,
+  sin inventar un "usuario no encontrado" que el contrato no distingue.
+- **Logs**: el handler usa `end_date + 1 día` (día "Hasta" inclusive), pagina
+  de verdad (`page`/`page_size`, cap 100) y ordena por
+  `timestamp DESC, id DESC`; la whitelist de `sort_by` es
+  `category|action|level` y `sort_order` solo reconoce `'asc'`. La UI envía
+  siempre el rango explícito (30 días calendario, hoy inclusive) para poder
+  mostrarlo; no depende del default invisible del BE.
+- **Export**: `POST /api/v1/audit/export` es real y devuelve un archivo crudo
+  (`Content-Disposition`), no el envelope. Se exporta el set filtrado (cap
+  10.000), `end_date + 1 día` y `search` → `search_term`; la descarga usa
+  `downloadBlob` (no `window.open`, que no manda el JWT).
+- **Tendencias**: el repo decide la granularidad por duración (≤1 día
+  horaria, >90 días semanal, resto diaria) y emite `label` con `to_char` en
+  inglés. La UI replica la regla desde `period.start_date/end_date`, re-deriva
+  la etiqueta del `date` y formatea los buckets date-only en UTC (horarios y
+  semanales en hora local). Un período `week` son 7 días móviles
+  (`NewPeriodRolling`), rotulado "Últimos 7 días".
+
+### 18.3 Decisiones de borde (documentadas)
+
+- **Tasa de éxito**: sin acciones es `n/d`, nunca `0%` (un 0% sugeriría que
+  todo falló). La hora pico solo se muestra si `peak_hour_actions > 0`.
+- **Fin del rango**: `formatAuditPeriodRange` muestra el `end_date` exclusivo
+  con el día inclusive (`01 oct 2026 – 31 oct 2026`).
+- **Filtro de categorías**: ofrece el enum vigente + `LEGACY`; una categoría
+  histórica fuera de esa lista se ve en la tabla (código crudo) pero no se
+  puede seleccionar. Acciones y tipos de entidad no se exponen como filtros
+  (el endpoint los acepta, pero el catálogo del BE no incluye `LEGACY`/valores
+  heredados y quedarían filtros incompletos).
+- **Rango incompleto/inválido**: con una sola fecha o `Desde > Hasta` no se
+  consulta; se muestra el aviso y el empty correspondiente en vez de dejar que
+  el BE complete el extremo faltante con su default.
+- **Orden**: ciclo sin orden → ASC → DESC → default (timestamp DESC). Volver al
+  default reusa la query cacheada (staleTime 60 s), no dispara un request
+  extra; el `<th>` conserva `aria-sort`.
+- **Página fija de 10 filas** (regla del proyecto); el pager muestra el total
+  real del filtro. Se quitó la columna "Evento": el timestamp es el link al
+  detalle y el `#id` va como sublínea, para que la tabla entre a 1440 sin
+  scroll interno.
+- **Top de usuarios y errores a ancho completo**: en 2 columnas la tabla de
+  usuarios (6 columnas) desbordaba su card a 1440 y 1280. Se compactaron
+  (sesiones/categorías como sublínea del usuario; acción como sublínea de la
+  categoría; última ocurrencia bajo el conteo) y pasaron a ancho completo.
+- **Gráfico sin librería**: columnas CSS escaladas al máximo real; las
+  etiquetas puntuales se muestran solo si entran en el ancho medido
+  (`ResizeObserver`, ~36 px por etiqueta); si no, quedan los extremos. En
+  mobile el gráfico no scrollea.
+- **Timestamps vs date-only**: `timestamp`/`occurred_at`/`last_*` son instantes
+  (`timestamptz`) → hora local; los buckets `DATE(...)` → UTC; nunca se usa el
+  `label` inglés del servidor.
+- **Export CSV del BE**: hereda el formato del handler (encabezados en inglés,
+  `error_message` sin comillas). La UI no reescribe el archivo; queda como
+  observación de contrato (ver §18.7), no se tocó el BE.
+
+### 18.4 Legado retirado (regla 6, documentado)
+
+- `src/services/auditService.ts`: servicio legacy con `VITE_USE_DEMO` y mocks
+  (`mockLogs`/`mockSummary`), sin consumidores tras F1. Lo reemplaza
+  `services/bi/auditService.ts` tipado.
+- `src/services/mocks/auditMocks.js`: solo lo importaba el servicio anterior.
+- `src/services/__tests__/auditExport.service.test.ts` → reemplazado por
+  `src/services/__tests__/audit.service.test.ts` (contrato completo de los 5
+  métodos + export).
+- `src/types.ts`: bloque `AUDIT TYPES` (`AuditLog`, `EntityHistoryEntry`,
+  `AuditDashboardSummary`) sin consumidores y con una forma que nunca existió
+  en el endpoint. Los tipos canónicos viven en `types/bi.ts`. Se conservaron
+  las constantes `API_ENDPOINTS.AUDIT_*` (mapa general, sin uso en F10).
+
+### 18.5 Tests
+
+- Dominio: `labels` (categorías/LEGACY/códigos crudos, acciones/INSERT,
+  niveles/tonos, resultado, severidad/tipo de alerta, filtros), `format`
+  (ausencia vs cero, sub-0,1%, `n/d`, hora/duración, UTC vs local, rango
+  inclusivo, llaves de día), `periods`, `trends` (granularidad por período,
+  etiquetas re-derivadas, arrays vacíos, máximo), `kpis` (dashboard/usuario,
+  sin acciones), `filters` (ventana de 30 días, estados del rango, orden,
+  params, export), `json` (objetos/arrays/strings/vacíos), `errors` — 37 casos.
+- Servicio: 5 métodos, rutas/params, limpieza, codificación de ids, body del
+  export y error propagado — 9 tests.
+- Hooks: params por endpoint, normalización de slices nil, `data` ausente,
+  detalle deshabilitado sin id, actividad con collections nulas — 7 tests;
+  período en URL (default, validación, escritura, limpieza) — 3 tests.
+- Páginas: Dashboard (9: KPIs/hints, tendencias re-derivadas, categorías/
+  acciones, alertas sin el message del SQL, links, errores, empty honesto,
+  ausencia de claims), Registro (11: ventana default, tabla/links, filtros,
+  texto, rango inválido, orden ASC/DESC/default, paginación, export/error,
+  empties, error y ausencia de KPIs mock), Detalle (6: campos/contexto/HTTP/
+  entidad/metadata, legacy con diffs, fallo con mensaje, 404, sin id, error),
+  Ficha (7: KPIs, categorías/días, sin columna usuario, período, empty, sin
+  sesiones/eventos de seguridad, error) — 33 tests.
+- i18n: paridad es/en, sin vacíos, claves nav y todas las claves estáticas de
+  F10 — 5 tests. Nav: 9 subgrupos, Auditoría con 2 hojas y `audit:read`; con
+  `audit:read` solo ese grupo; permiso ajeno no deja un grupo vacío — test de
+  F2-F9 actualizado.
+
+### 18.6 Gates
+
+- `npx tsc --noEmit`: 0 errores.
+- `npx vitest --run`: **331 archivos / 2191 tests OK** (+15 archivos y +92
+  tests respecto de F9; 94 tests nuevos de F10 y se retiró el test legacy del
+  export que tenía 3).
+- `pnpm build`: OK; chunks lazy `AuditDashboardPage`, `AuditLogsPage`,
+  `AuditLogDetailPage`, `AuditUserActivityPage` (+ `AuditTable` y
+  `AuditRefreshButton` compartidos por el feature).
+- `pnpm lint:design -- --base dev`: OK (código nuevo limpio; 1108 legacy).
+- `pnpm lint`: 0 errores (132 warnings legacy, sin cambios).
+- Gate anti-fabricación §5.3: en producción de F10 solo el `placeholder` del
+  buscador y el comentario "Sin fallback demo/mock" del servicio; el resto son
+  `vi.mock` de tests.
+- Gate TS: archivos nuevos de la fase solo `.ts`/`.tsx` (0 `.js`/`.jsx`); los
+  únicos `.js` tocados son los índices y shells de i18n que importan el
+  namespace `.ts` nuevo.
+- Backend: sin cambios (`git status` limpio).
+- Auditoría `vercel-react-best-practices` aplicada con criterio: páginas lazy,
+  una query por pantalla (el dashboard no dispara agregados duplicados), sin
+  `useEffect` para estado derivado (KPIs, series, etiquetas y visibilidad de
+  labels se derivan en render), `ResizeObserver` con deps primitivas en tabla
+  y gráfico, sin componentes definidos dentro de componentes y mapas de
+  metadata a nivel de módulo. Excepción consciente: el barrel público del
+  feature (plantilla FSD del plan).
+- **Smoke vivo** (`:5050` + Vite `:5173` `--mode api`, JWT de dev acuñado en
+  memoria con el `JWT_SECRET` local, admin `jJkV4F6HR`, rol `F2VLso`, sucursal
+  1, entitlements `core+bi`): **40/40 checks OK, 0 errores de consola, 0 page
+  errors y 0 respuestas HTTP ≥400**, con Playwright/Chrome contra la API real.
+  - Dashboard mes: 32 acciones, 23/32 = 71,9 %, 9 fallos, 1 usuario/5 sesiones,
+    0 críticos/0 incidentes, pico 15:00 con 14 acciones; 9 buckets diarios;
+    categorías Caja 14 (57,1 %; 43,8 %), Ventas 7, Inventario 6, Autenticación
+    2, Compras 2, Usuarios 1; tipos Creación 29 (69 %; 90,6 %), Cierre de sesión
+    2, Actualización 1; top admin 32 (71,9 %; 5 sesiones · 6 categorías); 2
+    grupos de error reales ("Sin mensaje"); alertas de seguridad vacías
+    (honesto); 10 recientes.
+  - Dashboard año: 180 acciones, 94,4 %, 13 usuarios/10 sesiones, pico 19:00
+    (60); 15 buckets semanales; Histórico 110 (61,1 %), Ventas 17, Caja 16,
+    Compras 15; top 5 (admin 163/93,9 % + ids heredados).
+  - Registro: 69 eventos en 22 sep–21 oct, 10 filas/página, 7 páginas; filtro
+    Categoría = Autenticación → 5 filas/1 página; orden por acción ASC
+    verificado; export CSV descargado con encabezado
+    `ID,Timestamp,UserID,...`; sin scroll interno a 1440.
+  - Detalle `#26827` (logout): Autenticación, Informativo, Éxito, admin,
+    sesión 1378, sucursal 1, IP `::1`, user agent, entidad `SESSION`/`1378`,
+    metadata `request_id`; sin card HTTP (campos ausentes en el hook) y sin
+    correlation-id inventado.
+  - Ficha de admin (año): 163 acciones, 153 exitosas, 10 fallidas, 93,9 %, 8
+    categorías, 9 sesiones, 0,45/día, última 20 oct 08:25; 8 categorías; 25
+    días; 20 eventos recientes; `?period=week` persistido en la URL.
+  - Responsive 1440/1280/1024/390: `bodyOverflow=false` en las 4 pantallas; a
+    390 las tablas scrollean dentro de la card con el hint y el gráfico no
+    scrollea (etiquetas solo en los extremos).
+- Sin push: F1-F10 quedan locales en la rama FE.
+
+### 18.7 Pendiente / deuda declarada
+
+- Endpoints no consumidos por falta de pantalla en el plan:
+  `/summary`, `/summary/range`, `/trends`, `/trends/range` (el dashboard embebe
+  los agregados), `/dashboard/range`, `/users/{id}/activity/range`,
+  `/users/top` (embebido), `/entity/{type}/{id}/history` y los catálogos
+  `/categories|/actions|/levels|/entity-types` (el vocabulario cerrado vive en
+  el dominio; los catálogos no incluyen `LEGACY`).
+- El filtro de categorías no permite seleccionar una categoría histórica fuera
+  de enum + `LEGACY`; acciones y tipos de entidad no son filtrables desde la
+  UI (el endpoint los acepta).
+- Las colecciones `sessions`/`security_events` de la ficha de usuario nunca se
+  completan en el BE; si se quieren mostrar sesiones, requiere cambio de repo.
+- El CSV de export hereda el formato del handler: encabezados en inglés y
+  `error_message`/`username` sin quoting; un mensaje con comas puede correr
+  columnas. Cambiarlo exige tocar `logsToCSV` (BE fuera del alcance de F10).
+- La ventana inicial del registro se calcula al montar la pantalla; una
+  pestaña abierta más de un día conserva el rango anterior hasta "Limpiar".
+- Sin comparación custom de períodos, sin selector de filas por página y sin
+  export JSON desde la UI (el servicio acepta `format: 'json'`).
+- Falta F11 (Pronósticos).

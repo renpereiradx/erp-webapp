@@ -1,0 +1,33 @@
+import type { ReactNode } from 'react'
+import PageHeader from '@/components/ui/PageHeader'
+
+interface AuditPageLayoutProps {
+  title: string
+  subtitle: string
+  /** Rango/período real aplicado (ya localizado). */
+  range?: string
+  actions?: ReactNode
+  children: ReactNode
+}
+
+/** Shell de las 4 pantallas de Auditoría (DESIGN §4/§6.8). */
+export const AuditPageLayout = ({
+  title,
+  subtitle,
+  range,
+  actions,
+  children,
+}: AuditPageLayoutProps) => (
+  <div className="min-h-screen bg-background">
+    <div className="w-full max-w-container-max px-md pb-xl lg:px-lg">
+      <PageHeader
+        title={title}
+        subtitle={range ? `${subtitle} · ${range}` : subtitle}
+        actions={actions}
+      />
+      <div className="space-y-xl">{children}</div>
+    </div>
+  </div>
+)
+
+export default AuditPageLayout

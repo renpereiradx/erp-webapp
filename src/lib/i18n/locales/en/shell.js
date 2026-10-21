@@ -85,6 +85,10 @@ export const shell = {
   'nav.financeCashFlow': 'Cash flow',
   'nav.financeTax': 'VAT management',
   'nav.financeLegalBooks': 'Legal books',
+  // F10 — Audit (2 leaves; event detail and user profile are not in the sidebar).
+  'nav.auditGroup': 'Audit',
+  'nav.auditDashboard': 'Audit dashboard',
+  'nav.auditLogs': 'Event log',
 
   'nav.collapseSidebar': 'Collapse menu',
   'nav.expandSidebar': 'Expand menu',

@@ -365,6 +365,27 @@ export const buildNavigation = (
                 },
               ],
             },
+            // F10 — Auditoría (2 hojas). Detalle de evento y ficha de usuario
+            // se alcanzan desde tablas y alertas; no duplican entradas.
+            // Permiso del BE: `biChain("audit:read", "audit")`.
+            {
+              name: t('nav.auditGroup', 'Auditoría'),
+              href: '#',
+              icon: Shield,
+              permission: 'audit:read',
+              children: [
+                {
+                  name: t('nav.auditDashboard', 'Panel de auditoría'),
+                  href: '/auditoria',
+                  icon: LayoutDashboard,
+                },
+                {
+                  name: t('nav.auditLogs', 'Registro de eventos'),
+                  href: '/auditoria/logs',
+                  icon: List,
+                },
+              ],
+            },
           ],
         },
       ]

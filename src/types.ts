@@ -1733,48 +1733,6 @@ export interface ProfitabilityAnalysis {
 }
 
 // ============================================================================
-// AUDIT TYPES
-// ============================================================================
-
-export interface AuditLog {
-  id: number;
-  user_id: string;
-  branch_id?: number;
-  action: string;
-  category: 'AUTH' | 'USER' | 'SALE' | 'PURCHASE' | string;
-  entity_type: string;
-  entity_id: string;
-  old_values?: any;
-  new_values?: any;
-  ip_address: string;
-  user_agent: string;
-  created_at: string;
-}
-
-export interface EntityHistoryEntry {
-  id: number;
-  branch_id?: number;
-  action: string;
-  user_id: string;
-  user_name: string;
-  created_at: string;
-  old_values?: any;
-  new_values?: any;
-}
-
-export interface AuditDashboardSummary {
-  summary: {
-    total_events: number;
-    events_today: number;
-    events_this_week: number;
-    events_this_month: number;
-  };
-  by_category: Record<string, number>;
-  by_action: Record<string, number>;
-  top_users: Array<{ user_id: string; user_name: string; count: number }>;
-}
-
-// ============================================================================
 // BUDGET TYPES
 // ============================================================================
 

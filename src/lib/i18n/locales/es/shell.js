@@ -85,6 +85,10 @@ export const shell = {
   'nav.financeCashFlow': 'Flujo de caja',
   'nav.financeTax': 'Gestión de IVA',
   'nav.financeLegalBooks': 'Libros legales',
+  // F10 — Auditoría (2 hojas; detalle y ficha de usuario no van al sidebar).
+  'nav.auditGroup': 'Auditoría',
+  'nav.auditDashboard': 'Panel de auditoría',
+  'nav.auditLogs': 'Registro de eventos',
 
   'nav.collapseSidebar': 'Colapsar menú',
   'nav.expandSidebar': 'Expandir menú',

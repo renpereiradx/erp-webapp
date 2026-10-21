@@ -2464,3 +2464,248 @@ export interface ProrrateoDetail {
   notes?: string;
   created_at: string;
 }
+
+// --- Auditoría (F10) --------------------------------------------------------
+//
+// Contrato REAL de `/api/v1/audit/*`
+// (`business_management/models/audit.go`, `internal/analytics/http_audit.go`,
+// `internal/platform/postgres/audit_repo.go`). Gate del BE:
+// `RequireModule('bi')` → `audit:read` (`biChain("audit:read", "audit")`).
+//
+// Semántica que la UI debe respetar (no "corregir" en el cliente):
+//  - `category`/`action`/`entity_type` son VARCHAR libres: el write path actual
+//    usa el vocabulario del modelo, pero la migración
+//    `20260916183127_backfill_legacy_audits_to_audit_logs` inserta filas con
+//    `category = 'LEGACY'` y acciones heredadas (`INSERT`). Un código fuera del
+//    vocabulario se muestra crudo, nunca se traduce a un nombre inventado.
+//  - `security_alerts[].message` viene en español desde el SQL; la UI traduce
+//    el `type` y muestra `count`, no el texto del servidor.
+//  - `UserActivityReport.sessions` y `.security_events` NUNCA se completan
+//    (el repo no los consulta): se tipan por contrato y no se renderizan.
+//  - Los slices nil de Go llegan como `null` (`trends`, `alerts`,
+//    `error_summary`, `logs`, `recent_actions`): los hooks normalizan a `[]`.
+
+export type AuditLevel = 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
+
+/** `models.AuditLog` — timestamps con zona (`timestamptz`). */
+export interface AuditLogEntry {
+  id: number;
+  timestamp: string;
+  user_id: string;
+  username?: string;
+  session_id?: string;
+  ip_address?: string;
+  user_agent?: string;
+  category: string;
+  action: string;
+  entity_type?: string;
+  entity_id?: string;
+  description: string;
+  /** JSONB crudo tal como lo devuelve el BE (objeto/array), no un string. */
+  old_values?: unknown;
+  new_values?: unknown;
+  metadata?: unknown;
+  level: AuditLevel | string;
+  success: boolean;
+  error_message?: string;
+  duration_ms?: number;
+  request_method?: string;
+  request_path?: string;
+  response_status?: number;
+  branch_id?: number;
+}
+
+export interface AuditCategoryStats {
+  category: string;
+  count: number;
+  success_rate: number;
+  percentage: number;
+}
+
+export interface AuditActionStats {
+  action: string;
+  count: number;
+  success_rate: number;
+  percentage: number;
+}
+
+export interface AuditUserActivitySummary {
+  user_id: string;
+  username: string;
+  total_actions: number;
+  successful_actions: number;
+  failed_actions: number;
+  unique_categories: number;
+  unique_sessions: number;
+  /** `0001-01-01T00:00:00Z` (cero de Go) cuando el usuario no tiene eventos. */
+  last_activity: string;
+  /** Total de acciones / días del período (no días activos). */
+  avg_actions_per_day: number;
+}
+
+/** `models.EntityActivityStats` — no lo emite ningún handler actual. */
+export interface AuditEntityActivityStats {
+  entity_type: string;
+  entity_id: string;
+  total_actions: number;
+  creates: number;
+  updates: number;
+  deletes: number;
+  reads: number;
+}
+
+export interface AuditErrorSummary {
+  category: string;
+  action: string;
+  /** Puede venir vacío (`''`) cuando el productor no registró mensaje. */
+  error_message: string;
+  count: number;
+  last_occurred: string;
+}
+
+export interface AuditHourlyDistribution {
+  hour: number;
+  count: number;
+}
+
+/** `type`: FAILED_LOGINS | UNUSUAL_ACTIVITY. `message`: texto del SQL (no se muestra). */
+export interface AuditSecurityAlert {
+  type: string;
+  severity: string;
+  message: string;
+  details?: string;
+  user_id?: string;
+  ip_address?: string;
+  occurred_at: string;
+  count: number;
+}
+
+export interface AuditTrendPoint {
+  /** Bucket: instante (hourly/weekly/monthly) o date-only a medianoche UTC (daily). */
+  date: string;
+  /** Etiqueta `to_char` en inglés del servidor; la UI la re-deriva. */
+  label: string;
+  total_actions: number;
+  successful: number;
+  failed: number;
+  unique_users: number;
+  error_rate: number;
+}
+
+export interface AuditKPIs {
+  total_actions: number;
+  successful_actions: number;
+  failed_actions: number;
+  success_rate: number;
+  unique_users: number;
+  unique_sessions: number;
+  avg_actions_per_user: number;
+  avg_actions_per_session: number;
+  /** Hora del wall clock de negocio (0-23); 0 cuando no hubo acciones. */
+  peak_hour: number;
+  peak_hour_actions: number;
+  critical_errors: number;
+  security_incidents: number;
+}
+
+/** `GET /api/v1/audit/dashboard?period=`. */
+export interface AuditDashboard {
+  generated_at: string;
+  period: BIReportPeriod;
+  kpis: AuditKPIs;
+  actions_by_category: AuditCategoryStats[] | null;
+  actions_by_type: AuditActionStats[] | null;
+  top_users: AuditUserActivitySummary[] | null;
+  recent_activity: AuditLogEntry[] | null;
+  trends: AuditTrendPoint[] | null;
+  security_alerts: AuditSecurityAlert[] | null;
+  error_summary: AuditErrorSummary[] | null;
+}
+
+/** `GET /api/v1/audit/logs` — paginación real del BE. */
+export interface AuditLogsResponse {
+  logs: AuditLogEntry[] | null;
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+/** Whitelist real de `sort_by` del listado (`audit_repo.go`). */
+export type AuditLogSortBy = 'category' | 'action' | 'level';
+
+export interface AuditLogsParams {
+  /** `YYYY-MM-DD`; el handler convierte el fin a `end_date + 1 día`. */
+  start_date?: string;
+  end_date?: string;
+  user_id?: string;
+  category?: string;
+  action?: string;
+  entity_type?: string;
+  entity_id?: string;
+  level?: string;
+  search?: string;
+  ip_address?: string;
+  /** `true` → solo éxitos; `false` → solo fallos. */
+  success?: boolean;
+  page?: number;
+  page_size?: number;
+  sort_by?: AuditLogSortBy;
+  /** El BE solo reconoce `'asc'`; cualquier otro valor ordena DESC. */
+  sort_order?: 'asc' | 'desc';
+}
+
+export interface AuditDailyActivity {
+  /** `DATE(timestamp)` — date-only serializado a medianoche UTC. */
+  date: string;
+  label: string;
+  actions: number;
+  success: number;
+  failed: number;
+}
+
+export interface AuditSessionEntry {
+  id: number;
+  session_id: string;
+  user_id: string;
+  username?: string;
+  ip_address?: string;
+  user_agent?: string;
+  started_at: string;
+  last_activity_at: string;
+  ended_at?: string;
+  end_reason?: string;
+  total_actions: number;
+  total_duration_seconds: number;
+  is_active: boolean;
+}
+
+/** `GET /api/v1/audit/users/{id}/activity?period=`. */
+export interface AuditUserActivityReport {
+  generated_at: string;
+  period: BIReportPeriod;
+  user_id: string;
+  username: string;
+  summary: AuditUserActivitySummary;
+  actions_by_category: AuditCategoryStats[] | null;
+  actions_by_day: AuditDailyActivity[] | null;
+  /** Nunca poblado por el repo (siempre null): no se renderiza. */
+  sessions: AuditSessionEntry[] | null;
+  recent_actions: AuditLogEntry[] | null;
+  /** Nunca poblado por el repo (siempre null): no se renderiza. */
+  security_events: AuditSecurityAlert[] | null;
+}
+
+export interface AuditExportFilters {
+  search?: string;
+  category?: string;
+  level?: string;
+  success?: 'true' | 'false';
+  start_date?: string;
+  end_date?: string;
+}
+
+export interface AuditExportOptions {
+  format?: 'json' | 'csv';
+  max_records?: number;
+}
