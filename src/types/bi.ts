@@ -1570,3 +1570,226 @@ export interface ProfitabilityDashboard {
   };
   alerts: ProfitabilityAlert[] | null;
 }
+
+// --- Cuentas por Cobrar (F7) ------------------------------------------------
+//
+// Contrato REAL de `/receivables/*`
+// (`business_management/models/receivables.go` + `internal/analytics/dto.go` +
+// `internal/analytics/http_receivables.go` + `internal/platform/postgres/
+// analytics_receivables_repo.go`). Envelope `{success, data, metadata}` en
+// todas las respuestas; gate del BE: `RequireModule('bi')` →
+// `receivables:read` (`biChain("receivables:read", "receivables")`).
+//
+// Particularidades del contrato que la UI debe respetar:
+//  - el "aging" de CxC mide días desde la VENTA, no desde el vencimiento;
+//  - `due_date` del listado se sintetiza como `sale_date + 30 días` (el
+//    vencimiento real solo alimenta `days_overdue`): no se muestra;
+//  - `ClientReceivables.total_overdue` usa >30 días desde la venta, distinto de
+//    `days_overdue` (que usa el vencimiento) del listado;
+//  - `ClientRisk.collection_rate` puede superar 100 % (fórmula del repo): no se
+//    muestra como tasa;
+//  - `status` del listado solo acepta PENDING/PARTIAL/OVERDUE (se superponen) y
+//    toda fila tiene saldo pendiente: PAID nunca aparece.
+
+/** Estados que devuelve (y acepta como filtro) el listado de CxC. */
+export type ReceivablesStatus = 'PENDING' | 'PARTIAL' | 'OVERDUE' | 'PAID';
+
+/** Comportamiento de pago calculado por el BE (EXCELLENT/GOOD/REGULAR/POOR). */
+export type ReceivablesPaymentBehavior = 'EXCELLENT' | 'GOOD' | 'REGULAR' | 'POOR';
+
+/** Nivel de riesgo del análisis por cliente. */
+export type ReceivablesRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+/** Tramo de antigüedad (`models.AgingBucket`). */
+export interface ReceivablesAgingBucket {
+  amount: number;
+  count: number;
+  percentage: number;
+}
+
+/** `aging_summary` de overview/report: días desde la venta (0-30, 31-60, 61-90, >90). */
+export interface ReceivablesAgingSummary {
+  current: ReceivablesAgingBucket;
+  days_30_60: ReceivablesAgingBucket;
+  days_60_90: ReceivablesAgingBucket;
+  over_90_days: ReceivablesAgingBucket;
+}
+
+/** `GET /receivables/overview`. */
+export interface ReceivablesOverview {
+  total_pending: number;
+  total_overdue: number;
+  total_count: number;
+  overdue_count: number;
+  /** Promedio de días desde la venta en las órdenes ya saldadas. */
+  average_days_to_collect: number;
+  /** Cobrado / facturado sobre todas las ventas no canceladas. */
+  collection_rate: number;
+  currency: string;
+  aging_summary: ReceivablesAgingSummary;
+}
+
+/** `payment_history` de `GET /receivables/{id}`. */
+export interface ReceivablePayment {
+  id: string;
+  amount: number;
+  payment_date: string;
+  payment_method: string;
+  reference?: string;
+  processed_by: string;
+}
+
+/** Cuenta por cobrar (una orden de venta con saldo pendiente). */
+export interface Receivable {
+  id: string;
+  sale_order_id: string;
+  client_id: string;
+  client_name: string;
+  client_phone?: string;
+  sale_date: string;
+  /** Sintetizado por el repo como sale_date + 30 días: no se muestra. */
+  due_date: string;
+  original_amount: number;
+  paid_amount: number;
+  pending_amount: number;
+  /** Días desde el vencimiento (0 si aún no venció). */
+  days_overdue: number;
+  status: ReceivablesStatus | string;
+  payment_history?: ReceivablePayment[] | null;
+  currency: string;
+}
+
+/** `GET /receivables` (lista maestra paginada). */
+export interface ReceivablesList {
+  items: Receivable[] | null;
+  pagination: BIPaginationInfo;
+  summary: ReceivablesListSummary;
+}
+
+export interface ReceivablesListSummary {
+  total_amount: number;
+  total_pending: number;
+  total_paid: number;
+  /** Conteo global de cuentas con saldo (no el tamaño de la página). */
+  item_count: number;
+  /** Filas del set completo con más de 60 días vencidos. */
+  high_priority_count: number;
+}
+
+/** `GET /receivables/client/{id}`. */
+export interface ClientReceivables {
+  client_id: string;
+  client_name: string;
+  client_phone?: string;
+  total_pending: number;
+  /** Pendiente con más de 30 días desde la venta (no el vencimiento real). */
+  total_overdue: number;
+  pending_count: number;
+  /** Venta más antigua pendiente; cero de Go si no hay deuda. */
+  oldest_debt: string;
+  /** Nunca se completa: se omite del contrato visible. */
+  credit_limit?: number;
+  credit_available?: number;
+  payment_behavior: ReceivablesPaymentBehavior | string;
+  /** Promedio (payment_date - sale_date) de todos los pagos del cliente. */
+  average_days_to_pay: number;
+  /** Hasta 100 cuentas, ordenadas por fecha descendente. */
+  receivables?: Receivable[] | null;
+}
+
+/** Fila de `GET /receivables/top-debtors` y de `statistics.top_debtors`. */
+export interface ClientReceivablesSummary {
+  client_id: string;
+  client_name: string;
+  total_pending: number;
+  total_overdue: number;
+  pending_count: number;
+  payment_behavior: ReceivablesPaymentBehavior | string;
+}
+
+/** Fila por cliente de `GET /receivables/aging/report`. */
+export interface ClientAgingDetail {
+  client_id: string;
+  client_name: string;
+  current: number;
+  days_30_60: number;
+  days_60_90: number;
+  over_90_days: number;
+  total: number;
+}
+
+/** `GET /receivables/aging/report` (by_client paginado; totales globales). */
+export interface ReceivablesAgingReport {
+  generated_at: string;
+  summary: ReceivablesAgingSummary;
+  by_client: ClientAgingDetail[] | null;
+  /** Suma global del set completo, no de la página. */
+  total_amount: number;
+  /** Clientes del set completo, no de la página. */
+  total_clients: number;
+}
+
+/** `GET /receivables/client/{id}/risk` (`analytics.ClientRisk`). */
+export interface ClientRisk {
+  client_id: string;
+  risk_level: ReceivablesRiskLevel | string;
+  payment_behavior: ReceivablesPaymentBehavior | string;
+  total_pending_orders: number;
+  total_pending_amount: number;
+  total_overdue_amount: number;
+  total_over_90_amount: number;
+  /** Ratio 0-1 (pendiente vencido / pendiente total). */
+  overdue_ratio: number;
+  /** Días desde la venta de la cuenta más antigua (no días vencidos). */
+  max_days_overdue: number;
+  avg_days_outstanding: number;
+  avg_days_to_pay: number;
+  total_payments: number;
+  /** Fórmula del repo; puede superar 100: no se muestra como tasa. */
+  collection_rate: number;
+  analyzed_at: string;
+}
+
+/** Punto semanal de `statistics.collection_trend`. */
+export interface ReceivablesCollectionTrendPoint {
+  /** Fecha date-only (lunes de la semana). */
+  date: string;
+  billed: number;
+  collected: number;
+  /** Diferencia acumulada facturado − cobrado calculada por el BE. */
+  balance: number;
+}
+
+/** `GET /receivables/statistics` y `/statistics/date-range`. */
+export interface ReceivablesStatistics {
+  /** Rango aplicado "YYYY-MM-DD - YYYY-MM-DD" (fin EXCLUSIVO). */
+  period: string;
+  total_billed: number;
+  total_collected: number;
+  /** Cobrado / facturado del período (flujos, no cohortes). */
+  collection_rate: number;
+  /** Días promedio desde la venta hasta el primer pago (sin pago: hasta hoy). */
+  average_dso: number;
+  /** Saldo vencido de las ventas del período / facturación del período. */
+  overdue_percentage: number;
+  top_debtors: ClientReceivablesSummary[] | null;
+  collection_trend: ReceivablesCollectionTrendPoint[] | null;
+}
+
+/** Whitelist real de `sort_by` de `GET /receivables` (T3). */
+export type ReceivablesSortBy = 'date' | 'amount' | 'client' | 'days_overdue';
+
+export interface ReceivablesSortParams {
+  status?: ReceivablesStatus;
+  client_id?: string;
+  page?: number;
+  page_size?: number;
+  sort_by?: ReceivablesSortBy;
+  sort_order?: 'ASC' | 'DESC';
+}
+
+/** Params de `/overdue`: solo pagina (el BE fija status y orden). */
+export interface ReceivablesPageParams {
+  page?: number;
+  page_size?: number;
+}

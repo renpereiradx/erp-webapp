@@ -254,6 +254,38 @@ export const buildNavigation = (
                 },
               ],
             },
+            // F7 — Cuentas por Cobrar (4 hojas). El detalle de cuenta y la
+            // ficha de crédito se alcanzan desde tablas, alertas y modales;
+            // no duplican entradas en el sidebar. Permiso del BE:
+            // `biChain("receivables:read", "receivables")`.
+            {
+              name: t('nav.receivablesGroup', 'Cuentas por Cobrar'),
+              href: '#',
+              icon: CreditCard,
+              permission: 'receivables:read',
+              children: [
+                {
+                  name: t('nav.receivablesDashboard', 'Resumen de cartera'),
+                  href: '/receivables',
+                  icon: LayoutDashboard,
+                },
+                {
+                  name: t('nav.receivablesList', 'Lista de cuentas'),
+                  href: '/receivables/list',
+                  icon: List,
+                },
+                {
+                  name: t('nav.receivablesOverdue', 'Cuentas vencidas'),
+                  href: '/receivables/overdue',
+                  icon: AlertTriangle,
+                },
+                {
+                  name: t('nav.receivablesAging', 'Reporte de antigüedad'),
+                  href: '/receivables/aging-report',
+                  icon: ClockIcon,
+                },
+              ],
+            },
           ],
         },
       ]

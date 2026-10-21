@@ -21,7 +21,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 
 import BiDrilldownButton from '../BiDrilldownButton'
 
-const renderButton = (onBeforeNavigate?: () => void) =>
+const renderButton = (onBeforeNavigate?: () => void, permission?: string) =>
   render(
     <MemoryRouter initialEntries={['/']}>
       <Routes>
@@ -33,6 +33,7 @@ const renderButton = (onBeforeNavigate?: () => void) =>
               label='Ver compradores'
               onBeforeNavigate={onBeforeNavigate}
               testId='bi-drilldown'
+              permission={permission}
             />
           }
         />
@@ -66,6 +67,18 @@ describe('BiDrilldownButton (F3)', () => {
   it('sin analytics:read no renderiza nada', () => {
     authState.permissions = new Set(['sales:read'])
     renderButton()
+    expect(screen.queryByTestId('bi-drilldown')).toBeNull()
+  })
+
+  it('con el permiso propio de la ruta (F7: receivables:read) renderiza', () => {
+    authState.permissions = new Set(['receivables:read'])
+    renderButton(undefined, 'receivables:read')
+    expect(screen.getByTestId('bi-drilldown')).toBeTruthy()
+  })
+
+  it('con analytics:read pero sin receivables:read no renderiza', () => {
+    authState.permissions = new Set(['analytics:read'])
+    renderButton(undefined, 'receivables:read')
     expect(screen.queryByTestId('bi-drilldown')).toBeNull()
   })
 })

@@ -1,103 +1,110 @@
 /**
- * Risk heuristics for receivables (priority, stats, styles, client level).
- * Extracted from useOverdueAccounts.js, RiskGauge.jsx and the AP aging hook
- * rescued from deletion (PLAN_ALINEACION_BI_FRONTEND F1).
- * No React, no i18n — labels stay as the legacy Spanish strings until the
- * consuming pages are migrated (FASE 3, decisión D6).
+ * Riesgo y comportamiento de pago de un cliente (F7).
+ *
+ * Todo sale de `GET /receivables/client/{id}/risk` (`analytics.ClientRisk`):
+ *  - `risk_level`: HIGH si hay deuda >90 días y más del 50 % del saldo está
+ *    vencido; MEDIUM si el vencido supera el 30 % o la antigüedad máxima pasa
+ *    de 60 días; LOW en el resto (reglas del repo, documentadas en pantalla).
+ *  - `payment_behavior`: EXCELLENT ≤30 días, GOOD ≤45, REGULAR ≤60, POOR >60
+ *    (`calculatePaymentBehavior`). Con 0 pagos el BE devuelve 0 días →
+ *    EXCELLENT, así que la UI lo oculta cuando no hay historial.
+ *  - `overdue_ratio` es un ratio 0-1 (se muestra como porcentaje).
+ *  - `max_days_overdue`/`avg_days_outstanding` son DÍAS DESDE LA VENTA, no días
+ *    vencidos: se rotulan "antigüedad".
+ *  - `collection_rate` puede superar 100 % (fórmula del repo): NO se muestra.
+ *
+ * Sin estilos ni literales de UI: las etiquetas viven en i18n.
  */
+import type { ClientRisk } from '@/types/bi'
+import { toNumberOrNull } from './format'
 
-export type ReceivablePriority = 'High' | 'Medium' | 'Low'
+export type RiskLevelKey = 'low' | 'medium' | 'high'
 
-/** Priority by days overdue: High > 60, Medium > 30, else Low. */
-export const getPriority = (daysOverdue: number | null | undefined): ReceivablePriority => {
-  if ((daysOverdue ?? 0) > 60) return 'High'
-  if ((daysOverdue ?? 0) > 30) return 'Medium'
-  return 'Low'
-}
-
-/** Account shape produced by mappers.transformApiResponse. */
-export interface OverdueAccountLike {
-  amount?: number | null
-  priority?: string | null
-  originalAmount?: number | null
-  paidAmount?: number | null
-}
-
-export interface OverdueStats {
-  totalOverdue: number
-  atRisk: number
-  efficiency: number
-  totalAccounts: number
-}
-
-/** Portfolio stats: overdue total, high-priority count and payment efficiency. */
-export const calculateStats = (accounts: OverdueAccountLike[]): OverdueStats => {
-  if (!accounts.length) {
-    return {
-      totalOverdue: 0,
-      atRisk: 0,
-      efficiency: 0,
-      totalAccounts: 0,
-    }
-  }
-
-  const totalOverdue = accounts.reduce((sum, acc) => sum + (acc.amount || 0), 0)
-  const atRisk = accounts.filter((acc) => acc.priority === 'High').length
-  // Efficiency is percentage of partial payments vs total
-  const totalOriginal = accounts.reduce((sum, acc) => sum + (acc.originalAmount || 0), 0)
-  const totalPaid = accounts.reduce((sum, acc) => sum + (acc.paidAmount || 0), 0)
-  const efficiency = totalOriginal > 0 ? Math.round((totalPaid / totalOriginal) * 100) : 0
-
-  return {
-    totalOverdue,
-    atRisk,
-    efficiency,
-    totalAccounts: accounts.length,
-  }
-}
-
-export interface RiskStyles {
-  color: string
-  bg: string
-  label: string
-  dot: string
-}
-
-/** Visual styles for the risk gauge, by level (EN or ES accepted). */
-export const getRiskStyles = (lvl: string | null | undefined): RiskStyles => {
-  switch (lvl?.toLowerCase()) {
-    case 'low':
-    case 'bajo':
-      return { color: 'text-green-500', bg: 'bg-green-100 text-green-800', label: 'Riesgo Bajo', dot: 'bg-green-500' }
-    case 'high':
-    case 'alto':
-      return { color: 'text-red-500', bg: 'bg-red-100 text-red-800', label: 'Riesgo Alto', dot: 'bg-red-500' }
+/** Nivel de riesgo normalizado; un valor desconocido no se renderiza. */
+export const riskLevelKey = (level: string | null | undefined): RiskLevelKey | null => {
+  switch ((level ?? '').toUpperCase()) {
+    case 'LOW':
+      return 'low'
+    case 'MEDIUM':
+      return 'medium'
+    case 'HIGH':
+      return 'high'
     default:
-      return { color: 'text-yellow-500', bg: 'bg-yellow-100 text-yellow-800', label: 'Riesgo Medio', dot: 'bg-yellow-500' }
+      return null
   }
 }
 
-/** Client row of the aging summary endpoint (days-bucket shape). */
-export interface AgingSummaryClient {
-  days_30_60?: number | null
-  days_60_90?: number | null
-  over_90_days?: number | null
-  total?: number | null
+export type RiskTone = 'success' | 'warning' | 'error'
+
+export const RISK_LEVEL_TONE: Record<RiskLevelKey, RiskTone> = {
+  low: 'success',
+  medium: 'warning',
+  high: 'error',
 }
 
-export type ClientRiskLevel = 'Crítico' | 'Moderado' | 'Mínimo'
+export type PaymentBehaviorKey = 'excellent' | 'good' | 'regular' | 'poor'
+
+/** Comportamiento de pago normalizado; un valor desconocido no se renderiza. */
+export const paymentBehaviorKey = (
+  behavior: string | null | undefined,
+): PaymentBehaviorKey | null => {
+  switch ((behavior ?? '').toUpperCase()) {
+    case 'EXCELLENT':
+      return 'excellent'
+    case 'GOOD':
+      return 'good'
+    case 'REGULAR':
+      return 'regular'
+    case 'POOR':
+      return 'poor'
+    default:
+      return null
+  }
+}
+
+/** Umbrales superiores de días de pago por comportamiento (BE). */
+export const PAYMENT_BEHAVIOR_MAX_DAYS: Record<Exclude<PaymentBehaviorKey, 'poor'>, number> = {
+  excellent: 30,
+  good: 45,
+  regular: 60,
+}
 
 /**
- * Client risk level from its aging breakdown: 'Crítico' with any debt over
- * 90 days, 'Moderado' when more than 30% of the balance is overdue,
- * 'Mínimo' otherwise. (Rescued from the deleted AP aging hook, F0.)
+ * El BE calcula `payment_behavior` con `AVG(días)` y sin pagos el promedio es
+ * 0 → EXCELLENT. La UI solo muestra comportamiento si hubo al menos un pago.
  */
-export const getRiskLevel = (client: AgingSummaryClient): ClientRiskLevel => {
-  const overduePercentage =
-    (((client.days_30_60 ?? 0) + (client.days_60_90 ?? 0) + (client.over_90_days ?? 0)) /
-      (client.total || 0)) *
-    100
-  if ((client.over_90_days ?? 0) > 0) return 'Crítico'
-  if (overduePercentage > 30) return 'Moderado'
-  return 'Mínimo'
+export const hasPaymentHistory = (risk: Pick<ClientRisk, 'total_payments'> | null | undefined): boolean =>
+  (toNumberOrNull(risk?.total_payments) ?? 0) > 0
+
+/** Ratio 0-1 → porcentaje 0-100 (sin clampear: se muestra el dato del BE). */
+export const overdueRatioPercent = (ratio: number | null | undefined): number | null => {
+  const numeric = toNumberOrNull(ratio)
+  return numeric === null ? null : numeric * 100
+}
+
+/**
+ * Señales que explican el nivel de riesgo con las mismas reglas del backend.
+ * Se muestran como texto; ninguna agrega cifras propias.
+ */
+export interface RiskSignals {
+  /** Hay deuda con más de 90 días desde la venta. */
+  over90Debt: boolean
+  /** Más de la mitad del saldo está "vencido" (>30 días desde la venta). */
+  ratioOver50: boolean
+  /** Más del 30 % del saldo está "vencido". */
+  ratioOver30: boolean
+  /** La cuenta más antigua supera los 60 días. */
+  maxAgeOver60: boolean
+}
+
+export const riskSignals = (risk: ClientRisk | null | undefined): RiskSignals => {
+  const ratio = toNumberOrNull(risk?.overdue_ratio) ?? 0
+  const maxAge = toNumberOrNull(risk?.max_days_overdue) ?? 0
+  const over90 = toNumberOrNull(risk?.total_over_90_amount) ?? 0
+  return {
+    over90Debt: over90 > 0,
+    ratioOver50: ratio > 0.5,
+    ratioOver30: ratio > 0.3,
+    maxAgeOver60: maxAge > 60,
+  }
 }

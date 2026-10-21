@@ -1,4 +1,5 @@
 import {
+  List,
   Settings,
   Shield,
   CalendarCheck,
@@ -14,6 +15,18 @@ import {
  * Estructura compatible con el sistema de navegación de MainLayout
  */
 export const distinctSearchableRoutes = [
+  // Cuentas por Cobrar (F7): la lista maestra también se ofrece en el buscador
+  // global. requiredModule evita una ruta que expulsa sin pack; el permiso es
+  // el de la cadena BE (receivables:read).
+  {
+    name: 'Lista de cuentas por cobrar',
+    href: '/receivables/list',
+    icon: List,
+    category: 'Finanzas / Cobros',
+    requiredModule: 'bi',
+    requiredPermission: 'receivables:read'
+  },
+
   // Gestión de Usuarios y Perfil
   {
     name: 'Mi Perfil y Seguridad',

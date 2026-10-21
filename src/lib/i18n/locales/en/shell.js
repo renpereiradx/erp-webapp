@@ -65,6 +65,12 @@ export const shell = {
   'nav.profitabilityCategories': 'Categories',
   'nav.profitabilityTrends': 'Trends',
   'nav.profitabilitySellers': 'Sellers',
+  // F7 — Accounts Receivable (4 group leaves; detail/profile stay off-sidebar).
+  'nav.receivablesGroup': 'Accounts Receivable',
+  'nav.receivablesDashboard': 'Portfolio summary',
+  'nav.receivablesList': 'Account list',
+  'nav.receivablesOverdue': 'Overdue accounts',
+  'nav.receivablesAging': 'Aging report',
   'nav.collapseSidebar': 'Collapse menu',
   'nav.expandSidebar': 'Expand menu',
   'nav.openMenu': 'Open menu',

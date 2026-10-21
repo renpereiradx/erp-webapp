@@ -8,13 +8,22 @@ import { buildSearchableItems, filterSearchResults } from './search'
 interface UseGlobalSearchOptions {
   navigation: NavigationItem[]
   reservationsEnabled: boolean
+  /** Pack BI activo (gatea las rutas extra con `requiredModule: 'bi'`). */
+  biEnabled: boolean
+  /** Checker de permisos para `requiredPermission` de las rutas extra. */
+  hasPermission: (permission: string) => boolean
 }
 
 /**
  * Orquestación del buscador global: índice de rutas, filtrado por término,
  * navegación con teclado (Ctrl+K, flechas, Enter, Escape) y click-outside.
  */
-export const useGlobalSearch = ({ navigation, reservationsEnabled }: UseGlobalSearchOptions) => {
+export const useGlobalSearch = ({
+  navigation,
+  reservationsEnabled,
+  biEnabled,
+  hasPermission,
+}: UseGlobalSearchOptions) => {
   // useI18n vive en un módulo JS: afirmamos la forma de `t` en el borde
   const { t } = useI18n() as unknown as { t: TFn }
   const navigate = useNavigate()
@@ -33,8 +42,8 @@ export const useGlobalSearch = ({ navigation, reservationsEnabled }: UseGlobalSe
   const resultsRef = useRef<(HTMLButtonElement | null)[]>([])
 
   const searchableItems = useMemo(
-    () => buildSearchableItems(navigation, t, reservationsEnabled),
-    [navigation, t, reservationsEnabled],
+    () => buildSearchableItems(navigation, t, reservationsEnabled, biEnabled, hasPermission),
+    [navigation, t, reservationsEnabled, biEnabled, hasPermission],
   )
 
   const go = useCallback(

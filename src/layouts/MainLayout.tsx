@@ -186,6 +186,8 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           onLogout={handleLogout}
           navigation={navigation}
           reservationsEnabled={reservationsEnabled}
+          biEnabled={biPackEnabled}
+          hasPermission={hasPermission}
         />
         {/* PLAN_BI_PACK_PREMIUM F4: aviso global de vencimiento del pack BI */}
         <LicenseBanner />

@@ -1,6 +1,7 @@
 /**
- * F3 — la ficha de cliente vuelve a ofrecer "Productos que compra" apuntando
- * al drill-down real, solo con pack BI + analytics:read.
+ * F3/F7 — la ficha de cliente ofrece "Productos que compra"
+ * (`analytics:read`) y "Análisis de Riesgo" (`receivables:read`), cada uno
+ * solo con pack BI y su permiso de ruta.
  */
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
@@ -55,6 +56,10 @@ const renderModal = (onClose = vi.fn()) =>
           path='/sales-analytics/customers/top-products'
           element={<div>RUTA_PRODUCTOS_CLIENTE</div>}
         />
+        <Route
+          path='/receivables/client-profile/CLI-1'
+          element={<div>RUTA_FICHA_CREDITO</div>}
+        />
       </Routes>
     </MemoryRouter>,
   )
@@ -81,9 +86,34 @@ describe('ClientDetailsModal — pivote BI (F3)', () => {
     expect(screen.queryByTestId('client-details-bi-drilldown')).toBeNull()
   })
 
-  it('sin analytics:read no renderiza el pivote', () => {
+  it('sin analytics:read no renderiza el pivote de productos', () => {
     authState.permissions = new Set(['clients:read'])
     renderModal()
     expect(screen.queryByTestId('client-details-bi-drilldown')).toBeNull()
+  })
+
+  it('con pack + receivables:read navega a la ficha de crédito y cierra', () => {
+    authState.permissions = new Set(['receivables:read'])
+    const onClose = vi.fn()
+    renderModal(onClose)
+
+    fireEvent.click(screen.getByTestId('client-details-risk-drilldown'))
+
+    expect(onClose).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('RUTA_FICHA_CREDITO')).toBeTruthy()
+  })
+
+  it('el pivote de riesgo exige receivables:read, no analytics:read', () => {
+    authState.permissions = new Set(['analytics:read'])
+    renderModal()
+    expect(screen.queryByTestId('client-details-risk-drilldown')).toBeNull()
+  })
+
+  it('sin pack BI ninguno de los dos pivotes se renderiza', () => {
+    authState.biEnabled = false
+    authState.permissions = new Set(['analytics:read', 'receivables:read'])
+    renderModal()
+    expect(screen.queryByTestId('client-details-bi-drilldown')).toBeNull()
+    expect(screen.queryByTestId('client-details-risk-drilldown')).toBeNull()
   })
 })

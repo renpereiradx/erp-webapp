@@ -65,6 +65,8 @@ export const buildSearchableItems = (
   navigation: NavigationItem[],
   t: TFn,
   reservationsEnabled: boolean,
+  biEnabled: boolean = true,
+  hasPermission: (permission: string) => boolean = () => true,
 ): SearchableItem[] => {
   const mainMenuLabel = t('nav.mainMenu', 'Menú Principal')
   const items = flattenNavigation(navigation, '', mainMenuLabel)
@@ -72,8 +74,12 @@ export const buildSearchableItems = (
   const seen = new Set(items.map((item) => item.href))
   // Cast de borde: searchableRoutes es un módulo JS sin tipos
   for (const route of distinctSearchableRoutes as unknown as readonly SearchableRouteInput[]) {
-    // Gates por módulo del negocio (ej. reservas desactivadas)
+    // Gates por módulo del negocio (ej. reservas desactivadas) y por permiso
+    // de la ruta destino: sin pack/permiso la entrada no se ofrece (la ruta
+    // expulsaría al usuario).
     if (route.requiredModule === 'reservations' && !reservationsEnabled) continue
+    if (route.requiredModule === 'bi' && !biEnabled) continue
+    if (route.requiredPermission && !hasPermission(route.requiredPermission)) continue
     if (seen.has(route.href)) continue
     seen.add(route.href)
     items.push({

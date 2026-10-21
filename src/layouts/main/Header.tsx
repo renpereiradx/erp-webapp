@@ -15,6 +15,10 @@ interface HeaderProps {
   onLogout: () => void
   navigation: NavigationItem[]
   reservationsEnabled: boolean
+  /** Pack BI activo (buscador global). */
+  biEnabled: boolean
+  /** Checker de permisos del usuario (buscador global). */
+  hasPermission: (permission: string) => boolean
 }
 
 /** Header sticky (glass-acrylic): buscador global, sucursal, notificaciones y perfil. */
@@ -25,6 +29,8 @@ export default function Header({
   onLogout,
   navigation,
   reservationsEnabled,
+  biEnabled,
+  hasPermission,
 }: HeaderProps) {
   const { t } = useI18n()
   const navigate = useNavigate()
@@ -41,7 +47,7 @@ export default function Header({
     resultsRef,
     shortcutLabel,
     go,
-  } = useGlobalSearch({ navigation, reservationsEnabled })
+  } = useGlobalSearch({ navigation, reservationsEnabled, biEnabled, hasPermission })
 
   return (
     <header className="h-16 border-b border-border-subtle glass-acrylic sticky top-0 z-[40] flex items-center justify-between px-md lg:px-lg">

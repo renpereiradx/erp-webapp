@@ -3,7 +3,7 @@
  * client-side y detalle real (count/total/products). Cierra las affordances
  * muertas de la auditoría 2026-09: sin "Marcar leído", "Silenciar" ni "Ver
  * Reporte"; "Gestionar" solo aparece para destinos que existen (F5 re-activó
- * stock-levels y F6 /profitability/products).
+ * stock-levels, F6 /profitability/products y F7 /receivables/overdue).
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
@@ -151,13 +151,19 @@ describe('AlertsPage (F2)', () => {
     expect(link).toHaveAttribute('href', '/profitability/products')
   })
 
-  it('solo enlaza "Gestionar" cuando el destino existe (stock-levels de F5)', async () => {
+  it('solo enlaza "Gestionar" cuando el destino existe (stock-levels F5 + vencidas F7)', async () => {
     renderPage()
     await screen.findByText('Stock agotado')
 
     const manageLinks = screen.getAllByRole('link', { name: 'Gestionar' })
-    expect(manageLinks).toHaveLength(1)
-    expect(manageLinks[0]).toHaveAttribute('href', '/inventory-analytics/stock-levels')
+    expect(manageLinks.map((link) => link.getAttribute('href'))).toEqual([
+      '/inventory-analytics/stock-levels',
+      '/receivables/overdue',
+    ])
+    // Presupuestos por vencer sigue sin destino existente en el router.
+    expect(
+      manageLinks.some((link) => link.getAttribute('href') === '/comercial/presupuestos'),
+    ).toBe(false)
 
     for (const name of [/marcar/i, /silenciar/i, /ver reporte/i, /actualizar datos/i]) {
       expect(screen.queryByRole('button', { name })).toBeNull()

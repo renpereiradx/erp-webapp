@@ -25,6 +25,7 @@ const MAX_PRODUCTS = 5
 const ACTIONABLE_ALERT_ROUTES = new Set([
   '/inventory-analytics/stock-levels',
   '/profitability/products',
+  '/receivables/overdue',
 ])
 
 /**

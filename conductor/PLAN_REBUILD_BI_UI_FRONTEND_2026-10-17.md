@@ -1189,3 +1189,231 @@ operativa que F4/F5).
   dashboard sigue silenciando errores de subconsulta (ver arriba).
 - Sin pantalla de comparación custom de períodos para rentabilidad: fuera del
   alcance de F6 (4 períodos estándar).
+
+---
+
+## 15. Estado de ejecución — F7 Cuentas por Cobrar (2026-10-20)
+
+**Rama FE:** `feature/bi-ui-rebuild` (F1-F6 sobre `dev` = `82710c7`).
+**Backend:** sin cambios (el contrato de `/receivables/*` alcanzó; no se encontró
+defecto nuevo en el smoke).
+
+### 15.1 Ejecutado
+
+- **Rutas (6)** en `src/App.tsx`, lazy y con `ReceivablesRoute` =
+  `BiModuleRoute` (pack) → `PermissionGuard(receivables:read)`, el mismo par que
+  `biChain("receivables:read", "receivables")` del BE:
+  `/receivables`, `/receivables/list`, `/receivables/detail/:id`,
+  `/receivables/overdue`, `/receivables/client-profile/:clientId`,
+  `/receivables/aging-report`.
+- **Feature `src/features/receivables/`** con la plantilla FSD:
+  `components/` (UI pura), `hooks/` (react-query + período en URL), `types/` y
+  barrel público. Cero fetch/cálculo en componentes.
+- **Páginas delgadas** en `src/pages/receivables/`:
+  `ReceivablesDashboardPage`, `ReceivablesListPage`, `ReceivableDetailPage`,
+  `OverdueReceivablesPage`, `ClientCreditProfilePage`,
+  `ReceivablesAgingReportPage`.
+- **Dominio puro** en `src/domain/receivables/`: `format`, `status`, `aging`,
+  `risk`, `collection`, `kpis`, `periods`, `constants` y `errors`, todos con
+  tests colocados. `aging` y `risk` se re-escribieron contra el contrato real;
+  `mappers.ts` y su test se eliminaron (ver §15.4).
+- **Servicio tipado** `services/bi/receivablesService.ts`: contrato real de los
+  9 endpoints consumidos (`overview`, listado, detalle, vencidas, ficha cliente,
+  riesgo, reporte de antigüedad, top deudores y estadísticas del período),
+  limpieza de params y telemetría; sin fallback demo. Tipos nuevos en
+  `types/bi.ts` (`ReceivablesOverview`, `Receivable`, `ReceivablesList`,
+  `ClientReceivables`, `ClientRisk`, `ReceivablesAgingReport`,
+  `ReceivablesStatistics`, etc.).
+- **Nav**: subgrupo `Cuentas por Cobrar` con 4 hojas (`/receivables`,
+  `/receivables/list`, `/receivables/overdue`, `/receivables/aging-report`) y
+  permiso `receivables:read`. Detalle y ficha de crédito no duplican entradas:
+  se alcanzan desde tablas, modales y alertas.
+- **i18n**: namespace `receivables` en `locales/{es,en}` (mismas claves,
+  verificadas por test) + `nav.receivables*` en ambos shells.
+- **Puntos de entrada §3.3 re-activados**:
+  - #9 `ClientDetailsModal` → "Análisis de Riesgo" a la ficha de crédito, con
+    `BiDrilldownButton` y permiso propio `receivables:read` (el componente ganó
+    la prop opcional `permission`, default `analytics:read` para F3).
+  - #12 `searchableRoutes`: `/receivables/list` vuelve con
+    `requiredModule: 'bi'` y `requiredPermission: 'receivables:read'`. El
+    buscador global (`search.ts`/`useGlobalSearch`/`Header`) ahora gatea ambos
+    campos — sin pack o sin permiso la entrada no se ofrece.
+  - F2: `AlertCard` re-activa "Gestionar" para `/receivables/overdue` (el
+    `action_url` del catálogo `alert_routes.go`).
+- **Compartido**: `SectionCard`, `TableCard`, `QueryBoundary`,
+  `TableEmptyState`, `DataSkeletons`, `BiPeriodSelector`, `SegmentedControl` y
+  `TablePagination` se reusan. La tabla, el ledger KPI y los badges son locales
+  del feature (un feature no importa componentes de otro).
+
+### 15.2 Decisiones de borde (documentadas)
+
+- **Períodos**: `statistics` usa `NewPeriod` (variant A): `week` es la semana
+  calendario que empieza el lunes, rotulada "Esta semana" (no rolling). Solo el
+  dashboard usa período; overview, listados, vencidas y antigüedad son
+  snapshots "a hoy" y el selector vive en la card de estadísticas, no en el
+  header.
+- **Aging desde la venta, no desde el vencimiento**: los 4 tramos del BE usan
+  `NOW() - sale_date`. Todas las pantallas lo dicen; no se rotula "días
+  vencidos" (eso es `days_overdue`, otro campo).
+- **`due_date` no se muestra**: el listado/detalle lo sintetiza como
+  `sale_date + 30 días`, mientras `days_overdue` usa el vencimiento real de la
+  orden. Mostrarlo contradecía la cifra; la nota del detalle explica el plazo.
+- **Cartera pendiente = summary del listado**, no `overview.total_pending`: el
+  overview suma pendientes negativos de órdenes sobrepagadas (en dev difieren
+  Gs. 0,50). El listado garantiza `total_amount > pagos` y coincide con las
+  filas y con el aging.
+- **`average_days_to_collect`** es el promedio de días desde la venta de las
+  órdenes ya saldadas, no un plazo de cobro: se rotula "Antigüedad media
+  (saldadas)".
+- **`collection_rate` del overview** = cobrado / facturado sobre todas las
+  ventas no canceladas: se rotula "Tasa de cobro histórica". La del período
+  (`statistics`) es de flujos (cobrado del período / facturado del período), no
+  de cohortes, y la card lo aclara.
+- **`average_dso`** = días promedio desde la venta hasta el primer pago (sin
+  pago cuenta hasta hoy): se rotula "Días hasta el primer pago", no "DSO".
+- **Serie semanal**: el `WITH RECURSIVE` del BE emite un bucket posterior al
+  fin del rango; el dominio lo descarta comparando con `statistics.period` (fin
+  exclusivo). El `LIMIT 12` devuelve las primeras 12 semanas del rango, no las
+  últimas: el subtítulo lo dice.
+- **`top_debtors` de statistics no se usa**: el dashboard llama a
+  `/receivables/top-debtors` (dato a hoy, independiente del período). El
+  `payment_behavior` de esa lista lo deriva el BE de la proporción vencida,
+  distinto del promedio de días de pago de la ficha; la card lo documenta.
+- **Listado**: solo 3 estados filtrables (PENDING/PARTIAL/OVERDUE; `PAID` nunca
+  aparece porque el WHERE exige saldo) y se superponen: la nota lo avisa. Sort
+  server-side con la whitelist `date|amount|client|days_overdue` (dirección por
+  defecto por columna) y 10 filas por página. Los totales del resumen son del
+  set filtrado completo (ventanas del repo), no de la página.
+- **Vencidas**: el endpoint fija `status=OVERDUE` y ordena por días vencidos
+  desc; la UI solo pagina. "Alta prioridad" = >60 días vencidos, el mismo
+  umbral de `summary.high_priority_count`.
+- **Ficha de cliente**: `total_overdue` de este endpoint usa >30 días desde la
+  venta (distinto del vencimiento real del listado) y se rotula con esa
+  definición. `max_days_overdue`/`avg_days_outstanding` son antigüedad desde la
+  venta, no días vencidos. La antigüedad por tramos se deriva de `sale_date` de
+  las cuentas listadas (mismo criterio del BE) y se avisa si el endpoint capa a
+  100. Sin pagos (`total_payments = 0`) el BE devuelve `payment_behavior =
+  EXCELLENT` con promedio 0: la UI muestra "Sin pagos registrados" y `—`.
+- **`collection_rate` del riesgo no se muestra**: su fórmula puede superar
+  100 % (dev: 286,9 % para un cliente con historial). Mostrarlo como tasa sería
+  una cifra engañosa.
+- **Sub-unidad**: un saldo real de 0,38 Gs se redondearía a "Gs. 0" con
+  `formatPYG`; `formatMoney` muestra 2 decimales cuando `0 < |monto| < 1`
+  ("Gs. 0,38") para no simular una cuenta saldada.
+- **Errores aislados por sección**: cada card tiene su `QueryBoundary` (el P0
+  de la auditoría era un `Promise.all` que tumbaba el dashboard completo). El
+  404 del detalle/ficha es un estado propio ("no encontrado"), no un fallo.
+
+### 15.3 Tests
+
+- Dominio: `format` (montos/sub-unidad, fechas UTC vs locales, rango
+  exclusivo, `daysSince`), `status` (estados, filtros, prioridad >60),
+  `aging` (tramos, sin clasificar, totales de página, antigüedad derivada),
+  `risk` (niveles, comportamiento, señales, sin pagos), `collection`
+  (whitelist/aria-sort/toggle, serie sin bucket posterior), `kpis` (portafolio,
+  período, listado, vencidas, antigüedad, ficha; `collection_rate` del riesgo
+  excluido), `periods`, `errors` — 42 casos.
+- Servicio: rutas/params de los 9 métodos, codificación de ids, limpieza de
+  params y error telemetrizado — 11 tests.
+- Hooks: params por endpoint (paginación/estado/orden/período), normalización
+  de slices nil, rango + serie, fallo cuando falta `data` — 11 tests; período
+  en URL (default, validación, escritura, limpieza) — 4 tests.
+- Páginas: Dashboard (10: KPIs, rango, serie, aging, deudores, recientes,
+  empty, error aislado, selector), Lista (10: resumen, orden/aria-sort,
+  filtro, paginación, empty, error, sin floats), Detalle (6: campos, pagos,
+  sin `due_date`, 404, error), Vencidas (6: resumen, prioridades, paginación,
+  empty, error), Ficha de crédito (9: cartera, riesgo/señales, sin pagos, sin
+  `collection_rate`, aging derivado, cap 100, 404, error), Antigüedad (7:
+  totales, tabla, sin clasificar condicional, paginación, empty, error) — 48
+  tests.
+- i18n: paridad es/en, sin vacíos, claves nav y todas las claves estáticas de
+  F7 — 4 tests. Nav: 4 hojas con `receivables:read`, grupo presente/ausente
+  según pack y permisos — test de F2-F6 actualizado. Alertas: "Gestionar" de
+  CxC hacia `/receivables/overdue` — page test de F2 actualizado. Buscador:
+  gate `requiredModule`/`requiredPermission` — 4 tests. Modal de cliente:
+  pivote de riesgo con `receivables:read` — 6 tests.
+
+### 15.4 Archivos retirados (regla 6, documentado)
+
+- `src/domain/receivables/mappers.ts` + `mappers.test.ts`: fabricaba
+  `riskScore = days_overdue + 20`, caía a `CLI-001`/`Cliente Desconocido`,
+  inventaba `nextAction`/`lastContact`/`contactVia` y duplicaba `activities`.
+  Sin consumidores tras F1; el feature nuevo deriva solo del contrato.
+- `risk.test.ts` y `aging.test.ts` viejos: reemplazados por los tests de los
+  módulos re-escritos (mismos nombres de archivo).
+- El bloque `receivablesService` de
+  `services/__tests__/biServices.p0-methods.service.test.ts` se retiró: el
+  contrato vive en `receivables.service.test.ts` (el service se reescribió
+  tipado y perdió los aliases `@deprecated`).
+
+### 15.5 Gates
+
+- `npx tsc --noEmit`: 0 errores.
+- `npx vitest --run`: **284 archivos / 1985 tests OK**.
+- `pnpm build`: OK; chunks lazy `ReceivablesDashboardPage`,
+  `ReceivablesListPage`, `ReceivableDetailPage`, `OverdueReceivablesPage`,
+  `ClientCreditProfilePage`, `ReceivablesAgingReportPage` (+ badges y refresh
+  compartidos).
+- `pnpm lint:design -- --base dev`: OK (código nuevo limpio; 1108 legacy).
+- `pnpm lint`: 0 errores (132 warnings legacy, sin cambios).
+- Gate anti-fabricación §5.3: sin `mock`/`Math.random`/`sample`/`dummy` en
+  producción de F7 (solo el comentario "Sin fallback demo/mock" del servicio).
+- Gate TS: archivos nuevos de la fase solo `.ts`/`.tsx` (0 `.js`/`.jsx`).
+- Backend: sin cambios (`git status` limpio); contrato verificado con `psql` y
+  los 9 endpoints en vivo.
+- Auditoría `vercel-react-best-practices` aplicada con criterio: páginas lazy,
+  las 4 queries del dashboard corren en paralelo y react-query las deduplica,
+  sin `useEffect` para estado derivado (aging, cap de 100, KPIs y señales se
+  derivan en render), `ResizeObserver` con deps primitivas, sin componentes
+  definidos dentro de componentes y mapas de metadatos a nivel de módulo.
+  Excepción consciente: el barrel público del feature (plantilla FSD del plan)
+  en lugar de imports profundos.
+- **Smoke vivo** (`:5050` + Vite `:5173` `--mode api`, JWT de dev admin
+  `jJkV4F6HR`, rol `F2VLso`, sesión 1379, entitlements core+bi):
+  6 pantallas, 0 errores de consola, 0 page errors y 0 respuestas HTTP ≥400.
+  - Dashboard: cartera Gs. 315.250 (pendiente y vencido), 3 cuentas (todas
+    vencidas), alta prioridad 3, tasa histórica 93,8 %, antigüedad media
+    (saldadas) 116 d; período mes: facturado/cobrado Gs. 1.475.500, tasa 100 %,
+    días al primer pago 0, vencido 0 %; serie semanal 28 sept Gs. 1.254.100,
+    05 oct Gs. 26.000, 12 oct Gs. 75.400/Gs. 117.260/−41.860, 19 oct
+    Gs. 120.000 (sin el bucket 02 nov); aging 100 % >90 d; deudores Erika
+    Gs. 314.600 y Rene Gs. 650 (comportamiento POOR); 3 cuentas recientes.
+  - Período año: rango 01 ene 2026 – 31 dic 2026, facturado Gs. 4.837.175,
+    cobrado Gs. 4.521.925, tasa 93,5 %, DSO 16 d, vencido 70,2 %; 12 semanas
+    desde el inicio del rango.
+  - Lista: resumen Gs. 477.890 / 315.250 / 162.640, 3 cuentas y 3 de alta
+    prioridad; filtro "Vencidas" y sort por cliente verificados (request
+    `status=OVERDUE`, `sort_by=client&sort_order=ASC`, `aria-sort=ascending`);
+    la fila de Gs. 0,38 se muestra como `Gs. 0,38`.
+  - Vencidas: 286/121/111 días, 3 en alta prioridad, paginación real.
+  - Detalle `SALE-1780338284-194`: Erika, vencida, 111 días, original =
+    pendiente Gs. 314.600, cobrado Gs. 0; sin pagos registrados; sin fecha de
+    vencimiento sintetizada.
+  - Ficha de Erika: Gs. 314.600 pendiente/vencido, 1 cuenta, venta más antigua
+    01 jun 2026, antigüedad máx./prom. 141 d, >90 d Gs. 314.600, 7 pagos,
+    promedio de pago 0 d; riesgo alto, proporción vencida 100 %, 4 señales,
+    comportamiento excelente; `collection_rate` 286,9 % **no** visible.
+  - Antigüedad: cartera Gs. 315.250, 2 clientes, >90 d 100 %; tabla de 2 filas
+    con Total visible a 1440 (se eliminó el scroll horizontal de la versión
+    intermedia).
+  - Alertas: "Gestionar" de CxC apunta y navega a `/receivables/overdue`;
+    buscador global encuentra las 4 hojas del grupo.
+  - Responsive 1440/390: `bodyOverflow=false` en las 6 pantallas.
+
+### 15.6 Pendiente / deuda declarada
+
+- Endpoints no consumidos por falta de pantalla en el plan:
+  `/receivables/aging/summary` (overview y reporte la embeben),
+  `/receivables/collection/reminders`, `/receivables/collection/high-priority`
+  y `/receivables/statistics/date-range` (solo 4 períodos estándar). No se
+  agregaron métodos muertos.
+- `statistics.top_debtors` sigue viniendo en el payload pero no se usa: el
+  dashboard pide `/receivables/top-debtors` para no atar el dato al período.
+- La ficha de cliente lista hasta 100 cuentas (cap del BE); si el cliente tiene
+  más, el aviso lo dice y la antigüedad derivada queda acotada a esa página.
+- Un saldo positivo menor a 1 Gs se muestra con 2 decimales; el resto sigue la
+  convención PYG sin decimales.
+- El 404 de la ficha se decide solo por el cliente: un fallo del endpoint de
+  riesgo se muestra como error de la sección de riesgo, no como "cliente no
+  encontrado".
+- Sin push: F1-F7 quedan locales en la rama FE.

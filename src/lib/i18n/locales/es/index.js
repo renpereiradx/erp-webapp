@@ -46,6 +46,7 @@ import { relationalAnalytics } from './relationalAnalytics'
 import { salesAnalytics } from './salesAnalytics'
 import { inventoryAnalytics } from './inventoryAnalytics'
 import { profitability } from './profitability'
+import { receivables } from './receivables'
 
 /**
  * Diccionario completo de traducciones en español
@@ -95,4 +96,5 @@ export const es = {
   ...salesAnalytics,
   ...inventoryAnalytics,
   ...profitability,
+  ...receivables,
 }

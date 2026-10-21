@@ -65,6 +65,12 @@ export const shell = {
   'nav.profitabilityCategories': 'Categorías',
   'nav.profitabilityTrends': 'Tendencias',
   'nav.profitabilitySellers': 'Vendedores',
+  // F7 — Cuentas por Cobrar (4 hojas del grupo; detalle y ficha no van al sidebar).
+  'nav.receivablesGroup': 'Cuentas por Cobrar',
+  'nav.receivablesDashboard': 'Resumen de cartera',
+  'nav.receivablesList': 'Lista de cuentas',
+  'nav.receivablesOverdue': 'Cuentas vencidas',
+  'nav.receivablesAging': 'Reporte de antigüedad',
   'nav.collapseSidebar': 'Colapsar menú',
   'nav.expandSidebar': 'Expandir menú',
   'nav.openMenu': 'Abrir menú',

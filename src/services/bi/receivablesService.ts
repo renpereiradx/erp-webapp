@@ -1,196 +1,165 @@
-import { apiClient } from '../api';
-import { BIParams, FinancialOverview, AgingReportItem } from '../../types/bi';
-
 /**
- * Servicio de Cuentas por Cobrar (BI - Receivables)
- * Actualizado para compatibilidad con hooks existentes y nuevo estándar BI.
+ * Servicio de Cuentas por Cobrar (BI, F7).
+ *
+ * Contrato real del backend (`models/receivables.go` +
+ * `internal/analytics/http_receivables.go` +
+ * `internal/platform/postgres/analytics_receivables_repo.go`): envelope
+ * `{success, data, metadata}` en TODAS las respuestas. El servicio NO lo
+ * desenvuelve — el hook lee `data`.
+ *
+ * Gate del BE: `RequireModule('bi')` → `receivables:read` para todo el grupo
+ * (`biChain("receivables:read", "receivables")`).
+ *
+ * Sin fallback demo/mock: si el endpoint falla, el error llega a la UI.
+ * No se consumen `/aging/summary` (el overview y el reporte la embeben),
+ * `/collection/reminders` ni `/statistics/date-range`: no hay pantalla del
+ * plan que los use y no se agregan métodos muertos.
  */
-export const receivablesService = {
-  /**
-   * Resumen general de cuentas por cobrar (Nuevo Estándar).
-   * Devuelve el envelope {success, data} tal como llega del BE — el tipo
-   * honesto es lo que permite al store desenvolver .data (patrón
-   * dashboardService.getSummary / fix NA-DB-1).
-   */
-  async getOverview(params: BIParams = {}): Promise<{ success?: boolean; data: FinancialOverview }> {
-    try {
-      return await apiClient.get('/receivables/overview', { params });
-    } catch (error: any) {
-      console.error('Error fetching receivables overview:', error);
-      throw error;
-    }
-  },
+import { apiClient } from '../api';
+import { telemetry } from '../../utils/telemetry';
+import type {
+  BIEnvelope,
+  ClientReceivables,
+  ClientReceivablesSummary,
+  ClientRisk,
+  DashboardPeriod,
+  Receivable,
+  ReceivablesAgingReport,
+  ReceivablesList,
+  ReceivablesOverview,
+  ReceivablesPageParams,
+  ReceivablesSortParams,
+  ReceivablesStatistics,
+} from '../../types/bi';
 
-  /**
-   * @deprecated Alias de getOverview — usar el método canónico.
-   */
-  async getSummary(period: string = 'month'): Promise<any> {
-    return this.getOverview({ period });
-  },
+type QueryValue = string | number | boolean | null | undefined;
 
-  /**
-   * @deprecated Alias de getOverview — usar el método canónico.
-   */
-  async getStatistics(period: string = 'month'): Promise<any> {
-    return this.getOverview({ period });
-  },
-
-  /**
-   * Reporte de antigüedad de deudas
-   */
-  async getAgingReport(params: BIParams = {}): Promise<{ data: AgingReportItem[] }> {
-    try {
-      return await apiClient.get('/receivables/aging/report', { params });
-    } catch (error: any) {
-      console.error('Error fetching receivables aging report:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * @deprecated Alias de getAgingReport — usar el método canónico.
-   */
-  async getDetailedAging(params: BIParams = {}): Promise<any> {
-    return this.getAgingReport(params);
-  },
-
-  /**
-   * Resumen de antigüedad por tramos (GET /receivables/aging/summary).
-   * Contrato: {current, days_30_60, days_60_90, over_90_days} con
-   * {amount, count, percentage}. NOTA: NO es alias del report detallado —
-   * el dashboard de CxC consume los tramos de este endpoint.
-   */
-  async getAgingSummary(params: BIParams = {}): Promise<any> {
-    try {
-      return await apiClient.get('/receivables/aging/summary', { params });
-    } catch (error: any) {
-      console.error('Error fetching receivables aging summary:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * @deprecated Alias de getAgingReport — usar el método canónico.
-   */
-  async getAging(params: BIParams = {}): Promise<any> {
-    return this.getAgingReport(params);
-  },
-
-  /**
-   * Lista de facturas vencidas
-   */
-  async getOverdue(params: BIParams = {}): Promise<{ data: any[] }> {
-    try {
-      return await apiClient.get('/receivables/overdue', { params });
-    } catch (error: any) {
-      console.error('Error fetching overdue receivables:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Obtiene el perfil/cuentas de un cliente específico
-   */
-  async getClientProfile(clientId: string): Promise<any> {
-    try {
-      return await apiClient.get(`/receivables/client/${clientId}`);
-    } catch (error: any) {
-      console.error(`Error fetching profile for client ${clientId}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Análisis de riesgo de un cliente
-   */
-  async getClientRisk(clientId: string): Promise<any> {
-    try {
-      return await apiClient.get(`/receivables/client/${clientId}/risk`);
-    } catch (error: any) {
-      console.error(`Error fetching risk for client ${clientId}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * @deprecated Alias de getClientRisk — usar el método canónico.
-   */
-  async getClientRiskAnalysis(clientId: string): Promise<any> {
-    return this.getClientRisk(clientId);
-  },
-
-  /**
-   * Principales deudores
-   */
-  async getTopDebtors(params: BIParams = {}): Promise<any> {
-    try {
-      return await apiClient.get('/receivables/top-debtors', { params });
-    } catch (error: any) {
-      console.error('Error fetching top debtors:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * @deprecated Alias de getOverdue — usar el método canónico.
-   */
-  async getOverdueAccounts(params: BIParams = {}): Promise<any> {
-    return this.getOverdue(params);
-  },
-
-  /**
-   * Lista maestra paginada (GET /receivables). El BE acepta `status` (enum),
-   * `client_id`, `page`/`page_size` (cap 100) y `sort_by`/`sort_order`
-   * (whitelist T3: date, amount, client, days_overdue). Filtros de UI sin
-   * soporte BE (search/montos/días) viajan y son ignorados — gap documentado
-   * en la auditoría 2B.
-   */
-  async getMasterList(
-    filters: Record<string, any> = {},
-    pagination: Record<string, any> = {},
-    sorting: Record<string, any> = {},
-  ): Promise<any> {
-    try {
-      const params: Record<string, any> = {
-        ...filters,
-        page: pagination.page,
-        page_size: pagination.page_size ?? pagination.pageSize,
-        sort_by: sorting.sortBy ?? 'date',
-        sort_order: sorting.sortOrder ?? 'desc',
-      };
-      if (!params.status || params.status === 'all') delete params.status;
-      return await apiClient.get('/receivables', { params });
-    } catch (error: any) {
-      console.error('Error fetching receivables master list:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Detalle de una cuenta por cobrar (GET /receivables/{id}, 404 tipado)
-   */
-  async getTransactionDetail(id: string): Promise<any> {
-    try {
-      return await apiClient.get(`/receivables/${id}`);
-    } catch (error: any) {
-      console.error(`Error fetching receivable ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Historial de auditoría de la entidad detrás de la cuenta
-   * (GET /api/v1/audit/entity/{entity_type}/{id}/history — gate audit:read).
-   * Llamada opcional del hook de detalle: falla en silencio sin audit:read.
-   */
-  async getTransactionHistory(id: string, entityType = 'RECEIVABLE'): Promise<any> {
-    try {
-      return await apiClient.get(`/api/v1/audit/entity/${entityType}/${id}/history`);
-    } catch (error: any) {
-      console.error(`Error fetching history for ${entityType} ${id}:`, error);
-      throw error;
-    }
+/** Strip de undefined/null/'' — URLSearchParams no debe ver parámetros vacíos. */
+export const cleanQueryParams = (params: object = {}): Record<string, string> => {
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(params) as Array<[string, QueryValue]>) {
+    if (value === undefined || value === null || value === '') continue;
+    out[key] = String(value);
   }
+  return out;
+};
+
+const recordError = (operation: string, error: unknown): void => {
+  const message = error instanceof Error ? error.message : String(error);
+  telemetry.record('bi.receivables.error', { operation, error: message });
+};
+
+const get = async <T>(path: string, params: object = {}): Promise<BIEnvelope<T>> =>
+  (await apiClient.get(path, { params: cleanQueryParams(params) })) as BIEnvelope<T>;
+
+const entityPath = (base: string, id: string): string =>
+  `${base}/${encodeURIComponent(id)}`;
+
+export const receivablesService = {
+  /** Cartera actual (snapshot, sin período): totales, vencido y antigüedad. */
+  async getOverview(): Promise<BIEnvelope<ReceivablesOverview>> {
+    try {
+      return await get<ReceivablesOverview>('/receivables/overview');
+    } catch (error) {
+      recordError('getOverview', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Lista maestra paginada. Whitelist de orden: `date|amount|client|
+   * days_overdue`; `status` solo acepta PENDING/PARTIAL/OVERDUE (el BE ignora
+   * cualquier otro valor y toda fila tiene saldo pendiente).
+   */
+  async getList(params: ReceivablesSortParams = {}): Promise<BIEnvelope<ReceivablesList>> {
+    try {
+      return await get<ReceivablesList>('/receivables', params);
+    } catch (error) {
+      recordError('getList', error);
+      throw error;
+    }
+  },
+
+  /** Detalle de una cuenta por cobrar (404 tipado si no existe). */
+  async getById(id: string): Promise<BIEnvelope<Receivable>> {
+    try {
+      return (await apiClient.get(entityPath('/receivables', id))) as BIEnvelope<Receivable>;
+    } catch (error) {
+      recordError('getById', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Vencidas: el BE fija `status=OVERDUE` y ordena por días vencidos desc.
+   * Solo acepta paginación (no sort/filtros propios).
+   */
+  async getOverdue(params: ReceivablesPageParams = {}): Promise<BIEnvelope<ReceivablesList>> {
+    try {
+      return await get<ReceivablesList>('/receivables/overdue', params);
+    } catch (error) {
+      recordError('getOverdue', error);
+      throw error;
+    }
+  },
+
+  /** Cuenta corriente de un cliente (resumen + hasta 100 cuentas). */
+  async getClientReceivables(clientId: string): Promise<BIEnvelope<ClientReceivables>> {
+    try {
+      return (await apiClient.get(
+        entityPath('/receivables/client', clientId),
+      )) as BIEnvelope<ClientReceivables>;
+    } catch (error) {
+      recordError('getClientReceivables', error);
+      throw error;
+    }
+  },
+
+  /** Análisis de riesgo del cliente (nivel LOW/MEDIUM/HIGH + métricas). */
+  async getClientRisk(clientId: string): Promise<BIEnvelope<ClientRisk>> {
+    try {
+      return (await apiClient.get(
+        entityPath('/receivables/client', clientId) + '/risk',
+      )) as BIEnvelope<ClientRisk>;
+    } catch (error) {
+      recordError('getClientRisk', error);
+      throw error;
+    }
+  },
+
+  /** Reporte de antigüedad: by_client paginado con totales globales. */
+  async getAgingReport(params: ReceivablesPageParams = {}): Promise<BIEnvelope<ReceivablesAgingReport>> {
+    try {
+      return await get<ReceivablesAgingReport>('/receivables/aging/report', params);
+    } catch (error) {
+      recordError('getAgingReport', error);
+      throw error;
+    }
+  },
+
+  /** Principales deudores a hoy (sin período). Límite 5 por defecto. */
+  async getTopDebtors(limit = 5): Promise<BIEnvelope<ClientReceivablesSummary[]>> {
+    try {
+      return await get<ClientReceivablesSummary[]>('/receivables/top-debtors', { limit });
+    } catch (error) {
+      recordError('getTopDebtors', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Estadísticas del período: facturado/cobrado del período, DSO promedio y
+   * serie semanal. `week` es la semana calendario (lunes), a diferencia de las
+   * pantallas rolling de Ventas/Inventario/Rentabilidad.
+   */
+  async getStatistics(period: DashboardPeriod = 'month'): Promise<BIEnvelope<ReceivablesStatistics>> {
+    try {
+      return await get<ReceivablesStatistics>('/receivables/statistics', { period });
+    } catch (error) {
+      recordError('getStatistics', error);
+      throw error;
+    }
+  },
 };
 
 export default receivablesService;

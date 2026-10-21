@@ -1,12 +1,15 @@
 // src/services/__tests__/biServices.p0-methods.service.test.ts
-// FASE 3A (plan auditoría BI 2026-09): 12 métodos que los hooks BI llamaban
-// y no existían en los services (6 payables + 4 receivables + 2 finreports)
-// con los endpoints BE ya respondiendo 200 tras FASE 1. Fija el contrato
-// FE→BE: rutas, mapeo de params de paginación/sort (T3/T9) y drops de
-// sentinela ('all') que el enum del BE no acepta.
+// FASE 3A (plan auditoría BI 2026-09): métodos que los hooks BI llamaban y no
+// existían en los services (6 payables + 2 finreports) con los endpoints BE
+// ya respondiendo 200 tras FASE 1. Fija el contrato FE→BE: rutas, mapeo de
+// params de paginación/sort (T3/T9) y drops de sentinela ('all') que el enum
+// del BE no acepta.
+//
+// Los 4 métodos de CxC que vivían acá se retiraron en F7: el service de
+// Cuentas por Cobrar se reescribió tipado y su contrato vive en
+// `receivables.service.test.ts`.
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { payablesService } from '../bi/payablesService';
-import { receivablesService } from '../bi/receivablesService';
 import { financialReportsService } from '../bi/financialReportsService';
 import { apiClient } from '../api';
 
@@ -70,51 +73,6 @@ describe('payablesService — métodos P0', () => {
   it('getSupplierPayables usa /payables/supplier/{id} (detalle con facturas)', async () => {
     await payablesService.getSupplierPayables('SUP-1');
     expect(apiClient.get).toHaveBeenCalledWith('/payables/supplier/SUP-1');
-  });
-});
-
-describe('receivablesService — métodos P0', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(apiClient.get).mockResolvedValue(envelope({ items: [], pagination: {} }));
-  });
-
-  it('getMasterList mapea filtros+paginación+sort con defaults T3', async () => {
-    await receivablesService.getMasterList(
-      { status: 'all', client_id: 'c1' },
-      { page: 1, pageSize: 5 },
-      { sortBy: 'date', sortOrder: 'desc' },
-    );
-    expect(apiClient.get).toHaveBeenCalledWith('/receivables', {
-      params: {
-        // sentinela 'all' eliminado: el enum del BE no lo acepta
-        client_id: 'c1',
-        page: 1,
-        page_size: 5,
-        sort_by: 'date',
-        sort_order: 'desc',
-      },
-    });
-  });
-
-  it('getTransactionDetail pega GET /receivables/{id}', async () => {
-    await receivablesService.getTransactionDetail('SALE-9');
-    expect(apiClient.get).toHaveBeenCalledWith('/receivables/SALE-9');
-  });
-
-  it('getTransactionHistory construye la URL de auditoría por entidad', async () => {
-    await receivablesService.getTransactionHistory('SALE-9', 'SALE');
-    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/audit/entity/SALE/SALE-9/history');
-
-    await receivablesService.getTransactionHistory('R-1');
-    expect(apiClient.get).toHaveBeenNthCalledWith(2, '/api/v1/audit/entity/RECEIVABLE/R-1/history');
-  });
-
-  it('getOverdueAccounts es alias de getOverdue (/receivables/overdue — ruta canónica T5)', async () => {
-    await receivablesService.getOverdueAccounts({ page: 1, page_size: 20 });
-    expect(apiClient.get).toHaveBeenCalledWith('/receivables/overdue', {
-      params: { page: 1, page_size: 20 },
-    });
   });
 });
 

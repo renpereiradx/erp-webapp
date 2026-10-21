@@ -1,4 +1,4 @@
-import { ShoppingBag } from 'lucide-react';
+import { ShieldAlert, ShoppingBag } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +61,17 @@ const ClientDetailsContent = ({
               icon={ShoppingBag}
               onBeforeNavigate={onClose}
               testId="client-details-bi-drilldown"
+            />
+          ) : null}
+          {/* F7: ficha de crédito y riesgo (gate propio: receivables:read). */}
+          {clientId ? (
+            <BiDrilldownButton
+              to={`/receivables/client-profile/${encodeURIComponent(clientId)}`}
+              label={t('receivables.client.riskButton', 'Análisis de Riesgo')}
+              icon={ShieldAlert}
+              permission="receivables:read"
+              onBeforeNavigate={onClose}
+              testId="client-details-risk-drilldown"
             />
           ) : null}
           <Button variant="secondary" type="button" onClick={onClose} className="whitespace-nowrap">

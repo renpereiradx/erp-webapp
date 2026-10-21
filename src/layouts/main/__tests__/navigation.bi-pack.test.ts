@@ -1,10 +1,11 @@
 /**
- * PLAN_REBUILD_BI_UI_FRONTEND F2/F3/F4/F5/F6 — el grupo BI existe con Dashboard
+ * PLAN_REBUILD_BI_UI_FRONTEND F2-F7 — el grupo BI existe con Dashboard
  * (5 rutas) + Analítica de Ventas (8 hojas: 6 de F4 + 2 drill-downs de F3) +
  * drill-downs de Compras + Analítica de Inventario (4 hojas de F5) +
- * Rentabilidad (6 hojas de F6) cuando hay pack y permisos BI. Sin pack o sin
- * hojas visibles el padre se oculta (incluido el padre con gate anyOf). SIFEN
- * sigue como grupo Core propio (ADR-3).
+ * Rentabilidad (6 hojas de F6) + Cuentas por Cobrar (4 hojas de F7) cuando hay
+ * pack y permisos BI. Sin pack o sin hojas visibles el padre se oculta
+ * (incluido el padre con gate anyOf). SIFEN sigue como grupo Core propio
+ * (ADR-3).
  */
 import { describe, it, expect } from 'vitest'
 import { buildNavigation, filterNavigationItems } from '../navigation'
@@ -40,8 +41,8 @@ const findByName = (items: NavigationItem[], name: string): NavigationItem | und
   return undefined
 }
 
-describe('navigation — Dashboard BI (F2) + Ventas (F4) + Inventario (F5) + Rentabilidad (F6)', () => {
-  it('admin con pack: Dashboard + Ventas + Compras + Inventario + Rentabilidad', () => {
+describe('navigation — Dashboard BI (F2-F7)', () => {
+  it('admin con pack: Dashboard + Ventas + Compras + Inventario + Rentabilidad + CxC', () => {
     const tree = filterNavigationItems(buildNavigation(t, false, true), checksFor(ADMIN_PERMS))
 
     const bi = findByName(tree, 'Inteligencia de Negocios')
@@ -52,6 +53,7 @@ describe('navigation — Dashboard BI (F2) + Ventas (F4) + Inventario (F5) + Ren
       'Analítica de Compras',
       'Analítica de Inventario',
       'Rentabilidad',
+      'Cuentas por Cobrar',
     ])
 
     const dashboard = findByName(tree, 'Dashboard')
@@ -99,6 +101,15 @@ describe('navigation — Dashboard BI (F2) + Ventas (F4) + Inventario (F5) + Ren
       '/profitability/sellers',
     ])
     expect(profitability?.permission).toBe('analytics:read')
+
+    const receivables = findByName(tree, 'Cuentas por Cobrar')
+    expect(receivables?.children?.map((child) => child.href)).toEqual([
+      '/receivables',
+      '/receivables/list',
+      '/receivables/overdue',
+      '/receivables/aging-report',
+    ])
+    expect(receivables?.permission).toBe('receivables:read')
   })
 
   it('sin pack BI (biEnabled=false) el grupo no existe; SIFEN sigue como Core', () => {
@@ -110,10 +121,11 @@ describe('navigation — Dashboard BI (F2) + Ventas (F4) + Inventario (F5) + Ren
     expect(findByName(tree, 'Analítica de Compras')).toBeUndefined()
     expect(findByName(tree, 'Analítica de Inventario')).toBeUndefined()
     expect(findByName(tree, 'Rentabilidad')).toBeUndefined()
+    expect(findByName(tree, 'Cuentas por Cobrar')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
   })
 
-  it('con analytics:read sin dashboard:read: BI sigue visible por Ventas/Compras, sin Dashboard', () => {
+  it('sin dashboard:read: BI sigue visible por Ventas/Compras/Inventario/Rentabilidad/CxC', () => {
     const perms = ADMIN_PERMS.filter((p) => p !== 'dashboard:read')
     const tree = filterNavigationItems(buildNavigation(t, false, true), checksFor(perms))
 
@@ -124,6 +136,7 @@ describe('navigation — Dashboard BI (F2) + Ventas (F4) + Inventario (F5) + Ren
       'Analítica de Compras',
       'Analítica de Inventario',
       'Rentabilidad',
+      'Cuentas por Cobrar',
     ])
     expect(findByName(tree, 'Dashboard')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
@@ -169,6 +182,18 @@ describe('navigation — Dashboard BI (F2) + Ventas (F4) + Inventario (F5) + Ren
     )
 
     expect(findByName(tree, 'Inteligencia de Negocios')).toBeUndefined()
+  })
+
+  it('con receivables:read se ve solo el grupo Cuentas por Cobrar (F7)', () => {
+    const tree = filterNavigationItems(
+      buildNavigation(t, false, true),
+      checksFor(['receivables:read']),
+    )
+
+    const bi = findByName(tree, 'Inteligencia de Negocios')
+    expect(bi).toBeDefined()
+    expect(bi?.children?.map((child) => child.name)).toEqual(['Cuentas por Cobrar'])
+    expect(findByName(tree, 'Cuentas por Cobrar')?.children).toHaveLength(4)
   })
 
   it('con dashboard:read solo: el grupo BI aparece por el gate anyOf padre', () => {

@@ -1,81 +1,90 @@
 import { describe, expect, it } from 'vitest'
-import { calculateStats, getPriority, getRiskLevel, getRiskStyles } from './risk'
+import {
+  RISK_LEVEL_TONE,
+  hasPaymentHistory,
+  overdueRatioPercent,
+  paymentBehaviorKey,
+  riskLevelKey,
+  riskSignals,
+} from './risk'
+import type { ClientRisk } from '@/types/bi'
 
-describe('getPriority', () => {
-  it.each([
-    [-5, 'Low'],
-    [0, 'Low'],
-    [30, 'Low'], // borde: 30 no es > 30
-    [31, 'Medium'],
-    [60, 'Medium'], // borde: 60 no es > 60
-    [61, 'High'],
-    [120, 'High'],
-    [null, 'Low'],
-    [undefined, 'Low'],
-  ])('%s días → %s', (days, expected) => {
-    expect(getPriority(days as number)).toBe(expected)
-  })
+const RISK = (overrides: Partial<ClientRisk> = {}): ClientRisk => ({
+  client_id: 'CL-1',
+  risk_level: 'HIGH',
+  payment_behavior: 'EXCELLENT',
+  total_pending_orders: 1,
+  total_pending_amount: 314600,
+  total_overdue_amount: 314600,
+  total_over_90_amount: 314600,
+  overdue_ratio: 1,
+  max_days_overdue: 141,
+  avg_days_outstanding: 141,
+  avg_days_to_pay: 0,
+  total_payments: 7,
+  collection_rate: 286.9,
+  analyzed_at: '2026-10-20T20:52:34-03:00',
+  ...overrides,
 })
 
-describe('calculateStats', () => {
-  it('devuelve ceros con lista vacía', () => {
-    expect(calculateStats([])).toEqual({
-      totalOverdue: 0,
-      atRisk: 0,
-      efficiency: 0,
-      totalAccounts: 0,
+describe('receivables/risk (F7)', () => {
+  it('normaliza el nivel de riesgo y no renderiza desconocidos', () => {
+    expect(riskLevelKey('HIGH')).toBe('high')
+    expect(riskLevelKey('medium')).toBe('medium')
+    expect(riskLevelKey('LOW')).toBe('low')
+    expect(riskLevelKey('CRITICAL')).toBeNull()
+    expect(riskLevelKey(null)).toBeNull()
+    expect(RISK_LEVEL_TONE.high).toBe('error')
+  })
+
+  it('normaliza el comportamiento de pago', () => {
+    expect(paymentBehaviorKey('EXCELLENT')).toBe('excellent')
+    expect(paymentBehaviorKey('GOOD')).toBe('good')
+    expect(paymentBehaviorKey('REGULAR')).toBe('regular')
+    expect(paymentBehaviorKey('POOR')).toBe('poor')
+    expect(paymentBehaviorKey('')).toBeNull()
+  })
+
+  it('oculta el comportamiento cuando no hay pagos registrados', () => {
+    expect(hasPaymentHistory(RISK())).toBe(true)
+    expect(hasPaymentHistory(RISK({ total_payments: 0 }))).toBe(false)
+    expect(hasPaymentHistory(null)).toBe(false)
+  })
+
+  it('convierte el ratio 0-1 a porcentaje sin clampear', () => {
+    expect(overdueRatioPercent(1)).toBe(100)
+    expect(overdueRatioPercent(0.25)).toBe(25)
+    expect(overdueRatioPercent(null)).toBeNull()
+    // El BE puede devolver >1 si los datos lo producen: se muestra el dato.
+    expect(overdueRatioPercent(1.2)).toBeCloseTo(120)
+  })
+
+  it('deriva las señales que explican el nivel con las reglas del BE', () => {
+    expect(riskSignals(RISK())).toEqual({
+      over90Debt: true,
+      ratioOver50: true,
+      ratioOver30: true,
+      maxAgeOver60: true,
     })
-  })
-
-  it('suma montos, cuenta High y calcula eficiencia redondeada', () => {
-    const accounts = [
-      { amount: 100, priority: 'High', originalAmount: 100, paidAmount: 50 },
-      { amount: 200, priority: 'Medium', originalAmount: 300, paidAmount: 150 },
-      { amount: 50, priority: 'High', originalAmount: 0, paidAmount: 0 },
-    ]
-    expect(calculateStats(accounts)).toEqual({
-      totalOverdue: 350,
-      atRisk: 2,
-      efficiency: Math.round((200 / 400) * 100), // 50
-      totalAccounts: 3,
+    expect(
+      riskSignals(
+        RISK({
+          total_over_90_amount: 0,
+          overdue_ratio: 0.2,
+          max_days_overdue: 30,
+        }),
+      ),
+    ).toEqual({
+      over90Debt: false,
+      ratioOver50: false,
+      ratioOver30: false,
+      maxAgeOver60: false,
     })
-  })
-
-  it('eficiencia 0 cuando no hay montos originales (evita división por cero)', () => {
-    expect(calculateStats([{ amount: 10, priority: 'Low', originalAmount: 0, paidAmount: 0 }]).efficiency).toBe(0)
-  })
-})
-
-describe('getRiskStyles', () => {
-  it.each([
-    ['low', 'Riesgo Bajo'],
-    ['bajo', 'Riesgo Bajo'],
-    ['high', 'Riesgo Alto'],
-    ['alto', 'Riesgo Alto'],
-    ['medium', 'Riesgo Medio'],
-    ['unknown', 'Riesgo Medio'],
-    [null, 'Riesgo Medio'],
-    [undefined, 'Riesgo Medio'],
-  ])('nivel %s → %s', (lvl, label) => {
-    expect(getRiskStyles(lvl).label).toBe(label)
-  })
-
-  it('cada nivel tiene sus 4 claves de estilo', () => {
-    for (const lvl of ['low', 'high', 'medium']) {
-      expect(Object.keys(getRiskStyles(lvl)).sort()).toEqual(['bg', 'color', 'dot', 'label'])
-    }
-  })
-})
-
-describe('getRiskLevel', () => {
-  it.each([
-    [{ days_30_60: 0, days_60_90: 0, over_90_days: 100, total: 500 }, 'Crítico'], // +90 aunque sea poco %
-    [{ days_30_60: 200, days_60_90: 0, over_90_days: 0, total: 500 }, 'Moderado'], // 40% vencido
-    [{ days_30_60: 100, days_60_90: 0, over_90_days: 0, total: 500 }, 'Mínimo'], // 20% vencido
-    [{ days_30_60: 150, days_60_90: 0, over_90_days: 0, total: 500 }, 'Mínimo'], // borde: 30% no es > 30
-    [{ days_30_60: 151, days_60_90: 0, over_90_days: 0, total: 500 }, 'Moderado'], // 30.2%
-    [{ days_30_60: 0, days_60_90: 0, over_90_days: 0, total: 0 }, 'Mínimo'], // total 0 → NaN% → Mínimo
-  ])('%j → %s', (client, expected) => {
-    expect(getRiskLevel(client)).toBe(expected)
+    expect(riskSignals(null)).toEqual({
+      over90Debt: false,
+      ratioOver50: false,
+      ratioOver30: false,
+      maxAgeOver60: false,
+    })
   })
 })

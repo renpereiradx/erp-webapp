@@ -28,6 +28,8 @@ export interface SearchableItem {
 
 /** Ruta buscable registrada en `@/config/searchableRoutes` */
 export type SearchableRouteInput = SearchableItem & {
-  /** Gate por módulo del negocio (ej. `reservations`) */
+  /** Gate por módulo del negocio (ej. `reservations`, `bi`) */
   requiredModule?: string
+  /** Gate por permiso de la ruta destino (evita affordances muertas). */
+  requiredPermission?: string
 }
