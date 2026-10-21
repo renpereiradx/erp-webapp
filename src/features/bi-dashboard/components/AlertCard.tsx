@@ -17,10 +17,12 @@ const MAX_PRODUCTS = 5
 
 /**
  * Rutas de alerta que YA existen en el router. F5 re-activó inventario
- * (`/inventory-analytics/stock-levels`) y F6 el margen negativo
- * (`/profitability/products`); `/receivables/overdue` (F7) sigue fuera hasta
- * que su pantalla exista. Un botón "Gestionar" que cae en 404 es la
- * affordance muerta de la auditoría 2026-09.
+ * (`/inventory-analytics/stock-levels`), F6 el margen negativo
+ * (`/profitability/products`) y F7 las vencidas (`/receivables/overdue`).
+ * `/comercial/presupuestos` también existe (Core), pero se deja fuera hasta
+ * decidir su gate: la entrada del sidebar exige `budgets:read` y el alert no
+ * lo comprueba. Un botón "Gestionar" que cae en 404 es la affordance muerta
+ * de la auditoría 2026-09.
  */
 const ACTIONABLE_ALERT_ROUTES = new Set([
   '/inventory-analytics/stock-levels',
