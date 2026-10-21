@@ -2,9 +2,8 @@
 
 **Fecha:** 2026-10-21 · **Origen:** `PLAN_REBUILD_BI_UI_FRONTEND_2026-10-17.md` §8–§19
 (secciones "Pendiente / deuda declarada" de cada fase) + verificación directa en código.
-**Rama FE:** `feature/bi-ui-rebuild` (22 commits sobre `dev` = `82710c7`, 252 sobre `main`).
-**Backend:** `dev` con 7 commits locales desde `origin/dev` (5 fixes analytics + el fix de
-CSV de auditoría + su actualización de `graphify`), sin push.
+**Estado:** F1–F11 integradas en `dev` y publicadas como **v1.2.0** (2026-10-21).
+**Backend:** `dev` con los 5 fixes analytics + el fix de CSV de auditoría, tag `v1.2.0`.
 
 > Este documento **no reescribe** el historial del plan: lo indexa, elimina las deudas ya
 > resueltas durante las fases y prioriza lo que queda. Cada ítem tiene ID estable (`BI-Dnn`)
@@ -20,12 +19,13 @@ CSV de auditoría + su actualización de `graphify`), sin push.
 | `go test ./internal/analytics/... ./internal/platform/postgres/...` | OK |
 | Anti-invención (`mock`/`Math.random`/`dummy`/claims) en superficie BI | limpio (solo `placeholder` de inputs y `vi.mock` de tests) |
 | `.js`/`.jsx` en superficie BI nueva | 0 |
+| Smoke final (Playwright, 2026-10-21) | 188/188 checks · 45 hojas BI · 10 subgrupos · SIFEN · buscador · CSV · 390/1440 |
 
 ## 1. Resumen por prioridad
 
 | Prioridad | Ítems | Naturaleza |
 |:--|:--|:--|
-| **P0 — Cierre del hito** | 1 | Integración/publicación; decisión del owner |
+| **P0 — Cierre del hito** | 1 (resuelto) | Release v1.2.0 publicado |
 | **P1 — Correcciones de bajo riesgo** | 5 | Bugs/accesibilidad ya desbloqueados; FE/BE acotados |
 | **P2 — Veracidad observable** | 4 | Datos parciales y filtros; FE + BE medio |
 | **P3 — Contratos del backend** | 11 | Cambios de contrato/decisiones de producto |
@@ -41,17 +41,18 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 
 ### BI-D01 · Integrar y publicar F1–F11
 
-- **Estado:** 22 commits FE locales en `feature/bi-ui-rebuild`; 7 commits BE locales en
-  `dev`. `origin/dev` no los tiene; `main` está 252 commits atrás.
-- **Evidencia:** `git log --oneline origin/dev..HEAD` (FE: 22; BE: 7).
-- **Impacto:** el rebuild completo existe en una sola máquina; no hay release ni tag del
-  hito. El plan §1 define integrar a `dev` al cerrar cada hito.
-- **Trabajo:** smoke final de pack completo (10 grupos BI + SIFEN + guards + buscador) →
-  merge FE a `dev` → gates completos → push de ambos repos → tag SemVer + sync
-  `package.json` (AGENTS.md §Versionado).
-- **Esfuerzo:** S (salvo el smoke, M).
-- **Disposición:** **decide el owner** (cuándo publicar). No se ejecuta sin esa decisión
-  porque implica push y tag en ambos repos.
+- **Estado:** **resuelto 2026-10-21** — release **v1.2.0** en ambos repos.
+- **Ejecutado:** smoke final de pack completo (188/188 checks) → merge fast-forward de
+  `feature/bi-ui-rebuild` a `dev` → gates → bump FE `package.json` a `1.2.0` → tag
+  `v1.2.0` en `dev` de FE y BE → push de `dev` + tags.
+- **Evidencia:** `git rev-parse v1.2.0^{commit}` = `dev` en ambos repos; tags visibles en
+  `git ls-remote --tags origin`.
+- **Smoke:** 45 hojas BI + 10 subgrupos, SIFEN visible, buscador con las 4 rutas, export
+  CSV de auditoría (12 columnas), 390/1440 sin overflow, 0 errores de consola/página y
+  0 respuestas ≥400. Los 2 404 de `/sifen/config/{PROD,TEST}` son preexistentes de Core
+  (pantallas SIFEN fuera del rebuild) y degradan sin romper la página.
+- **Pendiente:** `main` (snapshot de release) queda atrás; un fast-forward opcional al
+  tag es decisión del owner.
 
 ---
 
@@ -216,6 +217,9 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 - **BI-D04** — comentario de `AlertCard` corregido (F7 ya está en el set; se documenta el
   caso de `/comercial/presupuestos` como decisión pendiente, no como olvido). Commit FE
   `527e0d3`.
+- **BI-D01** — smoke final 188/188 → merge ff `feature/bi-ui-rebuild` a `dev` → bump
+  `package.json` 1.2.0 → tags `v1.2.0` en FE y BE → push de `dev` + tags. `main` queda
+  como snapshot pendiente (decisión del owner).
 - Registro consolidado (este documento) + puntero §20 en el plan.
 
 ## 8. Ya resuelto durante F1–F11 (no re-trabajar)
@@ -233,8 +237,8 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 
 ## 9. Orden recomendado
 
-1. **Cierre (BI-D01):** smoke final del pack → merge a `dev` → push → tag. Es lo único que
-   impide que el rebuild salga de esta máquina.
+1. ~~**Cierre (BI-D01):**~~ **hecho** — v1.2.0 publicado en ambos repos. Queda `main`
+   como snapshot opcional.
 2. **Honestidad de datos (BI-D07 + BI-D08):** un solo diff BE+FE para los dos dashboards
    parciales; reutiliza el banner ya probado de F2.
 3. **Decisiones cortas (BI-D03, BI-D05, BI-D09, BI-D10):** cada una es 1 sesión acotada;

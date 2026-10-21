@@ -2375,6 +2375,12 @@ Ejecutado en la pasada de consolidación:
   caso `/comercial/presupuestos` queda como decisión `BI-D03`; commit FE
   `527e0d3`).
 
-Pendiente de decisión del owner: **BI-D01** (smoke final → merge FE a `dev` →
-push ambos repos → tag SemVer) y los ítems marcados "decide el owner" en el
-registro (BI-D03, BI-D05, BI-D09, BI-D10, BI-D13, BI-D20, BI-D21).
+**BI-D01 ejecutado (2026-10-21):** smoke final 188/188 (45 hojas BI, 10
+subgrupos, SIFEN, buscador, CSV de auditoría con 12 columnas, 390/1440 sin
+overflow, 0 errores de consola/página) → merge fast-forward de
+`feature/bi-ui-rebuild` a `dev` → bump FE `package.json` a `1.2.0` → tag
+`v1.2.0` en `dev` de ambos repos → push de `dev` + tags. `main` queda como
+snapshot de release pendiente (decisión del owner).
+
+Siguen abiertos los ítems marcados "decide el owner" en el registro (BI-D03,
+BI-D05, BI-D09, BI-D10, BI-D13, BI-D20, BI-D21).
