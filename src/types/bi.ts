@@ -2709,3 +2709,312 @@ export interface AuditExportOptions {
   format?: 'json' | 'csv';
   max_records?: number;
 }
+
+// --- Pronósticos (`/forecast/*`, F11) ---------------------------------------
+// Contrato real: `models/forecast.go` + `internal/analytics/http_forecast.go`
+// + `internal/platform/postgres/analytics_forecast_repo.go`. Gate del BE:
+// `RequireModule('bi')` → `analytics:read` (`biChain("analytics:read",
+// "forecast")`).
+//
+// Convenciones del contrato que la UI respeta:
+//  - `confidence.level` NO es un intervalo de confianza: es R²×100 (LINEAR /
+//    SEASONAL), 75−CV×100 (EXPONENTIAL) u 80−CV×100 (MOVING_AVG), topado en 95.
+//  - `confidence.lower_bound/upper_bound` son MULTIPLICADORES (0.85/1.15) en
+//    LINEAR / EXPONENTIAL / SEASONAL y valores ABSOLUTOS (media ± 2σ) en
+//    MOVING_AVG. `MonthlyRevenue.lower_bound/upper_bound` ya vienen como
+//    montos absolutos (forecast × multiplicador).
+//  - Los `date`/`month` de buckets son date-only serializados por Go; se
+//    formatean en UTC para no correr el mes.
+//  - `demand.categories[].confidence` (75) y `top_products[].confidence` (70)
+//    son constantes del modelo, no una confianza por fila.
+
+export type ForecastMethod = 'LINEAR' | 'MOVING_AVG' | 'EXPONENTIAL' | 'SEASONAL';
+export type ForecastGranularity = 'DAILY' | 'WEEKLY' | 'MONTHLY';
+export type ForecastTrend = 'INCREASING' | 'DECREASING' | 'STABLE';
+export type ForecastStockoutRisk = 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE';
+export type ForecastInsightType =
+  | 'SALES_TREND'
+  | 'SEASONALITY'
+  | 'INVENTORY_RISK'
+  | 'INVENTORY_COVERAGE'
+  | 'REVENUE_PROJECTION';
+export type RevenueScenarioName = 'PESSIMISTIC' | 'BASELINE' | 'OPTIMISTIC';
+
+export interface ForecastDataPoint {
+  /** Bucket date-only (`DATE_TRUNC` del `sale_date`). */
+  date: string;
+  /** Etiqueta en inglés que emite `to_char`; la UI la re-deriva. */
+  label: string;
+  value: number;
+  is_actual: boolean;
+  is_forecast: boolean;
+}
+
+export interface ForecastConfidence {
+  /** 0-95. Ver la nota de arriba: no es un intervalo de confianza. */
+  level: number;
+  mae: number;
+  mape: number;
+  rmse: number;
+  r2: number;
+  lower_bound: number;
+  upper_bound: number;
+}
+
+export interface ForecastSeasonalFactor {
+  period: string;
+  factor: number;
+  /** Mes abreviado en español (`Ene`…`Dic`). */
+  label: string;
+}
+
+export interface ForecastSeasonality {
+  has_seasonality: boolean;
+  seasonal_period: string;
+  peak_periods: string[] | null;
+  low_periods: string[] | null;
+  seasonal_factors: ForecastSeasonalFactor[] | null;
+}
+
+export interface ForecastSalesSummary {
+  total_historical: number;
+  total_forecast: number;
+  average_historical: number;
+  average_forecast: number;
+  /** Promedio proyectado vs. promedio histórico (no ventana contra ventana). */
+  growth_rate: number;
+  trend: ForecastTrend;
+  confidence_level: number;
+}
+
+/** `GET /forecast/sales`. */
+export interface SalesForecast {
+  generated_at: string;
+  /** Inicio = fin del historial; fin = hoy + forecast_months. */
+  forecast_period: BIReportPeriod;
+  history_period: BIReportPeriod;
+  method: ForecastMethod;
+  /** Algoritmo que corrió (hoy siempre igual a `method`). */
+  method_effective: string;
+  granularity: ForecastGranularity;
+  summary: ForecastSalesSummary;
+  historical_data: ForecastDataPoint[] | null;
+  forecast_data: ForecastDataPoint[] | null;
+  confidence: ForecastConfidence;
+  seasonality?: ForecastSeasonality | null;
+}
+
+export interface ForecastInventorySummary {
+  total_products: number;
+  high_risk_products: number;
+  medium_risk_products: number;
+  low_risk_products: number;
+  total_projected_demand: number;
+  total_current_stock: number;
+  /** Días de cobertura (stock / demanda diaria promedio). */
+  overall_coverage: number;
+}
+
+export interface ForecastInventoryAlert {
+  /** STOCKOUT_IMMINENT | LOW_STOCK. */
+  type: string;
+  /** HIGH | MEDIUM. */
+  severity: string;
+  product_id: string;
+  product_name: string;
+  /** Texto en español del repo; la UI traduce `type`, no lo muestra. */
+  message: string;
+  days_to_act: number;
+}
+
+export interface ProductInventoryForecast {
+  product_id: string;
+  product_name: string;
+  current_stock: number;
+  /** Ventas de los últimos 90 días / días con ventas (no /90). */
+  average_daily_sales: number;
+  projected_demand: number;
+  /** 999 = sin velocidad de venta (centinela del SQL). */
+  days_until_stockout: number;
+  reorder_point: number;
+  suggested_reorder: number;
+  safety_stock: number;
+  stockout_risk: ForecastStockoutRisk;
+  /** hoy + (days_until_stockout − 3 días de lead time). */
+  reorder_date?: string | null;
+  trend: ForecastTrend;
+}
+
+/** `GET /forecast/inventory` (productos paginados; summary sobre el set completo). */
+export interface InventoryForecast {
+  generated_at: string;
+  forecast_period: BIReportPeriod;
+  products: ProductInventoryForecast[] | null;
+  summary: ForecastInventorySummary;
+  alerts: ForecastInventoryAlert[] | null;
+  pagination?: BIPaginationInfo | null;
+}
+
+export interface CategoryDemand {
+  category_id: string;
+  category_name: string;
+  historical_units: number;
+  forecast_units: number;
+  /** Últimos 30 días vs. 30 anteriores; 0 si no hay base previa. */
+  growth_rate: number;
+  trend: ForecastTrend;
+  /** Constante 75 del modelo. */
+  confidence: number;
+}
+
+export interface ProductDemand {
+  product_id: string;
+  product_name: string;
+  category_name: string;
+  historical_units: number;
+  forecast_units: number;
+  growth_rate: number;
+  trend: ForecastTrend;
+  /** Constante 70 del modelo. */
+  confidence: number;
+}
+
+export interface DemandTrend {
+  date: string;
+  label: string;
+  actual_demand: number;
+  forecast_demand: number;
+  is_forecast: boolean;
+}
+
+/** `GET /forecast/demand`. `trends` nunca se completa (no se renderiza). */
+export interface DemandForecast {
+  generated_at: string;
+  forecast_period: BIReportPeriod;
+  categories: CategoryDemand[] | null;
+  top_products: ProductDemand[] | null;
+  trends: DemandTrend[] | null;
+  pagination?: BIPaginationInfo | null;
+}
+
+export interface MonthlyRevenue {
+  month: string;
+  /** Etiqueta en inglés (`Jan 2006`); la UI la re-deriva del `month`. */
+  label: string;
+  actual: number;
+  forecast: number;
+  lower_bound: number;
+  upper_bound: number;
+  is_forecast: boolean;
+}
+
+export interface ForecastCategoryRevenue {
+  category_id: string;
+  category_name: string;
+  historical: number;
+  /** Histórico × (1 + growth general): no es un pronóstico por categoría. */
+  forecast: number;
+  /** Copia del growth general del payload. */
+  growth_rate: number;
+  percentage: number;
+}
+
+export interface RevenueScenario {
+  name: RevenueScenarioName | string;
+  /** Peso declarado por el BE (20/60/20), no una probabilidad estadística. */
+  probability: number;
+  forecast_amount: number;
+  growth_rate: number;
+  /** Texto en español del repo; la UI traduce `name`, no lo muestra. */
+  description: string;
+}
+
+export interface ForecastRevenueSummary {
+  historical_revenue: number;
+  forecast_revenue: number;
+  /** forecast_revenue × (12 / forecast_months). */
+  annual_projection: number;
+  growth_rate: number;
+  confidence_level: number;
+  trend: ForecastTrend;
+}
+
+/** `GET /forecast/revenue`. */
+export interface RevenueForecast {
+  generated_at: string;
+  forecast_period: BIReportPeriod;
+  history_period: BIReportPeriod;
+  summary: ForecastRevenueSummary;
+  by_month: MonthlyRevenue[] | null;
+  by_category: ForecastCategoryRevenue[] | null;
+  scenarios: RevenueScenario[] | null;
+}
+
+export interface ForecastInsight {
+  /** SALES_TREND | SEASONALITY | INVENTORY_RISK | INVENTORY_COVERAGE | REVENUE_PROJECTION. */
+  type: ForecastInsightType | string;
+  category: string;
+  /** Texto en español del repo; la UI traduce `type` y usa `value`. */
+  title: string;
+  description: string;
+  /** HIGH | MEDIUM | LOW. */
+  impact: string;
+  value?: number;
+  trend?: ForecastTrend | string;
+}
+
+export interface ForecastRecommendation {
+  /** HIGH | MEDIUM | LOW. */
+  priority: string;
+  category: string;
+  /** Texto en español del repo; la UI deriva la recomendación en i18n. */
+  title: string;
+  description: string;
+  action: string;
+  potential_impact: string;
+}
+
+/** `GET /forecast/dashboard` (compone los 4 pronósticos + insights + recomendaciones). */
+export interface ForecastDashboard {
+  generated_at: string;
+  forecast_period: BIReportPeriod;
+  sales_forecast?: SalesForecast | null;
+  revenue_forecast?: RevenueForecast | null;
+  inventory_forecast?: InventoryForecast | null;
+  demand_forecast?: DemandForecast | null;
+  key_insights: ForecastInsight[] | null;
+  recommendations: ForecastRecommendation[] | null;
+}
+
+export interface ForecastDashboardParams {
+  /** Horizonte de los 4 pronósticos (default 3 en el BE). */
+  months?: number;
+}
+
+export interface ForecastSalesParams {
+  history_months?: number;
+  forecast_months?: number;
+  method?: ForecastMethod;
+  granularity?: ForecastGranularity;
+}
+
+export interface ForecastInventoryParams {
+  forecast_days?: number;
+  category_id?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface ForecastDemandParams {
+  history_months?: number;
+  forecast_months?: number;
+  category_id?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface ForecastRevenueParams {
+  history_months?: number;
+  forecast_months?: number;
+  include_scenarios?: boolean;
+}

@@ -2091,3 +2091,264 @@ operativa que F4-F6).
 - Sin comparación custom de períodos, sin selector de filas por página y sin
   export JSON desde la UI (el servicio acepta `format: 'json'`).
 - Falta F11 (Pronósticos).
+
+---
+
+## 19. Estado de ejecución — F11 Pronósticos (2026-10-21)
+
+**Rama FE:** `feature/bi-ui-rebuild` (F1-F10 sobre `dev` = `82710c7`).
+**Backend:** un fix de fechas de pronóstico en `dev` (ver §19.2), sin cambio de
+contrato JSON.
+
+### 19.1 Ejecutado
+
+- **Rutas (5)** en `src/App.tsx`, lazy y con `ForecastRoute` =
+  `BiModuleRoute` (pack) → `PermissionGuard(analytics:read)`, el mismo par que
+  `biChain("analytics:read", "forecast")`:
+  `/bi/pronosticos/{dashboard,inventario,ventas,demanda,ingresos}`.
+- **Feature `src/features/forecast/`** con la plantilla FSD: `components/`
+  (UI pura), `hooks/` (`useForecastQueries`, `useForecastParams`), `types/` y
+  barrel público. Cero fetch/cálculo en componentes.
+- **Páginas delgadas** en `src/pages/forecast/`: `ForecastDashboardPage`,
+  `InventoryForecastPage`, `SalesForecastPage`, `DemandForecastPage` y
+  `RevenueForecastPage`.
+- **Dominio puro** en `src/domain/forecast/`: `constants`, `format`, `params`,
+  `pagination`, `sales`, `inventory`, `demand`, `revenue` y `dashboard`, todos
+  con tests colocados.
+- **Servicio tipado** `services/bi/forecastService.ts`: contrato real de los 5
+  endpoints (`dashboard`, `sales`, `inventory`, `demand`, `revenue`), limpieza
+  de params y telemetría; sin fallback demo. Se eliminó
+  `services/bi/biForecastingService.ts`, que normalizaba el payload a un
+  view-model en español con `generated_at`/`updated_text` fabricados y
+  etiquetas por defecto (era el último consumidor del modo demo BI).
+- **Tipos** en `types/bi.ts`: `SalesForecast`, `InventoryForecast`,
+  `DemandForecast`, `RevenueForecast`, `ForecastDashboard`, insights,
+  recomendaciones, escenarios y parámetros, con las convenciones reales del
+  contrato comentadas.
+- **Nav**: décimo subgrupo BI `Pronósticos` con 5 hojas y permiso
+  `analytics:read`. La marca del sidebar, HomeRedirect y guards se mantienen
+  en `/dashboard` (F2).
+- **i18n**: namespace `forecast` en `locales/{es,en}/forecast.ts` (paridad
+  verificada) + `nav.forecast*` en ambos shells. El selector de método usa
+  etiquetas cortas (`Lineal`/`Media móvil`/`Exponencial`) para entrar a 390 px;
+  la card del modelo muestra el nombre completo.
+- **Compartido**: `SectionCard`, `TableCard`, `QueryBoundary`,
+  `TableEmptyState`, `DataSkeletons`, `TablePagination` y `SegmentedControl` se
+  reusan. La tabla, el ledger KPI, los badges y el panel de escenarios son
+  locales del feature (un feature no importa componentes de otro).
+- **Puntos de entrada §3.3**: #1 nav (subgrupo nuevo) y #15 cross-links
+  reales: el dashboard enlaza sus insights/recomendaciones y las 4 pantallas
+  del grupo; cada pantalla enlaza de vuelta. No se agregó `searchableRoutes`:
+  las rutas de pronósticos no estaban en la fila #12 del plan.
+- **UX verificada en vivo**: el `PageHeader` compartido ponía título y
+  subtítulo en la misma línea y con 3 selectores el título quedaba en 4 líneas;
+  el layout del feature apila título/subtítulo y pone los controles en una
+  toolbar con etiquetas visibles (`Historial`, `Horizonte`, `Método`). Las
+  tablas de inventario entran a 1440 sin scroll (min-width 1040); en mobile
+  scrollean dentro de la card con el hint. 390/1440 sin overflow del body.
+
+### 19.2 Fix del backend encontrado en el smoke (desviación documentada)
+
+El plan asumía BE congelado. El smoke mostró fechas de proyección duplicadas o
+salteadas: con 6 meses de historia (may–oct 2026) la tabla de ventas proyectaba
+`nov. 2026`, `dic. 2026` y `dic. 2026` (dos diciembres), y `/forecast/revenue`
+emitía meses como `2027-07-01T18:00:00Z` en vez de inicios de mes.
+
+- **Causa**: los 4 métodos (`calculateLinearForecast`,
+  `calculateMovingAverageForecast`, `calculateExponentialForecast`,
+  `calculateSeasonalForecast`) avanzaban cada punto con el **gap promedio** del
+  historial (`lastDate.Sub(data[0].Date)/(n-1)`). Con meses sin ventas el gap
+  deja de ser un mes y los períodos se repiten o se saltean.
+- **Fix**: helper `nextForecastBucket(last, step, granularity)` que avanza un
+  mes calendario (`AddDate(0, step, 0)`), 7 días por semana o 1 día por día,
+  según la granularidad. Los 4 métodos lo usan; ingresos pasa `MONTHLY`.
+  Sin cambio de shape JSON (solo fechas correctas).
+- **Tests**: `TestNextForecastBucket` (mensual/semanal/diario) y
+  `TestLinearForecastDatesWithSparseHistoryAreConsecutiveMonths` (historial
+  con huecos → nov/dic/ene sin duplicados) en
+  `internal/platform/postgres/analytics_forecast_repo_test.go`.
+- **Evidencia post-fix (dev)**: ventas `nov 2026 / dic 2026 / ene 2027`;
+  ingresos a 6 meses `nov 2026 … abr 2027` consecutivos.
+- El backend se reconstruyó y reinició en `:5050` con
+  `CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000` (misma
+  nota operativa que F4-F9).
+
+### 19.3 Decisiones de borde (documentadas)
+
+- **Sin label "(IA)"**: el BE es estadístico (regresión, media móvil,
+  suavizado, estacionalidad), no IA/ML. El dashboard dice "Proyecciones
+  estadísticas del backend" y cada pantalla muestra el método. La decisión de
+  no rotular "(IA)" queda a confirmación del owner; es solo copy.
+- **SEASONAL no se ofrece en el selector**: exige ≥ 12 puntos de historia con
+  valores no nulos y la ventana mensual no lo garantiza (en dev, 12 meses de
+  ventana producen 6 puntos y el endpoint responde 400). Un deep-link con
+  `method=SEASONAL` se degrada a LINEAR. Exponerlo requiere un prechequeo de
+  puntos o un cambio del BE; queda como deuda.
+- **Confianza del modelo**: `confidence.level` no es un intervalo de
+  confianza; es R²×100 (LINEAR/SEASONAL), 75−CV×100 (EXPONENTIAL) u
+  80−CV×100 (MOVING_AVG), topado en 95. La UI muestra el nivel, R², MAE, MAPE y
+  RMSE reales y explica esa fórmula; no agrega una "probabilidad".
+- **Bandas**: en LINEAR/EXPONENTIAL/SEASONAL `lower_bound/upper_bound` son
+  multiplicadores (0.85/1.15) y la UI los aplica por punto; en MOVING_AVG son
+  valores absolutos (media ± 2σ). `MonthlyRevenue.lower_bound/upper_bound` ya
+  vienen absolutos. Una banda inferior negativa se muestra `-Gs. X` (es el
+  cálculo real, no se recorta a 0).
+- **Insights**: se traduce el `type` estable del BE (`SALES_TREND`,
+  `SEASONALITY`, `INVENTORY_RISK`, `INVENTORY_COVERAGE`,
+  `REVENUE_PROJECTION`) y se usa el `value` del payload. El `title`/
+  `description` en español del repo no se renderiza; un tipo desconocido se
+  omite.
+- **Recomendaciones**: el BE manda prosa en español sin clave de traducción.
+  La UI deriva las tarjetas de las mismas condiciones y umbrales (riesgo alto
+  > 0, cobertura < 14 días, tendencia DECREASING, estacionalidad con picos y
+  confianza de ingresos < 70) con i18n y las cifras reales del payload, en el
+  mismo orden del servidor.
+- **Estacionalidad**: solo se muestra si `has_seasonality` y hay factores
+  (≥ 12 puntos). Los meses abreviados en español que emite el BE se traducen
+  al locale de la UI; no se inventa un patrón.
+- **Fechas**: los buckets históricos son date-only y se formatean en UTC; la
+  proyección ahora avanza mes a mes (fix §19.2), así que las etiquetas
+  (`nov. 2026`) coinciden con el período real. Se ignora el `label` inglés del
+  servidor.
+- **Inventario**: la venta diaria es el total vendido en 90 días dividido por
+  los días con ventas (no por 90); `days_until_stockout = 999` es el centinela
+  de "sin velocidad" y se muestra "Sin ventas en 90 días", nunca 999 días. El
+  riesgo es un solo estado por producto (alto ≤3, medio ≤7, bajo ≤14); el
+  `NONE` no viaja en el summary y se deriva por diferencia exacta con
+  `total_products`. La reposición sugerida y la fecha de reposición (hoy +
+  días − 3 de lead time) son del BE. Máximo 100 productos (LIMIT del repo);
+  summary/alertas sobre el set completo, tabla paginada de a 10.
+- **Demanda**: crecimiento = últimos 30 días vs. 30 anteriores (0 si no hay
+  base); proyección = promedio mensual histórico × meses × (1 + growth). La
+  confianza por fila es una constante (75 categorías, 70 productos) y se
+  muestra una vez; no se presenta como confianza individual. Categorías
+  completas; top de productos paginado server-side (los totales de esa tabla
+  son de la página). `trends` nunca se completa: no se renderiza.
+- **Ingresos**: los escenarios son el modelo declarado del BE (base ±15 % con
+  pesos 20/60/20), no una probabilidad estadística; se rotulan "Peso del
+  escenario". La proyección anual extrapola el horizonte a 12 meses. En
+  categorías se muestra histórico y participación; la proyección por categoría
+  es una copia del growth general y no se presenta como pronóstico propio.
+  La serie mensual (histórico + proyección) se pagina client-side de a 10.
+- **Horizontes y defaults**: dashboard/ventas/demanda/ingresos usan 3 meses
+  por default (así el dashboard y las pantallas muestran las mismas cifras con
+  el mismo historial); ingresos ofrece 3/6/12, ventas 3/6/12 meses de horizonte
+  y 6/12/24 de historia, inventario 30/60/90 días. El dashboard compone
+  inventario con `meses × 30` días: cobertura y riesgo no dependen del
+  horizonte, pero la demanda proyectada de la tabla de inventario sí (la nota
+  de la pantalla lo aclara).
+- **Estado en URL**: `history`, `months`, `method`, `days` y `page` viven en
+  query params; un deep-link conserva la selección y cambiar de horizonte
+  resetea la página. Los valores inválidos caen al default sin request.
+- **Estados honestos**: error con retry, empty explícito sin historial y `—`
+  cuando un sub-pronóstico del dashboard viene `null` (el BE silencia los
+  errores de sus subconsultas y no emite `metadata.partial`).
+- **Sin exportar/imprimir**: los botones de exportar de la versión vieja eran
+  decorativos y no se re-agregaron (regla §5.9).
+
+### 19.4 Tests
+
+- Dominio: `format` (montos/sub-unidad, porcentajes firmados, `<0,1%`, fechas
+  UTC vs locales, rango de historial, KPIs), `params` (métodos, horizontes,
+  SEASONAL degradado, página, defaults), `pagination`, `sales` (series,
+  bandas multiplicador vs absolutas, métricas, estacionalidad traducida),
+  `inventory` (KPIs, centinela 999, alertas sin message, conteos/NONE,
+  paginación), `demand` (sumas, top, confianza constante, paginación),
+  `revenue` (orden de serie, escenarios, categorías sin copia de growth, KPIs)
+  y `dashboard` (KPIs, insights, recomendaciones por umbral, grupos) — 42
+  tests.
+- Servicio: rutas/params de los 5 métodos, paginación, escenarios booleanos,
+  limpieza de params y error propagado — 7 tests.
+- Hooks: params por endpoint, normalización de slices nil, `data` ausente,
+  refetch del grupo — 7 tests; selección en URL (defaults, deep-link inválido,
+  SEASONAL degradado, resets de página) — 7 tests.
+- Páginas: Dashboard (KPIs, insights traducidos, recomendaciones con links,
+  4 accesos, horizonte, sin IA/$), Ventas (contrato, KPIs, métricas, bandas,
+  etiquetas re-derivadas, proyección, estacionalidad, cambio de
+  historial/horizonte/método, empty, error), Inventario (KPIs, alertas,
+  riesgos incluido NONE, tabla con sentinela, paginación/horizonte, error),
+  Demanda (KPIs, categorías, top, paginación, notas, error) e Ingresos
+  (KPIs, escenarios sin prosa del BE, serie con bandas, categorías,
+  horizonte, notas, error) — 38 tests.
+- i18n: paridad es/en, sin vacíos, claves nav y todas las claves estáticas de
+  F11 — 5 tests. Nav: 10 subgrupos con Pronósticos y sus 5 hojas con
+  `analytics:read` — test de F2-F10 actualizado.
+- **Total F11: 106 tests nuevos**; la suite pasa de 2191 (cierre F10) a 2297.
+
+### 19.5 Gates
+
+- `npx tsc --noEmit`: 0 errores.
+- `npx vitest --run`: **348 archivos / 2297 tests OK**.
+- `pnpm build`: OK; chunks lazy `ForecastDashboardPage`,
+  `InventoryForecastPage`, `SalesForecastPage`, `DemandForecastPage`,
+  `RevenueForecastPage` (+ `ForecastTable`, `ForecastSeriesTable`,
+  `useForecastParams` compartidos).
+- `pnpm lint:design -- --base dev`: OK (código nuevo limpio; 1108 legacy).
+- `pnpm lint`: 0 errores (132 warnings legacy, sin cambios).
+- Gate anti-fabricación §5.3: en producción de F11 solo los comentarios "Sin
+  mock, sin claims de IA" (página) y "Sin fallback demo/mock" (servicio); el
+  resto son `vi.mock` de tests.
+- Gate TS: archivos nuevos de la fase solo `.ts`/`.tsx` (0 `.js`/`.jsx`); los
+  `.js` tocados son los índices/shells de i18n que importan el namespace `.ts`.
+- Backend: `gofmt` limpio, `make build` OK,
+  `go test ./internal/platform/postgres ./internal/analytics/...` OK (incluye
+  los 2 tests nuevos de fechas).
+- **Smoke vivo** (`:5050` + Vite `:5173` `--mode api`, JWT de dev acuñado en
+  memoria con el `JWT_SECRET` local, admin `jJkV4F6HR`, rol `F2VLso`, sucursal
+  1, entitlements core+bi): **49/49 checks OK, 0 errores de consola, 0 page
+  errors y 0 respuestas HTTP ≥400** con Playwright/Chrome.
+  - Dashboard (3 meses): ventas proyectadas Gs. 5.048.584, ingresos anuales
+    Gs. 18.983.440, productos en riesgo 4, demanda proyectada 306, cobertura
+    11,5 días; 4 insights y 2 recomendaciones reales; 4 accesos de grupo.
+  - Ventas (6 meses historia, 3 horizonte, lineal): históricas Gs. 4.803.775,
+    proyectadas Gs. 5.048.584, promedio Gs. 1.682.861, variación +110,2 %,
+    confianza 49,6 %, R² 0,50, MAE Gs. 280.379, MAPE 57,7 %, RMSE
+    Gs. 337.590; proyección nov. 2026 Gs. 1.486.810, dic. 2026 Gs. 1.682.861,
+    ene. 2027 Gs. 1.878.913 con bandas ±15 %. Con media móvil la banda es
+    absoluta (±2σ) y puede ser negativa (`-Gs. 150.312`), tal como la calcula
+    el BE. SEASONAL no aparece en el selector.
+  - Inventario (30 días): cobertura 11,5, stock 599, demanda 1.557, riesgo
+    alto 4 / medio 3 / bajo 3 / sin riesgo 90 sobre 100 productos; 7 alertas
+    (4 altas, 3 medias) traducidas sin el mensaje del SQL; tabla de 10 filas
+    en 10 páginas; una página con el centinela muestra "Sin ventas en 90 días"
+    y nunca "999".
+  - Demanda (3 meses): 7 categorías, 64 unidades históricas, 306 proyectadas,
+    mayor crecimiento Higiene Personal +1.550 %, top Colgate Ultra Fresh 500G
+    con 16 unidades; 16 productos en 2 páginas.
+  - Ingresos (3 meses): históricos Gs. 4.890.438, proyectados Gs. 4.745.860,
+    proyección anual Gs. 18.983.440, variación +191,1 %, confianza 70,6 %;
+    escenarios Pesimista Gs. 4.033.981 (20 %), Base Gs. 4.745.860 (60 %),
+    Optimista Gs. 5.457.739 (20 %); 8 categorías (Electrónicos 55,4 %);
+    horizonte 12 meses verificado (21 filas, 3 páginas).
+  - Deep-links verificados: `?history=24&months=6&method=EXPONENTIAL`,
+    `?days=60&page=2`, `?months=12&page=2`.
+  - Responsive 390/1440: `bodyOverflow=false` en las 5 pantallas; tablas con
+    scroll interno y hint solo cuando desbordan; toolbar con etiquetas y
+    método con etiquetas cortas.
+- Sin push: F1-F11 quedan locales en la rama FE; el fix BE queda local en
+  `dev` (mismo criterio que F4-F10).
+
+### 19.6 Pendiente / deuda declarada
+
+- **SEASONAL fuera de la UI**: el endpoint lo soporta, pero exige ≥ 12 puntos
+  con valores no nulos y la ventana mensual puede no alcanzarlos. Exponerlo
+  requiere prechequear los puntos o relajar el método en el BE.
+- **Dashboard sin detección de fallo parcial**: `sales/revenue/inventory/
+  demand` son punteros nilables; si una subconsulta falla, el BE devuelve el
+  dashboard incompleto sin `metadata.partial` y la UI muestra `—`/vacío. No es
+  distinguible de "sin datos".
+- **Inventario limitado a 100 productos** (`LIMIT 100` del repo): el summary y
+  los conteos describen ese set, no el catálogo completo. El copy lo dice.
+- **Demanda**: la confianza por categoría/producto es una constante del
+  modelo; `trends` nunca se completa y no se renderiza. Los totales de la
+  tabla de productos son de la página.
+- **Ingresos**: la proyección por categoría es una copia del growth general
+  (no se muestra); los escenarios tienen pesos/±15 % fijos del BE.
+- **Sin exportar/imprimir** y sin comparación de métodos o períodos custom:
+  fuera del alcance del plan (los botones viejos eran decorativos).
+- **Label "(IA)"**: decisión actual = no usarlo; queda a confirmación del
+  owner (es solo copy).
+- Sin `searchableRoutes` para las rutas de pronósticos (no estaban en §3.3
+  #12).
+- El fix de fechas del BE es un commit separado en `dev`
+  (`business_management`), sin push.

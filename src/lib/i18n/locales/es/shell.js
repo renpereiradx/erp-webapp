@@ -89,6 +89,13 @@ export const shell = {
   'nav.auditGroup': 'Auditoría',
   'nav.auditDashboard': 'Panel de auditoría',
   'nav.auditLogs': 'Registro de eventos',
+  // F11 — Pronósticos (5 hojas; todas con analytics:read).
+  'nav.forecastGroup': 'Pronósticos',
+  'nav.forecastDashboard': 'Resumen de pronósticos',
+  'nav.forecastInventory': 'Salud de inventario',
+  'nav.forecastSales': 'Pronóstico de ventas',
+  'nav.forecastDemand': 'Pronóstico de demanda',
+  'nav.forecastRevenue': 'Pronóstico de ingresos',
 
   'nav.collapseSidebar': 'Colapsar menú',
   'nav.expandSidebar': 'Expandir menú',

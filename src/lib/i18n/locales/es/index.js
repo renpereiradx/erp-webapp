@@ -50,6 +50,7 @@ import { receivables } from './receivables'
 import { payables } from './payables'
 import { finance } from './finance'
 import { audit } from './audit'
+import { forecast } from './forecast'
 
 /**
  * Diccionario completo de traducciones en español
@@ -103,4 +104,5 @@ export const es = {
   ...payables,
   ...finance,
   ...audit,
+  ...forecast,
 }

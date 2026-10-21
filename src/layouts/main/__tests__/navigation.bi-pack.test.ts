@@ -1,10 +1,11 @@
 /**
- * PLAN_REBUILD_BI_UI_FRONTEND F2-F7 — el grupo BI existe con Dashboard
+ * PLAN_REBUILD_BI_UI_FRONTEND F2-F11 — el grupo BI existe con Dashboard
  * (5 rutas) + Analítica de Ventas (8 hojas: 6 de F4 + 2 drill-downs de F3) +
  * drill-downs de Compras + Analítica de Inventario (4 hojas de F5) +
  * Rentabilidad (6 hojas de F6) + Cuentas por Cobrar (4 hojas de F7) +
  * Cuentas por Pagar (4 hojas de F8) + Reportes Financieros (4 hojas de F9) +
- * Auditoría (2 hojas de F10) cuando hay pack y permisos BI. Sin pack o sin hojas visibles el padre se oculta
+ * Auditoría (2 hojas de F10) + Pronósticos (5 hojas de F11) cuando hay pack y
+ * permisos BI. Sin pack o sin hojas visibles el padre se oculta
  * (incluido el padre con gate anyOf). SIFEN sigue como grupo Core propio
  * (ADR-3).
  */
@@ -42,8 +43,8 @@ const findByName = (items: NavigationItem[], name: string): NavigationItem | und
   return undefined
 }
 
-describe('navigation — Dashboard BI (F2-F7)', () => {
-  it('admin con pack: Dashboard + Ventas + Compras + Inventario + Rentabilidad + CxC', () => {
+describe('navigation — Dashboard BI (F2-F11)', () => {
+  it('admin con pack: Dashboard + Ventas + Compras + Inventario + Rentabilidad + CxC + CxP + Finanzas + Auditoría + Pronósticos', () => {
     const tree = filterNavigationItems(buildNavigation(t, false, true), checksFor(ADMIN_PERMS))
 
     const bi = findByName(tree, 'Inteligencia de Negocios')
@@ -58,6 +59,7 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
       'Cuentas por Pagar',
       'Reportes Financieros',
       'Auditoría',
+      'Pronósticos',
     ])
 
     const dashboard = findByName(tree, 'Dashboard')
@@ -141,6 +143,16 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
       '/auditoria/logs',
     ])
     expect(audit?.permission).toBe('audit:read')
+
+    const forecast = findByName(tree, 'Pronósticos')
+    expect(forecast?.children?.map((child) => child.href)).toEqual([
+      '/bi/pronosticos/dashboard',
+      '/bi/pronosticos/inventario',
+      '/bi/pronosticos/ventas',
+      '/bi/pronosticos/demanda',
+      '/bi/pronosticos/ingresos',
+    ])
+    expect(forecast?.permission).toBe('analytics:read')
   })
 
   it('sin pack BI (biEnabled=false) el grupo no existe; SIFEN sigue como Core', () => {
@@ -156,6 +168,7 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
     expect(findByName(tree, 'Cuentas por Pagar')).toBeUndefined()
     expect(findByName(tree, 'Reportes Financieros')).toBeUndefined()
     expect(findByName(tree, 'Auditoría')).toBeUndefined()
+    expect(findByName(tree, 'Pronósticos')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
   })
 
@@ -174,6 +187,7 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
       'Cuentas por Pagar',
       'Reportes Financieros',
       'Auditoría',
+      'Pronósticos',
     ])
     expect(findByName(tree, 'Dashboard')).toBeUndefined()
     expect(findByName(tree, 'Fiscal (SIFEN)')).toBeDefined()
@@ -192,8 +206,10 @@ describe('navigation — Dashboard BI (F2-F7)', () => {
       'Analítica de Compras',
       'Analítica de Inventario',
       'Rentabilidad',
+      'Pronósticos',
     ])
     expect(findByName(tree, 'Dashboard')).toBeUndefined()
+    expect(findByName(tree, 'Pronósticos')?.children).toHaveLength(5)
   })
 
   it('con reports:read solo: Descuentos y Reportes Financieros, sin analytics:read', () => {

@@ -82,6 +82,12 @@ const AuditDashboardPage = lazy(() => import('@/pages/audit/AuditDashboardPage')
 const AuditLogsPage = lazy(() => import('@/pages/audit/AuditLogsPage'))
 const AuditLogDetailPage = lazy(() => import('@/pages/audit/AuditLogDetailPage'))
 const AuditUserActivityPage = lazy(() => import('@/pages/audit/AuditUserActivityPage'))
+// PLAN_REBUILD_BI_UI_FRONTEND F11: Pronósticos (5 pantallas lazy).
+const ForecastDashboardPage = lazy(() => import('@/pages/forecast/ForecastDashboardPage'))
+const InventoryForecastPage = lazy(() => import('@/pages/forecast/InventoryForecastPage'))
+const SalesForecastPage = lazy(() => import('@/pages/forecast/SalesForecastPage'))
+const DemandForecastPage = lazy(() => import('@/pages/forecast/DemandForecastPage'))
+const RevenueForecastPage = lazy(() => import('@/pages/forecast/RevenueForecastPage'))
 import Login from '@/pages/Login.tsx'
 import BranchSelection from '@/pages/BranchSelection.tsx'
 import { CounterOrdersPage } from '@/features/counterorders'
@@ -274,6 +280,15 @@ const PayablesRoute = ({ children }: { children: React.ReactNode }) => (
  */
 const AuditRoute = ({ children }: { children: React.ReactNode }) => (
   <BiPermissionGuard permission='audit:read'>{children}</BiPermissionGuard>
+)
+
+/**
+ * F11 — Pronósticos. Las 5 pantallas comparten la cadena BE
+ * `RequireModule('bi')` → `analytics:read`
+ * (`biChain("analytics:read", "forecast")`).
+ */
+const ForecastRoute = ({ children }: { children: React.ReactNode }) => (
+  <BiPermissionGuard permission='analytics:read'>{children}</BiPermissionGuard>
 )
 
 function AppContent() {
@@ -504,6 +519,15 @@ function AppContent() {
                       <Route path='/auditoria/logs' element={<AuditRoute><AuditLogsPage /></AuditRoute>} />
                       <Route path='/auditoria/logs/:id' element={<AuditRoute><AuditLogDetailPage /></AuditRoute>} />
                       <Route path='/auditoria/usuarios/:id' element={<AuditRoute><AuditUserActivityPage /></AuditRoute>} />
+                      {/* PLAN_REBUILD_BI_UI_FRONTEND F11 — Pronósticos.
+                          Las 5 rutas usan `analytics:read`, igual que
+                          `biChain("analytics:read", "forecast")`. Siempre
+                          contra `/forecast/*` real, sin fallback demo. */}
+                      <Route path='/bi/pronosticos/dashboard' element={<ForecastRoute><ForecastDashboardPage /></ForecastRoute>} />
+                      <Route path='/bi/pronosticos/inventario' element={<ForecastRoute><InventoryForecastPage /></ForecastRoute>} />
+                      <Route path='/bi/pronosticos/ventas' element={<ForecastRoute><SalesForecastPage /></ForecastRoute>} />
+                      <Route path='/bi/pronosticos/demanda' element={<ForecastRoute><DemandForecastPage /></ForecastRoute>} />
+                      <Route path='/bi/pronosticos/ingresos' element={<ForecastRoute><RevenueForecastPage /></ForecastRoute>} />
                       <Route path='/finance/sifen-inutilizacion' element={
                         <PermissionGuard permission='sifen:read'>
                           <SkippedNumbersPage />

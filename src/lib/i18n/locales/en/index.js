@@ -34,6 +34,7 @@ import { receivables } from './receivables'
 import { payables } from './payables'
 import { finance } from './finance'
 import { audit } from './audit'
+import { forecast } from './forecast'
 import { es } from '../es/index'
 
 /**
@@ -87,4 +88,5 @@ export const en = {
   ...payables,
   ...finance,
   ...audit,
+  ...forecast,
 }

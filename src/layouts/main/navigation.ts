@@ -386,6 +386,42 @@ export const buildNavigation = (
                 },
               ],
             },
+            // F11 — Pronósticos (5 hojas). Todas usan `analytics:read`, igual
+            // que `biChain("analytics:read", "forecast")`. Los pronósticos son
+            // algoritmos estadísticos del BE, sin IA externa.
+            {
+              name: t('nav.forecastGroup', 'Pronósticos'),
+              href: '#',
+              icon: TrendingUp,
+              permission: 'analytics:read',
+              children: [
+                {
+                  name: t('nav.forecastDashboard', 'Resumen de pronósticos'),
+                  href: '/bi/pronosticos/dashboard',
+                  icon: LayoutDashboard,
+                },
+                {
+                  name: t('nav.forecastInventory', 'Salud de inventario'),
+                  href: '/bi/pronosticos/inventario',
+                  icon: Boxes,
+                },
+                {
+                  name: t('nav.forecastSales', 'Pronóstico de ventas'),
+                  href: '/bi/pronosticos/ventas',
+                  icon: TrendingUp,
+                },
+                {
+                  name: t('nav.forecastDemand', 'Pronóstico de demanda'),
+                  href: '/bi/pronosticos/demanda',
+                  icon: Package,
+                },
+                {
+                  name: t('nav.forecastRevenue', 'Pronóstico de ingresos'),
+                  href: '/bi/pronosticos/ingresos',
+                  icon: Coins,
+                },
+              ],
+            },
           ],
         },
       ]
