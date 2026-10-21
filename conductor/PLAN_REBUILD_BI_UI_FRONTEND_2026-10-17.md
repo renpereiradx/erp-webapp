@@ -2352,3 +2352,29 @@ emitía meses como `2027-07-01T18:00:00Z` en vez de inicios de mes.
   #12).
 - El fix de fechas del BE es un commit separado en `dev`
   (`business_management`), sin push.
+
+---
+
+## 20. Cierre F1–F11 — deuda consolidada (2026-10-21)
+
+F1–F11 quedan completas y verdes (baseline 2026-10-21: `tsc` 0, 348 archivos /
+2297 tests, `lint:design` "Código nuevo limpio"; BE analytics + postgres OK).
+Las deudas declaradas en §8–§19 se consolidaron y priorizaron con verificación
+en código en **`conductor/DEUDA_BI_REBUILD_FRONTEND_2026-10-21.md`** (IDs
+`BI-D01`…`BI-D26`). Ese registro reemplaza las notas sueltas de cada fase:
+varias ya estaban resueltas (FAC-000, `searchableRoutes` desde F7/F8/F9,
+destinos F5/F6/F7 de `AlertCard`) y no deben re-trabajarse.
+
+Ejecutado en la pasada de consolidación:
+
+- **BI-D02** — `logsToCSV` usa `encoding/csv` (comas/comillas/saltos de línea
+  en `username`, `description` y `error_message` ya no corren columnas) + test
+  `audit_repo_csv_test.go` (commit BE `1d24cc5`). Encabezados en inglés por
+  diseño (artefacto machine-facing, no depende del locale de la UI).
+- **BI-D04** — comentario de `AlertCard` corregido (F7 ya estaba en el set; el
+  caso `/comercial/presupuestos` queda como decisión `BI-D03`; commit FE
+  `527e0d3`).
+
+Pendiente de decisión del owner: **BI-D01** (smoke final → merge FE a `dev` →
+push ambos repos → tag SemVer) y los ítems marcados "decide el owner" en el
+registro (BI-D03, BI-D05, BI-D09, BI-D10, BI-D13, BI-D20, BI-D21).
