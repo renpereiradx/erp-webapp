@@ -4,6 +4,8 @@
 (secciones "Pendiente / deuda declarada" de cada fase) + verificación directa en código.
 **Estado:** F1–F11 integradas en `dev` y publicadas como **v1.2.0** (2026-10-21);
 cierre de deuda **BI-D03/D05/D07/D08/D09/D10** publicado como **v1.2.1** (2026-10-22).
+Últimas 4 decisiones **BI-D06/D13/D20/D21** tomadas por el owner (2026-10-22, ver §3/§5.1):
+**registro cerrado al 100%**. No requiere release (cambio de documentación).
 **Backend:** `dev` con los 5 fixes analytics + el fix de CSV de auditoría, tag `v1.2.0`.
 
 > Este documento **no reescribe** el historial del plan: lo indexa, elimina las deudas ya
@@ -28,9 +30,9 @@ cierre de deuda **BI-D03/D05/D07/D08/D09/D10** publicado como **v1.2.1** (2026-1
 | Prioridad | Ítems | Naturaleza |
 |:--|:--|:--|
 | **P0 — Cierre del hito** | 1 (resuelto) | v1.2.0 + v1.2.1 publicados |
-| **P1 — Correcciones de bajo riesgo** | 5 (4 resueltos) | D02/D03/D04/D05 resueltos; D06 abierto |
-| **P2 — Veracidad observable** | 4 (3 resueltos + 1 decidido) | D07/D08/D10 resueltos; D09 cerrado por decisión |
-| **P3 — Contratos del backend** | 11 | Cambios de contrato/decisiones de producto |
+| **P1 — Correcciones de bajo riesgo** | 5 (5 cerrados) | D02/D03/D04/D05 resueltos; D06 cerrado por decisión (2026-10-22) |
+| **P2 — Veracidad observable** | 4 (4 cerrados) | D07/D08/D10 resueltos; D09 cerrado por decisión |
+| **P3 — Contratos del backend** | 11 | D13/D20/D21 decididos por el owner (2026-10-22, §5.1); resto aceptado |
 | **P4 — Aceptado / fuera de alcance** | 5 | Documentado; no se ejecuta |
 
 Regla de cierre para cualquier ítem que se ejecute: tests colocados en el mismo diff,
@@ -102,16 +104,17 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 
 ### BI-D06 · `searchByName` de clientes/proveedores sin `AbortSignal` (deuda Core)
 
-- **Estado:** abierto.
+- **Estado:** **cerrado por decisión 2026-10-22 — aceptado, no se ejecuta.**
 - **Evidencia:** `src/services/clientService.ts:43` y `src/services/supplierService.ts:60`
   no reciben signal; `src/features/relational-analytics/hooks/useEntitySearch.ts:73-75`
   descarta respuestas viejas en el cliente.
-- **Impacto:** bajo (el dropdown ya evita resultados rancios); latencia/requests
-  desperdiciados en tipeo rápido.
-- **Fix propuesto:** propagar `signal` opcional por `clientService`/`supplierService` y
-  `api.ts`, con test de cancelación. Es superficie Core compartida: no exclusiva de BI.
-- **Esfuerzo:** S-M.
-- **Disposición:** hacer después.
+- **Por qué se acepta:** el dropdown ya evita resultados rancios por secuencia en el
+  cliente — el usuario nunca ve datos viejos. El costo restante es solo eficiencia
+  (requests desperdiciados al tipear rápido). `clientService`/`supplierService` son
+  superficie Core compartida que preexiste al rebuild: propagar `signal` por `api.ts`
+  es riesgo en código compartido sin beneficio visible para el usuario.
+- **Reabrir solo si:** se hace una pasada sistemática de cancelación (`AbortSignal`)
+  en los servicios Core, fuera del alcance BI.
 
 ---
 
@@ -197,15 +200,55 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 |:--|:--|:--|:--|
 | **BI-D11** | Agregados relacionales #1/#2/#3 no traen `currency`; se formatean como PYG (moneda base). #4 sí la trae por fila. | `src/domain/relational-analytics/normalize.ts:75-84`; plan §11 (F3). | Aceptado; corregir si el BE expone `currency` en esos reportes. |
 | **BI-D12** | Inventario pronosticado limitado a 100 productos (`LIMIT 100`); summary/conteos describen ese set, no el catálogo completo. | `internal/platform/postgres/analytics_forecast_repo.go:685` y `:1025`. | Aceptado (copy en pantalla). Cambiar exige BE + paginación del summary. |
-| **BI-D13** | Rentabilidad: el costo excluye líneas sin costo registrado (su revenue sí suma) y las unidades sin conversión quedan fuera de `units_sold` → beneficio sobreestimado/unidades subestimadas. | `internal/platform/postgres/analytics_profitability_repo.go` (uso de `sdCost`, `analytics_sql.go:165-170`); plan §14.6. | **Decide el owner**; es política de costos, no UI. |
+| **BI-D13** | Rentabilidad: el costo excluye líneas sin costo registrado (su revenue sí suma) y las unidades sin conversión quedan fuera de `units_sold` → beneficio sobreestimado/unidades subestimadas. | `internal/platform/postgres/analytics_profitability_repo.go` (uso de `sdCost`, `analytics_sql.go:165-170`); plan §14.6. | **Decidido 2026-10-22**: política ratificada tal como está (§5.1). |
 | **BI-D14** | CxP `overview.total_pending` netea sobrepagos; la UI lo compensa con el total del aging y lo documenta. | `internal/platform/postgres/analytics_payables_repo.go:119`/`:347`; plan §16.2. | Aceptado; cambiar exige repo + contrato. |
 | **BI-D15** | Caja inicial del flujo = solo cajas `OPEN` (no incluye cajas cerradas ni bancos). | `internal/platform/postgres/analytics_financial_repo.go:263-285`. | Aceptado; requiere contrato de saldos. |
 | **BI-D16** | Filtros SIFEN de libros legales aplican solo al libro de ventas y con rango completo (el endpoint por período no los acepta). | `src/features/financial-reports` (filtros); plan §17.6. | Aceptado. |
 | **BI-D17** | Pronósticos: `demand` confianza constante por fila (75/70), `trends` nunca se completa, proyección por categoría de ingresos = copia del growth general. | `internal/platform/postgres/analytics_forecast_repo.go:788`, `:859`, `:1301-1303`. | Aceptado (no se renderiza lo que no es cálculo propio). |
 | **BI-D18** | Auditoría: `sessions` y `security_events` de la ficha de usuario nunca se completan en el BE. | `internal/platform/postgres/audit_repo.go:1093` (`GetUserActivityReport` no los popula); modelo en `models/audit.go:370-372`. | Aceptado; requiere repo. |
 | **BI-D19** | Inventario: los conteos de estado de stock se superponen por diseño; ABC C incluye productos sin ventas con 0 %. | SQL del BE; plan §13.6. | Aceptado (documentado en UI). |
-| **BI-D20** | Pronósticos sin label "(IA)": el BE es estadístico. | Decisión de copy (§19.3). | **Decide el owner**; hoy no se usa. |
-| **BI-D21** | Pronósticos y Auditoría no están en `searchableRoutes`; CxC/CxP/IVA/Libros sí. | `src/config/searchableRoutes.js:17-49`. | **Decide el owner** (producto, no deuda técnica). |
+| **BI-D20** | Pronósticos sin label "(IA)": el BE es estadístico. | Decisión de copy (§19.3). | **Decidido 2026-10-22**: confirmado no usar "(IA)", definitivo (§5.1). |
+| **BI-D21** | Pronósticos y Auditoría no están en `searchableRoutes`; CxC/CxP/IVA/Libros sí. | `src/config/searchableRoutes.js:17-49`. | **Decidido 2026-10-22**: sin cambios — Auditoría ya es buscable; Pronósticos se mantiene degradado (§5.1). |
+
+### 5.1 Decisiones del owner (2026-10-22) — cierran D13/D20/D21
+
+**BI-D13 — política de costo: ratificada tal como está.**
+
+- El SQL ya la aplica como política unificada desde el cierre ① (`sdCost(alias, "")` en
+  las 12 consultas de rentabilidad): las líneas sin costo registrado no suman costo, pero
+  su revenue sí → el beneficio puede salir inflado por ese monto; las unidades sin
+  conversión quedan fuera de `units_sold`.
+- La alternativa aparente ("costo 0 en vez de excluir") es numéricamente idéntica para
+  los totales (SUM salta NULL ≡ COALESCE a 0 por fila): no es una opción real.
+- Alternativa verdadera descartada por ahora: beneficio solo sobre líneas costeadas +
+  "ingreso sin costo" aparte — cambia todos los números principales que el cliente ya ve.
+- Control operativo: que los productos tengan costo cargado (se registra con la primera
+  compra). La UI ya documenta el límite en pantalla.
+- **Reabrible como mejora barata:** KPI de "ingreso sin costo registrado / % del total"
+  en el dashboard de rentabilidad, para que el sobreestimo sea visible y no silencioso.
+
+**BI-D20 — label "(IA)": confirmado NO usarlo (definitivo).**
+
+- El BE es estadístico (regresión lineal, media móvil, suavizado), no IA/ML; rotularlo
+  "(IA)" promete de más, igual que decir "ERP completo" (posición de producto). La UI ya
+  dice "Proyecciones estadísticas del backend" y muestra el método real en cada pantalla.
+- Anotado también en el plan (§19.3 y cierre F11): confirmación del owner 2026-10-22.
+
+**BI-D21 — buscador global: sin cambios.**
+
+- Verificado en vivo con test desechable contra `buildSearchableItems` (2026-10-22):
+  **Auditoría YA es buscable** (`/auditoria` y `/auditoria/logs` están en el índice — el
+  buscador aplana todo el sidebar y "Auditoría" no califica como BI denso en
+  `isDegradableBI`); **Pronósticos está indexado pero degradado** (nombres con
+  "pronóstico"), igual que el resto de las ~30 hojas de analítica (ventas, compras,
+  inventario, rentabilidad, dashboard BI).
+- Decisión: **no se agrega nada.** Promover solo Pronósticos sería inconsistente (¿por qué
+  sí pronósticos y no rentabilidad?); el palette evita saturarse con módulos densos por
+  diseño (`search.ts` §isDegradableBI).
+- **Reabrible:** una línea en la whitelist de `isCoreModule` (`src/layouts/main/search.ts`).
+- Nota: las 4 entradas BI de `distinctSearchableRoutes` (CxC/CxP/IVA/Libros) hoy son
+  no-ops — sus hrefs ya existen en el sidebar y el dedupe por href las salta. Inofensivas;
+  limpieza opcional algún día.
 
 ---
 
@@ -249,6 +292,11 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
   release. El smoke focalizado de la release anterior (12/12) y el de catálogos
   históricos (8/8) cubren los cambios; no se repitió el smoke completo de 188 checks
   porque el código ya estaba verificado y solo cambió la versión.
+- **Cierre de las últimas 4 decisiones (2026-10-22):** BI-D06 aceptado como deuda Core
+  (no se ejecuta), BI-D13 política de costo ratificada, BI-D20 confirmado sin "(IA)",
+  BI-D21 sin cambios con verificación en vivo del índice de búsqueda (detalles en §3 y
+  §5.1). Con esto el registro queda **cerrado al 100%**: cambio de documentación sin
+  release.
 
 ## 8. Ya resuelto durante F1–F11 (no re-trabajar)
 
@@ -270,7 +318,9 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 2. ~~**Honestidad de datos (BI-D07 + BI-D08):**~~ **hecho** — metadata.partial + banner
    compartido en pronósticos y rentabilidad.
 3. ~~**Decisiones cortas (BI-D03, BI-D05, BI-D09, BI-D10):**~~ **hecho** — BI-D03/D05/
-   D10 implementados; BI-D09 cerrado por decisión. Queda BI-D06 (AbortSignal Core).
-4. **Contratos (BI-D13 primero):** si el owner confirma que el beneficio sobreestimado es
-   inaceptable, el fix de política de costos es el de mayor impacto de negocio del listado.
+   D10 implementados; BI-D09 cerrado por decisión; BI-D06 cerrado por decisión
+   (2026-10-22, aceptado como deuda Core).
+4. ~~**Contratos (BI-D13 primero):**~~ **decidido 2026-10-22** — BI-D13 política de costo
+   ratificada tal como está; BI-D20 sin "(IA)", definitivo; BI-D21 sin cambios (ver §5.1).
+   Registro cerrado al 100%.
 5. **P4:** no tocar salvo pedido explícito.

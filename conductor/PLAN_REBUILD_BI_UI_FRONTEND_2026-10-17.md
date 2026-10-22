@@ -2179,6 +2179,8 @@ emitía meses como `2027-07-01T18:00:00Z` en vez de inicios de mes.
   suavizado, estacionalidad), no IA/ML. El dashboard dice "Proyecciones
   estadísticas del backend" y cada pantalla muestra el método. La decisión de
   no rotular "(IA)" queda a confirmación del owner; es solo copy.
+  **Confirmado por el owner 2026-10-22: no se usa "(IA)", definitivo**
+  (DEUDA_BI_REBUILD_FRONTEND_2026-10-21.md §5.1).
 - **SEASONAL no se ofrece en el selector**: exige ≥ 12 puntos de historia con
   valores no nulos y la ventana mensual no lo garantiza (en dev, 12 meses de
   ventana producen 6 puntos y el endpoint responde 400). Un deep-link con
@@ -2347,7 +2349,7 @@ emitía meses como `2027-07-01T18:00:00Z` en vez de inicios de mes.
 - **Sin exportar/imprimir** y sin comparación de métodos o períodos custom:
   fuera del alcance del plan (los botones viejos eran decorativos).
 - **Label "(IA)"**: decisión actual = no usarlo; queda a confirmación del
-  owner (es solo copy).
+  owner (es solo copy). **Confirmado 2026-10-22: no se usa** (DEUDA §5.1).
 - Sin `searchableRoutes` para las rutas de pronósticos (no estaban en §3.3
   #12).
 - El fix de fechas del BE es un commit separado en `dev`
