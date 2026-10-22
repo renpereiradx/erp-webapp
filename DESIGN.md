@@ -183,6 +183,7 @@ construye con peso tipográfico y tono de superficie, no con bordes ni sombras f
 9. **NUNCA** uses gradientes, sombras pesadas (`shadow-xl`, `shadow-2xl`), ni animaciones > 300ms.
 10. **SIEMPRE** espaciado con tokens (`p-md`, `gap-lg`, `space-y-md`). Nunca valores arbitrarios (`p-[13px]`) si existe token.
 11. **SIEMPRE** que un input reciba dígitos numéricos (precios, montos, importes), formatea los miles **mientras se escribe** con el par `formatNumberInput` / `parseNumberInput` de `src/domain/shared/moneyInput.ts`: el usuario teclea `6000` y ve `6.000` (convención es-PY: punto = miles, coma = decimales). Nunca un `type="number"` crudo para montos: `type="text"` + `inputMode="decimal"` (receta §6.4).
+12. **Cero eslóganes, texto de ayuda y etiquetas secundarias.** No se agregan en UI nueva; al tocar una pantalla existente, se eliminan los que encuentres. Si una pantalla los necesita para tener sentido, el diseño está mal: corrige el diseño, no lo maquilles con texto.
 
 ---
 
@@ -750,6 +751,7 @@ export default function ProductsPage() {
 | Animaciones > 300ms, `animate-bounce` | `transition-colors duration-150` / `animate-in fade-in` |
 | Lógica de cálculo en el componente | `src/domain/<feature>/` |
 | Input de monto en crudo (`type="number"`: el usuario teclea `6000` y ve `6000`) | Par `formatNumberInput`/`parseNumberInput` (`moneyInput.ts`): ve `6.000` |
+| Eslógan/tagline, texto de ayuda decorativo, etiqueta secundaria "para que se entienda" | Cero texto decorativo: jerarquía tipográfica + datos (§3). Si la pantalla no se entiende sin ese texto, el diseño está mal — corregir el diseño (§1.12) |
 
 ---
 
