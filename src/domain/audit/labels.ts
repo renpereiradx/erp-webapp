@@ -205,6 +205,8 @@ export const auditActionFallback = (code: string | null | undefined): string =>
 /** Opciones del filtro de acción (vocabulario cerrado del modelo). */
 export const AUDIT_FILTER_ACTIONS: readonly string[] = [
   'CREATE',
+  // Acción histórica del backfill LEGACY (audit_logs.action = 'INSERT').
+  'INSERT',
   'READ',
   'UPDATE',
   'DELETE',

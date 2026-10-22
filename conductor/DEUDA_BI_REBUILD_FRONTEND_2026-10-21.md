@@ -171,10 +171,11 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
   lista vacía si falla). El grid de filtros pasa a 3 columnas (6 campos, 2 filas).
 - **Tests:** dominio (params/export/active), servicio (ruta), hook (catálogo y fallo),
   página (filtra por ambos y exporta).
-- **Residual:** una categoría histórica **fuera** del enum + `LEGACY` sigue sin poder
-  elegirse: el catálogo `/categories` del BE es el enum y no existe un endpoint de valores
-  distintos. Solucionarlo exige contrato BE (`/audit/categories?distinct=true` o similar);
-  no es resoluble solo con FE.
+- **Residual:** una categoría o un `entity_type` histórico **fuera** del enum/catálogo
+  (p. ej. `SALE_PAYMENTS` del backfill) sigue sin poder elegirse: los catálogos del BE son
+  los del modelo y no existe un endpoint de valores distintos. Solucionarlo exige contrato
+  BE (`/audit/categories|entity-types?distinct=true` o similar); no es resoluble solo con
+  FE. La acción histórica `INSERT` sí se agregó a mano al filtro.
 - **Espera:** una categoría libre desconocida se sigue mostrando en la tabla con su código
   crudo (comportamiento de F10).
 
