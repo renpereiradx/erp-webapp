@@ -44,6 +44,7 @@ import { reservations } from './reservations'
 import { dashboard } from './dashboard'
 import { relationalAnalytics } from './relationalAnalytics'
 import { salesAnalytics } from './salesAnalytics'
+import { purchaseAnalytics } from './purchaseAnalytics'
 import { inventoryAnalytics } from './inventoryAnalytics'
 import { profitability } from './profitability'
 import { receivables } from './receivables'
@@ -98,6 +99,7 @@ export const es = {
   ...dashboard,
   ...relationalAnalytics,
   ...salesAnalytics,
+  ...purchaseAnalytics,
   ...inventoryAnalytics,
   ...profitability,
   ...receivables,

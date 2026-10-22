@@ -46,6 +46,12 @@ export const shell = {
   'nav.relationalCustomerTop': 'Products by Customer',
   'nav.relationalSupplierTop': 'Supplied Products',
   'nav.relationalProductSuppliers': 'Compare Suppliers',
+  // PLAN_ANALITICA_COMPRAS — purchase aggregate group (5 screens).
+  'nav.purchaseDashboard': 'Purchases Dashboard',
+  'nav.purchaseProductsCategories': 'Products & Categories',
+  'nav.purchaseInsights': 'Suppliers & Buyers',
+  'nav.purchaseTrends': 'Trends',
+  'nav.purchasePeriodComparison': 'Period Comparison',
   // F4 — full Sales Analytics group (6 screens).
   'nav.salesDashboard': 'Sales Dashboard',
   'nav.salesProductsCategories': 'Products & Categories',

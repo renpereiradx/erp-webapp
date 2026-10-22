@@ -86,7 +86,13 @@ describe('navigation — Dashboard BI (F2-F11)', () => {
     ])
 
     const purchases = findByName(tree, 'Analítica de Compras')
+    // PLAN_ANALITICA_COMPRAS: 5 hojas agregadas + los 2 drill-downs de F3.
     expect(purchases?.children?.map((child) => child.href)).toEqual([
+      '/purchase-analytics/dashboard',
+      '/purchase-analytics/products-categories',
+      '/purchase-analytics/insights',
+      '/purchase-analytics/trends',
+      '/purchase-analytics/period-comparison',
       '/purchase-analytics/suppliers/top-products',
       '/purchase-analytics/products/suppliers',
     ])

@@ -38,6 +38,12 @@ const ProductBuyersPage = lazy(() => import('@/pages/sales-analytics/ProductBuye
 const CustomerTopProductsPage = lazy(() => import('@/pages/sales-analytics/CustomerTopProductsPage'))
 const SupplierTopProductsPage = lazy(() => import('@/pages/purchase-analytics/SupplierTopProductsPage'))
 const ProductSuppliersPage = lazy(() => import('@/pages/purchase-analytics/ProductSuppliersPage'))
+// PLAN_ANALITICA_COMPRAS — pantallas agregadas del grupo (RF-BIPACK-031..035).
+const PurchaseDashboardPage = lazy(() => import('@/pages/purchase-analytics/PurchaseDashboardPage'))
+const PurchaseProductsCategoriesPage = lazy(() => import('@/pages/purchase-analytics/PurchaseProductsCategoriesPage'))
+const PurchaseSuppliersBuyersPage = lazy(() => import('@/pages/purchase-analytics/PurchaseSuppliersBuyersPage'))
+const PurchaseTrendsPage = lazy(() => import('@/pages/purchase-analytics/PurchaseTrendsPage'))
+const PurchasePeriodComparisonPage = lazy(() => import('@/pages/purchase-analytics/PurchasePeriodComparisonPage'))
 // PLAN_REBUILD_BI_UI_FRONTEND F4: Analítica de Ventas (6 pantallas lazy).
 const SalesDashboardPage = lazy(() => import('@/pages/sales-analytics/SalesDashboardPage'))
 const ProductsCategoriesPage = lazy(() => import('@/pages/sales-analytics/ProductsCategoriesPage'))
@@ -455,6 +461,12 @@ function AppContent() {
                           /purchase-analytics. La entidad viaja por query param. */}
                       <Route path='/sales-analytics/products/buyers' element={<AnalyticsRoute><ProductBuyersPage /></AnalyticsRoute>} />
                       <Route path='/sales-analytics/customers/top-products' element={<AnalyticsRoute><CustomerTopProductsPage /></AnalyticsRoute>} />
+                      {/* PLAN_ANALITICA_COMPRAS — mismas AnalyticsRoute que el resto del grupo. */}
+                      <Route path='/purchase-analytics/dashboard' element={<AnalyticsRoute><PurchaseDashboardPage /></AnalyticsRoute>} />
+                      <Route path='/purchase-analytics/products-categories' element={<AnalyticsRoute><PurchaseProductsCategoriesPage /></AnalyticsRoute>} />
+                      <Route path='/purchase-analytics/insights' element={<AnalyticsRoute><PurchaseSuppliersBuyersPage /></AnalyticsRoute>} />
+                      <Route path='/purchase-analytics/trends' element={<AnalyticsRoute><PurchaseTrendsPage /></AnalyticsRoute>} />
+                      <Route path='/purchase-analytics/period-comparison' element={<AnalyticsRoute><PurchasePeriodComparisonPage /></AnalyticsRoute>} />
                       <Route path='/purchase-analytics/suppliers/top-products' element={<AnalyticsRoute><SupplierTopProductsPage /></AnalyticsRoute>} />
                       <Route path='/purchase-analytics/products/suppliers' element={<AnalyticsRoute><ProductSuppliersPage /></AnalyticsRoute>} />
                       {/* PLAN_REBUILD_BI_UI_FRONTEND F4 — Analítica de Ventas.

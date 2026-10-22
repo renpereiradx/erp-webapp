@@ -798,6 +798,234 @@ export interface DiscountSummaryParams {
   branch_id?: number;
 }
 
+// --- Analítica de Compras (PLAN_ANALITICA_COMPRAS, RF-BIPACK-031..035) -------
+//
+// Contrato REAL de `/purchase-analytics/*` (`business_management/models/
+// purchase_analytics.go` + `internal/analytics/http_purchase.go`). Mismo
+// week-rolling que ventas. Decisiones del BE que la UI debe respetar:
+// agregados sobre COMPLETED + moneda base; `pending_*` y
+// `excluded_other_currency` viajan aparte para no ocultarlos.
+
+export interface PurchasePerformanceComparison {
+  previous_period: BIReportPeriod;
+  purchases_change: number;
+  purchases_change_pct: number;
+  transactions_change: number;
+  transactions_change_pct: number;
+  order_change: number;
+  order_change_pct: number;
+}
+
+/** Respuesta de `GET /purchase-analytics/performance` (con `compare=true`). */
+export interface PurchasePerformance {
+  period: BIReportPeriod;
+  total_purchases: number;
+  total_transactions: number;
+  average_order: number;
+  total_units: number;
+  unique_suppliers: number;
+  /** Órdenes PENDING del rango: fuera de los agregados, visibles aparte. */
+  pending_orders: number;
+  pending_amount: number;
+  /** Compras COMPLETED en moneda no base excluidas de TODOS los agregados. */
+  excluded_other_currency: number;
+  comparison?: PurchasePerformanceComparison;
+}
+
+export interface PurchaseTrendPoint {
+  timestamp: string;
+  label: string;
+  purchases: number;
+  transactions: number;
+  units: number;
+  average_order: number;
+}
+
+export interface PurchaseTrends {
+  period: BIReportPeriod;
+  granularity: string;
+  data_points: PurchaseTrendPoint[];
+  summary: {
+    trend_direction: 'UP' | 'DOWN' | 'STABLE' | string;
+    growth_rate: number;
+    peak_period: string;
+    peak_value: number;
+    low_period: string;
+    low_value: number;
+    volatility: number;
+  };
+}
+
+export interface CategoryPurchasesData {
+  category_id: string;
+  category_name: string;
+  purchases: number;
+  percentage: number;
+  transactions: number;
+  units_purchased: number;
+  average_price: number;
+  top_product: string;
+  top_product_purchases: number;
+}
+
+export interface PurchasesByCategory {
+  period: BIReportPeriod;
+  categories: CategoryPurchasesData[];
+  total_purchases: number;
+}
+
+export interface ProductPurchasesData {
+  product_id: string;
+  product_name: string;
+  /** Drift del BE (igual que ventas): `sku` es el id del producto. No mostrarlo. */
+  sku: string;
+  category_name: string;
+  purchases: number;
+  units_purchased: number;
+  average_price: number;
+  transactions: number;
+  last_purchase_date: string;
+  rank: number;
+}
+
+/** `sort_by` aceptado por `GET /purchase-analytics/by-product` (whitelist BE). */
+export type PurchaseProductSort = 'purchases' | 'units' | 'name' | 'last_purchase';
+export type PurchaseSupplierSort = 'amount' | 'purchases' | 'name' | 'last_purchase';
+export type PurchaseSortOrder = 'asc' | 'desc';
+
+export interface PurchasesByProduct {
+  period: BIReportPeriod;
+  products: ProductPurchasesData[];
+  pagination: BIPaginationInfo;
+}
+
+export interface SupplierPurchasesData {
+  supplier_id: string;
+  supplier_name: string;
+  supplier_doc?: string;
+  total_purchases: number;
+  transaction_count: number;
+  average_order: number;
+  last_purchase: string;
+  first_purchase: string;
+  rank: number;
+}
+
+export interface PurchasesBySupplier {
+  period: BIReportPeriod;
+  suppliers: SupplierPurchasesData[];
+  pagination: BIPaginationInfo;
+}
+
+export interface BuyerPurchasesData {
+  buyer_id: string;
+  buyer_name: string;
+  total_purchases: number;
+  transaction_count: number;
+  units_purchased: number;
+  average_order: number;
+  rank: number;
+}
+
+export interface PurchasesByBuyer {
+  period: BIReportPeriod;
+  buyers: BuyerPurchasesData[];
+  pagination: BIPaginationInfo;
+}
+
+export interface PaymentMethodPurchases {
+  method: string;
+  display_name: string;
+  purchases: number;
+  percentage: number;
+  transaction_count: number;
+  average_order: number;
+}
+
+export interface PurchasesByPaymentMethod {
+  period: BIReportPeriod;
+  payment_methods: PaymentMethodPurchases[];
+  total_purchases: number;
+}
+
+export interface PurchasesByHour {
+  period: BIReportPeriod;
+  hourly_data: Array<{ hour: number; purchases: number; transactions: number; percentage: number }>;
+  peak_hour: number;
+  peak_purchases: number;
+}
+
+export interface PurchasesByDayOfWeek {
+  period: BIReportPeriod;
+  daily_data: Array<{
+    day_of_week: number;
+    day_name: string;
+    purchases: number;
+    transactions: number;
+    average_order: number;
+    percentage: number;
+  }>;
+  best_day: string;
+  best_purchases: number;
+}
+
+export interface PurchaseComparisonPeriod {
+  period: BIReportPeriod;
+  total_purchases: number;
+  total_transactions: number;
+  total_units: number;
+  average_order: number;
+  unique_suppliers: number;
+}
+
+export interface PurchaseComparison {
+  period_1: PurchaseComparisonPeriod;
+  period_2: PurchaseComparisonPeriod;
+  differences: {
+    purchases_change: number;
+    purchases_change_pct: number;
+    transactions_change: number;
+    transactions_change_pct: number;
+    units_change: number;
+    units_change_pct: number;
+    order_change: number;
+    order_change_pct: number;
+    suppliers_change: number;
+    suppliers_change_pct: number;
+  };
+}
+
+export interface PurchasePeriodParams {
+  period?: DashboardPeriod;
+}
+
+export interface PurchasePageParams extends PurchasePeriodParams {
+  page?: number;
+  page_size?: number;
+}
+
+export interface PurchaseProductParams extends PurchasePageParams {
+  sort_by?: PurchaseProductSort;
+  sort_order?: PurchaseSortOrder;
+}
+
+export interface PurchaseSupplierParams extends PurchasePageParams {
+  sort_by?: PurchaseSupplierSort;
+  sort_order?: PurchaseSortOrder;
+}
+
+export interface PurchaseTrendsParams extends PurchasePeriodParams {
+  granularity?: SalesTrendGranularity;
+}
+
+export interface PurchaseComparisonParams {
+  period?: DashboardPeriod;
+  start1?: string;
+  end1?: string;
+  start2?: string;
+  end2?: string;
+}
+
 // --- Analítica de Inventario (F5) -------------------------------------------
 //
 // Contrato REAL de `/inventory-analytics/*` (`business_management/models/

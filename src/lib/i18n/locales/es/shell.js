@@ -46,6 +46,12 @@ export const shell = {
   'nav.relationalCustomerTop': 'Productos por Cliente',
   'nav.relationalSupplierTop': 'Productos Suministrados',
   'nav.relationalProductSuppliers': 'Comparar Proveedores',
+  // PLAN_ANALITICA_COMPRAS — grupo agregado de compras (5 pantallas).
+  'nav.purchaseDashboard': 'Dashboard de Compras',
+  'nav.purchaseProductsCategories': 'Productos y Categorías',
+  'nav.purchaseInsights': 'Proveedores y Compradores',
+  'nav.purchaseTrends': 'Tendencias',
+  'nav.purchasePeriodComparison': 'Comparativa de Períodos',
   // F4 — Analítica de Ventas completa (6 pantallas del grupo).
   'nav.salesDashboard': 'Dashboard de Ventas',
   'nav.salesProductsCategories': 'Productos y Categorías',

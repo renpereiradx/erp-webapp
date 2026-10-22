@@ -188,15 +188,50 @@ export const buildNavigation = (
               icon: ShoppingCart,
               permission: 'analytics:read',
               children: [
+                // PLAN_ANALITICA_COMPRAS — grupo agregado (RF-BIPACK-031..035).
+                // Las 5 hojas agregadas van primero; los drill-downs
+                // relacionales (F3) quedan al final, como en ventas.
+                {
+                  name: t('nav.purchaseDashboard', 'Dashboard de Compras'),
+                  href: '/purchase-analytics/dashboard',
+                  icon: BarChart3,
+                  permission: 'analytics:read',
+                },
+                {
+                  name: t('nav.purchaseProductsCategories', 'Productos y Categorías'),
+                  href: '/purchase-analytics/products-categories',
+                  icon: Package,
+                  permission: 'analytics:read',
+                },
+                {
+                  name: t('nav.purchaseInsights', 'Proveedores y Compradores'),
+                  href: '/purchase-analytics/insights',
+                  icon: Store,
+                  permission: 'analytics:read',
+                },
+                {
+                  name: t('nav.purchaseTrends', 'Tendencias'),
+                  href: '/purchase-analytics/trends',
+                  icon: Gauge,
+                  permission: 'analytics:read',
+                },
+                {
+                  name: t('nav.purchasePeriodComparison', 'Comparativa de Períodos'),
+                  href: '/purchase-analytics/period-comparison',
+                  icon: ArrowLeftRight,
+                  permission: 'analytics:read',
+                },
                 {
                   name: t('nav.relationalSupplierTop', 'Productos Suministrados'),
                   href: '/purchase-analytics/suppliers/top-products',
                   icon: Package,
+                  permission: 'analytics:read',
                 },
                 {
                   name: t('nav.relationalProductSuppliers', 'Comparar Proveedores'),
                   href: '/purchase-analytics/products/suppliers',
                   icon: Tags,
+                  permission: 'analytics:read',
                 },
               ],
             },

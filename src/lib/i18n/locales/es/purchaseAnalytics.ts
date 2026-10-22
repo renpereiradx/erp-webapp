@@ -1,0 +1,168 @@
+/**
+ * Analítica de Compras (PLAN_ANALITICA_COMPRAS, RF-BIPACK-031..035).
+ * Paridad es/en exigida por purchaseAnalytics.locale.test.ts.
+ */
+export const purchaseAnalytics = {
+  purchaseAnalytics: {
+    errors: {
+      title: 'No se pudieron cargar los datos',
+    },
+    actions: {
+      refresh: 'Actualizar',
+      viewAll: 'Ver todos',
+    },
+    period: {
+      label: 'Período',
+      today: 'Hoy',
+      week: 'Últimos 7 días',
+      month: 'Este mes',
+      year: 'Este año',
+    },
+    trend: {
+      up: 'Tendencia al alza',
+      down: 'Tendencia a la baja',
+      stable: 'Sin tendencia',
+    },
+    table: {
+      scrollHint: 'Deslizá la tabla para ver todas las columnas.',
+      sortedAsc: 'ordenado ascendente',
+      sortedDesc: 'ordenado descendente',
+      sortBy: 'ordenar por',
+    },
+    columns: {
+      period: 'Período',
+      purchases: 'Compras',
+      orders: 'Órdenes',
+      ordersWithCount: 'Órdenes: {count}',
+      ordersCount: 'Órdenes',
+      units: 'Unidades',
+      share: 'Participación',
+      category: 'Categoría',
+      topProduct: 'Producto principal',
+      product: 'Producto',
+      supplier: 'Proveedor',
+      buyer: 'Comprador',
+      amount: 'Monto comprado',
+      avgPrice: 'Precio promedio',
+      avgOrder: 'Orden promedio',
+      lastPurchase: 'Última compra',
+      hour: 'Hora',
+      day: 'Día',
+    },
+    kpi: {
+      purchases: 'Compras',
+      orders: 'Órdenes',
+      avgOrder: 'Orden promedio',
+      units: 'Unidades',
+      suppliers: 'Proveedores',
+      pendingHint: 'Pendientes: {count} · {amount}',
+      excludedCurrency: 'Se excluyen {count} compras en moneda distinta a la base.',
+    },
+    dashboard: {
+      title: 'Dashboard de compras',
+      kpisTitle: 'Indicadores del período',
+      kpisSubtitle: 'Compras recibidas en moneda base, contra la ventana previa equivalente.',
+      trendTitle: 'Evolución de las compras',
+      trendSubtitle: 'Compras agrupadas por la granularidad del período.',
+      paymentTitle: 'Medios de pago',
+      paymentSubtitle: 'Participación sobre las compras del período.',
+      topSuppliersTitle: 'Proveedores con más compras',
+      topSuppliersSubtitle: 'Los 5 proveedores con mayor monto comprado del período.',
+      topCategoriesTitle: 'Categorías con más compras',
+      topCategoriesSubtitle: 'Top 5 de categorías del período.',
+    },
+    payment: {
+      empty: 'Sin compras registradas',
+      emptyHint: 'El período seleccionado no tiene compras para desglosar.',
+      unknown: 'Sin método registrado',
+      unknownHint: 'Órdenes sin método de pago asociado: {count}',
+      orders: 'Órdenes: {count}',
+    },
+    categories: {
+      title: 'Compras por categoría',
+      empty: 'Sin compras en el período',
+      emptyHint: 'Probá con otro período.',
+    },
+    productsPage: {
+      title: 'Compras por producto y categoría',
+    },
+    products: {
+      title: 'Productos comprados',
+      empty: 'Sin productos comprados',
+      emptyHint: 'Probá con otro período.',
+    },
+    suppliers: {
+      title: 'Compras por proveedor',
+      empty: 'Sin compras en el período',
+      emptyHint: 'Probá con otro período.',
+    },
+    buyers: {
+      title: 'Compras por comprador',
+      empty: 'Sin compradores en el período',
+      emptyHint: 'Probá con otro período.',
+    },
+    insights: {
+      title: 'Proveedores y compradores',
+    },
+    trendsPage: {
+      title: 'Tendencias de compras',
+    },
+    trends: {
+      empty: 'Sin compras en el período',
+      emptyHint: 'Probá con otro período para ver la serie de compras.',
+      seriesTitle: 'Serie del período',
+      caption: 'Serie de compras del período seleccionado',
+      direction: 'Tendencia',
+      growth: 'Primera vs última fecha',
+      peak: 'Mejor fecha',
+      low: 'Peor fecha',
+      barHint: 'Las barras se escalan contra la fecha con más compras de la serie.',
+    },
+    hourly: {
+      title: 'Compras por hora',
+      peak: 'Hora pico: {hour}',
+      empty: 'Sin compras en el período',
+      emptyHint: 'Probá con otro período.',
+    },
+    weekday: {
+      title: 'Compras por día de la semana',
+      best: 'Mejor día: {day}',
+      empty: 'Sin compras en el período',
+      emptyHint: 'Probá con otro período.',
+    },
+    comparison: {
+      title: 'Comparativa de compras',
+      controlsTitle: 'Parámetros',
+      modePeriod: 'Período vs anterior',
+      modeCustom: 'Rangos personalizados',
+      modeLabel: 'Modo de comparación',
+      periodA: 'Período A',
+      periodB: 'Período B',
+      from: 'Desde',
+      to: 'Hasta',
+      invalidRange:
+        'Cada rango debe tener una fecha válida con "Desde" no posterior a "Hasta".',
+      apply: 'Comparar',
+      resultTitle: 'Resultado',
+      resultSubtitle: 'Ventana A contra ventana B; la variación es A − B.',
+      fixRange: 'Corregí el rango de fechas para ver la comparación.',
+      partialHint:
+        'La ventana actual incluye solo las compras registradas hasta hoy; la ventana B es la previa de igual duración.',
+      metric: 'Métrica',
+      windowA: 'Ventana A',
+      windowB: 'Ventana B',
+      change: 'Variación',
+      empty: 'Sin compras en ninguna de las ventanas',
+      emptyHint: 'Probá con otro período o con rangos de fechas que tengan compras.',
+      metrics: {
+        purchases: 'Compras',
+        transactions: 'Órdenes',
+        units: 'Unidades',
+        avgOrder: 'Orden promedio',
+        suppliers: 'Proveedores',
+      },
+    },
+  },
+}
+
+export default purchaseAnalytics
