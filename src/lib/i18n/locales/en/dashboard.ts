@@ -19,10 +19,6 @@ export const dashboard = {
     errors: {
       title: 'Could not load the data',
     },
-    partial: {
-      message:
-        'Some sections could not be fully calculated. The values shown may be incomplete.',
-    },
     units: {
       days: 'days',
       times: 'x',

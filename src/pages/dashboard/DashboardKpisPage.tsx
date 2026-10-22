@@ -1,5 +1,6 @@
 import PageHeader from '@/components/ui/PageHeader'
 import { QueryBoundary } from '@/components/ui/QueryBoundary'
+import { PartialDataBanner } from '@/components/ui/PartialDataBanner'
 import { useI18n } from '@/lib/i18n'
 import { buildKpiGroups } from '@/domain/dashboard/kpis'
 import {
@@ -7,7 +8,6 @@ import {
   DashboardPeriodSelector,
   DashboardRefreshButton,
   KpiGroupsPanel,
-  PartialDataBanner,
   useDashboardKpis,
 } from '@/features/bi-dashboard'
 

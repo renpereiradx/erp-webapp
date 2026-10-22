@@ -190,4 +190,26 @@ describe('ProfitabilityDashboardPage (F6)', () => {
     expect((await screen.findAllByText('No se pudieron cargar los datos')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('network down').length).toBeGreaterThan(0)
   })
+
+  it('muestra el banner de datos parciales cuando el envelope trae partial', async () => {
+    vi.mocked(profitabilityService.getDashboard).mockResolvedValue(
+      profitabilityEnvelope(DASHBOARD, {
+        partial: true,
+        partial_errors: ['trends: boom'],
+      }) as never,
+    )
+    renderProfitabilityPage(<ProfitabilityDashboardPage />)
+
+    expect(await screen.findByTestId('profitability-partial-banner')).toBeInTheDocument()
+    expect(screen.getByTestId('profitability-partial-banner')).toHaveTextContent(
+      'Algunas secciones no pudieron calcularse completas',
+    )
+  })
+
+  it('no muestra el banner con un envelope sano', async () => {
+    renderProfitabilityPage(<ProfitabilityDashboardPage />)
+    await screen.findByText('Dashboard de rentabilidad')
+
+    expect(screen.queryByTestId('profitability-partial-banner')).toBeNull()
+  })
 })

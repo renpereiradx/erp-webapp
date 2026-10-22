@@ -94,6 +94,8 @@ export const common = {
   'common.close': 'Close',
   'common.delete': 'Delete',
   'common.optional': 'Optional',
+  'common.partialData.message':
+    'Some sections could not be fully calculated. The values shown may be incomplete.',
   'common.home': 'Home',
 
   // Error states

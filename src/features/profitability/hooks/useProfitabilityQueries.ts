@@ -13,6 +13,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { profitabilityService } from '@/services/bi/profitabilityService'
 import type {
+  BIMetadata,
   CategoryProfitabilityReport,
   CustomerProfitabilityReport,
   DashboardPeriod,
@@ -78,6 +79,8 @@ export interface ProfitabilityDashboardView {
   topCategories: NonNullable<ProfitabilityDashboard['top_categories']>
   trends: ProfitabilityTrendPoint[]
   alerts: ProfitabilityAlert[]
+  /** `metadata.partial` del envelope (T8/BR-4a): sección ensamblada con fallos. */
+  metadata?: BIMetadata
 }
 
 export const useProfitabilityDashboard = (period: DashboardPeriod) =>
@@ -93,6 +96,7 @@ export const useProfitabilityDashboard = (period: DashboardPeriod) =>
         topCategories: toArray(data?.top_categories),
         trends: toArray(data?.trends),
         alerts: toArray(data?.alerts),
+        metadata: response.metadata,
       }
     },
     staleTime: PROFITABILITY_STALE_TIME,

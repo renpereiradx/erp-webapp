@@ -16,6 +16,7 @@ import { TableCard } from '@/components/ui/TableCard'
 import { QueryBoundary } from '@/components/ui/QueryBoundary'
 import { TableEmptyState } from '@/components/ui/TableEmptyState'
 import { PanelSkeleton, TableSkeleton } from '@/components/ui/DataSkeletons'
+import { PartialDataBanner } from '@/components/ui/PartialDataBanner'
 import {
   CategoriesTable,
   CustomersTable,
@@ -116,6 +117,7 @@ const ProfitabilityDashboardPage = () => {
   const dashboardQuery = useProfitabilityDashboard(period)
 
   const data = dashboardQuery.data
+  const isPartial = Boolean(data?.metadata?.partial)
   const errorTitle = t('profitability.errors.title', 'No se pudieron cargar los datos')
   const kpiRows = buildDashboardKpis(data?.dashboard.kpis)
   const kpiItems = kpiRows.map((row) => {
@@ -183,6 +185,13 @@ const ProfitabilityDashboardPage = () => {
         </div>
       }
     >
+      {isPartial ? (
+        <PartialDataBanner
+          metadata={data?.metadata}
+          testId="profitability-partial-banner"
+        />
+      ) : null}
+
       <SectionCard
         title={t('profitability.dashboard.kpiTitle', 'Indicadores de rentabilidad')}
         description={t(

@@ -151,4 +151,26 @@ describe('ForecastDashboardPage (F11)', () => {
     expect(container.textContent).not.toContain('en tiempo real')
     expect(container.textContent).not.toContain('Live')
   })
+
+  it('muestra el banner de datos parciales cuando el envelope trae partial', async () => {
+    vi.mocked(forecastService.getDashboard).mockResolvedValue(
+      forecastEnvelope(forecastDashboardFixture(), {
+        partial: true,
+        partial_errors: ['demand_forecast: boom'],
+      }) as never,
+    )
+    renderForecastPage(<ForecastDashboardPage />)
+
+    expect(await screen.findByTestId('forecast-partial-banner')).toBeInTheDocument()
+    expect(screen.getByTestId('forecast-partial-banner')).toHaveTextContent(
+      'Algunas secciones no pudieron calcularse completas',
+    )
+  })
+
+  it('no muestra el banner con un envelope sano', async () => {
+    renderForecastPage(<ForecastDashboardPage />)
+    await screen.findByTestId('forecast-dashboard-kpis')
+
+    expect(screen.queryByTestId('forecast-partial-banner')).toBeNull()
+  })
 })

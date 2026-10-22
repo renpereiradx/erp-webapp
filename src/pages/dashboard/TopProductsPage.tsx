@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { DollarSign, Package, Search, TrendingUp } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import { QueryBoundary } from '@/components/ui/QueryBoundary'
+import { PartialDataBanner } from '@/components/ui/PartialDataBanner'
 import { TableEmptyState } from '@/components/ui/TableEmptyState'
 import { Input } from '@/components/ui/input'
 import SegmentedControl from '@/components/ui/SegmentedControl'
@@ -16,7 +17,6 @@ import {
   DashboardRefreshButton,
   KpiCard,
   PanelSkeleton,
-  PartialDataBanner,
   TopProductsTable,
   useDashboardTopProducts,
 } from '@/features/bi-dashboard'

@@ -19,10 +19,6 @@ export const dashboard = {
     errors: {
       title: 'No se pudieron cargar los datos',
     },
-    partial: {
-      message:
-        'Algunas secciones no pudieron calcularse completas. Los valores mostrados pueden estar incompletos.',
-    },
     units: {
       days: 'días',
       times: 'x',

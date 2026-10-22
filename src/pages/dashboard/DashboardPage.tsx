@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useI18n } from '@/lib/i18n'
 import PageHeader from '@/components/ui/PageHeader'
 import { QueryBoundary } from '@/components/ui/QueryBoundary'
+import { PartialDataBanner } from '@/components/ui/PartialDataBanner'
 import {
   ActivityPanel,
   AlertsPreview,
@@ -11,7 +12,6 @@ import {
   DashboardSection,
   OperationsPanel,
   PanelSkeleton,
-  PartialDataBanner,
   SummaryCards,
   TopProductsPreview,
   TrendsPanel,

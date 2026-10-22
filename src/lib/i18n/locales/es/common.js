@@ -76,6 +76,8 @@ export const common = {
   'status.published': 'Publicado',
 
   // Mensajes comunes
+  'common.partialData.message':
+    'Algunas secciones no pudieron calcularse completas. Los valores mostrados pueden estar incompletos.',
   'common.home': 'Inicio',
   'common.cancel': 'Cancelar',
   'common.save': 'Guardar',

@@ -15,6 +15,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { forecastService } from '@/services/bi/forecastService'
 import type {
+  BIMetadata,
   DemandForecast,
   ForecastDashboard,
   InventoryForecast,
@@ -107,17 +108,26 @@ const normalizeDashboard = (dashboard: ForecastDashboard): ForecastDashboard => 
   recommendations: toArray(dashboard.recommendations),
 })
 
+/**
+ * Dashboard consolidado + metadata del envelope. `metadata.partial` indica que
+ * el BE ensambló una sección con fallos (T8/BR-4a); la pantalla lo muestra
+ * como banner en vez de presentar el vacío/cero como dato real.
+ */
+export type ForecastDashboardView = ForecastDashboard & { metadata?: BIMetadata }
+
 /** Dashboard consolidado del horizonte pedido (default 3 meses en el BE). */
 export const useForecastDashboard = (months: number) =>
   useQuery({
     queryKey: forecastQueryKeys.dashboard(months),
-    queryFn: async (): Promise<ForecastDashboard> =>
-      normalizeDashboard(
-        requireData(
-          (await forecastService.getDashboard({ months }))?.data,
-          '/forecast/dashboard',
+    queryFn: async (): Promise<ForecastDashboardView> => {
+      const response = await forecastService.getDashboard({ months })
+      return {
+        ...normalizeDashboard(
+          requireData(response?.data, '/forecast/dashboard'),
         ),
-      ),
+        metadata: response?.metadata,
+      }
+    },
     staleTime: FORECAST_STALE_TIME,
   })
 

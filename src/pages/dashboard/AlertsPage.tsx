@@ -3,6 +3,7 @@ import { AlertTriangle, BellOff, BellRing, Info, ShieldAlert } from 'lucide-reac
 import PageHeader from '@/components/ui/PageHeader'
 import EmptyState from '@/components/ui/EmptyState'
 import { QueryBoundary } from '@/components/ui/QueryBoundary'
+import { PartialDataBanner } from '@/components/ui/PartialDataBanner'
 import { useI18n } from '@/lib/i18n'
 import { useSearchFocusShortcut } from '@/hooks/useSearchFocusShortcut'
 import {
@@ -20,7 +21,6 @@ import {
   DashboardSection,
   KpiCard,
   PanelSkeleton,
-  PartialDataBanner,
   useDashboardAlerts,
 } from '@/features/bi-dashboard'
 

@@ -4,6 +4,7 @@ import { useI18n } from '@/lib/i18n'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { QueryBoundary } from '@/components/ui/QueryBoundary'
 import { PanelSkeleton } from '@/components/ui/DataSkeletons'
+import { PartialDataBanner } from '@/components/ui/PartialDataBanner'
 import {
   ForecastControlGroup,
   ForecastGroupLinks,
@@ -114,6 +115,7 @@ const ForecastDashboardPage = () => {
   const { months, setMonths } = useDashboardForecastParams()
   const query = useForecastDashboard(months)
   const data = query.data
+  const isPartial = Boolean(data?.metadata?.partial)
 
   const values = Object.fromEntries(
     dashboardKpis(data).map((row) => [row.id, row]),
@@ -186,6 +188,13 @@ const ForecastDashboardPage = () => {
         onRetry={() => void query.refetch()}
         skeleton={<DashboardSkeleton />}
       >
+        {isPartial ? (
+          <PartialDataBanner
+            metadata={data?.metadata}
+            testId="forecast-partial-banner"
+          />
+        ) : null}
+
         <SectionCard
           title={t('forecast.dashboard.kpisTitle', 'Indicadores del horizonte')}
           description={t(
