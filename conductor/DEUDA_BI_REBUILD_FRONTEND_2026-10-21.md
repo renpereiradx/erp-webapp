@@ -15,7 +15,7 @@ Cierre de deuda post-release **BI-D03/D05/D07/D08/D09/D10** en `dev`, local (sin
 | Gate | Resultado |
 |:--|:--|
 | `npx tsc --noEmit` | 0 errores |
-| `npx vitest --run` | 350 archivos / 2309 tests OK |
+| `npx vitest --run` | 350 archivos / 2310 tests OK |
 | `pnpm lint:design -- --base dev` | OK — "Código nuevo limpio" |
 | `go test ./internal/analytics/... ./internal/platform/postgres/...` | OK |
 | Anti-invención (`mock`/`Math.random`/`dummy`/claims) en superficie BI | limpio (solo `placeholder` de inputs y `vi.mock` de tests) |
@@ -163,21 +163,28 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 
 ### BI-D10 · Filtros de auditoría incompletos
 
-- **Estado:** **resuelto 2026-10-21** para acción y tipo de entidad.
+- **Estado:** **resuelto 2026-10-22**, incluyendo el residual de valores históricos.
+- **BE (contrato nuevo):** `AuditRepository` suma `DistinctAuditCategories`/
+  `DistinctAuditEntityTypes` (repo: `SELECT DISTINCT` branch-scoped, whitelist de columna,
+  `LIMIT 500` defensivo); `AuditService` los delega. `/api/v1/audit/categories` y
+  `/api/v1/audit/entity-types` aceptan `?distinct=true|1` y mergean el vocabulario del
+  modelo con los valores reales de `audit_logs`, deduplicando y ordenando; el default sigue
+  siendo el catálogo del modelo (compatibilidad). Un fallo del repo responde error, no una
+  lista silenciosamente incompleta.
 - **FE:** `AuditLogFilters` suma `action` y `entityType`; viajan a `/logs` y al export
   (`filter.action`/`filter.entity_type`, soportados por `models.AuditLogFilter`). Acción
-  usa el vocabulario cerrado de `domain/audit/labels.ts`; tipo de entidad usa el catálogo
-  real `/api/v1/audit/entity-types` (`useAuditEntityTypes`, `staleTime` 30 min, degrada a
-  lista vacía si falla). El grid de filtros pasa a 3 columnas (6 campos, 2 filas).
-- **Tests:** dominio (params/export/active), servicio (ruta), hook (catálogo y fallo),
-  página (filtra por ambos y exporta).
-- **Residual:** una categoría o un `entity_type` histórico **fuera** del enum/catálogo
-  (p. ej. `SALE_PAYMENTS` del backfill) sigue sin poder elegirse: los catálogos del BE son
-  los del modelo y no existe un endpoint de valores distintos. Solucionarlo exige contrato
-  BE (`/audit/categories|entity-types?distinct=true` o similar); no es resoluble solo con
-  FE. La acción histórica `INSERT` sí se agregó a mano al filtro.
-- **Espera:** una categoría libre desconocida se sigue mostrando en la tabla con su código
-  crudo (comportamiento de F10).
+  usa el vocabulario cerrado de `domain/audit/labels.ts` (+ `INSERT` histórico); categorías
+  y tipos de entidad se piden con `?distinct=true` (`useAuditCatalogs`, `staleTime` 30 min;
+  categorías degradan al vocabulario del modelo y entity types a [] si falla). El grid de
+  filtros pasa a 3 columnas (6 campos, 2 filas).
+- **Valores históricos verificados en vivo:** `LEGACY` (categoría), `SALE_PAYMENTS` y
+  `reserves` (entity types) aparecen con `distinct=true` y son filtrables; sin el param el
+  catálogo sigue siendo el del modelo.
+- **Tests:** handler BE (4: default, merge, `distinct=1`/`false`, error), dominio
+  (params/export/active), servicio (rutas + `distinct`), hook (catálogos y fallback),
+  página (filtra por acción/entity type y por valores históricos; export).
+- **Etiquetas:** los valores conocidos se traducen; los históricos se muestran con su
+  código crudo (nunca una etiqueta inventada).
 
 ---
 
@@ -206,7 +213,7 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 
 | ID | Ítem | Nota |
 |:--|:--|:--|
-| **BI-D22** | Endpoints no consumidos por falta de pantalla: CxC (`aging/summary`, `collection/reminders`, `high-priority`, `statistics/date-range`), CxP (`overdue`, `urgent`, `reminders*`, `statistics/date-range`, `payment-capacity`, `supplier/{id}`), Finanzas (variantes `date-range`, `profit-margins`, `tax-summary/annual`, `compare-periods`, `/vat/monthly`, `vat-prorrateo/period`), Auditoría (`summary/range`, `trends*`, `dashboard/range`, `users/top`, `entity/.../history`, catálogos). | No se agregaron métodos muertos al FE. Consumirlos exige pantalla nueva. |
+| **BI-D22** | Endpoints no consumidos por falta de pantalla: CxC (`aging/summary`, `collection/reminders`, `high-priority`, `statistics/date-range`), CxP (`overdue`, `urgent`, `reminders*`, `statistics/date-range`, `payment-capacity`, `supplier/{id}`), Finanzas (variantes `date-range`, `profit-margins`, `tax-summary/annual`, `compare-periods`, `/vat/monthly`, `vat-prorrateo/period`), Auditoría (`summary/range`, `trends*`, `dashboard/range`, `users/top`, `entity/.../history`, `/actions` y `/levels`; categorías y entity-types ya se consumen con `distinct=true`). | No se agregaron métodos muertos al FE. Consumirlos exige pantalla nueva. |
 | **BI-D23** | Sin comparación custom de períodos, export/impresión, selector de filas o export JSON desde la UI. | Los botones viejos eran decorativos; §5.9. |
 | **BI-D24** | Sin registro de pagos a proveedor ni pantalla de movimientos de stock. | Pagos pertenecen a Compras; movimientos a Stock. |
 | **BI-D25** | `/profitability/overview` y `/overview/date-range` sin handler/consumo; `OverviewWithComparison` sin handler. | El dashboard consolidado los reemplaza. |
@@ -233,8 +240,9 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 - **BI-D07/08** — `metadata.partial` en los dashboards de pronósticos y rentabilidad
   (modelos + repos + handlers BE) y banner compartido en ambas pantallas, con tests.
 - **BI-D09** — cerrado por decisión: SEASONAL se mantiene fuera de la UI (ver arriba).
-- **BI-D10** — filtros de acción y tipo de entidad (catálogo real) + export, con tests;
-  residual de categorías históricas documentado.
+- **BI-D10** — filtros de acción y tipo de entidad + export; catálogos BE con
+  `?distinct=true` para categorías/entity types históricos (`LEGACY`, `SALE_PAYMENTS`),
+  con tests BE/FE.
 - Registro consolidado (este documento) + puntero §20 en el plan.
 
 ## 8. Ya resuelto durante F1–F11 (no re-trabajar)

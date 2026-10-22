@@ -2357,8 +2357,8 @@ emitía meses como `2027-07-01T18:00:00Z` en vez de inicios de mes.
 
 ## 20. Cierre F1–F11 — deuda consolidada (2026-10-21)
 
-F1–F11 quedan completas y verdes (baseline 2026-10-21: `tsc` 0, 350 archivos /
-2309 tests, `lint:design` "Código nuevo limpio"; BE analytics + postgres OK).
+F1–F11 quedan completas y verdes (baseline 2026-10-22: `tsc` 0, 350 archivos /
+2310 tests, `lint:design` "Código nuevo limpio"; BE analytics + postgres OK).
 Las deudas declaradas en §8–§19 se consolidaron y priorizaron con verificación
 en código en **`conductor/DEUDA_BI_REBUILD_FRONTEND_2026-10-21.md`** (IDs
 `BI-D01`…`BI-D26`). Ese registro reemplaza las notas sueltas de cada fase:
@@ -2400,10 +2400,12 @@ snapshot de release pendiente (decisión del owner).
 - **BI-D09** — cerrado por decisión: SEASONAL no se expone (un prechequeo
   exigiría query sonda y un deep-link no puede validarse antes del fetch;
   relajar el BE etiquetaría mal el método). El BE sigue soportándolo.
-- **BI-D10** — filtros de Acción (vocabulario cerrado) y Tipo de entidad
-  (catálogo real `/api/v1/audit/entity-types`) en el registro y en el export;
-  residual: una categoría histórica fuera del enum + `LEGACY` requiere un
-  endpoint de valores distintos en el BE.
+- **BI-D10** — filtros de Acción (vocabulario cerrado + `INSERT` histórico) y
+  Tipo de entidad en el registro y en el export. Contrato BE nuevo:
+  `/api/v1/audit/categories|entity-types?distinct=true` mergea el vocabulario
+  del modelo con los valores reales de `audit_logs` (branch-scoped), así se
+  filtran `LEGACY`, `SALE_PAYMENTS` y demás valores históricos. La UI degrada
+  al vocabulario estático si el catálogo falla.
 
 Gates de esta pasada: `tsc` 0 · 350 archivos / 2309 tests · `lint:design` OK ·
 `go test` analytics+postgres OK · smoke focalizado 12/12 (filtros, export,
