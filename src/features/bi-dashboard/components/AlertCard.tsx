@@ -16,18 +16,18 @@ const CATEGORY_LABELS: Record<string, string> = {
 const MAX_PRODUCTS = 5
 
 /**
- * Rutas de alerta que YA existen en el router. F5 re-activó inventario
- * (`/inventory-analytics/stock-levels`), F6 el margen negativo
- * (`/profitability/products`) y F7 las vencidas (`/receivables/overdue`).
- * `/comercial/presupuestos` también existe (Core), pero se deja fuera hasta
- * decidir su gate: la entrada del sidebar exige `budgets:read` y el alert no
- * lo comprueba. Un botón "Gestionar" que cae en 404 es la affordance muerta
- * de la auditoría 2026-09.
+ * Rutas de alerta que YA existen en el router: es el espejo del catálogo
+ * canónico del BE (`analytics.AlertActionURLs`) y debe cambiar en el mismo
+ * diff. F5 re-activó inventario, F6 el margen negativo, F7 las vencidas y
+ * F10/BI-D03 presupuestos (ruta Core sin guard en el router; su página
+ * degrada con toast si el usuario no tiene `budgets:read`). Un botón
+ * "Gestionar" que cae en 404 es la affordance muerta de la auditoría 2026-09.
  */
 const ACTIONABLE_ALERT_ROUTES = new Set([
   '/inventory-analytics/stock-levels',
   '/profitability/products',
   '/receivables/overdue',
+  '/comercial/presupuestos',
 ])
 
 /**

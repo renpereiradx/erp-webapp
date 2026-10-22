@@ -151,7 +151,7 @@ describe('AlertsPage (F2)', () => {
     expect(link).toHaveAttribute('href', '/profitability/products')
   })
 
-  it('solo enlaza "Gestionar" cuando el destino existe (stock-levels F5 + vencidas F7)', async () => {
+  it('enlaza "Gestionar" con los 4 destinos reales (F5/F6/F7 + presupuestos F10)', async () => {
     renderPage()
     await screen.findByText('Stock agotado')
 
@@ -159,11 +159,13 @@ describe('AlertsPage (F2)', () => {
     expect(manageLinks.map((link) => link.getAttribute('href'))).toEqual([
       '/inventory-analytics/stock-levels',
       '/receivables/overdue',
+      '/comercial/presupuestos',
     ])
-    // Presupuestos por vencer sigue sin destino existente en el router.
+    // El catálogo del BE (`AlertActionURLs`) incluye los 4 destinos; el de
+    // margen negativo se cubre en el test de F6.
     expect(
       manageLinks.some((link) => link.getAttribute('href') === '/comercial/presupuestos'),
-    ).toBe(false)
+    ).toBe(true)
 
     for (const name of [/marcar/i, /silenciar/i, /ver reporte/i, /actualizar datos/i]) {
       expect(screen.queryByRole('button', { name })).toBeNull()
