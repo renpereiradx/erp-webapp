@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import {
   AUDIT_FILTER_ACTIONS,
-  AUDIT_FILTER_CATEGORIES,
   AUDIT_FILTER_LEVELS,
   auditActionFallback,
   auditActionLabelKey,
@@ -38,7 +37,9 @@ interface AuditFiltersProps {
   searchDraft: string
   rangeState: AuditRangeState
   hasActiveFilters: boolean
-  /** Tipos de entidad del catálogo real (`/api/v1/audit/entity-types`). */
+  /** Categorías del catálogo real (`/api/v1/audit/categories?distinct=true`). */
+  categoryOptions: readonly AuditCatalogOption[]
+  /** Tipos de entidad del catálogo real (`/api/v1/audit/entity-types?distinct=true`). */
   entityTypeOptions: readonly AuditCatalogOption[]
   onCategoryChange: (value: string) => void
   onActionChange: (value: string) => void
@@ -56,16 +57,17 @@ interface AuditFiltersProps {
  * Barra de filtros del registro. Todos los filtros viajan al BE
  * (start_date/end_date/search/category/action/entity_type/level/success); el
  * texto se aplica con Enter o "Aplicar" para no refetchear por tecla.
- * Categoría, acción y nivel ofrecen el vocabulario del modelo (+ LEGACY del
- * backfill); los tipos de entidad salen del catálogo real
- * (`/api/v1/audit/entity-types`). Un código histórico fuera de esas listas se
- * sigue viendo en la tabla, pero no se puede elegir acá.
+ * Categorías y tipos de entidad salen de los catálogos reales con
+ * `?distinct=true` (incluyen `LEGACY`, `SALE_PAYMENTS` y otros valores
+ * históricos); acción y nivel ofrecen el vocabulario del modelo (+ `INSERT`
+ * del backfill).
  */
 export const AuditFilters = ({
   filters,
   searchDraft,
   rangeState,
   hasActiveFilters,
+  categoryOptions,
   entityTypeOptions,
   onCategoryChange,
   onActionChange,
@@ -134,9 +136,12 @@ export const AuditFilters = ({
               onChange={(event) => onCategoryChange(event.target.value)}
             >
               <option value="">{t('audit.filters.allCategories', 'Todas')}</option>
-              {AUDIT_FILTER_CATEGORIES.map((code) => (
-                <option key={code} value={code}>
-                  {t(auditCategoryLabelKey(code), auditCategoryFallback(code))}
+              {categoryOptions.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {t(
+                    auditCategoryLabelKey(option.code),
+                    auditCategoryFallback(option.code),
+                  )}
                 </option>
               ))}
             </select>

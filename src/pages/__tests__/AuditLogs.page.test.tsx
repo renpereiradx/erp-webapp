@@ -34,6 +34,7 @@ vi.mock('@/services/bi/auditService', () => ({
     getLogs: vi.fn(),
     getLogById: vi.fn(),
     getUserActivity: vi.fn(),
+    getCategories: vi.fn(),
     getEntityTypes: vi.fn(),
     exportLogs: vi.fn(),
   },
@@ -63,10 +64,17 @@ describe('AuditLogsPage (F10)', () => {
       blob: new Blob(['id\n']),
       filename: 'audit_logs.csv',
     })
+    vi.mocked(auditService.getCategories).mockResolvedValue(
+      auditEnvelope([
+        { code: 'SALE', name: 'Ventas' },
+        { code: 'LEGACY', name: 'LEGACY' },
+      ]) as never,
+    )
     vi.mocked(auditService.getEntityTypes).mockResolvedValue(
       auditEnvelope([
         { code: 'SALE', name: 'Venta' },
         { code: 'PAYMENT', name: 'Pago' },
+        { code: 'SALE_PAYMENTS', name: 'SALE_PAYMENTS' },
       ]) as never,
     )
   })
@@ -143,6 +151,46 @@ describe('AuditLogsPage (F10)', () => {
     await waitFor(() =>
       expect(auditService.getLogs).toHaveBeenLastCalledWith(
         expect.objectContaining({ action: 'CREATE', entity_type: 'SALE' }),
+      ),
+    )
+  })
+
+  it('ofrece categorías y entity types históricos del catálogo distinct (BI-D10)', async () => {
+    renderAuditPage(<AuditLogsPage />)
+    await screen.findByTestId('audit-logs-table')
+
+    const categorySelect = screen.getByLabelText('Categoría') as HTMLSelectElement
+    const entitySelect = screen.getByLabelText('Tipo de entidad', {
+      exact: true,
+    }) as HTMLSelectElement
+    await waitFor(() =>
+      expect(
+        Array.from(categorySelect.options).some((option) => option.value === 'LEGACY'),
+      ).toBe(true),
+    )
+    await waitFor(() =>
+      expect(
+        Array.from(entitySelect.options).some(
+          (option) => option.value === 'SALE_PAYMENTS',
+        ),
+      ).toBe(true),
+    )
+    vi.mocked(auditService.getLogs).mockClear()
+
+    fireEvent.change(categorySelect, { target: { value: 'LEGACY' } })
+    await waitFor(() =>
+      expect(auditService.getLogs).toHaveBeenLastCalledWith(
+        expect.objectContaining({ category: 'LEGACY', page: 1 }),
+      ),
+    )
+
+    fireEvent.change(entitySelect, { target: { value: 'SALE_PAYMENTS' } })
+    await waitFor(() =>
+      expect(auditService.getLogs).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          category: 'LEGACY',
+          entity_type: 'SALE_PAYMENTS',
+        }),
       ),
     )
   })

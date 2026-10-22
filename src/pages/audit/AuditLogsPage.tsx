@@ -16,7 +16,7 @@ import {
   AuditRefreshButton,
   AuditSortHeader,
   AuditTable,
-  useAuditEntityTypes,
+  useAuditCatalogs,
   useAuditExport,
   useAuditLogs,
   type AuditColumn,
@@ -61,7 +61,8 @@ const AuditLogsPage = () => {
   // acción, resultado o búsqueda no la congelan: la pestaña sigue "hoy".
   const [rangeTouched, setRangeTouched] = useState(false)
   const exporter = useAuditExport()
-  const entityTypeOptions = useAuditEntityTypes()
+  const { categories: categoryOptions, entityTypes: entityTypeOptions } =
+    useAuditCatalogs()
 
   /**
    * BI-D05: una pestaña abierta más de un día conservaba el rango inicial
@@ -294,6 +295,7 @@ const AuditLogsPage = () => {
         searchDraft={searchDraft}
         rangeState={rangeState}
         hasActiveFilters={filtersActive}
+        categoryOptions={categoryOptions}
         entityTypeOptions={entityTypeOptions}
         onCategoryChange={(category) => updateFilters({ category })}
         onActionChange={(action) => updateFilters({ action })}

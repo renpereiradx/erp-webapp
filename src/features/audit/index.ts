@@ -21,7 +21,7 @@ export { AuditTable } from './components/AuditTable'
 export { AuditTopUsersTable } from './components/AuditTopUsersTable'
 export { AuditTrendChart } from './components/AuditTrendChart'
 
-export { useAuditEntityTypes } from './hooks/useAuditCatalogs'
+export { useAuditCatalogs } from './hooks/useAuditCatalogs'
 export { useAuditExport } from './hooks/useAuditExport'
 export { useAuditPeriod } from './hooks/useAuditPeriod'
 export {

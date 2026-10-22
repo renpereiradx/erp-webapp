@@ -63,10 +63,15 @@ describe('auditService (F10)', () => {
     })
   })
 
-  it('catálogo de tipos de entidad: ruta real', async () => {
+  it('catálogos con valores distintos: categories y entity-types', async () => {
+    await auditService.getCategories()
+    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/audit/categories', {
+      params: { distinct: 'true' },
+    })
+
     await auditService.getEntityTypes()
     expect(apiClient.get).toHaveBeenCalledWith('/api/v1/audit/entity-types', {
-      params: {},
+      params: { distinct: 'true' },
     })
   })
 

@@ -15,10 +15,11 @@
  * muertos): `/summary*`, `/trends*` (el dashboard embebe las tendencias),
  * `/dashboard/range` y `/users/{id}/activity/range` (solo 4 períodos),
  * `/users/top` (el dashboard embebe el top 5) y `/entity/{type}/{id}/history`
- * (no hay pantalla de entidad en el plan). De los catálogos solo se consume
- * `/entity-types` para el filtro homónimo; categorías y acciones usan el
- * vocabulario cerrado de `domain/audit/labels.ts` (el catálogo del BE no
- * incluye `LEGACY`) y los niveles son los cuatro del modelo.
+ * (no hay pantalla de entidad en el plan). De los catálogos se consumen
+ * `/categories` y `/entity-types` con `?distinct=true` (BI-D10): el BE mergea
+ * el vocabulario del modelo con los valores reales de `audit_logs`, así se
+ * pueden filtrar `LEGACY`/`SALE_PAYMENTS`. Acción y nivel siguen siendo el
+ * vocabulario cerrado de `domain/audit/labels.ts` (+ `INSERT` histórico).
  */
 import { apiClient } from '../api';
 import { telemetry } from '../../utils/telemetry';
@@ -79,10 +80,30 @@ export const auditService = {
     }
   },
 
-  /** Catálogo de tipos de entidad para el filtro del registro. */
+  /**
+   * Catálogo de categorías: vocabulario del modelo + valores reales del log
+   * (`?distinct=true`, BI-D10). El BE deduplica y ordena.
+   */
+  async getCategories(): Promise<BIEnvelope<AuditCatalogOption[]>> {
+    try {
+      return await get<AuditCatalogOption[]>('/api/v1/audit/categories', {
+        distinct: true,
+      });
+    } catch (error) {
+      recordError('getCategories', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Catálogo de tipos de entidad: vocabulario del modelo + valores reales del
+   * log (`?distinct=true`, BI-D10), p. ej. `SALE_PAYMENTS`.
+   */
   async getEntityTypes(): Promise<BIEnvelope<AuditCatalogOption[]>> {
     try {
-      return await get<AuditCatalogOption[]>('/api/v1/audit/entity-types');
+      return await get<AuditCatalogOption[]>('/api/v1/audit/entity-types', {
+        distinct: true,
+      });
     } catch (error) {
       recordError('getEntityTypes', error);
       throw error;
