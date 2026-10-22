@@ -24,6 +24,8 @@ describe('audit/filters', () => {
     expect(defaults.endDate).toBe('2026-10-21')
     expect(defaults.search).toBe('')
     expect(defaults.category).toBe('')
+    expect(defaults.action).toBe('')
+    expect(defaults.entityType).toBe('')
     expect(defaults.level).toBe('')
     expect(defaults.result).toBe('ALL')
     expect(AUDIT_RESULT_FILTERS).toEqual(['ALL', 'SUCCESS', 'FAILURE'])
@@ -45,6 +47,8 @@ describe('audit/filters', () => {
         filters({
           search: '  SALE-1  ',
           category: 'SALE',
+          action: 'CREATE',
+          entityType: 'SALE',
           level: 'ERROR',
           result: 'FAILURE',
         }),
@@ -59,6 +63,8 @@ describe('audit/filters', () => {
       page_size: 10,
       search: 'SALE-1',
       category: 'SALE',
+      action: 'CREATE',
+      entity_type: 'SALE',
       level: 'ERROR',
       success: false,
       sort_by: 'action',
@@ -97,6 +103,8 @@ describe('audit/filters', () => {
     expect(hasActiveAuditFilters(defaults, defaults)).toBe(false)
     expect(hasActiveAuditFilters(filters({ search: 'admin' }), defaults)).toBe(true)
     expect(hasActiveAuditFilters(filters({ category: 'AUTH' }), defaults)).toBe(true)
+    expect(hasActiveAuditFilters(filters({ action: 'LOGIN' }), defaults)).toBe(true)
+    expect(hasActiveAuditFilters(filters({ entityType: 'SALE' }), defaults)).toBe(true)
     expect(hasActiveAuditFilters(filters({ result: 'FAILURE' }), defaults)).toBe(true)
     expect(
       hasActiveAuditFilters(filters({ startDate: '2026-10-01' }), defaults),
@@ -108,13 +116,21 @@ describe('audit/filters', () => {
   it('export: search viaja como search y success como string', () => {
     expect(
       toAuditExportFilters(
-        filters({ search: '  admin ', category: 'LEGACY', result: 'SUCCESS' }),
+        filters({
+          search: '  admin ',
+          category: 'LEGACY',
+          action: 'LOGIN',
+          entityType: 'USER',
+          result: 'SUCCESS',
+        }),
       ),
     ).toEqual({
       start_date: '2026-09-22',
       end_date: '2026-10-21',
       search: 'admin',
       category: 'LEGACY',
+      action: 'LOGIN',
+      entity_type: 'USER',
       success: 'true',
     })
   })

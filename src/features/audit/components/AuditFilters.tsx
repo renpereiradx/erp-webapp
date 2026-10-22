@@ -6,13 +6,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import {
+  AUDIT_FILTER_ACTIONS,
   AUDIT_FILTER_CATEGORIES,
   AUDIT_FILTER_LEVELS,
+  auditActionFallback,
+  auditActionLabelKey,
   auditCategoryFallback,
   auditCategoryLabelKey,
   auditLevelFallback,
   auditLevelLabelKey,
 } from '@/domain/audit/labels'
+import type { AuditCatalogOption } from '@/types/bi'
 import {
   AUDIT_RESULT_FILTERS,
   type AuditLogFilters,
@@ -34,7 +38,11 @@ interface AuditFiltersProps {
   searchDraft: string
   rangeState: AuditRangeState
   hasActiveFilters: boolean
+  /** Tipos de entidad del catálogo real (`/api/v1/audit/entity-types`). */
+  entityTypeOptions: readonly AuditCatalogOption[]
   onCategoryChange: (value: string) => void
+  onActionChange: (value: string) => void
+  onEntityTypeChange: (value: string) => void
   onLevelChange: (value: string) => void
   onResultChange: (value: AuditResultFilter) => void
   onStartDateChange: (value: string) => void
@@ -46,17 +54,22 @@ interface AuditFiltersProps {
 
 /**
  * Barra de filtros del registro. Todos los filtros viajan al BE
- * (start_date/end_date/search/category/level/success); el texto se aplica con
- * Enter o "Aplicar" para no refetchear por tecla. Categoría y nivel ofrecen el
- * vocabulario del modelo (+ LEGACY del backfill); un código histórico fuera
- * de esa lista se sigue viendo en la tabla, pero no se puede elegir acá.
+ * (start_date/end_date/search/category/action/entity_type/level/success); el
+ * texto se aplica con Enter o "Aplicar" para no refetchear por tecla.
+ * Categoría, acción y nivel ofrecen el vocabulario del modelo (+ LEGACY del
+ * backfill); los tipos de entidad salen del catálogo real
+ * (`/api/v1/audit/entity-types`). Un código histórico fuera de esas listas se
+ * sigue viendo en la tabla, pero no se puede elegir acá.
  */
 export const AuditFilters = ({
   filters,
   searchDraft,
   rangeState,
   hasActiveFilters,
+  entityTypeOptions,
   onCategoryChange,
+  onActionChange,
+  onEntityTypeChange,
   onLevelChange,
   onResultChange,
   onStartDateChange,
@@ -71,6 +84,8 @@ export const AuditFilters = ({
   const fromId = `${ids}-from`
   const toId = `${ids}-to`
   const categoryId = `${ids}-category`
+  const actionId = `${ids}-action`
+  const entityTypeId = `${ids}-entity-type`
   const levelId = `${ids}-level`
 
   const invalidRange = rangeState === 'invalid'
@@ -83,7 +98,7 @@ export const AuditFilters = ({
       data-testid="audit-filters"
     >
       <div className="flex flex-col gap-md">
-        <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-xs">
             <Label htmlFor={fromId} className="text-body-sm-bold text-foreground">
               {t('audit.filters.from', 'Desde')}
@@ -122,6 +137,42 @@ export const AuditFilters = ({
               {AUDIT_FILTER_CATEGORIES.map((code) => (
                 <option key={code} value={code}>
                   {t(auditCategoryLabelKey(code), auditCategoryFallback(code))}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-xs">
+            <Label htmlFor={actionId} className="text-body-sm-bold text-foreground">
+              {t('audit.filters.action', 'Acción')}
+            </Label>
+            <select
+              id={actionId}
+              className={SELECT_CLASS}
+              value={filters.action}
+              onChange={(event) => onActionChange(event.target.value)}
+            >
+              <option value="">{t('audit.filters.allActions', 'Todas')}</option>
+              {AUDIT_FILTER_ACTIONS.map((code) => (
+                <option key={code} value={code}>
+                  {t(auditActionLabelKey(code), auditActionFallback(code))}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-xs">
+            <Label htmlFor={entityTypeId} className="text-body-sm-bold text-foreground">
+              {t('audit.filters.entityType', 'Tipo de entidad')}
+            </Label>
+            <select
+              id={entityTypeId}
+              className={SELECT_CLASS}
+              value={filters.entityType}
+              onChange={(event) => onEntityTypeChange(event.target.value)}
+            >
+              <option value="">{t('audit.filters.allEntityTypes', 'Todos')}</option>
+              {entityTypeOptions.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.name || option.code}
                 </option>
               ))}
             </select>

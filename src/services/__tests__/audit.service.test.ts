@@ -63,6 +63,13 @@ describe('auditService (F10)', () => {
     })
   })
 
+  it('catálogo de tipos de entidad: ruta real', async () => {
+    await auditService.getEntityTypes()
+    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/audit/entity-types', {
+      params: {},
+    })
+  })
+
   it('detalle: codifica el id en la ruta', async () => {
     await auditService.getLogById('27088')
     expect(apiClient.get).toHaveBeenCalledWith('/api/v1/audit/logs/27088', {

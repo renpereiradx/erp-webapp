@@ -2622,6 +2622,12 @@ export interface AuditDashboard {
   error_summary: AuditErrorSummary[] | null;
 }
 
+/** Catálogo de auditoría (`/api/v1/audit/{categories,actions,levels,entity-types}`). */
+export interface AuditCatalogOption {
+  code: string;
+  name: string;
+}
+
 /** `GET /api/v1/audit/logs` — paginación real del BE. */
 export interface AuditLogsResponse {
   logs: AuditLogEntry[] | null;
@@ -2699,6 +2705,8 @@ export interface AuditUserActivityReport {
 export interface AuditExportFilters {
   search?: string;
   category?: string;
+  action?: string;
+  entity_type?: string;
   level?: string;
   success?: 'true' | 'false';
   start_date?: string;

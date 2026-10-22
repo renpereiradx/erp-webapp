@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Download, FileSearch, ListChecks } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '@/lib/i18n'
@@ -16,6 +16,7 @@ import {
   AuditRefreshButton,
   AuditSortHeader,
   AuditTable,
+  useAuditEntityTypes,
   useAuditExport,
   useAuditLogs,
   type AuditColumn,
@@ -49,12 +50,57 @@ import { formatDateTime, formatDuration } from '@/domain/audit/format'
  */
 const AuditLogsPage = () => {
   const { t, lang } = useI18n()
-  const [defaults] = useState<AuditLogFilters>(() => defaultAuditLogFilters())
+  const [defaults, setDefaults] = useState<AuditLogFilters>(() =>
+    defaultAuditLogFilters(),
+  )
   const [filters, setFilters] = useState<AuditLogFilters>(defaults)
   const [searchDraft, setSearchDraft] = useState('')
   const [page, setPage] = useState(1)
   const [sort, setSort] = useState<AuditSort | null>(null)
+  // Solo una edición manual del rango congela la ventana. Categoría, nivel,
+  // acción, resultado o búsqueda no la congelan: la pestaña sigue "hoy".
+  const [rangeTouched, setRangeTouched] = useState(false)
   const exporter = useAuditExport()
+  const entityTypeOptions = useAuditEntityTypes()
+
+  /**
+   * BI-D05: una pestaña abierta más de un día conservaba el rango inicial
+   * hasta "Limpiar". Al volver a foco/visibilidad se recalcula la ventana de
+   * 30 días, conservando el resto de los filtros. Si el usuario editó las
+   * fechas, no se pisa su selección.
+   */
+  const refreshDefaultRange = useCallback(() => {
+    if (rangeTouched) return
+    const fresh = defaultAuditLogFilters()
+    // Mismo día: no se toca la UI (ni se resetea la página en la que está el
+    // usuario al volver a la pestaña).
+    if (
+      filters.startDate === fresh.startDate &&
+      filters.endDate === fresh.endDate
+    ) {
+      return
+    }
+    setDefaults(fresh)
+    setFilters({
+      ...filters,
+      startDate: fresh.startDate,
+      endDate: fresh.endDate,
+    })
+    setPage(1)
+  }, [filters, rangeTouched])
+
+  useEffect(() => {
+    const onFocus = () => refreshDefaultRange()
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshDefaultRange()
+    }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [refreshDefaultRange])
 
   const rangeState = auditRangeState(filters.startDate, filters.endDate)
   const queryable = isAuditRangeQueryable(rangeState)
@@ -75,7 +121,10 @@ const AuditLogsPage = () => {
   }
 
   const handleClear = () => {
-    setFilters(defaults)
+    const fresh = defaultAuditLogFilters()
+    setDefaults(fresh)
+    setFilters(fresh)
+    setRangeTouched(false)
     setSearchDraft('')
     setPage(1)
     setSort(null)
@@ -245,11 +294,20 @@ const AuditLogsPage = () => {
         searchDraft={searchDraft}
         rangeState={rangeState}
         hasActiveFilters={filtersActive}
+        entityTypeOptions={entityTypeOptions}
         onCategoryChange={(category) => updateFilters({ category })}
+        onActionChange={(action) => updateFilters({ action })}
+        onEntityTypeChange={(entityType) => updateFilters({ entityType })}
         onLevelChange={(level) => updateFilters({ level })}
         onResultChange={handleResultChange}
-        onStartDateChange={(startDate) => updateFilters({ startDate })}
-        onEndDateChange={(endDate) => updateFilters({ endDate })}
+        onStartDateChange={(startDate) => {
+          setRangeTouched(true)
+          updateFilters({ startDate })
+        }}
+        onEndDateChange={(endDate) => {
+          setRangeTouched(true)
+          updateFilters({ endDate })
+        }}
         onSearchDraftChange={setSearchDraft}
         onApplySearch={handleApplySearch}
         onClear={handleClear}

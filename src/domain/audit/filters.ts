@@ -31,6 +31,10 @@ export interface AuditLogFilters {
   search: string
   /** Código exacto (`''` = todas). */
   category: string
+  /** Código exacto (`''` = todas). */
+  action: string
+  /** `entity_type` exacto (`''` = todos). */
+  entityType: string
   /** Código exacto (`''` = todos). */
   level: string
   result: AuditResultFilter
@@ -41,6 +45,8 @@ export const defaultAuditLogFilters = (now: Date = new Date()): AuditLogFilters 
   endDate: toLocalDateKey(now),
   search: '',
   category: '',
+  action: '',
+  entityType: '',
   level: '',
   result: 'ALL',
 })
@@ -114,6 +120,8 @@ export const toAuditLogsParams = (
   const search = filters.search.trim()
   if (search !== '') params.search = search
   if (filters.category !== '') params.category = filters.category
+  if (filters.action !== '') params.action = filters.action
+  if (filters.entityType !== '') params.entity_type = filters.entityType
   if (filters.level !== '') params.level = filters.level
   if (filters.result === 'SUCCESS') params.success = true
   if (filters.result === 'FAILURE') params.success = false
@@ -133,6 +141,8 @@ export const toAuditExportFilters = (filters: AuditLogFilters): AuditExportFilte
   const search = filters.search.trim()
   if (search !== '') result.search = search
   if (filters.category !== '') result.category = filters.category
+  if (filters.action !== '') result.action = filters.action
+  if (filters.entityType !== '') result.entity_type = filters.entityType
   if (filters.level !== '') result.level = filters.level
   if (filters.result === 'SUCCESS') result.success = 'true'
   if (filters.result === 'FAILURE') result.success = 'false'
@@ -148,5 +158,7 @@ export const hasActiveAuditFilters = (
   filters.endDate !== defaults.endDate ||
   filters.search.trim() !== '' ||
   filters.category !== '' ||
+  filters.action !== '' ||
+  filters.entityType !== '' ||
   filters.level !== '' ||
   filters.result !== 'ALL'

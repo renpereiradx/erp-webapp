@@ -202,6 +202,30 @@ export const auditActionLabelKey = (code: string | null | undefined): string =>
 export const auditActionFallback = (code: string | null | undefined): string =>
   ACTION_FALLBACK[auditActionKey(code)] || rawOrDash(code)
 
+/** Opciones del filtro de acción (vocabulario cerrado del modelo). */
+export const AUDIT_FILTER_ACTIONS: readonly string[] = [
+  'CREATE',
+  'READ',
+  'UPDATE',
+  'DELETE',
+  'LOGIN',
+  'LOGOUT',
+  'EXPORT',
+  'IMPORT',
+  'APPROVE',
+  'REJECT',
+  'CANCEL',
+  'REVERSE',
+  'ADJUST',
+  'TRANSFER',
+  'GENERATE',
+  'PROCESS',
+  'OPEN',
+  'CLOSE',
+  'VOID',
+  'FAILURE',
+]
+
 // --- Niveles ----------------------------------------------------------------
 
 export type AuditLevelKey = 'info' | 'warning' | 'error' | 'critical' | 'unknown'

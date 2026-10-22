@@ -4,8 +4,8 @@
  * estados honestos (rango inválido/incompleto, empty, error). Sin KPIs
  * inventados junto a la tabla.
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 
 vi.mock('@/lib/i18n', () => ({
   useI18n: () => ({
@@ -34,6 +34,7 @@ vi.mock('@/services/bi/auditService', () => ({
     getLogs: vi.fn(),
     getLogById: vi.fn(),
     getUserActivity: vi.fn(),
+    getEntityTypes: vi.fn(),
     exportLogs: vi.fn(),
   },
 }))
@@ -49,6 +50,10 @@ import AuditLogsPage from '../audit/AuditLogsPage'
 const defaults = defaultAuditLogFilters()
 
 describe('AuditLogsPage (F10)', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(auditService.getLogs).mockResolvedValue(
@@ -58,6 +63,12 @@ describe('AuditLogsPage (F10)', () => {
       blob: new Blob(['id\n']),
       filename: 'audit_logs.csv',
     })
+    vi.mocked(auditService.getEntityTypes).mockResolvedValue(
+      auditEnvelope([
+        { code: 'SALE', name: 'Venta' },
+        { code: 'PAYMENT', name: 'Pago' },
+      ]) as never,
+    )
   })
 
   it('consulta con la ventana de 30 días y muestra los eventos reales', async () => {
@@ -113,6 +124,29 @@ describe('AuditLogsPage (F10)', () => {
     )
   })
 
+  it('filtra por acción y tipo de entidad con el catálogo del BE (BI-D10)', async () => {
+    renderAuditPage(<AuditLogsPage />)
+    await screen.findByTestId('audit-logs-table')
+    await screen.findByRole('option', { name: 'Venta' })
+    vi.mocked(auditService.getLogs).mockClear()
+
+    fireEvent.change(screen.getByLabelText('Acción'), { target: { value: 'CREATE' } })
+    await waitFor(() =>
+      expect(auditService.getLogs).toHaveBeenLastCalledWith(
+        expect.objectContaining({ action: 'CREATE', page: 1 }),
+      ),
+    )
+
+    fireEvent.change(screen.getByLabelText('Tipo de entidad'), {
+      target: { value: 'SALE' },
+    })
+    await waitFor(() =>
+      expect(auditService.getLogs).toHaveBeenLastCalledWith(
+        expect.objectContaining({ action: 'CREATE', entity_type: 'SALE' }),
+      ),
+    )
+  })
+
   it('aplica el texto con Enter y lo recorta; Limpiar vuelve al rango inicial', async () => {
     renderAuditPage(<AuditLogsPage />)
     await screen.findByTestId('audit-logs-table')
@@ -150,6 +184,47 @@ describe('AuditLogsPage (F10)', () => {
 
     await screen.findByText('Rango de fechas inválido')
     expect(auditService.getLogs).not.toHaveBeenCalled()
+  })
+
+  it('refresca la ventana al volver a foco si el rango no se tocó (BI-D05)', async () => {
+    renderAuditPage(<AuditLogsPage />)
+    await screen.findByTestId('audit-logs-table')
+    const to = screen.getByLabelText('Hasta') as HTMLInputElement
+    const initialTo = to.value
+
+    vi.useFakeTimers({ toFake: ['Date'] })
+    const future = new Date()
+    future.setDate(future.getDate() + 2)
+    vi.setSystemTime(future)
+    act(() => {
+      window.dispatchEvent(new Event('focus'))
+    })
+
+    await waitFor(() => expect(to.value).not.toBe(initialTo))
+    expect(to.value).toBe(
+      defaultAuditLogFilters(future).endDate,
+    )
+  })
+
+  it('no pisa un rango elegido por el usuario al volver a foco (BI-D05)', async () => {
+    renderAuditPage(<AuditLogsPage />)
+    await screen.findByTestId('audit-logs-table')
+
+    fireEvent.change(screen.getByLabelText('Desde'), {
+      target: { value: '2026-01-01' },
+    })
+    fireEvent.change(screen.getByLabelText('Hasta'), {
+      target: { value: '2026-01-31' },
+    })
+
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2027, 0, 15, 12, 0, 0))
+    await act(async () => {
+      window.dispatchEvent(new Event('focus'))
+    })
+
+    expect(screen.getByLabelText('Desde')).toHaveValue('2026-01-01')
+    expect(screen.getByLabelText('Hasta')).toHaveValue('2026-01-31')
   })
 
   it('ordena server-side por acción con ciclo ASC → DESC → default', async () => {

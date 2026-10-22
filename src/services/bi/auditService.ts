@@ -14,14 +14,16 @@
  * Endpoints NO consumidos por las pantallas de F10 (no se agregan métodos
  * muertos): `/summary*`, `/trends*` (el dashboard embebe las tendencias),
  * `/dashboard/range` y `/users/{id}/activity/range` (solo 4 períodos),
- * `/users/top` (el dashboard embebe el top 5), `/entity/{type}/{id}/history`
- * (no hay pantalla de entidad en el plan) y los catálogos
- * `/categories|/actions|/levels|/entity-types` (el vocabulario cerrado vive en
- * `domain/audit/labels.ts`; LEGACY no está en el catálogo del BE).
+ * `/users/top` (el dashboard embebe el top 5) y `/entity/{type}/{id}/history`
+ * (no hay pantalla de entidad en el plan). De los catálogos solo se consume
+ * `/entity-types` para el filtro homónimo; categorías y acciones usan el
+ * vocabulario cerrado de `domain/audit/labels.ts` (el catálogo del BE no
+ * incluye `LEGACY`) y los niveles son los cuatro del modelo.
  */
 import { apiClient } from '../api';
 import { telemetry } from '../../utils/telemetry';
 import type {
+  AuditCatalogOption,
   AuditDashboard,
   AuditExportFilters,
   AuditExportOptions,
@@ -77,6 +79,16 @@ export const auditService = {
     }
   },
 
+  /** Catálogo de tipos de entidad para el filtro del registro. */
+  async getEntityTypes(): Promise<BIEnvelope<AuditCatalogOption[]>> {
+    try {
+      return await get<AuditCatalogOption[]>('/api/v1/audit/entity-types');
+    } catch (error) {
+      recordError('getEntityTypes', error);
+      throw error;
+    }
+  },
+
   /** Un evento por id; el BE responde 404 si no existe o es de otra sucursal. */
   async getLogById(id: string | number): Promise<BIEnvelope<AuditLogEntry>> {
     try {
@@ -119,6 +131,8 @@ export const auditService = {
     const filter: Record<string, unknown> = {};
     if (filters.search?.trim()) filter.search_term = filters.search.trim();
     if (filters.category) filter.category = filters.category;
+    if (filters.action) filter.action = filters.action;
+    if (filters.entity_type) filter.entity_type = filters.entity_type;
     if (filters.level) filter.level = filters.level;
     if (filters.success === 'true' || filters.success === 'false') {
       filter.success = filters.success === 'true';
