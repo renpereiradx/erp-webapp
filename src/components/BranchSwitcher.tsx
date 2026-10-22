@@ -30,6 +30,17 @@ const BranchSwitcher = () => {
 
   const activeBranchLabel = getBranchName(currentBranchId);
 
+  // Sin la opción "Todas las Sucursales" en el menú, una sesión que quedó en
+  // vista global (branchView=global de versiones anteriores, o admin sin
+  // sucursal en el JWT) se auto-ancla a la primera sucursal activa en cuanto
+  // la lista carga. Con cero sucursales en la instalación no hace nada: ese
+  // bootstrap usa la salida de emergencia de BranchSelection.
+  React.useEffect(() => {
+    if (!isLoading && currentBranchId === null && branches.length > 0) {
+      changeBranch(branches[0].id);
+    }
+  }, [isLoading, currentBranchId, branches, changeBranch]);
+
   // Los enums de branch_type (HEADQUARTERS, POINT_OF_SALE…) nunca se exponen
   // crudos: se traducen siempre, y la ciudad solo se muestra si existe (sin
   // placeholder "Ubicación" que no dice nada).
@@ -104,29 +115,6 @@ const BranchSwitcher = () => {
           </div>
 
           <div className="p-xs max-h-64 overflow-y-auto custom-scrollbar">
-            {/* Opción Global para Admin */}
-            {canViewGlobal && (
-              <button
-                onClick={() => { changeBranch(null); setIsOpen(false); }}
-                className={`w-full flex items-center justify-between px-md py-sm rounded-sm text-body-md transition-colors duration-150 ${
-                  currentBranchId === null
-                    ? 'bg-warning/10 text-warning'
-                    : 'text-on-surface-deep hover:bg-surface-muted hover:text-foreground'
-                }`}
-              >
-                <div className="flex flex-col items-start gap-xs">
-                  <span className="flex items-center gap-xs">
-                     <Globe size={14} />
-                     <span className="text-body-md">{t('branches.all', 'Todas las Sucursales')}</span>
-                  </span>
-                  <span className="text-label-caps uppercase text-on-surface-deep pl-sm">
-                    {t('branches.globalAccess', 'Acceso Administrativo (Sin Filtro)')}
-                  </span>
-                </div>
-                {currentBranchId === null && <Check size={16} />}
-              </button>
-            )}
-
             {/* Lista de Sucursales */}
             {isLoading ? (
               <div className="flex justify-center p-md"><Loader2 size={16} className="animate-spin text-primary" /></div>

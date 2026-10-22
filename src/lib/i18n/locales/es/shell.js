@@ -108,7 +108,6 @@ export const shell = {
   'branches.active': 'Sucursal Activa',
   'branches.all': 'Todas las Sucursales',
   'branches.select': 'Seleccionar Sucursal',
-  'branches.globalAccess': 'Acceso Administrativo (Sin Filtro)',
   'branches.withId': 'Sucursal {{id}}',
   'branches.pointOfSale': 'Punto de Venta',
   'branches.typeHeadquarters': 'Casa Central',

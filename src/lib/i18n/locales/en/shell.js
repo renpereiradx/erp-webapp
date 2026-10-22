@@ -108,7 +108,6 @@ export const shell = {
   'branches.active': 'Active Branch',
   'branches.all': 'All Branches',
   'branches.select': 'Select Branch',
-  'branches.globalAccess': 'Administrative Access (No Filter)',
   'branches.withId': 'Branch {{id}}',
   'branches.pointOfSale': 'Point of Sale',
   'branches.typeHeadquarters': 'Headquarters',
