@@ -27,6 +27,12 @@ import type {
  * por contrato, pero la UI no lo ofrece: exige ≥ 12 puntos de historia con
  * ventas no nulas y la ventana mensual puede no alcanzarlos (en dev, 12 meses
  * de ventana producen 6 puntos y el endpoint responde 400).
+ *
+ * Decisión BI-D09 (2026-10-21): se mantiene fuera de la UI. Un prechequeo
+ * requeriría una query sonda con otro método y haría el método dependiente de
+ * la ventana cargada (un deep-link `method=SEASONAL` no puede validarse antes
+ * del fetch); relajar el BE a LINEAR etiquetaría como estacional un pronóstico
+ * que no lo es. El endpoint sigue disponible para consumidores directos.
  */
 export const FORECAST_METHODS: readonly ForecastMethod[] = [
   'LINEAR',

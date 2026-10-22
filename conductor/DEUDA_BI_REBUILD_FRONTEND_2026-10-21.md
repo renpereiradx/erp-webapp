@@ -3,6 +3,7 @@
 **Fecha:** 2026-10-21 · **Origen:** `PLAN_REBUILD_BI_UI_FRONTEND_2026-10-17.md` §8–§19
 (secciones "Pendiente / deuda declarada" de cada fase) + verificación directa en código.
 **Estado:** F1–F11 integradas en `dev` y publicadas como **v1.2.0** (2026-10-21).
+Cierre de deuda post-release **BI-D03/D05/D07/D08/D09/D10** en `dev`, local (sin push).
 **Backend:** `dev` con los 5 fixes analytics + el fix de CSV de auditoría, tag `v1.2.0`.
 
 > Este documento **no reescribe** el historial del plan: lo indexa, elimina las deudas ya
@@ -14,20 +15,21 @@
 | Gate | Resultado |
 |:--|:--|
 | `npx tsc --noEmit` | 0 errores |
-| `npx vitest --run` | 348 archivos / 2297 tests OK |
+| `npx vitest --run` | 350 archivos / 2309 tests OK |
 | `pnpm lint:design -- --base dev` | OK — "Código nuevo limpio" |
 | `go test ./internal/analytics/... ./internal/platform/postgres/...` | OK |
 | Anti-invención (`mock`/`Math.random`/`dummy`/claims) en superficie BI | limpio (solo `placeholder` de inputs y `vi.mock` de tests) |
 | `.js`/`.jsx` en superficie BI nueva | 0 |
 | Smoke final (Playwright, 2026-10-21) | 188/188 checks · 45 hojas BI · 10 subgrupos · SIFEN · buscador · CSV · 390/1440 |
+| Smoke focalizado de cierre (2026-10-21) | 12/12 · filtros acción/entity, export, banners parciales simulados, 390/1440 |
 
 ## 1. Resumen por prioridad
 
 | Prioridad | Ítems | Naturaleza |
 |:--|:--|:--|
 | **P0 — Cierre del hito** | 1 (resuelto) | Release v1.2.0 publicado |
-| **P1 — Correcciones de bajo riesgo** | 5 | Bugs/accesibilidad ya desbloqueados; FE/BE acotados |
-| **P2 — Veracidad observable** | 4 | Datos parciales y filtros; FE + BE medio |
+| **P1 — Correcciones de bajo riesgo** | 5 (4 resueltos) | D02/D03/D04/D05 resueltos; D06 abierto |
+| **P2 — Veracidad observable** | 4 (3 resueltos + 1 decidido) | D07/D08/D10 resueltos; D09 cerrado por decisión |
 | **P3 — Contratos del backend** | 11 | Cambios de contrato/decisiones de producto |
 | **P4 — Aceptado / fuera de alcance** | 5 | Documentado; no se ejecuta |
 
@@ -69,20 +71,17 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 
 ### BI-D03 · Alerta "Presupuestos por vencer" sin "Gestionar" aunque el destino existe
 
-- **Estado:** abierto.
-- **Evidencia:** `src/features/bi-dashboard/components/AlertCard.tsx:25-29` (set de rutas
-  accionables) vs. `src/App.tsx:654` (`/comercial/presupuestos` existe) y
-  `business_management/internal/analytics/alert_routes.go:35-48` (catálogo canónico que
-  incluye esa ruta). `src/pages/__tests__/Alerts.page.test.tsx:154-167` fija hoy que **no**
-  se enlace.
-- **Impacto:** una de cuatro alertas pierde su acción; el contrato BE–FE queda desalineado
-  en un elemento.
-- **Decisión necesaria:** enlazar (la ruta existe y la página degrada con toast si falta
-  `budgets:read`) **o** mantenerla oculta y documentar el gate. Si se enlaza, evaluar
-  gatear el link por `budgets:read` (hoy `AlertCard` no consume `useAuth`).
-- **Esfuerzo:** S (1 componente + 1 test; gate por permiso: S-M).
-- **Disposición:** **decide el owner** (UX/permiso). No se cambió el comportamiento en
-  esta pasada.
+- **Estado:** **resuelto 2026-10-21** — `/comercial/presupuestos` se agregó al set de
+  rutas accionables y el test de la bandeja lo espera.
+- **Decisión:** enlazar sin gate adicional. La ruta existe y **no tiene guard** en
+  `App.tsx` (la entrada del sidebar sí pide `budgets:read`); la página degrada con un
+  toast si el usuario no tiene el permiso. Gatear el link habría requerido meter
+  `useAuth` en una tarjeta presentacional y en todos sus tests, por un caso que el router
+  ya permite por URL.
+- **Contrato:** el set FE ahora es espejo de `analytics.AlertActionURLs` (4 destinos).
+  Cambiar uno exige el mismo diff en ambos repos.
+- **Residual:** si el owner prefiere ocultar la acción a usuarios sin `budgets:read`, el
+  cambio es localizado (prop de permiso en `AlertCard` + mock de AuthContext en tests).
 
 ### BI-D04 · Comentario obsoleto en `AlertCard`
 
@@ -91,16 +90,15 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 
 ### BI-D05 · Ventana inicial de auditoría fija al montar
 
-- **Estado:** abierto.
-- **Evidencia:** `src/domain/audit/filters.ts:39` (`defaultAuditLogFilters(now = new Date())`)
-  se evalúa al montar; una pestaña abierta más de un día conserva el rango anterior hasta
-  "Limpiar".
-- **Impacto:** bajo (usuario puede limpiar/refrescar); molesto en terminales que quedan
-  abiertas.
-- **Fix propuesto:** recalcular el default al volver a foco/visibilidad **solo si** el
-  usuario no tocó el rango (rastrear `dirty`); test del hook.
-- **Esfuerzo:** S.
-- **Disposición:** hacer después (no bloquea).
+- **Estado:** **resuelto 2026-10-21**.
+- **Fix:** `AuditLogsPage` recalcula la ventana de 30 días en `focus` de ventana y
+  `visibilitychange` a visible, conservando categoría/acción/entity type/nivel/
+  resultado/búsqueda. Un flag `rangeTouched` congela la ventana en cuanto el usuario
+  edita Desde/Hasta; "Limpiar" lo resetea.
+- **Tests:** dos casos de página con `Date` fakeado (refresca si no se tocó; no pisa un
+  rango elegido).
+- **Decisión:** no se agregó un `setInterval`; el evento de foco es el momento en que el
+  usuario vuelve a mirar la pantalla y no genera refetch con la pestaña en background.
 
 ### BI-D06 · `searchByName` de clientes/proveedores sin `AbortSignal` (deuda Core)
 
@@ -121,57 +119,64 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 
 ### BI-D07 · Dashboard de pronósticos no distingue fallo parcial de "sin datos"
 
-- **Estado:** abierto.
-- **Evidencia:** `internal/platform/postgres/analytics_forecast_repo.go:1362-1421` arma el
-  dashboard con `if err == nil` por subconsulta y devuelve `nil` error; el modelo
-  `models.ForecastDashboard` (`models/forecast.go:273`) no implementa `partialReporter`.
-  El mecanismo genérico existe (`internal/analytics/http.go:153-190`, `PartialErrors()` en
-  `models/dashboard.go:27-31`) y F2 ya lo consume con `PartialDataBanner`.
-- **Impacto:** una subconsulta rota se muestra como `—`/vacío, indistinguible de "no hay
-  datos". F2 ya implementó y probó el banner en `/dashboard`; se reutiliza el patrón.
-- **Trabajo:** agregar `partialErrors` + `SetPartialErrors`/`PartialErrors` a
-  `ForecastDashboard`, registrar el error por subconsulta en el repo, promover el banner
-  en `/bi/pronosticos/dashboard` (mover `PartialDataBanner` a `src/components/ui/` o
-  duplicarlo en el feature; un feature no importa de otro) + tests de modelo y página.
-- **Esfuerzo:** M.
-- **Disposición:** hacer (primera deuda funcional recomendada).
+- **Estado:** **resuelto 2026-10-21**.
+- **BE:** `models.ForecastDashboard` implementa `partialErrors`/`PartialErrors()`;
+  `ForecastRepo.Dashboard` registra `sales_forecast|revenue_forecast|
+  inventory_forecast|demand_forecast: <error>` y `respondSuccess` lo promueve a
+  `metadata.partial/partial_errors` (handler test con dashboard sano y parcial).
+- **FE:** `useForecastDashboard` conserva `metadata` en el view-model y
+  `/bi/pronosticos/dashboard` muestra el `PartialDataBanner` compartido
+  (`components/ui/PartialDataBanner.tsx`, copia en `common.partialData.message` es/en).
+- **Tests:** handler BE (2), página FE (banner con partial y ausencia con envelope sano),
+  hook/dominio existentes.
+- **Decisión:** el banner es genérico y no muestra `partial_errors` crudos (errores SQL);
+  la señal es "sección incompleta", no el detalle técnico. El toast global de `App.tsx`
+  sigue mostrando el aviso; el banner agrega el contexto de la pantalla.
 
 ### BI-D08 · Dashboard de rentabilidad no distingue fallo parcial de "sin datos"
 
-- **Estado:** abierto.
-- **Evidencia:** `internal/platform/postgres/analytics_profitability_repo.go:984-1052`
-  (mismo patrón `if err == nil`: KPIs, comparación, top products/customers/categories,
-  trends) y `models/profitability.go:363` sin `PartialErrors()`.
-- **Trabajo:** idéntico a BI-D07; conviene resolverlos en el mismo diff para no duplicar
-  el banner ni el criterio.
-- **Esfuerzo:** M (compartido con BI-D07).
-- **Disposición:** hacer junto con BI-D07.
+- **Estado:** **resuelto 2026-10-21**.
+- **BE:** `models.ProfitabilityDashboard` implementa el mismo contrato;
+  `ProfitabilityRepo.DashboardDateRange` registra `kpis|comparison|top_products|
+  top_customers|top_categories|trends: <error>`.
+- **Honestidad extra:** si falla el overview de KPIs, **no se generan alertas** (antes
+  los umbrales disparaban sobre KPIs en cero: "margen bruto bajo: 0.0 %"). El banner de
+  parcialidad es la señal.
+- **FE:** `ProfitabilityDashboardView` conserva `metadata`; banner en
+  `/profitability/dashboard` con testid `profitability-partial-banner`.
+- **Tests:** handler BE (1), página FE (2: banner y envelope sano).
 
 ### BI-D09 · SEASONAL fuera de la UI
 
-- **Estado:** abierto.
-- **Evidencia:** `src/domain/forecast/constants.ts:38` (`FORECAST_UI_METHODS` sin SEASONAL)
-  y `src/domain/forecast/params.ts:83-85` (deep-link degradado a LINEAR). El BE lo soporta
-  pero exige ≥ 12 puntos con valores no nulos; la ventana mensual puede producir 6 y
-  responder 400.
-- **Opciones:** (a) prechequear puntos no nulos del historial ya cargado y ofrecerlo solo
-  cuando alcanza, con refetch al elegirlo; (b) relajar el método en el BE (fallback a
-  LINEAR con `metadata.partial`); (c) dejarlo fuera y documentarlo.
-- **Esfuerzo:** M (a/b), 0 (c).
-- **Disposición:** **decide el owner** / hacer después.
+- **Estado:** **cerrado por decisión 2026-10-21** — no se expone.
+- **Por qué no (a) prechequeo:** el método se elige antes del fetch; ofrecerlo solo con
+  ≥ 12 puntos exige una query sonda con otro método, y un deep-link `method=SEASONAL` no
+  puede validarse antes de cargar datos. La disponibilidad quedaría atada a la ventana
+  anterior (un cambio de historial puede volver a mandar una selección inválida).
+- **Por qué no (b) relajar el BE:** un fallback a LINEAR etiquetado como "estacional"
+  presenta como tal un pronóstico que no lo es; contradice la regla anti-invención.
+- **Costo de mantenerlo fuera:** el BE sigue soportándolo para consumidores directos; la
+  UI nunca promete un método que puede responder 400. Los tests de F11 ya fijan el
+  comportamiento (selector sin SEASONAL; deep-link degradado).
+- **Reabrir solo si:** aparece un prechequeo barato (p. ej. `/forecast/capacity`) o el BE
+  emite `method_available` en el payload.
 
 ### BI-D10 · Filtros de auditoría incompletos
 
-- **Estado:** abierto.
-- **Evidencia:** `src/features/audit/components/AuditFilters.tsx:47-60` — categoría y nivel
-  ofrecen enum + `LEGACY`; una categoría histórica fuera de esa lista no se puede elegir.
-  Acciones y tipos de entidad no son filtrables aunque el endpoint los acepta
-  (`/api/v1/audit/categories|actions|entity-types`).
-- **Trabajo:** consumir los catálogos del BE y agregar los dos selects (con i18n/labels
-  derivados del payload, no del enum) + tests. Los catálogos no incluyen `LEGACY`: decidir
-  si se agrega a mano.
-- **Esfuerzo:** M.
-- **Disposición:** hacer después.
+- **Estado:** **resuelto 2026-10-21** para acción y tipo de entidad.
+- **FE:** `AuditLogFilters` suma `action` y `entityType`; viajan a `/logs` y al export
+  (`filter.action`/`filter.entity_type`, soportados por `models.AuditLogFilter`). Acción
+  usa el vocabulario cerrado de `domain/audit/labels.ts`; tipo de entidad usa el catálogo
+  real `/api/v1/audit/entity-types` (`useAuditEntityTypes`, `staleTime` 30 min, degrada a
+  lista vacía si falla). El grid de filtros pasa a 3 columnas (6 campos, 2 filas).
+- **Tests:** dominio (params/export/active), servicio (ruta), hook (catálogo y fallo),
+  página (filtra por ambos y exporta).
+- **Residual:** una categoría histórica **fuera** del enum + `LEGACY` sigue sin poder
+  elegirse: el catálogo `/categories` del BE es el enum y no existe un endpoint de valores
+  distintos. Solucionarlo exige contrato BE (`/audit/categories?distinct=true` o similar);
+  no es resoluble solo con FE.
+- **Espera:** una categoría libre desconocida se sigue mostrando en la tabla con su código
+  crudo (comportamiento de F10).
 
 ---
 
@@ -220,6 +225,15 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 - **BI-D01** — smoke final 188/188 → merge ff `feature/bi-ui-rebuild` a `dev` → bump
   `package.json` 1.2.0 → tags `v1.2.0` en FE y BE → push de `dev` + tags. `main` queda
   como snapshot pendiente (decisión del owner).
+- **BI-D03** — `/comercial/presupuestos` agregado al set accionable de `AlertCard` y al
+  test de la bandeja; el set FE queda espejo de `analytics.AlertActionURLs`.
+- **BI-D05** — refresco de la ventana de auditoría en foco/visibilidad si el usuario no
+  tocó el rango, con dos page tests.
+- **BI-D07/08** — `metadata.partial` en los dashboards de pronósticos y rentabilidad
+  (modelos + repos + handlers BE) y banner compartido en ambas pantallas, con tests.
+- **BI-D09** — cerrado por decisión: SEASONAL se mantiene fuera de la UI (ver arriba).
+- **BI-D10** — filtros de acción y tipo de entidad (catálogo real) + export, con tests;
+  residual de categorías históricas documentado.
 - Registro consolidado (este documento) + puntero §20 en el plan.
 
 ## 8. Ya resuelto durante F1–F11 (no re-trabajar)
@@ -239,10 +253,10 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 
 1. ~~**Cierre (BI-D01):**~~ **hecho** — v1.2.0 publicado en ambos repos. Queda `main`
    como snapshot opcional.
-2. **Honestidad de datos (BI-D07 + BI-D08):** un solo diff BE+FE para los dos dashboards
-   parciales; reutiliza el banner ya probado de F2.
-3. **Decisiones cortas (BI-D03, BI-D05, BI-D09, BI-D10):** cada una es 1 sesión acotada;
-   conviene resolverlas juntas para no abrir/cerrar el feature varias veces.
+2. ~~**Honestidad de datos (BI-D07 + BI-D08):**~~ **hecho** — metadata.partial + banner
+   compartido en pronósticos y rentabilidad.
+3. ~~**Decisiones cortas (BI-D03, BI-D05, BI-D09, BI-D10):**~~ **hecho** — BI-D03/D05/
+   D10 implementados; BI-D09 cerrado por decisión. Queda BI-D06 (AbortSignal Core).
 4. **Contratos (BI-D13 primero):** si el owner confirma que el beneficio sobreestimado es
    inaceptable, el fix de política de costos es el de mayor impacto de negocio del listado.
 5. **P4:** no tocar salvo pedido explícito.

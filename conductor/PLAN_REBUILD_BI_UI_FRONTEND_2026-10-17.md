@@ -2357,8 +2357,8 @@ emitía meses como `2027-07-01T18:00:00Z` en vez de inicios de mes.
 
 ## 20. Cierre F1–F11 — deuda consolidada (2026-10-21)
 
-F1–F11 quedan completas y verdes (baseline 2026-10-21: `tsc` 0, 348 archivos /
-2297 tests, `lint:design` "Código nuevo limpio"; BE analytics + postgres OK).
+F1–F11 quedan completas y verdes (baseline 2026-10-21: `tsc` 0, 350 archivos /
+2309 tests, `lint:design` "Código nuevo limpio"; BE analytics + postgres OK).
 Las deudas declaradas en §8–§19 se consolidaron y priorizaron con verificación
 en código en **`conductor/DEUDA_BI_REBUILD_FRONTEND_2026-10-21.md`** (IDs
 `BI-D01`…`BI-D26`). Ese registro reemplaza las notas sueltas de cada fase:
@@ -2382,5 +2382,32 @@ overflow, 0 errores de consola/página) → merge fast-forward de
 `v1.2.0` en `dev` de ambos repos → push de `dev` + tags. `main` queda como
 snapshot de release pendiente (decisión del owner).
 
-Siguen abiertos los ítems marcados "decide el owner" en el registro (BI-D03,
-BI-D05, BI-D09, BI-D10, BI-D13, BI-D20, BI-D21).
+**Cierre de deuda post-release (2026-10-21, local sin push):**
+
+- **BI-D03** — `/comercial/presupuestos` se agregó al set de rutas accionables
+  de `AlertCard`; el set FE queda espejo del catálogo BE
+  (`analytics.AlertActionURLs`). La ruta Core no tiene guard en el router y la
+  página degrada con toast si falta `budgets:read`.
+- **BI-D05** — la ventana de 30 días de auditoría se recalcula al volver a
+  foco/visibilidad si el usuario no editó Desde/Hasta (flag `rangeTouched`);
+  "Limpiar" lo resetea.
+- **BI-D07/BI-D08** — `metadata.partial` real en los dashboards de pronósticos
+  y rentabilidad: los modelos implementan `PartialErrors()`, los repos
+  registran cada sección fallida y los handlers lo promueven. FE: banner
+  compartido `components/ui/PartialDataBanner` (copia en
+  `common.partialData.message` es/en) en ambas pantallas. En rentabilidad,
+  si fallan los KPIs no se generan alertas sobre ceros.
+- **BI-D09** — cerrado por decisión: SEASONAL no se expone (un prechequeo
+  exigiría query sonda y un deep-link no puede validarse antes del fetch;
+  relajar el BE etiquetaría mal el método). El BE sigue soportándolo.
+- **BI-D10** — filtros de Acción (vocabulario cerrado) y Tipo de entidad
+  (catálogo real `/api/v1/audit/entity-types`) en el registro y en el export;
+  residual: una categoría histórica fuera del enum + `LEGACY` requiere un
+  endpoint de valores distintos en el BE.
+
+Gates de esta pasada: `tsc` 0 · 350 archivos / 2309 tests · `lint:design` OK ·
+`go test` analytics+postgres OK · smoke focalizado 12/12 (filtros, export,
+banners parciales simulados, 390/1440) · 0 errores de consola/página.
+
+Siguen abiertos los ítems marcados "decide el owner" en el registro
+(BI-D06, BI-D13, BI-D20, BI-D21).
