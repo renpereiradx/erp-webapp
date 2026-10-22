@@ -2382,7 +2382,7 @@ overflow, 0 errores de consola/página) → merge fast-forward de
 `v1.2.0` en `dev` de ambos repos → push de `dev` + tags. `main` queda como
 snapshot de release pendiente (decisión del owner).
 
-**Cierre de deuda post-release (2026-10-21, local sin push):**
+**Cierre de deuda post-release (2026-10-21) — publicado en v1.2.1 (2026-10-22):**
 
 - **BI-D03** — `/comercial/presupuestos` se agregó al set de rutas accionables
   de `AlertCard`; el set FE queda espejo del catálogo BE
@@ -2410,6 +2410,10 @@ snapshot de release pendiente (decisión del owner).
 Gates de esta pasada: `tsc` 0 · 350 archivos / 2309 tests · `lint:design` OK ·
 `go test` analytics+postgres OK · smoke focalizado 12/12 (filtros, export,
 banners parciales simulados, 390/1440) · 0 errores de consola/página.
+
+**Release v1.2.1 (2026-10-22):** merge fast-forward de `feature/bi-ui-rebuild` a
+`dev` (ya era ancestro desde v1.2.0), 7 commits de cierre, tags `v1.2.1` en FE y
+BE, push de `dev` + tags y fast-forward de `main` al snapshot de release.
 
 Siguen abiertos los ítems marcados "decide el owner" en el registro
 (BI-D06, BI-D13, BI-D20, BI-D21).

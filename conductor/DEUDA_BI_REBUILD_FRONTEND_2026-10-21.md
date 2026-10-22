@@ -2,8 +2,8 @@
 
 **Fecha:** 2026-10-21 · **Origen:** `PLAN_REBUILD_BI_UI_FRONTEND_2026-10-17.md` §8–§19
 (secciones "Pendiente / deuda declarada" de cada fase) + verificación directa en código.
-**Estado:** F1–F11 integradas en `dev` y publicadas como **v1.2.0** (2026-10-21).
-Cierre de deuda post-release **BI-D03/D05/D07/D08/D09/D10** en `dev`, local (sin push).
+**Estado:** F1–F11 integradas en `dev` y publicadas como **v1.2.0** (2026-10-21);
+cierre de deuda **BI-D03/D05/D07/D08/D09/D10** publicado como **v1.2.1** (2026-10-22).
 **Backend:** `dev` con los 5 fixes analytics + el fix de CSV de auditoría, tag `v1.2.0`.
 
 > Este documento **no reescribe** el historial del plan: lo indexa, elimina las deudas ya
@@ -27,7 +27,7 @@ Cierre de deuda post-release **BI-D03/D05/D07/D08/D09/D10** en `dev`, local (sin
 
 | Prioridad | Ítems | Naturaleza |
 |:--|:--|:--|
-| **P0 — Cierre del hito** | 1 (resuelto) | Release v1.2.0 publicado |
+| **P0 — Cierre del hito** | 1 (resuelto) | v1.2.0 + v1.2.1 publicados |
 | **P1 — Correcciones de bajo riesgo** | 5 (4 resueltos) | D02/D03/D04/D05 resueltos; D06 abierto |
 | **P2 — Veracidad observable** | 4 (3 resueltos + 1 decidido) | D07/D08/D10 resueltos; D09 cerrado por decisión |
 | **P3 — Contratos del backend** | 11 | Cambios de contrato/decisiones de producto |
@@ -244,6 +244,11 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
   `?distinct=true` para categorías/entity types históricos (`LEGACY`, `SALE_PAYMENTS`),
   con tests BE/FE.
 - Registro consolidado (este documento) + puntero §20 en el plan.
+- **Publicación v1.2.1 (2026-10-22):** los 7 commits de cierre se mergearon/pushearon
+  en `dev` de ambos repos, con tags `v1.2.1` y fast-forward de `main` al snapshot de
+  release. El smoke focalizado de la release anterior (12/12) y el de catálogos
+  históricos (8/8) cubren los cambios; no se repitió el smoke completo de 188 checks
+  porque el código ya estaba verificado y solo cambió la versión.
 
 ## 8. Ya resuelto durante F1–F11 (no re-trabajar)
 
@@ -260,8 +265,8 @@ i18n es+en si hay copy, `tsc`/`vitest`/`lint:design` (FE) y `go test`/`go vet`
 
 ## 9. Orden recomendado
 
-1. ~~**Cierre (BI-D01):**~~ **hecho** — v1.2.0 publicado en ambos repos. Queda `main`
-   como snapshot opcional.
+1. ~~**Cierre (BI-D01):**~~ **hecho** — v1.2.0 y v1.2.1 publicados en ambos repos;
+   `main` actualizado al snapshot v1.2.1.
 2. ~~**Honestidad de datos (BI-D07 + BI-D08):**~~ **hecho** — metadata.partial + banner
    compartido en pronósticos y rentabilidad.
 3. ~~**Decisiones cortas (BI-D03, BI-D05, BI-D09, BI-D10):**~~ **hecho** — BI-D03/D05/
