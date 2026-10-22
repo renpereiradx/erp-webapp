@@ -111,7 +111,9 @@ export const shell = {
   'branches.globalAccess': 'Administrative Access (No Filter)',
   'branches.withId': 'Branch {{id}}',
   'branches.pointOfSale': 'Point of Sale',
-  'branches.location': 'Location',
+  'branches.typeHeadquarters': 'Headquarters',
+  'branches.typeWarehouse': 'Warehouse',
+  'branches.typeDistributionCenter': 'Distribution Center',
   'branches.operations': 'Operations Branch',
   'branches.globalNotice': 'The change affects all modules',
 }

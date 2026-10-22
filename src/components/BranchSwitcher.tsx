@@ -30,6 +30,21 @@ const BranchSwitcher = () => {
 
   const activeBranchLabel = getBranchName(currentBranchId);
 
+  // Los enums de branch_type (HEADQUARTERS, POINT_OF_SALE…) nunca se exponen
+  // crudos: se traducen siempre, y la ciudad solo se muestra si existe (sin
+  // placeholder "Ubicación" que no dice nada).
+  const formatBranchSubtitle = (branch: any) => {
+    if (!branch) return t('branches.operations', 'Sucursal de Operaciones');
+    const typeLabels: Record<string, string> = {
+      HEADQUARTERS: t('branches.typeHeadquarters', 'Casa Central'),
+      POINT_OF_SALE: t('branches.pointOfSale', 'Punto de Venta'),
+      WAREHOUSE: t('branches.typeWarehouse', 'Depósito'),
+      DISTRIBUTION_CENTER: t('branches.typeDistributionCenter', 'Centro de Distribución'),
+    };
+    const typeLabel = typeLabels[branch.branch_type] || t('branches.operations', 'Sucursal de Operaciones');
+    return branch.city ? `${typeLabel} • ${branch.city}` : typeLabel;
+  };
+
   // Determinar qué sucursales mostrar: si es admin, mostrar todas. Si no, solo las permitidas.
   const branchesToShow = canViewGlobal ? branches.map((b: any) => b.id) : allowedBranches;
 
@@ -134,9 +149,7 @@ const BranchSwitcher = () => {
                          <span className="text-body-md">{branch ? branch.name : t('branches.withId', 'Sucursal {{id}}', { id: branchId })}</span>
                       </span>
                       <span className="text-label-caps uppercase text-on-surface-deep pl-sm">
-                        {branch
-                          ? `${branch.branch_type || t('branches.pointOfSale', 'Punto de Venta')} • ${branch.city || t('branches.location', 'Ubicación')}`
-                          : t('branches.operations', 'Sucursal de Operaciones')}
+                        {formatBranchSubtitle(branch)}
                       </span>
                     </div>
                     {currentBranchId === branchId && <Check size={16} />}

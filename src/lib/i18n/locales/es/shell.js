@@ -111,7 +111,9 @@ export const shell = {
   'branches.globalAccess': 'Acceso Administrativo (Sin Filtro)',
   'branches.withId': 'Sucursal {{id}}',
   'branches.pointOfSale': 'Punto de Venta',
-  'branches.location': 'Ubicación',
+  'branches.typeHeadquarters': 'Casa Central',
+  'branches.typeWarehouse': 'Depósito',
+  'branches.typeDistributionCenter': 'Centro de Distribución',
   'branches.operations': 'Sucursal de Operaciones',
   'branches.globalNotice': 'El cambio afecta a todos los módulos',
 }
