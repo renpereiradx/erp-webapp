@@ -125,12 +125,12 @@ const ReservationHistoryDashboard: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">ID de Reserva</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Producto</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Cliente</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Hora Inicio</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Duración</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Estado</th>
+                    <th className="px-6 py-4 text-[0.6667rem] font-black uppercase tracking-widest text-slate-500">ID de Reserva</th>
+                    <th className="px-6 py-4 text-[0.6667rem] font-black uppercase tracking-widest text-slate-500">Producto</th>
+                    <th className="px-6 py-4 text-[0.6667rem] font-black uppercase tracking-widest text-slate-500">Cliente</th>
+                    <th className="px-6 py-4 text-[0.6667rem] font-black uppercase tracking-widest text-slate-500 text-center">Hora Inicio</th>
+                    <th className="px-6 py-4 text-[0.6667rem] font-black uppercase tracking-widest text-slate-500 text-center">Duración</th>
+                    <th className="px-6 py-4 text-[0.6667rem] font-black uppercase tracking-widest text-slate-500 text-right">Estado</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -148,7 +148,7 @@ const ReservationHistoryDashboard: React.FC = () => {
                         <span className="bg-slate-100 px-2 py-1 rounded">{item.duration}h</span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.6667rem] font-bold uppercase tracking-wide
                           ${item.status === 'CONFIRMED' || item.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : ''}
                           ${item.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : ''}
                           ${item.status === 'RESERVED' || item.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' : ''}
@@ -171,10 +171,10 @@ const ReservationHistoryDashboard: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Element ID</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Issue Type</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Details</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Action</th>
+                    <th className="px-6 py-4 text-[0.6667rem] font-black uppercase tracking-widest text-slate-500">Element ID</th>
+                    <th className="px-6 py-4 text-[0.6667rem] font-black uppercase tracking-widest text-slate-500">Issue Type</th>
+                    <th className="px-6 py-4 text-[0.6667rem] font-black uppercase tracking-widest text-slate-500">Details</th>
+                    <th className="px-6 py-4 text-[0.6667rem] font-black uppercase tracking-widest text-slate-500 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

@@ -384,7 +384,7 @@ const ScaleConfigPage: React.FC = () => {
               <div className="bg-background rounded-2xl border overflow-hidden shadow-fluent-2">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-800 border-b border-border-subtle text-[11px] font-black uppercase text-slate-400 tracking-wider">
+                    <tr className="bg-slate-50 dark:bg-slate-800 border-b border-border-subtle text-[0.7333rem] font-black uppercase text-slate-400 tracking-wider">
                       <th className="p-4">Balanza / Modelo</th>
                       <th className="p-4">Ubicación</th>
                       <th className="p-4">Dirección IP</th>
@@ -397,12 +397,12 @@ const ScaleConfigPage: React.FC = () => {
                       <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
                         <td className="p-4">
                           <div className="font-bold text-text-main">{s.name}</div>
-                          <div className="text-[11px] text-text-secondary">{s.model || 'Genérica'} ({s.protocol})</div>
+                          <div className="text-[0.7333rem] text-text-secondary">{s.model || 'Genérica'} ({s.protocol})</div>
                         </td>
                         <td className="p-4 text-text-secondary font-medium">{s.location || 'N/A'}</td>
                         <td className="p-4 font-mono text-xs font-semibold">{s.ip_address ? `${s.ip_address}:${s.port}` : 'USB / Local'}</td>
                         <td className="p-4">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.6667rem] font-black uppercase tracking-tighter ${
                             s.is_connected 
                               ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' 
                               : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'
@@ -478,7 +478,7 @@ const ScaleConfigPage: React.FC = () => {
                     <div className="space-y-2">
                       <div className="flex items-start justify-between">
                         <h4 className="font-bold text-text-main text-sm">{f.name}</h4>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                        <span className="text-[0.6667rem] font-black uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
                           {f.barcode_type === 'EAN13_VARIABLE_PRICE' ? 'EAN-13 Precio' : 'EAN-13 Peso'}
                         </span>
                       </div>
@@ -490,7 +490,7 @@ const ScaleConfigPage: React.FC = () => {
                     </div>
                     
                     <div className="flex items-center justify-between border-t pt-3">
-                      <span className="flex items-center gap-1 text-[11px] font-bold text-slate-400 uppercase tracking-wide">
+                      <span className="flex items-center gap-1 text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wide">
                         <FileText size={12} /> ZPL
                       </span>
                       <div className="flex items-center gap-2">
@@ -521,7 +521,7 @@ const ScaleConfigPage: React.FC = () => {
 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider">1. Seleccionar Producto</label>
+                    <label className="text-[0.7333rem] font-black uppercase text-slate-400 tracking-wider">1. Seleccionar Producto</label>
                     <select
                       value={simSelectedProductId}
                       onChange={(e) => setSimSelectedProductId(e.target.value)}
@@ -537,7 +537,7 @@ const ScaleConfigPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider">2. Cantidad / Peso Medido (Kg/L)</label>
+                    <label className="text-[0.7333rem] font-black uppercase text-slate-400 tracking-wider">2. Cantidad / Peso Medido (Kg/L)</label>
                     <div className="flex gap-2 items-center mt-1.5">
                       <Input
                         type="number"
@@ -571,38 +571,38 @@ const ScaleConfigPage: React.FC = () => {
                       <h4 className="font-bold text-text-main text-sm">{simResponse.product_name}</h4>
                       <p className="text-xs text-text-secondary font-medium">Balanza respondió con éxito</p>
                     </div>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-full text-[0.6667rem] font-black uppercase tracking-wider">
                       <Check size={10} /> Simulado
                     </span>
                   </header>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-3.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Código de Balanza</div>
+                      <div className="text-[0.6667rem] font-bold text-slate-400 uppercase tracking-wide">Código de Balanza</div>
                       <div className="font-bold text-text-main mt-1 font-mono text-sm">{simResponse.scale_code || 'No configurado'}</div>
                     </div>
                     <div className="p-3.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Cantidad pesada</div>
+                      <div className="text-[0.6667rem] font-bold text-slate-400 uppercase tracking-wide">Cantidad pesada</div>
                       <div className="font-black text-text-main mt-1 font-mono text-base">{simResponse.quantity} {simResponse.unit}</div>
                     </div>
                     <div className="p-3.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Precio unitario</div>
+                      <div className="text-[0.6667rem] font-bold text-slate-400 uppercase tracking-wide">Precio unitario</div>
                       <div className="font-bold text-text-main mt-1 font-mono text-sm">Gs. {simResponse.price_per_unit}</div>
                     </div>
                     <div className="p-3.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Total a Cobrar (c/ IVA)</div>
+                      <div className="text-[0.6667rem] font-bold text-slate-400 uppercase tracking-wide">Total a Cobrar (c/ IVA)</div>
                       <div className="font-black text-primary mt-1 font-mono text-base">Gs. {simResponse.subtotal_with_tax}</div>
                     </div>
                   </div>
 
                   <div className="space-y-2 border-t pt-4">
-                    <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                    <label className="text-[0.7333rem] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
                       <FileText size={12} /> Código EAN-13 Generado
                     </label>
                     <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
                       <div className="flex-1">
                         <div className="font-mono font-black text-lg tracking-[0.25em] text-text-main">{simBarcode}</div>
-                        <div className="text-[10px] font-medium text-slate-400 mt-1">Estructura: Prefijo {simBarcode.slice(0, 2)} + Balanza {simBarcode.slice(2, 6)} + Valor {simBarcode.slice(6, 12)} + Verificador {simBarcode.slice(12)}</div>
+                        <div className="text-[0.6667rem] font-medium text-slate-400 mt-1">Estructura: Prefijo {simBarcode.slice(0, 2)} + Balanza {simBarcode.slice(2, 6)} + Valor {simBarcode.slice(6, 12)} + Verificador {simBarcode.slice(12)}</div>
                       </div>
                       <Button variant="outline" size="sm" className="h-9 px-3 flex items-center gap-1.5 text-xs" onClick={() => {
                         navigator.clipboard.writeText(simBarcode);
@@ -658,7 +658,7 @@ const ScaleConfigPage: React.FC = () => {
               <div className="bg-background rounded-2xl border overflow-hidden shadow-fluent-2">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-800 border-b border-border-subtle text-[11px] font-black uppercase text-slate-400 tracking-wider">
+                    <tr className="bg-slate-50 dark:bg-slate-800 border-b border-border-subtle text-[0.7333rem] font-black uppercase text-slate-400 tracking-wider">
                       <th className="p-4">Código de Balanza</th>
                       <th className="p-4">Producto</th>
                       <th className="p-4">SKU</th>
@@ -697,7 +697,7 @@ const ScaleConfigPage: React.FC = () => {
             <form autoComplete="off" onSubmit={handleSaveScale} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nombre del Dispositivo</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Nombre del Dispositivo</label>
                   <Input
                     required
                     value={scaleForm.name}
@@ -707,7 +707,7 @@ const ScaleConfigPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ubicación Física</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Ubicación Física</label>
                   <Input
                     value={scaleForm.location}
                     onChange={(e) => setScaleForm({ ...scaleForm, location: e.target.value })}
@@ -716,7 +716,7 @@ const ScaleConfigPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Modelo</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Modelo</label>
                   <Input
                     value={scaleForm.model}
                     onChange={(e) => setScaleForm({ ...scaleForm, model: e.target.value })}
@@ -725,7 +725,7 @@ const ScaleConfigPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Dirección IP</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Dirección IP</label>
                   <Input
                     value={scaleForm.ip_address}
                     onChange={(e) => setScaleForm({ ...scaleForm, ip_address: e.target.value })}
@@ -734,7 +734,7 @@ const ScaleConfigPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Puerto</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Puerto</label>
                   <Input
                     type="number"
                     value={scaleForm.port}
@@ -743,7 +743,7 @@ const ScaleConfigPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Protocolo</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Protocolo</label>
                   <select
                     value={scaleForm.protocol}
                     onChange={(e) => setScaleForm({ ...scaleForm, protocol: e.target.value })}
@@ -755,7 +755,7 @@ const ScaleConfigPage: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Formato Impresión</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Formato Impresión</label>
                   <select
                     value={scaleForm.label_format_id}
                     onChange={(e) => setScaleForm({ ...scaleForm, label_format_id: parseInt(e.target.value) || 1 })}
@@ -794,7 +794,7 @@ const ScaleConfigPage: React.FC = () => {
             <form autoComplete="off" onSubmit={handleSaveFormat} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nombre del Formato</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Nombre del Formato</label>
                   <Input
                     required
                     value={formatForm.name}
@@ -804,7 +804,7 @@ const ScaleConfigPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tipo Código de Barras</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Tipo Código de Barras</label>
                   <select
                     value={formatForm.barcode_type}
                     onChange={(e) => setFormatForm({ ...formatForm, barcode_type: e.target.value })}
@@ -816,7 +816,7 @@ const ScaleConfigPage: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prefijo (2 dígitos)</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Prefijo (2 dígitos)</label>
                   <Input
                     value={formatForm.prefix}
                     onChange={(e) => setFormatForm({ ...formatForm, prefix: e.target.value })}
@@ -826,7 +826,7 @@ const ScaleConfigPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Dígitos Código Balanza</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Dígitos Código Balanza</label>
                   <Input
                     type="number"
                     value={formatForm.scale_code_digits}
@@ -835,7 +835,7 @@ const ScaleConfigPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Dígitos del Valor</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Dígitos del Valor</label>
                   <Input
                     type="number"
                     value={formatForm.value_digits}
@@ -844,7 +844,7 @@ const ScaleConfigPage: React.FC = () => {
                   />
                 </div>
                 <div className="col-span-2 space-y-2 border-y py-3.5 my-2">
-                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Información Incluida en Etiqueta</div>
+                  <div className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider mb-1">Información Incluida en Etiqueta</div>
                   <div className="grid grid-cols-2 gap-3">
                     <label className="flex items-center gap-2 text-xs font-bold text-text-main cursor-pointer select-none">
                       <input
@@ -885,7 +885,7 @@ const ScaleConfigPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="col-span-2">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Plantilla ZPL de Impresión</label>
+                  <label className="text-[0.7333rem] font-bold text-slate-400 uppercase tracking-wider">Plantilla ZPL de Impresión</label>
                   <textarea
                     value={formatForm.template}
                     onChange={(e) => setFormatForm({ ...formatForm, template: e.target.value })}

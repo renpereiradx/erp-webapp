@@ -199,7 +199,7 @@ export const IconPickerModal: React.FC<IconPickerModalProps> = ({
                   }`}
                 >
                   {/* Ícono de DATO: nombre Material Symbols almacenado en la etiqueta */}
-                  <span className="material-symbols-outlined text-[24px]">{icon}</span>
+                  <span className="material-symbols-outlined text-[1.6rem]">{icon}</span>
                 </button>
               ))}
             </div>

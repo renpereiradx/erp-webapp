@@ -95,7 +95,7 @@ const PriceAdjustmentHistoryDetail = () => {
           <div className="bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col gap-6 overflow-hidden">
             {/* Producto */}
             <div className='flex flex-col gap-1'>
-              <p className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1'>Producto Impactado</p>
+              <p className='text-[0.6667rem] font-black uppercase text-slate-400 tracking-[0.2em] mb-1'>Producto Impactado</p>
               <div className='flex items-start gap-3 mt-1'>
                 <div className='p-2.5 bg-slate-50 rounded-lg border border-border-subtle text-primary'>
                   <Tag size={20} />
@@ -104,7 +104,7 @@ const PriceAdjustmentHistoryDetail = () => {
                   <p className='font-bold text-text-main leading-tight truncate'>
                     {product ? product.product_name || product.name : 'N/A'}
                   </p>
-                  <p className='text-[10px] font-mono font-bold text-slate-500 mt-1 uppercase tracking-wider'>
+                  <p className='text-[0.6667rem] font-mono font-bold text-slate-500 mt-1 uppercase tracking-wider'>
                     SKU: {product ? product.product_id || product.id : 'N/A'}
                   </p>
                 </div>
@@ -113,21 +113,21 @@ const PriceAdjustmentHistoryDetail = () => {
 
             {/* Usuario */}
             <div className='flex flex-col gap-1 pt-2 border-t border-slate-50'>
-              <p className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1'>Responsable del Cambio</p>
+              <p className='text-[0.6667rem] font-black uppercase text-slate-400 tracking-[0.2em] mb-1'>Responsable del Cambio</p>
               <div className='flex items-center gap-3 mt-1'>
                 <div className='size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-xs border border-primary/20 shadow-inner'>
                   {adjustment.user_id?.substring(0, 2).toUpperCase() || '??'}
                 </div>
                 <div className='flex-1 min-w-0'>
                   <p className='font-bold text-text-main truncate'>{adjustment.user_id || 'Usuario Desconocido'}</p>
-                  <p className='text-[10px] font-black text-slate-400 uppercase'>ID: {adjustment.user_id || 'N/A'}</p>
+                  <p className='text-[0.6667rem] font-black text-slate-400 uppercase'>ID: {adjustment.user_id || 'N/A'}</p>
                 </div>
               </div>
             </div>
 
             {/* Fecha */}
             <div className='flex flex-col gap-1 pt-2 border-t border-slate-50'>
-              <p className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1'>Marca Temporal</p>
+              <p className='text-[0.6667rem] font-black uppercase text-slate-400 tracking-[0.2em] mb-1'>Marca Temporal</p>
               <div className='flex items-center gap-3 mt-1'>
                 <div className='p-2 bg-slate-50 rounded-lg border border-border-subtle text-slate-400'>
                   <Calendar size={18} />
@@ -151,7 +151,7 @@ const PriceAdjustmentHistoryDetail = () => {
             <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full blur-3xl opacity-20 transition-colors ${isIncrease ? 'bg-success' : 'bg-error'}`}></div>
             
             <div className='text-center relative z-10'>
-              <p className='text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2'>Valor Anterior</p>
+              <p className='text-[0.6667rem] font-black uppercase text-slate-400 tracking-widest mb-2'>Valor Anterior</p>
               <p className='text-2xl font-bold text-slate-400 line-through opacity-60'>
                 PYG {adjustment.old_value.toLocaleString('es-PY')}
               </p>
@@ -162,19 +162,19 @@ const PriceAdjustmentHistoryDetail = () => {
             </div>
 
             <div className='text-center relative z-10'>
-              <p className='text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2'>Nuevo Valor</p>
+              <p className='text-[0.6667rem] font-black uppercase text-slate-400 tracking-widest mb-2'>Nuevo Valor</p>
               <p className={`text-4xl font-black tracking-tight ${isIncrease ? 'text-success' : 'text-error'}`}>
                 PYG {adjustment.new_value.toLocaleString('es-PY')}
               </p>
             </div>
 
             <div className='md:border-l border-slate-100 md:pl-12 text-center md:text-left relative z-10'>
-              <p className='text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1'>Impacto del Ajuste</p>
+              <p className='text-[0.6667rem] font-black uppercase text-slate-400 tracking-widest mb-1'>Impacto del Ajuste</p>
               <div className='flex flex-col'>
                 <p className={`text-xl font-black ${isIncrease ? 'text-success' : 'text-error'}`}>
                   {isIncrease ? '+' : ''}{changePercent}%
                 </p>
-                <p className='text-[11px] font-bold text-slate-500 uppercase mt-0.5'>
+                <p className='text-[0.7333rem] font-bold text-slate-500 uppercase mt-0.5'>
                   {isIncrease ? 'Aumento' : 'Reducción'} neto
                 </p>
               </div>
@@ -198,11 +198,11 @@ const PriceAdjustmentHistoryDetail = () => {
           {adjustment.metadata && Object.keys(adjustment.metadata).length > 0 && (
             <div className="bg-white rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden flex flex-col">
               <div className='px-6 py-4 border-b border-border-subtle bg-[#fafafa] flex items-center gap-2'>
-                <h2 className='text-[13px] font-bold text-gray-700 uppercase tracking-widest'>Contexto y Metadatos</h2>
+                <h2 className='text-[0.8667rem] font-bold text-gray-700 uppercase tracking-widest'>Contexto y Metadatos</h2>
               </div>
               <div className="overflow-x-auto">
                 <table className='w-full text-left text-sm'>
-                  <thead className='bg-gray-50/50 border-b border-border-subtle text-[11px] font-black uppercase text-slate-500 tracking-wider'>
+                  <thead className='bg-gray-50/50 border-b border-border-subtle text-[0.7333rem] font-black uppercase text-slate-500 tracking-wider'>
                     <tr>
                       <th className='py-3 px-6'>Clave</th>
                       <th className='py-3 px-6'>Valor Técnico</th>
@@ -211,7 +211,7 @@ const PriceAdjustmentHistoryDetail = () => {
                   <tbody className='divide-y divide-gray-50'>
                     {Object.entries(adjustment.metadata).map(([key, value]) => (
                       <tr key={key} className='hover:bg-slate-50 transition-colors group'>
-                        <td className='py-3 px-6 font-bold text-slate-600 uppercase text-[10px] tracking-wider group-hover:text-primary transition-colors'>
+                        <td className='py-3 px-6 font-bold text-slate-600 uppercase text-[0.6667rem] tracking-wider group-hover:text-primary transition-colors'>
                           {key.replace(/_/g, ' ')}
                         </td>
                         <td className='py-3 px-6 font-mono text-xs text-slate-700 bg-slate-50/30'>

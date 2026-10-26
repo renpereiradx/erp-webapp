@@ -242,6 +242,14 @@ construye con peso tipográfico y tono de superficie, no con bordes ni sombras f
 
 Todas las clases de tamaño ya incluyen `fontSize + lineHeight + fontWeight (+ letterSpacing)`. **No las combines con `font-bold` ni `text-sm` sueltos.**
 
+> **Palanca global de densidad (2026-10-26):** los px de este documento son valores de
+> diseño base, medidos contra raíz `html { font-size: 15px }`. Tokens de tipografía y
+> espaciado (`design/tokens.json`) y las clases `text-[...]` del código están en **rem**,
+> así que cambiar ESE único valor en `src/index.css` escala toda la UI proporcionalmente
+> (14px ≈ −7%, para monitores chicos). NUNCA introduzcas px de nuevo: un `text-[10px]`
+> rompe la palanca y además ignora el zoom del navegador. Equivalencia: 1rem = 15px base
+> (`10px` = `0.6667rem`, `11px` = `0.7333rem`, `14px` = `0.9333rem`).
+
 | Necesidad | Clase | Spec | Regla |
 |:----------|:------|:-----|:------|
 | Hero de dashboard (raro) | `text-display-lg` | 48/56 · 900 | Máx. 1 por app. |

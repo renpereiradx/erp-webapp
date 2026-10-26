@@ -81,17 +81,17 @@ const PurchaseRequisitionList: React.FC = () => {
   const getStatusBadge = (status: PurchaseRequisition['status']) => {
     switch (status) {
       case 'DRAFT':
-        return <span className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent">BORRADOR</span>;
+        return <span className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded text-[0.6667rem] font-bold uppercase border border-transparent">BORRADOR</span>;
       case 'PENDING':
-        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent bg-[#fff4ce] text-[#794500]"><span className="size-1.5 rounded-full bg-[#794500]" /> PENDIENTE</span>;
+        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[0.6667rem] font-bold uppercase border border-transparent bg-[#fff4ce] text-[#794500]"><span className="size-1.5 rounded-full bg-[#794500]" /> PENDIENTE</span>;
       case 'APPROVED':
-        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent bg-[#dff6dd] text-[#107c10]"><span className="size-1.5 rounded-full bg-[#107c10]" /> APROBADO</span>;
+        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[0.6667rem] font-bold uppercase border border-transparent bg-[#dff6dd] text-[#107c10]"><span className="size-1.5 rounded-full bg-[#107c10]" /> APROBADO</span>;
       case 'REJECTED':
-        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent bg-[#fde7e9] text-[#a4262c]"><span className="size-1.5 rounded-full bg-[#a4262c]" /> RECHAZADO</span>;
+        return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[0.6667rem] font-bold uppercase border border-transparent bg-[#fde7e9] text-[#a4262c]"><span className="size-1.5 rounded-full bg-[#a4262c]" /> RECHAZADO</span>;
       case 'CANCELLED':
-        return <span className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent">CANCELADO</span>;
+        return <span className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded text-[0.6667rem] font-bold uppercase border border-transparent">CANCELADO</span>;
       default:
-        return <span className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded text-[10px] font-bold uppercase border border-transparent">{status}</span>;
+        return <span className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded text-[0.6667rem] font-bold uppercase border border-transparent">{status}</span>;
     }
   };
 
@@ -131,7 +131,7 @@ const PurchaseRequisitionList: React.FC = () => {
                     <button
                         key={status}
                         onClick={() => setStatusFilter(status)}
-                        className={`px-4 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all ${
+                        className={`px-4 py-1.5 text-[0.6667rem] font-bold uppercase rounded-md transition-all ${
                             statusFilter === status 
                             ? 'bg-primary/10 text-primary' 
                             : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
@@ -145,7 +145,7 @@ const PurchaseRequisitionList: React.FC = () => {
             <div className="h-8 w-px bg-border-base hidden md:block"></div>
 
             <Button 
-                className="bg-primary hover:bg-primary-hover text-white text-[10px] font-bold uppercase rounded shadow-sm transition-all px-5 py-2 h-auto"
+                className="bg-primary hover:bg-primary-hover text-white text-[0.6667rem] font-bold uppercase rounded shadow-sm transition-all px-5 py-2 h-auto"
                 onClick={() => navigate('/logistica/requisiciones/nueva')}
             >
                 <Plus size={14} className="mr-1.5" />
@@ -162,11 +162,11 @@ const PurchaseRequisitionList: React.FC = () => {
           <Table className="w-full text-left">
             <TableHeader className="bg-white border-b border-border-subtle">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="py-5 pl-8 text-[11px] font-bold uppercase text-slate-400 tracking-wider w-[140px]">ID Solicitud</TableHead>
-                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Solicitante</TableHead>
-                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider text-center">Estado</TableHead>
-                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Proveedor Sugerido</TableHead>
-                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Fecha</TableHead>
+                <TableHead className="py-5 pl-8 text-[0.7333rem] font-bold uppercase text-slate-400 tracking-wider w-[140px]">ID Solicitud</TableHead>
+                <TableHead className="py-5 text-[0.7333rem] font-bold uppercase text-slate-400 tracking-wider">Solicitante</TableHead>
+                <TableHead className="py-5 text-[0.7333rem] font-bold uppercase text-slate-400 tracking-wider text-center">Estado</TableHead>
+                <TableHead className="py-5 text-[0.7333rem] font-bold uppercase text-slate-400 tracking-wider">Proveedor Sugerido</TableHead>
+                <TableHead className="py-5 text-[0.7333rem] font-bold uppercase text-slate-400 tracking-wider">Fecha</TableHead>
                 <TableHead className="py-5 pr-8 w-12"></TableHead>
               </TableRow>
             </TableHeader>

@@ -86,7 +86,7 @@ function SelectLabel({ className = '', ...props }) {
     <SelectPrimitive.Label
       data-slot='select-label'
       data-testid={props['data-testid'] ?? 'select-label'}
-      className={cn('text-slate-400 px-2 py-1.5 text-[10px] font-black uppercase tracking-widest', className)}
+      className={cn('text-slate-400 px-2 py-1.5 text-[0.6667rem] font-black uppercase tracking-widest', className)}
       {...props}
     />
   )
@@ -99,7 +99,7 @@ function SelectItem({ className = '', children, ...props }) {
       data-slot='select-item'
       data-testid={props['data-testid'] ?? 'select-item'}
       className={cn(
-        "relative flex w-full cursor-pointer select-none items-center rounded-md px-2.5 py-2 text-[10px] font-bold uppercase tracking-widest outline-none transition-colors focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg:not([class*='text-'])]:text-slate-400",
+        "relative flex w-full cursor-pointer select-none items-center rounded-md px-2.5 py-2 text-[0.6667rem] font-bold uppercase tracking-widest outline-none transition-colors focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg:not([class*='text-'])]:text-slate-400",
         className
       )}
       {...props}

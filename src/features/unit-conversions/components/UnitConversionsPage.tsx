@@ -146,7 +146,7 @@ const UnitConversionsPage = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-slate-50 text-[10px] font-black text-text-secondary uppercase tracking-widest border-b border-border-subtle">
+                    <tr className="bg-slate-50 text-[0.6667rem] font-black text-text-secondary uppercase tracking-widest border-b border-border-subtle">
                       <th className="px-6 py-3">{t('unitConversions.colFrom', 'Origen')}</th>
                       <th className="px-6 py-3">{t('unitConversions.colTo', 'Destino')}</th>
                       <th className="px-6 py-3">{t('unitConversions.colScope', 'Alcance')}</th>
@@ -234,12 +234,12 @@ const UnitConversionsPage = () => {
                   <div key={i} className="flex flex-col gap-2 p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-amber-200 transition-colors">
                     <p className="text-xs font-bold text-text-main">{tmpl.example}</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono bg-white px-2 py-1 rounded border border-slate-200">
+                      <span className="text-[0.6667rem] font-mono bg-white px-2 py-1 rounded border border-slate-200">
                         {tmpl.from_unit} → {tmpl.factor} {tmpl.to_unit}
                       </span>
                       <button
                         onClick={() => loadFromTemplate(tmpl)}
-                        className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline"
+                        className="text-[0.6667rem] font-black uppercase tracking-widest text-primary hover:underline"
                       >
                         {t('unitConversions.useTemplate', 'Usar Plantilla')}
                       </button>
@@ -260,7 +260,7 @@ const UnitConversionsPage = () => {
             </div>
             <form autoComplete="off" onSubmit={handleSave} className="p-6 space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">
+                <label className="text-[0.6667rem] font-black text-text-secondary uppercase tracking-widest">
                   {t('unitConversions.productOptional', 'Producto (opcional)')}
                 </label>
                 {formData.product_id ? (
@@ -301,7 +301,7 @@ const UnitConversionsPage = () => {
                     texto libre — las conversiones referencian unidades del catálogo
                     canónico; extraUnits preserva valores legacy ya registrados. */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">
+                  <label className="text-[0.6667rem] font-black text-text-secondary uppercase tracking-widest">
                     {t('unitConversions.fromUnit', 'Unidad Origen')}
                   </label>
                   <UnitSelect
@@ -312,7 +312,7 @@ const UnitConversionsPage = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">
+                  <label className="text-[0.6667rem] font-black text-text-secondary uppercase tracking-widest">
                     {t('unitConversions.toUnit', 'Unidad Destino')}
                   </label>
                   <UnitSelect
@@ -324,7 +324,7 @@ const UnitConversionsPage = () => {
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">{t('unitConversions.factorLabel', 'Factor de Conversión')}</label>
+                <label className="text-[0.6667rem] font-black text-text-secondary uppercase tracking-widest">{t('unitConversions.factorLabel', 'Factor de Conversión')}</label>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-slate-400">=</span>
                   <input

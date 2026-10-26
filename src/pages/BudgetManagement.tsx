@@ -93,15 +93,15 @@ const BudgetManagement: React.FC = () => {
   const getStatusBadge = (status: Budget['status']) => {
     switch (status) {
       case 'PENDING':
-        return <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1.5 font-black uppercase text-[10px] tracking-tighter"><Clock size={12}/> PENDIENTE</Badge>;
+        return <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1.5 font-black uppercase text-[0.6667rem] tracking-tighter"><Clock size={12}/> PENDIENTE</Badge>;
       case 'APPROVED':
-        return <Badge className="bg-green-100 text-green-700 border-green-200 gap-1.5 font-black uppercase text-[10px] tracking-tighter"><CheckCircle2 size={12}/> APROBADO</Badge>;
+        return <Badge className="bg-green-100 text-green-700 border-green-200 gap-1.5 font-black uppercase text-[0.6667rem] tracking-tighter"><CheckCircle2 size={12}/> APROBADO</Badge>;
       case 'CONVERTED':
-        return <Badge className="bg-blue-100 text-blue-700 border-blue-200 gap-1.5 font-black uppercase text-[10px] tracking-tighter"><ArrowRightLeft size={12}/> VENDIDO</Badge>;
+        return <Badge className="bg-blue-100 text-blue-700 border-blue-200 gap-1.5 font-black uppercase text-[0.6667rem] tracking-tighter"><ArrowRightLeft size={12}/> VENDIDO</Badge>;
       case 'REJECTED':
-        return <Badge className="bg-red-100 text-red-700 border-red-200 gap-1.5 font-black uppercase text-[10px] tracking-tighter"><XCircle size={12}/> RECHAZADO</Badge>;
+        return <Badge className="bg-red-100 text-red-700 border-red-200 gap-1.5 font-black uppercase text-[0.6667rem] tracking-tighter"><XCircle size={12}/> RECHAZADO</Badge>;
       case 'EXPIRED':
-        return <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1.5 font-black uppercase text-[10px] tracking-tighter"><AlertCircle size={12}/> EXPIRADO</Badge>;
+        return <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1.5 font-black uppercase text-[0.6667rem] tracking-tighter"><AlertCircle size={12}/> EXPIRADO</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -157,7 +157,7 @@ const BudgetManagement: React.FC = () => {
                     <button
                         key={status}
                         onClick={() => setStatusFilter(status)}
-                        className={`px-4 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all ${
+                        className={`px-4 py-1.5 text-[0.6667rem] font-bold uppercase rounded-md transition-all ${
                             statusFilter === status 
                             ? 'bg-primary/10 text-primary' 
                             : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
@@ -171,7 +171,7 @@ const BudgetManagement: React.FC = () => {
             <div className="h-8 w-px bg-border-base hidden md:block"></div>
 
             <Button 
-                className="bg-primary hover:bg-primary-hover text-white text-[10px] font-bold uppercase rounded shadow-sm transition-all px-5 py-2 h-auto"
+                className="bg-primary hover:bg-primary-hover text-white text-[0.6667rem] font-bold uppercase rounded shadow-sm transition-all px-5 py-2 h-auto"
                 onClick={() => navigate('/comercial/presupuestos/nuevo')}
             >
                 <Plus size={14} className="mr-1.5" />
@@ -188,11 +188,11 @@ const BudgetManagement: React.FC = () => {
           <Table className="w-full text-left">
             <TableHeader className="bg-white border-b border-border-subtle">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="py-5 pl-8 text-[11px] font-bold uppercase text-slate-400 tracking-wider w-[140px]">Presupuesto</TableHead>
-                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Cliente</TableHead>
-                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider text-center">Estado</TableHead>
-                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider text-right">Total</TableHead>
-                <TableHead className="py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Validez</TableHead>
+                <TableHead className="py-5 pl-8 text-[0.7333rem] font-bold uppercase text-slate-400 tracking-wider w-[140px]">Presupuesto</TableHead>
+                <TableHead className="py-5 text-[0.7333rem] font-bold uppercase text-slate-400 tracking-wider">Cliente</TableHead>
+                <TableHead className="py-5 text-[0.7333rem] font-bold uppercase text-slate-400 tracking-wider text-center">Estado</TableHead>
+                <TableHead className="py-5 text-[0.7333rem] font-bold uppercase text-slate-400 tracking-wider text-right">Total</TableHead>
+                <TableHead className="py-5 text-[0.7333rem] font-bold uppercase text-slate-400 tracking-wider">Validez</TableHead>
                 <TableHead className="py-5 pr-8 w-12"></TableHead>
               </TableRow>
             </TableHeader>
@@ -265,7 +265,7 @@ const BudgetManagement: React.FC = () => {
         {/* Paginación */}
         {filteredBudgets.length > 0 && !isLoading && (
             <div className="px-8 py-5 border-t border-border-subtle bg-slate-50/50 flex items-center justify-between">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                <p className="text-[0.7333rem] font-bold uppercase tracking-widest text-slate-500">
                 Página {page} de {totalPages}
                 </p>
                 <div className="flex gap-2">
@@ -274,7 +274,7 @@ const BudgetManagement: React.FC = () => {
                     size="sm" 
                     disabled={page === 1}
                     onClick={() => setPage(p => p - 1)}
-                    className="h-8 font-bold text-[10px] uppercase border-border-base bg-white hover:bg-slate-50 px-4"
+                    className="h-8 font-bold text-[0.6667rem] uppercase border-border-base bg-white hover:bg-slate-50 px-4"
                 >
                     Anterior
                 </Button>
@@ -283,7 +283,7 @@ const BudgetManagement: React.FC = () => {
                     size="sm" 
                     disabled={page === totalPages}
                     onClick={() => setPage(p => p + 1)}
-                    className="h-8 font-bold text-[10px] uppercase border-border-base bg-white hover:bg-slate-50 px-4"
+                    className="h-8 font-bold text-[0.6667rem] uppercase border-border-base bg-white hover:bg-slate-50 px-4"
                 >
                     Siguiente
                 </Button>

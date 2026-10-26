@@ -174,7 +174,7 @@ export function TagEditor({
                 title={t('attributes.editor.icon_pick')}
               >
                 {/* Ícono de DATO: nombre Material Symbols almacenado en la etiqueta */}
-                <span className="material-symbols-outlined text-[20px]">{formData.icon || DEFAULT_TAG_ICON}</span>
+                <span className="material-symbols-outlined text-[1.3333rem]">{formData.icon || DEFAULT_TAG_ICON}</span>
               </Button>
               <Input
                 id="tag-icon"

@@ -215,7 +215,7 @@ export const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClos
         <div className="flex-1 overflow-y-auto custom-scrollbar px-lg pb-lg">
           {currentIcons.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-on-surface-deep opacity-60">
-              <span className="material-symbols-outlined text-[48px] mb-2">search_off</span>
+              <span className="material-symbols-outlined text-[3.2rem] mb-2">search_off</span>
               <p>No se encontraron íconos</p>
             </div>
           ) : (
@@ -235,7 +235,7 @@ export const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClos
                       : 'bg-surface-muted text-on-surface-deep hover:bg-surface-subtle hover:text-foreground border border-transparent'}
                   `}
                 >
-                  <span className="material-symbols-outlined text-[28px]">{icon}</span>
+                  <span className="material-symbols-outlined text-[1.8667rem]">{icon}</span>
                 </button>
               ))}
             </div>
@@ -254,7 +254,7 @@ export const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClos
                 disabled={currentPage === 1}
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-subtle disabled:opacity-30 disabled:hover:bg-transparent"
               >
-                <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+                <span className="material-symbols-outlined text-[1.3333rem]">chevron_left</span>
               </button>
               <span className="text-body-sm font-bold text-foreground min-w-[60px] text-center">
                 {currentPage} / {totalPages}
@@ -264,7 +264,7 @@ export const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClos
                 disabled={currentPage === totalPages}
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-subtle disabled:opacity-30 disabled:hover:bg-transparent"
               >
-                <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                <span className="material-symbols-outlined text-[1.3333rem]">chevron_right</span>
               </button>
             </div>
           </div>

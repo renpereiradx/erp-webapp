@@ -230,7 +230,7 @@ const BranchManagement: React.FC = () => {
                     </span>
                   </TableCell>
                   <TableCell className="py-5 px-6">
-                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.6667rem] font-black uppercase tracking-wider ${
                       branch.is_active ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-500'
                     }`}>
                       <div className={`size-1.5 rounded-full ${branch.is_active ? 'bg-success' : 'bg-slate-400'}`} />

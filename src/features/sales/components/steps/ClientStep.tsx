@@ -120,7 +120,7 @@ export const ClientStep = forwardRef<ClientStepRef, ClientStepProps>(
                 </p>
                 {client.document_id && (
                   <div className="text-sm font-medium text-on-surface-deep flex items-center gap-1.5">
-                    <Badge variant="outline" className="text-[10px]">CI/RUC</Badge>
+                    <Badge variant="outline" className="text-[0.6667rem]">CI/RUC</Badge>
                     {client.document_id}
                   </div>
                 )}

@@ -290,7 +290,7 @@ export const WalkInReservationForm = ({
           <span className="font-data-mono font-black text-sm text-primary">
             {duration} h
             {maxDuration < (selectedProduct?.max_duration || 4) && (
-              <span className="ml-1 text-[10px] font-bold text-on-surface-deep">
+              <span className="ml-1 text-[0.6667rem] font-bold text-on-surface-deep">
                 ({t('sales.checkoutWizard.walkIn.maxAvailable', 'máx {n}', { n: maxDuration })})
               </span>
             )}

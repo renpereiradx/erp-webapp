@@ -92,11 +92,11 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
                       >
                         {isSelected ? <Check size={12} strokeWidth={3} /> : <Plus size={12} strokeWidth={3} className="opacity-0" />}
                       </div>
-                      <span className="font-bold text-[13px] text-foreground uppercase leading-tight">
+                      <span className="font-bold text-[0.8667rem] text-foreground uppercase leading-tight">
                         {res.product_name || 'Servicio de reserva'}
                       </span>
                     </div>
-                    <span className="text-[10px] font-bold text-on-surface-deep bg-surface-subtle px-2 py-0.5 rounded uppercase">
+                    <span className="text-[0.6667rem] font-bold text-on-surface-deep bg-surface-subtle px-2 py-0.5 rounded uppercase">
                       #{resId}
                     </span>
                   </div>
@@ -105,22 +105,22 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 text-on-surface-deep">
                         <History size={12} />
-                        <span className="text-[10px] font-bold uppercase">Inicio:</span>
-                        <span className="text-[11px] font-medium text-foreground">
+                        <span className="text-[0.6667rem] font-bold uppercase">Inicio:</span>
+                        <span className="text-[0.7333rem] font-medium text-foreground">
                           {formatDateTime(res.start_time)}
                         </span>
                       </div>
                       {res.duration_hours && (
                         <div className="flex items-center gap-1.5 text-on-surface-deep">
-                          <span className="text-[10px] font-bold uppercase">Duración:</span>
-                          <span className="text-[11px] font-medium text-foreground">
+                          <span className="text-[0.6667rem] font-bold uppercase">Duración:</span>
+                          <span className="text-[0.7333rem] font-medium text-foreground">
                             {res.duration_hours}h
                           </span>
                         </div>
                       )}
                     </div>
                     <div className="flex flex-col items-end justify-center">
-                      <span className="text-[9px] font-bold text-outline-fg uppercase tracking-widest">
+                      <span className="text-[0.6rem] font-bold text-outline-fg uppercase tracking-widest">
                         {t('sales.checkoutWizard.total', 'Total')}
                       </span>
                       <span
@@ -135,7 +135,7 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
                   </div>
 
                   {blocked && (
-                    <div className="mt-2 text-[10px] font-bold uppercase text-on-surface-deep bg-surface-subtle rounded px-2 py-1 inline-block">
+                    <div className="mt-2 text-[0.6667rem] font-bold uppercase text-on-surface-deep bg-surface-subtle rounded px-2 py-1 inline-block">
                       {t('sales.checkoutWizard.reservations.oneReservationPerSale', 'Solo se permite una reserva por venta')}
                     </div>
                   )}

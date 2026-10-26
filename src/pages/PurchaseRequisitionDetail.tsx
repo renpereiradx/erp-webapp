@@ -63,11 +63,11 @@ const PurchaseRequisitionDetailView: React.FC = () => {
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case 'HIGH':
-        return <Badge className="bg-red-100 text-red-700 border-red-200 font-black text-[9px] px-2 py-0">ALTA</Badge>;
+        return <Badge className="bg-red-100 text-red-700 border-red-200 font-black text-[0.6rem] px-2 py-0">ALTA</Badge>;
       case 'MEDIUM':
-        return <Badge className="bg-blue-100 text-blue-700 border-blue-200 font-black text-[9px] px-2 py-0">MEDIA</Badge>;
+        return <Badge className="bg-blue-100 text-blue-700 border-blue-200 font-black text-[0.6rem] px-2 py-0">MEDIA</Badge>;
       default:
-        return <Badge className="bg-slate-100 text-slate-600 border-slate-200 font-black text-[9px] px-2 py-0">BAJA</Badge>;
+        return <Badge className="bg-slate-100 text-slate-600 border-slate-200 font-black text-[0.6rem] px-2 py-0">BAJA</Badge>;
     }
   };
 
@@ -116,7 +116,7 @@ const PurchaseRequisitionDetailView: React.FC = () => {
              </div>
              <table className="w-full">
                 <thead className="bg-white border-b border-border-subtle">
-                   <tr className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                   <tr className="text-[0.6667rem] font-black uppercase text-slate-400 tracking-widest">
                       <th className="py-4 px-6 text-left">Producto</th>
                       <th className="py-4 px-4 text-center">Cantidad</th>
                       <th className="py-4 px-4 text-center">Prioridad</th>
@@ -128,7 +128,7 @@ const PurchaseRequisitionDetailView: React.FC = () => {
                       <tr key={item.id} className="text-sm hover:bg-slate-50/30 transition-colors">
                          <td className="py-4 px-6">
                             <p className="font-bold text-text-main">{item.product_name}</p>
-                            <p className="text-[10px] text-slate-400 font-mono">{item.product_sku || item.product_id}</p>
+                            <p className="text-[0.6667rem] text-slate-400 font-mono">{item.product_sku || item.product_id}</p>
                          </td>
                          <td className="py-4 px-4 text-center font-black text-slate-700">
                             {item.quantity} {item.unit || 'uds'}
@@ -148,7 +148,7 @@ const PurchaseRequisitionDetailView: React.FC = () => {
           {requisition.notes && (
             <Card className="border-border-subtle bg-slate-50/50">
                <CardContent className="p-6">
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2">Observaciones del Solicitante</p>
+                  <p className="text-[0.6667rem] font-black uppercase text-slate-400 tracking-wider mb-2">Observaciones del Solicitante</p>
                   <p className="text-sm text-text-secondary font-medium leading-relaxed">{requisition.notes}</p>
                </CardContent>
             </Card>
@@ -159,19 +159,19 @@ const PurchaseRequisitionDetailView: React.FC = () => {
            <Card className="border-border-subtle shadow-fluent-2">
               <CardContent className="p-6 space-y-6">
                  <div>
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-3">Contexto de Solicitud</label>
+                    <label className="text-[0.6667rem] font-black uppercase text-slate-400 tracking-wider block mb-3">Contexto de Solicitud</label>
                     <div className="space-y-3">
                        <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-border-subtle">
                           <User size={16} className="text-primary" />
                           <div className="flex-1 min-w-0">
-                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Usuario</p>
+                             <p className="text-[0.6667rem] font-bold text-slate-400 uppercase tracking-tighter">Usuario</p>
                              <p className="text-xs font-black text-text-main truncate">{requisition.user_name}</p>
                           </div>
                        </div>
                        <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-border-subtle">
                           <Calendar size={16} className="text-primary" />
                           <div className="flex-1 min-w-0">
-                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Fecha Creación</p>
+                             <p className="text-[0.6667rem] font-bold text-slate-400 uppercase tracking-tighter">Fecha Creación</p>
                              <p className="text-xs font-black text-text-main truncate">{new Date(requisition.created_at).toLocaleString()}</p>
                           </div>
                        </div>
@@ -193,7 +193,7 @@ const PurchaseRequisitionDetailView: React.FC = () => {
               <BadgeAlert className="text-warning shrink-0" size={24} />
               <div>
                  <h4 className="text-xs font-black uppercase text-amber-700 tracking-wider mb-1">Revisión de Compras</h4>
-                 <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
+                 <p className="text-[0.7333rem] text-amber-800 font-medium leading-relaxed">
                     Asegúrese de verificar la disponibilidad en otros depósitos antes de aprobar una compra externa.
                  </p>
               </div>

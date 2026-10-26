@@ -173,14 +173,14 @@ export function VariantFormModal({ productId, isOpen, onClose, onSuccess }: Vari
                   type="button" 
                   variant="ghost" 
                   size="sm" 
-                  className="h-6 text-[10px] text-primary hover:bg-primary/10"
+                  className="h-6 text-[0.6667rem] text-primary hover:bg-primary/10"
                   onClick={() => setCustomAttributes([...customAttributes, { key: '', value: '' }])}
                 >
                   + Agregar atributo
                 </Button>
               </div>
               {customAttributes.length === 0 && attributes.length === 0 && !loadingAttributes && (
-                 <p className="text-[10px] text-slate-400 mb-2 italic">Agregue atributos específicos (ej: Conectividad, RAM) para diferenciar esta variante.</p>
+                 <p className="text-[0.6667rem] text-slate-400 mb-2 italic">Agregue atributos específicos (ej: Conectividad, RAM) para diferenciar esta variante.</p>
               )}
               {customAttributes.map((attr, index) => (
                 <div key={index} className="flex gap-2 mb-2 items-start">

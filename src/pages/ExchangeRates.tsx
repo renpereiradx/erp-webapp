@@ -470,7 +470,7 @@ export default function ExchangeRates() {
                   disabled={safePage <= 1}
                   aria-label={t('exchangeRates.action.previous_page', 'Página anterior')}
                 >
-                  <span className="material-icons-round text-[18px]">chevron_left</span>
+                  <span className="material-icons-round text-[1.2rem]">chevron_left</span>
                 </Button>
                 <span className="font-data-mono text-body-sm-bold text-muted-foreground px-2">
                   {safePage} / {totalPages}
@@ -482,7 +482,7 @@ export default function ExchangeRates() {
                   disabled={safePage >= totalPages}
                   aria-label={t('exchangeRates.action.next_page', 'Página siguiente')}
                 >
-                  <span className="material-icons-round text-[18px]">chevron_right</span>
+                  <span className="material-icons-round text-[1.2rem]">chevron_right</span>
                 </Button>
               </div>
             </div>

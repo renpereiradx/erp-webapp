@@ -133,7 +133,7 @@ const KeyboardShortcuts = () => {
             <h3 className="text-sm font-black uppercase tracking-widest text-text-main">
               {t('settings.shortcuts.title', 'Atajos de Teclado')}
             </h3>
-            <p className="text-[11px] text-text-secondary font-medium">
+            <p className="text-[0.7333rem] text-text-secondary font-medium">
               {t('settings.shortcuts.description', 'Personaliza los atajos de teclado para navegar más rápido.')}
             </p>
           </div>
@@ -142,7 +142,7 @@ const KeyboardShortcuts = () => {
           variant="ghost"
           size="sm"
           onClick={resetAllShortcuts}
-          className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary hover:bg-primary/5"
+          className="text-[0.6667rem] font-black uppercase tracking-widest text-slate-400 hover:text-primary hover:bg-primary/5"
         >
           <RotateCcw size={14} className="mr-2" />
           {t('settings.shortcuts.reset_all', 'Restaurar todos')}
@@ -152,7 +152,7 @@ const KeyboardShortcuts = () => {
       <div className="p-6 space-y-8">
         {Object.entries(categories).map(([categoryKey, category]) => (
           <div key={categoryKey} className="space-y-4">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">
+            <h4 className="text-[0.6667rem] font-black uppercase tracking-[0.2em] text-slate-400 px-1">
               {getCategoryLabel(categoryKey)}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -171,7 +171,7 @@ const KeyboardShortcuts = () => {
                     <div className="flex items-center gap-2">
                       {isEditing ? (
                         <div className="flex items-center gap-1.5">
-                          <kbd className="px-2 py-1 rounded bg-primary text-white text-[10px] font-black shadow-sm animate-pulse">
+                          <kbd className="px-2 py-1 rounded bg-primary text-white text-[0.6667rem] font-black shadow-sm animate-pulse">
                             {formatRecordingKeys(recordingKeys)}
                           </kbd>
                           <Button
@@ -194,7 +194,7 @@ const KeyboardShortcuts = () => {
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5">
-                          <kbd className="px-2 py-1 rounded bg-white border border-slate-200 text-slate-600 text-[10px] font-black shadow-sm group-hover:border-primary/30 transition-colors">
+                          <kbd className="px-2 py-1 rounded bg-white border border-slate-200 text-slate-600 text-[0.6667rem] font-black shadow-sm group-hover:border-primary/30 transition-colors">
                             {formatShortcut(shortcutId)}
                           </kbd>
                           <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -228,7 +228,7 @@ const KeyboardShortcuts = () => {
 
       <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-50 flex items-center gap-2">
         <Info size={14} className="text-primary" />
-        <p className="text-[10px] font-medium text-text-secondary italic">
+        <p className="text-[0.6667rem] font-medium text-text-secondary italic">
           {t('settings.shortcuts.hint', 'Haz clic en el icono de editar y presiona la combinación de teclas deseada.')}
         </p>
       </div>

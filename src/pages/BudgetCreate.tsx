@@ -185,7 +185,7 @@ const BudgetCreate: React.FC = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-black tracking-tight text-text-main leading-none">Nueva Cotización</h1>
-            <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest mt-1.5">Módulo Comercial • Proyección de Venta</p>
+            <p className="text-[0.6667rem] text-text-secondary font-bold uppercase tracking-widest mt-1.5">Módulo Comercial • Proyección de Venta</p>
           </div>
         </div>
         <div className="flex gap-3">
@@ -233,7 +233,7 @@ const BudgetCreate: React.FC = () => {
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-sm text-text-main truncate">{c.displayName || c.name}</p>
                         {c.document_id && (
-                          <p className="text-[11px] text-text-secondary font-semibold uppercase tracking-wider mt-0.5">{c.document_id}</p>
+                          <p className="text-[0.7333rem] text-text-secondary font-semibold uppercase tracking-wider mt-0.5">{c.document_id}</p>
                         )}
                       </div>
                     </div>
@@ -249,7 +249,7 @@ const BudgetCreate: React.FC = () => {
                     </div>
                     <div>
                       <p className="font-bold text-base text-text-main leading-none">{selectedClient.displayName || selectedClient.name}</p>
-                      <p className="text-[11px] font-bold text-slate-500 mt-1.5 uppercase tracking-wider">{selectedClient.document_id || 'RUC: NO APLICA'}</p>
+                      <p className="text-[0.7333rem] font-bold text-slate-500 mt-1.5 uppercase tracking-wider">{selectedClient.document_id || 'RUC: NO APLICA'}</p>
                     </div>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => setSelectedClient(null)} className="text-slate-400 hover:text-error hover:bg-error/10 rounded-full transition-colors">
@@ -277,7 +277,7 @@ const BudgetCreate: React.FC = () => {
                         <p className="font-bold text-sm text-text-main truncate">
                           {u.variant_name ? `${u.name} · ${u.variant_name}` : u.name}
                         </p>
-                        <p className="text-[11px] text-text-secondary font-mono mt-0.5 flex items-center gap-2">
+                        <p className="text-[0.7333rem] text-text-secondary font-mono mt-0.5 flex items-center gap-2">
                           {u.sku && <span>SKU: {u.sku}</span>}
                           <span className={u.stock > 0 ? 'text-success' : 'text-error'}>
                             {t('products.search.stock_label', 'Stock: {stock} {unit}', { stock: u.stock, unit: u.base_unit || 'unit' })}
@@ -307,7 +307,7 @@ const BudgetCreate: React.FC = () => {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
-                    <thead className="bg-white border-b border-border-subtle text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                    <thead className="bg-white border-b border-border-subtle text-[0.6667rem] font-bold uppercase text-slate-400 tracking-wider">
                       <tr>
                         <th className="py-4 px-6 w-12"></th>
                         <th className="py-4 px-4">Producto</th>
@@ -326,7 +326,7 @@ const BudgetCreate: React.FC = () => {
                           </td>
                           <td className="py-4 px-4">
                             <p className="font-bold text-sm text-text-main">{item.name}</p>
-                            <p className="text-[10px] text-text-secondary font-mono mt-0.5">{item.sku ? `SKU: ${item.sku}` : `ID: ${item.product_id}`}</p>
+                            <p className="text-[0.6667rem] text-text-secondary font-mono mt-0.5">{item.sku ? `SKU: ${item.sku}` : `ID: ${item.product_id}`}</p>
                           </td>
                           <td className="py-4 px-4">
                             <div className="flex items-center justify-center">
@@ -372,7 +372,7 @@ const BudgetCreate: React.FC = () => {
             </div>
             <div className="p-6 space-y-6">
               <div className="space-y-3">
-                <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Válido hasta:</label>
+                <label className="text-[0.6667rem] font-bold uppercase text-slate-400 tracking-wider">Válido hasta:</label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                   <Input 
@@ -384,7 +384,7 @@ const BudgetCreate: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-3">
-                <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Notas Comerciales:</label>
+                <label className="text-[0.6667rem] font-bold uppercase text-slate-400 tracking-wider">Notas Comerciales:</label>
                 <textarea 
                   className="w-full min-h-[120px] p-4 text-sm bg-white border border-border-base rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium resize-none"
                   placeholder="Instrucciones especiales para el cliente o detalles de la oferta..."
@@ -411,7 +411,7 @@ const BudgetCreate: React.FC = () => {
               <div className="h-px bg-white/10 my-1" />
               <div className="flex justify-between items-end pt-2">
                 <div className="flex-1 min-w-0 pr-4">
-                    <p className="text-[10px] font-black text-blue-100 uppercase tracking-[0.2em] leading-none mb-2 truncate">Total Presupuesto</p>
+                    <p className="text-[0.6667rem] font-black text-blue-100 uppercase tracking-[0.2em] leading-none mb-2 truncate">Total Presupuesto</p>
                     <h2 className="text-4xl font-black tracking-tighter font-mono text-white truncate">
                         {formatPYG(totals.total)}
                     </h2>

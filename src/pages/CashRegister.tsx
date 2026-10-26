@@ -113,11 +113,11 @@ const CashRegister = () => {
               <div className={`px-6 py-4 bg-slate-50 dark:bg-[#201f1e] flex flex-col md:flex-row justify-between items-center gap-4 border-b ${borderColor}`}>
                 <div className='flex gap-6 w-full md:w-auto'>
                   <div>
-                    <p className='text-[11px] text-slate-500 dark:text-[#a19f9d]'>Fondo inicial</p>
+                    <p className='text-[0.7333rem] text-slate-500 dark:text-[#a19f9d]'>Fondo inicial</p>
                     <p className='text-sm font-semibold font-mono'>₲{formatCurrency(activeCashRegister.initial_balance || 0)}</p>
                   </div>
                   <div>
-                    <p className='text-[11px] text-slate-500 dark:text-[#a19f9d]'>Diferencia neta</p>
+                    <p className='text-[0.7333rem] text-slate-500 dark:text-[#a19f9d]'>Diferencia neta</p>
                     <p className={`text-sm font-semibold font-mono ${netDifference >= 0 ? 'text-[#107c10] dark:text-[#54b054]' : 'text-[#d13438] dark:text-[#e35c60]'}`}>
                       {netDifference >= 0 ? '+' : '-'} ₲{formatCurrency(Math.abs(netDifference))}
                     </p>
@@ -274,8 +274,8 @@ const CashRegister = () => {
                       <div className='flex justify-between items-start mb-2'>
                         <span className='text-sm font-semibold'>{cr.name}</span>
                         {cr.status === 'OPEN' 
-                          ? <span className='text-[10px] px-1.5 py-0.5 rounded-sm bg-[#dff6dd] text-[#107c10] font-semibold'>Activa</span>
-                          : <span className='text-[10px] px-1.5 py-0.5 rounded-sm bg-slate-100 dark:bg-[#323130] text-slate-500 font-semibold'>Cerrada</span>
+                          ? <span className='text-[0.6667rem] px-1.5 py-0.5 rounded-sm bg-[#dff6dd] text-[#107c10] font-semibold'>Activa</span>
+                          : <span className='text-[0.6667rem] px-1.5 py-0.5 rounded-sm bg-slate-100 dark:bg-[#323130] text-slate-500 font-semibold'>Cerrada</span>
                         }
                       </div>
                       <div className='flex justify-between items-end mt-3'>
@@ -284,7 +284,7 @@ const CashRegister = () => {
                           {cr.closed_at && <span>Cierre: {new Date(cr.closed_at).toLocaleDateString([], {day:'2-digit', month:'2-digit', year:'2-digit'})}</span>}
                         </div>
                         <div className='text-right'>
-                          <span className='block text-[10px] text-slate-500 mb-0.5'>Saldo final</span>
+                          <span className='block text-[0.6667rem] text-slate-500 mb-0.5'>Saldo final</span>
                           <span className='text-sm font-mono font-medium'>₲{formatCurrency(cr.current_balance || 0)}</span>
                         </div>
                       </div>

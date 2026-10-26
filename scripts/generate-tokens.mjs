@@ -113,7 +113,11 @@ function generateBlock(tokens) {
     '   la escala de container --container-* en max-w-*, porque el tema default resuelve',
     '   maxWidth = {...container, ...spacing} con el spread de spacing al final.',
     '   Aquí restauramos la precedencia de container para las claves que coinciden en',
-    '   ambas escalas, manteniendo p-md/gap-lg etc. en la escala de espaciado. */',
+    '   ambas escalas, manteniendo p-md/gap-lg etc. en la escala de espaciado.',
+    '   NOTA: esto solo cubre la variante base. Las variantes responsive',
+    '   (sm:/md:/lg:max-w-*) las genera el core con el valor de spacing (p-ej',
+    '   md:max-w-md = --spacing-md): NO usar max-w responsive; usar anchos fijos con',
+    '   tokens de spacing (md:w-80, lg:w-96). */',
     '@layer utilities {',
     ...Object.keys(tokens.container || {})
       .filter((k) => tokens.spacing && tokens.spacing[k] !== undefined)

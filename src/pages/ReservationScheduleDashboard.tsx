@@ -155,7 +155,7 @@ const ReservationScheduleDashboard: React.FC = () => {
             </h3>
             <div className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Producto</label>
+                <label className="text-[0.6667rem] uppercase tracking-widest font-bold text-slate-400">Producto</label>
                 <select 
                   className="w-full bg-slate-50 border-slate-200 rounded-lg py-2.5 px-3 text-sm font-mono focus:ring-2 focus:ring-blue-500"
                   value={selectedProduct}
@@ -169,7 +169,7 @@ const ReservationScheduleDashboard: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Inicio (Hora)</label>
+                  <label className="text-[0.6667rem] uppercase tracking-widest font-bold text-slate-400">Inicio (Hora)</label>
                   <input 
                     className="w-full bg-slate-50 border-slate-200 rounded-lg py-2.5 px-3 text-sm font-mono focus:ring-2 focus:ring-blue-500" 
                     type="number" 
@@ -178,7 +178,7 @@ const ReservationScheduleDashboard: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Fin (Hora)</label>
+                  <label className="text-[0.6667rem] uppercase tracking-widest font-bold text-slate-400">Fin (Hora)</label>
                   <input 
                     className="w-full bg-slate-50 border-slate-200 rounded-lg py-2.5 px-3 text-sm font-mono focus:ring-2 focus:ring-blue-500" 
                     type="number" 
@@ -189,7 +189,7 @@ const ReservationScheduleDashboard: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Timezone</label>
+                <label className="text-[0.6667rem] uppercase tracking-widest font-bold text-slate-400">Timezone</label>
                 <p className="text-xs font-mono bg-slate-100 p-2 rounded-md text-slate-600">{config.timezone}</p>
               </div>
 
@@ -224,15 +224,15 @@ const ReservationScheduleDashboard: React.FC = () => {
             <div className="flex gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-[#10B981]"></div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Confirmado</span>
+                <span className="text-[0.6667rem] font-bold text-slate-500 uppercase tracking-tighter">Confirmado</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-[#EAB308]"></div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Reservado</span>
+                <span className="text-[0.6667rem] font-bold text-slate-500 uppercase tracking-tighter">Reservado</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-[#BA1A1A]"></div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Cancelado</span>
+                <span className="text-[0.6667rem] font-bold text-slate-500 uppercase tracking-tighter">Cancelado</span>
               </div>
             </div>
           </div>
@@ -285,8 +285,8 @@ const ReservationScheduleDashboard: React.FC = () => {
                       <span className="material-symbols-outlined text-slate-300 group-hover:text-blue-500">add_circle</span>
                     ) : (
                       <div className="flex flex-col items-end gap-1">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeColor}`}>{badgeText}</span>
-                        {group.type === 'GROUP' && <span className="text-[9px] font-black text-blue-500 uppercase tracking-tighter">Multi-Hora ({group.slots.length}h)</span>}
+                        <span className={`px-2 py-0.5 rounded-full text-[0.6667rem] font-bold ${badgeColor}`}>{badgeText}</span>
+                        {group.type === 'GROUP' && <span className="text-[0.6rem] font-black text-blue-500 uppercase tracking-tighter">Multi-Hora ({group.slots.length}h)</span>}
                       </div>
                     )}
                   </div>
@@ -317,11 +317,11 @@ const ReservationScheduleDashboard: React.FC = () => {
             <div className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Producto ID</label>
+                  <label className="text-[0.6667rem] uppercase tracking-widest font-bold text-slate-400">Producto ID</label>
                   <div className="font-mono text-sm bg-slate-100 p-2.5 rounded-lg border border-slate-200 text-slate-500">{selectedProduct}</div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Inicio Slot</label>
+                  <label className="text-[0.6667rem] uppercase tracking-widest font-bold text-slate-400">Inicio Slot</label>
                   <div className="font-mono text-sm bg-slate-100 p-2.5 rounded-lg border border-slate-200 text-slate-500">
                     {new Date(selectedSlot.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                   </div>
@@ -329,7 +329,7 @@ const ReservationScheduleDashboard: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Cliente ID / Nombre</label>
+                <label className="text-[0.6667rem] uppercase tracking-widest font-bold text-slate-400">Cliente ID / Nombre</label>
                 <input 
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-blue-500" 
                   placeholder="ID del cliente..." 
@@ -342,7 +342,7 @@ const ReservationScheduleDashboard: React.FC = () => {
 
               {selectedSlot.status === 'AVAILABLE' && (
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Duración (Horas)</label>
+                  <label className="text-[0.6667rem] uppercase tracking-widest font-bold text-slate-400">Duración (Horas)</label>
                   <div className="flex items-center gap-4">
                     <input 
                       className="flex-1 accent-blue-600" 

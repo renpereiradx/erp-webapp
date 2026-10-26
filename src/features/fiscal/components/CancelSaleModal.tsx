@@ -92,7 +92,7 @@ const CancelSaleModal: React.FC<CancelSaleModalProps> = ({
           {/* Impacto de la anulación (preview del backend) */}
           {cancelPreviewData?.impact_analysis && (
             <div className="p-3 bg-error/5 border border-error/20 text-error rounded-xl text-xs space-y-1">
-              <p className="font-black uppercase tracking-widest text-[10px] mb-1">
+              <p className="font-black uppercase tracking-widest text-[0.6667rem] mb-1">
                 {t('fiscal.cancel.impactTitle', 'Impacto de la anulación')}
               </p>
               {cancelPreviewData.impact_analysis.requires_payment_reversal && (
@@ -107,7 +107,7 @@ const CancelSaleModal: React.FC<CancelSaleModalProps> = ({
 
           {/* Motivo obligatorio — justificativa del evento SIFEN */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase tracking-widest text-text-secondary">
+            <label className="text-[0.7333rem] font-black uppercase tracking-widest text-text-secondary">
               {t('fiscal.cancel.reason', 'Motivo de cancelación')} *
             </label>
             <Textarea
@@ -121,7 +121,7 @@ const CancelSaleModal: React.FC<CancelSaleModalProps> = ({
               autoFocus
             />
             {motivo.trim().length > 0 && motivo.trim().length < 5 && (
-              <p className="text-[11px] font-semibold text-error">
+              <p className="text-[0.7333rem] font-semibold text-error">
                 {t('fiscal.cancel.reasonTooShort', 'El motivo debe tener al menos 5 caracteres')}
               </p>
             )}
@@ -130,7 +130,7 @@ const CancelSaleModal: React.FC<CancelSaleModalProps> = ({
           {/* Aviso de plazos fiscales (solo venta fiscal) */}
           {isApproved && windowInfo?.computable && windowInfo.deadline && (
             <div className={`rounded-xl border p-3 text-xs space-y-1.5 ${windowInfo.withinDeadline ? 'bg-amber-50/50 border-amber-200/60 text-amber-800' : 'bg-error/5 border-error/20 text-error'}`}>
-              <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[10px]">
+              <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[0.6667rem]">
                 <AlertTriangle size={14} />
                 {t('fiscal.cancel.fiscalWarning.title', 'Aviso fiscal SIFEN')}
                 <Badge variant={windowInfo.withinDeadline ? 'warning' : 'destructive'} className="ml-auto">
@@ -161,14 +161,14 @@ const CancelSaleModal: React.FC<CancelSaleModalProps> = ({
         <DialogFooter className="gap-3 pt-2">
           <Button
             variant="outline"
-            className="flex-1 font-bold uppercase text-[10px] tracking-widest"
+            className="flex-1 font-bold uppercase text-[0.6667rem] tracking-widest"
             onClick={reset}
             disabled={isSubmitting}
           >
             {t('fiscal.cancel.keep', 'Volver')}
           </Button>
           <Button
-            className="flex-1 bg-error hover:bg-error/90 text-white font-bold uppercase text-[10px] tracking-widest shadow-fluent-4"
+            className="flex-1 bg-error hover:bg-error/90 text-white font-bold uppercase text-[0.6667rem] tracking-widest shadow-fluent-4"
             onClick={handleConfirm}
             disabled={isSubmitting || motivo.trim().length < 5}
           >

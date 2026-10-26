@@ -96,7 +96,7 @@ export const MovementModal: React.FC<MovementModalProps> = ({ isOpen, onClose, o
             </div>
             <div className='flex-1'>
               <h2 className='text-2xl font-black tracking-tighter uppercase text-text-main'>Nuevo Movimiento</h2>
-              <p className='text-[10px] font-bold uppercase tracking-widest text-text-secondary mt-1'>Registro manual de entrada o salida de efectivo</p>
+              <p className='text-[0.6667rem] font-bold uppercase tracking-widest text-text-secondary mt-1'>Registro manual de entrada o salida de efectivo</p>
             </div>
             <button onClick={onClose} className='text-text-secondary hover:text-text-main transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 self-start'><XCircle className='w-6 h-6' /></button>
           </div>
@@ -104,7 +104,7 @@ export const MovementModal: React.FC<MovementModalProps> = ({ isOpen, onClose, o
         <div className='p-8 space-y-8'>
           <form autoComplete="off" onSubmit={handleSubmit} className='space-y-8' id='movement-form'>
             <div className='space-y-3'>
-              <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">
+              <Label className="text-[0.6667rem] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">
                 Tipo de Transacción
               </Label>
               <SegmentedControl
@@ -117,7 +117,7 @@ export const MovementModal: React.FC<MovementModalProps> = ({ isOpen, onClose, o
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Concepto Operativo</Label>
+                <Label className="text-[0.6667rem] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Concepto Operativo</Label>
                 <Select value={form.category} onValueChange={v => setForm(prev => ({...prev, category: v}))} required>
                   <SelectTrigger className="h-12 border-border-subtle rounded-xl font-bold bg-white dark:bg-slate-950 focus:ring-2 focus:ring-primary/10">
                     <SelectValue placeholder='Seleccione un motivo...' />
@@ -132,7 +132,7 @@ export const MovementModal: React.FC<MovementModalProps> = ({ isOpen, onClose, o
                 </Select>
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Monto de la Operación</Label>
+                <Label className="text-[0.6667rem] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Monto de la Operación</Label>
                 <div className='relative'>
                   <span className='absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 font-black'>₲</span>
                   <Input type='number' step='0.01' value={form.amount} onChange={e => setForm(prev => ({...prev, amount: e.target.value}))} placeholder='0' className="h-12 pl-10 font-mono font-black text-lg border-border-subtle rounded-xl bg-white dark:bg-slate-950 focus:ring-2 focus:ring-primary/10" required />
@@ -141,7 +141,7 @@ export const MovementModal: React.FC<MovementModalProps> = ({ isOpen, onClose, o
             </div>
 
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Detalles Adicionales</Label>
+              <Label className="text-[0.6667rem] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Detalles Adicionales</Label>
               <Textarea value={form.notes} onChange={e => setForm(prev => ({...prev, notes: e.target.value}))} placeholder='Añada cualquier información relevante para auditoría...' rows={3} className="resize-none rounded-xl border-border-subtle bg-white dark:bg-slate-950 focus:ring-2 focus:ring-primary/10 min-h-[100px] p-4" />
             </div>
             
@@ -154,8 +154,8 @@ export const MovementModal: React.FC<MovementModalProps> = ({ isOpen, onClose, o
           </form>
         </div>
         <div className='flex gap-4 p-8 border-t border-border-subtle bg-slate-50/50 dark:bg-slate-800/50'>
-          <Button variant='outline' onClick={onClose} disabled={isLoading} className="flex-1 h-12 border-border-subtle font-black uppercase tracking-widest text-[11px] rounded-xl hover:bg-white transition-all">Cancelar</Button>
-          <Button onClick={handleSubmit} form='movement-form' disabled={isLoading} className="flex-1 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[11px] h-12 rounded-xl shadow-fluent-8 transition-all active:scale-95">
+          <Button variant='outline' onClick={onClose} disabled={isLoading} className="flex-1 h-12 border-border-subtle font-black uppercase tracking-widest text-[0.7333rem] rounded-xl hover:bg-white transition-all">Cancelar</Button>
+          <Button onClick={handleSubmit} form='movement-form' disabled={isLoading} className="flex-1 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[0.7333rem] h-12 rounded-xl shadow-fluent-8 transition-all active:scale-95">
             {isLoading ? <Clock className='animate-spin mr-2' size={16} /> : <CheckCircle2 className="mr-2 w-4 h-4" />}Guardar Movimiento
           </Button>
         </div>

@@ -63,14 +63,14 @@
   --color-foreground: #181c22;
   --color-on-surface-deep: #414753;
   --color-divider: #c1c6d5;
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-base: 4px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 48px;
-  --spacing-gutter: 24px;
-  --spacing-margin-page: 40px;
+  --spacing-xs: 0.2667rem;
+  --spacing-sm: 0.5333rem;
+  --spacing-base: 0.2667rem;
+  --spacing-md: 1.0667rem;
+  --spacing-lg: 1.6rem;
+  --spacing-xl: 3.2rem;
+  --spacing-gutter: 1.6rem;
+  --spacing-margin-page: 2.6667rem;
   --spacing-container-max: 1440px;
   --container-3xs: 16rem;
   --container-2xs: 18rem;
@@ -93,47 +93,47 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
-  --text-display-lg: 48px;
-  --text-display-lg--line-height: 56px;
+  --text-display-lg: 3.2rem;
+  --text-display-lg--line-height: 3.7333rem;
   --text-display-lg--font-weight: 900;
   --text-display-lg--letter-spacing: -0.02em;
-  --text-headline-lg: 32px;
-  --text-headline-lg--line-height: 40px;
+  --text-headline-lg: 2.1333rem;
+  --text-headline-lg--line-height: 2.6667rem;
   --text-headline-lg--font-weight: 800;
   --text-headline-lg--letter-spacing: -0.01em;
-  --text-headline-lg-mobile: 24px;
-  --text-headline-lg-mobile--line-height: 32px;
+  --text-headline-lg-mobile: 1.6rem;
+  --text-headline-lg-mobile--line-height: 2.1333rem;
   --text-headline-lg-mobile--font-weight: 800;
-  --text-title-md: 20px;
-  --text-title-md--line-height: 28px;
+  --text-title-md: 1.3333rem;
+  --text-title-md--line-height: 1.8667rem;
   --text-title-md--font-weight: 700;
-  --text-body-lg: 16px;
-  --text-body-lg--line-height: 24px;
+  --text-body-lg: 1.0667rem;
+  --text-body-lg--line-height: 1.6rem;
   --text-body-lg--font-weight: 400;
-  --text-body-md: 14px;
-  --text-body-md--line-height: 20px;
+  --text-body-md: 0.9333rem;
+  --text-body-md--line-height: 1.3333rem;
   --text-body-md--font-weight: 400;
-  --text-body-md-bold: 14px;
-  --text-body-md-bold--line-height: 20px;
+  --text-body-md-bold: 0.9333rem;
+  --text-body-md-bold--line-height: 1.3333rem;
   --text-body-md-bold--font-weight: 700;
-  --text-body-sm: 14px;
-  --text-body-sm--line-height: 20px;
+  --text-body-sm: 0.9333rem;
+  --text-body-sm--line-height: 1.3333rem;
   --text-body-sm--font-weight: 400;
-  --text-body-sm-bold: 12px;
-  --text-body-sm-bold--line-height: 16px;
+  --text-body-sm-bold: 0.8rem;
+  --text-body-sm-bold--line-height: 1.0667rem;
   --text-body-sm-bold--font-weight: 600;
-  --text-label-caps: 11px;
-  --text-label-caps--line-height: 16px;
+  --text-label-caps: 0.7333rem;
+  --text-label-caps--line-height: 1.0667rem;
   --text-label-caps--font-weight: 700;
   --text-label-caps--letter-spacing: 0.05em;
-  --text-data-table: 14px;
-  --text-data-table--line-height: 20px;
+  --text-data-table: 0.9333rem;
+  --text-data-table--line-height: 1.3333rem;
   --text-data-table--font-weight: 500;
-  --text-data-tabular: 14px;
-  --text-data-tabular--line-height: 20px;
+  --text-data-tabular: 0.9333rem;
+  --text-data-tabular--line-height: 1.3333rem;
   --text-data-tabular--font-weight: 400;
-  --text-data-mono: 14px;
-  --text-data-mono--line-height: 20px;
+  --text-data-mono: 0.9333rem;
+  --text-data-mono--line-height: 1.3333rem;
   --text-data-mono--font-weight: 500;
   --font-sans: Inter, "Public Sans", system-ui, sans-serif;
   --font-display: Inter, system-ui, sans-serif;
@@ -211,7 +211,7 @@
    ambas escalas, manteniendo p-md/gap-lg etc. en la escala de espaciado.
    NOTA: esto solo cubre la variante base. Las variantes responsive
    (sm:/md:/lg:max-w-*) las genera el core con el valor de spacing (p-ej
-   md:max-w-md = 16px): NO usar max-w responsive; usar anchos fijos con
+   md:max-w-md = --spacing-md): NO usar max-w responsive; usar anchos fijos con
    tokens de spacing (md:w-80, lg:w-96). */
 @layer utilities {
   .max-w-xs { max-width: var(--container-xs); }
@@ -261,7 +261,11 @@
    ============================================================================= */
 @layer base {
   html {
-    font-size: 15px; /* ERP Balanced Density */
+    /* Palanca global de densidad: tipografía (tokens.json y utilidades Tailwind)
+       y espaciado están en rem contra esta raíz. tokens.json está convertido
+       ÷15 (base de diseño original), así que el valor de abajo escala TODA la
+       UI de una sola vez (15px = diseño original; 14px ≈ −7%). */
+    font-size: 14px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -448,8 +452,8 @@
   }
 
   .radix-dialog__title {
-    font-size: 18px;
-    line-height: 28px;
+    font-size: 1.2rem;
+    line-height: 1.8667rem;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: -0.025em;
@@ -457,8 +461,8 @@
   }
 
   .radix-dialog__description {
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 0.9333rem;
+    line-height: 1.3333rem;
     font-weight: 500;
     color: var(--color-text-secondary);
   }
@@ -554,14 +558,14 @@
     gap: 4px;
   }
   .sheet-title {
-    font-size: 20px;
-    line-height: 28px;
+    font-size: 1.3333rem;
+    line-height: 1.8667rem;
     font-weight: 700;
     color: var(--color-foreground);
   }
   .sheet-description {
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 0.9333rem;
+    line-height: 1.3333rem;
     color: var(--color-on-surface-deep);
   }
   .sheet-footer {

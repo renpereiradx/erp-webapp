@@ -189,7 +189,7 @@ const RegisterCashMovement: React.FC = () => {
         <div className='flex flex-col gap-3'>
           <button 
             onClick={() => navigate('/movimientos-caja')}
-            className='flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-on-surface-deep hover:text-primary transition-colors w-fit'
+            className='flex items-center gap-1.5 text-[0.6667rem] font-black uppercase tracking-widest text-on-surface-deep hover:text-primary transition-colors w-fit'
           >
             <ChevronLeft className='w-3.5 h-3.5' /> Volver a Movimientos
           </button>
@@ -205,13 +205,13 @@ const RegisterCashMovement: React.FC = () => {
         </div>
 
         <div className='flex items-center gap-3'>
-          <Button variant='ghost' onClick={() => navigate('/movimientos-caja')} disabled={loading} className="h-11 font-black uppercase tracking-widest text-[10px] text-text-secondary">
+          <Button variant='ghost' onClick={() => navigate('/movimientos-caja')} disabled={loading} className="h-11 font-black uppercase tracking-widest text-[0.6667rem] text-text-secondary">
             Cancelar
           </Button>
-          <Button variant='outline' onClick={() => handleSubmit(true)} disabled={loading || !activeCashRegister} className="h-11 px-6 font-black uppercase tracking-widest text-[10px] rounded-xl border-border-subtle bg-white dark:bg-slate-900">
+          <Button variant='outline' onClick={() => handleSubmit(true)} disabled={loading || !activeCashRegister} className="h-11 px-6 font-black uppercase tracking-widest text-[0.6667rem] rounded-xl border-border-subtle bg-white dark:bg-slate-900">
             <Plus className='w-4 h-4 mr-2' /> Guardar y Nuevo
           </Button>
-          <Button onClick={() => handleSubmit(false)} disabled={loading || !activeCashRegister} className="h-11 px-10 font-black uppercase tracking-widest text-[11px] rounded-xl shadow-fluent-8 bg-primary hover:bg-primary-hover text-white transition-all active:scale-95">
+          <Button onClick={() => handleSubmit(false)} disabled={loading || !activeCashRegister} className="h-11 px-10 font-black uppercase tracking-widest text-[0.7333rem] rounded-xl shadow-fluent-8 bg-primary hover:bg-primary-hover text-white transition-all active:scale-95">
             {loading ? <RefreshCw className="animate-spin mr-2 w-4 h-4" /> : <Save className="mr-2 w-4 h-4" />}
             {loading ? 'Guardando...' : 'Confirmar Registro'}
           </Button>
@@ -224,7 +224,7 @@ const RegisterCashMovement: React.FC = () => {
           <Card className='border-none rounded-3xl shadow-fluent-2 bg-white dark:bg-slate-900 overflow-hidden'>
             <CardContent className='p-10 space-y-10'>
               <div className='space-y-4'>
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-deep ml-1">Clase de Transacción</Label>
+                <Label className="text-[0.6667rem] font-black uppercase tracking-[0.3em] text-on-surface-deep ml-1">Clase de Transacción</Label>
                 <SegmentedControl
                   options={[
                     { value: 'INCOME', label: 'Ingreso (+)' },
@@ -239,7 +239,7 @@ const RegisterCashMovement: React.FC = () => {
 
               <div className='grid grid-cols-1 md:grid-cols-2 gap-10'>
                 <div className='space-y-4'>
-                  <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-deep ml-1">Concepto Operativo</Label>
+                  <Label className="text-[0.6667rem] font-black uppercase tracking-[0.3em] text-on-surface-deep ml-1">Concepto Operativo</Label>
                   <div className='relative group'>
                     <select
                       value={formData.concept}
@@ -257,7 +257,7 @@ const RegisterCashMovement: React.FC = () => {
                 </div>
 
                 <div className='space-y-4'>
-                  <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-deep ml-1">Monto de la Operación</Label>
+                  <Label className="text-[0.6667rem] font-black uppercase tracking-[0.3em] text-on-surface-deep ml-1">Monto de la Operación</Label>
                   <div className='relative'>
                     <span className='absolute inset-y-0 left-0 pl-5 flex items-center text-on-surface-deep font-black text-xl'>₲</span>
                     <Input
@@ -273,7 +273,7 @@ const RegisterCashMovement: React.FC = () => {
               </div>
 
               <div className='space-y-4'>
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-deep ml-1">Memoria / Observaciones (Opcional)</Label>
+                <Label className="text-[0.6667rem] font-black uppercase tracking-[0.3em] text-on-surface-deep ml-1">Memoria / Observaciones (Opcional)</Label>
                 <Textarea
                   value={formData.notes}
                   onChange={e => handleInputChange('notes', e.target.value)}
@@ -291,11 +291,11 @@ const RegisterCashMovement: React.FC = () => {
           <Card className='border-none rounded-3xl shadow-fluent-2 bg-white dark:bg-slate-900 overflow-hidden'>
             <div className='bg-primary p-8 text-white relative overflow-hidden'>
               <div className='absolute -right-6 -top-6 size-32 bg-white/10 rounded-full blur-3xl'></div>
-              <p className='text-[10px] font-black uppercase tracking-[0.3em] text-white/60 mb-2'>Estado de Caja</p>
+              <p className='text-[0.6667rem] font-black uppercase tracking-[0.3em] text-white/60 mb-2'>Estado de Caja</p>
               <h3 className='text-xl font-black tracking-tighter uppercase leading-tight'>{activeCashRegister?.name || 'Sin Caja'}</h3>
               <div className='mt-8 flex justify-between items-end'>
                 <div className='space-y-1'>
-                  <p className='text-[9px] font-bold uppercase tracking-widest text-white/50'>Balance Actual</p>
+                  <p className='text-[0.6rem] font-bold uppercase tracking-widest text-white/50'>Balance Actual</p>
                   <p className='text-3xl font-black font-mono tracking-tighter'>₲ {activeCashRegister?.current_balance?.toLocaleString() || '0'}</p>
                 </div>
                 <div className='size-12 rounded-2xl bg-white/20 flex items-center justify-center border border-white/20 backdrop-blur-md'>
@@ -308,14 +308,14 @@ const RegisterCashMovement: React.FC = () => {
                 <div className='size-8 rounded-full bg-surface-muted flex items-center justify-center text-on-surface-deep shrink-0'><CheckCircle2 className='w-4 h-4' /></div>
                 <div>
                   <p className='text-xs font-black uppercase tracking-tight text-text-main'>Trazabilidad Total</p>
-                  <p className='text-[11px] text-text-secondary mt-1 font-medium'>Cada movimiento queda registrado con usuario, fecha y hora exacta.</p>
+                  <p className='text-[0.7333rem] text-text-secondary mt-1 font-medium'>Cada movimiento queda registrado con usuario, fecha y hora exacta.</p>
                 </div>
               </div>
               <div className='flex items-start gap-4'>
                 <div className='size-8 rounded-full bg-surface-muted flex items-center justify-center text-on-surface-deep shrink-0'><Settings className='w-4 h-4' /></div>
                 <div>
                   <p className='text-xs font-black uppercase tracking-tight text-text-main'>Impacto Inmediato</p>
-                  <p className='text-[11px] text-text-secondary mt-1 font-medium'>El balance se actualiza en tiempo real al confirmar el registro.</p>
+                  <p className='text-[0.7333rem] text-text-secondary mt-1 font-medium'>El balance se actualiza en tiempo real al confirmar el registro.</p>
                 </div>
               </div>
             </CardContent>

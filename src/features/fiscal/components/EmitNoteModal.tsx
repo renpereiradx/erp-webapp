@@ -98,7 +98,7 @@ const EmitNoteModal: React.FC<EmitNoteModalProps> = ({
         <div className="space-y-4">
           {/* Tipo de nota */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase tracking-widest text-text-secondary">
+            <label className="text-[0.7333rem] font-black uppercase tracking-widest text-text-secondary">
               {t('fiscal.notes.type', 'Tipo de nota')}
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -120,12 +120,12 @@ const EmitNoteModal: React.FC<EmitNoteModalProps> = ({
                 );
               })}
             </div>
-            <p className="text-[10px] text-text-secondary font-medium">{t('fiscal.notes.typeHint', 'NCE para devoluciones/ajustes; NDE para incrementos')}</p>
+            <p className="text-[0.6667rem] text-text-secondary font-medium">{t('fiscal.notes.typeHint', 'NCE para devoluciones/ajustes; NDE para incrementos')}</p>
           </div>
 
           {/* Motivo E401 */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase tracking-widest text-text-secondary">
+            <label className="text-[0.7333rem] font-black uppercase tracking-widest text-text-secondary">
               {t('fiscal.notes.motivo', 'Motivo de emisión (E401)')}
             </label>
             <select
@@ -143,7 +143,7 @@ const EmitNoteModal: React.FC<EmitNoteModalProps> = ({
 
           {/* Monto opcional */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase tracking-widest text-text-secondary">
+            <label className="text-[0.7333rem] font-black uppercase tracking-widest text-text-secondary">
               {t('fiscal.notes.monto', 'Monto (opcional)')}
             </label>
             <Input
@@ -157,9 +157,9 @@ const EmitNoteModal: React.FC<EmitNoteModalProps> = ({
               className={`text-sm h-11 font-mono ${montoError ? 'border-error focus:ring-error/20' : ''}`}
             />
             {montoError ? (
-              <p className="text-[11px] font-semibold text-error">{t(montoError)}</p>
+              <p className="text-[0.7333rem] font-semibold text-error">{t(montoError)}</p>
             ) : (
-              <p className="text-[10px] text-text-secondary font-medium">
+              <p className="text-[0.6667rem] text-text-secondary font-medium">
                 {t('fiscal.notes.montoHint', 'Vacío = todo el disponible del DE original. Tope visible: {total}', {
                   total: saleTotal !== undefined ? String(saleTotal) : '—',
                 })}
@@ -171,14 +171,14 @@ const EmitNoteModal: React.FC<EmitNoteModalProps> = ({
         <DialogFooter className="gap-3 pt-2">
           <Button
             variant="outline"
-            className="flex-1 font-bold uppercase text-[10px] tracking-widest"
+            className="flex-1 font-bold uppercase text-[0.6667rem] tracking-widest"
             onClick={reset}
             disabled={emitMutation.isPending}
           >
             {t('fiscal.cancel.keep', 'Volver')}
           </Button>
           <Button
-            className="flex-1 bg-primary hover:bg-primary-hover text-white font-bold uppercase text-[10px] tracking-widest shadow-fluent-4"
+            className="flex-1 bg-primary hover:bg-primary-hover text-white font-bold uppercase text-[0.6667rem] tracking-widest shadow-fluent-4"
             onClick={() => emitMutation.mutate()}
             disabled={emitMutation.isPending || !!montoError}
           >

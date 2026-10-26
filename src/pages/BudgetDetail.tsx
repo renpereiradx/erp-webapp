@@ -173,7 +173,7 @@ const BudgetDetail: React.FC = () => {
              </div>
              <table className="w-full">
                 <thead className="bg-white border-b border-border-subtle">
-                   <tr className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                   <tr className="text-[0.6667rem] font-black uppercase text-slate-400 tracking-widest">
                       <th className="py-4 px-6 text-left">Descripción del Item</th>
                       <th className="py-4 px-4 text-center">Cantidad</th>
                       <th className="py-4 px-4 text-right">Precio Unit.</th>
@@ -185,7 +185,7 @@ const BudgetDetail: React.FC = () => {
                       <tr key={item.id} className="text-sm">
                          <td className="py-4 px-6">
                             <p className="font-bold text-text-main">{item.product_name || 'Producto ID: ' + item.product_id}</p>
-                            <p className="text-[10px] text-slate-400 font-mono">Cód: {item.product_sku || item.product_barcode || item.product_id}</p>
+                            <p className="text-[0.6667rem] text-slate-400 font-mono">Cód: {item.product_sku || item.product_barcode || item.product_id}</p>
                          </td>
                          <td className="py-4 px-4 text-center font-bold text-slate-600">
                             {item.quantity}
@@ -223,7 +223,7 @@ const BudgetDetail: React.FC = () => {
                <CardContent className="p-6 flex gap-4">
                   <AlertCircle className="text-warning shrink-0" size={20} />
                   <div>
-                     <p className="text-[10px] font-black uppercase text-amber-700 tracking-wider mb-2">Notas y Observaciones</p>
+                     <p className="text-[0.6667rem] font-black uppercase text-amber-700 tracking-wider mb-2">Notas y Observaciones</p>
                      <p className="text-sm text-amber-900 font-medium leading-relaxed">{budget.notes}</p>
                   </div>
                </CardContent>
@@ -236,27 +236,27 @@ const BudgetDetail: React.FC = () => {
            <Card className="border-border-subtle shadow-fluent-2">
               <CardContent className="p-6 space-y-6">
                  <div>
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-3">Información del Cliente</label>
+                    <label className="text-[0.6667rem] font-black uppercase text-slate-400 tracking-wider block mb-3">Información del Cliente</label>
                     <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-border-subtle">
                        <div className="size-10 rounded-full bg-white flex items-center justify-center text-primary shadow-sm">
                           <User size={18} />
                        </div>
                        <div>
                           <p className="font-black text-sm text-text-main">{budget.client_name || 'Consumidor Final'}</p>
-                          <p className="text-[10px] font-bold text-slate-400">ID: {budget.client_id}</p>
+                          <p className="text-[0.6667rem] font-bold text-slate-400">ID: {budget.client_id}</p>
                        </div>
                     </div>
                  </div>
 
                  <div>
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-3">Vigencia Comercial</label>
+                    <label className="text-[0.6667rem] font-black uppercase text-slate-400 tracking-wider block mb-3">Vigencia Comercial</label>
                     <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-border-subtle">
                        <div className="size-10 rounded-full bg-white flex items-center justify-center text-amber-500 shadow-sm">
                           <Clock size={18} />
                        </div>
                        <div>
                           <p className="font-black text-sm text-text-main">Válido hasta el {budget.valid_until ? new Date(budget.valid_until).toLocaleDateString() : '—'}</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Pasada esta fecha la oferta caduca</p>
+                          <p className="text-[0.6667rem] font-bold text-slate-400 uppercase tracking-tighter">Pasada esta fecha la oferta caduca</p>
                        </div>
                     </div>
                  </div>

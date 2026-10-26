@@ -375,7 +375,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
             <form autoComplete="off" id="branch-form" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-5">
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Código de Sucursal *</label>
+                  <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">Código de Sucursal *</label>
                   <Input 
                     value={formData.code || ''} 
                     onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
@@ -385,7 +385,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Nombre Comercial *</label>
+                  <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">Nombre Comercial *</label>
                   <Input 
                     value={formData.name || ''} 
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -394,7 +394,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Tipo de Sucursal</label>
+                  <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">Tipo de Sucursal</label>
                   <select 
                     className="w-full h-11 px-3 border border-slate-200 rounded-md bg-white text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none hover:bg-slate-50 transition-colors"
                     value={formData.branch_type || 'POINT_OF_SALE'}
@@ -422,7 +422,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
 
               <div className="space-y-5">
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Razón Social</label>
+                  <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">Razón Social</label>
                   <Input 
                     value={formData.legal_name || ''} 
                     onChange={(e) => setFormData({...formData, legal_name: e.target.value})}
@@ -431,7 +431,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">RUC</label>
+                  <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">RUC</label>
                   <Input 
                     value={formData.ruc || ''} 
                     onChange={(e) => setFormData({...formData, ruc: e.target.value})}
@@ -440,7 +440,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Dirección Física</label>
+                  <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">Dirección Física</label>
                   <Input 
                     value={formData.address || ''} 
                     onChange={(e) => setFormData({...formData, address: e.target.value})}
@@ -450,7 +450,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                    <div className="space-y-2">
-                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Teléfono</label>
+                    <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">Teléfono</label>
                     <Input 
                       value={formData.phone || ''} 
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
@@ -459,7 +459,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">Email</label>
+                    <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">Email</label>
                     <Input 
                       value={formData.email || ''} 
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -491,7 +491,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
               <div className="p-5 bg-slate-50 border border-slate-200 rounded-xl animate-in slide-in-from-top-2 duration-300 shadow-sm">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.establishment', 'Establecimiento')}</label>
+                    <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.establishment', 'Establecimiento')}</label>
                     <Input 
                       placeholder="001" 
                       className="text-sm h-11 font-mono" 
@@ -500,7 +500,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.expeditionPoint', 'Punto de Expedición')}</label>
+                    <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.expeditionPoint', 'Punto de Expedición')}</label>
                     <Input 
                       placeholder="001" 
                       className="text-sm h-11 font-mono"
@@ -509,7 +509,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.timbrado', 'Número de Timbrado')}</label>
+                    <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.timbrado', 'Número de Timbrado')}</label>
                     <Input 
                       placeholder="12345678" 
                       className="text-sm h-11 font-mono"
@@ -518,7 +518,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.documentType', 'Tipo de Documento')}</label>
+                    <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.documentType', 'Tipo de Documento')}</label>
                     <select 
                       className="w-full h-11 px-3 border border-slate-200 rounded-md bg-white text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none hover:bg-slate-50 transition-colors"
                       value={fiscalForm.document_type}
@@ -530,7 +530,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.serie', 'Serie')}</label>
+                    <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.serie', 'Serie')}</label>
                     <Input 
                       placeholder="AA" 
                       maxLength={2}
@@ -538,10 +538,10 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                       value={fiscalForm.serie}
                       onChange={(e) => setFiscalForm({...fiscalForm, serie: normalizeSerie(e.target.value)})}
                     />
-                    <p className="text-[10px] text-slate-400 font-medium">{t('fiscal.branch.serieHint', '2 letras, p. ej. AA')}</p>
+                    <p className="text-[0.6667rem] text-slate-400 font-medium">{t('fiscal.branch.serieHint', '2 letras, p. ej. AA')}</p>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.validFrom', 'Vigencia desde')}</label>
+                    <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.validFrom', 'Vigencia desde')}</label>
                     <Input 
                       type="date" 
                       className="text-sm h-11"
@@ -550,7 +550,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.validTo', 'Vigencia hasta')}</label>
+                    <label className="text-[0.7333rem] font-bold uppercase text-slate-500 tracking-wider">{t('fiscal.branch.validTo', 'Vigencia hasta')}</label>
                     <Input 
                       type="date" 
                       className="text-sm h-11"
@@ -560,7 +560,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                   </div>
                 </div>
                 <div className="mt-4 flex justify-between items-center">
-                  <p className="text-[11px] text-slate-400 italic font-medium">
+                  <p className="text-[0.7333rem] text-slate-400 italic font-medium">
                     {t('fiscal.branch.nextNumberHint', 'Lo asigna el backend automáticamente')}
                   </p>
                   <div className="flex gap-3">
@@ -684,7 +684,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
               <div className="p-5 bg-success/5 border border-success/20 rounded-xl animate-in slide-in-from-top-2 duration-300 shadow-sm">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-success/70 tracking-wider">Usuario</label>
+                    <label className="text-[0.7333rem] font-bold uppercase text-success/70 tracking-wider">Usuario</label>
                     <select 
                       className="w-full h-11 px-3 border border-success/30 rounded-md text-sm font-medium bg-white focus:ring-2 focus:ring-success/20 outline-none"
                       value={accessForm.user_id}
@@ -699,7 +699,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase text-success/70 tracking-wider">Nivel de Acceso</label>
+                    <label className="text-[0.7333rem] font-bold uppercase text-success/70 tracking-wider">Nivel de Acceso</label>
                     <select 
                       className="w-full h-11 px-3 border border-success/30 rounded-md text-sm font-medium bg-white focus:ring-2 focus:ring-success/20 outline-none"
                       value={accessForm.access_type}
@@ -788,7 +788,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                                       </Badge>
                                     ))}
                                     {accessUser && accessUser.status !== 'active' && (
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-surface-subtle text-on-surface-deep">
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.6667rem] font-black uppercase tracking-wider bg-surface-subtle text-on-surface-deep">
                                         <span className="size-1.5 rounded-full bg-outline" />
                                         {t('users.status.inactive', 'Inactivo')}
                                       </span>
@@ -806,7 +806,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                         </TableCell>
                         <TableCell className="py-4 px-4">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`px-3 py-1 rounded-md text-[11px] font-black uppercase tracking-wider border ${
+                            <span className={`px-3 py-1 rounded-md text-[0.7333rem] font-black uppercase tracking-wider border ${
                               acc.access_type === 'FULL' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                               acc.access_type === 'LIMITED' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                               'bg-slate-100 text-slate-600 border-slate-200'
@@ -814,7 +814,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, init
                               {acc.access_type}
                             </span>
                             {acc.is_default_branch && (
-                              <span className="px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-success/10 text-success border border-success/20 flex items-center gap-1">
+                              <span className="px-2 py-1 rounded-md text-[0.6667rem] font-black uppercase tracking-wider bg-success/10 text-success border border-success/20 flex items-center gap-1">
                                 <Star size={10} /> {t('branchAccess.defaultBadge', 'Por defecto')}
                               </span>
                             )}

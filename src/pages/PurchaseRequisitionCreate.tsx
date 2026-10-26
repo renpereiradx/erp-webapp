@@ -147,7 +147,7 @@ const PurchaseRequisitionCreate: React.FC = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-black tracking-tight text-text-main">Nueva Requisición</h1>
-            <p className="text-[11px] text-text-secondary font-bold uppercase tracking-widest mt-1">Suministros e Inventario • Flujo de Compra</p>
+            <p className="text-[0.7333rem] text-text-secondary font-bold uppercase tracking-widest mt-1">Suministros e Inventario • Flujo de Compra</p>
           </div>
         </div>
         <div className="flex gap-3">
@@ -183,7 +183,7 @@ const PurchaseRequisitionCreate: React.FC = () => {
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-sm truncate">{s.displayName || s.name}</p>
                         {s.tax_id && (
-                          <p className="text-[11px] text-text-secondary font-semibold uppercase tracking-wider mt-0.5">{s.tax_id}</p>
+                          <p className="text-[0.7333rem] text-text-secondary font-semibold uppercase tracking-wider mt-0.5">{s.tax_id}</p>
                         )}
                       </div>
                     </div>
@@ -222,7 +222,7 @@ const PurchaseRequisitionCreate: React.FC = () => {
                         <p className="font-bold text-sm truncate">
                           {u.variant_name ? `${u.name} · ${u.variant_name}` : u.name}
                         </p>
-                        <p className="text-[11px] text-text-secondary font-mono mt-0.5 flex items-center gap-2">
+                        <p className="text-[0.7333rem] text-text-secondary font-mono mt-0.5 flex items-center gap-2">
                           {u.sku && <span>SKU: {u.sku}</span>}
                           <span className={u.stock > 0 ? 'text-success' : 'text-error'}>
                             {t('products.search.stock_label', 'Stock: {stock} {unit}', { stock: u.stock, unit: u.base_unit || 'unit' })}
@@ -250,7 +250,7 @@ const PurchaseRequisitionCreate: React.FC = () => {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-slate-50/30 text-[10px] font-black uppercase text-slate-400 tracking-widest border-b">
+                    <thead className="bg-slate-50/30 text-[0.6667rem] font-black uppercase text-slate-400 tracking-widest border-b">
                       <tr>
                         <th className="py-4 px-6 text-left">Producto</th>
                         <th className="py-4 px-4 text-center">Cantidad</th>
@@ -264,7 +264,7 @@ const PurchaseRequisitionCreate: React.FC = () => {
                         <tr key={item.key} className="group hover:bg-slate-50/50 transition-colors">
                           <td className="py-4 px-6">
                             <p className="font-bold text-sm">{item.name}</p>
-                            <p className="text-[10px] text-slate-400 font-mono">{item.sku ? `SKU: ${item.sku}` : item.product_id}</p>
+                            <p className="text-[0.6667rem] text-slate-400 font-mono">{item.sku ? `SKU: ${item.sku}` : item.product_id}</p>
                           </td>
                           <td className="py-4 px-4">
                             <Input
@@ -285,13 +285,13 @@ const PurchaseRequisitionCreate: React.FC = () => {
                               value={item.priority}
                               onValueChange={(val) => updateItem(item.key, 'priority', val)}
                             >
-                              <SelectTrigger className="w-32 h-9 text-[10px] font-bold uppercase border-none bg-slate-100">
+                              <SelectTrigger className="w-32 h-9 text-[0.6667rem] font-bold uppercase border-none bg-slate-100">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="LOW" className="text-[10px] font-bold">BAJA</SelectItem>
-                                <SelectItem value="MEDIUM" className="text-[10px] font-bold">MEDIA</SelectItem>
-                                <SelectItem value="HIGH" className="text-[10px] font-bold text-red-600">ALTA</SelectItem>
+                                <SelectItem value="LOW" className="text-[0.6667rem] font-bold">BAJA</SelectItem>
+                                <SelectItem value="MEDIUM" className="text-[0.6667rem] font-bold">MEDIA</SelectItem>
+                                <SelectItem value="HIGH" className="text-[0.6667rem] font-bold text-red-600">ALTA</SelectItem>
                               </SelectContent>
                             </Select>
                           </td>
@@ -332,7 +332,7 @@ const PurchaseRequisitionCreate: React.FC = () => {
                  />
                  <div className="bg-blue-50 p-4 rounded-xl flex gap-3 border border-blue-100">
                     <Tags className="text-primary shrink-0" size={20} />
-                    <p className="text-[11px] text-blue-800 font-medium leading-relaxed">
+                    <p className="text-[0.7333rem] text-blue-800 font-medium leading-relaxed">
                         Las requisiciones son revisadas por el departamento de compras. Una vez aprobadas, se consolidarán en órdenes de compra globales.
                     </p>
                  </div>

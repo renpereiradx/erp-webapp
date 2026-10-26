@@ -68,7 +68,7 @@ export function TagsTable({ tags, selectedTag, onSelectTag, loading }: TagsTable
                     </TableCell>
                     <TableCell>
                       {/* Ícono de DATO: nombre Material Symbols almacenado en la etiqueta */}
-                      <span className="material-symbols-outlined text-[18px] text-on-surface-deep">{tag.icon}</span>
+                      <span className="material-symbols-outlined text-[1.2rem] text-on-surface-deep">{tag.icon}</span>
                     </TableCell>
                     <TableCell>
                       <Badge variant="info" className="text-label-caps uppercase">{tag.type}</Badge>

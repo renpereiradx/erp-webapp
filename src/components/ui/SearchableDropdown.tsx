@@ -241,7 +241,7 @@ export function SearchableDropdown<T extends SearchableDropdownItem>({
             {item.stock !== undefined && (
               <p
                 className={cn(
-                  'text-[10px] font-bold uppercase',
+                  'text-[0.6667rem] font-bold uppercase',
                   item.stock > 0 ? 'text-success' : 'text-error'
                 )}
               >

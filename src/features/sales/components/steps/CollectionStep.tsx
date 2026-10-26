@@ -436,7 +436,7 @@ export const CollectionStep = forwardRef<CollectionStepRef, CollectionStepProps>
                         : t('sales.checkoutWizard.collection.exactCollection', 'Cobro exacto')}
                 </span>
                 {isForeign && (
-                  <p className="text-[10px] text-on-surface-deep/80 uppercase tracking-wide mt-0.5">
+                  <p className="text-[0.6667rem] text-on-surface-deep/80 uppercase tracking-wide mt-0.5">
                     {t('sales.checkoutWizard.collection.changeInBase', 'se entrega en {base}', {
                       base: currencyCode,
                     })}

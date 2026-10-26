@@ -136,7 +136,7 @@ const BranchSelection = () => {
                     <Building2 size={24} />
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+                    <span className="text-[0.6667rem] font-bold text-slate-400 uppercase tracking-widest block mb-1">
                       {t('branchSelection.branchId', 'ID: {id}', { id: branch.code || branch.id })}
                     </span>
                     <h3 className="text-xl font-bold tracking-tight text-text-main group-hover:text-primary transition-colors">
@@ -194,18 +194,18 @@ const BranchSelection = () => {
         </div>
 
         <div className="mt-12 pt-8 border-t border-border-subtle flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">
+          <p className="text-[0.6667rem] font-bold text-slate-400 uppercase tracking-[0.15em]">
             {/* PLAN_VERSION_UI_FRONTEND: la versión la muestra SystemVersionBadge (antes "v2.0.4" literal). */}
             Sistema de Gestión &bull; Core Engine <SystemVersionBadge />
           </p>
           <div className="flex gap-6 opacity-60">
             <div className="flex items-center gap-1.5">
                <span className="material-symbols-outlined text-sm text-success">verified_user</span>
-               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{t('branchSelection.securityActive', 'Security Active')}</span>
+               <span className="text-[0.6rem] font-bold uppercase tracking-widest text-slate-500">{t('branchSelection.securityActive', 'Security Active')}</span>
             </div>
             <div className="flex items-center gap-1.5">
                <span className="material-symbols-outlined text-sm text-info">cloud_done</span>
-               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{t('branchSelection.syncedToCloud', 'Synced to Cloud')}</span>
+               <span className="text-[0.6rem] font-bold uppercase tracking-widest text-slate-500">{t('branchSelection.syncedToCloud', 'Synced to Cloud')}</span>
             </div>
           </div>
         </div>

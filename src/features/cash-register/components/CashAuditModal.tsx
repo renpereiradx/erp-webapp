@@ -92,7 +92,7 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
             </div>
             <div>
               <h2 className='text-lg font-black tracking-tighter uppercase text-text-main'>Arqueo de Caja</h2>
-              <p className='text-[10px] font-bold uppercase tracking-widest text-text-secondary'>Conteo físico de billetes y monedas</p>
+              <p className='text-[0.6667rem] font-bold uppercase tracking-widest text-text-secondary'>Conteo físico de billetes y monedas</p>
             </div>
           </div>
           <button onClick={onClose} className='text-text-secondary hover:text-text-main transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800'>
@@ -104,13 +104,13 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
           {loading ? (
             <div className='flex flex-col items-center justify-center py-20 gap-4'>
               <Clock className='animate-spin text-primary size-10' />
-              <p className='text-[10px] font-black uppercase tracking-[0.2em] text-slate-400'>Cargando denominaciones...</p>
+              <p className='text-[0.6667rem] font-black uppercase tracking-[0.2em] text-slate-400'>Cargando denominaciones...</p>
             </div>
           ) : (
             <form autoComplete="off" id='audit-form' onSubmit={handleSubmit} className='space-y-10'>
               <div className='grid grid-cols-1 md:grid-cols-2 gap-12'>
                 <div className='space-y-6'>
-                  <h4 className='text-[10px] font-black uppercase text-primary tracking-[0.3em] flex items-center gap-2 border-b border-primary/20 pb-2'>
+                  <h4 className='text-[0.6667rem] font-black uppercase text-primary tracking-[0.3em] flex items-center gap-2 border-b border-primary/20 pb-2'>
                     <PlusIcon size={12} /> Billetes
                   </h4>
                   <div className='space-y-3'>
@@ -118,7 +118,7 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
                       <div key={val} className='flex items-center justify-between gap-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-transparent hover:border-border-subtle hover:bg-white dark:hover:bg-slate-800 transition-all group'>
                         <span className='text-sm font-mono font-black text-text-main w-24'>{val.toLocaleString()} ₲</span>
                         <div className='flex items-center gap-2'>
-                          <span className='text-[10px] text-slate-400 font-black uppercase group-hover:text-primary transition-colors'>x</span>
+                          <span className='text-[0.6667rem] text-slate-400 font-black uppercase group-hover:text-primary transition-colors'>x</span>
                           <Input 
                             type='number' 
                             min='0' 
@@ -132,7 +132,7 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
                   </div>
                 </div>
                 <div className='space-y-6'>
-                  <h4 className='text-[10px] font-black uppercase text-warning tracking-[0.3em] flex items-center gap-2 border-b border-warning/20 pb-2'>
+                  <h4 className='text-[0.6667rem] font-black uppercase text-warning tracking-[0.3em] flex items-center gap-2 border-b border-warning/20 pb-2'>
                     <MinusIcon size={12} /> Monedas
                   </h4>
                   <div className='space-y-3'>
@@ -140,7 +140,7 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
                       <div key={val} className='flex items-center justify-between gap-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-transparent hover:border-border-subtle hover:bg-white dark:hover:bg-slate-800 transition-all group'>
                         <span className='text-sm font-mono font-black text-text-main w-24'>{val.toLocaleString()} ₲</span>
                         <div className='flex items-center gap-2'>
-                          <span className='text-[10px] text-slate-400 font-black uppercase group-hover:text-warning transition-colors'>x</span>
+                          <span className='text-[0.6667rem] text-slate-400 font-black uppercase group-hover:text-warning transition-colors'>x</span>
                           <Input 
                             type='number' 
                             min='0' 
@@ -158,11 +158,11 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
               <div className='p-8 bg-slate-50 dark:bg-slate-900/80 rounded-2xl border border-border-subtle shadow-inner flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden'>
                 <div className='absolute top-0 left-0 w-2 h-full bg-primary'></div>
                 <div className='text-center md:text-left flex-1 min-w-0'>
-                  <p className='text-[10px] font-black uppercase text-text-secondary tracking-[0.2em] mb-2'>Total Contado Físicamente</p>
+                  <p className='text-[0.6667rem] font-black uppercase text-text-secondary tracking-[0.2em] mb-2'>Total Contado Físicamente</p>
                   <p className='text-4xl font-black text-primary tabular-nums font-mono tracking-tighter truncate'>{totalCounted.toLocaleString()} ₲</p>
                 </div>
                 <div className='text-center md:text-right shrink-0'>
-                  <p className='text-[10px] font-black uppercase text-text-secondary tracking-[0.2em] mb-2'>Diferencia vs Sistema</p>
+                  <p className='text-[0.6667rem] font-black uppercase text-text-secondary tracking-[0.2em] mb-2'>Diferencia vs Sistema</p>
                   <div className='flex items-center justify-center md:justify-end gap-2'>
                     <p className={`text-3xl font-black tabular-nums font-mono ${difference === 0 ? 'text-success' : 'text-error'}`}>
                       {difference > 0 ? '+' : ''}{difference.toLocaleString()} ₲
@@ -177,7 +177,7 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
               </div>
 
               <div className='space-y-3'>
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Observaciones del Arqueo</Label>
+                <Label className="text-[0.6667rem] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Observaciones del Arqueo</Label>
                 <Textarea 
                   value={notes} 
                   onChange={e => setNotes(e.target.value)} 
@@ -194,7 +194,7 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
           <Button 
             type='submit' 
             form='audit-form' 
-            className='flex-1 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[11px] h-12 rounded-lg shadow-fluent-8 transition-all active:scale-95' 
+            className='flex-1 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[0.7333rem] h-12 rounded-lg shadow-fluent-8 transition-all active:scale-95' 
             disabled={isCreatingAudit || loading}
           >
             {isCreatingAudit ? <Clock className='animate-spin mr-2' size={16} /> : null}
@@ -203,7 +203,7 @@ export const CashAuditModal: React.FC<CashAuditModalProps> = ({ isOpen, onClose,
           <Button 
             variant='outline' 
             onClick={onClose} 
-            className='px-8 border-border-subtle font-black uppercase tracking-widest text-[11px] h-12 rounded-lg hover:bg-white dark:hover:bg-slate-950 transition-all'
+            className='px-8 border-border-subtle font-black uppercase tracking-widest text-[0.7333rem] h-12 rounded-lg hover:bg-white dark:hover:bg-slate-950 transition-all'
           >
             Cancelar
           </Button>

@@ -83,7 +83,7 @@ export default function DataState({
       <div className="py-20 text-center flex flex-col items-center justify-center" data-testid={testId || 'data-state-error'}>
         <div className="text-center p-8" data-testid="error-state-inner">
           <div className="mb-4">
-            <span className="material-icons-round text-destructive text-[64px]" aria-hidden="true">error_outline</span>
+            <span className="material-icons-round text-destructive text-[4.2667rem]" aria-hidden="true">error_outline</span>
           </div>
           <h3 className="text-2xl font-semibold mb-2">
             {title || 'Error'}
@@ -113,7 +113,7 @@ export default function DataState({
       <div className="text-center p-8">
         <div className="mb-4">
           <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
-            <span className="material-icons-round text-muted-foreground/40 text-[32px]">inventory_2</span>
+            <span className="material-icons-round text-muted-foreground/40 text-[2.1333rem]">inventory_2</span>
           </div>
         </div>
         <h3 className="text-2xl font-semibold mb-2">

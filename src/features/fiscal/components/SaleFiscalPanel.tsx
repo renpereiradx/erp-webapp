@@ -34,7 +34,7 @@ interface SaleFiscalPanelProps {
 
 const Field = ({ label, value, mono = false }: { label: string; value: React.ReactNode; mono?: boolean }) => (
   <div className="min-w-0">
-    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary mb-1">{label}</p>
+    <p className="text-[0.6667rem] font-black uppercase tracking-[0.2em] text-text-secondary mb-1">{label}</p>
     <p className={`text-sm font-semibold text-text-main break-all ${mono ? 'font-mono' : ''}`}>{value || '—'}</p>
   </div>
 );
@@ -69,7 +69,7 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
             <div className="size-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500"><Receipt size={20} /></div>
             <div>
               <p className="font-black uppercase tracking-tight text-sm text-text-main">{t('fiscal.panel.notFiscal.title', 'Venta sin documento fiscal')}</p>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">{t('fiscal.panel.notFiscal.subtitle', 'La sucursal no tiene emisión SIFEN activada (D3)')}</p>
+              <p className="text-[0.6667rem] font-bold uppercase tracking-widest text-text-secondary">{t('fiscal.panel.notFiscal.subtitle', 'La sucursal no tiene emisión SIFEN activada (D3)')}</p>
             </div>
           </div>
           {canUseDocuments && (
@@ -154,7 +154,7 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
               <CardTitle className="text-base font-black tracking-tight uppercase flex items-center gap-2">
                 {t('fiscal.panel.title', 'Facturación Electrónica SIFEN')}
               </CardTitle>
-              <CardDescription className="text-[10px] font-bold uppercase tracking-widest">
+              <CardDescription className="text-[0.6667rem] font-bold uppercase tracking-widest">
                 {docType ? t(docType.i18nKey) : `DE ${status.doc_type}`} · {status.establecimiento}-{status.punto_expedicion}-{status.serie}-{formatInvoiceNumber(status.numero_doc)}
               </CardDescription>
             </div>
@@ -181,7 +181,7 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
         {/* Respuesta de SIFEN (rechazo / observación) */}
         {(status.codigo_respuesta || status.mensaje || status.last_error) && (
           <div className={`rounded-xl border p-4 space-y-2 ${status.estado === 'RECHAZADO' ? 'bg-error/5 border-error/20' : 'bg-amber-50/50 border-amber-200/60'}`}>
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary">
+            <p className="text-[0.6667rem] font-black uppercase tracking-widest text-text-secondary">
               {t('fiscal.panel.sifenResponse', 'Respuesta de SIFEN')}
               {status.codigo_respuesta && <span className="ml-2 font-mono text-error">{status.codigo_respuesta}</span>}
             </p>
@@ -200,14 +200,14 @@ const SaleFiscalPanel: React.FC<SaleFiscalPanelProps> = ({ saleId, saleTotal }) 
             ) : (
               <div className="size-[112px] border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 text-slate-300 bg-slate-50/50">
                 <QrCode size={28} />
-                <span className="text-[9px] font-bold uppercase tracking-wider">{t('fiscal.panel.qrPending', 'QR al firmar el DE')}</span>
+                <span className="text-[0.6rem] font-bold uppercase tracking-wider">{t('fiscal.panel.qrPending', 'QR al firmar el DE')}</span>
               </div>
             )}
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary">{t('fiscal.panel.qrTitle', 'Comprobante electrónico')}</p>
+              <p className="text-[0.6667rem] font-black uppercase tracking-widest text-text-secondary">{t('fiscal.panel.qrTitle', 'Comprobante electrónico')}</p>
               <p className="text-xs text-text-secondary max-w-[220px]">{t('fiscal.panel.qrHint', 'Verificable en el portal e-Kuatia del SIFEN')}</p>
               {reprintCount !== null && (
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary">{t('fiscal.panel.reprints', '{count} reimpresión(es)', { count: String(reprintCount) })}</p>
+                <p className="text-[0.6667rem] font-bold uppercase tracking-widest text-primary">{t('fiscal.panel.reprints', '{count} reimpresión(es)', { count: String(reprintCount) })}</p>
               )}
             </div>
           </div>

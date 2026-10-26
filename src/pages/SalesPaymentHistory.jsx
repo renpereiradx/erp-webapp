@@ -453,7 +453,7 @@ const SalesPaymentHistory = () => {
 
                         {payment.notes && (
                            <div className="md:w-1/3 bg-white dark:bg-slate-800 p-3 rounded-md border border-slate-200 dark:border-slate-700 italic leading-relaxed text-xs text-slate-600 dark:text-slate-300">
-                             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1 not-italic">Notas</p>
+                             <p className="text-[0.6667rem] font-semibold text-slate-400 uppercase tracking-widest mb-1 not-italic">Notas</p>
                              "{payment.notes}"
                            </div>
                         )}

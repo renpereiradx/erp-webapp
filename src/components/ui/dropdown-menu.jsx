@@ -44,7 +44,7 @@ function DropdownMenuItem({ className, inset, variant = 'default', ...props }) {
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        'relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm font-bold outline-none transition-colors focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 uppercase tracking-widest text-[10px]',
+        'relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm font-bold outline-none transition-colors focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 uppercase tracking-widest text-[0.6667rem]',
         className
       )}
       {...props}

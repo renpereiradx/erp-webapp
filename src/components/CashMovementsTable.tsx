@@ -89,13 +89,13 @@ const CashMovementsTable: React.FC<CashMovementsTableProps> = ({ movements = [] 
         <Table>
           <TableHeader>
             <TableRow className='bg-slate-50/80 dark:bg-slate-800/50 border-b border-border-subtle'>
-              <TableHead className='py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400'>Instante</TableHead>
-              <TableHead className='py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400'>Tipo</TableHead>
-              <TableHead className='py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400'>Concepto / Auditoría</TableHead>
-              <TableHead className='py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right'>Monto</TableHead>
-              <TableHead className='py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right'>Balance</TableHead>
-              <TableHead className='py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400'>Responsable</TableHead>
-              <TableHead className='py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400'>Relación</TableHead>
+              <TableHead className='py-4 px-6 text-[0.6667rem] font-black uppercase tracking-widest text-slate-400'>Instante</TableHead>
+              <TableHead className='py-4 px-6 text-[0.6667rem] font-black uppercase tracking-widest text-slate-400'>Tipo</TableHead>
+              <TableHead className='py-4 px-6 text-[0.6667rem] font-black uppercase tracking-widest text-slate-400'>Concepto / Auditoría</TableHead>
+              <TableHead className='py-4 px-6 text-[0.6667rem] font-black uppercase tracking-widest text-slate-400 text-right'>Monto</TableHead>
+              <TableHead className='py-4 px-6 text-[0.6667rem] font-black uppercase tracking-widest text-slate-400 text-right'>Balance</TableHead>
+              <TableHead className='py-4 px-6 text-[0.6667rem] font-black uppercase tracking-widest text-slate-400'>Responsable</TableHead>
+              <TableHead className='py-4 px-6 text-[0.6667rem] font-black uppercase tracking-widest text-slate-400'>Relación</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className='divide-y divide-border-subtle/30'>
@@ -109,7 +109,7 @@ const CashMovementsTable: React.FC<CashMovementsTableProps> = ({ movements = [] 
                   </TableCell>
 
                   <TableCell className='py-4 px-6'>
-                    <Badge variant={display.variant} className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${display.colorClass}`}>
+                    <Badge variant={display.variant} className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[0.6rem] font-black uppercase tracking-widest border ${display.colorClass}`}>
                       {display.icon}
                       {display.label}
                     </Badge>
@@ -138,7 +138,7 @@ const CashMovementsTable: React.FC<CashMovementsTableProps> = ({ movements = [] 
                       <div className='size-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 border border-border-subtle shadow-inner'>
                         <User className='w-3.5 h-3.5' />
                       </div>
-                      <span className='text-[11px] font-bold text-text-secondary'>{movement.user_full_name || movement.created_by_name}</span>
+                      <span className='text-[0.7333rem] font-bold text-text-secondary'>{movement.user_full_name || movement.created_by_name}</span>
                     </div>
                   </TableCell>
 
@@ -147,10 +147,10 @@ const CashMovementsTable: React.FC<CashMovementsTableProps> = ({ movements = [] 
                       <div className='flex flex-col gap-1 p-2 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-800/30'>
                         <div className='flex items-center gap-1.5 text-blue-700 dark:text-blue-400'>
                           <Receipt className='w-3 h-3' />
-                          <span className='text-[9px] font-black uppercase'>Venta {(movement as any).related_sale_id}</span>
+                          <span className='text-[0.6rem] font-black uppercase'>Venta {(movement as any).related_sale_id}</span>
                         </div>
                         {(movement as any).sale_client_name && (
-                          <span className='text-[9px] text-blue-600/70 font-bold truncate'>Cli: {(movement as any).sale_client_name}</span>
+                          <span className='text-[0.6rem] text-blue-600/70 font-bold truncate'>Cli: {(movement as any).sale_client_name}</span>
                         )}
                       </div>
                     )}
@@ -159,16 +159,16 @@ const CashMovementsTable: React.FC<CashMovementsTableProps> = ({ movements = [] 
                       <div className='flex flex-col gap-1 p-2 bg-purple-50/50 dark:bg-purple-900/10 rounded-lg border border-purple-100 dark:border-purple-800/30'>
                         <div className='flex items-center gap-1.5 text-purple-700 dark:text-purple-400'>
                           <ShoppingCart className='w-3 h-3' />
-                          <span className='text-[9px] font-black uppercase'>Compra #{(movement as any).related_purchase_id}</span>
+                          <span className='text-[0.6rem] font-black uppercase'>Compra #{(movement as any).related_purchase_id}</span>
                         </div>
                         {(movement as any).purchase_supplier && (
-                          <span className='text-[9px] text-purple-600/70 font-bold truncate'>Prov: {(movement as any).purchase_supplier}</span>
+                          <span className='text-[0.6rem] text-purple-600/70 font-bold truncate'>Prov: {(movement as any).purchase_supplier}</span>
                         )}
                       </div>
                     )}
 
                     {!(movement as any).related_sale_id && !(movement as any).related_purchase_id && (
-                      <span className='text-[9px] font-black text-slate-300 uppercase tracking-widest'>Manual / Sist.</span>
+                      <span className='text-[0.6rem] font-black text-slate-300 uppercase tracking-widest'>Manual / Sist.</span>
                     )}
                   </TableCell>
                 </TableRow>

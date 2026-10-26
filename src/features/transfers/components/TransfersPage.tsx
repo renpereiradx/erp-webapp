@@ -124,7 +124,7 @@ const TransfersPage = ({ initialPreloadedItems, initialDestinationId }: Transfer
               >
                 {status}
                 {status === 'PENDING' && (pendingCount ?? 0) > 0 && (
-                  <span data-testid='transfers-pending-badge' className="rounded-full bg-error px-xs text-[10px] font-black text-white">{pendingCount}</span>
+                  <span data-testid='transfers-pending-badge' className="rounded-full bg-error px-xs text-[0.6667rem] font-black text-white">{pendingCount}</span>
                 )}
               </button>
             ))}
