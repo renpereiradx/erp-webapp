@@ -50,7 +50,10 @@ import BranchModal from '@/features/branches/components/BranchModal';
  */
 const BranchManagement: React.FC = () => {
   const { t } = useI18n();
-  const { addToast, toasts, removeToast } = useToast();
+  // Única instancia de toast de la página: se inyecta en los modales porque
+  // solo la renderizada en el ToastContainer de abajo es visible.
+  const toast = useToast();
+  const { addToast, toasts, removeToast } = toast;
   const queryClient = useQueryClient();
   
   // Estados de datos
@@ -285,11 +288,12 @@ const BranchManagement: React.FC = () => {
       </div>
 
       {isBranchModalOpen && (
-        <BranchModal 
-          isOpen={isBranchModalOpen} 
-          onClose={() => setIsBranchModalOpen(false)} 
+        <BranchModal
+          isOpen={isBranchModalOpen}
+          onClose={() => setIsBranchModalOpen(false)}
           branch={selectedBranch}
           initialTab={activeTab === 'general' ? 'info' : activeTab}
+          toast={toast}
         />
       )}
 

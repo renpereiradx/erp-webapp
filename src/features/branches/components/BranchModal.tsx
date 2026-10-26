@@ -64,11 +64,16 @@ interface BranchModalProps {
   onClose: () => void;
   branch: Branch | null;
   initialTab?: BranchTab;
+  // Instancia compartida de la página (ver useProductsLogic): useToast()
+  // guarda estado local por instancia y solo la renderizada en el
+  // ToastContainer de la página es visible.
+  toast?: ReturnType<typeof useToast>;
 }
 
-const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, initialTab = 'info' }) => {
+const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, branch, initialTab = 'info', toast: externalToast }) => {
   const { t } = useI18n();
-  const { addToast } = useToast();
+  const fallbackToast = useToast();
+  const { addToast } = externalToast ?? fallbackToast;
   const queryClient = useQueryClient();
   const isEditing = !!branch;
 
