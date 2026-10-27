@@ -139,7 +139,7 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
 
       {open && (
         <div
-          className="absolute z-50 w-full mt-1 bg-surface rounded-md shadow-fluent-8 border border-border-subtle overflow-x-hidden max-h-[400px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+          className="absolute z-50 w-full sm:w-[32rem] mt-1 bg-surface rounded-md shadow-fluent-8 border border-border-subtle overflow-x-hidden max-h-[400px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
           role="listbox"
           aria-label={t('sales.search.resultsAria', 'Resultados de búsqueda')}
         >
@@ -189,18 +189,21 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
                       )}
                     >
                       <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                      {/* flex-wrap: si la caja de cantidad (shrink-0) deja sin
+                          lugar la línea, el badge de SKU baja y el nombre
+                          nunca colapsa a 0 con su truncate. */}
                       <div className="flex flex-wrap items-center gap-2 min-w-0">
-                        {/* flex-wrap: si la caja de cantidad (shrink-0) deja sin
-                            lugar la línea, el badge de SKU baja y el nombre
-                            nunca colapsa a 0 con su truncate. */}
                         <p className="text-body-md-bold text-foreground truncate leading-none uppercase">
                           <HighlightText text={product.displayName ?? product.name} term={searchTerm} />
                         </p>
-                          <Badge variant="secondary" size="sm" className="font-data-mono shrink-0">
-                            #<HighlightText text={product.sku} term={searchTerm} />
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-3">
+                        <Badge variant="secondary" size="sm" className="font-data-mono shrink-0">
+                          #<HighlightText text={product.sku} term={searchTerm} />
+                        </Badge>
+                      </div>
+                        {/* flex-wrap también acá: los badges de stock son
+                            shrink-0; sin wrap desbordan su caja y quedan por
+                            detrás del stepper blanco. */}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                           <div className="flex items-baseline gap-1 shrink-0">
                             <p className="text-body-md-bold font-data-mono text-primary leading-none">
                               {formatCurrency(product.price)}
