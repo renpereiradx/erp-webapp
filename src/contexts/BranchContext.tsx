@@ -63,10 +63,17 @@ export const BranchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       // (device.defaultBranch). Solo fuerza sucursal para usuarios SIN
       // `branches:switch`; si la sucursal emparejada ya no está permitida se
       // ignora y se sigue la jerarquía normal (fail-open controlado).
+      // `user` llega async (/me): evaluado con user === null la fuerza pisaría
+      // la sucursal elegida también para admins/encargados en cada F5 (la
+      // terminal no puede decidir antes de saber si el usuario puede cambiar).
+      // El efecto re-corre cuando /me resuelve y aplica la fuerza si corresponde.
       const canSwitchBranches = isAdmin || hasPermission('branches:switch');
       const deviceBranchId = readDeviceDefaultBranch();
       const deviceBranchForced =
-        !canSwitchBranches && deviceBranchId !== null && finalAllowedBranches.includes(deviceBranchId);
+        user !== null &&
+        !canSwitchBranches &&
+        deviceBranchId !== null &&
+        finalAllowedBranches.includes(deviceBranchId);
 
       // Resolución de sucursal activa según jerarquía
       if (deviceBranchForced && deviceBranchId !== null) {

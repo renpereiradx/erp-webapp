@@ -187,6 +187,41 @@ describe('BranchContext — terminal vinculada (D.4)', () => {
       expect(screen.getByTestId('current-branch').textContent).toBe('3')
     })
   })
+
+  it('no pisa la sucursal elegida durante el arranque (user aún sin cargar por /me) — F5 en navegador con terminal emparejada', async () => {
+    localStorage.setItem('device.defaultBranch', '2')
+    localStorage.setItem('activeBranch', '3')
+    // Espejo de /me persistido por inicializaciones previas (AuthContext lo
+    // escribe en cada init): es la fuente de allowed_branches pre-/me.
+    localStorage.setItem('allowedBranches', '[2,3]')
+    // Boot: token presente pero /me no resolvió → sin permisos conocidos.
+    authState.isAuthenticated = true
+    authState.user = null
+    authState.hasPermission = (_permission: string) => false
+
+    const { rerender } = renderProbe()
+
+    // La sucursal elegida (3) sobrevive; la terminal no decide antes de
+    // saber si el usuario puede cambiar de sucursal.
+    await waitFor(() => {
+      expect(screen.getByTestId('current-branch').textContent).toBe('3')
+    })
+    expect(localStorage.getItem('activeBranch')).toBe('3')
+
+    // /me resuelve: usuario CON branches:switch → sigue en la elegida.
+    authState.user = VENDOR_USER
+    authState.hasPermission = (permission: string) => permission === 'branches:switch'
+    rerender(
+      <BranchProvider>
+        <BranchProbe />
+      </BranchProvider>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('current-branch').textContent).toBe('3')
+    })
+    expect(localStorage.getItem('activeBranch')).toBe('3')
+  })
 })
 
 describe('BranchContext — vista global persistente', () => {
