@@ -2218,7 +2218,10 @@ const SalesNew: React.FC = () => {
             <section className="bg-surface rounded-md shadow-whisper border-0 overflow-hidden min-w-0 self-stretch">
               <div className="px-lg py-md bg-surface-muted border-b border-divider flex flex-col gap-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-sm md:gap-md flex-wrap">
-                  <div className="w-full sm:w-80 shrink-0">
+                  {/* w-96: el dropdown es el picker primario del POS (nombre +
+                      badge SKU + caja de cantidad); w-80 lo obligaba a colapsar
+                      el nombre del producto resaltado. */}
+                  <div className="w-full sm:w-96 shrink-0">
                   <ProductSearchPanel
                     searchTerm={productSearchTerm}
                     onSearchTermChange={(v) => {
