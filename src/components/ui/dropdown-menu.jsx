@@ -44,7 +44,7 @@ function DropdownMenuItem({ className, inset, variant = 'default', ...props }) {
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        'relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm font-bold outline-none transition-colors focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 uppercase tracking-widest text-[0.6667rem]',
+        'relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm font-bold outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 uppercase tracking-widest text-[0.6667rem]',
         className
       )}
       {...props}
@@ -56,7 +56,7 @@ function DropdownMenuCheckboxItem({ className, children, checked, ...props }) {
   return (
     <DropdownMenuPrimitive.CheckboxItem
       className={cn(
-        'relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className
       )}
       checked={checked}
@@ -80,7 +80,7 @@ function DropdownMenuRadioItem({ className, children, ...props }) {
   return (
     <DropdownMenuPrimitive.RadioItem
       className={cn(
-        'relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className
       )}
       {...props}
@@ -101,7 +101,7 @@ function DropdownMenuLabel({ className, inset, ...props }) {
     <DropdownMenuPrimitive.Label
       data-inset={inset}
       className={cn(
-        'px-2 py-1.5 text-xs font-black uppercase tracking-widest text-slate-400',
+        'px-2 py-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground',
         className
       )}
       {...props}
@@ -113,7 +113,7 @@ function DropdownMenuLabel({ className, inset, ...props }) {
 function DropdownMenuSeparator({ className, ...props }) {
   return (
     <DropdownMenuPrimitive.Separator
-      className={cn('-mx-1 my-1 h-px bg-slate-100 dark:bg-slate-800', className)}
+      className={cn('-mx-1 my-1 h-px bg-muted', className)}
       {...props}
     />
   )
@@ -138,7 +138,7 @@ function DropdownMenuSubTrigger({ className, inset, children, ...props }) {
     <DropdownMenuPrimitive.SubTrigger
       data-inset={inset}
       className={cn(
-        'flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-slate-100 dark:focus:bg-slate-800 data-[state=open]:bg-slate-100 dark:data-[state=open]:bg-slate-800',
+        'flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent',
         className
       )}
       {...props}

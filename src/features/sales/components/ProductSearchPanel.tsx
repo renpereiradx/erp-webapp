@@ -157,7 +157,12 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
                   <div
                     className={cn(
                       'flex items-center w-full transition-colors duration-150 rounded-md overflow-hidden',
-                      isHighlighted ? 'bg-primary-container/50' : 'hover:bg-surface-muted',
+                      // Mismo resaltado que PurchaseProductSearchInput: tinte
+                      // sutil + anillo primario (bg-primary-container/50 era
+                      // un azul pesado que ensuciaba todo el dropdown).
+                      isHighlighted
+                        ? 'bg-primary/5 ring-1 ring-inset ring-primary'
+                        : 'hover:bg-surface-muted',
                     )}
                     onMouseEnter={() => onHighlight(index)}
                   >
