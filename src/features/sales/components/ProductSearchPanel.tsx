@@ -139,7 +139,7 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
 
       {open && (
         <div
-          className="absolute z-50 w-full sm:w-[32rem] mt-1 bg-surface rounded-md shadow-fluent-8 border border-border-subtle overflow-x-hidden max-h-[400px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+          className="absolute z-50 w-full sm:w-[36rem] mt-1 bg-surface rounded-md shadow-fluent-8 border border-border-subtle overflow-x-hidden max-h-[400px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
           role="listbox"
           aria-label={t('sales.search.resultsAria', 'Resultados de búsqueda')}
         >
@@ -212,31 +212,34 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
                               / {product.base_unit}
                             </span>
                           </div>
+                          {/* size lg: el stock es estado de venta, no un chip
+                              decorativo — el owner lo quiere legible a un
+                              vistazo en el POS. */}
                           <div className="flex flex-wrap items-center gap-1.5 min-w-0">
                             {badgeKind === 'variants' ? (
-                              <Badge variant="secondary" size="sm" className="gap-1 shrink-0">
-                                <Layers size={10} />
+                              <Badge variant="secondary" size="lg" className="gap-1 shrink-0 text-sm!">
+                                <Layers size={12} />
                                 {t('sales.search.multipleVariants', 'Múltiples Variantes')}
                               </Badge>
                             ) : badgeKind === 'service' ? (
-                              <Badge variant="secondary" size="sm" className="shrink-0">
+                              <Badge variant="secondary" size="lg" className="shrink-0 text-sm!">
                                 {t('sales.search.serviceBadge', 'Servicio')}
                               </Badge>
                             ) : availableStock > 0 ? (
-                              <Badge variant="success" size="sm" className="shrink-0">
+                              <Badge variant="success" size="lg" className="shrink-0 text-sm!">
                                 {t('sales.search.stock', 'Stock: {qty} {unit}', {
                                   qty: formatNumber(availableStock),
                                   unit: product.base_unit,
                                 })}
                               </Badge>
                             ) : (
-                              <Badge variant="destructive" size="sm" className="shrink-0">
+                              <Badge variant="destructive" size="lg" className="shrink-0 text-sm!">
                                 {t('sales.search.outOfStockShort', 'Sin stock')}
                               </Badge>
                             )}
                             {quantityInCart > 0 && (
-                              <Badge variant="warning" size="sm" className="gap-1 shrink-0">
-                                <ShoppingCart size={10} className="shrink-0" />
+                              <Badge variant="warning" size="lg" className="gap-1 shrink-0 text-sm!">
+                                <ShoppingCart size={12} className="shrink-0" />
                                 {t('sales.search.inCart', '{qty} en carrito', { qty: formatNumber(quantityInCart) })}
                               </Badge>
                             )}
