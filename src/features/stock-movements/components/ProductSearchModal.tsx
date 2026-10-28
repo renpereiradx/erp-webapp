@@ -39,9 +39,12 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onSelect: (product: CatalogProduct) => void;
+  /** Término inicial (deep-link "Ajustar Stock" desde /products): los
+   * resultados se cargan sin tipear; undefined = arranca vacío. */
+  initialTerm?: string;
 }
 
-export function ProductSearchModal({ open, onClose, onSelect }: Props) {
+export function ProductSearchModal({ open, onClose, onSelect, initialTerm }: Props) {
   const { t } = useI18n();
   const [term, setTerm] = useState('');
   const [highlight, setHighlight] = useState(-1);
@@ -70,12 +73,12 @@ export function ProductSearchModal({ open, onClose, onSelect }: Props) {
   // Reset al abrir/cerrar
   useEffect(() => {
     if (open) {
-      setTerm('');
+      setTerm(initialTerm ?? '');
       clearSearch();
       setHighlight(-1);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }, [open, clearSearch]);
+  }, [open, clearSearch, initialTerm]);
 
   // Scroll al item resaltado
   useEffect(() => {

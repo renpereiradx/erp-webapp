@@ -13,6 +13,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 
 const mocks = vi.hoisted(() => {
   return {
@@ -72,7 +73,11 @@ vi.mock('../components/ProductSearchModal', () => ({
 import { MovementForm } from '../components/MovementForm'
 
 const renderForm = () => {
-  render(<MovementForm />)
+  render(
+      <MemoryRouter>
+        <MovementForm />
+      </MemoryRouter>,
+    )
   return userEvent.setup()
 }
 

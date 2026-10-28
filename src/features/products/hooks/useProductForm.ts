@@ -2,8 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { z } from 'zod';
 import useProductStore from '@/store/useProductStore';
 import useCategoryStore from '@/store/useCategoryStore';
+import { useStockMovementsStore } from '@/store/useStockMovementsStore';
 import { useToast } from '@/hooks/useToast';
 import { useI18n } from '@/lib/i18n';
+import { priceAdjustmentService } from '@/services/priceAdjustmentService';
+import { buildPayloadFromForm, movementFormSchema } from '@/domain/stock/movements';
+import { currentUserId } from '@/utils/currentUserId';
 
 export const baseProductSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
@@ -19,6 +23,10 @@ export const baseProductSchema = z.object({
   is_variable_measure: z.boolean().default(false),
   is_bookable: z.boolean().default(false),
   scale_code: z.string().optional(),
+  // Valores iniciales (solo creación): NO son campos del producto — tras el
+  // alta se emiten como ajuste de precio + transacción INITIAL del ledger.
+  initial_price: z.string().default(''),
+  initial_stock: z.string().default(''),
 });
 
 export const productSchema = baseProductSchema.superRefine((data, ctx) => {
@@ -63,6 +71,28 @@ export const productSchema = baseProductSchema.superRefine((data, ctx) => {
       path: ["is_bookable"]
     });
   }
+
+  if (data.initial_price && data.initial_price.trim() !== '') {
+    const v = parseFloat(data.initial_price);
+    if (!Number.isFinite(v) || v <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'El precio inicial debe ser un número mayor a 0',
+        path: ['initial_price'],
+      });
+    }
+  }
+
+  if (data.initial_stock && data.initial_stock.trim() !== '') {
+    const v = parseFloat(data.initial_stock);
+    if (!Number.isFinite(v) || v <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'El stock inicial debe ser un número mayor a 0',
+        path: ['initial_stock'],
+      });
+    }
+  }
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;
@@ -83,7 +113,7 @@ export function useProductForm({ product, isOpen, onClose, toast: externalToast 
   const toast = externalToast ?? fallbackToast;
   // Métodos estables (no el objeto `toast`, cuya identidad cambia con cada
   // notificación y provocaría refetch en bucle en los efectos de abajo).
-  const { errorFrom, success } = toast;
+  const { errorFrom, success, warning } = toast;
   const { t } = useI18n();
   const isEditMode = product !== null;
 
@@ -101,6 +131,8 @@ export function useProductForm({ product, isOpen, onClose, toast: externalToast 
     is_variable_measure: false,
     is_bookable: false,
     scale_code: '',
+    initial_price: '',
+    initial_stock: '',
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof ProductFormData, string>>>({});
@@ -186,12 +218,15 @@ export function useProductForm({ product, isOpen, onClose, toast: externalToast 
           is_variable_measure: product.is_variable_measure || false,
           is_bookable: product.is_bookable || false,
           scale_code: product.scale_code || '',
+          initial_price: '',
+          initial_stock: '',
         });
       } else {
         setFormData({
           name: '', category: '', productType: 'PHYSICAL', description: '',
           barcode: '', sku: '', brand_id: '', origin: '', base_unit: 'unit', tax_rate_id: '',
           is_variable_measure: false, is_bookable: false, scale_code: '',
+          initial_price: '', initial_stock: '',
         });
       }
       setErrors({});
@@ -272,8 +307,60 @@ export function useProductForm({ product, isOpen, onClose, toast: externalToast 
         await updateProduct(productId, updateData);
         success(t('products.toast.updated', 'Producto actualizado exitosamente'));
       } else {
-        await createProduct(productData);
-        success(t('products.toast.created', 'Producto creado exitosamente'));
+        const created = await createProduct(productData);
+        // Precio/stock inicial: emitidos por los flujos auditados (ajuste de
+        // precio + transacción INITIAL del ledger), no por el alta directa.
+        // El producto YA existe: un fallo acá no revierte el alta, se informa.
+        const problems: string[] = [];
+        const price = formData.initial_price.trim() ? parseFloat(formData.initial_price) : null;
+        const stock = formData.initial_stock.trim() ? parseFloat(formData.initial_stock) : null;
+        if (price !== null || stock !== null) {
+          if (!created?.id) {
+            problems.push(t('products.toast.initial_setup.no_id', 'no se obtuvo el ID del producto creado'));
+          } else {
+            if (price !== null) {
+              const result = await priceAdjustmentService.createPriceAdjustment({
+                product_id: created.id,
+                new_price: price,
+                unit: formData.base_unit || 'unit',
+                reason: 'Precio inicial definido al crear el producto',
+                adjustment_type: 'INITIAL_SETUP',
+                old_price: 0,
+                metadata: { source: 'product_form_initial' },
+              });
+              if (!result.success) {
+                problems.push(`${t('products.toast.initial_setup.price', 'precio inicial')} (${result.error})`);
+              }
+            }
+            if (stock !== null) {
+              try {
+                const payload = buildPayloadFromForm(
+                  movementFormSchema.parse({
+                    product_id: created.id,
+                    mode: 'target',
+                    targetStock: stock,
+                    reasonCategory: 'INITIAL_COUNT',
+                    reason: 'Stock inicial al crear el producto',
+                  }),
+                  0,
+                  currentUserId(),
+                );
+                await useStockMovementsStore.getState().registerMovement(payload);
+              } catch (err: any) {
+                problems.push(`${t('products.toast.initial_setup.stock', 'stock inicial')} (${err?.message ?? err})`);
+              }
+            }
+          }
+        }
+        if (problems.length > 0) {
+          warning(t(
+            'products.toast.initial_setup.warning',
+            'Producto creado, pero no se pudo aplicar: {problems}. Completalo desde Ajustes de Precios o Movimientos de Stock.',
+            { problems: problems.join(' · ') },
+          ));
+        } else {
+          success(t('products.toast.created', 'Producto creado exitosamente'));
+        }
       }
       
       onClose();

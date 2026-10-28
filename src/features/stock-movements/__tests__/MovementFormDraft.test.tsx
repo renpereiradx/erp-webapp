@@ -13,6 +13,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 
 const mocks = vi.hoisted(() => {
   return {
@@ -94,7 +95,11 @@ const storedDraft = () => {
 /** Render + una fila agregada desde el buscador (cierra el modal de edición). */
 const renderWithRow = async () => {
   const user = userEvent.setup()
-  render(<MovementForm />)
+  render(
+      <MemoryRouter>
+        <MovementForm />
+      </MemoryRouter>,
+    )
   await user.click(screen.getByTestId('mock-search'))
   await screen.findByText('Editar movimiento')
   await user.click(screen.getByRole('button', { name: 'Cancelar' }))
@@ -120,7 +125,11 @@ describe('MovementForm — borrador y guard de salida', () => {
 
   it('restaura el borrador del operador al montar y muestra el badge', () => {
     useStockMovementsDraftStore.getState().saveDraft('USER_OP', [draftRow()])
-    render(<MovementForm />)
+    render(
+      <MemoryRouter>
+        <MovementForm />
+      </MemoryRouter>,
+    )
 
     expect(screen.getByText('PAPA KG')).toBeInTheDocument()
     expect(screen.getByTestId('stock-movements-draft-badge')).toBeInTheDocument()
@@ -128,7 +137,11 @@ describe('MovementForm — borrador y guard de salida', () => {
 
   it('NO restaura el borrador de otro operador (terminales compartidas)', () => {
     useStockMovementsDraftStore.getState().saveDraft('USER_OTHER', [draftRow()])
-    render(<MovementForm />)
+    render(
+      <MemoryRouter>
+        <MovementForm />
+      </MemoryRouter>,
+    )
 
     expect(screen.getByText('No hay productos en la cola.')).toBeInTheDocument()
     expect(screen.queryByTestId('stock-movements-draft-badge')).not.toBeInTheDocument()
@@ -144,7 +157,11 @@ describe('MovementForm — borrador y guard de salida', () => {
   it('el badge permite descartar el borrador', async () => {
     useStockMovementsDraftStore.getState().saveDraft('USER_OP', [draftRow()])
     const user = userEvent.setup()
-    render(<MovementForm />)
+    render(
+      <MemoryRouter>
+        <MovementForm />
+      </MemoryRouter>,
+    )
 
     await user.click(screen.getByRole('button', { name: 'Descartar borrador' }))
     expect(screen.getByText('No hay productos en la cola.')).toBeInTheDocument()
@@ -195,7 +212,11 @@ describe('MovementForm — borrador y guard de salida', () => {
 
   it('el submit exitoso limpia el borrador', async () => {
     const user = userEvent.setup()
-    render(<MovementForm />)
+    render(
+      <MemoryRouter>
+        <MovementForm />
+      </MemoryRouter>,
+    )
     await user.click(screen.getByTestId('mock-search'))
     await screen.findByText('Editar movimiento')
     await user.type(screen.getByLabelText('Stock objetivo'), '5')

@@ -82,7 +82,7 @@ describe('ProductDetailsModal', () => {
     expect(overlay.style.left).toBe('var(--erp-overlay-inset, var(--erp-content-inset, 0px))');
   });
 
-  it('no muestra la card de precio sin precios registrados', () => {
+  it('sin precios: muestra la card con CTA de ajuste rápido (usuario con products:write)', () => {
     render(
       <MemoryRouter>
         <ProductDetailsModal
@@ -93,7 +93,11 @@ describe('ProductDetailsModal', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.queryByText('Precio de Venta')).toBeNull();
+    // hasPermission mocked a true: la card existe y ofrece el alta de precio
+    // desde la ficha (antes el producto nacía desnudo y sin entrada visible).
+    expect(screen.getByText('Precio de Venta')).toBeTruthy();
+    expect(screen.getByText('Sin precio definido')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /ajustar precio/i })).toBeTruthy();
   });
 
   it('F3: los pivotes BI navegan al drill-down y cierran la ficha', () => {

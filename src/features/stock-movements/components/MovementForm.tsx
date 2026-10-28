@@ -16,6 +16,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Package, Search, Trash2, Send, Plus, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
@@ -88,10 +89,23 @@ function rowUnitFactor(row: MovementRowUI, conversions: UnitConversionRow[] | nu
 
 export function MovementForm() {
   const { t } = useI18n();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { registerBatch, loading, error, clearError } = useStockMovements();
   const saveDraft = useStockMovementsDraftStore((s) => s.saveDraft);
   /** Dueño del borrador, estable por montaje (vive en localStorage, no cambia en sesión). */
   const draftOwnerId = useMemo(() => currentUserId(), []);
+
+  // Deep-link "Ajustar Stock" desde /products: abre el buscador con el
+  // producto como término inicial. Se consume una vez y se limpia del
+  // history (mismo path, replace) para que un refresh no reabra el modal.
+  const [presetTerm] = useState(
+    () => (location.state as { presetSearch?: string } | null)?.presetSearch,
+  );
+  useEffect(() => {
+    if (presetTerm) navigate(location.pathname, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Borrador: la cola se restaura al montar si pertenece al operador actual
   // (inicializador perezoso, antes del primer render) y se persiste en cada cambio.
@@ -100,7 +114,7 @@ export function MovementForm() {
   );
   /** ¿Esta instancia arrancó desde un borrador persistido? (badge informativo). */
   const restoredRef = useRef(rows.length > 0);
-  const [showSearch, setShowSearch] = useState(false);
+  const [showSearch, setShowSearch] = useState(!!presetTerm);
   const [approval, setApproval] = useState<string>('operator');
 
   // Write-through del borrador. Con sesión sin resolver (sentinel) no se toca:
@@ -680,6 +694,7 @@ export function MovementForm() {
         open={showSearch}
         onClose={() => setShowSearch(false)}
         onSelect={handleSelectProduct}
+        initialTerm={presetTerm}
       />
 
       {/* Diálogo de salida con filas sin registrar (guard de navegación) */}

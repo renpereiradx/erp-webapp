@@ -37,8 +37,9 @@ vi.mock('@/store/useProductStore', () => ({
 const successToast = vi.fn();
 const errorToast = vi.fn();
 const errorFromToast = vi.fn();
+const warningToast = vi.fn();
 vi.mock('@/hooks/useToast', () => ({
-  useToast: () => ({ success: successToast, error: errorToast, errorFrom: errorFromToast }),
+  useToast: () => ({ success: successToast, error: errorToast, errorFrom: errorFromToast, warning: warningToast }),
 }));
 
 import { useProductForm } from '@/features/products/hooks/useProductForm';

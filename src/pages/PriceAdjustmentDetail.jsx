@@ -198,7 +198,14 @@ const PriceAdjustmentDetail = () => {
         return newErrors;
       });
     }
-  };
+  }
+
+  // Plantilla preseleccionada: la razón queda lista por defecto (fricción
+  // cero para el cajero) sin sacrificar la auditoría del "por qué".
+  useEffect(() => {
+    handleReasonTemplateChange('MARKET_UPDATE');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Redirigir si no hay producto seleccionado
   useEffect(() => {

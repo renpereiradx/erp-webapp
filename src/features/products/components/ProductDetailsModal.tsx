@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { Edit, Package, Info, Layout, Activity, TrendingUp, CheckCircle2, AlertTriangle, ShieldCheck, Clock, Users, ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,7 @@ interface ProductDetailsModalProps {
  */
 export default function ProductDetailsModal({ isOpen, onClose, product, onEdit, toast: externalToast }: ProductDetailsModalProps) {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const fallbackToast = useToast();
   const toast = externalToast ?? fallbackToast;
   const { errorFrom } = toast;
@@ -126,6 +128,15 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit, 
   });
 
   const isAvailable = !(product.state === false || product.status === false || product.is_active === false);
+  const isService = (product.product_type || product.productType) === 'SERVICE';
+
+  // Acción rápida de stock: reusa el flujo de /movimientos-stock con el
+  // buscador precargado (SKU si existe, si no nombre) — el ajuste sigue
+  // siendo una transacción auditada del ledger, nunca un input directo.
+  const handleQuickStockAdjust = () => {
+    onClose();
+    navigate('/movimientos-stock', { state: { presetSearch: product.sku || productName } });
+  };
 
   const infoLabelClass = 'text-label-caps uppercase text-on-surface-deep';
   const infoValueClass = 'text-body-md text-foreground';
@@ -483,16 +494,41 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit, 
           <div className="lg:col-span-4 space-y-lg">
 
             {/* Sale Price Card — dato crítico, jerarquía visual máxima */}
-            {salePrice && (
+            {(salePrice || canWrite) && (
               <div className="space-y-md">
                 <h3 className="text-label-caps uppercase text-on-surface-deep">{t('products.details.section.price', 'Precio de Venta')}</h3>
                 <div className={cn(sidebarCardClass, 'bg-primary/5 border-primary/30')}>
-                  <div className="font-data-mono text-headline-lg text-primary leading-none break-words">
-                    {formatCurrency(salePrice.price_per_unit)}
-                  </div>
-                  <p className="text-body-sm-bold text-on-surface-deep mt-xs uppercase">
-                    {t('products.details.price.per_unit', 'por {unit}', { unit: salePrice.unit || '-' })}
-                  </p>
+                  {salePrice ? (
+                    <>
+                      <div className="font-data-mono text-headline-lg text-primary leading-none break-words">
+                        {formatCurrency(salePrice.price_per_unit)}
+                      </div>
+                      <p className="text-body-sm-bold text-on-surface-deep mt-xs uppercase">
+                        {t('products.details.price.per_unit', 'por {unit}', { unit: salePrice.unit || '-' })}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-body-md text-on-surface-deep italic">
+                      {t('products.details.price.none', 'Sin precio definido')}
+                    </p>
+                  )}
+                  {canWrite && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="w-full mt-md"
+                      data-testid="product-details-adjust-price"
+                      onClick={() => {
+                        setSelectedUnit(salePrice?.unit || product.base_unit || 'unit');
+                        setSelectedValue(salePrice?.price_per_unit ?? 0);
+                        setSelectedVariantForRow(null);
+                        setIsPriceAdjustmentOpen(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                      {t('products.details.action.adjust_price', 'Ajustar Precio')}
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
@@ -532,6 +568,18 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit, 
                     <div className="font-data-mono text-headline-lg text-foreground leading-none">{stockQuantity}</div>
                     <p className="text-body-sm-bold text-on-surface-deep mt-xs">{t('products.details.inventory.base_product', 'Stock del producto base')}</p>
                   </div>
+                )}
+                {canWrite && !isService && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full mt-md"
+                    data-testid="product-details-adjust-stock"
+                    onClick={handleQuickStockAdjust}
+                  >
+                    <Package className="w-4 h-4" />
+                    {t('products.details.action.adjust_stock', 'Ajustar Stock')}
+                  </Button>
                 )}
               </div>
             </div>

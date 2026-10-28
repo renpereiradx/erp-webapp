@@ -28,6 +28,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import {
+  formatNumberInput,
+  parseNumberInput,
+  formatQuantityInput,
+  parseQuantityInput,
+} from '@/domain/shared/moneyInput'
 import { CategoryManagementModal } from '@/features/categories'
 import BrandCreateModal from '@/features/brands/components/BrandCreateModal'
 import { useToast } from '@/hooks/useToast';
@@ -102,7 +108,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null, toas
     if (errors && Object.keys(errors).length > 0) {
       if (errors.name || errors.category || errors.description || errors.productType) {
         setActiveTab('basic');
-      } else if (errors.base_unit || errors.scale_code || errors.barcode) {
+      } else if (errors.base_unit || errors.scale_code || errors.barcode || errors.initial_price || errors.initial_stock) {
         setActiveTab('measure');
       } else if (errors.tax_rate_id || errors.origin || errors.brand_id) {
         setActiveTab('details');
@@ -138,7 +144,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null, toas
 
   // Detección de errores en tiempo real por pestaña para los indicadores de alerta
   const hasBasicTabErrors = !!errors.name || !!errors.category || !!errors.description || !formData.name.trim() || !formData.category || !formData.description.trim();
-  const hasMeasureTabErrors = !!errors.base_unit || !!errors.scale_code || (formData.is_variable_measure && !formData.scale_code);
+  const hasMeasureTabErrors = !!errors.base_unit || !!errors.scale_code || !!errors.initial_price || !!errors.initial_stock || (formData.is_variable_measure && !formData.scale_code);
 
   const tabs: Array<{ id: FormTab; label: string; icon: React.ReactNode; hasError?: boolean }> = [
     {
@@ -587,9 +593,50 @@ export default function ProductFormModal({ isOpen, onClose, product = null, toas
                         className={cn('rounded-input', errors.base_unit && 'border-error')}
                         ariaLabel={t('products.modal.field.unit_of_measure', 'Unidad de Medida')}
                       />
-                      {renderErrorText(errors.base_unit)}
-                    </div>
+                        {renderErrorText(errors.base_unit)}
+                      </div>
                   </div>
+
+                  {/* Precio/stock inicial (solo creación): tras el alta se emiten
+                      como ajuste de precio + transacción INITIAL auditada. */}
+                  {!isEditMode && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-md pt-xs">
+                      <div className="space-y-xs">
+                        <Label htmlFor="product-initial-price" className={labelClass}>
+                          {t('products.modal.field.initial_price', 'Precio de Venta Inicial (Opcional)')}
+                        </Label>
+                        <Input
+                          id="product-initial-price"
+                          name="initial_price"
+                          inputMode="decimal"
+                          autoComplete="off"
+                          value={formatNumberInput(formData.initial_price)}
+                          onChange={e => setFormData(prev => ({ ...prev, initial_price: parseNumberInput(e.target.value) }))}
+                          state={errors.initial_price ? 'error' : ''}
+                          className="text-data-mono font-data-mono"
+                        />
+                        {renderErrorText(errors.initial_price)}
+                      </div>
+                      {formData.productType !== 'SERVICE' && (
+                        <div className="space-y-xs">
+                          <Label htmlFor="product-initial-stock" className={labelClass}>
+                            {t('products.modal.field.initial_stock', 'Stock Inicial (Opcional)')}
+                          </Label>
+                          <Input
+                            id="product-initial-stock"
+                            name="initial_stock"
+                            inputMode="decimal"
+                            autoComplete="off"
+                            value={formatQuantityInput(formData.initial_stock)}
+                            onChange={e => setFormData(prev => ({ ...prev, initial_stock: parseQuantityInput(e.target.value) }))}
+                            state={errors.initial_stock ? 'error' : ''}
+                            className="text-data-mono font-data-mono"
+                          />
+                          {renderErrorText(errors.initial_stock)}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Medida Variable */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-md pt-xs">
