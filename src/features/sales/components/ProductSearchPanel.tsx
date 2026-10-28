@@ -217,28 +217,28 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
                               vistazo en el POS. */}
                           <div className="flex flex-wrap items-center gap-1.5 min-w-0">
                             {badgeKind === 'variants' ? (
-                              <Badge variant="secondary" size="lg" className="gap-1 shrink-0 text-sm!">
+                              <Badge variant="secondary" size="lg" className="gap-1 shrink-0">
                                 <Layers size={12} />
                                 {t('sales.search.multipleVariants', 'Múltiples Variantes')}
                               </Badge>
                             ) : badgeKind === 'service' ? (
-                              <Badge variant="secondary" size="lg" className="shrink-0 text-sm!">
+                              <Badge variant="secondary" size="lg" className="shrink-0">
                                 {t('sales.search.serviceBadge', 'Servicio')}
                               </Badge>
                             ) : availableStock > 0 ? (
-                              <Badge variant="success" size="lg" className="shrink-0 text-sm!">
+                              <Badge variant="success" size="lg" className="shrink-0">
                                 {t('sales.search.stock', 'Stock: {qty} {unit}', {
                                   qty: formatNumber(availableStock),
                                   unit: product.base_unit,
                                 })}
                               </Badge>
                             ) : (
-                              <Badge variant="destructive" size="lg" className="shrink-0 text-sm!">
+                              <Badge variant="destructive" size="lg" className="shrink-0">
                                 {t('sales.search.outOfStockShort', 'Sin stock')}
                               </Badge>
                             )}
                             {quantityInCart > 0 && (
-                              <Badge variant="warning" size="lg" className="gap-1 shrink-0 text-sm!">
+                              <Badge variant="warning" size="lg" className="gap-1 shrink-0">
                                 <ShoppingCart size={12} className="shrink-0" />
                                 {t('sales.search.inCart', '{qty} en carrito', { qty: formatNumber(quantityInCart) })}
                               </Badge>

@@ -2,8 +2,10 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
+// size/shape own font-size, padding and radius: cn() has no tailwind-merge,
+// so any of these in the base would race the variants in the stylesheet cascade.
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 dark:focus:ring-slate-300",
+  "inline-flex items-center border font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 dark:focus:ring-slate-300",
   {
     variants: {
       variant: {
@@ -22,9 +24,9 @@ const badgeVariants = cva(
         outline: "text-slate-950 dark:text-slate-50",
       },
       size: {
-        default: "px-2.5 py-0.5",
-        sm: "px-2 py-0.25 text-[0.6667rem]",
-        lg: "px-3 py-1 text-sm",
+        default: "rounded-full px-2.5 py-0.5 text-xs",
+        sm: "rounded-full px-2 py-0.25 text-[0.6667rem]",
+        lg: "rounded-full px-3 py-1 text-sm",
       },
       shape: {
         default: "rounded-full",
