@@ -400,10 +400,8 @@ export const sales = {
     'Sin selección, Avanzar continúa como venta nueva. Tocá una venta para continuarla, o tocá la seleccionada para desmarcarla.',
   'sales.checkoutWizard.reservations.title': 'Reservas confirmadas',
   'sales.checkoutWizard.reservations.subtitle':
-    'Seleccioná una reserva para sumarla al carrito (solo se permite una por venta)',
+    'Seleccioná las reservas para sumarlas al carrito',
   'sales.checkoutWizard.reservations.productAlreadySelected': 'Producto ya seleccionado',
-  'sales.checkoutWizard.reservations.oneReservationPerSale': 'Solo se permite una reserva por venta',
-  'sales.checkoutWizard.walkIn.inCart': '(ya en el carrito)',
   'sales.checkoutWizard.walkIn.title': 'Registrar uso de cancha (sin reserva)',
   'sales.checkoutWizard.walkIn.subtitle':
     'El cliente ya usó la cancha: registrá el horario y sumalo al carrito para cobrar',
@@ -422,8 +420,6 @@ export const sales = {
   'sales.checkoutWizard.walkIn.registering': 'Registrando...',
   'sales.checkoutWizard.walkIn.needsClient':
     'Seleccioná un cliente antes de registrar el uso de la cancha',
-  'sales.checkoutWizard.walkIn.oneReservationPerSale':
-    'Solo se permite una reserva por venta. Remové el ítem de reserva del carrito para registrar otra.',
   'sales.checkoutWizard.walkIn.createFailed': 'No se pudo registrar el uso de la cancha',
   'sales.checkoutWizard.walkIn.confirmFailed': 'La reserva se creó pero no se pudo confirmar',
   'sales.checkoutWizard.walkIn.registered': 'Uso de cancha registrado (reserva #{id})',

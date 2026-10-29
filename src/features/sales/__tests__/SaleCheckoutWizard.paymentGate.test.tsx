@@ -82,7 +82,6 @@ const baseProps = {
   onToggleReservation: noop,
   onAddReservations: noop,
   formatDateTime: () => '—',
-  blockedProductIds: new Set<string>(),
   onRegisterWalkIn: async () => true,
   paymentMethods: [{ id: 1, name: 'Efectivo' }],
   paymentMethodId: 1,

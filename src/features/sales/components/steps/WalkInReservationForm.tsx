@@ -31,8 +31,6 @@ export interface WalkInSpec {
 
 interface WalkInReservationFormProps {
   clientId: string
-  /** Product ids ya presentes en el carrito (regla: una reserva por producto). */
-  blockedProductIds: Set<string>
   /** Registra el uso (CREATE + CONFIRM + carrito). true si se registró. */
   onRegisterWalkIn: (spec: WalkInSpec) => Promise<boolean>
 }
@@ -60,7 +58,6 @@ const formatSlotTime = (startTime: string): string => {
 
 export const WalkInReservationForm = ({
   clientId,
-  blockedProductIds,
   onRegisterWalkIn,
 }: WalkInReservationFormProps) => {
   const { t } = useI18n()
@@ -149,8 +146,8 @@ export const WalkInReservationForm = ({
         duration,
       })
       if (ok) {
-        // Reset de la selección; la validación de "una reserva por venta"
-        // corre en SalesNew al registrar la siguiente.
+        // Reset de la selección: otra cancha/horario puede registrarse en la
+        // misma venta (N reservas por venta).
         setStartTime('')
         setDuration(1)
       }
@@ -193,24 +190,14 @@ export const WalkInReservationForm = ({
             <option value="">
               {t('sales.checkoutWizard.walkIn.selectCourt', 'Seleccionar cancha...')}
             </option>
-            {/* Las canchas ya en el carrito (vía reserva) van al final y
-                deshabilitadas, para no confundir con una selección. */}
-            {[...products]
-              .sort((a, b) => {
-                const aBlocked = blockedProductIds.has(String(a.id || a.product_id))
-                const bBlocked = blockedProductIds.has(String(b.id || b.product_id))
-                return Number(aBlocked) - Number(bBlocked)
-              })
-              .map((p) => {
-                const id = p.id || p.product_id
-                const blocked = blockedProductIds.has(String(id))
-                return (
-                  <option key={id} value={id} disabled={blocked}>
-                    {p.name || p.product_name || id}
-                    {blocked ? ` — ${t('sales.checkoutWizard.walkIn.inCart', '(ya en el carrito)')}` : ''}
-                  </option>
-                )
-              })}
+            {products.map((p) => {
+              const id = p.id || p.product_id
+              return (
+                <option key={id} value={id}>
+                  {p.name || p.product_name || id}
+                </option>
+              )
+            })}
           </select>
         </div>
 

@@ -3,7 +3,8 @@
  *
  * Dos capacidades:
  * 1. Listar las reservas CONFIRMED del cliente (migra ReservationModal):
- *    toggle por reserva con la regla "una reserva por producto".
+ *    toggle por reserva; se admiten N reservas por venta (cada línea lleva
+ *    su reserve_id y el backend las valida y completa todas).
  * 2. Registrar un uso walk-in (cliente sin reserva que ya jugó) vía
  *    WalkInReservationForm — crea la reserva desde acá, sin salir de /ventas.
  */
@@ -25,13 +26,12 @@ interface ReservationsStepProps {
   formatDateTime: (date: any) => string
   // Walk-in: registrar uso de cancha sin reserva previa.
   clientId: string | null
-  blockedProductIds: Set<string>
   onRegisterWalkIn: (spec: WalkInSpec) => Promise<boolean>
 }
 
 export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStepProps>(
   (
-    { pendingReservations, selectedResIds, onToggleSelection, formatDateTime, clientId, blockedProductIds, onRegisterWalkIn },
+    { pendingReservations, selectedResIds, onToggleSelection, formatDateTime, clientId, onRegisterWalkIn },
     ref,
   ) => {
     const { t } = useI18n()
@@ -60,26 +60,19 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
         {pendingReservations.length > 0 && (
           <div ref={listRef} className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
             {pendingReservations.map((res, index) => {
-              const resId = Number(res.reserve_id || res.id)
-              const isSelected = selectedResIds.has(resId)
-              // Regla de negocio: UNA reserva por venta (el backend recibe un
-              // único p_reserve_id). Con una reserva ya marcada, las demás
-              // quedan bloqueadas (comportamiento tipo radio).
-              const blocked = selectedResIds.size > 0 && !isSelected
+              const resId = Number(res.reserve_id || res.id);
+              const isSelected = selectedResIds.has(resId);
 
               return (
                 <button
                   key={`${resId}-${index}`}
                   type="button"
-                  disabled={blocked}
                   onClick={() => onToggleSelection(resId)}
                   className={cn(
                     'w-full text-left p-4 rounded-md border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30',
                     isSelected
                       ? 'border-primary bg-primary/5 shadow-sm'
-                      : blocked
-                        ? 'border-divider bg-surface-muted opacity-50 cursor-not-allowed'
-                        : 'border-divider bg-surface hover:border-primary/40',
+                      : 'border-divider bg-surface hover:border-primary/40',
                   )}
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -134,11 +127,6 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
                     </div>
                   </div>
 
-                  {blocked && (
-                    <div className="mt-2 text-[0.6667rem] font-bold uppercase text-on-surface-deep bg-surface-subtle rounded px-2 py-1 inline-block">
-                      {t('sales.checkoutWizard.reservations.oneReservationPerSale', 'Solo se permite una reserva por venta')}
-                    </div>
-                  )}
                 </button>
               )
             })}
@@ -148,7 +136,6 @@ export const ReservationsStep = forwardRef<ReservationsStepRef, ReservationsStep
         {/* Registrar uso walk-in (sin reserva previa) */}
         <WalkInReservationForm
           clientId={clientId || ''}
-          blockedProductIds={blockedProductIds}
           onRegisterWalkIn={onRegisterWalkIn}
         />
       </div>

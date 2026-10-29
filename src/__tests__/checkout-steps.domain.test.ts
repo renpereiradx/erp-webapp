@@ -4,10 +4,9 @@
  * Covers the conditional step visibility rules:
  * - 'pending': shown with pending sales OR active counter orders
  *   (PLAN_PEDIDOS_MOSTRADOR FASE 3.1);
- * - "Reservas": hidden when the cart already carries an item with
- *   `reserve_id` (backend allows a single reservation per sale); visible
- *   otherwise when there are pending reservations or a selected client
- *   (walk-in registration keeps working).
+ * - "Reservas": visible when there are pending reservations or a selected
+ *   client (walk-in registration). N reservations per sale are allowed: the
+ *   step stays visible while reservations remain to load.
  */
 
 import { describe, it, expect } from 'vitest'
@@ -22,7 +21,6 @@ const base: CheckoutStepsInput = {
   counterOrdersCount: 0,
   pendingReservationsCount: 0,
   hasClient: false,
-  hasReserveInCart: false,
 }
 
 const input = (overrides: Partial<CheckoutStepsInput> = {}): CheckoutStepsInput => ({
@@ -50,16 +48,8 @@ describe('computeCheckoutSteps', () => {
     expect(steps).toContain('reservations')
   })
 
-  it('hides reservations when the cart already has an item with reserve_id, even with a client selected', () => {
-    const steps = computeCheckoutSteps(
-      input({ hasClient: true, pendingReservationsCount: 3, hasReserveInCart: true }),
-    )
-    expect(steps).not.toContain('reservations')
-    expect(steps).toEqual(['client', 'payment', 'collection'])
-  })
-
-  it('keeps reservations visible when no reservation is loaded (walk-in still works)', () => {
-    const steps = computeCheckoutSteps(input({ hasClient: true, hasReserveInCart: false }))
+  it('keeps reservations visible when a reservation is already loaded (N per sale allowed)', () => {
+    const steps = computeCheckoutSteps(input({ hasClient: true, pendingReservationsCount: 1 }))
     expect(steps).toContain('reservations')
   })
 
@@ -73,11 +63,6 @@ describe('computeCheckoutSteps', () => {
   it('omits pending and reservations when neither applies', () => {
     const steps = computeCheckoutSteps(input())
     expect(steps).toEqual(['client', 'payment', 'collection'])
-  })
-
-  it('hides reservations when a reserve is in the cart even without a selected client', () => {
-    const steps = computeCheckoutSteps(input({ hasReserveInCart: true }))
-    expect(steps).not.toContain('reservations')
   })
 
   it('hides reservations when the module is disabled for the business, even with a client', () => {

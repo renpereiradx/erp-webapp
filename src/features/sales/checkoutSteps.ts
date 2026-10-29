@@ -10,11 +10,8 @@
  *   negocio (business_settings, fail-open: false ⇒ nunca visible) y, además,
  *   que haya reservas confirmadas pendientes de cargar o un cliente
  *   seleccionado (permite registrar un uso walk-in de cancha sin salir del
- *   checkout). Se suprime cuando el carrito YA tiene un ítem con
- *   `reserve_id`: el backend admite una sola reserva por venta, así que con
- *   la reserva cargada el paso no aporta nada (y walk-in lo bloquea con
- *   toast). Sin reserva cargada el paso sigue visible (walk-in + selección
- *   normal de reservas funcionan igual que antes).
+ *   checkout). Permite N reservas por venta: el paso sigue visible mientras
+ *   queden reservas sin cargar.
  * - 'payment' y 'collection' siempre cierran el flujo.
  */
 
@@ -31,19 +28,15 @@ export interface CheckoutStepsInput {
   pendingReservationsCount: number
   /** Hay cliente seleccionado (habilita walk-in dentro del paso Reservas). */
   hasClient: boolean
-  /** El carrito ya contiene un ítem con reserve_id (una reserva por venta). */
-  hasReserveInCart: boolean
 }
 
 export function computeCheckoutSteps(input: CheckoutStepsInput): CheckoutStepId[] {
   const list: CheckoutStepId[] = ['client']
   if (input.activeSalesCount > 0 || input.counterOrdersCount > 0) list.push('pending')
 
-  const reservationsVisible =
-    input.reservationsEnabled &&
-    (input.pendingReservationsCount > 0 || input.hasClient) &&
-    !input.hasReserveInCart
-  if (reservationsVisible) list.push('reservations')
+  if (input.reservationsEnabled && (input.pendingReservationsCount > 0 || input.hasClient)) {
+    list.push('reservations')
+  }
 
   list.push('payment', 'collection')
   return list

@@ -67,7 +67,6 @@ interface SaleCheckoutWizardProps {
   onToggleReservation: (id: number) => void
   onAddReservations: () => void
   formatDateTime: (date: any) => string
-  blockedProductIds: Set<string>
   onRegisterWalkIn: (spec: WalkInSpec) => Promise<boolean>
 
   // Pago
@@ -103,7 +102,6 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
   onToggleReservation,
   onAddReservations,
   formatDateTime,
-  blockedProductIds,
   onRegisterWalkIn,
   paymentMethods,
   paymentMethodId,
@@ -154,9 +152,8 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
   // ─── Pasos visibles (condicionales) ─────────────────────────────────────
   // Reglas en checkoutSteps.computeCheckoutSteps: 'reservations' requiere el
   // módulo activo para el negocio y, además, reservas confirmadas pendientes
-  // o cliente seleccionado (walk-in); se suprime cuando el carrito ya tiene
-  // un ítem con reserve_id (el backend admite una sola reserva por venta y
-  // el paso ya no aporta nada).
+  // o cliente seleccionado (walk-in). Se admiten N reservas por venta: el
+  // paso sigue visible mientras queden reservas por cargar.
   const steps = useMemo<CheckoutStepId[]>(
     () =>
       computeCheckoutSteps({
@@ -165,9 +162,8 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
         counterOrdersCount: counterOrders.length,
         pendingReservationsCount: pendingReservations.length,
         hasClient: !!client,
-        hasReserveInCart: items.some((i) => !!i?.reserve_id),
       }),
-    [reservationsEnabled, activeSales.length, counterOrders.length, pendingReservations.length, client, items],
+    [reservationsEnabled, activeSales.length, counterOrders.length, pendingReservations.length, client],
   )
 
   // Última versión de steps para los state updaters (el array puede encoger
@@ -526,7 +522,6 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                 onToggleSelection={onToggleReservation}
                 formatDateTime={formatDateTime}
                 clientId={client?.id ?? null}
-                blockedProductIds={blockedProductIds}
                 onRegisterWalkIn={onRegisterWalkIn}
               />
             )}

@@ -1016,38 +1016,36 @@ const SalesNew: React.FC = () => {
     }));
 
     setItems(prev => {
-      const existingProductVariantKeys = new Set(prev.map(item => `${item.productId}_${item.variantId || 'base'}`));
       const existingReserveIds = new Set(
         prev
           .map(item => item.reserve_id)
           .filter((id): id is number => id !== undefined && id !== null)
       );
-      
-      const seenProductIdsInNew = new Set<string>();
-      const newItems = loadedItems.filter(item => {
-        // 1. Evitar duplicar reserva exacta
-        if (item.reserve_id && existingReserveIds.has(item.reserve_id)) return false;
-        
-        // 2. Evitar múltiples reservas para el mismo producto exacto (con variante)
-        const productKey = `${item.productId}_${item.variantId || 'base'}`;
-        if (existingProductVariantKeys.has(productKey) || seenProductIdsInNew.has(productKey)) {
-          return false;
-        }
-        seenProductIdsInNew.add(productKey);
-        
-        return true;
-      });
-      
+
+      // Solo se filtra la reserva EXACTA ya cargada: varias reservas distintas
+      // del mismo producto (misma cancha, otra fecha) sí pueden convivir.
+      const newItems = loadedItems.filter(item =>
+        !(item.reserve_id && existingReserveIds.has(item.reserve_id))
+      );
+
       if (newItems.length === 0) {
-        toast.info('Los productos de estas reservas ya están en el carrito');
+        toast.info('Las reservas seleccionadas ya están en el carrito');
         return prev;
       }
 
       return [...prev, ...newItems];
     });
 
-    // El wizard gestiona el cierre; aquí solo limpiamos las reservas ya cargadas.
-    setPendingReservations([]);
+    // El wizard gestiona el cierre; salen de la lista TODAS las seleccionadas:
+    // las nuevas se agregaron al carrito y las que ya estaban siguen allí.
+    const addedIds = new Set(
+      loadedItems
+        .map(item => item.reserve_id)
+        .filter((id): id is number => id !== undefined && id !== null)
+    );
+    setPendingReservations(prev =>
+      prev.filter(res => !addedIds.has(Number(res.reserve_id || res.id)))
+    );
     setSelectedResIds(new Set());
     toast.success('Reservas añadidas al carrito');
   };
@@ -1523,54 +1521,38 @@ const SalesNew: React.FC = () => {
     }
   };
 
-  // Arma el payload de venta nueva desde el carrito vigente: valida unicidad
-  // de reserve_id (máx. una reserva por venta), la regla de una reserva por
-  // producto y mapea los ítems a product_details. Se usa al abrir el wizard
-  // (handleSaveSale) y AL CONFIRMAR (onConfirmWizard/onLeavePendingWizard):
-  // reconstruir al confirmar garantiza que las reservas agregadas dentro del
-  // wizard (walk-in o existentes) lleguen al backend.
+  // Arma el payload de venta nueva desde el carrito vigente: filtra
+  // reserve_id duplicado (la misma reserva dos veces no es vendible; varias
+  // reservas DISTINTAS sí viajan, una por línea) y mapea los ítems a
+  // product_details. Se usa al abrir el wizard (handleSaveSale) y AL
+  // CONFIRMAR (onConfirmWizard/onLeavePendingWizard): reconstruir al
+  // confirmar garantiza que las reservas agregadas dentro del wizard
+  // (walk-in o existentes) lleguen al backend.
   const buildNewSaleData = useCallback((): any | null => {
-    // 1. Validar unicidad de reserve_id y productId para reservas (Instrucción: permitir solo uno por producto)
     const seenReserves = new Set<number>();
-    const seenProductVariantForReserves = new Set<string>();
     const uniqueItems: CartItem[] = [];
     const duplicatesRemoved: string[] = [];
 
     for (const item of items) {
       if (item.reserve_id) {
-        // Regla: No duplicar reserve_id exacto
+        // Regla: no duplicar el MISMO reserve_id (la reserva se vende una vez).
         if (seenReserves.has(item.reserve_id)) {
           duplicatesRemoved.push(`${item.name} (Reserva Duplicada)`);
           continue;
         }
-
-        // Regla: No permitir dos reservas distintas para el MISMO producto exacto
-        const productKey = `${item.productId}_${item.variantId || 'base'}`;
-        if (seenProductVariantForReserves.has(productKey)) {
-          duplicatesRemoved.push(`${item.name} (Mismo Producto)`);
-          continue;
-        }
-
         seenReserves.add(item.reserve_id);
-        seenProductVariantForReserves.add(productKey);
       }
       uniqueItems.push(item);
     }
 
     if (duplicatesRemoved.length > 0) {
-      toast.warning(`Se filtraron ítems para cumplir con la regla de una reserva por producto: ${duplicatesRemoved.join(', ')}`);
+      toast.warning(`Se filtraron ítems con reservas duplicadas: ${duplicatesRemoved.join(', ')}`);
     }
 
-    // 2. Validar que exista maximo 1 reserve_id distinto en el carrito (Regla de negocio actual)
+    // Legacy: el primer reserve_id alimenta p_reserve_id (metadata del SP);
+    // el backend valida y completa TODAS las reservas de las líneas.
     const distinctReserveIds = Array.from(seenReserves);
-
-    if (distinctReserveIds.length > 1) {
-      toast.error('Solo se permite una reserva por venta. Remueve ítems de otras reservas.');
-      return null;
-    }
-
-    // Tomar el reserve_id único si existe
-    const saleReserveId = distinctReserveIds.length === 1 ? distinctReserveIds[0] : undefined;
+    const saleReserveId = distinctReserveIds.length >= 1 ? distinctReserveIds[0] : undefined;
 
     const payloadPriceMod = uniqueItems.some(
       item => Math.abs((Number(item.price) || 0) - (Number(item.originalPrice) || 0)) > 0.01
@@ -1995,12 +1977,6 @@ const SalesNew: React.FC = () => {
       toast.error(t('sales.checkoutWizard.walkIn.needsClient', 'Seleccioná un cliente antes de registrar el uso de la cancha'));
       return false;
     }
-    // Regla de negocio: máximo una reserva por venta (process_sale_with_reserve).
-    if (items.some(i => i.reserve_id)) {
-      toast.error(t('sales.checkoutWizard.walkIn.oneReservationPerSale', 'Solo se permite una reserva por venta. Remové el ítem de reserva del carrito para registrar otra.'));
-      return false;
-    }
-
     const branchIdStr = localStorage.getItem('activeBranch');
     const branchId = branchIdStr ? parseInt(branchIdStr, 10) : undefined;
 
@@ -2063,14 +2039,6 @@ const SalesNew: React.FC = () => {
       return false;
     }
   }, [selectedClient, items, setItems, toast, t]);
-
-  // Productos ya presentes en el carrito VÍA RESERVA: el walk-in los bloquea
-  // (una reserva por producto). Los ítems de ventas pendientes continuadas
-  // (sin reserve_id) NO bloquean el registro walk-in.
-  const blockedProductIds = useMemo(
-    () => new Set(items.filter((i) => i.reserve_id).map((i) => String(i.productId))),
-    [items],
-  );
 
   // Resetea el estado del carrito tras concretar o dejar pendiente.
   const resetSaleState = () => {
@@ -2454,24 +2422,15 @@ const SalesNew: React.FC = () => {
         pendingReservations={pendingReservations}
         selectedResIds={selectedResIds}
         onToggleReservation={(resId) => {
-          const isSelected = selectedResIds.has(resId);
-          // Regla de negocio: UNA reserva por venta (el backend recibe un
-          // único p_reserve_id). Comportamiento tipo radio: marcar otra
-          // cuando ya hay una marcada se rechaza con guía.
-          if (!isSelected && selectedResIds.size > 0) {
-            toast.warning(
-              t('sales.checkoutWizard.reservations.oneReservationPerSale', 'Solo se permite una reserva por venta'),
-            );
-            return;
-          }
+          // Múltiples reservas por venta: cada línea lleva su reserve_id y el
+          // backend las valida y completa todas (SP multi-reserva).
           const newSelection = new Set(selectedResIds);
-          if (isSelected) newSelection.delete(resId);
+          if (newSelection.has(resId)) newSelection.delete(resId);
           else newSelection.add(resId);
           setSelectedResIds(newSelection);
         }}
         onAddReservations={handleAddReservations}
         formatDateTime={formatDateTime}
-        blockedProductIds={blockedProductIds}
         onRegisterWalkIn={handleRegisterWalkIn}
         paymentMethods={paymentMethods}
         paymentMethodId={paymentMethodId}
