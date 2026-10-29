@@ -850,10 +850,9 @@ const SalesNew: React.FC = () => {
       });
       if (reservations && reservations.length > 0) {
         setPendingReservations(reservations);
-        // Pre-seleccionar todas las reservas por defecto (Set de IDs numéricos).
-        // El wizard las muestra como un paso condicional.
-        const allIds = new Set(reservations.map((r: any) => Number(r.reserve_id || r.id)).filter(Boolean));
-        setSelectedResIds(allIds);
+        // Sin pre-selección: la regla es UNA reserva por venta (guard tipo
+        // radio), así que pre-marcar todas dejaba reservas imposible de
+        // re-seleccionar tras desmarcar. El usuario elige cuál sumar.
       }
     } catch (error) {
       console.error('Error buscando reservas del cliente:', error);
