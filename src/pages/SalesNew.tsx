@@ -408,6 +408,30 @@ const SalesNew: React.FC = () => {
     };
   }, [reservationsEnabled]);
 
+  // Reabrir el wizard con el cliente ya seleccionado: refetear sus reservas
+  // CONFIRMED. handleAddReservations consume pendingReservations (las pasa al
+  // carrito y las saca de la lista) y el cierre del wizard no las restaura,
+  // así que cancelar + vaciar el carrito dejaba el paso Reservas vacío hasta
+  // deseleccionar y reelegir el cliente. En el servidor siguen CONFIRMED (la
+  // venta nunca se procesó): re-pedirlas es la fuente de verdad correcta.
+  const selectedClientId = selectedClient?.id;
+  useEffect(() => {
+    if (!showCheckoutWizard || !reservationsEnabled || !selectedClientId) return;
+    let cancelled = false;
+    apiService
+      .getReservationReport({ client_id: selectedClientId, status: 'CONFIRMED' })
+      .then((reservations: unknown) => {
+        if (cancelled) return;
+        setPendingReservations(Array.isArray(reservations) ? reservations : []);
+      })
+      .catch(() => {
+        /* fail-soft: sin refetch se mantiene la lista ya cargada */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showCheckoutWizard, selectedClientId, reservationsEnabled]);
+
   // Búsqueda canónica (DESIGN.md §13): debounce+abort+guard en useProductSearch.
   // Los resultados previos siguen visibles mientras llega la respuesta nueva.
   const { results: productSearchRows, search: runProductSearch, clear: clearProductSearch } =
@@ -853,7 +877,13 @@ const SalesNew: React.FC = () => {
         // Sin pre-selección: la regla es UNA reserva por venta (guard tipo
         // radio), así que pre-marcar todas dejaba reservas imposible de
         // re-seleccionar tras desmarcar. El usuario elige cuál sumar.
+      } else {
+        // Cliente sin reservas: limpiar las del cliente anterior (quedaban
+        // stale y podían sumarse a la venta del nuevo cliente).
+        setPendingReservations([]);
       }
+      // La selección de reservas no atraviesa el cambio de cliente.
+      setSelectedResIds(new Set());
     } catch (error) {
       console.error('Error buscando reservas del cliente:', error);
     }
