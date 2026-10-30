@@ -25,6 +25,10 @@ export const licensing = {
   'licensing.card.expires': 'Vence',
   'licensing.card.never': 'No vence (perpetua)',
   'licensing.card.daysRemaining': 'Quedan {days} días',
+  // RN-BIPACK-12 (v2.5): cuota de sucursales activas (0 = ilimitadas)
+  'licensing.card.branches': 'Sucursales activas',
+  'licensing.card.branchesCount': '{used} de {limit}',
+  'licensing.card.branchesUnlimited': '{used} (ilimitadas)',
   'licensing.card.enforced': 'Control de licencia activo',
   'licensing.card.notEnforced':
     'Control de licencia desactivado (desarrollo): todos los módulos disponibles.',

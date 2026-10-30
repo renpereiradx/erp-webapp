@@ -34,11 +34,18 @@ vi.mock('@/lib/i18n', () => ({
 
 const getBranches = vi.fn<() => Promise<unknown>>()
 const updateBranch = vi.fn<() => Promise<unknown>>()
+const getLicenseStatus = vi.fn<() => Promise<unknown>>()
 
 vi.mock('@/features/branches/services/branchService', () => ({
   branchService: {
     getBranches: (...args: unknown[]) => getBranches(...(args as [])),
     updateBranch: (...args: unknown[]) => updateBranch(...(args as [])),
+  },
+}))
+
+vi.mock('@/services/licenseService', () => ({
+  licenseService: {
+    getStatus: (...args: unknown[]) => getLicenseStatus(...(args as [])),
   },
 }))
 
@@ -55,6 +62,14 @@ const renderPage = () => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  getLicenseStatus.mockResolvedValue({
+    status: 'none',
+    enforcing: true,
+    modules: [],
+    expires_at: null,
+    days_remaining: 0,
+    grace_days: 0,
+  })
   getBranches.mockResolvedValue({
     branches: [
       {
@@ -105,5 +120,32 @@ describe('BranchManagement — columna Acciones', () => {
 
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByText('Nombre Sucursal')).toBeInTheDocument()
+  })
+})
+
+describe('BranchManagement — cuota de sucursales (RN-BIPACK-12, v2.5)', () => {
+  it('con la cuota alcanzada muestra el aviso comercial con el tope', async () => {
+    getLicenseStatus.mockResolvedValue({
+      status: 'active',
+      enforcing: true,
+      mode: 'licensed',
+      modules: [],
+      expires_at: null,
+      days_remaining: 0,
+      grace_days: 0,
+      branch_limit: 1,
+    })
+    renderPage()
+
+    const notice = await screen.findByTestId('branches-limit-notice')
+    expect(notice).toHaveTextContent(/1 sucursal/i)
+    expect(notice).toHaveTextContent(/proveedor/i)
+  })
+
+  it('cuota ilimitada (0 / desarrollo): sin aviso', async () => {
+    renderPage()
+
+    expect(await screen.findByText('Nombre Sucursal')).toBeInTheDocument()
+    expect(screen.queryByTestId('branches-limit-notice')).toBeNull()
   })
 })

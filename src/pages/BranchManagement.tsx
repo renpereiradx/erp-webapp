@@ -15,6 +15,7 @@ import { useI18n } from '@/lib/i18n';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/useToast';
 import { branchService } from '@/features/branches/services/branchService';
+import { licenseService } from '@/services/licenseService';
 import { Branch } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,6 +103,19 @@ const BranchManagement: React.FC = () => {
 
   const branches = response?.branches || [];
 
+  // RN-BIPACK-12 (v2.5): aviso comercial cuando la licencia ya está en su
+  // cuota de sucursales activas — mejor verlo antes de que el backend
+  // rechace el alta. 0/undefined = ilimitadas (desarrollo).
+  const licenseQuery = useQuery({
+    queryKey: ['system-license'],
+    queryFn: () => licenseService.getStatus(),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+  const branchLimit = licenseQuery.data?.branch_limit ?? 0;
+  const activeBranchCount = branches.filter((b: any) => b.is_active).length;
+  const branchQuotaReached = branchLimit > 0 && activeBranchCount >= branchLimit;
+
   useEffect(() => {
     if (isError) {
       addToast(t('common.error.load', 'Error al cargar sucursales'), 'error');
@@ -173,6 +187,21 @@ const BranchManagement: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* RN-BIPACK-12 (v2.5): la licencia alcanzó su cuota de sucursales
+          activas — aviso comercial visible antes de que el backend rechace. */}
+      {branchQuotaReached && (
+        <p
+          data-testid="branches-limit-notice"
+          className="text-sm rounded-lg border border-semantic-warning/40 bg-semantic-warning/10 text-semantic-warning px-md py-sm"
+        >
+          {t(
+            'branches.limit.notice',
+            'Su licencia admite {limit} sucursal(es) activa(s) y ya está en ese número. Para habilitar otra, contacte a su proveedor.',
+            { limit: branchLimit },
+          )}
+        </p>
+      )}
 
       {/* Controles de Tabla */}
       <div className="bg-white rounded-2xl shadow-fluent-lg border border-border-subtle overflow-hidden">

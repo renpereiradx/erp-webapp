@@ -6,6 +6,11 @@
 export const branches = {
   'branches.withId': 'Sucursal {{id}}',
 
+  // RN-BIPACK-12 (v2.5): cuota de sucursales activas por licencia — aviso
+  // comercial en Gestión de Sucursales cuando la instalación está en su tope.
+  'branches.limit.notice':
+    'Su licencia admite {limit} sucursal(es) activa(s) y ya está en ese número. Para habilitar otra, contacte a su proveedor.',
+
   // BranchModal — cabecera y pestañas
   'branches.modal.titleNew': 'Nueva Sucursal',
   'branches.modal.titleEdit': 'Gestionar: {name}',

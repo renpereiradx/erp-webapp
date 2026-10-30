@@ -19,6 +19,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import GenericSkeletonList from '@/components/ui/GenericSkeletonList'
 import ErrorState from '@/components/ui/ErrorState'
 import { licenseService, type LicenseSnapshot, type LicenseStatus } from '@/services/licenseService'
+import { branchService } from '@/features/branches/services/branchService'
 
 // Componente legacy en .jsx con props sin tipar: alias tipado local.
 const SkeletonList = GenericSkeletonList as unknown as React.FC<{ count?: number }>
@@ -94,6 +95,16 @@ export default function LicenseStatusPage() {
     staleTime: 5 * 60 * 1000,
     retry: 1,
   })
+
+  // RN-BIPACK-12 (v2.5): "Sucursales activas: N de M" cruza la cuota del
+  // snapshot con las sucursales activas que el FE ya sabe listar.
+  const branchesQuery = useQuery({
+    queryKey: ['branches', 'active'],
+    queryFn: () => branchService.getBranches({ is_active: true, page_size: 200 }),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+  const activeBranchCount = branchesQuery.data?.branches?.length ?? 0
 
   const canInstall = hasPermission('license:write')
   const [uploading, setUploading] = useState(false)
@@ -198,6 +209,25 @@ export default function LicenseStatusPage() {
                       {t(statusLabelKey(license.status), license.status)}
                     </Badge>
                   </span>
+                </Row>
+                {/* RN-BIPACK-12 (v2.5): cuota de sucursales activas — el
+                    contador vive en el FE (lista de sucursales), la cuota en
+                    el snapshot (archivo firmado). 0 = ilimitadas. */}
+                <Row label={t('licensing.card.branches', 'Sucursales activas')}>
+                  {license.branch_limit && license.branch_limit > 0 ? (
+                    <span data-testid="license-branch-quota">
+                      {t('licensing.card.branchesCount', '{used} de {limit}', {
+                        used: activeBranchCount,
+                        limit: license.branch_limit,
+                      })}
+                    </span>
+                  ) : (
+                    <span data-testid="license-branch-quota">
+                      {t('licensing.card.branchesUnlimited', '{used} (ilimitadas)', {
+                        used: activeBranchCount,
+                      })}
+                    </span>
+                  )}
                 </Row>
                 {license.mode === 'trial' && license.trial_ends_at && (
                   <Row label={t('licensing.card.trialEnds', 'Fin de la evaluación')}>

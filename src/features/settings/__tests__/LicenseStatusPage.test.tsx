@@ -13,11 +13,18 @@ const getStatus = vi.fn()
 const upload = vi.fn()
 const refreshEntitlements = vi.fn()
 const hasPermission = vi.fn()
+const getBranches = vi.fn()
 
 vi.mock('@/services/licenseService', () => ({
   licenseService: {
     getStatus: (...args: unknown[]) => getStatus(...args),
     upload: (...args: unknown[]) => upload(...args),
+  },
+}))
+
+vi.mock('@/features/branches/services/branchService', () => ({
+  branchService: {
+    getBranches: (...args: unknown[]) => getBranches(...args),
   },
 }))
 
@@ -53,6 +60,9 @@ describe('LicenseStatusPage', () => {
     upload.mockReset()
     refreshEntitlements.mockReset()
     hasPermission.mockReset()
+    getBranches.mockReset()
+    hasPermission.mockReturnValue(false)
+    getBranches.mockResolvedValue({ branches: [] })
   })
 
   it('muestra el modo evaluación con fin de ventana y días restantes', async () => {
@@ -92,6 +102,30 @@ describe('LicenseStatusPage', () => {
     renderPage()
 
     expect(await screen.findByText('Licencia vencida (Core activo)')).toBeInTheDocument()
+  })
+
+  // RN-BIPACK-12 (v2.5): la fila de sucursales activas cruza la cuota del
+  // snapshot con la lista de sucursales del FE.
+  it('cuota de sucursales: "N de M" contra el branch_limit del snapshot', async () => {
+    getStatus.mockResolvedValue(
+      snapshot({ mode: 'licensed', status: 'active', branch_limit: 3 }),
+    )
+    getBranches.mockResolvedValue({
+      branches: [{ id: 1, is_active: true }, { id: 2, is_active: true }],
+    })
+    renderPage()
+
+    expect(await screen.findByText('Sucursales activas')).toBeInTheDocument()
+    expect(screen.getByTestId('license-branch-quota').textContent).toBe('2 de 3')
+  })
+
+  it('cuota 0 (ilimitadas / desarrollo): etiqueta sin tope', async () => {
+    getStatus.mockResolvedValue(snapshot({ mode: 'licensed', status: 'active' }))
+    getBranches.mockResolvedValue({ branches: [{ id: 1, is_active: true }] })
+    renderPage()
+
+    expect(await screen.findByText('Sucursales activas')).toBeInTheDocument()
+    expect(screen.getByTestId('license-branch-quota').textContent).toBe('1 (ilimitadas)')
   })
 
   it('sin license:write no ofrece el botón de instalación', async () => {

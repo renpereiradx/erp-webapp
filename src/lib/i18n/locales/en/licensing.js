@@ -24,6 +24,10 @@ export const licensing = {
   'licensing.card.expires': 'Expires',
   'licensing.card.never': 'Never (perpetual)',
   'licensing.card.daysRemaining': '{days} days left',
+  // RN-BIPACK-12 (v2.5): active branch quota (0 = unlimited)
+  'licensing.card.branches': 'Active branches',
+  'licensing.card.branchesCount': '{used} of {limit}',
+  'licensing.card.branchesUnlimited': '{used} (unlimited)',
   'licensing.card.enforced': 'License enforcement active',
   'licensing.card.notEnforced':
     'License enforcement off (development): every module available.',

@@ -32,6 +32,9 @@ export interface LicenseSnapshot {
   mode?: LicenseMode;
   trial_ends_at?: string | null;
   blocked?: boolean;
+  // v2.5 — cuota de sucursales ACTIVAS de la instalación (RN-BIPACK-12);
+  // 0 = ilimitadas (desarrollo y licencias emitidas antes del campo).
+  branch_limit?: number;
 }
 
 function normalizeSnapshot(raw: Partial<LicenseSnapshot>): LicenseSnapshot {
@@ -48,6 +51,7 @@ function normalizeSnapshot(raw: Partial<LicenseSnapshot>): LicenseSnapshot {
     mode: raw.mode,
     trial_ends_at: raw.trial_ends_at ?? null,
     blocked: Boolean(raw.blocked),
+    branch_limit: Number(raw.branch_limit ?? 0),
   };
 }
 
