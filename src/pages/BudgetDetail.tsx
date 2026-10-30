@@ -83,6 +83,9 @@ const BudgetDetail: React.FC = () => {
       if (result.success) {
         addToast('Presupuesto convertido a venta', 'success');
         fetchDetail();
+      } else {
+        // El backend responde 200 con success:false (ej. presupuesto vencido) — no es una excepción
+        addToast(result.error || 'Error al convertir presupuesto', 'error');
       }
     } catch (error: any) {
       addToast(error.message, 'error');

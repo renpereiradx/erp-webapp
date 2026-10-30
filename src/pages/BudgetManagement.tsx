@@ -115,6 +115,9 @@ const BudgetManagement: React.FC = () => {
         fetchBudgets(); // Recargar lista
         // Redirigir al detalle de la venta (opcional)
         // navigate(`/cobros-ventas/${result.sale_id}`);
+      } else {
+        // El backend responde 200 con success:false (ej. presupuesto vencido) — no es una excepción
+        addToast(result.error || 'Error al convertir presupuesto', 'error');
       }
     } catch (error: any) {
       addToast(error.message || 'Error al convertir presupuesto', 'error');

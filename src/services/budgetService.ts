@@ -118,7 +118,7 @@ export const budgetService = {
   /**
    * Convierte un presupuesto en una venta firme
    */
-  async convertToSale(id: string): Promise<{ success: boolean; sale_id: string; message: string }> {
+  async convertToSale(id: string): Promise<{ success: boolean; sale_id?: string; error?: string }> {
     const startTime = Date.now();
     try {
       const response = await apiClient.post(API_ENDPOINTS.BUDGET_CONVERT_TO_SALE(id), {});
